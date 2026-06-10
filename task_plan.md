@@ -6,6 +6,59 @@
 
 ---
 
+## v10.22 — Menu Principal animé + thème ambient celtic (MusicGen) [2026-06-10]
+
+User : « Il faut animer le Menu Principal, et génère un thème principal ambient celtic slow avec MusicGen ».
+Bible §10 (DA flat rétro-minimaliste — animations subtiles only), §12.1 (Hub = ambient celtique + drones).
+
+**Dispatch Plan** (task_dispatcher : Animation → motion_designer/ui_impl ; Audio → audio_designer ;
+auto : debug_qa + optimizer + git_commit) — exécution : implémentation main agent, review wave =
+`everything-claude-code:code-reviewer` (équiv. debug_qa/optimizer), validation = validate_step0 + smoke,
+commit = git_commit (conventional).
+
+- [x] tools/musicgen_theme.py — MusicGen small CPU, prompt celtic slow, crossfade loop 2.5s, WAV 16-bit mono 32kHz
+- [x] merlin_scene_art.gd — set_animated() opt-in : brume qui dérive, étoiles scintillantes, halo de lune (jeu inchangé)
+- [x] merlin_menu.gd — entrée cascade fondus, triskèle rotative (24s), runes respirantes déphasées, anneaux pulsants, pop focus ≤100ms
+- [x] merlin_menu.gd — _setup_music : boucle WAV (loop_end calculé, garde ADPCM), fade-in 3s, fade-out 0.22s (calé MerlinTransition.DUR), fallback silencieux si WAV absent
+- [x] code-reviewer : 1 HIGH (garde ADPCM) + 2 MEDIUM (kill pop tween en vol, typed arrays) corrigés
+- [x] Génération MusicGen terminée : 27.4s @ 32 kHz, 1.8 MB (5185s de CPU), WAV importé (.import OK)
+- [x] Parse check éditeur : 0 SCRIPT ERROR · smoke MerlinMenu passed=true script_errors=0 exit=0
+- [x] Commit + push
+
+---
+
+## v10.12 — Fusion adaptative + Map du chemin + Carte simplifiée [2026-06-07]
+
+Playtest : fusion trop rapide (scénario ne suit pas) + map manquante à droite + cartes surchargées.
+AskUserQuestion → map REMPLACE Destin ; carte = icône+rareté+tags clairs ; fusion adaptative. Specs : merlin-game-designer.
+
+- [x] Fusion : SUSTAIN animé jusqu'à is_resolution_ready (cap 12s) + gardes teardown (merlin_game)
+- [x] Map : NEW merlin_beat_map.gd (MerlinBeatMap) + câblage, remplace la carte Destin
+- [x] Carte : retiré pastilles + bande archétype, tags EN CLAIR (merlin_card_view)
+- [x] validate_step0 exit=0 · smoke passed=True · code-reviewer (2 HIGH + 2 MEDIUM corrigés)
+- [ ] Playtest user (ressenti) + décisions PART B avant build
+
+### Reste — gros chantiers cadrés (merlin-game-designer PART B), EN ATTENTE user :
+- Ramification réelle (quêtes = clusters 2-5 beats, sortie de chemin → vraie suite) — 7 Q ouvertes
+- Jet de dés (combinaisons spéciales) — 4 Q · Système 50+ tags (déblocage in/cross-aventure) — 4 Q
+
+---
+
+## v10.11 — Deck enrichi + Draft 1/3 + Rareté + Carte Destin (StS allégé) [2026-06-07]
+
+User : enrichir le deck + draft 1/3 aux beats clés + rareté + carte « destin » coin droit HUD, façon
+Slay the Spire. AskUserQuestion (4Q) → carte HUD = destin du run ; méca = tag-coverage + effets Rare+ ;
+draft = beats clés only ; visuel = minimal strict (DA flat) + gemme. Nombres : `merlin-game-designer`.
+
+- [x] merlin_card.gd : effect_type/value + enriched_pool() (14 cartes, effets HEAL/PURGE/DRAW)
+- [x] merlin_run.gd : apply_card_effects, draft_choices (pondéré), add_card_to_deck, archetype_scores, destiny_*
+- [x] merlin_card_view.gd : gemme rareté/coût + badge d'effet (flat)
+- [x] merlin_game.gd : effets en résolution + overlay draft (beats clés) + widget Carte Destin
+- [x] validate_step0 exit=0 · smoke MerlinGame passed=True · probe_draft 34/34 PASS · code-reviewer (hardening appliqué)
+- [ ] Playtest user (ressenti visuel draft/destin) + bible (documenter après sign-off)
+
+---
+
 ## v10.7 — Scénarios : qualité narrative (exemplar + générateur) [2026-06-06]
 
 Objectif : scénarios **complets, logiques, bien rédigés** (4 axes : causalité beat-à-beat,

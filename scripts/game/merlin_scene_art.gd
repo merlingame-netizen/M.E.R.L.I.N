@@ -13,6 +13,8 @@ const COL_MIST: Color = Color(0.79, 0.72, 0.58, 0.16)  # brume tan translucide
 
 var _beat: String = "Exploration"
 var _menu_decor: bool = false  # menu : brume teintée faction (vert/violet) + étoiles
+var _animated: bool = false    # menu : scène « vivante » (brume qui dérive, étoiles, halo de lune)
+var _t: float = 0.0
 
 
 func set_beat(beat_type: String) -> void:
@@ -22,6 +24,18 @@ func set_beat(beat_type: String) -> void:
 
 func set_menu_decor(on: bool) -> void:
 	_menu_decor = on
+	queue_redraw()
+
+
+## Anime la scène en continu (opt-in, utilisé par le menu uniquement — le jeu reste statique).
+func set_animated(on: bool) -> void:
+	_animated = on
+	set_process(on)
+	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	_t += delta
 	queue_redraw()
 
 
@@ -40,9 +54,13 @@ func _draw() -> void:
 	# Fond de la fenêtre de scène (coin légèrement arrondi simulé par un simple rect plein).
 	draw_rect(Rect2(Vector2.ZERO, s), COL_SCENE_BG, true)
 
-	# Lune (cercle crème), haut-centre.
+	# Lune (cercle crème), haut-centre. En mode animé : halo qui respire très lentement.
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40)
 	var moon_r: float = minf(w, h) * 0.13
+	if _animated:
+		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_t * 0.45))
+		var halo_a: float = 0.05 + 0.025 * (0.5 + 0.5 * sin(_t * 0.45))
+		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 	draw_circle(moon_c, moon_r, COL_MOON)
 
 	# Arbres nus en silhouette, encadrant (arrière-plan).
@@ -58,24 +76,35 @@ func _draw() -> void:
 	if _beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme":
 		_figure(Vector2(w * 0.5, h * 0.84), h * 0.50, w * 0.075)
 
-	# Brume : bandes horizontales plates translucides (avant-plan).
+	# Brume : bandes horizontales plates translucides (avant-plan). Dérive lente en mode animé.
+	var band_i: int = 0
 	for band in [0.60, 0.71, 0.81]:
 		var y: float = h * band
 		var bw: float = w * (0.5 + 0.18 * band)
 		var bx: float = w * 0.5 - bw * 0.5
+		if _animated:
+			bx += sin(_t * 0.20 + float(band_i) * 2.1) * w * 0.014
 		draw_rect(Rect2(Vector2(bx, y), Vector2(bw, h * 0.035)), COL_MIST, true)
+		band_i += 1
 
 	if _menu_decor:
 		# Brume teintée faction : vert à gauche, violet à droite (couleurs des Pôles) + étoiles.
-		draw_rect(Rect2(Vector2(0.0, h * 0.80), Vector2(w * 0.44, h * 0.045)), Color(0.50, 0.65, 0.36, 0.22), true)
-		draw_rect(Rect2(Vector2(w * 0.58, h * 0.84), Vector2(w * 0.42, h * 0.045)), Color(0.48, 0.31, 0.64, 0.22), true)
+		var drift: float = sin(_t * 0.16) * w * 0.012 if _animated else 0.0
+		draw_rect(Rect2(Vector2(0.0 + drift, h * 0.80), Vector2(w * 0.44, h * 0.045)), Color(0.50, 0.65, 0.36, 0.22), true)
+		draw_rect(Rect2(Vector2(w * 0.58 - drift, h * 0.84), Vector2(w * 0.42, h * 0.045)), Color(0.48, 0.31, 0.64, 0.22), true)
+		var star_i: int = 0
 		for sp in [Vector2(0.40, 0.18), Vector2(0.62, 0.28), Vector2(0.72, 0.50), Vector2(0.30, 0.40)]:
-			_star(Vector2(w * sp.x, h * sp.y), maxf(minf(w, h) * 0.010, 2.5))
+			var a: float = 1.0
+			if _animated:
+				a = 0.40 + 0.60 * (0.5 + 0.5 * sin(_t * 1.1 + float(star_i) * 1.9))
+			_star(Vector2(w * sp.x, h * sp.y), maxf(minf(w, h) * 0.010, 2.5), a)
+			star_i += 1
 
 
-func _star(p: Vector2, rr: float) -> void:
+func _star(p: Vector2, rr: float, alpha: float = 1.0) -> void:
+	var col: Color = Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, alpha)
 	draw_colored_polygon(PackedVector2Array([
-		p + Vector2(0.0, -rr), p + Vector2(rr * 0.5, 0.0), p + Vector2(0.0, rr), p + Vector2(-rr * 0.5, 0.0)]), COL_MOON)
+		p + Vector2(0.0, -rr), p + Vector2(rr * 0.5, 0.0), p + Vector2(0.0, rr), p + Vector2(-rr * 0.5, 0.0)]), col)
 
 
 # Arbre nu : tronc + quelques branches angulaires (silhouette plate).

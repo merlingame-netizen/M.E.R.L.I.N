@@ -2,6 +2,8 @@ extends Control
 ## MerlinMenu — écran-titre, DA flat rétro-minimaliste (mockup validé 2026-05-26).
 ## Gauche : wordmark M·E·R·L·I·N + filet/triskèle + rangée de runes + liste à icônes (focus or).
 ## Droite : scène en silhouettes (MerlinSceneArt). Coins : émblèmes-anneaux. Bas : barre ornementale.
+## Animé (2026-06-10) : entrée en cascade de fondus, triskèle rotative, runes qui respirent,
+## anneaux pulsants, scène vivante (brume/étoiles/halo) + thème ambient celtic (MusicGen) en boucle.
 
 const COL_BG: Color = Color("1E1A14")
 const COL_CREAM: Color = Color("E8DCC0")
@@ -14,11 +16,27 @@ const SELECTION_SCENE: String = "res://scenes/MerlinSelection.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 const OPTIONS_SCENE: String = "res://scenes/MerlinOptions.tscn"
 
-var _rows: Array = []  # [{btn, glyph, lbl, disc, key}]
+const THEME_WAV: String = "res://music/theme/merlin_main_theme.wav"
+const MUSIC_DB: float = -10.0       # volume cible du thème (ambient discret)
+const MUSIC_FADE_IN: float = 3.0    # fondu d'entrée long (ambient)
+const MUSIC_FADE_OUT: float = 0.22  # calé sur MerlinTransition.DUR
+
+var _rows: Array[Dictionary] = []  # [{btn, glyph, lbl, disc, icon_box, pop_tw, key}]
+var _title: Label
+var _tris: MerlinGlyph
+var _runes: Array[MerlinGlyph] = []  # rangée décorative
+var _rings: Array[MerlinRingGauge] = []  # émblèmes des coins
+var _scene_art: MerlinSceneArt
+var _bottom_bar: HBoxContainer
+var _rule_box: HBoxContainer
+var _music: AudioStreamPlayer
 
 
 func _ready() -> void:
 	_build_ui()
+	_setup_music()
+	_animate_entrance()
+	_start_idle_anims()
 	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
@@ -41,15 +59,16 @@ func _build_ui() -> void:
 	add_child(bg)
 
 	# --- Scène en silhouettes à droite (~58%) ---
-	var scene: MerlinSceneArt = MerlinSceneArt.new()
-	scene.anchor_left = 0.42
-	scene.anchor_right = 1.0
-	scene.anchor_top = 0.0
-	scene.anchor_bottom = 1.0
-	scene.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(scene)
-	scene.set_menu_decor(true)
-	scene.set_beat("Rencontre")  # figure encapuchonnée devant la lune
+	_scene_art = MerlinSceneArt.new()
+	_scene_art.anchor_left = 0.42
+	_scene_art.anchor_right = 1.0
+	_scene_art.anchor_top = 0.0
+	_scene_art.anchor_bottom = 1.0
+	_scene_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_scene_art)
+	_scene_art.set_menu_decor(true)
+	_scene_art.set_beat("Rencontre")  # figure encapuchonnée devant la lune
+	_scene_art.set_animated(true)     # scène vivante : brume qui dérive, étoiles, halo de lune
 
 	# --- Colonne gauche ---
 	var left: VBoxContainer = VBoxContainer.new()
@@ -64,27 +83,30 @@ func _build_ui() -> void:
 	left.add_theme_constant_override("separation", 10)
 	add_child(left)
 
-	var title: Label = Label.new()
-	title.text = "M·E·R·L·I·N"
-	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 64)
-	left.add_child(title)
+	_title = Label.new()
+	_title.text = "M·E·R·L·I·N"
+	_title.add_theme_color_override("font_color", COL_GOLD)
+	_title.add_theme_font_size_override("font_size", 64)
+	left.add_child(_title)
 
 	# Filet + triskèle.
-	var rule: HBoxContainer = HBoxContainer.new()
-	rule.add_theme_constant_override("separation", 8)
-	rule.custom_minimum_size = Vector2(0, 22)
-	rule.add_child(_hline())
-	var tris: MerlinGlyph = _icon("triskele", COL_GOLD, Vector2(22, 22), 1.6)
-	rule.add_child(tris)
-	rule.add_child(_hline())
-	left.add_child(rule)
+	_rule_box = HBoxContainer.new()
+	_rule_box.add_theme_constant_override("separation", 8)
+	_rule_box.custom_minimum_size = Vector2(0, 22)
+	_rule_box.add_child(_hline())
+	_tris = _icon("triskele", COL_GOLD, Vector2(22, 22), 1.6)
+	_tris.pivot_offset = Vector2(11, 11)  # rotation autour du centre (22x22)
+	_rule_box.add_child(_tris)
+	_rule_box.add_child(_hline())
+	left.add_child(_rule_box)
 
 	# Rangée de runes décoratives.
 	var runes: HBoxContainer = HBoxContainer.new()
 	runes.add_theme_constant_override("separation", 16)
 	for k in ["rune", "triskele", "burst", "spark", "rift"]:
-		runes.add_child(_icon(k, COL_DIM, Vector2(20, 22), 1.5))
+		var rg: MerlinGlyph = _icon(k, COL_DIM, Vector2(20, 22), 1.5)
+		_runes.append(rg)
+		runes.add_child(rg)
 	left.add_child(runes)
 
 	var gap: Control = Control.new()
@@ -133,6 +155,7 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 	# Icône dans un disque (disque or plein si sélectionné).
 	var icon_box: Control = Control.new()
 	icon_box.custom_minimum_size = Vector2(52, 52)
+	icon_box.pivot_offset = Vector2(26, 26)  # pop de focus centré
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var disc: Panel = Panel.new()
 	disc.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -162,7 +185,7 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 	row.add_child(line)
 	row.add_child(_diamond())
 
-	var data: Dictionary = {"btn": btn, "glyph": g, "lbl": lbl, "disc": disc, "key": glyph_key}
+	var data: Dictionary = {"btn": btn, "glyph": g, "lbl": lbl, "disc": disc, "icon_box": icon_box, "key": glyph_key}
 	_rows.append(data)
 	if enabled:
 		if cb.is_valid():
@@ -177,6 +200,18 @@ func _on_row_focus(data: Dictionary, on: bool) -> void:
 	(data["disc"] as Panel).add_theme_stylebox_override("panel", _disc_style(on))
 	(data["glyph"] as MerlinGlyph).setup(str(data["key"]), COL_BG if on else COL_DIM, 1.8)
 	(data["lbl"] as Label).add_theme_color_override("font_color", COL_GOLD if on else COL_CREAM)
+	if on:
+		# Pop bref du disque (retour visuel ≤100ms — pilier UX §21.1).
+		# Tuer le pop précédent encore en vol (navigation clavier rapide) : évite le wobble.
+		var prev: Tween = data.get("pop_tw") as Tween
+		if prev != null and prev.is_valid():
+			prev.kill()
+		var box: Control = data["icon_box"]
+		box.scale = Vector2.ONE
+		var tw: Tween = create_tween()
+		data["pop_tw"] = tw
+		tw.tween_property(box, "scale", Vector2(1.10, 1.10), 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(box, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _disc_style(selected: bool) -> StyleBoxFlat:
@@ -215,7 +250,8 @@ func _corner_emblem(glyph_key: String, col: Color, is_left: bool) -> void:
 	ring.set_anchors_preset(Control.PRESET_FULL_RECT)
 	ring.setup(col)
 	box.add_child(ring)
-	ring.set_ratio(0.4)
+	ring.set_ratio(0.0)  # balayé 0 → 0.42 par l'animation d'entrée
+	_rings.append(ring)
 	var g: MerlinGlyph = MerlinGlyph.new()
 	g.set_anchors_preset(Control.PRESET_FULL_RECT)
 	g.offset_left = 16
@@ -227,31 +263,31 @@ func _corner_emblem(glyph_key: String, col: Color, is_left: bool) -> void:
 
 
 func _build_bottom_bar() -> void:
-	var bar: HBoxContainer = HBoxContainer.new()
-	bar.anchor_left = 0.0
-	bar.anchor_right = 1.0
-	bar.anchor_top = 1.0
-	bar.anchor_bottom = 1.0
-	bar.offset_left = 36
-	bar.offset_right = -36
-	bar.offset_top = -56
-	bar.offset_bottom = -22
-	bar.add_theme_constant_override("separation", 14)
-	add_child(bar)
+	_bottom_bar = HBoxContainer.new()
+	_bottom_bar.anchor_left = 0.0
+	_bottom_bar.anchor_right = 1.0
+	_bottom_bar.anchor_top = 1.0
+	_bottom_bar.anchor_bottom = 1.0
+	_bottom_bar.offset_left = 36
+	_bottom_bar.offset_right = -36
+	_bottom_bar.offset_top = -56
+	_bottom_bar.offset_bottom = -22
+	_bottom_bar.add_theme_constant_override("separation", 14)
+	add_child(_bottom_bar)
 
-	bar.add_child(_icon("crown", COL_GOLD, Vector2(24, 24), 1.6))
-	bar.add_child(_dots(3))
+	_bottom_bar.add_child(_icon("crown", COL_GOLD, Vector2(24, 24), 1.6))
+	_bottom_bar.add_child(_dots(3))
 	var sp1: Control = Control.new()
 	sp1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(sp1)
-	bar.add_child(_hline())
-	bar.add_child(_icon("compass", COL_GOLD, Vector2(28, 28), 1.6))
-	bar.add_child(_hline())
+	_bottom_bar.add_child(sp1)
+	_bottom_bar.add_child(_hline())
+	_bottom_bar.add_child(_icon("compass", COL_GOLD, Vector2(28, 28), 1.6))
+	_bottom_bar.add_child(_hline())
 	var sp2: Control = Control.new()
 	sp2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(sp2)
-	bar.add_child(_dots(3))
-	bar.add_child(_icon("eye", COL_GOLD, Vector2(24, 24), 1.6))
+	_bottom_bar.add_child(sp2)
+	_bottom_bar.add_child(_dots(3))
+	_bottom_bar.add_child(_icon("eye", COL_GOLD, Vector2(24, 24), 1.6))
 
 
 func _icon(glyph_key: String, col: Color, sz: Vector2, w: float) -> MerlinGlyph:
@@ -306,18 +342,118 @@ func _spaced(s: String) -> String:
 	return out
 
 
+# ============================== ANIMATIONS ==============================
+
+
+## Entrée en cascade : tout démarre invisible puis fond en fondu, du titre vers le bas.
+## Fondus uniquement (pas de slides) : robuste aux re-layouts des containers, DA flat.
+func _animate_entrance() -> void:
+	_fade_in(_title, 0.00, 0.55)
+	_fade_in(_rule_box, 0.18, 0.45)
+	for i in _runes.size():
+		_fade_in(_runes[i], 0.30 + 0.08 * float(i), 0.40)
+	for i in _rows.size():
+		_fade_in(_rows[i]["btn"], 0.55 + 0.07 * float(i), 0.40)
+	_fade_in(_scene_art, 0.10, 0.90)
+	_fade_in(_bottom_bar, 1.00, 0.50)
+	for i in _rings.size():
+		var ring: MerlinRingGauge = _rings[i]
+		var emblem: CanvasItem = ring.get_parent() as CanvasItem
+		if emblem != null:
+			_fade_in(emblem, 0.35 + 0.15 * float(i), 0.45)
+		var tw: Tween = create_tween()
+		tw.tween_interval(0.45 + 0.15 * float(i))
+		tw.tween_method(ring.set_ratio, 0.0, 0.42, 0.85).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_callback(_pulse_ring.bind(ring))
+
+
+func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
+	node.modulate.a = 0.0
+	var tw: Tween = create_tween()
+	tw.tween_interval(maxf(delay, 0.001))
+	tw.tween_property(node, "modulate:a", 1.0, dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## Animations d'attente continues : triskèle rotative, runes qui respirent (déphasées).
+func _start_idle_anims() -> void:
+	var rot: Tween = create_tween().set_loops()
+	rot.tween_property(_tris, "rotation", TAU, 24.0).from(0.0)
+	for i in _runes.size():
+		var tw: Tween = create_tween()
+		tw.tween_interval(1.2 + 0.45 * float(i))  # déphasage : respiration organique, pas mécanique
+		tw.tween_callback(_breathe_glyph.bind(_runes[i]))
+
+
+func _breathe_glyph(g: MerlinGlyph) -> void:
+	var tw: Tween = create_tween().set_loops()
+	tw.tween_property(g, "modulate:a", 0.45, 1.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(g, "modulate:a", 1.0, 1.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Pulsation lente de l'anneau d'un émblème de coin (après le balayage d'entrée).
+func _pulse_ring(ring: MerlinRingGauge) -> void:
+	var tw: Tween = create_tween().set_loops()
+	tw.tween_method(ring.set_ratio, 0.42, 0.30, 3.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(ring.set_ratio, 0.30, 0.42, 3.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+# ============================== MUSIQUE ==============================
+
+
+## Thème principal ambient celtic (généré par MusicGen — tools/musicgen_theme.py),
+## en boucle parfaite (crossfade intégré au WAV) avec long fondu d'entrée.
+func _setup_music() -> void:
+	if not ResourceLoader.exists(THEME_WAV):
+		return  # thème pas encore généré/importé : menu silencieux, pas d'erreur
+	var stream: AudioStream = load(THEME_WAV)
+	if stream == null:
+		return
+	if stream is AudioStreamWAV:
+		var wav: AudioStreamWAV = stream
+		if wav.format == AudioStreamWAV.FORMAT_IMA_ADPCM:
+			# Paquets ADPCM à longueur variable : impossible de calculer loop_end en frames.
+			push_warning("[MerlinMenu] WAV ADPCM : boucle auto non configurée (réimporter en PCM)")
+		else:
+			var bytes_per_sample: int = 2 if wav.format == AudioStreamWAV.FORMAT_16_BITS else 1
+			var channels: int = 2 if wav.stereo else 1
+			wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			wav.loop_begin = 0
+			wav.loop_end = int(wav.data.size() / float(bytes_per_sample * channels))
+	_music = AudioStreamPlayer.new()
+	_music.stream = stream
+	_music.volume_db = -38.0
+	add_child(_music)
+	_music.play()
+	var tw: Tween = create_tween()
+	tw.tween_property(_music, "volume_db", MUSIC_DB, MUSIC_FADE_IN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+## Fondu de sortie calé sur le fondu au noir de MerlinTransition (fire-and-forget).
+func _fade_out_music() -> void:
+	if _music == null or not _music.playing:
+		return
+	var tw: Tween = create_tween()
+	tw.tween_property(_music, "volume_db", -40.0, MUSIC_FADE_OUT).set_trans(Tween.TRANS_SINE)
+
+
+# ============================== NAVIGATION ==============================
+
+
 func _on_new() -> void:
+	_fade_out_music()
 	MerlinTransition.change_scene(SELECTION_SCENE)
 
 
 func _on_continue() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.has_save() and run.load_run():
+		_fade_out_music()
 		MerlinTransition.change_scene(GAME_SCENE)
 
 
 func _on_options() -> void:
 	if ResourceLoader.exists(OPTIONS_SCENE):
+		_fade_out_music()
 		MerlinTransition.change_scene(OPTIONS_SCENE)
 
 
