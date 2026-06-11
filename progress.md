@@ -40,9 +40,32 @@ BIBLE.md=canon, GAME_DESIGN_BIBLE.md=legacy), take_resolution ne bloque jamais.
 - Code-review : 0 CRITICAL ; 3 HIGH corrigés (collision save joueur dans les harnais → backup/
   restore ; _quitting guard ; awaits autoplay). Gate final (soak+autoplay) en arrière-plan.
 
-### À suivre
-- Phase A (MerlinVisual → Prose/PromptBuilder → MerlinFx → WaitStage) + re-soak.
-- Phase B (priorité moteur + B2/B1/B7/B3/B4/B9/B5). Phase V (cascade agents + BIBLE.md + commits).
+### Phase A — Architecture (FAIT, gate vert, commit « refactor(v10.13): phase A »)
+- A1 MerlinVisual (palette canonique, 10 fichiers re-pointés hex-identiques) ; A4 MerlinProse +
+  MerlinPromptBuilder (prompts octet-identiques vérifiés, scenario 984→703) ; A2 MerlinFx (fusion
+  extraite verbatim, tweens auto-liés, game 1483→1135) ; A3 MerlinWaitStage (générique).
+- Gate post-A : validate 0 · smoke · **soak 200/200 + autoplay 3/3** (fusion extraite exercée réel).
+
+### Phase B — Animations + priorité moteur (FAIT, gate vert, commit « feat(v10.13): phase B »)
+- B0 priorité moteur (résolution > arc > opening > épilogue) + cache d'ouverture ; B1 cover boot
+  (menu peint avant le load) ; B2 hint intro ; **B3 interstitiel « le récit s'ouvre »** (ouverture
+  LLM ressuscitée, WaitStage 8s, couvre la gen d'arc, retry à l'Accept) ; B4 path-draw map + stamp
+  glyphe ; B9 sceau de degré (remplace le label inline) ; B7 scène vivante + « Merlin pense » ;
+  B5 draft staggered. Gate : soak 200/200 + autoplay 3/3 à travers l'interstitiel.
+
+### Phase V — Cascade game-design + canon (FAIT, commit « fix(v10.13): phase V »)
+- **Wave 1** : merlin-game-designer (0 CRITICAL/HIGH — PASS structurel, 3 MEDIUM) + audit ux_flow
+  4 piliers (0 CRITICAL, 2 HIGH contrastes). **Tous les HIGH+ et MEDIUMs actionnables corrigés**
+  (E1/E2/F1/F2/M1/M2/P1 save-zombie/P2 diégèse/T1) — preuves visuelles avant/après capturées.
+- **BIBLE.md §18 (canon)** : R108 reprise-début-de-beat, R109 fiabilité MESURÉE (gate soak),
+  R110 priorité moteur, R111 interstitiel, R112 sceau, R113 main jouable + cibles équilibrage v10.14
+  (partiel 55.6%→25-35%, morts 7.5%→10-25%).
+- **GATE FINAL v10.13 : validate 0 · soak 100/100 · autoplay 2/2 · 4 commits poussés.**
+
+### v10.14 (prochain build — décisions verrouillées)
+- Dé PRÉ-TIRÉ par rareté (4 bandes) + anim B8 dans MerlinFx (slot réservé) ; run = chaîne 2-3
+  quêtes de 2-5 beats (recalibrage économie) ; ramification v1 découverte au beat ; soak archétypes
+  5×100 avec cibles chiffrées ; ajustements équilibrage (partiel -2, tags beats 3-4).
 
 ---
 
