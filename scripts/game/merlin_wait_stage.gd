@@ -25,6 +25,7 @@ var _caption: String = ""
 var _skip_text: String = SKIP_TEXT_DEFAULT
 var _skippable: bool = true
 var _cap_ms: int = CAP_MS_DEFAULT
+var _skip_reveal_ms: int = SKIP_REVEAL_MS  # audit ux_flow F1 : révélation du skip paramétrable
 var _skipped: bool = false          # armé par le clic gauche (gui_input) si skippable
 var _caption_lbl: Label = null
 
@@ -46,6 +47,7 @@ static func start(host: Control, opts: Dictionary) -> MerlinWaitStage:
 	var col: Color = opts.get("color", MerlinVisual.GOLD)
 	var with_glow: bool = bool(opts.get("glow", true))
 	var dim_alpha: float = float(opts.get("dim_alpha", 0.0))
+	ws._skip_reveal_ms = int(opts.get("skip_reveal_ms", SKIP_REVEAL_MS))
 	ws.set_anchors_preset(Control.PRESET_FULL_RECT)
 	# Skippable → modal (absorbe les clics pour les recevoir) ; sinon transparent aux clics.
 	ws.mouse_filter = Control.MOUSE_FILTER_STOP if ws._skippable else Control.MOUSE_FILTER_IGNORE
@@ -129,7 +131,7 @@ func wait_until(pred: Callable) -> String:
 			dots = (dots + 1) % 4
 			# Affordance de skip révélée après 4s d'attente (pilier FACILE — pas de gel perçu).
 			var hint: String = ""
-			if _skippable and now - t0 > SKIP_REVEAL_MS:
+			if _skippable and now - t0 > _skip_reveal_ms:
 				hint = "  ·  " + _skip_text
 			_caption_lbl.text = _caption + " " + ".".repeat(dots) + hint
 		await get_tree().process_frame

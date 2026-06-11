@@ -318,6 +318,10 @@ func _set_model_awake() -> void:
 	_model_lbl.modulate.a = 1.0
 	_model_lbl.text = "✦ Merlin veille"
 	_model_lbl.add_theme_color_override("font_color", COL_GOLD)
+	# Audit ux_flow M1 (pilier MINIMAL) : la confirmation est vue 2,5s puis s'efface — pas de badge à vie.
+	var t: Tween = _model_lbl.create_tween()
+	t.tween_interval(2.5)
+	t.tween_property(_model_lbl, "modulate:a", 0.0, 0.8)
 
 
 func _icon(glyph_key: String, col: Color, sz: Vector2, w: float) -> MerlinGlyph:

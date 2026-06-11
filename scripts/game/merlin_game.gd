@@ -68,6 +68,7 @@ var _interstitial_open: bool = false           # B3 : interstitiel actif (entre 
 var _interstitial_wait: MerlinWaitStage = null # B3 : attente animée en cours (skippée par autoplay)
 var _intro_reveal_tw: Tween = null             # B2 : typewriter du pop-up d'intro (kill au clic)
 var _degree_seal: Control = null               # B9 : sceau circulaire de degré (haut-droit encart)
+var _draft_open_ms: int = 0                    # F2 : anti pick-aveugle pendant le deal du draft
 
 
 # v10.13 (Fix 0) — garde canonique post-await : la scène est-elle toujours « fraîche » ?
@@ -410,7 +411,7 @@ func _slam_degree_seal(degree: String) -> void:
 	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	lbl.text = str(DEGREE_SEAL_LABEL.get(degree, "RÉUSSITE"))
 	lbl.add_theme_color_override("font_color", MerlinVisual.CREAM)
-	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.add_theme_font_size_override("font_size", 16)  # §21.5 : minimum 16px (audit ux_flow T1)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -438,6 +439,7 @@ func _clear_degree_seal() -> void:
 func _advance_to_next() -> void:
 	_set_caret(false)
 	_can_advance = false
+	_clear_degree_seal()  # audit ux_flow M2 : le sceau du beat résolu ne flotte pas sur le modal de draft
 	# v10.11 — Draft « 1 carte sur 3 » aux beats clés, AVANT de passer au beat suivant.
 	if _pending_draft:
 		_pending_draft = false
@@ -481,6 +483,7 @@ func _present_draft() -> void:
 
 
 func _build_draft_layer(choices: Array) -> void:
+	_draft_open_ms = Time.get_ticks_msec()  # arme la garde F2 (pas de pick aveugle pendant le deal)
 	var layer: Control = Control.new()
 	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.mouse_filter = Control.MOUSE_FILTER_STOP  # modal : absorbe les clics derrière
@@ -553,15 +556,15 @@ func _stagger_draft_in(title: Control, row: Control, skip_c: Control) -> void:
 
 
 func _on_draft_card(card: MerlinCard) -> void:
-	if _draft_done_flag:
-		return
+	if _draft_done_flag or Time.get_ticks_msec() - _draft_open_ms < 500:
+		return  # audit ux_flow F2 : pas de pick AVEUGLE pendant le deal (contrôles encore à alpha 0)
 	_draft_pick = card
 	_draft_done_flag = true
 
 
 func _on_draft_skip() -> void:
-	if _draft_done_flag:
-		return
+	if _draft_done_flag or Time.get_ticks_msec() - _draft_open_ms < 500:
+		return  # audit ux_flow F2 : idem — un double-clic d'avance ne doit pas skipper sans voir
 	_draft_pick = null
 	_draft_done_flag = true
 
@@ -874,7 +877,9 @@ func _on_run_ended(_end_type: String) -> void:
 		_draft_layer = null
 		_draft_done_flag = true
 	_interstitial_open = false  # hygiène (review MEDIUM B3) : état net pendant la transition de fin
-	get_node("/root/MerlinRun").save()
+	# Audit design P1 : une run TERMINÉE n'a pas de save de reprise — un save ici créait une
+	# « save zombie » (Continuer rechargerait une run finie) si on quittait avant MerlinEnd.
+	get_node("/root/MerlinRun").clear_save()
 	call_deferred("_goto_end")
 
 
@@ -997,7 +1002,8 @@ func _show_intro_popup() -> void:
 
 	# v10.13 (B2) — hint « tout lire » dès le début du typewriter (pilier FACILE, ≤2 gestes :
 	# clic 1 = tout révéler, clic 2 = Accepter). Disparaît au clic ou à la fin de la frappe.
-	var read_hint: Label = MerlinVisual.make_label(MerlinVisual.INK_DIM, MerlinVisual.FS_HINT)
+	# DIM_WARM (clair) sur panneau sombre — INK_DIM était ≈2.4:1, sous le seuil 3:1 (audit ux_flow E1).
+	var read_hint: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
 	read_hint.text = "▶ clic pour tout lire"
 	read_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	read_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1146,7 +1152,7 @@ func _play_opening_interstitial() -> void:
 	if not sc.is_opening_ready() and not sc.is_opening_pending():
 		sc.prefetch_opening(run.scenario)
 	if _beat_header != null:
-		_beat_header.text = "— Merlin raconte —"
+		_beat_header.text = "— le récit s'ouvre —"  # audit design P2 : diégétique (Merlin ne se nomme pas)
 		_beat_header.visible = true
 	_set_encart_phase(Color("6E5A3C"))  # bordure neutre (même teinte que les situations)
 	if _situation_text != null:
@@ -1165,6 +1171,8 @@ func _play_opening_interstitial() -> void:
 		_interstitial_wait = MerlinWaitStage.start(self, {
 			"caption": "Merlin rassemble les fils de l'histoire",
 			"cap_ms": 8000,
+			"dim_alpha": 0.55,       # audit ux_flow E2 : caption or sur l'encart crème ≈1.8:1 → voile sombre
+			"skip_reveal_ms": 1500,  # audit ux_flow F1 : skip révélé à 1.5s (cap court 8s)
 		})
 		var issue: String = await _interstitial_wait.wait_until(func() -> bool: return bool(sc.is_opening_ready()))
 		_interstitial_wait = null

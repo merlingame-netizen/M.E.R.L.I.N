@@ -1342,3 +1342,43 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
 - **Plan B (perf)** : **cascade** — **lookahead agressif** (générer plus loin en avance) + **dégradation propre** (R61) + cibles **'tolérant'** (R58), **sans rien figer** (préserve 'live') ; **modèle plus petit (Q3/~1B)** = dernier recours.
 - **Dette acceptable au MVP** : méta/save légers, peu de polish visuel, 1 seul biome, contenu canon minimal — **JAMAIS le cœur** (LLM natif + résolution + perf restent solides).
 - **Garde-fous de scope** : **s'en tenir strictement au périmètre §16** ; toute idée hors-MVP est **notée 'post-MVP' dans la bible, pas implémentée**.
+
+
+---
+
+## §18 — v10.13 « Fondations prouvées » (2026-06-11) — fiabilité, async, architecture
+
+> Décisions VALIDÉES (plan approuvé user 2026-06-10, gates verts). Source : plan v10.13+v10.14.
+
+- **R108 — Contrat de reprise (précise R73)** : la reprise se fait TOUJOURS au DÉBUT de beat. Un seul
+  point de save en jeu : `_advance_to_next` APRÈS `advance_beat()` (index avancé + carte draftée,
+  atomique) + save à l'Accept (couvre le beat 1) ; les transients (combo, état UI, draft en cours)
+  ne sont JAMAIS persistés. Une run TERMINÉE n'a PAS de save de reprise (pas de « save zombie »).
+  Anti-pattern fondateur : sauver post-résolution avec index non avancé double-appliquait les coûts.
+- **R109 — Fiabilité MESURÉE, pas promise** : le critère « run fiable » = `cli godot soak` —
+  Monte Carlo logique N runs (archétypes optimal/greedy/chaotic/corrompu/tag-ignorant, cas dégénérés,
+  save/resume S5, invariants : fin atteinte, intégrité bornée, main bornée, ids uniques) + autoplay UI
+  complet LLM ON jusqu'à MerlinEnd. Gate de référence : 200/200 + 3/3, 0 SCRIPT ERROR. À RE-PASSER
+  après tout changement du flow de run.
+- **R110 — Priorité moteur single-flight** : `prose de résolution du beat courant > arc > ouverture
+  (interstitiel) > épilogue`. La résolution PRÉEMPTE (cancel + drain) ; les priorités basses ne se
+  lancent que si le moteur est idle et ne préemptent jamais. `take_resolution`/`take_opening` sont
+  CACHE-ONLY : ils ne bloquent jamais — toute attente visible appartient à une animation (sustain de
+  fusion cap 20s, WaitStage cap 8s), TOUJOURS skippable au clic.
+- **R111 — Interstitiel « le récit s'ouvre »** : entre l'Accept et le Beat 1, un moment narratif
+  sert l'ouverture (LLM si le cache l'a gagnée, sinon procédural) et COUVRE la gen d'arc en fond.
+  Libellé diégétique (Merlin ne se nomme pas). ≤2 gestes : clic = tout révéler, clic = Beat 1.
+- **R112 — Sceau de degré** : l'issue affiche le degré par un SCEAU circulaire flat (couleur degré,
+  libellé ÉCHEC/PARTIEL/RÉUSSITE/ÉCLATANTE ≥16px) + micro-secousse sur échec — l'info degré ne vit
+  QUE là (anti « info ×2 » : plus de préfixe dans la prose). « L'échec se lit échec. »
+- **R113 — Invariant main jouable** : à CHAQUE début de beat, la main contient ≥ 2 cartes
+  (`ensure_playable_hand` : repioche → défausse → injection de Communes neutres « Souffle Errant »,
+  Instinct/corruption 0). Une run ne soft-lock JAMAIS sur « combo impossible » (étend R93).
+- **Architecture (référence)** : `MerlinVisual` (palette canonique statique — rebranding = 1 édition),
+  `MerlinFx` (fusion : le layer EST le node, tweens auto-liés), `MerlinWaitStage` (attente animée
+  générique : caption + glow + skip + cap), `MerlinProse`/`MerlinPromptBuilder` (prompts statiques purs,
+  octet-identiques, zéro lecture d'autoload). merlin_game ≈1150 lignes, merlin_scenario ≈700.
+- **Équilibrage v10.14 (mesures soak 2026-06-11, à corriger au prochain build)** : partiel 55.6%
+  (cible 25-35%) et morts 7.5% (cible 10-25%) → durcir le partiel (-2 intégrité) et/ou élargir les
+  tags requis des beats 3-4. Décisions verrouillées v10.14 : dé PRÉ-TIRÉ par rareté (4 bandes),
+  run = chaîne de 2-3 quêtes de 2-5 beats, ramification découverte au beat, 50+ tags différés.
