@@ -11,6 +11,7 @@ const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 
 
 func _ready() -> void:
+	MerlinVisual.load_prefs()  # v10.13.1 — l'état du CheckButton reflète la préférence persistée
 	_build_ui()
 
 
@@ -40,7 +41,12 @@ func _build_ui() -> void:
 	root.add_child(_slider_row("Musique", 70))
 	root.add_child(_slider_row("Effets sonores", 80))
 	root.add_child(_slider_row("Vitesse du texte", 60))
-	root.add_child(_check_row("Réduire les animations / glitch", false))
+	# v10.13.1 — reduce-motion CÂBLÉ (BIBLE §23 R118/R74) : persiste + alimente MerlinVisual.
+	var reduce: CheckButton = _check_row("Réduire les animations / glitch", MerlinVisual.reduced_motion)
+	reduce.toggled.connect(func(on: bool) -> void:
+		MerlinVisual.reduced_motion = on
+		MerlinVisual.save_prefs())
+	root.add_child(reduce)
 	root.add_child(_check_row("Contraste renforcé", false))
 	root.add_child(_check_row("Police lisible (dys)", false))
 
@@ -59,6 +65,7 @@ func _build_ui() -> void:
 	back.custom_minimum_size = Vector2(160, 48)
 	back.pressed.connect(_on_back)
 	root.add_child(back)
+	MerlinVisual.connect_button_feedback(back)  # v10.13.1 — feedback canon §21 `tap`
 
 
 func _slider_row(label: String, value: float) -> HBoxContainer:

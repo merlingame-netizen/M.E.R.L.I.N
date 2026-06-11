@@ -31,6 +31,77 @@ const FS_BTN: int = 26
 const FS_CAPTION: int = 22
 const FS_HINT: int = 20
 
+# ── Vocabulaire d'animation canon (BIBLE §21, R116) — v10.13.1 ──
+const DUR_TAP_DOWN: float = 0.06   # press de bouton (scale 0.97)
+const DUR_TAP_UP: float = 0.10     # relâche (retour 1.0)
+const DUR_FAST: float = 0.12       # hover carte/bouton, reflow d'éventail
+const DUR_UI: float = 0.22         # vol de carte main↔combo (ghost, arc -18px)
+const DUR_DEAL: float = 0.28       # distribution (BACK out)
+const DUR_DISCARD: float = 0.25    # défausse (slide -40px, rot -6°, fade)
+const DUR_VEIL_IN: float = 0.20    # voile de transition de beat (entrée)
+const DUR_VEIL_OUT: float = 0.25   # voile (sortie)
+const STAGGER: float = 0.05        # décalage par carte dans un groupe
+
+# ── Reduce-motion (BIBLE §23 R118 / R74) : atténue, ne supprime JAMAIS l'information ──
+const PREFS_PATH: String = "user://options.cfg"
+static var reduced_motion: bool = false
+
+
+# Facteur de durée global : reduce-motion = durées ÷2 (amplitudes ÷2 côté appelant).
+static func motion() -> float:
+	return 0.5 if reduced_motion else 1.0
+
+
+static func load_prefs() -> void:
+	var cfg: ConfigFile = ConfigFile.new()
+	if cfg.load(PREFS_PATH) == OK:
+		reduced_motion = bool(cfg.get_value("a11y", "reduced_motion", false))
+
+
+static func save_prefs() -> void:
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(PREFS_PATH)  # préserve d'éventuelles autres clés
+	cfg.set_value("a11y", "reduced_motion", reduced_motion)
+	cfg.save(PREFS_PATH)
+
+
+# Feedback canon de bouton (§21 `tap` + `fast`) : press scale 0.97→1.0, hover modulate 1.06.
+# Tweens LIÉS au bouton (btn.create_tween) — jamais orphelins. Idempotent par bouton via meta.
+static func connect_button_feedback(btn: BaseButton) -> void:
+	if btn == null or btn.has_meta("_fx_feedback"):
+		return
+	btn.set_meta("_fx_feedback", true)
+	btn.pivot_offset = btn.size / 2.0
+	btn.resized.connect(func() -> void: btn.pivot_offset = btn.size / 2.0)
+	btn.button_down.connect(func() -> void: _btn_scale(btn, 0.97, DUR_TAP_DOWN))
+	btn.button_up.connect(func() -> void: _btn_scale(btn, 1.0, DUR_TAP_UP))
+	btn.mouse_entered.connect(func() -> void: _btn_tint(btn, Color(1.06, 1.06, 1.06, 1.0)))
+	btn.mouse_exited.connect(func() -> void: _btn_tint(btn, Color(1, 1, 1, 1)))
+
+
+static func _btn_scale(btn: Control, target: float, dur: float) -> void:
+	if not is_instance_valid(btn) or not btn.is_inside_tree():
+		return
+	if btn.has_meta("_fx_tw_scale"):
+		var prev: Tween = btn.get_meta("_fx_tw_scale")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	var t: Tween = btn.create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.tween_property(btn, "scale", Vector2(target, target), dur * motion())
+	btn.set_meta("_fx_tw_scale", t)
+
+
+static func _btn_tint(btn: Control, target: Color) -> void:
+	if not is_instance_valid(btn) or not btn.is_inside_tree():
+		return
+	if btn.has_meta("_fx_tw_tint"):
+		var prev: Tween = btn.get_meta("_fx_tw_tint")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	var t: Tween = btn.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.tween_property(btn, "modulate", target, DUR_FAST * motion())
+	btn.set_meta("_fx_tw_tint", t)
+
 
 # Couleur de degré — LISIBLE sur la bande crème (source : merlin_game._degree_color).
 static func degree_color(degree: String) -> Color:

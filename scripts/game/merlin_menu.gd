@@ -35,6 +35,7 @@ var _model_pulse_tw: Tween = null # pulse discret pendant le chargement (modulat
 
 
 func _ready() -> void:
+	MerlinVisual.load_prefs()  # v10.13.1 — préférences a11y (reduce-motion) chargées dès l'entrée
 	_build_ui()
 	_setup_music()
 	_animate_entrance()
