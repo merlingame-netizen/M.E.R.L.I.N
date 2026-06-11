@@ -79,6 +79,18 @@ func _play_one(k: int) -> bool:
 			break  # scène libérée → bascule vers MerlinEnd en cours
 		if run.ended:
 			break
+		# v10.13 (B3) — Interstitiel « Merlin raconte » (entre Accept et Beat 1) : skip de
+		# l'attente animée (WaitStage), du typewriter, puis avance vers le Beat 1.
+		if game._interstitial_open:
+			if game._interstitial_wait != null and is_instance_valid(game._interstitial_wait):
+				game._interstitial_wait._skipped = true  # clic simulé sur le WaitStage
+			elif game._tw != null and game._tw.is_valid():
+				game._skip_typewriter()
+			elif game._can_advance:
+				game._end_interstitial()
+				print("[AUTOPLAY] run#%d — interstitiel passé" % k)
+			await process_frame
+			continue
 		# Modal draft ouvert ? Choisir ou passer.
 		if game._draft_layer != null:
 			await create_timer(0.4).timeout

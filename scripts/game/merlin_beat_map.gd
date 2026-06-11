@@ -26,6 +26,13 @@ var _total: int = 0
 var _current: int = 0
 var _draft_marks: Dictionary = {}   # index de beat → déviation draftée
 
+# v10.13 (B4) — path-draw : le connecteur fraîchement parcouru POUSSE (0→1 en 0.6s) puis le halo
+# « tu es ici » fait un pop. set_current reste INSTANTANÉ (resume / init).
+var _growth: float = 1.0        # progression du connecteur _growth_idx (1.0 = trait complet)
+var _growth_idx: int = -1       # index du connecteur en cours d'animation (_current-1 → _current)
+var _halo_scale: float = 1.0    # pop du halo à l'arrivée (1.7 → 1.0 TRANS_BACK)
+var _adv_tw: Tween = null
+
 
 func setup(total: int) -> void:
 	_total = maxi(total, 1)
@@ -35,6 +42,40 @@ func setup(total: int) -> void:
 
 func set_current(idx: int) -> void:
 	_current = clampi(idx, 0, maxi(_total - 1, 0))
+	# Instantané : tue toute animation d'avancée résiduelle (resume → état net).
+	if _adv_tw != null and _adv_tw.is_valid():
+		_adv_tw.kill()
+	_growth = 1.0
+	_growth_idx = -1
+	_halo_scale = 1.0
+	queue_redraw()
+
+
+# v10.13 (B4) — Avancée ANIMÉE : le connecteur (idx-1 → idx) se dessine (pousse) en 0.6s,
+# puis le halo « tu es ici » pop (0.25s). Idempotent : même index → set_current instantané.
+func animate_advance(idx: int) -> void:
+	var target: int = clampi(idx, 0, maxi(_total - 1, 0))
+	if target == _current or target <= 0:
+		set_current(target)
+		return
+	_current = target
+	_growth_idx = target - 1
+	_growth = 0.0
+	_halo_scale = 1.0
+	if _adv_tw != null and _adv_tw.is_valid():
+		_adv_tw.kill()
+	_adv_tw = create_tween()
+	_adv_tw.tween_method(_set_growth, 0.0, 1.0, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_adv_tw.tween_method(_set_halo_scale, 1.7, 1.0, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _set_growth(v: float) -> void:
+	_growth = v
+	queue_redraw()
+
+
+func _set_halo_scale(v: float) -> void:
+	_halo_scale = v
 	queue_redraw()
 
 
@@ -61,9 +102,18 @@ func _draw() -> void:
 	if font != null:
 		draw_string(font, Vector2(0.0, 26.0), "CHEMIN", HORIZONTAL_ALIGNMENT_CENTER, sz.x, 14, COL_GOLD)
 	# Connecteurs du sentier : déjà parcouru = encre, à-venir = encre claire.
+	# v10.13 (B4) : le dernier connecteur parcouru POUSSE (path-draw) — trait encre p0→lerp(_growth)
+	# par-dessus le trait estompé complet.
 	for i in range(_total - 1):
-		var col: Color = COL_INK if i < _current else COL_DIM
-		draw_line(_node_pos(i), _node_pos(i + 1), col, 3.0)
+		var p0: Vector2 = _node_pos(i)
+		var p1: Vector2 = _node_pos(i + 1)
+		if i == _growth_idx and _growth < 1.0:
+			draw_line(p0, p1, COL_DIM, 3.0)
+			if _growth > 0.0:
+				draw_line(p0, p0.lerp(p1, _growth), COL_INK, 3.0)
+		else:
+			var col: Color = COL_INK if i < _current else COL_DIM
+			draw_line(p0, p1, col, 3.0)
 	# Nœuds.
 	for i in _total:
 		var p: Vector2 = _node_pos(i)
@@ -75,9 +125,10 @@ func _draw() -> void:
 		if i < _current:
 			draw_circle(p, NODE_R, COL_INK)                 # passé (plein encre)
 		elif i == _current:
-			draw_circle(p, NODE_R_CUR + 3.0, COL_GOLD)      # halo « tu es ici »
-			draw_circle(p, NODE_R_CUR, COL_PANEL)
-			draw_circle(p, NODE_R_CUR - 3.0, COL_GOLD)
+			# v10.13 (B4) : _halo_scale anime le pop d'arrivée (1.7 → 1.0), 1.0 au repos.
+			draw_circle(p, (NODE_R_CUR + 3.0) * _halo_scale, COL_GOLD)      # halo « tu es ici »
+			draw_circle(p, NODE_R_CUR * _halo_scale, COL_PANEL)
+			draw_circle(p, maxf((NODE_R_CUR - 3.0) * _halo_scale, 1.0), COL_GOLD)
 		else:
 			draw_circle(p, NODE_R, COL_DIM)                 # à venir (anneau)
 			draw_circle(p, NODE_R - 2.0, COL_FUTURE)

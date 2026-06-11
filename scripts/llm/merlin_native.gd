@@ -64,6 +64,9 @@ func _ready() -> void:
 
 
 func _boot() -> void:
+	# v10.13 (B1) : laisse le 1er frame PEINDRE (le menu s'affiche) avant le load bloquant 1-3s
+	# du modèle — sans ça l'app reste sur un écran noir pendant tout le chargement.
+	await RenderingServer.frame_post_draw
 	if not ClassDB.class_exists("MerlinLLM"):
 		push_error("[MerlinNative] GDExtension MerlinLLM absente (DLL non chargée ?)")
 		emit_signal("model_failed", "GDExtension MerlinLLM absente")

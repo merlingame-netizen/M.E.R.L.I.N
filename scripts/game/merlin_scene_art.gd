@@ -13,8 +13,16 @@ const COL_MIST: Color = Color(0.79, 0.72, 0.58, 0.16)  # brume tan translucide
 
 var _beat: String = "Exploration"
 var _menu_decor: bool = false  # menu : brume teintée faction (vert/violet) + étoiles
-var _animated: bool = false    # menu : scène « vivante » (brume qui dérive, étoiles, halo de lune)
+var _animated: bool = false    # scène « vivante » (brume qui dérive, étoiles, halo de lune)
 var _t: float = 0.0
+
+# v10.13 (B7) — « Merlin pense » : signal HONNÊTE d'activité du moteur natif. Quand on : le halo
+# de lune respire plus vite + une mote or plate orbite le menhir. Phase ACCUMULÉE (pas de saut
+# visuel quand la vitesse change en cours de respiration).
+const HALO_SPEED_IDLE: float = 0.45
+const HALO_SPEED_THINK: float = 1.6
+var _thinking: bool = false
+var _halo_phase: float = 0.0
 
 
 func set_beat(beat_type: String) -> void:
@@ -27,15 +35,24 @@ func set_menu_decor(on: bool) -> void:
 	queue_redraw()
 
 
-## Anime la scène en continu (opt-in, utilisé par le menu uniquement — le jeu reste statique).
+## Anime la scène en continu (opt-in — menu depuis 2026-06-10, jeu depuis v10.13 B7).
 func set_animated(on: bool) -> void:
 	_animated = on
 	set_process(on)
 	queue_redraw()
 
 
+## v10.13 (B7) — « Merlin pense » : halo accéléré + mote or en orbite tant que le moteur écrit.
+func set_thinking(on: bool) -> void:
+	if on == _thinking:
+		return
+	_thinking = on
+	queue_redraw()
+
+
 func _process(delta: float) -> void:
 	_t += delta
+	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
 	queue_redraw()
 
 
@@ -55,11 +72,13 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, s), COL_SCENE_BG, true)
 
 	# Lune (cercle crème), haut-centre. En mode animé : halo qui respire très lentement.
+	# v10.13 (B7) : la phase est accumulée dans _process → la respiration ACCÉLÈRE sans saut
+	# quand « Merlin pense » (set_thinking), et reprend son rythme lent au repos.
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40)
 	var moon_r: float = minf(w, h) * 0.13
 	if _animated:
-		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_t * 0.45))
-		var halo_a: float = 0.05 + 0.025 * (0.5 + 0.5 * sin(_t * 0.45))
+		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_halo_phase))
+		var halo_a: float = 0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))
 		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 	draw_circle(moon_c, moon_r, COL_MOON)
 
@@ -71,6 +90,13 @@ func _draw() -> void:
 
 	# Menhir gravé d'oghams (droite du centre).
 	_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40))
+
+	# v10.13 (B7) — « Merlin pense » : une mote or plate orbite le menhir pendant que le moteur
+	# écrit (orbite elliptique = profondeur suggérée, DA flat : simple cercle plein, zéro dégradé).
+	if _thinking and _animated:
+		var menhir_c: Vector2 = Vector2(w * 0.686, h * 0.66)
+		var mote: Vector2 = menhir_c + Vector2(cos(_t * 2.2) * w * 0.045, sin(_t * 2.2) * h * 0.10)
+		draw_circle(mote, maxf(minf(w, h) * 0.008, 2.5), MerlinVisual.GOLD)
 
 	# Motif central : figure encapuchonnée devant la lune (Rencontre/Climax/Dilemme).
 	if _beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme":

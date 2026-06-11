@@ -10,6 +10,15 @@ extends Node
 ## - GBNF cassé sur ce gemma4 → non utilisé. Le CODE possède la STRUCTURE
 ##   (beats, types, difficulté, required_tags) ; le LLM n'écrit que de la PROSE.
 ## - Sélection = seul ~JSON, pré-généré pendant l'idle du Menu (latence masquée).
+##
+## PRIORITÉ MOTEUR (v10.13 B0) — le moteur natif est SINGLE-FLIGHT ; hiérarchie des générations :
+##   1. PROSE DE RÉSOLUTION du beat courant — la seule que le joueur attend activement.
+##      prefetch_resolution PRÉEMPTE : cancel + drain de toute gen en vol à la pose (Fix 3/8).
+##   2. ARC narratif (prepare_arc) — fire-and-forget, swap seulement si arc non verrouillé.
+##   3. OUVERTURE (interstitiel « Merlin raconte », B3) — prefetch_opening, cache _opening_*.
+##   4. ÉPILOGUE (merlin_end) — enrichissement de fond, jamais attendu.
+## RÈGLE : une gen de priorité BASSE (opening, épilogue) ne se LANCE que si engine_idle() ;
+## elle ne préempte JAMAIS. Seule la résolution (1) cancel ce qui occupe le moteur.
 
 # A4 : les préfixes système (SYSTEM_PREFIX, MERLIN_VOICE_PREFIX, TAG_CUE, MAX_TOK_PROSE) et
 # l'ASSEMBLAGE de tous les prompts vivent dans MerlinPromptBuilder (statique pur, prompts
@@ -153,6 +162,13 @@ var _reso_sig: String = ""         # signature actuellement en génération
 var _reso_state: String = "idle"   # idle / running / ready
 var _reso_epoch: int = 0
 
+# --- Pré-génération OUVERTURE (v10.13 B0/B3) — pattern _sel_* ---
+# Lancée à l'ouverture du pop-up d'intro (merlin_game._show_intro_popup) SI le moteur est idle ;
+# consommée par l'interstitiel « Merlin raconte » (take_opening, cache-only). Priorité moteur 3.
+var _opening_cache: String = ""
+var _opening_state: String = "idle"   # idle / running / ready
+var _opening_epoch: int = 0
+
 # --- FIL ROUGE DU SCÉNARIO (continuité inter-beats, user 2026-06-06) ---
 # Capturé au skeleton (titre + pitch = enjeu SPÉCIFIQUE du scénario), enrichi à chaque beat
 # résolu (last_gist = résultat du beat précédent). Injecté dans le prompt d'issue pour que la
@@ -177,6 +193,13 @@ func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:
 
 func _mn() -> Node:
 	return get_node_or_null("/root/MerlinNative")
+
+
+# v10.13 (B0) — vrai si le moteur natif est prêt ET libre. Gate des générations de priorité
+# basse (opening, épilogue) : elles ne se lancent que sur un moteur idle, jamais en préemption.
+func engine_idle() -> bool:
+	var mn: Node = _mn()
+	return mn != null and mn.is_ready() and not mn.is_busy()
 
 
 # --- PERSONA MERLIN (câblage de l'existant : data/ai/config/merlin_persona.json) ---
@@ -381,16 +404,56 @@ func build_opening(scenario: Dictionary, with_pitch: bool = true) -> String:
 
 
 # Ouverture LLM (arrière-plan) : lance VRAIMENT l'histoire de CE scénario en 3-4 phrases. "" si moteur KO.
+# v10.13 (B0) : priorité BASSE — ne se lance que si le moteur est idle (jamais de préemption).
 func narrate_opening(scenario: Dictionary) -> String:
-	var mn: Node = _mn()
-	if mn == null or not mn.is_ready():
+	if not engine_idle():
 		return ""
+	var mn: Node = _mn()
 	var p: Dictionary = MerlinPromptBuilder.opening(scenario)
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return ""
 	var s: String = MerlinProse.clean_prose(str(r.get("text", "")).strip_edges())
 	return s if s.length() >= 10 else ""
+
+
+# v10.13 (B0/B3) — Pré-génère l'ouverture en arrière-plan (pattern _sel_*). RAZ inconditionnelle
+# du cache (l'ouverture est PAR-SCÉNARIO — jamais servir celle d'un run précédent), puis lance
+# narrate_opening SEULEMENT si le moteur est idle (priorité basse : l'arc/la résolution passent
+# devant). L'interstitiel « Merlin raconte » consommera via take_opening (cache-only).
+func prefetch_opening(scenario: Dictionary) -> void:
+	_opening_epoch += 1
+	var epoch: int = _opening_epoch
+	_opening_cache = ""
+	_opening_state = "idle"
+	if not engine_idle():
+		return  # moteur occupé (arc/intro en vol) → l'interstitiel servira le procédural
+	_opening_state = "running"
+	var prose: String = await narrate_opening(scenario)
+	if epoch != _opening_epoch:
+		return  # un prefetch plus récent a pris la main — résultat périmé, ne rien écraser
+	if prose.length() >= 10:
+		_opening_cache = prose
+		_opening_state = "ready"
+	else:
+		_opening_state = "idle"  # échec/cancel moteur → l'appelant retombe sur build_opening
+
+
+# Récupère l'ouverture pré-générée — CACHE-ONLY, ne bloque jamais ("" si pas prête : l'appelant
+# sert build_opening procédural). Contrat identique à take_resolution (v10.13 Fix 3).
+func take_opening() -> String:
+	return _opening_cache
+
+
+# Vrai si l'ouverture LLM est prête à afficher (l'interstitiel saute alors l'attente animée).
+func is_opening_ready() -> bool:
+	return _opening_state == "ready" and _opening_cache.length() >= 10
+
+
+# Vrai si une gen d'ouverture est EN VOL — l'appelant ne doit alors PAS relancer prefetch_opening
+# (sa RAZ inconditionnelle écraserait la gen en cours). (review HIGH B3)
+func is_opening_pending() -> bool:
+	return _opening_state == "running"
 
 
 # --- 3) SITUATION : le CODE choisit required_tags + une narration procédurale (INSTANT) ;
@@ -676,9 +739,10 @@ func note_outcome(res: Dictionary) -> void:
 # --- 5) ÉPILOGUE (fin de run, R69) : LLM, "" si échec → l'appelant garde le procédural. ---
 # Voix MERLIN qui referme l'aventure pour le Voyageur, avec souvenir intra-run câblé (user 2026-05-29).
 func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
-	var mn: Node = _mn()
-	if mn == null or not mn.is_ready():
+	# v10.13 (B0) : priorité BASSE — ne se lance que si le moteur est idle ("" → procédural conservé).
+	if not engine_idle():
 		return ""
+	var mn: Node = _mn()
 	var p: Dictionary = MerlinPromptBuilder.epilogue(_voice_prefix(), end_type, _build_memory_hint())
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):

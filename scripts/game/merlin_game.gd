@@ -63,6 +63,12 @@ var _draft_layer: Control = null         # overlay modal du draft
 var _draft_pick: MerlinCard = null       # carte choisie (null = passer)
 var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer)
 
+# v10.13 (Phase B) — interstitiel « Merlin raconte » (B3), hint intro (B2), sceau de degré (B9).
+var _interstitial_open: bool = false           # B3 : interstitiel actif (entre Accept et Beat 1)
+var _interstitial_wait: MerlinWaitStage = null # B3 : attente animée en cours (skippée par autoplay)
+var _intro_reveal_tw: Tween = null             # B2 : typewriter du pop-up d'intro (kill au clic)
+var _degree_seal: Control = null               # B9 : sceau circulaire de degré (haut-droit encart)
+
 
 # v10.13 (Fix 0) — garde canonique post-await : la scène est-elle toujours « fraîche » ?
 # Toute coroutine qui reprend après un await DOIT vérifier _fresh(ep) avant de toucher l'UI.
@@ -101,8 +107,13 @@ func _present_current_beat() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.ended:
 		return
+	_interstitial_open = false  # v10.13 (B3) : défense — l'interstitiel est forcément clos ici
+	_clear_degree_seal()        # v10.13 (B9) : le sceau du beat précédent ne survit pas au suivant
 	if _beat_map != null:  # v10.12 : avance la position « tu es ici » sur la map du chemin
-		_beat_map.set_current(run.beat_index)
+		if run.beat_index > 0:
+			_beat_map.animate_advance(run.beat_index)  # v10.13 (B4) : le connecteur POUSSE + pop du halo
+		else:
+			_beat_map.set_current(run.beat_index)
 	_scene_epoch += 1  # toute issue LLM en vol du beat précédent devient périmée
 	_can_advance = false
 	_set_caret(false)
@@ -128,6 +139,7 @@ func _present_current_beat() -> void:
 			_situ_tw.kill()  # évite la course si un beat enchaîne avant la fin du fondu
 		_situ_tw = _situ_panel.create_tween()
 		_situ_tw.tween_property(_situ_panel, "modulate:a", 1.0, 0.22)
+	_stamp_beat_glyph(str(_current_situation.get("type", "")))  # v10.13 (B4) : sceau du type de beat
 	_show_situation(_current_situation)
 	_state = 1
 
@@ -141,6 +153,33 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		_beat_header.text = "— %s · beat %d/%d —" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
 		_beat_header.visible = true
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
+
+
+# v10.13 (B4) — Stamp du glyphe type-de-beat au centre de l'encart : fade-in 0.3s puis fade-out
+# 0.3s pendant que le typewriter démarre (le sceau se dissout sous la prose naissante).
+# Mapping LOCAL type → clé MerlinGlyph (TYPE_TAG_BIAS donnerait des doublons Epreuve/Climax).
+const BEAT_GLYPHS: Dictionary = {
+	"Exploration": "eye", "Rencontre": "speech", "Epreuve": "sword",
+	"Dilemme": "balance", "Climax": "burst",
+}
+
+
+func _stamp_beat_glyph(btype: String) -> void:
+	if _situ_panel == null:
+		return
+	var g: MerlinGlyph = MerlinGlyph.new()
+	g.custom_minimum_size = Vector2(72, 72)
+	g.size = Vector2(72, 72)
+	g.setup(str(BEAT_GLYPHS.get(btype, "eye")), MerlinVisual.GOLD_DARK, 3.0)
+	g.z_index = 40
+	add_child(g)
+	g.global_position = _situ_panel.global_position + _situ_panel.size * 0.5 - g.size * 0.5
+	g.modulate.a = 0.0
+	# Tween lié au glyphe (create_tween d'un Control) → meurt avec lui, jamais orphelin.
+	var tw: Tween = g.create_tween()
+	tw.tween_property(g, "modulate:a", 0.85, 0.3)
+	tw.tween_property(g, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(g.queue_free)
 
 
 func _render_hand(deal: bool = false) -> void:
@@ -329,15 +368,71 @@ func _on_resolve() -> void:
 
 
 func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:
-	var deg_col: Color = _degree_color(str(res["degree"]))
+	var degree: String = str(res["degree"])
+	var deg_col: Color = _degree_color(degree)
 	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)
 	if _beat_header != null:
 		_beat_header.visible = false  # l'issue parle d'elle-même ; pas de marqueur de beat
 	if animate:
 		_situation_text.text = ""
-	_typewriter("[center][color=#%s]%s[/color]\n\n%s[/center]" % [deg_col.to_html(false), str(res["label"]), narration], animate)
+	# v10.13 (B9) : le degré ne préfixe PLUS la prose (anti « info ×2 ») — il vit dans le SCEAU
+	# slammé en haut-droit de l'encart. Le typewriter ne porte que la prose, seule.
+	_typewriter("[center]%s[/center]" % narration, animate)
+	_slam_degree_seal(degree)
 	if animate:
 		_pop(_situation_text, 1.03)  # léger "thump" à la révélation de l'issue
+
+
+# v10.13 (B9) — Sceau de degré : cercle flat (fond = MerlinVisual.degree_color), libellé CREAM,
+# slam scale 2.2 → 1.0 (TRANS_BACK 0.3s) en haut-droit de l'encart ; micro-secousse si échec.
+# Décalé du bord droit pour ne pas chevaucher la map CHEMIN. Nettoyé à _present_current_beat.
+const DEGREE_SEAL_LABEL: Dictionary = {
+	"echec": "ÉCHEC", "partiel": "PARTIEL", "reussite": "RÉUSSITE", "eclatante": "ÉCLATANTE",
+}
+const SEAL_D: float = 96.0  # diamètre du sceau (≥44 px — non cliquable mais lisible)
+
+
+func _slam_degree_seal(degree: String) -> void:
+	_clear_degree_seal()
+	if _situ_panel == null:
+		return
+	var seal: Panel = Panel.new()
+	seal.custom_minimum_size = Vector2(SEAL_D, SEAL_D)
+	seal.size = Vector2(SEAL_D, SEAL_D)
+	seal.pivot_offset = Vector2(SEAL_D, SEAL_D) * 0.5
+	seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	seal.z_index = 60
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = MerlinVisual.degree_color(degree)
+	sb.set_corner_radius_all(int(SEAL_D * 0.5))  # cercle plein flat (DA : zéro dégradé)
+	seal.add_theme_stylebox_override("panel", sb)
+	var lbl: Label = Label.new()
+	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lbl.text = str(DEGREE_SEAL_LABEL.get(degree, "RÉUSSITE"))
+	lbl.add_theme_color_override("font_color", MerlinVisual.CREAM)
+	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	seal.add_child(lbl)
+	add_child(seal)
+	# Haut-droit de l'encart, inset 150 px depuis le bord droit → ne recouvre pas la map CHEMIN
+	# (ancrée au bord droit de l'écran, largeur 120 + 24 d'inset).
+	seal.global_position = _situ_panel.global_position + Vector2(_situ_panel.size.x - SEAL_D - 150.0, 14.0)
+	_degree_seal = seal
+	seal.scale = Vector2(2.2, 2.2)
+	seal.modulate.a = 0.0
+	var tw: Tween = seal.create_tween().set_parallel(true)
+	tw.tween_property(seal, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(seal, "modulate:a", 1.0, 0.15)
+	if degree == "echec":
+		MerlinFx.shake(_situ_panel, 4.0, 0.25)  # micro-secousse : l'échec se SENT (B9)
+
+
+func _clear_degree_seal() -> void:
+	if _degree_seal != null and is_instance_valid(_degree_seal):
+		_degree_seal.queue_free()
+	_degree_seal = null
 
 
 func _advance_to_next() -> void:
@@ -426,6 +521,35 @@ func _build_draft_layer(choices: Array) -> void:
 	box.add_child(skip_center)
 	add_child(layer)
 	_draft_layer = layer
+	_stagger_draft_in(title, row, skip_center)  # v10.13 (B5) : entrée staggered (titre→cartes→Passer)
+
+
+# v10.13 (B5) — Entrée staggered du draft : titre fade 0.2s, cartes deal_in en cascade (0.12s/i),
+# bouton Passer fade 0.3s en dernier. Attend 1 frame que le HBox pose les cartes : deal_in anime
+# vers _base_pos, qu'on fige sur la position container via set_fan_transform (sinon base = ZERO).
+func _stagger_draft_in(title: Control, row: Control, skip_c: Control) -> void:
+	title.modulate.a = 0.0
+	skip_c.modulate.a = 0.0
+	var cards: Array = []
+	for c in row.get_children():
+		if c is MerlinCardView:
+			(c as Control).modulate.a = 0.0  # invisibles jusqu'au deal_in (pas de flash 1 frame)
+			cards.append(c)
+	var t_title: Tween = title.create_tween()
+	t_title.tween_property(title, "modulate:a", 1.0, 0.2)
+	await get_tree().process_frame  # layout du HBox posé → positions container valides
+	if _draft_layer == null or not is_instance_valid(row) or not is_inside_tree():
+		return  # draft déjà refermé (run terminée / scène quittée pendant la frame)
+	for i in cards.size():
+		var cv: MerlinCardView = cards[i]
+		if not is_instance_valid(cv):
+			continue
+		cv.modulate.a = 1.0  # deal_in gère son propre fondu depuis 0
+		cv.set_fan_transform(cv.position, 0.0)  # fige la position container comme base du deal
+		cv.deal_in(0.20 + 0.12 * float(i))
+	var t_skip: Tween = skip_c.create_tween()
+	t_skip.tween_interval(0.20 + 0.12 * float(cards.size()))
+	t_skip.tween_property(skip_c, "modulate:a", 1.0, 0.3)
 
 
 func _on_draft_card(card: MerlinCard) -> void:
@@ -460,8 +584,8 @@ func _build_beat_map() -> void:
 # Clic sur la zone récit (scène/narration). Pendant la frappe → révèle tout le texte ;
 # une fois l'issue entièrement écrite → passe au beat suivant. (Demande user 2026-05-26.)
 func _on_story_click(event: InputEvent) -> void:
-	if _intro_open or _draft_layer != null:
-		return
+	if _intro_open or _draft_layer != null or _interstitial_open:
+		return  # interstitiel (B3) : clics gérés par _input (skip/avance) ou par le WaitStage
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
 	if _tw != null and _tw.is_valid():
@@ -479,6 +603,13 @@ func _skip_typewriter() -> void:
 
 
 func _on_typewriter_done() -> void:
+	# v10.13 (B3) : ouverture de l'interstitiel entièrement écrite → clic = présenter le Beat 1.
+	if _interstitial_open:
+		_can_advance = true
+		if _caret != null:
+			_caret.text = "▮ cliquer pour continuer"
+		_set_caret(true)
+		return
 	if _state == 2:
 		# Issue entièrement écrite → avance au clic + caret « continuer » clignotant.
 		_can_advance = true
@@ -668,6 +799,17 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if _intro_open or _draft_layer != null:
 			return  # le draft est modal : ses clics sont gérés par l'overlay, pas par l'avance de beat
+		# v10.13 (B3) — interstitiel « Merlin raconte » : clic = skip typewriter, puis avance Beat 1.
+		if _interstitial_open:
+			if _interstitial_wait != null:
+				return  # le WaitStage (modal) gère son propre clic-skip
+			if _tw != null and _tw.is_valid():
+				_skip_typewriter()
+				get_viewport().set_input_as_handled()
+			elif _can_advance:
+				_end_interstitial()
+				get_viewport().set_input_as_handled()
+			return
 		if _state == 2:
 			if _tw != null and _tw.is_valid():
 				_skip_typewriter()
@@ -731,6 +873,7 @@ func _on_run_ended(_end_type: String) -> void:
 		_draft_layer.queue_free()
 		_draft_layer = null
 		_draft_done_flag = true
+	_interstitial_open = false  # hygiène (review MEDIUM B3) : état net pendant la transition de fin
 	get_node("/root/MerlinRun").save()
 	call_deferred("_goto_end")
 
@@ -755,7 +898,7 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 	if n <= 0:
 		_on_typewriter_done()
 		return
-	if _state == 1 or _state == 2:
+	if _state == 1 or _state == 2 or _interstitial_open:
 		_show_skip_hint()  # affordance « clic = passer » visible DÈS le début (user 2026-06-07)
 	_tw = create_tween()
 	_tw.tween_property(_situation_text, "visible_characters", n, clampf(float(n) / 60.0, 0.4, 5.0))
@@ -816,11 +959,13 @@ func _show_intro_popup() -> void:
 	sb.border_width_top = 3
 	sb.set_content_margin_all(20)
 	bandeau.add_theme_stylebox_override("panel", sb)
+	bandeau.mouse_filter = Control.MOUSE_FILTER_PASS  # v10.13 (B2) : le clic remonte au layer (skip)
 	_intro_layer.add_child(bandeau)
 
 	# Layout vertical : titre + intro (scroll si long) + ligne objectif/accepter.
 	var v: VBoxContainer = VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
+	v.mouse_filter = Control.MOUSE_FILTER_PASS  # v10.13 (B2) : idem — propagation vers _intro_layer
 	bandeau.add_child(v)
 
 	var title: Label = Label.new()
@@ -844,14 +989,37 @@ func _show_intro_popup() -> void:
 	intro_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_lbl.add_theme_color_override("default_color", COL_TEXT)
 	intro_lbl.add_theme_font_size_override("normal_font_size", 26)  # commentaire Merlin lisible (user 2026-06-06)
+	intro_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE  # v10.13 (B2) : le clic atteint le layer
 	mid.add_child(intro_lbl)
-	# v10.8 (user 2026-06-06) : Merlin t'accueille PUIS l'ouverture narrative qui lance l'histoire et
-	# coule dans le Beat 1. Pitch déjà présent dans la greeting → with_pitch=false (pas de doublon).
-	var opening: String = get_node("/root/MerlinScenario").build_opening(run.scenario, false)
+	# v10.13 (B3) : l'ouverture narrative ne vit PLUS dans le pop-up — elle est portée par
+	# l'interstitiel « Merlin raconte » après l'Accept (anti « info ×2 »). Pop-up = greeting seul.
 	var intro_text: String = str(data.get("intro", ""))
-	if opening.strip_edges() != "":
-		intro_text += "\n\n— · —\n\n" + opening
-	_reveal_into(intro_lbl, intro_text)
+
+	# v10.13 (B2) — hint « tout lire » dès le début du typewriter (pilier FACILE, ≤2 gestes :
+	# clic 1 = tout révéler, clic 2 = Accepter). Disparaît au clic ou à la fin de la frappe.
+	var read_hint: Label = MerlinVisual.make_label(MerlinVisual.INK_DIM, MerlinVisual.FS_HINT)
+	read_hint.text = "▶ clic pour tout lire"
+	read_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	read_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(read_hint)
+
+	_intro_reveal_tw = _reveal_into(intro_lbl, intro_text)
+	if _intro_reveal_tw != null:
+		_intro_reveal_tw.finished.connect(func() -> void:
+			if is_instance_valid(read_hint):
+				read_hint.visible = false)
+	else:
+		read_hint.visible = false  # rien à révéler → pas d'affordance
+	# 1er clic n'importe où sur le panneau (hors bouton Accepter) → tout le texte est révélé.
+	_intro_layer.gui_input.connect(func(e: InputEvent) -> void:
+		if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
+			return
+		if intro_lbl.visible_characters >= 0 and intro_lbl.visible_characters < intro_lbl.get_total_character_count():
+			if _intro_reveal_tw != null and _intro_reveal_tw.is_valid():
+				_intro_reveal_tw.kill()
+			intro_lbl.visible_characters = -1
+			if is_instance_valid(read_hint):
+				read_hint.visible = false)
 
 	# Ligne basse : Objectif (gauche, expand) + Accepter (droite, fixed). Une seule rangée → cibles
 	# tactiles ≥44 px (bible §21.1 pilier TACTILE+DESKTOP).
@@ -893,17 +1061,22 @@ func _show_intro_popup() -> void:
 	fade.modulate = Color(1, 1, 1, 0)
 	fade.create_tween().tween_property(fade, "modulate:a", 1.0, 0.3)
 
-	_bg_intro(run.scenario, intro_lbl, opening)
+	# v10.13 (B3) : ouverture pré-générée en cache (priorité moteur BASSE — ne se lance que si le
+	# moteur est idle) AVANT l'enrichissement de greeting. Consommée par l'interstitiel à l'Accept.
+	get_node("/root/MerlinScenario").prefetch_opening(run.scenario)
+	_bg_intro(run.scenario, intro_lbl)
 
 
-func _reveal_into(lbl: RichTextLabel, txt: String) -> void:
+# v10.13 (B2) : retourne le tween de frappe (null si rien à écrire) → skippable au clic.
+func _reveal_into(lbl: RichTextLabel, txt: String) -> Tween:
 	lbl.text = txt
 	lbl.visible_characters = 0
 	var n: int = lbl.get_total_character_count()
 	if n <= 0:
-		return
+		return null
 	var t: Tween = lbl.create_tween()
 	t.tween_property(lbl, "visible_characters", n, clampf(float(n) / 55.0, 0.6, 4.0))
+	return t
 
 
 func _pulse(node: Control) -> void:
@@ -913,23 +1086,23 @@ func _pulse(node: Control) -> void:
 
 
 # Enrichit l'intro en arrière-plan ; ne remplace QUE si le pop-up est encore ouvert. Jamais bloquant.
-func _bg_intro(scenario: Dictionary, lbl: RichTextLabel, opening: String = "") -> void:
+# v10.13 (B3) : plus de paramètre `opening` — l'ouverture vit dans l'interstitiel « Merlin raconte ».
+func _bg_intro(scenario: Dictionary, lbl: RichTextLabel) -> void:
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc == null:
 		return
-	var sep: String = "\n\n— · —\n\n"
-	# Greeting MERLIN enrichie (LLM, non bloquant) — conserve l'ouverture procédurale dessous.
+	# Greeting MERLIN enrichie (LLM, non bloquant).
 	var prose: String = await sc.narrate_intro(scenario)
 	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl):
 		return
 	# ÉVIDENT : ne pas muter un texte en cours de lecture → enrichir seulement si le typewriter a fini.
 	if prose.length() >= 10 and not (lbl.visible_characters >= 0 and lbl.visible_characters < lbl.get_total_character_count()):
-		lbl.text = prose + (sep + opening if opening.strip_edges() != "" else "")
+		lbl.text = prose
 		lbl.visible_characters = -1
 	# v10.13 (Fix 9) : le 2e appel LLM (narrate_opening) est SUPPRIMÉ ici — il occupait le moteur
 	# single-flight exactement pendant la composition du beat 1, affamant le prefetch de résolution
-	# (la prose d'ouverture ne gagnait jamais la course de toute façon). L'ouverture LLM revivra
-	# derrière l'interstitiel « Merlin raconte » (plan v10.13 phase B3), sous priorité moteur.
+	# (la prose d'ouverture ne gagnait jamais la course de toute façon). L'ouverture LLM vit
+	# désormais derrière l'interstitiel « Merlin raconte » (B3), via prefetch_opening (priorité basse).
 
 
 func _accept_quest() -> void:
@@ -947,7 +1120,73 @@ func _accept_quest() -> void:
 	t.tween_property(layer, "modulate:a", 0.0, 0.25)
 	t.tween_callback(layer.queue_free)
 	get_node("/root/MerlinRun").save()  # v10.13 (Fix 6) : quitter pendant le beat 1 → reprise au beat 1
-	_present_current_beat()  # l'intro cède la place à la 1ère situation, dans l'encart central (user 2026-06-06)
+	# v10.13 (B3) : l'intro cède la place à l'interstitiel « Merlin raconte » (ouverture narrative),
+	# qui présentera lui-même le Beat 1 au clic suivant. La save reste AVANT (Fix 6c).
+	_play_opening_interstitial()
+
+
+# === v10.13 (B3) — Interstitiel « Merlin raconte » : entre l'Accept et le Beat 1 ===
+# Sert l'ouverture narrative (LLM si le cache prefetch_opening est prêt, sinon attente animée
+# bornée 8s puis procédural) ET couvre la gen d'arc en arrière-plan (retarde arc_locked → plus
+# d'arcs LLM gagnent la course). Clic pendant le typewriter = tout révéler ; clic ensuite =
+# _present_current_beat() (≤2 gestes, pilier FACILE). Piloté par _input via _interstitial_open.
+func _play_opening_interstitial() -> void:
+	_scene_epoch += 1  # toute gen/anim liée au pop-up d'intro devient périmée
+	var ep: int = _scene_epoch
+	_interstitial_open = true
+	_can_advance = false
+	_set_caret(false)
+	_set_choice_ui(false)
+	var run: Node = get_node("/root/MerlinRun")
+	var sc: Node = get_node("/root/MerlinScenario")
+	# Review HIGH (B3) : si le prefetch lancé à l'ouverture de l'intro a été SAUTÉ (moteur occupé
+	# par la gen d'arc — cas courant au cold start), on RETENTE ici : l'arc a eu toute la lecture
+	# de l'intro pour finir, et le WaitStage (8s) attend alors une VRAIE gen, pas du vide.
+	# Jamais si déjà prête ou en vol (prefetch_opening fait une RAZ inconditionnelle).
+	if not sc.is_opening_ready() and not sc.is_opening_pending():
+		sc.prefetch_opening(run.scenario)
+	if _beat_header != null:
+		_beat_header.text = "— Merlin raconte —"
+		_beat_header.visible = true
+	_set_encart_phase(Color("6E5A3C"))  # bordure neutre (même teinte que les situations)
+	if _situation_text != null:
+		_situation_text.text = ""
+	if _situ_panel != null:
+		_situ_panel.modulate.a = 0.45
+		if _situ_tw != null and _situ_tw.is_valid():
+			_situ_tw.kill()
+		_situ_tw = _situ_panel.create_tween()
+		_situ_tw.tween_property(_situ_panel, "modulate:a", 1.0, 0.22)
+	var opening: String = ""
+	if bool(sc.is_opening_ready()):
+		opening = str(sc.take_opening())
+	else:
+		# Attente animée bornée (cap 8s, skippable) : couvre les gens de fond (arc/ouverture).
+		_interstitial_wait = MerlinWaitStage.start(self, {
+			"caption": "Merlin rassemble les fils de l'histoire",
+			"cap_ms": 8000,
+		})
+		var issue: String = await _interstitial_wait.wait_until(func() -> bool: return bool(sc.is_opening_ready()))
+		_interstitial_wait = null
+		if not _fresh(ep):
+			_interstitial_open = false
+			return  # scène quittée / supplantée pendant l'attente
+		if issue == "ready":
+			opening = str(sc.take_opening())
+	if opening.strip_edges() == "":
+		opening = str(sc.build_opening(run.scenario))  # procédural verbeux (cadre + accroche du pitch)
+	_typewriter("[center]" + opening + "[/center]", true)
+	# La suite (skip typewriter / avance au Beat 1) est pilotée par _input (_interstitial_open).
+
+
+# Sortie de l'interstitiel (clic « continuer » ou autoplay) → présentation du Beat 1.
+func _end_interstitial() -> void:
+	if not _interstitial_open:
+		return
+	_interstitial_open = false
+	_can_advance = false
+	_set_caret(false)
+	_present_current_beat()
 
 
 func _build_ui() -> void:
@@ -1001,6 +1240,7 @@ func _build_ui() -> void:
 	_scene_art = MerlinSceneArt.new()
 	_scene_art.custom_minimum_size = Vector2(0, 150)
 	root.add_child(_scene_art)
+	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
 
 	# ENCART CENTRAL (~80%) crème : porte l'intro/commentaire PUIS chaque situation/issue (user 2026-06-06).
 	# size_flags EXPAND → occupe tout l'espace restant quand les cartes sont cachées (hors phase de choix).
@@ -1108,6 +1348,21 @@ func _build_ui() -> void:
 	_overlay.visible = false
 
 	_build_beat_map()  # v10.12 : carte « map » du chemin, coin droit (remplace la carte Destin)
+
+	# v10.13 (B7) — « Merlin pense » : sonde 0.5s du moteur natif → le décor signale honnêtement
+	# quand une génération tourne (halo de lune accéléré + mote or en orbite du menhir).
+	var think_t: Timer = Timer.new()
+	think_t.wait_time = 0.5
+	think_t.autostart = true
+	add_child(think_t)
+	think_t.timeout.connect(_on_think_tick)
+
+
+func _on_think_tick() -> void:
+	if _scene_art == null:
+		return
+	var mn: Node = get_node_or_null("/root/MerlinNative")
+	_scene_art.set_thinking(mn != null and mn.is_busy())
 
 
 func _mk_label(col: Color, fsize: int) -> Label:

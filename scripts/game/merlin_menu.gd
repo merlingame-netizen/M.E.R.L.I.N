@@ -30,6 +30,8 @@ var _scene_art: MerlinSceneArt
 var _bottom_bar: HBoxContainer
 var _rule_box: HBoxContainer
 var _music: AudioStreamPlayer
+var _model_lbl: Label = null      # v10.13 (B1) : indicateur d'éveil du modèle (barre du bas)
+var _model_pulse_tw: Tween = null # pulse discret pendant le chargement (modulate sine)
 
 
 func _ready() -> void:
@@ -44,6 +46,11 @@ func _ready() -> void:
 			_trigger_warmup()
 		elif not mn.model_ready.is_connected(_trigger_warmup):
 			mn.model_ready.connect(_trigger_warmup)
+		# v10.13 (B1) : indicateur d'éveil — « Merlin s'éveille… » pulse, flip or sur model_ready.
+		if mn.is_ready():
+			_set_model_awake()
+		elif not mn.model_ready.is_connected(_set_model_awake):
+			mn.model_ready.connect(_set_model_awake)
 
 
 func _trigger_warmup() -> void:
@@ -286,8 +293,31 @@ func _build_bottom_bar() -> void:
 	var sp2: Control = Control.new()
 	sp2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bottom_bar.add_child(sp2)
+	# v10.13 (B1) : indicateur d'éveil du modèle — « ✦ Merlin s'éveille… » (pulse discret) tant que
+	# le load bloquant tourne, puis « ✦ Merlin veille » (or) sur model_ready (_set_model_awake).
+	_model_lbl = Label.new()
+	_model_lbl.text = "✦ Merlin s'éveille…"
+	_model_lbl.add_theme_color_override("font_color", COL_DIM)
+	_model_lbl.add_theme_font_size_override("font_size", 18)
+	_model_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_bottom_bar.add_child(_model_lbl)
+	_model_pulse_tw = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_model_pulse_tw.tween_property(_model_lbl, "modulate:a", 0.35, 1.1)
+	_model_pulse_tw.tween_property(_model_lbl, "modulate:a", 1.0, 1.1)
 	_bottom_bar.add_child(_dots(3))
 	_bottom_bar.add_child(_icon("eye", COL_GOLD, Vector2(24, 24), 1.6))
+
+
+# v10.13 (B1) : le modèle est chargé — l'indicateur cesse de pulser et passe à l'or « veille ».
+func _set_model_awake() -> void:
+	if _model_lbl == null:
+		return
+	if _model_pulse_tw != null and _model_pulse_tw.is_valid():
+		_model_pulse_tw.kill()
+	_model_pulse_tw = null
+	_model_lbl.modulate.a = 1.0
+	_model_lbl.text = "✦ Merlin veille"
+	_model_lbl.add_theme_color_override("font_color", COL_GOLD)
 
 
 func _icon(glyph_key: String, col: Color, sz: Vector2, w: float) -> MerlinGlyph:

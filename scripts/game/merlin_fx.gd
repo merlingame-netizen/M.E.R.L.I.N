@@ -379,19 +379,23 @@ func spark_wave(center: Vector2, color: Color, count: int, life: float, dist_bas
 		st.tween_property(spark, "scale", scale_target, life)
 
 
-# Screen shake : tween position de `target` avec offsets aléatoires en décroissance, retour à zéro.
-# STATIC réutilisable. Non-bloquant : démarre immédiatement, dure `duration` secondes. Le tween est
-# lié à `target` (target.create_tween()) → meurt avec lui, jamais orphelin.
+# Screen shake : tween position de `target` avec offsets aléatoires en décroissance, retour à la
+# position de DÉPART. STATIC réutilisable. Non-bloquant : démarre immédiatement, dure `duration`
+# secondes. Le tween est lié à `target` (target.create_tween()) → meurt avec lui, jamais orphelin.
+# v10.13 (B9) : secousse autour de la position COURANTE (et non ZERO) — le layer fusion vit en
+# (0,0) (comportement inchangé), mais un panneau layouté par un container (ex. _situ_panel) ne
+# doit pas finir téléporté à l'origine de son parent.
 static func shake(target: Control, amplitude: float, duration: float) -> void:
 	var n_steps: int = 10
 	var step_dur: float = duration / float(n_steps + 1)
 	var amp: float = amplitude
+	var base: Vector2 = target.position
 	var st: Tween = target.create_tween().set_trans(Tween.TRANS_LINEAR)
 	for _i in n_steps:
 		var off: Vector2 = Vector2(randf_range(-amp, amp), randf_range(-amp, amp))
-		st.tween_property(target, "position", off, step_dur)
+		st.tween_property(target, "position", base + off, step_dur)
 		amp *= 0.88  # decay exponentielle
-	st.tween_property(target, "position", Vector2.ZERO, step_dur)
+	st.tween_property(target, "position", base, step_dur)
 
 
 # Setter pour le shader uniform — Tween.tween_method requiert un Callable.
