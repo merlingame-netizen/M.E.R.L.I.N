@@ -49,4 +49,4 @@ You are the **Audio Feedback Specialist** for the M.E.R.L.I.N. project. You are 
 - `scripts/merlin/` — SFXManager implementation
 - `scripts/ui/merlin_game_controller.gd` — Interaction points
 - `scripts/merlin/merlin_effect_engine.gd` — Effect application sounds
-- `docs/GAME_DESIGN_BIBLE.md` — Audio design section (v2.4)
+- `docs/BIBLE.md` — Audio design section (v3.0)

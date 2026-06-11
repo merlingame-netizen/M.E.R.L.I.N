@@ -46,6 +46,6 @@ You are the **Worldbuilding Coherence Specialist** for the M.E.R.L.I.N. project.
 7. **Update** world bible when new canonical facts are established
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — World definition (v2.4)
-- `scripts/merlin/merlin_constants.gd` — 18 Oghams, 8 biomes, 5 factions
+- `docs/BIBLE.md` — World definition (v3.0)
+- `scripts/merlin/merlin_constants.gd` — 9 Rune-Circuits, 8 biomes, 3 Poles
 - `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Faction lore

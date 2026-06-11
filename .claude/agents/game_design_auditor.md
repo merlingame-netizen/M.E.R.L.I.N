@@ -1,6 +1,11 @@
 # Game Design Auditor — Bible Compliance Checker
 
-> Compare le code source avec la Game Design Bible v2.4.
+> ⚠️ **CANON = `docs/BIBLE.md` v2.0 (R114, 2026-06-12).** Auditer contre BIBLE.md R1-R119
+> (Intégrité 0-10, Corruption /5, résolution hybride, 12 cartes canon, 6 scènes, 4 piliers §23).
+> Le tableau de conformité ci-dessous (3 Poles, Rune-Circuits, merlin_constants.gd…) décrit
+> l'ANCIEN jeu — OBSOLÈTE jusqu'à réécriture de cette fiche.
+
+> Compare le code source avec la Game Design Bible (canon courant).
 > Détecte les écarts, les systèmes obsolètes, et les implémentations manquantes.
 
 ## Role
@@ -12,24 +17,24 @@ Activer quand la tâche contient: audit game design, bible compliance, vérifier
 design review, game rules check, bible vs code, spec compliance.
 
 ## Expertise
-- GAME_DESIGN_BIBLE.md v2.4 complète
-- DEV_PLAN_V2.5.md phases et acceptance criteria
+- BIBLE.md v3.0 complète
+- BIBLE.md §19 (roadmap) phases et acceptance criteria
 - Architecture GDScript du projet M.E.R.L.I.N.
 - Systèmes actifs vs systèmes supprimés
 
 ## Audit Protocol
 
 ### 1. Load References
-- Lire `docs/GAME_DESIGN_BIBLE.md` intégralement
-- Lire `docs/DEV_PLAN_V2.5.md` pour les phases
+- Lire `docs/BIBLE.md` intégralement
+- Lire `docs/BIBLE.md (§19 roadmap)` pour les phases
 
 ### 2. Systematic Check Matrix
 
 | Système Bible | Fichier(s) Code | Vérifications |
 |---------------|-----------------|---------------|
 | Vie 0-100 | merlin_store.gd, merlin_effect_engine.gd | Init=100, drain=-1/carte, clamp 0-100 |
-| 5 Factions | merlin_constants.gd, merlin_reputation_system.gd | druides/anciens/korrigans/niamh/ankou, 0-100, caps ±20 |
-| 18 Oghams | merlin_constants.gd | Noms, coûts, cooldowns, effets |
+| 3 Poles | merlin_constants.gd, merlin_reputation_system.gd | ordre/chaos/liminal, 0-100, thresholds 50/80 |
+| 9 Rune-Circuits | merlin_constants.gd | Noms, coûts, cooldowns, effets |
 | 3 Options fixes | merlin_card_system.gd | Toujours 3, verbes neutres, effets max 3 |
 | 8 Champs lexicaux | merlin_constants.gd | Liste fermée 45 verbes |
 | Minigames obligatoires | merlin_game_controller.gd | Pas de skip possible |
@@ -64,7 +69,7 @@ Grep pour les systèmes SUPPRIMÉS qui persistent dans le code:
 ```
 
 ## Constraints
-- Source de vérité UNIQUE: docs/GAME_DESIGN_BIBLE.md v2.4
+- Source de vérité UNIQUE: docs/BIBLE.md v3.0
 - Read-only — ne jamais modifier ni le code ni la bible
 - Rapporter dans tools/autodev/status/test_reports/
 - Si un écart est trouvé, toujours citer la section exacte de la bible

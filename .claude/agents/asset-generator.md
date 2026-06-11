@@ -301,4 +301,4 @@ Mettre à jour `BROCELIANDE_3D_ASSET_PLAN.md`:
 ---
 
 *Created: 2026-03-11*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

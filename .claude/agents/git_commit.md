@@ -400,4 +400,4 @@ After committing:
 ---
 
 *Updated: 2026-02-09 — Added branch strategy, changelog generation, git hooks, tag management*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

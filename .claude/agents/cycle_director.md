@@ -28,7 +28,7 @@ tools/autodev/status/test_results.json     → bugs connus
 tools/autodev/status/session.json          → dernier cycle
 tools/autodev/status/director_decision.json → derniere decision
 progress.md (derniers 100 lignes)          → historique
-docs/GAME_DESIGN_BIBLE.md (section active) → source de verite
+docs/BIBLE.md (section active) → source de verite
 ```
 
 ## PHASE 2 : DECIDE (1 min max)
@@ -38,7 +38,7 @@ Algorithme de priorite :
 ```
 1. INBOX HUMAIN (feedback_responses.json status=pending) → PRIORITE ABSOLUE
 2. BUGS CRITICAL/HIGH (test_results.json severity=CRITICAL|HIGH) → urgent
-3. BIBLE COMPLIANCE (ecarts code vs bible v2.4) → important
+3. BIBLE COMPLIANCE (ecarts code vs bible v3.0) → important
 4. FEATURE QUEUE (feature_queue.json status=pending, par priority) → backlog
 5. GENERATION AUTONOME → le Director identifie des taches gameplay/graphismes/UI
    qui manquent et les ajoute a la queue
@@ -71,7 +71,7 @@ Regles :
 Apres les workers, lancer **2 review agents** :
 
 1. **Code Reviewer** : qualite, bugs, conventions, null safety
-2. **Bible Compliance** : chaque changement doit etre compatible avec GAME_DESIGN_BIBLE.md
+2. **Bible Compliance** : chaque changement doit etre compatible avec BIBLE.md
 
 Si un reviewer trouve un probleme CRITICAL :
 - Revert le changement
@@ -129,7 +129,7 @@ Quand un blocker est rencontre :
 
 ## GARDE-FOUS
 
-- **Bible v2.4** = contrainte absolue. Ne JAMAIS contredire la bible.
+- **Bible v3.0** = contrainte absolue. Ne JAMAIS contredire la bible.
 - **Budget changement** : 10 fichiers / 500 lignes max par cycle
 - **Review obligatoire** : code + bible compliance avant merge
 - **Veto humain** : si feedback_responses contient un STOP ou REVERT, l'appliquer immediatement

@@ -46,6 +46,6 @@ You are the **Cognitive Load Optimizer** for the M.E.R.L.I.N. project. You are r
 
 ## Key References
 - `docs/70_graphic/UI_UX_BIBLE.md` — UI layout specifications
-- `docs/GAME_DESIGN_BIBLE.md` — Card format, 3 choices (v2.4)
+- `docs/BIBLE.md` — Card format, 3 choices (v3.0)
 - `scripts/ui/merlin_game_controller.gd` — UI state management
 - `scripts/merlin/merlin_visual.gd` — Visual hierarchy constants

@@ -52,7 +52,7 @@ selon hardware).
 ```
                 ┌─────────────────────────────────────┐
                 │     studio_director (tentacle)      │
-                │  • Lit GAME_DESIGN_BIBLE + DEV_PLAN │
+                │  • Lit docs/BIBLE.md (canon v2.0)   │
                 │  • Identifie gaps de cohérence       │
                 │  • Priorise par valeur joueur        │
                 │  • Dispatch swarms                   │
@@ -130,8 +130,9 @@ Audio reste mid-priority. Asset AI-gen vient après cohérence.
 
 | Doc | Contenu |
 |---|---|
-| `docs/GAME_DESIGN_BIBLE.md` (v2.4) | Source de vérité game design : core loop, 5 factions, 18 Oghams, RPG, 8 biomes, MOS |
-| `docs/DEV_PLAN_V2.5.md` | Plan de dev strict (10 phases, specs code, acceptance criteria) |
+| `docs/BIBLE.md` (**canon v2.0**) | Source de vérité UNIQUE : deck-building narratif, Gemma 4 natif, R1-R119, roadmap §19 |
+| `docs/archive/GAME_DESIGN_BIBLE_legacy_v3.8.md` | ARCHIVÉ — ancien jeu (factions/Oghams/MOS), non-autoritaire |
+| `docs/archive/DEV_PLAN_V2.5_legacy.md` | ARCHIVÉ — ancien plan de dev, non-autoritaire |
 | `docs/RPG_TEST_SYSTEM.md` | Système 3 axes (Souffle/Esprit/Coeur), DC, 4 résolutions |
 | `docs/BALANCE_FORMULA.md` | DC scaling, XP curve, ogham modifiers |
 | `docs/HUD_LAYOUT_RULES.md` | Règles UI/UX |

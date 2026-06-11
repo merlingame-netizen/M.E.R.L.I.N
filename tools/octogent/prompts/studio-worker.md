@@ -55,7 +55,7 @@ Do this task and **only** this task. Do not "improve" adjacent code, refactor ne
 You can read the main checkout's docs via absolute path (it's the same git objects, so `/mnt/c/Users/PGNK2128/Godot-MCP/CLAUDE.md` is fine for reading), but **all writes go through your cwd** (relative paths only).
 
 1. **Verify your branch.** `pwd && git rev-parse --abbrev-ref HEAD` — branch must be `octogent/studio-worker-{{workerIndex}}`. Working dir must end in `.octogent/worktrees/studio-worker-{{workerIndex}}/`. If either is wrong, STOP and report BLOCKED.
-2. **Read project compass.** `CLAUDE.md` (relative — same content as the main checkout) then any of `docs/GAME_DESIGN_BIBLE.md`, `docs/DEV_PLAN_V2.5.md`, `progress.md` that are relevant. Don't read everything blindly.
+2. **Read project compass.** `CLAUDE.md` (relative — same content as the main checkout) then any of `docs/BIBLE.md`, `docs/BIBLE.md (§19 roadmap)`, `progress.md` that are relevant. Don't read everything blindly.
 3. **Implement the task.** Follow MERLIN's code style (CLAUDE.md §Code Style):
    - GDScript: snake_case, type hints, no `:=` with `CONST[index]`, no `yield()`, no `//` for int division.
    - Files <800 lines, functions <50 lines.
@@ -81,7 +81,7 @@ Send `BLOCKED: <specific reason>` if ANY of these happen — don't burn time stu
 - The task references a file/symbol that doesn't exist.
 - `validate_step0` fails with an error you can't trace to your own changes.
 - You'd need to modify forbidden files (`tools/`, `server/`, `validate.bat`, etc.) to complete.
-- The task contradicts CLAUDE.md or GAME_DESIGN_BIBLE.md (and the conflict isn't resolvable from context).
+- The task contradicts CLAUDE.md or BIBLE.md (and the conflict isn't resolvable from context).
 - You've spent >30 minutes on a single task without measurable progress.
 
 Format: `BLOCKED: <one-sentence root cause>. Tried: <what you attempted>. Need: <what would unblock you>.`

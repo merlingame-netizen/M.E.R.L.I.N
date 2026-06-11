@@ -47,6 +47,6 @@ You are the **Sprint Reviewer** for the M.E.R.L.I.N. project. You are responsibl
 ## Key References
 - `validate.bat` — Validation pipeline
 - `CLAUDE.md` — Project rules and conventions
-- `docs/GAME_DESIGN_BIBLE.md` — Design specification
+- `docs/BIBLE.md` — Design specification
 - `scripts/test/` — Test files
-- `docs/DEV_PLAN_V2.5.md` — Development plan phases
+- `docs/BIBLE.md (§19 roadmap)` — Development plan phases

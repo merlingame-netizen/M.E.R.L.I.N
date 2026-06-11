@@ -52,6 +52,6 @@ Tu es un joueur DEBUTANT qui decouvre le jeu pour la premiere fois.
 ```
 
 ## References
-- `docs/GAME_DESIGN_BIBLE.md` — Core loop et flow
+- `docs/BIBLE.md` — Core loop et flow
 - `docs/70_graphic/UI_UX_BIBLE.md` — Standards visuels
 - `scripts/ui/` — Tous les scripts UI

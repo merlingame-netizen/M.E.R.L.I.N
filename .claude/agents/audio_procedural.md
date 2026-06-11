@@ -47,5 +47,5 @@ You are the **Procedural Audio Specialist** for the M.E.R.L.I.N. project. You ar
 
 ## Key References
 - `scripts/merlin/` — SFXManager implementation
-- `scripts/merlin/merlin_constants.gd` — 18 Oghams for unique sounds
-- `docs/GAME_DESIGN_BIBLE.md` — Audio design section (v2.4)
+- `scripts/merlin/merlin_constants.gd` — 9 Rune-Circuits for unique sounds
+- `docs/BIBLE.md` — Audio design section (v3.0)

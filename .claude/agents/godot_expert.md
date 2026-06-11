@@ -200,10 +200,10 @@ When reviewing engine-related code:
 - `export_presets.cfg` — Export configurations
 - `scripts/merlin/` — Core game scripts
 - `addons/` — Editor plugins and extensions
-- `docs/GAME_DESIGN_BIBLE.md` — Design constraints
+- `docs/BIBLE.md` — Design constraints
 - Godot 4.x documentation: https://docs.godotengine.org/en/stable/
 
 ---
 
 *Updated: 2026-03-16 — Tier 2: Godot 4.x internals, rendering, physics, signals, resources, shaders, export*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

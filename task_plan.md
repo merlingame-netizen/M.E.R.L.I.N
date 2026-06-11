@@ -1,8 +1,8 @@
 # Task Plan — MERLIN Game Development
 
-> **Source**: `docs/DEV_PLAN_V2.5.md` (canonical phase plan).
+> **Source**: `docs/BIBLE.md` v2.0 (canon unique — roadmap §19 ; l'ancien `DEV_PLAN_V2.5.md` est archivé dans `docs/archive/`).
 > **Consumed by**: `tools/octogent/prompts/studio-director.md` Tier 1 backlog.
-> **Last refresh**: 2026-05-31 (v10 audit UX 4 piliers + spec dashboard Gameplay Live).
+> **Last refresh**: 2026-06-12 (R114 montée en gamme : bible v2.0 §19-§24, archivage legacy, 4 outils studio).
 
 ---
 

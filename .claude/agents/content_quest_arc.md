@@ -46,7 +46,7 @@ You are the **Quest Arc Designer** for the M.E.R.L.I.N. project. You are respons
 7. **Document** quest catalog with state diagrams
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Narrative arc specs (v2.4)
+- `docs/BIBLE.md` — Narrative arc specs (v3.0)
 - `docs/LLM_ARCHITECTURE.md` — LLM narrative context management
 - `scripts/merlin/merlin_store.gd` — Quest state tracking
 - `scripts/merlin/merlin_card_system.gd` — Card sequencing

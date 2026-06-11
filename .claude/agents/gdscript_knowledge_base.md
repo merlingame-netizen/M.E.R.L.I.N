@@ -1157,5 +1157,29 @@ run["perks"] = {"selected_perk": "", "perk_used": false}
 
 ---
 
-*Last Updated: 2026-02-25 (Section 9: UI Overlay + Store State Patterns — B.1 Souffle Perk)*
+## Section 10 : LLM natif (MerlinLLM / llama.cpp / gemma4) — leçons 2026-05-25
+
+### 10.1 GBNF cassé sur gemma4 → format délimité (PATTERN CLÉ)
+**Symptôme** : génération grammar-constrained (GBNF) plante le runtime natif **silencieusement** (process meurt, `errors:[]`, **pas de GGML_ASSERT**) dès le 1er token JSON.
+**Cause racine** (prouvée par instrumentation stderr flushed `MERLIN_LLM_TRACE`) : le moteur de grammaire char-based de llama.cpp (b9196 ET b9305) a une incohérence **apply↔accept** sur les tokens structurels multi-char de gemma4 (`{"`, `{`). `llama_sampler_sample` retourne un token valide (masquage OK) mais `llama_sampler_accept` **vide la pile** → `std::runtime_error("Unexpected empty grammar stack")` (llama-grammar.cpp:1506). `apply` ne valide que le 1er char ; `accept` traite tous les chars et en trouve un invalide plus loin.
+**Fix** : pour gemma4, abandonner GBNF → **format délimité free-text + parsing GDScript tolérant** :
+- Prompt : `n|résumé|faction|émotion` (squelette) ; `OPT|label|HEAL_LIFE:n;ADD_REPUTATION:faction:n` (cartes).
+- Parser : `split("\n")` → `split("|")`, skip lignes malformées, sanitize enums, pad/clamp. Une ligne cassée = skip, jamais fatal (vs JSON où une virgule manquante casse tout).
+- Garder le code GBNF sous flag (`MERLIN_USE_GBNF=1`) pour ré-activation future.
+
+### 10.2 Thread d'inférence natif : TOUJOURS try/catch (C++)
+Une exception C++ non-attrapée dans un `std::thread` appelle `std::terminate()` → **mort silencieuse du process entier** (pas d'assert, pas de log). Le corps du thread dans `merlin_llm.cpp::generate_async` DOIT être enveloppé `try { … } catch (const std::exception& e) { error_msg = e.what(); }` pour convertir toute exception (grammaire, etc.) en erreur gracieuse récupérable côté GDScript.
+
+### 10.3 flash_attn DISABLED pour gemma4 CPU
+`LLAMA_FLASH_ATTN_TYPE_AUTO` résout à ENABLED sur b9305 → ralentit ~2× la génération CPU (SWA + Gated-Delta-Net) et déstabilise le kernel sliding-window. Forcer `LLAMA_FLASH_ATTN_TYPE_DISABLED` (+38 % vitesse, plus stable).
+
+### 10.4 Vitesse native variable → timeouts généreux + tokens réduits
+Génération CPU ~0.7-1.4 tok/s (variable selon charge). Calibrer `*_TIMEOUT_S` ≥ max_tokens / 0.7 pour éviter les wall-timeouts (un timeout = erreur, même si la sortie partielle serait parsable). Réduire max_tokens (cartes : 130) ET masquer la latence (cérémonie boot + prefetch N+2).
+
+### 10.5 Monitoring de run natif headless
+Le « kill ~285 s » concerne les commandes Bash **foreground** (mon harness), pas la machine. Un `Start-Process` PowerShell **détaché** (+ redirect stdout/err) tourne indépendamment jusqu'au bout (runs multi-minutes complétés). Monitorer via un poll-loop (process vivant + report JSON incrémental) → notification au terminal. Ne JAMAIS conclure « la machine tue les process » depuis un timeout de commande foreground.
+
+---
+
+*Last Updated: 2026-05-25 (Section 10: LLM natif gemma4 — GBNF cassé → délimité, try/catch thread, flash_attn, timeouts)*
 *Maintained by: Debug Agent, Optimizer Agent & Task Dispatcher*

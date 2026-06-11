@@ -58,6 +58,7 @@
 |------|------------------------|-----------------|---------------|
 | **Contenu Cartes** | card, text, dialogue, narrative, story, choice, option, carte | `narrative_writer.md` | `game_designer.md` |
 | **Game Design** | balance, rules, mechanic, system, progression, difficulty, equilibrage | `game_designer.md` | `data_analyst.md` |
+| **Playthrough / Game Thinking** | playthrough, jouer, playtest, parcours joueur, flow, UX, choix joueur, tutoriel, onboarding, transition ecran, minigame, reflexion jeu | `game_designer.md` + `ux_flow.md` + `game_playtester.md` (Wave 1 parallele) | `game_design_auditor.md` (Wave 2, audit final 4 piliers UX bible §21.1) |
 | **Assets Visuels** | art, sprite, texture, visual, graphics, style, pixel, image | `art_direction.md` | `ui_impl.md` |
 | **Audio** | sound, SFX, music, audio, voice, ACVoicebox, voix | `audio_designer.md` | `ui_impl.md` |
 | **Lore Merlin** | Merlin, personality, voice, character, personnalite, druide | `merlin_guardian.md` | `narrative_writer.md`, `lore_writer.md` |
@@ -388,4 +389,4 @@ Regles M.E.R.L.I.N. specifiques:
 *Base: `~/.claude/agents/common/dispatcher_base.md`*
 *Created: 2026-02-09 | Updated: 2026-02-24 — Added LLM Bi-Brain routing (3 new agents: bi_brain_orchestrator, narrative_arc_designer, player_profiler)*
 *Previous: 2026-02-22 — Added Game Director (Direction Creative category, cross-review)*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

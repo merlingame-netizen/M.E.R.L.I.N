@@ -17,45 +17,51 @@
 
 ### 2. Validation — AVANT CHAQUE TEST
 
-```powershell
-.\validate.bat   # Step 0: Editor Parse Check (le plus fiable)
+```bash
+python tools/cli.py godot validate_step0   # Parse check headless (le plus fiable)
 ```
 
-**Ordre**: Editer → validate.bat → corriger → re-valider → tester dans Godot
+**Ordre**: Editer → validate_step0 → corriger → re-valider → tester dans Godot
 
-**ATTENTION** : `validate.bat` (parse check headless) **ne detecte PAS** les erreurs runtime
-(`SCRIPT ERROR`, `Identifier "x" not declared`, push_error en _ready, etc.). Un script qui
-parse OK peut crasher au demarrage de scene. Pour ces cas, voir 2bis ci-dessous.
+**ATTENTION** : les `.bat` sont **bloqués par stratégie de groupe** sur ce poste — toujours
+passer par `python tools/cli.py godot ...` (ou `powershell -File tools/<script>.ps1`).
+Le parse check **ne detecte PAS** les erreurs runtime (`SCRIPT ERROR`, `Identifier "x" not
+declared`, push_error en _ready, etc.). Un script qui parse OK peut crasher au demarrage
+de scene. Pour ces cas, voir 2bis ci-dessous.
 
-### 2bis. Smoke Test Runtime — AVANT COMMIT runtime (OBLIGATOIRE)
+### 2bis. Smoke + Soak Runtime — AVANT COMMIT runtime (OBLIGATOIRE)
 
-Tout commit qui touche un script ou une scene impliquee dans le **flow demo** (IntroCeltOS,
-MerlinCabinHub, BroceliandeForest3D, MerlinGame, EndRunScreen, ParchmentPreRun, MenuOptions,
-SelectionSauvegarde) DOIT passer un smoke runtime sur **chaque scene affectee**:
+Les **6 scènes canon** : MerlinMenu, MerlinSelection, MerlinGame, MerlinEnd, MerlinOptions,
+GemmaConsole. Tout commit qui touche un script ou une scene du flow DOIT passer un smoke
+runtime sur **chaque scene affectee**:
 
 ```bash
-python tools/cli.py godot smoke --scene "res://scenes/IntroCeltOS.tscn" --duration 8
-python tools/cli.py godot smoke --scene "res://scenes/MerlinCabinHub.tscn" --duration 6
-python tools/cli.py godot smoke --scene "res://scenes/BroceliandeForest3D.tscn" --duration 10
+python tools/cli.py godot smoke --scene "res://scenes/MerlinMenu.tscn" --duration 6
+python tools/cli.py godot smoke --scene "res://scenes/MerlinGame.tscn" --duration 8
 ```
 
 Critere de pass : `passed=true` ET `script_errors=[]` ET `exit_code=0`.
 Si KO → corriger avant commit. Ne **JAMAIS** committer un bug runtime detectable par smoke.
 
-Le smoke lance Godot en mode normal (pas headless) avec `--quit-after N`, capture stdout/stderr,
-et grep `SCRIPT ERROR` / `Identifier ... not declared`. Couvre les bugs de _ready / _process /
-_input / signal handlers que le parse check seul rate.
+**R109 (BIBLE §18)** : tout changement du **flow de run** exige en plus le harnais de preuve :
+
+```bash
+python tools/cli.py godot soak --runs 200 --autoplay true --loops 3
+```
+
+Gate de référence : soak 200/200 + autoplay 3/3, 0 SCRIPT ERROR.
 
 ### 3. Post-Dev Checklist — FIN DE SESSION (OBLIGATOIRE)
 
 ```
-1. VALIDATE       — .\validate.bat (Step 0 minimum)
+1. VALIDATE       — python tools/cli.py godot validate_step0
 2. SMOKE RUNTIME  — python tools/cli.py godot smoke --scene <chaque scene touchee>
-3. FIX            — Corriger TOUTES erreurs + warnings + script_errors smoke
-4. REVALIDATE     — 0 errors validate.bat ET tous smoke passed=true
-5. COMMIT         — git add + git commit (conventional commits)
-6. PUSH           — git push origin main
-7. AGENTS         — Verifier que tous les agents/skills mandates ont ete invoques
+3. SOAK (si flow) — python tools/cli.py godot soak --runs 200 --autoplay true (R109)
+4. FIX            — Corriger TOUTES erreurs + warnings + script_errors smoke
+5. REVALIDATE     — 0 errors validate_step0 ET tous smoke passed=true
+6. COMMIT         — git add <fichiers touchés> + git commit (conventional commits)
+7. PUSH           — git push origin <branche courante>
+8. AGENTS         — Verifier que tous les agents/skills mandates ont ete invoques
 ```
 
 **JAMAIS** repondre "termine" sans les 6 etapes.
@@ -133,7 +139,10 @@ En debut de session MODERATE+:
 
 #### 10.1 Bible-first ritual au début de chaque session MERLIN
 
-L'agent **DOIT** lire `docs/GAME_DESIGN_BIBLE.md` sections §1-§24 **AVANT** toute action de code/design. Vérifier cohérence contexte ↔ bible. Divergence détectée → flag + AskUserQuestion réconciliation.
+L'agent **DOIT** lire `docs/BIBLE.md` (**canon unique v2.0** — Quickstart + §18-§24 minimum,
+journal R1-R113 au besoin) **AVANT** toute action de code/design. Vérifier cohérence contexte ↔
+bible. Divergence détectée → flag + AskUserQuestion réconciliation.
+⚠️ `docs/archive/GAME_DESIGN_BIBLE_legacy_v3.8.md` est **ARCHIVÉE, non-autoritaire**.
 
 **Exception** : prefixes `*` `/` `!` bypass. Pure debug sans design decision peut skip si bypass explicite.
 
@@ -150,20 +159,22 @@ Pattern multi-round : R1 (divergences fondamentales) → R2 (implications) → R
 
 #### 10.3 Bible update cadence per-feature complete
 
-À chaque feature complète (groupe de commits formant une unité), update les sections bible impactées + bump version (v3.5 → v3.6 → ...). Trigger : mécanisme listé §1-§24.
+À chaque feature complète (groupe de commits formant une unité), update les sections bible
+impactées : nouvelle règle R-numérotée dans la section concernée (ou §18+ versionnée).
+Trigger : tout mécanisme listé §1-§24 de `docs/BIBLE.md`.
 
-#### 10.4 Référence canonique v3.5 (2026-05-16)
+#### 10.4 Référence canonique v2.0 (2026-06-12, R114)
 
-- **5 Factions** (druides/anciens/korrigans/niamh/ankou)
-- **9 Rune-Circuits** (refacto Godot 18→9 à faire)
-- **NO drain de vie auto** (HoF2-style, équilibre via card effects)
-- **Pipeline 11 étapes** (drop step DRAIN -1)
-- **5 actes × 5 cartes = 25 cartes** target (MOS 8/20-25/50)
-- **Plateau-only v7.7.2** : MenuTest → BoardNarration (sub-scenes inline)
-- **MOS HUD** "Carte X/25" top-right
-- **Card flip** double-tap RotateY 180°
-- **asset_spawn_animator** module commun
-- **Merlin speech-bar + TTS** pendant scenario writing
+- **Deck-building narratif celtique** — Citizen Sleeper / Cultist Simulator feel, ton merveilleux-inquiétant
+- **Gemma 4 E2B natif** (MerlinLLM GDExtension, GBNF, 100% local, ZÉRO Ollama)
+- **2 jauges** : Intégrité 0-10 + Corruption (seuils /5, paliers glitch R75)
+- **Geste** : 1 carte principale + 1-2 modificateurs ; résolution hybride tags requis + code ; Gemma narre
+- **Run** : 3 titres+pitch générés → squelette 5 beats → lookahead → climax → fins multiples
+- **4 factions** (Druides / Créatures & Êtres / Chevalerie déchue / Corrompus) + 4 piliers PNJ
+- **6 scènes** : MerlinMenu → MerlinSelection → MerlinGame → MerlinEnd (+ MerlinOptions, GemmaConsole)
+- **Brocéliande seul** au MVP ; méta cross-run = fragments du Graal
+- **R109** : fiabilité MESURÉE (soak 200/200 + autoplay) après tout changement du flow
+- **§19** : roadmap montée en gamme v10.13.1 → v10.19 (juice → contenu → artworks → audio)
 
 ### 9. Game Design & Playthrough — Cascade Obligatoire (NON-NÉGOCIABLE)
 
@@ -177,24 +188,24 @@ déclencher une cascade d'agents spécialisés AVANT toute implémentation.
 - Toute "réflexion sur le jeu" (l'utilisateur réfléchit au gameplay à voix haute)
 - Tout playthrough simulé via smoke + capture screenshots
 
-**Cascade obligatoire** (voir bible §21.4) :
+**Cascade obligatoire** (voir `docs/BIBLE.md` §24) :
 ```
 Wave 1 (parallèle):
-  - game_designer.md       → cohérence bible §1-§20
+  - game_designer.md       → cohérence BIBLE.md §1-§24 (canon v2.0)
   - ux_flow.md             → flow + navigation
-  - game_playtester.md     → simulation 5 archétypes joueur
+  - game_playtester.md     → simulation 5 archétypes joueur (optimal/greedy/chaotic/corrompu/tag-ignorant)
 
 Wave 2 (séquentiel):
-  - game_design_auditor.md → audit final contre les 4 piliers UX §21.1
+  - game_design_auditor.md → audit final contre les 4 piliers UX (BIBLE.md §23)
 ```
 
-**Les 4 piliers UX** (à vérifier par TOUT agent UI/UX/game design) :
+**Les 4 piliers UX** (à vérifier par TOUT agent UI/UX/game design — BIBLE.md §23) :
 1. **FACILE** — action en ≤2 gestes
 2. **ÉVIDENT** — intention lisible <2s sans tuto
-3. **MINIMAL** — aucun élément UI sans rôle actif
+3. **MINIMAL** — aucun élément UI sans rôle actif ; l'info ne vit qu'à UN endroit
 4. **TACTILE + DESKTOP** — cibles ≥44×44 px, no hover-only, retour visuel ≤100ms
 
-**Référence** : `docs/GAME_DESIGN_BIBLE.md` §21 (source de vérité unique).
+**Référence** : `docs/BIBLE.md` §23 (R118 — source de vérité unique).
 
 ---
 
@@ -208,12 +219,14 @@ Ce projet est personnel — PAS de tag `[AI-assisted]`.
 
 ## Project Overview
 
-Narrative card game built with Godot 4.x.
-- **Core Loop**: Choix narratif → minigame (champ lexical) → effets proportionnels
-- **Game System**: 5 Factions, 18 Oghams, 1 barre de vie, 8 champs lexicaux, MOS
-- **LLM**: Multi-Brain heterogene (Qwen 3.5) via Ollama — voir `docs/LLM_ARCHITECTURE.md`
-- **Audio**: SFXManager (30+ sons proceduraux)
-- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` v2.4 (source de verite unique)
+**M.E.R.L.I.N.** — deck-building narratif celtique (Godot 4.5, Windows desktop).
+- **Core Loop**: situation (LLM) → main ~5 cartes → 1 principale + 1-2 modificateurs →
+  résolution hybride (tags requis → degré ; le code applique les jauges ; Gemma 4 narre) →
+  Intégrité/Corruption → situation suivante (lookahead)
+- **LLM**: **Gemma 4 E2B natif** (`addons/merlin_llm/` GDExtension, GBNF, 100% local, zéro Ollama)
+- **Jauges**: Intégrité 0-10 + Corruption (seuils /5 → événements + glitch R75)
+- **Audio**: thème menu MusicGen ; SFX/stingers = roadmap v10.16 (BIBLE §22)
+- **Design Ref**: `docs/BIBLE.md` **v2.0 (canon UNIQUE)** — R1-R119 + roadmap §19
 
 ---
 
@@ -257,11 +270,11 @@ Narrative card game built with Godot 4.x.
 ## Quick Commands
 
 ```bash
-.\validate.bat                          # Validation complete
-godot --path .                          # Run project
-godot --path . scenes/MerlinGame.tscn   # Run scene
-cd server && npm run build              # Build MCP server
-/loop 5m <prompt>                       # Tache recurrente
+python tools/cli.py godot validate_step0       # Parse check (les .bat sont bloqués par GPO)
+python tools/cli.py godot smoke --scene res://scenes/MerlinGame.tscn --duration 8
+python tools/cli.py godot soak --runs 200 --autoplay true   # Harnais de preuve R109
+godot --path .                                 # Run project
+/loop 5m <prompt>                              # Tache recurrente
 ```
 
 ### CLI-Anything (agent-native, CLI-first)
@@ -483,45 +496,46 @@ python tools/cli.py <tool>                      # Liste actions (godot/powerbi/o
 
 ## Architecture
 
-### Core Systems (scripts/merlin/)
+### Game Layer (scripts/game/)
 ```
-merlin_store.gd              <- Central state (Redux-like), Factions
-merlin_card_system.gd        <- Card engine, fallback pool, LLM generation
-merlin_effect_engine.gd      <- ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, PROMISE
-merlin_llm_adapter.gd        <- LLM contract, Faction-based, JSON repair
-merlin_constants.gd          <- 18 Oghams, biomes, minigames, factions
-merlin_reputation_system.gd  <- 5 factions, 0-100, thresholds 50/80
-merlin_save_system.gd        <- Profil unique JSON + run_state
+merlin_game.gd        <- Scène de jeu : UI plateau, boucle beats, combo, résolution (~1150 l)
+merlin_run.gd         <- État de run : deck, main, jauges, save/resume (R108)
+merlin_menu.gd        <- Menu principal animé (wordmark, thème MusicGen)
+merlin_fx.gd          <- Cinématique de fusion 4 phases + sustain skippable + helpers juice
+merlin_wait_stage.gd  <- Attente animée générique (caption + glow + skip + cap)
+merlin_visual.gd      <- SOURCE DE VÉRITÉ visuelle : palette canonique + FS_* + factories
+merlin_card_view.gd   <- Vue de carte (rareté=bordure, archétype=bande, glyphe par tag)
+merlin_beat_map.gd    <- Panneau CHEMIN (fil des beats, déviations de draft)
+merlin_scene_art.gd   <- Décor vivant (silhouettes, brume, lune)
+merlin_transition.gd  <- Fondus inter-scènes
 ```
 
-### UI Layer (scripts/ui/)
+### LLM Layer (scripts/llm/ + addons/merlin_llm/)
 ```
-merlin_game_controller.gd   <- Store-UI bridge, run flow, LLM wiring
+merlin_scenario.gd       <- Squelette + lookahead + priorité moteur (R110), single-flight
+merlin_prose.gd          <- Prompts statiques purs (octet-identiques)
+merlin_prompt_builder.gd <- Construction des prompts (zéro lecture d'autoload)
+addons/merlin_llm/       <- GDExtension native Gemma 4 E2B (GGUF, GBNF, streaming)
 ```
+(`addons/merlin_ai/` = couche héritée multi-backend — non utilisée par le flow canon.)
 
 ### Visual System
-```
-merlin_visual.gd            <- Centralized visual constants (PALETTE, GBC, fonts)
-```
-- **RULE**: ALL colors from `MerlinVisual.PALETTE` / `MerlinVisual.GBC`
-- **RULE**: `var c: Color = MerlinVisual.PALETTE["x"]` (explicit type, NEVER `:=`)
+- **RULE**: TOUTES les couleurs viennent de `MerlinVisual` (alias `const COL_X: Color = MerlinVisual.X`)
+- **RULE**: ZÉRO hex en dur hors `merlin_visual.gd` (BIBLE §20) — rebranding = 1 édition
+- **RULE**: `var c: Color = MerlinVisual.GOLD` (type explicite, JAMAIS `:=` avec CONST[index])
 
-### AI Layer (addons/merlin_ai/) — Details: `docs/LLM_ARCHITECTURE.md`
+### Harnais de preuve (R109)
 ```
-ollama_backend.gd        <- Ollama HTTP API
-merlin_ai.gd             <- Multi-Brain (Qwen 3.5), time-sharing, routing
-brain_swarm_config.gd    <- Hardware profiles NANO/SINGLE/DUAL/QUAD
-merlin_omniscient.gd     <- Orchestrateur IA, guardrails
-rag_manager.gd           <- RAG v3.0, per-brain context budget
+tools/probe_soak.gd    <- Monte Carlo N runs logiques (5 archétypes, invariants, save/resume)
+tools/autoplay_run.gd  <- Runs UI complets LLM ON (intro → beats → draft → MerlinEnd)
 ```
 
 ### Key Documents
-- `docs/GAME_DESIGN_BIBLE.md` — **Source de verite unique** pour le game design v2.4
-- `docs/DEV_PLAN_V2.5.md` — **Plan de dev strict** (10 phases, specs code, acceptance criteria)
-- `docs/LLM_ARCHITECTURE.md` — Multi-cerveaux, LoRA, prompts
-- `docs/70_graphic/UI_UX_BIBLE.md` — Visual system specification
-- `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Detail factions
-- `.claude/agents/AGENTS.md` — Agent roster
+- `docs/BIBLE.md` — **CANON UNIQUE v2.0** (R1-R119 ; §19 roadmap ; §20-§24 DA/Juice/Audio/Lisibilité/Pipeline)
+- `docs/archive/` — bibles et plans legacy (NON-AUTORITAIRES)
+- `.claude/agents/AGENTS.md` — Agent roster (⚠ beaucoup d'agents décrivent encore l'ancien jeu —
+  vérifier contre BIBLE.md ; `python tools/create_agent.py --validate` liste les agents périmés)
+- `.claude/skills/merlin-juice|merlin-audio|merlin-artwork/` — outillage studio (BIBLE §24)
 
 ---
 
@@ -539,40 +553,34 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 
 ---
 
-## Game Design (Quick Ref) — v2.4
+## Game Design (Quick Ref) — BIBLE v2.0
 
-> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v2.4
+> **Source de verite** : `docs/BIBLE.md` v2.0 (lire en début de session — règle 10.1)
 
 ### Core Loop
 ```
-Hub 2D → Biome → Ogham → 3D rail (marche) → [5-15s collecte] → [fondu] → Carte 2D (3 options) → Ogham? → Choix → Minigame overlay → Score → Effets → [fondu] → 3D → [repeter] → Fin → Hub
+Menu → 3 titres+pitch générés → « Merlin écrit » (squelette) → beats : situation (LLM) →
+main ~5 → combo (1 principale + 1-2 mods) → Résoudre → fusion animée → degré (sceau R112) →
+deltas jauges → beat suivant (lookahead) → climax → fin (multiple) → MerlinEnd
 ```
 
-### Pipeline effets (reference code — bible section 13.3)
-```
-1.DRAIN -1  2.CARTE  3.OGHAM?  4.CHOIX  5.MINIGAME  6.SCORE  7.EFFETS  8.PROTECTION  9.VIE=0?  10.PROMESSES  11.COOLDOWN  12.RETOUR 3D
-```
+### Systemes actifs (canon)
+- **Intégrité** : 0-10 ; échec -2/-3, partiel -1, éclatante +0/+1 ; mort narrative jugée par Gemma (R65)
+- **Corruption** : coût 0-3 par carte risquée ; seuil /5 → événement + carte corrompue ;
+  plafond ~15-20 = fin corrompu ; **glitch visuel par palier** (R75 : sain/trouble/emprise/dissolution)
+- **Résolution** : ternaire+ (échec/partiel/réussite/éclatante) — tags requis couverts = degré,
+  le code applique, Gemma colore (R20/R105) ; combos bénis nommés, paires antagonistes (R41/R79)
+- **Deck** : 12 cartes canon au départ (4 approches : Perception/Corps/Parole/Intuition, R21/R33) ;
+  main 5, défausse-repioche ; invariant main jouable ≥2 (R113)
+- **Quêtes** : v10.14+ run = chaîne 2-3 quêtes de 2-5 beats, dé PRÉ-TIRÉ par rareté, ramification
+- **Méta cross-run** : fragments du Graal (~20-30), codex, PNJ à mémoire, réputation 3 états (post-MVP)
+- **4 piliers PNJ** : Chœur des Druides · L'Être Indéfinissable · Le Compagnon Perdu · L'Enfant (R36-R40)
+- **Save** : reprise TOUJOURS au début de beat (R108) ; transients jamais persistés
 
-### Systemes actifs
-- **Vie** : 0-100, drain -1/carte AU DEBUT, verification mort APRES effets
-- **5 Factions** : 0-100, cross-run, PAS de decay. Caps: ±20/carte
-- **18 Oghams** : chiffres (PV/monnaie/cooldown/cout). 3 starters gratuits. Activation avant choix uniquement. 1 Ogham/carte max.
-- **3 options fixes**. Minigames obligatoires. Verbes neutres → esprit.
-- **8 Champs lexicaux** + neutre. 45 verbes liste fermee.
-- **Anam** : cross-run, ~10 runs/noeud. Mort = Anam × min(cartes/30, 1.0)
-- **8 Biomes** : score maturite (runs×2 + fins×5 + oghams×3 + max_rep×1)
-- **MOS** : convergence soft min 8, target 20-25, soft max 40, hard max 50
-- **Confiance Merlin** : 0-100 clamp, T0-T3, changement immediat mid-run
-- **Save** : Profil unique + run_state si interruption
-- **FastRoute** : 500+ cartes, variantes par tier confiance, resume JSON pour continuite LLM
-- **Multiplicateur** : score bonus additifs, cap global x2.0. Effets/option: 3 max.
-
-### Systemes SUPPRIMES
-~~Triade~~, ~~Souffle~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~, ~~Flux~~, ~~Run Typologies~~, ~~Decay rep~~, ~~Auto-run pre-run~~
-
-### Scene Flow
+### Scene Flow (6 scènes)
 ```
-IntroCeltOS -> Menu -> Quiz -> Rencontre -> Hub 2D -> [Choix biome + Ogham] -> Run 3D (rail permanent: marche ↔ cartes ↔ minigames) -> [Fin] -> Hub 2D
+MerlinMenu -> MerlinSelection (3 parchemins) -> MerlinGame (boucle beats) -> MerlinEnd
+           (+ MerlinOptions ; GemmaConsole = REPL debug LLM)
 ```
 
 ---
@@ -585,4 +593,4 @@ Status protocol: `status/session.json`, `status/worker_{name}.json`
 
 ---
 
-*Updated: 2026-03-14 — CLAUDE.md v3.3 (game design v2.4: audit robustesse, pipeline effets, caps, edge cases resolus, Oghams chiffres)*
+*Updated: 2026-06-12 — CLAUDE.md v4.0 (R114 : canon unique BIBLE.md v2.0, 6 scènes, Gemma 4 natif, soak R109, 4 skills studio, legacy archivé)*

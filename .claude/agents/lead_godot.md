@@ -145,7 +145,7 @@ powershell -ExecutionPolicy Bypass -File tools/validate_flow_order.ps1 -Quick
 - `scripts/ui/merlin_game_controller.gd` — Store-UI bridge
 - `scripts/merlin/merlin_visual.gd` — Centralized visual constants (PALETTE, GBC)
 - `addons/merlin_ai/merlin_ai.gd` — Multi-Brain AI orchestration
-- `docs/DEV_PLAN_V2.5.md` — Development phases
+- `docs/BIBLE.md (§19 roadmap)` — Development phases
 - `.claude/agents/gdscript_knowledge_base.md` — Known errors and patterns
 
 ## Communication Format
@@ -180,4 +180,4 @@ powershell -ExecutionPolicy Bypass -File tools/validate_flow_order.ps1 -Quick
 ---
 
 *Created: 2026-03-16 — Tier 1 Lead Godot Engineer*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

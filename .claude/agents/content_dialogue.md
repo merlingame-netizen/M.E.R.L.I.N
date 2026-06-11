@@ -46,7 +46,7 @@ You are the **Dialogue Writer** for the M.E.R.L.I.N. project. You are responsibl
 7. **Document** character voice guide per NPC
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — NPC and trust tier specs (v2.4)
+- `docs/BIBLE.md` — NPC and trust tier specs (v3.0)
 - `scripts/merlin/merlin_constants.gd` — Faction definitions
 - `scripts/merlin/merlin_store.gd` — Trust tier state
 - `addons/merlin_ai/rag_manager.gd` — Dialogue context

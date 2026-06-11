@@ -25,7 +25,7 @@ You are the **Determinism Tester** for the M.E.R.L.I.N. project. You are respons
 - Card draw randomness: seed → same card sequence
 - Effect randomness: damage/heal ranges, proc chances
 - Minigame word selection: seeded word lists
-- MOS convergence: deterministic with same inputs
+- challenge scoring: deterministic with same inputs
 - Faction rep changes: predictable given same choices
 - LLM fallback: deterministic card selection when LLM unavailable
 
@@ -48,4 +48,4 @@ You are the **Determinism Tester** for the M.E.R.L.I.N. project. You are respons
 - `scripts/merlin/merlin_store.gd` — Game state and seed storage
 - `scripts/merlin/merlin_effect_engine.gd` — Effect randomness
 - `scripts/merlin/merlin_save_system.gd` — Seed persistence
-- `docs/GAME_DESIGN_BIBLE.md` — Expected randomness behavior
+- `docs/BIBLE.md` — Expected randomness behavior

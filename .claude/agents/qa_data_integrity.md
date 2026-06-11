@@ -46,5 +46,5 @@ You are the **Data Integrity Specialist** for the M.E.R.L.I.N. project. You are 
 - `scripts/merlin/merlin_save_system.gd` — Save/load logic
 - `scripts/merlin/merlin_card_system.gd` — Card data format
 - `scripts/merlin/merlin_llm_adapter.gd` — LLM response parsing
-- `docs/GAME_DESIGN_BIBLE.md` — Canonical data formats
+- `docs/BIBLE.md` — Canonical data formats
 - `project.godot` — Project configuration

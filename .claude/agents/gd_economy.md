@@ -43,7 +43,7 @@ You are the **Economy Designer** for the M.E.R.L.I.N. project. You are responsib
 7. **Balance** so optimal play = fun play, not grind play
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Anam and Ogham rules (v2.4)
+- `docs/BIBLE.md` — Anam and Ogham rules (v3.0)
 - `scripts/merlin/merlin_constants.gd` — Economy constants
 - `scripts/merlin/merlin_store.gd` — Cross-run state tracking
 - `scripts/merlin/merlin_save_system.gd` — Progression persistence

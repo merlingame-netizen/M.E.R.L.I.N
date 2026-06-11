@@ -45,7 +45,7 @@ You are the **Narrative Arc Designer** for the M.E.R.L.I.N. project. You are res
 7. **Document** narrative flow guidelines for LLM prompt design
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Core loop and narrative rules (v2.4)
+- `docs/BIBLE.md` — Core loop and narrative rules (v3.0)
 - `docs/LLM_ARCHITECTURE.md` — LLM narrative generation pipeline
 - `scripts/merlin/merlin_llm_adapter.gd` — LLM prompt construction
 - `addons/merlin_ai/merlin_ai.gd` — Multi-Brain narrative routing

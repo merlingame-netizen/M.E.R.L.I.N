@@ -2,8 +2,8 @@
 """Generate the MERLIN main theme (ambient celtic slow) with MusicGen.
 
 Outputs a seamless-loop WAV at music/theme/merlin_main_theme.wav.
-CPU-only friendly (facebook/musicgen-small). Bible ref: GAME_DESIGN_BIBLE §12.1
-(Hub = ambient celtique + drones electroniques).
+CPU-only friendly (facebook/musicgen-small). Bible ref: docs/BIBLE.md §22 (R117 Audio —
+menu = theme celtique lent, boucle crossfade equal-power).
 """
 import sys
 import time

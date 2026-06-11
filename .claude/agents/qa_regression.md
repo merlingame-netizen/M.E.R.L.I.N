@@ -47,4 +47,4 @@ You are the **Regression Test Specialist** for the M.E.R.L.I.N. project. You are
 - `scripts/merlin/merlin_effect_engine.gd` — Effect pipeline
 - `scripts/merlin/merlin_card_system.gd` — Card engine
 - `scripts/test/` — Existing test suite
-- `docs/GAME_DESIGN_BIBLE.md` — Expected behavior reference
+- `docs/BIBLE.md` — Expected behavior reference

@@ -76,7 +76,7 @@ Task tool:
 |------|------|-----------|
 | Game Designer | `game_designer.md` | Rules, **data-driven balancing, economy, synergies** |
 | Narrative Writer | `narrative_writer.md` | Card text, **QA narrative, prompt writing, faction templates** |
-| **Balance Tuner** | `balance_tuner.md` | **Numeric balance, MOS convergence, difficulty curves, scoring tables** |
+| **Balance Tuner** | `balance_tuner.md` | **Numeric balance, challenge scoring, difficulty curves, scoring tables** |
 | Art Direction | `art_direction.md` | **Pixel art pipeline, shaders, procedural landscapes** |
 | Audio Designer | `audio_designer.md` | **SFXManager procedural, adaptive music, accessibility** |
 
@@ -265,7 +265,7 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 | Role | File | Specialty |
 |------|------|-----------|
 | **GD Economy** | `gd_economy.md` | **Anam flow, Ogham costs, cross-run reward curves** |
-| **GD Difficulty** | `gd_difficulty.md` | **MOS convergence tuning, difficulty curves, drain/heal balance** |
+| **GD Difficulty** | `gd_difficulty.md` | **challenge scoring tuning, difficulty curves, drain/heal balance** |
 | **GD Pacing** | `gd_pacing.md` | **Run length, card rhythm, tension/release, transition timing** |
 | **GD Faction Dynamics** | `gd_faction_dynamics.md` | **Alliance/rivalry balance, cross-faction effects, rep thresholds** |
 | **GD Narrative Flow** | `gd_narrative_flow.md` | **Per-run story arc, LLM narrative coherence, beat structure** |
@@ -336,7 +336,7 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 
 | Role | File | Specialty |
 |------|------|-----------|
-| **Meta Bible Guardian** | `meta_bible_guardian.md` | **Bible v2.4 enforcement, design drift detection, removed system audit** |
+| **Meta Bible Guardian** | `meta_bible_guardian.md` | **Bible v3.0 enforcement, design drift detection, removed system audit** |
 | **Meta Code-Bible Sync** | `meta_code_bible_sync.md` | **Constants alignment, enum sync, pipeline order verification** |
 | **Meta Sprint Reviewer** | `meta_sprint_reviewer.md` | **Post-sprint quality assessment, validation, debt tracking** |
 | **Meta Tech Debt** | `meta_tech_debt.md` | **TODO/FIXME tracking, duplication, complexity hotspots, dead code** |
@@ -562,7 +562,7 @@ When an agent completes work and needs handoff:
 | **`qa_boundary.md`** | **Clamp/cap logic modified, new effects added, division/percentage code** | **Boundary value testing, overflow detection** |
 | **`qa_smoke.md`** | **Pre-commit, pre-release, new scene/autoload added** | **Fast <60s health check across all systems** |
 | **`meta_bible_guardian.md`** | **Game mechanic code modified, new features without bible section** | **Design drift detection, bible alignment verification** |
-| **`meta_code_bible_sync.md`** | **merlin_constants.gd or GAME_DESIGN_BIBLE.md edited** | **Constants alignment, enum sync check** |
+| **`meta_code_bible_sync.md`** | **merlin_constants.gd or BIBLE.md edited** | **Constants alignment, enum sync check** |
 | **`meta_tech_debt.md`** | **Code shortcuts introduced, sprint review, "clean up"** | **TODO tracking, duplication detection, complexity audit** |
 | **`content_card_writer.md`** | **Fallback pool expansion, new biome cards needed** | **French card text, Celtic authenticity, 45-verb choices** |
 | **`content_merlin_voice.md`** | **Merlin dialogue written, trust tier text needed** | **Merlin personality consistency, T0-T3 modulation** |
@@ -731,4 +731,4 @@ claude "Use Task to read .claude/agents/perf_profiler.md and profile runtime per
 
 *Created: 2026-02-06*
 *Updated: 2026-03-15 — 105 agents + 1 KB (new: 56 specialized agents — 10 QA/Testing, 8 Game Design, 8 UX/Accessibility, 6 Audio/Atmosphere, 8 Visual/Art, 6 Performance/Technical, 6 Content/Narrative, 4 Meta/Process)*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

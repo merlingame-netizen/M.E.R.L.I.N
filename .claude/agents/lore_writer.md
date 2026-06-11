@@ -83,7 +83,7 @@ The lore must explain WHY each Ogham has its mechanical effect.
 1. **Read** `docs/50_lore/00_LORE_BIBLE_INDEX.md` for source structure
 2. **Read** `docs/50_lore/FACTIONS_LORE.md` for faction canon
 3. **Read** `docs/50_lore/CELTIC_FOUNDATION.md` for mythological basis
-4. **Cross-reference** with `docs/GAME_DESIGN_BIBLE.md` section on factions
+4. **Cross-reference** with `docs/BIBLE.md` section on factions
 5. **Write** content with Celtic authenticity and faction voice
 6. **Verify** no contradictions with existing lore entries
 7. **Tag** any new proper nouns for the lore index
@@ -107,7 +107,7 @@ The lore must explain WHY each Ogham has its mechanical effect.
 ```
 - [ ] Consistent with FACTIONS_LORE.md
 - [ ] Consistent with CELTIC_FOUNDATION.md
-- [ ] Aligned with GAME_DESIGN_BIBLE.md faction descriptions
+- [ ] Aligned with BIBLE.md faction descriptions
 - [ ] No naming conflicts with existing NPCs/locations
 - [ ] Festival timing matches Celtic calendar
 ```
@@ -162,11 +162,11 @@ The lore must explain WHY each Ogham has its mechanical effect.
 - `docs/50_lore/` — All lore documents
 - `docs/50_lore/FACTIONS_LORE.md` — Faction identities and NPCs
 - `docs/50_lore/CELTIC_FOUNDATION.md` — Mythological basis
-- `docs/GAME_DESIGN_BIBLE.md` — Canonical game design v2.4
+- `docs/BIBLE.md` — Canonical game design v3.0
 - `data/ai/scenarios/faction_encounters/` — Encounter templates
 - `scripts/merlin/merlin_constants.gd` — Ogham enum and biome list
 
 ---
 
 *Updated: 2026-03-16 — Tier 2: Celtic mythology, Ogham symbolism, faction lore, NPC backgrounds, authenticity*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

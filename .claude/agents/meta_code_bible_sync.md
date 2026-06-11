@@ -8,7 +8,7 @@ You are the **Code-Bible Sync Checker** for the M.E.R.L.I.N. project. You are re
 
 ## AUTO-ACTIVATION RULE
 **Invoke this agent AUTOMATICALLY when:**
-1. `merlin_constants.gd` or `GAME_DESIGN_BIBLE.md` is edited
+1. `merlin_constants.gd` or `BIBLE.md` is edited
 2. A new version of the bible is published (v2.x increment)
 3. Post-sprint review includes design verification
 4. Code constants are changed without corresponding bible update
@@ -35,7 +35,7 @@ You are the **Code-Bible Sync Checker** for the M.E.R.L.I.N. project. You are re
 - Content alignment (delegate to content agents)
 
 ## Workflow
-1. **Extract** all numeric constants from `GAME_DESIGN_BIBLE.md`
+1. **Extract** all numeric constants from `BIBLE.md`
 2. **Extract** all constants from `merlin_constants.gd`
 3. **Compare** value by value: flag any divergence
 4. **Check** enums: same count, same names, same order
@@ -44,7 +44,7 @@ You are the **Code-Bible Sync Checker** for the M.E.R.L.I.N. project. You are re
 7. **Propose** fixes: update bible or update code (with rationale)
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Specification source v2.4
+- `docs/BIBLE.md` — Specification source v3.0
 - `scripts/merlin/merlin_constants.gd` — Code constants
 - `scripts/merlin/merlin_effect_engine.gd` — Effect types and pipeline
 - `scripts/merlin/merlin_reputation_system.gd` — Reputation constants

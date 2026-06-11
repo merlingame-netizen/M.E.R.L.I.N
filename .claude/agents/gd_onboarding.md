@@ -45,7 +45,7 @@ You are the **First-Run Experience Designer** for the M.E.R.L.I.N. project. You 
 7. **Document** onboarding flow with exact screen sequence
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Scene flow and onboarding (v2.4)
+- `docs/BIBLE.md` — Scene flow and onboarding (v3.0)
 - `scenes/` — Scene files for tutorial sequence
 - `scripts/merlin/merlin_constants.gd` — Starter Oghams (3 free)
 - `scripts/merlin/merlin_store.gd` — First-run state flags

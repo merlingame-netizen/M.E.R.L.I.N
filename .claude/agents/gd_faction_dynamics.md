@@ -44,7 +44,7 @@ You are the **Faction Interaction Designer** for the M.E.R.L.I.N. project. You a
 7. **Document** faction dynamics rules and interaction matrix
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Faction system (v2.4)
+- `docs/BIBLE.md` — Faction system (v2.4)
 - `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Faction details
 - `scripts/merlin/merlin_reputation_system.gd` — Reputation logic
 - `scripts/merlin/merlin_constants.gd` — Faction constants

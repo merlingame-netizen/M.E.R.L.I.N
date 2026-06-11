@@ -237,4 +237,4 @@ Layer 4: Structure         -> JSON valid (parser verified)
 ---
 
 *Created: 2026-03-16 — Tier 1 LLM Integration Expert*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

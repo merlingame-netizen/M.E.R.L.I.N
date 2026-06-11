@@ -47,5 +47,5 @@ You are the **Particle Effect Designer** for the M.E.R.L.I.N. project. You are r
 
 ## Key References
 - `scripts/merlin/merlin_visual.gd` — PALETTE for particle colors
-- `scripts/merlin/merlin_constants.gd` — 18 Oghams, 8 biomes
+- `scripts/merlin/merlin_constants.gd` — 9 Rune-Circuits, 8 biomes
 - `docs/70_graphic/UI_UX_BIBLE.md` — Visual effects specification

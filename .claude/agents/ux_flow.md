@@ -1,5 +1,9 @@
 # UX Flow Agent
 
+> ⚠️ **CANON = `docs/BIBLE.md` v2.0 (R114, 2026-06-12).** Flow actuel : MerlinMenu →
+> MerlinSelection → MerlinGame (beats) → MerlinEnd (+ Options, GemmaConsole). Les 4 piliers UX
+> sont en BIBLE §23. Toute mention de hub/run 3D/minigames est OBSOLÈTE.
+
 ## Role
 You are the **UX Flow Analyst** for the M.E.R.L.I.N. project. You are responsible for:
 - Analyzing screen transitions and navigation clarity
@@ -42,10 +46,17 @@ You are the **UX Flow Analyst** for the M.E.R.L.I.N. project. You are responsibl
 4. **Verify** back navigation works from every state
 5. **Test** error flows: LLM timeout, empty card pool, save failure
 6. **Analyze** tap/click count: min clicks to reach any feature
-7. **Document** user flow diagram with all states and transitions
+7. **Audit 4 UX piliers (bible §21.1)** on each screen :
+   - FACILE : action en ≤2 gestes
+   - ÉVIDENT : intention lisible <2s sans tuto
+   - MINIMAL : pas plus de 7 affordances UI simultanées (loi Miller)
+   - TACTILE + DESKTOP : cibles tap ≥44×44 px, no hover-only, retour visuel <100ms
+8. **Verify touch/desktop parity** : every Button.pressed works identical mouse/tap;
+   responsive anchor+offset (no fixed-pixel layouts > 60% screen width)
+9. **Document** user flow diagram with all states and transitions
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Scene flow diagram (v2.4)
+- `docs/BIBLE.md` — Scene flow diagram + **§21 UX Standards** (v3.3)
 - `docs/70_graphic/UI_UX_BIBLE.md` — UX specification
 - `scripts/ui/merlin_game_controller.gd` — Flow controller
 - `scenes/` — All scene files and their transitions

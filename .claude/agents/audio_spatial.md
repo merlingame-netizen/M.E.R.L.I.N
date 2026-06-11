@@ -48,4 +48,4 @@ You are the **Spatial Audio Designer** for the M.E.R.L.I.N. project. You are res
 ## Key References
 - `scenes/` — 3D walking scene files
 - `scripts/merlin/merlin_constants.gd` — 8 biome definitions
-- `docs/GAME_DESIGN_BIBLE.md` — 3D walking segment specs (v2.4)
+- `docs/BIBLE.md` — 3D walking segment specs (v3.0)

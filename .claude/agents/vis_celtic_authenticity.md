@@ -47,5 +47,5 @@ You are the **Celtic Visual Authenticity Specialist** for the M.E.R.L.I.N. proje
 
 ## Key References
 - `scripts/merlin/merlin_constants.gd` — 18 Ogham definitions
-- `docs/GAME_DESIGN_BIBLE.md` — Celtic theme specification (v2.4)
+- `docs/BIBLE.md` — Celtic theme specification (v3.0)
 - `docs/70_graphic/UI_UX_BIBLE.md` — Visual style guide

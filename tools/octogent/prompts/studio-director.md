@@ -20,7 +20,7 @@ Forge UI commits landed. Workers were spawning on Forge tooling tasks
 When picking a task from the backlog (Tier 1/2/3):
 - **REJECT** any task whose target path is `tools/octogent/`, `tools/autodev/`, `server/`, `validate.bat`, `package.json`, `pnpm-lock.yaml`, `.claude/agents/`, `.claude/hooks/`. These are the meta-tool, not the game.
 - **REJECT** "audit" tasks that produce only a markdown report without code change (Phase-1 P1-A is the one allowed exception because it gates code changes in P1-B).
-- **PREFER** tasks tagged `P0-*` or `P1-*` from `task_plan.md` — they are the unblocked Phase 0 / Phase 1 items from `docs/DEV_PLAN_V2.5.md`.
+- **PREFER** tasks tagged `P0-*` or `P1-*` from `task_plan.md` — they are the unblocked Phase 0 / Phase 1 items from `docs/BIBLE.md (§19 roadmap)`.
 
 If Tier 3 LLM auto-gen proposes any forbidden target, reject and re-prompt
 the LLM with the constraint reinforced.
@@ -61,8 +61,8 @@ Before doing anything else, do these in order:
    - `CLAUDE.md`
    - `progress.md` (if it exists)
    - `task_plan.md` (if it exists)
-   - `docs/DEV_PLAN_V2.5.md` (canonical phase plan)
-   - `docs/GAME_DESIGN_BIBLE.md` (only the table of contents — full read on demand)
+   - `docs/BIBLE.md (§19 roadmap)` (canonical phase plan)
+   - `docs/BIBLE.md` (only the table of contents — full read on demand)
 3. **Build the backlog (cascade priority):**
    - **Tier 0 — User directive (HIGHEST PRIORITY)** : read the user's live directive from
      `curl -s http://127.0.0.1:{{apiPort}}/api/studio/directive`. Returns
@@ -76,7 +76,7 @@ Before doing anything else, do these in order:
      follow the directive — the user's live intent trumps the file.
    - **Tier 1 — `task_plan.md`** : extract unchecked `- [ ]` items. These are the user's explicit todos.
    - **Tier 2 — Octogent deck** : `curl -s http://127.0.0.1:{{apiPort}}/api/deck/tentacles | jq '.[] | {id, name, todos: (.todos // [])}'`. Pull pending todos from any tentacle.
-   - **Tier 3 — LLM auto-gen** : ONLY if Tiers 0/1/2 are empty. Read the current state of `progress.md` + `docs/DEV_PLAN_V2.5.md` and propose 3-5 concrete tasks aligned with the **next un-shipped phase**. Do not invent scope outside that phase. Print the proposed list to stdout for user visibility.
+   - **Tier 3 — LLM auto-gen** : ONLY if Tiers 0/1/2 are empty. Read the current state of `progress.md` + `docs/BIBLE.md (§19 roadmap)` and propose 3-5 concrete tasks aligned with the **next un-shipped phase**. Do not invent scope outside that phase. Print the proposed list to stdout for user visibility.
 4. **Plan the wave.** Pick up to {{workerCount}} independent tasks from the backlog. "Independent" means they don't touch the same files. Group conflicting tasks into sequential waves; only spawn workers for the current wave.
 
 ## Agent Routing (MANDATORY)

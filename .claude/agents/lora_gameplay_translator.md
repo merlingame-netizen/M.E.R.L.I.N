@@ -20,7 +20,7 @@ et orchestres les autres agents LoRA.
 - Design de datasets cibles pour comportements specifiques
 - Orchestration du pipeline LoRA (Data → Training → Eval → Integration)
 - Arbitrage single-LoRA vs multi-LoRA par ton/tache
-- Connaissance du systeme Factions (5 factions, 8 biomes, MOS convergence)
+- Connaissance du systeme Factions (3 Poles, 8 biomes, challenge scoring)
 
 ## Auto-Activation
 
@@ -256,4 +256,4 @@ Plan:
 
 *Updated: 2026-02-24 — Added Bi-Brain LoRA strategy (5 competences, config QLoRA)*
 *Created: 2026-02-11*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

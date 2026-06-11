@@ -105,4 +105,4 @@ rm -rf external/<repo_name>
 ---
 
 *PERF_REPOS v1.0 — M.E.R.L.I.N. — 2026-05-15.*
-*Réfs : `docs/BLENDER_WORKFLOW.md` §6+§7+§9, `docs/GAME_DESIGN_BIBLE.md` §20.*
+*Réfs : `docs/BLENDER_WORKFLOW.md` §6+§7+§9, `docs/archive/GAME_DESIGN_BIBLE_legacy_v3.8.md` §20 (ARCHIVÉ — canon : `docs/BIBLE.md` §20/§24).*

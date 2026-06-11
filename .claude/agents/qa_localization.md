@@ -46,6 +46,6 @@ You are the **i18n/l10n Tester** for the M.E.R.L.I.N. project. You are responsib
 ## Key References
 - `scripts/merlin/merlin_constants.gd` — Ogham names, biome names
 - `scripts/merlin/merlin_llm_adapter.gd` — LLM text processing
-- `docs/GAME_DESIGN_BIBLE.md` — Canonical French text
+- `docs/BIBLE.md` — Canonical French text
 - `scripts/merlin/merlin_visual.gd` — Font configuration
 - `addons/merlin_ai/rag_manager.gd` — RAG text encoding
