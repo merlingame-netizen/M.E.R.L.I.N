@@ -1,5 +1,8 @@
 # Plan de Developpement Strict — M.E.R.L.I.N. v2.5
 
+> ⚠️ **ARCHIVÉ (2026-06-12, R114) — NON-AUTORITAIRE.** Ce plan décrit un jeu antérieur au reset
+> du 2026-05-25. **Canon unique = `docs/BIBLE.md` v2.0** (roadmap : §19). Conservé pour histoire.
+
 > Source de verite design : `docs/GAME_DESIGN_BIBLE.md` v2.4
 > Ce plan est la reference pour toute implementation. Chaque phase doit etre terminee et validee avant de passer a la suivante.
 > Date : 2026-03-14 | Revision : 2026-03-14 (v2.5 — cross-check codebase + gap closure)

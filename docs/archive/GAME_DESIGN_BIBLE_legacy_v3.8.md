@@ -1,6 +1,11 @@
 # GAME DESIGN BIBLE — M.E.R.L.I.N. v3.8
 
-> **Source de verite unique** pour le game design de M.E.R.L.I.N.
+> ⚠️ **ARCHIVÉ (2026-06-12, R114) — NON-AUTORITAIRE.** Cette bible décrit un jeu antérieur au
+> reset du 2026-05-25 (factions/Oghams/MOS/biomes : systèmes ABANDONNÉS). **Canon unique =
+> `docs/BIBLE.md` v2.0.** Les sections encore valables (DA, UX, palettes) y ont été rapatriées
+> et ADAPTÉES (§20-§24). Conservé pour histoire uniquement.
+
+> ~~**Source de verite unique** pour le game design de M.E.R.L.I.N.~~
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
 > Date de creation : 2026-03-12 | v3.0 : 2026-05-09 | v3.1 : 2026-05-16
 > References : Inscryption (MJ adversarial, 4e mur) + AI Dungeon (liberte narrative IA) + **Hand of Fate 2** (no drain, equilibre via cartes)

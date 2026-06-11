@@ -1,10 +1,13 @@
-# BIBLE — Jeu de deck-building narratif (reconstruction 2026-05-25)
+# BIBLE — Jeu de deck-building narratif (reconstruction 2026-05-25) — **v2.0**
 
 > **Bible reconstruite from scratch** via AskUserQuestion (objectif 200+ questions).
 > **TOUTE bible / contexte / mémoire antérieurs sont NON-AUTORITAIRES** (oublié sur décision
 > utilisateur du 2026-05-25, « toute bibliothèque précédente de contexte devra être oubliée »).
 > **Source de vérité unique = CE fichier**, rempli uniquement par des réponses validées par l'utilisateur.
 > **Statut (R100, 2026-05-26)** : **canon MVP GELÉ** (décisions cœur R1-99 verrouillées). Les rounds R100+ n'ajoutent que du **détail / contenu concret / post-MVP**, sans contredire le canon MVP.
+> **v2.0 (R114, 2026-06-12)** : extension « montée en gamme » — sections §19-§24 (DA, Juice, Audio,
+> Lisibilité, Pipeline assets). `docs/archive/GAME_DESIGN_BIBLE_legacy_v3.8.md` et `DEV_PLAN_V2.5.md`
+> sont **ARCHIVÉS et non-autoritaires** ; leurs sections encore valables ont été rapatriées ici, adaptées au canon.
 
 ---
 
@@ -50,6 +53,11 @@ Menu → lancer la scène de jeu **Brocéliande (Biome 1)** → sélectionner pa
 14. Technique / Perf / Plateforme / Export
 15. Onboarding / Tutoriel
 16. Périmètre MVP détaillé
+
+> **Sections additionnelles (post-questionnaire)** : §18 v10.13 Fondations prouvées (R108-R113) ·
+> §19 R114 Montée en gamme · §20 Direction Artistique (R115) · §21 Animations & Juice (R116) ·
+> §22 Audio (R117) · §23 Lisibilité & Accessibilité (R118) · §24 Pipeline Assets & Outillage (R119).
+> (§17 : numéro non attribué — gap historique conservé.)
 
 ---
 
@@ -1382,3 +1390,239 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   (cible 25-35%) et morts 7.5% (cible 10-25%) → durcir le partiel (-2 intégrité) et/ou élargir les
   tags requis des beats 3-4. Décisions verrouillées v10.14 : dé PRÉ-TIRÉ par rareté (4 bandes),
   run = chaîne de 2-3 quêtes de 2-5 beats, ramification découverte au beat, 50+ tags différés.
+
+---
+
+## §19 — R114 · Montée en gamme « Fondations » (2026-06-12)
+
+> Décisions user (2 rounds AskUserQuestion, session 2026-06-12). La bible passe en **v2.0** :
+> les sections §20-§24 ci-dessous deviennent canon. Sources legacy archivées (non-autoritaires) :
+> `docs/archive/GAME_DESIGN_BIBLE_legacy_v3.8.md`, `docs/archive/DEV_PLAN_V2.5_legacy.md`.
+
+- **Périmètre** : **polish d'abord** — pousser le 2D existant au maximum (animations, transitions,
+  lisibilité, audio) AVANT le dégel des artworks génératifs et des biomes. Le canon MVP (§16)
+  reste la base ; rien de ce qui suit ne contredit R1-R113.
+- **4 dimensions retenues** (ordre d'exécution) : juice & animations → contenu & lore →
+  artworks génératifs → audio complet (l'audio de base — SFX/stingers — arrive avec le juice).
+- **Outillage studio (développement 100% Claude)** : 4 outils canon — skills `merlin-juice`,
+  `merlin-audio`, `merlin-artwork` + `tools/create_agent.py` (factory d'agents). Voir §24.
+- **Roadmap verrouillée** (gates mesurables par version) :
+
+| Version | Objectif | Gate de sortie |
+|---|---|---|
+| v10.13.1 Fondations | Cohérence (bible v2.0, CLAUDE.md, archivage) + 4 outils + juice pack 1 + glitch Corruption | validate 0 · smoke 6/6 · soak 200/200 + autoplay 3/3 · captures avant/après |
+| v10.14 Dé, Chemin & Équilibre | Dé pré-tiré 4 bandes + anim B8 · chaîne 2-3 quêtes · ramification v1 | soak archétypes 5×100 · partiel 25-35% · morts 10-25% |
+| v10.15 Juice complet & lisibilité | Transitions inter-écrans · beat map animée · reduce-motion complet | audit 4 piliers PASS · zéro hitch >33ms hors gen |
+| v10.16 Audio complet | MerlinAudio (3 bus) · 12-16 SFX · 4 stingers · nappe réactive | 100% déclencheurs joués · peak < -3dB |
+| v10.17 Contenu & lore | 50+ tags · combos curés (R79) · few-shot enrichis · piliers PNJ | guardian PASS 100% texte neuf · soak vert |
+| v10.18 Artworks génératifs | 1 image/situation async+cache · portraits 12 cartes (R29/R48) | 12/12 + ≥20 situations · async sans hitch |
+| v10.19 Polish release | Accessibilité fine (R99) · presets perf (R74) | audit accessibilité PASS |
+
+---
+
+## §20 — R115 · Direction Artistique (canon)
+
+> Rapatrie et REMPLACE les sections DA legacy. Étend R28 (visuel minimaliste élégant) et R70
+> (palette exacte & typo). **Source de vérité code : `scripts/game/merlin_visual.gd`** — la bible
+> documente, le code fait foi ; toute divergence = bug à corriger côté code OU amender ici.
+
+### Identité
+**Flat rétro-minimaliste, parchemin sombre.** Encre et crème sur brun profond, accents or
+(merveilleux) et violet (corruption). Pas de skeuomorphisme lourd, pas de photo-réalisme,
+pas de néon : le jeu est un **grimoire vivant**. Ton visuel = merveilleux-inquiétant (R8).
+
+### Palette canonique (miroir exact de `MerlinVisual`, verrouillée 2026-05-26)
+| Constante | Hex | Usage |
+|---|---|---|
+| BG_PAGE | #1E1A14 | fond de page (game, menu) |
+| BG_DEEP | #14100C | fond profond (end, options, selection, console) |
+| SURFACE / INK | #2A2018 | panneaux sombres / trait & texte foncé sur crème |
+| CREAM | #E8DCC0 | parchemin, texte clair, fond carte |
+| GOLD | #C9A24B | accent or |
+| GOLD_DARK | #8A6A2E | or sombre (degré réussite, captions discrètes) |
+| GREEN | #7FA65C | vie / positif |
+| GREEN_DARK | #4F6B3E | vert sombre (éclatante, console) |
+| VIOLET | #7B4FA3 | corruption / échec |
+| DIM_WARM | #9C8C6A | texte secondaire CLAIR (sur fonds sombres) |
+| INK_DIM | #6E5A3C | texte secondaire FONCÉ (sur crème) |
+| PANEL | #241E16 | surface de panneau (beat map) |
+| BORDER_BRUN | #4A3B28 | liseré brun (panneau, carte Commune) |
+| RING_BG | #3A3228 | fond d'anneau de jauge, nœud futur de la map |
+| RARE_BLUE | #5A7A8C | rareté Rare, déviation map |
+
+**Règle d'or : ZÉRO hex en dur hors `MerlinVisual`.** Les écrans aliasent
+(`const COL_GOLD: Color = MerlinVisual.GOLD`) — un rebranding = UNE édition.
+
+### Codes couleur sémantiques (miroir code)
+- **Degrés** (`MerlinVisual.degree_color`) : échec=VIOLET · partiel=INK_DIM · réussite=GOLD_DARK · éclatante=GREEN_DARK.
+- **Fusion** (`MerlinFx.FUSION_COLORS`) : échec #D04848 · partiel #D8A030 · réussite #E8C45A · éclatante #F4E0A8.
+- **Raretés** (`MerlinCardView.RARITY_STYLE`, bordure = rareté, R52/R53) : Commune #4A3B28 (3px) ·
+  Rare #5A7A8C (4px) · Épique #9A4FA8 (5px) · Mythique #C9A24B (7px + lueur or).
+- **Archétypes d'effet** (`ARCHETYPE_STYLE`, bande basse) : Offensif #C0533A « OFFENSE » ·
+  Défensif #4E7A6A « DÉFENSE » · Social #B58A3A « PAROLE » · Mystique #6B5A9C « MYSTÈRE » ·
+  Corrompu #8B4FA3 « CORRUPTION ».
+- **Badges effet actif** (`EFFECT_STYLE`, Rare+) : HEAL #5E7A42 ♥ · PURGE #6B4E8A ✦ · DRAW #3F5A6A ✚.
+
+### Typographie
+**Tout-serif** (R70). Tailles canon (`MerlinVisual.FS_*`) : narrative 36 · titre popup 40 ·
+bouton 26 · caption 22 · hint 20. Jamais de taille inférieure à 16px pour une info de jeu (R112).
+
+### Moods par type de beat (indicatif, teinte d'ambiance subtile)
+| Type | Teinte dominante | Intention |
+|---|---|---|
+| Exploration | GREEN_DARK très voilé | curiosité, respiration |
+| Rencontre | GOLD voilé | présence, écoute |
+| Épreuve | DIM_WARM neutre | tension contenue |
+| Dilemme | VIOLET très voilé | poids du choix |
+| Climax | GOLD + vignette renforcée | apothéose |
+
+La teinte est un **voile discret** (alpha ≤ 0.08) — jamais un changement de palette (anti-pattern :
+casser l'identité parchemin). Le glitch Corruption (§23 et R75) se SUPERPOSE à ces moods.
+
+---
+
+## §21 — R116 · Animations & Juice (canon)
+
+> Étend R110 (toute attente est animée ET skippable) et l'architecture §18 (MerlinFx : « le layer
+> EST le node »). **Source de vérité code : `scripts/game/merlin_fx.gd` + constantes `MerlinVisual.DUR_*`.**
+> Le skill `.claude/skills/merlin-juice/SKILL.md` est le mode d'emploi outillé de cette section.
+
+### Vocabulaire canon (nom → durée → courbe → usage)
+| Nom | Durée (s) | Trans/Ease | Usage |
+|---|---|---|---|
+| `tap` | 0.06 down / 0.10 up | QUAD out | press de bouton (scale 0.97→1.0) |
+| `fast` | 0.12 | CUBIC out | hover carte (scale 1.18 + lift 30px), hover bouton (modulate 1.06) |
+| `ui` | 0.22 | CUBIC in_out | vol de carte main↔combo (ghost, arc -18px) |
+| `deal` | 0.24-0.28 | BACK out | distribution de cartes (stagger 0.05) |
+| `discard` | 0.25 | QUAD in | défausse (slide -40px, rot -6°, fade, stagger 0.05) |
+| `veil` | 0.20 in / 0.25 out | QUAD in/out | voile de transition de beat (BG_PAGE alpha 0→0.85→0) |
+| `float_delta` | 0.9 | QUAD out | chiffre delta de jauge qui monte et s'évanouit |
+| `pulse` | 0.3 | SINE in_out | pulsation d'un nœud (1→1.3→1, beat map, jauges) |
+| `fusion` | 2.5-5.5 (par degré) | (FUSION_DURATIONS) | cinématique 4 phases — INTOUCHÉE, référence du genre |
+
+### Règles (DO)
+- **Tween lié au node hôte** (`node.create_tween()` ou layer auto-détruit type MerlinFx) — un tween
+  ne survit JAMAIS à son node (anti « tweens orphelins », bug fondateur v10.2).
+- `kill()` du tween précédent avant re-tween de la même propriété (`_tw` membre, pattern MerlinCardView).
+- `pivot_offset = size/2` AVANT tout tween de scale/rotation.
+- Overlays décoratifs : `mouse_filter = IGNORE` (un effet ne vole JAMAIS un clic).
+- Stagger 0.04-0.06s pour les groupes (cartes, options de draft).
+- Vérifier `MerlinVisual.reduced_motion` : si actif → durées ÷2, amplitudes ÷2, shake off,
+  l'INFORMATION reste (indice statique conservé, R74/R75).
+
+### Interdits (DON'T)
+- Anim UI > 0.5s hors cinématique de fusion et veil.
+- Anim **bloquante pendant la décision joueur** (la main et le combo répondent TOUJOURS au clic).
+- `await` ajouté dans le flow logique de run pour une raison cosmétique (régression soak/autoplay).
+- Polling `_process` pour de l'animation (tweens only). Particules : cap existant des sparks, pas de
+  nouvelles émissions pendant le sustain LLM (CPU réservé à la gen, R58).
+
+---
+
+## §22 — R117 · Audio (canon)
+
+> Étend R30 (nappe réactive, SFX feutrés organiques, Merlin texte-seul) et R76 (drone celtique
+> sans mélodie, stems additifs, stingers samples au MVP). Le skill `.claude/skills/merlin-audio/SKILL.md`
+> outille cette section (génération procédurale `tools/sfx_forge.py` + MusicGen).
+
+### Architecture
+- **3 bus** : Master → Music, SFX. Curseurs Options (R74) mappés 1:1.
+- **Autoload `MerlinAudio`** (cible v10.16) : `play_sfx(id)`, `play_stinger(degree)`,
+  `set_corruption_layer(level)` ; pré-chargement des WAV au boot.
+- **Ducking** : musique -6dB pendant un stinger, retour en 0.8s.
+- **Défauts** : Master 80% · Music 60% · SFX 80%. Peak ≤ -3dB sur tout asset (gate).
+
+### Catalogue SFX v1 (id → matière → déclencheur)
+| Id | Matière (feutrée-organique) | Déclencheur |
+|---|---|---|
+| `card_pick` | papier glissé court | carte prise en main / hover marqué |
+| `card_play` | papier posé + souffle | carte posée au combo |
+| `card_discard` | papier froissé doux | défausse |
+| `deal` | éventail de papier | distribution (1 par carte, pitch varié ±5%) |
+| `button_tap` | bois mat | press de bouton |
+| `gauge_up` | goutte d'eau claire | Intégrité +N |
+| `gauge_down` | corde sourde | Intégrité -N |
+| `corruption_tick` | murmure granuleux | Corruption +N |
+| `seal_stamp` | sceau de cire | apparition du sceau de degré (R112) |
+| `beat_turn` | page tournée | transition de beat (veil) |
+| `draft_reveal` | carillon feutré | révélation des options de draft |
+| `whisper_threshold` | souffle dissonant | franchissement de palier Corruption (R75) |
+
+### Stingers (4, par degré — samples courts ≤2.5s, R76)
+échec = corde frottée descendante · partiel = accord suspendu · réussite = accord chaud résolu ·
+éclatante = accord ouvert + harmonique haute. Joués à l'apparition du sceau (R112), ducking actif.
+
+### Musique
+- **Menu** : thème celtique lent existant (`music/theme/merlin_main_theme.wav`, MusicGen, boucle crossfade).
+- **Run** : drone celtique SANS mélodie (R76), 2 couches additives — couche basse permanente +
+  couche granuleuse dissonante dont le volume suit la Corruption (palier R75 → +6dB par palier).
+- **Pipeline** : `tools/musicgen_theme.py` (prompt celtique + crossfade equal-power). Jamais de
+  musique à mélodie forte pendant la lecture de prose (la prose est reine).
+
+---
+
+## §23 — R118 · Lisibilité & Accessibilité (canon)
+
+> Étend R18 (≥44px tactile-ready), R54 (typewriter skippable), R74 (Options : reduce-motion,
+> contraste, presets), R75 (indice statique), R99 (accessibilité fine). Rapatrie les « 4 piliers »
+> legacy, adaptés. **Tout agent UI/UX/game design vérifie ces 4 piliers** (cascade §18 de CLAUDE.md).
+
+### Les 4 piliers UX
+1. **FACILE** — toute action en ≤2 gestes (R111 : clic=révéler, clic=continuer).
+2. **ÉVIDENT** — l'intention se lit en <2s sans tutoriel (le sceau DIT le degré, la bordure DIT la rareté).
+3. **MINIMAL** — aucun élément UI sans rôle actif ; l'info ne vit qu'à UN endroit (anti « info ×2 », R112).
+4. **TACTILE + DESKTOP** — cibles ≥44×44px (R18), pas de hover-only (le hover ENRICHIT, ne révèle
+   jamais une info exclusive), retour visuel ≤100ms (`tap`).
+
+### Contrastes canon
+Texte principal : CREAM sur BG_PAGE/SURFACE (ratio élevé, vérifié). Texte secondaire : DIM_WARM
+sur sombre, INK_DIM sur crème — **jamais l'inverse** (les deux gris sont calibrés par fond).
+Une info de degré/danger n'est JAMAIS portée par la couleur seule → couleur + forme/libellé
+(sceau circulaire + libellé ≥16px, R112 ; daltonisme R99).
+
+### Reduce-motion (R74) — sémantique précise
+Atténue, ne supprime pas l'information : durées ÷2, amplitudes ÷2, shake/tremblements OFF,
+glitch Corruption plafonné à 0.1 d'intensité + **indice statique conservé** (teinte VIOLET
+alpha 0.06 + pastille près de la jauge, R75). Le typewriter reste skippable (R54), l'option
+« afficher direct » (R74) coupe tout différé de texte.
+
+### Garanties
+Zéro timer caché (R99) · tout différé est skippable (R110) · FR seul au MVP (R74) ·
+préférences persistées (Options, R74) · clavier de base au MVP, manette post-MVP (R99).
+
+---
+
+## §24 — R119 · Pipeline Assets & Outillage studio (canon)
+
+> Le studio se développe **entièrement depuis Claude** : chaque domaine a un outil dédié,
+> documenté, avec gate de sortie. Hiérarchie d'outils : MCP godot-mcp (éditeur live) →
+> CLI `python tools/cli.py godot …` (headless) → Edit/Write fichiers → scripts ad-hoc.
+
+### Les 4 outils canon
+| Outil | Rôle | Gate de sortie |
+|---|---|---|
+| `.claude/skills/merlin-juice/` | vocabulaire d'animation §21 + helpers MerlinFx | validate + smoke + soak/autoplay + capture avant/après |
+| `.claude/skills/merlin-audio/` | SFX procéduraux (`tools/sfx_forge.py`) + MusicGen + catalogue §22 | écoute + peak ≤ -3dB + déclencheurs joués en autoplay |
+| `.claude/skills/merlin-artwork/` | images par situation/carte (gravure sépia R29) + cache | QA visuelle + async sans hitch + fallback sans-image intact |
+| `tools/create_agent.py` | factory d'agents .md + registry AGENTS.md | `--validate` vert sur le parc |
+
+### Conventions assets
+- **Artworks** : `assets/artwork/cache/<sha1(prompt)>.png` + `manifest.json`
+  (`{hash, prompt, model, date, approved}`) — toute génération est REJOUABLE et traçable.
+- **SFX** : `audio/sfx/<id>.wav` (44.1kHz mono), ids = catalogue §22 exactement.
+- **Musique** : `music/<contexte>/…` (theme/base/loop existants).
+- L'image ne bloque JAMAIS le texte (fade-in async, R29 « live ») ; le son ne bloque jamais l'input.
+
+### Gates par type de changement
+| Type | Gate minimal |
+|---|---|
+| Docs/bible | revue merlin_guardian + meta_bible_guardian, 0 réf orpheline |
+| Code runtime flow | validate 0 + smoke scènes touchées + soak 200/200 + autoplay 3/3 (R109) |
+| Code visuel pur | validate 0 + smoke + capture avant/après |
+| Shader | test isolé (scène vide) AVANT câblage, commit séparé, fallback visible=false |
+| Asset audio/image | gate de l'outil (§24) + intégration smoke |
+
+### Cascades agents obligatoires (rappel CLAUDE.md)
+Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (game_design_auditor,
+4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
+tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
