@@ -1418,6 +1418,13 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
 | v10.18 Artworks génératifs | 1 image/situation async+cache · portraits 12 cartes (R29/R48) | 12/12 + ≥20 situations · async sans hitch |
 | v10.19 Polish release | Accessibilité fine (R99) · presets perf (R74) | audit accessibilité PASS |
 
+**v10.13.1 LIVRÉE (2026-06-12, gates mesurés)** : 7 commits — bible v2.0 + archivage legacy +
+CLAUDE.md v4.0 + art_direction réécrit · 4 outils (3 skills + create_agent.py, rapport initial
+107 fiches/85 stale) + 16 SFX générés (sfx_forge, peak -3dB) · juice pack 1 (ghost de vol,
+reflow d'éventail, voile de beat, boutons, sceau sonore) · glitch R75 câblé (4 paliers +
+pastille). **Gates : validate 0 · smoke 6/6 scènes · soak 200/200 · autoplay 3/3 · captures
+4 paliers · cascade Wave1+Wave2 GO · 2 HIGH review fixés.**
+
 ---
 
 ## §20 — R115 · Direction Artistique (canon)

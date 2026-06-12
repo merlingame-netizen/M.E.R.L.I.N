@@ -2,6 +2,43 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-12 — v10.13.1 « Fondations de gamme » (montée en gamme R114, 7 commits)
+
+### Context
+Demande user : cohérence totale + montée en puissance ambitieuse (assets/animations/lisibilité)
++ bible évolutive + outillage « 100% Claude ». Plan approuvé (2 rounds AskUserQuestion :
+polish d'abord, fusion sélective, 4 outils, v10.14 intégré). **Canon clarifié : docs/BIBLE.md
+v2.0 UNIQUE** — GAME_DESIGN_BIBLE v3.8 + DEV_PLAN_V2.5 ARCHIVÉS dans docs/archive/.
+
+### Done (gates verts à chaque commit)
+- **Cohérence** : BIBLE v2.0 (§19 R114 roadmap v10.13.1→v10.19 · §20 DA · §21 Juice ·
+  §22 Audio · §23 Lisibilité · §24 Pipeline) ; docs/README.md = carte d'autorité ;
+  CLAUDE.md v4.0 (6 scènes réelles, gates CLI, purge factions/Oghams/MOS) ; art_direction
+  réécrit (purge CRT) ; 45 fichiers agents redirigés ; bannières canon sur les 4 agents cascade.
+- **Outillage studio** : skills merlin-juice / merlin-audio / merlin-artwork ;
+  tools/create_agent.py (--validate : 107 fiches, 85 stale = backlog réécriture) ;
+  tools/sfx_forge.py → 16 WAV canon générés (12 SFX + 4 stingers, peak -3dB mesuré).
+- **Juice pack 1** (cascade Wave1 game_designer+ux_flow+playtester → Wave2 auditor : GO) :
+  ghost de vol main↔combo (node indépendant, pop à l'arrivée), reflow d'éventail animé
+  (_render_hand réutilise les vues), voile de beat (IGNORE, coroutine fire-and-forget,
+  garde anti double-fire), feedback boutons canon, sceau R112 SONORE (seal_stamp + stinger).
+- **Glitch corruption R75** : shader porté Godot 4 (+desaturation), 4 paliers (caps 0.50/0.25),
+  burst de seuil ≤0.5s, tremblement du cadre à l'arrivée de prose (palier ≥2), reduce-motion
+  câblé (Options→MerlinVisual.reduced_motion persisté) + PASTILLE statique violette (info jamais
+  perdue). Captures 4 paliers → Downloads.
+- **Leçons** : .bat bloqués GPO → CLI only ; tween_property sur shader_parameter/* KO →
+  tween_method+set_shader_parameter ; PowerShell Constrained Language → Bash/sed pour le bulk.
+
+### Gate final v10.13.1
+validate_step0 0 erreur GDScript · smoke 6/6 scènes (0 script_error) · soak 200/200 ·
+autoplay 3/3 (traverse voile+ghosts+reflow+glitch) · code-review 0 CRITICAL (2 HIGH fixés)
+· guardians bible PASS · captures 4/4.
+
+### Next (v10.14 — décisions verrouillées, voir §19 + section v10.13 ci-dessous)
+Dé PRÉ-TIRÉ 4 bandes + anim B8 (slot réservé MerlinFx l.214) ; run = chaîne 2-3 quêtes ;
+ramification v1 ; soak archétypes 5×100 ; équilibrage partiel 55.6%→25-35%.
+NB : le MCP godot-mcp nécessite un /mcp reconnect (l'éditeur a été lancé en cours de session).
+
 ## Session: 2026-06-10/11 — v10.13 « Fondations prouvées » (plan approuvé, exécution)
 
 ### Context
