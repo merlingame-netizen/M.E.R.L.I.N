@@ -67,6 +67,22 @@ var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer
 var _beat_transition: bool = false  # review HIGH-1 : anti double-fire de _present_current_beat (voile)
 var _ghost_in_flight: bool = false  # le pop_in du compact attend l'arrivée du ghost (cascade Wave2)
 
+# v10.13.1 (R75/R64) — glitch corruption par paliers : 0-4 sain · 5-9 trouble · 10-14 emprise ·
+# 15+ dissolution. Caps cascade Wave1 : 0.50/0.25 permanents max (lisibilité §23) ; burst ≤0.5s.
+const GLITCH_LEVELS: Array = [
+	{"i": 0.0, "d": 0.0},    # sain
+	{"i": 0.15, "d": 0.10},  # trouble
+	{"i": 0.35, "d": 0.20},  # emprise (+ tremblement bref à l'arrivée de prose)
+	{"i": 0.50, "d": 0.25},  # dissolution (cap permanent)
+]
+var _glitch_overlay: ColorRect = null
+var _glitch_mat: ShaderMaterial = null
+var _glitch_tw: Tween = null
+var _corruption_palier: int = 0
+var _corr_dot: Panel = null  # pastille statique VIOLET (R74/R75 : l'info survit à reduce-motion)
+var _glitch_i: float = 0.0   # valeurs courantes des uniforms (source des tween_method — le
+var _glitch_d: float = 0.0   # tween_property sur shader_parameter/* ne les voit pas toujours)
+
 # v10.13 (Phase B) — interstitiel « Merlin raconte » (B3), hint intro (B2), sceau de degré (B9).
 var _interstitial_open: bool = false           # B3 : interstitiel actif (entre Accept et Beat 1)
 var _interstitial_wait: MerlinWaitStage = null # B3 : attente animée en cours (skippée par autoplay)
@@ -178,6 +194,10 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		_beat_header.text = "— %s · beat %d/%d —" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
 		_beat_header.visible = true
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
+	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
+	# jamais pendant la lecture (Wave1 : amplitude ≤2px), off en reduce-motion (pastille = info).
+	if animate and _corruption_palier >= 2 and not MerlinVisual.reduced_motion and _situ_panel != null:
+		MerlinFx.shake(_situ_panel, 2.0, 0.2)
 
 
 # v10.13 (B4) — Stamp du glyphe type-de-beat au centre de l'encart : fade-in 0.3s puis fade-out
@@ -808,6 +828,61 @@ func _on_gauges(integrite: int, corruption: int) -> void:
 	_prev_integrite = integrite
 	_prev_corruption = corruption
 	_render_perles()
+	_update_corruption_fx(corruption)  # v10.13.1 (R75) : glitch par palier + pastille statique
+
+
+# v10.13.1 (R75/R64) — glitch corruption : tween des uniforms vers le palier (0.8s), burst bref
+# au franchissement de seuil (pic 0.8 pendant 0.15s → palier en 0.35s, total ≤0.5s — Wave1).
+# Reduce-motion : intensité cap 0.1 (R74), l'information reste portée par la pastille.
+func _update_corruption_fx(corruption: int) -> void:
+	if _glitch_overlay == null or _glitch_mat == null:
+		return
+	var palier: int = clampi(int(float(corruption) / 5.0), 0, 3)
+	var prev: int = _corruption_palier
+	_corruption_palier = palier
+	var lv: Dictionary = GLITCH_LEVELS[palier]
+	var ti: float = float(lv["i"])
+	var td: float = float(lv["d"])
+	if MerlinVisual.reduced_motion:
+		ti = minf(ti, 0.1)
+	if _corr_dot != null and _corr_gauge != null:
+		var alphas: Array = [0.0, 0.5, 0.75, 1.0]
+		_corr_dot.visible = palier >= 1
+		_corr_dot.modulate.a = float(alphas[palier])
+		_corr_dot.position = Vector2(_corr_gauge.size.x * 0.5 - 6.0, _corr_gauge.size.y + 4.0)
+	if palier > 0:
+		_glitch_overlay.visible = true
+	if _glitch_tw != null and _glitch_tw.is_valid():
+		_glitch_tw.kill()
+	# tween_method + set_shader_parameter (pattern vignette MerlinFx) — tween_property sur
+	# "shader_parameter/x" échouait au runtime (« property does not exist », smoke 2026-06-12).
+	_glitch_tw = create_tween().set_parallel(true)
+	if palier > prev and palier > 0 and not MerlinVisual.reduced_motion:
+		_set_glitch_i(0.8)  # burst de seuil — pic BREF (Wave1 : ≤0.5s total)
+		_glitch_tw.tween_method(_set_glitch_i, 0.8, ti, 0.35).set_delay(0.15)
+		_glitch_tw.tween_method(_set_glitch_d, _glitch_d, td, 0.35).set_delay(0.15)
+	else:
+		_glitch_tw.tween_method(_set_glitch_i, _glitch_i, ti, 0.8)
+		_glitch_tw.tween_method(_set_glitch_d, _glitch_d, td, 0.8)
+	if palier == 0:
+		_glitch_tw.chain().tween_callback(_hide_glitch_if_sane)
+
+
+func _set_glitch_i(v: float) -> void:
+	_glitch_i = v
+	if _glitch_mat != null:
+		_glitch_mat.set_shader_parameter("intensity", v)
+
+
+func _set_glitch_d(v: float) -> void:
+	_glitch_d = v
+	if _glitch_mat != null:
+		_glitch_mat.set_shader_parameter("desaturation", v)
+
+
+func _hide_glitch_if_sane() -> void:
+	if _corruption_palier == 0 and _glitch_overlay != null:
+		_glitch_overlay.visible = false
 
 
 func _tween_ratio(g: MerlinRingGauge, target: float, prev: Tween) -> Tween:
@@ -1435,6 +1510,32 @@ func _build_ui() -> void:
 	_overlay.visible = false
 
 	_build_beat_map()  # v10.12 : carte « map » du chemin, coin droit (remplace la carte Destin)
+
+	# v10.13.1 (R75) — overlay glitch corruption : plein écran, IGNORE, caché au palier sain
+	# (coût GPU nul). hide()/show() uniquement — jamais de queue_free cyclique (playtester).
+	_glitch_overlay = ColorRect.new()
+	_glitch_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_glitch_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_glitch_overlay.z_index = 95
+	_glitch_overlay.visible = false
+	var gl_shader: Shader = load("res://shaders/whisper_glitch.gdshader")
+	if gl_shader != null:
+		_glitch_mat = ShaderMaterial.new()
+		_glitch_mat.shader = gl_shader
+		_glitch_overlay.material = _glitch_mat
+	add_child(_glitch_overlay)
+	# Pastille statique VIOLET sous la jauge Corruption : visible dès le palier 1, quelle que
+	# soit l'option reduce-motion (pilier ÉVIDENT — l'état corruption ne disparaît jamais).
+	_corr_dot = Panel.new()
+	_corr_dot.custom_minimum_size = Vector2(12, 12)
+	_corr_dot.size = Vector2(12, 12)
+	_corr_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_corr_dot.visible = false
+	var dsb: StyleBoxFlat = StyleBoxFlat.new()
+	dsb.bg_color = MerlinVisual.VIOLET
+	dsb.set_corner_radius_all(6)
+	_corr_dot.add_theme_stylebox_override("panel", dsb)
+	_corr_gauge.add_child(_corr_dot)
 
 	# v10.13 (B7) — « Merlin pense » : sonde 0.5s du moteur natif → le décor signale honnêtement
 	# quand une génération tourne (halo de lune accéléré + mote or en orbite du menhir).
