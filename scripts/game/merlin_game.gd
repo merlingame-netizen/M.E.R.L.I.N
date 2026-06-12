@@ -375,7 +375,10 @@ func _update_preview() -> void:
 	# n == 2 : combinaison complète.
 	_preview_lbl.visible = true
 	var reqs: Array = _current_situation.get("required_tags", [])
-	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [])
+	# v10.14 — même dé PRÉ-TIRÉ que la résolution finale (build_situation) → preview = vérité,
+	# et le prefetch LLM cible le BON degré (anti cache-miss). Le dé ne s'AFFICHE pas ici
+	# (monolocalité R112 : sa révélation vit dans la fusion, anim B8).
+	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)))
 	var cov: Dictionary = res["coverage"]
 	var covered: int = cov["covered"].size()
 	var total: int = covered + cov["missing"].size()
@@ -399,7 +402,7 @@ func _on_resolve() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
 	var reqs: Array = _current_situation.get("required_tags", [])
-	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [])
+	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)))
 	var played_cards: Array = _combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 

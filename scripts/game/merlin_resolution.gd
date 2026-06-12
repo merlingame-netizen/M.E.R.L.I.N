@@ -13,10 +13,24 @@ const LABELS: Dictionary = {
 }
 
 # Deltas d'Intégrité par degré (R65). Corruption = somme coûts cartes + prix du partiel.
+# v10.14 (cascade 2026-06-12) : PARTIEL durci -1 → -2 (cible soak : partiel 25-35%, morts 10-25%).
 const INTEGRITE_DELTA: Dictionary = {
-	ECHEC: -3, PARTIEL: -1, REUSSITE: 0, ECLATANTE: 0,
+	ECHEC: -3, PARTIEL: -2, REUSSITE: 0, ECLATANTE: 0,
 }
 const PARTIEL_CORRUPTION_PRICE: int = 1  # le "succès à un prix" (R65)
+
+# v10.14 — Dé PRÉ-TIRÉ (4 bandes par rareté de la carte PRINCIPALE — cascade Wave1 2026-06-12).
+# JAMAIS de malus (R20 quasi-déterministe) : la Commune ne bouge qu'1 fois sur 6 (+1),
+# la Mythique GARANTIT +1. Le modificateur est clampé à la fourchette de couverture (comme la
+# synergie). Le dé est tiré UNE fois par beat (build_situation) → preview = résolution finale.
+# Tuning 2e passe (mesures soak 5×100, designer 2026-06-12) : Commune/Rare +1 cran généreuses
+# pour ramener les archétypes joueur-plausible vers la cible (greedy/chaotic 47% → ~38-42%).
+const DIE_BANDS: Dictionary = {
+	"Commune":  [0, 0, 0, 0, 1, 1],
+	"Rare":     [0, 0, 0, 1, 1, 1],
+	"Épique":   [0, 0, 1, 1, 1, 1],
+	"Mythique": [1, 1, 1, 1, 1, 1],
+}
 
 # Ordre croissant des degrés — sert à borner l'affinage par synergie (hybride, user 2026-05-28).
 const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
@@ -24,8 +38,10 @@ const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
 
 ## played_cards : Array de MerlinCard (ou Dict {tags:Array, corruption:int}).
 ## antagonist_tags : tags qui sabotent si joués (R41/R66).
-## Retourne {degree, label, integrite_delta, corruption_delta, coverage, eclatante_bonus, sabotaged}.
-static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = []) -> Dictionary:
+## die : face 1-6 PRÉ-TIRÉE par l'appelant (0 = pas de dé, rétro-compatible probes).
+## Retourne {degree, label, integrite_delta, corruption_delta, coverage, eclatante_bonus, sabotaged,
+##           die, die_mod, die_rarity}.
+static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0) -> Dictionary:
 	var played_tags: Array = []
 	var cost: int = 0
 	for c in played_cards:
@@ -45,6 +61,17 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	# le LLM, lui, NARRE la combinaison (cf. merlin_scenario.narrate_resolution).
 	var synergy: int = _synergy(played_cards)
 	var degree: String = _apply_synergy(base_degree, synergy, covered_n, req_n)
+
+	# v10.14 — Dé pré-tiré : bonus par bande de rareté de la carte PRINCIPALE, clampé à la même
+	# fourchette de couverture que la synergie (jamais échec total → réussite). die=0 → neutre.
+	var die_mod: int = 0
+	var die_rarity: String = ""
+	if die >= 1 and die <= 6 and not played_cards.is_empty():
+		die_rarity = _card_rarity(played_cards[0])
+		var band: Array = DIE_BANDS.get(die_rarity, DIE_BANDS["Commune"])
+		die_mod = int(band[die - 1])
+		if die_mod != 0:
+			degree = _apply_synergy(degree, die_mod, covered_n, req_n)
 
 	# Plafond éclatante (game design 2026-05-29) : l'éclatante récompense une VRAIE combinaison
 	# SANS coût — jamais une carte seule, jamais une carte à coût (corruption > 0).
@@ -79,6 +106,9 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		"eclatante_bonus": degree == ECLATANTE,
 		"sabotaged": sabotaged,
 		"synergy": synergy,
+		"die": die,
+		"die_mod": die_mod,
+		"die_rarity": die_rarity,
 	}
 
 
@@ -170,3 +200,13 @@ static func _card_corruption(c: Variant) -> int:
 	if c is Dictionary and c.has("corruption"):
 		return int(c["corruption"])
 	return 0
+
+
+static func _card_rarity(c: Variant) -> String:
+	if c is Object and "rarity" in c:
+		var r: String = str(c.rarity)
+		return r if r != "" else "Commune"
+	if c is Dictionary and c.has("rarity"):
+		var rd: String = str(c["rarity"])
+		return rd if rd != "" else "Commune"
+	return "Commune"

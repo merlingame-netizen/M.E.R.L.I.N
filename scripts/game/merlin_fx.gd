@@ -211,9 +211,13 @@ func run() -> void:
 	spark_wave(center, glow_col.darkened(0.20), w3, burst_dur * 0.85, 130.0, 70.0, Vector2(2.0, 2.0), 0.55)
 	await p3_glow.finished
 
-	# v10.14 : _roll_die(rarity) s'insérera ICI, entre Burst et Expression — révélation animée du dé
-	# (polygone flat par taille, chiffres décélérés, liseré rareté). Le dé est PRÉ-TIRÉ dans res
-	# (res.die calculé par MerlinResolution.resolve) : l'animation ne fait que révéler.
+	# === v10.14 (B8) — Révélation du dé PRÉ-TIRÉ, entre Burst et Expression. SEUL lieu
+	# d'affichage du dé (monolocalité R112, cascade Wave2). L'animation ne fait que RÉVÉLER :
+	# res.die/die_mod/die_rarity sont calculés par MerlinResolution.resolve (preview = vérité).
+	if int(_res.get("die", 0)) >= 1:
+		await _reveal_die(center, int(_res.get("die", 0)), int(_res.get("die_mod", 0)), str(_res.get("die_rarity", "Commune")))
+		if not is_inside_tree():
+			return
 
 	# === Phase 4 — Expression === typewriter caractère par caractère + chromatic aberration + zoom slow-mo.
 	var expr_text: String = _fusion_expression(_played, _res)
@@ -317,6 +321,74 @@ func run() -> void:
 
 	if is_instance_valid(self):  # la scène a pu nous libérer pendant le fade final (review HIGH)
 		queue_free()  # auto-destruction du layer : cartes reparentées, sparks et tweens partent avec
+
+
+# v10.14 (B8) — Révélation du dé : disque flat crème liseré couleur RARETÉ, chiffres décélérés
+# vers la face pré-tirée (séquence DÉTERMINISTE dérivée de la face — rejouable), « +1 » or flottant
+# si bonus. ~0.65s ; reduced_motion → face statique 0.3s. Nodes/tweens liés au layer (meurent avec).
+func _reveal_die(center: Vector2, die: int, mod: int, rarity: String) -> void:
+	var rstyle: Dictionary = MerlinCardView.RARITY_STYLE.get(rarity, MerlinCardView.RARITY_STYLE["Commune"])
+	var rcol: Color = rstyle["col"] as Color
+	var dia: float = 64.0
+	var disc: Panel = Panel.new()
+	disc.size = Vector2(dia, dia)
+	disc.pivot_offset = Vector2(dia, dia) * 0.5
+	disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	disc.z_index = 110
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = MerlinVisual.CREAM
+	sb.set_corner_radius_all(int(dia * 0.5))
+	sb.set_border_width_all(4)
+	sb.border_color = rcol
+	disc.add_theme_stylebox_override("panel", sb)
+	var lbl: Label = Label.new()
+	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lbl.add_theme_color_override("font_color", MerlinVisual.INK)
+	lbl.add_theme_font_size_override("font_size", 30)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	disc.add_child(lbl)
+	add_child(disc)
+	disc.global_position = center - Vector2(dia, dia) * 0.5 + Vector2(0.0, -120.0)
+	disc.scale = Vector2(0.6, 0.6)
+	disc.modulate.a = 0.0
+	var tin: Tween = disc.create_tween().set_parallel(true)
+	tin.tween_property(disc, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tin.tween_property(disc, "modulate:a", 1.0, 0.12)
+	if MerlinVisual.reduced_motion:
+		lbl.text = str(die)
+		await get_tree().create_timer(0.3).timeout
+	else:
+		var ticks: Array = [0.05, 0.07, 0.09, 0.12]
+		for i in ticks.size():
+			lbl.text = str(((die + i * 2) % 6) + 1)
+			await get_tree().create_timer(float(ticks[i])).timeout
+			if not is_inside_tree() or not is_instance_valid(disc):
+				return
+		lbl.text = str(die)
+		var settle: Tween = disc.create_tween()
+		settle.tween_property(disc, "scale", Vector2(1.15, 1.15), 0.08)
+		settle.tween_property(disc, "scale", Vector2.ONE, 0.10)
+		if mod > 0:
+			var plus: Label = Label.new()
+			plus.text = "+1"
+			plus.add_theme_color_override("font_color", MerlinVisual.GOLD)
+			plus.add_theme_font_size_override("font_size", 24)
+			plus.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			plus.z_index = 111
+			add_child(plus)
+			plus.global_position = disc.global_position + Vector2(dia + 8.0, 8.0)
+			var pt: Tween = plus.create_tween().set_parallel(true)
+			pt.tween_property(plus, "global_position:y", plus.global_position.y - 22.0, 0.5).set_trans(Tween.TRANS_SINE)
+			pt.tween_property(plus, "modulate:a", 0.0, 0.5)
+			pt.chain().tween_callback(plus.queue_free)
+		await get_tree().create_timer(0.25).timeout
+	if not is_inside_tree() or not is_instance_valid(disc):
+		return
+	var tout: Tween = disc.create_tween()
+	tout.tween_property(disc, "modulate:a", 0.0, 0.12)
+	tout.tween_callback(disc.queue_free)
 
 
 # Prédicat injecté « la prose est prête » — Callable invalide = prêt (pas de sustain), comme

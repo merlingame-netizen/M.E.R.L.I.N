@@ -38,8 +38,11 @@ const BEAT_TYPES: Array = ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Cl
 const TYPE_TAG_BIAS: Dictionary = {
 	"Exploration": ["Sens", "Savoir", "Mémoire", "Instinct", "Nature"],
 	"Rencontre": ["Empathie", "Verbe", "Ruse"],
-	"Epreuve": ["Force", "Agilité", "Endurance"],
-	"Dilemme": ["Ruse", "Empathie", "Instinct", "Nature"],
+	# v10.14 (cascade 2026-06-12) : pools Epreuve/Dilemme ÉLARGIS (mono-famille → 6 tags) pour que
+	# la couverture pleine soit atteignable par un deck varié (cible : partiel 55.6% → 25-35%).
+	# La famille d'origine reste dominante (3 entrées sur 6).
+	"Epreuve": ["Force", "Agilité", "Endurance", "Instinct", "Nature", "Savoir"],
+	"Dilemme": ["Ruse", "Empathie", "Instinct", "Nature", "Mémoire", "Force"],
 	"Climax": ["Force", "Ruse", "Savoir", "Instinct"],
 }
 
@@ -486,6 +489,10 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		"n": int(beat.get("n", 0)),
 		"total": BEAT_TYPES.size(),
 		"title": str(_run_thread.get("title", "")),
+		# v10.14 — dé PRÉ-TIRÉ du beat (bandes par rareté dans MerlinResolution). Tiré ICI une
+		# seule fois → preview et résolution finale partagent le même dé (anti cache-miss prose).
+		# NON persisté : rebuild au resume = re-tirage, acceptable (rien n'est joué avant le save).
+		"die": _rng.randi_range(1, 6),
 	}
 
 

@@ -347,6 +347,7 @@ class GodotAdapter(BaseAdapter):
         archetype: str = "mixed",
         autoplay: str = "",
         loops: str = "3",
+        per_archetype: str = "",
         **_kwargs: Any,
     ) -> dict:
         """v10.13 Phase P — proof gate « 100% fiable ».
@@ -360,14 +361,14 @@ class GodotAdapter(BaseAdapter):
         if isinstance(godot, dict):
             return godot
 
-        self.log(f"Soak: {runs} logic runs (archetype={archetype}) …")
+        self.log(f"Soak: {runs} logic runs (archetype={archetype}, per_archetype={per_archetype or 'false'}) …")
+        soak_args = [godot, "--headless", "--path", ".", "--script",
+                     "res://tools/probe_soak.gd", "--",
+                     f"--runs={runs}", f"--archetype={archetype}"]
+        if str(per_archetype).lower() in ("1", "true", "yes"):
+            soak_args.append("--per-archetype")  # v10.14 : 5 x runs, cibles par archetype
         try:
-            stdout, stderr, code = _run(
-                [godot, "--headless", "--path", ".", "--script",
-                 "res://tools/probe_soak.gd", "--",
-                 f"--runs={runs}", f"--archetype={archetype}"],
-                timeout=600,
-            )
+            stdout, stderr, code = _run(soak_args, timeout=600)
         except subprocess.TimeoutExpired:
             return self.error("probe_soak timed out after 600s")
         except OSError as exc:

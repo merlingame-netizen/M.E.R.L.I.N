@@ -11,7 +11,19 @@ const RunScript := preload("res://scripts/game/merlin_run.gd")
 const Scenario := preload("res://scripts/llm/merlin_scenario.gd")
 
 const ARCHETYPES: Array = ["optimal", "greedy", "chaotic", "corrompu", "tag_ignorant"]
-const GUARD_BEATS: int = 60  # filet anti-boucle (un run normal = 5-7 beats)
+const GUARD_BEATS: int = 90  # filet anti-boucle (chaîne de quêtes v10.14 : jusqu'à 15 beats)
+
+# v10.14 — GATE FINAL par archétype (cascade 3e passe 2026-06-12, mesures n=300). Les bots
+# non-attentifs (greedy/chaotic) opèrent STRUCTURELLEMENT à 45-55% de partiel (géométrie des
+# tags) : leur plafond mesure la sensibilité du système, pas l'expérience joueur — le signal
+# canonique est `optimal` (joueur qui lit les tags). corrompu = indicatif ; tag_ignorant =
+# bot adversarial, AUCUN critère. RAPPORT-SEULEMENT côté exit code (invariants seuls échouent).
+const GATE: Dictionary = {
+	"optimal": {"partiel_max": 0.25, "morts_max": 0.12},
+	"greedy": {"partiel_max": 0.55, "morts_max": 0.20},
+	"chaotic": {"partiel_max": 0.55, "morts_max": 0.20},
+	"corrompu": {"partiel_max": 0.55, "morts_max": 0.15},
+}
 
 var _fail: int = 0
 var _ends: Dictionary = {}
@@ -19,29 +31,41 @@ var _degrees: Dictionary = {}
 var _drafts_offered: int = 0
 var _drafts_taken: int = 0
 var _secours_injected: int = 0
+var _arch_stats: Dictionary = {}  # arch -> {"degrees": {}, "ends": {}, "runs": 0}
 
 
 func _init() -> void:
 	var runs: int = 200
 	var archetype: String = "mixed"
+	var per_arch: bool = false  # v10.14 : 5 × N runs, stats + cibles par archétype
 	for a in OS.get_cmdline_user_args():
 		var s: String = str(a)
 		if s.begins_with("--runs="):
 			runs = maxi(1, int(s.trim_prefix("--runs=")))
 		elif s.begins_with("--archetype="):
 			archetype = s.trim_prefix("--archetype=")
-	print("[SOAK] start — runs=%d archetype=%s" % [runs, archetype])
+		elif s == "--per-archetype":
+			per_arch = true
+	print("[SOAK] start — runs=%d archetype=%s per_arch=%s" % [runs, archetype, str(per_arch)])
 	# Préserve la sauvegarde RÉELLE du joueur (review HIGH) : le cas S5 écrit/efface
 	# user://merlin_run.json — snapshot avant la campagne, restauration après.
 	var save_path: String = "user://merlin_run.json"
 	var had_save: bool = FileAccess.file_exists(save_path)
 	var save_backup: String = FileAccess.get_file_as_string(save_path) if had_save else ""
 	var t0: int = Time.get_ticks_msec()
-	for i in runs:
-		var arch: String = archetype
-		if archetype == "mixed":
-			arch = str(ARCHETYPES[i % ARCHETYPES.size()])
-		_soak_one(i, arch)
+	if per_arch:
+		# v10.14 — campagne 5 × runs : chaque archétype mesuré séparément contre les cibles.
+		var idx: int = 0
+		for arch_name in ARCHETYPES:
+			for _i in runs:
+				_soak_one(idx, str(arch_name))
+				idx += 1
+	else:
+		for i in runs:
+			var arch: String = archetype
+			if archetype == "mixed":
+				arch = str(ARCHETYPES[i % ARCHETYPES.size()])
+			_soak_one(i, arch)
 	if had_save:
 		var f: FileAccess = FileAccess.open(save_path, FileAccess.WRITE)
 		if f != null:
@@ -49,11 +73,50 @@ func _init() -> void:
 			f.close()
 			print("[SOAK] sauvegarde joueur restaurée")
 	var dt: float = float(Time.get_ticks_msec() - t0) / 1000.0
+	var total_runs: int = runs * (ARCHETYPES.size() if per_arch else 1)
 	print("[SOAK] ends=%s" % str(_ends))
 	print("[SOAK] degrees=%s" % str(_degrees))
 	print("[SOAK] drafts %d/%d pris · secours injectées=%d" % [_drafts_taken, _drafts_offered, _secours_injected])
-	print("[SOAK] DONE — %d/%d PASS (%.1fs)" % [runs - _fail, runs, dt])
+	_report_targets()
+	print("[SOAK] DONE — %d/%d PASS (%.1fs)" % [total_runs - _fail, total_runs, dt])
 	quit(1 if _fail > 0 else 0)
+
+
+# v10.14 — rapport par archétype contre le GATE chiffré (rapport-seulement, jamais bloquant).
+func _report_targets() -> void:
+	if _arch_stats.is_empty():
+		return
+	print("[SOAK] — GATE FINAL v10.14 : optimal p<=25/m<=12 · greedy p<=55/m<=20 · chaotic p<=55/m<=20 · corrompu p<=55/m<=15 (indicatif) · tag_ignorant sans critère —")
+	for arch in _arch_stats:
+		var st: Dictionary = _arch_stats[arch]
+		var degs: Dictionary = st["degrees"]
+		var tot_deg: int = 0
+		for k in degs:
+			tot_deg += int(degs[k])
+		var partiel: float = float(int(degs.get("partiel", 0))) / float(maxi(tot_deg, 1))
+		var ends: Dictionary = st["ends"]
+		var tot_end: int = 0
+		for k in ends:
+			tot_end += int(ends[k])
+		var morts: float = float(int(ends.get("mort", 0))) / float(maxi(tot_end, 1))
+		var gate: Dictionary = GATE.get(arch, {})
+		var verdict: String = "indicatif"
+		if not gate.is_empty():
+			var ok: bool = true
+			if gate.has("partiel_max") and partiel > float(gate["partiel_max"]):
+				ok = false
+			if gate.has("morts_max") and morts > float(gate["morts_max"]):
+				ok = false
+			verdict = "OK" if ok else "HORS-GATE"
+		print("[SOAK]   %-12s runs=%-4d partiel=%5.1f%% · morts=%5.1f%% · [%s] · ends=%s" % [
+			str(arch), int(st["runs"]), partiel * 100.0, morts * 100.0, verdict, str(ends)])
+
+
+func _bump_arch(arch: String, kind: String, key: String) -> void:
+	if not _arch_stats.has(arch):
+		_arch_stats[arch] = {"degrees": {}, "ends": {}, "runs": 0}
+	var d: Dictionary = _arch_stats[arch][kind]
+	d[key] = int(d.get(key, 0)) + 1
 
 
 func _soak_one(i: int, arch: String) -> void:
@@ -63,6 +126,9 @@ func _soak_one(i: int, arch: String) -> void:
 	run._rng.seed = 1000 + i  # runs variés ET reproductibles (hors arbre : pas de randomize())
 	run.new_run(_skel(i))
 	var resume_tested: bool = false
+	if not _arch_stats.has(arch):
+		_arch_stats[arch] = {"degrees": {}, "ends": {}, "runs": 0}
+	_arch_stats[arch]["runs"] = int(_arch_stats[arch]["runs"]) + 1
 
 	# Cas dégénérés forcés (cycle) — la fiabilité doit tenir AUSSI là.
 	if i % 7 == 3:
@@ -85,12 +151,23 @@ func _soak_one(i: int, arch: String) -> void:
 				_secours_injected += 1
 		var beat: Dictionary = run.current_beat()
 		var btype: String = str(beat.get("type", "Exploration"))
-		var diff: int = int(beat.get("difficulte", 1))
-		var required: Array = Scenario.TYPE_TAG_BIAS.get(btype, ["Sens"]).slice(0, diff)
+		# v10.14 — MIROIR du jeu (_pick_tags v10.6) : TOUJOURS 2 tags, tirés au hasard du pool du
+		# type (seedé → reproductible). L'ancien slice(0, diff) prenait 1-3 tags FIXES en tête de
+		# pool → ignorait l'élargissement des pools et forçait 3 tags au climax (partiel garanti).
+		var pool: Array = Scenario.TYPE_TAG_BIAS.get(btype, ["Sens"]).duplicate()
+		for k in range(pool.size() - 1, 0, -1):
+			var j: int = rng.randi_range(0, k)
+			var tmp: Variant = pool[k]
+			pool[k] = pool[j]
+			pool[j] = tmp
+		var required: Array = pool.slice(0, mini(2, pool.size()))
 		var combo: Array = _pick_combo(arch, run.hand, required, rng)
-		var res: Dictionary = MerlinResolution.resolve(required, combo, [])
+		# v10.14 — dé PRÉ-TIRÉ du beat (seedé → reproductible), comme build_situation en jeu.
+		var die: int = rng.randi_range(1, 6)
+		var res: Dictionary = MerlinResolution.resolve(required, combo, [], die)
 		var deg: String = str(res.get("degree", ""))
 		_degrees[deg] = int(_degrees.get(deg, 0)) + 1
+		_bump_arch(arch, "degrees", deg)
 		run.play_and_discard(combo)
 		run.apply_card_effects(combo)
 		run.apply_resolution(res)
@@ -115,6 +192,7 @@ func _soak_one(i: int, arch: String) -> void:
 	_check(run.ended, i, "run terminée (guard=%d)" % guard, run)
 	if run.ended:
 		_ends[run.end_type] = int(_ends.get(run.end_type, 0)) + 1
+		_bump_arch(arch, "ends", run.end_type)
 	run.clear_save()
 	run.free()
 
