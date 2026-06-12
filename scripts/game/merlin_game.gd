@@ -63,6 +63,10 @@ var _draft_layer: Control = null         # overlay modal du draft
 var _draft_pick: MerlinCard = null       # carte choisie (null = passer)
 var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer)
 
+# v10.13.1 — juice pack 1 (§21) : gardes d'animation.
+var _beat_transition: bool = false  # review HIGH-1 : anti double-fire de _present_current_beat (voile)
+var _ghost_in_flight: bool = false  # le pop_in du compact attend l'arrivée du ghost (cascade Wave2)
+
 # v10.13 (Phase B) — interstitiel « Merlin raconte » (B3), hint intro (B2), sceau de degré (B9).
 var _interstitial_open: bool = false           # B3 : interstitiel actif (entre Accept et Beat 1)
 var _interstitial_wait: MerlinWaitStage = null # B3 : attente animée en cours (skippée par autoplay)
@@ -106,8 +110,28 @@ func _begin() -> void:
 
 func _present_current_beat() -> void:
 	var run: Node = get_node("/root/MerlinRun")
+	if run.ended or _beat_transition:
+		return  # review HIGH-1 : jamais deux transitions concurrentes (double-tap, races futures)
+	# v10.13.1 (§21 `veil`, cascade Wave1/playtester) — voile de transition : couvre le swap du
+	# contenu. COROUTINE appelée fire-and-forget par tous les appelants (_begin/_advance_to_next/
+	# _end_interstitial) — AUCUN await ajouté dans _advance_to_next. Le voile est IGNORE : aucun
+	# clic volé, l'autoplay (appels directs) n'est jamais bloqué. Skip inutile : 0.20s opaque max,
+	# le typewriter (skippable) démarre sous le voile sortant.
+	_beat_transition = true
+	var veil: ColorRect = MerlinFx.beat_veil(self)
+	var vin: Tween = veil.create_tween()
+	vin.tween_property(veil, "modulate:a", 0.85, MerlinVisual.DUR_VEIL_IN * MerlinVisual.motion())
+	await vin.finished
+	_beat_transition = false
+	if not is_inside_tree():
+		return  # scène quittée pendant le voile (le voile, enfant de la scène, part avec elle)
 	if run.ended:
+		veil.queue_free()
 		return
+	# Sortie fire-and-forget : le contenu (swappé ci-dessous) se révèle sous le voile qui se lève.
+	var vout: Tween = veil.create_tween()
+	vout.tween_property(veil, "modulate:a", 0.0, MerlinVisual.DUR_VEIL_OUT * MerlinVisual.motion())
+	vout.tween_callback(veil.queue_free)
 	_interstitial_open = false  # v10.13 (B3) : défense — l'interstitiel est forcément clos ici
 	_clear_degree_seal()        # v10.13 (B9) : le sceau du beat précédent ne survit pas au suivant
 	if _beat_map != null:  # v10.12 : avance la position « tu es ici » sur la map du chemin
@@ -184,16 +208,35 @@ func _stamp_beat_glyph(btype: String) -> void:
 
 
 func _render_hand(deal: bool = false) -> void:
-	for c in _hand_box.get_children():
-		c.queue_free()
 	var run: Node = get_node("/root/MerlinRun")
+	var wanted: Array = []
 	for card in run.hand:
-		if _combo.has(card):
-			continue  # carte posée → son slot est vidé dans l'éventail (repioche à la résolution)
-		var cv: MerlinCardView = MerlinCardView.new()
-		_hand_box.add_child(cv)
-		cv.setup(card)
-		cv.card_clicked.connect(_on_hand_card)
+		if not _combo.has(card):
+			wanted.append(card)
+	# v10.13.1 (§21 `fast`) — RÉUTILISE les vues : l'éventail REFLOW en douceur au lieu de snapper
+	# (rebuild). Vues en trop : sortie discard_out si visibles (sinon libération immédiate — la
+	# carte partie au combo est déjà remplacée à l'écran par son ghost).
+	var keep: Dictionary = {}
+	for c in _hand_box.get_children():
+		if c is MerlinCardView and not c.is_queued_for_deletion():
+			var cv: MerlinCardView = c
+			if cv._discarding:
+				continue  # review HIGH-2 : une vue en sortie discard ne se réutilise JAMAIS
+			if wanted.has(cv.card) and not keep.has(cv.card):
+				keep[cv.card] = cv
+			elif cv.visible:
+				cv.discard_out()
+			else:
+				cv.queue_free()
+	for card in wanted:
+		if not keep.has(card):
+			var cv: MerlinCardView = MerlinCardView.new()
+			_hand_box.add_child(cv)
+			cv.setup(card)
+			cv.card_clicked.connect(_on_hand_card)
+			keep[card] = cv
+	for i in wanted.size():  # ordre des enfants = ordre de la main (recouvrement stable)
+		_hand_box.move_child(keep[wanted[i]], i)
 	_deal_pending = deal  # anime la distribution seulement sur une main fraîche (beat/résolution)
 	call_deferred("_layout_fan")
 
@@ -204,8 +247,8 @@ func _layout_fan() -> void:
 		return
 	var cards: Array = []
 	for c in _hand_box.get_children():
-		if c is MerlinCardView:
-			cards.append(c)
+		if c is MerlinCardView and not c.is_queued_for_deletion():
+			cards.append(c)  # v10.13.1 : les vues en cours de discard_out ne comptent plus
 	var n: int = cards.size()
 	if n == 0:
 		return
@@ -225,7 +268,7 @@ func _layout_fan() -> void:
 		var rot: float = deg_to_rad(t * 2.0)     # rotation discrète
 		var cv: MerlinCardView = cards[i]
 		cv.z_index = i  # carte de droite au-dessus (recouvrement naturel)
-		cv.set_fan_transform(Vector2(x, y), rot)
+		cv.set_fan_transform(Vector2(x, y), rot, not _deal_pending)  # deal → snap, deal_in anime
 	if _deal_pending:
 		_deal_pending = false
 		for i in n:
@@ -243,7 +286,9 @@ func _render_combo() -> void:
 		cv.setup(card, role, true)  # compact (carte posée)
 		cv.card_clicked.connect(_on_combo_card)
 		if i == _combo.size() - 1:
-			cv.pop_in()  # seule la carte la plus récente fait son pop
+			# v10.13.1 : si un ghost vole vers le combo, le compact POP à son arrivée (DUR_UI).
+			var delay: float = MerlinVisual.DUR_UI * MerlinVisual.motion() if _ghost_in_flight else 0.0
+			cv.pop_in(delay)  # seule la carte la plus récente fait son pop
 	_update_preview()
 
 
@@ -252,17 +297,46 @@ func _on_hand_card(card: MerlinCard) -> void:
 	# principale, la 2e = modificateur). On bloque au-delà de 2 (plus de trio).
 	if _state != 1 or _combo.size() >= 2 or _combo.has(card):
 		return
+	# v10.13.1 (§21 `ui`) — ghost de vol main→combo : node INDÉPENDANT (cascade Wave1) ; la vraie
+	# vue disparaît immédiatement (le ghost la remplace à l'écran). AUCUN await : la main reste
+	# cliquable pendant le vol (pilier FACILE).
+	var src: MerlinCardView = _find_card_view(_hand_box, card)
 	_combo.append(card)
+	if src != null and _combo_box != null and _combo_box.is_inside_tree():
+		var idx: int = _combo.size() - 1
+		var to_pos: Vector2 = _combo_box.global_position + Vector2(
+			float(idx) * (MerlinCardView.CARD_SIZE_COMPACT.x + 10.0) + MerlinCardView.CARD_SIZE_COMPACT.x * 0.5,
+			MerlinCardView.CARD_SIZE_COMPACT.y * 0.5)
+		MerlinFx.ghost_flight(self, src.get_global_rect(), to_pos, COL_GOLD)
+		src.visible = false  # remplacée par le ghost — _render_hand la libère
+		_ghost_in_flight = true  # le compact POP à l'arrivée du ghost (pas avant — cascade Wave2)
 	_render_hand()   # la carte quitte l'éventail (slot vidé)
 	_render_combo()
+	_ghost_in_flight = false
 
 
 func _on_combo_card(card: MerlinCard) -> void:
 	if _state != 1:
 		return
+	# v10.13.1 — ghost retour combo→main (vers le centre de l'éventail).
+	var src: MerlinCardView = _find_card_view(_combo_box, card)
 	_combo.erase(card)
+	if src != null and _hand_box != null and _hand_box.is_inside_tree():
+		var to_pos: Vector2 = _hand_box.global_position + _hand_box.size * 0.5
+		MerlinFx.ghost_flight(self, src.get_global_rect(), to_pos, COL_GOLD)
+		src.visible = false
 	_render_hand()   # la carte revient dans l'éventail
 	_render_combo()
+
+
+# Retrouve la vue d'une carte dans un conteneur (main ou combo) — null si absente/libérée.
+func _find_card_view(box: Control, card: MerlinCard) -> MerlinCardView:
+	if box == null:
+		return null
+	for c in box.get_children():
+		if c is MerlinCardView and not c.is_queued_for_deletion() and (c as MerlinCardView).card == card:
+			return c
+	return null
 
 
 func _update_preview() -> void:
@@ -426,8 +500,26 @@ func _slam_degree_seal(degree: String) -> void:
 	var tw: Tween = seal.create_tween().set_parallel(true)
 	tw.tween_property(seal, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(seal, "modulate:a", 1.0, 0.15)
-	if degree == "echec":
+	if degree == "echec" and not MerlinVisual.reduced_motion:
 		MerlinFx.shake(_situ_panel, 4.0, 0.25)  # micro-secousse : l'échec se SENT (B9)
+	_play_seal_audio(degree)  # v10.13.1 (§22, Wave1) : le sceau SONNE — seal_stamp + stinger
+
+
+# v10.13.1 (§22 R117) — le moment-clé du beat n'est plus muet : seal_stamp + stinger du degré.
+# AudioStreamPlayer transitoires (auto-libérés) en attendant l'autoload MerlinAudio (v10.16).
+# Fallback SILENCIEUX si un WAV manque (gate Wave2 réserve 3) — jamais d'erreur runtime.
+func _play_seal_audio(degree: String) -> void:
+	var paths: Array = ["res://audio/sfx/seal_stamp.wav", "res://audio/sfx/stinger_%s.wav" % degree]
+	for i in paths.size():
+		var path: String = str(paths[i])
+		if not ResourceLoader.exists(path):
+			continue
+		var p: AudioStreamPlayer = AudioStreamPlayer.new()
+		p.stream = load(path)
+		p.volume_db = 0.0 if i == 0 else -4.0  # le stinger se place SOUS le stamp (pas de cacophonie)
+		add_child(p)
+		p.finished.connect(p.queue_free)
+		p.play()
 
 
 func _clear_degree_seal() -> void:
@@ -519,6 +611,7 @@ func _build_draft_layer(choices: Array) -> void:
 	skip.custom_minimum_size = Vector2(180, 52)
 	skip.add_theme_font_size_override("font_size", 22)
 	skip.pressed.connect(_on_draft_skip)
+	MerlinVisual.connect_button_feedback(skip)  # v10.13.1 — feedback canon §21 `tap`
 	var skip_center: CenterContainer = CenterContainer.new()
 	skip_center.add_child(skip)
 	box.add_child(skip_center)
@@ -725,29 +818,14 @@ func _tween_ratio(g: MerlinRingGauge, target: float, prev: Tween) -> Tween:
 	return t
 
 
+# v10.13.1 — promus en statics MerlinFx (§21, réutilisables par menu/selection/end).
+# Wrappers conservés : comportement et sites d'appel inchangés.
 func _pop(node: Control, peak: float) -> void:
-	node.pivot_offset = node.size / 2.0
-	var t: Tween = create_tween()
-	t.tween_property(node, "scale", Vector2(peak, peak), 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_property(node, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
+	MerlinFx.pop(node, peak)
 
 
 func _float_delta(anchor: Control, delta: int, col: Color) -> void:
-	var f: Label = Label.new()
-	f.text = ("+%d" % delta) if delta > 0 else str(delta)
-	f.add_theme_color_override("font_color", col)
-	f.add_theme_font_size_override("font_size", 22)
-	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	f.z_index = 100
-	add_child(f)
-	# Sous la jauge, centré (les jauges sont aux bords → un offset à droite sortirait de l'écran
-	# pour la jauge Corruption). Le chiffre monte vers la jauge puis s'efface.
-	f.global_position = anchor.global_position + Vector2(anchor.size.x * 0.5 - 10.0, anchor.size.y + 2.0)
-	var gy: float = f.global_position.y
-	var t: Tween = create_tween()
-	t.tween_property(f, "global_position:y", gy - 30.0, 0.6).set_trans(Tween.TRANS_SINE)
-	t.parallel().tween_property(f, "modulate:a", 0.0, 0.6)
-	t.tween_callback(f.queue_free)
+	MerlinFx.float_delta(self, anchor, delta, col)
 
 
 func _render_perles() -> void:
@@ -1315,6 +1393,7 @@ func _build_ui() -> void:
 	_resolve_btn.add_theme_font_size_override("font_size", 26)
 	_resolve_btn.pressed.connect(_on_resolve)
 	btn_row.add_child(_resolve_btn)
+	MerlinVisual.connect_button_feedback(_resolve_btn)  # v10.13.1 — feedback canon §21 `tap`
 
 	# v10.5 : label « Ta main : » retiré (user 2026-06-06). L'éventail se suffit visuellement.
 	_hand_box = Control.new()

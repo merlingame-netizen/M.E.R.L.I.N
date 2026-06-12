@@ -51,6 +51,8 @@ var _base_rot: float = 0.0
 var _base_z: int = 0
 var _hovering: bool = false
 var _tw: Tween
+var _fan_inited: bool = false  # v10.13.1 : 1er layout = snap ; suivants = reflow animé (§21 `fast`)
+var _discarding: bool = false  # v10.13.1 : en sortie discard_out → exclue du reuse (review HIGH-2)
 
 
 func setup(c: MerlinCard, role: String = "", compact: bool = false) -> void:
@@ -199,19 +201,30 @@ func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 
 
 ## Position/rotation de base dans l'éventail (posées par le conteneur). Appliquées si pas survolé.
-func set_fan_transform(pos: Vector2, rot: float) -> void:
+## v10.13.1 (§21 `fast`) : reflow ANIMÉ quand la carte a déjà été layoutée (l'éventail glisse
+## vers sa nouvelle place au lieu de snapper). 1er layout / deal en attente = snap (deal_in anime).
+func set_fan_transform(pos: Vector2, rot: float, animate_reflow: bool = true) -> void:
+	var first: bool = not _fan_inited
+	_fan_inited = true
 	_base_pos = pos
 	_base_rot = rot
 	_base_z = z_index  # ordre de recouvrement de l'éventail (posé par le conteneur avant cet appel)
-	# Hors survol, un re-layout (resize) doit reprendre la main : on tue une anim en cours (deal/pop)
-	# et on pose la carte à sa place. La distribution initiale relance deal_in JUSTE APRÈS cet appel.
-	if not _hovering:
-		if _tw != null and _tw.is_valid():
-			_tw.kill()
+	if _hovering:
+		return
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	if first or not animate_reflow or not is_inside_tree():
 		position = pos
 		rotation = rot
 		scale = Vector2.ONE
 		modulate.a = 1.0  # garantit l'opacité si un deal_in (tween a:0→1) est interrompu par un re-layout (fix cartes invisibles, user 2026-06-06)
+		return
+	scale = Vector2.ONE
+	modulate.a = 1.0
+	_tw = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	var d: float = MerlinVisual.DUR_FAST * MerlinVisual.motion()
+	_tw.tween_property(self, "position", pos, d)
+	_tw.tween_property(self, "rotation", rot, d)
 
 
 func _on_enter() -> void:
@@ -250,15 +263,31 @@ func deal_in(delay: float) -> void:
 	_tw.tween_property(self, "position", _base_pos, 0.28).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-## Pose dans la combinaison : apparition pop (échelle + fondu).
-func pop_in() -> void:
+## Défausse (§21 `discard`) : slide -40px + rot -6° + fade, puis libération. Fire-and-forget,
+## le tween est LIÉ au node qu'il détruit. La vue doit déjà être hors logique (pure sortie visuelle).
+func discard_out() -> void:
+	_discarding = true  # review HIGH-2 : la vue ne doit plus être réutilisée par _render_hand
+	mouse_filter = Control.MOUSE_FILTER_IGNORE  # plus cliquable pendant sa sortie
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	var d: float = MerlinVisual.DUR_DISCARD * MerlinVisual.motion()
+	_tw = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_tw.tween_property(self, "position", position + Vector2(-40.0, 0.0), d)
+	_tw.tween_property(self, "rotation", rotation + deg_to_rad(-6.0), d)
+	_tw.tween_property(self, "modulate:a", 0.0, d)
+	_tw.chain().tween_callback(queue_free)
+
+
+## Pose dans la combinaison : apparition pop (échelle + fondu). `delay` permet d'attendre
+## l'arrivée du ghost de vol (§21 `ui`) — la carte compacte POP quand le ghost se pose.
+func pop_in(delay: float = 0.0) -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	modulate.a = 0.0
 	scale = Vector2(0.8, 0.8)
 	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "modulate:a", 1.0, 0.14)
-	_tw.tween_property(self, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "modulate:a", 1.0, 0.14).set_delay(delay)
+	_tw.tween_property(self, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(delay)
 
 
 func _animate(pos: Vector2, rot: float, scl: float) -> void:

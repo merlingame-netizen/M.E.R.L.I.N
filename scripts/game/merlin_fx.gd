@@ -417,3 +417,93 @@ func _make_expr_label(bbcode: String, mod: Color, offset_px: Vector2, sz: Vector
 	lbl.size = sz
 	lbl.modulate = mod
 	return lbl
+
+
+# === v10.13.1 — Juice pack 1 (BIBLE §21 R116) : helpers statics réutilisables ===
+# Cascade game-design Wave1/Wave2 (2026-06-12) : ghost = node NEUF (jamais reparenter une
+# CardView réelle) ; voile = IGNORE (jamais STOP) ; tweens liés au node qu'ils animent.
+
+
+# Vol de carte main↔combo (§21 `ui`) : ghost crème indépendant, arc -18px (bezier quadratique),
+# scale →0.62, fade final, queue_free. Fire-and-forget — ne touche JAMAIS l'état logique.
+static func ghost_flight(host: Control, from_rect: Rect2, to_pos: Vector2, accent: Color, dur: float = -1.0) -> void:
+	if host == null or not host.is_inside_tree():
+		return
+	var d: float = (MerlinVisual.DUR_UI if dur <= 0.0 else dur) * MerlinVisual.motion()
+	var ghost: Panel = Panel.new()
+	ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ghost.z_index = 90
+	ghost.size = from_rect.size
+	ghost.pivot_offset = from_rect.size / 2.0
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = MerlinVisual.CREAM
+	sb.set_corner_radius_all(8)
+	sb.set_border_width_all(3)
+	sb.border_color = accent
+	ghost.add_theme_stylebox_override("panel", sb)
+	host.add_child(ghost)
+	ghost.global_position = from_rect.position
+	var from_p: Vector2 = from_rect.position
+	var to_tl: Vector2 = to_pos - from_rect.size * 0.5  # le pivot centré garde le centre visuel sur to_pos
+	var arc: float = -9.0 if MerlinVisual.reduced_motion else -18.0
+	var mid: Vector2 = (from_p + to_tl) * 0.5 + Vector2(0.0, arc)
+	var tw: Tween = ghost.create_tween().set_parallel(true)
+	tw.tween_method(_ghost_step.bind(ghost, from_p, mid, to_tl), 0.0, 1.0, d) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(ghost, "scale", Vector2(0.62, 0.62), d).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	var fade: Tween = ghost.create_tween()
+	fade.tween_interval(d)
+	fade.tween_property(ghost, "modulate:a", 0.0, 0.08)
+	fade.tween_callback(ghost.queue_free)
+
+
+# Pas de bezier sur le ghost via lambda multiligne (parse fragile) — helper bindé.
+static func _ghost_step(t: float, ghost: Control, a: Vector2, m: Vector2, b: Vector2) -> void:
+	if is_instance_valid(ghost):
+		ghost.global_position = a.lerp(m, t).lerp(m.lerp(b, t), t)
+
+
+# Chiffre delta de jauge qui monte et s'évanouit (§21 `float_delta`) — promu de merlin_game v10.13.
+# Tween lié au LABEL (et non à la scène) : meurt avec lui, jamais orphelin.
+static func float_delta(host: Control, anchor: Control, delta: int, col: Color) -> void:
+	if host == null or not host.is_inside_tree() or anchor == null:
+		return
+	var f: Label = Label.new()
+	f.text = ("+%d" % delta) if delta > 0 else str(delta)
+	f.add_theme_color_override("font_color", col)
+	f.add_theme_font_size_override("font_size", 22)
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	f.z_index = 100
+	host.add_child(f)
+	f.global_position = anchor.global_position + Vector2(anchor.size.x * 0.5 - 10.0, anchor.size.y + 2.0)
+	var gy: float = f.global_position.y
+	var t: Tween = f.create_tween()
+	t.tween_property(f, "global_position:y", gy - 30.0, 0.6 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	t.parallel().tween_property(f, "modulate:a", 0.0, 0.6 * MerlinVisual.motion())
+	t.tween_callback(f.queue_free)
+
+
+# Pop d'échelle 1-shot — promu de merlin_game v10.13 ; tween lié au node animé.
+static func pop(node: Control, peak: float) -> void:
+	if node == null or not node.is_inside_tree():
+		return
+	node.pivot_offset = node.size / 2.0
+	var p: float = 1.0 + (peak - 1.0) * (0.5 if MerlinVisual.reduced_motion else 1.0)
+	var t: Tween = node.create_tween()
+	t.tween_property(node, "scale", Vector2(p, p), 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(node, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
+
+
+# Voile de transition de beat (§21 `veil`) : IGNORE (jamais STOP — un voile n'est pas un modal,
+# cascade Wave1 : il ne vole aucun clic, l'autoplay n'est jamais bloqué). L'appelant anime
+# l'entrée (await dans SA coroutine) puis la sortie fire-and-forget. Pas de caption : le swap
+# est instantané ; toute attente longue reste portée par MerlinWaitStage (R110/R111).
+static func beat_veil(host: Control) -> ColorRect:
+	var veil: ColorRect = ColorRect.new()
+	veil.color = MerlinVisual.BG_PAGE
+	veil.modulate.a = 0.0
+	veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	veil.z_index = 80
+	host.add_child(veil)
+	return veil
