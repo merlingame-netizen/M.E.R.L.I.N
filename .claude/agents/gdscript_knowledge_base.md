@@ -395,6 +395,29 @@ for _i in range(10):  # Underscore car _i n'est pas utilise
 
 **Erreur:** `Tween without commands, aborting` / Runtime warning quand un Tween est cree mais aucun tweener n'est ajoute
 
+### tween_property sur `shader_parameter/*` : NON FIABLE au runtime (v10.13.1, 2026-06-12)
+
+```gdscript
+# WRONG - parse OK mais ERREUR RUNTIME « The tweened property "shader_parameter/intensity"
+# does not exist in object <ShaderMaterial> » (detecte par smoke total_errors, pas par validate)
+tween.tween_property(mat, "shader_parameter/intensity", target, 0.8)
+
+# CORRECT - tween_method + set_shader_parameter (pattern vignette MerlinFx), valeurs courantes
+# trackees en membres (source du from)
+tween.tween_method(_set_glitch_i, _glitch_i, target, 0.8)
+
+func _set_glitch_i(v: float) -> void:
+    _glitch_i = v
+    if _glitch_mat != null:
+        _glitch_mat.set_shader_parameter("intensity", v)
+```
+
+**Regle:** ne JAMAIS tweener un uniform shader par chemin de propriete — toujours
+`tween_method` + `set_shader_parameter`. Le parse check ne detecte pas cette erreur :
+seul le smoke runtime la voit (raison de plus pour le gate R109).
+
+### Tween vide si tweeners conditionnels (shader params null)
+
 ```gdscript
 # WRONG - Creer un Tween puis ajouter des tweeners conditionnellement
 # Si aucun parametre shader n'existe, le Tween reste vide et Godot se plaint
