@@ -2662,3 +2662,14 @@ usages Claude/dev/Godot.
   typees, objets/arrays imbriques->colonnes JSON, scalaires racine->table _root. Teste OK sur echantillon.
 - README migrations + procedure (export JSON Firebase -> convert -> wrangler d1 create atelier-idrac -> load).
 - Reste (utilisateur) : uploader l'export JSON RTDB + redonner le token CF -> je cree une D1 dediee et je charge.
+
+### 2026-06-14 (suite 17) — AtelierIdracIA: RTDB -> D1 migre (structure) + states a part
+
+- Fetch direct de la RTDB (region europe-west1) via service-account idrac-ai-academy (token OAuth
+  firebase.database) -> 146 Mo JSON, 15 noeuds. Convertisseur corrige (cle synthetique _key
+  anti-collision, mapping colonnes->cle originale).
+- Charge dans D1 'atelier-idrac' (id ade35601...) : 13 tables structurees (students 25, accounts 25,
+  submissions 19, activity_feed 1473, etc.). Verifie via requetes.
+- BLOQUANT D1 : table 'states' = 145 Mo (campaignData jusqu'a 16 Mo/ligne) > limite D1 2 Mo/valeur.
+  Exclue du chargement D1 -> a placer sur R2 (object storage) ou fichier SQLite sur VM (decision user).
+- Donnees + cle SA hors repo (uploads/tmp/root only ; jamais commitees).

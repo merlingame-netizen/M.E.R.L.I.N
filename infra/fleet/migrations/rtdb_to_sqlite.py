@@ -75,22 +75,33 @@ def build(data: dict, con: sqlite3.Connection) -> dict:
     for top, node in data.items():
         table = sanitize(top)
         if is_record_map(node):
-            # union of scalar columns across records
-            cols: dict[str, list] = {}
+            # map sanitized column name -> original field key (so values are read
+            # back from the real key); collect values for type inference.
+            col_orig: dict[str, str] = {}
+            col_vals: dict[str, list] = {}
             for rec in node.values():
                 for k, v in rec.items():
-                    cols.setdefault(sanitize(k), []).append(v)
-            col_defs = {c: col_type(vals) for c, vals in cols.items()}
-            colnames = list(col_defs.keys())
-            ddl = ", ".join(f'"{c}" {t}' for c, t in col_defs.items())
-            cur.execute(f'CREATE TABLE "{table}" ("id" TEXT PRIMARY KEY{", " + ddl if ddl else ""})')
+                    c = sanitize(k)
+                    if c in col_orig and col_orig[c] != k:  # two keys collide -> dedupe
+                        i = 2
+                        while f"{c}_{i}" in col_orig and col_orig[f"{c}_{i}"] != k:
+                            i += 1
+                        c = f"{c}_{i}"
+                    col_orig.setdefault(c, k)
+                    col_vals.setdefault(c, []).append(v)
+            # synthetic primary key column, collision-safe vs record fields
+            keycol = "_key"
+            while keycol in col_orig:
+                keycol += "_"
+            colnames = list(col_orig.keys())
+            ddl = ", ".join(f'"{c}" {col_type(col_vals[c])}' for c in colnames)
+            cur.execute(f'CREATE TABLE "{table}" ("{keycol}" TEXT PRIMARY KEY{", " + ddl if ddl else ""})')
             quoted = ", ".join('"' + c + '"' for c in colnames)
-            col_list = '"id"' + (", " + quoted if colnames else "")
+            col_list = f'"{keycol}"' + (", " + quoted if colnames else "")
             placeholders = ", ".join(["?"] * (len(colnames) + 1))
             ins = f'INSERT INTO "{table}" ({col_list}) VALUES ({placeholders})'
-            rows = []
-            for rid, rec in node.items():
-                rows.append([str(rid)] + [cell(rec.get(c)) for c in colnames])
+            rows = [[str(rid)] + [cell(rec.get(col_orig[c])) for c in colnames]
+                    for rid, rec in node.items()]
             cur.executemany(ins, rows)
             summary[table] = len(rows)
         else:

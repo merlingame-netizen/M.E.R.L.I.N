@@ -28,3 +28,13 @@ query with SQLite `json_extract(col, '$.field')`.
 
 > Note: D1 free tier = 5 GB / 5M reads-day / 100k writes-day. The converter reports
 > row counts so we can confirm it fits before loading.
+
+## D1 limits to know
+- **Max 2 MB per value/row** in D1. Large blobs (e.g. a 16 MB `states.campaignData`)
+  must go elsewhere — Cloudflare **R2** (object storage, free 10 GB) or a SQLite file
+  on a VM. Load the structured tables into D1 and keep big blobs out:
+  ```bash
+  # drop the oversized table before loading into D1
+  sqlite3 db.db 'DROP TABLE "states"'   # then iterdump -> d1.sql -> wrangler d1 execute
+  ```
+- Free tier: 5 GB storage, 100k writes/day, 5M reads/day.
