@@ -176,7 +176,7 @@ func run() -> void:
 	await p2.finished
 
 	# === Impact freeze + flash (Hades-style dramatic pause) ===
-	# AUDIO_HOOK: fusion_impact (degree-scaled hit SFX)
+	MerlinAudio.play_sfx("seal_stamp", 0.85)
 	await get_tree().create_timer(MerlinVisual.DUR_IMPACT_FREEZE).timeout
 	if not MerlinVisual.reduced_motion:
 		var flash_rect: ColorRect = ColorRect.new()

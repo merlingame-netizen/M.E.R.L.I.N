@@ -43,7 +43,8 @@ func change_scene(path: String, caption: String = "") -> void:
 	if not ResourceLoader.exists(path):
 		push_error("[MerlinTransition] scene not found: %s" % path)
 		return
-	# AUDIO_HOOK: scene_transition (ink wash SFX)
+	MerlinAudio.play_sfx("ink_wash")
+	MerlinAudio.fade_music(-40.0, DUR_WIPE * MerlinVisual.motion())
 	_busy = true
 	_revealing = false
 	_progress = 0.0

@@ -82,7 +82,11 @@ static func connect_button_feedback(btn: BaseButton) -> void:
 	btn.set_meta("_fx_feedback", true)
 	btn.pivot_offset = btn.size / 2.0
 	btn.resized.connect(func() -> void: btn.pivot_offset = btn.size / 2.0)
-	btn.button_down.connect(func() -> void: _btn_scale(btn, 0.97, DUR_TAP_DOWN))
+	btn.button_down.connect(func() -> void:
+		_btn_scale(btn, 0.97, DUR_TAP_DOWN)
+		var audio: Node = btn.get_node_or_null("/root/MerlinAudio")
+		if audio != null:
+			audio.play_sfx("button_tap"))
 	btn.button_up.connect(func() -> void: _btn_scale(btn, 1.0, DUR_TAP_UP))
 	btn.mouse_entered.connect(func() -> void: _btn_tint(btn, Color(1.06, 1.06, 1.06, 1.0)))
 	btn.mouse_exited.connect(func() -> void: _btn_tint(btn, Color(1, 1, 1, 1)))

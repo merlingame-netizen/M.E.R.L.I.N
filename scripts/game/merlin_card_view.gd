@@ -320,7 +320,7 @@ func deal_in(delay: float) -> void:
 	scale = Vector2(0.7, 0.7)
 	position = _base_pos + Vector2(0.0, 140.0)
 	rotation = _base_rot + deg_to_rad((randf() - 0.5) * 16.0)
-	# AUDIO_HOOK: card_deal (whoosh + paper settle)
+	MerlinAudio.play_sfx("deal", randf_range(0.95, 1.05))
 	var d: float = MerlinVisual.DUR_DEAL * MerlinVisual.motion() * 1.3
 	_tw = create_tween().set_parallel(true)
 	_tw.tween_property(self, "modulate:a", 1.0, 0.18).set_delay(delay)
@@ -335,7 +335,7 @@ func deal_in(delay: float) -> void:
 
 
 func discard_out() -> void:
-	# AUDIO_HOOK: card_discard (soft swoosh)
+	MerlinAudio.play_sfx("card_discard")
 	_discarding = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if _tw != null and _tw.is_valid():

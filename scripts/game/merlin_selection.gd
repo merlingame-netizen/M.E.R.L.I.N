@@ -10,8 +10,11 @@ const COL_DIM: Color = MerlinVisual.DIM_WARM
 
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
+const GAME_MUSIC: String = "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-loop.wav"
 
 var _cards_box: HBoxContainer
+var _title_lbl: Label
+var _back_btn: Button
 var _overlay: Panel
 var _overlay_lbl: Label
 var _busy: bool = false
@@ -23,7 +26,26 @@ var _overlay_base_txt: String = ""
 
 func _ready() -> void:
 	_build_ui()
+	_animate_entrance()
+	_setup_music()
 	call_deferred("_load_selection")
+
+
+func _setup_music() -> void:
+	if not ResourceLoader.exists(GAME_MUSIC):
+		return
+	var stream: AudioStream = load(GAME_MUSIC)
+	if stream == null:
+		return
+	if stream is AudioStreamWAV:
+		var wav: AudioStreamWAV = stream
+		if wav.format != AudioStreamWAV.FORMAT_IMA_ADPCM:
+			var bytes_per_sample: int = 2 if wav.format == AudioStreamWAV.FORMAT_16_BITS else 1
+			var channels: int = 2 if wav.stereo else 1
+			wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			wav.loop_begin = 0
+			wav.loop_end = int(wav.data.size() / float(bytes_per_sample * channels))
+	MerlinAudio.play_music(stream, 1.5)
 
 
 func _load_selection() -> void:
@@ -64,9 +86,11 @@ func _add_parchemin(title: String, pitch: String) -> void:
 	b.custom_minimum_size = Vector2(0, 62)
 	b.add_theme_font_size_override("font_size", 24)
 	b.pressed.connect(_on_pick.bind(title, pitch))
+	MerlinVisual.connect_button_feedback(b)
 	v.add_child(b)
 
 	_cards_box.add_child(panel)
+	_fade_in(panel, 0.30 + 0.12 * float(_cards_box.get_child_count() - 1), 0.45)
 
 
 func _on_pick(title: String, pitch: String) -> void:
@@ -98,12 +122,12 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 24)
 	margin.add_child(root)
 
-	var title: Label = Label.new()
-	title.text = "Choisis ton chemin"
-	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 46)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root.add_child(title)
+	_title_lbl = Label.new()
+	_title_lbl.text = "Choisis ton chemin"
+	_title_lbl.add_theme_color_override("font_color", COL_GOLD)
+	_title_lbl.add_theme_font_size_override("font_size", 46)
+	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	root.add_child(_title_lbl)
 
 	_cards_box = HBoxContainer.new()
 	_cards_box.add_theme_constant_override("separation", 24)
@@ -111,11 +135,12 @@ func _build_ui() -> void:
 	_cards_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(_cards_box)
 
-	var back: Button = Button.new()
-	back.text = "◀ Retour"
-	back.custom_minimum_size = Vector2(140, 44)
-	back.pressed.connect(_on_back)
-	root.add_child(back)
+	_back_btn = Button.new()
+	_back_btn.text = "◀ Retour"
+	_back_btn.custom_minimum_size = Vector2(140, 44)
+	_back_btn.pressed.connect(_on_back)
+	root.add_child(_back_btn)
+	MerlinVisual.connect_button_feedback(_back_btn)
 
 	_overlay = Panel.new()
 	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -159,6 +184,19 @@ func _hide_overlay() -> void:
 	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
 		_overlay_dots_tw.kill()
 	_overlay_dots_tw = null
+
+
+func _animate_entrance() -> void:
+	_fade_in(_title_lbl, 0.00, 0.45)
+	_fade_in(_cards_box, 0.20, 0.50)
+	_fade_in(_back_btn, 0.55, 0.35)
+
+
+func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
+	node.modulate.a = 0.0
+	var tw: Tween = create_tween()
+	tw.tween_interval(maxf(delay, 0.001))
+	tw.tween_property(node, "modulate:a", 1.0, dur * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _surface_style() -> StyleBoxFlat:

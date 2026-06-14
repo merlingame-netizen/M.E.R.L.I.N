@@ -29,7 +29,6 @@ var _rings: Array[MerlinRingGauge] = []  # émblèmes des coins
 var _scene_art: MerlinSceneArt
 var _bottom_bar: HBoxContainer
 var _rule_box: HBoxContainer
-var _music: AudioStreamPlayer
 var _model_lbl: Label = null      # v10.13 (B1) : indicateur d'éveil du modèle (barre du bas)
 var _model_pulse_tw: Tween = null # pulse discret pendant le chargement (modulate sine)
 
@@ -443,60 +442,38 @@ func _pulse_ring(ring: MerlinRingGauge) -> void:
 # ============================== MUSIQUE ==============================
 
 
-## Thème principal ambient celtic (généré par MusicGen — tools/musicgen_theme.py),
-## en boucle parfaite (crossfade intégré au WAV) avec long fondu d'entrée.
 func _setup_music() -> void:
 	if not ResourceLoader.exists(THEME_WAV):
-		return  # thème pas encore généré/importé : menu silencieux, pas d'erreur
+		return
 	var stream: AudioStream = load(THEME_WAV)
 	if stream == null:
 		return
 	if stream is AudioStreamWAV:
 		var wav: AudioStreamWAV = stream
-		if wav.format == AudioStreamWAV.FORMAT_IMA_ADPCM:
-			# Paquets ADPCM à longueur variable : impossible de calculer loop_end en frames.
-			push_warning("[MerlinMenu] WAV ADPCM : boucle auto non configurée (réimporter en PCM)")
-		else:
+		if wav.format != AudioStreamWAV.FORMAT_IMA_ADPCM:
 			var bytes_per_sample: int = 2 if wav.format == AudioStreamWAV.FORMAT_16_BITS else 1
 			var channels: int = 2 if wav.stereo else 1
 			wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 			wav.loop_begin = 0
 			wav.loop_end = int(wav.data.size() / float(bytes_per_sample * channels))
-	_music = AudioStreamPlayer.new()
-	_music.stream = stream
-	_music.volume_db = -38.0
-	add_child(_music)
-	_music.play()
-	var tw: Tween = create_tween()
-	tw.tween_property(_music, "volume_db", MUSIC_DB, MUSIC_FADE_IN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-
-## Fondu de sortie calé sur le fondu au noir de MerlinTransition (fire-and-forget).
-func _fade_out_music() -> void:
-	if _music == null or not _music.playing:
-		return
-	var tw: Tween = create_tween()
-	tw.tween_property(_music, "volume_db", -40.0, MUSIC_FADE_OUT).set_trans(Tween.TRANS_SINE)
+	MerlinAudio.play_music(stream, MUSIC_FADE_IN)
 
 
 # ============================== NAVIGATION ==============================
 
 
 func _on_new() -> void:
-	_fade_out_music()
 	MerlinTransition.change_scene(SELECTION_SCENE)
 
 
 func _on_continue() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.has_save() and run.load_run():
-		_fade_out_music()
 		MerlinTransition.change_scene(GAME_SCENE)
 
 
 func _on_options() -> void:
 	if ResourceLoader.exists(OPTIONS_SCENE):
-		_fade_out_music()
 		MerlinTransition.change_scene(OPTIONS_SCENE)
 
 

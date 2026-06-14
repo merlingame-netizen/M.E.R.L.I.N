@@ -30,10 +30,12 @@ var _scene_epoch: int = 0  # invalide une réponse LLM si la scène a tourné/ch
 var _can_advance: bool = false  # vrai après typewriter terminé : le clic avance (parité avec le bouton)
 var _caret: Label = null  # ▮ cliquer pour continuer (clignotant, identique merlin_game.gd)
 var _caret_tw: Tween = null
+var _quill_tw: Tween
 
 
 func _ready() -> void:
 	_build_ui()
+	MerlinAudio.stop_music(1.0)
 	call_deferred("_run_end")
 
 
@@ -138,7 +140,9 @@ func _build_ui() -> void:
 	_continue_btn.add_theme_font_size_override("font_size", 24)
 	_continue_btn.disabled = true
 	_continue_btn.pressed.connect(_on_continue)
+	MerlinVisual.connect_button_feedback(_continue_btn)
 	root.add_child(_continue_btn)
+	_animate_entrance()
 
 
 func _on_continue() -> void:
@@ -161,9 +165,18 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 	if n <= 0:
 		_on_typewriter_done()
 		return
+	var dur: float = clampf(float(n) / 30.0, 0.8, 10.0)
 	_tw = create_tween()
-	_tw.tween_property(_epilogue, "visible_characters", n, clampf(float(n) / 55.0, 0.5, 6.0))
+	_tw.tween_property(_epilogue, "visible_characters", n, dur)
 	_tw.tween_callback(_on_typewriter_done)
+	if _quill_tw != null and _quill_tw.is_valid():
+		_quill_tw.kill()
+	var tick_interval: float = dur / maxf(float(n), 1.0) * 3.0
+	var tick_count: int = maxi(n / 3, 1)
+	_quill_tw = create_tween()
+	for i in tick_count:
+		_quill_tw.tween_interval(tick_interval)
+		_quill_tw.tween_callback(func() -> void: MerlinAudio.play_sfx("quill_tick", randf_range(0.92, 1.08)))
 
 
 # === v10/C1 : helpers epoch + caret + skip-typewriter (parité merlin_game.gd) ===
@@ -205,3 +218,17 @@ func _on_epilogue_click(event: InputEvent) -> void:
 		_skip_typewriter()
 	elif _can_advance and not _continue_btn.disabled:
 		_on_continue()
+
+
+func _animate_entrance() -> void:
+	_fade_in(_title_lbl, 0.00, 0.50)
+	_fade_in(_epilogue_panel, 0.25, 0.55)
+	_fade_in(_state_lbl, 0.50, 0.40)
+	_fade_in(_continue_btn, 0.65, 0.40)
+
+
+func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
+	node.modulate.a = 0.0
+	var tw: Tween = create_tween()
+	tw.tween_interval(maxf(delay, 0.001))
+	tw.tween_property(node, "modulate:a", 1.0, dur * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)

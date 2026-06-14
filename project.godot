@@ -25,6 +25,7 @@ TweaksOverlay="*res://scripts/game/tweaks_overlay.gd"
 MerlinRun="*res://scripts/game/merlin_run.gd"
 MerlinScenario="*res://scripts/llm/merlin_scenario.gd"
 MerlinDebugOverlay="*res://scripts/game/merlin_debug_overlay.gd"
+MerlinAudio="*res://scripts/game/merlin_audio.gd"
 MerlinTransition="*res://scripts/game/merlin_transition.gd"
 
 [display]

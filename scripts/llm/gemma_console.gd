@@ -26,6 +26,10 @@ var _cancel_btn: Button
 var _creative_chk: CheckButton
 var _tokens_spin: SpinBox
 var _full_text: String = ""
+var _tw: Tween
+var _title_lbl: Label
+var _controls_row: HBoxContainer
+var _out_panel: PanelContainer
 
 
 func _ready() -> void:
@@ -61,11 +65,11 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 12)
 	margin.add_child(root)
 
-	var title: Label = Label.new()
-	title.text = "GEMMA PARLE — Console debug (Gemma 4 E2B natif)"
-	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 26)
-	root.add_child(title)
+	_title_lbl = Label.new()
+	_title_lbl.text = "GEMMA PARLE — Console debug (Gemma 4 E2B natif)"
+	_title_lbl.add_theme_color_override("font_color", COL_GOLD)
+	_title_lbl.add_theme_font_size_override("font_size", 26)
+	root.add_child(_title_lbl)
 
 	_status = Label.new()
 	_status.add_theme_font_size_override("font_size", 16)
@@ -82,20 +86,20 @@ func _build_ui() -> void:
 	_prompt_edit.add_theme_color_override("font_color", COL_TEXT)
 	root.add_child(_prompt_edit)
 
-	var controls: HBoxContainer = HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 16)
-	root.add_child(controls)
+	_controls_row = HBoxContainer.new()
+	_controls_row.add_theme_constant_override("separation", 16)
+	root.add_child(_controls_row)
 
 	_creative_chk = CheckButton.new()
 	_creative_chk.text = "Creatif (temp 0.85)"
 	_creative_chk.button_pressed = true
 	_creative_chk.custom_minimum_size = Vector2(0, 44)
-	controls.add_child(_creative_chk)
+	_controls_row.add_child(_creative_chk)
 
 	var tok_lbl: Label = Label.new()
 	tok_lbl.text = "max_tokens"
 	tok_lbl.add_theme_color_override("font_color", COL_TEXT)
-	controls.add_child(tok_lbl)
+	_controls_row.add_child(tok_lbl)
 
 	_tokens_spin = SpinBox.new()
 	_tokens_spin.min_value = 32
@@ -103,47 +107,50 @@ func _build_ui() -> void:
 	_tokens_spin.step = 16
 	_tokens_spin.value = 120
 	_tokens_spin.custom_minimum_size = Vector2(0, 44)
-	controls.add_child(_tokens_spin)
+	_controls_row.add_child(_tokens_spin)
 
 	_gen_btn = Button.new()
 	_gen_btn.text = "Generer"
 	_gen_btn.custom_minimum_size = Vector2(120, 44)
 	_gen_btn.pressed.connect(_on_generate_pressed)
 	_gen_btn.disabled = true
-	controls.add_child(_gen_btn)
+	_controls_row.add_child(_gen_btn)
+	MerlinVisual.connect_button_feedback(_gen_btn)
 
 	_cancel_btn = Button.new()
 	_cancel_btn.text = "Annuler"
 	_cancel_btn.custom_minimum_size = Vector2(100, 44)
 	_cancel_btn.pressed.connect(_on_cancel_pressed)
 	_cancel_btn.disabled = true
-	controls.add_child(_cancel_btn)
+	_controls_row.add_child(_cancel_btn)
+	MerlinVisual.connect_button_feedback(_cancel_btn)
 
 	var out_lbl: Label = Label.new()
 	out_lbl.text = "Sortie de Gemma :"
 	out_lbl.add_theme_color_override("font_color", COL_TEXT)
 	root.add_child(out_lbl)
 
-	var out_panel: PanelContainer = PanelContainer.new()
-	out_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_out_panel = PanelContainer.new()
+	_out_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_SURFACE
 	sb.set_corner_radius_all(6)
 	sb.set_content_margin_all(14)
-	out_panel.add_theme_stylebox_override("panel", sb)
-	root.add_child(out_panel)
+	_out_panel.add_theme_stylebox_override("panel", sb)
+	root.add_child(_out_panel)
 
 	_output = RichTextLabel.new()
 	_output.bbcode_enabled = true
 	_output.scroll_active = true
 	_output.add_theme_color_override("default_color", COL_TEXT)
 	_output.add_theme_font_size_override("normal_font_size", 18)
-	out_panel.add_child(_output)
+	_out_panel.add_child(_output)
 
 	_metrics = Label.new()
 	_metrics.add_theme_color_override("font_color", COL_GOLD)
 	_metrics.add_theme_font_size_override("font_size", 15)
 	root.add_child(_metrics)
+	_animate_entrance()
 
 
 func _set_status(txt: String, col: Color) -> void:
@@ -213,13 +220,30 @@ func _on_generation_finished(result: Dictionary) -> void:
 	print("[GemmaConsole] %s" % _metrics.text)
 
 
+func _animate_entrance() -> void:
+	_fade_in(_title_lbl, 0.00, 0.35)
+	_fade_in(_status, 0.10, 0.30)
+	_fade_in(_prompt_edit, 0.20, 0.40)
+	_fade_in(_controls_row, 0.35, 0.35)
+	_fade_in(_out_panel, 0.45, 0.45)
+	_fade_in(_metrics, 0.55, 0.30)
+
+
+func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
+	node.modulate.a = 0.0
+	var tw: Tween = create_tween()
+	tw.tween_interval(maxf(delay, 0.001))
+	tw.tween_property(node, "modulate:a", 1.0, dur * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
 func _typewriter(txt: String) -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
 	_output.text = txt
 	_output.visible_characters = 0
 	var n: int = _output.get_total_character_count()
 	if n <= 0:
 		return
-	var tw: Tween = create_tween()
-	# ~60 chars/s (R63 typewriter).
 	var dur: float = clampf(float(n) / 60.0, 0.3, 6.0)
-	tw.tween_property(_output, "visible_characters", n, dur)
+	_tw = create_tween()
+	_tw.tween_property(_output, "visible_characters", n, dur)

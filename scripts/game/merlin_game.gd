@@ -50,6 +50,8 @@ var _intro_open: bool = false
 var _pulse_tw: Tween
 var _prev_integrite: int = -999  # pour animer les deltas de jauges (-999 = pas encore initialisé)
 var _prev_corruption: int = -999
+var _tw_tick_count: int = 0
+var _quill_tw: Tween
 var _deal_pending: bool = false  # déclenche l'anim de distribution au prochain _layout_fan
 var _life_tw: Tween  # tween de remplissage de l'anneau vie (tué avant un nouveau → pas de snap arrière)
 var _corr_tw: Tween
@@ -417,7 +419,7 @@ func _update_preview() -> void:
 	var was_disabled: bool = _resolve_btn.disabled
 	_resolve_btn.disabled = false
 	if was_disabled and _resolve_btn.visible:
-		# AUDIO_HOOK: combo_complete (chime + lock-in)
+		MerlinAudio.play_sfx("draft_reveal")
 		_pop(_resolve_btn, 1.15)
 		_combo_complete_pulse()
 	# v10.4 — pré-génération LLM spéculative pendant la pose (user 2026-06-06). Dédupé par signature
@@ -571,21 +573,8 @@ func _slam_degree_seal(degree: String) -> void:
 	_play_seal_audio(degree)  # v10.13.1 (§22, Wave1) : le sceau SONNE — seal_stamp + stinger
 
 
-# v10.13.1 (§22 R117) — le moment-clé du beat n'est plus muet : seal_stamp + stinger du degré.
-# AudioStreamPlayer transitoires (auto-libérés) en attendant l'autoload MerlinAudio (v10.16).
-# Fallback SILENCIEUX si un WAV manque (gate Wave2 réserve 3) — jamais d'erreur runtime.
 func _play_seal_audio(degree: String) -> void:
-	var paths: Array = ["res://audio/sfx/seal_stamp.wav", "res://audio/sfx/stinger_%s.wav" % degree]
-	for i in paths.size():
-		var path: String = str(paths[i])
-		if not ResourceLoader.exists(path):
-			continue
-		var p: AudioStreamPlayer = AudioStreamPlayer.new()
-		p.stream = load(path)
-		p.volume_db = 0.0 if i == 0 else -4.0  # le stinger se place SOUS le stamp (pas de cacophonie)
-		add_child(p)
-		p.finished.connect(p.queue_free)
-		p.play()
+	MerlinAudio.play_stinger(degree)
 
 
 func _clear_degree_seal() -> void:
@@ -870,6 +859,11 @@ func _on_gauges(integrite: int, corruption: int) -> void:
 			_float_delta(_corr_gauge, dc, COL_VIOLET if dc > 0 else COL_GREEN)
 			if dc > 0:
 				MerlinFx.shake(_corr_gauge, 3.0, 0.15)
+				MerlinAudio.play_sfx("corruption_tick")
+		if di > 0:
+			MerlinAudio.play_sfx("gauge_up")
+		elif di < 0:
+			MerlinAudio.play_sfx("gauge_down")
 	# Pulse continue quand la stat est critique (vie basse / corruption haute).
 	_life_gauge.set_critical(integrite <= 3)
 	_corr_gauge.set_critical(corruption >= int(MerlinRun.CORRUPTION_CAP * 0.66))
@@ -887,6 +881,9 @@ func _update_corruption_fx(corruption: int) -> void:
 	var palier: int = clampi(int(float(corruption) / 5.0), 0, 3)
 	var prev: int = _corruption_palier
 	_corruption_palier = palier
+	if palier > prev and prev >= 0:
+		MerlinAudio.play_sfx("whisper_threshold")
+	MerlinAudio.set_corruption_layer(palier)
 	var lv: Dictionary = GLITCH_LEVELS[palier]
 	var ti: float = float(lv["i"])
 	var td: float = float(lv["d"])
@@ -1103,9 +1100,19 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 		return
 	if _state == 1 or _state == 2 or _interstitial_open:
 		_show_skip_hint()  # affordance « clic = passer » visible DÈS le début (user 2026-06-07)
+	_tw_tick_count = 0
+	var dur: float = clampf(float(n) / 30.0, 0.8, 10.0)
 	_tw = create_tween()
-	_tw.tween_property(_situation_text, "visible_characters", n, clampf(float(n) / 60.0, 0.4, 5.0))
+	_tw.tween_property(_situation_text, "visible_characters", n, dur)
 	_tw.finished.connect(_on_typewriter_done)
+	if _quill_tw != null and _quill_tw.is_valid():
+		_quill_tw.kill()
+	var tick_interval: float = dur / maxf(float(n), 1.0) * 3.0
+	var tick_count: int = maxi(n / 3, 1)
+	_quill_tw = create_tween()
+	for i in tick_count:
+		_quill_tw.tween_interval(tick_interval)
+		_quill_tw.tween_callback(func() -> void: MerlinAudio.play_sfx("quill_tick", randf_range(0.92, 1.08)))
 
 
 func _kill_tw() -> void:

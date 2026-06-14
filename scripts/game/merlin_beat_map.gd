@@ -57,7 +57,7 @@ func animate_advance(idx: int) -> void:
 	_adv_tw = create_tween()
 	_adv_tw.tween_method(_set_growth, 0.0, 1.0, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_adv_tw.tween_method(_set_halo_scale, 1.7, 1.0, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# AUDIO_HOOK: beat_advance (node ping)
+	MerlinAudio.play_sfx("beat_turn")
 	_adv_tw.tween_callback(_sparks_at_current)
 
 

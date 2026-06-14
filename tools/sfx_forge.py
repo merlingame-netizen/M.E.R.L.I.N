@@ -145,6 +145,13 @@ RECIPES: dict[str, Callable[[], list[float]]] = {
     "stinger_eclatante": lambda: _mix(
         _chord(2.2, (261.63, 329.63, 392.0, 523.25), attack=0.006, tau=0.75),
         _tone(2.2, 1046.5, attack=0.15, tau=0.70, partials=((1.0, 0.25),))),
+    # tick de plume doux (typewriter)
+    "quill_tick": lambda: _tone(0.06, 880.0, attack=0.001, tau=0.015,
+                                partials=((1.0, 1.0), (3.0, 0.15))),
+    # son d'encre pour transition ink wipe
+    "ink_wash": lambda: _mix(
+        _noise(0.45, seed=120, attack=0.02, tau=0.18, lowpass=0.15),
+        _tone(0.30, 130.0, attack=0.02, tau=0.12, partials=((1.0, 0.3),))),
 }
 
 
