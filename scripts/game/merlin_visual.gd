@@ -151,3 +151,36 @@ static func make_label(col: Color, fsize: int) -> Label:
 	l.add_theme_color_override("font_color", col)
 	l.add_theme_font_size_override("font_size", fsize)
 	return l
+
+
+# StyleBox bouton DA-conforme (GOLD sur SURFACE, bords arrondis).
+static func button_style_normal() -> StyleBoxFlat:
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = SURFACE
+	sb.set_corner_radius_all(6)
+	sb.set_border_width_all(2)
+	sb.border_color = GOLD_DARK
+	sb.set_content_margin_all(10)
+	return sb
+
+static func button_style_hover() -> StyleBoxFlat:
+	var sb: StyleBoxFlat = button_style_normal()
+	sb.bg_color = Color(SURFACE.r + 0.06, SURFACE.g + 0.05, SURFACE.b + 0.04, 1.0)
+	sb.border_color = GOLD
+	return sb
+
+static func button_style_pressed() -> StyleBoxFlat:
+	var sb: StyleBoxFlat = button_style_normal()
+	sb.bg_color = Color(SURFACE.r - 0.03, SURFACE.g - 0.02, SURFACE.b - 0.02, 1.0)
+	sb.border_color = GOLD
+	return sb
+
+static func apply_button_da(btn: Button) -> void:
+	btn.add_theme_stylebox_override("normal", button_style_normal())
+	btn.add_theme_stylebox_override("hover", button_style_hover())
+	btn.add_theme_stylebox_override("pressed", button_style_pressed())
+	btn.add_theme_stylebox_override("focus", button_style_normal())
+	btn.add_theme_color_override("font_color", GOLD)
+	btn.add_theme_color_override("font_hover_color", CREAM)
+	btn.add_theme_color_override("font_pressed_color", GOLD_DARK)
+	btn.add_theme_color_override("font_focus_color", GOLD)

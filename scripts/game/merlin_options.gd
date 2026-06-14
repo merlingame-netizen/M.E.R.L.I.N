@@ -136,6 +136,7 @@ func _build_ui() -> void:
 	_back_btn = Button.new()
 	_back_btn.text = "◀ Fermer"
 	_back_btn.custom_minimum_size = Vector2(160, 48)
+	MerlinVisual.apply_button_da(_back_btn)
 	_back_btn.pressed.connect(toggle)
 	vbox.add_child(_back_btn)
 	MerlinVisual.connect_button_feedback(_back_btn)

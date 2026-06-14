@@ -121,7 +121,7 @@ func _build_ui() -> void:
 	# Caret « ▮ cliquer pour continuer » — apparaît clignotant après la fin du typewriter (bible §21.1 ÉVIDENT).
 	_caret = Label.new()
 	_caret.text = "▮ cliquer pour continuer"
-	_caret.add_theme_color_override("font_color", Color("8A6A2E"))
+	_caret.add_theme_color_override("font_color", MerlinVisual.GOLD_DARK)
 	_caret.add_theme_font_size_override("font_size", 20)
 	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -139,6 +139,7 @@ func _build_ui() -> void:
 	_continue_btn.custom_minimum_size = Vector2(300, 64)
 	_continue_btn.add_theme_font_size_override("font_size", 24)
 	_continue_btn.disabled = true
+	MerlinVisual.apply_button_da(_continue_btn)
 	_continue_btn.pressed.connect(_on_continue)
 	MerlinVisual.connect_button_feedback(_continue_btn)
 	root.add_child(_continue_btn)

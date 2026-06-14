@@ -218,7 +218,7 @@ func _present_current_beat() -> void:
 	# montent qu'à la fin du typewriter (_on_typewriter_done state==1). Cartes cachées d'ici là.
 	_set_choice_ui(false)
 	# Signal de transition (user 2026-06-07) : bordure neutre + fondu de l'encart au nouveau beat.
-	_set_encart_phase(Color("6E5A3C"))
+	_set_encart_phase(MerlinVisual.INK_DIM)
 	if _situ_panel != null:
 		_situ_panel.modulate.a = 0.45
 		# v10.15 — Slide-up : l'encart monte de 12px en fondant (situation « arrive »).
@@ -685,6 +685,7 @@ func _build_draft_layer(choices: Array) -> void:
 	skip.text = "Passer"
 	skip.custom_minimum_size = Vector2(180, 52)
 	skip.add_theme_font_size_override("font_size", 22)
+	MerlinVisual.apply_button_da(skip)
 	skip.pressed.connect(_on_draft_skip)
 	MerlinVisual.connect_button_feedback(skip)  # v10.13.1 — feedback canon §21 `tap`
 	var skip_center: CenterContainer = CenterContainer.new()
@@ -847,12 +848,7 @@ func _show_skip_hint() -> void:
 
 
 func _degree_color(degree: String) -> Color:
-	# Couleurs LISIBLES sur la bande de narration crème (le label de degré s'y affiche).
-	match degree:
-		"echec": return Color("7B4FA3")     # violet
-		"partiel": return Color("6E5A3C")    # brun-ink
-		"eclatante": return Color("4F6B3E")  # vert sombre
-		_: return Color("8A6A2E")            # or sombre (réussite)
+	return MerlinVisual.degree_color(degree)
 
 
 func _on_gauges(integrite: int, corruption: int) -> void:
@@ -1279,6 +1275,7 @@ func _show_intro_popup() -> void:
 	accept.text = "Accepter ✦"
 	accept.custom_minimum_size = Vector2(260, 66)  # ≥44 px (pilier TACTILE+DESKTOP)
 	accept.add_theme_font_size_override("font_size", 28)
+	MerlinVisual.apply_button_da(accept)
 	accept.pressed.connect(_accept_quest)
 	row.add_child(accept)
 	accept.resized.connect(func() -> void: accept.pivot_offset = accept.size / 2.0)
@@ -1379,7 +1376,7 @@ func _play_opening_interstitial() -> void:
 	if _beat_header != null:
 		_beat_header.text = "— le récit s'ouvre —"  # audit design P2 : diégétique (Merlin ne se nomme pas)
 		_beat_header.visible = true
-	_set_encart_phase(Color("6E5A3C"))  # bordure neutre (même teinte que les situations)
+	_set_encart_phase(MerlinVisual.INK_DIM)  # bordure neutre (même teinte que les situations)
 	if _situation_text != null:
 		_situation_text.text = ""
 	if _situ_panel != null:
@@ -1492,7 +1489,7 @@ func _build_ui() -> void:
 	_situ_panel.add_child(inner)
 	# Marqueur de beat discret en haut de l'encart (sorti du texte narratif — user 2026-06-07).
 	_beat_header = Label.new()
-	_beat_header.add_theme_color_override("font_color", Color("8A6A2E"))
+	_beat_header.add_theme_color_override("font_color", MerlinVisual.GOLD_DARK)
 	_beat_header.add_theme_font_size_override("font_size", 18)
 	_beat_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_beat_header.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1512,7 +1509,7 @@ func _build_ui() -> void:
 	situ_center.add_child(_situation_text)
 
 	# Caret « cliquer pour continuer » : clignote faiblement quand l'issue est entièrement écrite.
-	_caret = _mk_label(Color("8A6A2E"), 20)
+	_caret = _mk_label(MerlinVisual.GOLD_DARK, 20)
 	_caret.text = "▮ cliquer pour continuer"
 	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1541,6 +1538,7 @@ func _build_ui() -> void:
 	_resolve_btn.text = "Résolution"
 	_resolve_btn.custom_minimum_size = Vector2(300, 66)
 	_resolve_btn.add_theme_font_size_override("font_size", 26)
+	MerlinVisual.apply_button_da(_resolve_btn)
 	_resolve_btn.pressed.connect(_on_resolve)
 	btn_row.add_child(_resolve_btn)
 	MerlinVisual.connect_button_feedback(_resolve_btn)  # v10.13.1 — feedback canon §21 `tap`

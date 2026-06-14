@@ -21,6 +21,7 @@ var _busy: bool = false
 # v10/H2 (audit UX bible §21.1 ÉVIDENT) : feedback visuel d'attente bornée (8 s budget côté
 # MerlinScenario.take_selection). (user 2026-05-31 /goal)
 var _overlay_dots_tw: Tween = null
+var _overlay_quill_tw: Tween = null
 var _overlay_base_txt: String = ""
 
 
@@ -85,6 +86,7 @@ func _add_parchemin(title: String, pitch: String) -> void:
 	b.text = "Suivre ce sentier"
 	b.custom_minimum_size = Vector2(0, 62)
 	b.add_theme_font_size_override("font_size", 24)
+	MerlinVisual.apply_button_da(b)
 	b.pressed.connect(_on_pick.bind(title, pitch))
 	MerlinVisual.connect_button_feedback(b)
 	v.add_child(b)
@@ -138,6 +140,7 @@ func _build_ui() -> void:
 	_back_btn = Button.new()
 	_back_btn.text = "◀ Retour"
 	_back_btn.custom_minimum_size = Vector2(140, 44)
+	MerlinVisual.apply_button_da(_back_btn)
 	_back_btn.pressed.connect(_on_back)
 	root.add_child(_back_btn)
 	MerlinVisual.connect_button_feedback(_back_btn)
@@ -145,11 +148,13 @@ func _build_ui() -> void:
 	_overlay = Panel.new()
 	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var ov_sb: StyleBoxFlat = StyleBoxFlat.new()
-	ov_sb.bg_color = Color(0.08, 0.06, 0.05, 0.92)
+	ov_sb.bg_color = Color(MerlinVisual.BG_DEEP.r, MerlinVisual.BG_DEEP.g, MerlinVisual.BG_DEEP.b, 0.92)
 	_overlay.add_theme_stylebox_override("panel", ov_sb)
 	add_child(_overlay)
 	_overlay_lbl = Label.new()
-	_overlay_lbl.set_anchors_preset(Control.PRESET_CENTER)
+	_overlay_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_overlay_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_overlay_lbl.add_theme_font_size_override("font_size", 38)
 	_overlay.add_child(_overlay_lbl)
@@ -162,8 +167,6 @@ func _on_back() -> void:
 
 func _show_overlay(txt: String) -> void:
 	_overlay.visible = true
-	# v10/H2 : on garde le texte de base et on anime un suffixe de dots cycliques (·  ··  ···)
-	# pour signifier l'activité d'attente. Tween en boucle, cleanup garanti dans _hide_overlay.
 	_overlay_base_txt = txt
 	_overlay_lbl.text = txt
 	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
@@ -172,6 +175,11 @@ func _show_overlay(txt: String) -> void:
 	for suffix in ["", "  ·", "  · ·", "  · · ·"]:
 		_overlay_dots_tw.tween_callback(_set_overlay_suffix.bind(suffix))
 		_overlay_dots_tw.tween_interval(0.4)
+	if _overlay_quill_tw != null and _overlay_quill_tw.is_valid():
+		_overlay_quill_tw.kill()
+	_overlay_quill_tw = create_tween().set_loops()
+	_overlay_quill_tw.tween_interval(0.6)
+	_overlay_quill_tw.tween_callback(func() -> void: MerlinAudio.play_sfx("quill_tick", randf_range(0.88, 1.04)))
 
 
 func _set_overlay_suffix(suffix: String) -> void:
@@ -184,6 +192,9 @@ func _hide_overlay() -> void:
 	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
 		_overlay_dots_tw.kill()
 	_overlay_dots_tw = null
+	if _overlay_quill_tw != null and _overlay_quill_tw.is_valid():
+		_overlay_quill_tw.kill()
+	_overlay_quill_tw = null
 
 
 func _animate_entrance() -> void:
