@@ -2673,3 +2673,10 @@ usages Claude/dev/Godot.
 - BLOQUANT D1 : table 'states' = 145 Mo (campaignData jusqu'a 16 Mo/ligne) > limite D1 2 Mo/valeur.
   Exclue du chargement D1 -> a placer sur R2 (object storage) ou fichier SQLite sur VM (decision user).
 - Donnees + cle SA hors repo (uploads/tmp/root only ; jamais commitees).
+
+### 2026-06-14 (suite 18) — states -> SQLite sur la VM GCP (script clé en main)
+
+- Choix user : states (145 Mo, hors limite D1) en fichier SQLite sur la VM GCP (gratuit).
+- Sandbox ne peut pas SSH -> AJOUT infra/fleet/migrations/vm_migrate.sh : tourne SUR la VM,
+  fetch RTDB via SA + convertit en ~/atelier-idrac.db (base complete, states inclus).
+- User : scp la cle SA (2 Ko) sur la VM puis `curl raw vm_migrate.sh | bash -s ~/idrac-sa.json`.
