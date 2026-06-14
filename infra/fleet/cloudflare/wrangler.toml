@@ -12,4 +12,4 @@ compatibility_date = "2026-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "merlin"
-database_id = "REPLACE_AFTER_d1_create"
+database_id = "6f4b1808-457b-44f6-a63a-03eeacd317a1"

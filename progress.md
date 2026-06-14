@@ -2589,3 +2589,13 @@ usages Claude/dev/Godot.
 - Valide : terraform validate (gcp) OK, worker.js node --check OK, fly main.py OK,
   fleet status/check OK, serve degrade proprement sans flask.
 - Reste (utilisateur) : signup par fournisseur + remplir fleet.yaml (runbooks dans chaque README).
+
+### 2026-06-14 (suite 10) — Cloudflare DEPLOYE (1er noeud live de la flotte)
+
+- Deploye d'ici via token API (sans navigateur) : D1 (SQLite) 'merlin' creee + schema applique,
+  Worker 'merlin-svc' live (sous-domaine workers.dev 'maxbab38' enregistre via API), Pages 'merlin-pages'
+  en production.
+- URLs: https://merlin-svc.maxbab38.workers.dev (/health + /items API SQLite OK),
+  https://merlin-pages.pages.dev (HTTP 200).
+- fleet.yaml renseigne -> console: cf-worker UP, cf-pages UP (2/5). Reste oracle/gcp/fly.
+- Token traite comme secret (env var uniquement, jamais commite ; verifie 0 fuite).

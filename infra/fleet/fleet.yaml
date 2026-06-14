@@ -27,13 +27,13 @@ targets:
   - name: cf-worker
     provider: cloudflare
     type: http
-    url: ""                               # https://<worker>.<account>.workers.dev/health
+    url: "https://merlin-svc.maxbab38.workers.dev/health"
     role: "API + D1 (SQLite)"
 
   - name: cf-pages
     provider: cloudflare
     type: http
-    url: ""                               # https://<project>.pages.dev
+    url: "https://merlin-pages.pages.dev"
     role: "site web (Pages)"
 
   - name: fly-service
