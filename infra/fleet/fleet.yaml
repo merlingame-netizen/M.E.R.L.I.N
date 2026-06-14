@@ -36,8 +36,5 @@ targets:
     url: "https://merlin-pages.pages.dev"
     role: "site web (Pages)"
 
-  - name: fly-service
-    provider: flyio
-    type: http
-    url: "https://merlin-fleet-mxb38.fly.dev/health"
-    role: "service conteneurisé"
+  # fly-service dropped (Fly requires a credit card on the org; not used).
+  # Templates remain in infra/fleet/flyio/ if you ever want to add it.

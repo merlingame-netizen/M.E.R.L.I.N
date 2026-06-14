@@ -2621,3 +2621,13 @@ usages Claude/dev/Godot.
   l'agent peut declencher le workflow. Fallback: fly deploy depuis le PC.
 - fleet.yaml: fly-service url = https://merlin-fleet-mxb38.fly.dev/health (vert une fois deploye).
 - Flotte: cf-worker UP, cf-pages UP, gcp-micro UP(PC), fly-service pending(build), oracle pending(capa).
+
+### 2026-06-14 (suite 13) — Fly abandonne ; flotte finale = 3 noeuds gratuits
+
+- Fly bloque par exigence carte (org trial : "disabled for trial organizations"). Independant
+  du sandbox/token/CI. Utilisateur choisit de laisser tomber Fly (3 noeuds suffisent).
+- Retire fly-service de fleet.yaml + supprime .github/workflows/fly-deploy.yml (CI inutile).
+  Templates infra/fleet/flyio/ conserves (option future). App Fly 'merlin-fleet-mxb38' reste vide
+  (0 machine = 0 cout) ; user peut la supprimer + revoquer le token Fly.
+- FLOTTE FINALE: cf-worker (D1 SQLite) UP, cf-pages UP, gcp-micro (VPS 1Go) UP, oracle-a1 pending
+  (capacite, watcher PC). Console locale `python tools/cli.py fleet serve`.
