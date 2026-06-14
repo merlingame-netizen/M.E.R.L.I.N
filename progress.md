@@ -2564,3 +2564,13 @@ usages Claude/dev/Godot.
   l'usage" en complement de freetier-guard.py (provisioning). Email via tfvars (non commite).
 - Budget APPLIQUE et actif (2 resources). Watcher 4/24 relance : deploiera la VM+stack
   des que la capacite s'ouvre (immediat apres PAYG en principe).
+
+### 2026-06-14 (suite 8) — Veilleur PC 24/7 (free-tier guard PowerShell)
+
+- Capacite Paris toujours nulle apres 1 semaine (verifie via capacity report + apply reel
+  = "Out of host capacity" physique, pas un blocage tier). PAYG = priorite, pas creation de hardware.
+- AJOUT infra/oracle/pc-watcher/ : setup.ps1 (install terraform, cles, tfvars Windows, bootstrap state)
+  + merlin-watch.ps1 (boucle 24/7, garde-fou free-tier natif PowerShell, deploie des qu'un hote A1
+  se libere, ecrit l'alias ssh merlin-vm avec tunnels) + README. Fichiers sensibles (.win/.bootstrap)
+  gitignores et envoyes a l'utilisateur.
+- Watcher conteneur arrete (le PC devient le pilote unique pour eviter divergence d'etat terraform).

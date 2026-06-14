@@ -9,3 +9,6 @@ crash.log
 # Docker stack secrets
 stack/.env
 # Keep .terraform.lock.hcl tracked (provider pinning) — do NOT ignore it
+# PC-watcher local files (contain OCIDs/email/state — sent to user, not committed)
+pc-watcher/terraform.tfvars.win
+pc-watcher/*.bootstrap
