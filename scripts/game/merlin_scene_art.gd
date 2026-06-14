@@ -71,16 +71,26 @@ func _draw() -> void:
 	# Fond de la fenêtre de scène (coin légèrement arrondi simulé par un simple rect plein).
 	draw_rect(Rect2(Vector2.ZERO, s), COL_SCENE_BG, true)
 
-	# Lune (cercle crème), haut-centre. En mode animé : halo qui respire très lentement.
-	# v10.13 (B7) : la phase est accumulée dans _process → la respiration ACCÉLÈRE sans saut
-	# quand « Merlin pense » (set_thinking), et reprend son rythme lent au repos.
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40)
 	var moon_r: float = minf(w, h) * 0.13
 	if _animated:
+		var halo_outer_r: float = moon_r * (1.45 + 0.08 * sin(_halo_phase * 0.6))
+		var halo_outer_a: float = 0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))
+		if MerlinVisual.reduced_motion:
+			halo_outer_a *= 0.5
+		draw_circle(moon_c, halo_outer_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_outer_a))
 		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_halo_phase))
 		var halo_a: float = 0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))
 		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 	draw_circle(moon_c, moon_r, COL_MOON)
+
+	if _animated and not MerlinVisual.reduced_motion:
+		var ray_len: float = minf(w, h) * 0.35
+		for ri in 4:
+			var angle: float = _t * 0.08 + float(ri) * PI * 0.5
+			var ray_end: Vector2 = moon_c + Vector2(cos(angle), sin(angle)) * ray_len
+			var ray_a: float = 0.03 + 0.01 * sin(_t * 0.15 + float(ri) * 1.3)
+			draw_line(moon_c, ray_end, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ray_a), 1.5)
 
 	# Arbres nus en silhouette, encadrant (arrière-plan).
 	_tree(Vector2(w * 0.12, h), h * 0.74, w)
@@ -102,30 +112,53 @@ func _draw() -> void:
 	if _beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme":
 		_figure(Vector2(w * 0.5, h * 0.84), h * 0.50, w * 0.075)
 
-	# v10.15 — Motes ambiantes (golden fireflies) : entre figure et brume (profondeur correcte).
 	if _animated:
-		for mi in 6:
+		for mi in 10:
 			var mf: float = float(mi)
-			var mx: float = w * (0.15 + 0.70 * fmod(mf * 0.618 + 0.1, 1.0))
-			var my: float = h * (0.25 + 0.50 * fmod(mf * 0.382 + 0.05, 1.0))
-			mx += sin(_t * 0.28 + mf * 1.7) * w * 0.025
-			my += cos(_t * 0.21 + mf * 2.3) * h * 0.018
-			var ma: float = 0.12 + 0.10 * (0.5 + 0.5 * sin(_t * 0.55 + mf * 1.1))
+			var mx: float = w * (0.10 + 0.80 * fmod(mf * 0.618 + 0.1, 1.0))
+			var my: float = h * (0.20 + 0.55 * fmod(mf * 0.382 + 0.05, 1.0))
+			var speed: float = 0.18 + mf * 0.04
+			mx += sin(_t * speed + mf * 1.7) * w * 0.025
+			my += cos(_t * (speed * 0.75) + mf * 2.3) * h * 0.018
+			var depth: float = my / h
+			var mr: float = maxf(minf(w, h) * lerpf(0.003, 0.007, depth), 1.5)
+			var ma: float = lerpf(0.08, 0.22, depth) * (0.5 + 0.5 * sin(_t * 0.55 + mf * 1.1))
 			if MerlinVisual.reduced_motion:
 				ma *= 0.5
-			var mr: float = maxf(minf(w, h) * 0.005, 1.8)
 			draw_circle(Vector2(mx, my), mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma))
 
-	# Brume : bandes horizontales plates translucides (avant-plan). Dérive lente en mode animé.
-	var band_i: int = 0
-	for band in [0.60, 0.71, 0.81]:
-		var y: float = h * band
-		var bw: float = w * (0.5 + 0.18 * band)
+	# v10.15 — contour de sol organique (avant brume, derrière le menu_decor).
+	if _animated:
+		var gnd_pts: PackedVector2Array = PackedVector2Array()
+		var gnd_steps: int = 16
+		for gi in gnd_steps + 1:
+			var gx: float = float(gi) / float(gnd_steps) * w
+			var gy: float = h * 0.88 + sin(gx * 0.012 + _t * 0.1) * h * 0.02
+			gnd_pts.append(Vector2(gx, gy))
+		gnd_pts.append(Vector2(w, h))
+		gnd_pts.append(Vector2(0.0, h))
+		var gnd_a: float = 0.35
+		if MerlinVisual.reduced_motion:
+			gnd_a *= 0.5
+		draw_colored_polygon(gnd_pts, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, gnd_a))
+
+	# Brume parallaxe : 3 couches à vitesses/opacités distinctes (profondeur).
+	var mist_layers: Array = [
+		{"y": 0.55, "speed": 0.12, "alpha": 0.10, "width": 0.55},
+		{"y": 0.66, "speed": 0.18, "alpha": 0.14, "width": 0.60},
+		{"y": 0.78, "speed": 0.25, "alpha": 0.18, "width": 0.65},
+	]
+	for li in mist_layers.size():
+		var ml: Dictionary = mist_layers[li]
+		var y: float = h * float(ml["y"])
+		var bw: float = w * float(ml["width"])
 		var bx: float = w * 0.5 - bw * 0.5
+		var alpha: float = float(ml["alpha"])
 		if _animated:
-			bx += sin(_t * 0.20 + float(band_i) * 2.1) * w * 0.014
-		draw_rect(Rect2(Vector2(bx, y), Vector2(bw, h * 0.035)), COL_MIST, true)
-		band_i += 1
+			bx += sin(_t * float(ml["speed"]) + float(li) * 2.1) * w * 0.020
+		if MerlinVisual.reduced_motion:
+			alpha *= 0.5
+		draw_rect(Rect2(Vector2(bx, y), Vector2(bw, h * 0.035)), Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha), true)
 
 	if _menu_decor:
 		# Brume teintée faction : vert à gauche, violet à droite (couleurs des Pôles) + étoiles.

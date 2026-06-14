@@ -20,7 +20,7 @@ const END_SCENE: String = "res://scenes/MerlinEnd.tscn"
 
 var _life_gauge: MerlinRingGauge
 var _corr_gauge: MerlinRingGauge
-var _progress_box: HBoxContainer
+var _beat_map: MerlinBeatMap
 var _scene_art: MerlinSceneArt
 var _situ_panel: PanelContainer       # encart central : porte intro/situation/issue
 var _situ_sb: StyleBoxFlat            # style de l'encart (bordure teintée par phase — signal de transition)
@@ -59,7 +59,6 @@ var _situ_rest_y: float = 0.0  # v10.15 : canonical Y of _situ_panel (for slide-
 var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
 
 # v10.11/12 (user 2026-06-07) — Map du chemin (coin droit) + Draft « 1 carte sur 3 » aux beats clés.
-var _beat_map: MerlinBeatMap = null      # v10.12 : carte « map » StS (chemin des beats), coin droit (remplace Destin)
 var _pending_draft: bool = false         # armé en résolution (réussite/éclatante, beats restants) → draft à l'avance
 var _draft_layer: Control = null         # overlay modal du draft
 var _draft_pick: MerlinCard = null       # carte choisie (null = passer)
@@ -410,18 +409,11 @@ func _update_preview() -> void:
 		_preview_lbl.text = "Pose une 2e carte pour former la combinaison."
 		_resolve_btn.disabled = true
 		return
-	# n == 2 : combinaison complète.
-	_preview_lbl.visible = true
+	# n == 2 : combinaison complète — masquer la mécanique brute (v10.15, pilier MINIMAL).
+	# Le degré se révèle via le sceau (R112), la corruption via la jauge.
+	_preview_lbl.visible = false
 	var reqs: Array = _current_situation.get("required_tags", [])
-	# v10.14 — même dé PRÉ-TIRÉ que la résolution finale (build_situation) → preview = vérité,
-	# et le prefetch LLM cible le BON degré (anti cache-miss). Le dé ne s'AFFICHE pas ici
-	# (monolocalité R112 : sa révélation vit dans la fusion, anim B8).
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)))
-	var cov: Dictionary = res["coverage"]
-	var covered: int = cov["covered"].size()
-	var total: int = covered + cov["missing"].size()
-	# v10.4 : plus de tags requis nommés (« ‹ Instinct › ») — seulement couverture/degré/coût.
-	_preview_lbl.text = "Couverture %d/%d  ·  degré pressenti : %s  ·  coût Corruption : %d" % [covered, total, str(res["label"]), int(res["corruption_delta"])]
 	var was_disabled: bool = _resolve_btn.disabled
 	_resolve_btn.disabled = false
 	if was_disabled and _resolve_btn.visible:
@@ -552,9 +544,7 @@ func _slam_degree_seal(degree: String) -> void:
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	seal.add_child(lbl)
 	add_child(seal)
-	# Haut-droit de l'encart, inset 150 px depuis le bord droit → ne recouvre pas la map CHEMIN
-	# (ancrée au bord droit de l'écran, largeur 120 + 24 d'inset).
-	seal.global_position = _situ_panel.global_position + Vector2(_situ_panel.size.x - SEAL_D - 150.0, 14.0)
+	seal.global_position = _situ_panel.global_position + Vector2(_situ_panel.size.x - SEAL_D - 24.0, 14.0)
 	_degree_seal = seal
 	seal.scale = Vector2(2.2, 2.2)
 	seal.modulate.a = 0.0
@@ -723,19 +713,6 @@ func _on_draft_skip() -> void:
 	_draft_done_flag = true
 
 
-# === v10.12 — Carte « map » du chemin (coin droit, remplace la carte Destin) ===
-func _build_beat_map() -> void:
-	_beat_map = MerlinBeatMap.new()
-	_beat_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_beat_map.anchor_left = 1.0
-	_beat_map.anchor_right = 1.0
-	_beat_map.anchor_top = 0.5
-	_beat_map.anchor_bottom = 0.5
-	_beat_map.offset_left = -144.0  # largeur 120 + 24 d'inset depuis le bord droit
-	_beat_map.offset_right = -24.0
-	_beat_map.offset_top = -150.0   # ~300 de haut, centré verticalement
-	_beat_map.offset_bottom = 150.0
-	add_child(_beat_map)
 
 
 # Clic sur la zone récit (scène/narration). Pendant la frappe → révèle tout le texte ;
@@ -877,7 +854,6 @@ func _on_gauges(integrite: int, corruption: int) -> void:
 	_corr_gauge.set_critical(corruption >= int(MerlinRun.CORRUPTION_CAP * 0.66))
 	_prev_integrite = integrite
 	_prev_corruption = corruption
-	_render_perles()
 	_update_corruption_fx(corruption)  # v10.13.1 (R75) : glitch par palier + pastille statique
 
 
@@ -953,46 +929,6 @@ func _float_delta(anchor: Control, delta: int, col: Color) -> void:
 	MerlinFx.float_delta(self, anchor, delta, col)
 
 
-func _render_perles() -> void:
-	var run: Node = get_node("/root/MerlinRun")
-	var total: int = int(run.scenario.get("total", 5))
-	var cur: int = run.beat_index
-	# Pool réutilisé (pas de free+rebuild → pas de doublon 1-frame). remove_child = comptage immédiat.
-	while _progress_box.get_child_count() > total:
-		var last: Node = _progress_box.get_child(_progress_box.get_child_count() - 1)
-		_progress_box.remove_child(last)
-		last.queue_free()
-	while _progress_box.get_child_count() < total:
-		_progress_box.add_child(_make_dot(0))
-	for i in total:
-		# Complétion du scénario : 2=beat résolu, 1=beat courant, 0=à venir.
-		var st: int = 2 if i < cur else (1 if i == cur else 0)
-		_style_dot(_progress_box.get_child(i) as Panel, st)
-
-
-func _make_dot(state: int) -> Panel:
-	var d: Panel = Panel.new()
-	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_style_dot(d, state)
-	return d
-
-
-func _style_dot(d: Panel, state: int) -> void:
-	var sz: float = 24.0 if state == 1 else 18.0  # agrandi (user 2026-06-07, lisibilité 720p)
-	d.custom_minimum_size = Vector2(sz, sz)
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.set_corner_radius_all(int(sz / 2.0))
-	if state == 0:      # à venir : creux estompé
-		sb.bg_color = Color(0, 0, 0, 0)
-		sb.set_border_width_all(1)
-		sb.border_color = COL_DIM
-	elif state == 1:    # courant : plein or + liseré crème (le plus saillant)
-		sb.bg_color = COL_GOLD
-		sb.set_border_width_all(2)
-		sb.border_color = COL_TEXT
-	else:               # résolu : plein or
-		sb.bg_color = COL_GOLD
-	d.add_theme_stylebox_override("panel", sb)
 
 
 # DEBUG (v10.2 visual test) — F12 déclenche la fusion (MerlinFx) avec une combo bidon depuis
@@ -1439,10 +1375,11 @@ func _build_ui() -> void:
 	var sp_l: Control = Control.new()
 	sp_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud.add_child(sp_l)
-	_progress_box = HBoxContainer.new()
-	_progress_box.add_theme_constant_override("separation", 10)
-	_progress_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	hud.add_child(_progress_box)
+	_beat_map = MerlinBeatMap.new()
+	_beat_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_beat_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_beat_map.custom_minimum_size = Vector2(0, 28)
+	hud.add_child(_beat_map)
 	var sp_r: Control = Control.new()
 	sp_r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud.add_child(sp_r)
@@ -1452,7 +1389,7 @@ func _build_ui() -> void:
 
 	# Scène en silhouettes plates — bande supérieure FIXE (l'encart récit prend l'espace dessous).
 	_scene_art = MerlinSceneArt.new()
-	_scene_art.custom_minimum_size = Vector2(0, 150)
+	_scene_art.custom_minimum_size = Vector2(0, 280)
 	root.add_child(_scene_art)
 	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
 
@@ -1510,10 +1447,12 @@ func _build_ui() -> void:
 	_combo_box = HBoxContainer.new()
 	_combo_box.add_theme_constant_override("separation", 10)
 	_combo_box.custom_minimum_size = Vector2(0, 104)
+	_combo_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	combo_v.add_child(_combo_box)
 	_preview_lbl = _mk_label(COL_TEXT, 23)
 	combo_v.add_child(_preview_lbl)
 	var btn_row: HBoxContainer = HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	combo_v.add_child(btn_row)
 	_resolve_btn = Button.new()
 	_resolve_btn.text = "Résolution"
@@ -1525,7 +1464,7 @@ func _build_ui() -> void:
 
 	# v10.5 : label « Ta main : » retiré (user 2026-06-06). L'éventail se suffit visuellement.
 	_hand_box = Control.new()
-	_hand_box.custom_minimum_size = Vector2(0, 264)  # + haut : cartes agrandies (240) + lift survol
+	_hand_box.custom_minimum_size = Vector2(0, 240)
 	_hand_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
 	_hand_box.visible = false  # cartes cachées hors phase de CHOIX (révélées à la fin du typewriter)
@@ -1562,7 +1501,6 @@ func _build_ui() -> void:
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
 
-	_build_beat_map()  # v10.12 : carte « map » du chemin, coin droit (remplace la carte Destin)
 
 	# v10.13.1 (R75) — overlay glitch corruption : plein écran, IGNORE, caché au palier sain
 	# (coût GPU nul). hide()/show() uniquement — jamais de queue_free cyclique (playtester).
