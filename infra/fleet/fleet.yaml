@@ -39,5 +39,5 @@ targets:
   - name: fly-service
     provider: flyio
     type: http
-    url: ""                               # https://<app>.fly.dev/health
+    url: "https://merlin-fleet-mxb38.fly.dev/health"
     role: "service conteneurisé"

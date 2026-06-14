@@ -2609,3 +2609,15 @@ usages Claude/dev/Godot.
 - Securite repo PUBLIC : IP des VM sorties du repo -> surcouche locale gitignoree fleet.local.yaml,
   mergee par fleet_adapter._load(). Repo ne contient que placeholders + URLs Cloudflare (publiques).
 - Console: cf-worker UP, cf-pages UP, gcp-micro (UP depuis PC). Reste oracle + fly.
+
+### 2026-06-14 (suite 12) — Fly.io: app creee, build bloque par proxy sandbox
+
+- App Fly 'merlin-fleet-mxb38' creee (org personal, region cdg) via token.
+- BLOCAGE: le builder Fly (depot ET classique) est injoignable depuis le sandbox (proxy
+  intercepte le TLS -> "certificate signed by unknown authority" / timeout). Impossible de
+  builder l'image d'ici.
+- SOLUTION: workflow .github/workflows/fly-deploy.yml (build+deploy depuis runners GitHub,
+  hors proxy). Necessite secret repo FLY_API_TOKEN (a ajouter par l'utilisateur), puis
+  l'agent peut declencher le workflow. Fallback: fly deploy depuis le PC.
+- fleet.yaml: fly-service url = https://merlin-fleet-mxb38.fly.dev/health (vert une fois deploye).
+- Flotte: cf-worker UP, cf-pages UP, gcp-micro UP(PC), fly-service pending(build), oracle pending(capa).

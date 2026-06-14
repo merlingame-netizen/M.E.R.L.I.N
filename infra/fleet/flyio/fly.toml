@@ -1,6 +1,6 @@
 # Fly.io — small containerized service. Scale-to-zero keeps cost ~0 (machine stops
 # when idle, cold-starts on request). Rename `app` to something globally unique.
-app = "merlin-svc"
+app = "merlin-fleet-mxb38"
 primary_region = "cdg"   # Paris
 
 [build]
