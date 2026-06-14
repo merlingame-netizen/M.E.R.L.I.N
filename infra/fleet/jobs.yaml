@@ -1,0 +1,37 @@
+# M.E.R.L.I.N. — fleet jobs. The dispatcher (`fleet run --job NAME`) routes each job
+# to the best FREE node whose `capabilities` cover `needs` and whose quota has room.
+#
+# Fields:
+#   name     unique job id
+#   needs    capabilities required (matched against node capabilities)
+#   cmd      shell command (run via SSH on VM nodes, or locally for cloudflare)
+#   http     {method,url,body} to call a serverless endpoint (alternative to cmd)
+#   cost     {ram_mb, requests} used by the free-tier guard (defaults 128 / 1)
+#   timeout  seconds (default 300)
+#
+# Routing preference: llm/heavy -> oracle-a1 ; api/data-sqlite -> cf-worker ;
+# cron/service/container -> gcp-micro (fallback oracle-a1).
+
+jobs:
+  - name: ping-self
+    needs: [cron]
+    cmd: "echo merlin-fleet-ok && uptime"
+    cost: { ram_mb: 32 }
+
+  - name: backup-d1
+    needs: [data-sqlite]
+    http: { method: GET, url: "https://merlin-svc.maxbab38.workers.dev/items" }
+    cost: { requests: 1 }
+
+  - name: kv-write
+    needs: [api]
+    http:
+      method: POST
+      url: "https://merlin-svc.maxbab38.workers.dev/items"
+      body: { key: "dispatch-test", value: "from fleet run" }
+    cost: { requests: 1 }
+
+  - name: narrator-gen
+    needs: [llm]
+    cmd: "ollama run merlin-narrator 'Décris Brocéliande en une phrase'"
+    cost: { ram_mb: 6144 }

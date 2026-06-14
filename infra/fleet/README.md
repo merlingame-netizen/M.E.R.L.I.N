@@ -49,6 +49,27 @@ PC: python tools/cli.py fleet serve ──> Flask dashboard :8765
 After each node is up, paste its `host`/`url` into `infra/fleet/fleet.yaml` and it appears
 live in the dashboard.
 
+## Control plane — dispatch jobs onto the best free node
+
+One console, one model. Each node declares `capabilities` + free-tier `quota` in
+`fleet.yaml`; jobs declare what they `need` in `jobs.yaml`. The dispatcher routes each
+job to the best **free** node and a **strict guard** refuses anything that would exceed
+a node's free quota — so it stays **free forever**.
+
+```bash
+python tools/cli.py fleet jobs                 # list jobs
+python tools/cli.py fleet quota                # free-tier headroom per node
+python tools/cli.py fleet plan --job NAME      # dry-run: which node + why
+python tools/cli.py fleet run  --job NAME       # dispatch + execute (SSH / HTTP / wrangler)
+```
+
+Routing preference: `llm`/`heavy` → **oracle-a1** · `api`/`data-sqlite` → **cf-worker**
+· `cron`/`service`/`container` → **gcp-micro** (fallback oracle). A job is refused if no
+node has the capability, is deployed, and has quota room.
+
+The Flask dashboard (`fleet serve`) is the single pane: node status + **free-tier
+gauges** + a **Jobs** panel with **Run** buttons + Uptime Kuma link.
+
 ## Hosted monitoring — Uptime Kuma (on the GCP VM)
 
 A full monitoring dashboard (HTTP/TCP/DB/ping checks, history, alerts, status page) runs as

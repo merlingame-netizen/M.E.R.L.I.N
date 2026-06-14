@@ -1,21 +1,24 @@
-# M.E.R.L.I.N. — multi-cloud free fleet inventory.
+# M.E.R.L.I.N. — multi-cloud free fleet inventory + dispatch model.
 # The fleet adapter (tools/adapters/fleet_adapter.py) reads this to health-check
-# every machine/service and feed the local admin dashboard.
+# nodes, route jobs (capabilities), and enforce free-tier quotas.
 #
-# Fill `host` (ssh targets) / `url` (http targets) as each node is deployed.
-# Empty host/url  -> the dashboard shows the node as "pending" (not yet deployed).
+# `capabilities` = what a node can run.  `quota` = free-tier limits (the dispatcher
+# never exceeds them -> "free forever").  Fill host/url as nodes deploy; VM IPs live
+# in the gitignored fleet.local.yaml (kept out of the public repo).
 
 defaults:
   ssh_user: ubuntu
   ssh_key: ~/.ssh/merlin_oracle_ed25519   # Windows: %USERPROFILE%\.ssh\merlin_oracle_ed25519
-  timeout: 6                              # seconds per check
+  timeout: 6
 
 targets:
   - name: oracle-a1
     provider: oracle
     type: ssh
-    host: ""                              # public IP once the A1 VM is created
+    host: ""                              # in fleet.local.yaml once the A1 VM is up
     role: "VPS lourd — dev / Ollama / stack docker"
+    capabilities: [llm, heavy, cron, service, data, container]
+    quota: { ram_mb: 24576, ocpus: 4, always_on: true }
 
   - name: gcp-micro
     provider: gcp
@@ -23,18 +26,24 @@ targets:
     host: ""                              # in fleet.local.yaml (kept out of the public repo)
     ssh_user: "merlin"
     role: "VPS léger 1Go — SQLite / cron / monitoring"
+    capabilities: [cron, service, data, container]
+    quota: { ram_mb: 1024, ocpus: 1, always_on: true }
 
   - name: cf-worker
     provider: cloudflare
     type: http
     url: "https://merlin-svc.maxbab38.workers.dev/health"
     role: "API + D1 (SQLite)"
+    capabilities: [api, data-sqlite, edge, data]
+    quota: { requests_day: 100000, d1_gb: 5, d1_reads_day: 5000000, d1_writes_day: 100000 }
 
   - name: cf-pages
     provider: cloudflare
     type: http
     url: "https://merlin-pages.pages.dev"
     role: "site web (Pages)"
+    capabilities: [edge]
+    quota: {}
 
   # fly-service dropped (Fly requires a credit card on the org; not used).
   # Templates remain in infra/fleet/flyio/ if you ever want to add it.

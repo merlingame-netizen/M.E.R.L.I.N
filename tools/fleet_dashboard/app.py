@@ -24,8 +24,20 @@ def run_dashboard(adapter, port: int = 8765) -> None:
 
     @app.route("/api/status")
     def api_status():
-        result = adapter.execute("status")
-        return jsonify(result.get("data", {}))
+        return jsonify(adapter.execute("status").get("data", {}))
+
+    @app.route("/api/jobs")
+    def api_jobs():
+        return jsonify(adapter.execute("jobs").get("data", {}))
+
+    @app.route("/api/quota")
+    def api_quota():
+        return jsonify(adapter.execute("quota").get("data", {}))
+
+    @app.route("/api/run/<job>", methods=["POST"])
+    def api_run(job):
+        r = adapter.execute("run", job=job)
+        return jsonify({"status": r.get("status"), "data": r.get("data"), "error": r.get("error")})
 
     url = f"http://127.0.0.1:{port}"
     threading.Timer(1.0, lambda: webbrowser.open(url)).start()

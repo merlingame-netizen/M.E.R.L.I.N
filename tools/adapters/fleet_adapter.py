@@ -29,6 +29,23 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FLEET_YAML = REPO_ROOT / "infra" / "fleet" / "fleet.yaml"
 FLEET_LOCAL = REPO_ROOT / "infra" / "fleet" / "fleet.local.yaml"
 STATUS_JSON = REPO_ROOT / "infra" / "fleet" / "status" / "fleet.json"
+JOBS_YAML = REPO_ROOT / "infra" / "fleet" / "jobs.yaml"
+JOBS_LOG = REPO_ROOT / "infra" / "fleet" / "status" / "jobs.json"
+QUOTA_JSON = REPO_ROOT / "infra" / "fleet" / "status" / "quota.json"
+
+# Per-capability node preference (efficient dispatch onto free nodes).
+PREFERENCE = {
+    "llm": ["oracle-a1", "gcp-micro"],
+    "heavy": ["oracle-a1", "gcp-micro"],
+    "api": ["cf-worker", "gcp-micro", "oracle-a1"],
+    "data-sqlite": ["cf-worker", "gcp-micro", "oracle-a1"],
+    "edge": ["cf-worker"],
+    "data": ["gcp-micro", "cf-worker", "oracle-a1"],
+    "cron": ["gcp-micro", "oracle-a1"],
+    "service": ["gcp-micro", "oracle-a1"],
+    "container": ["gcp-micro", "oracle-a1"],
+}
+SAFETY = 0.95  # never use more than 95% of a free quota
 
 # Remote one-liner: "usedMB/totalMB ncpu load disk%"
 SSH_PROBE = (
@@ -49,6 +66,10 @@ class FleetAdapter(BaseAdapter):
             "list": "List inventory targets from fleet.yaml",
             "check": "Health-check a single target (--target NAME)",
             "serve": "Run the local admin dashboard (--port 8765)",
+            "jobs": "List defined jobs (infra/fleet/jobs.yaml)",
+            "quota": "Show free-tier quota usage/headroom per node",
+            "plan": "Dry-run: which node would run a job (--job NAME)",
+            "run": "Dispatch + execute a job on the best free node (--job NAME)",
         }
 
     def health_probe(self) -> tuple[str, dict]:
@@ -86,6 +107,17 @@ class FleetAdapter(BaseAdapter):
             return self.ok(self._probe(tgt, inv.get("defaults", {})))
         if action == "serve":
             return self._serve(int(kwargs.get("port", 8765)))
+        if action == "jobs":
+            return self.ok({"jobs": self._load_jobs(), "path": str(JOBS_YAML)})
+        if action == "quota":
+            return self.ok(self._quota())
+        if action == "plan":
+            job = self._find_job(kwargs.get("job"))
+            if isinstance(job, dict) and job.get("_error"):
+                return self.error(job["_error"])
+            return self.ok(self._route(job))
+        if action == "run":
+            return self._run_job(kwargs.get("job"))
         raise NotImplementedError(action)
 
     # ── probing ──────────────────────────────────────────────────────────────
@@ -169,6 +201,170 @@ class FleetAdapter(BaseAdapter):
             base["disk"] = parts[3]
         base["state"] = "up"
         base["detail"] = "ssh ok"
+
+    # ── jobs / quota / dispatch ────────────────────────────────────────────────
+    def _load_jobs(self) -> list[dict]:
+        if not JOBS_YAML.exists():
+            return []
+        return (yaml.safe_load(JOBS_YAML.read_text()) or {}).get("jobs", [])
+
+    def _find_job(self, name: str | None):
+        if not name:
+            return {"_error": "requires --job NAME"}
+        job = next((j for j in self._load_jobs() if j.get("name") == name), None)
+        return job or {"_error": f"unknown job '{name}'"}
+
+    def _usage(self) -> dict:
+        if QUOTA_JSON.exists():
+            return json.loads(QUOTA_JSON.read_text()).get("nodes", {})
+        return {}
+
+    def _quota(self, inv: dict | None = None) -> dict:
+        inv = inv or self._load()
+        usage = self._usage()
+        nodes = {}
+        for t in inv.get("targets", []):
+            q = t.get("quota") or {}
+            u = usage.get(t["name"], {})
+            node: dict = {"limits": q, "usage": u}
+            if q.get("ram_mb"):
+                node["ram_pct"] = round(100 * u.get("reserved_ram_mb", 0) / q["ram_mb"])
+            if q.get("requests_day"):
+                node["req_pct"] = round(100 * u.get("requests_today", 0) / q["requests_day"])
+            nodes[t["name"]] = node
+        return {"nodes": nodes}
+
+    def _guard(self, node: dict, job: dict, u: dict) -> tuple[bool, str]:
+        q = node.get("quota") or {}
+        cost = job.get("cost") or {}
+        # RAM fit (strict — never exceed the node's free RAM)
+        if q.get("ram_mb"):
+            free = q["ram_mb"] - int(u.get("reserved_ram_mb", 0))
+            need = int(cost.get("ram_mb", 128))
+            if need > free:
+                return False, f"RAM {need}MB > free {free}MB"
+        # Daily requests cap (e.g. Cloudflare)
+        if q.get("requests_day"):
+            used = int(u.get("requests_today", 0))
+            if used + int(cost.get("requests", 1)) > q["requests_day"] * SAFETY:
+                return False, f"near requests/day cap ({used}/{q['requests_day']})"
+        return True, "ok"
+
+    def _route(self, job: dict, inv: dict | None = None) -> dict:
+        inv = inv or self._load()
+        targets = {t["name"]: t for t in inv.get("targets", [])}
+        needs = list(job.get("needs", []))
+        usage = self._usage()
+        # build candidate order from per-need preference, then any capable node
+        order: list[str] = []
+        for need in needs:
+            for n in PREFERENCE.get(need, []):
+                if n not in order:
+                    order.append(n)
+        for name, t in targets.items():
+            if set(needs).issubset(set(t.get("capabilities", []))) and name not in order:
+                order.append(name)
+        decisions, chosen = [], None
+        for name in order:
+            t = targets.get(name)
+            if not t:
+                continue
+            if needs and not set(needs).issubset(set(t.get("capabilities", []))):
+                decisions.append({"node": name, "ok": False, "reason": "missing capability"})
+                continue
+            if not (t.get("host") or t.get("url")):
+                decisions.append({"node": name, "ok": False, "reason": "not deployed"})
+                continue
+            ok, reason = self._guard(t, job, usage.get(name, {}))
+            decisions.append({"node": name, "ok": ok, "reason": reason})
+            if ok and chosen is None:
+                chosen = name
+        return {"job": job.get("name"), "needs": needs, "chosen": chosen, "candidates": decisions}
+
+    def _reserve(self, node: str, job: dict, sign: int) -> None:
+        data = {"nodes": self._usage()}
+        u = data["nodes"].setdefault(node, {})
+        cost = job.get("cost") or {}
+        u["reserved_ram_mb"] = max(0, int(u.get("reserved_ram_mb", 0)) + sign * int(cost.get("ram_mb", 128)))
+        if sign > 0:
+            u["requests_today"] = int(u.get("requests_today", 0)) + int(cost.get("requests", 1))
+        QUOTA_JSON.parent.mkdir(parents=True, exist_ok=True)
+        QUOTA_JSON.write_text(json.dumps(data, indent=2))
+
+    def _log_run(self, rec: dict) -> None:
+        log = []
+        if JOBS_LOG.exists():
+            log = json.loads(JOBS_LOG.read_text()).get("runs", [])
+        log.insert(0, rec)
+        JOBS_LOG.parent.mkdir(parents=True, exist_ok=True)
+        JOBS_LOG.write_text(json.dumps({"runs": log[:100]}, indent=2))
+
+    def _run_job(self, name: str | None) -> dict:
+        job = self._find_job(name)
+        if isinstance(job, dict) and job.get("_error"):
+            return self.error(job["_error"])
+        inv = self._load()
+        route = self._route(job, inv)
+        chosen = route["chosen"]
+        if not chosen:
+            return self.error("no eligible free node (capability/quota guard)", route)
+        node = {t["name"]: t for t in inv["targets"]}[chosen]
+        self._reserve(chosen, job, +1)
+        rec = {"job": job["name"], "node": chosen,
+               "started": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+        try:
+            if node.get("provider") == "cloudflare" or node.get("type") == "http":
+                out = self._exec_http_job(node, job)
+            else:
+                out = self._exec_ssh_job(node, inv.get("defaults", {}), job)
+        finally:
+            self._reserve(chosen, job, -1)
+        rec.update(out)
+        self._log_run(rec)
+        return self.ok(rec) if out.get("ok") else self.error(out.get("detail", "job failed"), rec)
+
+    def _exec_ssh_job(self, node: dict, defaults: dict, job: dict) -> dict:
+        cmd_str = job.get("cmd")
+        if not cmd_str:
+            return {"ok": False, "detail": "job has no cmd"}
+        host = (node.get("host") or "").strip()
+        user = node.get("ssh_user") or defaults.get("ssh_user", "ubuntu")
+        key = os.path.expanduser(node.get("ssh_key") or defaults.get("ssh_key", ""))
+        ssh = self.resolve_cmd("ssh")
+        cmd = [ssh, "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=accept-new",
+               "-o", "ConnectTimeout=8"]
+        if key and Path(key).exists():
+            cmd += ["-i", key]
+        cmd += [f"{user}@{host}", cmd_str]
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=int(job.get("timeout", 300)))
+            ok = p.returncode == 0
+            return {"ok": ok, "detail": (p.stdout or p.stderr).strip()[-300:]}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "detail": f"ssh exec failed: {exc}"}
+
+    def _exec_http_job(self, node: dict, job: dict) -> dict:
+        http = job.get("http")
+        if http:
+            try:
+                req = urllib.request.Request(
+                    http["url"], method=http.get("method", "GET"),
+                    data=json.dumps(http["body"]).encode() if http.get("body") else None,
+                    headers={"content-type": "application/json", "User-Agent": "merlin-fleet"})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    return {"ok": r.status < 400, "detail": f"HTTP {r.status}"}
+            except Exception as exc:  # noqa: BLE001
+                return {"ok": False, "detail": f"http job failed: {exc}"}
+        # else: a local command (e.g. wrangler) for this serverless node
+        cmd_str = job.get("cmd")
+        if not cmd_str:
+            return {"ok": False, "detail": "cloudflare job needs 'http' or 'cmd'"}
+        try:
+            p = subprocess.run(cmd_str, shell=True, capture_output=True, text=True,
+                               timeout=int(job.get("timeout", 300)))
+            return {"ok": p.returncode == 0, "detail": (p.stdout or p.stderr).strip()[-300:]}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "detail": f"exec failed: {exc}"}
 
     # ── dashboard ──────────────────────────────────────────────────────────────
     def _serve(self, port: int) -> dict:

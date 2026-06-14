@@ -2640,3 +2640,16 @@ usages Claude/dev/Godot.
 - Acces: ssh -L 3001:localhost:3001 merlin@IP -> http://localhost:3001 (creer admin, ajouter moniteurs).
 - README flotte: section Uptime Kuma + liste moniteurs (cf-worker/cf-pages/oracle).
 - Garde-fou classifier respecte: plan preview + pas d'exposition publique.
+
+### 2026-06-14 (suite 15) — Plan de controle unifie + dispatcher (gratuit TOUJOURS)
+
+- fleet.yaml enrichi : capabilities + quota free-tier par noeud.
+- jobs.yaml : definitions de jobs (needs/cmd/http/cost). Dispatcher dans fleet_adapter :
+  actions jobs/quota/plan/run + routeur (PREFERENCE par capability) + garde-fou STRICT
+  (refuse si quota free depasse ou noeud non deploye/incapable).
+- Routage verifie : cron->gcp-micro, api/data-sqlite->cf-worker, llm->oracle (refuse si down).
+- Run end-to-end OK : `fleet run kv-write` -> POST cf-worker -> HTTP 200 -> ecrit dans D1 SQLite
+  (verifie /items), log status/jobs.json, reserve/release quota status/quota.json.
+- Dashboard Flask = hub unique : tuiles + jauges quota + panneau Jobs avec boutons Run
+  (/api/jobs /api/quota /api/run). README section "Control plane".
+- Test depuis sandbox : routage+garde via `fleet plan` (SSH reel = depuis le PC).
