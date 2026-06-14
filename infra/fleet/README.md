@@ -49,6 +49,27 @@ PC: python tools/cli.py fleet serve ──> Flask dashboard :8765
 After each node is up, paste its `host`/`url` into `infra/fleet/fleet.yaml` and it appears
 live in the dashboard.
 
+## Hosted monitoring — Uptime Kuma (on the GCP VM)
+
+A full monitoring dashboard (HTTP/TCP/DB/ping checks, history, alerts, status page) runs as
+a Docker container on the GCP e2-micro. It's bound to **127.0.0.1 only** — reached via SSH
+tunnel (not exposed to the internet).
+
+```bash
+# from your PC (key + IP are in your fleet.local.yaml / RESTORE bundle):
+ssh -i %USERPROFILE%\.ssh\merlin_oracle_ed25519 -L 3001:localhost:3001 merlin@<gcp-ip>
+# then open:
+http://localhost:3001        # first visit: create the admin account
+```
+
+Add monitors (≈2 min): **+ Add New Monitor** for each —
+- `cf-worker` — HTTP(s) — `https://merlin-svc.maxbab38.workers.dev/health`
+- `cf-pages`  — HTTP(s) — `https://merlin-pages.pages.dev`
+- `oracle-a1` — TCP Port — `<oracle-ip>:22` (once the Oracle VM is up)
+
+Uptime Kuma can also publish a shareable **status page** (Settings → Status Pages) if you
+want a public read-only view later.
+
 ## Staying free (guards)
 
 - **Oracle**: `freetier-guard.py` (provisioning) + budget alert (already applied).

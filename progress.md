@@ -2631,3 +2631,12 @@ usages Claude/dev/Godot.
   (0 machine = 0 cout) ; user peut la supprimer + revoquer le token Fly.
 - FLOTTE FINALE: cf-worker (D1 SQLite) UP, cf-pages UP, gcp-micro (VPS 1Go) UP, oracle-a1 pending
   (capacite, watcher PC). Console locale `python tools/cli.py fleet serve`.
+
+### 2026-06-14 (suite 14) — Uptime Kuma (monitoring hebergé) sur la VM GCP
+
+- startup-script GCP enrichi : install Docker + conteneur louislam/uptime-kuma bind 127.0.0.1:3001
+  (PRIVE, accessible via tunnel SSH uniquement, choix user). Pas de firewall public 3001.
+- VM GCP recreee (terraform apply -replace, plan revu) -> nouvelle IP 34.83.113.0. fleet.local.yaml MAJ.
+- Acces: ssh -L 3001:localhost:3001 merlin@IP -> http://localhost:3001 (creer admin, ajouter moniteurs).
+- README flotte: section Uptime Kuma + liste moniteurs (cf-worker/cf-pages/oracle).
+- Garde-fou classifier respecte: plan preview + pas d'exposition publique.

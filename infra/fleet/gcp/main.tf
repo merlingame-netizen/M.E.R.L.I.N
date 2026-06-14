@@ -12,6 +12,8 @@ resource "google_compute_firewall" "ssh" {
   }
   source_ranges = [var.allowed_ssh_cidr]
 }
+# Uptime Kuma (:3001) is NOT exposed publicly — reached only via SSH tunnel
+# (ssh -L 3001:localhost:3001). The container binds to 127.0.0.1 on the VM.
 
 resource "google_compute_instance" "vm" {
   name         = var.instance_name
