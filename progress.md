@@ -34,9 +34,19 @@ validate_step0 0 erreur GDScript · smoke 6/6 scènes (0 script_error) · soak 2
 autoplay 3/3 (traverse voile+ghosts+reflow+glitch) · code-review 0 CRITICAL (2 HIGH fixés)
 · guardians bible PASS · captures 4/4.
 
-### Next (v10.14 — décisions verrouillées, voir §19 + section v10.13 ci-dessous)
-Dé PRÉ-TIRÉ 4 bandes + anim B8 (slot réservé MerlinFx l.214) ; run = chaîne 2-3 quêtes ;
-ramification v1 ; soak archétypes 5×100 ; équilibrage partiel 55.6%→25-35%.
+### v10.14 LIVRÉE (même session, 2 commits) — « Dé, Chemin & Équilibre » (R120)
+- **Dé pré-tiré par rareté** (bandes sans malus, R20), révélé en B8 dans la fusion ; preview =
+  résolution (anti cache-miss prose) ; PARTIEL -2 ; pools tags Epreuve/Dilemme élargis.
+- **Chaîne de quêtes** 2-3 × 2-5 beats : build_chain_beats statique (miroir harnais↔jeu),
+  arc PAR QUÊTE (begin_quest, last_gist traversant), map/HUD par quête, répit du sentier
+  +2 (+2 si Intégrité ≤4). **Ramification v1** : swap Epreuve↔Dilemme à l'avant-climax sur
+  revers, AVANT save (R108), indice micro-narratif + déviation map.
+- **Boucle de tuning MESURÉE** (4 consultations designer, n=300/archétype) : gate morts
+  re-baseliné chaînes (par beat joué, pas par run). **GATE FINAL 4/4 OK** : optimal 21.6%p/6.0%m ·
+  greedy 51.3/23.7 · chaotic 47.4/22.7 · corrompu 47.0/16.7 · 1500/1500 PASS.
+- Review : code jeu APPROVE ; 3 HIGH probes fixés (guard 12→16, begin_quest dans probe_prose,
+  garde titres distincts). Gates : validate 0 · smoke 0 · soak chaînes · autoplay 3/3.
+
 NB : le MCP godot-mcp nécessite un /mcp reconnect (l'éditeur a été lancé en cours de session).
 
 ## Session: 2026-06-10/11 — v10.13 « Fondations prouvées » (plan approuvé, exécution)

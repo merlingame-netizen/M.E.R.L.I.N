@@ -66,6 +66,7 @@ var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer
 # v10.13.1 — juice pack 1 (§21) : gardes d'animation.
 var _beat_transition: bool = false  # review HIGH-1 : anti double-fire de _present_current_beat (voile)
 var _ghost_in_flight: bool = false  # le pop_in du compact attend l'arrivée du ghost (cascade Wave2)
+var _quest_shown: int = -1          # v10.14 : quête affichée (frontières de chaîne, map par quête)
 
 # v10.13.1 (R75/R64) — glitch corruption par paliers : 0-4 sain · 5-9 trouble · 10-14 emprise ·
 # 15+ dissolution. Caps cascade Wave1 : 0.50/0.25 permanents max (lisibilité §23) ; burst ≤0.5s.
@@ -150,11 +151,24 @@ func _present_current_beat() -> void:
 	vout.tween_callback(veil.queue_free)
 	_interstitial_open = false  # v10.13 (B3) : défense — l'interstitiel est forcément clos ici
 	_clear_degree_seal()        # v10.13 (B9) : le sceau du beat précédent ne survit pas au suivant
-	if _beat_map != null:  # v10.12 : avance la position « tu es ici » sur la map du chemin
-		if run.beat_index > 0:
-			_beat_map.animate_advance(run.beat_index)  # v10.13 (B4) : le connecteur POUSSE + pop du halo
+	# v10.14 — frontière de quête (chaîne) : la map repart sur la quête courante et le fil
+	# narratif bascule (begin_quest : nouvel arc, last_gist conservé). Au resume (was == -1,
+	# beat > 0), begin_quest restaure aussi le fil de la quête en cours.
+	var cur_b: Dictionary = run.current_beat()
+	var local_i: int = int(cur_b.get("qn", run.beat_index + 1)) - 1
+	var bq: int = int(cur_b.get("quest", 0))
+	if bq != _quest_shown:
+		var was: int = _quest_shown
+		_quest_shown = bq
+		if _beat_map != null:
+			_beat_map.setup(int(cur_b.get("qtotal", int(run.scenario.get("total", 5)))))
+		if (was >= 0 and bq != was) or (was == -1 and run.beat_index > 0):
+			get_node("/root/MerlinScenario").begin_quest(run.scenario, bq)
+	if _beat_map != null:  # v10.12 : avance « tu es ici » (index PAR QUÊTE depuis v10.14)
+		if local_i > 0:
+			_beat_map.animate_advance(local_i)  # v10.13 (B4) : le connecteur POUSSE + pop du halo
 		else:
-			_beat_map.set_current(run.beat_index)
+			_beat_map.set_current(local_i)
 	_scene_epoch += 1  # toute issue LLM en vol du beat précédent devient périmée
 	_can_advance = false
 	_set_caret(false)
@@ -166,6 +180,14 @@ func _present_current_beat() -> void:
 	# swap de texte en cours de lecture viole le pilier ÉVIDENT (bible §21.1). Le budget LLM
 	# (moteur single-flight) est réservé à l'ISSUE — l'« effet des choix » que le joueur attend.
 	_current_situation = get_node("/root/MerlinScenario").build_situation(beat)
+	# v10.14 (ramification v1) — découverte AU beat : le chemin a basculé suite au revers
+	# précédent. Indice micro-narratif d'UNE phrase (Wave2 : jamais d'explication mécanique)
+	# + déviation marquée sur la map. Le beat basculé est déjà persisté (swap avant save, R108).
+	if bool(beat.get("swapped", false)):
+		_current_situation["narration"] = "Le sentier se déroba sous ses pas — un autre chemin s'imposa.\n\n" \
+			+ str(_current_situation.get("narration", ""))
+		if _beat_map != null:
+			_beat_map.mark_draft()
 	get_node("/root/MerlinScenario").invalidate_resolution()  # v10.4 : cache issue propre à chaque beat
 	_hide_overlay()
 	_combo.clear()
@@ -191,7 +213,14 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	if _scene_art != null:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
 	if _beat_header != null:
-		_beat_header.text = "— %s · beat %d/%d —" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
+		# v10.14 — le marqueur compte PAR QUÊTE et porte le titre de la quête (chaîne lisible).
+		var qt: String = str(situ.get("quest_title", ""))
+		var qn: int = int(situ.get("qn", run.beat_index + 1))
+		var qtot: int = int(situ.get("qtotal", int(run.scenario.get("total", 5))))
+		if qt != "":
+			_beat_header.text = "— %s · %s · beat %d/%d —" % [qt, btype, qn, qtot]
+		else:
+			_beat_header.text = "— %s · beat %d/%d —" % [btype, qn, qtot]
 		_beat_header.visible = true
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —

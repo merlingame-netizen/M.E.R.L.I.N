@@ -1411,7 +1411,7 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
 | Version | Objectif | Gate de sortie |
 |---|---|---|
 | v10.13.1 Fondations | Cohérence (bible v2.0, CLAUDE.md, archivage) + 4 outils + juice pack 1 + glitch Corruption | validate 0 · smoke 6/6 · soak 200/200 + autoplay 3/3 · captures avant/après |
-| v10.14 Dé, Chemin & Équilibre | Dé pré-tiré 4 bandes + anim B8 · chaîne 2-3 quêtes · ramification v1 | soak archétypes 5×100 · partiel 25-35% · morts 10-25% |
+| v10.14 Dé, Chemin & Équilibre | Dé pré-tiré 4 bandes + anim B8 · chaîne 2-3 quêtes · ramification v1 | soak archétypes 5×300 · GATE FINAL R120 (voir bloc v10.14 LIVRÉE ci-dessous) |
 | v10.15 Juice complet & lisibilité | Transitions inter-écrans · beat map animée · reduce-motion complet | audit 4 piliers PASS · zéro hitch >33ms hors gen |
 | v10.16 Audio complet | MerlinAudio (3 bus) · 12-16 SFX · 4 stingers · nappe réactive | 100% déclencheurs joués · peak < -3dB |
 | v10.17 Contenu & lore | 50+ tags · combos curés (R79) · few-shot enrichis · piliers PNJ | guardian PASS 100% texte neuf · soak vert |
@@ -1424,6 +1424,25 @@ CLAUDE.md v4.0 + art_direction réécrit · 4 outils (3 skills + create_agent.py
 reflow d'éventail, voile de beat, boutons, sceau sonore) · glitch R75 câblé (4 paliers +
 pastille). **Gates : validate 0 · smoke 6/6 scènes · soak 200/200 · autoplay 3/3 · captures
 4 paliers · cascade Wave1+Wave2 GO · 2 HIGH review fixés.**
+
+**v10.14 LIVRÉE (2026-06-12) — R120 « Dé, Chemin & Équilibre »** (cascade Wave1+Wave2 GO,
+4 passes de tuning designer sur mesures n=300) :
+- **Dé PRÉ-TIRÉ par rareté** (R20 préservé — JAMAIS de malus) : Commune +1 sur 2/6 · Rare 3/6 ·
+  Épique 4/6 · Mythique garanti. Tiré UNE fois par beat → preview = résolution. Révélé UNIQUEMENT
+  dans la fusion (anim B8, monolocalité R112). PARTIEL durci -1→-2.
+- **Chaîne de quêtes** : run = 2-3 quêtes (40/60) de 2-5 beats (patterns fixes, diff 3 au climax
+  FINAL seul) ; quêtes 2-3 = pool de sélection ; arc narratif PAR QUÊTE (begin_quest, fil rouge
+  last_gist traversant) ; map et HUD comptent par quête ; **« répit du sentier »** : +2 Intégrité
+  à chaque transition, +2 de plus si Intégrité ≤ 4 (amortisseur conditionnel).
+- **Ramification v1** : l'avant-climax des quêtes k≥4 BASCULE (Epreuve↔Dilemme) si le degré
+  précédent est échec/partiel — découverte AU beat (indice micro-narratif d'une phrase + déviation
+  sur la map, jamais d'explication mécanique). Swap AVANT save → resume déterministe (R108).
+- **GATE morts re-baseliné chaînes** : « le gate de mortalité est défini par beat joué, non par
+  run complet » — optimal ≤12% · greedy/chaotic ≤27% · corrompu ≤20% (indicatif). Le plancher
+  optimal garantit qu'un joueur discipliné n'est jamais puni par la longueur du chemin.
+- **Mesures finales (n=300/archétype, 1500/1500 PASS)** : optimal 21.6%p/6.0%m · greedy 51.3/23.7 ·
+  chaotic 47.4/22.7 · corrompu 47.0/16.7 — **gate 4/4 OK** · tag_ignorant 81/68 (bot adversarial,
+  sans critère). Pools tags Epreuve/Dilemme élargis à 6 (couverture pleine atteignable).
 
 ---
 

@@ -403,10 +403,10 @@ class GodotAdapter(BaseAdapter):
                 a_out, a_err, a_code = _run(
                     [godot, "--path", ".", "--script",
                      "res://tools/autoplay_run.gd", "--", f"--loops={loops}"],
-                    timeout=900,
+                    timeout=1600,  # v10.14 : chaînes 3 quêtes (jusqu'à 15 beats/run)
                 )
             except subprocess.TimeoutExpired:
-                return self.error("autoplay_run timed out after 900s")
+                return self.error("autoplay_run timed out after 1600s")
             except OSError as exc:
                 return self.error(f"Failed to launch autoplay_run: {exc}")
             a_combined = a_out + "\n" + a_err

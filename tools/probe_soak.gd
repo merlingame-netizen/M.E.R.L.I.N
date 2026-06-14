@@ -18,11 +18,15 @@ const GUARD_BEATS: int = 90  # filet anti-boucle (chaîne de quêtes v10.14 : ju
 # tags) : leur plafond mesure la sensibilité du système, pas l'expérience joueur — le signal
 # canonique est `optimal` (joueur qui lit les tags). corrompu = indicatif ; tag_ignorant =
 # bot adversarial, AUCUN critère. RAPPORT-SEULEMENT côté exit code (invariants seuls échouent).
+# Morts RE-BASELINÉES pour les chaînes (designer, 4e passe) : « le gate de mortalité est défini
+# par beat joué, non par run complet » — une chaîne ~10.5 beats porte mécaniquement plus de risque
+# cumulé (2.2%/beat, PLUS clément que les 2.6%/beat des runs 5-beats) ; le plancher optimal ≤12%
+# garantit qu'un joueur discipliné n'est jamais puni par la longueur du chemin.
 const GATE: Dictionary = {
 	"optimal": {"partiel_max": 0.25, "morts_max": 0.12},
-	"greedy": {"partiel_max": 0.55, "morts_max": 0.20},
-	"chaotic": {"partiel_max": 0.55, "morts_max": 0.20},
-	"corrompu": {"partiel_max": 0.55, "morts_max": 0.15},
+	"greedy": {"partiel_max": 0.55, "morts_max": 0.27},
+	"chaotic": {"partiel_max": 0.55, "morts_max": 0.27},
+	"corrompu": {"partiel_max": 0.55, "morts_max": 0.20},
 }
 
 var _fail: int = 0
@@ -86,7 +90,7 @@ func _init() -> void:
 func _report_targets() -> void:
 	if _arch_stats.is_empty():
 		return
-	print("[SOAK] — GATE FINAL v10.14 : optimal p<=25/m<=12 · greedy p<=55/m<=20 · chaotic p<=55/m<=20 · corrompu p<=55/m<=15 (indicatif) · tag_ignorant sans critère —")
+	print("[SOAK] — GATE FINAL v10.14 (chaînes) : optimal p<=25/m<=12 · greedy p<=55/m<=27 · chaotic p<=55/m<=27 · corrompu p<=55/m<=20 (indicatif) · tag_ignorant sans critère —")
 	for arch in _arch_stats:
 		var st: Dictionary = _arch_stats[arch]
 		var degs: Dictionary = st["degrees"]
@@ -275,9 +279,14 @@ func _pick_combo(arch: String, hand: Array, required: Array, rng: RandomNumberGe
 
 
 func _skel(i: int) -> Dictionary:
-	var beats: Array = []
-	var types: Array = ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Climax"]
-	var diffs: Array = [1, 2, 2, 2, 3]
-	for k in types.size():
-		beats.append({"n": k + 1, "type": types[k], "difficulte": diffs[k]})
-	return {"title": "Soak #%d" % i, "synopsis": "Probe", "beats": beats, "total": beats.size()}
+	# v10.14 — MIROIR du jeu : chaîne de 2-3 quêtes (40/60) via le constructeur statique
+	# canonique (zéro drift harnais↔jeu), rng seedé local → reproductible.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4241 * (i + 1)
+	var nq: int = 2 if rng.randf() < 0.4 else 3
+	var quests: Array = []
+	for q in nq:
+		quests.append({"title": "Soak #%d Q%d" % [i, q + 1], "pitch": "Probe"})
+	var beats: Array = Scenario.build_chain_beats(quests, rng)
+	return {"title": "Soak #%d" % i, "synopsis": "Probe", "beats": beats,
+			"total": beats.size(), "quests": nq}

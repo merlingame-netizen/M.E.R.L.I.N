@@ -84,9 +84,13 @@ func _run() -> void:
 
 	# --- Beats : situation (procédurale) + résolution (procédurale + LLM combinaison) ---
 	var guard: int = 0
+	var prose_quest: int = 0  # v10.14 (review HIGH) : bascule le fil narratif aux frontières de quête
 	while not run.ended and guard < 20:
 		guard += 1
 		var beat: Dictionary = run.current_beat()
+		if int(beat.get("quest", 0)) != prose_quest:
+			prose_quest = int(beat.get("quest", 0))
+			sc.begin_quest(skel, prose_quest)  # l'arc de la nouvelle quête remplace celui de la précédente
 		var situ: Dictionary = sc.build_situation(beat)
 		var required: Array = situ.get("required_tags", [])
 		var combo: Array = _choose(run.hand, required)

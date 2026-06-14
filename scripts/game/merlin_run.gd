@@ -47,6 +47,9 @@ var cartes_notables: Array = []
 var archetype_scores: Dictionary = {}  # v10.11 : compteur des archétypes des cartes JOUÉES (→ Carte Destin)
 var ended: bool = false
 var end_type: String = ""
+# v10.14 : degré du DERNIER beat résolu (pilote la ramification v1). Transient volontaire :
+# le swap de variante a lieu AVANT le save → jamais nécessaire au resume (R108).
+var last_degree: String = ""
 var _last_threshold: int = 0
 var _rng := RandomNumberGenerator.new()
 
@@ -264,6 +267,11 @@ func _weighted_rarity(weights: Dictionary) -> String:
 
 
 func _near_climax() -> bool:
+	# v10.14 — relatif à la QUÊTE courante (le draft booste les hautes raretés près de chaque
+	# climax de quête). Fallback global pour les squelettes legacy sans qn/qtotal.
+	var b: Dictionary = current_beat()
+	if b.has("qtotal"):
+		return int(b.get("qn", 1)) >= int(b.get("qtotal", 5)) - 1
 	var total: int = int(scenario.get("total", 5))
 	return beat_index >= total - 2
 
@@ -346,6 +354,7 @@ func destiny_snapshot() -> Dictionary:
 
 
 func apply_resolution(res: Dictionary) -> void:
+	last_degree = str(res.get("degree", ""))  # v10.14 : mémorisé pour la ramification v1
 	var di: int = int(res.get("integrite_delta", 0))
 	var dc: int = int(res.get("corruption_delta", 0))
 	# v10 dashboard : MAX_INTEGRITE peut être surchargé par TweaksOverlay (hot-reload).
@@ -383,12 +392,44 @@ func _check_end_after_resolution() -> void:
 
 
 func advance_beat() -> void:
+	var prev_quest: int = int(current_beat().get("quest", 0))
 	beat_index += 1
 	if ended:
 		return
 	var total: int = int(scenario.get("total", 5))
 	if beat_index >= total:
 		_end("accomplissement")
+		return
+	# v10.14 — « répit du sentier » (cascade) : Intégrité rendue à chaque transition de quête,
+	# clampé au max (jamais d'over-heal). Amortit le partiel -2 sur les chaînes longues.
+	# Tuning soak chaînes (mesures n=300) : +1 → 40% de morts greedy/chaotic ; +2 → 31% ;
+	# +2 et BONUS +2 si Intégrité ≤ 4 (« le sentier accorde un souffle quand on en a besoin »,
+	# amortisseur conditionnel du designer) → cible ≤20% sans rendre `optimal` invulnérable.
+	if int(current_beat().get("quest", 0)) != prev_quest:
+		var repit: int = 2
+		if integrite <= 4:
+			repit += 2
+		integrite = clampi(integrite + repit, 0, _max_integrite())
+		emit_signal("gauges_changed", integrite, corruption)
+	# v10.14 — Ramification v1 : à l'ARRIVÉE sur un beat à variante (avant-climax des quêtes
+	# k>=4), si le degré précédent est échec/partiel, le beat BASCULE (Epreuve<->Dilemme),
+	# IN PLACE dans le scenario — le save de l'appelant (juste après) persiste le beat basculé
+	# → resume déterministe (R108). Découverte AU beat : l'UI ajoute l'indice micro-narratif.
+	_maybe_swap_variant()
+
+
+func _maybe_swap_variant() -> void:
+	var beats: Array = scenario.get("beats", [])
+	if beat_index < 0 or beat_index >= beats.size():
+		return
+	var beat: Dictionary = beats[beat_index]
+	if not beat.has("variant_type") or bool(beat.get("swapped", false)):
+		return
+	if last_degree != MerlinResolution.ECHEC and last_degree != MerlinResolution.PARTIEL:
+		return
+	beat["type"] = str(beat["variant_type"])
+	beat["swapped"] = true
+	beats[beat_index] = beat
 
 
 func _end(p_type: String) -> void:
@@ -414,8 +455,10 @@ func to_state_dict() -> Dictionary:
 		"jauges": {"integrite": integrite, "corruption": corruption},
 		"scenario": {
 			"titre": scenario.get("title", ""),
-			"beat_courant": beat_index + 1,
-			"total": int(scenario.get("total", 5)),
+			# v10.14 — l'état LLM compte PAR QUÊTE (le récit en cours est celui de la quête).
+			"quete": str(current_beat().get("quest_title", scenario.get("title", ""))),
+			"beat_courant": int(current_beat().get("qn", beat_index + 1)),
+			"total": int(current_beat().get("qtotal", int(scenario.get("total", 5)))),
 		},
 		"faits_marquants": faits_marquants.duplicate(),
 		"pnj_rencontres": pnj_rencontres.duplicate(),

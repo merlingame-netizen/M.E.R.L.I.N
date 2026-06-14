@@ -64,7 +64,7 @@ func _run() -> void:
 		sc.invalidate_resolution()
 
 		var guard: int = 0
-		while not run.ended and guard < 12:
+		while not run.ended and guard < 16:  # v10.14 : chaîne max 15 beats (review HIGH — 12 tronquait)
 			guard += 1
 			var beat: Dictionary = run.current_beat()
 			var situ: Dictionary = sc.build_situation(beat)

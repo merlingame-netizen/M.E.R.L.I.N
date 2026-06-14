@@ -30,6 +30,15 @@ var _persona: Dictionary = {}
 
 const BEAT_TYPES: Array = ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Climax"]
 
+# v10.14 (cascade 2026-06-12) — patterns de quête par longueur k (2-5 beats). Chaque quête se
+# referme sur son Climax ; seul le Climax de la DERNIÈRE quête est à difficulté 3.
+const QUEST_PATTERNS: Dictionary = {
+	2: ["Exploration", "Climax"],
+	3: ["Exploration", "Epreuve", "Climax"],
+	4: ["Exploration", "Rencontre", "Epreuve", "Climax"],
+	5: ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Climax"],
+}
+
 # Biais de tags-cœur par type de beat (R68/R81).
 # MVP : limité aux tags COUVRABLES par le deck de départ (R33) — pas d'acquisition au MVP (R19),
 # donc une run doit être gagnable avec les 12 cartes. Les tags Monde/extras reviennent post-MVP
@@ -334,19 +343,90 @@ func generate_selection() -> Array:
 	return SEL_FALLBACK.duplicate(true)
 
 
-# --- 2) SQUELETTE : structure 5 beats (CODE). INSTANTANÉ — le pitch EST le synopsis. ---
-# (L'ancien appel LLM « synopsis » coûtait ~58s pour un texte jamais affiché dans la boucle.)
+# --- 2) SQUELETTE : CHAÎNE de quêtes (CODE). INSTANTANÉ — le pitch EST le synopsis. ---
+# v10.14 (cascade) : un run = 2-3 quêtes (40%/60%) de 2-5 beats. Quête 1 = le scénario choisi ;
+# quêtes suivantes = pitchs du pool de sélection (titres différents). Signature INCHANGÉE.
 func build_skeleton(title: String, pitch: String) -> Dictionary:
-	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) pour toute la run.
-	# arc = 5 situations LIÉES qui racontent UNE histoire (user 2026-06-07 : « décousu, ça doit se
-	# suivre »). On pose un arc fallback cohérent INSTANTANÉ ; prepare_arc tente un arc LLM spécifique.
+	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) — l'arc couvre la QUÊTE 1 ;
+	# begin_quest rebascule le fil à chaque transition (last_gist traverse les quêtes).
 	var fb: Dictionary = _fallback_arc()
 	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
+	var nq: int = 2 if _rng.randf() < 0.4 else 3
+	var quests: Array = [{"title": title, "pitch": pitch}]
+	var pool: Array = SEL_FALLBACK.duplicate(true)
+	_shuffle(pool)
+	for q in pool:
+		if quests.size() >= nq:
+			break
+		if str(q["title"]) != title:
+			quests.append({"title": str(q["title"]), "pitch": str(q["pitch"])})
+	if quests.size() < nq:
+		# Garde anti-race (review HIGH) : des titres DISTINCTS par quête sont requis — c'est le
+		# verrou qui empêche un prepare_arc périmé d'écraser l'arc de la quête suivante.
+		push_warning("MerlinScenario.build_skeleton: pool de quêtes insuffisant (%d/%d titres distincts)" % [quests.size(), nq])
+	var beats: Array = build_chain_beats(quests, _rng)
+	return {"title": title, "pitch": pitch, "synopsis": pitch, "beats": beats,
+			"total": beats.size(), "quests": quests.size()}
+
+
+# STATIQUE PURE (réutilisée par les harnais avec leur rng seedé) : concatène les beats des
+# quêtes. Chaque beat porte {n global, qn, qtotal, quest, quest_title, quest_pitch, type,
+# difficulte}. Difficulté : 1 au tout premier beat, 3 au Climax FINAL, 2 partout ailleurs.
+# Ramification v1 : l'avant-climax des quêtes k>=4 porte une VARIANTE (Epreuve<->Dilemme),
+# basculée par MerlinRun à l'arrivée si le degré précédent est échec/partiel.
+static func build_chain_beats(quests: Array, rng: RandomNumberGenerator) -> Array:
 	var beats: Array = []
-	var diffs: Array = [1, 2, 2, 2, 3]
-	for i in BEAT_TYPES.size():
-		beats.append({"n": i + 1, "type": BEAT_TYPES[i], "difficulte": diffs[i]})
-	return {"title": title, "pitch": pitch, "synopsis": pitch, "beats": beats, "total": beats.size()}
+	var n: int = 0
+	for qi in quests.size():
+		var k: int = rng.randi_range(2, 5)
+		var pattern: Array = QUEST_PATTERNS[k]
+		for j in pattern.size():
+			n += 1
+			var btype: String = str(pattern[j])
+			var diff: int = 2
+			if n == 1:
+				diff = 1
+			elif btype == "Climax" and qi == quests.size() - 1:
+				diff = 3
+			var beat: Dictionary = {
+				"n": n, "qn": j + 1, "qtotal": pattern.size(), "quest": qi,
+				"quest_title": str(quests[qi].get("title", "")),
+				"quest_pitch": str(quests[qi].get("pitch", "")),
+				"type": btype, "difficulte": diff,
+			}
+			if pattern.size() >= 4 and j == pattern.size() - 2:
+				beat["variant_type"] = "Dilemme" if btype == "Epreuve" else "Epreuve"
+			beats.append(beat)
+	return beats
+
+
+# Vue PAR-QUÊTE du scénario (title/pitch/beats de la quête) — consommée par prepare_arc
+# (l'arc narratif est PAR QUÊTE) et par begin_quest.
+func quest_view(scenario: Dictionary, quest_idx: int) -> Dictionary:
+	var qbeats: Array = []
+	for b in scenario.get("beats", []):
+		if int(b.get("quest", 0)) == quest_idx:
+			qbeats.append(b)
+	if qbeats.is_empty():
+		return {"title": str(scenario.get("title", "")), "pitch": str(scenario.get("pitch", "")),
+				"beats": scenario.get("beats", []), "total": int(scenario.get("total", 5))}
+	return {
+		"title": str(qbeats[0].get("quest_title", scenario.get("title", ""))),
+		"pitch": str(qbeats[0].get("quest_pitch", scenario.get("pitch", ""))),
+		"beats": qbeats, "total": qbeats.size(),
+	}
+
+
+# v10.14 — bascule du fil narratif sur la quête suivante (transition de chaîne) : nouveau
+# fallback d'arc, arc DÉVERROUILLÉ (prepare_arc LLM peut le remplacer), et le fil rouge
+# (last_gist) TRAVERSE les quêtes — la continuité du récit survit à la transition.
+func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
+	var qv: Dictionary = quest_view(scenario, quest_idx)
+	var fb: Dictionary = _fallback_arc()
+	var gist: String = str(_run_thread.get("last_gist", ""))
+	_run_thread = {"title": str(qv.get("title", "")), "pitch": str(qv.get("pitch", "")),
+		"last_gist": gist, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
+	prepare_arc(qv)  # fire-and-forget — l'arc LLM remplace le fallback s'il gagne la course
 
 
 # --- 2bis) INTRO DE QUÊTE (pop-up à accepter) : développement complet + objectif. ---
@@ -369,7 +449,8 @@ func build_intro(scenario: Dictionary) -> Dictionary:
 	var intro: String = ("%s\n\n%s" % [pitch, wrap]) if pitch.strip_edges() != "" else wrap
 	# Objectif spécifique : on réutilise l'accroche-action du pitch (déjà un impératif concret).
 	var p: String = pitch.strip_edges().trim_suffix(".")
-	var objectif: String = ("%s — et revenir entier des cinq épreuves du sentier." % p) if p != "" else ("Mener « %s » à son terme, et revenir entier des cinq épreuves." % title)
+	# v10.14 — le run est une CHAÎNE de quêtes : l'objectif ne promet plus « cinq épreuves ».
+	var objectif: String = ("%s — et revenir entier des épreuves du sentier." % p) if p != "" else ("Mener « %s » à son terme, et revenir entier du sentier." % title)
 	return {"intro": intro.strip_edges(), "objectif": objectif}
 
 
@@ -467,7 +548,12 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	# La situation ET ses tags requis viennent du MÊME index de l'arc pré-établi → scène ⇄ tags alignés
 	# (user 2026-06-07 : « les tags ne correspondent pas à la scène »). Fallback générique si absent.
 	# On VERROUILLE l'arc dès la 1re consommation → prepare_arc ne swappera plus (jamais 2 histoires mêlées).
-	var idx: int = int(beat.get("n", 1)) - 1
+	# v10.14 — index PAR-QUÊTE (qn) et non global (n) : l'arc (5 entrées) couvre UNE quête.
+	# Pour les quêtes courtes (k<5), la ligne de CLIMAX de l'arc tombe TOUJOURS sur le climax
+	# de la quête (arc[4]) — l'histoire se referme, jamais tronquée au milieu.
+	var idx: int = int(beat.get("qn", beat.get("n", 1))) - 1
+	if btype == "Climax":
+		idx = 4
 	var arc: Array = _run_thread.get("arc", [])
 	var arc_tags: Array = _run_thread.get("arc_tags", [])
 	var narration: String = ""
@@ -487,7 +573,13 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		"type": btype,
 		"difficulte": diff,
 		"n": int(beat.get("n", 0)),
-		"total": BEAT_TYPES.size(),
+		# v10.14 — la narration et le HUD comptent PAR QUÊTE (qn/qtotal) ; quest_title alimente
+		# le header. "total" reste la longueur de la quête courante (consommé par les prompts).
+		"qn": int(beat.get("qn", beat.get("n", 0))),
+		"qtotal": int(beat.get("qtotal", BEAT_TYPES.size())),
+		"quest": int(beat.get("quest", 0)),
+		"quest_title": str(beat.get("quest_title", _run_thread.get("title", ""))),
+		"total": int(beat.get("qtotal", BEAT_TYPES.size())),
 		"title": str(_run_thread.get("title", "")),
 		# v10.14 — dé PRÉ-TIRÉ du beat (bandes par rareté dans MerlinResolution). Tiré ICI une
 		# seule fois → preview et résolution finale partagent le même dé (anti cache-miss prose).
@@ -580,6 +672,12 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 # Lance la génération de l'arc en arrière-plan (fire-and-forget). Swappe l'arc fallback par l'arc LLM
 # SEULEMENT si aucun beat n'a encore été présenté (arc_locked == false) → UNE seule histoire par run.
 func prepare_arc(scenario: Dictionary) -> void:
+	# v10.14 — chain-aware : si le scénario est une CHAÎNE (beats multi-quêtes), l'arc couvre la
+	# quête du PREMIER beat (les suivantes passent par begin_quest). Appelants inchangés.
+	var beats_all: Array = scenario.get("beats", [])
+	if not beats_all.is_empty() and (beats_all[0] is Dictionary) and (beats_all[0] as Dictionary).has("quest"):
+		var q0: int = int((beats_all[0] as Dictionary).get("quest", 0))
+		scenario = quest_view(scenario, q0)
 	var title: String = str(scenario.get("title", ""))  # garde anti-race : ne swappe que si TOUJOURS ce scénario
 	# Pré-pick les 2 tags requis par beat AVANT la génération → la scène est écrite AUTOUR (alignement),
 	# et build_situation utilise ces mêmes tags pour la couverture. (user 2026-06-07 #1)
@@ -588,7 +686,7 @@ func prepare_arc(scenario: Dictionary) -> void:
 	for b in beats:
 		picked.append(_pick_tags(str(b.get("type", "Exploration")), int(b.get("difficulte", 1))))
 	if picked.size() != 5:
-		return
+		return  # arc LLM réservé aux quêtes de 5 beats (k<5 → fallback procédural, mapping climax→arc[4])
 	var arc: Array = await narrate_arc(scenario, picked)
 	if arc.size() == 5 and not bool(_run_thread.get("arc_locked", false)) and str(_run_thread.get("title", "")) == title:
 		_run_thread["arc"] = arc
