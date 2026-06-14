@@ -1,0 +1,43 @@
+# M.E.R.L.I.N. — multi-cloud free fleet inventory.
+# The fleet adapter (tools/adapters/fleet_adapter.py) reads this to health-check
+# every machine/service and feed the local admin dashboard.
+#
+# Fill `host` (ssh targets) / `url` (http targets) as each node is deployed.
+# Empty host/url  -> the dashboard shows the node as "pending" (not yet deployed).
+
+defaults:
+  ssh_user: ubuntu
+  ssh_key: ~/.ssh/merlin_oracle_ed25519   # Windows: %USERPROFILE%\.ssh\merlin_oracle_ed25519
+  timeout: 6                              # seconds per check
+
+targets:
+  - name: oracle-a1
+    provider: oracle
+    type: ssh
+    host: ""                              # public IP once the A1 VM is created
+    role: "VPS lourd — dev / Ollama / stack docker"
+
+  - name: gcp-micro
+    provider: gcp
+    type: ssh
+    host: ""                              # public IP of the e2-micro
+    ssh_user: ""                          # set to the GCP image user (e.g. your gcloud username)
+    role: "VPS léger 1Go — SQLite / cron / monitoring"
+
+  - name: cf-worker
+    provider: cloudflare
+    type: http
+    url: ""                               # https://<worker>.<account>.workers.dev/health
+    role: "API + D1 (SQLite)"
+
+  - name: cf-pages
+    provider: cloudflare
+    type: http
+    url: ""                               # https://<project>.pages.dev
+    role: "site web (Pages)"
+
+  - name: fly-service
+    provider: flyio
+    type: http
+    url: ""                               # https://<app>.fly.dev/health
+    role: "service conteneurisé"

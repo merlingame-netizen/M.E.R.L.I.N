@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars. Never commit the real file.
+project_id     = "your-gcp-project-id"
+credentials_file = ""                 # path to service-account JSON, or "" for gcloud ADC
+region         = "us-west1"
+zone           = "us-west1-b"
+ssh_user       = "merlin"
+ssh_public_key = "ssh-ed25519 AAAA... you@host"
+# allowed_ssh_cidr = "203.0.113.7/32"  # lock to your IP
+
+# Optional cost guard:
+# billing_account    = "XXXXXX-XXXXXX-XXXXXX"
+# budget_alert_email = "you@example.com"

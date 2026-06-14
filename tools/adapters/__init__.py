@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 # Registry: tool_name -> (module_path, class_name, external_path_or_None)
 ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
+    # ── Infra / fleet ─────────────────────────────────────────────────────
+    "fleet":       ("adapters.fleet_adapter",       "FleetAdapter",       None),
     # ── Original (pre-migration) ──────────────────────────────────────────
     "godot":       ("adapters.godot_adapter",       "GodotAdapter",       None),
     "ollama":      ("adapters.ollama_adapter",      "OllamaAdapter",      None),

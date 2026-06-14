@@ -1,0 +1,15 @@
+# Cloudflare Worker + D1 (SQLite) — free plan, 24/7, no card required.
+# Deploy:
+#   npm i -g wrangler && wrangler login
+#   wrangler d1 create merlin          # paste the printed database_id below
+#   wrangler d1 execute merlin --remote --file=schema.sql
+#   wrangler deploy
+name = "merlin-svc"
+main = "src/worker.js"
+compatibility_date = "2026-01-01"
+
+# SQLite database (Cloudflare D1). Fill database_id after `wrangler d1 create merlin`.
+[[d1_databases]]
+binding = "DB"
+database_name = "merlin"
+database_id = "REPLACE_AFTER_d1_create"

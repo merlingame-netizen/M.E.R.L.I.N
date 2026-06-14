@@ -1,0 +1,14 @@
+# Secrets & local state — never commit
+**/terraform.tfvars
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform/
+**/tfplan
+# Generated fleet status
+status/fleet.json
+# Cloudflare / node tooling
+cloudflare/.wrangler/
+**/node_modules/
+# GCP service-account keys
+**/*.json.key
+*-sa.json

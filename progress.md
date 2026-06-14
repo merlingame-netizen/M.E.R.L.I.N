@@ -2574,3 +2574,18 @@ usages Claude/dev/Godot.
   se libere, ecrit l'alias ssh merlin-vm avec tunnels) + README. Fichiers sensibles (.win/.bootstrap)
   gitignores et envoyes a l'utilisateur.
 - Watcher conteneur arrete (le PC devient le pilote unique pour eviter divergence d'etat terraform).
+
+### 2026-06-14 (suite 9) — Flotte multi-cloud gratuite + console d'admin locale
+
+- Strategie multi-fournisseurs (plan approuve) : Oracle A1 (lourd) + Google e2-micro (leger)
+  + Cloudflare (Workers/D1 SQLite/Pages, sans carte) + Fly.io (scale-to-zero).
+- Console d'admin LOCALE : nouvel adapter `fleet` (tools/adapters/fleet_adapter.py, herite
+  BaseAdapter) -> actions status/list/check/serve ; health-check SSH (cpu/ram/disk) + HTTP.
+  Dashboard Flask (tools/fleet_dashboard/) tuiles up/down sur http://127.0.0.1:8765.
+  Inventaire infra/fleet/fleet.yaml. `python tools/cli.py fleet serve`.
+- Nodes : infra/fleet/cloudflare (wrangler+worker D1+pages), infra/fleet/gcp (terraform
+  e2-micro, garde-fou validations e2-micro/30GB/region free + budget optionnel),
+  infra/fleet/flyio (Dockerfile+fly.toml scale-to-zero+service sqlite stdlib).
+- Valide : terraform validate (gcp) OK, worker.js node --check OK, fly main.py OK,
+  fleet status/check OK, serve degrade proprement sans flask.
+- Reste (utilisateur) : signup par fournisseur + remplir fleet.yaml (runbooks dans chaque README).

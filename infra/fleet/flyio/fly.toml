@@ -1,0 +1,17 @@
+# Fly.io — small containerized service. Scale-to-zero keeps cost ~0 (machine stops
+# when idle, cold-starts on request). Rename `app` to something globally unique.
+app = "merlin-svc"
+primary_region = "cdg"   # Paris
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true     # stop when idle  -> ~free
+  auto_start_machines = true    # cold-start on incoming request
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
