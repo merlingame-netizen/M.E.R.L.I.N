@@ -2689,3 +2689,9 @@ usages Claude/dev/Godot.
   insertion en streaming via generateur (plus de grosse liste), pop des noeuds depuis data
   pour liberer au fur et a mesure. Regression OK.
 - User relance le meme one-liner sur la VM (le script curl la version a jour).
+
+### 2026-06-14 (suite 20) — Migration AtelierIdracIA TERMINEE
+
+- VM: conversion optimisee a reussi -> ~/atelier-idrac.db 147Mo, 14 tables (states 25 lignes incl).
+- Bilan: D1 atelier-idrac (13 tables structurees, serverless) + VM SQLite (base complete + states).
+- Reste user: rm cle firebase sur la VM + revoke. Source = Firebase (durabilite).
