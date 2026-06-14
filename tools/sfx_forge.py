@@ -205,6 +205,11 @@ def _resonant_filter(samples: list[float], cutoff: float, resonance: float = 0.5
 
 # ── Post-traitement global (v3 — soft finish) ──────────────────────────────
 
+def _scale(samples: list[float], gain: float) -> list[float]:
+    """Gain simple sur un buffer."""
+    return [s * gain for s in samples]
+
+
 def _soft_finish(samples: list[float], fade_ms: float = 12.0,
                  shelf_hz: float = 5500.0) -> list[float]:
     """Finition douce : fade-in/out anti-click + lowpass haute-frequence."""
@@ -325,18 +330,29 @@ RECIPES: dict[str, Callable[[], list[float]]] = {
         _fm_tone(2.3, 1046.5, 3.0, 0.20, attack=0.18, tau=0.75))),
         decay=0.75, mix=0.55),
 
-    # tick plume FM precis mais doux + micro-reverb
-    "quill_tick": lambda: _reverb(
-        _fm_tone(0.07, 880.0, 3.5, 0.20, attack=0.006, tau=0.018),
-        decay=0.05, mix=0.25),
+    # plume grattant le parchemin — texture fibreuse, zero tonal
+    "quill_tick": lambda: _reverb(_warmth(_mix(
+        _resonant_filter(
+            _noise(0.09, seed=121, attack=0.002, tau=0.022, lowpass=0.40),
+            cutoff=3200.0, resonance=0.40, sweep_to=1500.0, sweep_dur=0.07),
+        _scale(_resonant_filter(
+            _noise(0.06, seed=122, attack=0.001, tau=0.015, lowpass=0.55),
+            cutoff=5000.0, resonance=0.20), 0.25),
+        _scale(_noise(0.07, seed=123, attack=0.005, tau=0.020, lowpass=0.10), 0.15)),
+        detune=0.002, jitter_seed=121),
+        decay=0.04, mix=0.18),
 
-    # encre — filtre + FM + salle douce
+    # encre s'etalant sur parchemin — absorption douce, texture fibreuse
     "ink_wash": lambda: _reverb(_warmth(_mix(
         _resonant_filter(
-            _noise(0.48, seed=120, attack=0.030, tau=0.20, lowpass=0.12),
-            cutoff=1200.0, resonance=0.3, sweep_to=350.0, sweep_dur=0.38),
-        _fm_tone(0.32, 130.0, 1.5, 0.35, attack=0.030, tau=0.14))),
-        decay=0.25, mix=0.45),
+            _noise(0.55, seed=130, attack=0.040, tau=0.22, lowpass=0.14),
+            cutoff=1800.0, resonance=0.35, sweep_to=400.0, sweep_dur=0.45),
+        _scale(_resonant_filter(
+            _noise(0.40, seed=131, attack=0.020, tau=0.18, lowpass=0.45),
+            cutoff=4000.0, resonance=0.25, sweep_to=2000.0, sweep_dur=0.30), 0.20),
+        _scale(_noise(0.35, seed=132, attack=0.030, tau=0.15, lowpass=0.06), 0.12)),
+        detune=0.004, jitter_seed=130),
+        decay=0.30, mix=0.50),
 }
 
 
