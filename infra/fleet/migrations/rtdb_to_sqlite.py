@@ -71,14 +71,25 @@ def build(data: dict, con: sqlite3.Connection) -> dict:
     cur = con.cursor()
     summary = {}
     root_kv = {}
+    rank = {"INTEGER": 0, "REAL": 1, "TEXT": 2}
 
-    for top, node in data.items():
+    def vtype(v):
+        if isinstance(v, bool) or isinstance(v, int):
+            return "INTEGER"
+        if isinstance(v, float):
+            return "REAL"
+        return "TEXT"
+
+    # Iterate keys via pop() so each node is freed from `data` after use (low memory:
+    # we never hold the whole DB + a duplicate of it at once).
+    for top in list(data.keys()):
+        node = data.pop(top)
         table = sanitize(top)
         if is_record_map(node):
-            # map sanitized column name -> original field key (so values are read
-            # back from the real key); collect values for type inference.
+            # 1st pass: column names (mapped to original keys) + widest type, no value
+            # buffering (avoids a full copy of big blobs like states.campaignData).
             col_orig: dict[str, str] = {}
-            col_vals: dict[str, list] = {}
+            col_t: dict[str, str] = {}
             for rec in node.values():
                 for k, v in rec.items():
                     c = sanitize(k)
@@ -88,24 +99,31 @@ def build(data: dict, con: sqlite3.Connection) -> dict:
                             i += 1
                         c = f"{c}_{i}"
                     col_orig.setdefault(c, k)
-                    col_vals.setdefault(c, []).append(v)
-            # synthetic primary key column, collision-safe vs record fields
+                    if v is not None:
+                        t = vtype(v)
+                        prev = col_t.get(c)
+                        col_t[c] = t if prev is None or rank[t] > rank[prev] else prev
             keycol = "_key"
             while keycol in col_orig:
                 keycol += "_"
             colnames = list(col_orig.keys())
-            ddl = ", ".join(f'"{c}" {col_type(col_vals[c])}' for c in colnames)
+            ddl = ", ".join(f'"{c}" {col_t.get(c, "TEXT")}' for c in colnames)
             cur.execute(f'CREATE TABLE "{table}" ("{keycol}" TEXT PRIMARY KEY{", " + ddl if ddl else ""})')
             quoted = ", ".join('"' + c + '"' for c in colnames)
             col_list = f'"{keycol}"' + (", " + quoted if colnames else "")
             placeholders = ", ".join(["?"] * (len(colnames) + 1))
             ins = f'INSERT INTO "{table}" ({col_list}) VALUES ({placeholders})'
-            rows = [[str(rid)] + [cell(rec.get(col_orig[c])) for c in colnames]
-                    for rid, rec in node.items()]
-            cur.executemany(ins, rows)
-            summary[table] = len(rows)
+
+            # 2nd pass: stream rows into sqlite (generator -> no big in-memory list).
+            def rows_gen():
+                for rid, rec in node.items():
+                    yield [str(rid)] + [cell(rec.get(col_orig[c])) for c in colnames]
+            cur.executemany(ins, rows_gen())
+            con.commit()
+            summary[table] = len(node)
         else:
             root_kv[top] = node
+        del node
 
     if root_kv:
         cur.execute('CREATE TABLE "_root" ("key" TEXT PRIMARY KEY, "value" TEXT)')

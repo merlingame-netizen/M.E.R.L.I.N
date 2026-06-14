@@ -2680,3 +2680,12 @@ usages Claude/dev/Godot.
 - Sandbox ne peut pas SSH -> AJOUT infra/fleet/migrations/vm_migrate.sh : tourne SUR la VM,
   fetch RTDB via SA + convertit en ~/atelier-idrac.db (base complete, states inclus).
 - User : scp la cle SA (2 Ko) sur la VM puis `curl raw vm_migrate.sh | bash -s ~/idrac-sa.json`.
+
+### 2026-06-14 (suite 19) — Convertisseur RTDB optimise memoire (VM 1Go)
+
+- Migration states sur VM: la conversion ramait (executemany construisait toute la table states
+  -145Mo- en une liste RAM -> swap thrash, user a fait ^C).
+- FIX rtdb_to_sqlite.py: inference de type incrementale (plus de buffering des valeurs),
+  insertion en streaming via generateur (plus de grosse liste), pop des noeuds depuis data
+  pour liberer au fur et a mesure. Regression OK.
+- User relance le meme one-liner sur la VM (le script curl la version a jour).
