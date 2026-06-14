@@ -5,7 +5,7 @@
 **/.terraform/
 **/tfplan
 # Generated fleet status
-status/fleet.json
+status/
 # Cloudflare / node tooling
 cloudflare/.wrangler/
 **/node_modules/
