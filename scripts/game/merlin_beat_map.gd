@@ -57,6 +57,8 @@ func animate_advance(idx: int) -> void:
 	_adv_tw = create_tween()
 	_adv_tw.tween_method(_set_growth, 0.0, 1.0, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_adv_tw.tween_method(_set_halo_scale, 1.7, 1.0, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# AUDIO_HOOK: beat_advance (node ping)
+	_adv_tw.tween_callback(_sparks_at_current)
 
 
 func _set_growth(v: float) -> void:
@@ -108,3 +110,23 @@ func _draw() -> void:
 		else:
 			draw_circle(p, NODE_R, COL_DIM)
 			draw_circle(p, NODE_R - 2.0, COL_FUTURE)
+
+
+func _sparks_at_current() -> void:
+	if MerlinVisual.reduced_motion:
+		return
+	var p: Vector2 = _node_pos(_current)
+	for si in 6:
+		var spark: ColorRect = ColorRect.new()
+		spark.size = Vector2(3.0, 3.0)
+		spark.color = COL_GOLD
+		spark.position = p - Vector2(1.5, 1.5)
+		spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(spark)
+		var angle: float = float(si) / 6.0 * TAU + randf() * 0.5
+		var dist: float = 18.0 + randf() * 22.0
+		var dest: Vector2 = p + Vector2(cos(angle), sin(angle)) * dist
+		var tw: Tween = spark.create_tween().set_parallel(true)
+		tw.tween_property(spark, "position", dest - Vector2(1.5, 1.5), MerlinVisual.DUR_MOTE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(spark, "modulate:a", 0.0, MerlinVisual.DUR_MOTE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(spark.queue_free)

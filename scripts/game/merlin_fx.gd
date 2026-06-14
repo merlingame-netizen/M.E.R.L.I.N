@@ -175,6 +175,20 @@ func run() -> void:
 	p2.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha * 0.40, vig_alpha * 0.75, dur["fuse"])
 	await p2.finished
 
+	# === Impact freeze + flash (Hades-style dramatic pause) ===
+	# AUDIO_HOOK: fusion_impact (degree-scaled hit SFX)
+	await get_tree().create_timer(MerlinVisual.DUR_IMPACT_FREEZE).timeout
+	if not MerlinVisual.reduced_motion:
+		var flash_rect: ColorRect = ColorRect.new()
+		flash_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		flash_rect.color = Color(1.0, 1.0, 1.0, 0.0)
+		flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(flash_rect)
+		var flash_tw: Tween = create_tween()
+		flash_tw.tween_property(flash_rect, "color:a", 0.55, MerlinVisual.DUR_FLASH * 0.3)
+		flash_tw.tween_property(flash_rect, "color:a", 0.0, MerlinVisual.DUR_FLASH * 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		flash_tw.tween_callback(flash_rect.queue_free)
+
 	# === Phase 3 — Burst === flash glow + 3 vagues de sparks (cascade) + cards explose + screen shake.
 	var burst_dur: float = dur["burst"]
 	var w1: int = int(spark_count * 0.40)

@@ -417,7 +417,9 @@ func _update_preview() -> void:
 	var was_disabled: bool = _resolve_btn.disabled
 	_resolve_btn.disabled = false
 	if was_disabled and _resolve_btn.visible:
-		_pop(_resolve_btn, 1.12)  # pulse 1-shot quand le combo devient complet (user 2026-06-07) — visible pour un pivot correct
+		# AUDIO_HOOK: combo_complete (chime + lock-in)
+		_pop(_resolve_btn, 1.15)
+		_combo_complete_pulse()
 	# v10.4 — pré-génération LLM spéculative pendant la pose (user 2026-06-06). Dédupé par signature
 	# combo côté MerlinScenario ; au clic Résolution le texte est souvent déjà prêt (cache-hit).
 	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, _combo.duplicate(), res)
@@ -467,6 +469,19 @@ func _on_resolve() -> void:
 	await fx.run()
 	if not _fresh(ep):
 		return  # scène quittée pendant la fusion (sécurité epoch + tree-check)
+	if _scene_art != null:
+		match deg:
+			"eclatante":
+				_scene_art.flash_moon()
+				_scene_art.sway_trees()
+			"reussite":
+				_scene_art.flash_moon()
+			"partiel":
+				_scene_art.thicken_mist()
+			"echec":
+				_scene_art.dim_moon()
+				_scene_art.thicken_mist()
+				_scene_art.sway_trees()
 
 	_set_choice_ui(false)   # v10.10 : cartes redescendent → l'issue occupe l'encart central, SEULE (user 2026-06-06)
 	_render_combo()         # _combo vide → clear _combo_box (les vues précédentes ont été reparented/free'd)
@@ -846,9 +861,15 @@ func _on_gauges(integrite: int, corruption: int) -> void:
 		if di != 0:
 			_pop(_life_gauge, 1.18)
 			_float_delta(_life_gauge, di, COL_GREEN if di > 0 else COL_VIOLET)
+			var life_flash_col: Color = COL_GREEN if di > 0 else COL_VIOLET
+			var lf_tw: Tween = _life_gauge.create_tween()
+			lf_tw.tween_property(_life_gauge, "modulate", Color(life_flash_col.r, life_flash_col.g, life_flash_col.b, 1.0), 0.06)
+			lf_tw.tween_property(_life_gauge, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		if dc != 0:
 			_pop(_corr_gauge, 1.18)
 			_float_delta(_corr_gauge, dc, COL_VIOLET if dc > 0 else COL_GREEN)
+			if dc > 0:
+				MerlinFx.shake(_corr_gauge, 3.0, 0.15)
 	# Pulse continue quand la stat est critique (vie basse / corruption haute).
 	_life_gauge.set_critical(integrite <= 3)
 	_corr_gauge.set_critical(corruption >= int(MerlinRun.CORRUPTION_CAP * 0.66))
@@ -928,6 +949,41 @@ func _pop(node: Control, peak: float) -> void:
 func _float_delta(anchor: Control, delta: int, col: Color) -> void:
 	MerlinFx.float_delta(self, anchor, delta, col)
 
+
+func _combo_complete_pulse() -> void:
+	if MerlinVisual.reduced_motion:
+		return
+	var center: Vector2 = _combo_box.global_position + _combo_box.size * 0.5
+	for ri in 3:
+		var ring: ColorRect = ColorRect.new()
+		ring.color = Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, 0.0)
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ring.size = Vector2(4.0, 4.0)
+		ring.pivot_offset = Vector2(2.0, 2.0)
+		ring.position = center - Vector2(2.0, 2.0)
+		add_child(ring)
+		var delay: float = float(ri) * 0.06
+		var tw: Tween = ring.create_tween().set_parallel(true)
+		tw.tween_property(ring, "scale", Vector2(60.0, 60.0), 0.45).set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(ring, "modulate:a", 0.0, 0.45).set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		var tw_a: Tween = ring.create_tween()
+		tw_a.tween_property(ring, "color:a", 0.35 - float(ri) * 0.08, 0.04).set_delay(delay)
+		tw_a.chain().tween_interval(0.45)
+		tw_a.tween_callback(ring.queue_free)
+	for si in 8:
+		var spark: ColorRect = ColorRect.new()
+		spark.size = Vector2(3.0, 3.0)
+		spark.color = MerlinVisual.GOLD
+		spark.position = center - Vector2(1.5, 1.5)
+		spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(spark)
+		var angle: float = float(si) / 8.0 * TAU + randf() * 0.4
+		var dist: float = 30.0 + randf() * 25.0
+		var dest: Vector2 = center + Vector2(cos(angle), sin(angle)) * dist
+		var st: Tween = spark.create_tween().set_parallel(true)
+		st.tween_property(spark, "position", dest - Vector2(1.5, 1.5), MerlinVisual.DUR_MOTE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		st.tween_property(spark, "modulate:a", 0.0, MerlinVisual.DUR_MOTE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		st.chain().tween_callback(spark.queue_free)
 
 
 

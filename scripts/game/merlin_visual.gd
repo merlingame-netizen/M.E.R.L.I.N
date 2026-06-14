@@ -43,6 +43,13 @@ const DUR_VEIL_OUT: float = 0.25   # voile (sortie)
 const STAGGER: float = 0.05        # décalage par carte dans un groupe
 const DUR_SLIDE_UP: float = 0.35   # situation slide-up à chaque beat
 const DUR_BREATHE: float = 3.0     # demi-période de respiration (titre, prose)
+const DUR_IMPACT_FREEZE: float = 0.08
+const DUR_FLASH: float = 0.12
+const DUR_INK_WIPE: float = 0.40
+const DUR_MOTE_FADE: float = 0.30
+const DUR_WORLD_REACT: float = 1.50
+const MOTE_COUNT_AMBIENT: int = 18
+const SPARK_COUNT_IMPACT: int = 8
 
 # ── Reduce-motion (BIBLE §23 R118 / R74) : atténue, ne supprime JAMAIS l'information ──
 const PREFS_PATH: String = "user://options.cfg"

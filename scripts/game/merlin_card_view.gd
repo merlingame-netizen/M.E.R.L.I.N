@@ -53,8 +53,12 @@ var _hovering: bool = false
 var _tw: Tween
 var _fan_inited: bool = false  # v10.13.1 : 1er layout = snap ; suivants = reflow animé (§21 `fast`)
 var _discarding: bool = false  # v10.13.1 : en sortie discard_out → exclue du reuse (review HIGH-2)
-var _sway_phase: float = 0.0  # v10.15 : phase du idle sway (déphasée par index dans l'éventail)
+var _sway_phase: float = 0.0
 var _sway_active: bool = false
+var _t: float = 0.0
+var _rarity_rank: int = 0
+var _panel_sb: StyleBoxFlat
+var _glow_col: Color = MerlinVisual.GOLD
 
 
 func setup(c: MerlinCard, role: String = "", compact: bool = false) -> void:
@@ -81,13 +85,16 @@ func _build(role: String) -> void:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_CARD
 	sb.set_corner_radius_all(8)
-	# Bordure ÉPAISSE = RARETÉ (v10.5). Liseré or si carte posée (rôle), sinon couleur de rareté.
 	sb.set_border_width_all(int(rstyle["w"]))
 	sb.border_color = COL_GOLD if role != "" else (rstyle["col"] as Color)
-	# Mythique : lueur dorée (shadow StyleBox — glow bon marché sans shader).
-	if rar == "Mythique":
-		sb.shadow_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.45)
-		sb.shadow_size = 8
+	_rarity_rank = ["Commune", "Rare", "Épique", "Mythique"].find(rar)
+	if _rarity_rank < 0:
+		_rarity_rank = 0
+	_glow_col = COL_GOLD if rar == "Mythique" else (rstyle["col"] as Color)
+	if _rarity_rank >= 1:
+		sb.shadow_color = Color(_glow_col.r, _glow_col.g, _glow_col.b, 0.0)
+		sb.shadow_size = 6 + _rarity_rank * 2
+	_panel_sb = sb
 	sb.set_content_margin_all(7 if _compact else 9)
 	panel.add_theme_stylebox_override("panel", sb)
 	add_child(panel)
@@ -202,16 +209,39 @@ func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 		badge.add_child(bl)
 
 
-## v10.15 — Idle sway : la carte respire doucement dans l'éventail (rot ±0.8°, y ±2px).
-## Déphasée via _sway_phase (posée par le conteneur à set_fan_transform). Off au hover/discard.
+func _wants_process() -> bool:
+	if _rarity_rank >= 1:
+		return true
+	if _hovering and not _compact:
+		return true
+	return _sway_active and not MerlinVisual.reduced_motion
+
+
 func _process(delta: float) -> void:
-	if not _sway_active or _hovering or _discarding or MerlinVisual.reduced_motion:
+	_t += delta
+	if _rarity_rank >= 1 and _panel_sb != null:
+		var ga: float = [0.0, 0.20, 0.30, 0.50][_rarity_rank]
+		var gamp: float = [0.0, 0.10, 0.15, 0.20][_rarity_rank]
+		if MerlinVisual.reduced_motion:
+			gamp = 0.0
+		var gspd: float = [0.0, 0.8, 1.0, 1.3][_rarity_rank]
+		_panel_sb.shadow_color = Color(_glow_col.r, _glow_col.g, _glow_col.b,
+			ga + gamp * sin(_t * gspd + _sway_phase))
+	if _hovering and not _compact:
+		if not MerlinVisual.reduced_motion:
+			var center: Vector2 = global_position + pivot_offset
+			var mouse: Vector2 = get_global_mouse_position()
+			var dx: float = clampf((mouse.x - center.x) / (size.x * 0.5), -1.0, 1.0)
+			rotation = lerpf(rotation, dx * deg_to_rad(3.0), 0.15)
+		return
+	if not _sway_active or _discarding:
 		return
 	_sway_phase += delta
-	var dr: float = sin(_sway_phase * 0.7) * deg_to_rad(0.8)
-	var dy: float = sin(_sway_phase * 0.55 + 1.0) * 2.0
-	rotation = _base_rot + dr
-	position = _base_pos + Vector2(0.0, dy)
+	if MerlinVisual.reduced_motion:
+		return
+	var w: float = sin(_sway_phase * 1.3) * 0.7 + sin(_sway_phase * 2.7 + 1.4) * 0.4 + sin(_sway_phase * 0.4) * 0.2
+	rotation = _base_rot + deg_to_rad(w)
+	position = _base_pos + Vector2(sin(_sway_phase * 0.35) * 1.0, sin(_sway_phase * 0.9 + 0.7) * 2.8)
 
 
 ## Position/rotation de base dans l'éventail (posées par le conteneur). Appliquées si pas survolé.
@@ -233,8 +263,8 @@ func set_fan_transform(pos: Vector2, rot: float, animate_reflow: bool = true) ->
 		scale = Vector2.ONE
 		modulate.a = 1.0  # garantit l'opacité si un deal_in (tween a:0→1) est interrompu par un re-layout (fix cartes invisibles, user 2026-06-06)
 		_sway_active = not _compact
-		_sway_phase = rot * 3.0  # déphasage naturel par position dans l'éventail
-		set_process(_sway_active and not MerlinVisual.reduced_motion)
+		_sway_phase = rot * 3.0
+		set_process(_wants_process())
 		return
 	scale = Vector2.ONE
 	modulate.a = 1.0
@@ -245,31 +275,33 @@ func set_fan_transform(pos: Vector2, rot: float, animate_reflow: bool = true) ->
 	_tw.chain().tween_callback(func() -> void:
 		_sway_active = not _compact
 		_sway_phase = rot * 3.0
-		set_process(_sway_active and not MerlinVisual.reduced_motion)
+		set_process(_wants_process())
 	)
 
 
 func _on_enter() -> void:
 	_hovering = true
 	_sway_active = false
-	set_process(false)
 	z_index = 50
 	if _compact:
-		_scale_to(COMPACT_HOVER_SCALE)  # carte posée (HBox) : agrandir seulement, pas de lift/rotation
+		set_process(_rarity_rank >= 1)
+		_scale_to(COMPACT_HOVER_SCALE)
 	else:
+		set_process(true)
 		_animate(_base_pos + Vector2(0, -HOVER_LIFT), 0.0, HOVER_SCALE)
 
 
 func _on_exit() -> void:
 	_hovering = false
-	z_index = _base_z  # rétablit l'ordre de l'éventail (pas 0 → évite le z-fighting entre voisines)
+	z_index = _base_z
 	if _compact:
 		_scale_to(1.0)
+		set_process(_rarity_rank >= 1)
 	else:
 		_animate(_base_pos, _base_rot, 1.0)
 		if not _discarding:
 			_sway_active = not _compact
-			set_process(_sway_active and not MerlinVisual.reduced_motion)
+			set_process(_wants_process())
 
 
 func _scale_to(scl: float) -> void:
@@ -279,39 +311,42 @@ func _scale_to(scl: float) -> void:
 	_tw.tween_property(self, "scale", Vector2(scl, scl), ANIM)
 
 
-## v10.15 — Distribution : la carte surgit depuis le bas hors-écran (+120px), scale 0.92→1.0,
-## avec un rebond BACK-OUT prononcé. Entrée plus dramatique (Cultist Simulator feel).
 func deal_in(delay: float) -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	_sway_active = false
-	set_process(false)
+	set_process(_rarity_rank >= 1)
 	modulate.a = 0.0
-	scale = Vector2(0.92, 0.92)
-	position = _base_pos + Vector2(0.0, 120.0)
+	scale = Vector2(0.7, 0.7)
+	position = _base_pos + Vector2(0.0, 140.0)
+	rotation = _base_rot + deg_to_rad((randf() - 0.5) * 16.0)
+	# AUDIO_HOOK: card_deal (whoosh + paper settle)
+	var d: float = MerlinVisual.DUR_DEAL * MerlinVisual.motion() * 1.3
 	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "modulate:a", 1.0, 0.22).set_delay(delay)
-	_tw.tween_property(self, "position", _base_pos, MerlinVisual.DUR_DEAL * MerlinVisual.motion()).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tw.tween_property(self, "scale", Vector2.ONE, MerlinVisual.DUR_DEAL * MerlinVisual.motion()).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "modulate:a", 1.0, 0.18).set_delay(delay)
+	_tw.tween_property(self, "position", _base_pos, d).set_delay(delay).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "scale", Vector2.ONE, d).set_delay(delay).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "rotation", _base_rot, d * 0.7).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_tw.chain().tween_callback(func() -> void:
 		_sway_active = not _compact
 		_sway_phase = _base_rot * 3.0
-		set_process(_sway_active and not MerlinVisual.reduced_motion)
+		set_process(_wants_process())
 	)
 
 
-## Défausse (§21 `discard`) : slide -40px + rot -6° + fade, puis libération. Fire-and-forget,
-## le tween est LIÉ au node qu'il détruit. La vue doit déjà être hors logique (pure sortie visuelle).
 func discard_out() -> void:
-	_discarding = true  # review HIGH-2 : la vue ne doit plus être réutilisée par _render_hand
-	mouse_filter = Control.MOUSE_FILTER_IGNORE  # plus cliquable pendant sa sortie
+	# AUDIO_HOOK: card_discard (soft swoosh)
+	_discarding = true
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	var d: float = MerlinVisual.DUR_DISCARD * MerlinVisual.motion()
-	_tw = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	_tw.tween_property(self, "position", position + Vector2(-40.0, 0.0), d)
-	_tw.tween_property(self, "rotation", rotation + deg_to_rad(-6.0), d)
-	_tw.tween_property(self, "modulate:a", 0.0, d)
+	var dir: float = -1.0 if randf() < 0.7 else 1.0
+	_tw = create_tween().set_parallel(true)
+	_tw.tween_property(self, "position", position + Vector2(dir * 60.0, 40.0), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_tw.tween_property(self, "rotation", rotation + deg_to_rad(dir * -35.0), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_tw.tween_property(self, "scale", Vector2(0.55, 0.55), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_tw.tween_property(self, "modulate:a", 0.0, d * 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_tw.chain().tween_callback(queue_free)
 
 
