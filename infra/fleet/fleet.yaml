@@ -20,8 +20,8 @@ targets:
   - name: gcp-micro
     provider: gcp
     type: ssh
-    host: ""                              # public IP of the e2-micro
-    ssh_user: ""                          # set to the GCP image user (e.g. your gcloud username)
+    host: ""                              # in fleet.local.yaml (kept out of the public repo)
+    ssh_user: "merlin"
     role: "VPS léger 1Go — SQLite / cron / monitoring"
 
   - name: cf-worker

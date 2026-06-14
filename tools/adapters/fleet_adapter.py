@@ -27,6 +27,7 @@ from adapters.base_adapter import BaseAdapter
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FLEET_YAML = REPO_ROOT / "infra" / "fleet" / "fleet.yaml"
+FLEET_LOCAL = REPO_ROOT / "infra" / "fleet" / "fleet.local.yaml"
 STATUS_JSON = REPO_ROOT / "infra" / "fleet" / "status" / "fleet.json"
 
 # Remote one-liner: "usedMB/totalMB ncpu load disk%"
@@ -57,7 +58,16 @@ class FleetAdapter(BaseAdapter):
     def _load(self) -> dict:
         if not FLEET_YAML.exists():
             raise FileNotFoundError(f"inventory not found: {FLEET_YAML}")
-        return yaml.safe_load(FLEET_YAML.read_text()) or {}
+        inv = yaml.safe_load(FLEET_YAML.read_text()) or {}
+        # Merge optional local-only overrides (e.g. VM IPs kept out of a public repo).
+        if FLEET_LOCAL.exists():
+            local = yaml.safe_load(FLEET_LOCAL.read_text()) or {}
+            by_name = {t.get("name"): t for t in inv.get("targets", [])}
+            for ovr in local.get("targets", []):
+                tgt = by_name.get(ovr.get("name"))
+                if tgt:
+                    tgt.update({k: v for k, v in ovr.items() if k != "name"})
+        return inv
 
     def run(self, action: str, **kwargs: Any) -> dict:
         if action == "list":

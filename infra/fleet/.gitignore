@@ -12,3 +12,4 @@ cloudflare/.wrangler/
 # GCP service-account keys
 **/*.json.key
 *-sa.json
+fleet.local.yaml

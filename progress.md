@@ -2599,3 +2599,13 @@ usages Claude/dev/Godot.
   https://merlin-pages.pages.dev (HTTP 200).
 - fleet.yaml renseigne -> console: cf-worker UP, cf-pages UP (2/5). Reste oracle/gcp/fly.
 - Token traite comme secret (env var uniquement, jamais commite ; verifie 0 fuite).
+
+### 2026-06-14 (suite 11) — Google e2-micro DEPLOYE (2e noeud VM live)
+
+- terraform apply d'ici (cle SA + project acoustic-agent-441423-p6) : VPC + firewall SSH +
+  instance e2-micro (us-west1-b, 1Go, 30Go pd-standard, garde-fou validations e2-micro/region/30Go).
+- IP 34.127.43.69, user merlin (cle merlin_oracle). Non joignable depuis le conteneur (egress SSH
+  bloque) mais RUNNING cote GCP ; le PC utilisateur y accede.
+- Securite repo PUBLIC : IP des VM sorties du repo -> surcouche locale gitignoree fleet.local.yaml,
+  mergee par fleet_adapter._load(). Repo ne contient que placeholders + URLs Cloudflare (publiques).
+- Console: cf-worker UP, cf-pages UP, gcp-micro (UP depuis PC). Reste oracle + fly.
