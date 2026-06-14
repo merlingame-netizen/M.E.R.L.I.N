@@ -14,7 +14,6 @@ const COL_VIOLET: Color = MerlinVisual.VIOLET
 
 const SELECTION_SCENE: String = "res://scenes/MerlinSelection.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
-const OPTIONS_SCENE: String = "res://scenes/MerlinOptions.tscn"
 
 const THEME_WAV: String = "res://music/theme/merlin_main_theme.wav"
 const MUSIC_DB: float = -10.0       # volume cible du thème (ambient discret)
@@ -473,8 +472,7 @@ func _on_continue() -> void:
 
 
 func _on_options() -> void:
-	if ResourceLoader.exists(OPTIONS_SCENE):
-		MerlinTransition.change_scene(OPTIONS_SCENE)
+	MerlinOptions.toggle()
 
 
 func _on_quit() -> void:

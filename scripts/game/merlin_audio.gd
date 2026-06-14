@@ -20,8 +20,8 @@ var _sfx_idx: int = 0
 var _music_a: AudioStreamPlayer
 var _music_b: AudioStreamPlayer
 var _active_music: AudioStreamPlayer
-var _duck_tw: Tween
-var _fade_tw: Tween
+var _duck_tw: Tween = null
+var _fade_tw: Tween = null
 var _corruption_level: int = 0
 
 var master_vol: float = 0.8
@@ -85,12 +85,18 @@ func play_stinger(degree: String) -> void:
 	_duck_music()
 
 
+func _kill_music_tweens() -> void:
+	if _duck_tw != null and _duck_tw.is_valid():
+		_duck_tw.kill()
+	if _fade_tw != null and _fade_tw.is_valid():
+		_fade_tw.kill()
+
+
 func _duck_music() -> void:
 	if _active_music == null or not _active_music.playing:
 		return
 	var restore_db: float = _music_vol_db()
-	if _duck_tw != null and _duck_tw.is_valid():
-		_duck_tw.kill()
+	_kill_music_tweens()
 	_duck_tw = create_tween()
 	_duck_tw.tween_property(_active_music, "volume_db", restore_db + DUCK_DB, 0.05).set_trans(Tween.TRANS_QUAD)
 	_duck_tw.tween_property(_active_music, "volume_db", restore_db, DUCK_RETURN).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -118,19 +124,28 @@ func play_music(stream: AudioStream, crossfade_dur: float = 1.5) -> void:
 func stop_music(fade_dur: float = 0.5) -> void:
 	if not _active_music.playing:
 		return
-	var tw: Tween = create_tween()
+	_kill_music_tweens()
 	var player: AudioStreamPlayer = _active_music
-	tw.tween_property(player, "volume_db", -40.0, fade_dur).set_trans(Tween.TRANS_SINE)
-	tw.tween_callback(player.stop)
+	_fade_tw = create_tween()
+	_fade_tw.tween_property(player, "volume_db", -40.0, fade_dur).set_trans(Tween.TRANS_SINE)
+	_fade_tw.tween_callback(player.stop)
 
 
 func fade_music(target_db: float, duration: float) -> void:
 	if not _active_music.playing:
 		return
-	if _fade_tw != null and _fade_tw.is_valid():
-		_fade_tw.kill()
+	_kill_music_tweens()
 	_fade_tw = create_tween()
 	_fade_tw.tween_property(_active_music, "volume_db", target_db, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func restore_music(duration: float = 0.6) -> void:
+	if not _active_music.playing:
+		return
+	var target_db: float = _music_vol_db()
+	_kill_music_tweens()
+	_fade_tw = create_tween()
+	_fade_tw.tween_property(_active_music, "volume_db", target_db, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func set_corruption_layer(level: int) -> void:

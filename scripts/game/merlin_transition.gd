@@ -16,6 +16,11 @@ var _progress: float = 0.0
 var _busy: bool = false
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE or what == NOTIFICATION_EXIT_TREE:
+		_busy = false
+
+
 func _ready() -> void:
 	layer = 200
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -44,7 +49,7 @@ func change_scene(path: String, caption: String = "") -> void:
 		push_error("[MerlinTransition] scene not found: %s" % path)
 		return
 	MerlinAudio.play_sfx("ink_wash")
-	MerlinAudio.fade_music(-40.0, DUR_WIPE * MerlinVisual.motion())
+	MerlinAudio.fade_music(-12.0, DUR_WIPE * MerlinVisual.motion())
 	_busy = true
 	_revealing = false
 	_progress = 0.0
@@ -74,6 +79,7 @@ func change_scene(path: String, caption: String = "") -> void:
 	_tw.tween_method(_set_progress, 0.0, 1.0, d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	await _tw.finished
 	_poly.polygon = PackedVector2Array()
+	MerlinAudio.restore_music(0.6)
 	_busy = false
 
 
