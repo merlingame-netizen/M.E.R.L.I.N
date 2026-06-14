@@ -41,6 +41,8 @@ const DUR_DISCARD: float = 0.25    # défausse (slide -40px, rot -6°, fade)
 const DUR_VEIL_IN: float = 0.20    # voile de transition de beat (entrée)
 const DUR_VEIL_OUT: float = 0.25   # voile (sortie)
 const STAGGER: float = 0.05        # décalage par carte dans un groupe
+const DUR_SLIDE_UP: float = 0.35   # situation slide-up à chaque beat
+const DUR_BREATHE: float = 3.0     # demi-période de respiration (titre, prose)
 
 # ── Reduce-motion (BIBLE §23 R118 / R74) : atténue, ne supprime JAMAIS l'information ──
 const PREFS_PATH: String = "user://options.cfg"

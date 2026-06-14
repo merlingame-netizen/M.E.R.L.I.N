@@ -53,6 +53,8 @@ var _hovering: bool = false
 var _tw: Tween
 var _fan_inited: bool = false  # v10.13.1 : 1er layout = snap ; suivants = reflow animé (§21 `fast`)
 var _discarding: bool = false  # v10.13.1 : en sortie discard_out → exclue du reuse (review HIGH-2)
+var _sway_phase: float = 0.0  # v10.15 : phase du idle sway (déphasée par index dans l'éventail)
+var _sway_active: bool = false
 
 
 func setup(c: MerlinCard, role: String = "", compact: bool = false) -> void:
@@ -200,6 +202,18 @@ func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 		badge.add_child(bl)
 
 
+## v10.15 — Idle sway : la carte respire doucement dans l'éventail (rot ±0.8°, y ±2px).
+## Déphasée via _sway_phase (posée par le conteneur à set_fan_transform). Off au hover/discard.
+func _process(delta: float) -> void:
+	if not _sway_active or _hovering or _discarding or MerlinVisual.reduced_motion:
+		return
+	_sway_phase += delta
+	var dr: float = sin(_sway_phase * 0.7) * deg_to_rad(0.8)
+	var dy: float = sin(_sway_phase * 0.55 + 1.0) * 2.0
+	rotation = _base_rot + dr
+	position = _base_pos + Vector2(0.0, dy)
+
+
 ## Position/rotation de base dans l'éventail (posées par le conteneur). Appliquées si pas survolé.
 ## v10.13.1 (§21 `fast`) : reflow ANIMÉ quand la carte a déjà été layoutée (l'éventail glisse
 ## vers sa nouvelle place au lieu de snapper). 1er layout / deal en attente = snap (deal_in anime).
@@ -218,6 +232,9 @@ func set_fan_transform(pos: Vector2, rot: float, animate_reflow: bool = true) ->
 		rotation = rot
 		scale = Vector2.ONE
 		modulate.a = 1.0  # garantit l'opacité si un deal_in (tween a:0→1) est interrompu par un re-layout (fix cartes invisibles, user 2026-06-06)
+		_sway_active = not _compact
+		_sway_phase = rot * 3.0  # déphasage naturel par position dans l'éventail
+		set_process(_sway_active and not MerlinVisual.reduced_motion)
 		return
 	scale = Vector2.ONE
 	modulate.a = 1.0
@@ -225,10 +242,17 @@ func set_fan_transform(pos: Vector2, rot: float, animate_reflow: bool = true) ->
 	var d: float = MerlinVisual.DUR_FAST * MerlinVisual.motion()
 	_tw.tween_property(self, "position", pos, d)
 	_tw.tween_property(self, "rotation", rot, d)
+	_tw.chain().tween_callback(func() -> void:
+		_sway_active = not _compact
+		_sway_phase = rot * 3.0
+		set_process(_sway_active and not MerlinVisual.reduced_motion)
+	)
 
 
 func _on_enter() -> void:
 	_hovering = true
+	_sway_active = false
+	set_process(false)
 	z_index = 50
 	if _compact:
 		_scale_to(COMPACT_HOVER_SCALE)  # carte posée (HBox) : agrandir seulement, pas de lift/rotation
@@ -243,6 +267,9 @@ func _on_exit() -> void:
 		_scale_to(1.0)
 	else:
 		_animate(_base_pos, _base_rot, 1.0)
+		if not _discarding:
+			_sway_active = not _compact
+			set_process(_sway_active and not MerlinVisual.reduced_motion)
 
 
 func _scale_to(scl: float) -> void:
@@ -252,15 +279,25 @@ func _scale_to(scl: float) -> void:
 	_tw.tween_property(self, "scale", Vector2(scl, scl), ANIM)
 
 
-## Distribution : la carte arrive depuis le bas en fondu vers sa place d'éventail (stagger via delay).
+## v10.15 — Distribution : la carte surgit depuis le bas hors-écran (+120px), scale 0.92→1.0,
+## avec un rebond BACK-OUT prononcé. Entrée plus dramatique (Cultist Simulator feel).
 func deal_in(delay: float) -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
+	_sway_active = false
+	set_process(false)
 	modulate.a = 0.0
-	position = _base_pos + Vector2(0.0, 40.0)
+	scale = Vector2(0.92, 0.92)
+	position = _base_pos + Vector2(0.0, 120.0)
 	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "modulate:a", 1.0, 0.24).set_delay(delay)
-	_tw.tween_property(self, "position", _base_pos, 0.28).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "modulate:a", 1.0, 0.22).set_delay(delay)
+	_tw.tween_property(self, "position", _base_pos, MerlinVisual.DUR_DEAL * MerlinVisual.motion()).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "scale", Vector2.ONE, MerlinVisual.DUR_DEAL * MerlinVisual.motion()).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.chain().tween_callback(func() -> void:
+		_sway_active = not _compact
+		_sway_phase = _base_rot * 3.0
+		set_process(_sway_active and not MerlinVisual.reduced_motion)
+	)
 
 
 ## Défausse (§21 `discard`) : slide -40px + rot -6° + fade, puis libération. Fire-and-forget,

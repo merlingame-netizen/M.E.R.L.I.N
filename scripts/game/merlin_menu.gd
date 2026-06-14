@@ -409,7 +409,8 @@ func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
 	tw.tween_property(node, "modulate:a", 1.0, dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-## Animations d'attente continues : triskèle rotative, runes qui respirent (déphasées).
+## Animations d'attente continues : triskèle rotative, runes qui respirent (déphasées),
+## titre qui pulse (v10.15 — or lumineux).
 func _start_idle_anims() -> void:
 	var rot: Tween = create_tween().set_loops()
 	rot.tween_property(_tris, "rotation", TAU, 24.0).from(0.0)
@@ -417,6 +418,13 @@ func _start_idle_anims() -> void:
 		var tw: Tween = create_tween()
 		tw.tween_interval(1.2 + 0.45 * float(i))  # déphasage : respiration organique, pas mécanique
 		tw.tween_callback(_breathe_glyph.bind(_runes[i]))
+	# v10.15 — Title breathing : le wordmark pulse entre crème et or (luminance warm).
+	if _title != null and not MerlinVisual.reduced_motion:
+		var col_bright: Color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 1.0).lerp(COL_CREAM, 0.5)
+		var tb: Tween = create_tween().set_loops()
+		var half: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
+		tb.tween_property(_title, "modulate", Color(col_bright.r, col_bright.g, col_bright.b, 1.0), half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tb.tween_property(_title, "modulate", Color.WHITE, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _breathe_glyph(g: MerlinGlyph) -> void:

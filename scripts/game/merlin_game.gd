@@ -54,6 +54,8 @@ var _deal_pending: bool = false  # déclenche l'anim de distribution au prochain
 var _life_tw: Tween  # tween de remplissage de l'anneau vie (tué avant un nouveau → pas de snap arrière)
 var _corr_tw: Tween
 var _situ_tw: Tween  # fondu de l'encart au nouveau beat (tué avant réutilisation → pas de course de tweens)
+var _prose_tw: Tween  # v10.15 : prose breathing loop (killed before next typewriter)
+var _situ_rest_y: float = 0.0  # v10.15 : canonical Y of _situ_panel (for slide-up anchoring)
 var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
 
 # v10.11/12 (user 2026-06-07) — Map du chemin (coin droit) + Draft « 1 carte sur 3 » aux beats clés.
@@ -198,10 +200,17 @@ func _present_current_beat() -> void:
 	_set_encart_phase(Color("6E5A3C"))
 	if _situ_panel != null:
 		_situ_panel.modulate.a = 0.45
+		# v10.15 — Slide-up : l'encart monte de 12px en fondant (situation « arrive »).
+		# Ancré sur _situ_rest_y pour éviter le drift si le tween précédent est interrompu.
+		if _situ_rest_y == 0.0:
+			_situ_rest_y = _situ_panel.position.y
+		_situ_panel.position.y = _situ_rest_y + 12.0
 		if _situ_tw != null and _situ_tw.is_valid():
-			_situ_tw.kill()  # évite la course si un beat enchaîne avant la fin du fondu
-		_situ_tw = _situ_panel.create_tween()
+			_situ_tw.kill()
+		_situ_tw = _situ_panel.create_tween().set_parallel(true)
 		_situ_tw.tween_property(_situ_panel, "modulate:a", 1.0, 0.22)
+		var slide_dur: float = MerlinVisual.DUR_SLIDE_UP * MerlinVisual.motion()
+		_situ_tw.tween_property(_situ_panel, "position:y", _situ_rest_y, slide_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_stamp_beat_glyph(str(_current_situation.get("type", "")))  # v10.13 (B4) : sceau du type de beat
 	_show_situation(_current_situation)
 	_state = 1
@@ -767,6 +776,15 @@ func _on_typewriter_done() -> void:
 	elif _state == 1:
 		# Situation entièrement écrite → caret masqué, les cartes MONTENT pour le choix (user 2026-06-06).
 		_set_caret(false)
+		# v10.15 — Prose breathing : le texte pulse doucement (alpha 0.88↔1.0) en attendant le choix.
+		# Stocké dans _prose_tw pour kill au prochain _typewriter (review HIGH-1).
+		if not MerlinVisual.reduced_motion and _situation_text != null:
+			if _prose_tw != null and _prose_tw.is_valid():
+				_prose_tw.kill()
+			_prose_tw = _situation_text.create_tween().set_loops()
+			var half: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
+			_prose_tw.tween_property(_situation_text, "modulate:a", 0.88, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			_prose_tw.tween_property(_situation_text, "modulate:a", 1.0, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_preview_lbl.visible = true
 		_resolve_btn.visible = true
 		_set_choice_ui(true)   # visible AVANT le rendu → _hand_box a sa taille pour _layout_fan
@@ -1077,6 +1095,9 @@ func _goto_end() -> void:
 
 
 func _typewriter(txt: String, animate: bool = true) -> void:
+	if _prose_tw != null and _prose_tw.is_valid():
+		_prose_tw.kill()
+	_situation_text.modulate.a = 1.0
 	_kill_tw()
 	_situation_text.text = txt
 	if not animate:

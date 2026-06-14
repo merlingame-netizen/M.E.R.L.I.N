@@ -102,6 +102,20 @@ func _draw() -> void:
 	if _beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme":
 		_figure(Vector2(w * 0.5, h * 0.84), h * 0.50, w * 0.075)
 
+	# v10.15 — Motes ambiantes (golden fireflies) : entre figure et brume (profondeur correcte).
+	if _animated:
+		for mi in 6:
+			var mf: float = float(mi)
+			var mx: float = w * (0.15 + 0.70 * fmod(mf * 0.618 + 0.1, 1.0))
+			var my: float = h * (0.25 + 0.50 * fmod(mf * 0.382 + 0.05, 1.0))
+			mx += sin(_t * 0.28 + mf * 1.7) * w * 0.025
+			my += cos(_t * 0.21 + mf * 2.3) * h * 0.018
+			var ma: float = 0.12 + 0.10 * (0.5 + 0.5 * sin(_t * 0.55 + mf * 1.1))
+			if MerlinVisual.reduced_motion:
+				ma *= 0.5
+			var mr: float = maxf(minf(w, h) * 0.005, 1.8)
+			draw_circle(Vector2(mx, my), mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma))
+
 	# Brume : bandes horizontales plates translucides (avant-plan). Dérive lente en mode animé.
 	var band_i: int = 0
 	for band in [0.60, 0.71, 0.81]:
