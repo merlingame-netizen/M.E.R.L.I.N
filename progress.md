@@ -2653,3 +2653,12 @@ usages Claude/dev/Godot.
 - Dashboard Flask = hub unique : tuiles + jauges quota + panneau Jobs avec boutons Run
   (/api/jobs /api/quota /api/run). README section "Control plane".
 - Test depuis sandbox : routage+garde via `fleet plan` (SSH reel = depuis le PC).
+
+### 2026-06-14 (suite 16) — Migration Firebase RTDB -> Cloudflare D1 (outil)
+
+- Demande : migrer la base AtelierIdracIA (Firebase Realtime Database) vers SQLite/D1, one-shot.
+- AJOUT infra/fleet/migrations/rtdb_to_sqlite.py : convertisseur RTDB JSON -> SQLite (.db) + dump
+  .sql pret pour `wrangler d1 execute --file`. Aplatissement : node->table, scalaires->colonnes
+  typees, objets/arrays imbriques->colonnes JSON, scalaires racine->table _root. Teste OK sur echantillon.
+- README migrations + procedure (export JSON Firebase -> convert -> wrangler d1 create atelier-idrac -> load).
+- Reste (utilisateur) : uploader l'export JSON RTDB + redonner le token CF -> je cree une D1 dediee et je charge.
