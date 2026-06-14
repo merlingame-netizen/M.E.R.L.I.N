@@ -21,3 +21,6 @@ _*.mjs
 !outlook_adapter.py
 !teams_adapter.py
 !onenote_adapter.py
+
+# Keep creative pipeline adapter
+!creative_adapter.py

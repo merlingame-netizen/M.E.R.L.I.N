@@ -47,6 +47,10 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "rag":           ("adapters.rag_adapter",           "RagAdapter",          None),
     # ── Wave 12 — Studio Bridge (autonomous orchestrator) ────────────
     "studio":        ("adapters.studio_adapter",        "StudioAdapter",       None),
+    # ── Wave 13 — CR Reunion (VTT Teams → CR Orange) ─────────────────
+    "cr":            ("adapters.cr_adapter",            "CRAdapter",           None),
+    # ── Wave 14 — Creative pipeline (sepia, celtic, SD, calligraphy) ──
+    "creative":      ("adapters.creative_adapter",      "CreativeAdapter",     None),
 }
 
 
