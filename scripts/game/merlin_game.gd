@@ -17,6 +17,8 @@ const COL_DIM: Color = MerlinVisual.DIM_WARM
 const DEFAULT_TITLE: String = "Le Sentier des Murmures"
 const DEFAULT_PITCH: String = "Un chemin s'ouvre sous les fougères, là où nul n'a marché. La forêt t'y attend, patiente."
 const END_SCENE: String = "res://scenes/MerlinEnd.tscn"
+const GAMEPLAY_MUSIC: String = "res://music/gameplay/gameplay_calm.wav"
+const GAMEPLAY_MUSIC_FADE: float = 4.0
 
 var _life_gauge: MerlinRingGauge
 var _corr_gauge: MerlinRingGauge
@@ -103,6 +105,7 @@ func _fresh(ep: int) -> bool:
 
 func _ready() -> void:
 	_build_ui()
+	_setup_gameplay_music()
 	var run: Node = get_node("/root/MerlinRun")
 	run.gauges_changed.connect(_on_gauges)
 	run.run_ended.connect(_on_run_ended)
@@ -126,6 +129,23 @@ func _begin() -> void:
 		_show_intro_popup()
 	else:
 		_present_current_beat()  # run repris → directement au beat courant
+
+
+func _setup_gameplay_music() -> void:
+	if not ResourceLoader.exists(GAMEPLAY_MUSIC):
+		return
+	var stream: AudioStream = load(GAMEPLAY_MUSIC)
+	if stream == null:
+		return
+	if stream is AudioStreamWAV:
+		var wav: AudioStreamWAV = stream
+		if wav.format != AudioStreamWAV.FORMAT_IMA_ADPCM:
+			var bps: int = 2 if wav.format == AudioStreamWAV.FORMAT_16_BITS else 1
+			var ch: int = 2 if wav.stereo else 1
+			wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			wav.loop_begin = 0
+			wav.loop_end = int(wav.data.size() / float(bps * ch))
+	MerlinAudio.play_music(stream, GAMEPLAY_MUSIC_FADE)
 
 
 func _present_current_beat() -> void:

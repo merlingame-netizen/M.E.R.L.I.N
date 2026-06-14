@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""SFX forge M.E.R.L.I.N. — synthese procedurale premium (BIBLE §22, R117).
+"""SFX forge M.E.R.L.I.N. — synthese procedurale soft (BIBLE §22, R117).
 
-v2 — Premium : reverb Schroeder, FM synthesis, warmth analogique, filtre resonant.
-Matiere feutree-organique (R30) : bruit filtre + enveloppes, sinus amortis, accords courts.
-Sortie : audio/sfx/<id>.wav — WAV mono 44.1 kHz 16-bit, peak normalise -3 dB.
+v3 — Soft : peak -14 dB, attaques ralenties, FM adoucie, post-traitement _soft_finish.
+Matiere feutree-organique (R30) : SFX subtils, -10 dB sous la musique.
+Sortie : audio/sfx/<id>.wav — WAV mono 44.1 kHz 16-bit, peak normalise -14 dB.
 Seed FIXE par recette → generation 100% rejouable (R119).
 
 Usage:
@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Callable
 
 SAMPLE_RATE = 44100
-PEAK_TARGET = 10 ** (-3.0 / 20.0)  # -3 dB
+PEAK_TARGET = 10 ** (-14.0 / 20.0)  # -14 dB (SFX subtils — v3)
 OUT_DIR = Path(__file__).resolve().parent.parent / "audio" / "sfx"
 
 
@@ -203,126 +203,147 @@ def _resonant_filter(samples: list[float], cutoff: float, resonance: float = 0.5
     return out
 
 
-# ── Recettes canon v2 (ids = BIBLE §22, ne pas renommer) ───────────────────
+# ── Post-traitement global (v3 — soft finish) ──────────────────────────────
+
+def _soft_finish(samples: list[float], fade_ms: float = 12.0,
+                 shelf_hz: float = 5500.0) -> list[float]:
+    """Finition douce : fade-in/out anti-click + lowpass haute-frequence."""
+    n = len(samples)
+    fi = int(SAMPLE_RATE * 3.0 / 1000.0)
+    for i in range(min(fi, n)):
+        samples[i] *= i / fi
+    fo = max(1, int(SAMPLE_RATE * fade_ms / 1000.0))
+    for i in range(max(0, n - fo), n):
+        samples[i] *= (n - i) / fo
+    alpha = 2.0 * math.pi * shelf_hz / SAMPLE_RATE
+    a = alpha / (1.0 + alpha)
+    prev = 0.0
+    for i in range(n):
+        prev += a * (samples[i] - prev)
+        samples[i] = prev
+    return samples
+
+
+# ── Recettes canon v3 — soft (ids = BIBLE §22, ne pas renommer) ────────────
 
 RECIPES: dict[str, Callable[[], list[float]]] = {
-    # papier glisse court + salle subtile
+    # papier glisse doux + salle chaleureuse
     "card_pick": lambda: _warmth(_reverb(
-        _noise(0.14, seed=101, attack=0.005, tau=0.05, lowpass=0.35),
-        decay=0.08, mix=0.25)),
+        _noise(0.16, seed=101, attack=0.015, tau=0.06, lowpass=0.18),
+        decay=0.12, mix=0.40)),
 
-    # papier pose + ton FM + filtre descendant
+    # papier pose + ton FM feutre + filtre descendant
     "card_play": lambda: _reverb(_mix(
         _resonant_filter(
-            _noise(0.22, seed=102, attack=0.002, tau=0.07, lowpass=0.30),
-            cutoff=4000.0, resonance=0.3, sweep_to=800.0, sweep_dur=0.15),
-        _fm_tone(0.18, 140.0, 2.0, 0.8, attack=0.002, tau=0.05)),
-        decay=0.12, mix=0.25),
+            _noise(0.24, seed=102, attack=0.012, tau=0.08, lowpass=0.18),
+            cutoff=2200.0, resonance=0.2, sweep_to=500.0, sweep_dur=0.18),
+        _fm_tone(0.20, 140.0, 2.0, 0.35, attack=0.012, tau=0.06)),
+        decay=0.15, mix=0.40),
 
     # froisse doux + warmth organique
     "card_discard": lambda: _reverb(_warmth(
-        _noise(0.30, seed=103, attack=0.01, tau=0.10, lowpass=0.45)),
-        decay=0.12, mix=0.20),
+        _noise(0.32, seed=103, attack=0.025, tau=0.12, lowpass=0.22)),
+        decay=0.15, mix=0.35),
 
     # eventail de papier + chorus subtil
     "deal": lambda: _warmth(_reverb(_concat(
-        _noise(0.09, seed=104, attack=0.004, tau=0.035, lowpass=0.35),
-        _noise(0.09, seed=105, attack=0.004, tau=0.035, lowpass=0.38),
-        _noise(0.12, seed=106, attack=0.004, tau=0.045, lowpass=0.32)),
-        decay=0.06, mix=0.20)),
+        _noise(0.10, seed=104, attack=0.012, tau=0.04, lowpass=0.16),
+        _noise(0.10, seed=105, attack=0.012, tau=0.04, lowpass=0.18),
+        _noise(0.13, seed=106, attack=0.012, tau=0.05, lowpass=0.15)),
+        decay=0.08, mix=0.30)),
 
-    # bois FM riche + micro-reverb
+    # bois FM doux + micro-reverb
     "button_tap": lambda: _reverb(_warmth(
-        _fm_tone(0.10, 220.0, 3.5, 1.8, attack=0.001, tau=0.025)),
-        decay=0.05, mix=0.15),
+        _fm_tone(0.12, 220.0, 3.0, 0.6, attack=0.010, tau=0.030)),
+        decay=0.08, mix=0.30),
 
-    # goutte FM montante + salle
+    # goutte FM montante douce + salle
     "gauge_up": lambda: _reverb(_warmth(
-        _fm_tone(0.28, 660.0, 2.0, 1.2, attack=0.002, tau=0.09, bend=0.6)),
-        decay=0.15, mix=0.30),
+        _fm_tone(0.30, 600.0, 2.0, 0.5, attack=0.015, tau=0.10, bend=0.4)),
+        decay=0.18, mix=0.45),
 
-    # corde FM descendante + filtre
+    # corde FM descendante + filtre doux
     "gauge_down": lambda: _reverb(
         _resonant_filter(
-            _fm_tone(0.40, 196.0, 1.5, 1.0, attack=0.004, tau=0.14, bend=-0.25),
-            cutoff=2000.0, resonance=0.4, sweep_to=300.0, sweep_dur=0.35),
-        decay=0.20, mix=0.30),
+            _fm_tone(0.42, 196.0, 1.5, 0.45, attack=0.018, tau=0.15, bend=-0.18),
+            cutoff=1400.0, resonance=0.3, sweep_to=250.0, sweep_dur=0.35),
+        decay=0.22, mix=0.45),
 
-    # murmure resonant + FM basse
+    # murmure resonant + FM basse attenuee
     "corruption_tick": lambda: _reverb(_warmth(_mix(
         _resonant_filter(
-            _noise(0.35, seed=107, attack=0.03, tau=0.12, lowpass=0.12),
-            cutoff=1200.0, resonance=0.7, sweep_to=400.0, sweep_dur=0.25),
-        _fm_tone(0.35, 92.0, 1.5, 2.0, attack=0.03, tau=0.12)),
-        detune=0.008), decay=0.18, mix=0.25),
+            _noise(0.38, seed=107, attack=0.04, tau=0.14, lowpass=0.10),
+            cutoff=700.0, resonance=0.5, sweep_to=300.0, sweep_dur=0.28),
+        _fm_tone(0.38, 92.0, 1.5, 0.9, attack=0.04, tau=0.14)),
+        detune=0.006), decay=0.20, mix=0.40),
 
-    # sceau FM impact + salle
+    # sceau FM impact doux + salle
     "seal_stamp": lambda: _reverb(_warmth(_mix(
-        _fm_tone(0.22, 110.0, 2.2, 2.5, attack=0.001, tau=0.05),
-        _noise(0.10, seed=108, attack=0.001, tau=0.03, lowpass=0.5))),
-        decay=0.25, mix=0.30),
+        _fm_tone(0.24, 110.0, 2.0, 1.0, attack=0.012, tau=0.06),
+        _noise(0.12, seed=108, attack=0.010, tau=0.04, lowpass=0.22))),
+        decay=0.28, mix=0.45),
 
-    # page + filtre descendant
+    # page + filtre descendant doux
     "beat_turn": lambda: _reverb(
         _resonant_filter(
-            _noise(0.45, seed=109, attack=0.06, tau=0.16, lowpass=0.28),
-            cutoff=3000.0, resonance=0.3, sweep_to=600.0, sweep_dur=0.35),
-        decay=0.15, mix=0.25),
+            _noise(0.48, seed=109, attack=0.06, tau=0.18, lowpass=0.20),
+            cutoff=1800.0, resonance=0.2, sweep_to=450.0, sweep_dur=0.38),
+        decay=0.18, mix=0.40),
 
-    # carillon FM tierce + salle ouverte
+    # carillon FM doux tierce + salle ouverte
     "draft_reveal": lambda: _reverb(_warmth(_concat(
-        _fm_tone(0.30, 523.25, 2.0, 0.6, attack=0.004, tau=0.12),
-        _fm_tone(0.40, 659.25, 2.0, 0.6, attack=0.004, tau=0.16))),
-        decay=0.30, mix=0.35),
+        _fm_tone(0.32, 523.25, 2.0, 0.25, attack=0.018, tau=0.14),
+        _fm_tone(0.42, 659.25, 2.0, 0.25, attack=0.018, tau=0.18))),
+        decay=0.35, mix=0.50),
 
-    # souffle resonant + accord desaccorde
+    # souffle resonant + accord desaccorde (deja doux)
     "whisper_threshold": lambda: _reverb(_mix(
         _resonant_filter(
-            _noise(0.8, seed=110, attack=0.10, tau=0.30, lowpass=0.10),
-            cutoff=800.0, resonance=0.6, sweep_to=200.0, sweep_dur=0.6),
-        _warmth(_chord(0.8, (233.08, 246.94), attack=0.10, tau=0.30), detune=0.006)),
-        decay=0.40, mix=0.35),
+            _noise(0.85, seed=110, attack=0.12, tau=0.32, lowpass=0.08),
+            cutoff=600.0, resonance=0.5, sweep_to=150.0, sweep_dur=0.65),
+        _warmth(_chord(0.85, (233.08, 246.94), attack=0.12, tau=0.32), detune=0.005)),
+        decay=0.45, mix=0.50),
 
-    # stinger echec — FM sombre descendant
+    # stinger echec — FM sombre descendant doux
     "stinger_echec": lambda: _reverb(_warmth(
-        _fm_tone(1.6, 174.61, 1.19, 1.5, attack=0.01, tau=0.55, bend=-0.12)),
-        decay=0.50, mix=0.40),
+        _fm_tone(1.8, 174.61, 1.19, 0.7, attack=0.030, tau=0.60, bend=-0.08)),
+        decay=0.55, mix=0.55),
 
-    # stinger partiel — accord trois notes
+    # stinger partiel — accord trois notes doux
     "stinger_partiel": lambda: _reverb(_warmth(
-        _chord(1.4, (220.0, 277.18, 329.63), attack=0.01, tau=0.50)),
-        decay=0.45, mix=0.35),
+        _chord(1.5, (220.0, 277.18, 329.63), attack=0.030, tau=0.55)),
+        decay=0.50, mix=0.50),
 
-    # stinger reussite — accord ouvert
+    # stinger reussite — accord ouvert doux
     "stinger_reussite": lambda: _reverb(_warmth(
-        _chord(1.8, (196.0, 246.94, 293.66, 392.0), attack=0.008, tau=0.60)),
-        decay=0.55, mix=0.40),
+        _chord(1.9, (196.0, 246.94, 293.66, 392.0), attack=0.025, tau=0.65)),
+        decay=0.60, mix=0.55),
 
-    # stinger eclatante — accord + FM aigu
+    # stinger eclatante — accord + FM aigu doux
     "stinger_eclatante": lambda: _reverb(_warmth(_mix(
-        _chord(2.2, (261.63, 329.63, 392.0, 523.25), attack=0.006, tau=0.75),
-        _fm_tone(2.2, 1046.5, 3.0, 0.5, attack=0.15, tau=0.70))),
-        decay=0.70, mix=0.40),
+        _chord(2.3, (261.63, 329.63, 392.0, 523.25), attack=0.025, tau=0.80),
+        _fm_tone(2.3, 1046.5, 3.0, 0.20, attack=0.18, tau=0.75))),
+        decay=0.75, mix=0.55),
 
-    # tick plume FM precis + micro-reverb
+    # tick plume FM precis mais doux + micro-reverb
     "quill_tick": lambda: _reverb(
-        _fm_tone(0.06, 880.0, 4.0, 0.5, attack=0.001, tau=0.015),
-        decay=0.03, mix=0.15),
+        _fm_tone(0.07, 880.0, 3.5, 0.20, attack=0.006, tau=0.018),
+        decay=0.05, mix=0.25),
 
-    # encre — filtre + FM + salle
+    # encre — filtre + FM + salle douce
     "ink_wash": lambda: _reverb(_warmth(_mix(
         _resonant_filter(
-            _noise(0.45, seed=120, attack=0.02, tau=0.18, lowpass=0.15),
-            cutoff=2000.0, resonance=0.4, sweep_to=500.0, sweep_dur=0.35),
-        _fm_tone(0.30, 130.0, 1.5, 0.8, attack=0.02, tau=0.12))),
-        decay=0.20, mix=0.30),
+            _noise(0.48, seed=120, attack=0.030, tau=0.20, lowpass=0.12),
+            cutoff=1200.0, resonance=0.3, sweep_to=350.0, sweep_dur=0.38),
+        _fm_tone(0.32, 130.0, 1.5, 0.35, attack=0.030, tau=0.14))),
+        decay=0.25, mix=0.45),
 }
 
 
 # ── Ecriture WAV ─────────────────────────────────────────────────────────────
 
 def _write_wav(samples: list[float], path: Path) -> float:
-    """Normalise au peak -3 dB et ecrit un WAV mono 16-bit. Retourne le peak dBFS MESURE."""
+    """Normalise au peak -14 dB et ecrit un WAV mono 16-bit. Retourne le peak dBFS MESURE."""
     peak = max((abs(s) for s in samples), default=0.0)
     if peak <= 0.0:
         raise ValueError(f"recette vide pour {path.name}")
@@ -342,7 +363,7 @@ def _write_wav(samples: list[float], path: Path) -> float:
 def forge(sfx_id: str) -> Path:
     if sfx_id not in RECIPES:
         raise KeyError(f"recette inconnue '{sfx_id}' — voir --list")
-    samples = RECIPES[sfx_id]()
+    samples = _soft_finish(RECIPES[sfx_id]())
     out = OUT_DIR / f"{sfx_id}.wav"
     peak_db = _write_wav(samples, out)
     dur = len(samples) / SAMPLE_RATE

@@ -26,7 +26,7 @@ var _corruption_level: int = 0
 
 var master_vol: float = 0.8
 var music_vol: float = 0.6
-var sfx_vol: float = 0.8
+var sfx_vol: float = 0.45
 
 
 func _ready() -> void:
@@ -183,7 +183,7 @@ func _load_prefs() -> void:
 	if cfg.load(PREFS_PATH) == OK:
 		master_vol = float(cfg.get_value("audio", "master", 0.8))
 		music_vol = float(cfg.get_value("audio", "music", 0.6))
-		sfx_vol = float(cfg.get_value("audio", "sfx", 0.8))
+		sfx_vol = float(cfg.get_value("audio", "sfx", 0.45))
 
 
 func _save_prefs() -> void:
