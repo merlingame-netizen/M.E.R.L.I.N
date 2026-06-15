@@ -1,0 +1,29 @@
+[Unit]
+Description=AtelierIAIdrac off-Firebase backend (REST + WebSocket over SQLite tree)
+Documentation=https://github.com/merlingame-netizen/M.E.R.L.I.N/tree/master/infra/fleet/atelier
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Where server.js / store.js live on the VM (clone of the MERLIN repo).
+WorkingDirectory=/opt/atelier/server
+# node:sqlite needs Node >= 22.5 with the experimental flag.
+ExecStart=/usr/bin/env node --experimental-sqlite server.js
+Environment=PORT=8787
+# Tree-form DB built by import-rtdb.js from the RTDB JSON export (NOT the
+# relational atelier-idrac.db produced for the D1 migration).
+Environment=DB_FILE=/var/lib/atelier/atelier-idrac-tree.db
+Environment=STORAGE_DIR=/var/lib/atelier/storage
+Restart=always
+RestartSec=2
+# Hardening: the service only needs its data dir writable.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/atelier
+# Bind to loopback only (default); Cloudflare Tunnel reaches it locally.
+
+[Install]
+WantedBy=multi-user.target
