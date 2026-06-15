@@ -216,8 +216,8 @@ func _on_row_focus(data: Dictionary, on: bool) -> void:
 		box.scale = Vector2.ONE
 		var tw: Tween = create_tween()
 		data["pop_tw"] = tw
-		tw.tween_property(box, "scale", Vector2(1.10, 1.10), 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		tw.tween_property(box, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(box, "scale", Vector2(1.10, 1.10), MerlinVisual.DUR_TAP_DOWN * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(box, "scale", Vector2.ONE, MerlinVisual.DUR_TAP_UP * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _disc_style(selected: bool) -> StyleBoxFlat:
@@ -404,7 +404,7 @@ func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
 	node.modulate.a = 0.0
 	var tw: Tween = create_tween()
 	tw.tween_interval(maxf(delay, 0.001))
-	tw.tween_property(node, "modulate:a", 1.0, dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(node, "modulate:a", 1.0, dur * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 ## Animations d'attente continues : triskèle rotative, runes qui respirent (déphasées),
@@ -426,16 +426,18 @@ func _start_idle_anims() -> void:
 
 
 func _breathe_glyph(g: MerlinGlyph) -> void:
+	var d: float = MerlinVisual.DUR_BREATHE * 0.5 * MerlinVisual.motion()
 	var tw: Tween = create_tween().set_loops()
-	tw.tween_property(g, "modulate:a", 0.45, 1.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(g, "modulate:a", 1.0, 1.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(g, "modulate:a", 0.45, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(g, "modulate:a", 1.0, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Pulsation lente de l'anneau d'un émblème de coin (après le balayage d'entrée).
 func _pulse_ring(ring: MerlinRingGauge) -> void:
+	var d: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
 	var tw: Tween = create_tween().set_loops()
-	tw.tween_method(ring.set_ratio, 0.42, 0.30, 3.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_method(ring.set_ratio, 0.30, 0.42, 3.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(ring.set_ratio, 0.42, 0.30, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(ring.set_ratio, 0.30, 0.42, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 # ============================== MUSIQUE ==============================

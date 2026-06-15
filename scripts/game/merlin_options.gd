@@ -6,8 +6,8 @@ const COL_BG: Color = MerlinVisual.BG_DEEP
 const COL_TEXT: Color = MerlinVisual.CREAM
 const COL_GOLD: Color = MerlinVisual.GOLD
 const COL_DIM: Color = MerlinVisual.DIM_WARM
-const DUR_IN: float = 0.30
-const DUR_OUT: float = 0.20
+const DUR_IN: float = MerlinVisual.DUR_PANEL_OPEN
+const DUR_OUT: float = MerlinVisual.DUR_VEIL_IN
 
 var _dim: ColorRect
 var _panel: MarginContainer
@@ -77,7 +77,7 @@ func _build_ui() -> void:
 	add_child(root)
 
 	_dim = ColorRect.new()
-	_dim.color = Color(0.0, 0.0, 0.0, 0.55)
+	_dim.color = MerlinVisual.DIM_OPTIONS
 	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.add_child(_dim)

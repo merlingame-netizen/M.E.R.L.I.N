@@ -17,10 +17,10 @@ extends Control
 # de la combinaison. Puis fondu vers la résolution textuelle existante. Awaitable, ~2.5s total.
 
 const FUSION_COLORS: Dictionary = {
-	"echec": Color("D04848"),       # rouge-violet vif (chute, malédiction)
-	"partiel": Color("D8A030"),     # ambre (effort à demi tenu)
-	"reussite": Color("E8C45A"),    # or chaud (geste accompli)
-	"eclatante": Color("F4E0A8"),   # or pâle / blanc-or (apothéose)
+	"echec": MerlinVisual.DEGREE_FAIL,
+	"partiel": MerlinVisual.DEGREE_PARTIAL,
+	"reussite": MerlinVisual.DEGREE_SUCCESS,
+	"eclatante": MerlinVisual.DEGREE_BRILLIANT,
 }
 
 # v10.3 — Amplification dramatique par degré (user 2026-06-06 AskUserQuestion).
@@ -564,8 +564,8 @@ static func float_delta(host: Control, anchor: Control, delta: int, col: Color) 
 	f.global_position = anchor.global_position + Vector2(anchor.size.x * 0.5 - 10.0, anchor.size.y + 2.0)
 	var gy: float = f.global_position.y
 	var t: Tween = f.create_tween()
-	t.tween_property(f, "global_position:y", gy - 30.0, 0.6 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
-	t.parallel().tween_property(f, "modulate:a", 0.0, 0.6 * MerlinVisual.motion())
+	t.tween_property(f, "global_position:y", gy - 30.0, MerlinVisual.DUR_FLOAT_LABEL * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	t.parallel().tween_property(f, "modulate:a", 0.0, MerlinVisual.DUR_FLOAT_LABEL * MerlinVisual.motion())
 	t.tween_callback(f.queue_free)
 
 

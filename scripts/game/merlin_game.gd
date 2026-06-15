@@ -26,12 +26,10 @@ var _beat_map: MerlinBeatMap
 var _scene_art: MerlinSceneArt
 var _situ_panel: PanelContainer       # encart central : porte intro/situation/issue
 var _situ_sb: StyleBoxFlat            # style de l'encart (bordure teintée par phase — signal de transition)
-var _beat_header: Label               # marqueur discret « — Type · beat N/total — » (sorti du texte narratif)
 var _situation_text: RichTextLabel
 var _hand_box: Control
 var _combo_box: HBoxContainer
 var _combo_panel: PanelContainer  # zone combinaison/preview/résolution — visible SEULEMENT en phase de choix
-var _preview_lbl: Label
 var _resolve_btn: Button
 var _overlay: Panel
 var _overlay_lbl: Label
@@ -232,7 +230,6 @@ func _present_current_beat() -> void:
 		_situ_tw.tween_property(_situ_panel, "modulate:a", 1.0, 0.22)
 		var slide_dur: float = MerlinVisual.DUR_SLIDE_UP * MerlinVisual.motion()
 		_situ_tw.tween_property(_situ_panel, "position:y", _situ_rest_y, slide_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_stamp_beat_glyph(str(_current_situation.get("type", "")))  # v10.13 (B4) : sceau du type de beat
 	_show_situation(_current_situation)
 	_state = 1
 
@@ -242,48 +239,11 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	var btype: String = str(situ.get("type", ""))
 	if _scene_art != null:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
-	if _beat_header != null:
-		# v10.14 — le marqueur compte PAR QUÊTE et porte le titre de la quête (chaîne lisible).
-		var qt: String = str(situ.get("quest_title", ""))
-		var qn: int = int(situ.get("qn", run.beat_index + 1))
-		var qtot: int = int(situ.get("qtotal", int(run.scenario.get("total", 5))))
-		if qt != "":
-			_beat_header.text = "— %s · %s · beat %d/%d —" % [qt, btype, qn, qtot]
-		else:
-			_beat_header.text = "— %s · beat %d/%d —" % [btype, qn, qtot]
-		_beat_header.visible = true
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
 	# jamais pendant la lecture (Wave1 : amplitude ≤2px), off en reduce-motion (pastille = info).
 	if animate and _corruption_palier >= 2 and not MerlinVisual.reduced_motion and _situ_panel != null:
 		MerlinFx.shake(_situ_panel, 2.0, 0.2)
-
-
-# v10.13 (B4) — Stamp du glyphe type-de-beat au centre de l'encart : fade-in 0.3s puis fade-out
-# 0.3s pendant que le typewriter démarre (le sceau se dissout sous la prose naissante).
-# Mapping LOCAL type → clé MerlinGlyph (TYPE_TAG_BIAS donnerait des doublons Epreuve/Climax).
-const BEAT_GLYPHS: Dictionary = {
-	"Exploration": "eye", "Rencontre": "speech", "Epreuve": "sword",
-	"Dilemme": "balance", "Climax": "burst",
-}
-
-
-func _stamp_beat_glyph(btype: String) -> void:
-	if _situ_panel == null:
-		return
-	var g: MerlinGlyph = MerlinGlyph.new()
-	g.custom_minimum_size = Vector2(72, 72)
-	g.size = Vector2(72, 72)
-	g.setup(str(BEAT_GLYPHS.get(btype, "eye")), MerlinVisual.GOLD_DARK, 3.0)
-	g.z_index = 40
-	add_child(g)
-	g.global_position = _situ_panel.global_position + _situ_panel.size * 0.5 - g.size * 0.5
-	g.modulate.a = 0.0
-	# Tween lié au glyphe (create_tween d'un Control) → meurt avec lui, jamais orphelin.
-	var tw: Tween = g.create_tween()
-	tw.tween_property(g, "modulate:a", 0.85, 0.3)
-	tw.tween_property(g, "modulate:a", 0.0, 0.3)
-	tw.tween_callback(g.queue_free)
 
 
 func _render_hand(deal: bool = false) -> void:
@@ -421,19 +381,9 @@ func _find_card_view(box: Control, card: MerlinCard) -> MerlinCardView:
 func _update_preview() -> void:
 	# v10.6 : le geste canonique = COMBO de 2 cartes. La résolution n'est active qu'à 2 cartes.
 	var n: int = _combo.size()
-	if n == 0:
-		_preview_lbl.visible = true
-		_preview_lbl.text = "Pose 2 cartes (la 1ère = action principale, la 2e = modificateur)."
+	if n < 2:
 		_resolve_btn.disabled = true
 		return
-	if n == 1:
-		_preview_lbl.visible = true
-		_preview_lbl.text = "Pose une 2e carte pour former la combinaison."
-		_resolve_btn.disabled = true
-		return
-	# n == 2 : combinaison complète — masquer la mécanique brute (v10.15, pilier MINIMAL).
-	# Le degré se révèle via le sceau (R112), la corruption via la jauge.
-	_preview_lbl.visible = false
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)))
 	var was_disabled: bool = _resolve_btn.disabled
@@ -474,7 +424,6 @@ func _on_resolve() -> void:
 	var ep: int = _scene_epoch
 	_combo.clear()
 	_set_hand_dimmed(true)  # ÉVIDENT : on lit l'issue ; main grisée + prompt/indice masqués
-	_preview_lbl.visible = false
 	_resolve_btn.visible = false
 	_can_advance = false    # « avancer » (clic) seulement quand l'issue est entièrement écrite
 
@@ -536,8 +485,6 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	var degree: String = str(res["degree"])
 	var deg_col: Color = _degree_color(degree)
 	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)
-	if _beat_header != null:
-		_beat_header.visible = false  # l'issue parle d'elle-même ; pas de marqueur de beat
 	if animate:
 		_situation_text.text = ""
 	# v10.13 (B9) : le degré ne préfixe PLUS la prose (anti « info ×2 ») — il vit dans le SCEAU
@@ -586,10 +533,10 @@ func _slam_degree_seal(degree: String) -> void:
 	seal.scale = Vector2(2.2, 2.2)
 	seal.modulate.a = 0.0
 	var tw: Tween = seal.create_tween().set_parallel(true)
-	tw.tween_property(seal, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(seal, "modulate:a", 1.0, 0.15)
+	tw.tween_property(seal, "scale", Vector2.ONE, MerlinVisual.DUR_SEAL_POP * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(seal, "modulate:a", 1.0, MerlinVisual.DUR_SEAL_FADE * MerlinVisual.motion())
 	if degree == "echec" and not MerlinVisual.reduced_motion:
-		MerlinFx.shake(_situ_panel, 4.0, 0.25)  # micro-secousse : l'échec se SENT (B9)
+		MerlinFx.shake(_situ_panel, 4.0, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())  # micro-secousse : l'échec se SENT (B9)
 	_play_seal_audio(degree)  # v10.13.1 (§22, Wave1) : le sceau SONNE — seal_stamp + stinger
 
 
@@ -655,7 +602,7 @@ func _build_draft_layer(choices: Array) -> void:
 	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.mouse_filter = Control.MOUSE_FILTER_STOP  # modal : absorbe les clics derrière
 	var dim: ColorRect = ColorRect.new()
-	dim.color = Color(0.06, 0.05, 0.04, 0.82)
+	dim.color = MerlinVisual.DIM_MODAL
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(dim)
@@ -787,7 +734,6 @@ func _on_typewriter_done() -> void:
 			var half: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
 			_prose_tw.tween_property(_situation_text, "modulate:a", 0.88, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 			_prose_tw.tween_property(_situation_text, "modulate:a", 1.0, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		_preview_lbl.visible = true
 		_resolve_btn.visible = true
 		_set_choice_ui(true)   # visible AVANT le rendu → _hand_box a sa taille pour _layout_fan
 		_render_hand(true)
@@ -804,8 +750,8 @@ func _set_caret(on: bool) -> void:
 	if on:
 		_caret.modulate.a = 0.65
 		_caret_tw = _caret.create_tween().set_loops()
-		_caret_tw.tween_property(_caret, "modulate:a", 0.18, 0.6).set_trans(Tween.TRANS_SINE)
-		_caret_tw.tween_property(_caret, "modulate:a", 0.65, 0.6).set_trans(Tween.TRANS_SINE)
+		_caret_tw.tween_property(_caret, "modulate:a", 0.18, MerlinVisual.DUR_CARET_BLINK * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+		_caret_tw.tween_property(_caret, "modulate:a", 0.65, MerlinVisual.DUR_CARET_BLINK * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
 
 
 func _set_hand_dimmed(on: bool) -> void:
@@ -831,7 +777,7 @@ func _set_encart_phase(col: Color) -> void:
 	if _encart_phase_tw != null and _encart_phase_tw.is_valid():
 		_encart_phase_tw.kill()  # situation→issue peut arriver avant la fin du tween précédent
 	_encart_phase_tw = create_tween()
-	_encart_phase_tw.tween_property(_situ_sb, "border_color", col, 0.25)
+	_encart_phase_tw.tween_property(_situ_sb, "border_color", col, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())
 
 
 # Affordance « clic pour passer » affichée DÈS le début du typewriter (avant le caret « continuer »
@@ -1162,7 +1108,7 @@ func _show_intro_popup() -> void:
 
 	# Voile léger limité au tiers bas (continuité visuelle bandeau↔plateau), pas de dim plein-rect.
 	var fade: ColorRect = ColorRect.new()
-	fade.color = Color(0.04, 0.03, 0.02, 0.62)
+	fade.color = MerlinVisual.DIM_LIGHT
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)  # voile plein écran derrière l'encart central
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE  # le layer parent capte déjà
 	_intro_layer.add_child(fade)
@@ -1345,7 +1291,7 @@ func _accept_quest() -> void:
 	if layer == null:
 		return
 	var t: Tween = create_tween()
-	t.tween_property(layer, "modulate:a", 0.0, 0.25)
+	t.tween_property(layer, "modulate:a", 0.0, MerlinVisual.DUR_VEIL_OUT * MerlinVisual.motion())
 	t.tween_callback(layer.queue_free)
 	get_node("/root/MerlinRun").save()  # v10.13 (Fix 6) : quitter pendant le beat 1 → reprise au beat 1
 	# v10.13 (B3) : l'intro cède la place à l'interstitiel « Merlin raconte » (ouverture narrative),
@@ -1373,9 +1319,6 @@ func _play_opening_interstitial() -> void:
 	# Jamais si déjà prête ou en vol (prefetch_opening fait une RAZ inconditionnelle).
 	if not sc.is_opening_ready() and not sc.is_opening_pending():
 		sc.prefetch_opening(run.scenario)
-	if _beat_header != null:
-		_beat_header.text = "— le récit s'ouvre —"  # audit design P2 : diégétique (Merlin ne se nomme pas)
-		_beat_header.visible = true
 	_set_encart_phase(MerlinVisual.INK_DIM)  # bordure neutre (même teinte que les situations)
 	if _situation_text != null:
 		_situation_text.text = ""
@@ -1443,7 +1386,7 @@ func _build_ui() -> void:
 
 	var root: VBoxContainer = VBoxContainer.new()
 	root.mouse_filter = Control.MOUSE_FILTER_PASS
-	root.add_theme_constant_override("separation", 14)
+	root.add_theme_constant_override("separation", 10)
 	margin.add_child(root)
 
 	var hud: HBoxContainer = HBoxContainer.new()
@@ -1487,13 +1430,6 @@ func _build_ui() -> void:
 	inner.add_theme_constant_override("separation", 6)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situ_panel.add_child(inner)
-	# Marqueur de beat discret en haut de l'encart (sorti du texte narratif — user 2026-06-07).
-	_beat_header = Label.new()
-	_beat_header.add_theme_color_override("font_color", MerlinVisual.GOLD_DARK)
-	_beat_header.add_theme_font_size_override("font_size", 18)
-	_beat_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_beat_header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inner.add_child(_beat_header)
 	var situ_center: CenterContainer = CenterContainer.new()
 	situ_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	situ_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1521,16 +1457,13 @@ func _build_ui() -> void:
 	_combo_panel.visible = false  # caché hors phase de CHOIX (cartes seulement au moment de choisir)
 	root.add_child(_combo_panel)
 	var combo_v: VBoxContainer = VBoxContainer.new()
-	combo_v.add_theme_constant_override("separation", 8)
+	combo_v.add_theme_constant_override("separation", 6)
 	_combo_panel.add_child(combo_v)
-	# (combo_title retiré — redondant avec _preview_lbl, user 2026-06-07 §21.2 ❌7)
 	_combo_box = HBoxContainer.new()
 	_combo_box.add_theme_constant_override("separation", 10)
 	_combo_box.custom_minimum_size = Vector2(0, 104)
 	_combo_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	combo_v.add_child(_combo_box)
-	_preview_lbl = _mk_label(COL_TEXT, 23)
-	combo_v.add_child(_preview_lbl)
 	var btn_row: HBoxContainer = HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	combo_v.add_child(btn_row)
@@ -1545,7 +1478,7 @@ func _build_ui() -> void:
 
 	# v10.5 : label « Ta main : » retiré (user 2026-06-06). L'éventail se suffit visuellement.
 	_hand_box = Control.new()
-	_hand_box.custom_minimum_size = Vector2(0, 240)
+	_hand_box.custom_minimum_size = Vector2(0, 220)
 	_hand_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
 	_hand_box.visible = false  # cartes cachées hors phase de CHOIX (révélées à la fin du typewriter)
@@ -1564,7 +1497,7 @@ func _build_ui() -> void:
 	_overlay.offset_bottom = -40
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # n'absorbe rien (plateau reste visible/interactif)
 	var ov_sb: StyleBoxFlat = StyleBoxFlat.new()
-	ov_sb.bg_color = Color(0.10, 0.08, 0.06, 0.94)
+	ov_sb.bg_color = MerlinVisual.TOAST_BG
 	ov_sb.set_corner_radius_all(10)
 	ov_sb.set_border_width_all(1)
 	ov_sb.border_color = COL_GOLD

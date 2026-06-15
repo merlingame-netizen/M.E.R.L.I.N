@@ -3,12 +3,12 @@ extends Control
 ## v10.16 — Décor vivant : silhouettes plates + lune réactive + god rays + 18 motes 3 catégories
 ## + brume parallaxe réactive + arbres réactifs. DA flat rétro-minimaliste (2026-05-26).
 
-const COL_SCENE_BG: Color = Color("17130D")
-const COL_SIL: Color = Color("0E0B07")
-const COL_MOON: Color = Color("E8DCC0")
-const COL_STONE: Color = Color("2A2018")
-const COL_INK: Color = Color("0E0B07")
-const COL_MIST: Color = Color(0.79, 0.72, 0.58, 0.16)
+const COL_SCENE_BG: Color = MerlinVisual.SCENE_BG
+const COL_SIL: Color = MerlinVisual.SILHOUETTE
+const COL_MOON: Color = MerlinVisual.CREAM
+const COL_STONE: Color = MerlinVisual.INK
+const COL_INK: Color = MerlinVisual.SILHOUETTE
+const COL_MIST: Color = MerlinVisual.MIST
 
 var _beat: String = "Exploration"
 var _menu_decor: bool = false

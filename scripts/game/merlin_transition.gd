@@ -2,7 +2,7 @@ extends CanvasLayer
 ## v10.16 — Transition encre organique : Polygon2D à front irrégulier (24 segments + bruit
 ## sinusoïdal). Remplace le fondu noir. Caption pendant le recouvrement complet.
 
-const COL_INK: Color = Color("0E0B07")
+const COL_INK: Color = MerlinVisual.SILHOUETTE
 const SEGMENTS: int = 24
 const NOISE_AMP: float = 40.0
 const DUR_WIPE: float = MerlinVisual.DUR_INK_WIPE

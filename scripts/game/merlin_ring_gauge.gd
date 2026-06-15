@@ -12,7 +12,7 @@ const BREATH_CRIT_MIN: float = 0.40  # critique : respiration marquée + rapide
 const BREATH_CRIT_DUR: float = 0.55
 
 var _ratio: float = 0.0
-var color_fill: Color = Color("7FA65C")
+var color_fill: Color = MerlinVisual.GREEN
 var _critical: bool = false
 var _crit_tw: Tween
 

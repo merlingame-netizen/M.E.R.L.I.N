@@ -22,26 +22,26 @@ const COL_GOLD: Color = MerlinVisual.GOLD     # liseré « posée » (rôle)
 
 # v10.5 — Rareté → couleur + épaisseur de bordure (le cadre EST la rareté, lisible d'un coup d'œil).
 const RARITY_STYLE: Dictionary = {
-	"Commune":  {"col": Color("4A3B28"), "w": 3},   # brun-ink sobre
-	"Rare":     {"col": Color("5A7A8C"), "w": 4},   # bleu-acier
-	"Épique":   {"col": Color("9A4FA8"), "w": 5},   # magenta-violet
-	"Mythique": {"col": Color("C9A24B"), "w": 7},   # or épais (+ lueur)
+	"Commune":  {"col": MerlinVisual.BORDER_BRUN, "w": 3},
+	"Rare":     {"col": MerlinVisual.RARE_BLUE, "w": 4},
+	"Épique":   {"col": MerlinVisual.RARITY_EPIC, "w": 5},
+	"Mythique": {"col": MerlinVisual.GOLD, "w": 7},
 }
 
 # v10.5 — Archétype d'effet → couleur de bande + libellé (reflète « ce que fait la carte »).
 const ARCHETYPE_STYLE: Dictionary = {
-	"Offensif": {"col": Color("C0533A"), "label": "OFFENSE"},
-	"Défensif": {"col": Color("4E7A6A"), "label": "DÉFENSE"},
-	"Social":   {"col": Color("B58A3A"), "label": "PAROLE"},
-	"Mystique": {"col": Color("6B5A9C"), "label": "MYSTÈRE"},
-	"Corrompu": {"col": Color("8B4FA3"), "label": "CORRUPTION"},
+	"Offensif": {"col": MerlinVisual.ARCHETYPE_OFFENSE, "label": "OFFENSE"},
+	"Défensif": {"col": MerlinVisual.ARCHETYPE_DEFENSE, "label": "DÉFENSE"},
+	"Social":   {"col": MerlinVisual.ARCHETYPE_SPEECH, "label": "PAROLE"},
+	"Mystique": {"col": MerlinVisual.ARCHETYPE_MYSTERY, "label": "MYSTÈRE"},
+	"Corrompu": {"col": MerlinVisual.ARCHETYPE_CORRUPT, "label": "CORRUPTION"},
 }
 
 # v10.11 — Effet actif (Rare+) → couleur + icône du badge (coin haut-droit) : « coût/effet en un coup d'œil » (StS).
 const EFFECT_STYLE: Dictionary = {
-	"HEAL":  {"col": Color("5E7A42"), "icon": "♥"},
-	"PURGE": {"col": Color("6B4E8A"), "icon": "✦"},
-	"DRAW":  {"col": Color("3F5A6A"), "icon": "✚"},
+	"HEAL":  {"col": MerlinVisual.EFFECT_HEAL, "icon": "♥"},
+	"PURGE": {"col": MerlinVisual.EFFECT_PURGE, "icon": "✦"},
+	"DRAW":  {"col": MerlinVisual.EFFECT_DRAW, "icon": "✚"},
 }
 
 var card: MerlinCard

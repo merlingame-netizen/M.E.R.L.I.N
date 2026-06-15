@@ -4,7 +4,7 @@ extends Control
 ## Glyphe choisi par FAMILLE de tag. Trait fin "ink" sur fond crème. Aucun asset externe.
 
 var glyph: String = "eye"
-var line_color: Color = Color("2A2018")
+var line_color: Color = MerlinVisual.INK
 var line_w: float = 2.5
 
 
@@ -64,7 +64,7 @@ func _ready() -> void:
 	resized.connect(queue_redraw)
 
 
-func setup(p_glyph: String, p_color: Color = Color("2A2018"), p_width: float = 2.5) -> void:
+func setup(p_glyph: String, p_color: Color = MerlinVisual.INK, p_width: float = 2.5) -> void:
 	glyph = p_glyph
 	line_color = p_color
 	line_w = p_width

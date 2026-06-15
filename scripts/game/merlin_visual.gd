@@ -24,6 +24,39 @@ const BORDER_BRUN: Color = Color("4A3B28")# liseré brun (panneau / carte Commun
 const RING_BG: Color = Color("3A3228")    # fond d'anneau de jauge / nœud futur de la map
 const RARE_BLUE: Color = Color("5A7A8C")  # bleu-acier (rareté Rare / déviation map)
 
+# ── Rareté (palier Épique) ──
+const RARITY_EPIC: Color = Color("9A4FA8")
+
+# ── Archétypes d'effet ──
+const ARCHETYPE_OFFENSE: Color = Color("C0533A")
+const ARCHETYPE_DEFENSE: Color = Color("4E7A6A")
+const ARCHETYPE_SPEECH: Color = Color("B58A3A")
+const ARCHETYPE_MYSTERY: Color = Color("6B5A9C")
+const ARCHETYPE_CORRUPT: Color = Color("8B4FA3")
+
+# ── Effets actifs ──
+const EFFECT_HEAL: Color = Color("5E7A42")
+const EFFECT_PURGE: Color = Color("6B4E8A")
+const EFFECT_DRAW: Color = Color("3F5A6A")
+
+# ── Degrés de résolution (fusion cinématique) ──
+const DEGREE_FAIL: Color = Color("D04848")
+const DEGREE_PARTIAL: Color = Color("D8A030")
+const DEGREE_SUCCESS: Color = Color("E8C45A")
+const DEGREE_BRILLIANT: Color = Color("F4E0A8")
+
+# ── Scène & décor ──
+const SCENE_BG: Color = Color("17130D")
+const SILHOUETTE: Color = Color("0E0B07")
+const MIST: Color = Color(0.79, 0.72, 0.58, 0.16)
+
+# ── Overlays & dim ──
+const DIM_MODAL: Color = Color(0.06, 0.05, 0.04, 0.82)
+const DIM_LIGHT: Color = Color(0.04, 0.03, 0.02, 0.62)
+const DIM_OPTIONS: Color = Color(0.0, 0.0, 0.0, 0.55)
+const TOAST_BG: Color = Color(0.10, 0.08, 0.06, 0.94)
+const DEBUG_BG: Color = Color(0.06, 0.05, 0.04, 0.90)
+
 # ── Tailles de police canoniques ──
 const FS_NARRATIVE: int = 36
 const FS_TITLE_POPUP: int = 40
@@ -50,6 +83,14 @@ const DUR_MOTE_FADE: float = 0.30
 const DUR_WORLD_REACT: float = 1.50
 const MOTE_COUNT_AMBIENT: int = 18
 const SPARK_COUNT_IMPACT: int = 8
+const DUR_SEAL_POP: float = 0.30
+const DUR_SEAL_FADE: float = 0.15
+const DUR_CARET_BLINK: float = 0.60
+const DUR_GAUGE_ANIM: float = 0.30
+const DUR_RING_BURST: float = 0.45
+const DUR_PANEL_OPEN: float = 0.25
+const DUR_FLOAT_LABEL: float = 0.60
+const DUR_ENCART_TINT: float = 0.25
 
 # ── Reduce-motion (BIBLE §23 R118 / R74) : atténue, ne supprime JAMAIS l'information ──
 const PREFS_PATH: String = "user://options.cfg"
@@ -123,6 +164,14 @@ static func degree_color(degree: String) -> Color:
 		"partiel": return INK_DIM
 		"eclatante": return GREEN_DARK
 		_: return GOLD_DARK  # réussite
+
+
+static func degree_fusion_color(degree: String) -> Color:
+	match degree:
+		"echec": return DEGREE_FAIL
+		"partiel": return DEGREE_PARTIAL
+		"eclatante": return DEGREE_BRILLIANT
+		_: return DEGREE_SUCCESS
 
 
 # Panneau sombre standard (source : merlin_game._surface_style).

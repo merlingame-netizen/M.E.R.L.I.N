@@ -198,8 +198,8 @@ func _set_caret(on: bool) -> void:
 	if on:
 		_caret.modulate.a = 0.65
 		_caret_tw = _caret.create_tween().set_loops()
-		_caret_tw.tween_property(_caret, "modulate:a", 0.18, 0.6).set_trans(Tween.TRANS_SINE)
-		_caret_tw.tween_property(_caret, "modulate:a", 0.65, 0.6).set_trans(Tween.TRANS_SINE)
+		_caret_tw.tween_property(_caret, "modulate:a", 0.18, MerlinVisual.DUR_CARET_BLINK * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+		_caret_tw.tween_property(_caret, "modulate:a", 0.65, MerlinVisual.DUR_CARET_BLINK * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
 
 
 func _skip_typewriter() -> void:
