@@ -43,7 +43,10 @@ async function main() {
   // load the shim (defines globalThis.firebase)
   require(path.join(__dirname, "..", "web", "firebase-shim.js"));
   const firebase = globalThis.firebase;
-  firebase.initializeApp({});
+  // Mirror the real app's initFirebase() guard exactly (js/app.js):
+  check("apps empty before init", firebase.apps.length === 0);
+  if (!firebase.apps.length) firebase.initializeApp({ apiKey: "x", databaseURL: "https://idrac-ai-academy-default-rtdb.europe-west1.firebasedatabase.app" });
+  check("apps populated after init", firebase.apps.length === 1);
   const db = firebase.database();
 
   try {

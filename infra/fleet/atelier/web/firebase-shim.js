@@ -6,6 +6,11 @@
   "use strict";
   var LS = global.localStorage || { getItem: function () { return null; }, setItem: function () {} };
   var BASE = "", WSURL = "";
+  function resolveBackend(cfg) {
+    BASE = (global.AIA_BACKEND || (cfg && cfg.backendUrl) || BASE || "").replace(/\/+$/, "");
+    WSURL = BASE.replace(/^http/, "ws");
+    return BASE;
+  }
 
   function clean(p) { return String(p == null ? "" : p).replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/"); }
   function join() { return clean(Array.prototype.filter.call(arguments, function (s) { return s != null && s !== ""; }).join("/")); }
@@ -160,15 +165,20 @@
   function database() { return { ref: function (p) { return new Ref(p || ""); }, goOnline: function () {}, goOffline: function () {} }; }
   database.ServerValue = { TIMESTAMP: Date.now() }; // app uses Date.now() anyway
 
+  // Resolve the backend eagerly at load (works whether or not the app calls
+  // initializeApp). `apps` starts empty so the app's `if (!firebase.apps.length)
+  // firebase.initializeApp(...)` guard still runs and (re)resolves the backend.
+  resolveBackend();
   global.firebase = {
     initializeApp: function (cfg) {
-      BASE = (global.AIA_BACKEND || (cfg && cfg.backendUrl) || "").replace(/\/+$/, "");
-      WSURL = BASE.replace(/^http/, "ws");
+      resolveBackend(cfg);
       if (!BASE) console.warn("[aia-shim] set window.AIA_BACKEND to your backend URL");
-      return {};
+      var app = {};
+      global.firebase.apps.push(app);
+      return app;
     },
     database: database, auth: auth, storage: storage,
-    apps: [{}]
+    apps: []
   };
   global.firebase.database.ServerValue = { TIMESTAMP: Date.now() };
 })(typeof window !== "undefined" ? window : globalThis);
