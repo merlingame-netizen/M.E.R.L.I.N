@@ -2695,3 +2695,16 @@ usages Claude/dev/Godot.
 - VM: conversion optimisee a reussi -> ~/atelier-idrac.db 147Mo, 14 tables (states 25 lignes incl).
 - Bilan: D1 atelier-idrac (13 tables structurees, serverless) + VM SQLite (base complete + states).
 - Reste user: rm cle firebase sur la VM + revoke. Source = Firebase (durabilite).
+
+### 2026-06-15 — AtelierIAIdrac off-Firebase : inventaire + backend coeur
+
+- Plan approuve: sortir l'app de Firebase en gratuit (shim compat Firebase -> backend VM WS+SQLite -> tunnel CF).
+- Phase 0 (inventaire): clone repo public, 31 modules/18.7k LOC. Surface Firebase relevee:
+  ref156/once46/on(value)19+child_added1/set44/update13/push104/remove66/transaction8/onDisconnect1
+  + storage put/getDownloadURL + auth anon. Paths arbitraires -> backend = arbre generique.
+- Phase 2 (backend coeur, infra/fleet/atelier/server/): store.js (arbre RTDB sur node:sqlite,
+  get/set/update/push(pushId firebase)/remove/CAS/query) + server.js (REST CRUD + WebSocket
+  temps reel + onDisconnect presence + storage fichiers). Teste: unit store OK + e2e WS recoit
+  les ecritures REST en live. Zero dep native (node:sqlite + ws).
+- import-rtdb.js: charge l'export RTDB JSON dans l'arbre (1 transaction).
+- Reste: shim client firebase-shim.js, tunnel cloudflared, deploiement VM, wiring index.html.

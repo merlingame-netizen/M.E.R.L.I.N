@@ -1,0 +1,14 @@
+{
+  "name": "atelier-backend",
+  "version": "0.1.0",
+  "description": "Firebase-RTDB-compatible backend (SQLite tree + REST + WebSocket) for AtelierIAIdrac",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite server.js",
+    "import": "node --experimental-sqlite import-rtdb.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
