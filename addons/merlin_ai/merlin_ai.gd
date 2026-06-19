@@ -54,6 +54,7 @@ var _is_time_sharing: bool = false  # True for SINGLE+ (one model at a time)
 
 var brain_count: int = 0  # Actual loaded count (set by _init_local_models)
 var _target_brain_count: int = 0  # Requested count (0 = auto-detect)
+var _perf_mode: String = "auto"   # narration mode: auto | fluide (0.6B) | qualite (2B) | qualite_gemma
 
 var rag_manager: RAGManager
 
@@ -181,6 +182,25 @@ func _load_brain_config() -> void:
 	if saved > 0:
 		set_brain_count(saved)
 		_log("Brain config loaded from settings: %d cerveaux" % saved)
+	_perf_mode = str(cfg.get_value("ai", "perf_mode", "auto"))
+	if _perf_mode != "auto" and _perf_mode != "":
+		_log("Narration mode loaded from settings: %s" % _perf_mode)
+
+
+## Set the narration performance mode and persist it (settings.cfg [ai] perf_mode).
+## "fluide" = Qwen3 0.6B (fast/mobile), "qualite" = Qwen 2B, "qualite_gemma" = Gemma 2B,
+## "auto" = hardware autodetect. Applies on the next warmup/scene load.
+func set_perf_mode(mode: String) -> void:
+	_perf_mode = mode
+	var cfg := ConfigFile.new()
+	cfg.load("user://settings.cfg")  # keep existing keys
+	cfg.set_value("ai", "perf_mode", mode)
+	cfg.save("user://settings.cfg")
+	_log("Narration mode set to '%s' (applies on next load)" % mode)
+
+
+func get_perf_mode() -> String:
+	return _perf_mode
 
 
 ## Start LLM model loading. Call from MenuPrincipal on "Nouvelle Partie"/"Continuer".
@@ -572,7 +592,10 @@ func _try_init_ollama(target: int) -> bool:
 	# ── Profile selection: respect target if user-set, else auto-detect HW ─
 	var available_ram := _estimate_available_ram_mb()
 	var cpu_threads := OS.get_processor_count()
-	if target > 0:
+	if _perf_mode != "auto" and _perf_mode != "":
+		# Two-mode narration (settings.cfg [ai] perf_mode): fluide=0.6B, qualite=2B, ...
+		_active_profile_id = BrainSwarmConfig.profile_for_mode(_perf_mode, available_ram, cpu_threads)
+	elif target > 0:
 		# User-driven via settings.cfg [ai] brain_count — overrides HW autodetect
 		match target:
 			1: _active_profile_id = BrainSwarmConfig.Profile.SINGLE

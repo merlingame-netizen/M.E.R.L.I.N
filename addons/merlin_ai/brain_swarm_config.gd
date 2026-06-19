@@ -15,7 +15,7 @@ extends RefCounted
 class_name BrainSwarmConfig
 
 # ── Profile Names ─────────────────────────────────────────────────────────────
-enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH, ULTRA, MOBILE_ULTRA }
+enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH, ULTRA, MOBILE_ULTRA, SINGLE_GEMMA }
 
 # ── Ollama Model Tags (Qwen 3.5 family) ──────────────────────────────────────
 const MODEL_QWEN35_4B := "qwen3.5:4b"
@@ -24,6 +24,8 @@ const MODEL_QWEN35_08B := "qwen3.5:0.8b"
 
 # Legacy (backward compat, fallback)
 const MODEL_QWEN25_1_5B := "qwen2.5:1.5b"
+# Quality 2B alt for the "qualité" narration mode (plan Add-on 7 — two LLM modes).
+const MODEL_GEMMA2_2B := "gemma2:2b"
 
 # ── Mobile model file paths (ARM64 via merlin_llm GDExtension recompiled, NOT Ollama) ─
 # These are .gguf filenames in addons/merlin_llm/models/ — NOT Ollama tags.
@@ -47,6 +49,7 @@ const RAM_BY_MODEL := {
 	"llama32_3b_mobile": 2500,
 	"qwen3_0.6b": 600,
 	"qwen3_0.6b_mobile": 600,
+	"gemma2_2b": 1800,
 }
 
 # ── Profile Definitions ──────────────────────────────────────────────────────
@@ -196,7 +199,36 @@ const PROFILES := {
 		"min_ram_mb": 2000,
 		"prefetch_depth": 0,
 	},
+	# "Qualité" narration mode — single 2B Gemma narrator (richer prose than 0.6B).
+	Profile.SINGLE_GEMMA: {
+		"name": "Qualité (Gemma 2B)",
+		"mode": "resident",
+		"brains": [
+			{"role": "narrator", "model_key": "gemma2_2b", "ollama_tag": MODEL_GEMMA2_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": false},
+		],
+		"total_ram_mb": 1800,
+		"min_threads": 4,
+		"min_ram_mb": 5000,
+		"prefetch_depth": 0,
+	},
 }
+
+
+## Two-mode narration selector (plan Add-on 7): map a performance mode to a profile.
+##   "fluide"        -> ULTRA        (Qwen3 0.6B — fast, mobile/low-power, stays fluid)
+##   "qualite"       -> SINGLE       (Qwen 3.5 2B — richer, needs a capable PC)
+##   "qualite_gemma" -> SINGLE_GEMMA (Gemma 2B alternative)
+##   "auto"/""/other -> detect_profile() by hardware (unchanged default behavior)
+static func profile_for_mode(mode: String, available_ram_mb: int, cpu_threads: int) -> int:
+	match mode:
+		"fluide":
+			return Profile.ULTRA
+		"qualite":
+			return Profile.SINGLE
+		"qualite_gemma":
+			return Profile.SINGLE_GEMMA
+		_:
+			return detect_profile(available_ram_mb, cpu_threads)
 
 
 ## Get the mobile model file path for a brain role in a profile.
