@@ -6,11 +6,14 @@
 #   bash tunnel.sh quick           # ephemeral *.trycloudflare.com URL, no login (testing)
 #   bash tunnel.sh named <name>    # stable URL under your Cloudflare account (production)
 #
+# Target port defaults to 8787 (atelier backend); override for other services, e.g. the
+# cockpit on 8765:   TUNNEL_PORT=8765 bash tunnel.sh quick
+#
 # WebSocket (wss://) is proxied automatically — the shim derives wss from the https URL.
 set -euo pipefail
 MODE="${1:-quick}"
 NAME="${2:-atelier}"
-LOCAL_URL="http://127.0.0.1:8787"
+LOCAL_URL="http://127.0.0.1:${TUNNEL_PORT:-8787}"
 
 install_cloudflared() {
   if command -v cloudflared >/dev/null 2>&1; then return; fi

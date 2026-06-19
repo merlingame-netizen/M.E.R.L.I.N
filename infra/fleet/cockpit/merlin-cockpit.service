@@ -1,0 +1,30 @@
+[Unit]
+# MERLIN dev cockpit (fleet hub) — 24/7 on the GCP e2-micro, reached via Cloudflare Tunnel.
+# This is a TEMPLATE: deploy/deploy-cockpit.sh fills __REPO_DIR__ / __USER__ / __VENV__ and
+# installs the result to /etc/systemd/system/merlin-cockpit.service. Do not edit in place on
+# the VM — re-run the deploy script.
+Description=M.E.R.L.I.N. dev cockpit (fleet hub, Flask)
+Documentation=https://github.com/merlingame-netizen/M.E.R.L.I.N/tree/master/infra/fleet/cockpit
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__REPO_DIR__
+# Token (Basic-auth) + headless flag live in this gitignored, 0600 env file.
+EnvironmentFile=/etc/merlin-cockpit.env
+Environment=COCKPIT_NO_OPEN=1
+Environment=COCKPIT_HOST=127.0.0.1
+ExecStart=__VENV__/bin/python tools/cli.py fleet serve --port 8765
+Restart=always
+RestartSec=3
+# Hardening: loopback-only service; the tunnel (separate cloudflared service) reaches 127.0.0.1.
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+# Cockpit needs to read the repo + write status JSON under it; allow the repo dir.
+ReadWritePaths=__REPO_DIR__
+
+[Install]
+WantedBy=multi-user.target
