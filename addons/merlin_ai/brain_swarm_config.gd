@@ -15,7 +15,7 @@ extends RefCounted
 class_name BrainSwarmConfig
 
 # ── Profile Names ─────────────────────────────────────────────────────────────
-enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH }
+enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH, ULTRA, MOBILE_ULTRA }
 
 # ── Ollama Model Tags (Qwen 3.5 family) ──────────────────────────────────────
 const MODEL_QWEN35_4B := "qwen3.5:4b"
@@ -31,6 +31,9 @@ const MODEL_QWEN25_1_5B := "qwen2.5:1.5b"
 const MODEL_FILE_LLAMA32_1B := "llama3.2-1b-q4_k_s.gguf"        # ~700 MB — entry mobile
 const MODEL_FILE_QWEN25_15B := "qwen2.5-1.5b-q4_k_m.gguf"       # ~1.4 GB — mid mobile
 const MODEL_FILE_LLAMA32_3B := "llama3.2-3b-q4_k_m.gguf"        # ~2.5 GB — high mobile
+# 0.6B ultra tier (plan Add-on 7) — desktop/VM via Ollama tag, mobile via on-device gguf.
+const MODEL_QWEN3_06B := "qwen3:0.6b"                           # Ollama tag (PC/VM test)
+const MODEL_FILE_QWEN3_06B := "qwen3-0.6b-q4_k_m.gguf"          # ~500 MB — ultra mobile (on-device)
 
 # ── RAM estimates per model_key (Q4 quantization, includes KV cache) ─────────
 # Keyed by `model_key` (NOT by `ollama_tag` / `model_file`).
@@ -42,6 +45,8 @@ const RAM_BY_MODEL := {
 	"llama32_1b_mobile": 700,
 	"qwen25_1.5b_mobile": 1400,
 	"llama32_3b_mobile": 2500,
+	"qwen3_0.6b": 600,
+	"qwen3_0.6b_mobile": 600,
 }
 
 # ── Profile Definitions ──────────────────────────────────────────────────────
@@ -162,6 +167,33 @@ const PROFILES := {
 		"total_ram_mb": 2500,
 		"min_threads": 6,
 		"min_ram_mb": 7000,
+		"prefetch_depth": 0,
+	},
+	# ── 0.6B ULTRA tiers (plan Add-on 7) — opt-in, NOT auto-selected (detect funcs
+	# unchanged). Desktop/VM = Ollama qwen3:0.6b ; mobile = on-device gguf. n_ctx 1024,
+	# so reduce the narrator RAG budget (~256) when using these (see rag_manager.gd).
+	Profile.ULTRA: {
+		"name": "Ultra (0.6B narrateur, CPU/Ollama)",
+		"mode": "resident",
+		"brains": [
+			{"role": "narrator", "model_key": "qwen3_0.6b", "ollama_tag": MODEL_QWEN3_06B, "n_ctx": 1024, "ram_mb": 600, "thinking": false},
+		],
+		"total_ram_mb": 600,
+		"min_threads": 2,
+		"min_ram_mb": 2000,
+		"prefetch_depth": 0,
+	},
+	Profile.MOBILE_ULTRA: {
+		"name": "Mobile Ultra (Qwen3 0.6B)",
+		"mode": "resident",
+		"platform": "mobile",
+		"backend": "merlin_llm_native",
+		"brains": [
+			{"role": "narrator", "model_key": "qwen3_0.6b_mobile", "model_file": MODEL_FILE_QWEN3_06B, "ollama_tag": "", "n_ctx": 1024, "ram_mb": 600, "thinking": false},
+		],
+		"total_ram_mb": 600,
+		"min_threads": 4,
+		"min_ram_mb": 2000,
 		"prefetch_depth": 0,
 	},
 }

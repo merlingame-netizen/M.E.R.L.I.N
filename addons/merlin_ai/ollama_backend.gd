@@ -20,6 +20,7 @@ const MODEL_REGISTRY := {
 	"qwen35_2b": {"tag": "qwen3.5:2b", "ram_mb": 1800, "context_default": 4096},
 	"qwen35_0.8b": {"tag": "qwen3.5:0.8b", "ram_mb": 800, "context_default": 2048},
 	"qwen25_1.5b": {"tag": "qwen2.5:1.5b", "ram_mb": 1200, "context_default": 4096},
+	"qwen3_0.6b": {"tag": "qwen3:0.6b", "ram_mb": 600, "context_default": 1024},
 }
 
 # ── Config ────────────────────────────────────────────────────────────────────
