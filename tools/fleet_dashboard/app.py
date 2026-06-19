@@ -107,6 +107,10 @@ def build_app(adapter) -> Flask:
     def api_loops():
         return jsonify(control.loops_status())
 
+    @app.route("/api/octogent")
+    def api_octogent():
+        return jsonify(control.octogent_status())
+
     @app.route("/api/launch/<jid>/stop", methods=["POST"])
     def api_launch_stop(jid):
         return jsonify(control.stop(jid))

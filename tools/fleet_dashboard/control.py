@@ -283,6 +283,18 @@ def stop(jid: str) -> dict:
     return {"error": "not found or not running"}
 
 
+def octogent_status() -> dict:
+    """Octogent (multi-agent dev) link + a mirror of the agent message bus. The Octogent
+    server itself runs off this VM (Oracle A1 / PC); set OCTOGENT_URL to embed/link it."""
+    url = os.environ.get("OCTOGENT_URL", "")
+    msgs = _read_json(STATUS / "agent_messages.json", {})
+    ml = msgs.get("messages", []) if isinstance(msgs, dict) else []
+    session = _read_json(STATUS / "session.json", {})
+    return {"url": url, "total": len(ml), "recent": ml[-12:],
+            "session": {"state": session.get("state"), "objective": session.get("objective"),
+                        "workers": session.get("workers")}}
+
+
 def loops_status() -> dict:
     """State of the autonomous loops (metrics + systemd timer schedule if present)."""
     data = _read_json(STATUS / "cockpit_loops.json", {})

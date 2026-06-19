@@ -59,6 +59,7 @@
     <button data-tab="dev" class="on">Dev</button>
     <button data-tab="fleet">Fleet</button>
     <button data-tab="models">Modèles</button>
+    <button data-tab="agents">Agents</button>
   </nav>
 
   <main>
@@ -94,6 +95,12 @@
       <div class="grid" id="loops"></div>
       <h2>Lancements récents</h2>
       <div class="grid" id="launches"></div>
+    </section>
+
+    <!-- AGENTS / OCTOGENT -->
+    <section class="pane" id="pane-agents">
+      <h2>Octogent — dev multi-agent</h2>
+      <div id="octo"></div>
     </section>
   </main>
 
@@ -208,12 +215,26 @@
       $('#loops').innerHTML = cards.join('') + (d.timers?`<div class="card"><div class="name">Timers systemd</div><pre class="log">${esc(d.timers)}</pre></div>`:'');
     }
 
+    // ---- AGENTS / OCTOGENT ----
+    async function refreshOcto(){
+      const d = await j('/api/octogent');
+      const head = d.url
+        ? `<div class="form"><div class="row"><span class="name">Dashboard Octogent</span><a class="badge running" href="${d.url}" target="_blank">ouvrir ↗</a></div>
+             <iframe src="${d.url}" style="width:100%;height:50vh;border:1px solid var(--bd);border-radius:8px;margin-top:10px;background:#fff"></iframe></div>`
+        : `<div class="form mut">OCTOGENT_URL non défini. Les agents tournent sur Oracle A1 (24 Go, gratuit) quand déployé, ou sur ton PC — règle <code>OCTOGENT_URL</code> dans /etc/merlin-cockpit.env pour l'embarquer ici.</div>`;
+      const sess = d.session||{};
+      const mirror = `<h2>Bus d'agents (${d.total||0})</h2><ul class="feed">` +
+        (d.recent||[]).slice().reverse().map(m=>`<li><span class="when">${esc((m.priority||'').slice(0,4))}</span><span><b>${esc(m.from_agent||m.from||'?')}</b>→${esc(m.to_agent||m.to||'?')} <span class="mut">${esc(m.type||'')}</span></span></li>`).join('') +
+        (d.recent&&d.recent.length?'':'<li class="mut">aucun message</li>') + '</ul>';
+      $('#octo').innerHTML = `<div class="grid">${card('Session dev', `<div class="metrics"><span>état <b>${esc(sess.state||'?')}</b></span></div><div class="role">${esc(sess.objective||'—')}</div>`, sess.state==='idle'?'pending':'up')}</div>` + head + mirror;
+    }
+
     // utils
     function card(name, body, state){ return `<div class="card ${state||''}"><div class="row"><span class="name">${name}</span></div>${body}</div>`; }
     function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
     // boot + polling
-    function tick(){ refreshDev(); refreshFleet(); refreshJobs(); refreshLaunches(); refreshLoops(); }
+    function tick(){ refreshDev(); refreshFleet(); refreshJobs(); refreshLaunches(); refreshLoops(); refreshOcto(); }
     loadCatalog(); tick();
     setInterval(()=>{ refreshFleet(); refreshLaunches(); refreshLoops(); }, 15000);
     setInterval(refreshDev, 30000);
