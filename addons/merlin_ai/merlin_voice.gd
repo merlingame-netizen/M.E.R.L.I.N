@@ -1,5 +1,5 @@
 extends Node
-class_name MerlinVoice
+# (no class_name: 'MerlinVoice' is now the autoload singleton name — project.godot)
 
 ## MerlinVoice - Voix "Yaourt" style Animal Crossing
 ##
@@ -79,6 +79,31 @@ func _ready() -> void:
 	apply_preset(current_preset)
 	_is_ready = true
 	voice_ready.emit(true)
+	# Honor a saved voice preference, then auto-link to the narrator AI so Merlin's
+	# narration is spoken (plan Add-on 7). Deferred so the autoload tree is ready.
+	_load_voice_setting()
+	call_deferred("_auto_connect_ai")
+
+
+func _load_voice_setting() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://settings.cfg") != OK:
+		return
+	var enabled: bool = bool(cfg.get_value("voice", "enabled", true))
+	if not enabled:
+		set_voice_mode(VoiceMode.OFF)
+
+
+## Connect to the MerlinAI autoload (if present) so response_received is spoken.
+func _auto_connect_ai() -> void:
+	if _connected_ai != null:
+		return
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return
+	var ai: Node = tree.root.get_node_or_null("MerlinAI")
+	if ai != null:
+		connect_to_ai(ai)
 
 
 func _try_load_acvoicebox() -> void:
@@ -364,7 +389,8 @@ func _on_ai_response(response) -> void:
 		return
 	var text: String = ""
 	if response is Dictionary:
-		text = str(response.get("response", ""))
+		# MerlinAI emits the narration under "text"; older callers used "response".
+		text = str(response.get("text", response.get("response", "")))
 	elif response is String:
 		text = response
 	if text.strip_edges() != "":

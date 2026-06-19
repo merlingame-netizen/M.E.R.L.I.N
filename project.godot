@@ -25,6 +25,7 @@ config/icon="res://icon.svg"
 
 GameManager="*res://scripts/game_manager.gd"
 MerlinAI="*res://addons/merlin_ai/merlin_ai.gd"
+MerlinVoice="*res://addons/merlin_ai/merlin_voice.gd"
 ScenariosRAG="*res://addons/merlin_ai/scenarios_rag.gd"
 MerlinStats="*res://scripts/merlin/merlin_stats_system.gd"
 MerlinBackdrop="*res://scripts/merlin_backdrop.gd"
