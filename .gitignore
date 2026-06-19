@@ -440,3 +440,8 @@ tools/autodev/mission-control/dist/
 .env.local
 *.local.cfg
 secrets.json
+
+# Cockpit runtime (launch logs/registry/queue)
+tools/autodev/status/cockpit_logs/
+tools/autodev/status/cockpit_launches.json
+data/ai/colab_queue.json

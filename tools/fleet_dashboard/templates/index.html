@@ -2,107 +2,209 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>M.E.R.L.I.N — Fleet Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <title>M.E.R.L.I.N — Control</title>
   <style>
     :root { --bg:#0d1117; --card:#161b22; --bd:#30363d; --tx:#e6edf3; --mut:#8b949e;
-            --up:#2ea043; --down:#f85149; --pend:#9e6a03; --acc:#58a6ff; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:var(--tx);
+            --up:#2ea043; --down:#f85149; --pend:#9e6a03; --acc:#58a6ff; --acc2:#a371f7; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { margin:0; background:var(--bg); color:var(--tx);
            font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
-    header { padding:18px 24px; border-bottom:1px solid var(--bd); display:flex; gap:16px; align-items:baseline; }
-    h1 { font-size:18px; margin:0; } h2 { font-size:14px; color:var(--mut); margin:24px 24px 8px; text-transform:uppercase; letter-spacing:1px; }
-    .sub { color:var(--mut); font-size:12px; }
-    .grid { display:grid; gap:14px; padding:8px 24px; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); }
-    .card { background:var(--card); border:1px solid var(--bd); border-radius:10px; padding:14px; border-left:4px solid var(--mut); }
+    header { padding:14px 16px calc(14px + env(safe-area-inset-bottom,0)); border-bottom:1px solid var(--bd);
+             display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; position:sticky; top:0; background:var(--bg); z-index:5; }
+    h1 { font-size:16px; margin:0; } .sub { color:var(--mut); font-size:12px; }
+    nav { display:flex; gap:6px; padding:10px 12px; position:sticky; top:50px; background:var(--bg); z-index:4;
+          border-bottom:1px solid var(--bd); overflow-x:auto; }
+    nav button { flex:0 0 auto; background:var(--card); color:var(--mut); border:1px solid var(--bd);
+          border-radius:20px; padding:9px 16px; font:inherit; font-weight:700; cursor:pointer; min-height:40px; }
+    nav button.on { color:var(--bg); background:var(--acc); border-color:var(--acc); }
+    main { padding:6px 0 40px; } .pane { display:none; } .pane.on { display:block; }
+    h2 { font-size:12px; color:var(--mut); margin:18px 16px 8px; text-transform:uppercase; letter-spacing:1px; }
+    .grid { display:grid; gap:12px; padding:6px 16px; grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr)); }
+    .card { background:var(--card); border:1px solid var(--bd); border-radius:10px; padding:13px; border-left:4px solid var(--mut); }
     .card.up{border-left-color:var(--up)} .card.down{border-left-color:var(--down)} .card.pending{border-left-color:var(--pend)}
-    .row{display:flex;justify-content:space-between;align-items:center}
-    .name{font-weight:700} .prov{color:var(--mut);font-size:12px} .role{font-size:12.5px;margin:6px 0}
-    .badge{font-size:11px;padding:2px 8px;border-radius:20px;text-transform:uppercase}
-    .badge.up{background:rgba(46,160,67,.15);color:var(--up)} .badge.down{background:rgba(248,81,73,.15);color:var(--down)}
-    .badge.pending{background:rgba(158,106,3,.15);color:var(--pend)}
-    .metrics{display:flex;gap:12px;flex-wrap:wrap;color:var(--mut);font-size:12px;margin-top:6px}
-    .metrics b{color:var(--tx)}
+    .card.running{border-left-color:var(--acc)} .card.done{border-left-color:var(--up)} .card.failed,.card.ended{border-left-color:var(--down)}
+    .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .name{font-weight:700} .prov,.mut{color:var(--mut);font-size:12px} .role{font-size:12.5px;margin:6px 0}
+    .badge{font-size:11px;padding:3px 9px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+    .badge.up,.badge.done{background:rgba(46,160,67,.15);color:var(--up)}
+    .badge.down,.badge.failed,.badge.ended{background:rgba(248,81,73,.15);color:var(--down)}
+    .badge.pending,.badge.manual{background:rgba(158,106,3,.15);color:var(--pend)}
+    .badge.running{background:rgba(88,166,255,.15);color:var(--acc)}
+    .metrics{display:flex;gap:12px;flex-wrap:wrap;color:var(--mut);font-size:12px;margin-top:6px} .metrics b{color:var(--tx)}
     .bar{height:6px;border-radius:4px;background:#21262d;margin-top:8px;overflow:hidden}
-    .bar > i{display:block;height:100%;background:var(--up)}
-    .bar.warn > i{background:var(--pend)} .bar.crit > i{background:var(--down)}
+    .bar > i{display:block;height:100%;background:var(--up)} .bar.warn>i{background:var(--pend)} .bar.crit>i{background:var(--down)}
     .qline{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:8px}
-    table{width:calc(100% - 48px);margin:8px 24px;border-collapse:collapse}
-    td,th{padding:8px 10px;border-bottom:1px solid var(--bd);text-align:left;font-size:13px}
-    th{color:var(--mut);font-weight:600;text-transform:uppercase;font-size:11px}
-    button{background:var(--acc);color:#0d1117;border:0;border-radius:6px;padding:5px 12px;font-weight:700;cursor:pointer}
-    button:disabled{opacity:.5;cursor:wait}
-    .res{font-size:12px;color:var(--mut)} .res.ok{color:var(--up)} .res.err{color:var(--down)}
-    footer{color:var(--mut);font-size:12px;padding:16px 24px}
-    code{color:var(--acc)}
+    ul.feed{list-style:none;margin:0 16px;padding:0} ul.feed li{border-bottom:1px solid var(--bd);padding:8px 2px;font-size:12.5px;display:flex;gap:8px}
+    ul.feed li .when{color:var(--mut);flex:0 0 auto}
+    button.go{background:var(--acc);color:#0d1117;border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;min-height:44px;font:inherit}
+    button.go:disabled{opacity:.5;cursor:wait} button.stop{background:var(--down);color:#0d1117}
+    button.sm{padding:7px 12px;min-height:38px;border-radius:6px}
+    select,input{background:#0d1117;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:10px;font:inherit;min-height:44px;width:100%}
+    label{display:block;font-size:11px;color:var(--mut);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px}
+    .form{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:6px 16px}
+    .res{font-size:12px;color:var(--mut);word-break:break-word} .res.ok{color:var(--up)} .res.err{color:var(--down)}
+    pre.log{white-space:pre-wrap;background:#0d1117;border:1px solid var(--bd);border-radius:8px;padding:8px;font-size:11px;color:var(--mut);max-height:160px;overflow:auto;margin:8px 0 0}
+    footer{color:var(--mut);font-size:11px;padding:16px} a{color:var(--acc)}
+    @media (max-width:520px){ h1{font-size:15px} nav button{padding:9px 13px} }
   </style>
 </head>
 <body>
   <header>
-    <h1>🛰️ M.E.R.L.I.N — Fleet Control</h1>
-    <span class="sub" id="summary">chargement…</span>
+    <h1>🜨 M.E.R.L.I.N — Control</h1>
+    <span class="sub" id="summary">…</span>
   </header>
+  <nav>
+    <button data-tab="dev" class="on">Dev</button>
+    <button data-tab="fleet">Fleet</button>
+    <button data-tab="models">Modèles</button>
+  </nav>
 
-  <h2>Nœuds</h2>
-  <div class="grid" id="grid"></div>
+  <main>
+    <!-- DEV -->
+    <section class="pane on" id="pane-dev">
+      <h2>État du dev MERLIN</h2>
+      <div class="grid" id="devcards"></div>
+      <h2>Commits récents</h2>
+      <ul class="feed" id="commits"></ul>
+      <h2>Activité (events)</h2>
+      <ul class="feed" id="events"></ul>
+    </section>
 
-  <h2>Jobs — dispatch sur le meilleur nœud gratuit</h2>
-  <table id="jobs"><thead><tr><th>Job</th><th>Besoins</th><th>Nœud cible</th><th>Action</th><th>Résultat</th></tr></thead><tbody></tbody></table>
+    <!-- FLEET -->
+    <section class="pane" id="pane-fleet">
+      <h2>Nœuds</h2>
+      <div class="grid" id="grid"></div>
+      <h2>Jobs — dispatch sur le meilleur nœud gratuit</h2>
+      <div class="grid" id="jobs"></div>
+    </section>
+
+    <!-- MODELS -->
+    <section class="pane" id="pane-models">
+      <h2>Initier un dev / modèle</h2>
+      <div class="form">
+        <label>Type</label>
+        <select id="lk" onchange="renderParams()"></select>
+        <div id="lparams"></div>
+        <div style="margin-top:14px"><button class="go" id="launchBtn" onclick="doLaunch()">Lancer ▶</button></div>
+        <div class="res" id="launchRes" style="margin-top:10px"></div>
+      </div>
+      <h2>Lancements récents</h2>
+      <div class="grid" id="launches"></div>
+    </section>
+  </main>
 
   <footer id="foot"></footer>
 
   <script>
-    let QUOTA = {}, PLAN = {};
+    const $ = s => document.querySelector(s);
+    const j = (u,o) => fetch(u,o).then(r=>r.json());
+    let CATALOG = [];
+
+    // tabs
+    document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+      document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+      document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+b.dataset.tab));
+    });
+
+    // ---- DEV ----
+    async function refreshDev(){
+      const d = await j('/api/dev');
+      const s = d.session||{}, h = d.health||{}, am = d.agent_messages||{};
+      $('#devcards').innerHTML = [
+        card('Session', `<div class="metrics"><span>état <b>${s.state||'?'}</b></span><span>cycle <b>${s.cycle??'—'}</b></span></div>
+              <div class="role">${(s.objective||'—')}</div><div class="mut">maj ${s.updated_at||'—'}</div>`, s.state==='idle'?'pending':'up'),
+        card('Branche & file', `<div class="metrics"><span>branch <b>${d.branch||'?'}</b></span><span>queue <b>${d.queue_count}</b></span></div>
+              <div class="mut">${(d.commits[0]?('dernier: '+d.commits[0].subject):'')}</div>`, 'up'),
+        card('Agents (messages)', `<div class="metrics"><span>total <b>${am.total||0}</b></span>${Object.entries(am.by_type||{}).map(([k,v])=>`<span>${k} <b>${v}</b></span>`).join('')}</div>`, 'up'),
+        card('LoRA / santé', `<div class="mut">${esc(JSON.stringify(d.lora||{}).slice(0,120))}</div><div class="mut">${esc(JSON.stringify(h).slice(0,120))}</div>`, 'up'),
+      ].join('');
+      $('#commits').innerHTML = (d.commits||[]).map(c=>`<li><span class="when">${c.when}</span><span><code>${c.hash}</code> ${esc(c.subject)} <span class="mut">· ${esc(c.author)}</span></span></li>`).join('');
+      $('#events').innerHTML = (d.events||[]).slice().reverse().map(e=>{
+        const t = e.ts||e.time||e.timestamp||''; const m = e.event||e.type||e.msg||e.raw||JSON.stringify(e);
+        return `<li><span class="when">${esc(String(t).slice(0,19))}</span><span>${esc(String(m).slice(0,140))}</span></li>`;
+      }).join('') || '<li class="mut">aucun event</li>';
+    }
+
+    // ---- FLEET ----
+    let QUOTA = {};
     const metric = (l,v) => v ? `<span>${l} <b>${v}</b></span>` : "";
-    function gauge(pct){ const c = pct>=90?"crit":pct>=70?"warn":""; return `<div class="bar ${c}"><i style="width:${Math.min(pct,100)}%"></i></div>`; }
-
-    async function refreshNodes(){
-      const [s,q] = await Promise.all([fetch("/api/status").then(r=>r.json()), fetch("/api/quota").then(r=>r.json())]);
-      QUOTA = q.nodes || {};
-      document.getElementById("summary").textContent = `${s.up}/${s.total} en ligne · maj ${s.checked_at}`;
-      document.getElementById("grid").innerHTML = (s.targets||[]).map(t=>{
-        const qn = QUOTA[t.name]||{}; let q = "";
-        if(qn.ram_pct!=null) q += `<div class="qline"><span>RAM free-tier</span><span>${qn.ram_pct}%</span></div>${gauge(qn.ram_pct)}`;
-        if(qn.req_pct!=null) q += `<div class="qline"><span>Requêtes/jour</span><span>${qn.req_pct}%</span></div>${gauge(qn.req_pct)}`;
-        return `<div class="card ${t.state}">
-          <div class="row"><span class="name">${t.name}</span><span class="badge ${t.state}">${t.state}</span></div>
-          <div class="prov">${t.provider} · ${t.type}</div>
-          <div class="role">${t.role||""}</div>
-          <div class="metrics">${metric("CPU",t.cpu)} ${metric("RAM",t.mem)} ${metric("Disk",t.disk)} ${metric("⏱",t.latency_ms!=null?t.latency_ms+"ms":"")}</div>
-          ${q}
-          <div class="res">${t.detail||""}</div></div>`;
-      }).join("");
+    const gauge = p => { const c=p>=90?'crit':p>=70?'warn':''; return `<div class="bar ${c}"><i style="width:${Math.min(p,100)}%"></i></div>`; };
+    async function refreshFleet(){
+      const [s,q] = await Promise.all([j('/api/status'), j('/api/quota')]);
+      QUOTA = q.nodes||{};
+      $('#summary').textContent = `${s.up}/${s.total} en ligne · ${s.checked_at||''}`;
+      $('#grid').innerHTML = (s.targets||[]).map(t=>{
+        const qn = QUOTA[t.name]||{}; let g='';
+        if(qn.ram_pct!=null) g += `<div class="qline"><span>RAM</span><span>${qn.ram_pct}%</span></div>${gauge(qn.ram_pct)}`;
+        if(qn.req_pct!=null) g += `<div class="qline"><span>Req/j</span><span>${qn.req_pct}%</span></div>${gauge(qn.req_pct)}`;
+        return `<div class="card ${t.state}"><div class="row"><span class="name">${t.name}</span><span class="badge ${t.state}">${t.state}</span></div>
+          <div class="prov">${t.provider} · ${t.type}</div><div class="role">${t.role||''}</div>
+          <div class="metrics">${metric('CPU',t.cpu)} ${metric('RAM',t.mem)} ${metric('Disk',t.disk)} ${metric('⏱',t.latency_ms!=null?t.latency_ms+'ms':'')}</div>
+          ${g}<div class="res">${esc(t.detail||'')}</div></div>`;
+      }).join('');
     }
-
     async function refreshJobs(){
-      const j = await fetch("/api/jobs").then(r=>r.json());
-      const tb = document.querySelector("#jobs tbody");
-      tb.innerHTML = (j.jobs||[]).map(job=>`
-        <tr>
-          <td><b>${job.name}</b></td>
-          <td>${(job.needs||[]).join(", ")}</td>
-          <td id="tgt-${job.name}" class="res">—</td>
-          <td><button onclick="runJob('${job.name}')" id="btn-${job.name}">Run ▶</button></td>
-          <td id="res-${job.name}" class="res"></td>
-        </tr>`).join("");
+      const d = await j('/api/jobs');
+      $('#jobs').innerHTML = (d.jobs||[]).map(job=>`<div class="card" id="job-${job.name}">
+        <div class="row"><span class="name">${job.name}</span><button class="go sm" id="b-${job.name}" onclick="runJob('${job.name}')">Run ▶</button></div>
+        <div class="mut">besoins: ${(job.needs||[]).join(', ')||'—'}</div>
+        <div class="res" id="r-${job.name}"></div></div>`).join('');
+    }
+    async function runJob(n){
+      const b=$('#b-'+n), r=$('#r-'+n); b.disabled=true; r.textContent='…'; r.className='res';
+      try{ const x=await j('/api/run/'+n,{method:'POST'}); const dd=x.data||{};
+        if(x.status==='ok'){ r.textContent='✓ '+(dd.detail||'ok')+' @'+(dd.node||''); r.className='res ok'; }
+        else { r.textContent='✗ '+(x.error||'refusé'); r.className='res err'; }
+      }catch(e){ r.textContent='✗ '+e; r.className='res err'; } b.disabled=false; refreshFleet();
     }
 
-    async function runJob(name){
-      const btn=document.getElementById("btn-"+name), res=document.getElementById("res-"+name);
-      btn.disabled=true; res.textContent="…"; res.className="res";
-      try{
-        const r = await fetch("/api/run/"+name,{method:"POST"}).then(r=>r.json());
-        const d = r.data||{};
-        document.getElementById("tgt-"+name).textContent = d.node || "—";
-        if(r.status==="ok"){ res.textContent = "✓ "+(d.detail||"ok")+" @"+d.node; res.className="res ok"; }
-        else { res.textContent = "✗ "+(r.error||"refusé"); res.className="res err"; }
-      }catch(e){ res.textContent="✗ "+e; res.className="res err"; }
-      btn.disabled=false; refreshNodes();
+    // ---- MODELS ----
+    async function loadCatalog(){
+      CATALOG = (await j('/api/launchers')).launchers||[];
+      $('#lk').innerHTML = CATALOG.map(l=>`<option value="${l.kind}">${esc(l.label)}</option>`).join('');
+      renderParams();
     }
+    function renderParams(){
+      const l = CATALOG.find(x=>x.kind===$('#lk').value)||{params:[]};
+      $('#lparams').innerHTML = (l.params||[]).map(p=>{
+        if(p.options) return `<label>${p.name}</label><select data-p="${p.name}">${p.options.map(o=>`<option>${o}</option>`).join('')}</select>`;
+        return `<label>${p.name}</label><input data-p="${p.name}" value="${p.default??''}" placeholder="${p.name}">`;
+      }).join('') || '<div class="mut" style="margin-top:8px">aucun paramètre</div>';
+    }
+    async function doLaunch(){
+      const kind=$('#lk').value, params={};
+      document.querySelectorAll('#lparams [data-p]').forEach(el=>{ if(el.value) params[el.dataset.p]=el.value; });
+      const b=$('#launchBtn'), r=$('#launchRes'); b.disabled=true; r.textContent='lancement…'; r.className='res';
+      try{ const x=await j('/api/launch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind,params})});
+        if(x.error){ r.textContent='✗ '+x.error; r.className='res err'; }
+        else if(x.open_url){ r.innerHTML='↗ ouvre le notebook: <a href="'+x.open_url+'" target="_blank">Colab</a> (file: '+x.queued+')'; r.className='res ok'; }
+        else { r.textContent='✓ lancé #'+x.id+' ('+x.kind+')'; r.className='res ok'; }
+      }catch(e){ r.textContent='✗ '+e; r.className='res err'; } b.disabled=false; refreshLaunches();
+    }
+    async function refreshLaunches(){
+      const d = await j('/api/launches');
+      $('#launches').innerHTML = (d.launches||[]).map(l=>`<div class="card ${l.status}">
+        <div class="row"><span class="name">${l.kind} <span class="mut">#${l.id}</span></span><span class="badge ${l.status}">${l.status}</span></div>
+        <div class="mut">${esc(l.started_at||'')} ${l.exit_code!=null?('· exit '+l.exit_code):''}</div>
+        ${l.open_url?`<div class="res"><a href="${l.open_url}" target="_blank">ouvrir notebook ↗</a></div>`:''}
+        ${l.log_tail?`<pre class="log">${esc(l.log_tail)}</pre>`:''}
+        ${l.status==='running'?`<div style="margin-top:8px"><button class="go sm stop" onclick="stopL('${l.id}')">Stop ■</button></div>`:''}
+      </div>`).join('') || '<div class="mut" style="padding:0 16px">aucun lancement</div>';
+    }
+    async function stopL(id){ await j('/api/launch/'+id+'/stop',{method:'POST'}); refreshLaunches(); }
 
-    refreshNodes(); refreshJobs();
-    setInterval(refreshNodes, 30000);
-    document.getElementById("foot").textContent = "Rafraîchissement nœuds 30s · dispatch local (SSH/HTTP depuis ce PC) · garde-fou free-tier strict.";
+    // utils
+    function card(name, body, state){ return `<div class="card ${state||''}"><div class="row"><span class="name">${name}</span></div>${body}</div>`; }
+    function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    // boot + polling
+    function tick(){ refreshDev(); refreshFleet(); refreshJobs(); refreshLaunches(); }
+    loadCatalog(); tick();
+    setInterval(()=>{ refreshFleet(); refreshLaunches(); }, 15000);
+    setInterval(refreshDev, 30000);
+    $('#foot').innerHTML = "Cockpit 24/7 · auth token · dispatch free-tier strict · gratuit toujours · <span class='mut'>refresh fleet/launches 15s</span>";
   </script>
 </body>
 </html>

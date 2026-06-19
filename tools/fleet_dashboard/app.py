@@ -26,6 +26,11 @@ from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request
 
+try:  # works whether imported as a package (fleet_dashboard.app) or a top-level module
+    from . import control
+except ImportError:  # pragma: no cover
+    import control  # type: ignore
+
 _HERE = Path(__file__).resolve().parent
 
 
@@ -77,6 +82,30 @@ def build_app(adapter) -> Flask:
     def api_run(job):
         r = adapter.execute("run", job=job)
         return jsonify({"status": r.get("status"), "data": r.get("data"), "error": r.get("error")})
+
+    # ── MERLIN dev visibility + dev/model launchers ──────────────────────────
+    @app.route("/api/dev")
+    def api_dev():
+        return jsonify(control.dev_status())
+
+    @app.route("/api/launchers")
+    def api_launchers():
+        return jsonify(control.launchers_catalog())
+
+    @app.route("/api/launch", methods=["POST"])
+    def api_launch():
+        body = request.get_json(silent=True) or {}
+        kind = body.get("kind", "")
+        rec = control.launch(kind, body.get("params") or {})
+        return jsonify(rec), (400 if rec.get("error") else 200)
+
+    @app.route("/api/launches")
+    def api_launches():
+        return jsonify(control.launches())
+
+    @app.route("/api/launch/<jid>/stop", methods=["POST"])
+    def api_launch_stop(jid):
+        return jsonify(control.stop(jid))
 
     return app
 
