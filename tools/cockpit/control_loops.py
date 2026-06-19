@@ -101,8 +101,11 @@ def _gen_template(canon, rng) -> dict:
 
 
 # ── LLM backends ─────────────────────────────────────────────────────────────
-def _http_json(url, payload, timeout=60):
-    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"content-type": "application/json"})
+def _http_json(url, payload, timeout=60, headers=None):
+    h = {"content-type": "application/json"}
+    if headers:
+        h.update(headers)
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=h)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
 
@@ -140,8 +143,11 @@ def _gen_workers_ai(canon, rng) -> dict | None:
     if not url:
         return None
     biome = rng.choice(canon.get("biomes", [{"name": "Brocéliande"}]))["name"]
+    headers = {}
+    if os.environ.get("WORKERS_AI_TOKEN"):
+        headers["x-gen-token"] = os.environ["WORKERS_AI_TOKEN"]
     try:
-        out = _http_json(url, {"task": "scenario_card", "biome": biome})
+        out = _http_json(url, {"task": "scenario_card", "biome": biome}, headers=headers)
         return out.get("card") or _extract_card(json.dumps(out))
     except Exception:
         return None

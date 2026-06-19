@@ -13,3 +13,9 @@ compatibility_date = "2026-01-01"
 binding = "DB"
 database_name = "merlin"
 database_id = "6f4b1808-457b-44f6-a63a-03eeacd317a1"
+
+# Workers AI — free serverless LLM inference (daily Neuron allocation). Powers
+# /ai/generate (scenario/lore cards) so no VM has to host a model.
+# Protect it:  wrangler secret put GEN_TOKEN   (the cockpit sends it as x-gen-token)
+[ai]
+binding = "AI"
