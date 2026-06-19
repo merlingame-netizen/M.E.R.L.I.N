@@ -1,0 +1,20 @@
+[Unit]
+# MERLIN ASR microservice (speech-to-text). Template: fill __REPO_DIR__/__USER__/__VENV__.
+# Loopback only; reach it over the Cloudflare Tunnel like the other services.
+Description=M.E.R.L.I.N. ASR microservice (speech-to-text)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__REPO_DIR__
+# ASR_BACKEND=stub|faster-whisper|sherpa-onnx|nemo ; ASR_MODEL=... ; ASR_TOKEN=...
+EnvironmentFile=-/etc/merlin-asr.env
+ExecStart=__VENV__/bin/python tools/asr/asr_server.py --port 8770 --host 127.0.0.1
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
