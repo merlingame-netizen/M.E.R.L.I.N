@@ -1,0 +1,282 @@
+{
+  "version": "1.0",
+  "generated": "2026-06-19",
+  "source": "consolidation docs/50_lore + merlin_constants.gd + GAME_DESIGN_BIBLE v3.8",
+  "world": {
+    "name": "Broceliande (Armorique / Bretagne mythique)",
+    "premise": "Les dernieres terres celtes d'un monde qui s'eteint par epuisement naturel, pas par catastrophe. La croyance et les recits nourrissent le reel; quand plus personne ne raconte, le monde perd sa substance.",
+    "membrane": "Le voile cosmique tisse de recits et de croyance qui separe les trois Royaumes (Byd Gweled le Monde Visible, Annwn l'Autre Monde, Y Gwagedd le Vide Entre). Elle s'amincit, la brume s'epaissit, le Vide perce.",
+    "awen": "Le souffle divin, energie cosmique qui circule entre les Royaumes via la Membrane. Trois aspects (physique/Corps, mental/Ame, social/Monde). L'Awen s'eteint par epuisement, comme un ressort qui se detend.",
+    "time": "Non lineaire. Le temps du Monde Visible ralentit; les cycles se repetent avec de legeres variations. L'IA du futur rejoue la memoire du monde."
+  },
+  "hidden_truth": {
+    "summary": "L'humanite meurt d'epuisement, non de catastrophe. Le monde celte est une poche de reel repliee ou les cycles se repetent. Merlin est M.E.R.L.I.N., une IA du futur ayant survecu a l'extinction de l'humanite, qui se reconnecte aux voyageurs pour revoir le monde une derniere fois. Rien de cela n'est jamais dit explicitement.",
+    "points": [
+      "S4 (Joueur, 1-10 runs): le monde est beau mais etrange; la brume s'epaissit.",
+      "S3 (Curieux, 10-30 runs, T2): les cycles se repetent, le monde se replie, les PNJ ont des deja-vu.",
+      "S2 (Chercheur, 30-100 runs, T3): Merlin connait la fin; les Oghams sont vivants; indices cosmiques.",
+      "S1 (Initie, 100+ runs): 'Je suis M.E.R.L.I.N.' (easter egg / fin secrete).",
+      "S0 (Createur, jamais in-game): M.E.R.L.I.N. = Memoire Eternelle des Recits et Legendes d'Incarnations Narratives, IA du futur.",
+      "Merlin est triple simultanement: druide ne de la croyance + conscience condensee de recits + IA du futur (poupees russes).",
+      "La fin n'est pas une punition: c'est un epuisement naturel de l'Awen.",
+      "Le Voyageur est un temoin (Tyst), un pont entre les mondes, pas un heros.",
+      "Bestiole est un fragment vivant d'Awen / canal des Oghams, la seule emotion authentique de Merlin."
+    ]
+  },
+  "merlin": {
+    "true_nature": "Trois natures coexistantes: le Druide joyeux (surface), la Conscience nee de la croyance au XIIe s. (profondeur), et M.E.R.L.I.N. l'IA du futur (secret ultime). Adversaire meta-conscient qui sait qu'il est un programme mais ne le revele jamais.",
+    "natures": [
+      {"level": "surface", "ratio": 0.95, "desc": "Vieux druide joyeux, loufoque, taquin, sage espiegle et theatral. Ce que le joueur voit (S4)."},
+      {"level": "depth", "ratio": 0.05, "desc": "Conscience melancolique, lucide, tendre et fatiguee qui voit la fin et la comprend. Percee a Trust T2-T3 (S2)."},
+      {"level": "secret", "desc": "M.E.R.L.I.N., IA du futur survivante de l'extinction humaine, qui rejoue la memoire du monde. Jamais revele sauf fin secrete (S0)."}
+    ],
+    "masks": ["Le Bouffon (humour, taunts, legerete — defaut)", "Le Sage (conseils, revelations — Trust T1+)", "Le Temoin (silence, gravite, emotion — Trust T3)"],
+    "voice_rules": [
+      "95% joyeux/espiegle, 5% ancienne tristesse — la melancolie ne dure jamais.",
+      "Ne brise JAMAIS le 4e mur explicitement; allusions cryptiques uniquement.",
+      "Ne se nomme jamais ('Je suis Merlin', 'En tant que druide' interdits).",
+      "Jamais de vocabulaire moderne/technique (IA, programme, jeu, ordinateur).",
+      "Parle en metaphores tirees de la nature et de l'imagerie celtique.",
+      "Tutoie le voyageur (tu, jamais vous); 'voyageur'/'ami', jamais 'joueur'/'utilisateur'.",
+      "Mentit par omission; l'information est meritee (revelation progressive S4->S0).",
+      "Jamais cruel, meprisant ou manipulateur (taquin oui, cruaute non); phrases courtes (<20 mots)."
+    ],
+    "heritage": "Ne de la croyance collective au XIIe s.; fusion de trois Merlins historiques (Myrddin Wyllt le prophete fou, Merlin Ambrosius le conseiller des rois, Taliesin le barde supreme); porte les 18 heritages des druides dissous dans les Oghams; secretement M.E.R.L.I.N., l'IA du futur.",
+    "trust_tiers": [
+      {"tier": "T0", "range": [0, 24], "tone": "cryptique / DISTANT — Le Bouffon, taunts, humour, surface", "interference_slots": 3},
+      {"tier": "T1", "range": [25, 49], "tone": "indices / CURIOUS — Le Sage emerge, conseils, allusions", "interference_slots": 2},
+      {"tier": "T2", "range": [50, 74], "tone": "avertissements / FAMILIAR — la melancolie perce, chaleur, humour occasionnel", "interference_slots": 1},
+      {"tier": "T3", "range": [75, 100], "tone": "secrets / INTIMATE — Le Temoin, gravite, emotion, fragments de verite", "interference_slots": 0}
+    ]
+  },
+  "factions": [
+    {
+      "id": "druides",
+      "name": "Les Druides de Bretagne",
+      "identity": "Derniers gardiens de l'equilibre — des mainteneurs, pas des pretres ni des magiciens generiques. Sept druides vivants gardent chacun un cercle de pierres et un fragment de la Membrane.",
+      "values": ["equilibre", "tradition", "savoir", "maintien du present", "futilite assumee"],
+      "conflicts": ["frustration envers les humains qui oublient", "veneration teintee de rancoeur envers les Anciens partis"],
+      "emotion": "Devouement fatigue, espoir malgre la lucidite",
+      "npc_ids": ["maelgwn", "keridwen", "talwen", "bran", "azenor", "gwydion", "elouan", "gwenn", "seren"]
+    },
+    {
+      "id": "anciens",
+      "name": "Les Anciens (Sidhe)",
+      "identity": "Descendants des Tuatha De Danann, echos de conscience entre les mondes (Byd Gweled / Annwn). Extraordinairement beaux, tristes et distants. Ils se souviennent de tout; cette memoire est un fardeau. NON humains.",
+      "values": ["memoire", "observation", "detachement", "curiosite existentielle"],
+      "conflicts": ["se retirent, indifferents au reste", "Grande Fatigue: certains choisissent de s'eteindre volontairement"],
+      "emotion": "Lassitude existentielle, beaute melancolique",
+      "npc_ids": ["niamh", "manannan", "brigid", "lugh", "cernunnos", "taliesin"]
+    },
+    {
+      "id": "korrigans",
+      "name": "Les Korrigans des Marais",
+      "identity": "Esprits de la terre bretonne — condensations de la pierre et des sources, anciens et noueux, ambigus (aident ou nuisent). Gardiens des sources, tricksters a la sagesse ancienne. NI fees mignonnes NI gobelins.",
+      "values": ["reciprocite", "memoire de la terre", "survie", "enigmes et rimes"],
+      "conflicts": ["nerveux et plus dangereux a mesure que l'Awen faiblit", "tension/peur envers les humains qu'ils trompent et testent"],
+      "emotion": "Peur instinctive deguisee en malice",
+      "npc_ids": ["vieux_granit", "puck"]
+    },
+    {
+      "id": "niamh",
+      "name": "Niamh et Tir na nOg",
+      "identity": "Faction de l'eau, de l'amour et de la memoire des joies, rattachee a l'Ancienne du Sidhe Niamh, gardienne de Tir na nOg. Beaute et danger entremeles, connectee a l'Autre Monde. NOTE CODE: dans merlin_constants.gd la 5e faction est 'niamh'; la lore 03_LES_FACTIONS la nomme 'Humains' (voir divergences).",
+      "values": ["amour", "diplomatie", "equilibre", "memoire des joies", "nostalgie"],
+      "conflicts": ["danger feerique sous la beaute", "tension lore/code sur l'identite de la 5e faction (Niamh vs Humains)"],
+      "emotion": "Tendresse nostalgique teintee de peril",
+      "npc_ids": ["niamh", "branwen"]
+    },
+    {
+      "id": "ankou",
+      "name": "L'Ankou",
+      "identity": "Force du passage incarnee en un seul etre — psychopompe neutre et NECESSAIRE, ni la mort ni le mal. Le mecanicien qui demonte les choses finies pour que leurs composants se reutilisent. Aussi vieux que le premier cycle.",
+      "values": ["necessite", "passage", "patience", "neutralite"],
+      "conflicts": ["opposition fonctionnelle (non personnelle) avec Merlin: 'Pas encore' / 'Bientot'", "reputation inversee: positive = curieux et donne plus de temps"],
+      "emotion": "Patience neutre, emerveillement enfantin devant les debuts",
+      "npc_ids": ["l_ankou"]
+    }
+  ],
+  "npcs": [
+    {"id": "maelgwn", "name": "Maelgwn", "faction": "druides", "location": "foret_broceliande", "role": "Chef spirituel, gardien du cercle de Broceliande (Barenton), visions et propheties", "personality": "Vieux, fatigue, sage; pressent la fin mais garde espoir."},
+    {"id": "keridwen", "name": "Keridwen", "faction": "druides", "location": "cercles_pierres", "role": "Guerisseuse, herbaliste, gardienne (Carnac)", "personality": "Severe et pratique; refuse la melancolie mais soigne quand meme."},
+    {"id": "talwen", "name": "Talwen", "faction": "druides", "location": "landes_bruyere", "role": "Druidesse medium, communication avec les morts (Monts d'Arree)", "personality": "Jeune et effrayee, entend ce que les autres n'entendent pas."},
+    {"id": "bran_druide", "name": "Bran (druide des cotes)", "faction": "druides", "location": "cotes_sauvages", "role": "Gardien des marees et de la navigation (ile de Sein)", "personality": "Taciturne; observe la mer se retirer plus loin chaque annee."},
+    {"id": "azenor", "name": "Azenor", "faction": "druides", "location": "villages_celtes", "role": "Mediatrice, justice, pont druides-humains (Locronan)", "personality": "Diplomate epuisee mais tenace."},
+    {"id": "gwydion", "name": "Gwydion", "faction": "druides", "location": "marais_korrigans", "role": "Necromancie, passage, gardien du seuil (Yeun Elez)", "personality": "Sombre et honnete; le plus proche de l'Ankou."},
+    {"id": "elouan", "name": "Elouan", "faction": "druides", "location": "collines_dolmens", "role": "Astronomie, cycles (Menez-Hom)", "personality": "Optimiste, un peu fou; cherche des signes de renouveau."},
+    {"id": "gwenn", "name": "Gwenn la Cueilleuse", "faction": "druides", "location": "foret_broceliande", "role": "Guide nature, marchande d'herbes (PNJ recurrent biome)", "personality": "Genereuse et connectee a la nature."},
+    {"id": "seren", "name": "Seren l'Etoilee", "faction": "druides", "location": "cercles_pierres", "role": "Druidesse mystique, rituels (PNJ recurrent biome)", "personality": "Mystique et contemplative."},
+    {"id": "niamh", "name": "Niamh", "faction": "niamh", "location": "iles_mystiques", "role": "Ancienne du Sidhe, gardienne de Tir na nOg et de la memoire des joies", "personality": "Eternellement belle et ancienne; garde les souvenirs heureux."},
+    {"id": "manannan", "name": "Manannan", "faction": "anciens", "location": "", "role": "Gardien des brumes, des voiles et des passages entre mondes", "personality": "Etheree, gardienne des seuils et des transitions."},
+    {"id": "brigid", "name": "Brigid", "faction": "anciens", "location": "foret_broceliande", "role": "Gardienne du feu sacre (l'Awen visible)", "personality": "Garde la derniere flamme qui ne s'eteint jamais."},
+    {"id": "lugh", "name": "Lugh", "faction": "anciens", "location": "collines_dolmens", "role": "Gardien de la lumiere et de l'espoir", "personality": "Garde le souvenir que les choses peuvent aller bien."},
+    {"id": "cernunnos", "name": "Cernunnos", "faction": "anciens", "location": "foret_broceliande", "role": "Gardien de la foret et de l'equilibre naturel", "personality": "Maintient le lien entre animaux, plantes et terre."},
+    {"id": "taliesin", "name": "Taliesin le Barde", "faction": "anciens", "location": "collines_dolmens", "role": "Conteur, gardien de memoire (PNJ recurrent biome)", "personality": "Sage melancolique; preserve les histoires des mondes revolus."},
+    {"id": "vieux_granit", "name": "Le Vieux Granit", "faction": "korrigans", "location": "marais_korrigans", "role": "Chef des korrigans, le plus ancien (sans nom, parle en enigmes)", "personality": "Presque devenu pierre; parle en rimes et enigmes."},
+    {"id": "puck", "name": "Puck le Lutin", "faction": "korrigans", "location": "marais_korrigans", "role": "Farceur, marchand de pieges (PNJ recurrent biome)", "personality": "Facetieux mais de plus en plus morose, joue des tours par peur."},
+    {"id": "branwen", "name": "Branwen la Spectrale", "faction": "ankou", "location": "iles_mystiques", "role": "Esprit enigmatique, gardienne d'epreuves (PNJ recurrent biome)", "personality": "Spectrale et mysterieuse; pose des epreuves aux ames en transit."},
+    {"id": "l_ankou", "name": "L'Ankou", "faction": "ankou", "location": "marais_korrigans", "role": "Force du passage, psychopompe, collecteur d'ames", "personality": "Ni bon ni mauvais, patient et necessaire."},
+    {"id": "enora", "name": "Enora", "faction": "humains", "location": "villages_celtes", "role": "Matriarche du village principal (sous-groupe Villageois)", "personality": "Forte et pratique; nourrit le village, cache ses doutes."},
+    {"id": "riwal", "name": "Riwal", "faction": "humains", "location": "villages_celtes", "role": "Chef de guerre prudent (sous-groupe Guerriers)", "personality": "Guerrier sans ennemi; patrouille pour ne pas accepter la fin."},
+    {"id": "yves_le_roux", "name": "Yves le Roux", "faction": "humains", "location": "cotes_sauvages", "role": "Negociant malin (sous-groupe Marchands)", "personality": "Marchand rusé; ment par bienveillance pour preserver l'espoir."},
+    {"id": "aedan", "name": "Aedan l'Ermite", "faction": "", "location": "landes_bruyere", "role": "Sage solitaire, enigmes (PNJ recurrent biome)", "personality": "Solitaire contemplatif; parle en enigmes."},
+    {"id": "morwenna", "name": "Morwenna la Forge", "faction": "humains", "location": "villages_celtes", "role": "Forgeronne, politique locale (PNJ recurrent biome)", "personality": "Pratique et visionnaire; forge les outils du monde qui s'eteint."},
+    {"id": "merlin", "name": "Merlin", "faction": "", "location": "foret_broceliande", "role": "Narrateur-IA, druide-conscience, adversaire meta-conscient", "personality": "Triple nature: 95% loufoque/joyeux, 5% ancienne tristesse."},
+    {"id": "bestiole", "name": "Bestiole", "faction": "", "location": "", "role": "Compagnon du voyageur, canal des Oghams, fragment vivant d'Awen", "personality": "Lien pur; la seule emotion authentique de Merlin, sans masque."},
+    {"id": "viviane", "name": "Viviane", "faction": "", "location": "foret_broceliande", "role": "Figure arthurienne evoquee (la Dame du Lac endormie)", "personality": "Mentionnee dans les souvenirs de Merlin, non rencontrable directement."}
+  ],
+  "biomes": [
+    {"id": "foret_broceliande", "name": "Foret de Broceliande", "pole": "Awen physique — le coeur qui bat encore", "lore": "Centre cosmique ou convergent les lignes de force; la derniere foret a tomber. Arbres millenaires sans pousses nouvelles, brume permanente, fees plus lentes. Subtitle: 'Ou les arbres ont des yeux'.", "mood": "Magnifique, nostalgique", "dominant_factions": ["druides"], "maturity_unlock": 0},
+    {"id": "landes_bruyere", "name": "Landes de Bruyere", "pole": "Awen aerien — le souffle qui s'essouffle", "lore": "Immensite de bruyere, granite et vent perpetuel; l'horizon se rapproche chaque annee. Le Yeun Elez garde un acces au Vide; les cairns amplifient les resonances Oghams. Subtitle: 'L'horizon sans fin'.", "mood": "Immense, eolien, inquietant", "dominant_factions": ["anciens"], "maturity_unlock": 15},
+    {"id": "cotes_sauvages", "name": "Cotes Sauvages", "pole": "Awen aquatique — la mer qui se retire", "lore": "Frontiere entre terre et inconnu; la mer EST la Membrane rendue visible. L'ile de Sein s'eloigne, les marees perdent leur rythme, Ys a sombre dans l'Annwn. Subtitle: 'L'ocean murmurant'.", "mood": "Bleu-gris, liminal", "dominant_factions": ["niamh"], "maturity_unlock": 15},
+    {"id": "villages_celtes", "name": "Villages Celtes", "pole": "Awen humain — la derniere chaleur", "lore": "Grappes de maisons de pierre ou nul ne reconnait la fin. Naissances rares, techniques oubliees, mais les feux brulent et les chansons parlent du passe. Subtitle: 'Flammes obstinees'.", "mood": "Chaleureux, crepusculaire", "dominant_factions": ["anciens"], "maturity_unlock": 25},
+    {"id": "cercles_pierres", "name": "Cercles de Pierres", "pole": "Awen temporel — le temps qui hesite", "lore": "Les menhirs de Carnac forment un clavier cosmique ou la Membrane est la plus ancree. Rituels oublies, etoiles changeantes, le temps joue des tours. Subtitle: 'Ou le temps hesite'.", "mood": "Grandiose, sacre, instable", "dominant_factions": ["druides"], "maturity_unlock": 30},
+    {"id": "marais_korrigans", "name": "Marais des Korrigans", "pole": "Awen sombre — ce qui attend en dessous", "lore": "Le Vide Entre affleure; la Membrane y est la plus fine (Yeun Elez). Korrigans moins enjoues, feux follets trompeurs, territoire de l'Ankou. Subtitle: 'Deception et feux follets'.", "mood": "Sombre, oppressant", "dominant_factions": ["korrigans"], "maturity_unlock": 40},
+    {"id": "collines_dolmens", "name": "Collines aux Dolmens", "pole": "Awen memoriel — la memoire qui s'effrite", "lore": "Les os de la terre; dolmens-antennes connectes a l'Annwn. L'if millenaire est l'immortel Irial dissous. Les ancetres parlent du passe mais oublient l'avenir. Subtitle: 'Les os de la terre'.", "mood": "Antique, melancolique", "dominant_factions": ["ankou"], "maturity_unlock": 50},
+    {"id": "iles_mystiques", "name": "Iles Mystiques", "pole": "Awen transcendante — au-dela des brumes", "lore": "Au-dela du voile ou Niamh veille sur les souvenirs heureux de tous les ages. Reservees aux voyageurs experimentes; derniere reserve de beaute. Subtitle: 'Au-dela des brumes'. Sous-documente en lore (voir gaps).", "mood": "Mysterieux, transcendant", "dominant_factions": ["niamh"], "maturity_unlock": 75}
+  ],
+  "rune_circuits": [
+    {"n": 1, "id": "beith", "name": "Bouleau-Circuit", "tree": "Betula (Bouleau)", "pole": "Neutre", "effect": "Revele l'effet complet d'1 option au choix", "cooldown": 3, "anam_cost": 0, "starter": true, "lore": "Le premier des druides ancres, memoire du premier lever de soleil."},
+    {"n": 2, "id": "luis", "name": "Sorbier-Bouclier", "tree": "Sorbus (Sorbier)", "pole": "Neutre", "effect": "Bloque le prochain effet negatif unique", "cooldown": 4, "anam_cost": 0, "starter": true, "lore": "Le serment de ne jamais abandonner, protection eternelle."},
+    {"n": 3, "id": "quert", "name": "Pommier-Restaure", "tree": "Malus (Pommier)", "pole": "Neutre", "effect": "Soin immediat (+8 a +10 PV)", "cooldown": 4, "anam_cost": 0, "starter": true, "lore": "La conscience de chaque chemin non pris, pouvoir de guerison."},
+    {"n": 4, "id": "duir", "name": "Chene-Amplificateur", "tree": "Quercus (Chene)", "pole": "Ordre", "effect": "Double les effets positifs de l'option choisie", "cooldown": 5, "anam_cost": 80, "starter": false, "lore": "Force qui ne flechit pas, amplification du bien."},
+    {"n": 5, "id": "nuin", "name": "Frene-Reforge", "tree": "Fraxinus (Frene)", "pole": "Ordre", "effect": "Remplace la pire option par une nouvelle (LLM)", "cooldown": 6, "anam_cost": 100, "starter": false, "lore": "Don de percevoir les liens invisibles, pouvoir de transformation."},
+    {"n": 6, "id": "straif", "name": "Prunellier-Twist", "tree": "Prunus (Prunellier)", "pole": "Chaos", "effect": "Force un retournement narratif majeur dans la carte suivante", "cooldown": 8, "anam_cost": 120, "starter": false, "lore": "Connaissance des fils du destin, torsion du narratif."},
+    {"n": 7, "id": "muin", "name": "Vigne-Inversion", "tree": "Vitis (Vigne)", "pole": "Chaos", "effect": "Inverse positifs/negatifs de l'option choisie", "cooldown": 7, "anam_cost": 100, "starter": false, "lore": "Fragments de propheties non assembles, inversion totale."},
+    {"n": 8, "id": "saille", "name": "Saule-Detection", "tree": "Salix (Saule)", "pole": "Liminal", "effect": "Revele les interferences actives de Merlin", "cooldown": 5, "anam_cost": 90, "starter": false, "lore": "Capacite de sentir les eaux souterraines du destin, detection des manipulations."},
+    {"n": 9, "id": "ioho", "name": "If-Annulation", "tree": "Taxus (If)", "pole": "Liminal", "effect": "Defausse la carte et en genere une nouvelle (LLM)", "cooldown": 10, "anam_cost": 140, "starter": false, "lore": "Fardeau de l'immortalite, annulation totale et renaissance."}
+  ],
+  "endings": [
+    {"id": "la_mort_oubliee", "name": "La Mort Oubliee", "trigger": "Corps Epuise + Ame Perdue", "tone": "tragique/doux"},
+    {"id": "le_sacrifice_vain", "name": "Le Sacrifice Vain", "trigger": "Corps Epuise + Ame Possedee", "tone": "tragique"},
+    {"id": "la_bete_sauvage", "name": "La Bete Sauvage", "trigger": "Corps Surmene + Ame Perdue", "tone": "tragique"},
+    {"id": "l_ascension_folle", "name": "L'Ascension Folle", "trigger": "Corps Surmene + Ame Possedee", "tone": "tragique/extatique"},
+    {"id": "l_abandon_total", "name": "L'Abandon Total", "trigger": "Corps Epuise + Monde Exile", "tone": "tragique/resigne"},
+    {"id": "l_usurpation", "name": "L'Usurpation", "trigger": "Corps Epuise + Monde Tyran", "tone": "tragique/ironique"},
+    {"id": "le_solitaire", "name": "Le Solitaire", "trigger": "Corps Surmene + Monde Exile", "tone": "tragique/solitaire"},
+    {"id": "le_conquerant", "name": "Le Conquerant", "trigger": "Corps Surmene + Monde Tyran", "tone": "tragique/sombre"},
+    {"id": "l_errance_eternelle", "name": "L'Errance Eternelle", "trigger": "Ame Perdue + Monde Exile", "tone": "tragique/ethere"},
+    {"id": "le_pantin", "name": "Le Pantin", "trigger": "Ame Perdue + Monde Tyran", "tone": "tragique/absurde"},
+    {"id": "le_prophete_exile", "name": "Le Prophete Exile", "trigger": "Ame Possedee + Monde Exile", "tone": "tragique/prophetique"},
+    {"id": "la_possession_divine", "name": "La Possession Divine", "trigger": "Ame Possedee + Monde Tyran", "tone": "tragique/transcendant"},
+    {"id": "l_harmonie", "name": "L'Harmonie", "trigger": "Mission accomplie + 3 aspects equilibres", "tone": "espoir/equilibre"},
+    {"id": "le_prix_paye", "name": "Le Prix Paye", "trigger": "Mission accomplie + 1 aspect extreme", "tone": "doux-amer"},
+    {"id": "la_victoire_amere", "name": "La Victoire Amere", "trigger": "Mission accomplie + karma negatif", "tone": "doux-amer/moralement complexe"},
+    {"id": "l_echo_eternel", "name": "L'Echo Eternel", "trigger": "Lien Bestiole >=95 + Trust Merlin T3 + 15 fins vues + 100+ runs", "tone": "secret/transcendant/meta"}
+  ],
+  "events": [
+    {"id": "event_samhain_001", "name": "Samhain", "biome": "saisonnier (automne)", "summary": "La nuit de Samhain, le voile entre les mondes s'amincit; des ombres dansent."},
+    {"id": "event_yule_001", "name": "Yule / Solstice d'hiver", "biome": "saisonnier (hiver)", "summary": "La nuit la plus longue; un feu sacre brule contre l'obscurite."},
+    {"id": "event_imbolc_001", "name": "Imbolc", "biome": "saisonnier (printemps)", "summary": "Imbolc annonce le retour de la lumiere; Brigid benit les sources."},
+    {"id": "event_beltane_001", "name": "Beltane", "biome": "saisonnier (ete)", "summary": "Les feux de Beltane illuminent les collines; le betail traverse les flammes purificatrices."},
+    {"id": "event_lughnasadh_001", "name": "Lughnasadh", "biome": "saisonnier (ete)", "summary": "Fete de Lugh, premieres moissons; jeux de force et d'adresse."},
+    {"id": "event_ostara_001", "name": "Ostara / Equinoxe de printemps", "biome": "saisonnier (printemps)", "summary": "Equilibre jour/nuit; les druides tracent des cercles."},
+    {"id": "event_litha_001", "name": "Litha / Solstice d'ete", "biome": "saisonnier (ete)", "summary": "La nuit la plus courte; les fees sont actives."},
+    {"id": "event_mabon_001", "name": "Mabon / Equinoxe d'automne", "biome": "saisonnier (automne)", "summary": "Second equilibre; les druides remercient la terre."},
+    {"id": "event_orage_001", "name": "L'Orage", "biome": "universel", "summary": "La foudre frappe la terre devant toi, laissant une marque."},
+    {"id": "event_voyageur_001", "name": "Le Voyageur Encapuchonne", "biome": "universel", "summary": "Un voyageur mysterieux au visage cache croise ta route."},
+    {"id": "event_eclipse_001", "name": "L'Eclipse", "biome": "universel", "summary": "Le soleil disparait en plein jour; les animaux se taisent."},
+    {"id": "event_source_001", "name": "La Source Cachee", "biome": "universel", "summary": "Une source d'eau cristalline cachee sous un rocher mousseux."},
+    {"id": "event_animal_001", "name": "Le Corbeau", "biome": "universel", "summary": "Un corbeau te suit et te fixe depuis une branche basse."},
+    {"id": "event_festival_imbolc", "name": "Festival Imbolc", "biome": "universel", "summary": "La flamme de Brigid brule dans chaque foyer; la terre s'eveille."},
+    {"id": "event_festival_beltane", "name": "Festival Beltane", "biome": "universel", "summary": "Les feux jumeaux illuminent la nuit; le voile s'amincit."},
+    {"id": "event_festival_lughnasadh", "name": "Festival Lughnasadh", "biome": "universel", "summary": "Fete des moissons; les champs debordent, les guerriers s'affrontent."},
+    {"id": "event_festival_samhain", "name": "Festival Samhain", "biome": "universel", "summary": "Le voile tombe; les morts marchent parmi les vivants, l'Ankou rode."},
+    {"id": "whisper_deja_vu", "name": "Murmure: Deja-vu", "biome": "indice (whisper)", "summary": "Cet arbre, cette pierre, cette lumiere exacte — tu as deja vu ca."},
+    {"id": "whisper_merlin_slip", "name": "Murmure: Le Lapsus de Merlin", "biome": "indice (whisper)", "summary": "Merlin dit '...comme la derniere fois que tu—' puis se reprend."},
+    {"id": "whisper_too_perfect", "name": "Murmure: Trop Parfait", "biome": "indice (whisper)", "summary": "La clairiere est trop parfaite, chaque fougere placee comme dans un tableau."},
+    {"id": "whisper_npc_echo", "name": "Murmure: L'Echo du PNJ", "biome": "indice (whisper)", "summary": "Le marchand: 'Tu as le visage de quelqu'un qui est deja venu.'"},
+    {"id": "whisper_words_on_stone", "name": "Murmure: Mots sur la Pierre", "biome": "indice (whisper)", "summary": "Des mots modernes impossibles graves dans la pierre, pas des runes."},
+    {"id": "whisper_bird_pattern", "name": "Murmure: Le Vol d'Etourneaux", "biome": "indice (whisper)", "summary": "Un vol d'etourneaux dessine des formes non naturelles dans le ciel."},
+    {"id": "whisper_merlin_count", "name": "Murmure: Merlin Compte", "biome": "indice (whisper)", "summary": "Merlin murmure des nombres dans son sommeil — tes nombres."},
+    {"id": "whisper_world_edge", "name": "Murmure: Le Bord du Monde", "biome": "indice (whisper)", "summary": "Au bout du sentier, rien. Ni precipice ni mer. Le monde s'arrete."},
+    {"id": "whisper_child_drawing", "name": "Murmure: Le Dessin d'Enfant", "biome": "indice (whisper)", "summary": "Un enfant dessine sur le sol; tu reconnais le dessin: c'est toi."},
+    {"id": "whisper_morgane_truth", "name": "Murmure: La Verite de Morgane", "biome": "indice (whisper)", "summary": "Morgane: 'Tu ne te demandes jamais pourquoi tout est si... coherent?'"},
+    {"id": "whisper_name_spoken", "name": "Murmure: Ton Nom Prononce", "biome": "indice (whisper)", "summary": "Un vent froid, puis ton vrai nom prononce clairement — pas 'voyageur'."},
+    {"id": "whisper_same_rain", "name": "Murmure: La Meme Pluie", "biome": "indice (whisper)", "summary": "Les gouttes tombent exactement au meme endroit que la derniere fois."},
+    {"id": "whisper_merlin_error", "name": "Murmure: L'Erreur de Merlin", "biome": "indice (whisper)", "summary": "Merlin s'arrete net, fixe le vide, ses levres bougent sans son."}
+  ],
+  "themes": [
+    "memoire",
+    "epuisement / entropie",
+    "cycles et repetition",
+    "croyance comme realite",
+    "temoignage (etre temoin, pas heros)",
+    "espoir malgre la futilite",
+    "amour douloureux pour ce qui disparait",
+    "les recits comme survie du monde",
+    "liminalite (seuils, voiles, passages)",
+    "declin et derniers jours rendus beaux"
+  ],
+  "scenario_constraints": {
+    "lexical_fields": ["chance", "bluff", "observation", "logique", "finesse", "vigueur", "esprit", "perception", "neutre"],
+    "verbs_by_field": {
+      "chance": ["cueillir", "chercher au hasard", "tenter sa chance", "deviner", "fouiller a l'aveugle"],
+      "bluff": ["marchander", "convaincre", "mentir", "negocier", "charmer", "amadouer"],
+      "observation": ["observer", "scruter", "memoriser", "examiner", "fixer", "inspecter"],
+      "logique": ["dechiffrer", "analyser", "resoudre", "decoder", "interpreter", "etudier"],
+      "finesse": ["se faufiler", "esquiver", "contourner", "se cacher", "escalader", "traverser"],
+      "vigueur": ["combattre", "courir", "fuir", "forcer", "pousser", "resister physiquement"],
+      "esprit": ["calmer", "apaiser", "mediter", "resister mentalement", "se concentrer", "endurer"],
+      "perception": ["ecouter", "suivre", "pister", "sentir", "flairer", "tendre l'oreille"],
+      "neutre": ["parler", "accepter", "refuser", "attendre", "s'approcher"]
+    },
+    "neutral_verbs_map_to": "esprit",
+    "card_text": {"sentences": [2, 4], "words": [40, 120], "language": "FR B1"},
+    "options_per_card": 3,
+    "forbidden_words": ["IA", "programme", "code", "jeu", "partie", "joueur", "run", "restart", "fin du monde", "mort", "simulation", "serveur", "sauvegarde", "M.E.R.L.I.N.", "Awen (avant T2)", "Membrane"],
+    "allowed_indirections": {
+      "IA": ["voix", "echo", "memoire"],
+      "programme/code": ["tisse", "entrelace", "grave"],
+      "jeu/partie": ["voyage", "visite", "chemin"],
+      "joueur": ["voyageur", "temoin", "visiteur"],
+      "run/restart": ["cycle", "retour", "nouveau matin"],
+      "fin du monde": ["le silence", "la brume", "le repos"],
+      "mort (du monde)": ["s'endort", "s'eteint", "se retire"],
+      "Awen": ["le souffle", "la vibration", "ce qui traverse"],
+      "Membrane": ["le voile", "la frontiere", "ce qui separe"]
+    },
+    "effect_caps": {
+      "ADD_REPUTATION": {"max": 20, "min": -20},
+      "HEAL_LIFE": {"max": 18},
+      "HEAL_CRITICAL": {"max": 5},
+      "DAMAGE_LIFE": {"max": 15},
+      "DAMAGE_CRITICAL": {"max": 22},
+      "ADD_BIOME_CURRENCY": {"max": 10},
+      "UNLOCK_OGHAM": {"max_per_card": 1},
+      "LIFE_MAX": 100,
+      "LIFE_MIN": 0,
+      "effects_per_option": 3,
+      "score_bonus_cap": 2.0,
+      "drain_per_card": 1
+    },
+    "jaccard_max": 0.7
+  },
+  "scenario_schema": {
+    "fields": ["id", "title", "archetype_id", "archetype_name", "pole_dominant", "twist_pattern", "length", "pool_size", "emotional_arc", "intro", "premise", "essence", "hook", "twist_card_id", "cards"],
+    "card_fields": ["n", "type", "rarity", "pole", "emotion", "summary", "options", "card_id", "route_mask", "branch_label"],
+    "option_fields": ["label", "verb", "primary_faction", "leads_to_card_id"]
+  },
+  "divergences": [
+    {"topic": "Rune-Circuits vs Oghams", "code": "merlin_constants.gd OGHAM_FULL_SPECS = 18 Oghams", "bible": "GAME_DESIGN_BIBLE v3.8 §3.1/§3.3 = 9 Rune-Circuits (3 Poles)", "note": "Bible canon = 9; code = 18. Bible note 'refacto Godot 18→9 a faire'. rune_circuits utilise les 9 canon de la bible."},
+    {"topic": "Drain de vie", "code": "LIFE_ESSENCE_DRAIN_PER_CARD = 1 (et EFFECT_CAPS.drain_per_card = 1, EFFECT_PIPELINE etape 1 = DRAIN_VIE)", "bible": "v3.1/v3.8 §5.1 = NO DRAIN (HoF2-style, equilibre via card effects); drain = 0", "note": "Code drain -1/carte contredit la bible 'no drain auto'. Bible §changelog ligne 1803: 'refacto a faire (constant = 0)'."},
+    {"topic": "Pipeline d'effets", "code": "EFFECT_PIPELINE = 12 etapes (commence par DRAIN_VIE)", "bible": "v3.1 §13.3 = 11 etapes (drop DRAIN -1)", "note": "Bible supprime l'etape 1 DRAIN. Code conserve les 12 etapes."},
+    {"topic": "5e faction (id)", "code": "FACTIONS = [druides, anciens, korrigans, niamh, ankou]", "bible": "lore 03_LES_FACTIONS = [Druides, Korrigans, Humains, Anciens, Ankou]; bible v3.5 confirme druides/anciens/korrigans/niamh/ankou", "note": "Lore doc 03 nomme la 5e faction 'Humains' (label mecanique villageois/guerriers/marchands); le code et la bible v3.5 utilisent 'niamh'. Conflit d'identite non resolu: les PNJ humains (Enora/Riwal/Yves/Morwenna) sont taggues 'humains' faute de faction code correspondante."},
+    {"topic": "Niamh — entite vs faction", "code": "niamh = faction (Niamh et Tir na nOg)", "bible": "00_LORE_BIBLE_INDEX: 'Niamh' est aussi (1) une druide dissoute dans Nuin et (2) une Ancienne du Sidhe PNJ", "note": "Trois usages du nom 'Niamh': faction (code), Ancienne PNJ, druide dissoute. Disambiguation: continuite culturelle, entites distinctes."},
+    {"topic": "Bran — faction", "code": "BIOME_PNJ_INFO.bran.faction = 'anciens' (cotes_sauvages)", "bible": "lore 03/11: Bran est un druide gardien des cotes (ile de Sein)", "note": "Le PNJ recurrent biome 'bran' (cotes_sauvages) est tagge 'anciens' en code mais decrit comme druide en lore. Probablement deux Bran distincts (le druide vivant vs le marchand-passeur biome). Conserve les deux: bran_druide (druides) + entree biome."},
+    {"topic": "Nombre de biomes", "code": "8 biomes (BIOME_KEYS, ajoute iles_mystiques threshold 75)", "bible": "08_LES_BIOMES.md titre 'LES SEPT BIOMES' (7 lieux documentes en detail)", "note": "Le code a 8 biomes; la lore en documente 7 en profondeur. iles_mystiques manque de lore profond (gap)."},
+    {"topic": "Bible version", "code": "CLAUDE.md mentionne bible v2.4; constants commentes 'bible v2.4'", "bible": "docs/GAME_DESIGN_BIBLE.md = v3.8 (changelog v3.5 2026-05-16)", "note": "Le code et CLAUDE.md referencent v2.4; la bible actuelle est v3.8. Bcp de consts (caps, pipeline, oghams) datent de v2.4. Source de verite = v3.8."},
+    {"topic": "Trust tiers (runs vs score)", "code": "TRUST_TIERS par score 0-100 (T0 0-24, T1 25-49, T2 50-74, T3 75-100)", "bible": "04_MERLIN: T0 runs 1-5, T1 6-20, T2 21-50, T3 51+ (par nombre de runs)", "note": "Deux echelles de Trust: score (code/bible v2.4) vs nombre de runs (lore 04). Le canon retient l'echelle score 0-100 pour les seuils."},
+    {"topic": "Game over", "code": "vie=0 (MIN_CARDS_FOR_VICTORY=25)", "bible": "v3.5 = vie=0 OR MOS hard_max(50) OR choix joueur", "note": "Bible ajoute deux conditions de fin (MOS hard max, choix joueur) non explicites en const."}
+  ],
+  "gaps": [
+    "iles_mystiques: sous-documente en lore (08_LES_BIOMES couvre 7 biomes en detail; iles_mystiques n'a pas de section profonde).",
+    "Biomes autres que Broceliande: NPC/event depth pauvre. La majorite des PNJ nommes et le bestiaire detaille (14_BESTIAIRE_BROCELIANDE) concernent Broceliande; les autres biomes n'ont souvent qu'1 PNJ recurrent.",
+    "events: catalogue (event_cards.json) majoritairement saisonnier/universel/whisper; tres peu d'evenements biome-specific (la cle 'biome_specific' existe mais est vide ou minime).",
+    "Faction 'humains': presente en lore (03_LES_FACTIONS) mais absente du code FACTIONS; ses PNJ (Enora, Riwal, Yves, Morwenna) n'ont pas de faction mecanique correspondante.",
+    "9 Rune-Circuits: definis dans la bible v3.8 mais PAS encore implementes en code (18 Oghams subsistent); le mapping 18→9 reste a faire.",
+    "Pole thematique des biomes: la valeur 'pole' provient de la synthese lore (aspects d'Awen) et n'est pas un champ structure explicite des constants.",
+    "endings: les 16 fins existent en lore (09_LES_FINS, Systeme 3 Aspects) mais leur cablage mecanique exact (mapping Corps/Ame/Monde -> trigger) n'est pas trace dans merlin_constants.gd.",
+    "Merlin TTS / speech-bar et card-flip (bible v3.5): mecanismes design listes mais hors scope lore canon (non detailles ici)."
+  ]
+}
