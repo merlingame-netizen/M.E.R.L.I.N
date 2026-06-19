@@ -1,0 +1,17 @@
+[Unit]
+# Templated unit: %i = control_loops subcommand (gen | validate | train).
+# Installed by deploy-cockpit.sh (fills __REPO_DIR__ / __USER__ / __VENV__).
+Description=M.E.R.L.I.N. cockpit autonomous loop (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=__USER__
+WorkingDirectory=__REPO_DIR__
+# Optional: OLLAMA_URL / WORKERS_AI_URL / Kaggle creds for the LLM backends.
+EnvironmentFile=-/etc/merlin-cockpit.env
+ExecStart=__VENV__/bin/python tools/cockpit/control_loops.py %i
+Nice=10
+# Each cycle is free + idempotent; backends degrade to the template generator if absent.
+NoNewPrivileges=true

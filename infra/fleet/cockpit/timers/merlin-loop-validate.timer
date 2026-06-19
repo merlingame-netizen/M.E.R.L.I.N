@@ -1,0 +1,11 @@
+[Unit]
+Description=MERLIN cockpit — headless validation + telemetry loop (every 2h)
+
+[Timer]
+Unit=merlin-loop@validate.service
+OnBootSec=12min
+OnUnitActiveSec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

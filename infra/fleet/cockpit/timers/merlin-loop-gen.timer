@@ -1,0 +1,11 @@
+[Unit]
+Description=MERLIN cockpit — scenario/lore generation loop (every 30 min)
+
+[Timer]
+Unit=merlin-loop@gen.service
+OnBootSec=5min
+OnUnitActiveSec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

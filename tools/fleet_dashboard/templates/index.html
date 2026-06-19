@@ -90,6 +90,8 @@
         <div style="margin-top:14px"><button class="go" id="launchBtn" onclick="doLaunch()">Lancer ▶</button></div>
         <div class="res" id="launchRes" style="margin-top:10px"></div>
       </div>
+      <h2>Boucles autonomes (24/7)</h2>
+      <div class="grid" id="loops"></div>
       <h2>Lancements récents</h2>
       <div class="grid" id="launches"></div>
     </section>
@@ -194,15 +196,26 @@
       </div>`).join('') || '<div class="mut" style="padding:0 16px">aucun lancement</div>';
     }
     async function stopL(id){ await j('/api/launch/'+id+'/stop',{method:'POST'}); refreshLaunches(); }
+    async function refreshLoops(){
+      const d = await j('/api/loops'); const L = d.loops||{};
+      const names = {gen:'Génération', validate:'Validation', train:'Retrain'};
+      const cards = Object.keys(names).map(k=>{
+        const s=L[k]; if(!s) return card(names[k], '<div class="mut">jamais exécuté</div>','pending');
+        const m = Object.entries(s).filter(([key])=>!['last','runs'].includes(key)).slice(0,4)
+          .map(([key,v])=>`<span>${key} <b>${esc(String(v)).slice(0,22)}</b></span>`).join('');
+        return card(names[k]+' <span class="mut">×'+(s.runs||0)+'</span>', `<div class="metrics">${m}</div><div class="mut">maj ${s.last||'—'}</div>`,'done');
+      });
+      $('#loops').innerHTML = cards.join('') + (d.timers?`<div class="card"><div class="name">Timers systemd</div><pre class="log">${esc(d.timers)}</pre></div>`:'');
+    }
 
     // utils
     function card(name, body, state){ return `<div class="card ${state||''}"><div class="row"><span class="name">${name}</span></div>${body}</div>`; }
     function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
     // boot + polling
-    function tick(){ refreshDev(); refreshFleet(); refreshJobs(); refreshLaunches(); }
+    function tick(){ refreshDev(); refreshFleet(); refreshJobs(); refreshLaunches(); refreshLoops(); }
     loadCatalog(); tick();
-    setInterval(()=>{ refreshFleet(); refreshLaunches(); }, 15000);
+    setInterval(()=>{ refreshFleet(); refreshLaunches(); refreshLoops(); }, 15000);
     setInterval(refreshDev, 30000);
     $('#foot').innerHTML = "Cockpit 24/7 · auth token · dispatch free-tier strict · gratuit toujours · <span class='mut'>refresh fleet/launches 15s</span>";
   </script>

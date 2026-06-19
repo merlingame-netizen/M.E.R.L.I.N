@@ -1,0 +1,11 @@
+[Unit]
+Description=MERLIN cockpit — retrain cadence gate (every 6h; self-gates on corpus growth)
+
+[Timer]
+Unit=merlin-loop@train.service
+OnBootSec=20min
+OnUnitActiveSec=6h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

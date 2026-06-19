@@ -283,6 +283,20 @@ def stop(jid: str) -> dict:
     return {"error": "not found or not running"}
 
 
+def loops_status() -> dict:
+    """State of the autonomous loops (metrics + systemd timer schedule if present)."""
+    data = _read_json(STATUS / "cockpit_loops.json", {})
+    timers = ""
+    try:
+        timers = subprocess.run(
+            ["systemctl", "list-timers", "--no-legend", "merlin-*"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout.strip()[:1200]
+    except Exception:
+        timers = ""
+    return {"loops": data, "timers": timers, "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+
+
 def launchers_catalog() -> dict:
     """Describe available launchers for the UI (kind, label, params)."""
     return {"launchers": [

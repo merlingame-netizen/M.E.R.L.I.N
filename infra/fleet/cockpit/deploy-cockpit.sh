@@ -52,7 +52,23 @@ sudo systemctl enable --now merlin-cockpit.service
 sleep 2
 sudo systemctl --no-pager --full status merlin-cockpit.service | head -n 10 || true
 
-# ── 4. Smoke (with creds) ────────────────────────────────────────────────────
+# ── 4. Autonomous loop timers (gen / validate / train) ───────────────────────
+if [ "${1:-}" != "--no-loops" ]; then
+  echo "==> Installing autonomous loop timers (gen 30m / validate 2h / train 6h)"
+  TPL="$REPO_DIR/infra/fleet/cockpit/timers"
+  sed -e "s#__REPO_DIR__#$REPO_DIR#g" -e "s#__USER__#$RUN_USER#g" -e "s#__VENV__#$VENV#g" \
+      "$TPL/merlin-loop@.service" | sudo tee /etc/systemd/system/merlin-loop@.service >/dev/null
+  for t in gen validate train; do
+    sudo cp "$TPL/merlin-loop-$t.timer" "/etc/systemd/system/merlin-loop-$t.timer"
+  done
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now merlin-loop-gen.timer merlin-loop-validate.timer merlin-loop-train.timer
+  echo "    timers:"; systemctl list-timers --no-legend 'merlin-*' | sed 's/^/      /' || true
+else
+  echo "==> Skipping loop timers (--no-loops)"
+fi
+
+# ── 5. Smoke (with creds) ────────────────────────────────────────────────────
 echo "==> Local health check"
 curl -fsS -u "merlin:$TOKEN_SHOWN" "http://127.0.0.1:$PORT/healthz" && echo
 echo
