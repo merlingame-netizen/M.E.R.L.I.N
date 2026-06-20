@@ -384,7 +384,7 @@
         <span class="val"><span id="recapTotal">0</span> € <small>environ</small></span>
       </div>
       <a class="btn btn-wa" id="sendChoices" style="margin-top:16px" target="_blank" rel="noopener">📤 Envoyer mes choix sur WhatsApp</a>
-      <p class="note" id="recapHint">Le budget = (logement ÷ 10) + tes activités. Hors essence, courses & restos.</p>
+      <p class="note" id="recapHint">Le budget = (logement ÷ nb de participants) + tes activités. Hors essence, courses & restos.</p>
     </section>
 
     <!-- RIB -->
@@ -570,6 +570,7 @@
                   <span class="price">${a.prix_label ? a.prix_label : (a.prix_par_personne!=null?`${euro(a.prix_par_personne)} € <small>/ pers</small>`:'Gratuit 🎉')}</span>
                   <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                     ${a.statut?badge(a.statut):''}
+                    ${a.tel?`<a class="dispo-link" href="tel:${a.tel}" data-stop="1">📞 Appeler</a>`:''}
                     ${a.lien?`<a class="dispo-link" href="${a.lien}" target="_blank" rel="noopener" data-stop="1">🔗 Infos & résa</a>`:''}
                   </span>
                 </div>

@@ -15,11 +15,11 @@ logement et des activités avec budget par personne calculé en direct.
 ## 🎮 Ce que fait la page
 
 - **Cagnotte** : compteur animé (`montant_recolte`)
-- **Logement** : 7 vraies options recherchées le 10/06 (10 pers, 1 nuit), 1 seul
+- **Logement** : 7 vraies options recherchées le 10/06 (5 pers, 1 nuit), 1 seul
   choix par personne, bouton « Vérifier la dispo » (annonce avec dates pré-remplies)
 - **Activités** : 15 options réelles (canoë, rando, soirées, sensations) en
   multi-choix avec prix 2026 vérifiés
-- **Budget live** : (logement ÷ 10) + activités cochées, dans une barre flottante
+- **Budget live** : (logement ÷ nb de participants) + activités cochées, dans une barre flottante
 - **Envoi WhatsApp** : chaque copain envoie ses choix + budget dans le groupe
 - Les choix sont mémorisés sur l'appareil (localStorage)
 
@@ -61,7 +61,7 @@ Sauvegarde → commit → push : la page se met à jour toute seule.
 GitHub Pages ne peut pas interroger Airbnb/Booking en direct (site statique,
 pas de serveur). Le système :
 1. Chaque carte a un bouton **« Vérifier la dispo »** → ouvre l'annonce ou la
-   recherche avec **nuit du 18 au 19/07 et 10 voyageurs déjà réglés** (1 tap)
+   recherche avec **nuit du 18 au 19/07 et 5 voyageurs déjà réglés** (1 tap)
 2. Après vérification (ou appel), tu mets à jour le champ `statut` dans
    `config.js` → tout le groupe voit ✅ / ⏳ / ❌ en temps réel au prochain push
 
