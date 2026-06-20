@@ -48,14 +48,14 @@ HAS_FFMPEG = shutil.which("ffmpeg") is not None
 # room echo adds presence, highpass removes rumble). Tuned to stay natural, not robotic.
 DSP_PROFILES = {
     "none": "",
-    # default storyteller — warm, deep, realistic; subtle pitch ↓4%
-    "conteur": "aresample=44100,asetrate=42336,atempo=1.0417,aresample=44100,"
-               "bass=g=5:f=110,highpass=f=70,aecho=0.85:0.9:90:0.16",
-    # deeper, drier — ↓7%, more chest, no reverb
-    "deep": "aresample=44100,asetrate=41013,atempo=1.0753,aresample=44100,"
+    # default storyteller — deep, warm, realistic; pitch ↓1 semitone (~-5.6%), bass chest, room.
+    "conteur": "aresample=44100,asetrate=41624,atempo=1.0595,aresample=44100,"
+               "bass=g=6:f=110,highpass=f=70,aecho=0.85:0.9:90:0.16",
+    # markedly deep — ↓3 semitones, more chest, dry.
+    "deep": "aresample=44100,asetrate=37084,atempo=1.1892,aresample=44100,"
             "bass=g=7:f=100,highpass=f=65",
-    # cavernous/dramatic — ↓8% + longer reverb tail
-    "mystery": "aresample=44100,asetrate=40572,atempo=1.0870,aresample=44100,"
+    # cavernous/dramatic — ↓4 semitones + long reverb tail.
+    "mystery": "aresample=44100,asetrate=35002,atempo=1.2599,aresample=44100,"
                "bass=g=6:f=120,highpass=f=60,aecho=0.8:0.88:140:0.26,aecho=0.9:0.9:320:0.14",
 }
 
