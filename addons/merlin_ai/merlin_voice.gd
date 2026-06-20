@@ -57,8 +57,9 @@ const VOICE_PRESETS := {
 @export_group("Conteur TTS")
 @export var tts_url: String = "http://127.0.0.1:8772"
 @export var tts_token: String = ""
-@export_range(0.7, 1.6) var tts_rate: float = 1.12  ## >1 = plus lent / plus grave
-@export var tts_mystery: bool = true                 ## filtre grave + reverb cote service
+@export_range(0.7, 1.6) var tts_rate: float = 1.10  ## >1 = plus lent / plus grave
+@export var tts_mystery: bool = true                 ## active le profil DSP cote service
+@export_enum("conteur", "deep", "mystery", "none") var tts_profile: String = "conteur"  ## voix grave realiste
 
 ## ACVoicebox (si disponible)
 var _acvoicebox: Node = null
@@ -112,6 +113,7 @@ func _load_voice_setting() -> void:
 		voice_mode = m
 	tts_url = str(cfg.get_value("voice", "tts_url", tts_url))
 	tts_token = str(cfg.get_value("voice", "tts_token", tts_token))
+	tts_profile = str(cfg.get_value("voice", "tts_profile", tts_profile))
 	if not bool(cfg.get_value("voice", "enabled", true)):
 		set_voice_mode(VoiceMode.OFF)
 
@@ -137,7 +139,7 @@ func _request_tts(text: String) -> void:
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	if tts_token != "":
 		headers.append("x-tts-token: " + tts_token)
-	var payload: Dictionary = {"text": text, "rate": tts_rate, "mystery": tts_mystery}
+	var payload: Dictionary = {"text": text, "rate": tts_rate, "mystery": tts_mystery, "profile": tts_profile}
 	var err: int = _tts_http.request(tts_url.rstrip("/") + "/speak", headers,
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:

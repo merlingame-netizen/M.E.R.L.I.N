@@ -15,20 +15,39 @@ curl -s -X POST -H 'content-type: application/json' \
 
 The **stub** returns a short tone so the whole game pipeline is testable with zero deps.
 
-## Real voice — Piper (recommended: free, CPU, fluid, French male)
+## The "Conteur" profile (deep, realistic — default)
 
+The service ships a curated **`conteur`** voice profile (default `TTS_PROFILE=conteur`): a
+ffmpeg DSP chain that deepens + warms any backend's output for a realistic storyteller —
+subtle pitch ↓4 %, low-shelf bass (chest/warmth), a short room echo, rumble high-pass. The
+game sends `profile:"conteur"` automatically. **Install `ffmpeg`** for the deepening (else the
+raw voice is used). Profiles: `conteur` (default), `deep` (drier, ↓7 %), `mystery` (cavernous,
+↓8 % + long reverb), `none`.
+
+## Realism ladder (pick a backend)
+
+**1. Piper — free, real-time, fluid (recommended first):**
 ```bash
 pip install piper-tts
-# download a deep French male voice (.onnx + .onnx.json), e.g. tom or gilles:
-python -m piper.download_voices fr_FR-tom-medium      # or fr_FR-gilles-low
-TTS_BACKEND=piper TTS_VOICE=~/.local/share/piper/fr_FR-tom-medium.onnx \
-  TTS_RATE=1.15 TTS_MYSTERY=1 python3 tools/tts/tts_server.py
+python -m piper.download_voices fr_FR-gilles-low      # deep male (or fr_FR-tom-medium)
+TTS_BACKEND=piper TTS_VOICE=~/.local/share/piper/fr_FR-gilles-low.onnx \
+  TTS_RATE=1.10 TTS_PROFILE=conteur python3 tools/tts/tts_server.py
 ```
 
-- **Mysterious-man shaping**: `TTS_RATE>1` slows the pace (graver, posé); `TTS_MYSTERY=1`
-  applies a ffmpeg post-filter (pitch ↓ ~8% + light reverb) — install `ffmpeg` for it.
-  Tune per-request via `{"text":..., "rate":1.2, "mystery":true}`.
-- **Premium option** (paid, cinematic): `TTS_BACKEND=elevenlabs ELEVEN_API_KEY=... ELEVEN_VOICE=<deep male id>`.
+**2. XTTS-v2 (Coqui) — most realistic free option, deep male, French:**
+```bash
+pip install TTS
+# built-in deep male speaker "Damien Black" (or clone your own with TTS_SPEAKER_WAV=ref.wav)
+TTS_BACKEND=coqui TTS_SPEAKER="Damien Black" TTS_PROFILE=conteur python3 tools/tts/tts_server.py
+```
+Heavier on CPU (a few seconds/line) but far more natural; results are cached by text.
+
+**3. ElevenLabs — premium cloud (paid), most cinematic:**
+```bash
+TTS_BACKEND=elevenlabs ELEVEN_API_KEY=... ELEVEN_VOICE=<deep-male-id> python3 tools/tts/tts_server.py
+```
+
+Tune per request: `{"text":..., "rate":1.2, "profile":"deep"}`.
 
 ## Game wiring (already done)
 

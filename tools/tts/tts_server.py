@@ -36,13 +36,31 @@ from flask import Flask, Response, jsonify, request
 BACKEND = os.environ.get("TTS_BACKEND", "stub")
 VOICE = os.environ.get("TTS_VOICE", "")          # piper .onnx path, or cloud voice id
 TOKEN = os.environ.get("TTS_TOKEN", "")
-RATE = float(os.environ.get("TTS_RATE", "1.12"))  # >1 = slower/graver (length_scale)
+RATE = float(os.environ.get("TTS_RATE", "1.10"))  # >1 = slower/graver (piper length_scale)
 MYSTERY = os.environ.get("TTS_MYSTERY", "1") == "1"
+PROFILE = os.environ.get("TTS_PROFILE", "conteur")  # conteur | deep | mystery | none
 CACHE = os.environ.get("TTS_CACHE", os.path.join(tempfile.gettempdir(), "merlin-tts-cache"))
 os.makedirs(CACHE, exist_ok=True)
 HAS_FFMPEG = shutil.which("ffmpeg") is not None
 
+# Curated DSP voice profiles (ffmpeg). aresample=44100 first makes asetrate rate-agnostic
+# (pitch DOWN for depth, atempo restores the duration, bass shelf adds warmth/chest, a short
+# room echo adds presence, highpass removes rumble). Tuned to stay natural, not robotic.
+DSP_PROFILES = {
+    "none": "",
+    # default storyteller — warm, deep, realistic; subtle pitch ↓4%
+    "conteur": "aresample=44100,asetrate=42336,atempo=1.0417,aresample=44100,"
+               "bass=g=5:f=110,highpass=f=70,aecho=0.85:0.9:90:0.16",
+    # deeper, drier — ↓7%, more chest, no reverb
+    "deep": "aresample=44100,asetrate=41013,atempo=1.0753,aresample=44100,"
+            "bass=g=7:f=100,highpass=f=65",
+    # cavernous/dramatic — ↓8% + longer reverb tail
+    "mystery": "aresample=44100,asetrate=40572,atempo=1.0870,aresample=44100,"
+               "bass=g=6:f=120,highpass=f=60,aecho=0.8:0.88:140:0.26,aecho=0.9:0.9:320:0.14",
+}
+
 _engine = {"ready": False, "err": ""}
+_coqui = None  # lazy XTTS model
 
 
 # ── WAV helpers ──────────────────────────────────────────────────────────────
@@ -67,17 +85,17 @@ def _sine_wav(text: str, rate_hz: int = 22050) -> bytes:
     return bio.getvalue()
 
 
-def _mystery_filter(wav_in: bytes, rate_mult: float) -> bytes:
-    """ffmpeg: drop pitch ~8% + light reverb for a grave, mysterious narrator. No-op if absent."""
-    if not (HAS_FFMPEG and MYSTERY):
+def _dsp_filter(wav_in: bytes, profile: str) -> bytes:
+    """Apply a curated DSP voice profile via ffmpeg (deep/realistic narrator). No-op if
+    ffmpeg is absent or the profile is 'none'/unknown."""
+    af = DSP_PROFILES.get(profile, "")
+    if not (HAS_FFMPEG and af):
         return wav_in
     try:
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as fi:
             fi.write(wav_in)
             ipath = fi.name
         opath = ipath + ".out.wav"
-        # asetrate lowers pitch; atempo restores duration; aecho = subtle reverb tail.
-        af = "asetrate=22050*0.92,atempo=1.0870,aecho=0.8:0.85:60:0.25"
         subprocess.run(["ffmpeg", "-y", "-i", ipath, "-af", af, opath],
                        capture_output=True, timeout=30, check=True)
         with open(opath, "rb") as f:
@@ -103,6 +121,26 @@ def _synth(text: str, rate: float) -> bytes:
         if out.returncode != 0 or not out.stdout:
             raise RuntimeError("piper failed: " + out.stderr.decode("utf-8", "ignore")[:160])
         return out.stdout
+    if BACKEND == "coqui":
+        # Most realistic free option (XTTS-v2): natural, French, deep built-in male speaker.
+        # Heavier on CPU (a few s/line) but cached. pip install TTS.
+        global _coqui
+        if _coqui is None:
+            from TTS.api import TTS as CoquiTTS
+            _coqui = CoquiTTS(os.environ.get("TTS_MODEL", "tts_models/multilingual/multi-dataset/xtts_v2"),
+                              gpu=False)
+        out_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
+        kwargs = {"text": text, "file_path": out_path, "language": "fr"}
+        spk_wav = os.environ.get("TTS_SPEAKER_WAV", "")
+        if spk_wav and os.path.exists(spk_wav):
+            kwargs["speaker_wav"] = spk_wav            # clone a deep reference voice
+        else:
+            kwargs["speaker"] = os.environ.get("TTS_SPEAKER", "Damien Black")  # deep male xtts speaker
+        _coqui.tts_to_file(**kwargs)
+        with open(out_path, "rb") as f:
+            data = f.read()
+        os.remove(out_path)
+        return data
     if BACKEND == "elevenlabs":
         import urllib.request
         key = os.environ.get("ELEVEN_API_KEY", "")
@@ -124,15 +162,14 @@ def _json_str(s: str) -> bytes:
     return json.dumps(s, ensure_ascii=False).encode("utf-8")
 
 
-def speak(text: str, rate: float, mystery: bool) -> bytes:
-    key = hashlib.sha1(f"{BACKEND}|{VOICE}|{rate}|{mystery}|{text}".encode()).hexdigest()[:16]
+def speak(text: str, rate: float, profile: str) -> bytes:
+    key = hashlib.sha1(f"{BACKEND}|{VOICE}|{rate}|{profile}|{text}".encode()).hexdigest()[:16]
     cpath = os.path.join(CACHE, key + ".wav")
     if os.path.exists(cpath):
         with open(cpath, "rb") as f:
             return f.read()
     wav = _synth(text, rate)
-    if mystery:
-        wav = _mystery_filter(wav, rate)
+    wav = _dsp_filter(wav, profile)
     try:
         with open(cpath, "wb") as f:
             f.write(wav)
@@ -153,8 +190,8 @@ def build_app() -> Flask:
     @app.route("/health")
     def health():
         return jsonify({"ok": True, "backend": BACKEND, "voice": os.path.basename(VOICE) or VOICE,
-                        "ready": BACKEND == "stub" or bool(VOICE) or BACKEND == "elevenlabs",
-                        "ffmpeg": HAS_FFMPEG, "mystery": MYSTERY})
+                        "ready": BACKEND in ("stub", "coqui", "elevenlabs") or bool(VOICE),
+                        "ffmpeg": HAS_FFMPEG, "profile": PROFILE, "profiles": list(DSP_PROFILES)})
 
     @app.route("/speak", methods=["POST"])
     def do_speak():
@@ -163,9 +200,12 @@ def build_app() -> Flask:
         if not text:
             return jsonify({"error": "text required"}), 400
         rate = float(body.get("rate", RATE))
-        mystery = bool(body.get("mystery", MYSTERY))
+        # profile override; legacy 'mystery':false -> no DSP. Default = TTS_PROFILE (conteur).
+        profile = str(body.get("profile", PROFILE))
+        if body.get("mystery") is False:
+            profile = "none"
         try:
-            wav = speak(text, rate, mystery)
+            wav = speak(text, rate, profile)
         except Exception as e:
             return jsonify({"error": str(e), "hint": "TTS_BACKEND=stub for a dep-free test"}), 503
         return Response(wav, mimetype="audio/wav")
@@ -178,7 +218,7 @@ def main():
     ap.add_argument("--port", type=int, default=8772)
     ap.add_argument("--host", default="127.0.0.1")
     a = ap.parse_args()
-    print(f"[tts] backend={BACKEND} voice={VOICE or '-'} rate={RATE} mystery={MYSTERY} ffmpeg={HAS_FFMPEG}")
+    print(f"[tts] backend={BACKEND} voice={VOICE or '-'} rate={RATE} profile={PROFILE} ffmpeg={HAS_FFMPEG}")
     build_app().run(host=a.host, port=a.port, threaded=True)
 
 
