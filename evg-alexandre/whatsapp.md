@@ -7,6 +7,31 @@
 
 ---
 
+## 💰 Créer la cagnotte SANS FRAIS (OnParticipe)
+
+L'objectif : collecter l'argent sans perdre de commission. Deux options 100 % gratuites :
+
+**Option simple (déjà en place) — virement sur le RIB**
+Le RIB est sur la page. Les potes font un **virement instantané** (devenu gratuit
+partout dans l'UE depuis 2025) avec le motif « EVG Alexandre ». Zéro frais, rien à créer.
+
+**Option pot en ligne avec lien partageable — OnParticipe**
+1. Va sur **https://www.onparticipe.fr** → « Créer une cagnotte » (gratuit)
+2. Titre : **EVG Alexandre** · renseigne **ton IBAN** pour le retrait (0 frais)
+3. Copie le lien de la cagnotte et colle-le dans `config.js` →
+   `lien_cagnotte: "https://www.onparticipe.fr/c/..."`
+4. Le bouton **« 🔗 Participer à la cagnotte »** apparaît tout seul sur la page.
+
+> ⚠️ À éviter : **Leetchi** et **Le Pot Commun** prélèvent **4 à 6 % au retrait**
+> bancaire (20-30 € perdus sur 500 €). OnParticipe fonctionne au **pourboire
+> volontaire** : au moment de payer, le don à la plateforme peut être mis à **0 €**.
+
+**Suivi de qui a payé** : dès qu'un pote verse sa part, ajoute-le dans le tableau
+`participants` de `config.js` (`{ nom: "Theo", montant: 60 }`) — il s'affiche dans
+la section « 🙌 Ils participent déjà ».
+
+---
+
 ## 1) Message d'annonce (destination actée 🎉)
 
 ```
@@ -18,7 +43,7 @@ C'est officiel : direction l'Ardèche ! 🎉
 
 LIEN_DE_LA_PAGE
 
-💸 Et pense à la cagnotte (RIB sur la page, motif : EVG Alexandre). Merci à tous ! 🤘
+💸 Cagnotte SANS FRAIS : virement sur le RIB de la page (motif : EVG Alexandre) ou via la cagnotte en ligne. Merci à tous ! 🤘
 ```
 
 ---

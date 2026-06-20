@@ -383,7 +383,16 @@ const CAGNOTTE_CONFIG = {
   },
 
 
-  /* ---- LIEN CAGNOTTE EN LIGNE (optionnel) ----------------------------- */
+  /* ---- CAGNOTTE EN LIGNE — OnParticipe (0 frais) ---------------------- */
+  // 👉 POUR ACTIVER LE BOUTON « Participer à la cagnotte » :
+  //   1. Va sur https://www.onparticipe.fr → « Créer une cagnotte » (gratuit)
+  //   2. Titre : « EVG Alexandre » · renseigne TON IBAN pour le retrait (0 frais)
+  //   3. Copie le lien de ta cagnotte et colle-le entre les guillemets ci-dessous
+  //   → le bouton apparaît tout seul sur la page.
+  // 💡 OnParticipe = 0 commission au retrait (modèle au pourboire VOLONTAIRE :
+  //    au moment de payer, le don à la plateforme peut être mis à 0 €).
+  // Si tu préfères rester 100 % simple : laisse vide, le virement sur le RIB
+  // (virement instantané gratuit) suffit déjà.
   lien_cagnotte: "",
 
 
@@ -395,14 +404,16 @@ const CAGNOTTE_CONFIG = {
       "👉 Va sur la page choisir TON logement préféré et TES activités " +
       "(canoë, canyoning, guinguettes, dégustation sous terre…) — ton budget " +
       "se calcule tout seul :\n\n{url}\n\n" +
-      "💸 Et pense à la cagnotte (RIB sur la page, motif : EVG Alexandre). " +
-      "Merci à tous ! 🤘"
+      "💸 Cagnotte SANS FRAIS : virement sur le RIB de la page (motif : EVG " +
+      "Alexandre) ou via la cagnotte en ligne. Merci à tous ! 🤘"
   },
 
 
-  /* ---- PARTICIPANTS ---------------------------------------------------- */
+  /* ---- PARTICIPANTS — suivi manuel de qui a payé ---------------------- */
+  // Ajoute une ligne quand quelqu'un a versé sa part (montant facultatif).
   participants: [
-    // { nom: "Thomas", montant: 50 },
+    // { nom: "Theo",   montant: 60 },
+    // { nom: "Antoine", montant: 60 },
   ]
 };
 
