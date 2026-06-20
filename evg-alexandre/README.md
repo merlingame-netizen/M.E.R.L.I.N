@@ -37,6 +37,16 @@ participants: [
 ```
 
 Une carte passée en `"complet"` se grise et devient non-sélectionnable.
+
+## 💰 Cagnotte sans frais
+
+Deux options 100 % gratuites (voir `whatsapp.md` pour le pas-à-pas) :
+- **Virement sur le RIB** (déjà affiché) — virement instantané gratuit depuis 2025.
+- **OnParticipe** — pot en ligne 0 commission au retrait. Crée la cagnotte sur
+  onparticipe.fr, puis colle son URL dans `lien_cagnotte` (config.js) → le bouton
+  « 🔗 Participer à la cagnotte » s'active. Le suivi de qui a payé se fait dans le
+  tableau `participants`.
+- ❌ À éviter : Leetchi / Le Pot Commun (4-6 % de frais au retrait bancaire).
 Sauvegarde → commit → push : la page se met à jour toute seule.
 
 ## 🌐 Activer GitHub Pages (1 seule fois)
