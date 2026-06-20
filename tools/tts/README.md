@@ -4,16 +4,39 @@ A real spoken narrator voice for Merlin (the procedural "Animalese"/digital voic
 not a human voice). Service-first: the game (`merlin_voice.gd`, mode **Conteur (voix TTS)**)
 POSTs narration text here and plays the returned WAV. Free + real-time on CPU via **Piper**.
 
-## Run (PC, test now — no model needed)
+## Test in your browser (localhost HTML console)
+
+Run the service, then open **http://127.0.0.1:8772/** — a built-in HTML console: pick a
+**language**, a **profile** (conteur/deep/mystery), a rate, and hit **Parler** to hear it.
+This is the "test the solution on localhost with the retained criteria" surface:
+**deep realistic Conteur voice + the SAME voice across languages**.
 
 ```bash
-TTS_BACKEND=stub python3 tools/tts/tts_server.py --port 8772
-curl -s -X POST -H 'content-type: application/json' \
-  -d '{"text":"Bienvenue, voyageur, dans les bois anciens."}' \
-  http://127.0.0.1:8772/speak --output merlin.wav   # play merlin.wav
+TTS_BACKEND=stub python3 tools/tts/tts_server.py --port 8772   # dep-free pipeline test
+# then open http://127.0.0.1:8772/  (for the real multilingual voice, use coqui/edge below)
 ```
 
-The **stub** returns a short tone so the whole game pipeline is testable with zero deps.
+## Same voice in every language (multilingual)
+
+Critère clé : **la voix doit être la même selon la langue**. Piper has a *different* model
+(different speaker) per language → not the same voice. Use a **single-speaker multilingual**
+backend:
+
+- **XTTS-v2 (coqui)** — local, free, ~16 languages, ONE speaker (`Damien Black` or a cloned
+  `TTS_SPEAKER_WAV`) → the same deep voice in fr/en/es/it/de/pt/zh/ja… The game sends `lang`
+  (current locale) automatically.
+  ```bash
+  pip install TTS
+  TTS_BACKEND=coqui TTS_SPEAKER="Damien Black" TTS_PROFILE=conteur python3 tools/tts/tts_server.py
+  ```
+- **edge-tts** — free cloud, no key. A `*MultilingualNeural` **male** voice keeps the same
+  timbre across languages (returns MP3 — the browser console plays it directly).
+  ```bash
+  pip install edge-tts
+  TTS_BACKEND=edge TTS_VOICE=fr-FR-RemyMultilingualNeural python3 tools/tts/tts_server.py
+  ```
+
+`/health` reports `same_voice_all_langs: true` for coqui/edge/elevenlabs (false for stub/piper).
 
 ## The "Conteur" profile (deep, realistic — default)
 

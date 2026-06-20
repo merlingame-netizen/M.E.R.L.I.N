@@ -108,39 +108,55 @@ def _dsp_filter(wav_in: bytes, profile: str) -> bytes:
 
 
 # ── backends ─────────────────────────────────────────────────────────────────
-def _synth(text: str, rate: float) -> bytes:
+# Return (audio_bytes, mime). "Same voice across languages" needs a single-speaker
+# MULTILINGUAL backend: coqui/XTTS (local) or edge (free cloud male multilingual voice).
+def _synth(text: str, rate: float, lang: str) -> tuple[bytes, str]:
     if BACKEND == "stub":
-        return _sine_wav(text)
+        return _sine_wav(text), "audio/wav"
     if BACKEND == "piper":
+        # NOTE: piper voices are per-language (different speaker per language) — not "same
+        # voice across languages". Use coqui/edge for a consistent multilingual narrator.
         if not VOICE or not os.path.exists(VOICE):
             raise RuntimeError("TTS_VOICE (piper .onnx) not found — set it or use TTS_BACKEND=stub")
-        # piper reads text on stdin, writes WAV to stdout. length_scale = pace.
         out = subprocess.run(
             ["piper", "--model", VOICE, "--length_scale", str(rate), "--output_file", "-"],
             input=text.encode("utf-8"), capture_output=True, timeout=60)
         if out.returncode != 0 or not out.stdout:
             raise RuntimeError("piper failed: " + out.stderr.decode("utf-8", "ignore")[:160])
-        return out.stdout
+        return out.stdout, "audio/wav"
     if BACKEND == "coqui":
-        # Most realistic free option (XTTS-v2): natural, French, deep built-in male speaker.
-        # Heavier on CPU (a few s/line) but cached. pip install TTS.
+        # XTTS-v2: ONE speaker, ~16 languages -> the SAME deep voice in every language.
         global _coqui
         if _coqui is None:
             from TTS.api import TTS as CoquiTTS
             _coqui = CoquiTTS(os.environ.get("TTS_MODEL", "tts_models/multilingual/multi-dataset/xtts_v2"),
                               gpu=False)
         out_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
-        kwargs = {"text": text, "file_path": out_path, "language": "fr"}
+        kwargs = {"text": text, "file_path": out_path, "language": (lang or "fr")}
         spk_wav = os.environ.get("TTS_SPEAKER_WAV", "")
         if spk_wav and os.path.exists(spk_wav):
-            kwargs["speaker_wav"] = spk_wav            # clone a deep reference voice
+            kwargs["speaker_wav"] = spk_wav            # clone a deep reference (same in all langs)
         else:
             kwargs["speaker"] = os.environ.get("TTS_SPEAKER", "Damien Black")  # deep male xtts speaker
         _coqui.tts_to_file(**kwargs)
         with open(out_path, "rb") as f:
             data = f.read()
         os.remove(out_path)
-        return data
+        return data, "audio/wav"
+    if BACKEND == "edge":
+        # edge-tts: free, no key. A *Multilingual* male voice speaks any language with the
+        # SAME timbre (e.g. fr-FR-RemyMultilingualNeural / en-US-BrianMultilingualNeural).
+        import asyncio
+        import edge_tts
+        voice = VOICE or os.environ.get("TTS_EDGE_VOICE", "fr-FR-RemyMultilingualNeural")
+
+        async def _gen() -> bytes:
+            buf = b""
+            async for chunk in edge_tts.Communicate(text, voice).stream():
+                if chunk["type"] == "audio":
+                    buf += chunk["data"]
+            return buf
+        return asyncio.run(_gen()), "audio/mpeg"  # MP3 (browser <audio> plays it directly)
     if BACKEND == "elevenlabs":
         import urllib.request
         key = os.environ.get("ELEVEN_API_KEY", "")
@@ -153,7 +169,7 @@ def _synth(text: str, rate: float) -> bytes:
             f"https://api.elevenlabs.io/v1/text-to-speech/{vid}?output_format=pcm_22050",
             data=body, headers={"xi-api-key": key, "content-type": "application/json", "accept": "audio/wav"})
         with urllib.request.urlopen(req, timeout=60) as r:
-            return r.read()
+            return r.read(), "audio/wav"
     raise RuntimeError(f"unknown TTS_BACKEND '{BACKEND}'")
 
 
@@ -162,20 +178,75 @@ def _json_str(s: str) -> bytes:
     return json.dumps(s, ensure_ascii=False).encode("utf-8")
 
 
-def speak(text: str, rate: float, profile: str) -> bytes:
-    key = hashlib.sha1(f"{BACKEND}|{VOICE}|{rate}|{profile}|{text}".encode()).hexdigest()[:16]
-    cpath = os.path.join(CACHE, key + ".wav")
+def speak(text: str, rate: float, profile: str, lang: str) -> tuple[bytes, str]:
+    ext = "mp3" if BACKEND == "edge" else "wav"
+    key = hashlib.sha1(f"{BACKEND}|{VOICE}|{rate}|{profile}|{lang}|{text}".encode()).hexdigest()[:16]
+    cpath = os.path.join(CACHE, key + "." + ext)
+    mime = "audio/mpeg" if ext == "mp3" else "audio/wav"
     if os.path.exists(cpath):
         with open(cpath, "rb") as f:
-            return f.read()
-    wav = _synth(text, rate)
-    wav = _dsp_filter(wav, profile)
+            return f.read(), mime
+    audio, mime = _synth(text, rate, lang)
+    if mime == "audio/wav":  # DSP profiles operate on WAV (ffmpeg)
+        audio = _dsp_filter(audio, profile)
     try:
         with open(cpath, "wb") as f:
-            f.write(wav)
+            f.write(audio)
     except Exception:
         pass
-    return wav
+    return audio, mime
+
+
+_CONSOLE_HTML = """<!doctype html><html lang=fr><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>MERLIN — Voix Conteur (test)</title>
+<style>
+ body{margin:0;background:#0d1117;color:#e6edf3;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace}
+ .wrap{max-width:760px;margin:0 auto;padding:22px}
+ h1{font-size:19px} .mut{color:#8b949e;font-size:13px}
+ label{display:block;margin:14px 0 5px;color:#8b949e;text-transform:uppercase;font-size:11px;letter-spacing:1px}
+ textarea,select,input{width:100%;box-sizing:border-box;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:11px;font:inherit}
+ textarea{min-height:90px} .row{display:flex;gap:12px;flex-wrap:wrap} .row>div{flex:1;min-width:150px}
+ button{margin-top:16px;background:#58a6ff;color:#0d1117;border:0;border-radius:8px;padding:13px 20px;font-weight:700;font:inherit;cursor:pointer;min-height:46px}
+ button:disabled{opacity:.5} audio{width:100%;margin-top:16px} .badge{font-size:12px;padding:3px 9px;border-radius:20px;background:#21262d}
+ .ok{color:#2ea043} .err{color:#f85149} code{color:#a371f7}
+</style></head><body><div class=wrap>
+ <h1>🜨 MERLIN — Voix du Conteur (test localhost)</h1>
+ <div class=mut id=health>…</div>
+ <label>Langue (même voix dans toutes — backend multilingue)</label>
+ <select id=lang onchange=fill()>
+  <option value=fr>Français</option><option value=en>English</option><option value=es>Español</option>
+  <option value=it>Italiano</option><option value=de>Deutsch</option><option value=pt>Português</option>
+  <option value=zh>中文</option><option value=ja>日本語</option>
+ </select>
+ <label>Texte</label><textarea id=txt></textarea>
+ <div class=row>
+  <div><label>Profil (profondeur)</label><select id=prof>
+   <option value=conteur>Conteur (−1 ½t, défaut)</option><option value=deep>Deep (−3 ½t)</option>
+   <option value=mystery>Mystery (−4 ½t)</option><option value=none>Aucun (brut)</option></select></div>
+  <div><label>Débit <span id=rv>1.10</span></label><input id=rate type=range min=0.8 max=1.4 step=0.02 value=1.10 oninput="rv.textContent=this.value"></div>
+ </div>
+ <button id=go onclick=speak()>▶ Parler</button> <span id=st class=mut></span>
+ <audio id=au controls></audio>
+ <p class=mut>Critères : <b>voix grave réaliste (Conteur)</b> · <b>même voix multilingue</b> (XTTS « Damien Black » ou edge-tts <code>*MultilingualNeural</code>) · CPU/gratuit.</p>
+</div><script>
+ const S={fr:"Bienvenue, voyageur. Les bois de Brocéliande se souviennent de ton nom.",
+  en:"Welcome, traveler. The woods of Brocéliande remember your name.",
+  es:"Bienvenido, viajero. Los bosques de Brocéliande recuerdan tu nombre.",
+  it:"Benvenuto, viaggiatore. I boschi di Brocéliande ricordano il tuo nome.",
+  de:"Willkommen, Reisender. Die Wälder von Brocéliande erinnern sich an deinen Namen.",
+  pt:"Bem-vindo, viajante. As florestas de Brocéliande lembram o teu nome.",
+  zh:"欢迎你，旅人。布罗塞利安德的森林记得你的名字。",ja:"ようこそ、旅人よ。ブロセリアンドの森はあなたの名を覚えている。"};
+ function fill(){txt.value=S[lang.value]||S.fr}
+ async function speak(){go.disabled=true;st.textContent="…";st.className="mut";
+  try{const r=await fetch("/speak",{method:"POST",headers:{"content-type":"application/json"},
+   body:JSON.stringify({text:txt.value,lang:lang.value,profile:prof.value,rate:parseFloat(rate.value)})});
+   if(!r.ok){const e=await r.json();st.textContent="✗ "+(e.error||r.status);st.className="err";go.disabled=false;return}
+   au.src=URL.createObjectURL(await r.blob());au.play();st.textContent="✓";st.className="ok"}
+  catch(e){st.textContent="✗ "+e;st.className="err"} go.disabled=false}
+ fetch("/health").then(r=>r.json()).then(h=>{health.innerHTML=
+   `backend <b>${h.backend}</b> · même voix multilingue: <b class=${h.same_voice_all_langs?'ok':'err'}>${h.same_voice_all_langs?'oui':'non (utilise coqui/edge)'}</b> · ffmpeg ${h.ffmpeg?'✓':'✗'} · profil ${h.profile}`});
+ fill();
+</script></body></html>"""
 
 
 def build_app() -> Flask:
@@ -187,11 +258,17 @@ def build_app() -> Flask:
             if request.headers.get("x-tts-token", "") != TOKEN:
                 return Response("unauthorized\n", 401)
 
+    @app.route("/")
+    def console():
+        return Response(_CONSOLE_HTML, mimetype="text/html")
+
     @app.route("/health")
     def health():
+        multilingual = BACKEND in ("coqui", "edge", "elevenlabs")
         return jsonify({"ok": True, "backend": BACKEND, "voice": os.path.basename(VOICE) or VOICE,
-                        "ready": BACKEND in ("stub", "coqui", "elevenlabs") or bool(VOICE),
-                        "ffmpeg": HAS_FFMPEG, "profile": PROFILE, "profiles": list(DSP_PROFILES)})
+                        "ready": BACKEND in ("stub", "coqui", "edge", "elevenlabs") or bool(VOICE),
+                        "ffmpeg": HAS_FFMPEG, "profile": PROFILE, "profiles": list(DSP_PROFILES),
+                        "multilingual": multilingual, "same_voice_all_langs": multilingual})
 
     @app.route("/speak", methods=["POST"])
     def do_speak():
@@ -200,15 +277,15 @@ def build_app() -> Flask:
         if not text:
             return jsonify({"error": "text required"}), 400
         rate = float(body.get("rate", RATE))
-        # profile override; legacy 'mystery':false -> no DSP. Default = TTS_PROFILE (conteur).
+        lang = str(body.get("lang", os.environ.get("TTS_LANG", "fr")))
         profile = str(body.get("profile", PROFILE))
         if body.get("mystery") is False:
             profile = "none"
         try:
-            wav = speak(text, rate, profile)
+            audio, mime = speak(text, rate, profile, lang)
         except Exception as e:
             return jsonify({"error": str(e), "hint": "TTS_BACKEND=stub for a dep-free test"}), 503
-        return Response(wav, mimetype="audio/wav")
+        return Response(audio, mimetype=mime)
 
     return app
 

@@ -139,7 +139,11 @@ func _request_tts(text: String) -> void:
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	if tts_token != "":
 		headers.append("x-tts-token: " + tts_token)
-	var payload: Dictionary = {"text": text, "rate": tts_rate, "mystery": tts_mystery, "profile": tts_profile}
+	var lang: String = "fr"
+	var lm: Node = get_node_or_null("/root/LocaleManager")
+	if lm != null and lm.has_method("get_language"):
+		lang = str(lm.get_language())  # same voice, current game language (multilingual backend)
+	var payload: Dictionary = {"text": text, "rate": tts_rate, "mystery": tts_mystery, "profile": tts_profile, "lang": lang}
 	var err: int = _tts_http.request(tts_url.rstrip("/") + "/speak", headers,
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
