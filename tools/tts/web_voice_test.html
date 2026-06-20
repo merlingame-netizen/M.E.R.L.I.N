@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MERLIN — Test voix Conteur (navigateur, zéro install)</title>
+<style>
+ body{margin:0;background:#0d1117;color:#e6edf3;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace}
+ .wrap{max-width:780px;margin:0 auto;padding:22px}
+ h1{font-size:19px} .mut{color:#8b949e;font-size:13px}
+ label{display:block;margin:14px 0 5px;color:#8b949e;text-transform:uppercase;font-size:11px;letter-spacing:1px}
+ select,textarea,input{width:100%;box-sizing:border-box;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:11px;font:inherit}
+ textarea{min-height:84px}
+ .langs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+ .langs button{flex:0 0 auto;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:20px;padding:9px 15px;cursor:pointer;font:inherit;min-height:42px}
+ .langs button.on{background:#58a6ff;color:#0d1117;border-color:#58a6ff;font-weight:700}
+ .row{display:flex;gap:14px;flex-wrap:wrap}.row>div{flex:1;min-width:150px}
+ .go{margin-top:18px;background:#a371f7;color:#0d1117;border:0;border-radius:10px;padding:15px 22px;font-weight:700;font:inherit;cursor:pointer;min-height:52px;width:100%}
+ .badge{font-size:12px;padding:2px 8px;border-radius:20px;background:#21262d} code{color:#a371f7}
+ .ok{color:#2ea043}.warn{color:#9e6a03}
+</style>
+</head>
+<body><div class="wrap">
+ <h1>🜨 MERLIN — Voix du Conteur (test navigateur)</h1>
+ <p class="mut">Zéro installation : utilise les voix de <b>Windows / du navigateur</b> (Web Speech API).
+   Pour la <b>même voix dans toutes les langues</b>, choisis une voix marquée <code>Multilingual</code>
+   (ou « Natural »). Le <b>grave</b> = baisse la hauteur (pitch).</p>
+
+ <label>Voix (🌍 = multilingue / même voix toutes langues)</label>
+ <select id="voice"></select>
+ <div class="mut" id="vhint"></div>
+
+ <label>Langue (charge un exemple + règle la prononciation)</label>
+ <div class="langs" id="langs"></div>
+
+ <label>Texte</label>
+ <textarea id="txt"></textarea>
+
+ <div class="row">
+  <div><label>Grave (pitch) <span id="pv">0.6</span></label>
+   <input id="pitch" type="range" min="0" max="1.4" step="0.05" value="0.6" oninput="pv.textContent=this.value"></div>
+  <div><label>Débit <span id="rv">0.88</span></label>
+   <input id="rate" type="range" min="0.5" max="1.3" step="0.02" value="0.88" oninput="rv.textContent=this.value"></div>
+ </div>
+
+ <button class="go" id="go">▶ Parler</button>
+ <p class="mut" id="status"></p>
+ <p class="mut">Astuce : si aucune voix française grave n'est listée, ajoute-en une dans
+   <b>Windows → Paramètres → Heure et langue → Voix</b> (voix « Natural/Multilingual » de Microsoft),
+   puis recharge cette page. Pour la voix in-game (Godot), c'est le service Python (XTTS/edge) — mais
+   pour <b>écouter/valider le rendu</b> ici, le navigateur suffit.</p>
+</div>
+<script>
+ const SAMPLES = {
+  "fr-FR":"Bienvenue, voyageur. Les bois de Brocéliande se souviennent de ton nom… mais moi seul connais la fin de ton histoire.",
+  "en-US":"Welcome, traveler. The woods of Brocéliande remember your name… but I alone know how your story ends.",
+  "es-ES":"Bienvenido, viajero. Los bosques de Brocéliande recuerdan tu nombre… pero solo yo conozco el final de tu historia.",
+  "it-IT":"Benvenuto, viaggiatore. I boschi di Brocéliande ricordano il tuo nome… ma io solo conosco la fine della tua storia.",
+  "de-DE":"Willkommen, Reisender. Die Wälder von Brocéliande erinnern sich an deinen Namen… doch nur ich kenne das Ende deiner Geschichte.",
+  "pt-PT":"Bem-vindo, viajante. As florestas de Brocéliande lembram o teu nome… mas só eu sei o fim da tua história."
+ };
+ let curLang = "fr-FR";
+ const voiceSel = document.getElementById("voice");
+ const langsEl = document.getElementById("langs");
+ const txt = document.getElementById("txt");
+ const status = document.getElementById("status");
+
+ // language chips
+ Object.keys(SAMPLES).forEach((code,i)=>{
+   const b=document.createElement("button");
+   b.textContent=code.split("-")[0].toUpperCase(); b.dataset.code=code;
+   if(i===0)b.classList.add("on");
+   b.onclick=()=>{curLang=code; txt.value=SAMPLES[code];
+     document.querySelectorAll(".langs button").forEach(x=>x.classList.toggle("on",x===b));};
+   langsEl.appendChild(b);
+ });
+ txt.value = SAMPLES[curLang];
+
+ function isMulti(v){return /multilingual|natural|multi/i.test(v.name);}
+ function loadVoices(){
+   const vs = speechSynthesis.getVoices();
+   if(!vs.length){return;}
+   // sort: multilingual first, then French, then rest
+   vs.sort((a,b)=>{
+     const am=isMulti(a),bm=isMulti(b), af=a.lang.startsWith("fr"),bf=b.lang.startsWith("fr");
+     return (bm-am)||(bf-af)||a.name.localeCompare(b.name);
+   });
+   voiceSel.innerHTML = vs.map((v,i)=>`<option value="${i}">${isMulti(v)?"🌍 ":""}${v.name} — ${v.lang}</option>`).join("");
+   voiceSel._list = vs;
+   const multi = vs.filter(isMulti).length;
+   document.getElementById("vhint").innerHTML = multi
+     ? `<span class="ok">${multi} voix multilingue(s) détectée(s) → choisis-en une pour la même voix partout.</span>`
+     : `<span class="warn">Aucune voix « Multilingual/Natural » : les voix sont propres à chaque langue (voix différente selon la langue). Ajoute une voix Natural dans Windows pour le même timbre.</span>`;
+ }
+ speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); setTimeout(loadVoices,300);
+
+ document.getElementById("go").onclick = ()=>{
+   speechSynthesis.cancel();
+   const u = new SpeechSynthesisUtterance(txt.value);
+   const vs = voiceSel._list || speechSynthesis.getVoices();
+   const v = vs[parseInt(voiceSel.value||"0")];
+   if(v){u.voice=v;}
+   u.lang = curLang;
+   u.pitch = parseFloat(document.getElementById("pitch").value); // grave
+   u.rate  = parseFloat(document.getElementById("rate").value);  // posé
+   u.onstart=()=>{status.textContent="🔊 "+(v?v.name:"")+" — "+curLang;};
+   u.onerror=(e)=>{status.textContent="✗ "+e.error;};
+   speechSynthesis.speak(u);
+ };
+</script>
+</body></html>
