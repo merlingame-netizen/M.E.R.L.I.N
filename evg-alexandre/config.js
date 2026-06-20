@@ -349,9 +349,9 @@ const CAGNOTTE_CONFIG = {
   //   → le bouton apparaît tout seul sur la page.
   // 💡 OnParticipe = 0 commission au retrait (modèle au pourboire VOLONTAIRE :
   //    au moment de payer, le don à la plateforme peut être mis à 0 €).
-  // Si tu préfères rester 100 % simple : laisse vide, le virement sur le RIB
-  // (virement instantané gratuit) suffit déjà.
-  lien_cagnotte: "",
+  // ⚠️ Tant que tu n'as pas créé TA cagnotte, le bouton pointe vers la page
+  //    d'accueil OnParticipe. Remplace par l'URL de ta cagnotte dès que tu l'as.
+  lien_cagnotte: "https://www.onparticipe.fr/",
 
 
   /* ---- WHATSAPP -------------------------------------------------------- */

@@ -7,12 +7,21 @@ logement et des activités avec budget par personne calculé en direct.
 
 | Fichier | Rôle |
 |---------|------|
-| `index.html` | La page interactive (rien à toucher) |
-| **`config.js`** | **👉 Le seul fichier à modifier** : compteur, statuts de dispo, prix, activités, participants |
+| **`index.html`** | **La page CAGNOTTE** (premium, design « été ardéchois ») — la page d'accueil |
+| `programme.html` | Le site interactif (logement + activités + budget) — accessible via un lien en bas de la cagnotte |
+| **`config.js`** | **👉 Le seul fichier à modifier** : compteur, lien OnParticipe, prix, activités, participants |
+| `fonts/` | Polices auto-hébergées (Bricolage Grotesque, Hanken Grotesk, Instrument Serif) — rendu garanti même hors-ligne |
 | `rib-maxime-babonneau.pdf` | Le RIB téléchargeable |
 | `whatsapp.md` | Messages WhatsApp prêts à coller + checklist résas urgentes |
 
-## 🎮 Ce que fait la page
+## 💛 La page Cagnotte (`index.html`)
+
+Page dédiée et soignée : montant animé, badges « sans frais », bouton
+**OnParticipe** (`lien_cagnotte`), RIB avec copie + PDF, liste des participants,
+partage WhatsApp. Pour activer ta vraie cagnotte : crée-la sur onparticipe.fr et
+colle son URL dans `lien_cagnotte` (sinon le bouton mène à l'accueil OnParticipe).
+
+## 🎮 Ce que fait `programme.html`
 
 - **Cagnotte** : compteur animé (`montant_recolte`)
 - **Logement** : 7 vraies options recherchées le 10/06 (5 pers, 1 nuit), 1 seul
