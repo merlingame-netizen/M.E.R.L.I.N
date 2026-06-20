@@ -18,9 +18,21 @@
 const CAGNOTTE_CONFIG = {
 
   /* ---- LE COMPTEUR ----------------------------------------------------- */
+  // ⚠️ Si sync.worker_url est renseigné (voir SETUP.md), ces valeurs servent
+  //    seulement de SECOURS : le vrai montant/objectif vient du Worker.
   montant_recolte: 100,
-  objectif: 0,                 // pas d'objectif fixe (dépendra location + cadeaux)
-  afficher_objectif: false,
+  objectif: 600,               // estimation BASSE du budget (Airbnb + cadeau + qq activités)
+  afficher_objectif: true,
+
+  // Phrase affichée sous le titre de la page Cagnotte.
+  cagnotte_description: "Cette cagnotte finance l'EVG d'Alexandre en Ardèche : "
+    + "la location du logement, son cadeau et quelques activités (canoë dans les "
+    + "gorges…). Le montant visé est une estimation basse du budget des deux jours "
+    + "— chaque participation nous aide à tout couvrir 🛶🍻",
+
+  // Synchro temps réel du montant (Cloudflare Worker). Vide = secours config.js.
+  // Renseigne l'URL de ton Worker après déploiement (voir SETUP.md).
+  sync: { worker_url: "" },
 
 
   /* ---- INFOS DE L'EVG -------------------------------------------------- */

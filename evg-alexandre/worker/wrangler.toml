@@ -1,0 +1,14 @@
+# Cloudflare Worker — compteur cagnotte EVG
+# Déploiement : voir ../SETUP.md
+name = "cagnotte-evg"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# KV : crée le namespace puis colle son id ci-dessous
+#   wrangler kv namespace create CAGNOTTE_KV
+[[kv_namespaces]]
+binding = "CAGNOTTE_KV"
+id = "REMPLACER_PAR_TON_KV_ID"
+
+# Le mot de passe admin n'est PAS ici (jamais dans le repo) :
+#   wrangler secret put ADMIN_SECRET

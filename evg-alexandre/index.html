@@ -111,6 +111,16 @@
   .pot .sub{position:relative;color:#D8C6AC;font-size:15px}
   .pot .merci{font-family:"Instrument Serif",serif;font-style:italic;font-size:21px;
     color:#F2C879;margin-top:14px;position:relative}
+  /* progress */
+  .prog{position:relative;margin-top:16px}
+  .prog-bar{height:14px;border-radius:999px;background:rgba(255,255,255,.09);
+    border:1px solid rgba(242,200,121,.22);overflow:hidden}
+  .prog-bar>span{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#F2C879,#EC6E36);
+    box-shadow:0 0 16px rgba(236,110,54,.55);transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+  .prog-meta{display:flex;justify-content:space-between;gap:10px;margin-top:9px;
+    font-size:13.5px;color:#D8C6AC}
+  .prog-meta #progPct{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;color:#F2C879}
 
   /* ---------- trust chips ---------- */
   .trust{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
@@ -223,7 +233,7 @@
     <header>
       <span class="eyebrow rise d1"><span class="dot"></span><span id="kicker">EVG · Vallon-Pont-d'Arc</span></span>
       <h1 class="rise d2">La cagnotte<br><em id="forwho">d'Alexandre</em></h1>
-      <p class="lede rise d2">On se cotise pour le <b>logement</b> et les <b>cadeaux</b> du week-end. Chaque participation compte 🍻</p>
+      <p class="lede rise d2" id="lede">On se cotise pour le <b>logement</b> et les <b>cadeaux</b> du week-end. Chaque participation compte 🍻</p>
     </header>
 
     <!-- POT / AMOUNT -->
@@ -232,6 +242,12 @@
       <div class="tag">💰 Déjà récolté</div>
       <div class="amount"><span class="num" id="raised">0</span><span class="eur">€</span></div>
       <div class="sub" id="potSub">collectés pour l'EVG</div>
+
+      <div class="prog" id="prog">
+        <div class="prog-bar"><span id="progFill"></span></div>
+        <div class="prog-meta"><span id="progPct">0 %</span><span id="goalLine"></span></div>
+      </div>
+
       <div class="merci">Merci pour votre générosité 🙏</div>
 
       <div class="trust">
@@ -297,15 +313,42 @@
     /* HERO */
     $('forwho').textContent = "d'" + (C.prenom_du_marie || "Alexandre");
     if(C.lieu) $('kicker').textContent = "EVG · " + C.lieu.replace(/\s*🛶\s*/,'').replace(/·.*$/,'').trim();
+    if(C.cagnotte_description) $('lede').textContent = C.cagnotte_description;
 
-    /* AMOUNT count-up */
-    const raised = Number(C.montant_recolte||0);
-    const dur=1500, t0=performance.now();
-    (function tick(t){
-      const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
-      $('raised').textContent = euro(Math.round(raised*e));
-      if(p<1) requestAnimationFrame(tick); else $('raised').textContent = euro(raised);
-    })(t0);
+    /* AMOUNT + progress (count-up). Re-render si le Worker renvoie de nouvelles valeurs. */
+    const showGoal = C.afficher_objectif !== false;
+    let curShown = 0;
+    function render(montant, objectif){
+      montant = Number(montant||0); objectif = Number(objectif||0);
+      const from = curShown, to = montant, t0 = performance.now(), dur = 1200;
+      (function tick(t){
+        const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+        $('raised').textContent = euro(Math.round(from + (to-from)*e));
+        if(p<1) requestAnimationFrame(tick); else $('raised').textContent = euro(to);
+      })(t0);
+      curShown = to;
+      if(showGoal && objectif>0){
+        const pct = Math.min(100, Math.round((montant/objectif)*100));
+        $('goalLine').innerHTML = `objectif ~<b style="color:#F2C879">${euro(objectif)} €</b>`;
+        $('progPct').textContent = pct + ' %';
+        setTimeout(()=>{ $('progFill').style.width = pct + '%'; }, 120);
+      } else { $('prog').style.display='none'; }
+    }
+    // 1) valeurs de secours (config.js) immédiatement
+    render(C.montant_recolte, C.objectif);
+
+    // 2) synchro live via Cloudflare Worker, si configuré (sinon on garde le secours)
+    const workerUrl = (C.sync && C.sync.worker_url) ? C.sync.worker_url : "";
+    if(workerUrl){
+      fetch(workerUrl, {cache:'no-store'})
+        .then(r=>{ if(!r.ok) throw 0; return r.json(); })
+        .then(d=>{
+          if(d && d.montant!=null){
+            render(Number(d.montant), d.objectif!=null ? Number(d.objectif) : C.objectif);
+          }
+        })
+        .catch(()=>{ /* hors-ligne / pas encore déployé → on garde les valeurs config.js */ });
+    }
 
     /* OnParticipe CTA */
     const pot = C.lien_cagnotte || "https://www.onparticipe.fr/";
