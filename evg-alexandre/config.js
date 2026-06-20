@@ -20,8 +20,8 @@ const CAGNOTTE_CONFIG = {
   /* ---- LE COMPTEUR ----------------------------------------------------- */
   // ⚠️ Si sync.worker_url est renseigné (voir SETUP.md), ces valeurs servent
   //    seulement de SECOURS : le vrai montant/objectif vient du Worker.
-  montant_recolte: 100,
-  objectif: 600,               // estimation BASSE du budget (Airbnb + cadeau + qq activités)
+  montant_recolte: 0,
+  objectif: 750,               // estimation BASSE du budget (aligné sur OnParticipe)
   afficher_objectif: true,
 
   // Phrase affichée sous le titre de la page Cagnotte.
@@ -363,7 +363,7 @@ const CAGNOTTE_CONFIG = {
   //    au moment de payer, le don à la plateforme peut être mis à 0 €).
   // ⚠️ Tant que tu n'as pas créé TA cagnotte, le bouton pointe vers la page
   //    d'accueil OnParticipe. Remplace par l'URL de ta cagnotte dès que tu l'as.
-  lien_cagnotte: "https://www.onparticipe.fr/",
+  lien_cagnotte: "https://www.onparticipe.fr/c/3SWBzVUo",
 
 
   /* ---- WHATSAPP -------------------------------------------------------- */

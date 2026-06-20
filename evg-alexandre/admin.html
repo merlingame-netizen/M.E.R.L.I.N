@@ -35,6 +35,11 @@
     box-shadow:0 16px 30px -14px rgba(181,67,15,.7);transition:transform .14s,filter .2s}
   button:hover{transform:translateY(-2px);filter:brightness(1.04)}
   button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+  button.ghost{background:none;color:var(--river-deep);border:1.5px solid var(--stone-line);
+    box-shadow:none;margin-top:10px}
+  button.ghost:hover{border-color:var(--river-deep);filter:none}
+  .status{margin-top:6px;font-size:13.5px;color:var(--ink-soft)}
+  .status b{color:var(--ink)}
   .msg{margin-top:16px;padding:13px 15px;border-radius:12px;font-weight:600;font-size:14.5px;display:none}
   .msg.ok{display:block;background:rgba(44,154,106,.12);color:var(--ok);border:1px solid rgba(44,154,106,.35)}
   .msg.err{display:block;background:rgba(192,57,43,.1);color:var(--err);border:1px solid rgba(192,57,43,.35)}
@@ -48,7 +53,8 @@
   <form class="card" id="form" autocomplete="off">
     <span class="eyebrow">Admin · privé</span>
     <h1>Mettre à jour <em>la cagnotte</em></h1>
-    <p class="sub">Change le montant affiché sur la page publique. Réservé à l'organisateur·trice.</p>
+    <p class="sub">Par défaut le montant est lu <b>automatiquement sur OnParticipe</b>. Ici tu peux <b>forcer</b> une valeur (ex. si des virements RIB s'ajoutent), ou repasser en auto.</p>
+    <p class="status" id="status">État : <b>…</b></p>
 
     <div id="warn" class="warn">⚠️ Aucun Worker configuré (<code>sync.worker_url</code> vide dans <code>config.js</code>). Renseigne l'URL après déploiement — voir <code>SETUP.md</code>.</div>
 
@@ -66,7 +72,8 @@
     <label for="pwd">Mot de passe admin</label>
     <input id="pwd" type="password" placeholder="ton mot de passe (ADMIN_SECRET)" required />
 
-    <button id="btn" type="submit">💾 Mettre à jour</button>
+    <button id="btn" type="submit">💾 Forcer ce montant</button>
+    <button id="autoBtn" type="button" class="ghost">↩︎ Repasser en auto (OnParticipe)</button>
     <div class="msg" id="msg"></div>
 
     <p class="note">↩︎ <a href="index.html">Retour à la cagnotte</a></p>
@@ -81,37 +88,45 @@
     if(!url){ $('warn').style.display='block'; }
     if(C.objectif) $('objectif').placeholder = "ex. " + C.objectif;
 
-    $('form').addEventListener('submit', async (e)=>{
-      e.preventDefault();
+    const euro = n => Number(n||0).toLocaleString('fr-FR');
+    const SRC = { manual:"forcé (manuel)", auto:"auto OnParticipe", "auto-cache":"auto OnParticipe (cache)",
+      "auto-stale":"auto (dernier connu)", fallback:"secours" };
+    async function refreshStatus(){
+      if(!url) return;
+      try{
+        const d = await (await fetch(url,{cache:'no-store'})).json();
+        $('status').innerHTML = `État : <b>${SRC[d.source]||d.source}</b> · ${euro(d.montant)} € / ${euro(d.objectif)} €`;
+      }catch(e){ $('status').innerHTML = 'État : <b>injoignable</b>'; }
+    }
+    refreshStatus();
+
+    async function post(body, okMsg){
       const msg=$('msg'); msg.className='msg'; msg.textContent='';
       if(!url){ msg.className='msg err'; msg.textContent="Worker non configuré (config.js)."; return; }
-      const montant = Number($('montant').value);
-      const objectif = $('objectif').value!=='' ? Number($('objectif').value) : undefined;
       const pwd = $('pwd').value;
-      const btn=$('btn'); btn.disabled=true; btn.textContent='⏳ Envoi…';
+      if(!pwd){ msg.className='msg err'; msg.textContent="Entre ton mot de passe admin."; return; }
       try{
-        const body = { montant };
-        if(objectif!==undefined) body.objectif = objectif;
-        const r = await fetch(url, {
-          method:'POST',
+        const r = await fetch(url, { method:'POST',
           headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+pwd },
-          body: JSON.stringify(body)
-        });
+          body: JSON.stringify(body) });
         const d = await r.json().catch(()=>({}));
-        if(r.ok){
-          msg.className='msg ok';
-          msg.textContent = `✅ Montant mis à jour : ${Number(d.montant).toLocaleString('fr-FR')} €`;
-          $('pwd').value='';
-        } else {
-          msg.className='msg err';
-          msg.textContent = '❌ ' + (d.error || ('Erreur '+r.status));
-        }
-      }catch(err){
-        msg.className='msg err';
-        msg.textContent = "❌ Impossible de joindre le Worker (réseau ?).";
-      }finally{
-        btn.disabled=false; btn.textContent='💾 Mettre à jour';
-      }
+        if(r.ok){ msg.className='msg ok'; msg.textContent = okMsg(d); refreshStatus(); }
+        else { msg.className='msg err'; msg.textContent = '❌ ' + (d.error || ('Erreur '+r.status)); }
+      }catch(err){ msg.className='msg err'; msg.textContent = "❌ Impossible de joindre le Worker (réseau ?)."; }
+    }
+
+    $('autoBtn').addEventListener('click', ()=>{
+      post({mode:'auto'}, ()=>{ $('pwd').value=''; return '✅ Repassé en lecture automatique OnParticipe.'; });
+    });
+
+    $('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if($('montant').value===''){ const m=$('msg'); m.className='msg err'; m.textContent="Entre un montant."; return; }
+      const body = { montant: Number($('montant').value) };
+      if($('objectif').value!=='') body.objectif = Number($('objectif').value);
+      const btn=$('btn'); btn.disabled=true; btn.textContent='⏳ Envoi…';
+      await post(body, d => { $('pwd').value=''; return `✅ Montant forcé : ${euro(d.montant)} €`; });
+      btn.disabled=false; btn.textContent='💾 Forcer ce montant';
     });
   })();
   </script>

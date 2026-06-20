@@ -1,8 +1,12 @@
-# Cloudflare Worker — compteur cagnotte EVG
+# Cloudflare Worker — compteur cagnotte EVG (auto OnParticipe + override)
 # Déploiement : voir ../SETUP.md
 name = "cagnotte-evg"
 main = "worker.js"
 compatibility_date = "2026-01-01"
+
+# Page OnParticipe lue automatiquement (lecture server-side du total)
+[vars]
+ONPARTICIPE_URL = "https://www.onparticipe.fr/c/3SWBzVUo"
 
 # KV : crée le namespace puis colle son id ci-dessous
 #   wrangler kv namespace create CAGNOTTE_KV
