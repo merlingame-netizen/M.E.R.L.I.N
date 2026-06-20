@@ -42,6 +42,7 @@ var default_config = {
 	"calendar_month": 1,
 	"calendar_year": 2026,
 	"brain_count": 0,  # 0=Auto, 2=Dual, 3=Triple
+	"perf_mode": "auto",  # narration mode: auto | fluide (0.6B) | qualite (2B) | qualite_gemma
 }
 
 # Calendar controls (scene nodes)
@@ -205,6 +206,15 @@ const BRAIN_OPTIONS := [
 	{"value": 3, "label_key": "BRAIN_TRIPLE", "info_key": "BRAIN_TRIPLE_INFO"},
 ]
 
+# Two narration modes (plan Add-on 7) — built in code (no .tscn node), under IASection.
+const PERF_MODE_OPTIONS := [
+	{"value": "auto", "label": "Auto (selon puissance)"},
+	{"value": "fluide", "label": "Fluide — Qwen3 0.6B"},
+	{"value": "qualite", "label": "Qualite — 2B"},
+	{"value": "qualite_gemma", "label": "Qualite — Gemma 2B"},
+]
+var perf_mode_option: OptionButton = null
+
 
 func _configure_ia_options() -> void:
 	# Early return if BrainCountOption is missing from .tscn (IASection container
@@ -221,6 +231,7 @@ func _configure_ia_options() -> void:
 			brain_count_option.selected = i
 			break
 	brain_count_option.item_selected.connect(_on_brain_count_changed)
+	_build_perf_mode_row()
 
 	# Configure info label styling — separate guard since BrainInfoLabel sits
 	# in IASection but is independent of BrainCountOption resolution.
@@ -235,6 +246,44 @@ func _on_brain_count_changed(index: int) -> void:
 	var value: int = int(brain_count_option.get_item_metadata(index))
 	current_config["brain_count"] = value
 	_update_brain_info_label()
+
+
+# Build the "Mode narration" dropdown in code (no .tscn node) under IASection.
+func _build_perf_mode_row() -> void:
+	if brain_count_option == null:
+		return
+	var ia: Node = brain_count_option.get_parent().get_parent()  # IASection
+	if ia == null:
+		return
+	var row := HBoxContainer.new()
+	row.name = "PerfModeRow"
+	var lbl := Label.new()
+	lbl.text = "Mode narration"
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	perf_mode_option = OptionButton.new()
+	for opt in PERF_MODE_OPTIONS:
+		perf_mode_option.add_item(str(opt["label"]))
+		perf_mode_option.set_item_metadata(perf_mode_option.item_count - 1, opt["value"])
+	var cur: String = str(current_config.get("perf_mode", "auto"))
+	for i in range(perf_mode_option.item_count):
+		if str(perf_mode_option.get_item_metadata(i)) == cur:
+			perf_mode_option.selected = i
+			break
+	perf_mode_option.item_selected.connect(_on_perf_mode_changed)
+	row.add_child(lbl)
+	row.add_child(perf_mode_option)
+	ia.add_child(row)
+	ia.move_child(row, brain_count_option.get_parent().get_index() + 1)
+
+
+func _on_perf_mode_changed(index: int) -> void:
+	if perf_mode_option == null:
+		return
+	var value: String = str(perf_mode_option.get_item_metadata(index))
+	current_config["perf_mode"] = value
+	var mai = get_node_or_null("/root/MerlinAI")
+	if mai and mai.has_method("set_perf_mode"):
+		mai.set_perf_mode(value)  # persists + applies on next warmup
 
 
 func _update_brain_info_label() -> void:
@@ -362,6 +411,7 @@ func load_settings():
 			"calendar_month": config.get_value("calendar", "month", default_config.calendar_month),
 			"calendar_year": config.get_value("calendar", "year", default_config.calendar_year),
 			"brain_count": config.get_value("ai", "brain_count", default_config.brain_count),
+			"perf_mode": config.get_value("ai", "perf_mode", default_config.get("perf_mode", "auto")),
 		}
 	else:
 		# Utiliser les valeurs par défaut
@@ -394,6 +444,7 @@ func save_settings():
 
 	# Sauvegarder la configuration IA
 	config.set_value("ai", "brain_count", current_config.get("brain_count", 0))
+	config.set_value("ai", "perf_mode", current_config.get("perf_mode", "auto"))
 
 	config.save(CONFIG_PATH)
 
