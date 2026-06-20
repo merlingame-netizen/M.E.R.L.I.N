@@ -5,10 +5,8 @@
   "return_date": "2027-02-05",
   "price": 729.0,
   "currency": "EUR",
-  "carriers": [
-    "Corsair"
-  ],
-  "stops_out": 0,
-  "stops_in": 0,
+  "carriers": [],
+  "stops_out": -1,
+  "stops_in": -1,
   "deep_link": ""
 }
