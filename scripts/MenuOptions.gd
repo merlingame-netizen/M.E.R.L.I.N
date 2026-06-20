@@ -138,9 +138,10 @@ func _configure_voice_options() -> void:
 		_update_voice_ui_enabled()
 		return
 	# Populate voice mode (3 items, node already in scene)
-	voice_mode_option.add_item(tr("VOICE_SPOKEN"))    # 0
-	voice_mode_option.add_item(tr("VOICE_ROBOT"))    # 1
-	voice_mode_option.add_item(tr("VOICE_DISABLED")) # 2
+	voice_mode_option.add_item(tr("VOICE_SPOKEN"))    # 0 = AC_VOICE
+	voice_mode_option.add_item(tr("VOICE_ROBOT"))    # 1 = DIGITAL_VOICE
+	voice_mode_option.add_item(tr("VOICE_DISABLED")) # 2 = OFF
+	voice_mode_option.add_item("Conteur (voix TTS)") # 3 = NARRATOR_TTS (vraie voix d'homme)
 	voice_mode_option.selected = current_config.get("voice_mode", 0)
 	voice_mode_option.item_selected.connect(_on_voice_mode_changed)
 
@@ -188,6 +189,9 @@ func _update_voice_ui_enabled() -> void:
 
 func _on_voice_mode_changed(index: int) -> void:
 	current_config["voice_mode"] = index
+	var mv = get_node_or_null("/root/MerlinVoice")
+	if mv and mv.has_method("set_voice_mode"):
+		mv.set_voice_mode(index)  # apply live (0=AC,1=Digital,2=Off,3=Conteur TTS)
 	_update_voice_ui_enabled()
 
 

@@ -1,0 +1,21 @@
+[Unit]
+# MERLIN TTS microservice (storyteller voice). Template: fill __REPO_DIR__/__USER__/__VENV__.
+# Loopback only; reach it over the Cloudflare Tunnel like the other services.
+Description=M.E.R.L.I.N. TTS microservice (storyteller voice)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__REPO_DIR__
+# TTS_BACKEND=stub|piper|elevenlabs ; TTS_VOICE=/path/fr_FR-tom-medium.onnx ;
+# TTS_RATE=1.12 ; TTS_MYSTERY=1 ; TTS_TOKEN=...
+EnvironmentFile=-/etc/merlin-tts.env
+ExecStart=__VENV__/bin/python tools/tts/tts_server.py --port 8772 --host 127.0.0.1
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

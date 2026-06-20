@@ -13,12 +13,13 @@ signal character_displayed(char: String, index: int)
 signal voice_ready(is_ready: bool)
 
 ## Modes de voix
-enum VoiceMode { AC_VOICE, DIGITAL_VOICE, OFF }
+enum VoiceMode { AC_VOICE, DIGITAL_VOICE, OFF, NARRATOR_TTS }
 
 const VOICE_MODE_LABELS := {
 	VoiceMode.AC_VOICE: "Voix AC (Animalese)",
 	VoiceMode.DIGITAL_VOICE: "Voix Numerique",
 	VoiceMode.OFF: "Desactivee",
+	VoiceMode.NARRATOR_TTS: "Conteur (voix TTS)",
 }
 
 ## Presets de voix (compatibles ACVoicebox)
@@ -52,6 +53,13 @@ const VOICE_PRESETS := {
 @export var auto_speak_responses: bool = true
 @export var strip_markdown: bool = true
 
+## Conteur TTS (vraie voix d'homme mysterieux via le microservice tools/tts/asr_server)
+@export_group("Conteur TTS")
+@export var tts_url: String = "http://127.0.0.1:8772"
+@export var tts_token: String = ""
+@export_range(0.7, 1.6) var tts_rate: float = 1.12  ## >1 = plus lent / plus grave
+@export var tts_mystery: bool = true                 ## filtre grave + reverb cote service
+
 ## ACVoicebox (si disponible)
 var _acvoicebox: Node = null
 var _using_acvoicebox := false
@@ -69,6 +77,8 @@ var _is_displaying: bool = false
 var _char_timer: float = 0.0
 var _is_ready: bool = false
 var _connected_ai: Node = null
+var _tts_http: HTTPRequest = null
+var _tts_player: AudioStreamPlayer = null
 var _last_pitch: float = 294.0
 
 
@@ -79,6 +89,14 @@ func _ready() -> void:
 	apply_preset(current_preset)
 	_is_ready = true
 	voice_ready.emit(true)
+	# Conteur TTS: HTTP + a dedicated player for the storyteller voice (Add-on 7).
+	_tts_http = HTTPRequest.new()
+	add_child(_tts_http)
+	_tts_http.request_completed.connect(_on_tts_response)
+	_tts_player = AudioStreamPlayer.new()
+	_tts_player.bus = "Master"
+	_tts_player.name = "NarratorTTSPlayer"
+	add_child(_tts_player)
 	# Honor a saved voice preference, then auto-link to the narrator AI so Merlin's
 	# narration is spoken (plan Add-on 7). Deferred so the autoload tree is ready.
 	_load_voice_setting()
@@ -89,8 +107,12 @@ func _load_voice_setting() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load("user://settings.cfg") != OK:
 		return
-	var enabled: bool = bool(cfg.get_value("voice", "enabled", true))
-	if not enabled:
+	var m: int = int(cfg.get_value("voice", "mode", voice_mode))
+	if m >= 0 and m <= VoiceMode.NARRATOR_TTS:
+		voice_mode = m
+	tts_url = str(cfg.get_value("voice", "tts_url", tts_url))
+	tts_token = str(cfg.get_value("voice", "tts_token", tts_token))
+	if not bool(cfg.get_value("voice", "enabled", true)):
 		set_voice_mode(VoiceMode.OFF)
 
 
@@ -104,6 +126,32 @@ func _auto_connect_ai() -> void:
 	var ai: Node = tree.root.get_node_or_null("MerlinAI")
 	if ai != null:
 		connect_to_ai(ai)
+
+
+# ── Conteur TTS: fetch a real storyteller voice from the microservice and play it ─────
+func _request_tts(text: String) -> void:
+	if _tts_http == null or tts_url.strip_edges() == "" or text.strip_edges() == "":
+		return
+	if _tts_http.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
+		_tts_http.cancel_request()  # one at a time; latest line wins
+	var headers: PackedStringArray = ["Content-Type: application/json"]
+	if tts_token != "":
+		headers.append("x-tts-token: " + tts_token)
+	var payload: Dictionary = {"text": text, "rate": tts_rate, "mystery": tts_mystery}
+	var err: int = _tts_http.request(tts_url.rstrip("/") + "/speak", headers,
+		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if err != OK:
+		push_warning("[MerlinVoice] TTS request error %d (service down? %s)" % [err, tts_url])
+
+
+func _on_tts_response(_result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if code != 200 or body.is_empty() or _tts_player == null:
+		return
+	# Godot 4.4: parse a WAV container straight from bytes.
+	var stream: AudioStreamWAV = AudioStreamWAV.load_from_buffer(body)
+	if stream != null:
+		_tts_player.stream = stream
+		_tts_player.play()
 
 
 func _try_load_acvoicebox() -> void:
@@ -236,6 +284,9 @@ func display_text(text: String) -> void:
 				_acvoicebox.play_string(text)
 		VoiceMode.DIGITAL_VOICE:
 			pass  # Handled in _process via _advance_one_char
+		VoiceMode.NARRATOR_TTS:
+			if voice_enabled:
+				_request_tts(text)  # typewriter still runs in _process (visual)
 		VoiceMode.OFF:
 			pass  # Handled in _process (text display only, no sound)
 
