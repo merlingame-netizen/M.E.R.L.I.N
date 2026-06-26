@@ -49,6 +49,8 @@ class CreativeAdapter(BaseAdapter):
             "pipeline":      "Full pipeline: prompt→SD→sepia→cache→validate [Phase 3]",
             "celtic":        "Generate Celtic knotwork pattern (--type, --width, --height) [Phase 4]",
             "calligraphy":   "Generate handwriting strokes (--text, --format) [Phase 5]",
+            "sprite-anim":   "Generate animated sprite-sheet + SpriteFrames .tres (--template, --seed, --frames, --size, --fps) [Track S]",
+            "sprite-anim-list": "List sprite-anim templates",
         }
 
     def run(self, action: str, **kwargs: Any) -> dict:
@@ -61,6 +63,8 @@ class CreativeAdapter(BaseAdapter):
             case "pipeline":      return self._pipeline(**kwargs)
             case "celtic":        return self._celtic(**kwargs)
             case "calligraphy":   return self._calligraphy(**kwargs)
+            case "sprite-anim":   return self._sprite_anim(**kwargs)
+            case "sprite-anim-list": return self._sprite_anim_list()
             case _: raise NotImplementedError(action)
 
     # ── Sepia ───────────────────────────────────────────────────────────────
@@ -343,6 +347,67 @@ class CreativeAdapter(BaseAdapter):
             return self.error(f"Unknown format {fmt!r}. Use json, png, or svg.")
         except Exception as exc:
             return self.error(f"Calligraphy failed: {exc}")
+
+    # ── Sprite-anim forge (Track S) ─────────────────────────────────────────
+
+    def _sprite_anim_list(self) -> dict:
+        try:
+            from sprite_anim_forge import list_templates
+        except ImportError:
+            return self.error("sprite_anim_forge not available (missing Pillow?)")
+        return self.ok(list_templates())
+
+    def _sprite_anim(self, **kwargs: Any) -> dict:
+        try:
+            from sprite_anim_forge import generate, TEMPLATES
+        except ImportError:
+            return self.error("sprite_anim_forge not available (missing Pillow?)")
+
+        template = kwargs.get("template")
+        if not template:
+            return self.error("--template required (see sprite-anim-list)")
+        if template not in TEMPLATES:
+            return self.error(f"Unknown template {template!r}. Available: {sorted(TEMPLATES)}")
+
+        try:
+            seed = int(kwargs.get("seed", 42))
+        except (ValueError, TypeError):
+            return self.error("--seed must be an integer")
+
+        frames = None
+        if kwargs.get("frames") is not None:
+            try:
+                frames = int(kwargs["frames"])
+            except (ValueError, TypeError):
+                return self.error("--frames must be an integer")
+
+        fps = None
+        if kwargs.get("fps") is not None:
+            try:
+                fps = int(kwargs["fps"])
+            except (ValueError, TypeError):
+                return self.error("--fps must be an integer")
+
+        width = height = None
+        if kwargs.get("size"):
+            try:
+                parts = str(kwargs["size"]).lower().split("x")
+                width, height = int(parts[0]), int(parts[1])
+            except (ValueError, IndexError):
+                return self.error("--size must be WxH (e.g. 128x128)")
+
+        loop = None
+        if kwargs.get("no_loop"):
+            loop = False
+
+        try:
+            result = generate(template, seed=seed, frames=frames,
+                              width=width, height=height, fps=fps, loop=loop)
+            if result.get("error"):
+                return self.error(result["error"])
+            return self.ok(result)
+        except Exception as exc:
+            return self.error(f"Sprite-anim generation failed: {exc}")
 
     # ── Helpers ──────────────────────────────────────────────────────────────
 
