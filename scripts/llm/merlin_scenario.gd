@@ -334,10 +334,15 @@ func generate_selection() -> Array:
 	var mn: Node = _mn()
 	if mn != null and mn.is_ready():
 		var p: Dictionary = MerlinPromptBuilder.selection(_voice_prefix())
-		var res: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
-		if not res.has("error"):
-			var arr: Array = MerlinJson.extract_array(str(res.get("text", "")))
-			var clean: Array = MerlinProse.clean_selection(arr)
+		# v10.17 (track LLM, inspiré NobodyWho) — génération STRUCTURÉE robuste : retry-on-malformed
+		# (MerlinStructured) au lieu d'un seul essai. Grammaire OFF (MerlinGrammar.USE_GBNF=false, GBNF
+		# cassé gemma4) → parse+repair+validate+retry (chemin éprouvé). Contrat de fallback INCHANGÉ :
+		# <3 entrées valides OU {error} → SEL_FALLBACK (= comportement actuel, pire cas identique).
+		var r: Dictionary = await MerlinStructured.generate_object(
+			mn, str(p["system"]), str(p["user"]), p["opts"],
+			"selection", Callable(MerlinProse, "is_valid_selection"), true)
+		if r.has("data"):
+			var clean: Array = MerlinProse.clean_selection(r["data"])
 			if clean.size() >= 3:
 				return clean.slice(0, 3)
 	return SEL_FALLBACK.duplicate(true)

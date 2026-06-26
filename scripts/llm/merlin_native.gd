@@ -86,6 +86,12 @@ func _boot() -> void:
 	_model_ready = true
 	print("[MerlinNative] Gemma 4 E2B charge (n_ctx=%d) : %s" % [N_CTX, abs_path])
 	emit_signal("model_ready")
+	# v10.17 (track LLM) — warm le cache GBNF + valide les fichiers au boot (observabilité PURE :
+	# n'altère NI le load modèle, NI generate/generate_raw, NI le timeout/cancel). preload_all ne lève
+	# jamais (fichier absent → push_warning). Enforcement OFF par défaut (MerlinGrammar.USE_GBNF=false).
+	var gram: Dictionary = MerlinGrammar.preload_all()
+	print("[MerlinNative] GBNF preload : ok=%d enforce=%s missing=%s" % [
+		int(gram.get("ok", 0)), str(gram.get("enforcement", false)), str(gram.get("missing", []))])
 
 
 func is_ready() -> bool:

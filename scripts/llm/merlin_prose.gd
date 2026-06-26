@@ -133,3 +133,12 @@ static func clean_selection(arr: Array) -> Array:
 			if t.length() >= 2 and p.length() >= 5:
 				out.append({"title": t, "pitch": p})
 	return out
+
+
+# v10.17 (track LLM) — vrai si `parsed` est une sélection exploitable : Array de >=3 entrées
+# {title>=2, pitch>=5}. Réutilise le MÊME critère que clean_selection (DRY) sans muter. Passé en
+# Callable de validation à MerlinStructured.generate_object (retry-on-malformed).
+static func is_valid_selection(parsed: Variant) -> bool:
+	if not (parsed is Array):
+		return false
+	return clean_selection(parsed).size() >= 3

@@ -1,0 +1,5 @@
+root ::= ws "[" ws obj ws "," ws obj ws "," ws obj ws "]" ws
+obj ::= "{" ws "\"title\":" ws string ws "," ws "\"pitch\":" ws string ws "}"
+string ::= "\"" char* "\""
+char ::= [^"\\] | "\\" ["\\/bfnrt]
+ws ::= [ \t\n]*
