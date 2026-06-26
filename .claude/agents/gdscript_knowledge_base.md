@@ -1206,3 +1206,40 @@ Le « kill ~285 s » concerne les commandes Bash **foreground** (mon harness), p
 
 *Last Updated: 2026-05-25 (Section 10: LLM natif gemma4 — GBNF cassé → délimité, try/catch thread, flash_attn, timeouts)*
 *Maintained by: Debug Agent, Optimizer Agent & Task Dispatcher*
+
+---
+
+## Recent Decisions (auto-injected 2026-06-14)
+
+- **R120 v10.14 « Dé, Chemin & Équilibre » — chaînes de quêtes + équilibrage mesuré** (2026-06-12): **Dé pré-tiré par rareté SANS malus** (R20) : Commune 2/6 +1 · Rare 3/6 · Épique 4/6 ·
+- **R114 Montée en gamme « Fondations » (v10.13.1) — canon unique + outillage studio** (2026-06-12): **Canon UNIQUE = docs/BIBLE.md v2.0** : GAME_DESIGN_BIBLE.md v3.8 et DEV_PLAN_V2.5.md sont
+- **Lesson: `tween_property` sur `"shader_parameter/x"` d'un ShaderMaterial → « property doe** (2026-06-12): Pattern maison : `tween_method(setter, from, to, dur)` + `set_shader_parameter` (cf. vignette MerlinFx) ; tracker les valeurs courantes en membres
+- **Lesson: `.\validate.bat` bloqué par stratégie de groupe (GPO)** (2026-06-12): TOUJOURS `python tools/cli.py godot validate_step0/smoke/soak` — CLAUDE.md v4.0 mis à jour
+- **Phase A — fondations physiques (feedback playtest)** (2026-06-11): **Saut ajouté** : utilitaire ~1 m (ESPACE presse fraîche via `queue_jump()`, pas de bunny-hop), JUMP_VELOCITY 6.5 / gravité 20. Sert à enjamber les conduites au sol.
+- **Level 3 Electrical Station** (2026-06-10): Gris béton + métal (palette concrete, distincte de Pipe Dreams) ; électrocution = **zones sous tension qui drainent la batterie** + flash écran bleu ; props = bancs de transfos + murs de disjoncteurs 
+- **Chaîne de contrôle systématique** (2026-06-10): Skill `/backrooms-design` (G0→G6) + checker `tools/design_check.py` **PASS/FAIL bloquant** + 4 fichiers mémoire backrooms__*.
+- **Level 1 lore-wise (textures/ambiance)** (2026-06-09): Lumière : néons froids + **flaques sodium ambre** (~22%). Béton **sale & humide** (rouille, coulures, mousse, huile, fissures). Palette neutre (moins bleue).
+
+---
+
+## Patterns Track Motion/LLM/Sprite (2026-06-21 — goal intégration IA-anim, R121)
+
+- **Managed tween (`MerlinTween`, `scripts/game/merlin_tween.gd`)** : l'idiome `if _tw and _tw.is_valid():
+  _tw.kill(); _tw = node.create_tween()` (répété ~15×) → `MerlinTween.retween(node, key)` (méta-based : le
+  tween précédent de `(node,key)` est en meta sur le node, tué avant le neuf). ⚠ PAS un correctif d'orphelins
+  (le code était déjà sûr via `node.create_tween()` qui meurt avec le node) — **réduction de boilerplate +
+  garde anti double-boucle**. Loopers (`float_bob`/`_pulse`) via `retween_looping`. Choix méta > leash-node :
+  zéro enfant ajouté à l'arbre (rien à filtrer dans `get_children`).
+- **`generate_structured` + retry-on-malformed (`scripts/llm/merlin_structured.gd`, inspiré NobodyWho)** :
+  wrapper ADDITIF au-dessus de `generate()` (single-flight `_busy` / nonce `_gen_id` / timeout INTACTS,
+  awaits séquentiels) — applique régime structuré + parse (`MerlinJson`) + valide (`Callable`) + retry.
+  ⚠ **GBNF reste CASSÉ sur gemma4** (cf. lesson 2026-06-12 + `merlin_scenario` L10-11) → enforcement OFF
+  par défaut (`MerlinGrammar.USE_GBNF = false`) : la robustesse vient du **parse+repair+retry**, PAS de la
+  grammaire. `MerlinGrammar` = on-ramp (valide au boot, 1 const pour réactiver après un soak dédié prouvant
+  que `set_grammar` ne bloque pas). Fallback procédural toujours préservé (pire cas == comportement actuel).
+- **Throttle `_process` via accumulateur delta (perf)** : pour une anim procédurale INÉVITABLE en `_process`
+  (décor `_draw`, glow carte Rare+ non tween-able), cadencer l'ÉCRITURE : `_acc += delta ; if _acc < DT:
+  return ; _acc -= DT`. Décor 15fps, glow/sway carte 12fps. Les PHASES (`_t`/`_sway_phase`) avancent au VRAI
+  delta (courbe lisse) ; le hover-parallax reste plein framerate (feedback curseur direct).
+- **`asset_validator` alpha-aware** : un overlay transparent (sprite-sheet) doit être composité sur BG_DEEP
+  AVANT la mesure palette — sinon les pixels transparents lisent du noir (hors-palette) et le check échoue.
