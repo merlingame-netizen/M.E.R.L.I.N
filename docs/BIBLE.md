@@ -1404,8 +1404,9 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   reste la base ; rien de ce qui suit ne contredit R1-R113.
 - **4 dimensions retenues** (ordre d'exécution) : juice & animations → contenu & lore →
   artworks génératifs → audio complet (l'audio de base — SFX/stingers — arrive avec le juice).
-- **Outillage studio (développement 100% Claude)** : 4 outils canon — skills `merlin-juice`,
-  `merlin-audio`, `merlin-artwork` + `tools/create_agent.py` (factory d'agents). Voir §24.
+- **Outillage studio (développement 100% Claude)** : 5 outils canon — skills `merlin-juice`,
+  `merlin-audio`, `merlin-artwork` + `tools/sprite_anim_forge.py` (sprites animés) +
+  `tools/create_agent.py` (factory d'agents). Voir §24.
 - **Roadmap verrouillée** (gates mesurables par version) :
 
 | Version | Objectif | Gate de sortie |
@@ -1510,7 +1511,8 @@ casser l'identité parchemin). Le glitch Corruption (§23 et R75) se SUPERPOSE �
 ## §21 — R116 · Animations & Juice (canon)
 
 > Étend R110 (toute attente est animée ET skippable) et l'architecture §18 (MerlinFx : « le layer
-> EST le node »). **Source de vérité code : `scripts/game/merlin_fx.gd` + constantes `MerlinVisual.DUR_*`.**
+> EST le node »). **Source de vérité code : `scripts/game/merlin_fx.gd` + `scripts/game/merlin_tween.gd`
+> (R121) + constantes `MerlinVisual.DUR_*`.**
 > Le skill `.claude/skills/merlin-juice/SKILL.md` est le mode d'emploi outillé de cette section.
 
 ### Vocabulaire canon (nom → durée → courbe → usage)
@@ -1542,6 +1544,26 @@ casser l'identité parchemin). Le glitch Corruption (§23 et R75) se SUPERPOSE �
 - `await` ajouté dans le flow logique de run pour une raison cosmétique (régression soak/autoplay).
 - Polling `_process` pour de l'animation (tweens only). Particules : cap existant des sparks, pas de
   nouvelles émissions pendant le sustain LLM (CPU réservé à la gen, R58).
+
+### R121 · Tween managé (MerlinTween) + banque de recettes + throttle `_process` (2026-06-21)
+> **Source de vérité code : `scripts/game/merlin_tween.gd` + `scripts/game/merlin_fx.gd`.**
+> Inspiration externe : KoBeWi `Godot-Tween-Suite` (lifecycle) + `TweenFX` (recettes juicy).
+
+- **MerlinTween** (statique pur, méta-based) = sucre canon pour l'idiome « tuer le tween précédent de
+  la même propriété avant d'en recréer un » (répété ~15× dans le code) : `MerlinTween.retween(node,
+  key)` / `retween_looping(node, key)` / `kill_for(node, key)`. Le tween précédent de `(node, key)` est
+  mémorisé en META sur le node → meurt avec lui, **zéro enfant ajouté à l'arbre**. ⚠ Ce n'est PAS un
+  correctif d'orphelins (le code était déjà sûr par la convention `node.create_tween()`) mais une
+  **réduction de boilerplate + garde anti double-boucle** ; les loopers (`float_bob`, `_pulse`) y passent.
+- **Banque de recettes** (`merlin_fx.gd`, statics réutilisables) : `float_bob` (boucle lifecycle-safe via
+  MerlinTween), `snap` (délègue à `pop`), `punch_pos`, `slide_in`, `slide_out`, `fade`. RÉUTILISENT les
+  helpers existants — **zéro duplication** de shake/pop/ghost_flight/float_delta/spark_wave/beat_veil.
+  Toute durée via `MerlinVisual.DUR_* * motion()`, amplitudes ÷2 en reduce-motion.
+- **Throttle `_process`** (perf) — affine l'interdit ci-dessus : quand une animation procédurale est
+  INÉVITABLE en `_process` (décor `_draw`, glow de carte Rare+ — non tween-ables), cadencer l'ÉCRITURE
+  via un accumulateur delta (`_acc += delta ; if _acc < DT: return ; _acc -= DT`). Décor **15fps**,
+  glow/sway carte **12fps** (−75 % de draw calls, −80 % d'ops glow/sway). Les PHASES (`_t`, `_sway_phase`)
+  avancent au VRAI delta (courbe lisse) ; le **hover-parallax reste plein framerate** (feedback direct).
 
 ---
 
@@ -1624,17 +1646,20 @@ préférences persistées (Options, R74) · clavier de base au MVP, manette post
 > documenté, avec gate de sortie. Hiérarchie d'outils : MCP godot-mcp (éditeur live) →
 > CLI `python tools/cli.py godot …` (headless) → Edit/Write fichiers → scripts ad-hoc.
 
-### Les 4 outils canon
+### Les 5 outils canon
 | Outil | Rôle | Gate de sortie |
 |---|---|---|
-| `.claude/skills/merlin-juice/` | vocabulaire d'animation §21 + helpers MerlinFx | validate + smoke + soak/autoplay + capture avant/après |
+| `.claude/skills/merlin-juice/` | vocabulaire d'animation §21 + helpers MerlinFx + MerlinTween (R121) | validate + smoke + soak/autoplay + capture avant/après |
 | `.claude/skills/merlin-audio/` | SFX procéduraux (`tools/sfx_forge.py`) + MusicGen + catalogue §22 | écoute + peak ≤ -3dB + déclencheurs joués en autoplay |
 | `.claude/skills/merlin-artwork/` | images par situation/carte (gravure sépia R29) + cache | QA visuelle + async sans hitch + fallback sans-image intact |
+| `tools/sprite_anim_forge.py` | sprites animés procéduraux (feuille + SpriteFrames `.tres`, palette canon) | `python` run + `asset_validator --type sprite_sheet` + import Godot 0 erreur |
 | `tools/create_agent.py` | factory d'agents .md + registry AGENTS.md | `--validate` vert sur le parc |
 
 ### Conventions assets
 - **Artworks** : `assets/artwork/cache/<sha1(prompt)>.png` + `manifest.json`
   (`{hash, prompt, model, date, approved}`) — toute génération est REJOUABLE et traçable.
+- **Sprites animés** : `assets/sprites/cache/<template>_<sha1>_sheet.png` + `_frames.tres` + `manifest.json`
+  (gitignoré, régénérable) — feuille horizontale, `cell × n ≤ 8192px` (limite import Godot), boucle seamless.
 - **SFX** : `audio/sfx/<id>.wav` (44.1kHz mono), ids = catalogue §22 exactement.
 - **Musique** : `music/<contexte>/…` (theme/base/loop existants).
 - L'image ne bloque JAMAIS le texte (fade-in async, R29 « live ») ; le son ne bloque jamais l'input.
