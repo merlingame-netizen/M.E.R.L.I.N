@@ -56,6 +56,12 @@ var _discarding: bool = false  # v10.13.1 : en sortie discard_out → exclue du 
 var _sway_phase: float = 0.0
 var _sway_active: bool = false
 var _t: float = 0.0
+# v10.17 (perf) — Glow (Rare+) + sway idle cadencés à 12fps : ces mouvements sont lents (glow gspd
+# 0.8-1.3, sway ≤2.7 rad/s → cycles 2-8s) donc 12fps est indiscernable de 60 mais divise par 5 le
+# coût (sin() + écritures shadow_color/position/rotation par carte/frame). Le hover-parallax reste
+# à PLEIN framerate (feedback direct du curseur). _sway_phase/_t avancent au vrai delta → courbe lisse.
+const SLOW_DT: float = 1.0 / 12.0
+var _slow_acc: float = 0.0
 var _rarity_rank: int = 0
 var _panel_sb: StyleBoxFlat
 var _glow_col: Color = MerlinVisual.GOLD
@@ -219,6 +225,23 @@ func _wants_process() -> bool:
 
 func _process(delta: float) -> void:
 	_t += delta
+	# Hover parallax = feedback DIRECT du curseur → PLEIN framerate (jamais cadencé).
+	var hovering_parallax: bool = _hovering and not _compact
+	if hovering_parallax and not MerlinVisual.reduced_motion:
+		var center: Vector2 = global_position + pivot_offset
+		var mouse: Vector2 = get_global_mouse_position()
+		var dx: float = clampf((mouse.x - center.x) / (size.x * 0.5), -1.0, 1.0)
+		rotation = lerpf(rotation, dx * deg_to_rad(3.0), 0.15)
+	# _sway_phase avance au VRAI delta (la courbe sin reste lisse même quand l'écriture est cadencée).
+	var swaying: bool = not hovering_parallax and _sway_active and not _discarding and not MerlinVisual.reduced_motion
+	if swaying:
+		_sway_phase += delta
+	# Glow (Rare+) + écriture du sway idle : cadencés à 12fps (perf). Le glow continue même au survol
+	# (throttlé) ; le sway ne s'écrit que hors survol. Hover-parallax déjà appliqué plein framerate ci-dessus.
+	_slow_acc += delta
+	if _slow_acc < SLOW_DT:
+		return
+	_slow_acc -= SLOW_DT
 	if _rarity_rank >= 1 and _panel_sb != null:
 		var ga: float = [0.0, 0.20, 0.30, 0.50][_rarity_rank]
 		var gamp: float = [0.0, 0.10, 0.15, 0.20][_rarity_rank]
@@ -227,21 +250,10 @@ func _process(delta: float) -> void:
 		var gspd: float = [0.0, 0.8, 1.0, 1.3][_rarity_rank]
 		_panel_sb.shadow_color = Color(_glow_col.r, _glow_col.g, _glow_col.b,
 			ga + gamp * sin(_t * gspd + _sway_phase))
-	if _hovering and not _compact:
-		if not MerlinVisual.reduced_motion:
-			var center: Vector2 = global_position + pivot_offset
-			var mouse: Vector2 = get_global_mouse_position()
-			var dx: float = clampf((mouse.x - center.x) / (size.x * 0.5), -1.0, 1.0)
-			rotation = lerpf(rotation, dx * deg_to_rad(3.0), 0.15)
-		return
-	if not _sway_active or _discarding:
-		return
-	_sway_phase += delta
-	if MerlinVisual.reduced_motion:
-		return
-	var w: float = sin(_sway_phase * 1.3) * 0.7 + sin(_sway_phase * 2.7 + 1.4) * 0.4 + sin(_sway_phase * 0.4) * 0.2
-	rotation = _base_rot + deg_to_rad(w)
-	position = _base_pos + Vector2(sin(_sway_phase * 0.35) * 1.0, sin(_sway_phase * 0.9 + 0.7) * 2.8)
+	if swaying:
+		var w: float = sin(_sway_phase * 1.3) * 0.7 + sin(_sway_phase * 2.7 + 1.4) * 0.4 + sin(_sway_phase * 0.4) * 0.2
+		rotation = _base_rot + deg_to_rad(w)
+		position = _base_pos + Vector2(sin(_sway_phase * 0.35) * 1.0, sin(_sway_phase * 0.9 + 0.7) * 2.8)
 
 
 ## Position/rotation de base dans l'éventail (posées par le conteneur). Appliquées si pas survolé.
@@ -357,9 +369,13 @@ func pop_in(delay: float = 0.0) -> void:
 		_tw.kill()
 	modulate.a = 0.0
 	scale = Vector2(0.8, 0.8)
+	# v10.17 (DA §21) — durées via constantes canon + motion() (reduce-motion ÷2). Avant : 0.14/0.2 en dur
+	# (dernière anim de carte sans motion()). DUR_DEAL (BACK out) = la constante au feel pop le plus proche.
+	var fade_d: float = MerlinVisual.DUR_FAST * MerlinVisual.motion()
+	var pop_d: float = MerlinVisual.DUR_DEAL * MerlinVisual.motion()
 	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "modulate:a", 1.0, 0.14).set_delay(delay)
-	_tw.tween_property(self, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(delay)
+	_tw.tween_property(self, "modulate:a", 1.0, fade_d).set_delay(delay)
+	_tw.tween_property(self, "scale", Vector2.ONE, pop_d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(delay)
 
 
 func _animate(pos: Vector2, rot: float, scl: float) -> void:

@@ -20,11 +20,25 @@ const HALO_SPEED_THINK: float = 1.6
 var _thinking: bool = false
 var _halo_phase: float = 0.0
 
+# v10.17 (perf) — Cadence de redraw du décor ambiant. _draw fait ~90 ops (3 god rays, 18 motes,
+# brume, sol, halos) ; à 60fps c'est ~5400 ops/s pour un décor qui bouge LENTEMENT (vitesses
+# 0.03-0.25). 15fps est visuellement indiscernable et divise par 4 la charge de dessin. Les
+# phases (_t/_halo_phase) avancent au vrai delta → zéro saccade ; seul le queue_redraw est cadencé.
+const REDRAW_DT: float = 1.0 / 15.0
+var _redraw_acc: float = 0.0
+
 var _moon_flash: float = 0.0
 var _moon_dim: float = 0.0
 var _mist_factor: float = 1.0
 var _tree_sway: float = 0.0
 var _react_tw: Tween = null
+
+# v10.18 — Animations menu « atmosphérique discret » (Phase 1)
+var _gust: float = 0.0                    # souffle de forêt (0..1), enveloppe tweenée
+var _parallax: Vector2 = Vector2.ZERO     # décalage parallaxe (px, faible)
+var _cursor: Vector2 = Vector2.ZERO       # position curseur LOCALE
+var _cursor_on: bool = false
+var _mote_density: float = 1.0            # multiplicateur du nombre de motes
 
 
 func set_beat(beat_type: String) -> void:
@@ -80,10 +94,57 @@ func sway_trees() -> void:
 	tw.tween_property(self, "_tree_sway", 0.0, MerlinVisual.DUR_WORLD_REACT * MerlinVisual.motion() * 0.8).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
+# v10.18 — Souffle de forêt : léger vent unifiant arbres + brume + motes (DISCRET).
+func trigger_gust() -> void:
+	_gust = 1.0
+	var tw: Tween = MerlinTween.retween(self, "gust")
+	tw.tween_property(self, "_gust", 0.0, MerlinVisual.DUR_WORLD_REACT * 2.4 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+# v10.18 — Parallaxe douce (≤ qq px). Appelée throttlée par le menu (R1).
+func set_parallax(offset: Vector2) -> void:
+	if MerlinVisual.reduced_motion:
+		offset = Vector2.ZERO
+	_parallax = offset
+	queue_redraw()
+
+
+# v10.18 — Densité des motes (1.0 = base). > 1.0 réservé aux écrans légers (menu).
+func set_mote_density(scale: float) -> void:
+	_mote_density = clampf(scale, 0.5, 2.0)
+
+
+# v10.18 — Pulse rare et LÉGER de l'orbe (réutilise le chemin _moon_flash, basse amplitude).
+func moon_pulse() -> void:
+	if _react_tw != null and _react_tw.is_valid():
+		_react_tw.kill()
+	_moon_dim = 0.0
+	_moon_flash = 0.35
+	_react_tw = create_tween()
+	_react_tw.tween_property(self, "_moon_flash", 0.0, MerlinVisual.DUR_WORLD_REACT * 1.6 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+# v10.18 — Aura de curseur (position LOCALE) ; les motes proches dérivent légèrement vers elle.
+func set_cursor(local_pos: Vector2, on: bool) -> void:
+	_cursor = local_pos
+	_cursor_on = on and not MerlinVisual.reduced_motion
+	queue_redraw()
+
+
+# v10.18 — Position GLOBALE de l'orbe (pour le pull-to-orb, Phase 3).
+func get_orb_global() -> Vector2:
+	return global_position + Vector2(size.x * 0.5, size.y * 0.40)
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
-	queue_redraw()
+	# Redraw cadencé à 15fps (perf) — les setters réactifs (flash_moon/dim_moon/thicken_mist/
+	# sway_trees/set_beat) appellent queue_redraw() DIRECTEMENT, donc les réactions restent immédiates.
+	_redraw_acc += delta
+	if _redraw_acc >= REDRAW_DT:
+		_redraw_acc -= REDRAW_DT
+		queue_redraw()
 
 
 func _ready() -> void:
@@ -101,7 +162,8 @@ func _draw() -> void:
 
 	draw_rect(Rect2(Vector2.ZERO, s), COL_SCENE_BG, true)
 
-	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40)
+	var px: Vector2 = _parallax
+	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + px * 0.12
 	var moon_r: float = minf(w, h) * 0.13
 
 	# God rays (behind everything except background)
@@ -142,11 +204,13 @@ func _draw() -> void:
 		moon_col = moon_col.lerp(COL_SCENE_BG, _moon_dim)
 	draw_circle(moon_c, moon_r, moon_col)
 
-	# Background trees (with reactive sway)
-	_tree(Vector2(w * 0.12 + _tree_sway * 0.8, h), h * 0.74, w)
-	_tree(Vector2(w * 0.27 + _tree_sway * 0.5, h), h * 0.60, w)
-	_tree(Vector2(w * 0.80 - _tree_sway * 0.5, h), h * 0.66, w)
-	_tree(Vector2(w * 0.91 - _tree_sway * 0.8, h), h * 0.78, w)
+	# Background trees (with reactive sway + gust + parallax)
+	var tg: float = _tree_sway + _gust * 5.0
+	var tpx: float = px.x * 0.25
+	_tree(Vector2(w * 0.12 + tg * 0.8 + tpx, h), h * 0.74, w)
+	_tree(Vector2(w * 0.27 + tg * 0.5 + tpx, h), h * 0.60, w)
+	_tree(Vector2(w * 0.80 - tg * 0.5 + tpx, h), h * 0.66, w)
+	_tree(Vector2(w * 0.91 - tg * 0.8 + tpx, h), h * 0.78, w)
 
 	# Menhir
 	_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40))
@@ -189,14 +253,27 @@ func _draw() -> void:
 					mr = maxf(minf(w, h) * 0.007, 2.5)
 					speed = 0.08 + mf * 0.015
 					ma = lerpf(0.14, 0.26, fmod(mf * 0.3, 1.0)) * (0.5 + 0.5 * sin(_t * 0.3 + mf * 1.9))
-			var mx: float = base_x + sin(_t * speed + mf * 1.7) * w * 0.030
-			var my: float = base_y + cos(_t * (speed * 0.7) + mf * 2.3) * h * 0.020
+			var mx: float = base_x + sin(_t * speed + mf * 1.7) * w * 0.030 + px.x + _gust * sin(_t * 0.5 + mf) * w * 0.006
+			var my: float = base_y + cos(_t * (speed * 0.7) + mf * 2.3) * h * 0.020 + px.y
 			if cat == 1:
 				mx += _t * 0.8
 				mx = fmod(mx, w)
+			if _cursor_on:
+				var to_cur: Vector2 = _cursor - Vector2(mx, my)
+				var d_cur: float = to_cur.length()
+				if d_cur > 0.1 and d_cur < w * 0.16:
+					var pull: float = (1.0 - d_cur / (w * 0.16)) * w * 0.010
+					mx += to_cur.x / d_cur * pull
+					my += to_cur.y / d_cur * pull
 			if rm:
 				ma *= 0.5
 			draw_circle(Vector2(mx, my), mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma))
+
+	# v10.18 — Aura de curseur : halo chaud très faible (DISCRET).
+	if _cursor_on and _animated:
+		var gc: Color = MerlinVisual.GOLD
+		draw_circle(_cursor, minf(w, h) * 0.10, Color(gc.r, gc.g, gc.b, 0.04))
+		draw_circle(_cursor, minf(w, h) * 0.05, Color(gc.r, gc.g, gc.b, 0.05))
 
 	# Ground contour
 	if _animated:
@@ -226,7 +303,7 @@ func _draw() -> void:
 		var bx: float = w * 0.5 - bw * 0.5
 		var alpha: float = float(ml["alpha"]) * _mist_factor
 		if _animated:
-			bx += sin(_t * float(ml["speed"]) + float(li) * 2.1) * w * 0.020
+			bx += sin(_t * float(ml["speed"]) + float(li) * 2.1) * w * (0.020 + _gust * 0.012) + px.x * 0.5
 		if rm:
 			alpha *= 0.5
 		draw_rect(Rect2(Vector2(bx, y), Vector2(bw, h * 0.035)), Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha), true)

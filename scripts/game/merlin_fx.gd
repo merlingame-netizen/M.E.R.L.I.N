@@ -593,3 +593,83 @@ static func beat_veil(host: Control) -> ColorRect:
 	veil.z_index = 80
 	host.add_child(veil)
 	return veil
+
+
+# === v10.17 (track Motion) — Banque de recettes juicy (BIBLE §21) : statics réutilisables, durées
+# via MerlinVisual.DUR_* * motion(), amplitudes ÷2 en reduce-motion. RÉUTILISENT les helpers existants
+# (snap→pop) — AUCUNE duplication de shake/pop/ghost_flight/float_delta/spark_wave/beat_veil. Les
+# loopers passent par MerlinTween (lifecycle-safe : auto-tué à la sortie du node, jamais empilé). ===
+
+
+# Oscillation verticale douce en BOUCLE (§21 `float_bob`) — idle vivant pour titres/glyphes/jetons.
+# Lifecycle-safe via MerlinTween → jamais d'orphelin ni de double-boucle. Renvoie le tween (l'appelant
+# peut le tuer via MerlinTween.kill_for(node, "float_bob")).
+static func float_bob(node: Control, amplitude_px: float = 6.0, half_period: float = -1.0) -> Tween:
+	if node == null or not node.is_inside_tree():
+		return null
+	var amp: float = amplitude_px * (0.5 if MerlinVisual.reduced_motion else 1.0)
+	var d: float = (MerlinVisual.DUR_BREATHE * 0.5 if half_period <= 0.0 else half_period) * MerlinVisual.motion()
+	var base_y: float = node.position.y
+	var t: Tween = MerlinTween.retween_looping(node, "float_bob").set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.tween_property(node, "position:y", base_y - amp, d)
+	t.tween_property(node, "position:y", base_y, d)
+	return t
+
+
+# Pop « snap » (§21 `pop`) — alias sémantique délégant à pop() (overshoot BACK). NE ré-implémente PAS
+# l'overshoot : une seule source de vérité pour le pop d'échelle.
+static func snap(node: Control, scale_peak: float = 1.12) -> void:
+	pop(node, scale_peak)
+
+
+# Nudge positionnel 1-shot DIRIGÉ + retour (§21 `punch_pos`) — version déterministe et dirigée de
+# shake (sans aléatoire). Lié au node (auto-tué à sa sortie). dur via DUR_FAST * motion().
+static func punch_pos(node: Control, offset_px: Vector2, dur: float = -1.0) -> void:
+	if node == null or not node.is_inside_tree():
+		return
+	var d: float = (MerlinVisual.DUR_FAST if dur <= 0.0 else dur) * MerlinVisual.motion()
+	var off: Vector2 = offset_px * (0.5 if MerlinVisual.reduced_motion else 1.0)
+	var base: Vector2 = node.position
+	var t: Tween = node.create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.tween_property(node, "position", base + off, d * 0.4)
+	t.tween_property(node, "position", base, d * 0.6).set_trans(Tween.TRANS_BACK)
+
+
+# Glissé + fondu d'ENTRÉE (§21 `slide`) — le node arrive de `from_offset` vers sa position courante
+# en fondu. Lié au node. dur via DUR_DEAL * motion(). Renvoie le tween.
+static func slide_in(node: Control, from_offset: Vector2, dur: float = -1.0) -> Tween:
+	if node == null or not node.is_inside_tree():
+		return null
+	var d: float = (MerlinVisual.DUR_DEAL if dur <= 0.0 else dur) * MerlinVisual.motion()
+	var dest: Vector2 = node.position
+	node.position = dest + from_offset
+	node.modulate.a = 0.0
+	var t: Tween = node.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.tween_property(node, "position", dest, d)
+	t.tween_property(node, "modulate:a", 1.0, d * 0.8)
+	return t
+
+
+# Glissé + fondu de SORTIE (§21 `slide`) — le node part vers `to_offset` en fondu ; queue_free optionnel
+# à la fin. Lié au node. dur via DUR_DISCARD * motion(). Renvoie le tween.
+static func slide_out(node: Control, to_offset: Vector2, dur: float = -1.0, free_after: bool = false) -> Tween:
+	if node == null or not node.is_inside_tree():
+		return null
+	var d: float = (MerlinVisual.DUR_DISCARD if dur <= 0.0 else dur) * MerlinVisual.motion()
+	var dest: Vector2 = node.position + to_offset
+	var t: Tween = node.create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	t.tween_property(node, "position", dest, d)
+	t.tween_property(node, "modulate:a", 0.0, d * 0.9)
+	if free_after:
+		t.chain().tween_callback(node.queue_free)
+	return t
+
+
+# Fondu d'opacité générique (§21) — lié au node. Renvoie le tween (await .finished possible).
+static func fade(node: CanvasItem, target_a: float, dur: float = -1.0) -> Tween:
+	if node == null or not node.is_inside_tree():
+		return null
+	var d: float = (MerlinVisual.DUR_FAST if dur <= 0.0 else dur) * MerlinVisual.motion()
+	var t: Tween = node.create_tween()
+	t.tween_property(node, "modulate:a", clampf(target_a, 0.0, 1.0), d)
+	return t

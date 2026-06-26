@@ -2,6 +2,27 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-21 — GOAL Intégration IA/anim + pratiques (4 tracks)
+
+### Context
+User /goal : déployer/inspirer les projets IA-GEN 2D anim + contrôle IA, intégrer dans branches dev +
+skills. Décisions (3 rounds AskUserQuestion) : sens 2D = motion ET sprite-gen ; LLM = durcir natif
+(zéro 2e moteur) ; motion = managed-tween + perf + TweenFX ; branches par track + MAJ skills/KB/BIBLE.
+Recherche live : NobodyWho 1009★, KoBeWi Tween-Suite 129★, TweenFX 175★. Audit perf 6 findings.
+
+### Tracks (voir task_plan.md)
+- **M** feat/motion-juice : MerlinTween (auto-kill) + recettes DA + plan perf.
+- **L** feat/llm-hardening : MerlinGrammar + generate_structured() additif (soak R109).
+- **S** feat/sprite-anim-forge : sprite_anim_forge.py + wiring.
+- **P** : skills merlin-juice/artwork + KB + BIBLE §21/§24.
+
+### Done
+- Setup : Godot CLI gate confirmé (validate_step0 exit=0, Godot 4.5.1) ; planning files MAJ ;
+  workflow design+review multi-agents lancé (wf_5d940f70).
+
+### En cours
+- Implémentation track par track (gates à chaque commit).
+
 ## Session: 2026-06-12 — v10.13.1 « Fondations de gamme » (montée en gamme R114, 7 commits)
 
 ### Context

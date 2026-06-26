@@ -315,19 +315,39 @@ func _layout_fan() -> void:
 
 
 func _render_combo() -> void:
+	# v10.17 (perf) — RÉUTILISE les vues compactes au lieu de tout détruire/reconstruire à chaque clic
+	# (miroir de _render_hand). Le rôle ("principale"/"modificateur") est figé au setup() → on ne réutilise
+	# une vue QUE si l'index de sa carte donne le MÊME rôle (mémorisé en meta), sinon on la reconstruit.
+	# Seul cas de re-rôle : principale retirée → le modificateur passe en index 0 (combo plafonné à 2).
+	var role_of: Dictionary = {}  # card -> rôle attendu à son nouvel index
+	for i in _combo.size():
+		role_of[_combo[i]] = "principale" if i == 0 else "modificateur"
+	var keep: Dictionary = {}
 	for c in _combo_box.get_children():
-		c.queue_free()
+		if c is MerlinCardView and not c.is_queued_for_deletion():
+			var cv: MerlinCardView = c
+			var built_role: String = str(cv.get_meta("combo_role", ""))
+			if role_of.has(cv.card) and not keep.has(cv.card) and built_role == str(role_of[cv.card]):
+				keep[cv.card] = cv
+			else:
+				cv.queue_free()  # carte partie du combo OU rôle périmé → libérée
 	for i in _combo.size():
 		var card: MerlinCard = _combo[i]
 		var role: String = "principale" if i == 0 else "modificateur"
-		var cv: MerlinCardView = MerlinCardView.new()
-		_combo_box.add_child(cv)
-		cv.setup(card, role, true)  # compact (carte posée)
-		cv.card_clicked.connect(_on_combo_card)
-		if i == _combo.size() - 1:
-			# v10.13.1 : si un ghost vole vers le combo, le compact POP à son arrivée (DUR_UI).
-			var delay: float = MerlinVisual.DUR_UI * MerlinVisual.motion() if _ghost_in_flight else 0.0
-			cv.pop_in(delay)  # seule la carte la plus récente fait son pop
+		if not keep.has(card):
+			var cv: MerlinCardView = MerlinCardView.new()
+			_combo_box.add_child(cv)
+			cv.setup(card, role, true)  # compact (carte posée)
+			cv.set_meta("combo_role", role)
+			cv.card_clicked.connect(_on_combo_card)
+			keep[card] = cv
+			if i == _combo.size() - 1:
+				# POP uniquement sur une vue NEUVE (pas sur une vue réutilisée → plus de re-pop à chaque clic).
+				# Si un ghost vole vers le combo, le compact POP à son arrivée (DUR_UI).
+				var delay: float = MerlinVisual.DUR_UI * MerlinVisual.motion() if _ghost_in_flight else 0.0
+				cv.pop_in(delay)
+	for i in _combo.size():  # ordre des enfants = ordre du combo (recouvrement stable)
+		_combo_box.move_child(keep[_combo[i]], i)
 	_update_preview()
 
 
@@ -1254,7 +1274,10 @@ func _reveal_into(lbl: RichTextLabel, txt: String) -> Tween:
 
 
 func _pulse(node: Control) -> void:
-	_pulse_tw = node.create_tween().set_loops()
+	# v10.17 : tween managé (MerlinTween) — auto-tue un pulse précédent du MÊME node (anti double-boucle
+	# si _pulse rappelé) ; le tween reste lié au node (auto-tué à sa sortie de l'arbre). Tué aussi
+	# explicitement dans _accept_quest via _pulse_tw.
+	_pulse_tw = MerlinTween.retween_looping(node, "pulse")
 	_pulse_tw.tween_property(node, "scale", Vector2(1.04, 1.04), 0.7).set_trans(Tween.TRANS_SINE)
 	_pulse_tw.tween_property(node, "scale", Vector2(1.0, 1.0), 0.7).set_trans(Tween.TRANS_SINE)
 
