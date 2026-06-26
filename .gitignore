@@ -248,6 +248,9 @@ merlin-lora-cpu-output*/
 output/
 .codex/
 
+# Generated sprite-anim cache (regenerable via tools/sprite_anim_forge.py — Track S)
+assets/sprites/cache/
+
 # Swarm coordination (ephemeral state)
 .swarm/results/
 .swarm/locks/

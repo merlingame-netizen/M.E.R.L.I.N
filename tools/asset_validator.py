@@ -86,6 +86,9 @@ ASSET_SPECS: dict[str, AssetSpec] = {
     "pattern":   AssetSpec("pattern",   None, None, max_file_kb=100),
     "portrait":  AssetSpec("portrait",  256,  256,  max_file_kb=500),
     "icon":      AssetSpec("icon",      64,   64,   max_file_kb=50),
+    # Sprite-anim forge (Track S) : feuille horizontale RGBA (largeur = n×cell), overlay transparent.
+    "sprite_sheet": AssetSpec("sprite_sheet", None, None, max_file_kb=1500, require_alpha=True),
+    "sprite_frame": AssetSpec("sprite_frame", None, None, max_file_kb=300, require_alpha=True),
     "any":       AssetSpec("any",       None, None, max_file_kb=2000, delta_e_max=20.0,
                            palette_coverage_min=0.70),
 }
@@ -193,8 +196,18 @@ def check_alpha(img: Image.Image, spec: AssetSpec) -> CheckResult:
 
 
 def check_palette(img: Image.Image, spec: AssetSpec, sample_max: int = 5000) -> CheckResult:
-    """Check that image pixels are within delta-E threshold of canonical palette."""
-    rgb = img.convert("RGB")
+    """Check that image pixels are within delta-E threshold of canonical palette.
+
+    Alpha-aware: transparent/semi-transparent assets (e.g. sprite sheets) are composited
+    over the canonical BG_DEEP before measuring, so transparent areas read as a canonical
+    colour instead of black (which would otherwise fail an in-palette overlay sprite).
+    """
+    if img.mode in ("RGBA", "LA", "PA"):
+        bg = Image.new("RGBA", img.size, (0x14, 0x10, 0x0C, 255))  # BG_DEEP
+        bg.alpha_composite(img.convert("RGBA"))
+        rgb = bg.convert("RGB")
+    else:
+        rgb = img.convert("RGB")
     pixels = _pixels(rgb)
 
     step = max(1, len(pixels) // sample_max)
