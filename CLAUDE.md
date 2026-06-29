@@ -259,12 +259,6 @@ Ce projet est personnel — PAS de tag `[AI-assisted]`.
 - MCP query la scene EDITEUR (`/root/<SceneName>` echoue souvent). Utiliser
   `EditorInterface.get_edited_scene_root()` via `execute_editor_script` pour le tree live.
 
-**Dashboard multi-agent (Octogent)** :
-- Vendore dans `tools/octogent/` — voir `tools/octogent/MERLIN.md` pour le deploy.
-- `cd tools/octogent && docker compose up -d` → http://localhost:8787
-- Fallback WSL si Docker indispo : `wsl bash tools/octogent/start-wsl.sh`
-- Mounts `~/.claude/` (lecture sessions) + repo MERLIN read-only (agents lisent le code).
-
 ---
 
 ## Quick Commands
@@ -344,6 +338,13 @@ python tools/cli.py teams recent-chats --limit 10
 python tools/cli.py teams search-chats --query "dataset"
 python tools/cli.py teams recent-channels --limit 10
 python tools/cli.py teams cache-scan --limit 20           # Best-effort LevelDB scan
+
+# CR Reunion (VTT Teams → CR Orange — Gemma 4 local)
+python tools/cli.py cr status                              # Check Ollama/Gemma availability
+python tools/cli.py cr generate --input ~/Downloads/t.vtt  # Full pipeline: MD + PPT + Outlook
+python tools/cli.py cr parse --input ~/Downloads/t.vtt     # Parse VTT only (no LLM)
+python tools/cli.py cr json --input ~/Downloads/t.vtt      # CR as JSON
+python tools/cli.py cr watch                               # Auto-trigger on .vtt in Downloads
 
 # DBeaver / EDH Hive
 python tools/cli.py dbeaver list-connections
