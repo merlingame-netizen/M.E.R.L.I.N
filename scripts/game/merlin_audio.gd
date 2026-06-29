@@ -127,6 +127,16 @@ func set_voice_vol(linear: float) -> void:
 	_save_prefs()
 
 
+# Voix avec pitch dérivé de l'HUMEUR — source UNIQUE (bulle menu + prose in-game + intro + épilogue).
+# user 2026-06-29 : « dans TOUTES les scenes où il parle il faut ce son ».
+func play_voice_mood(mood: String = "neutral") -> void:
+	var base: float = 0.95
+	match mood:
+		"surprise": base = 1.18
+		"angry": base = 0.82
+	play_voice(base * randf_range(0.94, 1.06))
+
+
 func play_stinger(degree: String) -> void:
 	var id: String = "stinger_" + degree
 	play_sfx("seal_stamp")

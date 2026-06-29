@@ -108,18 +108,9 @@ func _process(_delta: float) -> void:
 			if idx >= 0:
 				var ch: String = _label.text[idx]
 				if ch != " " and "\n\t.,;:!?…»«-—'\"".find(ch) == -1:
-					MerlinAudio.play_voice(_voice_pitch())
+					MerlinAudio.play_voice_mood(_mood)  # pitch centralisé (humeur) dans MerlinAudio
 		if _label.visible_ratio >= 0.999:
 			_voicing = false
-
-
-# Pitch de la voix selon l'humeur (grave-mystérieux par défaut) + légère variation.
-func _voice_pitch() -> float:
-	var base: float = 0.95
-	match _mood:
-		"surprise": base = 1.18
-		"angry": base = 0.82
-	return base * randf_range(0.94, 1.06)
 
 
 func _update_follow() -> void:

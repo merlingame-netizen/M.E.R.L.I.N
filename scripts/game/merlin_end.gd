@@ -174,10 +174,12 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 		_quill_tw.kill()
 	var tick_interval: float = dur / maxf(float(n), 1.0) * 3.0
 	var tick_count: int = maxi(n / 3, 1)
+	# v10.20 — l'épilogue est CONTÉ par Merlin → sa VOIX (à la place du quill). user 2026-06-29.
+	var mood: String = MerlinSceneArt.mood_for_text(txt)
 	_quill_tw = create_tween()
 	for i in tick_count:
 		_quill_tw.tween_interval(tick_interval)
-		_quill_tw.tween_callback(func() -> void: MerlinAudio.play_sfx("quill_tick", randf_range(0.92, 1.08)))
+		_quill_tw.tween_callback(func() -> void: MerlinAudio.play_voice_mood(mood))
 
 
 # === v10/C1 : helpers epoch + caret + skip-typewriter (parité merlin_game.gd) ===
