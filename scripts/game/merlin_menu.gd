@@ -54,6 +54,8 @@ var _next_speak: float = 3.0         # 1re prise de parole dès qu'une pensée e
 var _voice_test: bool = false        # dev : MERLIN_VOICE_TEST → bulle factice instantanée (rendu)
 var _voice_test_done: bool = false
 var _voice_test_acc: float = 0.0
+var _autoclick_done: bool = false    # dev : MERLIN_AUTOCLICK → déclenche Nouvelle Partie (capture transition)
+var _autoclick_acc: float = 0.0
 
 
 func _ready() -> void:
@@ -657,6 +659,12 @@ func _process(delta: float) -> void:
 		_parallax_acc = 0.0
 		_update_parallax_cursor()
 	_tick_voice(delta)
+	# Dev (MERLIN_AUTOCLICK) : déclenche Nouvelle Partie après ~2s pour capturer la transition zoom-parole.
+	if not _autoclick_done and OS.has_environment("MERLIN_AUTOCLICK"):
+		_autoclick_acc += delta
+		if _autoclick_acc >= 2.0:
+			_autoclick_done = true
+			_on_new()
 	_maybe_capture()
 	if not _cap_dir.is_empty():
 		_demo_walk(delta)

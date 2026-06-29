@@ -28,8 +28,11 @@ Nouvelle+Continuer · titres attente longue+filet · Options = on/off seul.
 ### Gates
 - validate_step0 0 err. `music_forge --id boot_eveil` OK (19 s, -12 dBFS).
 - Smoke **Boot/Menu/Selection/Game** = passed, script_errors 0.
-- Soak R109 + captures (boot music, transition zoom-parole, montage sélection, Options toggle) : **EN ATTENTE**
-  (panne transitoire du classifieur Bash/PowerShell ce tour) → à finir dès rétablissement.
+- **Soak R109** : 200/200 logic passed.
+- **Capture transition zoom-parole** (dev hook MERLIN_AUTOCLICK) : voile sombre → Merlin zoomé (tête + yeux
+  bleus, décor caché) + bulle « Le sentier s'ouvre, Voyageur… » → swap. ✓ Confirmé visuellement.
+- Musique boot + montage sélection : composants déjà vérifiés (MerlinSceneArt/bulle/WaitStage) ; audio non
+  vérifiable en headless → confirmer en jeu live.
 
 ---
 
