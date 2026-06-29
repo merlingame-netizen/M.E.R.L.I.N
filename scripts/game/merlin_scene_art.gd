@@ -44,6 +44,17 @@ var _shoot_next: float = 4.0          # compte à rebours avant la prochaine
 var _shoot_a: Vector2 = Vector2.ZERO  # départ (normalisé 0-1)
 var _shoot_b: Vector2 = Vector2.ZERO  # arrivée (normalisé 0-1)
 
+# v10.18 — Regard de MERLIN (menu) : suit la souris, cligne des yeux, regarde ailleurs par moments.
+var _fig_head: Vector2 = Vector2.ZERO  # centre de la tête (calculé en _draw, lu en _process : 1 frame de retard ok)
+var _fig_hr: float = 1.0               # rayon de la tête
+var _gaze: Vector2 = Vector2.ZERO      # décalage de regard LISSÉ (-1..1 par axe)
+var _blink: float = 0.0                # 0 = ouvert, 1 = fermé (pic du clignement)
+var _blink_t: float = -1.0             # <0 = pas en clignement ; sinon progression
+var _blink_next: float = 3.0           # compte à rebours avant le prochain clignement
+var _lookaway_t: float = -1.0          # <0 = suit la souris ; sinon regarde ailleurs (épisode)
+var _lookaway_next: float = 5.0
+var _lookaway_dir: Vector2 = Vector2.ZERO
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -158,7 +169,43 @@ func _process(delta: float) -> void:
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
 	if _menu_decor and not MerlinVisual.reduced_motion:
 		_update_shooting_star(delta)
+		_update_merlin_gaze(delta)
 	queue_redraw()
+
+
+# Regard de Merlin (menu) : clignements ponctuels + suivi de la souris, interrompu par de courts
+# épisodes où il « regarde ailleurs ». _gaze (offset -1..1) est lissé puis appliqué aux barres en _draw.
+func _update_merlin_gaze(delta: float) -> void:
+	# Clignement : minuterie → pinch rapide (~0.16s) fermeture/ouverture (courbe sin 0→1→0).
+	if _blink_t < 0.0:
+		_blink_next -= delta
+		if _blink_next <= 0.0:
+			_blink_next = randf_range(2.4, 5.5)
+			_blink_t = 0.0
+	else:
+		_blink_t += delta / 0.16
+		_blink = sin(clampf(_blink_t, 0.0, 1.0) * PI)
+		if _blink_t >= 1.0:
+			_blink_t = -1.0
+			_blink = 0.0
+	# « Regarder ailleurs » : épisodes courts (0.8-1.6s) dans une direction aléatoire, surtout horizontale.
+	if _lookaway_t < 0.0:
+		_lookaway_next -= delta
+		if _lookaway_next <= 0.0:
+			_lookaway_next = randf_range(4.5, 9.0)
+			_lookaway_t = randf_range(0.8, 1.6)
+			var ang: float = randf_range(0.0, TAU)
+			_lookaway_dir = Vector2(cos(ang), sin(ang) * 0.55)
+	else:
+		_lookaway_t -= delta
+	# Cible de regard : ailleurs (pendant l'épisode) sinon vers la souris (dir tête→curseur, clampée).
+	var target: Vector2 = Vector2.ZERO
+	if _lookaway_t >= 0.0:
+		target = _lookaway_dir
+	elif _fig_hr > 1.0:
+		var to_cur: Vector2 = (_cursor_pos - _fig_head) / (_fig_hr * 6.0)
+		target = Vector2(clampf(to_cur.x, -1.0, 1.0), clampf(to_cur.y, -1.0, 1.0))
+	_gaze = _gaze.lerp(target, clampf(delta * 6.0, 0.0, 1.0))  # suivi smooth
 
 
 # Étoile filante (menu) : minuterie aléatoire (6-13s) puis traversée ~0.85s d'un court arc.
@@ -432,15 +479,19 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	# v10.18 — Yeux MERLIN (menu) : 2 BARRES BLEUES VERTICALES lumineuses + lueur qui pulse (signature,
 	# user 2026-06-29). Bleu = RARE_BLUE éclairci vers crème. Barres à coins arrondis (rect + 2 disques).
 	if _menu_decor:
+		_fig_head = head_c  # lu par _update_merlin_gaze (frame suivante) pour viser la souris
+		_fig_hr = hr
 		var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if menu else 1.0
 		var eye_col: Color = MerlinVisual.RARE_BLUE.lerp(MerlinVisual.CREAM, 0.35)
-		var eye_h: float = hr * 0.70
+		var openf: float = maxf(1.0 - 0.9 * _blink, 0.07)  # clignement : barre quasi fermée au pic
+		var eye_h: float = hr * 0.70 * openf
 		var eye_w: float = maxf(hr * 0.16, 2.0)
 		var eye_dx: float = hr * 0.34
+		var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
 		for s in [-1.0, 1.0]:
-			var ex: float = head_c.x + s * eye_dx
-			var ey: float = head_c.y - eye_h * 0.5
-			draw_circle(Vector2(ex, head_c.y), eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, 0.16 * pulse))
-			draw_rect(Rect2(ex - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse), true)
-			draw_circle(Vector2(ex, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
-			draw_circle(Vector2(ex, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
+			var ec2: Vector2 = Vector2(head_c.x + s * eye_dx, head_c.y) + gaze_px
+			var ey: float = ec2.y - eye_h * 0.5
+			draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, 0.16 * pulse))
+			draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse), true)
+			draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
+			draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
