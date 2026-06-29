@@ -59,6 +59,30 @@ var _lookaway_dir: Vector2 = Vector2.ZERO
 # Défaut 1.0 → menu/in-game inchangés. cape [0-0.45] → tête [0.40-0.70] → yeux [0.65-1.0].
 var _fig_reveal: float = 1.0
 
+# v10.18 — Révélation du DÉCOR (boot cinématique) : 0 = décor caché (gros plan yeux sur fond ciel),
+# 1 = décor complet. Multiplie l'alpha de TOUS les éléments décor (PAS la figure). Défaut 1.0 → menu/in-game inchangés.
+var _decor_reveal: float = 1.0
+
+# v10.18 — Hooks YEUX cinématiques (boot) : surcouches neutres par défaut → menu/in-game inchangés.
+var _eye_open_force: float = -1.0   # <0 = clignement auto ; sinon 0..1 ouverture FORCÉE (réveil)
+var _eye_glow: float = 1.0          # multiplicateur de luminosité des yeux (réveil + flash ébahi)
+var _eye_widen: float = 1.0         # écartement + allongement des barres (ébahi)
+var _gaze_scripted: bool = false    # true = regard piloté par merlin_boot (pas la souris)
+var _gaze_forced: Vector2 = Vector2.ZERO
+
+# v10.18 — SAISON : feuillage saisonnier dérivé palette canon (zéro hex). Défaut neutre (alpha 0) → arbres nus inchangés.
+var _season_key: String = ""
+var _season_leaf: Color = MerlinVisual.GREEN
+var _season_leaf_a: float = 0.0
+var _season_blobs: int = 0
+var _season_blob_r: float = 0.012
+var _season_fly_mult: float = 1.0
+var _season_fly_col: Color = MerlinVisual.GREEN.lerp(MerlinVisual.GOLD, 0.45)
+var _season_sol: Color = MerlinVisual.SILHOUETTE
+var _season_sol_f: float = 0.0
+var _season_sky: Color = MerlinVisual.SCENE_BG
+var _season_sky_f: float = 0.0
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -151,6 +175,110 @@ func set_figure_reveal(p: float) -> void:
 	queue_redraw()
 
 
+# v10.18 — Boot cinématique : révélation du décor (0 = caché → 1 = complet). Les yeux/tête (figure) ne
+# sont PAS affectés → ils restent visibles sur fond ciel pendant le gros plan (decor_reveal=0).
+func set_decor_reveal(p: float) -> void:
+	_decor_reveal = clampf(p, 0.0, 1.0)
+	queue_redraw()
+
+
+# v10.18 — Boot cinématique (yeux). set_eye_open(v<0) = clignement auto ; v∈[0..1] = ouverture forcée.
+func set_eye_open(v: float) -> void:
+	_eye_open_force = v
+	queue_redraw()
+
+
+func set_eye_glow(v: float) -> void:
+	_eye_glow = maxf(v, 0.0)
+	queue_redraw()
+
+
+func set_eye_widen(v: float) -> void:
+	_eye_widen = maxf(v, 0.1)
+	queue_redraw()
+
+
+# Regard piloté par le boot (séquence scriptée gauche/droite/centre) au lieu de suivre la souris.
+func set_scripted_gaze(on: bool, dir: Vector2 = Vector2.ZERO) -> void:
+	_gaze_scripted = on
+	_gaze_forced = dir
+	queue_redraw()
+
+
+# v10.18 — SAISON : feuillage + accents dérivés UNIQUEMENT de la palette canon (zéro hex). Clé inconnue
+# / "" → neutre (arbres nus, menu/in-game inchangés). L'heure du jour garde l'autorité sur ciel/lune ;
+# la saison ne fait que MODULER (lerp léger) pour éviter les conflits de teinte.
+func set_season(season: String) -> void:
+	_season_key = season
+	match season:
+		"printemps":
+			_season_leaf = MerlinVisual.GREEN.lerp(MerlinVisual.CREAM, 0.30)
+			_season_leaf_a = 0.55
+			_season_blobs = 2
+			_season_blob_r = 0.012
+			_season_fly_mult = 1.0
+			_season_fly_col = MerlinVisual.GREEN.lerp(MerlinVisual.GOLD, 0.45)
+			_season_sol = MerlinVisual.GREEN
+			_season_sol_f = 0.10
+			_season_sky = MerlinVisual.GREEN
+			_season_sky_f = 0.05
+		"ete":
+			_season_leaf = MerlinVisual.GREEN.lerp(MerlinVisual.GOLD, 0.18)
+			_season_leaf_a = 0.78
+			_season_blobs = 3
+			_season_blob_r = 0.016
+			_season_fly_mult = 1.0
+			_season_fly_col = MerlinVisual.GOLD.lerp(MerlinVisual.GREEN, 0.30)
+			_season_sol = MerlinVisual.GOLD
+			_season_sol_f = 0.08
+			_season_sky = MerlinVisual.GOLD
+			_season_sky_f = 0.06
+		"automne":
+			_season_leaf = MerlinVisual.GOLD.lerp(MerlinVisual.VIOLET, 0.22)
+			_season_leaf_a = 0.62
+			_season_blobs = 2
+			_season_blob_r = 0.013
+			_season_fly_mult = 0.8
+			_season_fly_col = MerlinVisual.GOLD.lerp(MerlinVisual.GREEN, 0.45)
+			_season_sol = MerlinVisual.VIOLET
+			_season_sol_f = 0.10
+			_season_sky = MerlinVisual.VIOLET
+			_season_sky_f = 0.07
+		"hiver":
+			_season_leaf = MerlinVisual.CREAM.lerp(MerlinVisual.RARE_BLUE, 0.20)
+			_season_leaf_a = 0.28
+			_season_blobs = 1
+			_season_blob_r = 0.009
+			_season_fly_mult = 0.4
+			_season_fly_col = MerlinVisual.RARE_BLUE.lerp(MerlinVisual.CREAM, 0.30)
+			_season_sol = MerlinVisual.RARE_BLUE
+			_season_sol_f = 0.12
+			_season_sky = MerlinVisual.RARE_BLUE
+			_season_sky_f = 0.08
+		_:
+			_season_leaf_a = 0.0
+			_season_blobs = 0
+			_season_sol_f = 0.0
+			_season_sky_f = 0.0
+			_season_fly_mult = 1.0
+			_season_fly_col = MerlinVisual.GREEN.lerp(MerlinVisual.GOLD, 0.45)
+	queue_redraw()
+
+
+# Saison courante dérivée de la date système (override possible via MERLIN_SEASON pour les tests).
+static func season_for_now() -> String:
+	if OS.has_environment("MERLIN_SEASON"):
+		return OS.get_environment("MERLIN_SEASON")
+	var mo: int = int(Time.get_datetime_dict_from_system().get("month", 6))
+	if mo == 12 or mo <= 2:
+		return "hiver"
+	if mo <= 5:
+		return "printemps"
+	if mo <= 8:
+		return "ete"
+	return "automne"
+
+
 # v10.18 — Le décor change selon l'heure réelle (passer Time...["hour"]). 4 périodes : la teinte du
 # ciel et la chaleur de la lune varient ; le menu reste nocturne-merveilleux (variations subtiles).
 # Teintes DÉRIVÉES des couleurs canon (zéro hex hors merlin_visual.gd).
@@ -177,15 +305,22 @@ func set_time_of_day(hour: int) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
-	if _menu_decor and not MerlinVisual.reduced_motion:
-		_update_shooting_star(delta)
-		_update_merlin_gaze(delta)
+	if _menu_decor:
+		if not MerlinVisual.reduced_motion:
+			_update_shooting_star(delta)
+			_update_merlin_gaze(delta)
+		elif _gaze_scripted:
+			_update_merlin_gaze(delta)  # reduced_motion : seul le gaze scripté (boot) tourne (early-return interne)
 	queue_redraw()
 
 
 # Regard de Merlin (menu) : clignements ponctuels + suivi de la souris, interrompu par de courts
 # épisodes où il « regarde ailleurs ». _gaze (offset -1..1) est lissé puis appliqué aux barres en _draw.
 func _update_merlin_gaze(delta: float) -> void:
+	# Boot cinématique : le regard est piloté (séquence scriptée) → on applique directement, pas de souris.
+	if _gaze_scripted:
+		_gaze = _gaze.lerp(_gaze_forced, clampf(delta * 9.0, 0.0, 1.0))
+		return
 	# Clignement : minuterie → pinch rapide (~0.16s) fermeture/ouverture (courbe sin 0→1→0).
 	if _blink_t < 0.0:
 		_blink_next -= delta
@@ -245,8 +380,10 @@ func _draw() -> void:
 	var w: float = s.x
 	var h: float = s.y
 	var rm: bool = MerlinVisual.reduced_motion
+	var dr: float = _decor_reveal  # v10.18 — révélation décor (boot) : multiplie l'alpha des éléments décor
 
-	draw_rect(Rect2(Vector2.ZERO, s), _tod_sky, true)  # v10.18 : teinte du ciel selon l'heure
+	# Ciel : teinte de l'heure, MODULÉE légèrement par la saison (l'heure garde l'autorité).
+	draw_rect(Rect2(Vector2.ZERO, s), _tod_sky.lerp(_season_sky, _season_sky_f), true)
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * 0.13
@@ -267,18 +404,18 @@ func _draw() -> void:
 				tip + Vector2(ca * bot_half, -sa * bot_half),
 				tip + Vector2(-ca * bot_half, sa * bot_half),
 			])
-			var ra: float = 0.025 + 0.010 * sin(_t * 0.12 + float(ri) * 2.1)
+			var ra: float = (0.025 + 0.010 * sin(_t * 0.12 + float(ri) * 2.1)) * dr
 			draw_colored_polygon(pts, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ra))
 
 	# Moon halos + disk
 	if _animated:
 		var halo_outer_r: float = moon_r * (1.45 + 0.08 * sin(_halo_phase * 0.6))
-		var halo_outer_a: float = 0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))
+		var halo_outer_a: float = (0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))) * dr
 		if rm:
 			halo_outer_a *= 0.5
 		draw_circle(moon_c, halo_outer_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_outer_a))
 		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_halo_phase))
-		var halo_a: float = 0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))
+		var halo_a: float = (0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))) * dr
 		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 
 	# Moon flash/dim reactive (+ chaleur selon l'heure, v10.18)
@@ -287,31 +424,31 @@ func _draw() -> void:
 		moon_col = moon_col.lerp(Color.WHITE, _moon_flash * 0.6)
 	if _moon_dim > 0.01:
 		moon_col = moon_col.lerp(COL_SCENE_BG, _moon_dim)
-	draw_circle(moon_c, moon_r, moon_col)
+	draw_circle(moon_c, moon_r, Color(moon_col.r, moon_col.g, moon_col.b, moon_col.a * dr))
 
 	# v10.18 — étoile filante (menu) : traînée crème qui apparaît/disparaît le long de l'arc.
 	if _menu_decor and _shoot_t >= 0.0 and _shoot_t <= 1.0 and not rm:
 		var sh_head: Vector2 = Vector2(lerpf(_shoot_a.x, _shoot_b.x, _shoot_t) * w, lerpf(_shoot_a.y, _shoot_b.y, _shoot_t) * h)
 		var sh_tt: float = maxf(_shoot_t - 0.14, 0.0)
 		var sh_tail: Vector2 = Vector2(lerpf(_shoot_a.x, _shoot_b.x, sh_tt) * w, lerpf(_shoot_a.y, _shoot_b.y, sh_tt) * h)
-		var sh_a: float = sin(_shoot_t * PI) * 0.7
+		var sh_a: float = sin(_shoot_t * PI) * 0.7 * dr
 		draw_line(sh_tail, sh_head, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, sh_a), 2.0, true)
 		draw_circle(sh_head, 2.6, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, sh_a))
 
-	# Background trees (with reactive sway)
-	_tree(Vector2(w * 0.12 + _tree_sway * 0.8, h), h * 0.74, w)
-	_tree(Vector2(w * 0.27 + _tree_sway * 0.5, h), h * 0.60, w)
-	_tree(Vector2(w * 0.80 - _tree_sway * 0.5, h), h * 0.66, w)
-	_tree(Vector2(w * 0.91 - _tree_sway * 0.8, h), h * 0.78, w)
+	# Background trees (with reactive sway) — alpha = decor_reveal (boot : décor caché en gros plan yeux)
+	_tree(Vector2(w * 0.12 + _tree_sway * 0.8, h), h * 0.74, w, dr)
+	_tree(Vector2(w * 0.27 + _tree_sway * 0.5, h), h * 0.60, w, dr)
+	_tree(Vector2(w * 0.80 - _tree_sway * 0.5, h), h * 0.66, w, dr)
+	_tree(Vector2(w * 0.91 - _tree_sway * 0.8, h), h * 0.78, w, dr)
 
 	# Menhir
-	_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40))
+	_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40), dr)
 
 	# Thinking mote
 	if _thinking and _animated:
 		var menhir_c: Vector2 = Vector2(w * 0.686, h * 0.66)
 		var mote: Vector2 = menhir_c + Vector2(cos(_t * 2.2) * w * 0.045, sin(_t * 2.2) * h * 0.10)
-		draw_circle(mote, maxf(minf(w, h) * 0.008, 2.5), MerlinVisual.GOLD)
+		draw_circle(mote, maxf(minf(w, h) * 0.008, 2.5), Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, dr))
 
 	# Figure
 	if _beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme":
@@ -352,18 +489,19 @@ func _draw() -> void:
 				mx = fmod(mx, w)
 			if rm:
 				ma *= 0.5
-			draw_circle(Vector2(mx, my) + _parallax, mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma))
+			draw_circle(Vector2(mx, my) + _parallax, mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma * dr))
 
 	# v10.18 — Lucioles (nuit / crépuscule, menu) : 12 points vert-or qui dérivent et clignotent
 	# (blink piqué via pow). Distinctes des motes ambrées : plus vertes, halo, parmi les arbres.
 	if _menu_decor and _fireflies and _animated:
-		var fcol: Color = MerlinVisual.GREEN.lerp(MerlinVisual.GOLD, 0.45)
-		for fi in 12:
+		var fcol: Color = _season_fly_col  # v10.18 : teinte des lucioles selon la saison
+		var fcount: int = int(round(12.0 * _season_fly_mult))  # densité saisonnière (hiver ~5, été 12)
+		for fi in fcount:
 			var ff: float = float(fi)
 			var fpx: float = w * (0.42 + 0.55 * fmod(ff * 0.618 + 0.2, 1.0)) + sin(_t * (0.28 + ff * 0.04) + ff) * w * 0.018
 			var fpy: float = h * (0.42 + 0.46 * fmod(ff * 0.382 + 0.1, 1.0)) + cos(_t * (0.22 + ff * 0.03) + ff * 1.3) * h * 0.028
 			var blink: float = 0.5 + 0.5 * sin(_t * (1.6 + ff * 0.27) + ff * 2.1)
-			var fa: float = 0.08 + 0.55 * pow(blink, 3.0)
+			var fa: float = (0.08 + 0.55 * pow(blink, 3.0)) * dr
 			if rm:
 				fa *= 0.5
 			var fr: float = maxf(minf(w, h) * 0.0045, 2.0)
@@ -380,10 +518,11 @@ func _draw() -> void:
 			gnd_pts.append(Vector2(gx, gy))
 		gnd_pts.append(Vector2(w, h))
 		gnd_pts.append(Vector2(0.0, h))
-		var gnd_a: float = 0.35
+		var gnd_a: float = 0.35 * dr
 		if rm:
 			gnd_a *= 0.5
-		draw_colored_polygon(gnd_pts, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, gnd_a))
+		var gnd_col: Color = COL_SIL.lerp(_season_sol, _season_sol_f)  # accent sol saisonnier (subtil)
+		draw_colored_polygon(gnd_pts, Color(gnd_col.r, gnd_col.g, gnd_col.b, gnd_a))
 
 	# Mist layers (reactive via _mist_factor)
 	var mist_layers: Array = [
@@ -396,7 +535,7 @@ func _draw() -> void:
 		var y: float = h * float(ml["y"])
 		var bw: float = w * float(ml["width"])
 		var bx: float = w * 0.5 - bw * 0.5
-		var alpha: float = float(ml["alpha"]) * _mist_factor
+		var alpha: float = float(ml["alpha"]) * _mist_factor * dr
 		if _animated:
 			bx += sin(_t * float(ml["speed"]) + float(li) * 2.1) * w * 0.020
 		if rm:
@@ -411,27 +550,27 @@ func _draw() -> void:
 		var fg_drift: float = 0.0
 		if not rm:
 			fg_drift = sin(_t * 0.06) * w * 0.008
-		_tree(Vector2(w * 0.02 - fg_drift, h), h * 0.90, w, fg_a)
-		_tree(Vector2(w * 0.97 + fg_drift, h), h * 0.85, w, fg_a)
+		_tree(Vector2(w * 0.02 - fg_drift, h), h * 0.90, w, fg_a * dr)
+		_tree(Vector2(w * 0.97 + fg_drift, h), h * 0.85, w, fg_a * dr)
 
 	# v10.18 (menu) — aura douce qui suit le curseur : 3 cercles GOLD très discrets (off en reduced_motion).
 	if _animated and _cursor_inside and not rm:
 		for ck in 3:
 			var aura_r: float = minf(w, h) * 0.045 * (1.0 + float(ck) * 0.9)
-			var aura_a: float = 0.05 / (float(ck) + 1.0)
+			var aura_a: float = (0.05 / (float(ck) + 1.0)) * dr
 			draw_circle(_cursor_pos, aura_r, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, aura_a))
 
 	# Menu decor
 	if _menu_decor:
 		var drift: float = sin(_t * 0.16) * w * 0.012 if _animated else 0.0
-		draw_rect(Rect2(Vector2(0.0 + drift, h * 0.80), Vector2(w * 0.44, h * 0.045)), Color(0.50, 0.65, 0.36, 0.22), true)
-		draw_rect(Rect2(Vector2(w * 0.58 - drift, h * 0.84), Vector2(w * 0.42, h * 0.045)), Color(0.48, 0.31, 0.64, 0.22), true)
+		draw_rect(Rect2(Vector2(0.0 + drift, h * 0.80), Vector2(w * 0.44, h * 0.045)), Color(0.50, 0.65, 0.36, 0.22 * dr), true)
+		draw_rect(Rect2(Vector2(w * 0.58 - drift, h * 0.84), Vector2(w * 0.42, h * 0.045)), Color(0.48, 0.31, 0.64, 0.22 * dr), true)
 		var star_i: int = 0
 		for sp in [Vector2(0.40, 0.18), Vector2(0.62, 0.28), Vector2(0.72, 0.50), Vector2(0.30, 0.40)]:
 			var a: float = 1.0
 			if _animated:
 				a = 0.40 + 0.60 * (0.5 + 0.5 * sin(_t * 1.1 + float(star_i) * 1.9))
-			_star(Vector2(w * sp.x, h * sp.y), maxf(minf(w, h) * 0.010, 2.5), a)
+			_star(Vector2(w * sp.x, h * sp.y), maxf(minf(w, h) * 0.010, 2.5), a * dr)
 			star_i += 1
 
 
@@ -452,18 +591,36 @@ func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0) -> vo
 		var side: float = 1.0 if (int(frac * 100.0) % 2 == 0) else -1.0
 		draw_line(p, p + Vector2(side * bl * 0.6, -bl * 0.7), col, trunk_w * 0.7, true)
 		draw_line(p, p + Vector2(-side * bl * 0.45, -bl * 0.6), col, trunk_w * 0.6, true)
+	# v10.18 — Feuillage saisonnier : blobs flat dans la canopée haute. alpha inclut decor_reveal (param).
+	# Défaut (aucune saison) → _season_leaf_a = 0 → aucun blob, arbres nus inchangés.
+	if _season_leaf_a > 0.001 and alpha > 0.01:
+		var leaf_a: float = _season_leaf_a * alpha
+		if MerlinVisual.reduced_motion:
+			leaf_a *= 0.7
+		var lc: Color = Color(_season_leaf.r, _season_leaf.g, _season_leaf.b, leaf_a)
+		var br: float = _season_blob_r * w_ref
+		var n: int = _season_blobs * 3
+		for k in n:
+			var kf: float = float(k)
+			var frac2: float = 0.50 + 0.42 * fmod(kf * 0.618, 1.0)
+			var p2: Vector2 = base.lerp(top, frac2)
+			var lat: float = (fmod(kf * 0.382, 1.0) - 0.5) * height * 0.30
+			var ver: float = (fmod(kf * 0.271, 1.0) - 0.5) * height * 0.14
+			draw_circle(p2 + Vector2(lat, ver), br, lc)
 
 
-func _menhir(pos: Vector2, dim: Vector2) -> void:
-	draw_rect(Rect2(pos, dim), COL_STONE, true)
+func _menhir(pos: Vector2, dim: Vector2, alpha: float = 1.0) -> void:
+	var stone: Color = COL_STONE if alpha >= 1.0 else Color(COL_STONE.r, COL_STONE.g, COL_STONE.b, COL_STONE.a * alpha)
+	var ink: Color = COL_INK if alpha >= 1.0 else Color(COL_INK.r, COL_INK.g, COL_INK.b, COL_INK.a * alpha)
+	draw_rect(Rect2(pos, dim), stone, true)
 	var cx: float = pos.x + dim.x * 0.5
 	var y0: float = pos.y + dim.y * 0.18
 	var y1: float = pos.y + dim.y * 0.82
-	draw_line(Vector2(cx, y0), Vector2(cx, y1), COL_INK, 2.0, true)
+	draw_line(Vector2(cx, y0), Vector2(cx, y1), ink, 2.0, true)
 	var tick: float = dim.x * 0.42
 	for i in 4:
 		var ty: float = lerpf(y0, y1, float(i + 1) / 5.0)
-		draw_line(Vector2(cx - tick, ty), Vector2(cx + tick, ty), COL_INK, 2.0, true)
+		draw_line(Vector2(cx - tick, ty), Vector2(cx + tick, ty), ink, 2.0, true)
 
 
 func _figure(base_in: Vector2, height: float, half_w: float) -> void:
@@ -498,15 +655,18 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 		if a_eyes > 0.01:
 			var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if menu else 1.0
 			var eye_col: Color = MerlinVisual.RARE_BLUE.lerp(MerlinVisual.CREAM, 0.35)
-			var openf: float = maxf(1.0 - 0.9 * _blink, 0.07)  # clignement : barre quasi fermée au pic
-			var eye_h: float = hr * 0.70 * openf * a_eyes  # grandissent en s'allumant
+			# Ouverture : clignement auto OU forcée par le boot (réveil). _eye_widen écarte/allonge (ébahi).
+			var openf: float = _eye_open_force if _eye_open_force >= 0.0 else maxf(1.0 - 0.9 * _blink, 0.07)
+			var eye_h: float = hr * 0.70 * openf * a_eyes * _eye_widen  # grandissent en s'allumant + ébahi
 			var eye_w: float = maxf(hr * 0.16, 2.0)
-			var eye_dx: float = hr * 0.34
+			var eye_dx: float = hr * 0.34 * _eye_widen  # l'écartement augmente quand ébahi
 			var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
+			var core_a: float = minf(0.9 * pulse * a_eyes * _eye_glow, 1.0)  # luminosité × réveil/flash, clampée
+			var halo_a: float = minf(0.16 * pulse * a_eyes * _eye_glow, 0.6)
 			for s in [-1.0, 1.0]:
 				var ec2: Vector2 = Vector2(head_c.x + s * eye_dx, head_c.y) + gaze_px
 				var ey: float = ec2.y - eye_h * 0.5
-				draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, 0.16 * pulse * a_eyes))
-				draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse * a_eyes), true)
-				draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse * a_eyes))
-				draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse * a_eyes))
+				draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, halo_a))
+				draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, core_a), true)
+				draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
+				draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))

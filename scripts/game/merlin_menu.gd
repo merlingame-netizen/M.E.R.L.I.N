@@ -57,6 +57,7 @@ func _ready() -> void:
 	if OS.has_environment("MERLIN_TOD_HOUR"):
 		tod_hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
 	_scene_art.set_time_of_day(tod_hour)
+	_scene_art.set_season(MerlinSceneArt.season_for_now())  # v10.18 : décor saisonnier (cohérent avec le boot)
 	_setup_dev_capture()
 	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
 	var mn: Node = get_node_or_null("/root/MerlinNative")

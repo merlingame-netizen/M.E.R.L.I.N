@@ -49,7 +49,10 @@ func change_scene(path: String, caption: String = "") -> void:
 		push_error("[MerlinTransition] scene not found: %s" % path)
 		return
 	MerlinAudio.play_sfx("ink_wash")
-	MerlinAudio.fade_music(-12.0, DUR_WIPE * MerlinVisual.motion())
+	# Coupe le FLUX DE BASE sous le voile (anti double-musique, user 2026-06-29) : on STOPPE la piste
+	# courante au lieu de la ducker. La scène suivante démarre sa musique de zéro (play_music depuis le
+	# silence) → plus aucun chevauchement de deux mélodies pendant le chargement.
+	MerlinAudio.stop_music(DUR_WIPE * MerlinVisual.motion())
 	_busy = true
 	_revealing = false
 	_progress = 0.0
@@ -79,7 +82,7 @@ func change_scene(path: String, caption: String = "") -> void:
 	_tw.tween_method(_set_progress, 0.0, 1.0, d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	await _tw.finished
 	_poly.polygon = PackedVector2Array()
-	MerlinAudio.restore_music(0.6)
+	# Plus de restore_music : la scène suivante a relancé sa propre piste (play_music) depuis le silence.
 	_busy = false
 
 

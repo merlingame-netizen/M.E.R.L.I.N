@@ -1,37 +1,32 @@
 extends Control
-## v10.18 — Écran de CHARGEMENT (boot). Le modèle Gemma 4 charge DANS UN THREAD (MerlinNative → zéro
-## freeze). Ici : Merlin se MATÉRIALISE couche par couche (cape → tête → regard bleu) pendant que des
-## LOGS s'égrènent à GAUCHE (style console d'éveil). Fondu vers le menu quand prêt. Scène de lancement.
+## v10.18 — BOOT CINÉMATIQUE (5 actes). Le modèle Gemma 4 charge DANS UN THREAD (MerlinNative → zéro
+## freeze). On démarre DÉJÀ zoomé sur les yeux de Merlin : (1) ils se réveillent, (2) ils regardent,
+## (3) dézoom + le décor apparaît selon SAISON + heure du jour, (4) pause 0,5s, (5) GRONDEMENT + le menu
+## est poussé DE FORCE depuis la gauche (décor + yeux ébahis, 1,3s) → swap vers MerlinMenu. Scène de lancement.
 
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
-const REVEAL_S: float = 3.4      # durée de la matérialisation de Merlin
-const MIN_SHOW_S: float = 3.6    # on laisse la matérialisation se jouer en entier
-const MAX_WAIT_S: float = 30.0   # filet : on passe au menu même si le modèle traîne (procédural OK)
-
-# Logs d'éveil (seuil de matérialisation → ligne). Style « console » : préfixe ▸, gauche, séquentiel.
-const NARR: Array = [
-	[0.00, "invocation du grimoire ancien"],
-	[0.18, "éveil de la conscience"],
-	[0.40, "tissage de la cape d'ombre"],
-	[0.62, "matérialisation de la silhouette"],
-	[0.80, "allumage du regard"],
-]
+const ZOOM_START: float = 3.4       # gros plan initial sur les yeux
+const ACT1_WAKE_S: float = 1.6      # réveil des yeux (ouverture + allumage)
+const ACT2_GAZE_S: float = 1.8      # le regard (gauche → droite → centre)
+const ACT3_DEZOOM_S: float = 2.2    # dézoom + apparition du décor (saison + heure)
+const ACT4_PAUSE_S: float = 0.5     # pause suspendue
+const ACT5_PUSH_S: float = 1.3      # grondement + push du menu depuis la gauche
+const GATE_MAX_S: float = 8.0       # filet : on n'attend pas le modèle indéfiniment
+const SHAKE_AMP: float = 16.0       # amplitude grondement (px)
+const SHAKE_AMP_RM: float = 7.0     # amplitude reduced_motion
 
 var _scene_art: MerlinSceneArt
-var _logbox: VBoxContainer
-var _caret: Label
-var _llm_line: Label
+var _stage: Control                 # reçoit la poussée latérale (shove) à l'acte 5
+var _panel: ColorRect               # « menu » qui barge depuis la gauche
+var _cap_label: Label
 var _ready_model: bool = false
-var _t0: float = 0.0
-var _reveal: float = 0.0
-var _narr_shown: int = 0
 var _going: bool = false
-var _caret_t: float = 0.0
-var _caret_on: bool = true
+var _shake_amp: float = 0.0
+var _shake_t: float = 0.0
 # Capture dev (env-gated MERLIN_CAPTURE_DIR) — jamais active en prod.
 var _cap_dir: String = ""
 var _cap_iv_ms: int = 300
-var _cap_max: int = 12
+var _cap_max: int = 14
 var _cap_count: int = 0
 var _cap_last: int = 0
 var _cap_boot: int = 0
@@ -39,89 +34,81 @@ var _cap_boot: int = 0
 
 func _ready() -> void:
 	MerlinVisual.load_prefs()
+
 	var bg: ColorRect = ColorRect.new()
 	bg.color = MerlinVisual.BG_DEEP
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 
-	# Décor vivant : Merlin (beat Climax) se matérialise via set_figure_reveal (piloté ci-dessous).
+	# Étage décor : translaté vers la droite (shove) à l'acte 5. Ancrage TOP_LEFT + taille explicite
+	# (recalée en _process) → position.x librement tweenable sans que le layout ne la réécrive (C1/C2 review).
+	_stage = Control.new()
+	_stage.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_stage)
+
+	# Décor vivant — Merlin (beat Climax). Zoom = scale du Control autour du pivot YEUX (recalculé chaque
+	# frame en _process). Shake = _scene_art.position. Démarre en gros plan (scale 3.4×), décor caché.
 	_scene_art = MerlinSceneArt.new()
 	_scene_art.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_scene_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_scene_art.modulate.a = 0.85
-	add_child(_scene_art)
+	_stage.add_child(_scene_art)
 	_scene_art.set_menu_decor(true)
 	_scene_art.set_beat("Climax")
-	_scene_art.set_animated(true)
-	_scene_art.set_figure_reveal(0.0)  # Merlin invisible au départ
+	_scene_art.set_season(MerlinSceneArt.season_for_now())
 	var tod_hour: int = int(Time.get_datetime_dict_from_system().get("hour", 21))
 	if OS.has_environment("MERLIN_TOD_HOUR"):
 		tod_hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
 	_scene_art.set_time_of_day(tod_hour)
+	_scene_art.set_decor_reveal(0.0)     # décor caché : gros plan sur les yeux
+	_scene_art.set_figure_reveal(0.65)   # cape + tête prêtes ; yeux à matérialiser
+	_scene_art.set_eye_open(0.0)         # yeux fermés
+	_scene_art.set_eye_glow(0.0)         # éteints
+	_scene_art.scale = Vector2(ZOOM_START, ZOOM_START)
+	_scene_art.set_animated(true)
 
-	# Wordmark discret, en haut à GAUCHE (pas centré).
-	var wm: Label = Label.new()
-	wm.text = "M·E·R·L·I·N"
-	wm.add_theme_color_override("font_color", MerlinVisual.GOLD)
-	wm.add_theme_font_size_override("font_size", 38)
-	wm.position = Vector2(52, 44)
-	wm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(wm)
+	# Caption discrète (bas-centre) — un mot par acte, très estompé.
+	_cap_label = Label.new()
+	_cap_label.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
+	_cap_label.add_theme_font_size_override("font_size", 17)
+	_cap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cap_label.anchor_left = 0.0
+	_cap_label.anchor_right = 1.0
+	_cap_label.anchor_top = 1.0
+	_cap_label.anchor_bottom = 1.0
+	_cap_label.offset_top = -64.0
+	_cap_label.offset_bottom = -38.0
+	_cap_label.modulate.a = 0.0
+	_cap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_cap_label)
 
-	# Feed de LOGS, à GAUCHE, aligné à gauche, séquentiel (style console d'éveil).
-	_logbox = VBoxContainer.new()
-	_logbox.anchor_left = 0.0
-	_logbox.anchor_top = 0.0
-	_logbox.offset_left = 54
-	_logbox.offset_top = 150
-	_logbox.add_theme_constant_override("separation", 7)
-	_logbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_logbox)
-	# Ligne « modèle » réelle (▸ … → ✓ prêt sur model_ready).
-	_llm_line = _make_log_label("▸ chargement du moteur (Gemma 4 E2B)…", MerlinVisual.DIM_WARM)
-	_logbox.add_child(_llm_line)
-	# Curseur clignotant (« prompt » de la console) en bas du feed.
-	_caret = _make_log_label("▸ _", MerlinVisual.GOLD)
-	_logbox.add_child(_caret)
+	# Panneau « menu » qui barge depuis la gauche (acte 5). TOP_LEFT + taille explicite (_process) → slide
+	# horizontal fiable. Hors écran au départ ; au-dessus de tout.
+	_panel = ColorRect.new()
+	_panel.color = MerlinVisual.BG_DEEP
+	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.position = Vector2(-4000.0, 0.0)
+	add_child(_panel)
 
-	# Barre shimmer fine, en bas, pleine largeur (gauche → droite).
-	var bar_bg: Panel = Panel.new()
-	bar_bg.anchor_left = 0.0
-	bar_bg.anchor_right = 1.0
-	bar_bg.anchor_top = 1.0
-	bar_bg.anchor_bottom = 1.0
-	bar_bg.offset_left = 54
-	bar_bg.offset_right = -54
-	bar_bg.offset_top = -34
-	bar_bg.offset_bottom = -30
-	bar_bg.clip_contents = true
-	bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var bsb: StyleBoxFlat = StyleBoxFlat.new()
-	bsb.bg_color = MerlinVisual.RING_BG
-	bar_bg.add_theme_stylebox_override("panel", bsb)
-	add_child(bar_bg)
-	var fill: ColorRect = ColorRect.new()
-	fill.color = MerlinVisual.GOLD
-	fill.size = Vector2(120, 4)
-	fill.position = Vector2(-120, 0)
-	bar_bg.add_child(fill)
-	var sh: Tween = create_tween().set_loops()
-	sh.tween_property(fill, "position:x", 1400.0, 1.4).from(-120.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	sh.tween_interval(0.25)
-
-	# Connexion au modèle (chargé en thread). Connecter AVANT is_ready() (anti-race).
+	# Modèle Gemma : chargé EN THREAD (MerlinNative) → zéro freeze. Connecter AVANT is_ready() (anti-race).
+	# CONNECT_DEFERRED : MerlinNative peut émettre model_ready depuis son thread → le slot court sur le
+	# thread principal (pas d'écriture cross-thread de _ready_model — review H2).
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
 		if mn.has_signal("model_ready") and not mn.model_ready.is_connected(_on_model_ready):
-			mn.model_ready.connect(_on_model_ready)
+			mn.model_ready.connect(_on_model_ready, CONNECT_DEFERRED)
 		if mn.has_signal("model_failed") and not mn.model_failed.is_connected(_on_model_failed):
-			mn.model_failed.connect(_on_model_failed)
+			mn.model_failed.connect(_on_model_failed, CONNECT_DEFERRED)
 		if mn.is_ready():
 			_on_model_ready()
 	else:
 		_on_model_ready()
 
 	_cap_dir = OS.get_environment("MERLIN_CAPTURE_DIR")
+	if not _cap_dir.is_empty():
+		DirAccess.make_dir_recursive_absolute(_cap_dir)  # dev : garantir le dossier de capture
 	var civ: String = OS.get_environment("MERLIN_CAPTURE_INTERVAL_MS")
 	if civ != "":
 		_cap_iv_ms = maxi(50, int(civ))
@@ -129,79 +116,164 @@ func _ready() -> void:
 	if cmx != "":
 		_cap_max = maxi(1, int(cmx))
 
-	_t0 = Time.get_ticks_msec() / 1000.0
 	modulate.a = 0.0
-	create_tween().tween_property(self, "modulate:a", 1.0, 0.5)
 	set_process(true)
-
-
-func _make_log_label(txt: String, col: Color) -> Label:
-	var l: Label = Label.new()
-	l.text = txt
-	l.add_theme_color_override("font_color", col)
-	l.add_theme_font_size_override("font_size", 17)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return l
-
-
-func _on_model_ready() -> void:
-	_ready_model = true
-	if _llm_line != null:
-		_llm_line.text = "✓ Gemma 4 E2B — prêt"
-		_llm_line.add_theme_color_override("font_color", MerlinVisual.GREEN)
-
-
-func _on_model_failed(_reason: String) -> void:
-	_ready_model = true  # le menu marche sans LLM (fallback procédural) → ne pas attendre pour rien
-	if _llm_line != null:
-		_llm_line.text = "▸ moteur indisponible — mode procédural"
-		_llm_line.add_theme_color_override("font_color", MerlinVisual.VIOLET)
+	_play_cinematic()
 
 
 func _process(delta: float) -> void:
-	_maybe_capture()
-	# Matérialisation de Merlin (couche par couche, piloté par _reveal 0→1).
-	_reveal = minf(_reveal + delta / REVEAL_S, 1.0)
+	# Taille explicite des couches TOP_LEFT (≠ vp seulement → pas de re-sort inutile qui clobberait le shake).
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	if _stage != null and _stage.size != vp:
+		_stage.size = vp
+	if _panel != null and _panel.size != vp:
+		_panel.size = vp
+	# Pivot du zoom = position des YEUX, recalculé chaque frame (size peut changer au 1er layout).
 	if _scene_art != null:
-		_scene_art.set_figure_reveal(_reveal)
-	# Logs d'éveil : on insère chaque ligne quand la matérialisation franchit son seuil.
-	while _narr_shown < NARR.size() and _reveal >= float(NARR[_narr_shown][0]):
-		var line: Label = _make_log_label("▸ " + str(NARR[_narr_shown][1]), MerlinVisual.CREAM)
-		line.modulate.a = 0.0
-		_logbox.add_child(line)
-		_logbox.move_child(_caret, _logbox.get_child_count() - 1)  # curseur reste en bas
-		create_tween().tween_property(line, "modulate:a", 1.0, 0.3)
-		_narr_shown += 1
-	# Curseur clignotant.
-	_caret_t += delta
-	if _caret_t >= 0.45:
-		_caret_t = 0.0
-		_caret_on = not _caret_on
-		if _caret != null:
-			_caret.modulate.a = 1.0 if _caret_on else 0.25
-	# Transition : matérialisation finie ET modèle prêt (ou filet) ET durée mini écoulée.
-	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _t0
-	if not _going and _reveal >= 1.0 and elapsed >= MIN_SHOW_S and (_ready_model or elapsed >= MAX_WAIT_S):
-		_go_to_menu()
+		var ss: Vector2 = _scene_art.size
+		if ss.x > 4.0 and ss.y > 4.0:
+			_scene_art.pivot_offset = Vector2(ss.x * 0.5, ss.y * 0.37)
+	# Shake (grondement, acte 5) — décroissance ~frame-rate-indépendante, arrondi pixel (anti-scintillement).
+	if _shake_t > 0.0 and _scene_art != null:
+		_shake_t -= delta
+		_shake_amp *= pow(0.86, delta * 60.0)
+		var ox: float = (randf() * 2.0 - 1.0) * _shake_amp
+		var oy: float = (randf() * 2.0 - 1.0) * _shake_amp * 0.45
+		_scene_art.position = Vector2(round(ox), round(oy))
+		if _shake_t <= 0.0:
+			_scene_art.position = Vector2.ZERO
+	_maybe_capture()
 
 
-func _go_to_menu() -> void:
+func _play_cinematic() -> void:
+	var m: float = MerlinVisual.motion()
+	var rm: bool = MerlinVisual.reduced_motion
+	await get_tree().process_frame   # layout settle → pivot/size valides avant le fondu
+	var vw: float = float(get_viewport().get_visible_rect().size.x)
+	create_tween().tween_property(self, "modulate:a", 1.0, 0.5 * m)   # fondu d'entrée (masque le 1er settle)
+
+	# Dev (env-gated) : sauter directement à l'acte 5 pour capturer le push sans la lenteur du gros plan.
+	if OS.get_environment("MERLIN_BOOT_SKIP_TO_PUSH") != "":
+		_scene_art.scale = Vector2.ONE
+		_scene_art.set_figure_reveal(1.0)
+		_scene_art.set_eye_open(-1.0)
+		_scene_art.set_decor_reveal(1.0)
+		_ready_model = true
+		await get_tree().create_timer(0.8).timeout
+		_push_to_menu(vw, m, rm)
+		return
+
+	# ===== ACTE 1 — RÉVEIL DES YEUX (gros plan) =====
+	_caption("il s'éveille")
+	var t1: Tween = create_tween().set_parallel(true)
+	t1.tween_property(_scene_art, "_eye_open_force", 1.0, ACT1_WAKE_S * m).from(0.0).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t1.tween_property(_scene_art, "_eye_glow", 1.0, ACT1_WAKE_S * m).from(0.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t1.tween_property(_scene_art, "_fig_reveal", 1.0, ACT1_WAKE_S * m).from(0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t1.finished
+
+	# ===== ACTE 2 — LE REGARD (gros plan) =====
+	_caption("il observe")
+	_scene_art.set_scripted_gaze(true, Vector2.ZERO)
+	var seg: float = (ACT2_GAZE_S * m) / 3.6
+	var t2: Tween = create_tween()
+	t2.tween_property(_scene_art, "_gaze_forced", Vector2(-0.85, 0.0), seg * 1.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t2.tween_property(_scene_art, "_gaze_forced", Vector2(0.85, -0.10), seg * 1.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t2.tween_property(_scene_art, "_gaze_forced", Vector2.ZERO, seg).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t2.finished
+
+	# ===== ACTE 3 — DÉZOOM + ÉVEIL DU DÉCOR (saison + heure) =====
+	_caption("le monde s'ouvre")
+	_scene_art.set_scripted_gaze(false)   # le regard reprend la main (suit la souris)
+	var t3: Tween = create_tween().set_parallel(true)
+	t3.tween_property(_scene_art, "scale", Vector2.ONE, ACT3_DEZOOM_S * m).from(Vector2(ZOOM_START, ZOOM_START)).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	var dz: PropertyTweener = t3.tween_property(_scene_art, "_decor_reveal", 1.0, maxf(ACT3_DEZOOM_S - 0.3, 0.4) * m).from(0.0).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	dz.set_delay(0.3 * m)   # le décor « rattrape » la caméra
+	await t3.finished
+
+	# ===== ACTE 4 — PAUSE SUSPENDUE + GATE model_ready =====
+	_caption("")
+	await get_tree().create_timer(ACT4_PAUSE_S * m).timeout
+	var waited: float = 0.0
+	while not _ready_model and waited < GATE_MAX_S:   # ne JAMAIS quitter avant que le modèle soit prêt
+		await get_tree().create_timer(0.1).timeout
+		waited += 0.1
+
+	# ===== ACTE 5 — GRONDEMENT + PUSH DEPUIS LA GAUCHE =====
+	_push_to_menu(vw, m, rm)
+
+
+# Acte 5 : grondement (shake + impact sonore) + le menu poussé DE FORCE depuis la gauche ;
+# le décor est shové vers la droite, les yeux s'écarquillent (ébahis) et fixent la source.
+func _push_to_menu(vw: float, m: float, rm: bool) -> void:
+	if _going:
+		return
 	_going = true
-	set_process(false)
-	# Hygiène (review LOW) : se déconnecter de l'autoload persistant avant de céder la scène.
+	# GRONDEMENT — impact sonore grave (stamp pitché ↓) + screen-shake.
+	var ma: Node = get_node_or_null("/root/MerlinAudio")
+	if ma != null and ma.has_method("play_sfx"):
+		ma.play_sfx("seal_stamp", 0.55)
+	_shake_amp = SHAKE_AMP_RM if rm else SHAKE_AMP
+	_shake_t = (0.6 if rm else 1.0) * m
+
+	# YEUX ÉBAHIS — écartement + flash de luminosité + regard qui dérape vers la gauche (la force entrante).
+	_scene_art.set_scripted_gaze(true, Vector2(-1.0, 0.0))
+	if not rm:
+		var tw_eye: Tween = create_tween()
+		tw_eye.tween_interval(0.10 * m)
+		tw_eye.tween_property(_scene_art, "_eye_widen", 1.5, 0.30 * m).from(1.0).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw_eye.tween_property(_scene_art, "_eye_widen", 1.12, 0.45 * m).set_trans(Tween.TRANS_SINE)
+		var tw_glow: Tween = create_tween()
+		tw_glow.tween_interval(0.10 * m)
+		tw_glow.tween_property(_scene_art, "_eye_glow", 1.35, 0.18 * m).from(1.0).set_trans(Tween.TRANS_QUAD)
+		tw_glow.tween_property(_scene_art, "_eye_glow", 1.0, 0.40 * m).set_trans(Tween.TRANS_SINE)
+	else:
+		_scene_art.set_eye_widen(1.2)
+	var tw_gaze: Tween = create_tween()
+	tw_gaze.tween_interval(0.55 * m)
+	tw_gaze.tween_property(_scene_art, "_gaze_forced", Vector2.ZERO, 0.5 * m).set_trans(Tween.TRANS_SINE)
+
+	# DÉCOR shové vers la droite (encaisse la poussée).
+	var tw_shove: Tween = create_tween()
+	tw_shove.tween_interval(0.15 * m)
+	tw_shove.tween_property(_stage, "position:x", vw * 0.40, 0.55 * m).from(0.0).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+	# MENU poussé DE FORCE depuis la gauche : panneau BG_DEEP, entrée brusque (BACK overshoot).
+	var tw_push: Tween = create_tween()
+	tw_push.tween_interval((0.10 if rm else 0.15) * m)
+	if rm:
+		tw_push.tween_property(_panel, "position:x", 0.0, 0.30 * m).from(-vw).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	else:
+		tw_push.tween_property(_panel, "position:x", 0.0, 0.85 * m).from(-vw).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	await get_tree().create_timer(ACT5_PUSH_S * m).timeout
+	# Hygiène : se déconnecter de l'autoload persistant avant de céder la scène.
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
 		if mn.has_signal("model_ready") and mn.model_ready.is_connected(_on_model_ready):
 			mn.model_ready.disconnect(_on_model_ready)
 		if mn.has_signal("model_failed") and mn.model_failed.is_connected(_on_model_failed):
 			mn.model_failed.disconnect(_on_model_failed)
-	if _caret != null:
-		_caret.text = "✦ Merlin veille."
-		_caret.modulate.a = 1.0
-	var tw: Tween = create_tween()
-	tw.tween_interval(0.35)
-	tw.tween_property(self, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.tween_callback(func() -> void: get_tree().change_scene_to_file(MENU_SCENE))
+	set_process(false)
+	get_tree().change_scene_to_file(MENU_SCENE)
+
+
+func _caption(txt: String) -> void:
+	if _cap_label == null:
+		return
+	if txt == "":
+		create_tween().tween_property(_cap_label, "modulate:a", 0.0, 0.3)
+		return
+	_cap_label.text = "✦ " + txt
+	_cap_label.modulate.a = 0.0
+	create_tween().tween_property(_cap_label, "modulate:a", 0.65, 0.5)
+
+
+func _on_model_ready() -> void:
+	_ready_model = true
+
+
+func _on_model_failed(_reason: String) -> void:
+	_ready_model = true   # le menu marche sans LLM (fallback procédural) → ne pas bloquer le boot
 
 
 func _maybe_capture() -> void:

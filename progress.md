@@ -2,6 +2,43 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-29 — v10.18 Boot cinématique (intro 5 actes)
+
+### Context
+User : le boot doit être un plan cinématique — yeux en zoom qui se réveillent → regardent →
+dezoom + apparition du décor selon SAISON + heure du jour → pause 0,5s → grondement + push
+BRUSQUE du menu depuis la gauche (décor + yeux ébahis, 1,3s). Design via workflow 4 agents
+(timeline + feel acte 5 + saisons + faisabilité Godot) ; facts via Explore (audio/menu/palette/shake).
+
+### Done
+- **MerlinSceneArt** : `set_decor_reveal(0..1)` (multiplie l'alpha de ~15 éléments décor, défaut 1.0
+  → menu/in-game inchangés ; figure NON affectée) ; hooks yeux cinématiques `set_eye_open/glow/widen`
+  + `set_scripted_gaze` ; `set_season` (4 saisons, feuillage blobs dérivé palette canon + accents
+  sol/ciel/lucioles) + `season_for_now()` static. Aucune modif merlin_visual.gd (tout dérivé).
+- **merlin_boot** : re-chorégraphie 5 actes — zoom (scale du Control, pivot YEUX recalculé/frame) →
+  dezoom QUINT + decor_reveal → pause + GATE model_ready (filet 8s, no-freeze préservé : modèle threadé)
+  → grondement (shake + SFX seal_stamp pitché) + push panneau BG_DEEP depuis la gauche (BACK overshoot)
+  + décor shové droite + yeux ébahis (widen/glow/regard gauche) → change_scene MerlinMenu. Dev hook
+  `MERLIN_BOOT_SKIP_TO_PUSH` (capture acte 5). Caption discrète par acte.
+- **merlin_menu** : `set_season(season_for_now())` (décor saisonnier cohérent boot↔menu).
+
+### Fixes intégrés (feedback user + review adversariale, même commit)
+- **Double-musique « nouvelle partie »** : `MerlinTransition` STOPPE la piste de base sous le voile
+  (`stop_music`) au lieu de la ducker → la scène suivante démarre de zéro, plus de chevauchement de 2
+  mélodies (menu theme vs VOYAGEUR/Tri Martolod). `restore_music` retiré.
+- **Transitions plus lentes** : `DUR_INK_WIPE` 0.65 → 1.0 (couvre + révèle ~2s, plus posé).
+- **Review C1/C2** : `_stage`/`_panel` ré-ancrés TOP_LEFT + taille recalée en `_process` → les tweens
+  `position.x` (shove + push) ne sont plus réécrits par le layout. Push capturé : panneau qui barge
+  depuis la GAUCHE, décor + yeux shovés à droite → couvre → swap. ✓
+- **Review H2** : signaux MerlinNative connectés `CONNECT_DEFERRED` (pas d'écriture cross-thread).
+- **Review H3** : gaze scripté actif même en reduced_motion (actes 2/5).
+
+### Gates
+- validate_step0 0 err. Smoke Boot/Menu/Selection/Game = passed, script_errors 0.
+- Capture : actes 1-3 (yeux réveil → dezoom → décor été foliage + crépuscule violet) + acte 5 push
+  (panneau depuis la gauche, décor shové, couverture, swap) confirmés visuellement.
+
+
 ## Session: 2026-06-12 — v10.13.1 « Fondations de gamme » (montée en gamme R114, 7 commits)
 
 ### Context

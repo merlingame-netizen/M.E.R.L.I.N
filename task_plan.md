@@ -2,7 +2,35 @@
 
 > **Source**: `docs/BIBLE.md` v2.0 (canon unique — roadmap §19 ; l'ancien `DEV_PLAN_V2.5.md` est archivé dans `docs/archive/`).
 > **Consumed by**: `tools/octogent/prompts/studio-director.md` Tier 1 backlog.
-> **Last refresh**: 2026-06-14 (v10.16.2 audio polish).
+> **Last refresh**: 2026-06-29 (v10.18 boot cinematic).
+
+## v10.18 — Boot Cinématique (intro 5 actes) [IN PROGRESS]
+
+### Context
+User 2026-06-29 : le boot doit être un **plan cinématique** —
+1. **Acte 1 (Réveil)** : démarre DÉJÀ zoomé sur les yeux de Merlin ; ils se réveillent (ouverture + allumage).
+2. **Acte 2 (Regard)** : les yeux regardent (gauche/droite/centre), toujours en gros plan.
+3. **Acte 3 (Dezoom + décor)** : dézoom révélant Merlin entier + le décor APPARAÎT selon **saison** ET heure du jour.
+4. **Acte 4 (Pause)** : scène complète → pause 0,5s.
+5. **Acte 5 (Grondement + push)** : grondement + animation BRUSQUE comme si on poussait DE FORCE le menu depuis
+   la GAUCHE ; le décor et les yeux sont ÉBAHIS — durée 1,3s — puis swap vers MerlinMenu.
+
+### Pré-implémentation (en cours)
+- Explore agent : facts audio (rumble SFX), entrance menu, transition, palette, shake, blast-radius MerlinSceneArt.
+- Workflow design+faisabilité : timeline chronométrée + feel acte 5 + système saison + de-risk Godot.
+
+### Implémentation prévue
+- **MerlinSceneArt** : `set_decor_reveal(0..1)`, hooks cinématiques yeux (ouverture/luminosité/écartement/regard scripté),
+  `set_season(saison)` (feuillage saisonnier dérivé palette canon, zéro hex).
+- **merlin_boot.gd** : re-chorégraphie 5 actes — zoom (scale du Control autour du pivot yeux) → dezoom + décor →
+  pause → grondement (shake + audio) + push panneau depuis la gauche + yeux ébahis → change_scene MerlinMenu.
+  Gating sur `model_ready` (no-freeze préservé : modèle chargé en thread).
+
+### Gates
+- validate_step0 0 err ; smoke Boot/Menu/Game passed ; capture multi-frames des 5 actes ; review concurrence/feel.
+
+---
+
 
 ## v10.16.2 — Audio Polish : SFX soft + gameplay music
 
