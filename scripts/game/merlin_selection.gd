@@ -1,6 +1,9 @@
 extends Control
-## MerlinSelection — écran de sélection (bible R56). Merlin propose 3 scénarios (titre + pitch),
-## le joueur en choisit un → "Merlin écrit" (squelette) → démarre la run → scène de jeu.
+## MerlinSelection — écran de sélection (bible R56). Merlin propose 3 sentiers (titre + pitch),
+## le joueur en CHOISIT un MANUELLEMENT → montage (squelette + arc) → scène de jeu.
+## v10.19 (user 2026-06-29) : les 3 TITRES sont FORCÉMENT LLM — montage « Merlin rêve les sentiers »
+## ultra-animé tant qu'ils ne sont pas prêts (filet ~75 s + skip après 20 s). Le pick lance la
+## transition « zoom vers Merlin qui parle » (montage du scénario).
 
 const COL_BG: Color = MerlinVisual.BG_DEEP
 const COL_SURFACE: Color = MerlinVisual.SURFACE
@@ -12,17 +15,23 @@ const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 const GAME_MUSIC: String = "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-loop.wav"
 
+const TITLES_CAP_S: float = 75.0    # filet dur : au-delà, on accepte le fallback (jamais d'attente infinie)
+const SKIP_REVEAL_S: float = 20.0   # affordance « passer » révélée après 20 s
+
 var _cards_box: HBoxContainer
 var _title_lbl: Label
 var _back_btn: Button
 var _overlay: Panel
+var _overlay_art: MerlinSceneArt
 var _overlay_lbl: Label
+var _overlay_skip_lbl: Label
 var _busy: bool = false
-# v10/H2 (audit UX bible §21.1 ÉVIDENT) : feedback visuel d'attente bornée (8 s budget côté
-# MerlinScenario.take_selection). (user 2026-05-31 /goal)
 var _overlay_dots_tw: Tween = null
 var _overlay_quill_tw: Tween = null
+var _overlay_pulse_tw: Tween = null
 var _overlay_base_txt: String = ""
+var _overlay_skipped: bool = false
+var _overlay_skip_shown: bool = false
 
 
 func _ready() -> void:
@@ -50,17 +59,39 @@ func _setup_music() -> void:
 
 
 func _load_selection() -> void:
-	_show_overlay("Merlin rêve trois sentiers…")
-	# Récupère les scénarios pré-générés depuis le menu (instantané si prêts).
-	var sels: Array = await get_node("/root/MerlinScenario").take_selection()
+	var sc: Node = get_node("/root/MerlinScenario")
+	_show_overlay("Merlin rêve les trois sentiers")
+	# Titres FORCÉMENT LLM : on attend que la sélection soit prête (montage animé), filet TITLES_CAP_S
+	# + skip après SKIP_REVEAL_S. take_selection() ne sert ensuite plus que de récupérateur.
+	await _force_wait_titles(sc)
+	var sels: Array = await sc.take_selection()
 	_hide_overlay()
+	if not is_inside_tree():
+		return
 	for s in sels:
 		_add_parchemin(str(s.get("title", "?")), str(s.get("pitch", "")))
 
 
+# Attend les titres LLM (montage). Sort quand prêt, ou au skip (20 s+), ou au cap dur (75 s).
+func _force_wait_titles(sc: Node) -> void:
+	var t0: int = Time.get_ticks_msec()
+	while is_inside_tree():
+		if sc.has_method("is_selection_ready") and sc.is_selection_ready():
+			return
+		var elapsed: float = float(Time.get_ticks_msec() - t0) / 1000.0
+		if elapsed >= TITLES_CAP_S or _overlay_skipped:
+			return
+		if elapsed >= SKIP_REVEAL_S and not _overlay_skip_shown:
+			_reveal_overlay_skip()
+		# Robustesse : relance la pré-gen si elle n'a pas démarré (modèle prêt plus tard que le menu).
+		if sc.has_method("ensure_selection_prefetch"):
+			sc.ensure_selection_prefetch()
+		await get_tree().create_timer(0.25).timeout
+
+
 func _add_parchemin(title: String, pitch: String) -> void:
 	var panel: PanelContainer = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(460, 560)  # parchemins agrandis (user 2026-06-06 : scale tout)
+	panel.custom_minimum_size = Vector2(460, 560)
 	panel.add_theme_stylebox_override("panel", _surface_style())
 	var v: VBoxContainer = VBoxContainer.new()
 	v.add_theme_constant_override("separation", 14)
@@ -102,10 +133,11 @@ func _on_pick(title: String, pitch: String) -> void:
 	# Squelette INSTANTANÉ (le pitch est le synopsis) → bascule immédiate vers le jeu.
 	var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(title, pitch)
 	get_node("/root/MerlinRun").new_run(skel)
-	# Arc narratif LLM en arrière-plan (fire-and-forget) : génère pendant la transition + l'intro ;
-	# swappe l'arc fallback cohérent avant le beat 1 si prêt à temps (user 2026-06-07).
+	# Arc narratif LLM en arrière-plan (fire-and-forget) ; l'interstitiel in-game (R111) le couvre.
 	get_node("/root/MerlinScenario").prepare_arc(skel)
-	MerlinTransition.change_scene(GAME_SCENE)
+	# v10.19 — montage du scénario : transition « zoom vers Merlin qui parle » (réplique fixe : l'arc
+	# génère déjà, single-flight → pas de génération ici).
+	MerlinTransition.change_scene_merlin(GAME_SCENE, "Le sentier se dessine sous mes doigts, Voyageur…")
 
 
 func _build_ui() -> void:
@@ -145,19 +177,50 @@ func _build_ui() -> void:
 	root.add_child(_back_btn)
 	MerlinVisual.connect_button_feedback(_back_btn)
 
+	# --- Overlay « montage réflexion de Merlin » (ultra-animé) ---
 	_overlay = Panel.new()
 	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var ov_sb: StyleBoxFlat = StyleBoxFlat.new()
-	ov_sb.bg_color = Color(MerlinVisual.BG_DEEP.r, MerlinVisual.BG_DEEP.g, MerlinVisual.BG_DEEP.b, 0.92)
+	ov_sb.bg_color = Color(MerlinVisual.BG_DEEP.r, MerlinVisual.BG_DEEP.g, MerlinVisual.BG_DEEP.b, 0.96)
 	_overlay.add_theme_stylebox_override("panel", ov_sb)
+	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_overlay.gui_input.connect(_on_overlay_input)
 	add_child(_overlay)
+	# Scène vivante de Merlin (réflexion) en fond du montage, atténuée pour la lisibilité du texte.
+	_overlay_art = MerlinSceneArt.new()
+	_overlay_art.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay_art.modulate.a = 0.5
+	_overlay.add_child(_overlay_art)
+	_overlay_art.set_menu_decor(true)
+	_overlay_art.set_beat("Rencontre")
+	_overlay_art.set_season(MerlinSceneArt.season_for_now())
+	var hour: int = int(Time.get_datetime_dict_from_system().get("hour", 21))
+	if OS.has_environment("MERLIN_TOD_HOUR"):
+		hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
+	_overlay_art.set_time_of_day(hour)
+	_overlay_art.set_animated(true)
 	_overlay_lbl = Label.new()
 	_overlay_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_overlay_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
-	_overlay_lbl.add_theme_font_size_override("font_size", 38)
+	_overlay_lbl.add_theme_font_size_override("font_size", 40)
 	_overlay.add_child(_overlay_lbl)
+	_overlay_skip_lbl = Label.new()
+	_overlay_skip_lbl.anchor_left = 0.0
+	_overlay_skip_lbl.anchor_right = 1.0
+	_overlay_skip_lbl.anchor_top = 1.0
+	_overlay_skip_lbl.anchor_bottom = 1.0
+	_overlay_skip_lbl.offset_top = -64.0
+	_overlay_skip_lbl.offset_bottom = -32.0
+	_overlay_skip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_overlay_skip_lbl.add_theme_color_override("font_color", COL_DIM)
+	_overlay_skip_lbl.add_theme_font_size_override("font_size", 18)
+	_overlay_skip_lbl.text = "▶ clic pour passer"
+	_overlay_skip_lbl.visible = false
+	_overlay_skip_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.add_child(_overlay_skip_lbl)
 	_overlay.visible = false
 
 
@@ -169,6 +232,15 @@ func _show_overlay(txt: String) -> void:
 	_overlay.visible = true
 	_overlay_base_txt = txt
 	_overlay_lbl.text = txt
+	if _overlay_art != null:
+		_overlay_art.set_thinking(true)  # mote « Merlin réfléchit »
+	# Pulse de la légende (respiration) — « ultra animé ».
+	if _overlay_pulse_tw != null and _overlay_pulse_tw.is_valid():
+		_overlay_pulse_tw.kill()
+	if not MerlinVisual.reduced_motion:
+		_overlay_pulse_tw = create_tween().set_loops()
+		_overlay_pulse_tw.tween_property(_overlay_lbl, "modulate:a", 0.55, 1.1).set_trans(Tween.TRANS_SINE)
+		_overlay_pulse_tw.tween_property(_overlay_lbl, "modulate:a", 1.0, 1.1).set_trans(Tween.TRANS_SINE)
 	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
 		_overlay_dots_tw.kill()
 	_overlay_dots_tw = create_tween().set_loops()
@@ -187,14 +259,32 @@ func _set_overlay_suffix(suffix: String) -> void:
 		_overlay_lbl.text = _overlay_base_txt + suffix
 
 
+func _reveal_overlay_skip() -> void:
+	_overlay_skip_shown = true
+	if _overlay_skip_lbl != null:
+		_overlay_skip_lbl.visible = true
+		_overlay_skip_lbl.modulate.a = 0.0
+		create_tween().tween_property(_overlay_skip_lbl, "modulate:a", 1.0, 0.4)
+
+
+func _on_overlay_input(event: InputEvent) -> void:
+	# Skip autorisé uniquement APRÈS la révélation de l'affordance (≥20 s) → respecte « titres forcément
+	# générés » tout en évitant de piéger le joueur si le modèle est absent.
+	if _overlay_skip_shown and event is InputEventMouseButton and event.pressed:
+		_overlay_skipped = true
+
+
 func _hide_overlay() -> void:
 	_overlay.visible = false
-	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
-		_overlay_dots_tw.kill()
+	if _overlay_art != null:
+		_overlay_art.set_thinking(false)
+		_overlay_art.set_animated(false)  # stoppe les redraws du décor une fois le montage fini
+	for tw in [_overlay_dots_tw, _overlay_quill_tw, _overlay_pulse_tw]:
+		if tw != null and tw.is_valid():
+			tw.kill()
 	_overlay_dots_tw = null
-	if _overlay_quill_tw != null and _overlay_quill_tw.is_valid():
-		_overlay_quill_tw.kill()
 	_overlay_quill_tw = null
+	_overlay_pulse_tw = null
 
 
 func _animate_entrance() -> void:

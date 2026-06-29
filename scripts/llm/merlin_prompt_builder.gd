@@ -249,6 +249,10 @@ static func menu_thought(voice: String, mode: String, ctx: Dictionary) -> Dictio
 			usr = "%s\nEn UNE phrase courte (max 14 mots), encourage le Voyageur a repartir vers l'aventure dans la foret. Chaleureux, un brin malicieux." % ctx_line
 		"blague":
 			usr = "%s\nGlisse UNE courte boutade (max 14 mots), legere et merveilleuse, dans le gout celtique (korrigans, gui, brume, dolmen). Pas de meta." % ctx_line
+		"premiere":
+			usr = "%s\nC'est la TOUTE PREMIERE fois que tu rencontres ce Voyageur. Presente-toi brievement et accueille-le en UNE a DEUX phrases courtes (max 22 mots au total), mysterieux et bienveillant. Tu es Merlin, gardien de Broceliande." % ctx_line
+		"depart":
+			usr = "%s\nLe Voyageur s'elance vers l'aventure a l'instant meme. Lance-le en UNE phrase courte (max 12 mots), comme un seuil que vous franchissez ensemble. Tu t'adresses a lui." % ctx_line
 		"survol":
 			var bouton: String = str(ctx.get("bouton", ""))
 			usr = "%s\nLe Voyageur hesite, la main au-dessus du choix « %s ». Commente son hesitation en UNE phrase courte (max 14 mots), taquine ou complice." % [ctx_line, bouton]

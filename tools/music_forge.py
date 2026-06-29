@@ -25,11 +25,17 @@ from typing import Callable
 SAMPLE_RATE = 44100
 PEAK_TARGET = 10 ** (-12.0 / 20.0)  # -12 dB
 DURATION = 35.0
+BOOT_DURATION = 22.0  # cue d'éveil (boot) — court, en boucle seamless
 CROSSFADE = 3.0
 OUT_DIR = Path(__file__).resolve().parent.parent / "music" / "gameplay"
+# Certaines pistes sortent ailleurs que music/gameplay (ex. l'éveil du boot).
+OUT_OVERRIDE: dict[str, Path] = {
+    "boot_eveil": Path(__file__).resolve().parent.parent / "music" / "intro",
+}
 
 PENTA_D = (146.83, 174.61, 196.00, 220.00, 261.63)
 PENTA_D_HIGH = (293.66, 349.23, 392.00, 440.00, 523.25)
+PENTA_D_LOW = (73.42, 87.31, 98.00, 110.00, 146.83)  # pentatonique grave (éveil sombre-merveilleux)
 
 
 def _drone(duration: float, freq: float, detune: float = 0.003,
@@ -187,8 +193,23 @@ def _gameplay_calm() -> list[float]:
     return _make_seamless(soft, CROSSFADE)
 
 
+def _boot_eveil() -> list[float]:
+    # Éveil du boot : drone GRAVE qui sourd + cloches éparses basses + souffle, réverb cathédrale.
+    # Sombre-merveilleux, court (boucle seamless). Enchaîne sur le thème menu (pistes différentes).
+    drone_lo = _drone(BOOT_DURATION, 55.00, mod_depth=0.18, mod_rate=0.045, mod_index=0.25)  # A1
+    drone_mid = _drone(BOOT_DURATION, 82.41, detune=0.005, mod_depth=0.12, mod_rate=0.06, mod_index=0.18)  # E2
+    bells = _sequence_bells(BOOT_DURATION, PENTA_D_LOW, seed=701, density=0.18, decay=5.5, vol_range=(0.18, 0.45))
+    shimmer = _sequence_bells(BOOT_DURATION, PENTA_D, seed=702, density=0.08, decay=4.0, vol_range=(0.08, 0.20))
+    atmosphere = _wind(BOOT_DURATION, seed=703, intensity=0.22, sweep_period=14.0)
+    raw = _mix(drone_lo, drone_mid, bells, shimmer, atmosphere)
+    wet = _pad_reverb(raw, size=0.72, mix=0.55)  # réverb ample (caverne d'éveil)
+    soft = _lowpass_gentle(wet, 3600.0)  # plus sombre que le gameplay
+    return _make_seamless(soft, CROSSFADE)
+
+
 TRACKS: dict[str, Callable[[], list[float]]] = {
     "gameplay_calm": _gameplay_calm,
+    "boot_eveil": _boot_eveil,
 }
 
 
@@ -216,7 +237,7 @@ def forge(track_id: str) -> Path:
         raise KeyError(f"piste inconnue '{track_id}' — voir --list")
     print(f"Generating {track_id}... (this may take ~30s)")
     samples = TRACKS[track_id]()
-    out = OUT_DIR / f"{track_id}.wav"
+    out = OUT_OVERRIDE.get(track_id, OUT_DIR) / f"{track_id}.wav"
     peak_db = _write_wav(samples, out)
     dur = len(samples) / SAMPLE_RATE
     print(f"OK {out.name}  {dur:.1f}s  peak {peak_db:.1f} dBFS")

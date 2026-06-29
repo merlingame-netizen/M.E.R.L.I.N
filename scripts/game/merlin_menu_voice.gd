@@ -15,6 +15,7 @@ const MODES: Array = ["journee", "encourage", "souvenir", "blague", "journee", "
 var _voice: String = ""
 var _ctx: Dictionary = {}
 var _queue: Array[String] = []
+var _depart: String = ""             # réplique « le Voyageur s'élance » consommée par la transition de lancement
 var _hover_cache: Dictionary = {}   # bouton (String) → réplique prête
 var _hover_pending: Dictionary = {} # bouton → true (génération en cours)
 var _mode_idx: int = 0
@@ -51,6 +52,14 @@ func take_thought() -> String:
 	return _queue.pop_front() if not _queue.is_empty() else ""
 
 
+# Réplique de DÉPART (lancement Nouvelle/Continuer) : consommée par la transition. "" si pas encore prête
+# (la transition retombe alors sur une réplique procédurale courte). Re-générée au pump suivant.
+func take_depart() -> String:
+	var d: String = _depart
+	_depart = ""
+	return d
+
+
 # Réplique de survol : instantanée si en cache (consommée), sinon "" (une fraîche sera re-générée).
 func hover_line(bouton: String) -> String:
 	if _hover_cache.has(bouton):
@@ -71,8 +80,8 @@ func _process(delta: float) -> void:
 
 # Tente UN remplissage si le moteur est libre. Async mais non-bloquant (le moteur pompe chaque frame).
 func _pump() -> void:
-	if _pumping:
-		return
+	if _pumping or not MerlinVoicePrefs.is_enabled():
+		return  # voix coupée dans Options → file vide → aucune bulle
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn == null or not mn.is_ready() or mn.is_busy():
 		return  # scénarios prioritaires / modèle pas prêt → on retentera
@@ -83,15 +92,22 @@ func _pump() -> void:
 
 
 func _pump_body() -> void:
-	# 1) Salutation d'abord (une seule fois). _greeted ne passe à true qu'en cas de SUCCÈS : si le moteur
-	# était occupé (scénarios) ou en erreur, on RETENTE au prochain pump (sinon la salutation serait perdue).
+	# 1) Salutation d'abord (une seule fois). « premiere » au tout premier lancement (chronique vierge),
+	# sinon « salut ». _greeted ne passe à true qu'en cas de SUCCÈS (sinon on RETENTE : moteur occupé).
 	if not _greeted:
-		var hello: String = await _generate("salut", {})
+		var first: bool = int(_ctx.get("runs_played", 0)) == 0 and str(_ctx.get("last_seen_iso", "")) == ""
+		var hello: String = await _generate("premiere" if first else "salut", {})
 		if hello != "" and _running:
 			_greeted = true
 			_queue.append(hello)
 		return
-	# 2) File de pensées idle.
+	# 2) Réplique de DÉPART (lancement) — en garder UNE prête pour la transition Nouvelle/Continuer.
+	if _depart == "":
+		var dep: String = await _generate("depart", {})
+		if dep != "" and _running:
+			_depart = dep
+		return
+	# 3) File de pensées idle.
 	if _queue.size() < QUEUE_CAP:
 		var mode: String = str(MODES[_mode_idx % MODES.size()])
 		_mode_idx += 1
@@ -99,7 +115,7 @@ func _pump_body() -> void:
 		if line != "" and _running:
 			_queue.append(line)
 		return
-	# 3) Sinon, alimente le cache de survol (1 bouton manquant à la fois).
+	# 4) Sinon, alimente le cache de survol (1 bouton manquant à la fois).
 	for b in _ctx.get("hover_buttons", []):
 		var bs: String = str(b)
 		if not _hover_cache.has(bs) and not bool(_hover_pending.get(bs, false)):

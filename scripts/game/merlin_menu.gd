@@ -777,14 +777,27 @@ func _setup_music() -> void:
 
 func _on_new() -> void:
 	_confirm_row("burst")
-	MerlinTransition.change_scene(SELECTION_SCENE)
+	# v10.19 — transition « zoom vers Merlin qui parle » (réplique pré-fetchée) → sélection.
+	var line: String = _depart_line()
+	MerlinTransition.change_scene_merlin(SELECTION_SCENE, line)
 
 
 func _on_continue() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.has_save() and run.load_run():
 		_confirm_row("spark")
-		MerlinTransition.change_scene(GAME_SCENE)
+		var line: String = _depart_line()
+		MerlinTransition.change_scene_merlin(GAME_SCENE, line)
+
+
+# Réplique de départ (pré-générée par la voix) + on coupe la voix du menu (single-flight : la scène
+# suivante a besoin du moteur, et le menu va être quitté). Filet "" → la transition met sa réplique.
+func _depart_line() -> String:
+	var line: String = ""
+	if _voice != null:
+		line = _voice.take_depart()
+		_voice.stop()
+	return line
 
 
 # v10.18 — Retour de confirmation (anneau qui s'évase + flash) sur la rangée d'une clé donnée.

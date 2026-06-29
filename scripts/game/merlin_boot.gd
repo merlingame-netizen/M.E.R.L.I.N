@@ -5,6 +5,8 @@ extends Control
 ## est poussé DE FORCE depuis la gauche (décor + yeux ébahis, 1,3s) → swap vers MerlinMenu. Scène de lancement.
 
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
+const EVEIL_MUSIC: String = "res://music/intro/boot_eveil.wav"  # cue d'éveil (≠ thème → crossfade propre au menu)
+const EVEIL_FADE_IN: float = 2.0    # fondu d'entrée doux de la musique d'éveil
 const ZOOM_START: float = 3.4       # gros plan initial sur les yeux
 const ACT1_WAKE_S: float = 1.6      # réveil des yeux (ouverture + allumage)
 const ACT2_GAZE_S: float = 1.8      # le regard (gauche → droite → centre)
@@ -34,6 +36,7 @@ var _cap_boot: int = 0
 
 func _ready() -> void:
 	MerlinVisual.load_prefs()
+	_setup_eveil_music()  # musique d'intro : enchaîne sur le thème à l'arrivée au menu
 
 	var bg: ColorRect = ColorRect.new()
 	bg.color = MerlinVisual.BG_DEEP
@@ -119,6 +122,25 @@ func _ready() -> void:
 	modulate.a = 0.0
 	set_process(true)
 	_play_cinematic()
+
+
+func _setup_eveil_music() -> void:
+	if not ResourceLoader.exists(EVEIL_MUSIC):
+		return  # cue pas encore généré → silence (le menu lancera le thème)
+	var stream: AudioStream = load(EVEIL_MUSIC)
+	if stream == null:
+		return
+	if stream is AudioStreamWAV:
+		var wav: AudioStreamWAV = stream
+		if wav.format != AudioStreamWAV.FORMAT_IMA_ADPCM:
+			var bps: int = 2 if wav.format == AudioStreamWAV.FORMAT_16_BITS else 1
+			var ch: int = 2 if wav.stereo else 1
+			wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			wav.loop_begin = 0
+			wav.loop_end = int(wav.data.size() / float(bps * ch))
+	var ma: Node = get_node_or_null("/root/MerlinAudio")
+	if ma != null and ma.has_method("play_music"):
+		ma.play_music(stream, EVEIL_FADE_IN)  # le menu crossfadera vers le thème (pistes différentes)
 
 
 func _process(delta: float) -> void:

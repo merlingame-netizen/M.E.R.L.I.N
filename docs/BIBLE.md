@@ -1400,6 +1400,22 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   `user://options.cfg [chronique]` : runs_played, palmarès wins/deaths/corrupted, dernière issue+titre,
   `days_since_seen`). Cadence modérée (14-20 s, hold 7 s), machine à écrire, auto-fondu ; reduced_motion
   = texte plein + position figée. Déclenchement : arrivée (salut) + idle + survol des boutons.
+- **R123 — Flow d'entrée mis en scène par Merlin (2026-06-29, user)** : le rituel boot → menu → sélection →
+  jeu est animé bout-à-bout.
+  - **Musique d'intro** : cue d'éveil dédié `boot_eveil` (`music_forge.py`, drone grave + cloches basses,
+    `res://music/intro/`) joué dès le boot, **crossfade propre** vers le thème au menu (piste différente →
+    pas d'auto-doublon, cf. leçon transition stop_music).
+  - **Transition « zoom vers Merlin qui parle »** : `MerlinTransition.change_scene_merlin(path, line, gate)`
+    — voile sombre → `MerlinSceneArt` zoomé (pivot yeux) + bulle ; la réplique est **pré-fetchée** par la
+    voix (`MerlinMenuVoice.take_depart()`, mode `depart`) → **jamais de génération pendant la transition**
+    (single-flight préservé R110). Remplace le voile d'encre pour **Nouvelle Partie + Continuer**.
+  - **Titres de sélection forcément LLM** : `merlin_selection` attend les 3 titres LLM via un **montage
+    ultra-animé** (`MerlinSceneArt` qui « réfléchit » + caption pulsée + dots + quill), filet **cap 75 s**
+    + skip révélé à **20 s** (skip → fallback). `MerlinScenario.is_selection_ready()` /
+    `ensure_selection_prefetch()`. Pick **manuel** → `change_scene_merlin` (montage du scénario).
+  - **Première rencontre** : mode prompt `premiere` si chronique vierge (runs_played 0 + last_seen vide).
+  - **Voix paramétrable** : `MerlinVoicePrefs` (`[voice] enabled`) + toggle dans Options ; voix coupée → file
+    vide → aucune bulle (la parole de transition, scénarisée, reste).
 
 ---
 

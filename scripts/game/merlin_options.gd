@@ -129,6 +129,11 @@ func _build_ui() -> void:
 		MerlinVisual.save_prefs())
 	vbox.add_child(reduce)
 
+	# Voix de Merlin (bulles de pensée au menu) — user 2026-06-29. Simple interrupteur on/off.
+	var voice_chk: CheckButton = _check_row("Voix de Merlin (bulles au menu)", MerlinVoicePrefs.is_enabled())
+	voice_chk.toggled.connect(func(on: bool) -> void: MerlinVoicePrefs.set_enabled(on))
+	vbox.add_child(voice_chk)
+
 	var spacer: Control = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)

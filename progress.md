@@ -2,6 +2,37 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-29 — v10.19b Flow d'entrée mis en scène par Merlin
+
+### Context
+User : intro (boot) avec musique ; clic Nouvelle Partie/Continuer → transition **zoom vers Merlin qui
+parle** ; sélection manuelle mais **titres forcément LLM** + montage ultra-animé ; première fois Merlin
+nous parle ; voix paramétrable dans Options. Décisions AskUserQuestion : cue d'éveil dédié · zoom-parole
+Nouvelle+Continuer · titres attente longue+filet · Options = on/off seul.
+
+### Réalisé (5 phases)
+- **A — Musique intro** : `music_forge.py` cue `boot_eveil` (drone grave + cloches basses + réverb, 19 s)
+  → `res://music/intro/boot_eveil.wav` ; `merlin_boot._setup_eveil_music()` le joue en `_ready` →
+  crossfade propre vers le thème au menu (pistes différentes).
+- **B — Voix paramétrable + 1re fois** : NEW `merlin_voice_prefs.gd` (`[voice] enabled`) ; toggle
+  « Voix de Merlin » dans `merlin_options` ; `merlin_menu_voice` gate `is_enabled()` ; modes prompt
+  `premiere` (1er lancement, chronique vierge) + `depart`.
+- **C — Transition « zoom + parole »** : `merlin_transition.change_scene_merlin(path, line, gate)` —
+  voile sombre → MerlinSceneArt zoomé (pivot yeux) + MerlinSpeechBubble (réplique **pré-fetchée** par la
+  voix → single-flight préservé) + push-in QUINT → swap. `merlin_menu._on_new`/`_on_continue` l'utilisent.
+- **D — Titres forcés-LLM + montage** : `merlin_scenario.is_selection_ready()` + `ensure_selection_prefetch()` ;
+  `merlin_selection` attend les titres LLM (montage MerlinSceneArt « réfléchit » + caption pulse + dots +
+  quill), filet **cap 75 s** + skip révélé à **20 s** (skip→fallback) ; pick → `change_scene_merlin` (montage
+  scénario, réplique fixe car l'arc génère).
+
+### Gates
+- validate_step0 0 err. `music_forge --id boot_eveil` OK (19 s, -12 dBFS).
+- Smoke **Boot/Menu/Selection/Game** = passed, script_errors 0.
+- Soak R109 + captures (boot music, transition zoom-parole, montage sélection, Options toggle) : **EN ATTENTE**
+  (panne transitoire du classifieur Bash/PowerShell ce tour) → à finir dès rétablissement.
+
+---
+
 ## Session: 2026-06-29 — v10.19 Merlin parle (bulles de pensée LLM au menu)
 
 ### Context

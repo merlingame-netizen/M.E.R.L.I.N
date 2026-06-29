@@ -329,6 +329,23 @@ func invalidate_selection() -> void:
 	_sel_state = "idle"
 
 
+# v10.19 — sélection prête (3 titres LLM en cache) ? Utilisé par l'écran de sélection pour l'attente
+# FORCÉE (titres « forcément générés », user 2026-06-29) au lieu du fallback 8 s.
+func is_selection_ready() -> bool:
+	return _sel_state == "ready" and _sel_cache.size() >= 3
+
+
+# Garantit qu'une pré-génération de sélection est lancée. Robustesse : si le warmup du menu n'a pas
+# tourné (modèle pas prêt à temps, menu déjà quitté), on relance dès que le moteur est dispo. No-op si
+# déjà prête ou en vol.
+func ensure_selection_prefetch() -> void:
+	if _sel_state == "ready" or _sel_state == "running":
+		return
+	var mn: Node = _mn()
+	if mn != null and mn.is_ready() and not mn.is_busy():
+		warmup_and_prefetch_selection()
+
+
 # --- 1) SÉLECTION : 3 scénarios (titre + pitch) — voix MERLIN (user 2026-05-29) ---
 func generate_selection() -> Array:
 	var mn: Node = _mn()
