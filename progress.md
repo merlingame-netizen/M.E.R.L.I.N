@@ -2,6 +2,34 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-29 — v10.20 Yeux à humeurs, voix procédurale, DA alignée
+
+### Context
+User : skip impossible pendant la gen LLM ; DA varie trop menu↔sélection↔options ; yeux de Merlin
+bleus brillants (neutre) / jaune glow (surprise) / rouge + sourcils froncés (colère) ; chaque phrase
+avec une voix. Décisions AskUserQuestion : voix procédurale synchronisée · humeur par heuristique de
+texte · volume+toggle Options · alignement DA FORT.
+
+### Réalisé
+- **Fix skip sélection** : la caption mangeait les clics (`mouse_filter`) → IGNORE ; affordance « passer »
+  à **3 s** (au lieu de 20) → on peut couper la gen LLM (skip = fallback).
+- **Yeux à humeurs (R124)** : `MerlinVisual` EYE_NEUTRAL/SURPRISE/ANGRY ; `MerlinSceneArt.set_eye_mood` +
+  décroissance ~4.5 s + `mood_for_text` (heuristique) ; rendu = couleur + glow + écartement par humeur +
+  **sourcils froncés** (angry). Câblé : `merlin_menu._say`, transition montage (humeur depuis la réplique).
+- **Voix procédurale (R124)** : `sfx_forge` cue `voice_blip` ; `MerlinAudio.play_voice` + pool dédié +
+  `voice_vol` (prefs) ; `MerlinSpeechBubble` blip toutes les ~2 lettres, **pitch selon l'humeur** ;
+  gate `MerlinVoicePrefs`. Options : slider « Voix de Merlin (volume) ».
+- **DA alignée (R125)** : NEW `merlin_ornament.gd` (filet+triskèle+diamant+fond scène vivante PARTAGÉS).
+  Sélection : fond `MerlinSceneArt` vivant + filet/triskèle or + parchemins en pop d'échelle. Options :
+  filet/triskèle or. → écrans secondaires = « même monde » que le menu.
+
+### Gates
+- validate 0 err. Smoke Boot/Menu/Selection/Game passed (0 script_error). **Soak R109 200/200**.
+- `voice_blip` + `boot_eveil` générés. Captures : yeux **JAUNES** (surprise) + **ROUGES + sourcils** (angry)
+  confirmés. Voix (audio) joue en jeu (non headless). DA sélection/options : composants vérifiés (smoke).
+
+---
+
 ## Session: 2026-06-29 — v10.19b Flow d'entrée mis en scène par Merlin
 
 ### Context

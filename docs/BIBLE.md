@@ -1416,6 +1416,20 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   - **Première rencontre** : mode prompt `premiere` si chronique vierge (runs_played 0 + last_seen vide).
   - **Voix paramétrable** : `MerlinVoicePrefs` (`[voice] enabled`) + toggle dans Options ; voix coupée → file
     vide → aucune bulle (la parole de transition, scénarisée, reste).
+- **R124 — Yeux à humeurs + voix procédurale (2026-06-29, user)** :
+  - **Humeurs des yeux** : `MerlinSceneArt.set_eye_mood("neutral"|"surprise"|"angry")` — neutre = bleu
+    BRILLANT (`EYE_NEUTRAL`), surprise/suspicion = jaune + glow (`EYE_SURPRISE`), colère = rouge
+    (`EYE_ANGRY`) + **sourcils froncés**. Décroît vers neutre après ~4.5 s. Humeur choisie par
+    `mood_for_text` (heuristique : `?`/interjections → surprise ; mots durs/corruption → angry). Câblé sur
+    chaque réplique (menu `_say`, transition montage).
+  - **Voix procédurale** : chaque phrase est « voixée » — `MerlinSpeechBubble` joue un blip
+    (`MerlinAudio.play_voice`, cue `voice_blip` de sfx_forge) toutes les ~2 lettres frappées, **pitch selon
+    l'humeur** (grave neutre / aigu surprise / très grave colère). Volume `voice_vol` ([audio] voice) +
+    slider Options. Pas de TTS (100 % procédural, zéro latence).
+- **R125 — Ornement DA partagé (2026-06-29, user)** : `MerlinOrnament` (statique) = source UNIQUE des
+  signes visuels du menu (filet INK_DIM, **triskèle or** tournant, diamant, **fond scène vivante**
+  `MerlinSceneArt` dimmé). Appliqué à **Sélection** (fond vivant + filet/triskèle + parchemins en pop) et
+  **Options** (filet/triskèle) → les écrans secondaires « ressemblent au menu principal » (même monde).
 
 ---
 
