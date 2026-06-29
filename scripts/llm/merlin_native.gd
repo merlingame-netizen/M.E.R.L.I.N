@@ -49,6 +49,13 @@ var _result_ready: bool = false
 var _gen_id: int = 0  # nonce : invalide les callbacks tardifs (après timeout) → anti-corruption
 var _quitting: bool = false  # v10.13 (Fix 7) : garde anti double-_graceful_quit
 
+# v10.18 — Chargement du modèle DANS UN THREAD (anti-freeze au boot) : le thread principal reste fluide
+# (écran de chargement animé). _process poll la fin et émet model_ready SUR le thread principal.
+var _load_thread: Thread = null
+var _load_path: String = ""
+var _load_err: int = 0
+var _load_done: bool = false
+
 # Observabilité debug (log Gemma temps réel) : étiquette de l'activité en cours + journal d'événements.
 const ACTIVITY_LOG_MAX: int = 24
 var _current_label: String = ""
@@ -75,16 +82,37 @@ func _boot() -> void:
 	if _llm == null:
 		emit_signal("model_failed", "Instanciation MerlinLLM échouée")
 		return
-	# set_context_size DOIT précéder load_model (ctx créé au chargement).
+	# set_context_size DOIT précéder load_model (ctx créé au chargement) — sur le thread principal.
 	_llm.set_context_size(N_CTX)
-	var abs_path: String = ProjectSettings.globalize_path(MODEL_E2B)
-	var err: int = _llm.load_model(abs_path)
-	if err != OK:
-		push_error("[MerlinNative] load_model err=%d path=%s" % [err, abs_path])
-		emit_signal("model_failed", "load_model err=%d" % err)
+	# v10.18 — load_model (bloquant ~2-3s) lancé DANS UN THREAD → ZÉRO freeze : l'écran de chargement
+	# anime pendant ce temps. _process détecte la fin (_load_done) et appelle _finish_load (thread principal).
+	_load_path = ProjectSettings.globalize_path(MODEL_E2B)
+	_load_done = false
+	_load_err = 0
+	_load_thread = Thread.new()
+	_load_thread.start(_threaded_load)
+	set_process(true)  # pour poller la fin du thread de chargement
+
+
+# Exécuté sur un thread SÉPARÉ : seule l'opération CPU de chargement (aucune interaction SceneTree).
+func _threaded_load() -> void:
+	_load_err = _llm.load_model(_load_path)
+	_load_done = true  # lu par _process sur le thread principal (flag one-shot)
+
+
+# Appelé sur le thread PRINCIPAL (via _process) quand le thread de chargement a fini : join + signal.
+func _finish_load() -> void:
+	if _load_thread != null:
+		_load_thread.wait_to_finish()
+		_load_thread = null
+	if not _busy:
+		set_process(false)
+	if _load_err != OK:
+		push_error("[MerlinNative] load_model err=%d path=%s" % [_load_err, _load_path])
+		emit_signal("model_failed", "load_model err=%d" % _load_err)
 		return
 	_model_ready = true
-	print("[MerlinNative] Gemma 4 E2B charge (n_ctx=%d) : %s" % [N_CTX, abs_path])
+	print("[MerlinNative] Gemma 4 E2B charge (n_ctx=%d) : %s" % [N_CTX, _load_path])
 	emit_signal("model_ready")
 
 
@@ -97,6 +125,10 @@ func is_busy() -> bool:
 
 
 func _process(_delta: float) -> void:
+	# v10.18 — fin du chargement THREADÉ détectée sur le thread principal → join + model_ready.
+	if _load_done and _load_thread != null:
+		_load_done = false
+		_finish_load()
 	# poll_result() DOIT être appelé sur le thread principal ; il fire le callback
 	# quand le thread d'inférence a terminé.
 	if _llm != null and _busy:
@@ -253,6 +285,9 @@ func _notification(what: int) -> void:
 		# v10.13 (Fix 7) : auto_accept_quit=false → c'est NOUS qui quittons, après un join borné.
 		_graceful_quit()
 	elif what == NOTIFICATION_EXIT_TREE:
+		if _load_thread != null:
+			_load_thread.wait_to_finish()
+			_load_thread = null
 		if _llm != null and _busy:
 			_llm.cancel_generation()
 
@@ -265,6 +300,10 @@ func _graceful_quit() -> void:
 	if _quitting:
 		return  # double WM_CLOSE (automation) → une seule coroutine de fermeture
 	_quitting = true
+	# v10.18 — si le chargement threadé tourne encore, on le JOINE (pas de thread orphelin au quit).
+	if _load_thread != null:
+		_load_thread.wait_to_finish()
+		_load_thread = null
 	if _llm != null and _busy:
 		_llm.cancel_generation()
 		var dl: int = Time.get_ticks_msec() + 2000
