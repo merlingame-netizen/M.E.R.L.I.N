@@ -44,6 +44,17 @@ var _last_focus_box: Control = null  # v10.18 — pour la comète de navigation
 var _walk_acc: float = 0.0           # dev : focus-walk pendant la capture
 var _walk_idx: int = 0
 
+# v10.19 — VOIX DE MERLIN (user 2026-06-29) : bulles de pensée LLM au-dessus de sa tête.
+const HOVER_BTNS: Array = ["CONTINUER", "NOUVELLE PARTIE", "OPTIONS"]
+var _voice: MerlinMenuVoice = null
+var _bubble: MerlinSpeechBubble = null
+var _chron: Dictionary = {}
+var _speak_acc: float = 0.0
+var _next_speak: float = 3.0         # 1re prise de parole dès qu'une pensée est prête
+var _voice_test: bool = false        # dev : MERLIN_VOICE_TEST → bulle factice instantanée (rendu)
+var _voice_test_done: bool = false
+var _voice_test_acc: float = 0.0
+
 
 func _ready() -> void:
 	MerlinVisual.load_prefs()  # v10.13.1 — préférences a11y (reduce-motion) chargées dès l'entrée
@@ -59,6 +70,7 @@ func _ready() -> void:
 	_scene_art.set_time_of_day(tod_hour)
 	_scene_art.set_season(MerlinSceneArt.season_for_now())  # v10.18 : décor saisonnier (cohérent avec le boot)
 	_setup_dev_capture()
+	_setup_voice()
 	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
@@ -77,6 +89,92 @@ func _trigger_warmup() -> void:
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc != null:
 		sc.warmup_and_prefetch_selection()
+
+
+# v10.19 — Voix de Merlin : bulle suivi-tête + ordonnanceur LLM (cède la priorité aux scénarios).
+func _setup_voice() -> void:
+	_voice_test = OS.has_environment("MERLIN_VOICE_TEST")
+	_chron = MerlinChronicle.read()
+	MerlinChronicle.touch_seen()  # horodate CETTE visite (après lecture du « depuis la dernière fois »)
+	_bubble = MerlinSpeechBubble.new()
+	_bubble.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	add_child(_bubble)  # au-dessus de _scene_art (ajouté après) ; sous d'éventuels modaux
+	_voice = MerlinMenuVoice.new()
+	add_child(_voice)
+	_voice.setup(_voice_prefix(), _build_voice_ctx())
+	_voice.start()
+
+
+# Préfixe voix enrichi par la persona (via l'autoload MerlinScenario), sinon la constante canon.
+func _voice_prefix() -> String:
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc != null and sc.has_method("_voice_prefix"):
+		return str(sc._voice_prefix())
+	return MerlinPromptBuilder.MERLIN_VOICE_PREFIX
+
+
+func _build_voice_ctx() -> Dictionary:
+	var hour: int = int(Time.get_datetime_dict_from_system().get("hour", 21))
+	if OS.has_environment("MERLIN_TOD_HOUR"):
+		hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
+	var ctx: Dictionary = _chron.duplicate()
+	ctx["tod"] = _tod_label(hour)
+	ctx["saison"] = _saison_label(MerlinSceneArt.season_for_now())
+	ctx["hover_buttons"] = HOVER_BTNS
+	return ctx
+
+
+func _tod_label(hour: int) -> String:
+	if hour >= 5 and hour < 9:
+		return "à l'aube"
+	elif hour >= 9 and hour < 17:
+		return "en plein jour"
+	elif hour >= 17 and hour < 21:
+		return "au crépuscule"
+	return "dans la nuit"
+
+
+func _saison_label(key: String) -> String:
+	match key:
+		"printemps": return "au printemps"
+		"ete": return "en été"
+		"automne": return "en automne"
+		"hiver": return "en hiver"
+	return ""
+
+
+# Position ÉCRAN de la tête de Merlin (lue live dans MerlinSceneArt) pour ancrer la bulle au-dessus.
+func _head_screen() -> Dictionary:
+	if _scene_art == null or not is_instance_valid(_scene_art):
+		return {}
+	var h: Vector2 = _scene_art._fig_head
+	if h == Vector2.ZERO:
+		return {}
+	return {"pos": _scene_art.global_position + h, "hr": _scene_art._fig_hr}
+
+
+func _btn_name_for_key(key: String) -> String:
+	match key:
+		"spark": return "CONTINUER"
+		"burst": return "NOUVELLE PARTIE"
+		"target": return "OPTIONS"
+	return ""
+
+
+func _maybe_hover_voice(data: Dictionary) -> void:
+	if _voice == null or _bubble == null or _bubble.is_active():
+		return
+	var btn_name: String = _btn_name_for_key(str(data.get("key", "")))
+	if btn_name == "":
+		return
+	var l: String = _voice.hover_line(btn_name)
+	if l != "":
+		_bubble.show_line(l, Callable(self, "_head_screen"))
+
+
+func _exit_tree() -> void:
+	if _voice != null:
+		_voice.stop()
 
 
 func _build_ui() -> void:
@@ -232,6 +330,8 @@ func _play_press_tick() -> void:
 
 
 func _on_row_focus(data: Dictionary, on: bool) -> void:
+	if on:
+		_maybe_hover_voice(data)  # v10.19 : Merlin commente le bouton survolé (si une réplique est prête)
 	(data["disc"] as Panel).add_theme_stylebox_override("panel", _disc_style(on))
 	(data["glyph"] as MerlinGlyph).setup(str(data["key"]), COL_BG if on else COL_DIM, 1.8)
 	(data["lbl"] as Label).add_theme_color_override("font_color", COL_GOLD if on else COL_CREAM)
@@ -556,9 +656,30 @@ func _process(delta: float) -> void:
 	if _parallax_acc >= 1.0 / 30.0:
 		_parallax_acc = 0.0
 		_update_parallax_cursor()
+	_tick_voice(delta)
 	_maybe_capture()
 	if not _cap_dir.is_empty():
 		_demo_walk(delta)
+
+
+# Cadence de prise de parole : affiche une pensée prête quand la bulle est libre + le délai écoulé.
+func _tick_voice(delta: float) -> void:
+	if _bubble == null:
+		return
+	# Dev (env MERLIN_VOICE_TEST) : bulle factice instantanée pour valider le rendu sans attendre le LLM.
+	if _voice_test and not _voice_test_done:
+		_voice_test_acc += delta
+		if _voice_test_acc >= 1.2:
+			_voice_test_done = true
+			_bubble.show_line("Ah… te revoilà, Voyageur. La brume gardait ta place au chaud.", Callable(self, "_head_screen"))
+		return
+	if _voice == null:
+		return
+	_speak_acc += delta
+	if not _bubble.is_active() and _voice.has_ready() and _speak_acc >= _next_speak:
+		_speak_acc = 0.0
+		_next_speak = randf_range(14.0, 20.0)  # cadence modérée
+		_bubble.show_line(_voice.take_thought(), Callable(self, "_head_screen"))
 
 
 func _update_parallax_cursor() -> void:

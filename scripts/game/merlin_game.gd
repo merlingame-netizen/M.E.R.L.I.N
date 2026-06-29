@@ -1031,9 +1031,18 @@ func _on_run_ended(_end_type: String) -> void:
 		_draft_layer = null
 		_draft_done_flag = true
 	_interstitial_open = false  # hygiène (review MEDIUM B3) : état net pendant la transition de fin
+	# v10.19 — Chronique cross-run (user 2026-06-29) : mémorise l'issue AVANT de purger la save,
+	# pour que Merlin commente « la dernière fois » au prochain menu.
+	var run: Node = get_node("/root/MerlinRun")
+	var title: String = ""
+	var scen: Variant = run.get("scenario")
+	if scen is Dictionary:
+		var sd: Dictionary = scen
+		title = str(sd.get("title", sd.get("titre", "")))
+	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")))
 	# Audit design P1 : une run TERMINÉE n'a pas de save de reprise — un save ici créait une
 	# « save zombie » (Continuer rechargerait une run finie) si on quittait avant MerlinEnd.
-	get_node("/root/MerlinRun").clear_save()
+	run.clear_save()
 	call_deferred("_goto_end")
 
 

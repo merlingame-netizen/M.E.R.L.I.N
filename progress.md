@@ -2,6 +2,40 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-29 — v10.19 Merlin parle (bulles de pensée LLM au menu)
+
+### Context
+User : « Merlin doit parler, bulles au-dessus de sa tête, c'est le LLM qui se fait des réflexions
+automatiquement — salue, parle de la journée, commente la dernière fois qu'on s'est vus, encourage,
+blague. » Décisions (AskUserQuestion) : **100% LLM** (pas de banque écrite ; on cache la sortie LLM
+pour masquer la latence), **mémoire riche**, déclenchement **arrivée + idle + survol**, cadence **modérée**.
+Exploration : 3 agents Explore (API LLM / placement menu+bulle / save+contexte).
+
+### Réalisé
+- **merlin_chronicle.gd** (NEW, statique ConfigFile [chronique]) : runs_played, wins/deaths/corrupted,
+  last_end_type/title/integrite/corruption, last_run_iso, last_seen_iso + `days_since_seen`.
+- **merlin_prompt_builder.menu_thought(voice, mode, ctx)** : 6 modes (salut/journee/souvenir/encourage/
+  blague/survol), 1 phrase courte, persona MERLIN_VOICE_PREFIX, opts {creative, max_tokens 56}.
+- **merlin_menu_voice.gd** (NEW, Node) : ordonnanceur — file (cap 3) + cache survol par bouton ;
+  gate `is_ready() and not is_busy()` + délai initial 1,5 s → **cède la priorité à la pré-gen scénarios** ;
+  `_tidy` (clean_prose + first_sentence + borne 110 car.). 100% LLM, sortie juste mise en cache.
+- **merlin_speech_bubble.gd** (NEW, Control) : parchemin CREAM/bord GOLD au-dessus de la tête (suivi
+  live `_scene_art._fig_head`, clamp écran), queue triangle, machine à écrire (visible_ratio), auto-fondu
+  7 s ; reduced_motion = texte plein + position figée + fondus ÷2.
+- **merlin_menu.gd** : lecture chronique + touch_seen ; instancie voix+bulle ; `_tick_voice` (1re pensée
+  dès prête, puis 14–20 s) ; survol bouton → `_maybe_hover_voice` ; `_exit_tree` → voice.stop().
+- **merlin_game.gd** : `MerlinChronicle.record_end(...)` à la fin de run AVANT clear_save.
+
+### Gates
+- validate_step0 0 err. Smoke Menu/Selection/Game = passed, script_errors 0 (modèle absent en headless
+  → la voix attend `is_ready`, aucun crash).
+- **Capture (dev hook MERLIN_VOICE_TEST)** : bulle parchemin au-dessus de la tête, queue vers Merlin,
+  texte lisible, suivi, z-order OK — vérifié visuellement (lancement direct MerlinMenu.tscn).
+- Voix LLM réelle : même chemin `MerlinNative.generate` que la prose in-game (éprouvé) ; non frame-capturée
+  (CPU lent + readback throttle) → à confirmer en jeu live. Mémoire : logique ConfigFile (idiome prefs éprouvé).
+
+---
+
 ## Session: 2026-06-29 — v10.18 Boot cinématique (intro 5 actes)
 
 ### Context

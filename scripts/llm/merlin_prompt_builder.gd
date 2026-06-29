@@ -211,6 +211,52 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"}}
 
 
+# --- VOIX DU MENU : pensées COURTES de Merlin au-dessus de sa tête (100% LLM, user 2026-06-29) ---
+# `mode` ∈ salut|journee|souvenir|encourage|blague|survol. `ctx` = contexte menu : tod (libellé heure),
+# saison (libellé), runs_played, last_end_type, last_scenario_title, days_since_seen, bouton (survol).
+# UNE phrase courte, 1re personne, il s'adresse au Voyageur. Sortie recoupée côté merlin_menu_voice.
+static func menu_thought(voice: String, mode: String, ctx: Dictionary) -> Dictionary:
+	var tod: String = str(ctx.get("tod", "le soir"))
+	var saison: String = str(ctx.get("saison", ""))
+	var runs: int = int(ctx.get("runs_played", 0))
+	var days: int = int(ctx.get("days_since_seen", -1))
+	var last_end: String = str(ctx.get("last_end_type", ""))
+	var last_title: String = str(ctx.get("last_scenario_title", ""))
+	var end_fr: Dictionary = {
+		"accomplissement": "il a triomphe et entrevu un fragment du Graal",
+		"mort": "il a succombe, et la foret l'a repris",
+		"corrompu": "la Corruption l'avait emporte",
+	}
+	var ctx_line: String = "Contexte (NE le recite PAS tel quel) : on est %s, %s." % [tod, saison]
+	var usr: String = ""
+	match mode:
+		"salut":
+			var depuis: String = ""
+			if days >= 2:
+				depuis = " Tu ne l'as pas revu depuis %d jours." % days
+			elif days == 1:
+				depuis = " Tu ne l'as pas revu depuis hier."
+			usr = "%s%s\nSalue le Voyageur en UNE phrase courte (max 14 mots), chaleureuse et un brin taquine, en accord avec le moment. Tu t'adresses a LUI." % [ctx_line, depuis]
+		"journee":
+			usr = "%s\nGlisse UNE pensee courte (max 14 mots) sur ce moment du jour ou cette saison a Broceliande. Image celtique breve, tu t'adresses au Voyageur ou penses tout haut." % ctx_line
+		"souvenir":
+			if runs <= 0 or last_end == "":
+				return menu_thought(voice, "salut", ctx)
+			var what: String = str(end_fr.get(last_end, "son aventure s'etait achevee"))
+			var titre: String = (" (l'aventure « %s »)" % last_title) if last_title != "" else ""
+			usr = "%s\nLa derniere fois, le Voyageur a vecu ceci : %s%s. Fais-y allusion en UNE phrase courte (max 16 mots), fier ou taquin selon l'issue, sans tout deballer." % [ctx_line, what, titre]
+		"encourage":
+			usr = "%s\nEn UNE phrase courte (max 14 mots), encourage le Voyageur a repartir vers l'aventure dans la foret. Chaleureux, un brin malicieux." % ctx_line
+		"blague":
+			usr = "%s\nGlisse UNE courte boutade (max 14 mots), legere et merveilleuse, dans le gout celtique (korrigans, gui, brume, dolmen). Pas de meta." % ctx_line
+		"survol":
+			var bouton: String = str(ctx.get("bouton", ""))
+			usr = "%s\nLe Voyageur hesite, la main au-dessus du choix « %s ». Commente son hesitation en UNE phrase courte (max 14 mots), taquine ou complice." % [ctx_line, bouton]
+		_:
+			usr = "%s\nDis UNE phrase courte (max 14 mots) au Voyageur." % ctx_line
+	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 56, "label": "pensée menu (%s)" % mode}}
+
+
 # --- ÉPILOGUE (fin de run, R69) : voix MERLIN qui referme l'aventure pour le Voyageur. ---
 # `mem` = memory hint intra-run, construit par merlin_scenario._build_memory_hint() (lit MerlinRun).
 static func epilogue(voice: String, end_type: String, mem: String) -> Dictionary:

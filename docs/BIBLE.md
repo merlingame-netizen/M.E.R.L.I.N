@@ -1390,6 +1390,16 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   (cible 25-35%) et morts 7.5% (cible 10-25%) → durcir le partiel (-2 intégrité) et/ou élargir les
   tags requis des beats 3-4. Décisions verrouillées v10.14 : dé PRÉ-TIRÉ par rareté (4 bandes),
   run = chaîne de 2-3 quêtes de 2-5 beats, ramification découverte au beat, 50+ tags différés.
+- **R122 — Voix de Merlin au menu (2026-06-29, user)** : au menu, Merlin « pense » à voix haute dans
+  une bulle parchemin AU-DESSUS de sa tête (suivi live `MerlinSceneArt._fig_head`), texte **100% LLM**
+  (Gemma) — jamais de banque écrite à la main ; la sortie LLM est seulement **mise en cache** (file
+  pré-générée + cache de survol) pour masquer la latence CPU. `MerlinMenuVoice` gate
+  `is_ready() and not is_busy()` + délai initial → **CÈDE la priorité à la pré-gen scénarios** (étend
+  R110, aucune préemption). Modes : salut / journée / souvenir / encourage / blague / survol. Les
+  callbacks « la dernière fois qu'on s'est vus » viennent de `MerlinChronicle` (mémoire cross-run dans
+  `user://options.cfg [chronique]` : runs_played, palmarès wins/deaths/corrupted, dernière issue+titre,
+  `days_since_seen`). Cadence modérée (14-20 s, hold 7 s), machine à écrire, auto-fondu ; reduced_motion
+  = texte plein + position figée. Déclenchement : arrivée (salut) + idle + survol des boutons.
 
 ---
 
