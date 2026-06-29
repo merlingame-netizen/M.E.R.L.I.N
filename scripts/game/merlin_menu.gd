@@ -22,6 +22,7 @@ var _rows: Array[Dictionary] = []  # [{btn, glyph, lbl, disc, icon_box, pop_tw, 
 var _title: Label
 var _tris: MerlinGlyph
 var _scene_art: MerlinSceneArt
+var _left: VBoxContainer = null  # colonne gauche (pour le slide d'entrée)
 var _bottom_bar: HBoxContainer
 var _rule_box: HBoxContainer
 var _model_lbl: Label = null      # v10.13 (B1) : indicateur d'éveil du modèle (barre du bas)
@@ -107,6 +108,7 @@ func _build_ui() -> void:
 	left.offset_bottom = -70
 	left.add_theme_constant_override("separation", 10)
 	add_child(left)
+	_left = left
 
 	_title = Label.new()
 	_title.text = "M·E·R·L·I·N"
@@ -465,14 +467,38 @@ func _spaced(s: String) -> String:
 ## Entrée en cascade : tout démarre invisible puis fond en fondu, du titre vers le bas.
 ## Fondus uniquement (pas de slides) : robuste aux re-layouts des containers, DA flat.
 func _animate_entrance() -> void:
-	# v10.18 (user 2026-06-29) — cascade resserrée : le joueur peut cliquer plus tôt (~0.3s), tout est
-	# en place < 1s. Fondus uniquement (robuste aux re-layouts containers, DA flat).
-	_fade_in(_title, 0.00, 0.50)
-	_fade_in(_rule_box, 0.14, 0.40)
+	# v10.18 (user 2026-06-29) — entrée DYNAMIQUE : caméra zoom-settle sur la scène, colonne gauche qui
+	# SLIDE depuis la gauche (+ fondus stagger), bandeau bas qui slide-up. Épuré mais vivant.
+	# Pré-masque pour éviter le flash avant le calcul de layout (1 frame).
+	for n in [_title, _rule_box, _scene_art, _bottom_bar]:
+		(n as CanvasItem).modulate.a = 0.0
+	for d in _rows:
+		(d["btn"] as CanvasItem).modulate.a = 0.0
+	await get_tree().process_frame  # tailles/positions des containers calculées
+
+	# Caméra : léger zoom-settle (pull-in) + fondu de la scène (pivot = centre).
+	_scene_art.pivot_offset = _scene_art.size * 0.5
+	_scene_art.scale = Vector2(1.06, 1.06)
+	var cam: Tween = create_tween().set_parallel(true)
+	cam.tween_property(_scene_art, "scale", Vector2.ONE, 0.95 * MerlinVisual.motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	cam.tween_property(_scene_art, "modulate:a", 1.0, 0.85 * MerlinVisual.motion())
+
+	# Colonne gauche : SLIDE depuis la gauche (bloc) ; les éléments fondent en stagger par-dessus.
+	if _left != null:
+		var left_rest: Vector2 = _left.position
+		_left.position = left_rest - Vector2(44.0, 0.0)
+		create_tween().tween_property(_left, "position", left_rest, 0.55 * MerlinVisual.motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_fade_in(_title, 0.00, 0.45)
+	_fade_in(_rule_box, 0.12, 0.40)
 	for i in _rows.size():
-		_fade_in(_rows[i]["btn"], 0.28 + 0.06 * float(i), 0.36)
-	_fade_in(_scene_art, 0.06, 0.85)
-	_fade_in(_bottom_bar, 0.58, 0.42)
+		_fade_in(_rows[i]["btn"], 0.22 + 0.06 * float(i), 0.36)
+
+	# Bandeau bas : slide-up + fondu (après les boutons).
+	var bb_rest: Vector2 = _bottom_bar.position
+	_bottom_bar.position = bb_rest + Vector2(0.0, 18.0)
+	var bs: Tween = create_tween().set_parallel(true)
+	bs.tween_property(_bottom_bar, "position", bb_rest, 0.5 * MerlinVisual.motion()).set_delay(0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	bs.tween_property(_bottom_bar, "modulate:a", 1.0, 0.45 * MerlinVisual.motion()).set_delay(0.5)
 
 
 func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:

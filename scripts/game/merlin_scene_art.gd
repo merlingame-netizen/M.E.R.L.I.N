@@ -36,6 +36,7 @@ var _cursor_inside: bool = false
 # la lune. Dérivé des couleurs canon (zéro hex). Défaut = nuit canon → in-game inchangé.
 var _tod_sky: Color = MerlinVisual.SCENE_BG
 var _tod_moon_warm: float = 0.0
+var _fireflies: bool = false  # v10.18 — lucioles (nuit/crépuscule, menu)
 
 # v10.18 — Étoiles filantes occasionnelles (MENU uniquement) : traînée crème le long d'un court arc.
 var _shoot_t: float = -1.0            # <0 = inactive ; sinon progression 0→1
@@ -134,18 +135,21 @@ func set_cursor(pos: Vector2, inside: bool) -> void:
 # Teintes DÉRIVÉES des couleurs canon (zéro hex hors merlin_visual.gd).
 func set_time_of_day(hour: int) -> void:
 	var h: int = clampi(hour, 0, 23)
-	if h >= 5 and h < 9:        # aube — chaleur dorée naissante
-		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.GOLD, 0.10)
-		_tod_moon_warm = 0.55
-	elif h >= 9 and h < 17:     # jour — ciel plus froid/clair, lune ténue
-		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.13)
-		_tod_moon_warm = 0.20
-	elif h >= 17 and h < 21:    # crépuscule — violet
-		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.VIOLET, 0.14)
-		_tod_moon_warm = 0.65
-	else:                        # nuit — bleu profond, lune froide brillante
-		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.05)
+	_fireflies = false
+	if h >= 5 and h < 9:        # aube — or chaud rosé
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.GOLD, 0.22).lerp(MerlinVisual.VIOLET, 0.06)
+		_tod_moon_warm = 0.75
+	elif h >= 9 and h < 17:     # jour — nettement plus CLAIR et froid
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.30).lerp(MerlinVisual.CREAM, 0.10)
+		_tod_moon_warm = 0.15
+	elif h >= 17 and h < 21:    # crépuscule — violet franc + lucioles
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.VIOLET, 0.30)
+		_tod_moon_warm = 0.80
+		_fireflies = true
+	else:                        # nuit — bleu profond, lune froide + lucioles
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.16)
 		_tod_moon_warm = 0.0
+		_fireflies = true
 	queue_redraw()
 
 
@@ -293,6 +297,22 @@ func _draw() -> void:
 				ma *= 0.5
 			draw_circle(Vector2(mx, my) + _parallax, mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma))
 
+	# v10.18 — Lucioles (nuit / crépuscule, menu) : 12 points vert-or qui dérivent et clignotent
+	# (blink piqué via pow). Distinctes des motes ambrées : plus vertes, halo, parmi les arbres.
+	if _menu_decor and _fireflies and _animated:
+		var fcol: Color = MerlinVisual.GREEN.lerp(MerlinVisual.GOLD, 0.45)
+		for fi in 12:
+			var ff: float = float(fi)
+			var fpx: float = w * (0.42 + 0.55 * fmod(ff * 0.618 + 0.2, 1.0)) + sin(_t * (0.28 + ff * 0.04) + ff) * w * 0.018
+			var fpy: float = h * (0.42 + 0.46 * fmod(ff * 0.382 + 0.1, 1.0)) + cos(_t * (0.22 + ff * 0.03) + ff * 1.3) * h * 0.028
+			var blink: float = 0.5 + 0.5 * sin(_t * (1.6 + ff * 0.27) + ff * 2.1)
+			var fa: float = 0.08 + 0.55 * pow(blink, 3.0)
+			if rm:
+				fa *= 0.5
+			var fr: float = maxf(minf(w, h) * 0.0045, 2.0)
+			draw_circle(Vector2(fpx, fpy), fr * 2.2, Color(fcol.r, fcol.g, fcol.b, fa * 0.22))
+			draw_circle(Vector2(fpx, fpy), fr, Color(fcol.r, fcol.g, fcol.b, fa))
+
 	# Ground contour
 	if _animated:
 		var gnd_pts: PackedVector2Array = PackedVector2Array()
@@ -389,7 +409,12 @@ func _menhir(pos: Vector2, dim: Vector2) -> void:
 		draw_line(Vector2(cx - tick, ty), Vector2(cx + tick, ty), COL_INK, 2.0, true)
 
 
-func _figure(base: Vector2, height: float, half_w: float) -> void:
+func _figure(base_in: Vector2, height: float, half_w: float) -> void:
+	# v10.18 — Merlin FLOTTE (menu) : bob vertical + sway horizontal smooth via _t. In-game inchangé.
+	var menu: bool = _menu_decor and _animated and not MerlinVisual.reduced_motion
+	var fx: float = (sin(_t * 0.55) * half_w * 0.10) if menu else 0.0
+	var fy: float = (sin(_t * 0.80) * height * 0.018) if menu else 0.0
+	var base: Vector2 = base_in + Vector2(fx, fy)
 	var top: float = base.y - height
 	var shoulder: float = base.y - height * 0.62
 	var cloak: PackedVector2Array = PackedVector2Array([
@@ -401,4 +426,21 @@ func _figure(base: Vector2, height: float, half_w: float) -> void:
 		Vector2(base.x - half_w * 0.30, shoulder),
 	])
 	draw_colored_polygon(cloak, COL_SIL)
-	draw_circle(Vector2(base.x, top + height * 0.06), half_w * 0.42, COL_SIL)
+	var head_c: Vector2 = Vector2(base.x, top + height * 0.06)
+	var hr: float = half_w * 0.42
+	draw_circle(head_c, hr, COL_SIL)
+	# v10.18 — Yeux MERLIN (menu) : 2 BARRES BLEUES VERTICALES lumineuses + lueur qui pulse (signature,
+	# user 2026-06-29). Bleu = RARE_BLUE éclairci vers crème. Barres à coins arrondis (rect + 2 disques).
+	if _menu_decor:
+		var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if menu else 1.0
+		var eye_col: Color = MerlinVisual.RARE_BLUE.lerp(MerlinVisual.CREAM, 0.35)
+		var eye_h: float = hr * 0.70
+		var eye_w: float = maxf(hr * 0.16, 2.0)
+		var eye_dx: float = hr * 0.34
+		for s in [-1.0, 1.0]:
+			var ex: float = head_c.x + s * eye_dx
+			var ey: float = head_c.y - eye_h * 0.5
+			draw_circle(Vector2(ex, head_c.y), eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, 0.16 * pulse))
+			draw_rect(Rect2(ex - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse), true)
+			draw_circle(Vector2(ex, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
+			draw_circle(Vector2(ex, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
