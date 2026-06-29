@@ -55,6 +55,10 @@ var _lookaway_t: float = -1.0          # <0 = suit la souris ; sinon regarde ail
 var _lookaway_next: float = 5.0
 var _lookaway_dir: Vector2 = Vector2.ZERO
 
+# v10.18 — Matérialisation de Merlin COUCHE PAR COUCHE (boot) : 0 = invisible, 1 = pleinement matérialisé.
+# Défaut 1.0 → menu/in-game inchangés. cape [0-0.45] → tête [0.40-0.70] → yeux [0.65-1.0].
+var _fig_reveal: float = 1.0
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -138,6 +142,12 @@ func set_parallax(offset: Vector2) -> void:
 func set_cursor(pos: Vector2, inside: bool) -> void:
 	_cursor_pos = pos
 	_cursor_inside = inside
+	queue_redraw()
+
+
+# Matérialisation progressive de Merlin (boot) : 0 = invisible → 1 = pleinement matérialisé.
+func set_figure_reveal(p: float) -> void:
+	_fig_reveal = clampf(p, 0.0, 1.0)
 	queue_redraw()
 
 
@@ -461,7 +471,11 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	var menu: bool = _menu_decor and _animated and not MerlinVisual.reduced_motion
 	var fx: float = (sin(_t * 0.55) * half_w * 0.10) if menu else 0.0
 	var fy: float = (sin(_t * 0.80) * height * 0.018) if menu else 0.0
-	var base: Vector2 = base_in + Vector2(fx, fy)
+	# Matérialisation : la figure monte un peu en se formant + alpha par COUCHE (cape → tête → yeux).
+	var base: Vector2 = base_in + Vector2(fx, fy + (1.0 - _fig_reveal) * height * 0.10)
+	var a_cloak: float = clampf(_fig_reveal / 0.45, 0.0, 1.0)
+	var a_head: float = clampf((_fig_reveal - 0.40) / 0.30, 0.0, 1.0)
+	var a_eyes: float = clampf((_fig_reveal - 0.65) / 0.35, 0.0, 1.0)
 	var top: float = base.y - height
 	var shoulder: float = base.y - height * 0.62
 	var cloak: PackedVector2Array = PackedVector2Array([
@@ -472,26 +486,27 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 		Vector2(base.x + half_w * 0.30, shoulder),
 		Vector2(base.x - half_w * 0.30, shoulder),
 	])
-	draw_colored_polygon(cloak, COL_SIL)
+	draw_colored_polygon(cloak, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_cloak))
 	var head_c: Vector2 = Vector2(base.x, top + height * 0.06)
 	var hr: float = half_w * 0.42
-	draw_circle(head_c, hr, COL_SIL)
+	draw_circle(head_c, hr, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
 	# v10.18 — Yeux MERLIN (menu) : 2 BARRES BLEUES VERTICALES lumineuses + lueur qui pulse (signature,
-	# user 2026-06-29). Bleu = RARE_BLUE éclairci vers crème. Barres à coins arrondis (rect + 2 disques).
+	# user 2026-06-29). S'ALLUMENT EN DERNIER dans la matérialisation (a_eyes : grandissent + s'éclairent).
 	if _menu_decor:
 		_fig_head = head_c  # lu par _update_merlin_gaze (frame suivante) pour viser la souris
 		_fig_hr = hr
-		var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if menu else 1.0
-		var eye_col: Color = MerlinVisual.RARE_BLUE.lerp(MerlinVisual.CREAM, 0.35)
-		var openf: float = maxf(1.0 - 0.9 * _blink, 0.07)  # clignement : barre quasi fermée au pic
-		var eye_h: float = hr * 0.70 * openf
-		var eye_w: float = maxf(hr * 0.16, 2.0)
-		var eye_dx: float = hr * 0.34
-		var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
-		for s in [-1.0, 1.0]:
-			var ec2: Vector2 = Vector2(head_c.x + s * eye_dx, head_c.y) + gaze_px
-			var ey: float = ec2.y - eye_h * 0.5
-			draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, 0.16 * pulse))
-			draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse), true)
-			draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
-			draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse))
+		if a_eyes > 0.01:
+			var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if menu else 1.0
+			var eye_col: Color = MerlinVisual.RARE_BLUE.lerp(MerlinVisual.CREAM, 0.35)
+			var openf: float = maxf(1.0 - 0.9 * _blink, 0.07)  # clignement : barre quasi fermée au pic
+			var eye_h: float = hr * 0.70 * openf * a_eyes  # grandissent en s'allumant
+			var eye_w: float = maxf(hr * 0.16, 2.0)
+			var eye_dx: float = hr * 0.34
+			var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
+			for s in [-1.0, 1.0]:
+				var ec2: Vector2 = Vector2(head_c.x + s * eye_dx, head_c.y) + gaze_px
+				var ey: float = ec2.y - eye_h * 0.5
+				draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, 0.16 * pulse * a_eyes))
+				draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse * a_eyes), true)
+				draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse * a_eyes))
+				draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.9 * pulse * a_eyes))
