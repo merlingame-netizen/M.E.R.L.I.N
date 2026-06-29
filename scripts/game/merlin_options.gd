@@ -14,6 +14,7 @@ var _panel: MarginContainer
 var _vol_master: HSlider
 var _vol_music: HSlider
 var _vol_sfx: HSlider
+var _vol_voice: HSlider
 var _title_lbl: Label
 var _back_btn: Button
 var _tw: Tween = null
@@ -43,6 +44,7 @@ func _open() -> void:
 	_vol_master.value = MerlinAudio.master_vol * 100.0
 	_vol_music.value = MerlinAudio.music_vol * 100.0
 	_vol_sfx.value = MerlinAudio.sfx_vol * 100.0
+	_vol_voice.value = MerlinAudio.voice_vol * 100.0
 	_init_sliders = false
 	visible = true
 	_dim.modulate.a = 0.0
@@ -121,6 +123,9 @@ func _build_ui() -> void:
 	_vol_sfx = _slider_row("Effets sonores", 80, vbox)
 	_vol_sfx.value_changed.connect(func(v: float) -> void:
 		if not _init_sliders: MerlinAudio.set_bus_volume("SFX", v / 100.0))
+	_vol_voice = _slider_row("Voix de Merlin (volume)", 70, vbox)
+	_vol_voice.value_changed.connect(func(v: float) -> void:
+		if not _init_sliders: MerlinAudio.set_voice_vol(v / 100.0))
 
 	MerlinVisual.load_prefs()
 	var reduce: CheckButton = _check_row("Réduire les animations / glitch", MerlinVisual.reduced_motion)

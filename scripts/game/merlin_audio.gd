@@ -7,12 +7,17 @@ const SFX_IDS: Array = [
 	"gauge_up", "gauge_down", "corruption_tick", "seal_stamp",
 	"beat_turn", "draft_reveal", "whisper_threshold",
 	"stinger_echec", "stinger_partiel", "stinger_reussite", "stinger_eclatante",
-	"quill_tick", "ink_wash",
+	"quill_tick", "ink_wash", "voice_blip",
 ]
+const VOICE_POOL: int = 4
 const POOL_SIZE: int = 8
 const DUCK_DB: float = -6.0
 const DUCK_RETURN: float = 0.8
 const PREFS_PATH: String = "user://options.cfg"
+
+const STEM_BUS: StringName = &"Stems"
+const STEM_FADE_DUR: float = 0.6
+const STEM_SILENT_DB: float = -40.0
 
 var _sfx_cache: Dictionary = {}
 var _sfx_pool: Array[AudioStreamPlayer] = []
@@ -24,9 +29,25 @@ var _duck_tw: Tween = null
 var _fade_tw: Tween = null
 var _corruption_level: int = 0
 
+var _stem_players: Dictionary = {}
+var _stem_tweens: Dictionary = {}
+var _stem_active_mood: String = ""
+
+var stem_moods: Dictionary = {
+	"calm":    { "vocals": 0.3, "drums": 0.2, "bass": 0.4, "guitar": 0.6, "piano": 0.8, "other": 0.3 },
+	"tension": { "vocals": 0.1, "drums": 0.5, "bass": 0.7, "guitar": 0.4, "piano": 0.3, "other": 0.8 },
+	"resolve": { "vocals": 0.5, "drums": 0.8, "bass": 0.9, "guitar": 0.6, "piano": 0.4, "other": 0.2 },
+	"corrupt": { "vocals": 0.1, "drums": 0.3, "bass": 0.6, "guitar": 0.2, "piano": 0.1, "other": 1.0 },
+	"victory": { "vocals": 0.8, "drums": 0.7, "bass": 0.5, "guitar": 0.9, "piano": 1.0, "other": 0.2 },
+}
+
 var master_vol: float = 0.8
 var music_vol: float = 0.6
 var sfx_vol: float = 0.45
+var voice_vol: float = 0.7   # v10.20 — volume de la voix procédurale de Merlin (R124)
+
+var _voice_pool: Array[AudioStreamPlayer] = []
+var _voice_idx: int = 0
 
 
 func _ready() -> void:
@@ -34,6 +55,7 @@ func _ready() -> void:
 	_load_prefs()
 	_preload_sfx()
 	_create_pool()
+	_create_voice_pool()
 	_create_music_players()
 	_apply_volumes()
 
@@ -78,11 +100,39 @@ func play_sfx(id: String, pitch_scale: float = 1.0) -> void:
 	p.play()
 
 
+func _create_voice_pool() -> void:
+	for i in VOICE_POOL:
+		var p: AudioStreamPlayer = AudioStreamPlayer.new()
+		p.bus = &"SFX"  # suit le bus SFX (donc master + sfx) ; voice_vol module en plus
+		add_child(p)
+		_voice_pool.append(p)
+
+
+# v10.20 — Voix procédurale de Merlin : un blip par ~2 lettres, pitch = humeur (depuis MerlinSpeechBubble).
+func play_voice(pitch_scale: float = 1.0) -> void:
+	if voice_vol <= 0.01 or not _sfx_cache.has("voice_blip") or _voice_pool.is_empty():
+		return
+	var p: AudioStreamPlayer = _voice_pool[_voice_idx]
+	_voice_idx = (_voice_idx + 1) % VOICE_POOL
+	if p.playing:
+		p.stop()
+	p.stream = _sfx_cache["voice_blip"]
+	p.pitch_scale = pitch_scale
+	p.volume_db = linear_to_db(maxf(voice_vol, 0.001)) - 4.0  # voix feutrée (≠ SFX d'action)
+	p.play()
+
+
+func set_voice_vol(linear: float) -> void:
+	voice_vol = clampf(linear, 0.0, 1.0)
+	_save_prefs()
+
+
 func play_stinger(degree: String) -> void:
 	var id: String = "stinger_" + degree
 	play_sfx("seal_stamp")
 	play_sfx(id, 1.0)
 	_duck_music()
+	duck_stems()
 
 
 func _kill_music_tweens() -> void:
@@ -184,6 +234,7 @@ func _load_prefs() -> void:
 		master_vol = float(cfg.get_value("audio", "master", 0.8))
 		music_vol = float(cfg.get_value("audio", "music", 0.6))
 		sfx_vol = float(cfg.get_value("audio", "sfx", 0.45))
+		voice_vol = float(cfg.get_value("audio", "voice", 0.7))
 
 
 func _save_prefs() -> void:
@@ -192,4 +243,100 @@ func _save_prefs() -> void:
 	cfg.set_value("audio", "master", master_vol)
 	cfg.set_value("audio", "music", music_vol)
 	cfg.set_value("audio", "sfx", sfx_vol)
+	cfg.set_value("audio", "voice", voice_vol)
 	cfg.save(PREFS_PATH)
+
+
+# --- STEMS ADAPTIVE (Suno/Demucs pipeline) ---
+
+func load_stems(folder: String) -> void:
+	stop_stems_immediate()
+	var dir := DirAccess.open(folder)
+	if dir == null:
+		push_warning("MerlinAudio: stems folder not found: " + folder)
+		return
+	dir.list_dir_begin()
+	var fname := dir.get_next()
+	while fname != "":
+		if not dir.current_is_dir() and (fname.ends_with(".ogg") or fname.ends_with(".wav") or fname.ends_with(".mp3")):
+			var stem_name := fname.get_basename()
+			var player := AudioStreamPlayer.new()
+			player.bus = STEM_BUS
+			player.stream = load(folder.path_join(fname))
+			player.volume_db = STEM_SILENT_DB
+			add_child(player)
+			_stem_players[stem_name] = player
+		fname = dir.get_next()
+
+
+func play_stems(mood: String = "calm") -> void:
+	for player: AudioStreamPlayer in _stem_players.values():
+		if not player.playing:
+			player.play()
+	set_stem_mood(mood)
+
+
+func set_stem_mood(mood: String, fade_dur: float = STEM_FADE_DUR) -> void:
+	if not stem_moods.has(mood):
+		push_warning("MerlinAudio: unknown stem mood: " + mood)
+		return
+	_stem_active_mood = mood
+	var levels: Dictionary = stem_moods[mood]
+	for stem_name: String in _stem_players:
+		var player: AudioStreamPlayer = _stem_players[stem_name]
+		var target_linear: float = levels.get(stem_name, 0.0)
+		var target_db: float = linear_to_db(maxf(target_linear, 0.001))
+		if _stem_tweens.has(stem_name):
+			var tw: Tween = _stem_tweens[stem_name]
+			if tw != null and tw.is_valid():
+				tw.kill()
+		var tw := create_tween()
+		tw.tween_property(player, "volume_db", target_db, fade_dur) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_stem_tweens[stem_name] = tw
+
+
+func stop_stems(fade_dur: float = 0.5) -> void:
+	for stem_name: String in _stem_players:
+		var player: AudioStreamPlayer = _stem_players[stem_name]
+		if player.playing:
+			var tw := create_tween()
+			tw.tween_property(player, "volume_db", STEM_SILENT_DB, fade_dur)
+			tw.tween_callback(player.stop)
+	_stem_active_mood = ""
+
+
+func stop_stems_immediate() -> void:
+	for stem_name: String in _stem_tweens:
+		var tw: Tween = _stem_tweens[stem_name]
+		if tw != null and tw.is_valid():
+			tw.kill()
+	_stem_tweens.clear()
+	for player: AudioStreamPlayer in _stem_players.values():
+		player.stop()
+		player.queue_free()
+	_stem_players.clear()
+	_stem_active_mood = ""
+
+
+func get_stem_mood() -> String:
+	return _stem_active_mood
+
+
+func is_stems_playing() -> bool:
+	for player: AudioStreamPlayer in _stem_players.values():
+		if player.playing:
+			return true
+	return false
+
+
+func duck_stems() -> void:
+	if _stem_players.is_empty():
+		return
+	for player: AudioStreamPlayer in _stem_players.values():
+		if player.playing and player.volume_db > STEM_SILENT_DB:
+			var tw := create_tween()
+			tw.tween_property(player, "volume_db", player.volume_db + DUCK_DB, 0.05) \
+				.set_trans(Tween.TRANS_QUAD)
+			tw.tween_property(player, "volume_db", player.volume_db, DUCK_RETURN) \
+				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)

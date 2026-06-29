@@ -171,7 +171,7 @@ func _maybe_hover_voice(data: Dictionary) -> void:
 		return
 	var l: String = _voice.hover_line(btn_name)
 	if l != "":
-		_bubble.show_line(l, Callable(self, "_head_screen"))
+		_say(l)
 
 
 func _exit_tree() -> void:
@@ -679,7 +679,7 @@ func _tick_voice(delta: float) -> void:
 		_voice_test_acc += delta
 		if _voice_test_acc >= 1.2:
 			_voice_test_done = true
-			_bubble.show_line("Ah… te revoilà, Voyageur. La brume gardait ta place au chaud.", Callable(self, "_head_screen"))
+			_say("Ah… te revoilà, Voyageur ? La brume gardait ta place au chaud.")
 		return
 	if _voice == null:
 		return
@@ -687,7 +687,17 @@ func _tick_voice(delta: float) -> void:
 	if not _bubble.is_active() and _voice.has_ready() and _speak_acc >= _next_speak:
 		_speak_acc = 0.0
 		_next_speak = randf_range(14.0, 20.0)  # cadence modérée
-		_bubble.show_line(_voice.take_thought(), Callable(self, "_head_screen"))
+		_say(_voice.take_thought())
+
+
+# Fait parler Merlin : humeur des yeux (heuristique) + bulle voixée. Centralise le rituel de parole.
+func _say(line: String) -> void:
+	if line.strip_edges().is_empty():
+		return
+	var mood: String = MerlinSceneArt.mood_for_text(line)
+	if _scene_art != null:
+		_scene_art.set_eye_mood(mood)
+	_bubble.show_line(line, Callable(self, "_head_screen"), mood)
 
 
 func _update_parallax_cursor() -> void:

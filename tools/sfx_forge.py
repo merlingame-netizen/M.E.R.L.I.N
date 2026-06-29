@@ -301,6 +301,11 @@ RECIPES: dict[str, Callable[[], list[float]]] = {
         _fm_tone(0.42, 659.25, 2.0, 0.25, attack=0.018, tau=0.18))),
         decay=0.35, mix=0.50),
 
+    # v10.20 — voix de MERLIN : blip court FM grave (timbre "voyelle"), un par ~2 lettres frappees.
+    # Le pitch est decale a la lecture selon l'humeur (grave/aigu). Court + feutre (joue en rafale).
+    "voice_blip": lambda: _warmth(
+        _fm_tone(0.085, 175.0, 2.0, 0.45, attack=0.006, tau=0.030)),
+
     # souffle resonant + accord desaccorde (deja doux)
     "whisper_threshold": lambda: _reverb(_mix(
         _resonant_filter(

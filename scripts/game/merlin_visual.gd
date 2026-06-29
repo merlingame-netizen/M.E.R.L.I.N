@@ -24,6 +24,11 @@ const BORDER_BRUN: Color = Color("4A3B28")# liseré brun (panneau / carte Commun
 const RING_BG: Color = Color("3A3228")    # fond d'anneau de jauge / nœud futur de la map
 const RARE_BLUE: Color = Color("5A7A8C")  # bleu-acier (rareté Rare / déviation map)
 
+# ── Yeux de Merlin — humeurs (R124, user 2026-06-29) ──
+const EYE_NEUTRAL: Color = Color("5FB8E8")  # bleu BRILLANT (humeur neutre)
+const EYE_SURPRISE: Color = Color("F2D24A") # jaune lumineux (surprise / suspicion)
+const EYE_ANGRY: Color = Color("E0483A")    # rouge (colère + sourcils froncés)
+
 # ── Rareté (palier Épique) ──
 const RARITY_EPIC: Color = Color("9A4FA8")
 

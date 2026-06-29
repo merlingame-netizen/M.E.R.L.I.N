@@ -21,6 +21,10 @@ var _follow: Callable = Callable()  # () -> {"pos": Vector2 (écran), "hr": floa
 var _tail_x: float = 30.0           # abscisse locale de la queue (sous la tête)
 var _active: bool = false
 var _life_tw: Tween = null
+# v10.20 — VOIX procédurale (R124) : un blip toutes les ~2 lettres pendant la frappe, pitch selon l'humeur.
+var _mood: String = "neutral"
+var _voiced_chars: int = 0
+var _voicing: bool = false
 
 
 func _ready() -> void:
@@ -54,11 +58,13 @@ func is_active() -> bool:
 
 
 # Affiche une réplique au-dessus de la tête. `follow` renvoie la position écran de la tête à chaque frame.
-func show_line(text: String, follow: Callable) -> void:
+# `mood` (neutral/surprise/angry) → pitch de la voix procédurale.
+func show_line(text: String, follow: Callable, mood: String = "neutral") -> void:
 	var t: String = text.strip_edges()
 	if t.is_empty():
 		return
 	_follow = follow
+	_mood = mood
 	_label.text = t
 	_active = true
 	visible = true
@@ -66,6 +72,8 @@ func show_line(text: String, follow: Callable) -> void:
 	_update_follow()  # placement immédiat (évite un flash au mauvais endroit)
 	var rm: bool = MerlinVisual.reduced_motion
 	var m: float = MerlinVisual.motion()
+	_voiced_chars = 0
+	_voicing = not rm and MerlinVoicePrefs.is_enabled()  # voix synchronisée à la frappe (off si reduced_motion)
 	if _life_tw != null and _life_tw.is_valid():
 		_life_tw.kill()
 	modulate.a = 0.0
@@ -90,6 +98,28 @@ func _process(_delta: float) -> void:
 	# Suivi du flottement de la tête (figé en reduced_motion : placement unique au show).
 	if _active and not MerlinVisual.reduced_motion:
 		_update_follow()
+	# Voix : un blip toutes les ~2 lettres révélées (saute espaces/ponctuation), pitch selon l'humeur.
+	if _voicing and _active:
+		var total: int = _label.get_total_character_count()
+		var cur: int = int(_label.visible_ratio * float(total))
+		if cur - _voiced_chars >= 2:
+			var idx: int = mini(cur - 1, _label.text.length() - 1)
+			_voiced_chars = cur
+			if idx >= 0:
+				var ch: String = _label.text[idx]
+				if ch != " " and "\n\t.,;:!?…»«-—'\"".find(ch) == -1:
+					MerlinAudio.play_voice(_voice_pitch())
+		if _label.visible_ratio >= 0.999:
+			_voicing = false
+
+
+# Pitch de la voix selon l'humeur (grave-mystérieux par défaut) + légère variation.
+func _voice_pitch() -> float:
+	var base: float = 0.95
+	match _mood:
+		"surprise": base = 1.18
+		"angry": base = 0.82
+	return base * randf_range(0.94, 1.06)
 
 
 func _update_follow() -> void:

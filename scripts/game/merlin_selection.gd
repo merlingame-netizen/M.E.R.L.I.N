@@ -16,7 +16,7 @@ const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 const GAME_MUSIC: String = "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-loop.wav"
 
 const TITLES_CAP_S: float = 75.0    # filet dur : au-delà, on accepte le fallback (jamais d'attente infinie)
-const SKIP_REVEAL_S: float = 20.0   # affordance « passer » révélée après 20 s
+const SKIP_REVEAL_S: float = 3.0    # affordance « passer » révélée vite (user : on doit pouvoir skipper)
 
 var _cards_box: HBoxContainer
 var _title_lbl: Label
@@ -206,6 +206,7 @@ func _build_ui() -> void:
 	_overlay_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_overlay_lbl.add_theme_font_size_override("font_size", 40)
+	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE  # laisse les clics atteindre gui_input (skip)
 	_overlay.add_child(_overlay_lbl)
 	_overlay_skip_lbl = Label.new()
 	_overlay_skip_lbl.anchor_left = 0.0

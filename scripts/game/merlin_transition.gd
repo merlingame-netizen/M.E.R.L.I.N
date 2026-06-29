@@ -145,7 +145,9 @@ func change_scene_merlin(path: String, line: String, gate: Callable = Callable()
 	var spoken: String = line.strip_edges()
 	if spoken == "":
 		spoken = "Le sentier s'ouvre, Voyageur… avançons."  # filet si la réplique LLM n'était pas prête
-	bubble.show_line(spoken, _montage_head.bind(art))
+	var mood: String = MerlinSceneArt.mood_for_text(spoken)
+	art.set_eye_mood(mood)
+	bubble.show_line(spoken, _montage_head.bind(art), mood)
 
 	# 3) Laisse parler, + éventuel gate (montage d'arc) borné.
 	await get_tree().create_timer((1.2 if rm else 2.6) * m).timeout

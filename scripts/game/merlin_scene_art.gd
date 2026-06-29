@@ -67,6 +67,10 @@ var _decor_reveal: float = 1.0
 var _eye_open_force: float = -1.0   # <0 = clignement auto ; sinon 0..1 ouverture FORCÉE (réveil)
 var _eye_glow: float = 1.0          # multiplicateur de luminosité des yeux (réveil + flash ébahi)
 var _eye_widen: float = 1.0         # écartement + allongement des barres (ébahi)
+# v10.20 — HUMEUR des yeux (R124, user 2026-06-29) : neutral=bleu brillant, surprise=jaune+glow,
+# angry=rouge+sourcils froncés. Décroît vers neutral après quelques secondes.
+var _eye_mood: String = "neutral"
+var _eye_mood_t: float = 0.0
 var _gaze_scripted: bool = false    # true = regard piloté par merlin_boot (pas la souris)
 var _gaze_forced: Vector2 = Vector2.ZERO
 
@@ -198,6 +202,30 @@ func set_eye_widen(v: float) -> void:
 	queue_redraw()
 
 
+# Humeur des yeux : "neutral" (bleu), "surprise" (jaune+glow), "angry" (rouge+sourcils). Décroît seule.
+func set_eye_mood(mood: String) -> void:
+	_eye_mood = mood
+	_eye_mood_t = 0.0 if mood == "neutral" else 4.5  # tenue ~4.5s puis retour au bleu
+	queue_redraw()
+
+
+# Heuristique d'humeur depuis une réplique (zéro LLM) : "?"/interjections → surprise ; ton dur/colère/
+# corruption → angry ; sinon neutral. Statique → utilisable par tout appelant qui fait parler Merlin.
+static func mood_for_text(t: String) -> String:
+	var s: String = t.to_lower()
+	var angry: PackedStringArray = ["jamais", "insolent", "gare", "malheur", "fureur", "colère", "colere",
+		"insensé", "insense", "imprudent", "tais-toi", "n'ose", "trahi", "maudit", "ténèbres", "tenebres",
+		"corruption", "ombre te"]
+	for w in angry:
+		if s.find(w) != -1:
+			return "angry"
+	if s.find("?") != -1 or s.find("…") != -1 or s.find("oh") != -1 or s.find("ah ") != -1 \
+			or s.find("tiens") != -1 or s.find("vraiment") != -1 or s.find("étrange") != -1 \
+			or s.find("etrange") != -1 or s.find("korrigan") != -1 or s.find("eh bien") != -1:
+		return "surprise"
+	return "neutral"
+
+
 # Regard piloté par le boot (séquence scriptée gauche/droite/centre) au lieu de suivre la souris.
 func set_scripted_gaze(on: bool, dir: Vector2 = Vector2.ZERO) -> void:
 	_gaze_scripted = on
@@ -305,6 +333,10 @@ func set_time_of_day(hour: int) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
+	if _eye_mood_t > 0.0:
+		_eye_mood_t -= delta
+		if _eye_mood_t <= 0.0:
+			_eye_mood = "neutral"  # retour au bleu brillant après la tenue d'humeur
 	if _menu_decor:
 		if not MerlinVisual.reduced_motion:
 			_update_shooting_star(delta)
@@ -654,15 +686,28 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 		_fig_hr = hr
 		if a_eyes > 0.01:
 			var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if menu else 1.0
-			var eye_col: Color = MerlinVisual.RARE_BLUE.lerp(MerlinVisual.CREAM, 0.35)
-			# Ouverture : clignement auto OU forcée par le boot (réveil). _eye_widen écarte/allonge (ébahi).
+			# v10.20 — HUMEUR (R124) : couleur + lueur + écartement selon _eye_mood (neutral/surprise/angry).
+			var eye_col: Color = MerlinVisual.EYE_NEUTRAL
+			var mood_glow: float = 1.0
+			var mood_widen: float = 1.0
+			match _eye_mood:
+				"surprise":
+					eye_col = MerlinVisual.EYE_SURPRISE
+					mood_glow = 1.5
+					mood_widen = 1.12
+				"angry":
+					eye_col = MerlinVisual.EYE_ANGRY
+					mood_glow = 1.35
+					mood_widen = 0.90  # les yeux se plissent en colère
+			# Ouverture : clignement auto OU forcée par le boot (réveil). _eye_widen × mood = écartement.
 			var openf: float = _eye_open_force if _eye_open_force >= 0.0 else maxf(1.0 - 0.9 * _blink, 0.07)
-			var eye_h: float = hr * 0.70 * openf * a_eyes * _eye_widen  # grandissent en s'allumant + ébahi
+			var widen: float = _eye_widen * mood_widen
+			var eye_h: float = hr * 0.70 * openf * a_eyes * widen
 			var eye_w: float = maxf(hr * 0.16, 2.0)
-			var eye_dx: float = hr * 0.34 * _eye_widen  # l'écartement augmente quand ébahi
+			var eye_dx: float = hr * 0.34 * widen
 			var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
-			var core_a: float = minf(0.9 * pulse * a_eyes * _eye_glow, 1.0)  # luminosité × réveil/flash, clampée
-			var halo_a: float = minf(0.16 * pulse * a_eyes * _eye_glow, 0.6)
+			var core_a: float = minf(0.9 * pulse * a_eyes * _eye_glow * mood_glow, 1.0)  # luminosité × humeur, clampée
+			var halo_a: float = minf(0.16 * pulse * a_eyes * _eye_glow * mood_glow, 0.7)
 			for s in [-1.0, 1.0]:
 				var ec2: Vector2 = Vector2(head_c.x + s * eye_dx, head_c.y) + gaze_px
 				var ey: float = ec2.y - eye_h * 0.5
@@ -670,3 +715,11 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 				draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, core_a), true)
 				draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
 				draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
+			# Sourcils FRONCÉS (colère) : deux traits plongeant vers le centre, au-dessus des yeux.
+			if _eye_mood == "angry":
+				var brow_y: float = head_c.y - eye_h * 0.62
+				var brow_col: Color = Color(eye_col.r, eye_col.g, eye_col.b, core_a)
+				for s2 in [-1.0, 1.0]:
+					var inner: Vector2 = Vector2(head_c.x + s2 * eye_dx * 0.50, brow_y + hr * 0.12)
+					var outer: Vector2 = Vector2(head_c.x + s2 * eye_dx * 1.35, brow_y - hr * 0.10)
+					draw_line(inner, outer, brow_col, maxf(eye_w * 0.75, 2.0), true)
