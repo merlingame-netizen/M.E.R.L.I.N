@@ -1425,7 +1425,12 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   - **Voix procédurale** : chaque phrase est « voixée » — `MerlinSpeechBubble` joue un blip
     (`MerlinAudio.play_voice`, cue `voice_blip` de sfx_forge) toutes les ~2 lettres frappées, **pitch selon
     l'humeur** (grave neutre / aigu surprise / très grave colère). Volume `voice_vol` ([audio] voice) +
-    slider Options. Pas de TTS (100 % procédural, zéro latence).
+    slider Options. Pas de TTS (100 % procédural, zéro latence). La voix est jouée dans **toutes** les
+    scènes où Merlin conte (prose in-game, intro, épilogue, bulle menu, montage de transition).
+  - **Anti-superposition (user 2026-06-29)** : `MerlinAudio.begin_voice()`/`play_voice_session(sess, mood)`
+    → **UNE seule voix de Merlin à la fois** (un nouveau locuteur coupe le précédent — jamais deux
+    typewriters/bulles superposés). `play_sfx` ignore un même SFX rejoué sous `SFX_MIN_GAP_MS` (40 ms)
+    → plus de double-déclenchements empilés. Règle : « rien ne se superpose inutilement ».
 - **R125 — Ornement DA partagé (2026-06-29, user)** : `MerlinOrnament` (statique) = source UNIQUE des
   signes visuels du menu (filet INK_DIM, **triskèle or** tournant, diamant, **fond scène vivante**
   `MerlinSceneArt` dimmé). Appliqué à **Sélection** (fond vivant + filet/triskèle + parchemins en pop) et

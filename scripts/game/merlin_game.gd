@@ -1083,10 +1083,11 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 	# v10.20 — Merlin PARLE : sa VOIX procédurale accompagne sa prose (humeur depuis le texte), à la place
 	# du quill (user 2026-06-29 : « il faut ce son dans toutes les scenes où il parle »).
 	var mood: String = MerlinSceneArt.mood_for_text(txt)
+	var sess: int = MerlinAudio.begin_voice()  # voix unique : coupe un locuteur précédent (anti-superposition)
 	_quill_tw = create_tween()
 	for i in tick_count:
 		_quill_tw.tween_interval(tick_interval)
-		_quill_tw.tween_callback(func() -> void: MerlinAudio.play_voice_mood(mood))
+		_quill_tw.tween_callback(func() -> void: MerlinAudio.play_voice_session(sess, mood))
 
 
 func _kill_tw() -> void:
@@ -1265,12 +1266,13 @@ func _reveal_into(lbl: RichTextLabel, txt: String) -> Tween:
 	t.tween_property(lbl, "visible_characters", n, dur)
 	# v10.20 — voix de Merlin sur l'intro/ouverture (était muette). Cadence ~1 blip / 3 lettres.
 	var mood: String = MerlinSceneArt.mood_for_text(txt)
+	var sess: int = MerlinAudio.begin_voice()  # voix unique (anti-superposition)
 	var ticks: int = maxi(n / 3, 1)
 	var iv: float = dur / float(maxi(ticks, 1))
 	var vt: Tween = lbl.create_tween()
 	for i in ticks:
 		vt.tween_interval(iv)
-		vt.tween_callback(func() -> void: MerlinAudio.play_voice_mood(mood))
+		vt.tween_callback(func() -> void: MerlinAudio.play_voice_session(sess, mood))
 	return t
 
 

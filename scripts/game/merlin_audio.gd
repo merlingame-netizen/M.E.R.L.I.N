@@ -11,6 +11,7 @@ const SFX_IDS: Array = [
 ]
 const VOICE_POOL: int = 4
 const POOL_SIZE: int = 8
+const SFX_MIN_GAP_MS: int = 40   # anti-superposition : intervalle mini avant de rejouer un MÊME SFX
 const DUCK_DB: float = -6.0
 const DUCK_RETURN: float = 0.8
 const PREFS_PATH: String = "user://options.cfg"
@@ -48,6 +49,8 @@ var voice_vol: float = 0.7   # v10.20 — volume de la voix procédurale de Merl
 
 var _voice_pool: Array[AudioStreamPlayer] = []
 var _voice_idx: int = 0
+var _sfx_last_ms: Dictionary = {}   # id → dernier ms de lecture (anti-double-fire)
+var _voice_session: int = 0         # voix UNIQUE : seul le dernier locuteur sonne (anti-superposition)
 
 
 func _ready() -> void:
@@ -90,6 +93,12 @@ func _create_music_players() -> void:
 func play_sfx(id: String, pitch_scale: float = 1.0) -> void:
 	if not _sfx_cache.has(id):
 		return
+	# v10.20 — anti-superposition (user 2026-06-29) : un MÊME SFX ne se relance pas dans les SFX_MIN_GAP_MS
+	# (évite les double-déclenchements quasi simultanés qui s'empilent). N'affecte pas la voix (play_voice).
+	var now: int = Time.get_ticks_msec()
+	if now - int(_sfx_last_ms.get(id, -10000)) < SFX_MIN_GAP_MS:
+		return
+	_sfx_last_ms[id] = now
 	var p: AudioStreamPlayer = _sfx_pool[_sfx_idx]
 	_sfx_idx = (_sfx_idx + 1) % POOL_SIZE
 	if p.playing:
@@ -135,6 +144,20 @@ func play_voice_mood(mood: String = "neutral") -> void:
 		"surprise": base = 1.18
 		"angry": base = 0.82
 	play_voice(base * randf_range(0.94, 1.06))
+
+
+# VOIX UNIQUE (user 2026-06-29 : « rien ne se superpose inutilement ») : un locuteur ouvre une session
+# avant de parler ; quand un nouveau locuteur ouvre la sienne, les anciens deviennent muets. Garantit
+# qu'UNE seule voix de Merlin sonne à la fois (jamais deux typewriters/bulles superposés).
+func begin_voice() -> int:
+	_voice_session += 1
+	return _voice_session
+
+
+func play_voice_session(session: int, mood: String = "neutral") -> void:
+	if session != _voice_session:
+		return  # un locuteur plus récent a pris la main → on ne superpose pas
+	play_voice_mood(mood)
 
 
 func play_stinger(degree: String) -> void:

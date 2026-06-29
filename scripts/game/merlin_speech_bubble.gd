@@ -25,6 +25,7 @@ var _life_tw: Tween = null
 var _mood: String = "neutral"
 var _voiced_chars: int = 0
 var _voicing: bool = false
+var _voice_session: int = 0   # voix UNIQUE (anti-superposition) — ouverte au show_line
 
 
 func _ready() -> void:
@@ -74,6 +75,8 @@ func show_line(text: String, follow: Callable, mood: String = "neutral") -> void
 	var m: float = MerlinVisual.motion()
 	_voiced_chars = 0
 	_voicing = not rm and MerlinVoicePrefs.is_enabled()  # voix synchronisée à la frappe (off si reduced_motion)
+	if _voicing:
+		_voice_session = MerlinAudio.begin_voice()  # prend la main sur la voix (coupe un locuteur précédent)
 	if _life_tw != null and _life_tw.is_valid():
 		_life_tw.kill()
 	modulate.a = 0.0
@@ -108,7 +111,7 @@ func _process(_delta: float) -> void:
 			if idx >= 0:
 				var ch: String = _label.text[idx]
 				if ch != " " and "\n\t.,;:!?…»«-—'\"".find(ch) == -1:
-					MerlinAudio.play_voice_mood(_mood)  # pitch centralisé (humeur) dans MerlinAudio
+					MerlinAudio.play_voice_session(_voice_session, _mood)  # voix unique (anti-superposition)
 		if _label.visible_ratio >= 0.999:
 			_voicing = false
 
