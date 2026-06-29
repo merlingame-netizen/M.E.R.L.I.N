@@ -37,6 +37,12 @@ var _cursor_inside: bool = false
 var _tod_sky: Color = MerlinVisual.SCENE_BG
 var _tod_moon_warm: float = 0.0
 
+# v10.18 — Étoiles filantes occasionnelles (MENU uniquement) : traînée crème le long d'un court arc.
+var _shoot_t: float = -1.0            # <0 = inactive ; sinon progression 0→1
+var _shoot_next: float = 4.0          # compte à rebours avant la prochaine
+var _shoot_a: Vector2 = Vector2.ZERO  # départ (normalisé 0-1)
+var _shoot_b: Vector2 = Vector2.ZERO  # arrivée (normalisé 0-1)
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -146,7 +152,24 @@ func set_time_of_day(hour: int) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
+	if _menu_decor and not MerlinVisual.reduced_motion:
+		_update_shooting_star(delta)
 	queue_redraw()
+
+
+# Étoile filante (menu) : minuterie aléatoire (6-13s) puis traversée ~0.85s d'un court arc.
+func _update_shooting_star(delta: float) -> void:
+	if _shoot_t < 0.0:
+		_shoot_next -= delta
+		if _shoot_next <= 0.0:
+			_shoot_next = randf_range(6.0, 13.0)
+			_shoot_t = 0.0
+			_shoot_a = Vector2(randf_range(0.10, 0.62), randf_range(0.05, 0.26))
+			_shoot_b = _shoot_a + Vector2(randf_range(0.18, 0.32), randf_range(0.09, 0.17))
+	else:
+		_shoot_t += delta / 0.85
+		if _shoot_t > 1.0:
+			_shoot_t = -1.0
 
 
 func _ready() -> void:
@@ -204,6 +227,15 @@ func _draw() -> void:
 	if _moon_dim > 0.01:
 		moon_col = moon_col.lerp(COL_SCENE_BG, _moon_dim)
 	draw_circle(moon_c, moon_r, moon_col)
+
+	# v10.18 — étoile filante (menu) : traînée crème qui apparaît/disparaît le long de l'arc.
+	if _menu_decor and _shoot_t >= 0.0 and _shoot_t <= 1.0 and not rm:
+		var sh_head: Vector2 = Vector2(lerpf(_shoot_a.x, _shoot_b.x, _shoot_t) * w, lerpf(_shoot_a.y, _shoot_b.y, _shoot_t) * h)
+		var sh_tt: float = maxf(_shoot_t - 0.14, 0.0)
+		var sh_tail: Vector2 = Vector2(lerpf(_shoot_a.x, _shoot_b.x, sh_tt) * w, lerpf(_shoot_a.y, _shoot_b.y, sh_tt) * h)
+		var sh_a: float = sin(_shoot_t * PI) * 0.7
+		draw_line(sh_tail, sh_head, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, sh_a), 2.0, true)
+		draw_circle(sh_head, 2.6, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, sh_a))
 
 	# Background trees (with reactive sway)
 	_tree(Vector2(w * 0.12 + _tree_sway * 0.8, h), h * 0.74, w)

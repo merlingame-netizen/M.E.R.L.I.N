@@ -51,7 +51,11 @@ func _ready() -> void:
 	_animate_entrance()
 	_start_idle_anims()
 	_scene_art.set_mote_density(1.05)  # scène plus subtile (user 2026-06-29) : motes à peine au-dessus du canon
-	_scene_art.set_time_of_day(Time.get_datetime_dict_from_system().get("hour", 21))  # le menu change selon l'heure réelle
+	# Le menu change selon l'heure RÉELLE ; override dev MERLIN_TOD_HOUR pour capturer les 4 variantes.
+	var tod_hour: int = int(Time.get_datetime_dict_from_system().get("hour", 21))
+	if OS.has_environment("MERLIN_TOD_HOUR"):
+		tod_hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
+	_scene_art.set_time_of_day(tod_hour)
 	_setup_dev_capture()
 	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
 	var mn: Node = get_node_or_null("/root/MerlinNative")
@@ -210,10 +214,18 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 	if enabled:
 		if cb.is_valid():
 			btn.pressed.connect(cb)
+		btn.pressed.connect(_play_press_tick)  # clic audible (feedback net, user 2026-06-29)
 		btn.focus_entered.connect(_on_row_focus.bind(data, true))
 		btn.focus_exited.connect(_on_row_focus.bind(data, false))
 		btn.mouse_entered.connect(btn.grab_focus)  # survol = focus (highlight unifié)
 	return btn
+
+
+# Tick sonore au clic d'une ligne de menu (feedback « net »). Null-safe (MerlinAudio = autoload).
+func _play_press_tick() -> void:
+	var a: Node = get_node_or_null("/root/MerlinAudio")
+	if a != null and a.has_method("play_sfx"):
+		a.play_sfx("button_tap", randf_range(0.97, 1.05))
 
 
 func _on_row_focus(data: Dictionary, on: bool) -> void:
@@ -231,7 +243,7 @@ func _on_row_focus(data: Dictionary, on: bool) -> void:
 		box.scale = Vector2.ONE
 		var tw: Tween = create_tween()
 		data["pop_tw"] = tw
-		tw.tween_property(box, "scale", Vector2(1.10, 1.10), MerlinVisual.DUR_TAP_DOWN * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(box, "scale", Vector2(1.16, 1.16), MerlinVisual.DUR_TAP_DOWN * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(box, "scale", Vector2.ONE, MerlinVisual.DUR_TAP_UP * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		# v10.18 — charge du trait + comète de navigation depuis la rangée précédente.
 		MerlinMenuFx.connector_charge(data.get("line") as ColorRect)
@@ -532,7 +544,7 @@ func _update_parallax_cursor() -> void:
 		var norm: Vector2 = (mouse - center) / (art_rect.size * 0.5)
 		norm.x = clampf(norm.x, -1.0, 1.0)
 		norm.y = clampf(norm.y, -1.0, 1.0)
-		_scene_art.set_parallax(norm * 6.0)
+		_scene_art.set_parallax(norm * 9.0)  # v10.18 : réactivité curseur renforcée (user 2026-06-29)
 	var inside: bool = art_rect.has_point(mouse)
 	_scene_art.set_cursor(mouse - art_rect.position, inside)
 
