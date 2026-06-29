@@ -9,8 +9,6 @@ const COL_BG: Color = MerlinVisual.BG_PAGE
 const COL_CREAM: Color = MerlinVisual.CREAM
 const COL_GOLD: Color = MerlinVisual.GOLD
 const COL_DIM: Color = MerlinVisual.INK_DIM
-const COL_GREEN: Color = MerlinVisual.GREEN
-const COL_VIOLET: Color = MerlinVisual.VIOLET
 
 const SELECTION_SCENE: String = "res://scenes/MerlinSelection.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
@@ -23,8 +21,6 @@ const MUSIC_FADE_OUT: float = 0.22  # calé sur MerlinTransition.DUR
 var _rows: Array[Dictionary] = []  # [{btn, glyph, lbl, disc, icon_box, pop_tw, key}]
 var _title: Label
 var _tris: MerlinGlyph
-var _runes: Array[MerlinGlyph] = []  # rangée décorative
-var _rings: Array[MerlinRingGauge] = []  # émblèmes des coins
 var _scene_art: MerlinSceneArt
 var _bottom_bar: HBoxContainer
 var _rule_box: HBoxContainer
@@ -54,7 +50,8 @@ func _ready() -> void:
 	_setup_music()
 	_animate_entrance()
 	_start_idle_anims()
-	_scene_art.set_mote_density(1.35)  # menu = écran léger : motes un peu plus denses (discret)
+	_scene_art.set_mote_density(1.05)  # scène plus subtile (user 2026-06-29) : motes à peine au-dessus du canon
+	_scene_art.set_time_of_day(Time.get_datetime_dict_from_system().get("hour", 21))  # le menu change selon l'heure réelle
 	_setup_dev_capture()
 	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
 	var mn: Node = get_node_or_null("/root/MerlinNative")
@@ -124,15 +121,6 @@ func _build_ui() -> void:
 	_rule_box.add_child(_hline())
 	left.add_child(_rule_box)
 
-	# Rangée de runes décoratives.
-	var runes: HBoxContainer = HBoxContainer.new()
-	runes.add_theme_constant_override("separation", 16)
-	for k in ["rune", "triskele", "burst", "spark", "rift"]:
-		var rg: MerlinGlyph = _icon(k, COL_DIM, Vector2(20, 22), 1.5)
-		_runes.append(rg)
-		runes.add_child(rg)
-	left.add_child(runes)
-
 	var gap: Control = Control.new()
 	gap.custom_minimum_size = Vector2(0, 22)
 	left.add_child(gap)
@@ -148,10 +136,6 @@ func _build_ui() -> void:
 	menu.add_child(_menu_row("cards", "CARTES", Callable(), false))
 	menu.add_child(_menu_row("target", "OPTIONS", _on_options, true))
 	menu.add_child(_menu_row("cross", "QUITTER", _on_quit, true))
-
-	# Émblèmes des coins (anneaux partiels + glyphe), comme le mockup.
-	_corner_emblem("leaf", COL_GREEN, true)
-	_corner_emblem("tree", COL_VIOLET, false)
 
 	_build_bottom_bar()
 
@@ -282,42 +266,6 @@ func _radial_glow_tex() -> GradientTexture2D:
 	return t
 
 
-func _corner_emblem(glyph_key: String, col: Color, is_left: bool) -> void:
-	var box: Control = Control.new()
-	box.custom_minimum_size = Vector2(64, 64)
-	box.size = Vector2(64, 64)
-	box.anchor_top = 0.0
-	box.anchor_bottom = 0.0
-	box.offset_top = 22
-	box.offset_bottom = 86
-	if is_left:
-		box.anchor_left = 0.0
-		box.anchor_right = 0.0
-		box.offset_left = 28
-		box.offset_right = 92
-	else:
-		box.anchor_left = 1.0
-		box.anchor_right = 1.0
-		box.offset_left = -92
-		box.offset_right = -28
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(box)
-	var ring: MerlinRingGauge = MerlinRingGauge.new()
-	ring.set_anchors_preset(Control.PRESET_FULL_RECT)
-	ring.setup(col)
-	box.add_child(ring)
-	ring.set_ratio(0.0)  # balayé 0 → 0.42 par l'animation d'entrée
-	_rings.append(ring)
-	var g: MerlinGlyph = MerlinGlyph.new()
-	g.set_anchors_preset(Control.PRESET_FULL_RECT)
-	g.offset_left = 16
-	g.offset_top = 16
-	g.offset_right = -16
-	g.offset_bottom = -16
-	g.setup(glyph_key, col, 1.8)
-	box.add_child(g)
-
-
 func _build_bottom_bar() -> void:
 	_bottom_bar = HBoxContainer.new()
 	_bottom_bar.anchor_left = 0.0
@@ -331,19 +279,15 @@ func _build_bottom_bar() -> void:
 	_bottom_bar.add_theme_constant_override("separation", 14)
 	add_child(_bottom_bar)
 
-	_bottom_bar.add_child(_icon("crown", COL_GOLD, Vector2(24, 24), 1.6))
-	_bottom_bar.add_child(_dots(3))
-	var sp1: Control = Control.new()
-	sp1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_bottom_bar.add_child(sp1)
-	_bottom_bar.add_child(_hline())
-	_bottom_bar.add_child(_icon("compass", COL_GOLD, Vector2(28, 28), 1.6))
-	_bottom_bar.add_child(_hline())
-	var sp2: Control = Control.new()
-	sp2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_bottom_bar.add_child(sp2)
-	# v10.13 (B1) : indicateur d'éveil du modèle — « ✦ Merlin s'éveille… » (pulse discret) tant que
-	# le load bloquant tourne, puis « ✦ Merlin veille » (or) sur model_ready (_set_model_awake).
+	# v10.18 (user 2026-06-29) — la couronne devient un VRAI bouton « À PROPOS » (identité/version) ;
+	# les ornements sans rôle (compas, œil, points, traits) sont retirés (pilier MINIMAL §23).
+	_bottom_bar.add_child(_about_button())
+
+	var spacer: Control = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_bottom_bar.add_child(spacer)
+
+	# Indicateur d'éveil du modèle (droite) — « ✦ Merlin s'éveille… » (pulse) puis « ✦ Merlin veille » (or).
 	_model_lbl = Label.new()
 	_model_lbl.text = "✦ Merlin s'éveille…"
 	_model_lbl.add_theme_color_override("font_color", COL_DIM)
@@ -353,8 +297,86 @@ func _build_bottom_bar() -> void:
 	_model_pulse_tw = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_model_pulse_tw.tween_property(_model_lbl, "modulate:a", 0.35, 1.1)
 	_model_pulse_tw.tween_property(_model_lbl, "modulate:a", 1.0, 1.1)
-	_bottom_bar.add_child(_dots(3))
-	_bottom_bar.add_child(_icon("eye", COL_GOLD, Vector2(24, 24), 1.6))
+
+
+# Bouton « À PROPOS » du bandeau bas : couronne + libellé, ouvre une fiche identité/version (vrai bouton).
+func _about_button() -> Button:
+	var btn: Button = Button.new()
+	btn.custom_minimum_size = Vector2(150, 32)
+	btn.focus_mode = Control.FOCUS_ALL
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
+	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
+		btn.add_theme_stylebox_override(st, empty)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(row)
+	row.add_child(_icon("crown", COL_GOLD, Vector2(22, 22), 1.6))
+	var lbl: Label = Label.new()
+	lbl.text = "À PROPOS"
+	lbl.add_theme_color_override("font_color", COL_DIM)
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(lbl)
+	# Feedback survol/focus net : libellé or au survol, retour au repos (≤100ms, pilier ÉVIDENT).
+	btn.mouse_entered.connect(func() -> void: btn.grab_focus())
+	btn.focus_entered.connect(func() -> void: lbl.add_theme_color_override("font_color", COL_GOLD))
+	btn.focus_exited.connect(func() -> void: lbl.add_theme_color_override("font_color", COL_DIM))
+	btn.pressed.connect(_show_about)
+	return btn
+
+
+# Fiche « À propos » : identité du jeu + version + pitch. Overlay sobre, clic n'importe où = fermer.
+func _show_about() -> void:
+	var layer: Control = Control.new()
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(layer)
+	var dim: ColorRect = ColorRect.new()
+	dim.color = MerlinVisual.DIM_MODAL
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(dim)
+	var panel: PanelContainer = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(460, 0)
+	var psb: StyleBoxFlat = StyleBoxFlat.new()
+	psb.bg_color = MerlinVisual.SURFACE
+	psb.set_corner_radius_all(10)
+	psb.set_border_width_all(2)
+	psb.border_color = COL_GOLD
+	psb.set_content_margin_all(30)
+	panel.add_theme_stylebox_override("panel", psb)
+	layer.add_child(panel)
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(v)
+	var lines: Array = [
+		["M·E·R·L·I·N", 40, COL_GOLD],
+		["Deck-building narratif celtique", 21, COL_CREAM],
+		["Brocéliande — un sort, une voie, un prix.", 16, COL_DIM],
+		["v10.18 · 100% local · Gemma 4 E2B natif", 15, COL_DIM],
+		["", 6, COL_DIM],
+		["cliquer pour fermer", 14, COL_DIM],
+	]
+	for ln in lines:
+		var l: Label = Label.new()
+		l.text = str(ln[0])
+		l.add_theme_font_size_override("font_size", int(ln[1]))
+		l.add_theme_color_override("font_color", ln[2] as Color)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(l)
+	layer.modulate.a = 0.0
+	var tw: Tween = layer.create_tween()
+	tw.tween_property(layer, "modulate:a", 1.0, MerlinVisual.DUR_VEIL_IN * MerlinVisual.motion())
+	layer.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed:
+			layer.queue_free())
 
 
 # v10.13 (B1) : le modèle est chargé — l'indicateur cesse de pulser et passe à l'or « veille ».
@@ -431,23 +453,14 @@ func _spaced(s: String) -> String:
 ## Entrée en cascade : tout démarre invisible puis fond en fondu, du titre vers le bas.
 ## Fondus uniquement (pas de slides) : robuste aux re-layouts des containers, DA flat.
 func _animate_entrance() -> void:
-	_fade_in(_title, 0.00, 0.55)
-	_fade_in(_rule_box, 0.18, 0.45)
-	for i in _runes.size():
-		_fade_in(_runes[i], 0.30 + 0.08 * float(i), 0.40)
+	# v10.18 (user 2026-06-29) — cascade resserrée : le joueur peut cliquer plus tôt (~0.3s), tout est
+	# en place < 1s. Fondus uniquement (robuste aux re-layouts containers, DA flat).
+	_fade_in(_title, 0.00, 0.50)
+	_fade_in(_rule_box, 0.14, 0.40)
 	for i in _rows.size():
-		_fade_in(_rows[i]["btn"], 0.55 + 0.07 * float(i), 0.40)
-	_fade_in(_scene_art, 0.10, 0.90)
-	_fade_in(_bottom_bar, 1.00, 0.50)
-	for i in _rings.size():
-		var ring: MerlinRingGauge = _rings[i]
-		var emblem: CanvasItem = ring.get_parent() as CanvasItem
-		if emblem != null:
-			_fade_in(emblem, 0.35 + 0.15 * float(i), 0.45)
-		var tw: Tween = create_tween()
-		tw.tween_interval(0.45 + 0.15 * float(i))
-		tw.tween_method(ring.set_ratio, 0.0, 0.42, 0.85).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		tw.tween_callback(_pulse_ring.bind(ring))
+		_fade_in(_rows[i]["btn"], 0.28 + 0.06 * float(i), 0.36)
+	_fade_in(_scene_art, 0.06, 0.85)
+	_fade_in(_bottom_bar, 0.58, 0.42)
 
 
 func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
@@ -462,10 +475,6 @@ func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
 func _start_idle_anims() -> void:
 	var rot: Tween = create_tween().set_loops()
 	rot.tween_property(_tris, "rotation", TAU, 24.0).from(0.0)
-	for i in _runes.size():
-		var tw: Tween = create_tween()
-		tw.tween_interval(1.2 + 0.45 * float(i))  # déphasage : respiration organique, pas mécanique
-		tw.tween_callback(_breathe_glyph.bind(_runes[i]))
 	# v10.15 — Title breathing : le wordmark pulse entre crème et or (luminance warm).
 	if _title != null and not MerlinVisual.reduced_motion:
 		var col_bright: Color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 1.0).lerp(COL_CREAM, 0.5)
@@ -486,21 +495,6 @@ func _start_idle_anims() -> void:
 		var nudge_t: Tween = create_tween()
 		nudge_t.tween_interval(5.0)
 		nudge_t.tween_callback(MerlinMenuFx.attention_nudge.bind(first_active))
-
-
-func _breathe_glyph(g: MerlinGlyph) -> void:
-	var d: float = MerlinVisual.DUR_BREATHE * 0.5 * MerlinVisual.motion()
-	var tw: Tween = create_tween().set_loops()
-	tw.tween_property(g, "modulate:a", 0.45, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(g, "modulate:a", 1.0, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-
-## Pulsation lente de l'anneau d'un émblème de coin (après le balayage d'entrée).
-func _pulse_ring(ring: MerlinRingGauge) -> void:
-	var d: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
-	var tw: Tween = create_tween().set_loops()
-	tw.tween_method(ring.set_ratio, 0.42, 0.30, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_method(ring.set_ratio, 0.30, 0.42, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 # ====================== AMBIANCE (Phase 1, v10.18) ======================

@@ -32,6 +32,11 @@ var _parallax: Vector2 = Vector2.ZERO
 var _cursor_pos: Vector2 = Vector2.ZERO
 var _cursor_inside: bool = false
 
+# v10.18 — Variation selon l'heure RÉELLE (aube/jour/crépuscule/nuit) : teinte du ciel + chaleur de
+# la lune. Dérivé des couleurs canon (zéro hex). Défaut = nuit canon → in-game inchangé.
+var _tod_sky: Color = MerlinVisual.SCENE_BG
+var _tod_moon_warm: float = 0.0
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -118,6 +123,26 @@ func set_cursor(pos: Vector2, inside: bool) -> void:
 	queue_redraw()
 
 
+# v10.18 — Le décor change selon l'heure réelle (passer Time...["hour"]). 4 périodes : la teinte du
+# ciel et la chaleur de la lune varient ; le menu reste nocturne-merveilleux (variations subtiles).
+# Teintes DÉRIVÉES des couleurs canon (zéro hex hors merlin_visual.gd).
+func set_time_of_day(hour: int) -> void:
+	var h: int = clampi(hour, 0, 23)
+	if h >= 5 and h < 9:        # aube — chaleur dorée naissante
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.GOLD, 0.10)
+		_tod_moon_warm = 0.55
+	elif h >= 9 and h < 17:     # jour — ciel plus froid/clair, lune ténue
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.13)
+		_tod_moon_warm = 0.20
+	elif h >= 17 and h < 21:    # crépuscule — violet
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.VIOLET, 0.14)
+		_tod_moon_warm = 0.65
+	else:                        # nuit — bleu profond, lune froide brillante
+		_tod_sky = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.05)
+		_tod_moon_warm = 0.0
+	queue_redraw()
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
@@ -137,7 +162,7 @@ func _draw() -> void:
 	var h: float = s.y
 	var rm: bool = MerlinVisual.reduced_motion
 
-	draw_rect(Rect2(Vector2.ZERO, s), COL_SCENE_BG, true)
+	draw_rect(Rect2(Vector2.ZERO, s), _tod_sky, true)  # v10.18 : teinte du ciel selon l'heure
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * 0.13
@@ -172,8 +197,8 @@ func _draw() -> void:
 		var halo_a: float = 0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))
 		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 
-	# Moon flash/dim reactive
-	var moon_col: Color = COL_MOON
+	# Moon flash/dim reactive (+ chaleur selon l'heure, v10.18)
+	var moon_col: Color = COL_MOON.lerp(MerlinVisual.GOLD, _tod_moon_warm * 0.35)
 	if _moon_flash > 0.01:
 		moon_col = moon_col.lerp(Color.WHITE, _moon_flash * 0.6)
 	if _moon_dim > 0.01:
