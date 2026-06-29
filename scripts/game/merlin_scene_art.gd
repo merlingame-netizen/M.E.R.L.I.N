@@ -26,6 +26,12 @@ var _mist_factor: float = 1.0
 var _tree_sway: float = 0.0
 var _react_tw: Tween = null
 
+# v10.18 (menu Phase 2) — densité de motes + parallaxe + aura de curseur, pilotés par merlin_menu.gd.
+var _mote_density: float = 1.0
+var _parallax: Vector2 = Vector2.ZERO
+var _cursor_pos: Vector2 = Vector2.ZERO
+var _cursor_inside: bool = false
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -80,6 +86,38 @@ func sway_trees() -> void:
 	tw.tween_property(self, "_tree_sway", 0.0, MerlinVisual.DUR_WORLD_REACT * MerlinVisual.motion() * 0.8).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
+# v10.18 (menu Phase 2) — réactions composées + contrôles continus pilotés par merlin_menu.gd.
+
+# Souffle de forêt : les arbres oscillent ET la brume s'épaissit brièvement (réutilise l'existant).
+func trigger_gust() -> void:
+	sway_trees()
+	thicken_mist()
+
+
+# Pulse rare de l'orbe lunaire (réutilise le flash réactif).
+func moon_pulse() -> void:
+	flash_moon()
+
+
+# Densité de motes (1.0 = canon) — le menu monte à ~1.35 pour un fond plus vivant. Borné.
+func set_mote_density(factor: float) -> void:
+	_mote_density = clampf(factor, 0.0, 3.0)
+	queue_redraw()
+
+
+# Décalage de parallaxe (px) suivant le curseur : lune/motes = couche lointaine (facteur < 1) dans _draw.
+func set_parallax(offset: Vector2) -> void:
+	_parallax = offset
+	queue_redraw()
+
+
+# Curseur (coordonnées locales au node) + dedans/dehors → aura GOLD douce près du curseur dans _draw.
+func set_cursor(pos: Vector2, inside: bool) -> void:
+	_cursor_pos = pos
+	_cursor_inside = inside
+	queue_redraw()
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
@@ -101,7 +139,7 @@ func _draw() -> void:
 
 	draw_rect(Rect2(Vector2.ZERO, s), COL_SCENE_BG, true)
 
-	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40)
+	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * 0.13
 
 	# God rays (behind everything except background)
@@ -163,7 +201,7 @@ func _draw() -> void:
 
 	# 18 ambient motes (3 categories: firefly/dust/ember)
 	if _animated:
-		var mcount: int = MerlinVisual.MOTE_COUNT_AMBIENT
+		var mcount: int = int(MerlinVisual.MOTE_COUNT_AMBIENT * _mote_density)  # v10.18 : densité pilotée
 		for mi in mcount:
 			var mf: float = float(mi)
 			var cat: int = mi % 3
@@ -196,7 +234,7 @@ func _draw() -> void:
 				mx = fmod(mx, w)
 			if rm:
 				ma *= 0.5
-			draw_circle(Vector2(mx, my), mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma))
+			draw_circle(Vector2(mx, my) + _parallax, mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma))
 
 	# Ground contour
 	if _animated:
@@ -241,6 +279,13 @@ func _draw() -> void:
 			fg_drift = sin(_t * 0.06) * w * 0.008
 		_tree(Vector2(w * 0.02 - fg_drift, h), h * 0.90, w, fg_a)
 		_tree(Vector2(w * 0.97 + fg_drift, h), h * 0.85, w, fg_a)
+
+	# v10.18 (menu) — aura douce qui suit le curseur : 3 cercles GOLD très discrets (off en reduced_motion).
+	if _animated and _cursor_inside and not rm:
+		for ck in 3:
+			var aura_r: float = minf(w, h) * 0.045 * (1.0 + float(ck) * 0.9)
+			var aura_a: float = 0.05 / (float(ck) + 1.0)
+			draw_circle(_cursor_pos, aura_r, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, aura_a))
 
 	# Menu decor
 	if _menu_decor:

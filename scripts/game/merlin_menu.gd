@@ -31,6 +31,22 @@ var _rule_box: HBoxContainer
 var _model_lbl: Label = null      # v10.13 (B1) : indicateur d'éveil du modèle (barre du bas)
 var _model_pulse_tw: Tween = null # pulse discret pendant le chargement (modulate sine)
 
+# v10.18 — Phase 1 : driver d'ambiance (souffle, parallaxe, aura curseur) + capture dev (env-gated).
+var _gust_timer: float = 0.0
+var _next_gust: float = 9.0
+var _moon_timer: float = 0.0
+var _next_moon: float = 14.0
+var _parallax_acc: float = 0.0
+var _cap_dir: String = ""
+var _cap_iv_ms: int = 250
+var _cap_max: int = 40
+var _cap_count: int = 0
+var _cap_last: int = 0
+var _cap_boot: int = 0
+var _last_focus_box: Control = null  # v10.18 — pour la comète de navigation
+var _walk_acc: float = 0.0           # dev : focus-walk pendant la capture
+var _walk_idx: int = 0
+
 
 func _ready() -> void:
 	MerlinVisual.load_prefs()  # v10.13.1 — préférences a11y (reduce-motion) chargées dès l'entrée
@@ -38,6 +54,8 @@ func _ready() -> void:
 	_setup_music()
 	_animate_entrance()
 	_start_idle_anims()
+	_scene_art.set_mote_density(1.35)  # menu = écran léger : motes un peu plus denses (discret)
+	_setup_dev_capture()
 	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
@@ -163,6 +181,18 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 	icon_box.custom_minimum_size = Vector2(52, 52)
 	icon_box.pivot_offset = Vector2(26, 26)  # pop de focus centré
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# v10.18 — Halo de focus (derrière le disque, invisible au repos).
+	var halo: TextureRect = TextureRect.new()
+	halo.texture = _radial_glow_tex()
+	halo.stretch_mode = TextureRect.STRETCH_SCALE
+	halo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	halo.offset_left = -18
+	halo.offset_top = -18
+	halo.offset_right = 18
+	halo.offset_bottom = 18
+	halo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	halo.modulate.a = 0.0
+	icon_box.add_child(halo)
 	var disc: Panel = Panel.new()
 	disc.set_anchors_preset(Control.PRESET_FULL_RECT)
 	disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -191,7 +221,7 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 	row.add_child(line)
 	row.add_child(_diamond())
 
-	var data: Dictionary = {"btn": btn, "glyph": g, "lbl": lbl, "disc": disc, "icon_box": icon_box, "key": glyph_key}
+	var data: Dictionary = {"btn": btn, "glyph": g, "lbl": lbl, "disc": disc, "icon_box": icon_box, "key": glyph_key, "halo": halo, "line": line}
 	_rows.append(data)
 	if enabled:
 		if cb.is_valid():
@@ -206,6 +236,7 @@ func _on_row_focus(data: Dictionary, on: bool) -> void:
 	(data["disc"] as Panel).add_theme_stylebox_override("panel", _disc_style(on))
 	(data["glyph"] as MerlinGlyph).setup(str(data["key"]), COL_BG if on else COL_DIM, 1.8)
 	(data["lbl"] as Label).add_theme_color_override("font_color", COL_GOLD if on else COL_CREAM)
+	MerlinMenuFx.focus_halo(data.get("halo") as CanvasItem, on)
 	if on:
 		# Pop bref du disque (retour visuel ≤100ms — pilier UX §21.1).
 		# Tuer le pop précédent encore en vol (navigation clavier rapide) : évite le wobble.
@@ -218,6 +249,10 @@ func _on_row_focus(data: Dictionary, on: bool) -> void:
 		data["pop_tw"] = tw
 		tw.tween_property(box, "scale", Vector2(1.10, 1.10), MerlinVisual.DUR_TAP_DOWN * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tw.tween_property(box, "scale", Vector2.ONE, MerlinVisual.DUR_TAP_UP * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		# v10.18 — charge du trait + comète de navigation depuis la rangée précédente.
+		MerlinMenuFx.connector_charge(data.get("line") as ColorRect)
+		MerlinMenuFx.comet(_last_focus_box, box, self)
+		_last_focus_box = box
 
 
 func _disc_style(selected: bool) -> StyleBoxFlat:
@@ -230,6 +265,21 @@ func _disc_style(selected: bool) -> StyleBoxFlat:
 		sb.set_border_width_all(1)
 		sb.border_color = COL_DIM
 	return sb
+
+
+# v10.18 — Texture radiale dorée pour le halo de focus (or au centre → transparent).
+func _radial_glow_tex() -> GradientTexture2D:
+	var g: Gradient = Gradient.new()
+	g.set_color(0, Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.8))
+	g.set_color(1, Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.0))
+	var t: GradientTexture2D = GradientTexture2D.new()
+	t.gradient = g
+	t.width = 96
+	t.height = 96
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5)
+	t.fill_to = Vector2(1.0, 0.5)
+	return t
 
 
 func _corner_emblem(glyph_key: String, col: Color, is_left: bool) -> void:
@@ -423,6 +473,19 @@ func _start_idle_anims() -> void:
 		var half: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
 		tb.tween_property(_title, "modulate", Color(col_bright.r, col_bright.g, col_bright.b, 1.0), half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		tb.tween_property(_title, "modulate", Color.WHITE, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# v10.18 — Shimmer ténu sur les rangées désactivées + invitation idle sur la 1re active.
+	for d in _rows:
+		if (d["btn"] as Button).disabled:
+			MerlinMenuFx.locked_shimmer(d.get("disc") as CanvasItem)
+	var first_active: Control = null
+	for d in _rows:
+		if not (d["btn"] as Button).disabled:
+			first_active = d.get("icon_box") as Control
+			break
+	if first_active != null:
+		var nudge_t: Tween = create_tween()
+		nudge_t.tween_interval(5.0)
+		nudge_t.tween_callback(MerlinMenuFx.attention_nudge.bind(first_active))
 
 
 func _breathe_glyph(g: MerlinGlyph) -> void:
@@ -438,6 +501,101 @@ func _pulse_ring(ring: MerlinRingGauge) -> void:
 	var tw: Tween = create_tween().set_loops()
 	tw.tween_method(ring.set_ratio, 0.42, 0.30, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_method(ring.set_ratio, 0.30, 0.42, d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+# ====================== AMBIANCE (Phase 1, v10.18) ======================
+## Pilote le décor vivant : souffle de forêt périodique, pulse rare de l'orbe,
+## parallaxe + aura de curseur (throttlés 30fps, désactivés en reduced_motion).
+func _process(delta: float) -> void:
+	if _scene_art == null:
+		return
+	_gust_timer += delta
+	if _gust_timer >= _next_gust:
+		_gust_timer = 0.0
+		_next_gust = randf_range(9.0, 16.0)
+		_scene_art.trigger_gust()
+	_moon_timer += delta
+	if _moon_timer >= _next_moon:
+		_moon_timer = 0.0
+		_next_moon = randf_range(12.0, 22.0)
+		_scene_art.moon_pulse()
+	_parallax_acc += delta
+	if _parallax_acc >= 1.0 / 30.0:
+		_parallax_acc = 0.0
+		_update_parallax_cursor()
+	_maybe_capture()
+	if not _cap_dir.is_empty():
+		_demo_walk(delta)
+
+
+func _update_parallax_cursor() -> void:
+	var art_rect: Rect2 = _scene_art.get_global_rect()
+	if art_rect.size.x < 4.0 or art_rect.size.y < 4.0:
+		return
+	var mouse: Vector2 = get_global_mouse_position()
+	if not MerlinVisual.reduced_motion:
+		var center: Vector2 = art_rect.position + art_rect.size * 0.5
+		var norm: Vector2 = (mouse - center) / (art_rect.size * 0.5)
+		norm.x = clampf(norm.x, -1.0, 1.0)
+		norm.y = clampf(norm.y, -1.0, 1.0)
+		_scene_art.set_parallax(norm * 6.0)
+	var inside: bool = art_rect.has_point(mouse)
+	_scene_art.set_cursor(mouse - art_rect.position, inside)
+
+
+# Capture dev (env-gated MERLIN_CAPTURE_DIR) — jamais active en prod. Motif de l'ancien CaptureRecorder.
+func _setup_dev_capture() -> void:
+	_cap_dir = OS.get_environment("MERLIN_CAPTURE_DIR")
+	if _cap_dir.is_empty():
+		return
+	var iv: String = OS.get_environment("MERLIN_CAPTURE_INTERVAL_MS")
+	if not iv.is_empty() and iv.is_valid_int():
+		_cap_iv_ms = maxi(50, int(iv))
+	var mx: String = OS.get_environment("MERLIN_CAPTURE_MAX_FRAMES")
+	if not mx.is_empty() and mx.is_valid_int():
+		_cap_max = maxi(1, int(mx))
+	if not DirAccess.dir_exists_absolute(_cap_dir):
+		DirAccess.make_dir_recursive_absolute(_cap_dir)
+	_cap_last = Time.get_ticks_msec() - _cap_iv_ms
+
+
+func _maybe_capture() -> void:
+	if _cap_dir.is_empty():
+		return
+	if _cap_boot < 3:
+		_cap_boot += 1
+		return
+	var now: int = Time.get_ticks_msec()
+	if now - _cap_last < _cap_iv_ms:
+		return
+	_cap_last = now
+	if _cap_count >= _cap_max:
+		return
+	var tex: ViewportTexture = get_viewport().get_texture()
+	if tex == null:
+		return
+	var img: Image = tex.get_image()
+	if img == null:
+		return
+	if img.get_width() > 640:
+		var ratio: float = 640.0 / float(img.get_width())
+		img.resize(640, int(float(img.get_height()) * ratio), Image.INTERPOLATE_BILINEAR)
+	img.save_png("%s/frame_%04d.png" % [_cap_dir, _cap_count])
+	_cap_count += 1
+
+
+# Dev uniquement (pendant la capture) : promène le focus pour exercer halo/comète/charge.
+func _demo_walk(delta: float) -> void:
+	_walk_acc += delta
+	if _walk_acc < 1.4:
+		return
+	_walk_acc = 0.0
+	for step in _rows.size():
+		_walk_idx = (_walk_idx + 1) % _rows.size()
+		var b: Button = _rows[_walk_idx]["btn"]
+		if not b.disabled:
+			b.grab_focus()
+			break
 
 
 # ============================== MUSIQUE ==============================
@@ -464,13 +622,23 @@ func _setup_music() -> void:
 
 
 func _on_new() -> void:
+	_confirm_row("burst")
 	MerlinTransition.change_scene(SELECTION_SCENE)
 
 
 func _on_continue() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.has_save() and run.load_run():
+		_confirm_row("spark")
 		MerlinTransition.change_scene(GAME_SCENE)
+
+
+# v10.18 — Retour de confirmation (anneau qui s'évase + flash) sur la rangée d'une clé donnée.
+func _confirm_row(key: String) -> void:
+	for d in _rows:
+		if str(d.get("key")) == key:
+			MerlinMenuFx.confirm(d.get("lbl") as Label, d.get("icon_box") as Control)
+			return
 
 
 func _on_options() -> void:
