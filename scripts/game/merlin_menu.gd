@@ -659,6 +659,9 @@ func _process(delta: float) -> void:
 		_parallax_acc = 0.0
 		_update_parallax_cursor()
 	_tick_voice(delta)
+	# Dev (MERLIN_EYE_MOOD=neutral|surprise|angry) : force l'humeur des yeux pour capture/QA.
+	if _scene_art != null and OS.has_environment("MERLIN_EYE_MOOD"):
+		_scene_art.set_eye_mood(OS.get_environment("MERLIN_EYE_MOOD"))
 	# Dev (MERLIN_AUTOCLICK) : déclenche Nouvelle Partie après ~2s pour capturer la transition zoom-parole.
 	if not _autoclick_done and OS.has_environment("MERLIN_AUTOCLICK"):
 		_autoclick_acc += delta

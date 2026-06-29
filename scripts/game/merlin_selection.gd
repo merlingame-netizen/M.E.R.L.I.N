@@ -123,7 +123,21 @@ func _add_parchemin(title: String, pitch: String) -> void:
 	v.add_child(b)
 
 	_cards_box.add_child(panel)
-	_fade_in(panel, 0.30 + 0.12 * float(_cards_box.get_child_count() - 1), 0.45)
+	_card_in(panel, 0.10 + 0.14 * float(_cards_box.get_child_count() - 1))
+
+
+# Entrée de parchemin : pop d'échelle + fondu (juice renforcé, user 2026-06-29). Pas de position
+# (l'HBox la pilote) → on anime modulate + scale (que le conteneur ne réécrit pas).
+func _card_in(node: Control, delay: float) -> void:
+	node.modulate.a = 0.0
+	node.pivot_offset = node.custom_minimum_size * 0.5
+	node.scale = Vector2(0.90, 0.90)
+	var m: float = MerlinVisual.motion()
+	var tw: Tween = node.create_tween()
+	tw.tween_interval(maxf(delay, 0.001))
+	tw.set_parallel(true)
+	tw.tween_property(node, "modulate:a", 1.0, 0.45 * m).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(node, "scale", Vector2.ONE, 0.55 * m).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_pick(title: String, pitch: String) -> void:
@@ -146,6 +160,9 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
+	# v10.20 — fond SCÈNE VIVANTE (DA alignée sur le menu, user 2026-06-29) : même monde, dimmé.
+	add_child(MerlinOrnament.scene_backdrop(0.40))
+
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -162,6 +179,10 @@ func _build_ui() -> void:
 	_title_lbl.add_theme_font_size_override("font_size", 46)
 	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_title_lbl)
+	# Filet + triskèle or (signature DA du menu).
+	var rule: HBoxContainer = MerlinOrnament.triskele_rule(24.0)
+	root.add_child(rule)
+	MerlinOrnament.spin_triskele(rule)
 
 	_cards_box = HBoxContainer.new()
 	_cards_box.add_theme_constant_override("separation", 24)

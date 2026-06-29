@@ -113,6 +113,10 @@ func _build_ui() -> void:
 	_title_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_title_lbl.add_theme_font_size_override("font_size", 34)
 	vbox.add_child(_title_lbl)
+	# Filet + triskèle or (DA alignée sur le menu, user 2026-06-29).
+	var rule: HBoxContainer = MerlinOrnament.triskele_rule(22.0)
+	vbox.add_child(rule)
+	MerlinOrnament.spin_triskele(rule)
 
 	_vol_master = _slider_row("Volume Maître", 80, vbox)
 	_vol_master.value_changed.connect(func(v: float) -> void:
