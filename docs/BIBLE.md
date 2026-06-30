@@ -1435,6 +1435,43 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   signes visuels du menu (filet INK_DIM, **triskèle or** tournant, diamant, **fond scène vivante**
   `MerlinSceneArt` dimmé). Appliqué à **Sélection** (fond vivant + filet/triskèle + parchemins en pop) et
   **Options** (filet/triskèle) → les écrans secondaires « ressemblent au menu principal » (même monde).
+- **R126 — Mise en scène de la résolution + œil-lune (2026-06-29, user)** :
+  - **Carte de scénario conservée** : à la résolution, la situation n'est plus effacée — elle reste
+    affichée **estompée** (alpha 0.55) en haut de l'encart ; l'**issue s'écrit DESSOUS** (label dédié,
+    voixée R124) séparée par un **filet or**. `_typewriter(txt, animate, target)` paramétré par cible.
+  - **Vignette d'effet** : sous le filet, un bloc compact apparaît avec **badge de degré** (couleur+label)
+    + **Δ Intégrité / Δ Corruption** (chips colorés) + **glyphes d'effet** (✚ Soin / ❖ Purge / ✦ Pioche)
+    si une carte Rare+ déclenche HEAL/PURGE/DRAW. Remplace le sceau-coin (anti « info ×2 ») ; stinger de
+    degré + micro-secousse échec conservés.
+  - **Fusion plus lente + animée** : `FUSION_DURATIONS` +~40 %/phase + phase **SWELL** (souffle du glow
+    avant l'impact) + **4e vague** d'étincelles + `FUSION_ZOOM`/shake/spark count amplifiés. Sustain
+    (attente prose, skippable) inchangée.
+  - **Œil-lune** : `MerlinSceneArt.set_watch_eyes(true)` (in-game) → les **yeux de Merlin vivent dans la
+    LUNE** (agrandie ×1.3) en permanence et **suivent le curseur** (`set_cursor` via `_process` 30 fps) +
+    **humeur** selon la situation/l'issue (rouge échec, jaune éclatante, bleu repos). `_draw_eyes(center,
+    radius)` extrait (figure OU lune) ; anti-doublon yeux du figure. Capture in-game : œil-lune confirmé.
+
+- **R127 — Factions & PNJ piliers : du prompt à la mécanique (2026-06-30, co-design user)** — 4 vagues :
+  - **Wave A — Factions + piliers dans l'arc** : tirage pondéré d'une faction par run
+    (`FACTION_WEIGHTS = [30,30,30,8]`, Corrompus rare) + son pilier PNJ (Chœur/Être/Chevalier/Compagnon) ;
+    L'Enfant = wildcard ~12 % indépendant. Injectés en tête du prompt d'arc (`faction_pilier_block`) → le
+    PNJ **apparaît à la Rencontre puis revient** à un beat tardif. Préservés à travers `begin_quest`.
+  - **Wave B — Mémoire cross-run** : `MerlinChronicle.record_end` stocke faction+pilier ; `build_skeleton`
+    relit la chronique → **même pilier re-tiré ⇒ `pnj_recog=true`** (« Il RECONNAÎT le Voyageur »). Menu
+    mode `souvenir` **nomme le pilier** croisé la dernière fois (allusion cross-run). La récurrence porte sur
+    le **pilier de faction** (relation qui se construit), jamais sur L'Enfant.
+  - **Wave C — Décor teinté par faction** : `MerlinSceneArt.set_faction()` → accent canon (Druides=vert,
+    Créatures=bleu-acier, Chevalerie=or patiné, Corrompus=violet, shift le plus marqué) modulant **lune +
+    ciel + motes**. Modulation LÉGÈRE (DA cohérente), zéro hex. Override de test `MERLIN_FACTION`.
+  - **Wave D — Offrande thématique du pilier** : au beat **Rencontre** (1×/run, **indépendante du degré**,
+    **remplace** le draft standard), le PNJ tend une **carte signée** par sa nature — `MerlinCard.pilier_bank()` :
+    Chœur = soin/purge GRATUIT · Être = pacte +Corruption · Compagnon = tentation · Chevalier = lame
+    (Offensif pur) · Enfant = piège. **Invariant** (vérifié par panel d'équilibrage adversarial) : la
+    corruption est un **coût RÉCURRENT** (payé à chaque résolution, `resolution.gd:51/95`) ⇒ toute carte
+    d'offrande **≤ 1 corruption** ; le « piège »/« tentation » est **100 % narratif** (zéro stat cachée,
+    pilier ÉVIDENT). Unicité persistée `pilier_offering_done` (R108, posée à l'ouverture du modal). Modal de
+    draft réutilisé (titre thémé par le PNJ). **Gate** : soak 200/200 avec offrandes, **taux corrompu 13.5 %
+    inchangé** vs baseline.
 
 ---
 
