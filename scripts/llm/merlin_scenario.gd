@@ -385,13 +385,24 @@ func _draw_faction_pilier() -> Dictionary:
 	return {"faction": fk, "pilier": str(FACTION_PILIER.get(fk, "choeur")), "pilier2": enfant}
 
 
+# Getters lus par merlin_game à la fin du run → mémorisés dans la chronique (récurrence PNJ cross-run).
+func current_faction() -> String:
+	return str(_run_thread.get("faction", ""))
+
+
+func current_pilier() -> String:
+	return str(_run_thread.get("pilier", ""))
+
+
 func build_skeleton(title: String, pitch: String) -> Dictionary:
 	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) — l'arc couvre la QUÊTE 1 ;
 	# begin_quest rebascule le fil à chaque transition (last_gist traverse les quêtes).
 	var fb: Dictionary = _fallback_arc()
 	var fp: Dictionary = _draw_faction_pilier()  # v10.20.2 : faction + pilier PNJ de la run (fil rouge)
+	# Récurrence : si le pilier tiré est CELUI de la run précédente (chronique), il RECONNAÎT le Voyageur.
+	var recog: bool = str(fp["pilier"]) != "" and str(fp["pilier"]) == str(MerlinChronicle.read().get("last_pilier", ""))
 	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
-		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": false}
+		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	var nq: int = 2 if _rng.randf() < 0.4 else 3
 	var quests: Array = [{"title": title, "pitch": pitch}]
 	var pool: Array = SEL_FALLBACK.duplicate(true)

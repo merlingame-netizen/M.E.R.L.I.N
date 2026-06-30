@@ -1240,7 +1240,11 @@ func _on_run_ended(_end_type: String) -> void:
 	if scen is Dictionary:
 		var sd: Dictionary = scen
 		title = str(sd.get("title", sd.get("titre", "")))
-	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")))
+	# v10.20.2 — mémorise AUSSI la faction + le pilier PNJ de la run (récurrence : reconnaissance au run suivant).
+	var sc_mem: Node = get_node_or_null("/root/MerlinScenario")
+	var faction: String = str(sc_mem.current_faction()) if sc_mem != null and sc_mem.has_method("current_faction") else ""
+	var pilier: String = str(sc_mem.current_pilier()) if sc_mem != null and sc_mem.has_method("current_pilier") else ""
+	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier)
 	# Audit design P1 : une run TERMINÉE n'a pas de save de reprise — un save ici créait une
 	# « save zombie » (Continuer rechargerait une run finie) si on quittait avant MerlinEnd.
 	run.clear_save()

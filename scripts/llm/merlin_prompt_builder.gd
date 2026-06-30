@@ -278,9 +278,14 @@ static func menu_thought(voice: String, mode: String, ctx: Dictionary) -> Dictio
 		"souvenir":
 			if runs <= 0 or last_end == "":
 				return menu_thought(voice, "salut", ctx)
-			var what: String = str(end_fr.get(last_end, "son aventure s'etait achevee"))
-			var titre: String = (" (l'aventure « %s »)" % last_title) if last_title != "" else ""
-			usr = "%s\nLa derniere fois, le Voyageur a vecu ceci : %s%s. Fais-y allusion en UNE phrase courte (max 16 mots), fier ou taquin selon l'issue, sans tout deballer." % [ctx_line, what, titre]
+			# Allusion au PNJ pilier de la run précédente (« tu te souviens du Chœur ? ») si connu — v10.20.2.
+			var pk: String = str(ctx.get("last_pilier", ""))
+			if PILIERS.has(pk):
+				usr = "%s\nLa derniere fois, le Voyageur a croise %s dans la foret. Evoque CE personnage en UNE phrase courte (max 16 mots), comme si TU t'en souvenais avec lui (tendre, taquin ou inquiet selon sa nature), sans tout deballer." % [ctx_line, str(PILIERS[pk]["nom"])]
+			else:
+				var what: String = str(end_fr.get(last_end, "son aventure s'etait achevee"))
+				var titre: String = (" (l'aventure « %s »)" % last_title) if last_title != "" else ""
+				usr = "%s\nLa derniere fois, le Voyageur a vecu ceci : %s%s. Fais-y allusion en UNE phrase courte (max 16 mots), fier ou taquin selon l'issue, sans tout deballer." % [ctx_line, what, titre]
 		"encourage":
 			usr = "%s\nEn UNE phrase courte (max 14 mots), encourage le Voyageur a repartir vers l'aventure dans la foret. Chaleureux, un brin malicieux." % ctx_line
 		"blague":

@@ -14,11 +14,13 @@ const DEFAULTS: Dictionary = {
 	"last_end_type": "", "last_scenario_title": "",
 	"last_integrite": 0, "last_corruption": 0,
 	"last_run_iso": "", "last_seen_iso": "",
+	# v10.20.2 — mémoire de la dernière run pour la RÉCURRENCE des PNJ (le pilier te reconnaît) + l'allusion menu.
+	"last_faction": "", "last_pilier": "",
 }
 
 
-# Enregistre la fin d'un run : +1 run, +1 au palmarès de l'issue, mémorise la dernière aventure.
-static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int) -> void:
+# Enregistre la fin d'un run : +1 run, +1 au palmarès de l'issue, mémorise la dernière aventure + son PNJ.
+static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "") -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(PREFS_PATH)  # préserve les autres sections (audio/a11y)
 	cfg.set_value(SECTION, "runs_played", int(cfg.get_value(SECTION, "runs_played", 0)) + 1)
@@ -33,6 +35,8 @@ static func record_end(end_type: String, scenario_title: String, integrite: int,
 	cfg.set_value(SECTION, "last_scenario_title", scenario_title)
 	cfg.set_value(SECTION, "last_integrite", integrite)
 	cfg.set_value(SECTION, "last_corruption", corruption)
+	cfg.set_value(SECTION, "last_faction", faction)
+	cfg.set_value(SECTION, "last_pilier", pilier)
 	cfg.set_value(SECTION, "last_run_iso", Time.get_datetime_string_from_system())
 	cfg.save(PREFS_PATH)
 
