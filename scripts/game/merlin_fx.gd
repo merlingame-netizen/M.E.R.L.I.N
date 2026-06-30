@@ -27,11 +27,13 @@ const FUSION_COLORS: Dictionary = {
 # Durées par phase (s) — échec court & mat, éclatante long & ample.
 # v10.20 (user 2026-06-29) : fusion PLUS LENTE + PLUS ANIMÉE — durées +~40%, phase « swell » (souffle du
 # glow) entre fuse et burst, 4e vague d'étincelles, zoom/shake amplifiés. (la sustain reste skippable.)
+# v10.20.1 (review human-mode T1) : fusion plus animée que l'origine MAIS recapée ~3–4,8 s (l'éclatante
+# 6,8 s « punissait » le bon jeu par l'attente). On raccourcit surtout `expr` (slow-mo) ; swell conservé.
 const FUSION_DURATIONS: Dictionary = {
-	"echec":     {"gather": 0.42, "fuse": 0.63, "swell": 0.30, "burst": 0.70, "expr": 1.05},
-	"partiel":   {"gather": 0.56, "fuse": 0.77, "swell": 0.38, "burst": 0.91, "expr": 1.96},
-	"reussite":  {"gather": 0.70, "fuse": 0.98, "swell": 0.42, "burst": 1.12, "expr": 2.10},
-	"eclatante": {"gather": 0.84, "fuse": 1.19, "swell": 0.50, "burst": 1.54, "expr": 2.70},
+	"echec":     {"gather": 0.40, "fuse": 0.58, "swell": 0.28, "burst": 0.62, "expr": 0.82},
+	"partiel":   {"gather": 0.50, "fuse": 0.70, "swell": 0.35, "burst": 0.80, "expr": 1.10},
+	"reussite":  {"gather": 0.60, "fuse": 0.85, "swell": 0.40, "burst": 0.95, "expr": 1.20},
+	"eclatante": {"gather": 0.70, "fuse": 1.00, "swell": 0.45, "burst": 1.20, "expr": 1.45},
 }
 const FUSION_SHAKE_PX: Dictionary = {"echec": 5.0, "partiel": 10.0, "reussite": 15.0, "eclatante": 24.0}
 const FUSION_ZOOM: Dictionary = {"echec": 1.05, "partiel": 1.08, "reussite": 1.12, "eclatante": 1.16}
@@ -324,7 +326,7 @@ func run() -> void:
 			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 				skip_box[0] = true)
 		var sustain_t0: int = Time.get_ticks_msec()
-		var deadline_ms: int = sustain_t0 + 20000  # cap large : couvre la gen LLM (≈1 tok/s) sans bloquer
+		var deadline_ms: int = sustain_t0 + 12000  # v10.20.1 (T4) : cap baissé 20→12 s → fallback procédural plus tôt
 		var next_spark_ms: int = 0
 		var next_dot_ms: int = 0
 		var dots: int = 0
@@ -337,8 +339,8 @@ func run() -> void:
 			if now >= next_dot_ms and is_instance_valid(cap_lbl):
 				next_dot_ms = now + 450
 				dots = (dots + 1) % 4
-				# Affordance de skip révélée après 4s d'attente (pilier FACILE — pas de gel perçu).
-				var hint: String = "  ·  clic pour continuer" if now - sustain_t0 > 4000 else ""
+				# v10.20.1 (T2) : affordance de skip révélée vite (1,5 s) — le joueur qui a compris avance.
+				var hint: String = "  ·  clic pour continuer" if now - sustain_t0 > 1500 else ""
 				cap_lbl.text = "Merlin tisse les fils du sort " + ".".repeat(dots) + hint
 			await get_tree().process_frame
 		if pulse != null and pulse.is_valid():

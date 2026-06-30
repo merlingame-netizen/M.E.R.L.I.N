@@ -129,8 +129,10 @@ func _maybe_game_capture() -> void:
 	var dir: String = OS.get_environment("MERLIN_CAPTURE_DIR")
 	if dir.is_empty():
 		return
+	var iv_ms: int = maxi(100, int(OS.get_environment("MERLIN_CAPTURE_INTERVAL_MS")) if OS.get_environment("MERLIN_CAPTURE_INTERVAL_MS") != "" else 700)
+	var cap_max: int = maxi(1, int(OS.get_environment("MERLIN_CAPTURE_MAX_FRAMES")) if OS.get_environment("MERLIN_CAPTURE_MAX_FRAMES") != "" else 30)
 	var now: int = Time.get_ticks_msec()
-	if now - _cap_last_ms < 700 or _cap_n >= 30:
+	if now - _cap_last_ms < iv_ms or _cap_n >= cap_max:
 		return
 	_cap_last_ms = now
 	var tex: ViewportTexture = get_viewport().get_texture()

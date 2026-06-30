@@ -498,8 +498,9 @@ func _draw() -> void:
 		var mote: Vector2 = menhir_c + Vector2(cos(_t * 2.2) * w * 0.045, sin(_t * 2.2) * h * 0.10)
 		draw_circle(mote, maxf(minf(w, h) * 0.008, 2.5), Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, dr))
 
-	# Figure
-	if _beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme":
+	# Figure — supprimée en mode œil-lune (in-game) : la présence de Merlin EST l'œil dans la lune ;
+	# la silhouette encapuchonnée occulterait les yeux (v10.20, capture QA).
+	if not _watch_eyes and (_beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme"):
 		_figure(Vector2(w * 0.5, h * 0.84), h * 0.50, w * 0.075)
 
 	# 18 ambient motes (3 categories: firefly/dust/ember)
