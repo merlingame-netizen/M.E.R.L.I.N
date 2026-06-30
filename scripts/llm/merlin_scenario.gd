@@ -363,11 +363,35 @@ func generate_selection() -> Array:
 # --- 2) SQUELETTE : CHAÎNE de quêtes (CODE). INSTANTANÉ — le pitch EST le synopsis. ---
 # v10.14 (cascade) : un run = 2-3 quêtes (40%/60%) de 2-5 beats. Quête 1 = le scénario choisi ;
 # quêtes suivantes = pitchs du pool de sélection (titres différents). Signature INCHANGÉE.
+# v10.20.2 — tirage pondéré faction + pilier PNJ (fil rouge de la run). Corrompus RARE ; L'Enfant = wildcard.
+const FACTION_KEYS: Array = ["druides", "creatures", "chevalerie", "corrompus"]
+const FACTION_WEIGHTS: Array = [30, 30, 30, 8]  # Corrompus rare (user 2026-06-30)
+const FACTION_PILIER: Dictionary = {"druides": "choeur", "creatures": "etre", "chevalerie": "chevalier", "corrompus": "compagnon"}
+
+
+func _draw_faction_pilier() -> Dictionary:
+	var total: int = 0
+	for w in FACTION_WEIGHTS:
+		total += int(w)
+	var r: int = _rng.randi_range(1, total)
+	var acc: int = 0
+	var fk: String = "druides"
+	for i in FACTION_KEYS.size():
+		acc += int(FACTION_WEIGHTS[i])
+		if r <= acc:
+			fk = str(FACTION_KEYS[i])
+			break
+	var enfant: String = "enfant" if _rng.randf() < 0.12 else ""  # L'Enfant : wildcard rare, hors faction
+	return {"faction": fk, "pilier": str(FACTION_PILIER.get(fk, "choeur")), "pilier2": enfant}
+
+
 func build_skeleton(title: String, pitch: String) -> Dictionary:
 	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) — l'arc couvre la QUÊTE 1 ;
 	# begin_quest rebascule le fil à chaque transition (last_gist traverse les quêtes).
 	var fb: Dictionary = _fallback_arc()
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
+	var fp: Dictionary = _draw_faction_pilier()  # v10.20.2 : faction + pilier PNJ de la run (fil rouge)
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": false}
 	var nq: int = 2 if _rng.randf() < 0.4 else 3
 	var quests: Array = [{"title": title, "pitch": pitch}]
 	var pool: Array = SEL_FALLBACK.duplicate(true)
@@ -442,8 +466,14 @@ func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
 	var fb: Dictionary = _fallback_arc()
 	var gist: String = str(_run_thread.get("last_gist", ""))
 	var bridge: String = str(_run_thread.get("bridge", ""))  # v10.20.1 : le pont TRAVERSE les quêtes
+	# v10.20.2 : la faction + le pilier PNJ (fil rouge) sont RUN-wide → ils survivent à la transition de quête.
+	var faction: String = str(_run_thread.get("faction", ""))
+	var pilier: String = str(_run_thread.get("pilier", ""))
+	var pilier2: String = str(_run_thread.get("pilier2", ""))
+	var recog: bool = bool(_run_thread.get("pnj_recog", false))
 	_run_thread = {"title": str(qv.get("title", "")), "pitch": str(qv.get("pitch", "")),
-		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
+		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+		"faction": faction, "pilier": pilier, "pilier2": pilier2, "pnj_recog": recog}
 	prepare_arc(qv)  # fire-and-forget — l'arc LLM remplace le fallback s'il gagne la course
 
 
@@ -685,7 +715,11 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 	var mn: Node = _mn()
 	if mn == null or not mn.is_ready():
 		return []
-	var p: Dictionary = MerlinPromptBuilder.arc(scenario, req_tags)
+	# v10.20.2 — couleur de faction + pilier PNJ (fil rouge) injectés dans l'arc → le LLM les tisse.
+	var fblock: String = MerlinPromptBuilder.faction_pilier_block(
+		str(_run_thread.get("faction", "")), str(_run_thread.get("pilier", "")),
+		str(_run_thread.get("pilier2", "")), bool(_run_thread.get("pnj_recog", false)))
+	var p: Dictionary = MerlinPromptBuilder.arc(scenario, req_tags, fblock)
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return []

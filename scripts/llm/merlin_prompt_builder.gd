@@ -37,6 +37,42 @@ const TAG_CUE: Dictionary = {
 }
 
 
+# v10.20.2 (user 2026-06-30) — FACTIONS + PILIERS PNJ canon (BIBLE §11-§15, §36-§40) injectés dans les
+# prompts pour que CHAQUE run porte une couleur de faction + un PNJ récurrent (fil rouge). Toutes brisées
+# par le Graal → enfermées dans la RÉPÉTITION (Druides glitchent, Créatures bouclent, Chevaliers rejouent).
+const FACTIONS: Dictionary = {
+	"druides": {"nom": "les Druides", "ton": "gardiens du savoir qui GLITCHENT — ils répètent un rituel dont le sens s'est effacé, persuadés que cela retient le pire ; solennité qui boucle, formules qui reviennent."},
+	"creatures": {"nom": "les Créatures & Êtres", "ton": "une mosaïque d'entités DÉSUNIES, piégées dans des boucles — elles rejouent scènes et pactes à l'infini, changeantes, insaisissables."},
+	"chevalerie": {"nom": "la Chevalerie déchue", "ton": "des chevaliers arthuriens brisés qui REJOUENT leur défaite — honneur en ruine, serments répétés dans le vide, gloire fantôme."},
+	"corrompus": {"nom": "les Corrompus", "ton": "le bug fait chair — une force diffuse qui ronge, d'anciens alliés défigurés, une fausse paix qui appelle à céder."},
+}
+# 5 piliers : 1 par faction + L'Enfant (hors-faction, wildcard). Fiche = identité + voix + offrande.
+const PILIERS: Dictionary = {
+	"choeur": {"nom": "le Chœur des Druides", "fiche": "un duo de druides au regard absent qui bouclent un rite vidé de sens. VOIX solennelle qui SE RÉPÈTE (formules qui reviennent, glitch audible). Distant, jamais hostile d'emblée ; offre équilibre et soin à qui respecte les rites."},
+	"etre": {"nom": "l'Être Indéfinissable", "fiche": "une forme qui MUE sans jamais se fixer (jamais le même). VOIX joueuse, malicieuse, à double-sens (énigmes, demi-vérités, il rit et taquine). C'est un TENTATEUR : il propose des pactes — du pouvoir contre de la Corruption."},
+	"chevalier": {"nom": "le Chevalier déchu", "fiche": "un chevalier à l'armure ternie qui rejoue sans fin une défaite. VOIX grave, honneur blessé, serments répétés ; il cherche une rédemption qu'il ne trouve pas, et peut tendre une lame à qui relève son honneur."},
+	"compagnon": {"nom": "le Compagnon Perdu", "fiche": "un ancien compagnon de route AIMÉ, désormais méconnaissable — des bribes de l'ancien affleurent (un geste, un mot). VOIX douce, tentatrice, fausse paix ('viens te reposer, l'abandon est doux'). Il pousse le Voyageur à CÉDER, à le rejoindre."},
+	"enfant": {"nom": "l'Enfant", "fiche": "un enfant perdu d'une innocence désarmante qui CHERCHE à se rapprocher. VOIX simple, directe, candide — il pose les questions que nul n'ose. Présenté comme précieux, à protéger. (Joue l'innocence PURE — ne laisse JAMAIS deviner qu'il est autre chose.)"},
+}
+
+
+# Bloc de contexte FACTION + PILIER injecté en tête du prompt d'arc → le LLM tisse le ton de la faction
+# et fait apparaître/revenir le PNJ. `recog` = le PNJ reconnaît le Voyageur (mémoire cross-run).
+static func faction_pilier_block(faction_key: String, pilier_key: String, pilier2_key: String = "", recog: bool = false) -> String:
+	var out: String = ""
+	if FACTIONS.has(faction_key):
+		var f: Dictionary = FACTIONS[faction_key]
+		out += "DOMAINE de l'aventure : %s — %s Que CE ton imprègne les scènes (sans jamais dire le mot 'faction').\n" % [str(f["nom"]), str(f["ton"])]
+	if PILIERS.has(pilier_key):
+		var p: Dictionary = PILIERS[pilier_key]
+		var rg: String = " Il RECONNAÎT le Voyageur, déjà croisé jadis." if recog else ""
+		out += "Un personnage RÉCURRENT traverse l'aventure — %s : %s%s Fais-le APPARAÎTRE à l'ÉTAPE 2 (la rencontre) puis REVENIR à une étape plus tardive (sa présence relie les scènes).\n" % [str(p["nom"]), str(p["fiche"]), rg]
+	if PILIERS.has(pilier2_key):
+		var p2: Dictionary = PILIERS[pilier2_key]
+		out += "Une autre présence s'invite par moments — %s : %s\n" % [str(p2["nom"]), str(p2["fiche"])]
+	return out
+
+
 # LLM réservé aux MOMENTS FORTS (Climax ou réussite éclatante) → réduit les rafales d'appels
 # séquentiels qui stallent le moteur natif (générations en série). Ailleurs : procédural seul. (user 2026-05-29)
 # Source de vérité unique (A4) : merlin_scenario.is_strong_moment délègue ici.
@@ -72,7 +108,7 @@ static func opening(scenario: Dictionary) -> Dictionary:
 
 # --- ARC NARRATIF : 5 étapes liées, CHACUNE construite autour de ses 2 tags requis (req_tags) →
 #     la scène DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés). ---
-static func arc(scenario: Dictionary, req_tags: Array) -> Dictionary:
+static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "") -> Dictionary:
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
 	var roles: Array = [
@@ -90,7 +126,7 @@ static func arc(scenario: Dictionary, req_tags: Array) -> Dictionary:
 			cues.append(str(TAG_CUE.get(str(t), str(t))))
 		var cue_txt: String = " ET ".join(cues) if cues.size() > 0 else "agir"
 		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [i + 1, str(roles[i]), cue_txt]
-	var usr: String = ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a Broceliande. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch]) + steps + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, et FINIT sur l'instant ou le Voyageur doit agir (« Que decida le Voyageur ? »).\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir. Que decida le Voyageur ?\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
+	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a Broceliande. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch]) + steps + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, et FINIT sur l'instant ou le Voyageur doit agir (« Que decida le Voyageur ? »).\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir. Que decida le Voyageur ?\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": 340, "label": "arc narratif (5 étapes)"}}
 
 
