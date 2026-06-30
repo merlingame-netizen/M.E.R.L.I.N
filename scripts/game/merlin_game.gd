@@ -49,6 +49,9 @@ var _res_block: VBoxContainer = null
 var _res_rule: ColorRect = null
 var _effect_vignette: HBoxContainer = null
 var _resolution_text: RichTextLabel = null
+# v10.20.1 (review O1) — feedforward : forces DEMANDÉES par la scène + couverture live (anti « jouer à l'aveugle »).
+var _req_row: HBoxContainer = null
+var _req_chips: Array = []  # [{tag:String, panel:PanelContainer, label:Label}]
 # Garde anti-clobber : incrémenté à CHAQUE transition d'affichage (nouvelle situation,
 # issue affichée, fin de run). Un enrichissement LLM en arrière-plan ne remplace le texte
 # QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
@@ -296,6 +299,7 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
 		_scene_art.set_eye_mood(MerlinSceneArt.mood_for_text(str(situ.get("narration", ""))))  # v10.20 : œil-lune réagit
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
+	_show_required_tags(situ.get("required_tags", []))  # v10.20.1 (O1) : feedforward des forces demandées
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
 	# jamais pendant la lecture (Wave1 : amplitude ≤2px), off en reduce-motion (pastille = info).
 	if animate and _corruption_palier >= 2 and not MerlinVisual.reduced_motion and _situ_panel != null:
@@ -435,6 +439,7 @@ func _find_card_view(box: Control, card: MerlinCard) -> MerlinCardView:
 
 
 func _update_preview() -> void:
+	_update_tag_coverage()  # v10.20.1 (O1) : couverture live à CHAQUE changement de combo (même <2 cartes)
 	# v10.6 : le geste canonique = COMBO de 2 cartes. La résolution n'est active qu'à 2 cartes.
 	var n: int = _combo.size()
 	if n < 2:
@@ -451,6 +456,59 @@ func _update_preview() -> void:
 	# v10.4 — pré-génération LLM spéculative pendant la pose (user 2026-06-06). Dédupé par signature
 	# combo côté MerlinScenario ; au clic Résolution le texte est souvent déjà prêt (cache-hit).
 	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, _combo.duplicate(), res)
+
+
+# v10.20.1 (O1) — affiche les forces DEMANDÉES par la scène (feedforward, anti « jouer à l'aveugle »).
+func _show_required_tags(tags: Array) -> void:
+	if _req_row == null:
+		return
+	for c in _req_row.get_children():
+		c.queue_free()
+	_req_chips.clear()
+	if tags.is_empty():
+		_req_row.visible = false
+		return
+	var prefix: Label = Label.new()
+	prefix.text = "Ce lieu réclame"
+	prefix.add_theme_color_override("font_color", MerlinVisual.INK_DIM)
+	prefix.add_theme_font_size_override("font_size", 18)
+	prefix.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_req_row.add_child(prefix)
+	for t in tags:
+		var panel: PanelContainer = PanelContainer.new()
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var lbl: Label = Label.new()
+		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(lbl)
+		_req_row.add_child(panel)
+		_req_chips.append({"tag": str(t), "panel": panel, "label": lbl})
+	_req_row.visible = true
+	_update_tag_coverage()
+
+
+# Couverture live : un tag requis est « couvert » si une carte posée du combo le porte. ✓ doré / ○ estompé.
+func _update_tag_coverage() -> void:
+	if _req_chips.is_empty():
+		return
+	var have: Dictionary = {}
+	for c in _combo:
+		if c is MerlinCard:
+			for tg in c.tags:
+				have[str(tg)] = true
+	for chip in _req_chips:
+		var covered: bool = have.has(str(chip["tag"]))
+		var col: Color = MerlinVisual.GOLD if covered else MerlinVisual.INK_DIM
+		var sb: StyleBoxFlat = StyleBoxFlat.new()
+		sb.bg_color = Color(col.r, col.g, col.b, 0.20 if covered else 0.06)
+		sb.set_corner_radius_all(8)
+		sb.set_border_width_all(1)
+		sb.border_color = col
+		sb.set_content_margin_all(7)
+		(chip["panel"] as PanelContainer).add_theme_stylebox_override("panel", sb)
+		var lbl: Label = chip["label"]
+		lbl.text = ("✓ " if covered else "○ ") + str(chip["tag"])
+		lbl.add_theme_color_override("font_color", MerlinVisual.INK if covered else MerlinVisual.INK_DIM)
 
 
 func _on_resolve() -> void:
@@ -555,6 +613,8 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	# DESSOUS, avec une VIGNETTE D'EFFET (degré + Δ jauges + effets de carte). Le degré vit dans la vignette
 	# (plus de sceau en coin — anti « info ×2 », B9 préservé).
 	_situation_text.modulate.a = 0.55
+	if _req_row != null:
+		_req_row.visible = false  # la rangée « réclame » cède la place au bloc résolution
 	_build_effect_vignette(res, degree)
 	if _res_block != null:
 		_res_block.visible = true
@@ -1603,6 +1663,14 @@ func _build_ui() -> void:
 	_situation_text.add_theme_color_override("default_color", COL_INK)
 	_situation_text.add_theme_font_size_override("normal_font_size", 36)  # narratif ample (user 2026-06-06)
 	situ_center.add_child(_situation_text)
+
+	# v10.20.1 (O1) — Rangée FEEDFORWARD : forces que la scène réclame + couverture live. Sous la situation.
+	_req_row = HBoxContainer.new()
+	_req_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_req_row.add_theme_constant_override("separation", 10)
+	_req_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_req_row.visible = false
+	inner.add_child(_req_row)
 
 	# v10.20 — Bloc RÉSOLUTION sous la situation (la « carte de scénario » reste affichée, estompée ;
 	# l'issue s'écrit dessous, avec une vignette d'effet). user 2026-06-29. Caché hors résolution.
