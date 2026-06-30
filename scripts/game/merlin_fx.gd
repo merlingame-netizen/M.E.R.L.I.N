@@ -316,6 +316,22 @@ func run() -> void:
 		cap_lbl.modulate.a = 0.0
 		add_child(cap_lbl)
 		create_tween().tween_property(cap_lbl, "modulate:a", 0.85, 0.4)
+		# R128 (user 2026-06-30) — barre de progression « où on en est ». Gemma ne streame PAS (texte d'un bloc)
+		# → progression HEURISTIQUE temps écoulé, plafonnée à 0.90 jusqu'à ce que l'issue soit prête, puis 100 %.
+		var bar_w: float = 360.0
+		var bar_track: ColorRect = ColorRect.new()
+		bar_track.color = Color(MerlinVisual.INK.r, MerlinVisual.INK.g, MerlinVisual.INK.b, 0.50)
+		bar_track.size = Vector2(bar_w, 6.0)
+		bar_track.position = Vector2((screen_size.x - bar_w) * 0.5, screen_size.y * 0.655)
+		bar_track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar_track.modulate.a = 0.0
+		add_child(bar_track)
+		var bar_fill: ColorRect = ColorRect.new()
+		bar_fill.color = MerlinVisual.GOLD
+		bar_fill.size = Vector2(0.0, 6.0)
+		bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar_track.add_child(bar_fill)
+		create_tween().tween_property(bar_track, "modulate:a", 0.85, 0.4)
 		var pulse: Tween = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		pulse.tween_property(glow, "color:a", 0.18, 0.9)
 		pulse.tween_property(glow, "color:a", 0.06, 0.9)
@@ -330,9 +346,20 @@ func run() -> void:
 		var next_spark_ms: int = 0
 		var next_dot_ms: int = 0
 		var dots: int = 0
+		# R128 — petits sons de « réflexion magique » (point d'interrogation), espacés 3-5 s, JAMAIS superposés
+		# (seule source sonore du sustain : voix de situation finie, voix d'issue pas commencée).
+		var next_think_ms: int = sustain_t0 + 1200
+		var think_sfx: Array = ["question_transition", "ogham_chime", "magic_reveal"]
+		var think_idx: int = 0
 		while is_inside_tree() and is_instance_valid(glow) and not skip_box[0] \
 				and not _is_ready() and Time.get_ticks_msec() < deadline_ms:
 			var now: int = Time.get_ticks_msec()
+			if is_instance_valid(bar_fill):
+				bar_fill.size.x = minf(0.90, float(now - sustain_t0) / 10000.0) * bar_w  # progression estimée (plafond 0.90)
+			if now >= next_think_ms:
+				next_think_ms = now + randi_range(3000, 5000)  # cadence 3-5 s, jamais superposé
+				MerlinAudio.play_sfx(str(think_sfx[think_idx % think_sfx.size()]))
+				think_idx += 1
 			if now >= next_spark_ms:
 				next_spark_ms = now + 2200
 				spark_wave(center, glow_col, 8, 1.8, 60.0, 40.0, Vector2(1.6, 1.6), 0.5)
@@ -345,6 +372,13 @@ func run() -> void:
 			await get_tree().process_frame
 		if pulse != null and pulse.is_valid():
 			pulse.kill()
+		if is_instance_valid(bar_fill):
+			bar_fill.size.x = bar_w  # issue prête → barre pleine (100 %), honnête : on n'atteint 100 % qu'ici
+		if is_instance_valid(bar_track):
+			var bout: Tween = bar_track.create_tween()
+			bout.tween_interval(0.18)
+			bout.tween_property(bar_track, "modulate:a", 0.0, 0.22)
+			bout.tween_callback(bar_track.queue_free)
 		if is_instance_valid(cap_lbl):
 			cap_lbl.queue_free()
 		if is_inside_tree() and is_instance_valid(glow):

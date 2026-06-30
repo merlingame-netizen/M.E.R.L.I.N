@@ -1473,6 +1473,25 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
     draft réutilisé (titre thémé par le PNJ). **Gate** : soak 200/200 avec offrandes, **taux corrompu 13.5 %
     inchangé** vs baseline.
 
+- **R128 — Résolution « suite de l'histoire » + attente LLM enrichie (2026-06-30, user)** — immersion narrative :
+  - **Issue dans le MÊME fil** : l'issue ne s'écrit plus dans un bloc séparé estompé sous un filet or (R126
+    révisé) ; elle se révèle **à la suite de la situation, dans le MÊME label** (`_situation_text`), qui reste
+    **pleine opacité**. `_typewriter(txt, animate, target, from_chars)` : nouveau `from_chars` → l'animation
+    part de la fin de la situation, seule l'issue se révèle. La **vignette d'effet** (degré + Δ jauges + effets)
+    apparaît **compacte SOUS le texte, APRÈS** le typewriter (`_on_typewriter_done` state 2). Source du texte
+    situation = ce qui est **réellement affiché** (gère l'enrichissement LLM). Plus de filet or, plus
+    d'estompage 0.55.
+  - **Feedforward « Ce lieu réclame » RETIRÉ** (revient sur O1) : choix d'immersion ; la lisibilité repose sur
+    la prose + les glyphes de tag des cartes. `_show_required_tags`/`_update_tag_coverage` supprimés.
+  - **Attente LLM enrichie** (sustain, merlin_fx, UNIQUEMENT en génération réelle / cache-miss) : Merlin
+    **réfléchit** (`MerlinSceneArt.set_thinking(true)` enfin branché → halo lune accéléré pendant fusion+attente)
+    + **barre de progression** « où on en est » (Gemma ne streame pas → heuristique temps écoulé, **plafond 0.90
+    jusqu'au prêt**, puis 100 % — jamais de faux 100 %) + **petits sons de réflexion** (question_transition /
+    ogham_chime / magic_reveal en rotation, **espacés 3-5 s, jamais superposés** — seule source sonore du
+    sustain). Cap 12 s + skip inchangés (on enrichit la QUALITÉ de l'attente, pas sa durée).
+  - **Selection** : « son de point » (`quill_tick` toutes les 0.6 s pendant « Merlin rêve les trois sentiers »)
+    **retiré** — les points « … » restent visuels.
+
 ---
 
 ## §19 — R114 · Montée en gamme « Fondations » (2026-06-12)

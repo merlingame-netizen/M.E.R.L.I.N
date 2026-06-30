@@ -27,7 +27,6 @@ var _overlay_lbl: Label
 var _overlay_skip_lbl: Label
 var _busy: bool = false
 var _overlay_dots_tw: Tween = null
-var _overlay_quill_tw: Tween = null
 var _overlay_pulse_tw: Tween = null
 var _overlay_base_txt: String = ""
 var _overlay_skipped: bool = false
@@ -269,11 +268,8 @@ func _show_overlay(txt: String) -> void:
 	for suffix in ["", "  ·", "  · ·", "  · · ·"]:
 		_overlay_dots_tw.tween_callback(_set_overlay_suffix.bind(suffix))
 		_overlay_dots_tw.tween_interval(0.4)
-	if _overlay_quill_tw != null and _overlay_quill_tw.is_valid():
-		_overlay_quill_tw.kill()
-	_overlay_quill_tw = create_tween().set_loops()
-	_overlay_quill_tw.tween_interval(0.6)
-	_overlay_quill_tw.tween_callback(func() -> void: MerlinAudio.play_sfx("quill_tick", randf_range(0.88, 1.04)))
+	# Note (user 2026-06-30) : le « son de point » (quill_tick toutes les 0.6 s) est RETIRÉ — jugé inutile.
+	# Les points « … » restent purement visuels.
 
 
 func _set_overlay_suffix(suffix: String) -> void:
@@ -301,11 +297,10 @@ func _hide_overlay() -> void:
 	if _overlay_art != null:
 		_overlay_art.set_thinking(false)
 		_overlay_art.set_animated(false)  # stoppe les redraws du décor une fois le montage fini
-	for tw in [_overlay_dots_tw, _overlay_quill_tw, _overlay_pulse_tw]:
+	for tw in [_overlay_dots_tw, _overlay_pulse_tw]:
 		if tw != null and tw.is_valid():
 			tw.kill()
 	_overlay_dots_tw = null
-	_overlay_quill_tw = null
 	_overlay_pulse_tw = null
 
 

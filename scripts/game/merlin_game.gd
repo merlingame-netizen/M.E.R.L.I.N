@@ -43,15 +43,13 @@ var _state: int = 0  # 0=loading 1=playing 2=resolving
 var _eye_cursor_acc: float = 0.0  # v10.20 — throttle du suivi curseur de l'œil-lune (yeux de Merlin)
 var _cap_last_ms: int = 0         # dev capture in-game
 var _cap_n: int = 0
-var _tw_target: RichTextLabel = null  # v10.20 — cible du typewriter (situation OU résolution)
-# v10.20 — bloc RÉSOLUTION sous la situation (situation conservée+estompée) + vignette d'effet. user 2026-06-29.
+var _tw_target: RichTextLabel = null  # v10.20 — cible du typewriter (situation, qui porte aussi l'issue R128)
+# v10.21 (user 2026-06-30) — l'issue s'écrit À LA SUITE de la situation, dans le MÊME fil (_situation_text).
+# _res_block ne porte plus que la VIGNETTE d'effet, qui apparaît SOUS le texte APRÈS le typewriter de l'issue.
 var _res_block: VBoxContainer = null
-var _res_rule: ColorRect = null
 var _effect_vignette: HBoxContainer = null
-var _resolution_text: RichTextLabel = null
-# v10.20.1 (review O1) — feedforward : forces DEMANDÉES par la scène + couverture live (anti « jouer à l'aveugle »).
-var _req_row: HBoxContainer = null
-var _req_chips: Array = []  # [{tag:String, panel:PanelContainer, label:Label}]
+var _pending_res: Dictionary = {}    # res/degré mémorisés au resolve → fade-in vignette post-typewriter
+var _pending_degree: String = ""
 # Garde anti-clobber : incrémenté à CHAQUE transition d'affichage (nouvelle situation,
 # issue affichée, fin de run). Un enrichissement LLM en arrière-plan ne remplace le texte
 # QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
@@ -223,11 +221,10 @@ func _present_current_beat() -> void:
 	vout.tween_callback(veil.queue_free)
 	_interstitial_open = false  # v10.13 (B3) : défense — l'interstitiel est forcément clos ici
 	_clear_degree_seal()        # v10.13 (B9) : le sceau du beat précédent ne survit pas au suivant
-	# v10.20 — reset du bloc résolution : nouvelle situation pleine opacité, vignette/issue cachées.
+	# v10.21 — reset au nouveau beat : situation pleine opacité, vignette d'effet cachée (l'issue R128 vit
+	# dans _situation_text, réécrit par _show_situation au beat suivant).
 	if _res_block != null:
 		_res_block.visible = false
-	if _resolution_text != null:
-		_resolution_text.text = ""
 	if _situation_text != null:
 		_situation_text.modulate.a = 1.0
 	# v10.14 — frontière de quête (chaîne) : la map repart sur la quête courante et le fil
@@ -302,7 +299,7 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 			_scene_art.set_faction(str(sc_f.current_faction()))
 		_scene_art.set_eye_mood(MerlinSceneArt.mood_for_text(str(situ.get("narration", ""))))  # v10.20 : œil-lune réagit
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
-	_show_required_tags(situ.get("required_tags", []))  # v10.20.1 (O1) : feedforward des forces demandées
+	# v10.21 — feedforward « Ce lieu réclame » RETIRÉ (user 2026-06-30) : immersion narrative ; l'issue continue le fil.
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
 	# jamais pendant la lecture (Wave1 : amplitude ≤2px), off en reduce-motion (pastille = info).
 	if animate and _corruption_palier >= 2 and not MerlinVisual.reduced_motion and _situ_panel != null:
@@ -442,7 +439,6 @@ func _find_card_view(box: Control, card: MerlinCard) -> MerlinCardView:
 
 
 func _update_preview() -> void:
-	_update_tag_coverage()  # v10.20.1 (O1) : couverture live à CHAQUE changement de combo (même <2 cartes)
 	# v10.6 : le geste canonique = COMBO de 2 cartes. La résolution n'est active qu'à 2 cartes.
 	var n: int = _combo.size()
 	if n < 2:
@@ -459,59 +455,6 @@ func _update_preview() -> void:
 	# v10.4 — pré-génération LLM spéculative pendant la pose (user 2026-06-06). Dédupé par signature
 	# combo côté MerlinScenario ; au clic Résolution le texte est souvent déjà prêt (cache-hit).
 	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, _combo.duplicate(), res)
-
-
-# v10.20.1 (O1) — affiche les forces DEMANDÉES par la scène (feedforward, anti « jouer à l'aveugle »).
-func _show_required_tags(tags: Array) -> void:
-	if _req_row == null:
-		return
-	for c in _req_row.get_children():
-		c.queue_free()
-	_req_chips.clear()
-	if tags.is_empty():
-		_req_row.visible = false
-		return
-	var prefix: Label = Label.new()
-	prefix.text = "Ce lieu réclame"
-	prefix.add_theme_color_override("font_color", MerlinVisual.INK_DIM)
-	prefix.add_theme_font_size_override("font_size", 18)
-	prefix.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_req_row.add_child(prefix)
-	for t in tags:
-		var panel: PanelContainer = PanelContainer.new()
-		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var lbl: Label = Label.new()
-		lbl.add_theme_font_size_override("font_size", 18)
-		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		panel.add_child(lbl)
-		_req_row.add_child(panel)
-		_req_chips.append({"tag": str(t), "panel": panel, "label": lbl})
-	_req_row.visible = true
-	_update_tag_coverage()
-
-
-# Couverture live : un tag requis est « couvert » si une carte posée du combo le porte. ✓ doré / ○ estompé.
-func _update_tag_coverage() -> void:
-	if _req_chips.is_empty():
-		return
-	var have: Dictionary = {}
-	for c in _combo:
-		if c is MerlinCard:
-			for tg in c.tags:
-				have[str(tg)] = true
-	for chip in _req_chips:
-		var covered: bool = have.has(str(chip["tag"]))
-		var col: Color = MerlinVisual.GOLD if covered else MerlinVisual.INK_DIM
-		var sb: StyleBoxFlat = StyleBoxFlat.new()
-		sb.bg_color = Color(col.r, col.g, col.b, 0.20 if covered else 0.06)
-		sb.set_corner_radius_all(8)
-		sb.set_border_width_all(1)
-		sb.border_color = col
-		sb.set_content_margin_all(7)
-		(chip["panel"] as PanelContainer).add_theme_stylebox_override("panel", sb)
-		var lbl: Label = chip["label"]
-		lbl.text = ("✓ " if covered else "○ ") + str(chip["tag"])
-		lbl.add_theme_color_override("font_color", MerlinVisual.INK if covered else MerlinVisual.INK_DIM)
 
 
 func _on_resolve() -> void:
@@ -563,8 +506,12 @@ func _on_resolve() -> void:
 	for c in _combo_box.get_children():
 		if c is MerlinCardView:
 			vues_du_combo.append(c)
+	if _scene_art != null:
+		_scene_art.set_thinking(true)  # R128 : Merlin « réfléchit » (halo lune accéléré) pendant la fusion + l'attente LLM
 	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, func() -> bool: return sc.is_resolution_ready(played_cards, res))
 	await fx.run()
+	if _scene_art != null and is_instance_valid(_scene_art):
+		_scene_art.set_thinking(false)  # l'issue est prête → Merlin cesse de réfléchir, l'issue s'écrit
 	if not _fresh(ep):
 		return  # scène quittée pendant la fusion (sécurité epoch + tree-check)
 	if _scene_art != null:
@@ -612,25 +559,28 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	var degree: String = str(res["degree"])
 	var deg_col: Color = _degree_color(degree)
 	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)
-	# v10.20 (user 2026-06-29) : on CONSERVE la « carte de scénario » (situation estompée) ; l'issue s'écrit
-	# DESSOUS, avec une VIGNETTE D'EFFET (degré + Δ jauges + effets de carte). Le degré vit dans la vignette
-	# (plus de sceau en coin — anti « info ×2 », B9 préservé).
-	_situation_text.modulate.a = 0.55
-	if _req_row != null:
-		_req_row.visible = false  # la rangée « réclame » cède la place au bloc résolution
-	_build_effect_vignette(res, degree)
-	if _res_block != null:
-		_res_block.visible = true
+	# v10.21 (user 2026-06-30, R128) : l'issue s'écrit À LA SUITE de la situation, dans le MÊME fil de prose —
+	# la situation reste PLEINE (plus d'estompage 0.55), plus de filet or. La vignette d'effet (degré + Δ jauges)
+	# apparaît SOUS le texte APRÈS le typewriter (différée → _on_typewriter_done via _pending_res/_pending_degree).
+	_pending_res = res
+	_pending_degree = degree
 	if degree == "echec" and not MerlinVisual.reduced_motion and _situ_panel != null:
 		MerlinFx.shake(_situ_panel, 4.0, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())  # l'échec se SENT (B9)
-	_play_seal_audio(degree)  # stinger de degré (conservé de l'ancien sceau) — seal_stamp + stinger
+	_play_seal_audio(degree)  # stinger de degré (seal_stamp + stinger)
 	# Humeur de l'œil-lune selon l'issue : échec → rouge, éclatante → jaune, sinon depuis le texte.
 	if _scene_art != null:
 		var mood: String = "angry" if degree == "echec" else ("surprise" if degree == "eclatante" else MerlinSceneArt.mood_for_text(narration))
 		_scene_art.set_eye_mood(mood)
-	_typewriter("[center]%s[/center]" % narration, animate, _resolution_text)  # l'issue s'écrit (voixée) dans son label
-	if animate and _resolution_text != null:
-		_pop(_resolution_text, 1.03)  # léger "thump" à la révélation de l'issue
+	# Texte COMBINÉ : ce qui est RÉELLEMENT affiché (situation, éventuellement enrichie) + l'issue, à la suite.
+	# _typewriter(from_chars = longueur situation) → seule l'issue se révèle, la situation reste écrite.
+	var cur: String = _situation_text.text
+	var situ_chars: int = _situation_text.get_total_character_count()
+	var combined: String
+	if cur.ends_with("[/center]"):
+		combined = cur.substr(0, cur.length() - 9) + "\n\n%s[/center]" % narration  # 9 = len("[/center]")
+	else:
+		combined = "[center]%s\n\n%s[/center]" % [cur, narration]
+	_typewriter(combined, animate, _situation_text, situ_chars)
 
 
 # v10.20 — Vignette d'effet (sous le filet) : badge de degré + Δ jauges + glyphes d'effet de carte. Fondu d'entrée.
@@ -984,7 +934,13 @@ func _on_typewriter_done() -> void:
 		_set_caret(true)
 		return
 	if _state == 2:
-		# Issue entièrement écrite → avance au clic + caret « continuer » clignotant.
+		# Issue entièrement écrite → la VIGNETTE d'effet (degré + Δ jauges + effets) apparaît SOUS le texte
+		# (R128 : compacte, après coup, sans casser la prose), puis avance au clic + caret « continuer ».
+		if not _pending_res.is_empty():
+			_build_effect_vignette(_pending_res, _pending_degree)
+			if _res_block != null:
+				_res_block.visible = true
+			_pending_res = {}
 		_can_advance = true
 		if _caret != null:
 			_caret.text = "▮ cliquer pour continuer"
@@ -1325,7 +1281,9 @@ func _goto_end() -> void:
 	MerlinTransition.change_scene(END_SCENE)
 
 
-func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null) -> void:
+# R128 — `from_chars` : pour la CONTINUATION (issue à la suite de la situation), l'animation part de la fin de
+# la situation (visible_characters = from_chars) → seule la portion ajoutée se révèle ; le reste demeure écrit.
+func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null, from_chars: int = 0) -> void:
 	var lbl: RichTextLabel = target if target != null else _situation_text
 	_tw_target = lbl
 	if _prose_tw != null and _prose_tw.is_valid():
@@ -1337,22 +1295,24 @@ func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null
 		lbl.visible_characters = -1  # tout révélé (swap d'enrichissement)
 		_on_typewriter_done()
 		return
-	lbl.visible_characters = 0
 	var n: int = lbl.get_total_character_count()
-	if n <= 0:
+	var start: int = clampi(from_chars, 0, n)
+	lbl.visible_characters = start
+	if n <= start:
 		_on_typewriter_done()
 		return
 	if _state == 1 or _state == 2 or _interstitial_open:
 		_show_skip_hint()  # affordance « clic = passer » visible DÈS le début (user 2026-06-07)
 	_tw_tick_count = 0
-	var dur: float = clampf(float(n) / 30.0, 0.8, 10.0)
+	var added: int = n - start  # nombre de caractères réellement animés (l'issue seule en continuation)
+	var dur: float = clampf(float(added) / 30.0, 0.8, 10.0)
 	_tw = create_tween()
 	_tw.tween_property(lbl, "visible_characters", n, dur)
 	_tw.finished.connect(_on_typewriter_done)
 	if _quill_tw != null and _quill_tw.is_valid():
 		_quill_tw.kill()
-	var tick_interval: float = dur / maxf(float(n), 1.0) * 3.0
-	var tick_count: int = maxi(n / 3, 1)
+	var tick_interval: float = dur / maxf(float(added), 1.0) * 3.0
+	var tick_count: int = maxi(added / 3, 1)
 	# v10.20 — Merlin PARLE : sa VOIX procédurale accompagne sa prose (humeur depuis le texte), à la place
 	# du quill (user 2026-06-29 : « il faut ce son dans toutes les scenes où il parle »).
 	var mood: String = MerlinSceneArt.mood_for_text(txt)
@@ -1741,48 +1701,19 @@ func _build_ui() -> void:
 	_situation_text.add_theme_font_size_override("normal_font_size", 36)  # narratif ample (user 2026-06-06)
 	situ_center.add_child(_situation_text)
 
-	# v10.20.1 (O1) — Rangée FEEDFORWARD : forces que la scène réclame + couverture live. Sous la situation.
-	_req_row = HBoxContainer.new()
-	_req_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_req_row.add_theme_constant_override("separation", 10)
-	_req_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_req_row.visible = false
-	inner.add_child(_req_row)
-
-	# v10.20 — Bloc RÉSOLUTION sous la situation (la « carte de scénario » reste affichée, estompée ;
-	# l'issue s'écrit dessous, avec une vignette d'effet). user 2026-06-29. Caché hors résolution.
+	# v10.21 (R128) — Bloc RÉSOLUTION = uniquement la VIGNETTE d'effet (degré + Δ jauges + effets), compacte
+	# SOUS le texte. L'issue elle-même s'écrit dans _situation_text (même fil narratif) — plus de filet or ni de
+	# label séparé (user 2026-06-30). Caché hors résolution ; apparaît APRÈS le typewriter de l'issue.
 	_res_block = VBoxContainer.new()
-	_res_block.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_res_block.add_theme_constant_override("separation", 10)
 	_res_block.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_res_block.visible = false
 	inner.add_child(_res_block)
-	var rule_box: CenterContainer = CenterContainer.new()
-	rule_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_res_rule = ColorRect.new()
-	_res_rule.color = MerlinVisual.GOLD
-	_res_rule.custom_minimum_size = Vector2(420, 2)  # filet or séparateur
-	_res_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rule_box.add_child(_res_rule)
-	_res_block.add_child(rule_box)
-	_effect_vignette = HBoxContainer.new()  # vignette d'effet (degré + Δ jauges + effets), peuplée au resolve
+	_effect_vignette = HBoxContainer.new()
 	_effect_vignette.alignment = BoxContainer.ALIGNMENT_CENTER
 	_effect_vignette.add_theme_constant_override("separation", 16)
 	_effect_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_res_block.add_child(_effect_vignette)
-	var res_center: CenterContainer = CenterContainer.new()
-	res_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	res_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_res_block.add_child(res_center)
-	_resolution_text = RichTextLabel.new()
-	_resolution_text.bbcode_enabled = true
-	_resolution_text.fit_content = true
-	_resolution_text.custom_minimum_size = Vector2(1180, 0)
-	_resolution_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_resolution_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_resolution_text.add_theme_color_override("default_color", COL_INK)
-	_resolution_text.add_theme_font_size_override("normal_font_size", 36)
-	res_center.add_child(_resolution_text)
 
 	# Caret « cliquer pour continuer » : clignote faiblement quand l'issue est entièrement écrite.
 	_caret = _mk_label(MerlinVisual.GOLD_DARK, 20)
