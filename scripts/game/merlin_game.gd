@@ -812,6 +812,13 @@ func _build_draft_layer(choices: Array) -> void:
 	title.add_theme_font_size_override("font_size", 30)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
+	# v10.20.1 (O4) — explique la VALEUR du draft (avant, il apparaissait sans dire pourquoi).
+	var sub: Label = Label.new()
+	sub.text = "Elle rejoint ton grimoire — de nouvelles forces ouvrent d'autres voies."
+	sub.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
+	sub.add_theme_font_size_override("font_size", 18)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(sub)
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 30)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
