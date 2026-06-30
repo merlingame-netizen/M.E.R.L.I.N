@@ -370,6 +370,11 @@ const FACTION_PILIER: Dictionary = {"druides": "choeur", "creatures": "etre", "c
 
 
 func _draw_faction_pilier() -> Dictionary:
+	# Override de test (capture/QA d'une faction précise), comme MERLIN_SEASON pour la saison.
+	if OS.has_environment("MERLIN_FACTION"):
+		var fko: String = OS.get_environment("MERLIN_FACTION")
+		if FACTION_PILIER.has(fko):
+			return {"faction": fko, "pilier": str(FACTION_PILIER[fko]), "pilier2": ""}
 	var total: int = 0
 	for w in FACTION_WEIGHTS:
 		total += int(w)

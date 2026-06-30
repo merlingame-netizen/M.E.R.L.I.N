@@ -297,6 +297,9 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	var btype: String = str(situ.get("type", ""))
 	if _scene_art != null:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
+		var sc_f: Node = get_node_or_null("/root/MerlinScenario")  # Wave C : décor teinté par la faction de la run
+		if sc_f != null and sc_f.has_method("current_faction"):
+			_scene_art.set_faction(str(sc_f.current_faction()))
 		_scene_art.set_eye_mood(MerlinSceneArt.mood_for_text(str(situ.get("narration", ""))))  # v10.20 : œil-lune réagit
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
 	_show_required_tags(situ.get("required_tags", []))  # v10.20.1 (O1) : feedforward des forces demandées

@@ -90,6 +90,15 @@ var _season_sol_f: float = 0.0
 var _season_sky: Color = MerlinVisual.SCENE_BG
 var _season_sky_f: float = 0.0
 
+# v10.20.3 (Wave C) — FACTION de la run : teinte LÉGÈRE du décor (lune + ciel + motes) dérivée UNIQUEMENT
+# de la palette canon (zéro hex). Modulation subtile (DA cohérente) ; Corrompus = le shift le plus froid/marqué.
+# Défaut "" → forces à 0 → menu/in-game inchangés tant qu'aucune faction n'est posée.
+var _faction_key: String = ""
+var _faction_accent: Color = MerlinVisual.GOLD
+var _faction_moon_f: float = 0.0
+var _faction_sky_f: float = 0.0
+var _faction_mote_f: float = 0.0
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -302,6 +311,31 @@ func set_season(season: String) -> void:
 	queue_redraw()
 
 
+# v10.20.3 (Wave C) — FACTION de la run : pose l'accent + les forces de teinte (lune/ciel/motes). Idempotent
+# (re-appel même clé = no-op) → appelable à chaque beat sans coût. Clé inconnue / "" → neutre (forces 0).
+func set_faction(faction: String) -> void:
+	if faction == _faction_key:
+		return
+	_faction_key = faction
+	match faction:
+		"druides":      # sage de la nature — vert vivant
+			_faction_accent = MerlinVisual.GREEN
+			_faction_moon_f = 0.14; _faction_sky_f = 0.05; _faction_mote_f = 0.30
+		"creatures":    # féerique étrange — bleu-acier d'outre-monde
+			_faction_accent = MerlinVisual.RARE_BLUE
+			_faction_moon_f = 0.18; _faction_sky_f = 0.06; _faction_mote_f = 0.40
+		"chevalerie":   # honneur terni — or patiné (gris-or)
+			_faction_accent = MerlinVisual.GOLD.lerp(MerlinVisual.DIM_WARM, 0.45)
+			_faction_moon_f = 0.16; _faction_sky_f = 0.04; _faction_mote_f = 0.30
+		"corrompus":    # froid malsain — violet de Corruption, le shift le plus marqué
+			_faction_accent = MerlinVisual.VIOLET
+			_faction_moon_f = 0.26; _faction_sky_f = 0.10; _faction_mote_f = 0.55
+		_:
+			_faction_accent = MerlinVisual.GOLD
+			_faction_moon_f = 0.0; _faction_sky_f = 0.0; _faction_mote_f = 0.0
+	queue_redraw()
+
+
 # Saison courante dérivée de la date système (override possible via MERLIN_SEASON pour les tests).
 static func season_for_now() -> String:
 	if OS.has_environment("MERLIN_SEASON"):
@@ -423,8 +457,8 @@ func _draw() -> void:
 	var rm: bool = MerlinVisual.reduced_motion
 	var dr: float = _decor_reveal  # v10.18 — révélation décor (boot) : multiplie l'alpha des éléments décor
 
-	# Ciel : teinte de l'heure, MODULÉE légèrement par la saison (l'heure garde l'autorité).
-	draw_rect(Rect2(Vector2.ZERO, s), _tod_sky.lerp(_season_sky, _season_sky_f), true)
+	# Ciel : teinte de l'heure, MODULÉE par la saison puis (subtilement) par la faction de la run (Wave C).
+	draw_rect(Rect2(Vector2.ZERO, s), _tod_sky.lerp(_season_sky, _season_sky_f).lerp(_faction_accent, _faction_sky_f), true)
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * (0.17 if _watch_eyes else 0.13)  # lune agrandie en mode œil-lune (lisibilité)
@@ -459,8 +493,8 @@ func _draw() -> void:
 		var halo_a: float = (0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))) * dr
 		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 
-	# Moon flash/dim reactive (+ chaleur selon l'heure, v10.18)
-	var moon_col: Color = COL_MOON.lerp(MerlinVisual.GOLD, _tod_moon_warm * 0.35)
+	# Moon flash/dim reactive (+ chaleur selon l'heure, v10.18 ; + teinte de faction, Wave C)
+	var moon_col: Color = COL_MOON.lerp(MerlinVisual.GOLD, _tod_moon_warm * 0.35).lerp(_faction_accent, _faction_moon_f)
 	if _moon_flash > 0.01:
 		moon_col = moon_col.lerp(Color.WHITE, _moon_flash * 0.6)
 	if _moon_dim > 0.01:
@@ -506,6 +540,7 @@ func _draw() -> void:
 	# 18 ambient motes (3 categories: firefly/dust/ember)
 	if _animated:
 		var mcount: int = int(MerlinVisual.MOTE_COUNT_AMBIENT * _mote_density)  # v10.18 : densité pilotée
+		var mote_col: Color = MerlinVisual.GOLD.lerp(_faction_accent, _faction_mote_f)  # Wave C : motes teintées faction
 		for mi in mcount:
 			var mf: float = float(mi)
 			var cat: int = mi % 3
@@ -538,7 +573,7 @@ func _draw() -> void:
 				mx = fmod(mx, w)
 			if rm:
 				ma *= 0.5
-			draw_circle(Vector2(mx, my) + _parallax, mr, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, ma * dr))
+			draw_circle(Vector2(mx, my) + _parallax, mr, Color(mote_col.r, mote_col.g, mote_col.b, ma * dr))
 
 	# v10.18 — Lucioles (nuit / crépuscule, menu) : 12 points vert-or qui dérivent et clignotent
 	# (blink piqué via pow). Distinctes des motes ambrées : plus vertes, halo, parmi les arbres.
