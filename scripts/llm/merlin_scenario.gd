@@ -367,7 +367,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) — l'arc couvre la QUÊTE 1 ;
 	# begin_quest rebascule le fil à chaque transition (last_gist traverse les quêtes).
 	var fb: Dictionary = _fallback_arc()
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
 	var nq: int = 2 if _rng.randf() < 0.4 else 3
 	var quests: Array = [{"title": title, "pitch": pitch}]
 	var pool: Array = SEL_FALLBACK.duplicate(true)
@@ -441,8 +441,9 @@ func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
 	var qv: Dictionary = quest_view(scenario, quest_idx)
 	var fb: Dictionary = _fallback_arc()
 	var gist: String = str(_run_thread.get("last_gist", ""))
+	var bridge: String = str(_run_thread.get("bridge", ""))  # v10.20.1 : le pont TRAVERSE les quêtes
 	_run_thread = {"title": str(qv.get("title", "")), "pitch": str(qv.get("pitch", "")),
-		"last_gist": gist, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
+		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
 	prepare_arc(qv)  # fire-and-forget — l'arc LLM remplace le fallback s'il gagne la course
 
 
@@ -583,6 +584,11 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		required = _pick_tags(btype, diff)
 	if narration == "":
 		narration = _fallback_situation(btype, required)
+	# v10.20.1 — PONT de continuité : la situation s'OUVRE sur ce que le Voyageur vient de faire (degré du
+	# beat précédent). Tue le saut abrupt « rocher → chevreuil ». Pas au 1er beat de la run (rien avant).
+	var bridge: String = str(_run_thread.get("bridge", ""))
+	if int(beat.get("n", 1)) > 1 and bridge != "":
+		narration = bridge + " " + narration
 	_run_thread["arc_locked"] = true
 	return {
 		"narration": narration,
@@ -842,15 +848,41 @@ func fallback_resolution(degree: String, situ_type: String = "") -> String:
 # Mémorise le RÉSULTAT du beat courant dans le fil rouge → le prompt d'issue du beat SUIVANT
 # enchaîne dessus (continuité). Public (v10.13 Fix 4) : appelé INCONDITIONNELLEMENT par
 # merlin_game._on_resolve — le degré est réel même quand la prose finit en procédural.
-func note_outcome(res: Dictionary) -> void:
+# v10.20.1 (user 2026-06-30 : « continuité dans les événements, en fonction de ce que l'on fait ») :
+# le gist devient SPÉCIFIQUE — ce que le Voyageur a VRAIMENT fait (registre des cartes jouées) + l'issue.
+# → le prompt d'issue du beat SUIVANT enchaîne sur l'action réelle, ET un PONT procédural relie la
+# situation suivante au résultat (plus de saut « rocher lumineux → chevreuil égaré »).
+func note_outcome(res: Dictionary, _situation: Dictionary = {}, played_cards: Array = []) -> void:
 	var degree: String = str(res.get("degree", "reussite"))
-	var gist: Dictionary = {
-		"echec": "le geste a echoue et la foret a repris le dessus ;",
-		"partiel": "le geste n'a porte qu'a demi, en laissant un prix ;",
-		"reussite": "le geste a porte et la voie s'est ouverte ;",
-		"eclatante": "le geste a triomphe, eclatant et net ;",
+	# Registre de l'ACTION depuis les archétypes des cartes jouées (ce que le geste FUT vraiment).
+	var reg_map: Dictionary = {
+		"Social": "trouva les mots", "Offensif": "agit de tout son corps",
+		"Mystique": "vit ce qui se cachait", "Défensif": "tint bon sans céder", "Corrompu": "appela l'ombre",
 	}
-	_run_thread["last_gist"] = str(gist.get(degree, "le geste a porte ;"))
+	var regs: Array = []
+	for c in played_cards:
+		# duck-typing (PAS `is MerlinCard`) : évite une dépendance de classe sur MerlinCard qui cassait le
+		# chargement de merlin_scenario (autoload + preload soak) → soak 0/200. v10.20.1 fix.
+		if c is Object and c.has_method("archetype"):
+			var r: String = str(reg_map.get(c.archetype(), ""))
+			if r != "" and not regs.has(r):
+				regs.append(r)
+	var action: String = " et ".join(PackedStringArray(regs)) if regs.size() > 0 else "agit"
+	var result_map: Dictionary = {
+		"echec": "mais la foret resista", "partiel": "et n'obtint qu'a demi, en laissant un prix",
+		"reussite": "et la voie s'ouvrit", "eclatante": "et tout ceda d'un coup",
+	}
+	var result: String = str(result_map.get(degree, "et la voie s'ouvrit"))
+	# Gist SPÉCIFIQUE (consommé « Juste avant, … » par le prompt d'issue du beat suivant).
+	_run_thread["last_gist"] = "le Voyageur %s %s" % [action, result]
+	# PONT de transition (degré) prepend à la SITUATION suivante (procédurale) → enchaînement, plus de saut.
+	var bridge_map: Dictionary = {
+		"echec": "Le revers dans le dos, le Voyageur ne renonca pas et s'enfonca plus loin.",
+		"partiel": "Le prix encore sur les epaules, le Voyageur reprit le sentier.",
+		"reussite": "Sa voie ouverte, le Voyageur s'enfonca plus avant.",
+		"eclatante": "Porte par son elan, le Voyageur poursuivit, sur de lui.",
+	}
+	_run_thread["bridge"] = str(bridge_map.get(degree, "Le Voyageur poursuivit sa route."))
 
 
 # A4 : helpers de prose (_clean_prose, _strip_scene_echo, _split_sentences, _sig_words,

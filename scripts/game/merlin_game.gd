@@ -593,7 +593,7 @@ func _on_resolve() -> void:
 	var prose: String = str(sc.take_resolution(situ, played_cards, res))
 	if prose.length() < 10:
 		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")))
-	sc.note_outcome(res)  # v10.13 (Fix 4) : fil rouge mis à jour MÊME en fallback (continuité du beat suivant)
+	sc.note_outcome(res, situ, played_cards)  # v10.20.1 : gist SPÉCIFIQUE (action réelle) + pont vers la situation suivante
 	run.summary = prose
 	_show_resolution(res, prose, true)
 	# v10.13 (Fix 6) : PLUS de save ici — il persistait les jauges post-résolution avec un beat_index
