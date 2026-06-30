@@ -25,17 +25,19 @@ const FUSION_COLORS: Dictionary = {
 
 # v10.3 — Amplification dramatique par degré (user 2026-06-06 AskUserQuestion).
 # Durées par phase (s) — échec court & mat, éclatante long & ample.
+# v10.20 (user 2026-06-29) : fusion PLUS LENTE + PLUS ANIMÉE — durées +~40%, phase « swell » (souffle du
+# glow) entre fuse et burst, 4e vague d'étincelles, zoom/shake amplifiés. (la sustain reste skippable.)
 const FUSION_DURATIONS: Dictionary = {
-	"echec":     {"gather": 0.30, "fuse": 0.45, "burst": 0.50, "expr": 0.75},
-	"partiel":   {"gather": 0.40, "fuse": 0.55, "burst": 0.65, "expr": 1.40},
-	"reussite":  {"gather": 0.50, "fuse": 0.70, "burst": 0.80, "expr": 1.50},
-	"eclatante": {"gather": 0.60, "fuse": 0.85, "burst": 1.10, "expr": 1.95},
+	"echec":     {"gather": 0.42, "fuse": 0.63, "swell": 0.30, "burst": 0.70, "expr": 1.05},
+	"partiel":   {"gather": 0.56, "fuse": 0.77, "swell": 0.38, "burst": 0.91, "expr": 1.96},
+	"reussite":  {"gather": 0.70, "fuse": 0.98, "swell": 0.42, "burst": 1.12, "expr": 2.10},
+	"eclatante": {"gather": 0.84, "fuse": 1.19, "swell": 0.50, "burst": 1.54, "expr": 2.70},
 }
-const FUSION_SHAKE_PX: Dictionary = {"echec": 4.0, "partiel": 8.0, "reussite": 12.0, "eclatante": 20.0}
-const FUSION_ZOOM: Dictionary = {"echec": 1.04, "partiel": 1.06, "reussite": 1.08, "eclatante": 1.12}
+const FUSION_SHAKE_PX: Dictionary = {"echec": 5.0, "partiel": 10.0, "reussite": 15.0, "eclatante": 24.0}
+const FUSION_ZOOM: Dictionary = {"echec": 1.05, "partiel": 1.08, "reussite": 1.12, "eclatante": 1.16}
 const FUSION_VIGNETTE_A: Dictionary = {"echec": 0.60, "partiel": 0.42, "reussite": 0.36, "eclatante": 0.55}
 const FUSION_CA_OFFSET: Dictionary = {"echec": 1.5, "partiel": 2.0, "reussite": 2.5, "eclatante": 4.0}
-const FUSION_SPARK_COUNT: Dictionary = {"echec": 18, "partiel": 24, "reussite": 30, "eclatante": 42}
+const FUSION_SPARK_COUNT: Dictionary = {"echec": 22, "partiel": 30, "reussite": 38, "eclatante": 52}
 
 # Vignette via shader canvas_item : sombre les coins selon `intensity`, teinte `tint` (selon degré).
 const VIGNETTE_SHADER_CODE: String = """
@@ -175,6 +177,16 @@ func run() -> void:
 	p2.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha * 0.40, vig_alpha * 0.75, dur["fuse"])
 	await p2.finished
 
+	# === Phase 2.5 — Swell === (v10.20) souffle d'anticipation : le glow enfle 45→70 %, les cartes
+	# « inspirent » (micro-pulse 1.55→1.64), la vignette se resserre — un temps suspendu avant l'impact.
+	var sw: float = float(dur.get("swell", 0.30))
+	var psw: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	psw.tween_property(glow, "color:a", 0.70, sw)
+	psw.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha * 0.75, vig_alpha * 0.88, sw)
+	for cv_s in card_views:
+		psw.tween_property(cv_s, "scale", Vector2(1.64, 1.64), sw)
+	await psw.finished
+
 	# === Impact freeze + flash (Hades-style dramatic pause) ===
 	MerlinAudio.play_sfx("seal_stamp", 0.85)
 	await get_tree().create_timer(MerlinVisual.DUR_IMPACT_FREEZE).timeout
@@ -191,9 +203,10 @@ func run() -> void:
 
 	# === Phase 3 — Burst === flash glow + 3 vagues de sparks (cascade) + cards explose + screen shake.
 	var burst_dur: float = dur["burst"]
-	var w1: int = int(spark_count * 0.40)
-	var w2: int = int(spark_count * 0.35)
-	var w3: int = spark_count - w1 - w2
+	var w1: int = int(spark_count * 0.34)
+	var w2: int = int(spark_count * 0.28)
+	var w3: int = int(spark_count * 0.22)
+	var w4: int = spark_count - w1 - w2 - w3  # v10.20 : 4e vague (cendres lentes)
 	# Vague 1 — sparks rapides, brillants, dispersion large (éclat initial).
 	spark_wave(center, glow_col, w1, burst_dur * 0.55, 280.0, 140.0, Vector2(1.0, 1.0), 1.00)
 	# Screen shake concurrent (déclenche dès Vague 1, amplitude par degré, decay).
@@ -223,6 +236,10 @@ func run() -> void:
 	# Vague 3 (tail-end, cendres tombantes lentes).
 	await get_tree().create_timer(burst_dur * 0.22).timeout
 	spark_wave(center, glow_col.darkened(0.20), w3, burst_dur * 0.85, 130.0, 70.0, Vector2(2.0, 2.0), 0.55)
+	# Vague 4 (v10.20) — cendres TRÈS lentes, longue traîne (enrichit la retombée).
+	if w4 > 0:
+		await get_tree().create_timer(burst_dur * 0.18).timeout
+		spark_wave(center, glow_col.darkened(0.30), w4, burst_dur * 1.05, 90.0, 50.0, Vector2(2.6, 2.6), 0.40)
 	await p3_glow.finished
 
 	# === v10.14 (B8) — Révélation du dé PRÉ-TIRÉ, entre Burst et Expression. SEUL lieu

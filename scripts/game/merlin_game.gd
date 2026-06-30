@@ -40,6 +40,15 @@ var _can_advance: bool = false  # true quand l'issue est entièrement écrite �
 var _current_situation: Dictionary = {}
 var _combo: Array = []
 var _state: int = 0  # 0=loading 1=playing 2=resolving
+var _eye_cursor_acc: float = 0.0  # v10.20 — throttle du suivi curseur de l'œil-lune (yeux de Merlin)
+var _cap_last_ms: int = 0         # dev capture in-game
+var _cap_n: int = 0
+var _tw_target: RichTextLabel = null  # v10.20 — cible du typewriter (situation OU résolution)
+# v10.20 — bloc RÉSOLUTION sous la situation (situation conservée+estompée) + vignette d'effet. user 2026-06-29.
+var _res_block: VBoxContainer = null
+var _res_rule: ColorRect = null
+var _effect_vignette: HBoxContainer = null
+var _resolution_text: RichTextLabel = null
 # Garde anti-clobber : incrémenté à CHAQUE transition d'affichage (nouvelle situation,
 # issue affichée, fin de run). Un enrichissement LLM en arrière-plan ne remplace le texte
 # QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
@@ -99,6 +108,43 @@ var _draft_open_ms: int = 0                    # F2 : anti pick-aveugle pendant 
 # Toute coroutine qui reprend après un await DOIT vérifier _fresh(ep) avant de toucher l'UI.
 func _fresh(ep: int) -> bool:
 	return ep == _scene_epoch and is_inside_tree()
+
+
+func _process(delta: float) -> void:
+	_maybe_game_capture()  # dev (MERLIN_CAPTURE_DIR) : capture in-game pour QA
+	# v10.20 — l'ŒIL-LUNE (yeux de Merlin dans la lune) suit le CURSEUR : le joueur manipule ses cartes
+	# en bas → les yeux le regardent. Throttle 30 fps. Suivi off en reduced_motion (l'humeur reste).
+	if _scene_art == null or MerlinVisual.reduced_motion:
+		return
+	_eye_cursor_acc += delta
+	if _eye_cursor_acc >= 1.0 / 30.0:
+		_eye_cursor_acc = 0.0
+		var rect: Rect2 = _scene_art.get_global_rect()
+		if rect.size.x > 4.0:
+			_scene_art.set_cursor(get_global_mouse_position() - rect.position, true)
+
+
+# Dev (env MERLIN_CAPTURE_DIR) : capture périodique de l'écran in-game (QA). Jamais active en prod.
+func _maybe_game_capture() -> void:
+	var dir: String = OS.get_environment("MERLIN_CAPTURE_DIR")
+	if dir.is_empty():
+		return
+	var now: int = Time.get_ticks_msec()
+	if now - _cap_last_ms < 700 or _cap_n >= 30:
+		return
+	_cap_last_ms = now
+	var tex: ViewportTexture = get_viewport().get_texture()
+	if tex == null:
+		return
+	var img: Image = tex.get_image()
+	if img == null:
+		return
+	if img.get_width() > 720:
+		var r: float = 720.0 / float(img.get_width())
+		img.resize(720, int(float(img.get_height()) * r), Image.INTERPOLATE_BILINEAR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	img.save_png("%s/game_%04d.png" % [dir, _cap_n])
+	_cap_n += 1
 
 
 func _ready() -> void:
@@ -172,6 +218,13 @@ func _present_current_beat() -> void:
 	vout.tween_callback(veil.queue_free)
 	_interstitial_open = false  # v10.13 (B3) : défense — l'interstitiel est forcément clos ici
 	_clear_degree_seal()        # v10.13 (B9) : le sceau du beat précédent ne survit pas au suivant
+	# v10.20 — reset du bloc résolution : nouvelle situation pleine opacité, vignette/issue cachées.
+	if _res_block != null:
+		_res_block.visible = false
+	if _resolution_text != null:
+		_resolution_text.text = ""
+	if _situation_text != null:
+		_situation_text.modulate.a = 1.0
 	# v10.14 — frontière de quête (chaîne) : la map repart sur la quête courante et le fil
 	# narratif bascule (begin_quest : nouvel arc, last_gist conservé). Au resume (was == -1,
 	# beat > 0), begin_quest restaure aussi le fil de la quête en cours.
@@ -239,6 +292,7 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	var btype: String = str(situ.get("type", ""))
 	if _scene_art != null:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
+		_scene_art.set_eye_mood(MerlinSceneArt.mood_for_text(str(situ.get("narration", ""))))  # v10.20 : œil-lune réagit
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
 	# jamais pendant la lecture (Wave1 : amplitude ≤2px), off en reduce-motion (pastille = info).
@@ -410,9 +464,19 @@ func _on_resolve() -> void:
 	var played_cards: Array = _combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
+	# v10.20 — capture des Δ jauges (net : coût + effets + résolution) pour la VIGNETTE d'effet. user 2026-06-29.
+	var int_before: int = int(run.get("integrite"))
+	var corr_before: int = int(run.get("corruption"))
 	run.play_and_discard(_combo)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
 	run.apply_resolution(res)
+	res["integrite_delta"] = int(run.get("integrite")) - int_before
+	res["corruption_delta"] = int(run.get("corruption")) - corr_before
+	var fx_effects: Array = []  # effets actifs déclenchés (HEAL/PURGE/DRAW) pour les glyphes de la vignette
+	for c in played_cards:
+		if c is MerlinCard and str(c.effect_type) != "":
+			fx_effects.append(str(c.effect_type))
+	res["fx_effects"] = fx_effects
 	# Draft « 1 carte sur 3 » armé : SEULEMENT aux beats clés (réussite/éclatante) tant qu'il reste des beats.
 	var deg: String = str(res.get("degree", ""))
 	_pending_draft = (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) and not run.is_climax() and not run.ended
@@ -485,14 +549,81 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	var degree: String = str(res["degree"])
 	var deg_col: Color = _degree_color(degree)
 	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)
-	if animate:
-		_situation_text.text = ""
-	# v10.13 (B9) : le degré ne préfixe PLUS la prose (anti « info ×2 ») — il vit dans le SCEAU
-	# slammé en haut-droit de l'encart. Le typewriter ne porte que la prose, seule.
-	_typewriter("[center]%s[/center]" % narration, animate)
-	_slam_degree_seal(degree)
-	if animate:
-		_pop(_situation_text, 1.03)  # léger "thump" à la révélation de l'issue
+	# v10.20 (user 2026-06-29) : on CONSERVE la « carte de scénario » (situation estompée) ; l'issue s'écrit
+	# DESSOUS, avec une VIGNETTE D'EFFET (degré + Δ jauges + effets de carte). Le degré vit dans la vignette
+	# (plus de sceau en coin — anti « info ×2 », B9 préservé).
+	_situation_text.modulate.a = 0.55
+	_build_effect_vignette(res, degree)
+	if _res_block != null:
+		_res_block.visible = true
+	if degree == "echec" and not MerlinVisual.reduced_motion and _situ_panel != null:
+		MerlinFx.shake(_situ_panel, 4.0, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())  # l'échec se SENT (B9)
+	_play_seal_audio(degree)  # stinger de degré (conservé de l'ancien sceau) — seal_stamp + stinger
+	# Humeur de l'œil-lune selon l'issue : échec → rouge, éclatante → jaune, sinon depuis le texte.
+	if _scene_art != null:
+		var mood: String = "angry" if degree == "echec" else ("surprise" if degree == "eclatante" else MerlinSceneArt.mood_for_text(narration))
+		_scene_art.set_eye_mood(mood)
+	_typewriter("[center]%s[/center]" % narration, animate, _resolution_text)  # l'issue s'écrit (voixée) dans son label
+	if animate and _resolution_text != null:
+		_pop(_resolution_text, 1.03)  # léger "thump" à la révélation de l'issue
+
+
+# v10.20 — Vignette d'effet (sous le filet) : badge de degré + Δ jauges + glyphes d'effet de carte. Fondu d'entrée.
+func _build_effect_vignette(res: Dictionary, degree: String) -> void:
+	if _effect_vignette == null:
+		return
+	for c in _effect_vignette.get_children():
+		c.queue_free()
+	var badge: Panel = Panel.new()
+	badge.custom_minimum_size = Vector2(58, 58)
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bsb: StyleBoxFlat = StyleBoxFlat.new()
+	bsb.bg_color = _degree_color(degree)
+	bsb.set_corner_radius_all(29)
+	badge.add_theme_stylebox_override("panel", bsb)
+	var blbl: Label = Label.new()
+	blbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	blbl.text = str(DEGREE_SEAL_LABEL.get(degree, "RÉUSSITE"))
+	blbl.add_theme_color_override("font_color", MerlinVisual.CREAM)
+	blbl.add_theme_font_size_override("font_size", 11)
+	blbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	blbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	blbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	blbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(blbl)
+	_effect_vignette.add_child(badge)
+	var di: int = int(res.get("integrite_delta", 0))
+	var dc: int = int(res.get("corruption_delta", 0))
+	if di != 0:
+		_effect_vignette.add_child(_vignette_chip("Intégrité %+d" % di, MerlinVisual.GREEN if di > 0 else MerlinVisual.VIOLET))
+	if dc != 0:
+		_effect_vignette.add_child(_vignette_chip("Corruption %+d" % dc, MerlinVisual.VIOLET if dc > 0 else MerlinVisual.GREEN))
+	for e in res.get("fx_effects", []):
+		match str(e):
+			"HEAL": _effect_vignette.add_child(_vignette_chip("✚ Soin", MerlinVisual.EFFECT_HEAL))
+			"PURGE": _effect_vignette.add_child(_vignette_chip("❖ Purge", MerlinVisual.EFFECT_PURGE))
+			"DRAW": _effect_vignette.add_child(_vignette_chip("✦ Pioche", MerlinVisual.EFFECT_DRAW))
+	_effect_vignette.modulate.a = 0.0
+	_effect_vignette.create_tween().tween_property(_effect_vignette, "modulate:a", 1.0, MerlinVisual.DUR_SEAL_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+
+
+func _vignette_chip(text: String, col: Color) -> Control:
+	var p: PanelContainer = PanelContainer.new()
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = Color(col.r, col.g, col.b, 0.18)
+	sb.set_corner_radius_all(8)
+	sb.set_border_width_all(1)
+	sb.border_color = col
+	sb.set_content_margin_all(8)
+	p.add_theme_stylebox_override("panel", sb)
+	var l: Label = Label.new()
+	l.text = text
+	l.add_theme_color_override("font_color", col)
+	l.add_theme_font_size_override("font_size", 18)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(l)
+	return p
 
 
 # v10.13 (B9) — Sceau de degré : cercle flat (fond = MerlinVisual.degree_color), libellé CREAM,
@@ -704,7 +835,8 @@ func _skip_typewriter() -> void:
 	if _tw == null or not _tw.is_valid():
 		return
 	_kill_tw()
-	_situation_text.visible_characters = -1
+	var lbl: RichTextLabel = _tw_target if _tw_target != null else _situation_text
+	lbl.visible_characters = -1
 	_on_typewriter_done()
 
 
@@ -1054,18 +1186,20 @@ func _goto_end() -> void:
 	MerlinTransition.change_scene(END_SCENE)
 
 
-func _typewriter(txt: String, animate: bool = true) -> void:
+func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null) -> void:
+	var lbl: RichTextLabel = target if target != null else _situation_text
+	_tw_target = lbl
 	if _prose_tw != null and _prose_tw.is_valid():
 		_prose_tw.kill()
-	_situation_text.modulate.a = 1.0
+	lbl.modulate.a = 1.0
 	_kill_tw()
-	_situation_text.text = txt
+	lbl.text = txt
 	if not animate:
-		_situation_text.visible_characters = -1  # tout révélé (swap d'enrichissement)
+		lbl.visible_characters = -1  # tout révélé (swap d'enrichissement)
 		_on_typewriter_done()
 		return
-	_situation_text.visible_characters = 0
-	var n: int = _situation_text.get_total_character_count()
+	lbl.visible_characters = 0
+	var n: int = lbl.get_total_character_count()
 	if n <= 0:
 		_on_typewriter_done()
 		return
@@ -1074,7 +1208,7 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 	_tw_tick_count = 0
 	var dur: float = clampf(float(n) / 30.0, 0.8, 10.0)
 	_tw = create_tween()
-	_tw.tween_property(_situation_text, "visible_characters", n, dur)
+	_tw.tween_property(lbl, "visible_characters", n, dur)
 	_tw.finished.connect(_on_typewriter_done)
 	if _quill_tw != null and _quill_tw.is_valid():
 		_quill_tw.kill()
@@ -1438,6 +1572,7 @@ func _build_ui() -> void:
 	_scene_art.custom_minimum_size = Vector2(0, 280)
 	root.add_child(_scene_art)
 	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
+	_scene_art.set_watch_eyes(true)  # v10.20 : les yeux de Merlin vivent dans la LUNE et suivent le curseur
 
 	# ENCART CENTRAL (~80%) crème : porte l'intro/commentaire PUIS chaque situation/issue (user 2026-06-06).
 	# size_flags EXPAND → occupe tout l'espace restant quand les cartes sont cachées (hors phase de choix).
@@ -1466,6 +1601,41 @@ func _build_ui() -> void:
 	_situation_text.add_theme_color_override("default_color", COL_INK)
 	_situation_text.add_theme_font_size_override("normal_font_size", 36)  # narratif ample (user 2026-06-06)
 	situ_center.add_child(_situation_text)
+
+	# v10.20 — Bloc RÉSOLUTION sous la situation (la « carte de scénario » reste affichée, estompée ;
+	# l'issue s'écrit dessous, avec une vignette d'effet). user 2026-06-29. Caché hors résolution.
+	_res_block = VBoxContainer.new()
+	_res_block.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_res_block.add_theme_constant_override("separation", 10)
+	_res_block.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_res_block.visible = false
+	inner.add_child(_res_block)
+	var rule_box: CenterContainer = CenterContainer.new()
+	rule_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_res_rule = ColorRect.new()
+	_res_rule.color = MerlinVisual.GOLD
+	_res_rule.custom_minimum_size = Vector2(420, 2)  # filet or séparateur
+	_res_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rule_box.add_child(_res_rule)
+	_res_block.add_child(rule_box)
+	_effect_vignette = HBoxContainer.new()  # vignette d'effet (degré + Δ jauges + effets), peuplée au resolve
+	_effect_vignette.alignment = BoxContainer.ALIGNMENT_CENTER
+	_effect_vignette.add_theme_constant_override("separation", 16)
+	_effect_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_res_block.add_child(_effect_vignette)
+	var res_center: CenterContainer = CenterContainer.new()
+	res_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	res_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_res_block.add_child(res_center)
+	_resolution_text = RichTextLabel.new()
+	_resolution_text.bbcode_enabled = true
+	_resolution_text.fit_content = true
+	_resolution_text.custom_minimum_size = Vector2(1180, 0)
+	_resolution_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_resolution_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_resolution_text.add_theme_color_override("default_color", COL_INK)
+	_resolution_text.add_theme_font_size_override("normal_font_size", 36)
+	res_center.add_child(_resolution_text)
 
 	# Caret « cliquer pour continuer » : clignote faiblement quand l'issue est entièrement écrite.
 	_caret = _mk_label(MerlinVisual.GOLD_DARK, 20)

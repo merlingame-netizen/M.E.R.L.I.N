@@ -71,6 +71,9 @@ var _eye_widen: float = 1.0         # écartement + allongement des barres (éba
 # angry=rouge+sourcils froncés. Décroît vers neutral après quelques secondes.
 var _eye_mood: String = "neutral"
 var _eye_mood_t: float = 0.0
+# v10.20 — Mode ŒIL-LUNE (in-game, user 2026-06-29) : les yeux de Merlin vivent DANS la lune (cercle
+# central) et suivent le curseur. La lune est agrandie ; les yeux du figure sont alors supprimés (doublon).
+var _watch_eyes: bool = false
 var _gaze_scripted: bool = false    # true = regard piloté par merlin_boot (pas la souris)
 var _gaze_forced: Vector2 = Vector2.ZERO
 
@@ -209,6 +212,12 @@ func set_eye_mood(mood: String) -> void:
 	queue_redraw()
 
 
+# v10.20 — Mode œil-lune (in-game) : yeux dans la lune qui suivent le curseur (set_cursor) + humeur.
+func set_watch_eyes(on: bool) -> void:
+	_watch_eyes = on
+	queue_redraw()
+
+
 # Heuristique d'humeur depuis une réplique (zéro LLM) : "?"/interjections → surprise ; ton dur/colère/
 # corruption → angry ; sinon neutral. Statique → utilisable par tout appelant qui fait parler Merlin.
 static func mood_for_text(t: String) -> String:
@@ -337,12 +346,12 @@ func _process(delta: float) -> void:
 		_eye_mood_t -= delta
 		if _eye_mood_t <= 0.0:
 			_eye_mood = "neutral"  # retour au bleu brillant après la tenue d'humeur
-	if _menu_decor:
-		if not MerlinVisual.reduced_motion:
+	if (_menu_decor or _watch_eyes) and not MerlinVisual.reduced_motion:
+		if _menu_decor:
 			_update_shooting_star(delta)
-			_update_merlin_gaze(delta)
-		elif _gaze_scripted:
-			_update_merlin_gaze(delta)  # reduced_motion : seul le gaze scripté (boot) tourne (early-return interne)
+		_update_merlin_gaze(delta)  # menu = suit la souris ; œil-lune in-game = suit le curseur (set_cursor)
+	elif _menu_decor and _gaze_scripted:
+		_update_merlin_gaze(delta)  # reduced_motion : seul le gaze scripté (boot) tourne (early-return interne)
 	queue_redraw()
 
 
@@ -418,7 +427,7 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, s), _tod_sky.lerp(_season_sky, _season_sky_f), true)
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
-	var moon_r: float = minf(w, h) * 0.13
+	var moon_r: float = minf(w, h) * (0.17 if _watch_eyes else 0.13)  # lune agrandie en mode œil-lune (lisibilité)
 
 	# God rays (behind everything except background)
 	if _animated and not rm:
@@ -457,6 +466,13 @@ func _draw() -> void:
 	if _moon_dim > 0.01:
 		moon_col = moon_col.lerp(COL_SCENE_BG, _moon_dim)
 	draw_circle(moon_c, moon_r, Color(moon_col.r, moon_col.g, moon_col.b, moon_col.a * dr))
+
+	# v10.20 — ŒIL-LUNE : les yeux de Merlin vivent DANS la lune et suivent le curseur (suivi gameplay,
+	# user 2026-06-29). _fig_head/_fig_hr = lune → le gaze (_update_merlin_gaze) vise le curseur depuis ici.
+	if _watch_eyes:
+		_fig_head = moon_c
+		_fig_hr = moon_r
+		_draw_eyes(moon_c, moon_r * 0.80, 1.0)
 
 	# v10.18 — étoile filante (menu) : traînée crème qui apparaît/disparaît le long de l'arc.
 	if _menu_decor and _shoot_t >= 0.0 and _shoot_t <= 1.0 and not rm:
@@ -681,45 +697,51 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	draw_circle(head_c, hr, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
 	# v10.18 — Yeux MERLIN (menu) : 2 BARRES BLEUES VERTICALES lumineuses + lueur qui pulse (signature,
 	# user 2026-06-29). S'ALLUMENT EN DERNIER dans la matérialisation (a_eyes : grandissent + s'éclairent).
-	if _menu_decor:
+	# v10.20 — en mode « œil-lune » (set_watch_eyes), les yeux vivent dans la LUNE (dessinés en _draw) :
+	# on ne les dessine PAS aussi sur la tête (anti-doublon) et on NE touche PAS _fig_head (la lune l'a posé).
+	if _menu_decor and not _watch_eyes:
 		_fig_head = head_c  # lu par _update_merlin_gaze (frame suivante) pour viser la souris
 		_fig_hr = hr
-		if a_eyes > 0.01:
-			var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if menu else 1.0
-			# v10.20 — HUMEUR (R124) : couleur + lueur + écartement selon _eye_mood (neutral/surprise/angry).
-			var eye_col: Color = MerlinVisual.EYE_NEUTRAL
-			var mood_glow: float = 1.0
-			var mood_widen: float = 1.0
-			match _eye_mood:
-				"surprise":
-					eye_col = MerlinVisual.EYE_SURPRISE
-					mood_glow = 1.5
-					mood_widen = 1.12
-				"angry":
-					eye_col = MerlinVisual.EYE_ANGRY
-					mood_glow = 1.35
-					mood_widen = 0.90  # les yeux se plissent en colère
-			# Ouverture : clignement auto OU forcée par le boot (réveil). _eye_widen × mood = écartement.
-			var openf: float = _eye_open_force if _eye_open_force >= 0.0 else maxf(1.0 - 0.9 * _blink, 0.07)
-			var widen: float = _eye_widen * mood_widen
-			var eye_h: float = hr * 0.70 * openf * a_eyes * widen
-			var eye_w: float = maxf(hr * 0.16, 2.0)
-			var eye_dx: float = hr * 0.34 * widen
-			var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
-			var core_a: float = minf(0.9 * pulse * a_eyes * _eye_glow * mood_glow, 1.0)  # luminosité × humeur, clampée
-			var halo_a: float = minf(0.16 * pulse * a_eyes * _eye_glow * mood_glow, 0.7)
-			for s in [-1.0, 1.0]:
-				var ec2: Vector2 = Vector2(head_c.x + s * eye_dx, head_c.y) + gaze_px
-				var ey: float = ec2.y - eye_h * 0.5
-				draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, halo_a))
-				draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, core_a), true)
-				draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
-				draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
-			# Sourcils FRONCÉS (colère) : deux traits plongeant vers le centre, au-dessus des yeux.
-			if _eye_mood == "angry":
-				var brow_y: float = head_c.y - eye_h * 0.62
-				var brow_col: Color = Color(eye_col.r, eye_col.g, eye_col.b, core_a)
-				for s2 in [-1.0, 1.0]:
-					var inner: Vector2 = Vector2(head_c.x + s2 * eye_dx * 0.50, brow_y + hr * 0.12)
-					var outer: Vector2 = Vector2(head_c.x + s2 * eye_dx * 1.35, brow_y - hr * 0.10)
-					draw_line(inner, outer, brow_col, maxf(eye_w * 0.75, 2.0), true)
+		_draw_eyes(head_c, hr, a_eyes)
+
+
+# v10.20 — Rendu des YEUX (2 barres bleues + humeur + gaze + lueur + sourcils colère) à un CENTRE et un
+# RAYON donnés. Appelé par _figure (à la tête) ET par le mode œil-lune (set_watch_eyes, centre de la lune).
+func _draw_eyes(center: Vector2, hr: float, a_eyes: float) -> void:
+	if a_eyes <= 0.01:
+		return
+	var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if (_animated and not MerlinVisual.reduced_motion) else 1.0
+	var eye_col: Color = MerlinVisual.EYE_NEUTRAL
+	var mood_glow: float = 1.0
+	var mood_widen: float = 1.0
+	match _eye_mood:
+		"surprise":
+			eye_col = MerlinVisual.EYE_SURPRISE
+			mood_glow = 1.5
+			mood_widen = 1.12
+		"angry":
+			eye_col = MerlinVisual.EYE_ANGRY
+			mood_glow = 1.35
+			mood_widen = 0.90  # les yeux se plissent en colère
+	var openf: float = _eye_open_force if _eye_open_force >= 0.0 else maxf(1.0 - 0.9 * _blink, 0.07)
+	var widen: float = _eye_widen * mood_widen
+	var eye_h: float = hr * 0.70 * openf * a_eyes * widen
+	var eye_w: float = maxf(hr * 0.16, 2.0)
+	var eye_dx: float = hr * 0.34 * widen
+	var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
+	var core_a: float = minf(0.9 * pulse * a_eyes * _eye_glow * mood_glow, 1.0)
+	var halo_a: float = minf(0.16 * pulse * a_eyes * _eye_glow * mood_glow, 0.7)
+	for s in [-1.0, 1.0]:
+		var ec2: Vector2 = Vector2(center.x + s * eye_dx, center.y) + gaze_px
+		var ey: float = ec2.y - eye_h * 0.5
+		draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, halo_a))
+		draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, core_a), true)
+		draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
+		draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
+	if _eye_mood == "angry":
+		var brow_y: float = center.y - eye_h * 0.62
+		var brow_col: Color = Color(eye_col.r, eye_col.g, eye_col.b, core_a)
+		for s2 in [-1.0, 1.0]:
+			var inner: Vector2 = Vector2(center.x + s2 * eye_dx * 0.50, brow_y + hr * 0.12)
+			var outer: Vector2 = Vector2(center.x + s2 * eye_dx * 1.35, brow_y - hr * 0.10)
+			draw_line(inner, outer, brow_col, maxf(eye_w * 0.75, 2.0), true)
