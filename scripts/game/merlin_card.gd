@@ -9,10 +9,12 @@ var evocation: String = ""
 var tags: Array = []          # Array[String] (concepts, R81)
 var corruption: int = 0       # coût Corruption payé en jouant (0-3, R64)
 var rarity: String = "Commune"  # Commune / Rare / Épique / Mythique (R52)
+var effect_type: String = ""   # "" | HEAL | PURGE | DRAW — effet actif joué (Rare+, user 2026-06-07)
+var effect_value: int = 0      # intensité (PV soignés / Corruption purgée / cartes piochées)
 var _archetype_cache: String = ""  # v10.5 : archétype dérivé memoïsé (to_dict appelé ~1Hz × deck)
 
 
-static func make(p_id: String, p_name: String, p_tags: Array, p_evocation: String, p_corruption: int = 0, p_rarity: String = "Commune") -> MerlinCard:
+static func make(p_id: String, p_name: String, p_tags: Array, p_evocation: String, p_corruption: int = 0, p_rarity: String = "Commune", p_effect_type: String = "", p_effect_value: int = 0) -> MerlinCard:
 	var c: MerlinCard = MerlinCard.new()
 	c.id = p_id
 	c.card_name = p_name
@@ -20,6 +22,8 @@ static func make(p_id: String, p_name: String, p_tags: Array, p_evocation: Strin
 	c.evocation = p_evocation
 	c.corruption = p_corruption
 	c.rarity = p_rarity
+	c.effect_type = p_effect_type
+	c.effect_value = p_effect_value
 	return c
 
 
@@ -52,6 +56,7 @@ func to_dict() -> Dictionary:
 	return {
 		"id": id, "name": card_name, "evocation": evocation,
 		"tags": tags.duplicate(), "corruption": corruption, "rarity": rarity,
+		"effect_type": effect_type, "effect_value": effect_value,
 		"archetype": archetype(),
 	}
 
@@ -60,7 +65,8 @@ static func from_dict(d: Dictionary) -> MerlinCard:
 	return make(
 		str(d.get("id", "")), str(d.get("name", "")),
 		d.get("tags", []), str(d.get("evocation", "")),
-		int(d.get("corruption", 0)), str(d.get("rarity", "Commune")))
+		int(d.get("corruption", 0)), str(d.get("rarity", "Commune")),
+		str(d.get("effect_type", "")), int(d.get("effect_value", 0)))
 
 
 ## Deck de départ canon — 12 cartes (R33 tags + R102 évocations). Communes, voyageur généraliste.
@@ -91,3 +97,102 @@ static func starter_deck() -> Array:
 		make("appel_ombre", "L'Appel de l'Ombre", ["Instinct", "Nature"],
 			"Tu appelles ce qui dort sous les racines. Il vient — mais il prélève son dû.", 1),
 	]
+
+
+## Pool enrichi — cartes Rare/Épique/Mythique gagnées par DRAFT aux beats clés (user 2026-06-07).
+## tags ORDONNÉS pour que tags[0] donne l'archétype voulu (archetype() = famille de tags[0] ;
+## corruption>0 force Corrompu). Effets actifs (HEAL/PURGE/DRAW) sur Rare+. Barème : merlin-game-designer.
+static func enriched_pool() -> Array:
+	return [
+		# — Rares (6) —
+		make("oeil_du_druide", "L'Œil du Druide", ["Savoir", "Vigilance"],
+			"Tu lis les traces que d'autres effacent ; le mensonge devient transparent sous ton regard.", 0, "Rare", "DRAW", 1),
+		make("voix_autorite", "La Voix d'Autorité", ["Autorité", "Verbe"],
+			"Un seul mot, dit au bon moment — et la salle cède sans qu'on sache pourquoi.", 0, "Rare"),
+		make("pas_de_loup", "Le Pas de Loup", ["Agilité", "Instinct"],
+			"Tu disparais avant que l'ombre sache qu'elle t'a vu.", 0, "Rare"),
+		make("bras_de_fer", "Le Bras de Fer", ["Force", "Endurance"],
+			"Tu encaisses, tu tiens, tu retournes la pression — le premier qui cède n'est pas toi.", 0, "Rare", "HEAL", 1),
+		make("lecture_augure", "La Lecture des Augures", ["Vision", "Mystère"],
+			"Les signes étaient là depuis le matin ; tu es le seul à les avoir lus.", 0, "Rare"),
+		make("serment_tenu", "Le Serment Tenu", ["Sacrifice", "Franchise"],
+			"Tu as promis. Tu paies le prix. Et c'est précisément ce qui te donne du poids.", 0, "Rare", "HEAL", 1),
+		# — Épiques (5) —
+		make("transe_druidique", "La Transe Druidique", ["Vision", "Rituel"],
+			"La frontière entre toi et la forêt s'efface. Tu vois ce que Brocéliande te cache depuis longtemps.", 0, "Épique", "DRAW", 1),
+		make("colere_juste", "La Colère Juste", ["Force", "Autorité"],
+			"Elle ne crie pas, elle tonne — et personne ne cherche à la faire taire.", 0, "Épique"),
+		make("empathie_profonde", "L'Empathie Profonde", ["Empathie", "Mémoire"],
+			"Tu portes la douleur de l'autre un instant — assez pour lui dire exactement ce qu'il fallait.", 0, "Épique", "HEAL", 2),
+		make("marche_equilibre", "La Marche d'Équilibre", ["Équilibre", "Endurance"],
+			"Tu ne cherches pas la victoire — tu cherches la durée. Et tu dures.", 0, "Épique", "PURGE", 2),
+		make("appel_profond", "L'Appel Profond", ["Nature", "Sacrifice"],
+			"Tu demandes à la terre plus qu'elle ne donne d'ordinaire. Elle répond — et tu sais ce que ça coûte.", 1, "Épique", "HEAL", 2),
+		# — Mythiques (3) —
+		make("verbe_primordial", "Le Verbe Primordial", ["Verbe", "Rituel"],
+			"Ce mot existait avant les hommes. Tu n'en connais qu'un. Il suffit.", 0, "Mythique", "PURGE", 2),
+		make("memoire_ancienne", "La Mémoire Ancienne", ["Mémoire", "Vision"],
+			"Tu touches une strate du temps que nul n'a visitée depuis des siècles. Ce que tu rapportes change tout.", 0, "Mythique", "DRAW", 2),
+		make("dissolution_consentie", "La Dissolution Consentie", ["Dissolution", "Sacrifice"],
+			"Tu effaces une part de toi pour qu'une autre passe. Ce n'est pas de la faiblesse — c'est du calcul froid.", 2, "Mythique", "HEAL", 3),
+	]
+
+
+## Wave D (Wave D, co-design user 2026-06-30 + panel équilibrage adversarial) — BANQUES D'OFFRANDE PAR PILIER.
+## Au beat « Rencontre », le PNJ pilier de la run offre 1 carte SIGNÉE par sa nature (modal de draft réutilisé).
+## 5 signatures DISTINCTES, toutes à coût VISIBLE (pilier ÉVIDENT : zéro stat cachée — le « piège »/« tentation »
+## est NARRATIF). Invariant équilibrage : corruption ≤ 1 (coût RÉCURRENT payé à chaque résolution, pas one-shot —
+## merlin_resolution.gd:51/95). Sélection (filtre owned + RNG) côté merlin_run.pilier_offering().
+##   choeur   = SOIN/PURGE GRATUIT (corruption 0 — seul levier anti-économie-corrompue via eau_claire)
+##   etre     = PACTE (corruption 1, effets forts, archétype Corrompu)
+##   compagnon= TENTATION (mix corr 0/1, valeur séduisante mais « Passer » reste un choix)
+##   chevalier= LAME (effect_type "" pur, tags[0]=Force → Offensif, corruption 0)
+##   enfant   = PIÈGE (1 médiocre honnête Commune + 1 corrompu visible + 1 « vrai » cadeau ambigu)
+static func pilier_bank(pilier: String) -> Array:
+	match pilier:
+		"choeur":
+			return [
+				make("choeur_baume_vert", "Le Baume Vert", ["Nature", "Empathie"],
+					"La druidesse presse une feuille contre ta plaie sans un mot ; la sève sait le chemin que le sang oublie.", 0, "Rare", "HEAL", 1),
+				make("choeur_eau_claire", "L'Eau Claire", ["Savoir", "Rituel"],
+					"Bois à la source que seuls les Druides connaissent ; elle lave plus que la gorge, elle lave la mémoire de la peur.", 0, "Rare", "PURGE", 1),
+				make("choeur_main_qui_releve", "La Main qui Relève", ["Empathie", "Savoir"],
+					"Une paume calleuse se pose sur ton épaule ; tu n'es pas seul, et cette certitude vaut plus que dix remèdes.", 0, "Épique", "HEAL", 2),
+			]
+		"etre":
+			return [
+				make("etre_pacte_de_lisiere", "Le Pacte de Lisière", ["Vision", "Mystère"],
+					"L'Être te montre une vérité qu'aucun œil ne devrait voir ; tu la prends, et quelque chose en toi se ternit pour l'avoir vue.", 1, "Épique", "DRAW", 2),
+				make("etre_offrande_sang", "L'Offrande de Sang", ["Sacrifice", "Rituel"],
+					"Tu ouvres la paume au-dessus de la coupe ; ce que tu y verses revient décuplé, mais ce n'est plus tout à fait du sang qui coule.", 1, "Mythique", "HEAL", 3),
+				make("etre_faveur_indicible", "La Faveur Indicible", ["Mystère", "Verbe"],
+					"Elle murmure un mot que ta bouche refuse de retenir ; la porte s'ouvre, et tu sens qu'une part de toi est restée de l'autre côté.", 1, "Rare", "PURGE", 1),
+			]
+		"compagnon":
+			return [
+				make("compagnon_promesse_ancienne", "La Promesse Ancienne", ["Empathie", "Mémoire"],
+					"Sa voix a le grain d'un ami que tu croyais perdu ; elle te promet de rester, et tu voudrais tant la croire.", 0, "Épique", "HEAL", 2),
+				make("compagnon_main_tendue", "La Main Tendue", ["Empathie", "Sacrifice"],
+					"Il te tend la main par-dessus le gouffre ; sa poigne est chaude, ferme, sincère — et quelque chose en lui s'éteint un peu chaque fois qu'il t'aide.", 1, "Épique", "HEAL", 2),
+				make("compagnon_retour_promis", "Le Retour Promis", ["Ruse", "Verbe"],
+					"« Reviens vers moi », souffle-t-il, et chaque mot tisse un chemin si doux que tu oublies de regarder où il mène.", 1, "Rare", "DRAW", 1),
+			]
+		"chevalier":
+			return [
+				make("chevalier_lame_ternie", "La Lame Ternie", ["Force", "Sacrifice"],
+					"Son épée n'a plus l'éclat des serments, mais elle tranche encore ; il te la confie sans un regard pour ce qu'elle a coûté.", 0, "Rare"),
+				make("chevalier_charge_du_dechu", "La Charge du Déchu", ["Force", "Autorité"],
+					"Il fond sur l'obstacle comme aux jours de gloire ; ce qui le poussait jadis vers l'honneur le pousse aujourd'hui tout court.", 0, "Épique"),
+				make("chevalier_serment_de_cendre", "Le Serment de Cendre", ["Force", "Sacrifice", "Autorité"],
+					"Tu jures sur ce qu'il te reste d'honneur ; le serment tient, mais il te brûle les lèvres à chaque fois qu'il sort.", 0, "Mythique"),
+			]
+		"enfant":
+			return [
+				make("enfant_jouet_offert", "Le Jouet Offert", ["Instinct"],
+					"« Tiens, c'est pour toi », dit l'Enfant, et le petit objet de bois ne fait rien d'autre que tenir au creux de ta main.", 0, "Commune"),
+				make("enfant_secret_chuchote", "Le Secret Chuchoté", ["Murmure", "Mystère"],
+					"« Garde-le pour toi », souffle l'enfant en riant ; mais son rire sonne faux, et le secret pèse déjà trop lourd dans ta poitrine.", 1, "Rare", "DRAW", 1),
+				make("enfant_main_chaude", "La Petite Main Chaude", ["Empathie", "Instinct"],
+					"Sa menotte se glisse dans la tienne, confiante ; le geste te réchauffe le cœur — mais tu sens, sans savoir pourquoi, qu'il ne faudrait pas la lâcher.", 0, "Rare", "HEAL", 1),
+			]
+	return []

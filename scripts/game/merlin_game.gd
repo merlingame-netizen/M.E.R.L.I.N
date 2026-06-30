@@ -750,6 +750,18 @@ func _advance_to_next() -> void:
 	_set_caret(false)
 	_can_advance = false
 	_clear_degree_seal()  # audit ux_flow M2 : le sceau du beat résolu ne flotte pas sur le modal de draft
+	var run: Node = get_node("/root/MerlinRun")
+	# Wave D — offrande du PILIER au beat « Rencontre » (1×/run, INDÉPENDANTE du degré) : le PNJ tend une carte
+	# signée par sa nature. REMPLACE le draft standard ce beat. current_beat() = le beat JUSTE résolu (advance_beat
+	# n'a pas encore tourné). Le flag pilier_offering_done (posé à l'ouverture, persisté) garantit l'unicité au resume.
+	if str(run.current_beat().get("type", "")) == "Rencontre" and not run.pilier_offering_done and not run.ended:
+		var pk: String = _current_offer_pilier()
+		if pk != "":
+			_pending_draft = false  # l'offrande du pilier remplace le draft standard ce beat
+			_scene_epoch += 1
+			await _present_pilier_offering(pk)
+			if not is_inside_tree():
+				return
 	# v10.11 — Draft « 1 carte sur 3 » aux beats clés, AVANT de passer au beat suivant.
 	if _pending_draft:
 		_pending_draft = false
@@ -757,7 +769,6 @@ func _advance_to_next() -> void:
 		await _present_draft()
 		if not is_inside_tree():
 			return
-	var run: Node = get_node("/root/MerlinRun")
 	run.advance_beat()
 	if run.ended:
 		return
@@ -792,7 +803,59 @@ func _present_draft() -> void:
 		_draft_layer = null
 
 
-func _build_draft_layer(choices: Array) -> void:
+# === Wave D — Offrande du pilier (modal de draft réutilisé, titre thémé par le PNJ) ===
+
+# Pilier qui fait l'offrande : le pilier de faction, SAUF si le wildcard L'Enfant est présent (il surcharge).
+func _current_offer_pilier() -> String:
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc == null:
+		return ""
+	var pk: String = str(sc.current_pilier()) if sc.has_method("current_pilier") else ""
+	if sc.has_method("current_pilier2") and str(sc.current_pilier2()) == "enfant":
+		pk = "enfant"  # le wildcard Enfant fait l'offrande quand présent (exception inquiétante)
+	return pk
+
+
+# Titre + sous-titre du modal, signés par la nature du PNJ (le « piège »/« tentation » est dans le TON, pas une stat).
+func _pilier_offer_text(pilier_key: String) -> Dictionary:
+	match pilier_key:
+		"choeur":
+			return {"title": "Le Chœur des Druides t'offre un présent", "sub": "Un don de la forêt — sans prix, sans ombre."}
+		"etre":
+			return {"title": "L'Être Indéfinissable te propose un pacte", "sub": "Un pouvoir réel — contre une part de toi."}
+		"compagnon":
+			return {"title": "Le Compagnon te tend une carte", "sub": "Sa main est chaude. Ce qu'elle coûte l'est moins."}
+		"chevalier":
+			return {"title": "Le Chevalier déchu te confie une lame", "sub": "L'acier reste tranchant, même terni."}
+		"enfant":
+			return {"title": "L'Enfant te montre ce qu'il a trouvé", "sub": "« C'est pour toi », dit-il en souriant."}
+	return {"title": "Une voie s'offre à toi — choisis une carte", "sub": "Elle rejoint ton grimoire."}
+
+
+# Présente l'offrande signée. Calque exact de _present_draft (mêmes gardes structurelles, même cycle de modal),
+# mais cartes = banque du pilier et titre thémé. Flag d'unicité posé à l'OUVERTURE (résiste resume/replay).
+func _present_pilier_offering(pilier_key: String) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	run.pilier_offering_done = true  # AVANT le filtre vide : même un skip (banque épuisée) ne re-tente jamais
+	var choices: Array = run.pilier_offering(pilier_key, 2)
+	if choices.is_empty():
+		return  # tout déjà possédé → pas de modal vide
+	_draft_pick = null
+	_draft_done_flag = false
+	var txt: Dictionary = _pilier_offer_text(pilier_key)
+	_build_draft_layer(choices, str(txt["title"]), str(txt["sub"]))
+	while not _draft_done_flag and is_inside_tree() and is_instance_valid(_draft_layer) and not run.ended:
+		await get_tree().process_frame
+	if _draft_pick != null:
+		run.add_card_to_deck(_draft_pick)
+		if _beat_map != null:
+			_beat_map.mark_draft()
+	if _draft_layer != null:
+		_draft_layer.queue_free()
+		_draft_layer = null
+
+
+func _build_draft_layer(choices: Array, title_text: String = "Une voie s'offre à toi — choisis une carte", sub_text: String = "Elle rejoint ton grimoire — de nouvelles forces ouvrent d'autres voies.") -> void:
 	_draft_open_ms = Time.get_ticks_msec()  # arme la garde F2 (pas de pick aveugle pendant le deal)
 	var layer: Control = Control.new()
 	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -810,14 +873,14 @@ func _build_draft_layer(choices: Array) -> void:
 	box.add_theme_constant_override("separation", 20)
 	center.add_child(box)
 	var title: Label = Label.new()
-	title.text = "Une voie s'offre à toi — choisis une carte"
+	title.text = title_text  # Wave D : titre thémé pour l'offrande du pilier (défaut = draft standard)
 	title.add_theme_color_override("font_color", COL_GOLD)
 	title.add_theme_font_size_override("font_size", 30)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	# v10.20.1 (O4) — explique la VALEUR du draft (avant, il apparaissait sans dire pourquoi).
 	var sub: Label = Label.new()
-	sub.text = "Elle rejoint ton grimoire — de nouvelles forces ouvrent d'autres voies."
+	sub.text = sub_text
 	sub.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
 	sub.add_theme_font_size_override("font_size", 18)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

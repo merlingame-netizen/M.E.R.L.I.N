@@ -399,6 +399,12 @@ func current_pilier() -> String:
 	return str(_run_thread.get("pilier", ""))
 
 
+# Wave D — pilier secondaire (wildcard L'Enfant, ~12%). Lu par merlin_game pour l'offrande : présent → l'Enfant
+# fait l'offrande (exception inquiétante) en surcharge du pilier de faction.
+func current_pilier2() -> String:
+	return str(_run_thread.get("pilier2", ""))
+
+
 func build_skeleton(title: String, pitch: String) -> Dictionary:
 	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) — l'arc couvre la QUÊTE 1 ;
 	# begin_quest rebascule le fil à chaque transition (last_gist traverse les quêtes).

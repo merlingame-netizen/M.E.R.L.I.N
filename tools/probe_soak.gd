@@ -175,8 +175,21 @@ func _soak_one(i: int, arch: String) -> void:
 		run.play_and_discard(combo)
 		run.apply_card_effects(combo)
 		run.apply_resolution(res)
-		# Draft logique (mêmes conditions que merlin_game._on_resolve)
-		if (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) \
+		# Wave D — offrande du PILIER au beat Rencontre (miroir de merlin_game._advance_to_next) : 1×/run,
+		# REMPLACE le draft standard ce beat. Pilier tiré aux poids de MerlinScenario → mesure l'impact
+		# corruption réel des cartes signées entrant en deck (taux 0.7 comme le draft).
+		var did_offering: bool = false
+		if btype == "Rencontre" and not run.pilier_offering_done and not run.ended:
+			run.pilier_offering_done = true
+			var offer: Array = run.pilier_offering(_soak_draw_pilier(rng), 2)
+			if not offer.is_empty():
+				did_offering = true
+				_drafts_offered += 1
+				if rng.randf() < 0.7:
+					run.add_card_to_deck(offer[rng.randi_range(0, offer.size() - 1)])
+					_drafts_taken += 1
+		# Draft logique standard (mêmes conditions que merlin_game._on_resolve) — sauté si l'offrande a eu lieu.
+		if not did_offering and (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) \
 				and not run.is_climax() and not run.ended:
 			var choices: Array = run.draft_choices(3)
 			if not choices.is_empty():
@@ -199,6 +212,21 @@ func _soak_one(i: int, arch: String) -> void:
 		_bump_arch(arch, "ends", run.end_type)
 	run.clear_save()
 	run.free()
+
+
+# Wave D — tire le pilier de l'offrande aux poids de MerlinScenario (faction 30/30/30/8 → choeur/etre/
+# chevalier/compagnon) + wildcard L'Enfant ~12% (surcharge). Reproductible (rng seedé de la run).
+func _soak_draw_pilier(rng: RandomNumberGenerator) -> String:
+	if rng.randf() < 0.12:
+		return "enfant"
+	var roll: int = rng.randi_range(1, 98)
+	if roll <= 30:
+		return "choeur"
+	if roll <= 60:
+		return "etre"
+	if roll <= 90:
+		return "chevalier"
+	return "compagnon"
 
 
 func _check(cond: bool, i: int, label: String, run: Node) -> bool:

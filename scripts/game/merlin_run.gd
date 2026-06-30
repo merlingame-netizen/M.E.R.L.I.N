@@ -50,6 +50,9 @@ var end_type: String = ""
 # v10.14 : degré du DERNIER beat résolu (pilote la ramification v1). Transient volontaire :
 # le swap de variante a lieu AVANT le save → jamais nécessaire au resume (R108).
 var last_degree: String = ""
+# Wave D — l'offrande du pilier (beat Rencontre) a déjà été proposée cette run. Persisté (R108) : posé à
+# l'OUVERTURE du modal → une offrande consommée n'est jamais re-proposée au resume / au replay de beat.
+var pilier_offering_done: bool = false
 var _last_threshold: int = 0
 var _rng := RandomNumberGenerator.new()
 
@@ -74,6 +77,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	ended = false
 	end_type = ""
 	_last_threshold = 0
+	pilier_offering_done = false
 	deck = MerlinCard.starter_deck()
 	hand = []
 	discard = []
@@ -220,8 +224,8 @@ func _draw_extra(n: int) -> void:
 
 # v10.11 — Draft « 1 carte sur 3 » : tire n cartes DISTINCTES du pool enrichi, pondérées par rareté,
 # en excluant celles déjà possédées (deck/main/défausse). Proche climax → poids hautes raretés.
-func draft_choices(n: int = 3) -> Array:
-	var pool: Array = MerlinCard.enriched_pool()
+# Cartes déjà possédées (deck + main + défausse), par id. Partagé par draft_choices ET pilier_offering (DRY).
+func owned_ids() -> Dictionary:
 	var owned: Dictionary = {}
 	for c in deck:
 		owned[c.id] = true
@@ -229,6 +233,31 @@ func draft_choices(n: int = 3) -> Array:
 		owned[c.id] = true
 	for c in discard:
 		owned[c.id] = true
+	return owned
+
+
+# Wave D — offrande du pilier (beat Rencontre) : tire jusqu'à n cartes de la banque SIGNÉE du pilier, filtrées
+# par owned_ids (jamais de doublon), mélangées via _rng (variance). Banque vide après filtre → [] (merlin_game
+# SKIP le modal, jamais d'array vide). La sélection vit ici (RNG de la run), la banque dans MerlinCard.pilier_bank.
+func pilier_offering(pilier: String, n: int = 2) -> Array:
+	var bank: Array = MerlinCard.pilier_bank(pilier)
+	var owned: Dictionary = owned_ids()
+	var avail: Array = []
+	for c in bank:
+		if not owned.has(c.id):
+			avail.append(c)
+	# Mélange Fisher-Yates partiel (RNG de la run) puis prend les n premières → variance entre runs.
+	for i in range(avail.size() - 1, 0, -1):
+		var j: int = _rng.randi_range(0, i)
+		var tmp = avail[i]
+		avail[i] = avail[j]
+		avail[j] = tmp
+	return avail.slice(0, mini(n, avail.size()))
+
+
+func draft_choices(n: int = 3) -> Array:
+	var pool: Array = MerlinCard.enriched_pool()
+	var owned: Dictionary = owned_ids()
 	var avail: Array = []
 	for c in pool:
 		if not owned.has(c.id):
@@ -493,6 +522,7 @@ func save() -> void:
 		"cartes_notables": cartes_notables,
 		"archetype_scores": archetype_scores,
 		"last_threshold": _last_threshold,
+		"pilier_offering_done": pilier_offering_done,  # Wave D : unicité de l'offrande au resume (R108)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -526,6 +556,7 @@ func load_run() -> bool:
 	cartes_notables = data.get("cartes_notables", [])
 	archetype_scores = data.get("archetype_scores", {})
 	_last_threshold = int(data.get("last_threshold", 0))
+	pilier_offering_done = bool(data.get("pilier_offering_done", false))  # Wave D : défaut false (saves legacy)
 	deck = _dicts_to_cards(data.get("deck", []))
 	hand = _dicts_to_cards(data.get("hand", []))
 	discard = _dicts_to_cards(data.get("discard", []))
