@@ -742,6 +742,12 @@ func _draw() -> void:
 			var ff: float = float(fi)
 			var fpx: float = w * (0.42 + 0.55 * fmod(ff * 0.618 + 0.2, 1.0)) + sin(_t * (0.28 + ff * 0.04) + ff) * w * 0.018
 			var fpy: float = h * (0.42 + 0.46 * fmod(ff * 0.382 + 0.1, 1.0)) + cos(_t * (0.22 + ff * 0.03) + ff * 1.3) * h * 0.028
+			# v10.21 (goal hover++) — les lucioles FUIENT doucement le curseur (répulsion radiale).
+			var fly_hov: float = _hover_f(Vector2(fpx, fpy), h * 0.10)
+			if fly_hov > 0.02:
+				var away: Vector2 = (Vector2(fpx, fpy) - _cursor_pos).normalized() * fly_hov * h * 0.045
+				fpx += away.x
+				fpy += away.y
 			var blink: float = 0.5 + 0.5 * sin(_t * (1.6 + ff * 0.27) + ff * 2.1)
 			var fa: float = (0.08 + 0.55 * pow(blink, 3.0)) * dr
 			if rm:
@@ -814,7 +820,9 @@ func _draw() -> void:
 			var px: float = m_x + fx * m_w
 			var wob: float = sin(fx * 6.0 + drift + float(li) * 2.1) * m_th * 0.45 \
 				+ sin(fx * 13.0 - drift * 1.7) * m_th * 0.20
-			ribbon.append(Vector2(px, m_y + wob))
+			# v10.21 (goal hover++) — la brume S'ÉCARTE du curseur qui la traverse (creux local).
+			var part: float = _hover_f(Vector2(px, m_y + m_th * 0.5), m_th * 2.6)
+			ribbon.append(Vector2(px, m_y + wob + part * m_th * 0.85))
 		for si3 in seg + 1:  # bord INFÉRIEUR sinueux (retour, phase décalée)
 			var fx2: float = 1.0 - float(si3) / float(seg)
 			var px2: float = m_x + fx2 * m_w
@@ -962,7 +970,8 @@ func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0) -> vo
 	# Feuillage saisonnier : petits accents colorés DANS les masses de la canopée (QA v10.21 : les gros
 	# pois flottaient hors couronne → rayon réduit, nombre doublé, positions calées sur les blobs sombres).
 	if _season_leaf_a > 0.001 and alpha > 0.01:
-		var leaf_a: float = _season_leaf_a * alpha * 0.85 * (0.7 if rm2 else 1.0)
+		# v10.21 (goal hover++) — le feuillage S'ÉCLAIRE quand le curseur caresse la couronne.
+		var leaf_a: float = _season_leaf_a * alpha * 0.85 * (0.7 if rm2 else 1.0) * (1.0 + hov * 0.55)
 		var lc: Color = Color(_season_leaf.r, _season_leaf.g, _season_leaf.b, leaf_a)
 		var br: float = _season_blob_r * w_ref * 0.75
 		for k2 in _season_blobs * 6:
