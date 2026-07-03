@@ -55,6 +55,49 @@ var last_degree: String = ""
 var pilier_offering_done: bool = false
 # v10.21 (Wave G, R130) — budget « Pousser » restant pour la QUÊTE courante (1/quête, rechargé au répit).
 var pushes_left_quest: int = 1
+# v10.21 (Wave I, R131) — INTERVENTIONS du pilier : beats planifiés (à la Rencontre) + compteur (cap 2),
+# persistés (R108). blessed_tags {card_id: tag} = bénédictions actives, consommées à la pose.
+var intervention_beats: Array = []
+var pilier_interventions: int = 0
+var blessed_tags: Dictionary = {}
+
+
+# Tags bénis portés par les cartes de ce combo (canal bonus de MerlinResolution.resolve, R131).
+func blessed_bonus(combo: Array) -> Array:
+	var out: Array = []
+	for c in combo:
+		if c is Object and c.get("id") != null and blessed_tags.has(str(c.id)):
+			out.append(str(blessed_tags[str(c.id)]))
+	return out
+
+
+# Consomme les bénédictions des cartes jouées (une bénédiction sert UNE fois).
+func consume_blessings(combo: Array) -> void:
+	for c in combo:
+		if c is Object and c.get("id") != null:
+			blessed_tags.erase(str(c.id))
+
+
+# v10.21 (R131) — mutation de corruption via API unique : jauges + seuils + fin (spec panel).
+func add_corruption(n: int) -> void:
+	corruption = maxi(0, corruption + n)
+	emit_signal("gauges_changed", integrite, corruption)
+	_check_corruption_threshold()
+
+
+# Pioche N cartes hors résolution (don du Compagnon, R131) — respecte le cap de main.
+func draw_extra(n: int) -> void:
+	var cap: int = _hand_size() + HAND_CAP_EXTRA
+	for i in n:
+		if hand.size() >= cap:
+			return
+		if deck.is_empty():
+			if discard.is_empty():
+				return
+			deck = discard.duplicate()
+			discard = []
+			_shuffle(deck)
+		hand.append(deck.pop_back())
 var _last_threshold: int = 0
 var _rng := RandomNumberGenerator.new()
 
@@ -81,6 +124,9 @@ func new_run(p_scenario: Dictionary) -> void:
 	_last_threshold = 0
 	pilier_offering_done = false
 	pushes_left_quest = MerlinResolution.PUSH_BUDGET_PER_QUEST
+	intervention_beats = []
+	pilier_interventions = 0
+	blessed_tags = {}
 	deck = MerlinCard.starter_deck()
 	hand = []
 	discard = []
@@ -528,6 +574,8 @@ func save() -> void:
 		"last_threshold": _last_threshold,
 		"pilier_offering_done": pilier_offering_done,  # Wave D : unicité de l'offrande au resume (R108)
 		"pushes_left_quest": pushes_left_quest,  # Wave G (R130) : budget Pousser persisté (additif)
+		"intervention_beats": intervention_beats, "pilier_interventions": pilier_interventions,
+		"blessed_tags": blessed_tags,  # Wave I (R131) : planning + bénédictions persistés (R108)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -563,6 +611,9 @@ func load_run() -> bool:
 	_last_threshold = int(data.get("last_threshold", 0))
 	pilier_offering_done = bool(data.get("pilier_offering_done", false))  # Wave D : défaut false (saves legacy)
 	pushes_left_quest = int(data.get("pushes_left_quest", MerlinResolution.PUSH_BUDGET_PER_QUEST))  # Wave G (R130)
+	intervention_beats = data.get("intervention_beats", [])  # Wave I (R131), défauts = saves legacy OK
+	pilier_interventions = int(data.get("pilier_interventions", 0))
+	blessed_tags = data.get("blessed_tags", {})
 	deck = _dicts_to_cards(data.get("deck", []))
 	hand = _dicts_to_cards(data.get("hand", []))
 	discard = _dicts_to_cards(data.get("discard", []))

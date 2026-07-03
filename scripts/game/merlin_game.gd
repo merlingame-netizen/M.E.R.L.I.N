@@ -241,6 +241,10 @@ func _present_current_beat() -> void:
 		_push_row = null
 	_push_pending = false
 	_push_res_raw = {}
+	if _pact_row != null and is_instance_valid(_pact_row):  # R131 : idem pour le pacte
+		_pact_row.queue_free()
+		_pact_row = null
+	_intervention_done_this_beat = false
 	if _situation_text != null:
 		_situation_text.modulate.a = 1.0
 	# v10.14 — frontière de quête (chaîne) : la map repart sur la quête courante et le fil
@@ -321,6 +325,17 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		# JAMAIS angry à l'apparition — réservé au degré échec). Le mood pilier PRIME sur mood_for_text.
 		var pk2: String = _current_offer_pilier()
 		if btype == "Rencontre" and pk2 != "":
+			# v10.21 (Wave I, R131) — PLANIFICATION des interventions (persistée R108, cap 2, jamais le
+			# climax final, jamais consécutives) : le pilier reviendra se mêler de 1-2 beats ultérieurs.
+			if (run.intervention_beats as Array).is_empty() and int(run.pilier_interventions) == 0:
+				var total_b: int = int(run.scenario.get("total", 5))
+				var t1: int = run.beat_index + 1 + (randi() % 2)
+				if t1 < total_b - 1:
+					run.intervention_beats.append(t1)
+					if randf() < 0.5:
+						var t2: int = t1 + 2 + (randi() % 2)
+						if t2 < total_b - 1:
+							run.intervention_beats.append(t2)
 			_scene_art.set_pilier(pk2, true)
 			MerlinAudio.play_pad("pad_" + pk2)  # v10.21 Wave A : la nappe SIGNÉE s'installe avec lui
 			if pk2 == "choeur" or pk2 == "chevalier":
@@ -365,6 +380,8 @@ func _render_hand(deal: bool = false) -> void:
 			var cv: MerlinCardView = MerlinCardView.new()
 			_hand_box.add_child(cv)
 			cv.setup(card)
+			if run.blessed_tags.has(str(card.id)):  # R131 : bénédiction VISIBLE (badge ✦tag)
+				cv.set_blessed(str(run.blessed_tags[str(card.id)]))
 			cv.card_clicked.connect(_on_hand_card)
 			keep[card] = cv
 	for i in wanted.size():  # ordre des enfants = ordre de la main (recouvrement stable)
@@ -478,7 +495,8 @@ func _update_preview() -> void:
 		_resolve_btn.disabled = true
 		return
 	var reqs: Array = _current_situation.get("required_tags", [])
-	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)))
+	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)),
+		get_node("/root/MerlinRun").blessed_bonus(_combo))  # R131 : bénédictions dans la preview (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_resolve_btn.disabled = false
 	if was_disabled and _resolve_btn.visible:
@@ -499,7 +517,8 @@ func _on_resolve() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
 	var reqs: Array = _current_situation.get("required_tags", [])
-	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)))
+	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)),
+		run.blessed_bonus(_combo))  # R131 : mêmes tags bénis que la preview (invariant R120)
 	var played_cards: Array = _combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
@@ -507,6 +526,7 @@ func _on_resolve() -> void:
 	var int_before: int = int(run.get("integrite"))
 	var corr_before: int = int(run.get("corruption"))
 	run.play_and_discard(_combo)
+	run.consume_blessings(played_cards)  # R131 : une bénédiction sert UNE fois (érodée à la pose)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
 	# v10.21 (Wave G, R130) — PARTIEL = CHOIX : si budget Pousser disponible, l'application de la
 	# résolution est DIFFÉRÉE jusqu'au choix Encaisser/Pousser (post-lecture). Sinon flux inchangé.
@@ -626,6 +646,141 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	else:
 		combined = "[center]%s\n\n%s[/center]" % [cur, narration]
 	_typewriter(combined, animate, _situation_text, situ_chars)
+
+
+# === v10.21 (Wave I, R131) — INTERVENTIONS du pilier : il revient se mêler du sentier (1-2×/run) ===
+# Lignes SIGNÉES (panel design, docs/spec_v10.21_presences.md) écrites À LA SUITE du fil (R128).
+const INTERVENTION_LINES: Dictionary = {
+	"choeur": "Nous avons chanté sur celle-ci, Voyageur — quand ta main la lâchera, la forêt se souviendra que tu fus des nôtres.",
+	"chevalier": "Je n'ai plus de cause, alors prends mon fer — qu'il tranche pour toi ce que je n'ai pas su défendre.",
+	"etre": "Accepte, et ce que tu ne sais pas nommer ouvrira les portes à ta place — il suffit que tu me laisses entrer, un peu.",
+	"compagnon": "Prends, comme avant — là où je marche on ne garde rien, et ce que cela te coûte, tu me le rendras plus tard.",
+	"enfant": "Regarde, j'ai écarté les ronces pour toi — c'est facile, quand on me laisse faire.",
+}
+var _intervention_done_this_beat: bool = false
+var _pact_row: HBoxContainer = null
+
+
+# Ce beat est-il planifié pour une intervention ? Consommation à l'OUVERTURE (R108) + save atomique.
+func _maybe_intervention() -> bool:
+	var run: Node = get_node("/root/MerlinRun")
+	if _intervention_done_this_beat or run.ended or run.is_climax():
+		return false
+	if not (run.intervention_beats as Array).has(run.beat_index) or int(run.pilier_interventions) >= 2:
+		return false
+	var pk: String = _current_offer_pilier()
+	if pk == "":
+		return false
+	_intervention_done_this_beat = true
+	run.intervention_beats.erase(run.beat_index)
+	run.pilier_interventions = int(run.pilier_interventions) + 1
+	run.save()  # même le quit mid-séquence ne re-proposera jamais cette intervention
+	_play_intervention(pk)
+	return true
+
+
+# Séquence scriptée (~1.8s, spec panel) : silhouette + nappe + réaction lune + ligne signée dans le fil
+# + effet. Les effets SANS consentement (bénédictions) s'appliquent à l'ouverture ; les pactes via boutons.
+func _play_intervention(pk: String) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	if _scene_art != null:
+		_scene_art.set_pilier(pk, true)
+		if pk == "choeur" or pk == "chevalier":
+			_scene_art.set_eye_mood("neutral")
+			_scene_art.flash_moon()
+		else:
+			_scene_art.set_eye_mood("surprise")
+	MerlinAudio.play_pad("pad_" + pk)
+	# Effets SANS consentement (bénédiction/aide) appliqués à l'ouverture — R108 : payés = acquis.
+	if pk == "choeur" or pk == "chevalier" or pk == "enfant":
+		_apply_blessing(pk)
+	# Ligne signée écrite À LA SUITE (pattern R128 from_chars) → le handler state 1 re-passe ensuite.
+	var situ_chars: int = _situation_text.get_total_character_count()
+	var combined: String = _situation_text.text.replace("[/center]",
+		"\n\n« %s »[/center]" % str(INTERVENTION_LINES.get(pk, "")))
+	_typewriter(combined, true, _situation_text, situ_chars)
+	# Pactes opt-in (Être / Compagnon) : boutons après l'écriture de la ligne (jamais de timer, R99).
+	if pk == "etre" or pk == "compagnon":
+		if _tw != null and _tw.is_valid():
+			await _tw.finished
+		if is_inside_tree() and not run.ended:
+			_build_pact_choice(pk)
+
+
+# Bénédiction : une carte de la main gagne un tag temporaire VISIBLE (badge), consommé à la pose.
+# Chœur = Nature/Équilibre · Chevalier = Force/Autorité · Enfant = un tag REQUIS du beat (l'aide innocente).
+func _apply_blessing(pk: String) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	if (run.hand as Array).is_empty():
+		return
+	var tag: String = ""
+	match pk:
+		"choeur":
+			tag = "Nature" if randf() < 0.5 else "Équilibre"
+		"chevalier":
+			tag = "Force" if randf() < 0.5 else "Autorité"
+		"enfant":
+			var reqs2: Array = _current_situation.get("required_tags", [])
+			if reqs2.is_empty():
+				return
+			tag = str(reqs2[randi() % reqs2.size()])
+	# Carte éligible : ne portant pas déjà le tag (fallback : n'importe laquelle).
+	var pick: MerlinCard = null
+	for c in run.hand:
+		if c is MerlinCard and not (c.tags as Array).has(tag):
+			pick = c
+			break
+	if pick == null:
+		pick = run.hand[0]
+	run.blessed_tags[str(pick.id)] = tag
+	run.save()
+
+
+# Pacte opt-in (1 geste, prix AFFICHÉ) : Être = la porte s'ouvre (tag requis béni) contre +1 Corruption ;
+# Compagnon = pioche 1 contre +1 Corruption. Refuser = rien. Ignorable (la main reste jouable).
+func _build_pact_choice(pk: String) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	_pact_row = HBoxContainer.new()
+	_pact_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_pact_row.add_theme_constant_override("separation", 24)
+	var acc: Button = Button.new()
+	acc.text = ("Accepter  (la voie s'ouvre · Corruption +1)" if pk == "etre"
+		else "Accepter  (pioche 1 · Corruption +1)")
+	var ref: Button = Button.new()
+	ref.text = "Refuser"
+	for b in [acc, ref]:
+		var btn: Button = b
+		btn.custom_minimum_size = Vector2(300, 52)
+		btn.add_theme_font_size_override("font_size", 18)
+		MerlinVisual.apply_button_da(btn)
+		MerlinVisual.connect_button_feedback(btn)
+		_pact_row.add_child(btn)
+	acc.pressed.connect(_on_pact_choice.bind(pk, true))
+	ref.pressed.connect(_on_pact_choice.bind(pk, false))
+	if _res_block != null:
+		_res_block.add_child(_pact_row)
+		_res_block.visible = true
+
+
+func _on_pact_choice(pk: String, accepted: bool) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	if accepted:
+		if pk == "etre":
+			var reqs3: Array = _current_situation.get("required_tags", [])
+			if not reqs3.is_empty() and not (run.hand as Array).is_empty():
+				var tag3: String = str(reqs3[randi() % reqs3.size()])
+				run.blessed_tags[str((run.hand[0] as MerlinCard).id)] = tag3
+				_render_hand()
+		elif pk == "compagnon":
+			run.draw_extra(1)
+			_render_hand(true)
+		run.add_corruption(1)  # le prix du pacte — affiché sur le bouton AVANT le clic
+		run.save()
+	if _pact_row != null and is_instance_valid(_pact_row):
+		_pact_row.queue_free()
+		_pact_row = null
+	if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
+		_res_block.visible = false  # rien d'autre à montrer dans le bloc
 
 
 # v10.21 (Wave G, R130) — Choix « Encaisser / Pousser » sous la vignette : 1 geste, zéro timer (R99),
@@ -1073,6 +1228,10 @@ func _on_typewriter_done() -> void:
 			_caret.text = "▮ cliquer pour continuer"
 		_set_caret(true)
 	elif _state == 1:
+		# v10.21 (Wave I, R131) — INTERVENTION du pilier : si ce beat est planifié, la séquence prend la
+		# main (ligne signée écrite à la suite → re-typewriter → ce handler re-passe, flag posé).
+		if _maybe_intervention():
+			return
 		# Situation entièrement écrite → caret masqué, les cartes MONTENT pour le choix (user 2026-06-06).
 		_set_caret(false)
 		# v10.15 — Prose breathing : le texte pulse doucement (alpha 0.88↔1.0) en attendant le choix.

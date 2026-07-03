@@ -46,7 +46,7 @@ const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
 ## die : face 1-6 PRÉ-TIRÉE par l'appelant (0 = pas de dé, rétro-compatible probes).
 ## Retourne {degree, label, integrite_delta, corruption_delta, coverage, eclatante_bonus, sabotaged,
 ##           die, die_mod, die_rarity}.
-static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0) -> Dictionary:
+static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = []) -> Dictionary:
 	var played_tags: Array = []
 	var cost: int = 0
 	for c in played_cards:
@@ -54,6 +54,10 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		for t in tags:
 			played_tags.append(t)
 		cost += _card_corruption(c)
+	# v10.21 (Wave I, R131) — TAGS BÉNIS par une intervention de pilier : ajoutés à la couverture.
+	# Passés par TOUS les call-sites (preview, prefetch, résolution) → invariant preview = résolution (R120).
+	for bt in bonus_tags:
+		played_tags.append(str(bt))
 
 	var cov: Dictionary = MerlinTags.coverage(required, played_tags)
 	var covered_n: int = cov["covered"].size()

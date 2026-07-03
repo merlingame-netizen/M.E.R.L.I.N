@@ -158,6 +158,27 @@ func _build(role: String) -> void:
 	_add_corner_markers(rar, rstyle)
 
 
+# v10.21 (Wave I, R131) — badge de BÉNÉDICTION : pastille GOLD portant le tag temporaire offert par le
+# pilier (zéro info cachée, pilier ÉVIDENT). Posée par merlin_game._render_hand quand la carte est bénie.
+func set_blessed(tag: String) -> void:
+	var badge: PanelContainer = PanelContainer.new()
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb2: StyleBoxFlat = StyleBoxFlat.new()
+	sb2.bg_color = MerlinVisual.GOLD
+	sb2.set_corner_radius_all(8)
+	sb2.set_content_margin_all(4)
+	badge.add_theme_stylebox_override("panel", sb2)
+	var lbl2: Label = Label.new()
+	lbl2.text = "✦ " + tag
+	lbl2.add_theme_color_override("font_color", MerlinVisual.INK)
+	lbl2.add_theme_font_size_override("font_size", 12)
+	lbl2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(lbl2)
+	var sz2: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE
+	badge.position = Vector2(sz2.x * 0.5 - 34.0, -10.0)  # à cheval sur le bord haut (visible dans l'éventail)
+	add_child(badge)
+
+
 # Marqueurs de coin (overlay absolu sur self, hors flux du VBox) : gemme rareté/coût + badge d'effet.
 func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 	var sz: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE

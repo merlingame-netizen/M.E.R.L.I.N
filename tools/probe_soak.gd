@@ -166,10 +166,37 @@ func _soak_one(i: int, arch: String) -> void:
 			pool[k] = pool[j]
 			pool[j] = tmp
 		var required: Array = pool.slice(0, mini(2, pool.size()))
+		# v10.21 (Wave I, R131) — miroir des INTERVENTIONS : planifiées à la Rencontre, appliquées au beat
+		# cible (bénédiction = blessed_tags → canal bonus de resolve ; pactes selon la politique d'archétype).
+		if btype == "Rencontre" and (run.intervention_beats as Array).is_empty() and int(run.pilier_interventions) == 0:
+			var t1: int = run.beat_index + 1 + rng.randi_range(0, 1)
+			if t1 < int(run.scenario.get("total", 5)) - 1:
+				run.intervention_beats.append(t1)
+		if (run.intervention_beats as Array).has(run.beat_index) and int(run.pilier_interventions) < 2:
+			run.intervention_beats.erase(run.beat_index)
+			run.pilier_interventions += 1
+			var ipk: String = _soak_draw_pilier(rng)
+			if ipk == "choeur" or ipk == "chevalier" or ipk == "enfant":
+				if not run.hand.is_empty():
+					var btag: String = "Nature" if ipk == "choeur" else "Force"
+					if ipk == "enfant" and not required.is_empty():
+						btag = str(required[0])
+					run.blessed_tags[str(run.hand[0].id)] = btag
+			else:  # etre / compagnon : pacte opt-in selon la politique
+				var take_pact: bool = arch == "greedy" or arch == "corrompu" \
+					or (arch == "optimal" and (run.corruption % 5) <= 2) \
+					or (arch == "chaotic" and rng.randf() < 0.5)
+				if take_pact:
+					if ipk == "compagnon":
+						run.draw_extra(1)
+					elif not run.hand.is_empty() and not required.is_empty():
+						run.blessed_tags[str(run.hand[0].id)] = str(required[0])
+					run.add_corruption(1)
 		var combo: Array = _pick_combo(arch, run.hand, required, rng)
 		# v10.14 — dé PRÉ-TIRÉ du beat (seedé → reproductible), comme build_situation en jeu.
 		var die: int = rng.randi_range(1, 6)
-		var res: Dictionary = MerlinResolution.resolve(required, combo, [], die)
+		var res: Dictionary = MerlinResolution.resolve(required, combo, [], die, run.blessed_bonus(combo))
+		run.consume_blessings(combo)  # R131 : une bénédiction sert UNE fois (miroir du jeu)
 		# v10.21 (Wave G, R130) — miroir du choix « Pousser » : politiques par archétype (spec panel).
 		# optimal pousse si corruption loin du seuil ; greedy/corrompu toujours ; chaotic 50% ; tag_ignorant jamais.
 		if str(res.get("degree", "")) == MerlinResolution.PARTIEL and int(run.pushes_left_quest) > 0:
