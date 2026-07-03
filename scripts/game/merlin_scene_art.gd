@@ -582,15 +582,16 @@ func _draw() -> void:
 			var ra: float = (0.025 + 0.010 * sin(_t * 0.12 + float(ri) * 2.1)) * dr
 			draw_colored_polygon(pts, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ra))
 
-	# Moon halos + disk
+	# Moon halos + disk — v10.21 (goal hover) : la lune S'ILLUMINE à l'approche du curseur.
+	var m_hov: float = _hover_f(moon_c, moon_r * 2.2)
 	if _animated:
-		var halo_outer_r: float = moon_r * (1.45 + 0.08 * sin(_halo_phase * 0.6))
-		var halo_outer_a: float = (0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))) * dr
+		var halo_outer_r: float = moon_r * (1.45 + 0.08 * sin(_halo_phase * 0.6) + m_hov * 0.10)
+		var halo_outer_a: float = (0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))) * dr * (1.0 + m_hov * 0.9)
 		if rm:
 			halo_outer_a *= 0.5
 		draw_circle(moon_c, halo_outer_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_outer_a))
 		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_halo_phase))
-		var halo_a: float = (0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))) * dr
+		var halo_a: float = (0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))) * dr * (1.0 + m_hov * 0.9)
 		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 
 	# Moon flash/dim reactive (+ chaleur selon l'heure, v10.18 ; + teinte de faction, Wave C)
@@ -603,7 +604,7 @@ func _draw() -> void:
 	# v10.21 — ANNEAU RUNIQUE : 6 segments d'arc en rotation TRÈS lente autour de la lune (mystique discret).
 	if _animated:
 		var ring_r: float = moon_r * 1.55
-		var ring_a: float = (0.07 + 0.02 * sin(_halo_phase * 0.5)) * dr * (0.5 if rm else 1.0)
+		var ring_a: float = (0.07 + 0.02 * sin(_halo_phase * 0.5)) * dr * (0.5 if rm else 1.0) * (1.0 + m_hov * 1.3)
 		var ring_col: Color = Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ring_a)
 		var spin_r: float = _t * 0.04
 		for ai in 6:
@@ -754,6 +755,10 @@ func _draw() -> void:
 				var root: Vector2 = front_crest[ci]
 				var g_h: float = h * (0.020 + fmod(tf * 0.37, 0.014))
 				var lean: float = 0.0 if rm else sin(_t * (0.8 + fmod(tf, 0.5)) + tf * 2.2) * g_h * 0.35
+				# v10.21 (goal hover) — l'herbe SE COURBE en s'écartant du curseur qui passe.
+				var gr_hov: float = _hover_f(root, h * 0.07)
+				if gr_hov > 0.02:
+					lean += signf(root.x - _cursor_pos.x) * gr_hov * g_h * 0.7
 				for bl2 in 3:
 					var spread: float = (float(bl2) - 1.0) * g_h * 0.45
 					draw_line(root, root + Vector2(spread + lean, -g_h * (0.75 + 0.25 * float(bl2 == 1))), g_col, 1.5, true)
@@ -882,6 +887,15 @@ func _star(p: Vector2, rr: float, alpha: float = 1.0) -> void:
 		p + Vector2(0.0, -rr), p + Vector2(rr * 0.5, 0.0), p + Vector2(0.0, rr), p + Vector2(-rr * 0.5, 0.0)]), col)
 
 
+# v10.21 (goal hover) — Facteur de PROXIMITÉ du curseur (0 loin → 1 dessus) : le décor RÉAGIT au survol
+# (arbres qui frémissent, lune qui s'illumine, oghams qui scintillent, herbe qui se courbe). 0 si le
+# curseur est hors du node ou en reduce-motion.
+func _hover_f(p: Vector2, radius: float) -> float:
+	if not _cursor_inside or MerlinVisual.reduced_motion:
+		return 0.0
+	return clampf(1.0 - _cursor_pos.distance_to(p) / maxf(radius, 1.0), 0.0, 1.0)
+
+
 # v10.21 — Arbre ORGANIQUE (user : « moins design HTML ») : tronc GALBÉ en polygone effilé avec courbe
 # en S, 2 branches maîtresses effilées, CANOPÉE en masses sombres qui respirent + sway idle propre à
 # chaque arbre (déterministe : seedé par base.x — zéro randf en _draw). Signature INCHANGÉE (6 appelants).
@@ -889,7 +903,9 @@ func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0) -> vo
 	var col: Color = COL_SIL if alpha >= 1.0 else Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, alpha)
 	var tseed: float = fmod(absf(base.x) * 0.137, TAU)  # variation par arbre, stable d'une frame à l'autre
 	var rm2: bool = MerlinVisual.reduced_motion
-	var idle: float = 0.0 if rm2 else sin(_t * (0.22 + fmod(tseed, 0.13)) + tseed) * height * 0.012
+	# v10.21 (goal hover) — l'arbre FRÉMIT à l'approche du curseur : sway plus vif + plus ample.
+	var hov: float = _hover_f(base + Vector2(0.0, -height * 0.55), height * 0.85)
+	var idle: float = 0.0 if rm2 else sin(_t * (0.22 + fmod(tseed, 0.13) + hov * 2.6) + tseed) * height * (0.012 + hov * 0.016)
 	var swy: float = idle + _tree_sway * 0.35
 	var top: Vector2 = base + Vector2(swy * 2.2, -height)
 	var t_w: float = maxf(w_ref * 0.010, 3.0)
@@ -1026,9 +1042,17 @@ func _menhir(pos: Vector2, dim: Vector2, alpha: float = 1.0) -> void:
 	var y1: float = pos.y + dim.y * 0.82
 	draw_line(Vector2(cx, y0), Vector2(cx, y1), ink, 2.0, true)
 	var tick: float = dim.x * 0.38
+	# v10.21 (goal hover) — les entailles ogham SCINTILLENT d'or à l'approche du curseur.
+	var g_hov: float = _hover_f(pos + dim * 0.5, dim.y * 1.1)
+	var glint: Color = Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b,
+		g_hov * (0.45 + 0.25 * sin(_t * 3.0)) * alpha)
 	for i in 4:
 		var ty: float = lerpf(y0, y1, float(i + 1) / 5.0)
 		draw_line(Vector2(cx - tick, ty), Vector2(cx + tick, ty), ink, 2.0, true)
+		if g_hov > 0.02:
+			draw_line(Vector2(cx - tick, ty), Vector2(cx + tick, ty), glint, 2.0, true)
+	if g_hov > 0.02:
+		draw_line(Vector2(cx, y0), Vector2(cx, y1), glint, 2.0, true)
 	# Mousse au pied (accent GREEN canon, discret — la forêt reprend la pierre).
 	var moss: Color = MerlinVisual.GREEN
 	draw_circle(pos + Vector2(dim.x * 0.22, dim.y * 0.97), dim.x * 0.20, Color(moss.r, moss.g, moss.b, 0.22 * alpha))
