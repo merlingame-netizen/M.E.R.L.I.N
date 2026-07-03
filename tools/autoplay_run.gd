@@ -84,7 +84,9 @@ func _play_one(k: int) -> bool:
 
 	# Boucle maîtresse pilotée par l'état — gère beats, fusion, draft, fin.
 	var take_draft: bool = (k % 2 == 0)  # alterne prendre/passer le draft entre les runs
-	var dl: int = Time.get_ticks_msec() + int(RUN_DEADLINE_S * 1000.0)
+	# --slow ajoute ~N s de pause PAR BEAT (jusqu'à 15 beats) → deadline étendu d'autant (QA 2026-06-30 :
+	# un run capture --slow=3 a dépassé les 480 s et FAIL alors que le jeu était sain).
+	var dl: int = Time.get_ticks_msec() + int((RUN_DEADLINE_S + _slow_s * 20.0) * 1000.0)
 	while Time.get_ticks_msec() < dl:
 		if not is_instance_valid(game):
 			break  # scène libérée → bascule vers MerlinEnd en cours

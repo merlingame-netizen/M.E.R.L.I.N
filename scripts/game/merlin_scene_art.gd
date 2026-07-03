@@ -99,6 +99,15 @@ var _faction_moon_f: float = 0.0
 var _faction_sky_f: float = 0.0
 var _faction_mote_f: float = 0.0
 
+# v10.21 — SILHOUETTE DU PILIER PNJ (spec panel) : présence SEULEMENT aux beats du PNJ (Rencontre,
+# interventions). Bande GAUCHE (x=0.22w — la beat map vit à droite), pieds sur la crête du sol,
+# couleur SILHOUETTE.lerp(accent, 0.25) (§20 zéro hex), matérialisation 1.0s / disparition 0.6s ×motion().
+const PILIER_ACCENT: Dictionary = {
+	"choeur": "GREEN", "etre": "RARE_BLUE", "chevalier": "GOLD", "compagnon": "VIOLET", "enfant": "CREAM"}
+var _pilier_key: String = ""
+var _pilier_reveal: float = 0.0  # 0 = absent → 1 = matérialisé (rampe corps puis détails)
+var _pilier_tw: Tween = null
+
 # v10.21 (user 2026-06-30 : « décor bien plus animé, moins design HTML ») — REFONTE ORGANIQUE.
 # Feuilles qui tombent (couleur saisonnière ; hiver = flocons crème). 6 particules recyclées.
 const LEAF_COUNT: int = 6
@@ -345,6 +354,23 @@ func set_faction(faction: String) -> void:
 			_faction_accent = MerlinVisual.GOLD
 			_faction_moon_f = 0.0; _faction_sky_f = 0.0; _faction_mote_f = 0.0
 	queue_redraw()
+
+
+# v10.21 — Présence du PNJ pilier : matérialisation 1.0s (rampe corps→détails) / disparition 0.6s,
+# ×motion(). Reduce-motion (R74) : alpha instantané. key="" ou on=false → départ fondu.
+func set_pilier(key: String, on: bool) -> void:
+	if on and key != "":
+		_pilier_key = key
+	var target: float = 1.0 if (on and key != "") else 0.0
+	if _pilier_tw != null and _pilier_tw.is_valid():
+		_pilier_tw.kill()
+	if MerlinVisual.reduced_motion:
+		_pilier_reveal = target
+		queue_redraw()
+		return
+	_pilier_tw = create_tween()
+	_pilier_tw.tween_property(self, "_pilier_reveal", target,
+		(1.0 if target > 0.5 else 0.6) * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 # Saison courante dérivée de la date système (override possible via MERLIN_SEASON pour les tests).
@@ -620,6 +646,8 @@ func _draw() -> void:
 	if not _watch_eyes and (_beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme"):
 		_figure(Vector2(w * 0.5, h * 0.84), h * 0.50, w * 0.075)
 
+	# (v10.21 — la silhouette du pilier est dessinée APRÈS la brume : présence au premier plan, jamais délavée.)
+
 	# 18 ambient motes (3 categories: firefly/dust/ember)
 	if _animated:
 		var mcount: int = int(MerlinVisual.MOTE_COUNT_AMBIENT * _mote_density)  # v10.18 : densité pilotée
@@ -656,7 +684,25 @@ func _draw() -> void:
 				mx = fmod(mx, w)
 			if rm:
 				ma *= 0.5
-			draw_circle(Vector2(mx, my) + _parallax, mr, Color(mote_col.r, mote_col.g, mote_col.b, ma * dr))
+			# v10.21 — RE-SKIN de ≤8 motes pendant la présence du pilier (spec panel : zéro nouvel émetteur) :
+			# Chœur = vertes ASCENDANTES · Être = bleues d'outre-monde · Chevalier = braises · Compagnon =
+			# violettes basses · Enfant = crème. Les 10 autres motes gardent l'ambre ambiant.
+			var mc2: Color = mote_col
+			if _pilier_reveal > 0.5 and mi < 8:
+				match _pilier_key:
+					"choeur":
+						mc2 = MerlinVisual.GREEN
+						my -= fmod(_t * 9.0 + mf * 37.0, h * 0.22)
+					"etre":
+						mc2 = MerlinVisual.RARE_BLUE
+					"chevalier":
+						mc2 = MerlinVisual.GOLD.lerp(MerlinVisual.INK, 0.25)
+					"compagnon":
+						mc2 = MerlinVisual.VIOLET
+						my = minf(my + h * 0.10, h * 0.86)
+					"enfant":
+						mc2 = MerlinVisual.CREAM
+			draw_circle(Vector2(mx, my) + _parallax, mr, Color(mc2.r, mc2.g, mc2.b, ma * dr))
 
 	# v10.18 — Lucioles (nuit / crépuscule, menu) : 12 points vert-or qui dérivent et clignotent
 	# (blink piqué via pow). Distinctes des motes ambrées : plus vertes, halo, parmi les arbres.
@@ -743,6 +789,10 @@ func _draw() -> void:
 			ribbon.append(Vector2(px2, m_y + m_th + wob2))
 		draw_colored_polygon(ribbon, Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha))
 		# (QA v10.21 : le « cœur » rectangulaire créait des coutures droites — retiré, le ruban seul suffit.)
+
+	# v10.21 — SILHOUETTE DU PNJ PILIER : dessinée APRÈS la brume (premier plan, jamais délavée — QA probe).
+	if _pilier_reveal > 0.01:
+		_draw_pilier(w, h, dr)
 
 	# v10.21 — FEUILLES qui tombent (quads tournoyants, couleur saison ; hiver = flocons crème ronds).
 	if _animated and not _leaves.is_empty():
@@ -878,6 +928,84 @@ func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0) -> vo
 			draw_circle(lp, br * (0.7 + fmod(kf2 * 0.29, 0.5)), lc)
 
 
+# v10.21 — Les 5 silhouettes de PILIERS (spec panel) : formes DISTINCTES par nature, deux rampes d'alpha
+# (corps 0→0.70 de reveal, détails accent 0.40→1.0), bob idle léger, tailles hiérarchisées (Être le seul
+# plus grand que les arbres proches, désaxé — inquiétant ; Enfant demi-taille).
+func _draw_pilier(w: float, h: float, dr: float) -> void:
+	var accent: Color = MerlinVisual.GOLD
+	match _pilier_key:
+		"choeur": accent = MerlinVisual.GREEN
+		"etre": accent = MerlinVisual.RARE_BLUE
+		"chevalier": accent = MerlinVisual.GOLD.lerp(MerlinVisual.DIM_WARM, 0.45)
+		"compagnon": accent = MerlinVisual.VIOLET
+		"enfant": accent = MerlinVisual.CREAM
+	var col_base: Color = COL_SIL.lerp(accent, 0.35)  # QA probe : accent renforcé (identité lisible)
+	var a_body: float = clampf(_pilier_reveal / 0.70, 0.0, 1.0) * dr
+	var a_det: float = clampf((_pilier_reveal - 0.40) / 0.60, 0.0, 1.0) * dr
+	if a_body <= 0.01:
+		return
+	var rm3: bool = MerlinVisual.reduced_motion
+	var bob: float = 0.0 if rm3 else sin(_t * 0.9) * h * 0.004
+	# QA probe : x=0.345 — la clairière entre l'arbre de gauche (0.27) et le sentier de la lune (0.5) ;
+	# à 0.22 la silhouette était coincée entre deux troncs.
+	var feet: Vector2 = Vector2(w * 0.345, h * 0.868 + bob)
+	var body: Color = Color(col_base.r, col_base.g, col_base.b, a_body)
+	var det: Color = Color(accent.r, accent.g, accent.b, a_det * 0.85)
+	match _pilier_key:
+		"choeur":  # druide : robe droite + bâton surmonté d'une lueur
+			var eh: float = h * 0.22
+			var hw2: float = eh * 0.16
+			draw_colored_polygon(PackedVector2Array([
+				feet + Vector2(-hw2, 0.0), feet + Vector2(hw2, 0.0),
+				feet + Vector2(hw2 * 0.55, -eh * 0.78), feet + Vector2(-hw2 * 0.55, -eh * 0.78)]), body)
+			draw_circle(feet + Vector2(0.0, -eh * 0.88), hw2 * 0.62, body)  # capuche
+			var staff_x: float = feet.x + hw2 * 1.7
+			draw_line(Vector2(staff_x, feet.y), Vector2(staff_x, feet.y - eh * 1.05), body, 3.0, true)
+			draw_circle(Vector2(staff_x, feet.y - eh * 1.10), hw2 * 0.34, det)  # lueur du bâton
+		"etre":  # trop grand, trop fin, désaxé — la forêt qui marche
+			var eh2: float = h * 0.30
+			var lean2: float = eh2 * 0.105  # ~6°
+			var hw3: float = eh2 * 0.055
+			draw_colored_polygon(PackedVector2Array([
+				feet + Vector2(-hw3 * 1.6, 0.0), feet + Vector2(hw3 * 1.6, 0.0),
+				feet + Vector2(hw3 + lean2, -eh2 * 0.86), feet + Vector2(-hw3 + lean2, -eh2 * 0.86)]), body)
+			draw_circle(feet + Vector2(lean2 * 1.15, -eh2 * 0.93), hw3 * 2.1, body)  # tête trop petite, décalée
+			for e_i in 2:  # deux lueurs d'yeux (froides)
+				draw_circle(feet + Vector2(lean2 * 1.15 + (float(e_i) - 0.5) * hw3 * 1.6, -eh2 * 0.94), 1.8, det)
+		"chevalier":  # large, tête baissée, épée pointe au sol
+			var eh3: float = h * 0.20
+			var hw4: float = eh3 * 0.26
+			draw_colored_polygon(PackedVector2Array([
+				feet + Vector2(-hw4, 0.0), feet + Vector2(hw4, 0.0),
+				feet + Vector2(hw4 * 0.72, -eh3 * 0.72), feet + Vector2(-hw4 * 0.72, -eh3 * 0.72)]), body)
+			draw_circle(feet + Vector2(hw4 * 0.18, -eh3 * 0.76), hw4 * 0.42, body)  # tête INCLINÉE vers l'avant
+			var sw_x: float = feet.x - hw4 * 1.45
+			draw_line(Vector2(sw_x, feet.y - eh3 * 0.52), Vector2(sw_x, feet.y), det, 2.5, true)  # lame plantée
+			draw_line(Vector2(sw_x - hw4 * 0.34, feet.y - eh3 * 0.52), Vector2(sw_x + hw4 * 0.34, feet.y - eh3 * 0.52), body, 3.0, true)  # garde
+		"compagnon":  # humain, main tendue vers le centre
+			var eh4: float = h * 0.19
+			var hw5: float = eh4 * 0.14
+			draw_colored_polygon(PackedVector2Array([
+				feet + Vector2(-hw5, 0.0), feet + Vector2(hw5, 0.0),
+				feet + Vector2(hw5 * 0.6, -eh4 * 0.74), feet + Vector2(-hw5 * 0.6, -eh4 * 0.74)]), body)
+			draw_circle(feet + Vector2(0.0, -eh4 * 0.84), hw5 * 0.72, body)
+			var sh: Vector2 = feet + Vector2(hw5 * 0.5, -eh4 * 0.62)
+			var hand: Vector2 = sh + Vector2(eh4 * 0.34, eh4 * 0.06)  # bras tendu vers la lune
+			draw_line(sh, hand, body, 3.5, true)
+			draw_circle(hand, 2.6, det)  # la main qui offre
+		"enfant":  # demi-taille, grosse tête, petite étoile près de la main
+			var eh5: float = h * 0.11
+			var hw6: float = eh5 * 0.20
+			draw_colored_polygon(PackedVector2Array([
+				feet + Vector2(-hw6, 0.0), feet + Vector2(hw6, 0.0),
+				feet + Vector2(hw6 * 0.62, -eh5 * 0.62), feet + Vector2(-hw6 * 0.62, -eh5 * 0.62)]), body)
+			draw_circle(feet + Vector2(0.0, -eh5 * 0.80), hw6 * 1.05, body)  # tête proportionnellement grande
+			var star_p: Vector2 = feet + Vector2(hw6 * 2.0, -eh5 * 0.42 + (0.0 if rm3 else sin(_t * 1.4) * 2.0))
+			draw_colored_polygon(PackedVector2Array([
+				star_p + Vector2(0.0, -4.0), star_p + Vector2(2.0, 0.0),
+				star_p + Vector2(0.0, 4.0), star_p + Vector2(-2.0, 0.0)]), det)  # l'étoile qu'il « a trouvée »
+
+
 # v10.21 — Menhir ORGANIQUE : pierre effilée légèrement penchée (polygone irrégulier) + mousse au pied.
 # Les entailles ogham (trait vertical + 4 barres) demeurent — c'est sa signature.
 func _menhir(pos: Vector2, dim: Vector2, alpha: float = 1.0) -> void:
@@ -909,6 +1037,8 @@ func _menhir(pos: Vector2, dim: Vector2, alpha: float = 1.0) -> void:
 
 func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	# v10.18 — Merlin FLOTTE (menu) : bob vertical + sway horizontal smooth via _t. In-game inchangé.
+	# v10.21 (goal) — MERLIN plus DÉTAILLÉ et VIVANT, toujours simpliste/flat : ombre au sol, ourlet de
+	# cape ONDULANT, capuche en pointe, BÂTON à orbe qui pulse avec le halo, étincelles runiques en orbite.
 	var menu: bool = _menu_decor and _animated and not MerlinVisual.reduced_motion
 	var fx: float = (sin(_t * 0.55) * half_w * 0.10) if menu else 0.0
 	var fy: float = (sin(_t * 0.80) * height * 0.018) if menu else 0.0
@@ -919,9 +1049,21 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	var a_eyes: float = clampf((_fig_reveal - 0.65) / 0.35, 0.0, 1.0)
 	var top: float = base.y - height
 	var shoulder: float = base.y - height * 0.62
+	# Ombre au sol : flaque elliptique douce sous la cape (l'ancre au monde — il FLOTTE au-dessus).
+	var sh_c: Vector2 = Vector2(base_in.x, base_in.y + height * 0.015)
+	var sh_pts: PackedVector2Array = PackedVector2Array()
+	for shi in 10:
+		var sha: float = float(shi) / 10.0 * TAU
+		sh_pts.append(sh_c + Vector2(cos(sha) * half_w * 1.15, sin(sha) * half_w * 0.22))
+	draw_colored_polygon(sh_pts, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.28 * a_cloak))
+	# Cape à OURLET VIVANT : le bas ondule (3 points animés entre les deux coins).
+	var hem_w: float = 0.0 if not menu else 1.0
 	var cloak: PackedVector2Array = PackedVector2Array([
 		Vector2(base.x - half_w * 0.45, top + height * 0.10),
 		Vector2(base.x - half_w, base.y),
+		Vector2(base.x - half_w * 0.5, base.y + sin(_t * 1.3 + 0.5) * height * 0.014 * hem_w),
+		Vector2(base.x, base.y + sin(_t * 1.1 + 2.1) * height * 0.018 * hem_w),
+		Vector2(base.x + half_w * 0.5, base.y + sin(_t * 1.4 + 4.2) * height * 0.014 * hem_w),
 		Vector2(base.x + half_w, base.y),
 		Vector2(base.x + half_w * 0.45, top + height * 0.10),
 		Vector2(base.x + half_w * 0.30, shoulder),
@@ -931,6 +1073,25 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	var head_c: Vector2 = Vector2(base.x, top + height * 0.06)
 	var hr: float = half_w * 0.42
 	draw_circle(head_c, hr, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
+	# Capuche en pointe (signature d'enchanteur, 1 triangle).
+	draw_colored_polygon(PackedVector2Array([
+		head_c + Vector2(-hr * 0.9, -hr * 0.25), head_c + Vector2(hr * 0.15, -hr * 1.55),
+		head_c + Vector2(hr * 0.95, -hr * 0.10)]), Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
+	# BÂTON : hampe légèrement inclinée à sa droite + ORBE d'or qui pulse avec le halo de la lune.
+	var staff_top: Vector2 = Vector2(base.x + half_w * 1.30, top - height * 0.06)
+	var staff_bot: Vector2 = Vector2(base.x + half_w * 1.05, base.y)
+	draw_line(staff_bot, staff_top, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head), maxf(half_w * 0.07, 2.5), true)
+	var orb_pulse: float = 0.5 + 0.5 * sin(_halo_phase) if _animated else 1.0
+	var orb_a: float = (0.45 + 0.35 * orb_pulse) * a_eyes
+	draw_circle(staff_top, half_w * 0.30, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, orb_a * 0.25))
+	draw_circle(staff_top, half_w * 0.16, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, orb_a))
+	# Étincelles runiques : 3 poussières d'or en orbite lente autour de lui (vivant, discret).
+	if menu and a_eyes > 0.3:
+		for rs in 3:
+			var ra: float = _t * (0.35 + float(rs) * 0.11) + float(rs) * 2.09
+			var rp: Vector2 = Vector2(base.x, shoulder) + Vector2(cos(ra) * half_w * 1.55, sin(ra) * height * 0.30)
+			var rs_a: float = (0.25 + 0.30 * (0.5 + 0.5 * sin(_t * 1.8 + float(rs) * 2.0))) * a_eyes
+			draw_circle(rp, 1.8, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, rs_a))
 	# v10.18 — Yeux MERLIN (menu) : 2 BARRES BLEUES VERTICALES lumineuses + lueur qui pulse (signature,
 	# user 2026-06-29). S'ALLUMENT EN DERNIER dans la matérialisation (a_eyes : grandissent + s'éclairent).
 	# v10.20 — en mode « œil-lune » (set_watch_eyes), les yeux vivent dans la LUNE (dessinés en _draw) :

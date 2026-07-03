@@ -298,6 +298,19 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		if sc_f != null and sc_f.has_method("current_faction"):
 			_scene_art.set_faction(str(sc_f.current_faction()))
 		_scene_art.set_eye_mood(MerlinSceneArt.mood_for_text(str(situ.get("narration", ""))))  # v10.20 : œil-lune réagit
+		# v10.21 (spec panel) — PRÉSENCE du PNJ pilier aux beats de Rencontre : silhouette matérialisée +
+		# réaction de la lune (Chœur/Chevalier = flash chaleureux, mood neutre ; autres = surprise ;
+		# JAMAIS angry à l'apparition — réservé au degré échec). Le mood pilier PRIME sur mood_for_text.
+		var pk2: String = _current_offer_pilier()
+		if btype == "Rencontre" and pk2 != "":
+			_scene_art.set_pilier(pk2, true)
+			if pk2 == "choeur" or pk2 == "chevalier":
+				_scene_art.set_eye_mood("neutral")
+				_scene_art.flash_moon()
+			else:
+				_scene_art.set_eye_mood("surprise")
+		else:
+			_scene_art.set_pilier("", false)
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
 	# v10.21 — feedforward « Ce lieu réclame » RETIRÉ (user 2026-06-30) : immersion narrative ; l'issue continue le fil.
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
