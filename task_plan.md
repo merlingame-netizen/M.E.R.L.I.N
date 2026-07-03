@@ -36,3 +36,7 @@
 - [x] Wave L COMPLÈTE : (a) recul lecture (b) jauges pré-alerte+Emprise (c) cartes sans hover (d) chaîne quêtes map (561127cf, 8b02e522, 89bd12ef)
 - [ ] RESTE (sessions suivantes, spec chiffrée docs/spec_v10.21_presences.md) : Wave I (interventions),
       Wave G (Encaisser/Pousser + soak cibles), Wave A (pads sonores par pilier).
+- [x] Wave A COMPLÈTE : 5 nappes signées par pilier (forge + canal unique play_pad/stop_pad) (c9060742)
+- [x] Hover++ : brume qui s'écarte, lucioles qui fuient, feuillage qui s'éclaire — 7 éléments réactifs (3b058573)
+- [ ] RESTE : Wave I (interventions) + Wave G (Encaisser/Pousser) — gameplay systems, spec intégrale
+      dans docs/spec_v10.21_presences.md §I et §G + regles_g1. Démarrer par I (miroir de pilier_offering_done).
