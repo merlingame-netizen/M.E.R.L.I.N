@@ -22,6 +22,10 @@ const GAMEPLAY_MUSIC_FADE: float = 4.0
 
 var _life_gauge: MerlinRingGauge
 var _corr_gauge: MerlinRingGauge
+# v10.21 (L-b) — pré-alerte de seuil : pastille statique + libellé Emprise + garde anti-re-pulse.
+var _thr_dot: ColorRect = null
+var _emprise_lbl: Label = null
+var _near_thr_shown: bool = false
 var _beat_map: MerlinBeatMap
 var _scene_art: MerlinSceneArt
 var _situ_panel: PanelContainer       # encart central : porte intro/situation/issue
@@ -1069,6 +1073,16 @@ func _on_gauges(integrite: int, corruption: int) -> void:
 	# Pulse continue quand la stat est critique (vie basse / corruption haute).
 	_life_gauge.set_critical(integrite <= 3)
 	_corr_gauge.set_critical(corruption >= int(MerlinRun.CORRUPTION_CAP * 0.66))
+	# v10.21 (L-b) — PRÉ-ALERTE de seuil : à 1 du prochain seuil /5, pulse UNIQUE à l'entrée en zone
+	# + pastille statique persistante (info, pas boucle). Libellé « l'Emprise guette » à cap−2.
+	var near_thr: bool = (corruption % 5) == 4 and corruption < MerlinRun.CORRUPTION_CAP
+	if near_thr and not _near_thr_shown and not MerlinVisual.reduced_motion:
+		_pop(_corr_gauge, 1.12)
+	_near_thr_shown = near_thr
+	if _thr_dot != null:
+		_thr_dot.visible = near_thr
+	if _emprise_lbl != null:
+		_emprise_lbl.visible = corruption >= MerlinRun.CORRUPTION_CAP - 2
 	_prev_integrite = integrite
 	_prev_corruption = corruption
 	_update_corruption_fx(corruption)  # v10.13.1 (R75) : glitch par palier + pastille statique
@@ -1684,6 +1698,24 @@ func _build_ui() -> void:
 	_corr_gauge = MerlinRingGauge.new()
 	hud.add_child(_corr_gauge)
 	_corr_gauge.setup(COL_VIOLET, true)  # jauge « vivante » : respiration continue
+	# v10.21 (L-b) — PRÉ-ALERTE de seuil : pastille statique 6px collée à l'anneau (visible à 1 du
+	# prochain seuil /5, silencieuse, persiste — porte l'info même en reduce-motion).
+	_thr_dot = ColorRect.new()
+	_thr_dot.color = MerlinVisual.VIOLET
+	_thr_dot.size = Vector2(6, 6)
+	_thr_dot.position = Vector2(-10, 4)
+	_thr_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_thr_dot.visible = false
+	_corr_gauge.add_child(_thr_dot)
+	# Alerte forte (cap−2) : libellé court sous l'anneau — « l'Emprise guette » (FS 16, DIM_WARM sur sombre).
+	_emprise_lbl = Label.new()
+	_emprise_lbl.text = "l'Emprise guette"
+	_emprise_lbl.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
+	_emprise_lbl.add_theme_font_size_override("font_size", 16)
+	_emprise_lbl.position = Vector2(-34, 52)
+	_emprise_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_emprise_lbl.visible = false
+	_corr_gauge.add_child(_emprise_lbl)
 
 	# Scène en silhouettes plates — bande supérieure FIXE (l'encart récit prend l'espace dessous).
 	_scene_art = MerlinSceneArt.new()
