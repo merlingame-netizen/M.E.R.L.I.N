@@ -1500,6 +1500,23 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
     Anti-générique : mémoire intra-run des fallbacks d'issue (`_fb_served`) — plus jamais la même variante
     servie deux fois dans une run.
 
+- **R129 — Décor organique vivant + présences des piliers (2026-06-30, goal user)** :
+  - **Refonte décor** (« moins design HTML ») : arbres organiques (troncs galbés, canopées en masses qui
+    respirent, sway par arbre), sol en ondulations superposées + herbe animée, brume en rubans sinueux,
+    ciel à bandes + étoiles + collines parallaxe, feuilles qui tombent (hiver = flocons), oiseaux furtifs,
+    anneau runique lent autour de la lune, menhir penché + mousse. 100 % `_draw` procédural, palette canon.
+  - **MERLIN détaillé** (toujours simpliste) : ombre au sol, ourlet de cape ondulant, capuche en pointe,
+    bâton à orbe pulsant (phase du halo), étincelles runiques en orbite.
+  - **Silhouettes des piliers** (spec panel, `docs/spec_v10.21_presences.md`) : 5 formes procédurales
+    distinctes aux beats de Rencontre (`set_pilier`), x=0.345 (clairière), dessinées APRÈS la brume,
+    matérialisation 1 s, re-skin de 8 motes signées, réaction lune (flash/mood, jamais angry). Sonde QA :
+    `tools/probe_pilier.gd` (5 rendus plein écran en 15 s).
+  - **Décor RÉACTIF au survol** (`_hover_f`) : arbres qui frémissent, lune qui s'illumine (halos + anneau),
+    oghams du menhir qui scintillent d'or, herbe qui s'écarte du curseur. Off en reduce-motion.
+  - **Reste du goal (multi-session)** : uniformisation UI/UX Selection/End/Options sur ce langage ; vagues
+    v10.21 I (interventions) · L (lisibilité) · G (Encaisser/Pousser) · A (nappes sonores) — spec chiffrée
+    prête dans `docs/spec_v10.21_presences.md`.
+
 ---
 
 ## §19 — R114 · Montée en gamme « Fondations » (2026-06-12)

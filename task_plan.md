@@ -24,3 +24,11 @@
 - R127 factions/piliers (Waves A-D) · R128 résolution même-fil + attente enrichie
 - Harnais autoplay RÉPARÉ : gate R109 vert (soak 200/200 + autoplay 3/3) · mode --slow QA
 - Anti-répétition fallbacks (_fb_served)
+
+## Progrès goal (2026-06-30, session courante)
+- [x] Refonte décor organique (55be0d82) — QA 3 rounds captures
+- [x] MERLIN détaillé + 5 silhouettes piliers + probe_pilier.gd (75a775c1) — QA probe plein écran
+- [x] Hover décor : arbres/lune/menhir/herbe (d3c8dc14)
+- [x] BIBLE R129 posée · spec panel persistée (docs/spec_v10.21_presences.md)
+- [ ] PROCHAINE SESSION : Wave I (interventions — spec §I, miroir save R108 de pilier_offering_done),
+      puis L (lisibilité), G (Encaisser/Pousser + soak cibles), A (pads), uniformisation Selection/End/Options.
