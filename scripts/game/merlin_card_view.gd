@@ -161,7 +161,8 @@ func _build(role: String) -> void:
 # Marqueurs de coin (overlay absolu sur self, hors flux du VBox) : gemme rareté/coût + badge d'effet.
 func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 	var sz: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE
-	var gsz: float = 18.0 if _compact else 24.0
+	# v10.21 (L-c) — pastille de coût plus FRANCHE : lisible dans l'éventail SANS hover (28px, fonte 16).
+	var gsz: float = 20.0 if _compact else 28.0
 	# Gemme (coin haut-gauche) : couleur = rareté ; chiffre = coût Corruption si > 0.
 	var gem: Panel = Panel.new()
 	gem.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -179,7 +180,7 @@ func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 		gl.text = str(card.corruption)
 		gl.set_anchors_preset(Control.PRESET_FULL_RECT)
 		gl.add_theme_color_override("font_color", COL_CARD)
-		gl.add_theme_font_size_override("font_size", 11 if _compact else 13)
+		gl.add_theme_font_size_override("font_size", 13 if _compact else 16)  # v10.21 (L-c) : coût lisible de loin
 		gl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		gl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		gl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -187,11 +188,11 @@ func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 	# Badge d'effet (coin haut-droit) — masqué en compact (zone de combinaison étroite).
 	if not _compact and str(card.effect_type) != "" and EFFECT_STYLE.has(card.effect_type):
 		var est: Dictionary = EFFECT_STYLE[card.effect_type]
-		var bw: float = 52.0
+		var bw: float = 58.0  # v10.21 (L-c) : badge d'effet plus franc (58×25, fonte 15)
 		var badge: Panel = Panel.new()
 		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		badge.position = Vector2(sz.x - bw - 4.0, 4.0)
-		badge.size = Vector2(bw, 22.0)
+		badge.size = Vector2(bw, 25.0)
 		var bsb: StyleBoxFlat = StyleBoxFlat.new()
 		bsb.bg_color = (est["col"] as Color)
 		bsb.set_corner_radius_all(6)
@@ -202,7 +203,7 @@ func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 		var sign: String = "−" if str(card.effect_type) == "PURGE" else "+"
 		bl.text = "%s%s%d" % [str(est["icon"]), sign, int(card.effect_value)]
 		bl.add_theme_color_override("font_color", COL_CARD)
-		bl.add_theme_font_size_override("font_size", 13)
+		bl.add_theme_font_size_override("font_size", 15)  # v10.21 (L-c)
 		bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		bl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		bl.mouse_filter = Control.MOUSE_FILTER_IGNORE
