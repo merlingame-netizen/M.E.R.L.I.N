@@ -1513,6 +1513,14 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
     `tools/probe_pilier.gd` (5 rendus plein écran en 15 s).
   - **Décor RÉACTIF au survol** (`_hover_f`) : arbres qui frémissent, lune qui s'illumine (halos + anneau),
     oghams du menhir qui scintillent d'or, herbe qui s'écarte du curseur. Off en reduce-motion.
+- **R130 — Le partiel devient un CHOIX : « Encaisser / Pousser » (2026-06-30, Wave G, panel)** :
+  sur toute issue PARTIELLE avec budget, l'application est DIFFÉRÉE — 2 boutons sous la vignette,
+  ledger affiché (« Encaisser : Intégrité −2 · Corruption +N » / « Pousser : Réussite · Corruption
+  +N+1 → projection »). Pousser = Intégrité épargnée, prix du partiel NON remboursé + PUSH_PRICE 1 ;
+  budget **1 push/quête** (rechargé au répit, persisté R108) ; draft armé sur le degré BRUT ; coda
+  procédurale écrite dans le même fil (R128). Mesure 200 runs : partiel effectif 31,6 % (cible 28-38),
+  corrompu 14,5 % (≤18), morts 23 %→15 % (à surveiller), ~1,1 push/run.
+
   - **Reste du goal (multi-session)** : uniformisation UI/UX Selection/End/Options sur ce langage ; vagues
     v10.21 I (interventions) · L (lisibilité) · G (Encaisser/Pousser) · A (nappes sonores) — spec chiffrée
     prête dans `docs/spec_v10.21_presences.md`.
