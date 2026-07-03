@@ -34,6 +34,7 @@ var _ends: Dictionary = {}
 var _degrees: Dictionary = {}
 var _drafts_offered: int = 0
 var _drafts_taken: int = 0
+var _pushes: int = 0  # v10.21 (R130) : nombre de « Pousser » simulés (métrique d'équilibrage)
 var _secours_injected: int = 0
 var _arch_stats: Dictionary = {}  # arch -> {"degrees": {}, "ends": {}, "runs": 0}
 
@@ -80,7 +81,7 @@ func _init() -> void:
 	var total_runs: int = runs * (ARCHETYPES.size() if per_arch else 1)
 	print("[SOAK] ends=%s" % str(_ends))
 	print("[SOAK] degrees=%s" % str(_degrees))
-	print("[SOAK] drafts %d/%d pris · secours injectées=%d" % [_drafts_taken, _drafts_offered, _secours_injected])
+	print("[SOAK] drafts %d/%d pris · secours injectées=%d · pushes R130=%d" % [_drafts_taken, _drafts_offered, _secours_injected, _pushes])
 	_report_targets()
 	print("[SOAK] DONE — %d/%d PASS (%.1fs)" % [total_runs - _fail, total_runs, dt])
 	quit(1 if _fail > 0 else 0)
@@ -169,6 +170,21 @@ func _soak_one(i: int, arch: String) -> void:
 		# v10.14 — dé PRÉ-TIRÉ du beat (seedé → reproductible), comme build_situation en jeu.
 		var die: int = rng.randi_range(1, 6)
 		var res: Dictionary = MerlinResolution.resolve(required, combo, [], die)
+		# v10.21 (Wave G, R130) — miroir du choix « Pousser » : politiques par archétype (spec panel).
+		# optimal pousse si corruption loin du seuil ; greedy/corrompu toujours ; chaotic 50% ; tag_ignorant jamais.
+		if str(res.get("degree", "")) == MerlinResolution.PARTIEL and int(run.pushes_left_quest) > 0:
+			var wants: bool = false
+			match arch:
+				"optimal": wants = (run.corruption % 5) <= 2 and run.integrite <= 6
+				"greedy", "corrompu": wants = true
+				"chaotic": wants = rng.randf() < 0.5
+			if wants:
+				res = res.duplicate(true)
+				res["degree"] = MerlinResolution.REUSSITE
+				res["integrite_delta"] = 0
+				res["corruption_delta"] = int(res.get("corruption_delta", 0)) + MerlinResolution.PUSH_PRICE
+				run.pushes_left_quest -= 1
+				_pushes += 1
 		var deg: String = str(res.get("degree", ""))
 		_degrees[deg] = int(_degrees.get(deg, 0)) + 1
 		_bump_arch(arch, "degrees", deg)

@@ -54,6 +54,13 @@ var _res_block: VBoxContainer = null
 var _effect_vignette: HBoxContainer = null
 var _pending_res: Dictionary = {}    # res/degré mémorisés au resolve → fade-in vignette post-typewriter
 var _pending_degree: String = ""
+# v10.21 (Wave G, R130) — PARTIEL = CHOIX « Encaisser / Pousser » : l'application de la résolution est
+# DIFFÉRÉE jusqu'au choix (play_and_discard + effets de cartes restent immédiats — un HEAL sauve avant).
+var _push_pending: bool = false
+var _push_res_raw: Dictionary = {}   # deltas BRUTS de resolve() préservés pour l'application différée
+var _push_situ: Dictionary = {}
+var _push_cards: Array = []
+var _push_row: HBoxContainer = null
 # Garde anti-clobber : incrémenté à CHAQUE transition d'affichage (nouvelle situation,
 # issue affichée, fin de run). Un enrichissement LLM en arrière-plan ne remplace le texte
 # QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
@@ -229,6 +236,11 @@ func _present_current_beat() -> void:
 	# dans _situation_text, réécrit par _show_situation au beat suivant).
 	if _res_block != null:
 		_res_block.visible = false
+	if _push_row != null and is_instance_valid(_push_row):  # R130 : jamais de choix fantôme au beat suivant
+		_push_row.queue_free()
+		_push_row = null
+	_push_pending = false
+	_push_res_raw = {}
 	if _situation_text != null:
 		_situation_text.modulate.a = 1.0
 	# v10.14 — frontière de quête (chaîne) : la map repart sur la quête courante et le fil
@@ -496,7 +508,17 @@ func _on_resolve() -> void:
 	var corr_before: int = int(run.get("corruption"))
 	run.play_and_discard(_combo)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
-	run.apply_resolution(res)
+	# v10.21 (Wave G, R130) — PARTIEL = CHOIX : si budget Pousser disponible, l'application de la
+	# résolution est DIFFÉRÉE jusqu'au choix Encaisser/Pousser (post-lecture). Sinon flux inchangé.
+	var deg_raw: String = str(res.get("degree", ""))
+	_push_pending = deg_raw == MerlinResolution.PARTIEL \
+		and int(run.get("pushes_left_quest")) > 0 and not run.ended
+	if _push_pending:
+		_push_res_raw = res.duplicate(true)  # deltas BRUTS préservés pour l'application différée
+		_push_situ = situ
+		_push_cards = played_cards
+	else:
+		run.apply_resolution(res)
 	res["integrite_delta"] = int(run.get("integrite")) - int_before
 	res["corruption_delta"] = int(run.get("corruption")) - corr_before
 	var fx_effects: Array = []  # effets actifs déclenchés (HEAL/PURGE/DRAW) pour les glyphes de la vignette
@@ -507,9 +529,10 @@ func _on_resolve() -> void:
 	# Draft « 1 carte sur 3 » armé : SEULEMENT aux beats clés (réussite/éclatante) tant qu'il reste des beats.
 	var deg: String = str(res.get("degree", ""))
 	_pending_draft = (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) and not run.is_climax() and not run.ended
-	run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
-	if run.faits_marquants.size() > 6:
-		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
+	if not _push_pending:  # R130 : différé → consigné au CHOIX avec le degré FINAL
+		run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
+		if run.faits_marquants.size() > 6:
+			run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
 
 	_scene_epoch += 1
 	var ep: int = _scene_epoch
@@ -564,7 +587,8 @@ func _on_resolve() -> void:
 	var prose: String = str(sc.take_resolution(situ, played_cards, res))
 	if prose.length() < 10:
 		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")))
-	sc.note_outcome(res, situ, played_cards)  # v10.20.1 : gist SPÉCIFIQUE (action réelle) + pont vers la situation suivante
+	if not _push_pending:  # R130 : différé → note_outcome au CHOIX avec le degré FINAL
+		sc.note_outcome(res, situ, played_cards)  # v10.20.1 : gist SPÉCIFIQUE (action réelle) + pont vers la situation suivante
 	run.summary = prose
 	_show_resolution(res, prose, true)
 	# v10.13 (Fix 6) : PLUS de save ici — il persistait les jauges post-résolution avec un beat_index
@@ -602,6 +626,84 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	else:
 		combined = "[center]%s\n\n%s[/center]" % [cur, narration]
 	_typewriter(combined, animate, _situation_text, situ_chars)
+
+
+# v10.21 (Wave G, R130) — Choix « Encaisser / Pousser » sous la vignette : 1 geste, zéro timer (R99),
+# boutons ≥44 px, LEDGER affiché par bouton (prix criant AVANT le clic). Anti-misclick : disabled 250 ms.
+const PUSH_CODAS: Array = [
+	"Tu pousses ta volonté dans la brèche — la forêt cède, mais quelque chose s'infiltre.",
+	"Tu forces le passage d'un souffle de plus. La voie s'ouvre en grand ; l'ombre retient ton nom.",
+	"Un dernier effort, arraché à toi-même. La forêt plie — et prélève sa part.",
+]
+
+
+func _build_push_choice() -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	_push_row = HBoxContainer.new()
+	_push_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_push_row.add_theme_constant_override("separation", 24)
+	_push_row.mouse_filter = Control.MOUSE_FILTER_PASS
+	var corr_cost: int = int(_push_res_raw.get("corruption_delta", 0))
+	var enc: Button = Button.new()
+	enc.text = "Encaisser  (Intégrité %d · Corruption +%d)" % [int(_push_res_raw.get("integrite_delta", 0)), corr_cost]
+	var pou: Button = Button.new()
+	var proj: int = int(run.get("corruption")) + corr_cost + MerlinResolution.PUSH_PRICE
+	pou.text = "Pousser  (Réussite · Corruption +%d → %d)" % [corr_cost + MerlinResolution.PUSH_PRICE, proj]
+	for b in [enc, pou]:
+		var btn: Button = b
+		btn.custom_minimum_size = Vector2(320, 56)  # ≥44 px (pilier TACTILE)
+		btn.add_theme_font_size_override("font_size", 18)
+		MerlinVisual.apply_button_da(btn)
+		MerlinVisual.connect_button_feedback(btn)
+		btn.disabled = true  # anti-misclick : armés après 250 ms
+		_push_row.add_child(btn)
+	enc.pressed.connect(_on_push_choice.bind(false))
+	pou.pressed.connect(_on_push_choice.bind(true))
+	if _res_block != null:
+		_res_block.add_child(_push_row)
+		_res_block.visible = true
+	var arm_tw: Tween = create_tween()
+	arm_tw.tween_interval(0.25)
+	arm_tw.tween_callback(func() -> void:
+		if is_instance_valid(enc):
+			enc.disabled = false
+		if is_instance_valid(pou):
+			pou.disabled = false)
+
+
+func _on_push_choice(push: bool) -> void:
+	if not _push_pending and _push_res_raw.is_empty():
+		return
+	_push_pending = false
+	var run: Node = get_node("/root/MerlinRun")
+	var sc: Node = get_node("/root/MerlinScenario")
+	if push:
+		_push_res_raw["degree"] = MerlinResolution.REUSSITE
+		_push_res_raw["integrite_delta"] = 0  # l'Intégrité est ÉPARGNÉE ; le prix du partiel reste dû
+		_push_res_raw["corruption_delta"] = int(_push_res_raw.get("corruption_delta", 0)) + MerlinResolution.PUSH_PRICE
+		_push_res_raw["label"] = str(_push_res_raw.get("label", "")) + " (forcé)"
+		run.set("pushes_left_quest", int(run.get("pushes_left_quest")) - 1)
+	run.apply_resolution(_push_res_raw)  # application UNIQUE différée (jauges animées ici)
+	run.faits_marquants.append("%s → %s" % [str(_push_situ.get("type", "")), str(_push_res_raw.get("label", ""))])
+	if run.faits_marquants.size() > 6:
+		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
+	sc.note_outcome(_push_res_raw, _push_situ, _push_cards)  # fil rouge avec le degré FINAL (R120)
+	if push and _situation_text != null:
+		# Coda procédurale écrite dans le MÊME fil (R128) + vignette re-frappée au degré final.
+		_situation_text.text = _situation_text.text.replace("[/center]",
+			"\n\n" + str(PUSH_CODAS[randi() % PUSH_CODAS.size()]) + "[/center]")
+		_situation_text.visible_characters = -1
+		_build_effect_vignette(_push_res_raw, MerlinResolution.REUSSITE)
+	if _push_row != null and is_instance_valid(_push_row):
+		_push_row.queue_free()
+		_push_row = null
+	_push_res_raw = {}
+	if run.ended:
+		return  # mort/fin via l'application différée → run_ended a pris la main
+	_can_advance = true
+	if _caret != null:
+		_caret.text = "▮ cliquer pour continuer"
+	_set_caret(true)
 
 
 # v10.20 — Vignette d'effet (sous le filet) : badge de degré + Δ jauges + glyphes d'effet de carte. Fondu d'entrée.
@@ -962,6 +1064,10 @@ func _on_typewriter_done() -> void:
 			if _res_block != null:
 				_res_block.visible = true
 			_pending_res = {}
+		# v10.21 (Wave G, R130) — PARTIEL différé : le choix Encaisser/Pousser REMPLACE l'avance au clic.
+		if _push_pending:
+			_build_push_choice()
+			return
 		_can_advance = true
 		if _caret != null:
 			_caret.text = "▮ cliquer pour continuer"

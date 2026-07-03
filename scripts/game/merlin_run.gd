@@ -53,6 +53,8 @@ var last_degree: String = ""
 # Wave D — l'offrande du pilier (beat Rencontre) a déjà été proposée cette run. Persisté (R108) : posé à
 # l'OUVERTURE du modal → une offrande consommée n'est jamais re-proposée au resume / au replay de beat.
 var pilier_offering_done: bool = false
+# v10.21 (Wave G, R130) — budget « Pousser » restant pour la QUÊTE courante (1/quête, rechargé au répit).
+var pushes_left_quest: int = 1
 var _last_threshold: int = 0
 var _rng := RandomNumberGenerator.new()
 
@@ -78,6 +80,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	end_type = ""
 	_last_threshold = 0
 	pilier_offering_done = false
+	pushes_left_quest = MerlinResolution.PUSH_BUDGET_PER_QUEST
 	deck = MerlinCard.starter_deck()
 	hand = []
 	discard = []
@@ -439,6 +442,7 @@ func advance_beat() -> void:
 		if integrite <= 4:
 			repit += 2
 		integrite = clampi(integrite + repit, 0, _max_integrite())
+		pushes_left_quest = MerlinResolution.PUSH_BUDGET_PER_QUEST  # v10.21 (R130) : le budget Pousser se recharge avec le répit
 		emit_signal("gauges_changed", integrite, corruption)
 	# v10.14 — Ramification v1 : à l'ARRIVÉE sur un beat à variante (avant-climax des quêtes
 	# k>=4), si le degré précédent est échec/partiel, le beat BASCULE (Epreuve<->Dilemme),
@@ -523,6 +527,7 @@ func save() -> void:
 		"archetype_scores": archetype_scores,
 		"last_threshold": _last_threshold,
 		"pilier_offering_done": pilier_offering_done,  # Wave D : unicité de l'offrande au resume (R108)
+		"pushes_left_quest": pushes_left_quest,  # Wave G (R130) : budget Pousser persisté (additif)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -557,6 +562,7 @@ func load_run() -> bool:
 	archetype_scores = data.get("archetype_scores", {})
 	_last_threshold = int(data.get("last_threshold", 0))
 	pilier_offering_done = bool(data.get("pilier_offering_done", false))  # Wave D : défaut false (saves legacy)
+	pushes_left_quest = int(data.get("pushes_left_quest", MerlinResolution.PUSH_BUDGET_PER_QUEST))  # Wave G (R130)
 	deck = _dicts_to_cards(data.get("deck", []))
 	hand = _dicts_to_cards(data.get("hand", []))
 	discard = _dicts_to_cards(data.get("discard", []))

@@ -18,6 +18,11 @@ const INTEGRITE_DELTA: Dictionary = {
 	ECHEC: -3, PARTIEL: -2, REUSSITE: 0, ECLATANTE: 0,
 }
 const PARTIEL_CORRUPTION_PRICE: int = 1  # le "succès à un prix" (R65)
+# v10.21 (Wave G, R130) — « Pousser » : sur un PARTIEL, payer +1 Corruption transforme en RÉUSSITE.
+# Le prix du partiel N'EST PAS remboursé (sinon push gratuit = stratégie dominante) : taux d'échange
+# lisible, 1 Corruption contre l'Intégrité épargnée (−2). Budget : 1 push par QUÊTE.
+const PUSH_PRICE: int = 1
+const PUSH_BUDGET_PER_QUEST: int = 1
 
 # v10.14 — Dé PRÉ-TIRÉ (4 bandes par rareté de la carte PRINCIPALE — cascade Wave1 2026-06-12).
 # JAMAIS de malus (R20 quasi-déterministe) : la Commune ne bouge qu'1 fois sur 6 (+1),
