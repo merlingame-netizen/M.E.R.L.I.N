@@ -121,7 +121,12 @@ func _play_one(k: int) -> bool:
 				if game._combo.size() < 2:
 					game._on_hand_card(run.hand[game._combo.size()])
 				else:
-					await game._on_resolve()  # bloquant OK : fusion + sustain n'attendent rien de nous
+					# Fire-and-forget VOLONTAIRE (fix 2026-06-30) : si la run se TERMINE pendant la fusion
+					# (mort/corruption mid-resolve), la scène est libérée et la coroutine _on_resolve meurt —
+					# un await ici ne reprend JAMAIS → boucle maîtresse suspendue AU-DELÀ de son deadline
+					# (le while ne re-checke qu'entre itérations). Sans await, la boucle garde la main :
+					# _state==2 pendant la résolution → aucune branche ne re-déclenche (pas de double-resolve).
+					game._on_resolve()
 		elif game._state == 2 and game._can_advance:
 			# VOLONTAIREMENT fire-and-forget : _advance_to_next() attend le modal de draft, que
 			# CETTE boucle doit servir (_on_draft_card/_on_draft_skip) → un await ici = deadlock.
