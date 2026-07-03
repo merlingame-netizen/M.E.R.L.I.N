@@ -32,3 +32,7 @@
 - [x] BIBLE R129 posée · spec panel persistée (docs/spec_v10.21_presences.md)
 - [ ] PROCHAINE SESSION : Wave I (interventions — spec §I, miroir save R108 de pilier_offering_done),
       puis L (lisibilité), G (Encaisser/Pousser + soak cibles), A (pads), uniformisation Selection/End/Options.
+- [x] Uniformisation scènes : MerlinEnd backdrop vivant + hover auto-alimenté partout (ae86e08a)
+- [x] Wave L COMPLÈTE : (a) recul lecture (b) jauges pré-alerte+Emprise (c) cartes sans hover (d) chaîne quêtes map (561127cf, 8b02e522, 89bd12ef)
+- [ ] RESTE (sessions suivantes, spec chiffrée docs/spec_v10.21_presences.md) : Wave I (interventions),
+      Wave G (Encaisser/Pousser + soak cibles), Wave A (pads sonores par pilier).
