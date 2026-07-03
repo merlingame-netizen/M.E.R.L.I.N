@@ -43,3 +43,6 @@
 - [x] Wave G COMPLÈTE : R130 Encaisser/Pousser + re-mesure (partiel eff. 31.6%, corrompu 14.5%) (f2c1de8a)
 - [x] Wave I COMPLÈTE : R131 interventions (planning R108, bénédictions ✦, pactes opt-in, soak miroir) (6a59b791)
 - [x] GOAL v10.21 : les 6 chantiers livrés. R109 final (autoplay 3/3) en re-mesure de clôture.
+- [x] CLÔTURE GOAL v10.21 (2026-07-04) : gate R109 COMPLET VERT — soak 200/200 + autoplay 3/3, 0 SCRIPT
+      ERROR, avec TOUS les systèmes exercés (pushes R130 dans les 2 branches, offrandes, chaînes 12 beats).
+      2 régressions attrapées et corrigées par le gate lui-même (cast quests, harnais push-aware).
