@@ -7,7 +7,7 @@ extends SceneTree
 ## Sortie : [AUTOPLAY] ... + « [AUTOPLAY] DONE — k/n PASS » ; exit 1 si échec.
 
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
-const RUN_DEADLINE_S: float = 240.0   # budget par run (5 beats × fusion+sustain+typewriter, marges)
+const RUN_DEADLINE_S: float = 480.0   # budget par run (v10.14 : chaîne jusqu'à 15 beats × fusion+sustain)
 const END_DEADLINE_S: float = 25.0    # bascule run_ended → MerlinEnd (fade + change_scene différé)
 
 var _fail: int = 0
@@ -24,6 +24,12 @@ func _main() -> void:
 		if s.begins_with("--loops="):
 			loops = maxi(1, int(s.trim_prefix("--loops=")))
 	await process_frame
+	# Anti-flake (2026-06-30) : fermer la fenêtre = quit(0) silencieux SANS ligne DONE → gate 0/N alors que
+	# le harnais tournait. Titre explicite + fenêtre MINIMISÉE (sauf capture : la minimisation suspend le
+	# rendu → viewport noir, or MERLIN_CAPTURE_DIR a besoin des frames réelles).
+	DisplayServer.window_set_title("MERLIN AUTOPLAY (test R109) — NE PAS FERMER")
+	if not OS.has_environment("MERLIN_CAPTURE_DIR"):
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED)
 	print("[AUTOPLAY] start — loops=%d" % loops)
 	# Préserve la sauvegarde RÉELLE du joueur (review HIGH) : le harness écrit/efface
 	# user://merlin_run.json — on snapshot avant, on restaure après (même en échec).
@@ -95,7 +101,7 @@ func _play_one(k: int) -> bool:
 		if game._draft_layer != null:
 			await create_timer(0.4).timeout
 			if is_instance_valid(game) and game._draft_layer != null:
-				var cv: MerlinCardView = _find_card_view(game._draft_layer)
+				var cv: Node = _find_card_view(game._draft_layer)
 				if take_draft and cv != null:
 					game._on_draft_card(cv.card)
 					print("[AUTOPLAY] run#%d — draft pris : %s" % [k, cv.card.card_name])
@@ -145,11 +151,14 @@ func _until(pred: Callable, timeout_s: float) -> bool:
 	return pred.call()
 
 
-func _find_card_view(node: Node) -> MerlinCardView:
-	if node is MerlinCardView:
+# Duck-typing VOLONTAIRE (aucune référence statique MerlinCardView) : une réf class_name ici tire
+# merlin_card_view.gd dans la chaîne de compilation du harnais, qui compile AVANT l'enregistrement des
+# autoloads en mode --script → « Identifier not found: MerlinAudio » (cassait tout l'autoplay, fix 2026-06-30).
+func _find_card_view(node: Node) -> Node:
+	if node.has_method("deal_in") and node.get("card") != null:
 		return node
 	for ch in node.get_children():
-		var f: MerlinCardView = _find_card_view(ch)
+		var f: Node = _find_card_view(ch)
 		if f != null:
 			return f
 	return null
