@@ -356,6 +356,27 @@ func set_faction(faction: String) -> void:
 	queue_redraw()
 
 
+# v10.21 (Wave L-a) — RECUL du décor pendant la LECTURE : la prose domine, la forêt s'efface un peu
+# (alpha décor ×0.75, motes ×0.6), transition 0.4s SINE ×motion(). EXEMPTION : la silhouette du pilier
+# reste à ≥80 % (c'est un indice d'état, spec panel) ; le glitch R75 vit dans sa propre couche (non touché).
+var _recess: float = 0.0
+var _recess_tw: Tween = null
+
+
+func set_reading_recess(on: bool) -> void:
+	var target: float = 1.0 if on else 0.0
+	if is_equal_approx(_recess, target):
+		return
+	if _recess_tw != null and _recess_tw.is_valid():
+		_recess_tw.kill()
+	if MerlinVisual.reduced_motion:
+		_recess = target
+		queue_redraw()
+		return
+	_recess_tw = create_tween()
+	_recess_tw.tween_property(self, "_recess", target, 0.4 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+
+
 # v10.21 — Présence du PNJ pilier : matérialisation 1.0s (rampe corps→détails) / disparition 0.6s,
 # ×motion(). Reduce-motion (R74) : alpha instantané. key="" ou on=false → départ fondu.
 func set_pilier(key: String, on: bool) -> void:
@@ -535,7 +556,8 @@ func _draw() -> void:
 	var w: float = s.x
 	var h: float = s.y
 	var rm: bool = MerlinVisual.reduced_motion
-	var dr: float = _decor_reveal  # v10.18 — révélation décor (boot) : multiplie l'alpha des éléments décor
+	# v10.18 — révélation décor (boot) × v10.21 (Wave L-a) recul de lecture (−25 % d'alpha décor).
+	var dr: float = _decor_reveal * (1.0 - _recess * 0.25)
 
 	# Ciel : teinte de l'heure, MODULÉE par la saison puis (subtilement) par la faction de la run (Wave C).
 	var sky_col: Color = _tod_sky.lerp(_season_sky, _season_sky_f).lerp(_faction_accent, _faction_sky_f)
@@ -656,7 +678,8 @@ func _draw() -> void:
 
 	# 18 ambient motes (3 categories: firefly/dust/ember)
 	if _animated:
-		var mcount: int = int(MerlinVisual.MOTE_COUNT_AMBIENT * _mote_density)  # v10.18 : densité pilotée
+		# v10.18 : densité pilotée × v10.21 (L-a) : motes réduites de 40 % pendant la lecture.
+		var mcount: int = int(MerlinVisual.MOTE_COUNT_AMBIENT * _mote_density * (1.0 - _recess * 0.4))
 		var mote_col: Color = MerlinVisual.GOLD.lerp(_faction_accent, _faction_mote_f)  # Wave C : motes teintées faction
 		for mi in mcount:
 			var mf: float = float(mi)
@@ -801,8 +824,9 @@ func _draw() -> void:
 		# (QA v10.21 : le « cœur » rectangulaire créait des coutures droites — retiré, le ruban seul suffit.)
 
 	# v10.21 — SILHOUETTE DU PNJ PILIER : dessinée APRÈS la brume (premier plan, jamais délavée — QA probe).
+	# EXEMPTION L-a : la présence du PNJ est un INDICE D'ÉTAT → recul limité à −20 % (spec panel cap 0.80).
 	if _pilier_reveal > 0.01:
-		_draw_pilier(w, h, dr)
+		_draw_pilier(w, h, _decor_reveal * (1.0 - _recess * 0.20))
 
 	# v10.21 — FEUILLES qui tombent (quads tournoyants, couleur saison ; hiver = flocons crème ronds).
 	if _animated and not _leaves.is_empty():

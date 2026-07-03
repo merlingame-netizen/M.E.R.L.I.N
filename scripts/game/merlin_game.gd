@@ -238,6 +238,8 @@ func _present_current_beat() -> void:
 		_quest_shown = bq
 		if _beat_map != null:
 			_beat_map.setup(int(cur_b.get("qtotal", int(run.scenario.get("total", 5)))))
+			# v10.21 (Wave L-d) — frontières de CHAÎNE visibles : quêtes accomplies/futures autour du chemin.
+			_beat_map.set_quest_context(int(cur_b.get("quest", 0)), (run.scenario.get("quests", []) as Array).size())
 		if (was >= 0 and bq != was) or (was == -1 and run.beat_index > 0):
 			get_node("/root/MerlinScenario").begin_quest(run.scenario, bq)
 	if _beat_map != null:  # v10.12 : avance « tu es ici » (index PAR QUÊTE depuis v10.14)
@@ -1003,6 +1005,8 @@ func _set_choice_ui(on: bool) -> void:
 	if _hand_box != null:
 		_hand_box.visible = on
 		_hand_box.modulate.a = 1.0
+	if on and _scene_art != null:
+		_scene_art.set_reading_recess(false)  # v10.21 (L-a) : la main remonte → la forêt revit
 
 
 # Teinte la bordure de l'encart selon la phase (situation neutre / issue = couleur du degré) — signal
@@ -1314,6 +1318,8 @@ func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null
 	if n <= start:
 		_on_typewriter_done()
 		return
+	if _scene_art != null:
+		_scene_art.set_reading_recess(true)  # v10.21 (L-a) : la forêt s'efface pendant que la prose s'écrit
 	if _state == 1 or _state == 2 or _interstitial_open:
 		_show_skip_hint()  # affordance « clic = passer » visible DÈS le début (user 2026-06-07)
 	_tw_tick_count = 0

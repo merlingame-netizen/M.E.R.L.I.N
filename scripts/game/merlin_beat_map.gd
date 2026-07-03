@@ -20,6 +20,10 @@ const COL_DEV: Color = MerlinVisual.RARE_BLUE
 var _total: int = 0
 var _current: int = 0
 var _draft_marks: Dictionary = {}
+# v10.21 (Wave L-d) — contexte de CHAÎNE : quêtes passées (losanges pleins à gauche du chemin) et
+# futures (creux à droite) → la frontière de quête devient lisible d'un coup d'œil.
+var _quest_idx: int = 0
+var _quest_count: int = 1
 
 var _growth: float = 1.0
 var _growth_idx: int = -1
@@ -76,6 +80,25 @@ func mark_draft() -> void:
 	queue_redraw()
 
 
+# v10.21 (Wave L-d) — position dans la CHAÎNE de quêtes (qi = index courant 0-based, qc = total).
+func set_quest_context(qi: int, qc: int) -> void:
+	_quest_idx = maxi(qi, 0)
+	_quest_count = maxi(qc, 1)
+	queue_redraw()
+
+
+# Losange de quête (frontières de chaîne) : plein = quête accomplie, creux = à venir.
+func _quest_diamond(p: Vector2, filled: bool) -> void:
+	var r: float = 4.0
+	var pts: PackedVector2Array = PackedVector2Array([
+		p + Vector2(0.0, -r), p + Vector2(r, 0.0), p + Vector2(0.0, r), p + Vector2(-r, 0.0)])
+	if filled:
+		draw_colored_polygon(pts, COL_GOLD)
+	else:
+		for i in 4:
+			draw_line(pts[i], pts[(i + 1) % 4], COL_DIM, 1.5, true)
+
+
 func _node_pos(i: int) -> Vector2:
 	var total_w: float = float(maxi(_total - 1, 0)) * SPACING_H
 	var start_x: float = (size.x - total_w) * 0.5
@@ -85,6 +108,14 @@ func _node_pos(i: int) -> Vector2:
 func _draw() -> void:
 	if _total <= 0:
 		return
+	# v10.21 (Wave L-d) — chaîne de quêtes : losanges pleins (accomplies) à gauche, creux (à venir) à droite.
+	if _quest_count > 1:
+		var first: Vector2 = _node_pos(0)
+		var last: Vector2 = _node_pos(_total - 1)
+		for qp in _quest_idx:
+			_quest_diamond(Vector2(first.x - 18.0 - float(_quest_idx - 1 - qp) * 12.0, first.y), true)
+		for qf in (_quest_count - _quest_idx - 1):
+			_quest_diamond(Vector2(last.x + 18.0 + float(qf) * 12.0, last.y), false)
 	for i in range(_total - 1):
 		var p0: Vector2 = _node_pos(i)
 		var p1: Vector2 = _node_pos(i + 1)
