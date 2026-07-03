@@ -426,6 +426,11 @@ func _process(delta: float) -> void:
 	if _animated and not MerlinVisual.reduced_motion:
 		_update_leaves(delta)  # v10.21 : feuilles/flocons qui tombent (menu ET in-game)
 		_update_bird(delta)    # v10.21 : oiseau furtif occasionnel
+		# v10.21 (goal uniformisation) — AUTO-alimentation du curseur en mode décor-menu : le hover
+		# (arbres/lune/menhir/herbe) marche dans TOUTES les scènes à backdrop (Selection/End/Options)
+		# sans câblage par scène. Le menu/le jeu re-set la même valeur ensuite : inoffensif.
+		if _menu_decor:
+			set_cursor(get_local_mouse_position(), get_global_rect().has_point(get_global_mouse_position()))
 	queue_redraw()
 
 

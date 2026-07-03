@@ -85,6 +85,10 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
+	# v10.21 (goal uniformisation) — MÊME monde vivant que le menu derrière l'écran de fin (dimmé
+	# davantage : le bilan doit dominer, la forêt respire encore derrière — elle a « pris sa part »).
+	add_child(MerlinOrnament.scene_backdrop(0.30))
+
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
