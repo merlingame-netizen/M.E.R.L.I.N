@@ -99,6 +99,17 @@ var _faction_moon_f: float = 0.0
 var _faction_sky_f: float = 0.0
 var _faction_mote_f: float = 0.0
 
+# v10.21 (user 2026-06-30 : « décor bien plus animé, moins design HTML ») — REFONTE ORGANIQUE.
+# Feuilles qui tombent (couleur saisonnière ; hiver = flocons crème). 6 particules recyclées.
+const LEAF_COUNT: int = 6
+var _leaves: Array = []  # [{p:Vector2 (normalisé 0-1), phase:float, speed:float, size:float}]
+# Oiseau furtif : silhouette « accent circonflexe » qui traverse le ciel (rare, comme l'étoile filante).
+var _bird_t: float = -1.0
+var _bird_next: float = 9.0
+var _bird_y: float = 0.18
+var _bird_dir: float = 1.0
+var _bird_flock: int = 3
+
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
@@ -386,7 +397,45 @@ func _process(delta: float) -> void:
 		_update_merlin_gaze(delta)  # menu = suit la souris ; œil-lune in-game = suit le curseur (set_cursor)
 	elif _menu_decor and _gaze_scripted:
 		_update_merlin_gaze(delta)  # reduced_motion : seul le gaze scripté (boot) tourne (early-return interne)
+	if _animated and not MerlinVisual.reduced_motion:
+		_update_leaves(delta)  # v10.21 : feuilles/flocons qui tombent (menu ET in-game)
+		_update_bird(delta)    # v10.21 : oiseau furtif occasionnel
 	queue_redraw()
+
+
+# v10.21 — Feuilles qui tombent (couleur saisonnière ; hiver = flocons lents). Particules recyclées,
+# positions NORMALISÉES (0-1) → indépendant du resize. Vent léger + spin par feuille.
+func _update_leaves(delta: float) -> void:
+	if _leaves.is_empty():
+		for i in LEAF_COUNT:
+			_leaves.append({"p": Vector2(randf(), randf() * 0.8), "phase": randf() * TAU,
+				"speed": 0.028 + randf() * 0.022, "size": 0.8 + randf() * 0.7})
+	var winter: bool = _season_key == "hiver"
+	for lf in _leaves:
+		var spd: float = float(lf["speed"]) * (0.55 if winter else 1.0)
+		var pos: Vector2 = lf["p"]
+		pos.y += spd * delta
+		pos.x += (sin(_t * 1.6 + float(lf["phase"])) * 0.010 + 0.006) * delta
+		if pos.y > 0.92:
+			pos = Vector2(randf(), -0.04)
+			lf["phase"] = randf() * TAU
+		lf["p"] = pos
+
+
+# v10.21 — Oiseau furtif : petit vol en « accents » qui traverse le haut du ciel (rare, 9-16 s).
+func _update_bird(delta: float) -> void:
+	if _bird_t < 0.0:
+		_bird_next -= delta
+		if _bird_next <= 0.0:
+			_bird_next = randf_range(9.0, 16.0)
+			_bird_t = 0.0
+			_bird_y = randf_range(0.08, 0.26)
+			_bird_dir = 1.0 if randf() < 0.5 else -1.0
+			_bird_flock = 2 + (1 if randf() < 0.5 else 0)
+	else:
+		_bird_t += delta / 8.0  # traversée lente ~8 s
+		if _bird_t > 1.0:
+			_bird_t = -1.0
 
 
 # Regard de Merlin (menu) : clignements ponctuels + suivi de la souris, interrompu par de courts
@@ -458,7 +507,32 @@ func _draw() -> void:
 	var dr: float = _decor_reveal  # v10.18 — révélation décor (boot) : multiplie l'alpha des éléments décor
 
 	# Ciel : teinte de l'heure, MODULÉE par la saison puis (subtilement) par la faction de la run (Wave C).
-	draw_rect(Rect2(Vector2.ZERO, s), _tod_sky.lerp(_season_sky, _season_sky_f).lerp(_faction_accent, _faction_sky_f), true)
+	var sky_col: Color = _tod_sky.lerp(_season_sky, _season_sky_f).lerp(_faction_accent, _faction_sky_f)
+	draw_rect(Rect2(Vector2.ZERO, s), sky_col, true)
+	# v10.21 — PROFONDEUR du ciel : 2 bandes d'horizon légèrement éclaircies (banding flat, zéro dégradé).
+	var horizon_l: Color = sky_col.lerp(MerlinVisual.CREAM, 0.045)
+	draw_rect(Rect2(Vector2(0.0, h * 0.52), Vector2(w, h * 0.20)), Color(horizon_l.r, horizon_l.g, horizon_l.b, 0.5 * dr), true)
+	var horizon_l2: Color = sky_col.lerp(MerlinVisual.CREAM, 0.08)
+	draw_rect(Rect2(Vector2(0.0, h * 0.62), Vector2(w, h * 0.10)), Color(horizon_l2.r, horizon_l2.g, horizon_l2.b, 0.5 * dr), true)
+	# v10.21 — ÉTOILES scintillantes (positions déterministes, twinkle par phase) — la nuit vit aussi in-game.
+	if _animated:
+		for sti in 14:
+			var stf: float = float(sti)
+			var sp2: Vector2 = Vector2(w * fmod(stf * 0.618 + 0.05, 1.0), h * (0.04 + 0.30 * fmod(stf * 0.382, 1.0)))
+			var tw_a: float = (0.10 + 0.16 * maxf(sin(_t * (0.7 + fmod(stf, 0.6)) + stf * 2.3), 0.0)) * dr
+			if rm:
+				tw_a *= 0.5
+			draw_circle(sp2 + _parallax * 0.3, 1.4 + fmod(stf * 0.7, 1.2), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, tw_a))
+	# v10.21 — COLLINES LOINTAINES : bande silhouette douce derrière les arbres (couche de profondeur).
+	var hills: PackedVector2Array = PackedVector2Array()
+	var h_steps: int = 16
+	for hi2 in h_steps + 1:
+		var hx: float = float(hi2) / float(h_steps) * w
+		var hy: float = h * 0.74 + sin(hx * 0.006 + 1.3) * h * 0.030 + sin(hx * 0.017 + 4.0) * h * 0.012
+		hills.append(Vector2(hx, hy) + _parallax * 0.25)
+	hills.append(Vector2(w, h))
+	hills.append(Vector2(0.0, h))
+	draw_colored_polygon(hills, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.30 * dr))
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * (0.17 if _watch_eyes else 0.13)  # lune agrandie en mode œil-lune (lisibilité)
@@ -500,6 +574,15 @@ func _draw() -> void:
 	if _moon_dim > 0.01:
 		moon_col = moon_col.lerp(COL_SCENE_BG, _moon_dim)
 	draw_circle(moon_c, moon_r, Color(moon_col.r, moon_col.g, moon_col.b, moon_col.a * dr))
+	# v10.21 — ANNEAU RUNIQUE : 6 segments d'arc en rotation TRÈS lente autour de la lune (mystique discret).
+	if _animated:
+		var ring_r: float = moon_r * 1.55
+		var ring_a: float = (0.07 + 0.02 * sin(_halo_phase * 0.5)) * dr * (0.5 if rm else 1.0)
+		var ring_col: Color = Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ring_a)
+		var spin_r: float = _t * 0.04
+		for ai in 6:
+			var a0: float = spin_r + float(ai) * (TAU / 6.0)
+			draw_arc(moon_c, ring_r, a0, a0 + 0.62, 7, ring_col, 2.0, true)
 
 	# v10.20 — ŒIL-LUNE : les yeux de Merlin vivent DANS la lune et suivent le curseur (suivi gameplay,
 	# user 2026-06-29). _fig_head/_fig_hr = lune → le gaze (_update_merlin_gaze) vise le curseur depuis ici.
@@ -592,39 +675,106 @@ func _draw() -> void:
 			draw_circle(Vector2(fpx, fpy), fr * 2.2, Color(fcol.r, fcol.g, fcol.b, fa * 0.22))
 			draw_circle(Vector2(fpx, fpy), fr, Color(fcol.r, fcol.g, fcol.b, fa))
 
-	# Ground contour
+	# v10.21 — SOL en 2 ondulations SUPERPOSÉES (profondeur) + touffes d'herbe animées sur la crête.
 	if _animated:
-		var gnd_pts: PackedVector2Array = PackedVector2Array()
-		var gnd_steps: int = 16
-		for gi in gnd_steps + 1:
-			var gx: float = float(gi) / float(gnd_steps) * w
-			var gy: float = h * 0.88 + sin(gx * 0.012 + _t * 0.1) * h * 0.02
-			gnd_pts.append(Vector2(gx, gy))
-		gnd_pts.append(Vector2(w, h))
-		gnd_pts.append(Vector2(0.0, h))
-		var gnd_a: float = 0.35 * dr
-		if rm:
-			gnd_a *= 0.5
 		var gnd_col: Color = COL_SIL.lerp(_season_sol, _season_sol_f)  # accent sol saisonnier (subtil)
-		draw_colored_polygon(gnd_pts, Color(gnd_col.r, gnd_col.g, gnd_col.b, gnd_a))
+		var band_specs: Array = [
+			{"y": 0.855, "amp": 0.016, "ph": 0.0, "a": 0.20, "spd": 0.07},
+			{"y": 0.885, "amp": 0.022, "ph": 2.1, "a": 0.38, "spd": 0.11},
+		]
+		var front_crest: PackedVector2Array = PackedVector2Array()
+		for bspec in band_specs:
+			var gnd_pts: PackedVector2Array = PackedVector2Array()
+			var gnd_steps: int = 20
+			for gi in gnd_steps + 1:
+				var gx: float = float(gi) / float(gnd_steps) * w
+				var gy: float = h * float(bspec["y"]) \
+					+ sin(gx * 0.010 + _t * float(bspec["spd"]) + float(bspec["ph"])) * h * float(bspec["amp"]) \
+					+ sin(gx * 0.031 + float(bspec["ph"]) * 2.0) * h * float(bspec["amp"]) * 0.4
+				gnd_pts.append(Vector2(gx, gy))
+			if bspec == band_specs[1]:
+				front_crest = gnd_pts.duplicate()
+			gnd_pts.append(Vector2(w, h))
+			gnd_pts.append(Vector2(0.0, h))
+			var gnd_a: float = float(bspec["a"]) * dr * (0.5 if rm else 1.0)
+			draw_colored_polygon(gnd_pts, Color(gnd_col.r, gnd_col.g, gnd_col.b, gnd_a))
+		# Touffes d'herbe : éventails de 3 brins sur la crête avant, sway par touffe (déterministe).
+		if not front_crest.is_empty():
+			var g_a: float = 0.55 * dr * (0.5 if rm else 1.0)
+			var g_col: Color = Color(gnd_col.r, gnd_col.g, gnd_col.b, g_a)
+			for ti in 9:
+				var tf: float = float(ti)
+				var ci: int = clampi(int(fmod(tf * 0.618 + 0.07, 1.0) * 20.0), 0, front_crest.size() - 1)
+				var root: Vector2 = front_crest[ci]
+				var g_h: float = h * (0.020 + fmod(tf * 0.37, 0.014))
+				var lean: float = 0.0 if rm else sin(_t * (0.8 + fmod(tf, 0.5)) + tf * 2.2) * g_h * 0.35
+				for bl2 in 3:
+					var spread: float = (float(bl2) - 1.0) * g_h * 0.45
+					draw_line(root, root + Vector2(spread + lean, -g_h * (0.75 + 0.25 * float(bl2 == 1))), g_col, 1.5, true)
 
-	# Mist layers (reactive via _mist_factor)
+	# v10.21 — BRUME en RUBANS ondulants (bords sinueux, dérive continue) — fini les rects plats.
 	var mist_layers: Array = [
-		{"y": 0.55, "speed": 0.12, "alpha": 0.10, "width": 0.55},
-		{"y": 0.66, "speed": 0.18, "alpha": 0.14, "width": 0.60},
-		{"y": 0.78, "speed": 0.25, "alpha": 0.18, "width": 0.65},
+		{"y": 0.55, "speed": 0.12, "alpha": 0.10, "width": 0.58, "th": 0.030},
+		{"y": 0.66, "speed": 0.18, "alpha": 0.14, "width": 0.64, "th": 0.038},
+		{"y": 0.78, "speed": 0.25, "alpha": 0.18, "width": 0.70, "th": 0.046},
 	]
 	for li in mist_layers.size():
 		var ml: Dictionary = mist_layers[li]
-		var y: float = h * float(ml["y"])
-		var bw: float = w * float(ml["width"])
-		var bx: float = w * 0.5 - bw * 0.5
-		var alpha: float = float(ml["alpha"]) * _mist_factor * dr
-		if _animated:
-			bx += sin(_t * float(ml["speed"]) + float(li) * 2.1) * w * 0.020
-		if rm:
-			alpha *= 0.5
-		draw_rect(Rect2(Vector2(bx, y), Vector2(bw, h * 0.035)), Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha), true)
+		var alpha: float = float(ml["alpha"]) * _mist_factor * dr * (0.5 if rm else 1.0)
+		if alpha <= 0.004:
+			continue
+		var m_w: float = w * float(ml["width"])
+		var m_x: float = w * 0.5 - m_w * 0.5
+		var m_y: float = h * float(ml["y"])
+		var m_th: float = h * float(ml["th"])
+		var drift: float = (_t * float(ml["speed"])) if _animated else 0.0
+		var seg: int = 14
+		var ribbon: PackedVector2Array = PackedVector2Array()
+		for si2 in seg + 1:  # bord SUPÉRIEUR sinueux (2 ondes superposées, dérive lente)
+			var fx: float = float(si2) / float(seg)
+			var px: float = m_x + fx * m_w
+			var wob: float = sin(fx * 6.0 + drift + float(li) * 2.1) * m_th * 0.45 \
+				+ sin(fx * 13.0 - drift * 1.7) * m_th * 0.20
+			ribbon.append(Vector2(px, m_y + wob))
+		for si3 in seg + 1:  # bord INFÉRIEUR sinueux (retour, phase décalée)
+			var fx2: float = 1.0 - float(si3) / float(seg)
+			var px2: float = m_x + fx2 * m_w
+			var wob2: float = sin(fx2 * 5.0 - drift * 0.8 + float(li)) * m_th * 0.35
+			ribbon.append(Vector2(px2, m_y + m_th + wob2))
+		draw_colored_polygon(ribbon, Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha))
+		# (QA v10.21 : le « cœur » rectangulaire créait des coutures droites — retiré, le ruban seul suffit.)
+
+	# v10.21 — FEUILLES qui tombent (quads tournoyants, couleur saison ; hiver = flocons crème ronds).
+	if _animated and not _leaves.is_empty():
+		var winter: bool = _season_key == "hiver"
+		var leaf_col: Color = (MerlinVisual.CREAM if winter else _season_leaf.lerp(MerlinVisual.GOLD, 0.25))
+		for lf2 in _leaves:
+			var lp2: Vector2 = Vector2(float((lf2["p"] as Vector2).x) * w, float((lf2["p"] as Vector2).y) * h) + _parallax * 0.8
+			var l_a: float = 0.42 * dr * (0.5 if rm else 1.0)
+			var lsz: float = maxf(minf(w, h) * 0.006, 2.4) * float(lf2["size"])
+			if winter:
+				draw_circle(lp2, lsz * 0.6, Color(leaf_col.r, leaf_col.g, leaf_col.b, l_a))
+			else:
+				var spin: float = _t * (1.2 + float(lf2["phase"]) * 0.15) + float(lf2["phase"])
+				var ca2: float = cos(spin)
+				var sa2: float = sin(spin)
+				draw_colored_polygon(PackedVector2Array([
+					lp2 + Vector2(ca2, sa2) * lsz, lp2 + Vector2(-sa2, ca2) * lsz * 0.5,
+					lp2 + Vector2(-ca2, -sa2) * lsz, lp2 + Vector2(sa2, -ca2) * lsz * 0.5,
+				]), Color(leaf_col.r, leaf_col.g, leaf_col.b, l_a))
+
+	# v10.21 — OISEAU furtif : petit vol de chevrons qui bat des ailes en traversant le ciel.
+	if _animated and _bird_t >= 0.0 and _bird_t <= 1.0 and not rm:
+		var bx2: float = lerpf(-0.06, 1.06, _bird_t if _bird_dir > 0.0 else 1.0 - _bird_t) * w
+		var by2: float = _bird_y * h + sin(_bird_t * 9.0) * h * 0.012
+		var b_a: float = sin(_bird_t * PI) * 0.5 * dr
+		var b_col: Color = Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, b_a)
+		for bi2 in _bird_flock:
+			var bo: Vector2 = Vector2(bx2 - float(bi2) * 14.0 * _bird_dir, by2 + float(bi2) * 6.0)
+			var flap: float = sin(_t * 7.0 + float(bi2) * 1.7) * 3.0
+			var wing: float = 5.0
+			draw_line(bo, bo + Vector2(-wing * _bird_dir, -2.5 - flap), b_col, 1.6, true)
+			draw_line(bo, bo + Vector2(wing * _bird_dir, -2.5 + flap), b_col, 1.6, true)
 
 	# Foreground silhouettes (2 edge trees, slow drift)
 	if _animated:
@@ -644,11 +794,29 @@ func _draw() -> void:
 			var aura_a: float = (0.05 / (float(ck) + 1.0)) * dr
 			draw_circle(_cursor_pos, aura_r, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, aura_a))
 
-	# Menu decor
+	# Menu decor — v10.21 : TERTRES organiques (fini les rects plats à couleurs en dur, violation DA §20).
 	if _menu_decor:
 		var drift: float = sin(_t * 0.16) * w * 0.012 if _animated else 0.0
-		draw_rect(Rect2(Vector2(0.0 + drift, h * 0.80), Vector2(w * 0.44, h * 0.045)), Color(0.50, 0.65, 0.36, 0.22 * dr), true)
-		draw_rect(Rect2(Vector2(w * 0.58 - drift, h * 0.84), Vector2(w * 0.42, h * 0.045)), Color(0.48, 0.31, 0.64, 0.22 * dr), true)
+		var mounds: Array = [
+			{"x0": -0.02, "x1": 0.46, "y": 0.815, "amp": 0.020, "col": MerlinVisual.GREEN, "off": drift},
+			{"x0": 0.56, "x1": 1.02, "y": 0.855, "amp": 0.024, "col": MerlinVisual.VIOLET, "off": -drift},
+		]
+		for mo in mounds:
+			var m_pts: PackedVector2Array = PackedVector2Array()
+			var m_seg: int = 12
+			var crest_y: float = h * float(mo["y"]) - h * float(mo["amp"]) * 3.0
+			for msi in m_seg + 1:
+				var mf: float = float(msi) / float(m_seg)
+				var mx2: float = lerpf(float(mo["x0"]), float(mo["x1"]), mf) * w + float(mo["off"])
+				var dome: float = sin(mf * PI)  # 0 aux bords → 1 au centre
+				# QA v10.21 : le profil DESCEND SOUS l'écran aux extrémités (h*1.02) → vraie colline,
+				# plus de murs verticaux aux bords du polygone.
+				var my2: float = lerpf(h * 1.02, crest_y, dome) - sin(mf * 9.0 + _t * 0.2) * h * 0.004
+				m_pts.append(Vector2(mx2, my2))
+			m_pts.append(Vector2(lerpf(float(mo["x0"]), float(mo["x1"]), 1.0) * w + float(mo["off"]), h * 1.04))
+			m_pts.append(Vector2(float(mo["x0"]) * w + float(mo["off"]), h * 1.04))
+			var m_col: Color = mo["col"]
+			draw_colored_polygon(m_pts, Color(m_col.r, m_col.g, m_col.b, 0.16 * dr))
 		var star_i: int = 0
 		for sp in [Vector2(0.40, 0.18), Vector2(0.62, 0.28), Vector2(0.72, 0.50), Vector2(0.30, 0.40)]:
 			var a: float = 1.0
@@ -664,47 +832,79 @@ func _star(p: Vector2, rr: float, alpha: float = 1.0) -> void:
 		p + Vector2(0.0, -rr), p + Vector2(rr * 0.5, 0.0), p + Vector2(0.0, rr), p + Vector2(-rr * 0.5, 0.0)]), col)
 
 
+# v10.21 — Arbre ORGANIQUE (user : « moins design HTML ») : tronc GALBÉ en polygone effilé avec courbe
+# en S, 2 branches maîtresses effilées, CANOPÉE en masses sombres qui respirent + sway idle propre à
+# chaque arbre (déterministe : seedé par base.x — zéro randf en _draw). Signature INCHANGÉE (6 appelants).
 func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0) -> void:
-	var top: Vector2 = base + Vector2(0.0, -height)
-	var trunk_w: float = maxf(w_ref * 0.012, 3.0)
 	var col: Color = COL_SIL if alpha >= 1.0 else Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, alpha)
-	draw_line(base, top, col, trunk_w, true)
-	var bl: float = height * 0.26
-	for frac in [0.55, 0.70, 0.84]:
-		var p: Vector2 = base.lerp(top, frac)
-		var side: float = 1.0 if (int(frac * 100.0) % 2 == 0) else -1.0
-		draw_line(p, p + Vector2(side * bl * 0.6, -bl * 0.7), col, trunk_w * 0.7, true)
-		draw_line(p, p + Vector2(-side * bl * 0.45, -bl * 0.6), col, trunk_w * 0.6, true)
-	# v10.18 — Feuillage saisonnier : blobs flat dans la canopée haute. alpha inclut decor_reveal (param).
-	# Défaut (aucune saison) → _season_leaf_a = 0 → aucun blob, arbres nus inchangés.
+	var tseed: float = fmod(absf(base.x) * 0.137, TAU)  # variation par arbre, stable d'une frame à l'autre
+	var rm2: bool = MerlinVisual.reduced_motion
+	var idle: float = 0.0 if rm2 else sin(_t * (0.22 + fmod(tseed, 0.13)) + tseed) * height * 0.012
+	var swy: float = idle + _tree_sway * 0.35
+	var top: Vector2 = base + Vector2(swy * 2.2, -height)
+	var t_w: float = maxf(w_ref * 0.010, 3.0)
+	var mid: Vector2 = base.lerp(top, 0.5) + Vector2(sin(tseed * 3.7) * height * 0.04 + swy, 0.0)
+	draw_colored_polygon(PackedVector2Array([
+		base + Vector2(-t_w * 2.4, 0.0), base + Vector2(t_w * 2.4, 0.0),
+		mid + Vector2(t_w * 1.2, 0.0), top + Vector2(t_w * 0.55, 0.0),
+		top + Vector2(-t_w * 0.55, 0.0), mid + Vector2(-t_w * 1.2, 0.0),
+	]), col)
+	for bi in 2:
+		var b_side: float = 1.0 if bi == 0 else -1.0
+		var bp: Vector2 = base.lerp(top, 0.58 + 0.16 * float(bi)) + Vector2(swy, 0.0)
+		var tip: Vector2 = bp + Vector2(b_side * height * (0.20 - 0.05 * float(bi)), -height * 0.16)
+		draw_colored_polygon(PackedVector2Array([
+			bp + Vector2(0.0, -t_w * 0.9), tip, bp + Vector2(0.0, t_w * 0.9)]), col)
+	# Canopée : 5 masses sombres agglomérées, respiration douce (phase par blob).
+	var crown: Vector2 = top + Vector2(swy * 1.5, height * 0.06)
+	var cr: float = height * 0.16
+	for k in 5:
+		var kf: float = float(k)
+		var ang: float = tseed + kf * 1.256
+		var breathe: float = 0.0 if rm2 else sin(_t * 0.5 + tseed + kf) * cr * 0.06
+		var bc: Vector2 = crown + Vector2(cos(ang) * cr * (0.9 + fmod(kf * 0.31, 0.5)), sin(ang) * cr * 0.55 - cr * 0.25 + breathe)
+		draw_circle(bc, cr * (0.55 + fmod(kf * 0.27, 0.35)), col)
+	# Feuillage saisonnier : petits accents colorés DANS les masses de la canopée (QA v10.21 : les gros
+	# pois flottaient hors couronne → rayon réduit, nombre doublé, positions calées sur les blobs sombres).
 	if _season_leaf_a > 0.001 and alpha > 0.01:
-		var leaf_a: float = _season_leaf_a * alpha
-		if MerlinVisual.reduced_motion:
-			leaf_a *= 0.7
+		var leaf_a: float = _season_leaf_a * alpha * 0.85 * (0.7 if rm2 else 1.0)
 		var lc: Color = Color(_season_leaf.r, _season_leaf.g, _season_leaf.b, leaf_a)
-		var br: float = _season_blob_r * w_ref
-		var n: int = _season_blobs * 3
-		for k in n:
-			var kf: float = float(k)
-			var frac2: float = 0.50 + 0.42 * fmod(kf * 0.618, 1.0)
-			var p2: Vector2 = base.lerp(top, frac2)
-			var lat: float = (fmod(kf * 0.382, 1.0) - 0.5) * height * 0.30
-			var ver: float = (fmod(kf * 0.271, 1.0) - 0.5) * height * 0.14
-			draw_circle(p2 + Vector2(lat, ver), br, lc)
+		var br: float = _season_blob_r * w_ref * 0.75
+		for k2 in _season_blobs * 6:
+			var kf2: float = float(k2)
+			var ang2: float = tseed * 1.3 + kf2 * 0.897
+			var rad2: float = cr * (0.35 + fmod(kf2 * 0.43, 0.55))  # DANS la couronne (0.35-0.90 × cr)
+			var lp: Vector2 = crown + Vector2(cos(ang2) * rad2, sin(ang2) * rad2 * 0.55 - cr * 0.25)
+			draw_circle(lp, br * (0.7 + fmod(kf2 * 0.29, 0.5)), lc)
 
 
+# v10.21 — Menhir ORGANIQUE : pierre effilée légèrement penchée (polygone irrégulier) + mousse au pied.
+# Les entailles ogham (trait vertical + 4 barres) demeurent — c'est sa signature.
 func _menhir(pos: Vector2, dim: Vector2, alpha: float = 1.0) -> void:
 	var stone: Color = COL_STONE if alpha >= 1.0 else Color(COL_STONE.r, COL_STONE.g, COL_STONE.b, COL_STONE.a * alpha)
 	var ink: Color = COL_INK if alpha >= 1.0 else Color(COL_INK.r, COL_INK.g, COL_INK.b, COL_INK.a * alpha)
-	draw_rect(Rect2(pos, dim), stone, true)
-	var cx: float = pos.x + dim.x * 0.5
-	var y0: float = pos.y + dim.y * 0.18
+	var lean: float = dim.x * 0.16  # penché vers la lune (ancienneté)
+	draw_colored_polygon(PackedVector2Array([
+		pos + Vector2(dim.x * 0.08, dim.y),                       # pied gauche
+		pos + Vector2(-dim.x * 0.06 + lean, dim.y * 0.42),        # flanc gauche renflé
+		pos + Vector2(dim.x * 0.16 + lean, dim.y * 0.06),         # épaule gauche
+		pos + Vector2(dim.x * 0.62 + lean, 0.0),                  # sommet arrondi (facette)
+		pos + Vector2(dim.x * 0.98 + lean, dim.y * 0.14),         # épaule droite
+		pos + Vector2(dim.x * 1.04, dim.y * 0.55),                # flanc droit
+		pos + Vector2(dim.x * 0.92, dim.y),                       # pied droit
+	]), stone)
+	var cx: float = pos.x + dim.x * 0.5 + lean * 0.5
+	var y0: float = pos.y + dim.y * 0.20
 	var y1: float = pos.y + dim.y * 0.82
 	draw_line(Vector2(cx, y0), Vector2(cx, y1), ink, 2.0, true)
-	var tick: float = dim.x * 0.42
+	var tick: float = dim.x * 0.38
 	for i in 4:
 		var ty: float = lerpf(y0, y1, float(i + 1) / 5.0)
 		draw_line(Vector2(cx - tick, ty), Vector2(cx + tick, ty), ink, 2.0, true)
+	# Mousse au pied (accent GREEN canon, discret — la forêt reprend la pierre).
+	var moss: Color = MerlinVisual.GREEN
+	draw_circle(pos + Vector2(dim.x * 0.22, dim.y * 0.97), dim.x * 0.20, Color(moss.r, moss.g, moss.b, 0.22 * alpha))
+	draw_circle(pos + Vector2(dim.x * 0.70, dim.y * 1.00), dim.x * 0.26, Color(moss.r, moss.g, moss.b, 0.16 * alpha))
 
 
 func _figure(base_in: Vector2, height: float, half_w: float) -> void:
