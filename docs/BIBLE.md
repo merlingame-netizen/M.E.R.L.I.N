@@ -1491,6 +1491,14 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
     sustain). Cap 12 s + skip inchangés (on enrichit la QUALITÉ de l'attente, pas sa durée).
   - **Selection** : « son de point » (`quill_tick` toutes les 0.6 s pendant « Merlin rêve les trois sentiers »)
     **retiré** — les points « … » restent visuels.
+  - **QA prouvée par captures réelles (2026-06-30)** : harnais autoplay **réparé** (duck-typing — zéro réf
+    statique aux scripts du jeu en mode `--script` ; fire-and-forget `_on_resolve` anti-suspension ; fenêtre
+    minimisée hors capture + mode `--slow=N` pour figer l'issue à l'écran) → **gate R109 de nouveau MESURABLE
+    et VERT : soak 200/200 + autoplay 3/3, 0 SCRIPT ERROR**. Captures : résolution même-fil + vignette + barre
+    de progression (remplissage 8→40 %) + glitch corruption R75 confirmés à l'écran. Bug attrapé par le
+    harnais : la vignette de fusion n'avait JAMAIS animé (ordre d'arguments `tween_method`+`bind`) — corrigé.
+    Anti-générique : mémoire intra-run des fallbacks d'issue (`_fb_served`) — plus jamais la même variante
+    servie deux fois dans une run.
 
 ---
 

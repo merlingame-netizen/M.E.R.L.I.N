@@ -17,12 +17,17 @@ func _init() -> void:
 	_main()
 
 
+var _slow_s: float = 0.0  # --slow=2.5 : temps de pause sur l'ISSUE écrite avant d'avancer (QA visuelle/captures)
+
+
 func _main() -> void:
 	var loops: int = 3
 	for a in OS.get_cmdline_user_args():
 		var s: String = str(a)
 		if s.begins_with("--loops="):
 			loops = maxi(1, int(s.trim_prefix("--loops=")))
+		elif s.begins_with("--slow="):
+			_slow_s = maxf(0.0, float(s.trim_prefix("--slow=")))
 	await process_frame
 	# Anti-flake (2026-06-30) : fermer la fenêtre = quit(0) silencieux SANS ligne DONE → gate 0/N alors que
 	# le harnais tournait. Titre explicite + fenêtre MINIMISÉE (sauf capture : la minimisation suspend le
@@ -128,6 +133,11 @@ func _play_one(k: int) -> bool:
 					# _state==2 pendant la résolution → aucune branche ne re-déclenche (pas de double-resolve).
 					game._on_resolve()
 		elif game._state == 2 and game._can_advance:
+			# --slow : pause bornée sur l'ISSUE écrite (résolution même-fil + vignette visibles → captures QA).
+			if _slow_s > 0.0:
+				await create_timer(_slow_s).timeout
+				if not is_instance_valid(game) or run.ended:
+					continue
 			# VOLONTAIREMENT fire-and-forget : _advance_to_next() attend le modal de draft, que
 			# CETTE boucle doit servir (_on_draft_card/_on_draft_skip) → un await ici = deadlock.
 			# Sûr : _can_advance repasse à false AVANT le 1er await de _advance_to_next.

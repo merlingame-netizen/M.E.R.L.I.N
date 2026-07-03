@@ -187,6 +187,7 @@ var _opening_epoch: int = 0
 # prose (a) reste ancrée dans CE scénario et (b) enchaîne sur le beat d'avant — fini les beats
 # orphelins « sans queue ni tête ». RAZ à chaque build_skeleton (= nouveau run).
 var _run_thread: Dictionary = {"title": "", "pitch": "", "last_gist": ""}
+var _fb_served: Dictionary = {}  # anti-répétition intra-run des fallbacks d'issue : "degré|pool" → [index servis]
 
 
 func _ready() -> void:
@@ -414,6 +415,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	var recog: bool = str(fp["pilier"]) != "" and str(fp["pilier"]) == str(MerlinChronicle.read().get("last_pilier", ""))
 	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
+	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
 	var nq: int = 2 if _rng.randf() < 0.4 else 3
 	var quests: Array = [{"title": title, "pitch": pitch}]
 	var pool: Array = SEL_FALLBACK.duplicate(true)
@@ -894,11 +896,26 @@ func fallback_resolution(degree: String, situ_type: String = "") -> String:
 	# Longueur VARIABLE même en procédural (user 2026-06-06) : aux MOMENTS FORTS (Climax / éclatante)
 	# on sert le pool LONG → « plus long au climax » s'affiche EN JEU même quand l'issue LLM longue
 	# timeoute (cas fréquent à ~1 tok/s). Sinon pool de routine (plus court).
-	var src: Dictionary = RESO_FALLBACKS_LONG if is_strong_moment(situ_type, degree) else RESO_FALLBACKS
+	var strong: bool = is_strong_moment(situ_type, degree)
+	var src: Dictionary = RESO_FALLBACKS_LONG if strong else RESO_FALLBACKS
 	var pool: Array = src.get(degree, src.get("reussite", []))
 	if pool.is_empty():
 		pool = RESO_FALLBACKS["reussite"]
-	return str(pool[_rng.randi_range(0, pool.size() - 1)])
+	# Anti-générique (QA captures 2026-06-30 : même fallback « partiel » servi 2× mot pour mot dans une
+	# run) : mémoire intra-run des variantes servies par (degré, pool) — on ne repioche que parmi les
+	# AUTRES ; pool épuisé → RAZ. « partiel » = ~47 % des issues, la répétition se voyait vite.
+	var key: String = degree + ("|L" if strong else "|S")
+	var served: Array = _fb_served.get(key, [])
+	if served.size() >= pool.size():
+		served = []
+	var avail: Array = []
+	for i in pool.size():
+		if not served.has(i):
+			avail.append(i)
+	var idx: int = int(avail[_rng.randi_range(0, avail.size() - 1)])
+	served.append(idx)
+	_fb_served[key] = served
+	return str(pool[idx])
 
 
 # Mémorise le RÉSULTAT du beat courant dans le fil rouge → le prompt d'issue du beat SUIVANT
