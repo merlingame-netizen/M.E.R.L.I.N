@@ -310,6 +310,7 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		var pk2: String = _current_offer_pilier()
 		if btype == "Rencontre" and pk2 != "":
 			_scene_art.set_pilier(pk2, true)
+			MerlinAudio.play_pad("pad_" + pk2)  # v10.21 Wave A : la nappe SIGNÉE s'installe avec lui
 			if pk2 == "choeur" or pk2 == "chevalier":
 				_scene_art.set_eye_mood("neutral")
 				_scene_art.flash_moon()
@@ -317,6 +318,7 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 				_scene_art.set_eye_mood("surprise")
 		else:
 			_scene_art.set_pilier("", false)
+			MerlinAudio.stop_pad()  # le pilier s'en va → sa nappe s'éteint (canal unique, jamais superposé)
 	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
 	# v10.21 — feedforward « Ce lieu réclame » RETIRÉ (user 2026-06-30) : immersion narrative ; l'issue continue le fil.
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
@@ -1278,6 +1280,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _on_run_ended(_end_type: String) -> void:
+	MerlinAudio.stop_pad()  # v10.21 Wave A : la nappe du pilier ne survit pas à la run (autoload)
 	# v10.13 (Fix 1) : si la run se termine pendant le modal de draft, on le ferme proprement
 	# (la boucle de _present_draft sort via sa garde is_instance_valid/_draft_layer → skip).
 	if _draft_layer != null:

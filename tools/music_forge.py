@@ -207,9 +207,51 @@ def _boot_eveil() -> list[float]:
     return _make_seamless(soft, CROSSFADE)
 
 
+# ── v10.21 Wave A — nappes SIGNÉES par pilier PNJ (BIBLE §22 + spec panel) ──────
+# Boucles seamless courtes (16 s), discrètes (jouées bas volume via MerlinAudio.play_pad, canal unique).
+PAD_DURATION = 16.0
+
+
+def _pad_pilier(freq_lo: float, freq_hi: float, detune: float, bell_notes: tuple[float, ...],
+                bell_seed: int, bell_density: float, wind_i: float, lp: float, rev_size: float) -> list[float]:
+    drone_lo = _drone(PAD_DURATION, freq_lo, mod_depth=0.10, mod_rate=0.05, mod_index=0.15)
+    drone_hi = _drone(PAD_DURATION, freq_hi, detune=detune, mod_depth=0.08, mod_rate=0.06, mod_index=0.12)
+    bells = _sequence_bells(PAD_DURATION, bell_notes, seed=bell_seed, density=bell_density,
+                            decay=4.0, vol_range=(0.10, 0.30))
+    atmosphere = _wind(PAD_DURATION, seed=bell_seed + 1, intensity=wind_i, sweep_period=10.0)
+    raw = _mix(drone_lo, drone_hi, bells, atmosphere)
+    wet = _pad_reverb(raw, size=rev_size, mix=0.50)
+    return _make_seamless(_lowpass_gentle(wet, lp), CROSSFADE)
+
+
+def _pad_choeur() -> list[float]:      # chaud, druidique — A2+E3, cloches douces
+    return _pad_pilier(110.00, 164.81, 0.003, PENTA_D, 801, 0.16, 0.14, 3800.0, 0.62)
+
+
+def _pad_etre() -> list[float]:        # froid d'outre-monde — F#2+C#3 fortement désaccordé, réverb ample
+    return _pad_pilier(92.50, 138.59, 0.009, PENTA_D_HIGH, 811, 0.10, 0.20, 3200.0, 0.75)
+
+
+def _pad_chevalier() -> list[float]:   # solennel, grave — D2, cloches basses rares
+    return _pad_pilier(73.42, 110.00, 0.002, PENTA_D_LOW, 821, 0.12, 0.10, 3000.0, 0.58)
+
+
+def _pad_compagnon() -> list[float]:   # mélancolique — G2, battement lent
+    return _pad_pilier(98.00, 146.83, 0.006, PENTA_D, 831, 0.14, 0.16, 3400.0, 0.68)
+
+
+def _pad_enfant() -> list[float]:      # boîte à musique inquiète — G3 clair, clochettes denses
+    return _pad_pilier(196.00, 293.66, 0.004, PENTA_D_HIGH, 841, 0.22, 0.10, 4200.0, 0.55)
+
+
 TRACKS: dict[str, Callable[[], list[float]]] = {
     "gameplay_calm": _gameplay_calm,
     "boot_eveil": _boot_eveil,
+    "pad_choeur": _pad_choeur,
+    "pad_etre": _pad_etre,
+    "pad_chevalier": _pad_chevalier,
+    "pad_compagnon": _pad_compagnon,
+    "pad_enfant": _pad_enfant,
 }
 
 

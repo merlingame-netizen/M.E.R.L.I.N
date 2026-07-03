@@ -185,6 +185,50 @@ func _duck_music() -> void:
 	_duck_tw.tween_property(_active_music, "volume_db", restore_db, DUCK_RETURN).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
+# === v10.21 Wave A — NAPPE du pilier PNJ : canal UNIQUE (un seul pad à la fois, jamais superposé),
+# fade-in 1.2s / fade-out 0.8s, bas volume (sous la musique). Boucle forcée sur l'AudioStreamWAV.
+const PAD_DIR: String = "res://music/gameplay/"
+const PAD_VOL_DB: float = -16.0
+var _pad_player: AudioStreamPlayer = null
+var _pad_id: String = ""
+var _pad_tw: Tween = null
+
+
+func play_pad(id: String) -> void:
+	if id == _pad_id:
+		return  # même nappe déjà en cours (anti-superposition, user 2026-06-29)
+	var path: String = PAD_DIR + id + ".wav"
+	if not ResourceLoader.exists(path):
+		return
+	if _pad_player == null:
+		_pad_player = AudioStreamPlayer.new()
+		_pad_player.bus = &"Music"
+		add_child(_pad_player)
+	var stream: AudioStream = load(path)
+	if stream is AudioStreamWAV:
+		(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+		(stream as AudioStreamWAV).loop_end = int((stream as AudioStreamWAV).data.size() / 2)  # frames 16-bit mono
+	_pad_id = id
+	if _pad_tw != null and _pad_tw.is_valid():
+		_pad_tw.kill()
+	_pad_player.stream = stream
+	_pad_player.volume_db = -40.0
+	_pad_player.play()
+	_pad_tw = create_tween()
+	_pad_tw.tween_property(_pad_player, "volume_db", PAD_VOL_DB, 1.2)
+
+
+func stop_pad() -> void:
+	if _pad_player == null or _pad_id == "":
+		return
+	_pad_id = ""
+	if _pad_tw != null and _pad_tw.is_valid():
+		_pad_tw.kill()
+	_pad_tw = create_tween()
+	_pad_tw.tween_property(_pad_player, "volume_db", -40.0, 0.8)
+	_pad_tw.tween_callback(_pad_player.stop)
+
+
 func play_music(stream: AudioStream, crossfade_dur: float = 1.5) -> void:
 	if stream == null:
 		return
