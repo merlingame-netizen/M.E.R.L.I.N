@@ -537,8 +537,11 @@ static func shake(target: Control, amplitude: float, duration: float) -> void:
 	st.tween_property(target, "position", base, step_dur)
 
 
-# Setter pour le shader uniform — Tween.tween_method requiert un Callable.
-func _set_vignette_intensity(mat: ShaderMaterial, v: float) -> void:
+# Setter pour le shader uniform — Tween.tween_method(callable.bind(mat)) : la valeur INTERPOLÉE arrive en
+# 1er argument, les args bindés en DERNIER. L'ancien ordre (mat, v) recevait (float, mat) → « Cannot convert
+# argument 1 from float to Object » à CHAQUE step : la vignette de fusion n'a jamais animé (fix 2026-06-30,
+# découvert par le harnais autoplay réparé).
+func _set_vignette_intensity(v: float, mat: ShaderMaterial) -> void:
 	if mat != null:
 		mat.set_shader_parameter("intensity", v)
 
