@@ -40,3 +40,6 @@
 - [x] Hover++ : brume qui s'écarte, lucioles qui fuient, feuillage qui s'éclaire — 7 éléments réactifs (3b058573)
 - [ ] RESTE : Wave I (interventions) + Wave G (Encaisser/Pousser) — gameplay systems, spec intégrale
       dans docs/spec_v10.21_presences.md §I et §G + regles_g1. Démarrer par I (miroir de pilier_offering_done).
+- [x] Wave G COMPLÈTE : R130 Encaisser/Pousser + re-mesure (partiel eff. 31.6%, corrompu 14.5%) (f2c1de8a)
+- [x] Wave I COMPLÈTE : R131 interventions (planning R108, bénédictions ✦, pactes opt-in, soak miroir) (6a59b791)
+- [x] GOAL v10.21 : les 6 chantiers livrés. R109 final (autoplay 3/3) en re-mesure de clôture.

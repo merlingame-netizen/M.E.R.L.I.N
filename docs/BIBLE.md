@@ -1521,9 +1521,17 @@ _(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — round
   procédurale écrite dans le même fil (R128). Mesure 200 runs : partiel effectif 31,6 % (cible 28-38),
   corrompu 14,5 % (≤18), morts 23 %→15 % (à surveiller), ~1,1 push/run.
 
-  - **Reste du goal (multi-session)** : uniformisation UI/UX Selection/End/Options sur ce langage ; vagues
-    v10.21 I (interventions) · L (lisibilité) · G (Encaisser/Pousser) · A (nappes sonores) — spec chiffrée
-    prête dans `docs/spec_v10.21_presences.md`.
+- **R131 — Interventions du pilier PNJ (2026-06-30, Wave I, panel)** : le pilier REVIENT se mêler du
+  sentier (1-2×/run) — planifié à la Rencontre (persisté R108, cap 2, jamais le climax), séquence signée
+  (silhouette + nappe + réaction lune + LIGNE SIGNÉE écrite à la suite du fil R128). Effets par nature :
+  Chœur/Chevalier **bénissent** une carte (tag temporaire VISIBLE ✦, consommé à la pose, canal
+  `bonus_tags` de resolve → preview = résolution R120) · Enfant offre un tag REQUIS (l'aide innocente) ·
+  Être/Compagnon = **pactes opt-in** (voie ouverte / pioche 1) contre +1 Corruption AFFICHÉE, Accepter/
+  Refuser 1 geste, ignorables. API `run.add_corruption(n)` + `draw_extra(n)`. Soak miroir complet :
+  corrompu 14,5 % stable, 200/200.
+
+  - **Goal ACCOMPLI (2026-06-30/07-04)** : uniformisation scènes ✓ (End backdrop, hover partout) ; vagues
+    v10.21 TOUTES livrées — I (R131) · L (4 axes) · G (R130) · A (5 nappes signées).
 
 ---
 
