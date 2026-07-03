@@ -1243,3 +1243,33 @@ Le « kill ~285 s » concerne les commandes Bash **foreground** (mon harness), p
   delta (courbe lisse) ; le hover-parallax reste plein framerate (feedback curseur direct).
 - **`asset_validator` alpha-aware** : un overlay transparent (sprite-sheet) doit être composité sur BG_DEEP
   AVANT la mesure palette — sinon les pixels transparents lisent du noir (hors-palette) et le check échoue.
+
+## Patterns harnais & tweens (2026-06-30 — réparation autoplay R109)
+
+- **Mode `--script` (SceneTree) : le script principal compile AVANT l'enregistrement des autoloads** : toute
+  référence `class_name` dans un harnais (`extends SceneTree`) tire le script visé dans SA chaîne de
+  compilation — si ce script (ou une dépendance) référence un autoload global (`MerlinAudio.play_sfx`),
+  compile error « Identifier not found » en cascade, AVANT que le jeu ne démarre. Règle : dans
+  `tools/*_run.gd`, **zéro référence statique aux scripts du jeu** — duck-typing
+  (`node.has_method("deal_in") and node.get("card") != null`) ou `get_node("/root/X")` runtime.
+  Symptôme trompeur : le harnais TOURNE quand même (reload ultérieur OK) mais le gate compte les SCRIPT
+  ERROR du boot → « 0/N » alors que les runs passent.
+- **`Tween.tween_method(callable.bind(extra), from, to, dur)` : la valeur interpolée arrive en 1er argument,
+  les args bindés en DERNIER** : une signature `f(extra, v)` reçoit `(v, extra)` → « Cannot convert argument
+  1 » à CHAQUE step, silencieux en gameplay (l'anim ne joue simplement jamais). Signature correcte :
+  `f(v: float, extra)` . Invisible au smoke (erreur runtime, pas compile) — c'est le harnais autoplay qui
+  l'attrape (vignette de fusion, cassée depuis son introduction).
+- **Fenêtre du harnais autoplay : fermer = `quit(0)` silencieux SANS ligne DONE** → le gate lit « 0/N PASS »
+  alors que rien n'a échoué. Anti-flake : titre explicite + `DisplayServer.window_set_mode(MINIMIZED)` —
+  SAUF en capture (`MERLIN_CAPTURE_DIR`) : la minimisation suspend le rendu → viewport noir.
+- **`await objet._methode()` sur un node qui peut être LIBÉRÉ pendant l'await = suspension ÉTERNELLE** :
+  la coroutine meurt avec le node, l'appelant ne reprend jamais — et un deadline « while Time < dl »
+  ne protège PAS (re-vérifié seulement ENTRE les itérations, pas dans l'await). Cas réel : le harnais
+  autoplay awaitait `game._on_resolve()` ; une fin de run mid-resolve (corruption) libère MerlinGame →
+  harnais suspendu ~16 min → fermeture fenêtre → exit 0 sans DONE. Règle harnais : **fire-and-forget +
+  polling d'état** pour toute méthode async d'un node dont la durée de vie n'est pas garantie.
+- **`as Array` sur un champ de Dictionary hétérogène = SCRIPT ERROR runtime qui AVORTE la fonction** :
+  `(dict.get("k", []) as Array).size()` pète si la valeur existe sous une autre forme (squelettes
+  harnais/legacy) → la fonction s'arrête là (beat jamais présenté, run gelée au beat 0). Garde
+  obligatoire : `var v: Variant = dict.get("k", []) ; (v as Array).size() if v is Array else fallback`.
+  Attrapé par le gate R109 (autoplay 0/3) alors que validate/smoke/soak passaient tous.

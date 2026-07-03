@@ -259,7 +259,10 @@ func _present_current_beat() -> void:
 		if _beat_map != null:
 			_beat_map.setup(int(cur_b.get("qtotal", int(run.scenario.get("total", 5)))))
 			# v10.21 (Wave L-d) — frontières de CHAÎNE visibles : quêtes accomplies/futures autour du chemin.
-			_beat_map.set_quest_context(int(cur_b.get("quest", 0)), (run.scenario.get("quests", []) as Array).size())
+			# Garde de type : les squelettes harnais/legacy peuvent porter « quests » sous une autre forme
+			# (cast direct = SCRIPT ERROR + beat jamais présenté — attrapé par le gate R109 2026-07-04).
+			var qv2: Variant = run.scenario.get("quests", [])
+			_beat_map.set_quest_context(int(cur_b.get("quest", 0)), (qv2 as Array).size() if qv2 is Array else 1)
 		if (was >= 0 and bq != was) or (was == -1 and run.beat_index > 0):
 			get_node("/root/MerlinScenario").begin_quest(run.scenario, bq)
 	if _beat_map != null:  # v10.12 : avance « tu es ici » (index PAR QUÊTE depuis v10.14)
