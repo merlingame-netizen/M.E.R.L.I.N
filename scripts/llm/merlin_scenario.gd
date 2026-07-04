@@ -555,7 +555,10 @@ func _pick_preamble(pool: Array, key: String) -> String:
 func build_intro(scenario: Dictionary) -> Dictionary:
 	var title: String = str(scenario.get("title", "l'aventure"))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var biome: String = str(scenario.get("biome", "foret"))
+	var biome: String = str(scenario.get("biome", ""))
+	if biome == "":  # le squelette ne porte pas toujours le biome → source de vérité = la run (v10.22)
+		var run_b: Node = get_node_or_null("/root/MerlinRun")
+		biome = str(run_b.biome) if run_b != null else "foret"
 	var lieu_pool: Array = PREAMBULE_LIEU.get(biome, PREAMBULE_LIEU["foret"])
 	var intro: String = "%s\n\n%s\n\n%s" % [
 		_pick_preamble(PREAMBULE_QUI, "pre_qui"),

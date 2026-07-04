@@ -53,6 +53,9 @@ var last_degree: String = ""
 # Wave D — l'offrande du pilier (beat Rencontre) a déjà été proposée cette run. Persisté (R108) : posé à
 # l'OUVERTURE du modal → une offrande consommée n'est jamais re-proposée au resume / au replay de beat.
 var pilier_offering_done: bool = false
+# v10.22 — BIOME de la run (démo : "foret" | "falaises"). Choisi au menu (Nouvelle Partie), persisté
+# (R108 : resume = même monde). Override test/harnais : env MERLIN_BIOME. Champ additif (saves legacy OK).
+var biome: String = "foret"
 # v10.21 (Wave G, R130) — budget « Pousser » restant pour la QUÊTE courante (1/quête, rechargé au répit).
 var pushes_left_quest: int = 1
 # v10.21 (Wave I, R131) — INTERVENTIONS du pilier : beats planifiés (à la Rencontre) + compteur (cap 2),
@@ -104,6 +107,8 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
+	if OS.has_environment("MERLIN_BIOME"):  # v10.22 : override test/harnais (probe, autoplay, captures)
+		biome = OS.get_environment("MERLIN_BIOME")
 
 
 func new_run(p_scenario: Dictionary) -> void:
@@ -573,6 +578,7 @@ func save() -> void:
 		"archetype_scores": archetype_scores,
 		"last_threshold": _last_threshold,
 		"pilier_offering_done": pilier_offering_done,  # Wave D : unicité de l'offrande au resume (R108)
+		"biome": biome,  # v10.22 : resume = même monde
 		"pushes_left_quest": pushes_left_quest,  # Wave G (R130) : budget Pousser persisté (additif)
 		"intervention_beats": intervention_beats, "pilier_interventions": pilier_interventions,
 		"blessed_tags": blessed_tags,  # Wave I (R131) : planning + bénédictions persistés (R108)
@@ -610,6 +616,7 @@ func load_run() -> bool:
 	archetype_scores = data.get("archetype_scores", {})
 	_last_threshold = int(data.get("last_threshold", 0))
 	pilier_offering_done = bool(data.get("pilier_offering_done", false))  # Wave D : défaut false (saves legacy)
+	biome = str(data.get("biome", "foret"))  # v10.22 : défaut forêt (saves legacy)
 	pushes_left_quest = int(data.get("pushes_left_quest", MerlinResolution.PUSH_BUDGET_PER_QUEST))  # Wave G (R130)
 	intervention_beats = data.get("intervention_beats", [])  # Wave I (R131), défauts = saves legacy OK
 	pilier_interventions = int(data.get("pilier_interventions", 0))

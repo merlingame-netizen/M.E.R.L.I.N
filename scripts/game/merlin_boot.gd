@@ -64,6 +64,9 @@ func _ready() -> void:
 	if OS.has_environment("MERLIN_TOD_HOUR"):
 		tod_hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
 	_scene_art.set_time_of_day(tod_hour)
+	# v10.22 — le boot révèle le ciel NEUTRE (comme le menu) : le monde/biome n'apparaît qu'après le
+	# choix Forêt/Falaises de Nouvelle Partie.
+	_scene_art.set_biome("")
 	_scene_art.set_decor_reveal(0.0)     # décor caché : gros plan sur les yeux
 	_scene_art.set_figure_reveal(0.65)   # cape + tête prêtes ; yeux à matérialiser
 	_scene_art.set_eye_open(0.0)         # yeux fermés

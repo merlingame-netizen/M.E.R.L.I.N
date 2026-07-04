@@ -232,6 +232,7 @@ func _build_ui() -> void:
 	_overlay_art.set_menu_decor(true)
 	_overlay_art.set_beat("Rencontre")
 	_overlay_art.set_season(MerlinSceneArt.season_for_now())
+	_overlay_art.set_biome(str(get_node("/root/MerlinRun").biome))  # v10.22 : même monde que la run
 	var hour: int = int(Time.get_datetime_dict_from_system().get("hour", 21))
 	if OS.has_environment("MERLIN_TOD_HOUR"):
 		hour = int(OS.get_environment("MERLIN_TOD_HOUR"))

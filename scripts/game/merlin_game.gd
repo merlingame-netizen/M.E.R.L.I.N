@@ -1994,6 +1994,7 @@ func _build_ui() -> void:
 	root.add_child(_scene_art)
 	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
 	_scene_art.set_watch_eyes(true)  # v10.20 : les yeux de Merlin vivent dans la LUNE et suivent le curseur
+	_scene_art.set_biome(str(get_node("/root/MerlinRun").biome))  # v10.22 : le monde choisi au menu
 
 	# ENCART CENTRAL (~80%) crème : porte l'intro/commentaire PUIS chaque situation/issue (user 2026-06-06).
 	# size_flags EXPAND → occupe tout l'espace restant quand les cartes sont cachées (hors phase de choix).

@@ -196,6 +196,9 @@ func _build_ui() -> void:
 	_scene_art.set_menu_decor(true)
 	_scene_art.set_beat("Rencontre")  # figure encapuchonnée devant la lune
 	_scene_art.set_animated(true)     # scène vivante : brume qui dérive, étoiles, halo de lune
+	# v10.22 (user) — le menu est NU : ciel + étoiles + lune + Merlin seuls. Le monde (biome) n'apparaît
+	# qu'après le choix Forêt/Falaises (Nouvelle Partie), en pop progressif.
+	_scene_art.set_biome("")
 
 	# --- Colonne gauche ---
 	var left: VBoxContainer = VBoxContainer.new()
@@ -799,9 +802,117 @@ func _setup_music() -> void:
 
 func _on_new() -> void:
 	_confirm_row("burst")
-	# v10.19 — transition « zoom vers Merlin qui parle » (réplique pré-fetchée) → sélection.
-	var line: String = _depart_line()
-	MerlinTransition.change_scene_merlin(SELECTION_SCENE, line)
+	# v10.22 (user) — Nouvelle Partie ouvre d'abord le CHOIX DU BIOME (Forêt / Falaises) ; le décor du
+	# monde choisi POP progressivement autour, PUIS la transition vers la sélection s'enclenche.
+	_show_biome_choice()
+
+
+# v10.22 — Overlay du choix de biome : 2 cartes compactes à la charte (titre + 2 lignes + bouton).
+var _biome_layer: Control = null
+
+const BIOME_CARDS: Array = [
+	{"id": "foret", "titre": "Brocéliande", "desc": "La forêt qui rêve. Brumes, korrigans,\npierres qui murmurent — et quatre puissances\nqui se disputent son cœur."},
+	{"id": "falaises", "titre": "Les Falaises du Bout-du-Monde", "desc": "La terre s'achève en à-pic. Un phare mort,\nune mer qui ne rend rien — et le vent\nqui use les serments plus vite que la pierre."},
+]
+
+
+func _show_biome_choice() -> void:
+	if _biome_layer != null:
+		return
+	_biome_layer = Control.new()
+	_biome_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_biome_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_biome_layer)
+	var dim: ColorRect = ColorRect.new()
+	dim.color = MerlinVisual.DIM_LIGHT
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_biome_layer.add_child(dim)
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_biome_layer.add_child(center)
+	var col: VBoxContainer = VBoxContainer.new()
+	col.add_theme_constant_override("separation", 24)
+	center.add_child(col)
+	var title: Label = Label.new()
+	title.text = "Où le chemin commence-t-il ?"
+	title.add_theme_color_override("font_color", MerlinVisual.GOLD)
+	title.add_theme_font_size_override("font_size", 32)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	col.add_child(MerlinOrnament.triskele_rule(18.0))
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 30)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(row)
+	for bc in BIOME_CARDS:
+		var card: PanelContainer = PanelContainer.new()
+		card.custom_minimum_size = Vector2(420, 0)
+		card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var sb2: StyleBoxFlat = StyleBoxFlat.new()
+		sb2.bg_color = MerlinVisual.SURFACE
+		sb2.set_border_width_all(1)
+		sb2.border_color = MerlinVisual.BORDER_BRUN
+		sb2.set_corner_radius_all(10)
+		sb2.set_content_margin_all(24)
+		card.add_theme_stylebox_override("panel", sb2)
+		var cv2: VBoxContainer = VBoxContainer.new()
+		cv2.add_theme_constant_override("separation", 12)
+		card.add_child(cv2)
+		var ct: Label = Label.new()
+		ct.text = str(bc["titre"])
+		ct.add_theme_color_override("font_color", MerlinVisual.GOLD)
+		ct.add_theme_font_size_override("font_size", 26)
+		ct.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ct.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		cv2.add_child(ct)
+		var cd: Label = Label.new()
+		cd.text = str(bc["desc"])
+		cd.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
+		cd.add_theme_font_size_override("font_size", 18)
+		cd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cv2.add_child(cd)
+		var cb: Button = Button.new()
+		cb.text = "Partir là-bas"
+		cb.custom_minimum_size = Vector2(0, 52)
+		cb.add_theme_font_size_override("font_size", 20)
+		MerlinVisual.apply_button_da(cb)
+		cb.pressed.connect(_on_biome_picked.bind(str(bc["id"])))
+		MerlinVisual.connect_button_feedback(cb)
+		cv2.add_child(cb)
+		row.add_child(card)
+	_biome_layer.modulate.a = 0.0
+	_biome_layer.create_tween().tween_property(_biome_layer, "modulate:a", 1.0, 0.30 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+
+
+func _on_biome_picked(bio: String) -> void:
+	if _biome_layer == null:
+		return
+	var layer: Control = _biome_layer
+	_biome_layer = null
+	var run: Node = get_node("/root/MerlinRun")
+	run.biome = bio
+	# L'overlay s'efface, le MONDE choisi apparaît en pop progressif (rampe decor_reveal du boot),
+	# la forêt/mer accueille le Voyageur (gust + flash), puis la transition s'enclenche.
+	var m: float = MerlinVisual.motion()
+	var out_tw: Tween = layer.create_tween()
+	out_tw.tween_property(layer, "modulate:a", 0.0, 0.25 * m).set_trans(Tween.TRANS_SINE)
+	out_tw.tween_callback(layer.queue_free)
+	if _scene_art != null:
+		_scene_art.set_biome(bio)
+		_scene_art.set_decor_reveal(0.0)
+		var pop: Tween = create_tween()
+		pop.tween_method(_scene_art.set_decor_reveal, 0.0, 1.0, 2.0 * m).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		pop.tween_callback(_scene_art.trigger_gust)
+		pop.tween_callback(_scene_art.flash_moon)
+		pop.tween_interval(0.5 * m)
+		pop.tween_callback(func() -> void:
+			var line: String = _depart_line()
+			MerlinTransition.change_scene_merlin(SELECTION_SCENE, line))
+	else:
+		var line: String = _depart_line()
+		MerlinTransition.change_scene_merlin(SELECTION_SCENE, line)
 
 
 func _on_continue() -> void:

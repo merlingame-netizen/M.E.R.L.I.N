@@ -24,6 +24,8 @@ func _main() -> void:
 	art.set_time_of_day(22)
 	art.set_season("ete")
 	art.set_decor_reveal(1.0)
+	if OS.has_environment("MERLIN_BIOME"):  # v10.22 : sonde des biomes (falaises/foret/neutre)
+		art.set_biome(OS.get_environment("MERLIN_BIOME"))
 	for pk in PILIERS:
 		# Teinte de faction cohérente avec le pilier (l'Enfant garde la teinte courante — wildcard).
 		match str(pk):

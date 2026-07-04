@@ -71,4 +71,11 @@ static func scene_backdrop(dim: float = 0.42) -> MerlinSceneArt:
 		hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
 	art.set_time_of_day(hour)
 	art.set_animated(true)
+	# v10.22 — le fond des écrans secondaires vit dans le BIOME de la run (Forêt / Falaises).
+	# NB : `art` n'est PAS encore dans l'arbre ici → on passe par la racine du SceneTree.
+	var ml: MainLoop = Engine.get_main_loop()
+	if ml is SceneTree:
+		var run_b: Node = (ml as SceneTree).root.get_node_or_null("MerlinRun")
+		if run_b != null:
+			art.set_biome(str(run_b.biome))
 	return art
