@@ -134,8 +134,42 @@ interventions 1/run / greffes V3 / transitions invisibles.
       (40 GD / 25 BAL / 30 NAR / 20 DA / 20 AUD / 25 UX / 20 TEC / 20 PRO — options A-D + RECO
       argumentée par question, ancrées R1-R137 + mesures soak ; 12 ⚠ structurantes en tête).
       Convention : le user annote `> RÉPONSE : X` ; non annotée = RECO adoptée.
-- [~] Les 12 structurantes posées en interactif (3 rounds AskUserQuestion).
-- [ ] À réception (« questionnaire annoté » ou délégation aux recos) : consolidation en
-      docs/cdc_v1.md (règles numérotées + objectifs mesurables + roadmap V4→V1.0), report BIBLE
-      (cadence 10.3), tasks des vagues, puis reprise du dev par la V4 re-priorisée.
+- [x] Les 12 structurantes TRANCHÉES en interactif (toutes = RECO) : fin du Graal jouable,
+      12 fragments, seuil onirique complet, réputation 3 effets, Fusion ~12 fragments (gabarits
+      main + coda LLM), artworks par quête, musique réactive 2 couches, streaming résolution,
+      export gaté dès V4, whitelist obligatoire, DoD composite, itch.io gratuit (578f6da3).
+- [x] USER : « Adopte toutes les recos pour la suite, go » — les 188 restantes = RECO adoptée.
+- [~] EN COURS (3 agents parallèles, 2026-07-04) :
+      (1) Consolidation docs/cdc_v1.md (200 règles CDC-XX-NN traçables + objectifs mesurables +
+          roadmap V4→v0.9→v1.0 + renvois d'amendements BIBLE) — agent acc676e9cf3190c2e.
+      (2) v1.0-V4a recalibrage §K multi-leviers DANS L'ORDRE avec soak 300 après CHAQUE levier :
+          whitelist branchée au jeu réel → climax 2+1 → drafts garantis (transition + ouverture) →
+          éclatante (clause retirée, +1 Intégrité) → dé 17/33/50/67 si morts OK → contre-pression
+          §E en dernier. Gates par archétype en dur (optimal ≤10/greedy-chaotic ≤30/corrompu ≤25).
+          — agent a2bc1026fbbd1a419 (task #50).
+      (3) v1.0-V4b export Windows : preset + résolution chemin GGUF hors éditeur + commande
+          export_gate (build exporté DOIT passer 1 autoplay) — agent a75f2eb61ca16fcf2 (task #51).
+- [ ] Au retour : commits par chantier (gates R109), BIBLE R138 (CDC adopté) + amendements
+      listés par le CDC, puis suite roadmap V4 (fleet QA task #45, purge legacy PRO-19).
 
+
+---
+
+# task_plan — v1.0-V4a « recalibrage §K multi-leviers » (2026-07-04)
+
+> Cahier des charges docs/cdc_v1_questionnaire.md — méthode PRO-17-A : 1 levier → soak 300 → tableau §K.
+
+## Baseline (soak 300) : échec 25,3 (cible 3-8) · partiel 28,5 IN · réussite 43,4 (45-55) ·
+## éclatante 2,8 (8-15) · morts mixte 36,6 / optimal 0 · climax plein 1,1 (45-55) · drafts 2,69 (5-6)
+
+| # | Levier | Fichiers | Statut |
+|---|--------|----------|--------|
+| 1 | Whitelist branchée au jeu réel (BAL-14-A/TEC-17-A) | merlin_scenario, merlin_prompt_builder, probe_soak (selftest chemin jeu) | pending |
+| 2 | Climax 2+1 : REQ_GAP_BY_DIFF[3]=2 (BAL-13-A) | merlin_scenario | pending |
+| 3 | Drafts garantis : transition de quête + ouverture (BAL-11-B/GD-27) | merlin_game, probe_soak | pending |
+| 4 | Éclatante : porte sans clause trait-couvre + delta +1 (BAL-02-B+BAL-25) | merlin_resolution | pending |
+| 5 | Dé re-serré 17/33/50/67 (BAL-12-B) SI morts optimal ≤10 et mixte en baisse | merlin_resolution, probe_soak | pending |
+| 6 | Contre-pression §E : quête 3 + greffes ≥3 → 3 requis (GD-32-B) | merlin_scenario, merlin_game, probe_soak | pending |
+| 7 | Assertions dures : gates morts/archétype + 4 bandes si atteintes | probe_soak | pending |
+
+Gates finaux : validate_step0 0/0 → smoke MerlinGame+MerlinMenu → soak 200 → soak 300 (tableau §K) → autoplay 3/3. JAMAIS committer.

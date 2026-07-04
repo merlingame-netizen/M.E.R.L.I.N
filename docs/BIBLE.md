@@ -1820,6 +1820,19 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R138 — CAHIER DES CHARGES V1.0 ADOPTÉ (2026-07-04, user « adopte toutes les recos »)** :
+  la V1.0 est définie par **docs/cdc_v1.md** — 200 règles CDC-XX-NN issues d'un questionnaire
+  tous-métiers (docs/cdc_v1_questionnaire.md), 12 structurantes tranchées en session, 188 par
+  recommandation adoptée. DÉCISIONS MAJEURES : la fin du Graal est JOUABLE en V1.0 (12 fragments,
+  run finale dédiée, Fusion sur gabarits main + coda LLM) · seuil onirique complet (jalons + bilan
+  + codex ~20-40 entrées + trait-souvenir) · réputation 3 états à effets réels (greffe offerte /
+  sabotage / pool teinté, persistance amortie) · artworks gravure PAR QUÊTE (cache ~30 lieux validé
+  main) · musique réactive 2 couches (paliers R75) · streaming LLM sur la résolution · export
+  Windows GATÉ dès V4 · whitelist §F obligatoire (assertion dure) · DoD composite chiffré ·
+  itch.io gratuit. Objectifs mesurables (29 métriques K/P/L/F/Q/D) et roadmap V4 → v0.9 → v1.0
+  dans le CDC — les amendements canon listés par le CDC (R20, R53, R74, R99, §22…) s'appliquent
+  au fil des vagues (cadence 10.3).
+
 - **R137 — GREFFES : les 4 verbes évoluent (2026-07-04, v11-V3, spec §E)** : le draft ne donne plus
   de cartes — il GREFFE un bonus visible sur UNE des 4 actions (cap 3 slots/action, toujours dessinés).
   3 types : +1 tag permanent (Sacrifice/Équilibre exclusifs greffes) · +1 bande de dé · charges
