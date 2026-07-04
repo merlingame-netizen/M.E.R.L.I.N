@@ -30,8 +30,8 @@
 | PRO-01 | Definition of DONE V1.0 | Tous les jalons |
 | PRO-09 | Distribution (itch/Steam) | Licences, packaging, identité |
 
-Ces 12 sont aussi posées en interactif dans la session — les 188 autres suivent le mécanisme
-« non annotée = reco ».
+Ces 12 ont été TRANCHÉES en session interactive le 2026-07-04 (réponses inscrites sous chaque
+question) — **toutes suivent la RECO**. Les 188 autres suivent le mécanisme « non annotée = reco ».
 
 ---
 
@@ -69,12 +69,16 @@ Le canon (R44/R80) fixe une quête longue de ~20-30 fragments avant la fusion av
 - **C.** Hybride : la fin existe mais derrière un mur haut (~25 fragments), assumée comme rarement vue.
 - **RECO : A** — un deck-builder narratif sans fin réelle casse la promesse « chaque run = un pas vers le Graal » (R43) ; c'est LE critère qui sépare la V1.0 d'une démo.
 
+> **RÉPONSE : A** *(tranché en session interactive, 2026-07-04)*
+
 ### GD-02 — ⚠ Nombre total de fragments
 R80 chiffre ~20-30 fragments ; à ~20-30 min/run, cela fait 8-15 h minimum avant la fin. Quel total pour la V1.0 ?
 - **A.** 20-30 (canon strict, jeu long).
 - **B.** 12 fragments (fin atteignable en ~10-14 runs).
 - **C.** 8 fragments à valeur narrative forte (fin en ~8-10 runs, chaque fragment = une révélation majeure).
 - **RECO : B** — préserve l'esprit « longue quête » de R80 sans exiger un volume de contenu de révélations que 2 biomes ne peuvent pas porter ; 20-30 se garde pour la version à ~8 biomes (R97).
+
+> **RÉPONSE : B** *(tranché en session interactive, 2026-07-04)*
 
 ### GD-03 — Cadence de gain des fragments
 R80 fixe une cadence « conditionnelle (hauts faits), pas un compteur », mais R43/R69 disent « chaque run dévoile un fragment ». Quelle règle en V1.0 ?
@@ -125,6 +129,8 @@ R50 définit le seuil (post-MVP) : jalons du Graal, gestion du deck, codex, bila
 - **C.** B + décision de fin de run : garder/refuser le trait-souvenir proposé (GD-36).
 - **RECO : C** — le seuil est le hub qui donne du sens à la méta ; sans la décision du souvenir il n'est qu'un écran de stats, et R50 liste déjà « épurer/gérer le deck » comme action canon.
 
+> **RÉPONSE : C** *(tranché en session interactive, 2026-07-04)*
+
 ### GD-10 — Persistance du build cross-run
 Post-pivot, verbes + greffes reset à chaque run (R26 « reset par run »). Qu'est-ce qui persiste en V1.0 ?
 - **A.** Reset total (pureté roguelike, seuls fragments/codex/chronique persistent).
@@ -152,6 +158,8 @@ R42/R92 (3 états Hostile/Neutre/Favorable) est annoncé, non construit. Post-pi
 - **B.** 3 effets : Favorable = 1 greffe de la banque du pilier offerte (prix one-shot annulé) ; Hostile = 1 tag antagoniste sur les beats de la faction (sabotage R92) ; routes/quêtes du pool teintées.
 - **C.** R92 complet (difficulté modulée, routes fermées, sabotage, dons).
 - **RECO : B** — remappe naturellement R92 sur les systèmes v11 réels (banques de greffes §E, sabotage déjà dans resolve(), pool de quêtes R120) sans nouveau moteur.
+
+> **RÉPONSE : B** *(tranché en session interactive, 2026-07-04)*
 
 ### GD-14 — Persistance de la réputation
 R42 : la faveur « persiste en partie cross-run via les PNJ récurrents ». Quelle règle exacte ?
@@ -442,6 +450,8 @@ La whitelist (requis ⊆ base ∪ traits ∪ greffes, fallback même index, asse
 - **C.** Post-V1.0.
 - **RECO : A** — c'est le prérequis de TOUTES les autres cibles (BAL-01/03/12/13) ; sans elle, chaque mesure soak reste polluée par des beats structurellement injouables.
 
+> **RÉPONSE : A** *(tranché en session interactive, 2026-07-04)*
+
 ### BAL-15 — Seuil de deadhand acceptable
 La spec §C prévoit un A/B « réserve de trait » si le deadhand (main sans trait couvrant) dépasse 45 % (mesuré 34,9 %). Quel seuil V1.0 ?
 - **A.** ≤35 % (strict).
@@ -567,6 +577,8 @@ La fin canonique est la fusion avec Merlin (R44/R89), prévue au bout de 20-30 f
 - **B.** Oui, atteignable avec seuil réduit (~10 fragments via NAR-03 B).
 - **C.** Cinématique unique débloquée par un haut fait (1re run parfaite).
 - **RECO : A** — la Fusion mérite son écran-seuil et ses fins-méta LLM-composées (R89) ; la bâcler en V1 grillerait la révélation la plus précieuse du canon. (⚠ contradictoire avec GD-01-A : c'est l'arbitrage n°1 à rendre.)
+
+> **RÉPONSE : B** *(tranché en session interactive, 2026-07-04)*
 
 ### NAR-05 — Fins de run : main vs LLM
 L'épilogue est aujourd'hui 100 % généré (R69). Faut-il sécuriser les 3 types de fin ?
@@ -758,6 +770,8 @@ Le skill `merlin-artwork` est prêt (cascade `concept_art_generator.mjs`, duoton
 - **C.** GO partiel : 1 image par QUÊTE (2-3/run), sujet = le lieu du préambule, affichée à l'ouverture de quête puis persistante.
 - **RECO : C** — divise le volume par ~4 (cache bien plus réutilisable entre runs), garantit « zéro hitch » plus facilement, et l'image d'un LIEU vieillit mieux que celle d'une situation unique.
 
+> **RÉPONSE : C** *(tranché en session interactive, 2026-07-04)*
+
 ### DA-02 — Artworks : style exact
 Le style canon est gravure sépia (R29), le skill post-traite en duotone :
 - **A.** Duotone strict CREAM/INK (pipeline actuel, zéro hex hors palette §20).
@@ -899,6 +913,8 @@ R137 définit 3 types de greffe sur les 4 tuiles-verbes, slots toujours dessiné
 - **B.** Réactif 2 couches : base permanente + couche granuleuse dissonante dont le volume suit le palier R75 — la couche manquante générée offline via `tools/music_forge.py`.
 - **C.** Stems complets 4+ (tension, intégrité, climax…).
 - **RECO : B** — c'est le canon §22 mot pour mot, il ne manque qu'UN asset et un mapping volume↔palier déjà spécifié.
+
+> **RÉPONSE : B** *(tranché en session interactive, 2026-07-04)*
 
 ### AUD-02 — Nombre de stems et seuils
 Si AUD-01 B, jusqu'où empiler ?
@@ -1226,6 +1242,8 @@ Le signal C++ token-par-token reste non branché ; le typewriter anime du texte 
 - **C.** Streaming sur la RÉSOLUTION seule (prose pure sans GBNF = zéro parsing incrémental).
 - **RECO : C** — c'est l'attente post-Résoudre que le joueur subit à chaque beat ; 80 % du bénéfice perçu pour le risque GDExtension minimal, le JSON incrémental attendra.
 
+> **RÉPONSE : C** *(tranché en session interactive, 2026-07-04)*
+
 ### TEC-02 — Budget cache-miss accepté
 Cibles R58 : sélection <5 s, situation <8 s, résolution <5 s ; en cache-miss réel l'attente va jusqu'au cap 12 s. Quel contrat final ?
 - **A.** Accepter cache-miss ≤12 s SI le taux de cache-miss mesuré (télémétrie) reste <10 % des beats.
@@ -1267,6 +1285,8 @@ Aucun preset d'export configuré ; le jeu n'a JAMAIS tourné hors éditeur avec 
 - **B.** Preset configuré à la beta, sans gate dédié.
 - **C.** À la RC seulement.
 - **RECO : A** — c'est LE risque existentiel restant (chemins res:// vs pack, chargement GGUF hors éditeur) ; le découvrir à la RC coûterait le jalon.
+
+> **RÉPONSE : A** *(tranché en session interactive, 2026-07-04)*
 
 ### TEC-08 — Linux / Mac / Web : GO/NO-GO
 La GDExtension C++ exige une recompilation par plateforme ; le Web est impossible (natif + 3,3 GB). Décision V1 ?
@@ -1368,6 +1388,8 @@ R93 définit le DoD du MVP. Quel DoD chiffré pour V1.0 JOUABLE COMPLÈTE ?
 - **C.** Date butoir fixe, on shippe l'état atteint.
 - **RECO : A** — chaque clause correspond à un trou connu de l'état réel (export jamais fait, §K hors cible, fleet QA jamais passée, zéro playtest externe).
 
+> **RÉPONSE : A** *(tranché en session interactive, 2026-07-04)*
+
 ### PRO-02 — Jalons d'ici V1.0
 Combien de versions entre v11-V4 et la 1.0 ?
 - **A.** 3 jalons : V4 (fleet QA + purge + §K + whitelist) → v0.9 « beta export » (TEC-07, UX pack, playtests) → v1.0 RC.
@@ -1423,6 +1445,8 @@ Gratuit probable, 100 % local, zip ~4 GB. Canal V1 ?
 - **B.** Steam (100 $ + review + AI disclosure obligatoire pour le contenu généré).
 - **C.** GitHub Releases seul.
 - **RECO : A** — audience narrative/expérimentale idéale, tolérance aux gros fichiers, zéro friction légale ; Steam se réévalue si la traction itch le justifie.
+
+> **RÉPONSE : A** *(tranché en session interactive, 2026-07-04)*
 
 ### PRO-10 — Nom final
 « M.E.R.L.I.N. » est l'acronyme de travail. Le figer ?
