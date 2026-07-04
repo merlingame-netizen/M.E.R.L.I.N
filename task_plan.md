@@ -91,3 +91,19 @@ func ` ≠ `static func`) —
 - [ ] W3 greffes · W4 R131 remap/traits corrompus/BIBLE (spec §vagues).
 - [ ] Fleet QA « agents humains » cohérence visuelle + gameplay (re-demandé par le user) — après Vague 1.
 
+## v11 ÉCRAN STABLE « REIGNS » (2026-07-04, plan approuvé — docs/spec_v11_ecran_stable.md)
+User : « animations ++, gameplay sommaire ET complexe, l'UI change trop entre phases, simplicité
+REIGNS en lecture ». Verrouillé : écran stable / zéro modal / push en ligne / dé-jargonnage + tuto /
+interventions 1/run / greffes V3 / transitions invisibles.
+- [x] V1 : gate + commit W2 (143b03ac, 1409+/376-). Incidents gate corrigés : cap R113 dans les runs
+      « pool anéanti » (assertion probe conditionnelle au cycle saturé + _draw_one_clean tampon) ;
+      branche PACTE manquante dans autoplay (un pacte = spin deadline — verts passés = chance du
+      tirage). Distribution §K transitoire (échec 28 %, éclatante 1,8 %) → recalibrage V3.
+- [~] V2a EN COURS (agent) : grille 6 zones fixes (encart 348 scroll_following, Z4 ligne d'état 72,
+      décor 200, Résoudre permanent, _die_hint supprimé), swap_zone/set_zone_active,
+      _choice_open, fix dim/fusion, suppression slide-up + beat_veil, chips dé-jargonnées,
+      autoplay _choice_open même commit.
+- [ ] V2b : modals→zones (intro, interstitiel, draft _open_draft_zone/_draft_active, push/pacte/
+      vignette → Z4), 2 hints tuto persistés, interventions cap 1. Gate + captures 8 phases + §23.
+- [ ] V3 greffes (task #48, spec §E + spec_v11_pivot) · V4 fleet QA + purge + BIBLE.
+
