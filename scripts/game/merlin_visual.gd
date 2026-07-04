@@ -95,6 +95,7 @@ const DUR_RING_BURST: float = 0.45
 const DUR_PANEL_OPEN: float = 0.25
 const DUR_FLOAT_LABEL: float = 0.60
 const DUR_ENCART_TINT: float = 0.25
+const DUR_ZONE_FADE: float = 0.22  # v11-V2a (spec écran stable) : cross-fade du CONTENU d'une zone fixe
 
 # ── Reduce-motion (BIBLE §23 R118 / R74) : atténue, ne supprime JAMAIS l'information ──
 const PREFS_PATH: String = "user://options.cfg"
@@ -117,6 +118,68 @@ static func save_prefs() -> void:
 	cfg.load(PREFS_PATH)  # préserve d'éventuelles autres clés
 	cfg.set_value("a11y", "reduced_motion", reduced_motion)
 	cfg.save(PREFS_PATH)
+
+
+# ── v11-V2a (spec écran stable) — grammaire des ZONES : chaque zone existe 100 % du temps ;
+# seul son CONTENU change (cross-fade), son interactivité s'éteint par mouse_filter, jamais par visible. ──
+
+# Swap du contenu d'une zone : fade-out 0.18 s → build.call() (repose le contenu) → fade-in
+# DUR_ZONE_FADE. reduced_motion : swap sec, alpha restitué à 1 (l'information ne s'efface jamais).
+# Tween LIÉ à la zone (jamais orphelin) ; un swap relancé tue le précédent (meta).
+static func swap_zone(zone: Control, build: Callable) -> void:
+	if zone == null or not is_instance_valid(zone) or not zone.is_inside_tree():
+		if build.is_valid():
+			build.call()  # zone absente → au moins poser le contenu (jamais de beat perdu)
+		return
+	if reduced_motion:
+		build.call()
+		zone.modulate.a = 1.0
+		return
+	if zone.has_meta("_fx_tw_swap"):
+		var prev: Tween = zone.get_meta("_fx_tw_swap")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	var t: Tween = zone.create_tween()
+	t.tween_property(zone, "modulate:a", 0.0, 0.18 * motion()).set_trans(Tween.TRANS_SINE)
+	t.tween_callback(build)
+	t.tween_property(zone, "modulate:a", 1.0, DUR_ZONE_FADE * motion()).set_trans(Tween.TRANS_SINE)
+	zone.set_meta("_fx_tw_swap", t)
+
+
+# Active/estompe une zone : modulate 1.0 / 0.35 + souris ON/OFF récursif. Les mouse_filter
+# d'origine sont mémorisés en meta puis RESTAURÉS — les IGNORE permanents des éléments
+# décoratifs ne sont jamais écrasés (on ne stocke que les nodes réellement interactifs).
+static func set_zone_active(zone: Control, on: bool) -> void:
+	if zone == null or not is_instance_valid(zone):
+		return
+	var target: float = 1.0 if on else 0.35
+	if zone.has_meta("_fx_tw_zone"):
+		var prev: Tween = zone.get_meta("_fx_tw_zone")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	if zone.is_inside_tree():
+		var t: Tween = zone.create_tween()
+		t.tween_property(zone, "modulate:a", target, DUR_ZONE_FADE * motion()).set_trans(Tween.TRANS_SINE)
+		zone.set_meta("_fx_tw_zone", t)
+	else:
+		zone.modulate.a = target  # hors arbre : pas de tween possible, l'état reste juste
+	_set_zone_mouse(zone, on)
+
+
+# Récursif : OFF → mouse_filter d'origine mémorisé (meta) puis IGNORE ; ON → restauration.
+# Les nodes déjà IGNORE ne sont ni stockés ni modifiés. Idempotent (double OFF sans risque).
+static func _set_zone_mouse(node: Node, on: bool) -> void:
+	if node is Control:
+		var c: Control = node
+		if on:
+			if c.has_meta("_zone_mf"):
+				c.mouse_filter = int(c.get_meta("_zone_mf"))
+				c.remove_meta("_zone_mf")
+		elif c.mouse_filter != Control.MOUSE_FILTER_IGNORE and not c.has_meta("_zone_mf"):
+			c.set_meta("_zone_mf", c.mouse_filter)
+			c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for ch in node.get_children():
+		_set_zone_mouse(ch, on)
 
 
 # Feedback canon de bouton (§21 `tap` + `fast`) : press scale 0.97→1.0, hover modulate 1.06.

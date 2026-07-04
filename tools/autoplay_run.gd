@@ -155,7 +155,7 @@ func _play_one(k: int) -> bool:
 			# v11-W2 — phase de choix : 1 TUILE d'action + 1 TRAIT, puis Résoudre. Duck-typing pur
 			# (accès propriétés/méthodes sur Node) : un renommage côté jeu = erreur runtime BRUYANTE
 			# (gate 0/N), jamais de faux vert silencieux.
-			if game._hand_box != null and game._hand_box.visible and (run.hand as Array).size() >= 1:
+			if game._choice_open and (run.hand as Array).size() >= 1:
 				var acts: Array = run.actions
 				if game._selected_action == null and not acts.is_empty():
 					game._on_action_tile(acts[_pick % acts.size()])

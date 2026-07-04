@@ -99,10 +99,11 @@ interventions 1/run / greffes V3 / transitions invisibles.
       « pool anéanti » (assertion probe conditionnelle au cycle saturé + _draw_one_clean tampon) ;
       branche PACTE manquante dans autoplay (un pacte = spin deadline — verts passés = chance du
       tirage). Distribution §K transitoire (échec 28 %, éclatante 1,8 %) → recalibrage V3.
-- [~] V2a EN COURS (agent) : grille 6 zones fixes (encart 348 scroll_following, Z4 ligne d'état 72,
+- [x] V2a LIVRÉE (gate vert : validate 0/0, smoke Game+Menu, soak 200/200, autoplay 3/3) : grille 6 zones fixes (encart 348 scroll_following, Z4 ligne d'état 72,
       décor 200, Résoudre permanent, _die_hint supprimé), swap_zone/set_zone_active,
       _choice_open, fix dim/fusion, suppression slide-up + beat_veil, chips dé-jargonnées,
-      autoplay _choice_open même commit.
+      autoplay _choice_open même commit. Vigilances V2b : contraste chips sur BG_PAGE, cross-fade
+      vignette↔push dans Z4 (114 px > 72), interstitiel à migrer, purger beat_veil/DUR_SLIDE_UP.
 - [ ] V2b : modals→zones (intro, interstitiel, draft _open_draft_zone/_draft_active, push/pacte/
       vignette → Z4), 2 hints tuto persistés, interventions cap 1. Gate + captures 8 phases + §23.
 - [ ] V3 greffes (task #48, spec §E + spec_v11_pivot) · V4 fleet QA + purge + BIBLE.

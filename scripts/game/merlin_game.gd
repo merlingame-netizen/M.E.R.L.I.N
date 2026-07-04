@@ -59,9 +59,10 @@ var _tw_target: RichTextLabel = null  # v10.20 — cible du typewriter (situatio
 # _res_block ne porte plus que la VIGNETTE d'effet, qui apparaît SOUS le texte APRÈS le typewriter de l'issue.
 var _res_block: VBoxContainer = null
 var _effect_vignette: HBoxContainer = null
+var _status_line: Control = null     # v11-V2a — Z4 « ligne d'état » 72 px FIXE (vignette/choix au centre, caret à droite)
+var _choice_open: bool = false       # v11-V2a — garde anti-clic du choix (reprend le rôle de _hand_box.visible)
 var _pending_res: Dictionary = {}    # res/degré mémorisés au resolve → fade-in vignette post-typewriter
 var _pending_degree: String = ""
-var _die_hint: MerlinDice = null     # v10.23 — indice « ce choix jettera un dé » (liseré = rareté de la principale)
 # v10.21 (Wave G, R130) — PARTIEL = CHOIX « Encaisser / Pousser » : l'application de la résolution est
 # DIFFÉRÉE jusqu'au choix (play_and_discard + effets de cartes restent immédiats — un HEAL sauve avant).
 var _push_pending: bool = false
@@ -84,9 +85,10 @@ var _quill_tw: Tween
 var _deal_pending: bool = false  # déclenche l'anim de distribution au prochain _layout_fan
 var _life_tw: Tween  # tween de remplissage de l'anneau vie (tué avant un nouveau → pas de snap arrière)
 var _corr_tw: Tween
-var _situ_tw: Tween  # fondu de l'encart au nouveau beat (tué avant réutilisation → pas de course de tweens)
+var _situ_tw: Tween  # fondu de l'encart (interstitiel) — tué avant réutilisation → pas de course de tweens
 var _prose_tw: Tween  # v10.15 : prose breathing loop (killed before next typewriter)
-var _situ_rest_y: float = 0.0  # v10.15 : canonical Y of _situ_panel (for slide-up anchoring)
+var _req_tw: Tween = null      # v11-V2a : fade des pastilles requis (hauteur réservée, alpha seulement)
+var _resolve_tw: Tween = null  # v11-V2a : fade armé/désarmé du bouton Résoudre (self_modulate)
 var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
 
 # v10.11/12 (user 2026-06-07) — Map du chemin (coin droit) + Draft « 1 carte sur 3 » aux beats clés.
@@ -219,31 +221,15 @@ func _present_current_beat() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.ended or _beat_transition:
 		return  # review HIGH-1 : jamais deux transitions concurrentes (double-tap, races futures)
-	# v10.13.1 (§21 `veil`, cascade Wave1/playtester) — voile de transition : couvre le swap du
-	# contenu. COROUTINE appelée fire-and-forget par tous les appelants (_begin/_advance_to_next/
-	# _end_interstitial) — AUCUN await ajouté dans _advance_to_next. Le voile est IGNORE : aucun
-	# clic volé, l'autoplay (appels directs) n'est jamais bloqué. Skip inutile : 0.20s opaque max,
-	# le typewriter (skippable) démarre sous le voile sortant.
+	# v11-V2a (spec écran stable) — le voile plein écran (MerlinFx.beat_veil) est SUPPRIMÉ : le
+	# contenu de l'encart bascule par cross-fade de zone (swap_zone, en fin de fonction) et les
+	# zones ne bougent jamais. _beat_transition reste la garde anti double-fire — posée ici,
+	# relâchée au rebuild du contenu. Fonction devenue SYNCHRONE (plus d'await).
 	_beat_transition = true
-	var veil: ColorRect = MerlinFx.beat_veil(self)
-	var vin: Tween = veil.create_tween()
-	vin.tween_property(veil, "modulate:a", 0.85, MerlinVisual.DUR_VEIL_IN * MerlinVisual.motion())
-	await vin.finished
-	_beat_transition = false
-	if not is_inside_tree():
-		return  # scène quittée pendant le voile (le voile, enfant de la scène, part avec elle)
-	if run.ended:
-		veil.queue_free()
-		return
-	# Sortie fire-and-forget : le contenu (swappé ci-dessous) se révèle sous le voile qui se lève.
-	var vout: Tween = veil.create_tween()
-	vout.tween_property(veil, "modulate:a", 0.0, MerlinVisual.DUR_VEIL_OUT * MerlinVisual.motion())
-	vout.tween_callback(veil.queue_free)
 	_interstitial_open = false  # v10.13 (B3) : défense — l'interstitiel est forcément clos ici
-	# v10.21 — reset au nouveau beat : situation pleine opacité, vignette d'effet cachée (l'issue R128 vit
-	# dans _situation_text, réécrit par _show_situation au beat suivant).
-	if _res_block != null:
-		_res_block.visible = false
+	# v10.21 — reset au nouveau beat : situation pleine opacité, vignette d'effet estompée (elle vit
+	# en Z4 désormais ; l'issue R128 vit dans _situation_text, réécrit par _show_situation).
+	_fade_res_block(false)
 	if _push_row != null and is_instance_valid(_push_row):  # R130 : jamais de choix fantôme au beat suivant
 		_push_row.queue_free()
 		_push_row = null
@@ -281,7 +267,6 @@ func _present_current_beat() -> void:
 	_scene_epoch += 1  # toute issue LLM en vol du beat précédent devient périmée
 	_can_advance = false
 	_set_caret(false)
-	_set_hand_dimmed(false)
 	# v11-W2 (spec §C) : REDRAW COMPLET de la main de 4 traits (cycle vrai — défausse totale,
 	# reshuffle <4). Les caps R113 (≤1 corrompu/main, ≥1 trait) vivent dans merlin_run.
 	run.redraw_hand()
@@ -304,32 +289,22 @@ func _present_current_beat() -> void:
 	# v11-W2 — sélection nettoyée + tuiles rafraîchies (feedforward du nouveau beat) + pastilles requis.
 	_selected_action = null
 	_selected_trait = null
-	_resolve_btn.visible = false
-	_resolve_btn.disabled = true
-	if _die_hint != null:
-		_die_hint.visible = false
+	_set_resolve_armed(false)  # Z6 : le bouton reste VISIBLE, simplement désarmé (alpha 0.35)
 	_refresh_action_tiles()
 	_render_required_tags()
-	# v10.10 (user 2026-06-06) : la SITUATION s'affiche SEULE dans l'encart central ; les cartes ne
-	# montent qu'à la fin du typewriter (_on_typewriter_done state==1). Cartes cachées d'ici là.
+	# v10.10 (user 2026-06-06) : la SITUATION s'affiche SEULE dans l'encart central ; le choix ne
+	# s'ouvre qu'à la fin du typewriter (_on_typewriter_done state==1). Zones estompées d'ici là.
 	_set_choice_ui(false)
-	# Signal de transition (user 2026-06-07) : bordure neutre + fondu de l'encart au nouveau beat.
+	# Signal de transition (user 2026-06-07) : bordure neutre ; le NOUVEAU beat arrive par cross-fade
+	# de zone (fade-out → contenu → fade-in), JAMAIS par tween de position (leçon C1 : tweener la
+	# position d'un Control ancré fait perdre la main au layout). Le slide-up v10.15 est supprimé.
 	_set_encart_phase(MerlinVisual.INK_DIM)
-	if _situ_panel != null:
-		_situ_panel.modulate.a = 0.45
-		# v10.15 — Slide-up : l'encart monte de 12px en fondant (situation « arrive »).
-		# Ancré sur _situ_rest_y pour éviter le drift si le tween précédent est interrompu.
-		if _situ_rest_y == 0.0:
-			_situ_rest_y = _situ_panel.position.y
-		_situ_panel.position.y = _situ_rest_y + 12.0
-		if _situ_tw != null and _situ_tw.is_valid():
-			_situ_tw.kill()
-		_situ_tw = _situ_panel.create_tween().set_parallel(true)
-		_situ_tw.tween_property(_situ_panel, "modulate:a", 1.0, 0.22)
-		var slide_dur: float = MerlinVisual.DUR_SLIDE_UP * MerlinVisual.motion()
-		_situ_tw.tween_property(_situ_panel, "position:y", _situ_rest_y, slide_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_show_situation(_current_situation)
-	_state = 1
+	if _situ_tw != null and _situ_tw.is_valid():
+		_situ_tw.kill()  # fondu d'interstitiel en vol → le swap de zone prend la main sur l'alpha
+	MerlinVisual.swap_zone(_situ_panel, func() -> void:
+		_beat_transition = false
+		_show_situation(_current_situation)
+		_state = 1)
 
 
 func _show_situation(situ: Dictionary, animate: bool = true) -> void:
@@ -451,8 +426,8 @@ func _layout_fan() -> void:
 # v11-W2 — sélection du TRAIT sur l'élément : levée +20 px + bordure GOLD ; re-clic = désélection.
 # Plus aucun vol vers un combo panel : la carte reste dans l'éventail (pilier MINIMAL).
 func _on_trait_card(card: MerlinCard) -> void:
-	if _state != 1:
-		return
+	if _state != 1 or not _choice_open:
+		return  # v11-V2a : zone estompée = choix fermé (l'alpha n'est pas une porte, _choice_open l'est)
 	_selected_trait = null if _selected_trait == card else card
 	for c in _hand_box.get_children():
 		if c is MerlinCardView and not c.is_queued_for_deletion():
@@ -462,8 +437,8 @@ func _on_trait_card(card: MerlinCard) -> void:
 
 # v11-W2 — sélection de l'ACTION sur la tuile : bordure GOLD 3 px ; re-clic = désélection.
 func _on_action_tile(card: MerlinCard) -> void:
-	if _state != 1:
-		return
+	if _state != 1 or not _choice_open:
+		return  # v11-V2a : même garde que les traits — clic hors phase de choix ignoré
 	_selected_action = null if _selected_action == card else card
 	for v in _action_views:
 		if is_instance_valid(v):
@@ -578,21 +553,17 @@ func _update_preview() -> void:
 	# v11-W2 : le geste canonique = 1 ACTION + 1 TRAIT. La résolution ne s'arme qu'à la paire complète
 	# (bouton Résoudre CONSERVÉ, spec §A — jamais de résolution auto au 2e clic).
 	if _selected_action == null or _selected_trait == null:
-		_resolve_btn.disabled = true
-		if _die_hint != null:
-			_die_hint.visible = false
+		_set_resolve_armed(false)
 		return
 	var combo: Array = [_selected_action, _selected_trait]
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		get_node("/root/MerlinRun").blessed_bonus(combo))  # R131 : bénédictions dans la preview (R120)
 	var was_disabled: bool = _resolve_btn.disabled
-	_resolve_btn.disabled = false
-	# v10.23/v11 — l'indice de dé s'allume avec le bouton : liseré = rareté de l'ACTION (source du dé, R133).
-	if _die_hint != null:
-		_die_hint.visible = int(_current_situation.get("die", 0)) >= 1
-		_die_hint.set_hint_rarity(str(_selected_action.rarity))
-	if was_disabled and _resolve_btn.visible:
+	_set_resolve_armed(true)
+	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
+	# qualité du jet (R133) ; le bouton qui s'arme suffit à dire « la paire est complète ».
+	if was_disabled and _choice_open:
 		MerlinAudio.play_sfx("draft_reveal")
 		_pop(_resolve_btn, 1.15)
 		_selection_complete_pulse()
@@ -606,7 +577,7 @@ func _on_resolve() -> void:
 	if _state != 1 or _selected_action == null or _selected_trait == null:
 		return
 	_state = 2
-	_resolve_btn.disabled = true
+	_set_resolve_armed(false)  # Z6 : désarmé (alpha 0.35 + disabled) — le bouton ne disparaît jamais
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
@@ -660,10 +631,9 @@ func _on_resolve() -> void:
 	var tile: MerlinActionView = _tile_for(_selected_action)
 	_selected_action = null
 	_selected_trait = null
-	_set_hand_dimmed(true)  # ÉVIDENT : on lit l'issue ; main grisée + prompt/indice masqués
-	_resolve_btn.visible = false
-	if _die_hint != null:
-		_die_hint.visible = false
+	# v11-V2a : la MAIN s'estompe (ÉVIDENT : on lit l'issue) mais la rangée d'actions reste PLEINE
+	# alpha pendant la fusion — la tuile jouée pulse à 1.0 ; l'estompe de Z6 part APRÈS fx.run().
+	_set_hand_dimmed(true)
 	_can_advance = false    # « avancer » (clic) seulement quand l'issue est entièrement écrite
 
 	# v10.2 — Animation cinématique de fusion AVANT la prose. Pendant ce temps la pré-génération
@@ -703,7 +673,7 @@ func _on_resolve() -> void:
 
 	# v11-W1 : le jet de dé vit DANS la fusion (MerlinFx.run Phase 3, en chevauchement sur la décrue) —
 	# plus de second dé séquentiel ici (le doublon rallongeait la séquence et brouillait la lecture).
-	_set_choice_ui(false)   # v10.10 : cartes redescendent → l'issue occupe l'encart central, SEULE (user 2026-06-06)
+	_set_choice_ui(false)   # v11-V2a : estompe Z5+Z6 APRÈS la fusion — l'issue occupe l'encart, SEULE
 
 	# v10.4 — Issue TOUJOURS générée par le LLM (user 2026-06-06). take_resolution renvoie le cache
 	# de pré-génération si prêt (cas courant : pose + anim ont couvert la latence), sinon génère et
@@ -876,7 +846,7 @@ func _build_pact_choice(pk: String) -> void:
 	ref.pressed.connect(_on_pact_choice.bind(pk, false))
 	if _res_block != null:
 		_res_block.add_child(_pact_row)
-		_res_block.visible = true
+		_fade_res_block(true)
 
 
 func _on_pact_choice(pk: String, accepted: bool) -> void:
@@ -896,7 +866,7 @@ func _on_pact_choice(pk: String, accepted: bool) -> void:
 		_pact_row.queue_free()
 		_pact_row = null
 	if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
-		_res_block.visible = false  # rien d'autre à montrer dans le bloc
+		_fade_res_block(false)  # rien d'autre à montrer dans le slot central
 
 
 # v10.21 (Wave G, R130) — Choix « Encaisser / Pousser » sous la vignette : 1 geste, zéro timer (R99),
@@ -932,7 +902,7 @@ func _build_push_choice() -> void:
 	pou.pressed.connect(_on_push_choice.bind(true))
 	if _res_block != null:
 		_res_block.add_child(_push_row)
-		_res_block.visible = true
+		_fade_res_block(true)
 	var arm_tw: Tween = create_tween()
 	arm_tw.tween_interval(0.25)
 	arm_tw.tween_callback(func() -> void:
@@ -1028,13 +998,10 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 			0.25 * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	# v11-W0 (user : « un compteur avec des chiffres ») — les chips chiffrées Intégrité/Corruption sont
 	# SUPPRIMÉES : les deltas de jauges vivent dans les ANNEAUX animés (float_delta), un seul endroit (§23).
-	# v10.23 — la CONTRIBUTION du sort devient lisible dans la vignette.
-	if int(res.get("die", 0)) >= 1:
-		var dmod: int = int(res.get("die_mod", 0))
-		if dmod > 0:
-			_effect_vignette.add_child(_vignette_chip("⚄ Le sort a souri (+%d)" % dmod, MerlinVisual.GOLD_DARK))
-		else:
-			_effect_vignette.add_child(_vignette_chip("⚄ Le sort resta muet", MerlinVisual.INK_DIM))
+	# v11-V2a (dé-jargonnage) — le sort ne parle que s'il a souri, SANS chiffre (le liseré de tuile
+	# porte déjà la qualité, R133) ; la chip « resta muet » est supprimée (bruit sans information).
+	if int(res.get("die", 0)) >= 1 and int(res.get("die_mod", 0)) > 0:
+		_effect_vignette.add_child(_vignette_chip("⚄ Le sort a souri", MerlinVisual.GOLD_DARK))
 	for e in res.get("fx_effects", []):
 		match str(e):
 			"HEAL": _effect_vignette.add_child(_vignette_chip("✚ Soin", MerlinVisual.EFFECT_HEAL))
@@ -1316,8 +1283,7 @@ func _on_typewriter_done() -> void:
 		# (R128 : compacte, après coup, sans casser la prose), puis avance au clic + caret « continuer ».
 		if not _pending_res.is_empty():
 			_build_effect_vignette(_pending_res, _pending_degree)
-			if _res_block != null:
-				_res_block.visible = true
+			_fade_res_block(true)
 			_pending_res = {}
 		# v10.21 (Wave G, R130) — PARTIEL différé : le choix Encaisser/Pousser REMPLACE l'avance au clic.
 		# v11-W1 : sur PARTIEL les deltas vivent dans le LEDGER des boutons SEULEMENT — anneaux après le choix.
@@ -1345,17 +1311,15 @@ func _on_typewriter_done() -> void:
 			var half: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
 			_prose_tw.tween_property(_situation_text, "modulate:a", 0.88, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 			_prose_tw.tween_property(_situation_text, "modulate:a", 1.0, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		_resolve_btn.visible = true
-		_set_choice_ui(true)   # visible AVANT le rendu → _hand_box a sa taille pour _layout_fan
+		_set_choice_ui(true)   # v11-V2a : zones permanentes — l'ouverture du choix est une estompe inverse
 		_render_hand(true)
 		_refresh_action_tiles()  # v11-W2 : feedforward + sélection propres à l'ouverture du choix
-		_update_preview()        # paire incomplète → bouton désarmé, indice de dé masqué
+		_update_preview()        # paire incomplète → bouton Résoudre désarmé (alpha 0.35)
 
 
 func _set_caret(on: bool) -> void:
 	if _caret == null:
 		return
-	_caret.visible = on
 	if _caret_tw != null and _caret_tw.is_valid():
 		_caret_tw.kill()
 	_caret_tw = null
@@ -1364,28 +1328,84 @@ func _set_caret(on: bool) -> void:
 		_caret_tw = _caret.create_tween().set_loops()
 		_caret_tw.tween_property(_caret, "modulate:a", 0.18, MerlinVisual.DUR_CARET_BLINK * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
 		_caret_tw.tween_property(_caret, "modulate:a", 0.65, MerlinVisual.DUR_CARET_BLINK * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	elif _caret.is_inside_tree():
+		# v11-V2a : extinction par ALPHA (le node ne disparaît jamais — la zone reste stable)
+		_caret_tw = _caret.create_tween()
+		_caret_tw.tween_property(_caret, "modulate:a", 0.0, MerlinVisual.DUR_FAST * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	else:
+		_caret.modulate.a = 0.0
 
 
+# v11-V2a (Z6) — armement du bouton Résoudre PERMANENT : jamais de visible=false. Désarmé =
+# self_modulate 0.35 + disabled ; armé = pleine alpha (le pulse d'armement vit dans _update_preview).
+# self_modulate et PAS modulate : le hover-tint de connect_button_feedback tweene modulate.
+func _set_resolve_armed(armed: bool) -> void:
+	if _resolve_btn == null:
+		return
+	_resolve_btn.disabled = not armed
+	var target: float = 1.0 if armed else 0.35
+	if _resolve_tw != null and _resolve_tw.is_valid():
+		_resolve_tw.kill()
+	if _resolve_btn.is_inside_tree():
+		_resolve_tw = _resolve_btn.create_tween()
+		_resolve_tw.tween_property(_resolve_btn, "self_modulate:a", target,
+			MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	else:
+		_resolve_btn.self_modulate.a = target
+
+
+# v11-V2a (Z3) — pastilles des requis : hauteur RÉSERVÉE 26 px en tête d'encart, révélation par
+# alpha seul (zéro reflow, JAMAIS visible=false). Beat sans requis → la rangée reste éteinte.
+func _set_req_visible(on: bool) -> void:
+	if _req_row == null:
+		return
+	var target: float = 1.0 if on and _req_row.get_child_count() > 0 else 0.0
+	if _req_tw != null and _req_tw.is_valid():
+		_req_tw.kill()
+	if _req_row.is_inside_tree():
+		_req_tw = _req_row.create_tween()
+		_req_tw.tween_property(_req_row, "modulate:a", target,
+			MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	else:
+		_req_row.modulate.a = target
+
+
+# v11-V2a (Z4) — le slot central de la ligne d'état (vignette / choix différés) vit par alpha.
+# Tween lié au bloc + kill via meta (pattern MerlinVisual) — jamais deux fades concurrents.
+func _fade_res_block(on: bool) -> void:
+	if _res_block == null:
+		return
+	var target: float = 1.0 if on else 0.0
+	if _res_block.has_meta("_tw_fade"):
+		var prev: Tween = _res_block.get_meta("_tw_fade")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	if _res_block.is_inside_tree():
+		var t: Tween = _res_block.create_tween()
+		t.tween_property(_res_block, "modulate:a", target,
+			MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+		_res_block.set_meta("_tw_fade", t)
+	else:
+		_res_block.modulate.a = target
+
+
+# v11-V2a — estompe de LECTURE de la main (grammaire de zone : dim = zone inactive). La rangée
+# d'actions n'est volontairement PAS couplée ici : pendant la fusion elle reste pleine alpha (la
+# tuile jouée pulse) — son estompe passe par _set_choice_ui(false) APRÈS fx.run().
 func _set_hand_dimmed(on: bool) -> void:
-	if _hand_box != null:
-		_hand_box.modulate.a = 0.35 if on else 1.0
-	if _action_bar != null:  # v11-W2 : les tuiles (permanentes) s'estompent aussi pendant la lecture
-		_action_bar.modulate.a = 0.45 if on else 1.0
+	MerlinVisual.set_zone_active(_hand_box, not on)
 
 
-# Éventail de TRAITS visible UNIQUEMENT en phase de CHOIX (user 2026-06-06) : l'intro et les
-# situations/issues occupent l'encart central SEUL. v11-W2 : la rangée d'actions reste PERMANENTE
-# (elle s'estompe via _set_hand_dimmed) ; les pastilles des requis suivent l'éventail (§23 MINIMAL).
+# v11-V2a (spec écran stable) — le CHOIX s'ouvre/se ferme par ESTOMPE de zone (alpha 0.35 + souris
+# off via mouse_filter), JAMAIS par visible : les zones existent 100 % du temps. _choice_open est
+# LA garde anti-clic (_on_action_tile/_on_trait_card) — reprend le rôle de _hand_box.visible.
 func _set_choice_ui(on: bool) -> void:
-	if _hand_box != null:
-		_hand_box.visible = on
-		_hand_box.modulate.a = 1.0
-	if _action_bar != null:
-		_action_bar.modulate.a = 1.0
-	if _req_row != null:
-		_req_row.visible = on and _req_row.get_child_count() > 0
+	_choice_open = on
+	MerlinVisual.set_zone_active(_hand_box, on)
+	MerlinVisual.set_zone_active(_action_bar, on)
+	_set_req_visible(on)
 	if on and _scene_art != null:
-		_scene_art.set_reading_recess(false)  # v10.21 (L-a) : la main remonte → la forêt revit
+		_scene_art.set_reading_recess(false)  # v10.21 (L-a) : la main s'éveille → la forêt revit
 
 
 # Teinte la bordure de l'encart selon la phase (situation neutre / issue = couleur du degré) — signal
@@ -1408,8 +1428,7 @@ func _show_skip_hint() -> void:
 		_caret_tw.kill()
 	_caret_tw = null
 	_caret.text = "▶ clic pour passer"
-	_caret.visible = true
-	_caret.modulate.a = 0.5
+	_caret.modulate.a = 0.5  # v11-V2a : présence par alpha (jamais visible=false)
 
 
 func _degree_color(degree: String) -> Color:
@@ -2056,16 +2075,20 @@ func _build_ui() -> void:
 	catcher.gui_input.connect(_on_story_click)
 	add_child(catcher)
 
+	# v11-V2a (grille fixe 1920×1080, spec écran stable) : marges 16 verticales / 28 horizontales,
+	# séparations 8 — le total des 6 zones fixes tient sous 1080 sans SIZE_EXPAND_FILL vertical.
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.mouse_filter = Control.MOUSE_FILTER_PASS
-	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(m, 28)
+	margin.add_theme_constant_override("margin_left", 28)
+	margin.add_theme_constant_override("margin_right", 28)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 16)
 	add_child(margin)
 
 	var root: VBoxContainer = VBoxContainer.new()
 	root.mouse_filter = Control.MOUSE_FILTER_PASS
-	root.add_theme_constant_override("separation", 10)
+	root.add_theme_constant_override("separation", 8)
 	margin.add_child(root)
 
 	var hud: HBoxContainer = HBoxContainer.new()
@@ -2107,9 +2130,9 @@ func _build_ui() -> void:
 	_emprise_lbl.visible = false
 	_corr_gauge.add_child(_emprise_lbl)
 
-	# Scène en silhouettes plates — bande supérieure FIXE (l'encart récit prend l'espace dessous).
+	# Scène en silhouettes plates — Z2 DÉCOR 200 px FIXE (dessine relatif à `size`).
 	_scene_art = MerlinSceneArt.new()
-	_scene_art.custom_minimum_size = Vector2(0, 280)
+	_scene_art.custom_minimum_size = Vector2(0, 200)
 	root.add_child(_scene_art)
 	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
 	_scene_art.set_watch_eyes(true)  # v10.20 : les yeux de Merlin vivent dans la LUNE et suivent le curseur
@@ -2120,12 +2143,10 @@ func _build_ui() -> void:
 		var rvl: Tween = create_tween()
 		rvl.tween_method(_scene_art.set_decor_reveal, 0.0, 1.0, 1.4 * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
-	# ENCART CENTRAL (~80%) crème : porte l'intro/commentaire PUIS chaque situation/issue (user 2026-06-06).
-	# size_flags EXPAND → occupe tout l'espace restant quand les cartes sont cachées (hors phase de choix).
-	# Bordure teintée par phase (_set_encart_phase) = signal de transition intro→situation→issue (user 2026-06-07).
+	# Z3 ENCART crème 348 px FIXE (v11-V2a : plus AUCUN SIZE_EXPAND_FILL vertical — la grille ne
+	# reflow jamais). Porte chaque situation/issue ; bordure teintée par phase (_set_encart_phase).
 	_situ_panel = PanelContainer.new()
-	_situ_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_situ_panel.custom_minimum_size = Vector2(0, 260)
+	_situ_panel.custom_minimum_size = Vector2(0, 348)
 	_situ_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # clics → capteur récit (skip/avance)
 	_situ_sb = _cream_style()
 	_situ_panel.add_theme_stylebox_override("panel", _situ_sb)
@@ -2140,51 +2161,60 @@ func _build_ui() -> void:
 	_req_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_req_row.add_theme_constant_override("separation", 10)
 	_req_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_req_row.visible = false
+	_req_row.custom_minimum_size = Vector2(0, 26)  # hauteur RÉSERVÉE : la tête de l'encart ne reflow jamais
+	_req_row.modulate.a = 0.0  # révélée par alpha (_set_req_visible), JAMAIS par visible=false
 	inner.add_child(_req_row)
-	var situ_center: CenterContainer = CenterContainer.new()
-	situ_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	situ_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inner.add_child(situ_center)
+	# v11-V2a : fil type VN — toute longueur tient dans la hauteur fixe par SCROLL (suivi pendant la
+	# frappe) ; textes courts alignés en haut (le CenterContainer vertical est supprimé : zéro reflow).
 	_situation_text = RichTextLabel.new()
 	_situation_text.bbcode_enabled = true
-	_situation_text.fit_content = true
-	_situation_text.custom_minimum_size = Vector2(1180, 0)  # bloc de texte large, centré dans l'encart
+	_situation_text.fit_content = false
+	_situation_text.scroll_active = true
+	_situation_text.scroll_following = true
+	_situation_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_situation_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_situation_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situation_text.add_theme_color_override("default_color", COL_INK)
-	_situation_text.add_theme_font_size_override("normal_font_size", 36)  # narratif ample (user 2026-06-06)
-	situ_center.add_child(_situation_text)
+	_situation_text.add_theme_font_size_override("normal_font_size", MerlinVisual.FS_NARRATIVE)
+	inner.add_child(_situation_text)
 
-	# v10.21 (R128) — Bloc RÉSOLUTION = uniquement la VIGNETTE d'effet (degré + Δ jauges + effets), compacte
-	# SOUS le texte. L'issue elle-même s'écrit dans _situation_text (même fil narratif) — plus de filet or ni de
-	# label séparé (user 2026-06-30). Caché hors résolution ; apparaît APRÈS le typewriter de l'issue.
+	# v11-V2a (Z4) — LIGNE D'ÉTAT 72 px FIXE entre l'encart et l'éventail : slot central (vignette
+	# d'effet R128 / choix Encaisser-Pousser / pacte — encore portés par _res_block en V2a, re-ciblage
+	# propre en V2b) + caret « continuer » aligné à droite. La zone existe 100 % du temps.
+	_status_line = Control.new()
+	_status_line.custom_minimum_size = Vector2(0, 72)
+	_status_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_status_line)
 	_res_block = VBoxContainer.new()
+	_res_block.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_res_block.alignment = BoxContainer.ALIGNMENT_CENTER
 	_res_block.add_theme_constant_override("separation", 10)
 	_res_block.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_res_block.visible = false
-	inner.add_child(_res_block)
+	_res_block.modulate.a = 0.0  # révélé par alpha (_fade_res_block), JAMAIS par visible=false
+	_status_line.add_child(_res_block)
 	_effect_vignette = HBoxContainer.new()
 	_effect_vignette.alignment = BoxContainer.ALIGNMENT_CENTER
 	_effect_vignette.add_theme_constant_override("separation", 16)
 	_effect_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_res_block.add_child(_effect_vignette)
 
-	# Caret « cliquer pour continuer » : clignote faiblement quand l'issue est entièrement écrite.
+	# Caret « cliquer pour continuer » : clignote quand l'issue est écrite — alpha-fade, jamais caché.
 	_caret = _mk_label(MerlinVisual.GOLD_DARK, 20)
 	_caret.text = "▮ cliquer pour continuer"
 	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_caret.visible = false
-	root.add_child(_caret)
+	_caret.modulate.a = 0.0
+	_status_line.add_child(_caret)
+	_caret.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	_caret.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 
 	# v11-W2 (spec §I) — ÉVENTAIL de 4 TRAITS (150×190 CREAM) au-dessus de la rangée d'actions.
 	# v10.5 : label « Ta main : » retiré (user 2026-06-06). L'éventail se suffit visuellement.
 	_hand_box = Control.new()
-	_hand_box.custom_minimum_size = Vector2(0, 200)
+	_hand_box.custom_minimum_size = Vector2(0, 208)  # Z5 : 208 px FIXE — zone PERMANENTE, estompée
+	# hors phase de choix (set_zone_active) ; le lift des cartes déborde sur Z4 (cosmétique assumé).
 	_hand_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
-	_hand_box.visible = false  # cartes cachées hors phase de CHOIX (révélées à la fin du typewriter)
 	_hand_box.resized.connect(_layout_fan)
 	root.add_child(_hand_box)
 
@@ -2208,15 +2238,11 @@ func _build_ui() -> void:
 	MerlinVisual.apply_button_da(_resolve_btn)
 	_resolve_btn.pressed.connect(_on_resolve)
 	_resolve_btn.disabled = true
-	_resolve_btn.visible = false  # révélé avec l'éventail (fin du typewriter de situation)
+	_resolve_btn.self_modulate.a = 0.35  # Z6 : TOUJOURS visible — désarmé = estompe (jamais visible=false)
 	_action_bar.add_child(_resolve_btn)
 	MerlinVisual.connect_button_feedback(_resolve_btn)  # v10.13.1 — feedback canon §21 `tap`
-	# v10.23/v11 — INDICE DE DÉ : ce choix jettera un dé, et sa qualité vient de l'ACTION (liseré à sa
-	# rareté, R133). Visible uniquement quand la paire est complète (comme le bouton).
-	_die_hint = MerlinDice.hint(26.0)
-	_die_hint.visible = false
-	_die_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_action_bar.add_child(_die_hint)
+	# v11-V2a (dé-jargonnage) — l'indice de dé (_die_hint) est SUPPRIMÉ : le liseré de la tuile
+	# porte déjà la qualité du jet (R133).
 
 	# TOAST bas non-bloquant (ne recouvre PLUS le plateau — anti-pattern §21.2 ❌1 corrigé, user 2026-06-07).
 	_overlay = Panel.new()

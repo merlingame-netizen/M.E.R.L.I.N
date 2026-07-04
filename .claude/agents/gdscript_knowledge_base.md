@@ -1273,3 +1273,10 @@ Le « kill ~285 s » concerne les commandes Bash **foreground** (mon harness), p
   harnais/legacy) → la fonction s'arrête là (beat jamais présenté, run gelée au beat 0). Garde
   obligatoire : `var v: Variant = dict.get("k", []) ; (v as Array).size() if v is Array else fallback`.
   Attrapé par le gate R109 (autoplay 0/3) alors que validate/smoke/soak passaient tous.
+
+## validate_step0 aveugle aux identifiants membres supprimés (2026-07-04, v11-V2a)
+
+Un `var _x` supprimé de la classe alors que des corps de fonctions le référencent encore **passe
+validate_step0 (0 erreur)** — l'erreur `Identifier not declared` ne sort qu'au CHARGEMENT de la
+scène. Même famille que la leçon « statics cross-classe » (v11-W0). Règle : après toute purge de
+membre/fonction, le gate minimal est **smoke de la scène consommatrice**, jamais validate seul.
