@@ -82,10 +82,19 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		if die_mod != 0:
 			degree = _apply_synergy(degree, die_mod, covered_n, req_n)
 
-	# Plafond éclatante (game design 2026-05-29) : l'éclatante récompense une VRAIE combinaison
-	# SANS coût — jamais une carte seule, jamais une carte à coût (corruption > 0).
-	if degree == ECLATANTE and (played_cards.size() < 2 or cost > 0):
-		degree = REUSSITE
+	# v11 (spec panel §D, CRITICAL) — ÉCLATANTE redéfinie : couverture PLEINE + coût 0 + le TRAIT
+	# couvre ≥1 tag requis + (synergie +1 OU dé +1). Remplace l'ancien plafond « ≥2 cartes »
+	# (structurellement toujours satisfait avec action+trait → 43-67 % d'éclatantes mesurées).
+	# Porte UNIQUE : filtre aussi les promotions venues de _apply_synergy/dé. Cible soak : 8-15 %.
+	if degree == ECLATANTE:
+		var trait_covers: bool = false
+		for i in range(1, played_cards.size()):
+			for t in _card_tags(played_cards[i]):
+				if (cov["covered"] as Array).has(MerlinTags.to_canon(str(t))):
+					trait_covers = true
+		if not (covered_n >= req_n and req_n > 0 and cost == 0 and trait_covers \
+				and (synergy == 1 or die_mod == 1)):
+			degree = REUSSITE
 
 	# Sabotage par tag antagoniste (R66) : dégrade d'un cran — APRÈS la synergie (un combo
 	# cohérent peut donc amortir une partie de la pénalité de sabotage).
@@ -135,32 +144,34 @@ static func _degree_from_coverage(covered_n: int, req_n: int, extra: Array) -> S
 	return ECHEC
 
 
-# Cohérence de la combinaison : +1 si ≥2 cartes partagent une famille de tags (geste focalisé),
-# -1 si dispersé (familles toutes distinctes) ou corrompu sans cohésion, 0 sinon (1 carte / neutre).
+# v11 (spec panel §D, CRITICAL unanime) — Synergie du geste ACTION + TRAIT :
+#   +1 SI le trait apporte ≥1 tag NON-dupliqué dont la famille == famille CANONIQUE de l'action
+#      ET le trait n'est pas corrompu (le trait « nourrit » le verbe) ;
+#   −1 SI le trait est corrompu (tag Corrompu ou coût récurrent) ;
+#    0 sinon. Les tags de base de l'action ne comptent JAMAIS entre eux.
+# L'ancienne heuristique par familles donnait +1 permanent à toute action 2-tags mono-famille et
+# −1 systématique au geste cross-famille normal (mesuré : 0 % d'échecs, 0 % de morts).
+# Fallback legacy (probes/dicts sans action en [0]) : neutre — la synergie est un fait du PIVOT.
 static func _synergy(played_cards: Array) -> int:
 	if played_cards.size() < 2:
 		return 0
-	var fams: Dictionary = {}
-	var has_corrupt: bool = false
-	for c in played_cards:
-		for t in _card_tags(c):
-			if MerlinTags.is_corrupted_tag(str(t)):
-				has_corrupt = true
-				continue
-			var f: String = MerlinTags.family_of(str(t))
-			if f != "":
-				fams[f] = int(fams.get(f, 0)) + 1
-	for f in fams:
-		if int(fams[f]) >= 2:
-			return 1  # au moins une famille renforcée → combinaison cohérente
-	if has_corrupt:
-		return -1
-	# Dispersé : au moins autant de familles distinctes que de cartes (rien ne se renforce).
-	# NB : une carte multi-tags compte plusieurs familles → un généraliste tend vers "dispersé"
-	# quand aucune famille n'atteint 2 (le bonus de cohésion ci-dessus a priorité s'il s'applique).
-	if fams.size() >= played_cards.size():
-		return -1
-	return 0
+	var action: Variant = played_cards[0]
+	var fam: String = _card_family(action)
+	if fam == "":
+		return 0  # pas d'action en position [0] (harnais legacy) → neutre
+	var action_canon: Array = []
+	for t in _card_tags(action):
+		action_canon.append(MerlinTags.to_canon(str(t)))
+	var syn: int = 0
+	for i in range(1, played_cards.size()):
+		var tr: Variant = played_cards[i]
+		if _is_corrupted_card(tr):
+			return -1  # trait corrompu : le Murmure pollue le geste, sans appel
+		for t in _card_tags(tr):
+			var c: String = MerlinTags.to_canon(str(t))
+			if not action_canon.has(c) and MerlinTags.family_of(c) == fam:
+				syn = 1
+	return syn
 
 
 # Affine le degré par la synergie, BORNÉ à la fourchette permise par la couverture (jamais
@@ -209,6 +220,25 @@ static func _card_corruption(c: Variant) -> int:
 	if c is Dictionary and c.has("corruption"):
 		return int(c["corruption"])
 	return 0
+
+
+# v11 — famille canonique d'une ACTION ("" pour un trait/carte legacy — duck-typé comme le reste).
+static func _card_family(c: Variant) -> String:
+	if c is Object and "family" in c:
+		return str(c.family)
+	if c is Dictionary and c.has("family"):
+		return str(c["family"])
+	return ""
+
+
+# v11 — trait corrompu = tag Corrompu OU coût récurrent (spec §C/§D).
+static func _is_corrupted_card(c: Variant) -> bool:
+	if _card_corruption(c) > 0:
+		return true
+	for t in _card_tags(c):
+		if MerlinTags.is_corrupted_tag(str(t)):
+			return true
+	return false
 
 
 static func _card_rarity(c: Variant) -> String:

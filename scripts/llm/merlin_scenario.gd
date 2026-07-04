@@ -40,10 +40,9 @@ const QUEST_PATTERNS: Dictionary = {
 }
 
 # Biais de tags-cœur par type de beat (R68/R81).
-# MVP : limité aux tags COUVRABLES par le deck de départ (R33) — pas d'acquisition au MVP (R19),
-# donc une run doit être gagnable avec les 12 cartes. Les tags Monde/extras reviennent post-MVP
-# (cartes-souvenir R90). Tags starter : Sens, Savoir, Mémoire, Force, Agilité, Endurance,
-# Empathie, Verbe, Ruse, Instinct, Nature.
+# v11 (spec §F) : le biais ne définit plus le pool tirable — il ne fait que COLORER le tirage
+# (les candidats du biais passent en premier). La source de vérité de ce qui est requérable est
+# la WHITELIST build_tag_pool ci-dessous (tags de base des actions ∪ deck de traits ∪ greffes).
 const TYPE_TAG_BIAS: Dictionary = {
 	"Exploration": ["Sens", "Savoir", "Mémoire", "Instinct", "Nature"],
 	"Rencontre": ["Empathie", "Verbe", "Ruse"],
@@ -54,6 +53,215 @@ const TYPE_TAG_BIAS: Dictionary = {
 	"Dilemme": ["Ruse", "Empathie", "Instinct", "Nature", "Mémoire", "Force"],
 	"Climax": ["Force", "Ruse", "Savoir", "Instinct"],
 }
+
+
+## === v11 (spec §F) — WHITELIST des required_tags générables ===
+## Pool générable = {8 tags de BASE des 4 actions} ∪ {tags du deck de TRAITS courant} ∪ {tags
+## GREFFÉS (W3 : run.actions[i].tags au-delà des 2 premiers)}. Statiques PURS : partagés par le
+## jeu (via _current_tag_pool) et par le harnais tools/probe_soak.gd (zéro drift — guardrail
+## « gate jamais aveugle »). Gardes : les tags Corrompus ne sont JAMAIS requis ; Sacrifice et
+## Équilibre JAMAIS requis tant que non greffés ; tags ×1 (comptage dynamique) → 1 beat/quête.
+
+# Composition des requis par difficulté. Difficulté = nb de tags requis HORS tags de base des
+# actions (spec §F, littéral) ; le climax diff 3 passe à 3 requis (contre-pression §E).
+# Table gatée : le recalibrage W2/W3 (2 passes soak 5×300) ajuste ICI sans toucher au flux.
+const REQ_TOTAL_BY_DIFF: Dictionary = {1: 2, 2: 2, 3: 3}
+const REQ_GAP_BY_DIFF: Dictionary = {1: 1, 2: 2, 3: 3}
+# Jamais requérables via le deck de traits — exclusifs aux greffes W3 (formes canon).
+const GRAFT_ONLY_TAGS: Array = ["sacrifice", "equilibre"]
+
+
+# Tags d'une carte-like, duck-typé (PAS `is MerlinCard` : la référence de classe cassait le
+# chargement préchargé du soak — leçon v10.20.1).
+static func _tags_of(c: Variant) -> Array:
+	if c is Object and "tags" in c:
+		return c.tags
+	if c is Dictionary and c.has("tags"):
+		return c["tags"]
+	return []
+
+
+## Construit le pool générable. Retourne (formes canon sauf `display`) :
+##   base    : tags de base des actions (2 premiers de chaque verbe)
+##   gap     : tags requérables HORS base (deck de traits + greffes, gardes appliquées)
+##   x1      : tags de `gap` à exemplaire UNIQUE dans le deck de traits (émission 1 beat/quête)
+##   allowed : set (Dictionary) canon de TOUT ce qui est requérable
+##   display : canon → forme affichée (accentuée, pour l'UI et les prompts)
+static func build_tag_pool(actions: Array, traits: Array) -> Dictionary:
+	var base: Array = []
+	var grafted: Array = []
+	var display: Dictionary = {}
+	for a in actions:
+		var atags: Array = _tags_of(a)
+		for ti in atags.size():
+			var t: String = str(atags[ti])
+			if MerlinTags.is_corrupted_tag(t):
+				continue
+			var c: String = MerlinTags.to_canon(t)
+			if not display.has(c):
+				display[c] = t
+			if ti < 2:
+				if not base.has(c):
+					base.append(c)
+			elif not grafted.has(c) and not base.has(c):
+				grafted.append(c)  # W3 : tag greffé — requérable, compte comme hors-base
+	var counts: Dictionary = {}  # canon → exemplaires dans le deck de traits
+	for tr in traits:
+		for t2v in _tags_of(tr):
+			var t2: String = str(t2v)
+			if MerlinTags.is_corrupted_tag(t2):
+				continue  # un tag Corrompu n'est JAMAIS requis
+			var c2: String = MerlinTags.to_canon(t2)
+			counts[c2] = int(counts.get(c2, 0)) + 1
+			if not display.has(c2):
+				display[c2] = t2
+	var gap: Array = []
+	for c3 in counts:
+		if base.has(c3) or grafted.has(c3):
+			continue
+		if GRAFT_ONLY_TAGS.has(c3):
+			continue  # Sacrifice/Équilibre : jamais requis sans greffe (spec §F)
+		gap.append(str(c3))
+	for c4 in grafted:
+		if not gap.has(c4):
+			gap.append(str(c4))
+	var x1: Array = []
+	for c5 in gap:
+		if int(counts.get(c5, 0)) == 1 and not grafted.has(c5):
+			x1.append(str(c5))  # ex. Franchise/Mystère/Rituel au deck de départ (comptage dynamique)
+	var allowed: Dictionary = {}
+	for c6 in base:
+		allowed[c6] = true
+	for c7 in gap:
+		allowed[c7] = true
+	return {"base": base, "gap": gap, "x1": x1, "allowed": allowed, "display": display, "counts": counts}
+
+
+## Tirage STATIQUE et pur des tags requis d'un beat (partagé jeu ↔ harnais, zéro drift).
+## Composition par difficulté (REQ_*_BY_DIFF), biais de type en tête, tags ×1 exclus s'ils ont
+## déjà été émis dans la quête (`x1_used`, MUTÉ par append). Formes AFFICHÉES en sortie.
+static func pick_required_tags(btype: String, diff: int, pool_info: Dictionary, rng: RandomNumberGenerator, x1_used: Array) -> Array:
+	var d: int = clampi(diff, 1, 3)
+	var total: int = int(REQ_TOTAL_BY_DIFF.get(d, 2))
+	var gap_n: int = mini(int(REQ_GAP_BY_DIFF.get(d, 1)), total)
+	var base: Array = []
+	if pool_info.get("base") is Array:
+		base = pool_info["base"]
+	var gap: Array = []
+	if pool_info.get("gap") is Array:
+		gap = pool_info["gap"]
+	var x1: Array = []
+	if pool_info.get("x1") is Array:
+		x1 = pool_info["x1"]
+	var display: Dictionary = {}
+	if pool_info.get("display") is Dictionary:
+		display = pool_info["display"]
+	var bias_canon: Dictionary = {}
+	var bias_pool: Array = TYPE_TAG_BIAS.get(btype, TYPE_TAG_BIAS["Exploration"])
+	for bt in bias_pool:
+		bias_canon[MerlinTags.to_canon(str(bt))] = true
+	# Candidats HORS-BASE : biais du type d'abord (couleur du beat), complétés par le reste du pool.
+	var gap_bias: Array = []
+	var gap_rest: Array = []
+	for c in gap:
+		if x1.has(c) and x1_used.has(c):
+			continue  # tag ×1 déjà émis dans cette quête (émission bornée, spec §F)
+		if bias_canon.has(c):
+			gap_bias.append(c)
+		else:
+			gap_rest.append(c)
+	_shuffle_rng(gap_bias, rng)
+	_shuffle_rng(gap_rest, rng)
+	var picked: Array = []  # canon
+	for c in gap_bias + gap_rest:
+		if picked.size() >= gap_n:
+			break
+		picked.append(c)
+		if x1.has(c):
+			x1_used.append(c)
+	# Complète en tags de BASE (biais d'abord) jusqu'au total — filet si le pool hors-base manque.
+	var base_bias: Array = []
+	var base_rest: Array = []
+	for c in base:
+		if picked.has(c):
+			continue
+		if bias_canon.has(c):
+			base_bias.append(c)
+		else:
+			base_rest.append(c)
+	_shuffle_rng(base_bias, rng)
+	_shuffle_rng(base_rest, rng)
+	for c in base_bias + base_rest:
+		if picked.size() >= total:
+			break
+		picked.append(c)
+	if picked.is_empty():
+		picked.append("sens")  # filet théorique — le pool d'actions n'est jamais vide en pratique
+	var out: Array = []
+	for c in picked:
+		out.append(str(display.get(c, str(c).capitalize())))
+	return out
+
+
+## v11 (spec §F) — VALIDE des tags requis (arc LLM ou constantes) contre le pool générable :
+## tout tag hors-pool est remplacé par le fallback du MÊME index (1er arc procédural canonique),
+## lui-même re-vérifié in-pool. Filet ultime : 1er tag de base des actions. Dédoublonné.
+static func validate_required_tags(required: Array, beat_idx: int, pool_info: Dictionary) -> Array:
+	var allowed: Dictionary = {}
+	if pool_info.get("allowed") is Dictionary:
+		allowed = pool_info["allowed"]
+	var display: Dictionary = {}
+	if pool_info.get("display") is Dictionary:
+		display = pool_info["display"]
+	var base: Array = []
+	if pool_info.get("base") is Array:
+		base = pool_info["base"]
+	var out: Array = []
+	for j in required.size():
+		var t: String = str(required[j])
+		var c: String = MerlinTags.to_canon(t)
+		if not allowed.has(c):
+			# Fallback du même index : la paire du beat correspondant de l'arc procédural.
+			var arc_tags: Array = FALLBACK_ARC_TAGS[0]
+			var pair_v: Variant = arc_tags[clampi(beat_idx, 0, arc_tags.size() - 1)]
+			var pair: Array = pair_v if pair_v is Array else []
+			t = str(pair[j % pair.size()]) if not pair.is_empty() else ""
+			c = MerlinTags.to_canon(t)
+			if t == "" or not allowed.has(c):
+				t = str(display.get(base[0], "Sens")) if not base.is_empty() else "Sens"
+				c = MerlinTags.to_canon(t)
+		var dup: bool = false
+		for u in out:
+			if MerlinTags.to_canon(str(u)) == c:
+				dup = true
+		if not dup:
+			out.append(t)
+	if out.is_empty() and not base.is_empty():
+		out.append(str(display.get(base[0], "Sens")))
+	return out
+
+
+## Liste affichable du pool générable (ordre stable : base puis hors-base) — consommée par le
+## prompt d'arc comme LISTE FERMÉE (contrainte dure, spec §F).
+static func pool_display_list(pool_info: Dictionary) -> Array:
+	var display: Dictionary = {}
+	if pool_info.get("display") is Dictionary:
+		display = pool_info["display"]
+	var out: Array = []
+	for key in ["base", "gap"]:
+		var arr_v: Variant = pool_info.get(key)
+		if arr_v is Array:
+			for c in arr_v:
+				out.append(str(display.get(c, str(c))))
+	return out
+
+
+static func _shuffle_rng(arr: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(arr.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var tmp: Variant = arr[i]
+		arr[i] = arr[j]
+		arr[j] = tmp
 
 # Pitch = UNE ligne d'accroche-action (appel à l'aventure), pas un paragraphe.
 # Le développement complet de la quête arrive dans l'INTRO (pop-up à accepter, voir build_intro).

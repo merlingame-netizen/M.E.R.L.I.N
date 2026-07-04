@@ -1,8 +1,9 @@
 extends SceneTree
-## Autoplay UI (v10.13 Phase P) — joue N runs COMPLETS dans la vraie scène, LLM ON :
-## intro → Accepter → chaque beat : composer le combo → résoudre (fusion + sustain) → avancer
-## (+ draft pris/passé en alternance) → MerlinEnd. PREUVE scène du « 100% fiable » : chaque run
-## atteint MerlinEnd sans erreur script (grep côté CLI). Lancer NON-headless (rendu réel).
+## Autoplay UI (v10.13 Phase P, réécrit v11-W2 pivot ACTION+TRAIT) — joue N runs COMPLETS dans la
+## vraie scène, LLM ON : intro → Accepter → chaque beat : 1 TUILE d'action + 1 TRAIT (combos variés,
+## compteur croissant) → Résoudre (fusion + sustain) → avancer (+ draft pris/passé en alternance,
+## + Encaisser/Pousser tranché) → MerlinEnd. PREUVE scène du « 100% fiable » : chaque run atteint
+## MerlinEnd sans erreur script (grep côté CLI). Lancer NON-headless (rendu réel).
 ##   Godot --path . --script res://tools/autoplay_run.gd -- --loops=3
 ## Sortie : [AUTOPLAY] ... + « [AUTOPLAY] DONE — k/n PASS » ; exit 1 si échec.
 
@@ -12,6 +13,8 @@ const RUN_DEADLINE_S: float = 600.0   # budget par run (v10.22 : chaînes 11-15 
 const END_DEADLINE_S: float = 25.0    # bascule run_ended → MerlinEnd (fade + change_scene différé)
 
 var _fail: int = 0
+var _pick: int = 0  # v11-W2 : compteur CROISSANT (jamais remis à zéro) → l'action tourne sur les
+                    # 4 verbes et le trait balaie la main — les combos varient entre beats ET runs.
 
 
 func _init() -> void:
@@ -123,6 +126,23 @@ func _play_one(k: int) -> bool:
 			game._skip_typewriter()
 			await process_frame
 			continue
+		# v10.21 (R131) — PACTE d'intervention (Être/Compagnon) ouvert ? Trancher pour avancer.
+		# Branche MANQUANTE jusqu'ici : sans elle, un pacte = spin jusqu'au deadline (les gates
+		# verts passés tenaient au tirage de pilier — 60 % de bénédictions non-bloquantes).
+		# On clique le BOUTON (fidèle au joueur), alterné Accepter/Refuser par run.
+		if game._pact_row != null and is_instance_valid(game._pact_row):
+			await create_timer(0.3).timeout
+			if is_instance_valid(game) and game._pact_row != null and is_instance_valid(game._pact_row):
+				var pact_btns: Array = []
+				for pb in game._pact_row.get_children():
+					if pb is Button:
+						pact_btns.append(pb)
+				if not pact_btns.is_empty():
+					var pbi: int = k % pact_btns.size()
+					(pact_btns[pbi] as Button).pressed.emit()
+					print("[AUTOPLAY] run#%d — pacte bouton %d cliqué" % [k, pbi])
+			await process_frame
+			continue
 		# v10.21 (R130) — choix « Encaisser / Pousser » pendant ? Trancher (alterné par run) pour avancer.
 		if game._push_pending and game._push_row != null:
 			await create_timer(0.3).timeout
@@ -132,10 +152,16 @@ func _play_one(k: int) -> bool:
 			await process_frame
 			continue
 		if game._state == 1:
-			# Phase de choix : poser 2 cartes puis résoudre.
-			if game._hand_box != null and game._hand_box.visible and run.hand.size() >= 2:
-				if game._combo.size() < 2:
-					game._on_hand_card(run.hand[game._combo.size()])
+			# v11-W2 — phase de choix : 1 TUILE d'action + 1 TRAIT, puis Résoudre. Duck-typing pur
+			# (accès propriétés/méthodes sur Node) : un renommage côté jeu = erreur runtime BRUYANTE
+			# (gate 0/N), jamais de faux vert silencieux.
+			if game._hand_box != null and game._hand_box.visible and (run.hand as Array).size() >= 1:
+				var acts: Array = run.actions
+				if game._selected_action == null and not acts.is_empty():
+					game._on_action_tile(acts[_pick % acts.size()])
+				elif game._selected_trait == null:
+					game._on_trait_card(run.hand[_pick % (run.hand as Array).size()])
+					_pick += 1  # combo suivant : action ET trait décalés (k croissant)
 				else:
 					# Fire-and-forget VOLONTAIRE (fix 2026-06-30) : si la run se TERMINE pendant la fusion
 					# (mort/corruption mid-resolve), la scène est libérée et la coroutine _on_resolve meurt —

@@ -1,8 +1,9 @@
 extends Control
 ## MerlinGame — boucle de jeu (bible §2, R54/R55/R72). Scène de jeu MVP.
-## Situation (LLM prose) → main → combinaison (1 principale + 2 mods) → résolution (CODE)
-## → narration (LLM) → beat suivant. Génération SÉQUENTIELLE à la demande (voile "Merlin écrit"),
-## sans lookahead (le moteur natif est single-flight). Fallbacks partout → la run se termine toujours.
+## v11-W2 (pivot ACTION+TRAIT) : situation (LLM prose) → geste = 1 ACTION (tuile permanente, rangée
+## basse) + 1 TRAIT (main 4, redraw complet par beat) → résolution (CODE) → narration (LLM) → beat
+## suivant. Génération SÉQUENTIELLE à la demande, sans lookahead (moteur single-flight). Fallbacks
+## partout → la run se termine toujours.
 
 # v10.13 (A1) : palette ALIASÉE sur MerlinVisual (source de vérité unique — rebranding = 1 édition).
 const COL_BG: Color = MerlinVisual.BG_PAGE  # DA flat (2026-05-26) — fond ink-brun du mockup validé
@@ -32,8 +33,11 @@ var _situ_panel: PanelContainer       # encart central : porte intro/situation/i
 var _situ_sb: StyleBoxFlat            # style de l'encart (bordure teintée par phase — signal de transition)
 var _situation_text: RichTextLabel
 var _hand_box: Control
-var _combo_box: HBoxContainer
-var _combo_panel: PanelContainer  # zone combinaison/preview/résolution — visible SEULEMENT en phase de choix
+# v11-W2 (spec §I) — rangée basse PERMANENTE : 4 tuiles d'action 260×116 + Résoudre + indice de dé.
+# Le combo panel (104 px) est SUPPRIMÉ : la sélection se lit SUR l'élément (bordure GOLD).
+var _action_bar: HBoxContainer = null
+var _action_views: Array = []          # les 4 MerlinActionView (construites à _begin depuis run.actions)
+var _req_row: HBoxContainer = null     # feedforward : pastilles FAMILY_COLORS des tags requis (encart)
 var _resolve_btn: Button
 var _overlay: Panel
 var _overlay_lbl: Label
@@ -42,7 +46,10 @@ var _caret_tw: Tween
 var _can_advance: bool = false  # true quand l'issue est entièrement écrite → clic = beat suivant
 
 var _current_situation: Dictionary = {}
-var _combo: Array = []
+# v11-W2 (spec §A) — le geste = 1 ACTION + 1 TRAIT, sélection en 2 clics, re-clic = désélection.
+# Remplace l'ancien _combo Array (2 cartes de la main).
+var _selected_action: MerlinCard = null
+var _selected_trait: MerlinCard = null
 var _state: int = 0  # 0=loading 1=playing 2=resolving
 var _eye_cursor_acc: float = 0.0  # v10.20 — throttle du suivi curseur de l'œil-lune (yeux de Merlin)
 var _cap_last_ms: int = 0         # dev capture in-game
@@ -90,7 +97,6 @@ var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer
 
 # v10.13.1 — juice pack 1 (§21) : gardes d'animation.
 var _beat_transition: bool = false  # review HIGH-1 : anti double-fire de _present_current_beat (voile)
-var _ghost_in_flight: bool = false  # le pop_in du compact attend l'arrivée du ghost (cascade Wave2)
 var _quest_shown: int = -1          # v10.14 : quête affichée (frontières de chaîne, map par quête)
 
 # v10.13.1 (R75/R64) — glitch corruption par paliers : 0-4 sain · 5-9 trouble · 10-14 emprise ·
@@ -179,6 +185,7 @@ func _begin() -> void:
 		var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(DEFAULT_TITLE, DEFAULT_PITCH)
 		run.new_run(skel)
 		get_node("/root/MerlinScenario").prepare_arc(skel)  # arc narratif LLM en fond (swappe le fallback avant beat 1)
+	_build_action_tiles()  # v11-W2 : les 4 tuiles permanentes (run.actions n'existe qu'après new_run/load_run)
 	_on_gauges(run.integrite, run.corruption)
 	if _beat_map != null:  # v10.12 : la map dessine le chemin du run (total beats + position courante)
 		_beat_map.setup(int(run.scenario.get("total", 5)))
@@ -275,7 +282,9 @@ func _present_current_beat() -> void:
 	_can_advance = false
 	_set_caret(false)
 	_set_hand_dimmed(false)
-	run.ensure_playable_hand()  # v10.13 (Fix 5) : invariant main ≥ 2 cartes — jamais de soft-lock de combo
+	# v11-W2 (spec §C) : REDRAW COMPLET de la main de 4 traits (cycle vrai — défausse totale,
+	# reshuffle <4). Les caps R113 (≤1 corrompu/main, ≥1 trait) vivent dans merlin_run.
+	run.redraw_hand()
 	var beat: Dictionary = run.current_beat()
 	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
 	# ici : à ~1 tok/s la gen (~40s) ne gagne jamais la course contre la lecture du joueur, et un
@@ -292,7 +301,15 @@ func _present_current_beat() -> void:
 			_beat_map.mark_draft()
 	get_node("/root/MerlinScenario").invalidate_resolution()  # v10.4 : cache issue propre à chaque beat
 	_hide_overlay()
-	_combo.clear()
+	# v11-W2 — sélection nettoyée + tuiles rafraîchies (feedforward du nouveau beat) + pastilles requis.
+	_selected_action = null
+	_selected_trait = null
+	_resolve_btn.visible = false
+	_resolve_btn.disabled = true
+	if _die_hint != null:
+		_die_hint.visible = false
+	_refresh_action_tiles()
+	_render_required_tags()
 	# v10.10 (user 2026-06-06) : la SITUATION s'affiche SEULE dans l'encart central ; les cartes ne
 	# montent qu'à la fin du typewriter (_on_typewriter_done state==1). Cartes cachées d'ici là.
 	_set_choice_ui(false)
@@ -360,10 +377,11 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 
 func _render_hand(deal: bool = false) -> void:
 	var run: Node = get_node("/root/MerlinRun")
+	# v11-W2 : la main ENTIÈRE reste dans l'éventail (la sélection se lit sur l'élément — levée +
+	# bordure GOLD — plus de vol vers un combo panel).
 	var wanted: Array = []
 	for card in run.hand:
-		if not _combo.has(card):
-			wanted.append(card)
+		wanted.append(card)
 	# v10.13.1 (§21 `fast`) — RÉUTILISE les vues : l'éventail REFLOW en douceur au lieu de snapper
 	# (rebuild). Vues en trop : sortie discard_out si visibles (sinon libération immédiate — la
 	# carte partie au combo est déjà remplacée à l'écran par son ghost).
@@ -386,10 +404,12 @@ func _render_hand(deal: bool = false) -> void:
 			cv.setup(card)
 			if run.blessed_tags.has(str(card.id)):  # R131 : bénédiction VISIBLE (badge ✦tag)
 				cv.set_blessed(str(run.blessed_tags[str(card.id)]))
-			cv.card_clicked.connect(_on_hand_card)
+			cv.card_clicked.connect(_on_trait_card)
 			keep[card] = cv
 	for i in wanted.size():  # ordre des enfants = ordre de la main (recouvrement stable)
 		_hand_box.move_child(keep[wanted[i]], i)
+	for card in keep:  # v11-W2 : l'état de sélection se lit SUR la carte (levée + bordure GOLD)
+		(keep[card] as MerlinCardView).set_selected(card == _selected_trait)
 	_deal_pending = deal  # anime la distribution seulement sur une main fraîche (beat/résolution)
 	call_deferred("_layout_fan")
 
@@ -428,58 +448,120 @@ func _layout_fan() -> void:
 			(cards[i] as MerlinCardView).deal_in(float(i) * 0.05)  # distribution en cascade
 
 
-func _render_combo() -> void:
-	for c in _combo_box.get_children():
-		c.queue_free()
-	for i in _combo.size():
-		var card: MerlinCard = _combo[i]
-		var role: String = "principale" if i == 0 else "modificateur"
-		var cv: MerlinCardView = MerlinCardView.new()
-		_combo_box.add_child(cv)
-		cv.setup(card, role, true)  # compact (carte posée)
-		cv.card_clicked.connect(_on_combo_card)
-		if i == _combo.size() - 1:
-			# v10.13.1 : si un ghost vole vers le combo, le compact POP à son arrivée (DUR_UI).
-			var delay: float = MerlinVisual.DUR_UI * MerlinVisual.motion() if _ghost_in_flight else 0.0
-			cv.pop_in(delay)  # seule la carte la plus récente fait son pop
+# v11-W2 — sélection du TRAIT sur l'élément : levée +20 px + bordure GOLD ; re-clic = désélection.
+# Plus aucun vol vers un combo panel : la carte reste dans l'éventail (pilier MINIMAL).
+func _on_trait_card(card: MerlinCard) -> void:
+	if _state != 1:
+		return
+	_selected_trait = null if _selected_trait == card else card
+	for c in _hand_box.get_children():
+		if c is MerlinCardView and not c.is_queued_for_deletion():
+			(c as MerlinCardView).set_selected((c as MerlinCardView).card == _selected_trait)
 	_update_preview()
 
 
-func _on_hand_card(card: MerlinCard) -> void:
-	# v10.6 (user 2026-06-06) — le geste canonique est un COMBO de 2 cartes (la 1ère = action
-	# principale, la 2e = modificateur). On bloque au-delà de 2 (plus de trio).
-	if _state != 1 or _combo.size() >= 2 or _combo.has(card):
-		return
-	# v10.13.1 (§21 `ui`) — ghost de vol main→combo : node INDÉPENDANT (cascade Wave1) ; la vraie
-	# vue disparaît immédiatement (le ghost la remplace à l'écran). AUCUN await : la main reste
-	# cliquable pendant le vol (pilier FACILE).
-	var src: MerlinCardView = _find_card_view(_hand_box, card)
-	_combo.append(card)
-	if src != null and _combo_box != null and _combo_box.is_inside_tree():
-		var idx: int = _combo.size() - 1
-		var to_pos: Vector2 = _combo_box.global_position + Vector2(
-			float(idx) * (MerlinCardView.CARD_SIZE_COMPACT.x + 10.0) + MerlinCardView.CARD_SIZE_COMPACT.x * 0.5,
-			MerlinCardView.CARD_SIZE_COMPACT.y * 0.5)
-		MerlinFx.ghost_flight(self, src.get_global_rect(), to_pos, COL_GOLD)
-		src.visible = false  # remplacée par le ghost — _render_hand la libère
-		_ghost_in_flight = true  # le compact POP à l'arrivée du ghost (pas avant — cascade Wave2)
-	_render_hand()   # la carte quitte l'éventail (slot vidé)
-	_render_combo()
-	_ghost_in_flight = false
-
-
-func _on_combo_card(card: MerlinCard) -> void:
+# v11-W2 — sélection de l'ACTION sur la tuile : bordure GOLD 3 px ; re-clic = désélection.
+func _on_action_tile(card: MerlinCard) -> void:
 	if _state != 1:
 		return
-	# v10.13.1 — ghost retour combo→main (vers le centre de l'éventail).
-	var src: MerlinCardView = _find_card_view(_combo_box, card)
-	_combo.erase(card)
-	if src != null and _hand_box != null and _hand_box.is_inside_tree():
-		var to_pos: Vector2 = _hand_box.global_position + _hand_box.size * 0.5
-		MerlinFx.ghost_flight(self, src.get_global_rect(), to_pos, COL_GOLD)
-		src.visible = false
-	_render_hand()   # la carte revient dans l'éventail
-	_render_combo()
+	_selected_action = null if _selected_action == card else card
+	for v in _action_views:
+		if is_instance_valid(v):
+			(v as MerlinActionView).set_selected((v as MerlinActionView).card == _selected_action)
+	_update_preview()
+
+
+# Retrouve la tuile d'une action (null si absente) — les MerlinCard d'action sont partagées avec run.actions.
+func _tile_for(action: MerlinCard) -> MerlinActionView:
+	for v in _action_views:
+		if is_instance_valid(v) and (v as MerlinActionView).card == action:
+			return v
+	return null
+
+
+# v11-W2 — construit les 4 tuiles PERMANENTES depuis run.actions (objets partagés : la sélection
+# compare par référence). Appelé à _begin (après new_run/load_run) ; re-render léger par beat via
+# _refresh_action_tiles — jamais de rebuild.
+func _build_action_tiles() -> void:
+	if _action_bar == null:
+		return
+	for v in _action_views:
+		if is_instance_valid(v):
+			(v as MerlinActionView).queue_free()
+	_action_views = []
+	var run: Node = get_node("/root/MerlinRun")
+	var acts: Array = run.actions
+	for i in acts.size():
+		var av: MerlinActionView = MerlinActionView.new()
+		_action_bar.add_child(av)
+		_action_bar.move_child(av, i)  # tuiles AVANT le gap/bouton (ordre stable des 4 verbes)
+		av.setup(acts[i])
+		av.action_clicked.connect(_on_action_tile)
+		_action_views.append(av)
+
+
+# v11-W2 — re-render léger des tuiles : sélection, bénédictions R131 (badge ✦tag), feedforward
+# (souligné GOLD pulsé quand la tuile couvre ≥1 tag requis du beat — spec §I).
+func _refresh_action_tiles() -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	var reqs_canon: Array = []
+	for r in _current_situation.get("required_tags", []):
+		reqs_canon.append(MerlinTags.to_canon(str(r)))
+	for v in _action_views:
+		if not is_instance_valid(v):
+			continue
+		var av: MerlinActionView = v
+		av.set_selected(av.card == _selected_action)
+		var btag: String = str(run.blessed_tags.get(str(av.card.id), ""))
+		av.set_blessed(btag)
+		var covers: bool = false
+		for t in av.card.tags:
+			if reqs_canon.has(MerlinTags.to_canon(str(t))):
+				covers = true
+		if btag != "" and reqs_canon.has(MerlinTags.to_canon(btag)):
+			covers = true
+		av.set_feedforward(covers)
+
+
+# v11-W2 — pastilles des tags REQUIS (« ce lieu réclame ») sur l'encart : rond 14 px FAMILY_COLORS +
+# nom INK sur crème. Rendues au beat, révélées avec l'éventail (_set_choice_ui).
+func _render_required_tags() -> void:
+	if _req_row == null:
+		return
+	for c in _req_row.get_children():
+		c.queue_free()
+	for r in _current_situation.get("required_tags", []):
+		var tag: String = str(r)
+		var chip: PanelContainer = PanelContainer.new()
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var csb: StyleBoxFlat = StyleBoxFlat.new()
+		csb.bg_color = Color(MerlinVisual.INK.r, MerlinVisual.INK.g, MerlinVisual.INK.b, 0.10)
+		csb.set_corner_radius_all(12)
+		csb.content_margin_left = 10.0
+		csb.content_margin_right = 10.0
+		csb.content_margin_top = 3.0
+		csb.content_margin_bottom = 3.0
+		chip.add_theme_stylebox_override("panel", csb)
+		var crow: HBoxContainer = HBoxContainer.new()
+		crow.add_theme_constant_override("separation", 6)
+		crow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chip.add_child(crow)
+		var dot: Panel = Panel.new()
+		dot.custom_minimum_size = Vector2(14, 14)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var dot_sb: StyleBoxFlat = StyleBoxFlat.new()
+		dot_sb.bg_color = Color(MerlinTags.color_of(tag))
+		dot_sb.set_corner_radius_all(7)
+		dot.add_theme_stylebox_override("panel", dot_sb)
+		crow.add_child(dot)
+		var lbl: Label = Label.new()
+		lbl.text = tag
+		lbl.add_theme_color_override("font_color", COL_INK)
+		lbl.add_theme_font_size_override("font_size", 16)
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		crow.add_child(lbl)
+		_req_row.add_child(chip)
 
 
 # Retrouve la vue d'une carte dans un conteneur (main ou combo) — null si absente/libérée.
@@ -493,44 +575,45 @@ func _find_card_view(box: Control, card: MerlinCard) -> MerlinCardView:
 
 
 func _update_preview() -> void:
-	# v10.6 : le geste canonique = COMBO de 2 cartes. La résolution n'est active qu'à 2 cartes.
-	var n: int = _combo.size()
-	if n < 2:
+	# v11-W2 : le geste canonique = 1 ACTION + 1 TRAIT. La résolution ne s'arme qu'à la paire complète
+	# (bouton Résoudre CONSERVÉ, spec §A — jamais de résolution auto au 2e clic).
+	if _selected_action == null or _selected_trait == null:
 		_resolve_btn.disabled = true
 		if _die_hint != null:
 			_die_hint.visible = false
 		return
+	var combo: Array = [_selected_action, _selected_trait]
 	var reqs: Array = _current_situation.get("required_tags", [])
-	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)),
-		get_node("/root/MerlinRun").blessed_bonus(_combo))  # R131 : bénédictions dans la preview (R120)
+	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
+		get_node("/root/MerlinRun").blessed_bonus(combo))  # R131 : bénédictions dans la preview (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_resolve_btn.disabled = false
-	# v10.23 — l'indice de dé s'allume avec le bouton : liseré = rareté de la carte PRINCIPALE (_combo[0]).
+	# v10.23/v11 — l'indice de dé s'allume avec le bouton : liseré = rareté de l'ACTION (source du dé, R133).
 	if _die_hint != null:
 		_die_hint.visible = int(_current_situation.get("die", 0)) >= 1
-		if _combo.size() > 0 and _combo[0] is MerlinCard:
-			_die_hint.set_hint_rarity(str((_combo[0] as MerlinCard).rarity))
+		_die_hint.set_hint_rarity(str(_selected_action.rarity))
 	if was_disabled and _resolve_btn.visible:
 		MerlinAudio.play_sfx("draft_reveal")
 		_pop(_resolve_btn, 1.15)
-		_combo_complete_pulse()
-	# v10.4 — pré-génération LLM spéculative pendant la pose (user 2026-06-06). Dédupé par signature
-	# combo côté MerlinScenario ; au clic Résolution le texte est souvent déjà prêt (cache-hit).
-	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, _combo.duplicate(), res)
+		_selection_complete_pulse()
+	# v10.4 — pré-génération LLM spéculative sur la SÉLECTION courante uniquement (guardrail spec :
+	# jamais les 16 combos). Dédupée par signature combo [action, trait] côté MerlinScenario.
+	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, combo.duplicate(), res)
 
 
 func _on_resolve() -> void:
-	# v10.6 : résolution UNIQUEMENT sur un combo de 2 cartes (le geste canonique).
-	if _state != 1 or _combo.size() != 2:
+	# v11-W2 : résolution UNIQUEMENT sur la paire complète ACTION + TRAIT (le geste canonique).
+	if _state != 1 or _selected_action == null or _selected_trait == null:
 		return
 	_state = 2
 	_resolve_btn.disabled = true
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
+	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
 	var reqs: Array = _current_situation.get("required_tags", [])
-	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)),
-		run.blessed_bonus(_combo))  # R131 : mêmes tags bénis que la preview (invariant R120)
-	var played_cards: Array = _combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
+	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
+		run.blessed_bonus(combo))  # R131 : mêmes tags bénis que la preview (invariant R120)
+	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
 	# v10.20 — capture des Δ jauges (net : coût + effets + résolution) pour la VIGNETTE d'effet. user 2026-06-29.
@@ -540,7 +623,7 @@ func _on_resolve() -> void:
 	# mais le COMMIT VISUEL des anneaux est différé : joués maintenant, les deltas seraient INVISIBLES
 	# sous le layer plein écran de MerlinFx. _flush_gauges() rejoue tout après le typewriter.
 	_gauges_deferred = true
-	run.play_and_discard(_combo)
+	run.play_and_discard(combo)  # v11 : l'action (permanente) y est ignorée côté défausse
 	run.consume_blessings(played_cards)  # R131 : une bénédiction sert UNE fois (érodée à la pose)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
 	# v10.21 (Wave G, R130) — PARTIEL = CHOIX : si budget Pousser disponible, l'application de la
@@ -571,24 +654,35 @@ func _on_resolve() -> void:
 
 	_scene_epoch += 1
 	var ep: int = _scene_epoch
-	_combo.clear()
+	# v11-W2 — capture des vues AVANT le clear : SEULE la vue du TRAIT vole dans la fusion (aspirée
+	# par MerlinFx) ; l'ACTION est une tuile permanente qui PULSE sur place pendant la séquence.
+	var trait_view: MerlinCardView = _find_card_view(_hand_box, _selected_trait)
+	var tile: MerlinActionView = _tile_for(_selected_action)
+	_selected_action = null
+	_selected_trait = null
 	_set_hand_dimmed(true)  # ÉVIDENT : on lit l'issue ; main grisée + prompt/indice masqués
 	_resolve_btn.visible = false
+	if _die_hint != null:
+		_die_hint.visible = false
 	_can_advance = false    # « avancer » (clic) seulement quand l'issue est entièrement écrite
 
 	# v10.2 — Animation cinématique de fusion AVANT la prose. Pendant ce temps la pré-génération
 	# LLM (lancée à la pose, _update_preview) continue → masque la latence (user 2026-06-06).
 	# v10.13 (A2) : la fusion vit dans MerlinFx (layer autonome — tweens liés à lui, auto-queue_free).
-	# Les card views du combo sont capturées ICI puis reparentées dans le layer par MerlinFx ;
+	# La vue du trait est capturée ICI puis reparentée dans le layer par MerlinFx ;
 	# le prédicat `ready` injecte is_resolution_ready (le sustain ne lit plus /root/MerlinScenario).
 	var vues_du_combo: Array = []
-	for c in _combo_box.get_children():
-		if c is MerlinCardView:
-			vues_du_combo.append(c)
+	if trait_view != null:
+		vues_du_combo.append(trait_view)
+	if tile != null:
+		tile.set_selected(false)
+		tile.fusion_pulse(true)  # la tuile bat au rythme de la fusion — jamais aspirée
 	if _scene_art != null:
 		_scene_art.set_thinking(true)  # R128 : Merlin « réfléchit » (halo lune accéléré) pendant la fusion + l'attente LLM
 	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, func() -> bool: return sc.is_resolution_ready(played_cards, res))
 	await fx.run()
+	if tile != null and is_instance_valid(tile):
+		tile.fusion_pulse(false)
 	if _scene_art != null and is_instance_valid(_scene_art):
 		_scene_art.set_thinking(false)  # l'issue est prête → Merlin cesse de réfléchir, l'issue s'écrit
 	if not _fresh(ep):
@@ -610,7 +704,6 @@ func _on_resolve() -> void:
 	# v11-W1 : le jet de dé vit DANS la fusion (MerlinFx.run Phase 3, en chevauchement sur la décrue) —
 	# plus de second dé séquentiel ici (le doublon rallongeait la séquence et brouillait la lecture).
 	_set_choice_ui(false)   # v10.10 : cartes redescendent → l'issue occupe l'encart central, SEULE (user 2026-06-06)
-	_render_combo()         # _combo vide → clear _combo_box (les vues précédentes ont été reparented/free'd)
 
 	# v10.4 — Issue TOUJOURS générée par le LLM (user 2026-06-06). take_resolution renvoie le cache
 	# de pré-génération si prêt (cas courant : pose + anim ont couvert la latence), sinon génère et
@@ -724,12 +817,10 @@ func _play_intervention(pk: String) -> void:
 			_build_pact_choice(pk)
 
 
-# Bénédiction : une carte de la main gagne un tag temporaire VISIBLE (badge), consommé à la pose.
+# Bénédiction (v11-W2, spec §G) : une ACTION gagne un tag temporaire VISIBLE (badge sur la tuile),
+# consommé à la pose. Les ids action_* sont STABLES → run.blessed_tags[action_id] survit au resume (R108).
 # Chœur = Nature/Équilibre · Chevalier = Force/Autorité · Enfant = un tag REQUIS du beat (l'aide innocente).
 func _apply_blessing(pk: String) -> void:
-	var run: Node = get_node("/root/MerlinRun")
-	if (run.hand as Array).is_empty():
-		return
 	var tag: String = ""
 	match pk:
 		"choeur":
@@ -741,16 +832,25 @@ func _apply_blessing(pk: String) -> void:
 			if reqs2.is_empty():
 				return
 			tag = str(reqs2[randi() % reqs2.size()])
-	# Carte éligible : ne portant pas déjà le tag (fallback : n'importe laquelle).
+	_bless_action(tag)
+	get_node("/root/MerlinRun").save()
+
+
+# Pose la bénédiction sur une action ÉLIGIBLE : ne portant pas déjà le tag (fallback : la première).
+func _bless_action(tag: String) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	var acts: Array = run.actions
+	if acts.is_empty() or tag == "":
+		return
 	var pick: MerlinCard = null
-	for c in run.hand:
-		if c is MerlinCard and not (c.tags as Array).has(tag):
-			pick = c
+	for a in acts:
+		if a is MerlinCard and not ((a as MerlinCard).tags as Array).has(tag):
+			pick = a
 			break
 	if pick == null:
-		pick = run.hand[0]
+		pick = acts[0]
 	run.blessed_tags[str(pick.id)] = tag
-	run.save()
+	_refresh_action_tiles()  # badge ✦tag visible immédiatement (pilier ÉVIDENT)
 
 
 # Pacte opt-in (1 geste, prix AFFICHÉ) : Être = la porte s'ouvre (tag requis béni) contre +1 Corruption ;
@@ -783,11 +883,10 @@ func _on_pact_choice(pk: String, accepted: bool) -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if accepted:
 		if pk == "etre":
+			# v11-W2 : le pacte de l'Être bénit une ACTION (tag requis → la porte s'ouvre par le verbe).
 			var reqs3: Array = _current_situation.get("required_tags", [])
-			if not reqs3.is_empty() and not (run.hand as Array).is_empty():
-				var tag3: String = str(reqs3[randi() % reqs3.size()])
-				run.blessed_tags[str((run.hand[0] as MerlinCard).id)] = tag3
-				_render_hand()
+			if not reqs3.is_empty():
+				_bless_action(str(reqs3[randi() % reqs3.size()]))
 		elif pk == "compagnon":
 			run.draw_extra(1)
 			_render_hand(true)
@@ -1002,7 +1101,7 @@ func _advance_to_next() -> void:
 	if run.ended:
 		return
 	# v10.13 (Fix 6) : save UNIQUE — au DÉBUT de beat (index avancé + carte draftée, atomique).
-	# Resume = toujours au début de beat (canon BIBLE.md R73) ; transients (_combo/_state) jamais persistés.
+	# Resume = toujours au début de beat (canon BIBLE.md R73) ; transients (_selected_*/_state) jamais persistés.
 	run.save()
 	if not is_inside_tree():
 		return  # la scène a pu être libérée pendant le draft / via run_ended (sécurité teardown)
@@ -1249,7 +1348,8 @@ func _on_typewriter_done() -> void:
 		_resolve_btn.visible = true
 		_set_choice_ui(true)   # visible AVANT le rendu → _hand_box a sa taille pour _layout_fan
 		_render_hand(true)
-		_render_combo()
+		_refresh_action_tiles()  # v11-W2 : feedforward + sélection propres à l'ouverture du choix
+		_update_preview()        # paire incomplète → bouton désarmé, indice de dé masqué
 
 
 func _set_caret(on: bool) -> void:
@@ -1269,16 +1369,21 @@ func _set_caret(on: bool) -> void:
 func _set_hand_dimmed(on: bool) -> void:
 	if _hand_box != null:
 		_hand_box.modulate.a = 0.35 if on else 1.0
+	if _action_bar != null:  # v11-W2 : les tuiles (permanentes) s'estompent aussi pendant la lecture
+		_action_bar.modulate.a = 0.45 if on else 1.0
 
 
-# Cartes + zone de combinaison visibles UNIQUEMENT en phase de CHOIX (user 2026-06-06) : l'intro et
-# les situations/issues occupent l'encart central SEUL ; les cartes montent au moment de composer.
+# Éventail de TRAITS visible UNIQUEMENT en phase de CHOIX (user 2026-06-06) : l'intro et les
+# situations/issues occupent l'encart central SEUL. v11-W2 : la rangée d'actions reste PERMANENTE
+# (elle s'estompe via _set_hand_dimmed) ; les pastilles des requis suivent l'éventail (§23 MINIMAL).
 func _set_choice_ui(on: bool) -> void:
-	if _combo_panel != null:
-		_combo_panel.visible = on
 	if _hand_box != null:
 		_hand_box.visible = on
 		_hand_box.modulate.a = 1.0
+	if _action_bar != null:
+		_action_bar.modulate.a = 1.0
+	if _req_row != null:
+		_req_row.visible = on and _req_row.get_child_count() > 0
 	if on and _scene_art != null:
 		_scene_art.set_reading_recess(false)  # v10.21 (L-a) : la main remonte → la forêt revit
 
@@ -1445,10 +1550,12 @@ func _flush_gauges() -> void:
 	_on_gauges(int(run.get("integrite")), int(run.get("corruption")))
 
 
-func _combo_complete_pulse() -> void:
+# v11-W2 — la paire ACTION + TRAIT est complète : onde + sparks centrées sur le bouton Résoudre
+# (il s'arme + pulse — spec §A, le regard est guidé vers la confirmation).
+func _selection_complete_pulse() -> void:
 	if MerlinVisual.reduced_motion:
 		return
-	var center: Vector2 = _combo_box.global_position + _combo_box.size * 0.5
+	var center: Vector2 = _resolve_btn.global_position + _resolve_btn.size * 0.5
 	for ri in 3:
 		var ring: ColorRect = ColorRect.new()
 		ring.color = Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, 0.0)
@@ -1519,12 +1626,10 @@ func _input(event: InputEvent) -> void:
 	if event.keycode != KEY_F12:
 		return
 	var run: Node = get_node_or_null("/root/MerlinRun")
-	if run == null or run.hand == null or run.hand.size() < 1:
+	if run == null or (run.hand as Array).is_empty() or (run.actions as Array).is_empty():
 		return
-	var fake_played: Array = []
-	var n: int = mini(run.hand.size(), 3)
-	for i in n:
-		fake_played.append(run.hand[i])
+	# v11-W2 : geste canonique [action, trait] — l'action en [0] (contrat resolve R20).
+	var fake_played: Array = [run.actions[0], run.hand[0]]
 	# Cycle entre les 4 degrés selon le timestamp pour varier les couleurs au fil des F12.
 	var degrees: Array = ["echec", "partiel", "reussite", "eclatante"]
 	var deg: String = str(degrees[int(Time.get_unix_time_from_system()) % 4])
@@ -1536,17 +1641,16 @@ func _input(event: InputEvent) -> void:
 		"corruption_delta": 0,
 		"synergy": 0,
 	}
-	# v10.13 (A2) : crée des MerlinCardView jetables dans _combo_box puis passe par MerlinFx.play —
-	# les vues sont capturées ICI et reparentées dans le layer par MerlinFx (parité résolution réelle).
-	for c in _combo_box.get_children():
-		c.queue_free()
+	# v10.13 (A2)/v11-W2 : une vue de TRAIT jetable (l'action est une tuile permanente — elle n'est
+	# jamais aspirée) puis MerlinFx.play — la vue est reparentée dans le layer (parité résolution réelle).
 	var vues: Array = []
-	for i in fake_played.size():
-		var cv: MerlinCardView = MerlinCardView.new()
-		_combo_box.add_child(cv)
-		cv.setup(fake_played[i], "principale" if i == 0 else "modificateur", true)
-		vues.append(cv)
-	await get_tree().process_frame  # laisse Godot poser les card views dans le layout
+	var cv: MerlinCardView = MerlinCardView.new()
+	add_child(cv)
+	cv.setup(run.hand[0])
+	cv.position = Vector2(size.x * 0.5 - MerlinCardView.CARD_SIZE.x * 0.5,
+		size.y - MerlinCardView.CARD_SIZE.y - 140.0)
+	vues.append(cv)
+	await get_tree().process_frame  # laisse Godot poser la card view dans le layout
 	# Prédicat `ready` injecté : même source que la résolution réelle (is_resolution_ready). Pas de
 	# scénario (probe hors-jeu) → prêt d'office = pas de sustain (parité avec l'ancien `sc == null`).
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
@@ -2030,6 +2134,14 @@ func _build_ui() -> void:
 	inner.add_theme_constant_override("separation", 6)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situ_panel.add_child(inner)
+	# v11-W2 (spec §I) — FEEDFORWARD : les tags REQUIS du beat en pastilles FAMILY_COLORS, en tête de
+	# l'encart, visibles pendant le choix uniquement (l'info ne vit qu'à UN endroit — §23 MINIMAL).
+	_req_row = HBoxContainer.new()
+	_req_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_req_row.add_theme_constant_override("separation", 10)
+	_req_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_req_row.visible = false
+	inner.add_child(_req_row)
 	var situ_center: CenterContainer = CenterContainer.new()
 	situ_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	situ_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -2066,43 +2178,45 @@ func _build_ui() -> void:
 	_caret.visible = false
 	root.add_child(_caret)
 
-	_combo_panel = PanelContainer.new()
-	_combo_panel.add_theme_stylebox_override("panel", _surface_style())
-	_combo_panel.visible = false  # caché hors phase de CHOIX (cartes seulement au moment de choisir)
-	root.add_child(_combo_panel)
-	var combo_v: VBoxContainer = VBoxContainer.new()
-	combo_v.add_theme_constant_override("separation", 6)
-	_combo_panel.add_child(combo_v)
-	_combo_box = HBoxContainer.new()
-	_combo_box.add_theme_constant_override("separation", 10)
-	_combo_box.custom_minimum_size = Vector2(0, 104)
-	_combo_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	combo_v.add_child(_combo_box)
-	var btn_row: HBoxContainer = HBoxContainer.new()
-	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	combo_v.add_child(btn_row)
-	_resolve_btn = Button.new()
-	_resolve_btn.text = "Résolution"
-	_resolve_btn.custom_minimum_size = Vector2(300, 66)
-	_resolve_btn.add_theme_font_size_override("font_size", 26)
-	MerlinVisual.apply_button_da(_resolve_btn)
-	_resolve_btn.pressed.connect(_on_resolve)
-	btn_row.add_child(_resolve_btn)
-	MerlinVisual.connect_button_feedback(_resolve_btn)  # v10.13.1 — feedback canon §21 `tap`
-	# v10.23 (user) — INDICE DE DÉ : ce choix jettera un dé, et sa qualité vient de la carte PRINCIPALE
-	# (liseré à sa rareté). Visible uniquement quand le combo est complet (comme le bouton).
-	_die_hint = MerlinDice.hint(26.0)
-	_die_hint.visible = false
-	btn_row.add_child(_die_hint)
-
+	# v11-W2 (spec §I) — ÉVENTAIL de 4 TRAITS (150×190 CREAM) au-dessus de la rangée d'actions.
 	# v10.5 : label « Ta main : » retiré (user 2026-06-06). L'éventail se suffit visuellement.
 	_hand_box = Control.new()
-	_hand_box.custom_minimum_size = Vector2(0, 220)
+	_hand_box.custom_minimum_size = Vector2(0, 200)
 	_hand_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
 	_hand_box.visible = false  # cartes cachées hors phase de CHOIX (révélées à la fin du typewriter)
 	_hand_box.resized.connect(_layout_fan)
 	root.add_child(_hand_box)
+
+	# v11-W2 (spec §I) — RANGÉE D'ACTIONS permanente : 4 tuiles 260×116 (SURFACE, grammaire distincte
+	# des traits CREAM) + bouton Résoudre + indice de dé, centrés. Le combo panel (104 px) est SUPPRIMÉ.
+	# Les tuiles sont insérées par _build_action_tiles (run.actions n'existe qu'après new_run/load_run).
+	_action_bar = HBoxContainer.new()
+	_action_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	_action_bar.add_theme_constant_override("separation", 16)
+	_action_bar.mouse_filter = Control.MOUSE_FILTER_PASS
+	root.add_child(_action_bar)
+	var bar_gap: Control = Control.new()
+	bar_gap.custom_minimum_size = Vector2(24, 0)
+	bar_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_action_bar.add_child(bar_gap)
+	_resolve_btn = Button.new()
+	_resolve_btn.text = "Résoudre"
+	_resolve_btn.custom_minimum_size = Vector2(240, 66)  # ≥44 px (pilier TACTILE)
+	_resolve_btn.add_theme_font_size_override("font_size", MerlinVisual.FS_BTN)
+	_resolve_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	MerlinVisual.apply_button_da(_resolve_btn)
+	_resolve_btn.pressed.connect(_on_resolve)
+	_resolve_btn.disabled = true
+	_resolve_btn.visible = false  # révélé avec l'éventail (fin du typewriter de situation)
+	_action_bar.add_child(_resolve_btn)
+	MerlinVisual.connect_button_feedback(_resolve_btn)  # v10.13.1 — feedback canon §21 `tap`
+	# v10.23/v11 — INDICE DE DÉ : ce choix jettera un dé, et sa qualité vient de l'ACTION (liseré à sa
+	# rareté, R133). Visible uniquement quand la paire est complète (comme le bouton).
+	_die_hint = MerlinDice.hint(26.0)
+	_die_hint.visible = false
+	_die_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_action_bar.add_child(_die_hint)
 
 	# TOAST bas non-bloquant (ne recouvre PLUS le plateau — anti-pattern §21.2 ❌1 corrigé, user 2026-06-07).
 	_overlay = Panel.new()
@@ -2182,14 +2296,6 @@ func _mk_label(col: Color, fsize: int) -> Label:
 	l.add_theme_color_override("font_color", col)
 	l.add_theme_font_size_override("font_size", fsize)
 	return l
-
-
-func _surface_style() -> StyleBoxFlat:
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = COL_SURFACE
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(16)
-	return sb
 
 
 func _cream_style() -> StyleBoxFlat:

@@ -8,11 +8,17 @@ signal run_ended(end_type: String)
 
 const START_INTEGRITE: int = 10
 const MAX_INTEGRITE: int = 10
-const HAND_SIZE: int = 5
+# v11 (pivot ACTION+TRAIT, spec panel §C) : main de 4 TRAITS, redraw COMPLET chaque beat en cycle
+# vrai (les 16 traits vus en ~4 beats — les corrompus polluent réellement).
+const HAND_SIZE: int = 4
 const CORRUPTION_THRESHOLD_STEP: int = 5
 const CORRUPTION_CAP: int = 18
 const SAVE_PATH: String = "user://merlin_run.json"
-const SAVE_VERSION: int = 1
+# v11 (spec §J) : bump — les saves v10.x (deck de cartes 2-combo) sont INVALIDÉES proprement
+# (load_run → false → le menu ne propose que Nouvelle Partie). JAMAIS de conversion mid-run (R108).
+const SAVE_VERSION: int = 2
+# v11 (R113 re-spécifié) : cap 1 trait corrompu par main (re-tirage silencieux de l'excédent).
+const MAX_CORRUPTED_IN_HAND: int = 1
 
 # v10.11 (user 2026-06-07) — Deck enrichi + Draft + Carte Destin (Slay the Spire allégé).
 # Poids de rareté du draft (somme = 100) ; barème merlin-game-designer.
@@ -36,6 +42,9 @@ var integrite: int = START_INTEGRITE
 var corruption: int = 0
 var scenario: Dictionary = {}
 var beat_index: int = 0
+# v11 — les 4 ACTIONS permanentes (tuiles, jamais défaussées, greffables W3). deck/hand/discard
+# ne contiennent plus QUE des TRAITS.
+var actions: Array = []
 var deck: Array = []
 var hand: Array = []
 var discard: Array = []
@@ -93,14 +102,15 @@ func draw_extra(n: int) -> void:
 	var cap: int = _hand_size() + HAND_CAP_EXTRA
 	for i in n:
 		if hand.size() >= cap:
-			return
+			break
 		if deck.is_empty():
 			if discard.is_empty():
-				return
+				break
 			deck = discard.duplicate()
 			discard = []
 			_shuffle(deck)
 		hand.append(deck.pop_back())
+	_enforce_hand_caps()  # v11 (R113) : toute pioche mid-beat re-passe le cap ≤1 corrompu
 var _last_threshold: int = 0
 var _rng := RandomNumberGenerator.new()
 
@@ -132,11 +142,13 @@ func new_run(p_scenario: Dictionary) -> void:
 	intervention_beats = []
 	pilier_interventions = 0
 	blessed_tags = {}
-	deck = MerlinCard.starter_deck()
+	actions = MerlinCard.make_actions()  # v11 : les 4 verbes fixes évolutifs
+	deck = MerlinCard.starter_traits()   # v11 : 16 traits (12 canon retagués + 4 nouveaux)
 	hand = []
 	discard = []
 	_shuffle(deck)
 	draw_to_full()
+	_enforce_hand_caps()
 	emit_signal("gauges_changed", integrite, corruption)
 
 
@@ -194,25 +206,88 @@ func get_run_constants() -> Dictionary:
 	}
 
 
+# v11 (pivot) — le geste = [ACTION, TRAIT]. L'action est PERMANENTE (jamais défaussée, jamais
+# repiochée) ; seul le trait rejoint la défausse. Pas de repioche au slot : la main entière est
+# redistribuée au beat suivant (redraw_hand, cycle vrai).
 func play_and_discard(cards: Array) -> void:
-	# La repioche prend le SLOT LIBÉRÉ (même index dans la main) au lieu d'être ajoutée
-	# en bout de main → sinon la nouvelle carte file à droite de l'éventail (demande user 2026-05-27).
 	for c in cards:
+		if c.is_action():
+			var arch_a: String = c.archetype()  # la Carte Destin lit aussi le verbe dominant
+			archetype_scores[arch_a] = int(archetype_scores.get(arch_a, 0)) + 1
+			continue
 		var idx: int = hand.find(c)
-		var rep: MerlinCard = _draw_one()  # tirer AVANT de défausser c (évite de re-piocher c)
 		if idx >= 0:
-			if rep != null:
-				hand[idx] = rep
-			else:
-				hand.remove_at(idx)
-		elif rep != null:
-			hand.append(rep)
+			hand.remove_at(idx)
 		discard.append(c)
 		if not cartes_notables.has(c.card_name):
 			cartes_notables.append(c.card_name)
 		var arch: String = c.archetype()  # v10.11 : alimente la Carte Destin (archétype dominant du run)
 		archetype_scores[arch] = int(archetype_scores.get(arch, 0)) + 1
-	draw_to_full()  # filet : complète si le deck était vide à un tirage
+
+
+# v11 (spec §C) — REDRAW COMPLET au début de chaque beat, en CYCLE VRAI : défausse totale de la
+# main, tirage sans remise, reshuffle quand le paquet s'épuise. Les 16 traits sont vus en ~4 beats ;
+# les corrompus injectés aux seuils polluent réellement le cycle.
+func redraw_hand() -> void:
+	while not hand.is_empty():
+		discard.append(hand.pop_back())
+	draw_to_full()
+	_enforce_hand_caps()
+
+
+# v11 (R113 re-spécifié) — les 4 ACTIONS sont toujours jouables (soft-lock impossible PAR
+# CONSTRUCTION) ; la main est bornée : ≤1 trait corrompu (re-tirage silencieux de l'excédent,
+# l'excédent retourne SOUS le paquet) et ≥1 trait en main (filet états dégénérés).
+func _enforce_hand_caps() -> void:
+	var guard: int = 0
+	while _corrupted_in_hand() > MAX_CORRUPTED_IN_HAND and guard < 32:
+		guard += 1
+		var swapped: bool = false
+		for i in hand.size():
+			if (hand[i] as MerlinCard).is_corrupted_trait():
+				var rep: MerlinCard = _draw_one_clean()
+				if rep == null:
+					break  # plus rien de sain à tirer → on garde l'excédent (cycle saturé)
+				deck.push_front(hand[i])  # sous le paquet — reviendra, mais pas cette main
+				hand[i] = rep
+				swapped = true
+				break
+		if not swapped:
+			break
+	if hand.is_empty():
+		hand.append(MerlinCard.make(
+			"secours_%d" % beat_index, "Souffle Errant", ["Instinct"],
+			"Un souffle sans nom traverse la clairière et se range à ton côté.", 0))
+
+
+func _corrupted_in_hand() -> int:
+	var n: int = 0
+	for c in hand:
+		if (c as MerlinCard).is_corrupted_trait():
+			n += 1
+	return n
+
+
+# Tire le prochain trait SAIN du paquet. Les corrompus croisés sont mis en TAMPON puis reposés
+# sous le paquet À LA FIN — les reposer immédiatement empêchait le paquet de se vider, donc la
+# défausse (pleine de traits sains) n'était jamais rebrassée : cap R113 violé (soak run#8/47/151/177).
+func _draw_one_clean() -> MerlinCard:
+	var rejected: Array = []
+	var out: MerlinCard = null
+	var guard: int = deck.size() + discard.size() + 2
+	while guard > 0:
+		guard -= 1
+		var c: MerlinCard = _draw_one()
+		if c == null:
+			break
+		if c.is_corrupted_trait():
+			rejected.append(c)
+		else:
+			out = c
+			break
+	for r in rejected:
+		deck.push_front(r)
+	return out
 
 
 func _draw_one() -> MerlinCard:
@@ -225,20 +300,11 @@ func _draw_one() -> MerlinCard:
 	return deck.pop_back() if not deck.is_empty() else null
 
 
-# v10.13 (Fix 5) — INVARIANT : une main JOUABLE (≥ 2 cartes) à chaque début de beat. Filets en
-# cascade : repioche normale → tirage direct de la défausse → injection de Communes neutres
-# (pool total < 2, atteignable via TweaksOverlay HAND_SIZE=1 ou états dégénérés). La run ne
-# soft-lock JAMAIS sur « impossible de composer un combo » (R93 : la run se termine toujours).
+# v11 (R113 re-spécifié) — INVARIANT : les 4 ACTIONS sont toujours jouables, la main porte ≥1
+# TRAIT (filets dans _enforce_hand_caps). La run ne soft-lock JAMAIS (R93) — par construction.
 func ensure_playable_hand() -> void:
 	draw_to_full()
-	while hand.size() < 2 and not discard.is_empty():
-		hand.append(discard.pop_back())
-	var n: int = 0
-	while hand.size() < 2:
-		n += 1
-		hand.append(MerlinCard.make(
-			"secours_%d_%d" % [beat_index, n], "Souffle Errant", ["Instinct"],
-			"Un souffle sans nom traverse la clairière et se range à ton côté.", 0))
+	_enforce_hand_caps()
 
 
 # v10.11 — Effets actifs des cartes jouées (Rare+). Appelé APRÈS play_and_discard et AVANT apply_resolution
@@ -274,6 +340,7 @@ func _draw_extra(n: int) -> void:
 		if c == null:
 			break
 		hand.append(c)
+	_enforce_hand_caps()  # v11 (R113) : l'effet DRAW aussi — jamais 2 corrompus en main
 
 
 # v10.11 — Draft « 1 carte sur 3 » : tire n cartes DISTINCTES du pool enrichi, pondérées par rareté,
@@ -569,6 +636,7 @@ func save() -> void:
 		"corruption": corruption,
 		"scenario": scenario,
 		"beat_index": beat_index,
+		"actions": _cards_to_dicts(actions),  # v11 : les 4 verbes (greffes W3 comprises)
 		"deck": _cards_to_dicts(deck), "hand": _cards_to_dicts(hand), "discard": _cards_to_dicts(discard),
 		"summary": summary,
 		"faits_marquants": faits_marquants,
@@ -604,6 +672,11 @@ func load_run() -> bool:
 	var data: Variant = JSON.parse_string(raw)
 	if not (data is Dictionary):
 		return false
+	# v11 (spec §J) — INVALIDATION PROPRE des saves pré-pivot : un deck 2-combo ne se convertit
+	# pas en actions+traits mid-run (R108 rend la conversion inutile — on repart au menu).
+	if int(data.get("version", 1)) < SAVE_VERSION:
+		clear_save()
+		return false
 	integrite = int(data.get("integrite", START_INTEGRITE))
 	corruption = int(data.get("corruption", 0))
 	scenario = data.get("scenario", {})
@@ -621,6 +694,9 @@ func load_run() -> bool:
 	intervention_beats = data.get("intervention_beats", [])  # Wave I (R131), défauts = saves legacy OK
 	pilier_interventions = int(data.get("pilier_interventions", 0))
 	blessed_tags = data.get("blessed_tags", {})
+	actions = _dicts_to_cards(data.get("actions", []))
+	if actions.is_empty():
+		actions = MerlinCard.make_actions()  # filet : jamais de run sans les 4 verbes
 	deck = _dicts_to_cards(data.get("deck", []))
 	hand = _dicts_to_cards(data.get("hand", []))
 	discard = _dicts_to_cards(data.get("discard", []))

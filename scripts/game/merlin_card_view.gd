@@ -7,10 +7,11 @@ extends Control
 
 signal card_clicked(card: MerlinCard)
 
-const CARD_SIZE: Vector2 = Vector2(180, 240)          # v10.5 : + grandes (était 152×196)
-const CARD_SIZE_COMPACT: Vector2 = Vector2(170, 104)  # zone de combinaison (était 150×88)
+const CARD_SIZE: Vector2 = Vector2(150, 190)          # v11-W2 : mode TRAIT (spec §I — éventail de 4)
+const CARD_SIZE_COMPACT: Vector2 = Vector2(170, 104)  # legacy (l'ancienne zone de combinaison)
 const HOVER_SCALE: float = 1.18
 const HOVER_LIFT: float = 30.0
+const SELECT_LIFT: float = 20.0                       # v11-W2 : trait sélectionné = levée +20 px + bordure GOLD
 const COMPACT_HOVER_SCALE: float = 1.06
 # v10.24 (user : « animations de cartes cohérentes et travaillées ») — CHARTE DE MOUVEMENT unique :
 #   ARRIVÉES  (deal, pop)   = TRANS_BACK  EASE_OUT (un seul overshoot franc, jamais de double-élastique)
@@ -64,6 +65,11 @@ var _t: float = 0.0
 var _rarity_rank: int = 0
 var _panel_sb: StyleBoxFlat
 var _glow_col: Color = MerlinVisual.GOLD
+# v11-W2 — sélection SUR l'élément (le combo panel est supprimé) : bordure GOLD + levée +20 px,
+# désélection au re-clic. Style de repos mémorisé pour restaurer la bordure de rareté.
+var _selected: bool = false
+var _rest_border_col: Color = MerlinVisual.BORDER_BRUN
+var _rest_border_w: int = 3
 
 
 func _dur(base: float) -> float:
@@ -96,6 +102,8 @@ func _build(role: String) -> void:
 	sb.set_corner_radius_all(8)
 	sb.set_border_width_all(int(rstyle["w"]))
 	sb.border_color = COL_GOLD if role != "" else (rstyle["col"] as Color)
+	_rest_border_col = sb.border_color  # v11-W2 : restauré à la désélection
+	_rest_border_w = int(rstyle["w"])
 	_rarity_rank = ["Commune", "Rare", "Épique", "Mythique"].find(rar)
 	if _rarity_rank < 0:
 		_rarity_rank = 0
@@ -113,11 +121,11 @@ func _build(role: String) -> void:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
 
-	# Nom (main) ou rôle (combinaison).
+	# Nom (main) ou rôle (compact legacy). v11-W2 : nom ≥16 px (spec §I, carte-trait 150×190).
 	var top: Label = Label.new()
 	top.text = role if _compact else card.card_name
 	top.add_theme_color_override("font_color", COL_INK_DIM if _compact else COL_INK)
-	top.add_theme_font_size_override("font_size", 11 if _compact else 13)
+	top.add_theme_font_size_override("font_size", 11 if _compact else 16)
 	top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	top.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -165,6 +173,24 @@ func _build(role: String) -> void:
 
 	# v10.11 — Gemme rareté/coût (coin haut-gauche) + badge d'effet (coin haut-droit). DA flat conservée.
 	_add_corner_markers(rar, rstyle)
+
+
+# v11-W2 — position de REPOS : la sélection lève la carte de 20 px (l'état se lit sur l'élément).
+func _rest_pos() -> Vector2:
+	return _base_pos + (Vector2(0.0, -SELECT_LIFT) if _selected else Vector2.ZERO)
+
+
+# v11-W2 — sélection du TRAIT sur l'élément : bordure GOLD + levée +20 px ; désélection au re-clic
+# (gérée par merlin_game._on_trait_card). Ne combat jamais le hover (retour via _on_exit).
+func set_selected(on: bool) -> void:
+	if _selected == on:
+		return
+	_selected = on
+	if _panel_sb != null:
+		_panel_sb.border_color = COL_GOLD if on else _rest_border_col
+		_panel_sb.set_border_width_all(maxi(_rest_border_w, 4) if on else _rest_border_w)
+	if not _hovering and not _discarding and _fan_inited:
+		_animate(_rest_pos(), _base_rot, 1.0)
 
 
 # v10.21 (Wave I, R131) — badge de BÉNÉDICTION : pastille GOLD portant le tag temporaire offert par le
@@ -272,7 +298,7 @@ func _process(delta: float) -> void:
 		return
 	var w: float = sin(_sway_phase * 1.3) * 0.7 + sin(_sway_phase * 2.7 + 1.4) * 0.4 + sin(_sway_phase * 0.4) * 0.2
 	rotation = _base_rot + deg_to_rad(w)
-	position = _base_pos + Vector2(sin(_sway_phase * 0.35) * 1.0, sin(_sway_phase * 0.9 + 0.7) * 2.8)
+	position = _rest_pos() + Vector2(sin(_sway_phase * 0.35) * 1.0, sin(_sway_phase * 0.9 + 0.7) * 2.8)
 
 
 ## Position/rotation de base dans l'éventail (posées par le conteneur). Appliquées si pas survolé.
@@ -288,8 +314,9 @@ func set_fan_transform(pos: Vector2, rot: float, animate_reflow: bool = true) ->
 		return
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
+	var target: Vector2 = _rest_pos()  # v11-W2 : la sélection lève la position de repos de 20 px
 	if first or not animate_reflow or not is_inside_tree():
-		position = pos
+		position = target
 		rotation = rot
 		scale = Vector2.ONE
 		modulate.a = 1.0  # garantit l'opacité si un deal_in (tween a:0→1) est interrompu par un re-layout (fix cartes invisibles, user 2026-06-06)
@@ -301,7 +328,7 @@ func set_fan_transform(pos: Vector2, rot: float, animate_reflow: bool = true) ->
 	modulate.a = 1.0
 	_tw = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var d: float = MerlinVisual.DUR_FAST * MerlinVisual.motion()
-	_tw.tween_property(self, "position", pos, d)
+	_tw.tween_property(self, "position", target, d)
 	_tw.tween_property(self, "rotation", rot, d)
 	_tw.chain().tween_callback(func() -> void:
 		_sway_active = not _compact
@@ -329,7 +356,7 @@ func _on_exit() -> void:
 		_scale_to(1.0)
 		set_process(_rarity_rank >= 1)
 	else:
-		_animate(_base_pos, _base_rot, 1.0)
+		_animate(_rest_pos(), _base_rot, 1.0)  # v11-W2 : retour à la position de repos (levée si sélectionnée)
 		if not _discarding:
 			_sway_active = not _compact
 			set_process(_wants_process())

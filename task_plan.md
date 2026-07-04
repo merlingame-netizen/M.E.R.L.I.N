@@ -77,6 +77,17 @@ func ` ≠ `static func`) —
       doublon supprimé), pill degré 170×48 (badge 58 px purgé), anneaux en commit différé post-typewriter
       (_gauges_deferred/_flush_gauges — fix « deltas sous le layer fx »), PARTIEL = ledger seul,
       sceau mort _slam_degree_seal purgé. Gate R109 + code-review en cours.
-- [ ] W2 moteur Action+Trait + harnais réécrit · W3 greffes · W4 R131/saves/BIBLE (spec §vagues).
+- [~] W2 EN COURS (étages) : (1) FAIT inline — moteur/données : merlin_card (family, make_actions 4
+      verbes, starter_traits 16, is_action/is_corrupted_trait), merlin_resolution (_synergy v11 :
+      +1 trait nourrit la famille canonique de l'action / -1 corrompu / 0 sinon + _card_family +
+      porte éclatante unique : couverture pleine+coût 0+trait couvre+syn ou dé), merlin_run
+      (actions permanentes, HAND_SIZE 4, redraw_hand cycle vrai, _enforce_hand_caps ≤1 corrompu,
+      play_and_discard action-aware, SAVE_VERSION 2 invalidation propre + actions persistées).
+      Parse 0/0. PAS ENCORE COMMITTÉ (guardrail : gate harnais réécrit d'abord).
+      (2) Agent A (fond) : UI tuiles 260×116 + éventail 4 traits + suppression combo panel +
+      merlin_action_view.gd + autoplay_run adapté. (3) Agent B (fond) : probe_soak action×trait
+      5 archétypes + whitelist required_tags (scenario/prompt_builder). Gate final : validate +
+      smoke 6 + soak 200/200 (assertions §K loguées) + autoplay 3/3 → UN commit W2.
+- [ ] W3 greffes · W4 R131 remap/traits corrompus/BIBLE (spec §vagues).
 - [ ] Fleet QA « agents humains » cohérence visuelle + gameplay (re-demandé par le user) — après Vague 1.
 

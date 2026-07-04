@@ -11,7 +11,26 @@ var corruption: int = 0       # coût Corruption payé en jouant (0-3, R64)
 var rarity: String = "Commune"  # Commune / Rare / Épique / Mythique (R52)
 var effect_type: String = ""   # "" | HEAL | PURGE | DRAW — effet actif joué (Rare+, user 2026-06-07)
 var effect_value: int = 0      # intensité (PV soignés / Corruption purgée / cartes piochées)
+# v11 (pivot ACTION+TRAIT, spec panel 2026-07-04) — famille canonique FIXE d'une ACTION (verbe).
+# "" pour les traits et cartes legacy. La famille de synergie de l'action ne change JAMAIS,
+# même quand des tags sont greffés (W3).
+var family: String = ""
 var _archetype_cache: String = ""  # v10.5 : archétype dérivé memoïsé (to_dict appelé ~1Hz × deck)
+
+
+# v11 — une carte est une ACTION (tuile permanente) si elle porte une famille canonique.
+func is_action() -> bool:
+	return family != ""
+
+
+# v11 — un TRAIT est corrompu s'il porte un tag Corrompu OU un coût récurrent (spec §C/§D).
+func is_corrupted_trait() -> bool:
+	if corruption > 0:
+		return true
+	for t in tags:
+		if MerlinTags.is_corrupted_tag(str(t)):
+			return true
+	return false
 
 
 static func make(p_id: String, p_name: String, p_tags: Array, p_evocation: String, p_corruption: int = 0, p_rarity: String = "Commune", p_effect_type: String = "", p_effect_value: int = 0) -> MerlinCard:
@@ -57,16 +76,84 @@ func to_dict() -> Dictionary:
 		"id": id, "name": card_name, "evocation": evocation,
 		"tags": tags.duplicate(), "corruption": corruption, "rarity": rarity,
 		"effect_type": effect_type, "effect_value": effect_value,
+		"family": family,  # v11 : "" pour les traits — champ additif
 		"archetype": archetype(),
 	}
 
 
 static func from_dict(d: Dictionary) -> MerlinCard:
-	return make(
+	var c: MerlinCard = make(
 		str(d.get("id", "")), str(d.get("name", "")),
 		d.get("tags", []), str(d.get("evocation", "")),
 		int(d.get("corruption", 0)), str(d.get("rarity", "Commune")),
 		str(d.get("effect_type", "")), int(d.get("effect_value", 0)))
+	c.family = str(d.get("family", ""))
+	return c
+
+
+## === v11 (spec panel W2) — Les 4 ACTIONS fixes évolutives (tuiles permanentes) ===
+## Action-as-card : MerlinCard avec `family` canonique FIXE, 2 tags de base EXACTEMENT (jamais la
+## famille entière — arbitrage lentilles 2+4 : couverture pleine ~67 %, partiel ~31 %). rarity =
+## qualité de dé dérivée du nb de greffes (W2 transitoire : "Commune" = bande 33 %, greffes en W3).
+static func make_actions() -> Array:
+	return [
+		_action("action_percevoir", "PERCEVOIR", "Perception", ["Sens", "Savoir"],
+			"Regarder vraiment — et laisser ce qui se cache remonter à la surface."),
+		_action("action_agir", "AGIR", "Corps", ["Force", "Agilité"],
+			"Le corps tranche là où l'esprit hésite ; un geste, et le monde change."),
+		_action("action_parler", "PARLER", "Parole", ["Empathie", "Verbe"],
+			"Les mots ouvrent ce que la force brise ; parler, c'est déjà agir sur les cœurs."),
+		_action("action_ressentir", "RESSENTIR", "Intuition", ["Instinct", "Nature"],
+			"Fermer les yeux et écouter ce que Brocéliande murmure sous la peau du monde."),
+	]
+
+
+static func _action(p_id: String, p_name: String, p_family: String, p_tags: Array, p_evocation: String) -> MerlinCard:
+	var c: MerlinCard = make(p_id, p_name, p_tags, p_evocation, 0, "Commune")
+	c.family = p_family
+	return c
+
+
+## === v11 (spec panel W2) — Deck de TRAITS de départ : 16 (main 4, cycle vrai) ===
+## 12 noms canon CONSERVÉS (évocations R102 recyclées — lore 100 % préservé) + 4 nouveaux.
+## Structure lentille 4 : les 8 tags gap ×2 slots + ≥1 slot secondaire par tag de base (synergie
+## et couverture cross-action). RÈGLE DURE : tout trait porte ≥1 tag NON-dupliqué par une action.
+## L'Appel de l'Ombre garde son corr 1 canon (retagué [Mystère, Nature] — Mystère ×1 dans le pool).
+static func starter_traits() -> Array:
+	return [
+		make("regard_percant", "Le Regard Perçant", ["Vigilance", "Sens"],
+			"Tes yeux fendent l'ombre ; rien ne reste caché à qui sait vraiment voir."),
+		make("ecoute_silence", "L'Écoute du Silence", ["Vigilance"],
+			"Entre deux souffles du vent, la forêt confie ce qu'elle tait aux autres."),
+		make("memoire_lieux", "La Mémoire des Lieux", ["Mémoire", "Savoir"],
+			"Les pierres se souviennent. Pose la main, et leur passé remonte en toi."),
+		make("main_de_fer", "La Main de Fer", ["Force", "Endurance"],
+			"Quand la douceur échoue, reste la poigne qui ne tremble pas."),
+		make("pas_leger", "Le Pas Léger", ["Agilité", "Finesse"],
+			"Tu glisses où d'autres trébuchent ; le danger ne saisit que le vide."),
+		make("souffle_tenace", "Le Souffle Tenace", ["Endurance"],
+			"Le corps plie sans rompre ; tu tiens quand tout voudrait te briser."),
+		make("langue_de_miel", "La Langue de Miel", ["Ruse", "Empathie"],
+			"Tes mots coulent doux ; même les cœurs fermés s'entrouvrent."),
+		make("mot_ruse", "Le Mot Rusé", ["Ruse", "Verbe"],
+			"Une vérité de travers, un silence bien placé — et la porte cède."),
+		make("presence_calme", "La Présence Calme", ["Autorité", "Empathie"],
+			"Ta seule présence apaise ; la tempête baisse d'un ton."),
+		make("pressentiment", "Le Pressentiment", ["Vision", "Instinct"],
+			"Quelque chose te souffle avant que tu saches — écoute ce frisson."),
+		make("voix_foret", "La Voix de la Forêt", ["Vision", "Nature"],
+			"Tu parles la langue des sèves et des racines ; Brocéliande répond."),
+		make("appel_ombre", "L'Appel de l'Ombre", ["Mystère", "Nature"],
+			"Tu appelles ce qui dort sous les racines. Il vient — mais il prélève son dû.", 1),
+		make("main_sure", "La Main Sûre", ["Finesse"],
+			"Le geste juste, ni trop tôt ni trop fort — la précision est une patience."),
+		make("verbe_haut", "Le Verbe Haut", ["Autorité", "Verbe"],
+			"Ta voix porte sans crier ; on se tait pour l'entendre, pas parce qu'elle l'exige."),
+		make("coeur_franc", "Le Cœur Franc", ["Franchise", "Empathie"],
+			"Tu dis vrai même quand ça coûte — et c'est pour cela qu'on te croit."),
+		make("geste_ancien", "Le Geste Ancien", ["Rituel", "Mémoire"],
+			"Tes mains refont un geste plus vieux que toi ; quelque chose, quelque part, le reconnaît."),
+	]
 
 
 ## Deck de départ canon — 12 cartes (R33 tags + R102 évocations). Communes, voyageur généraliste.
