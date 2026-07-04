@@ -129,3 +129,13 @@ interventions 1/run / greffes V3 / transitions invisibles.
 - [ ] V4 : fleet QA captures 8 phases ×2 biomes (charte/anim/overlap/UX §23), purge banques legacy
       du chemin runtime, R137 + re-spec lore R49/R90/R92, tasks #45/#48 close.
 
+## CAHIER DES CHARGES V1.0 (2026-07-04, plan approuvé)
+- [x] Questionnaire 200 questions tous métiers PERSISTÉ : docs/cdc_v1_questionnaire.md
+      (40 GD / 25 BAL / 30 NAR / 20 DA / 20 AUD / 25 UX / 20 TEC / 20 PRO — options A-D + RECO
+      argumentée par question, ancrées R1-R137 + mesures soak ; 12 ⚠ structurantes en tête).
+      Convention : le user annote `> RÉPONSE : X` ; non annotée = RECO adoptée.
+- [~] Les 12 structurantes posées en interactif (3 rounds AskUserQuestion).
+- [ ] À réception (« questionnaire annoté » ou délégation aux recos) : consolidation en
+      docs/cdc_v1.md (règles numérotées + objectifs mesurables + roadmap V4→V1.0), report BIBLE
+      (cadence 10.3), tasks des vagues, puis reprise du dev par la V4 re-priorisée.
+
