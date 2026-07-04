@@ -8,9 +8,11 @@ extends Control
 signal done
 
 const SIZE_PX: float = 96.0
-const TUMBLE_S: float = 0.55     # phase 1 : culbute rapide
-const SLOW_S: float = 0.65       # phase 2 : le défilement ralentit
-const SETTLE_S: float = 0.35     # phase 3 : pose + rebond
+# v11-W1 (spec panel) : dé COMPRESSÉ ~1,15 s total (vs 2,10 s) — il se lance en chevauchement sur la
+# décrue de fusion (MerlinFx.run Phase 3), la séquence complète reste lisible sans traîner.
+const TUMBLE_S: float = 0.35     # phase 1 : culbute rapide
+const SLOW_S: float = 0.40       # phase 2 : le défilement ralentit
+const SETTLE_S: float = 0.25     # phase 3 : pose + rebond
 const PIP_R: float = 7.0
 
 var _face: int = 1               # face AFFICHÉE (défile pendant la culbute)
@@ -71,6 +73,7 @@ func _run() -> void:
 		_flash = 1.0 if _die_mod > 0 else 0.0
 		queue_redraw()
 		await get_tree().create_timer(0.5).timeout
+		done.emit()  # v11-W1 (review CRITICAL) : sans lui, `await dice.done` dans MerlinFx = softlock
 		_fade_out()
 		return
 	MerlinAudio.play_sfx("card_pick", 0.7)  # petit claquement de lancer (recette existante, grave)
@@ -100,7 +103,9 @@ func _run() -> void:
 	_face = _final_face
 	_settled = true
 	rotation = 0.0
-	MerlinAudio.play_sfx("seal_stamp", 1.1)
+	# v11-W1 (review) : plus de seal_stamp ici — 3 stamps quasi identiques se tassaient dans ~2 s
+	# (impact de fusion + pose du dé + stinger de degré). La pose claque avec le son de lancer, grave.
+	MerlinAudio.play_sfx("card_pick", 1.0)
 	var settle: Tween = create_tween()
 	settle.tween_method(func(v: float) -> void:
 		_squash = Vector2(1.0 + 0.22 * (1.0 - v), 1.0 - 0.22 * (1.0 - v))
@@ -115,7 +120,7 @@ func _run() -> void:
 			_flash = v
 			queue_redraw(), 1.0, 0.6, 0.3 * m)
 	await settle.finished
-	await get_tree().create_timer(0.55 * m).timeout
+	await get_tree().create_timer(0.15 * m).timeout  # v11-W1 : hold 0,55 → 0,15 s
 	done.emit()
 	_fade_out()
 

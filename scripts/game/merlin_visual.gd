@@ -88,7 +88,6 @@ const DUR_MOTE_FADE: float = 0.30
 const DUR_WORLD_REACT: float = 1.50
 const MOTE_COUNT_AMBIENT: int = 18
 const SPARK_COUNT_IMPACT: int = 8
-const DUR_SEAL_POP: float = 0.30
 const DUR_SEAL_FADE: float = 0.15
 const DUR_CARET_BLINK: float = 0.60
 const DUR_GAUGE_ANIM: float = 0.30

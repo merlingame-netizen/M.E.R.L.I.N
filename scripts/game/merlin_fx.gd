@@ -2,9 +2,10 @@ class_name MerlinFx
 extends Control
 ## v10.13 (A2) — Animation cinématique de fusion (extraite VERBATIM de merlin_game.gd, v10.2→v10.13).
 ## MerlinFx EST le layer overlay : il s'ajoute au host (plein écran, absorbe les clics), anime les
-## 4 phases (Gather → Fuse → Burst → Décrue) + le SUSTAIN skippable, puis se queue_free().
-## v11-W0 : la phase « Expression » (slogan jaune + aberration chromatique + zoom slow-mo) est SUPPRIMÉE
-## (user 2026-07-04 : « animation bizarre, texte jaune mal placé ») — après le burst, simple décrue.
+## 3 phases (Rassemblement → Burst → Décrue+Dé) + le SUSTAIN skippable, puis se queue_free().
+## v11-W0/W1 (user 2026-07-04 « le jeu est trop complexe ») : la phase « Expression » (slogan jaune +
+## aberration chromatique + zoom) est SUPPRIMÉE, gather+fuse fusionnés, swell supprimé, le dé UNIQUE
+## (MerlinDice) se lance en chevauchement sur la décrue — overhead fixe ~2,1-2,4 s (vs ~6-8 s).
 ## Correction « tweens orphelins » PAR CONSTRUCTION : tout tween interne est créé sur CE node
 ## (create_tween() d'un Control = tween lié au node) → la mort du layer emporte ses animations.
 ## Découplage LLM : le sustain ne lit PLUS /root/MerlinScenario — prédicat `ready` injecté (Callable).
@@ -25,17 +26,16 @@ const FUSION_COLORS: Dictionary = {
 	"eclatante": MerlinVisual.DEGREE_BRILLIANT,
 }
 
-# v10.3 — Amplification dramatique par degré (user 2026-06-06 AskUserQuestion).
-# Durées par phase (s) — échec court & mat, éclatante long & ample.
-# v10.20 (user 2026-06-29) : fusion PLUS LENTE + PLUS ANIMÉE — durées +~40%, phase « swell » (souffle du
-# glow) entre fuse et burst, 4e vague d'étincelles, zoom/shake amplifiés. (la sustain reste skippable.)
-# v10.20.1 (review human-mode T1) : fusion plus animée que l'origine MAIS recapée ~3–4,8 s (l'éclatante
-# 6,8 s « punissait » le bon jeu par l'attente). On raccourcit surtout `expr` (slow-mo) ; swell conservé.
+# v10.3 — Amplification dramatique par degré (user 2026-06-06 AskUserQuestion) : échec court & mat,
+# éclatante longue & ample.
+# v11-W1 (spec panel 2026-07-04, user « le jeu est trop complexe ») — fusion RECAPÉE : gather+fuse
+# FUSIONNÉS en un seul rassemblement, swell supprimé, totaux {0,90 / 1,10 / 1,30 / 1,70 s} (vs
+# 1,88-3,35 s). Le dé se lance EN CHEVAUCHEMENT sur la décrue. Toutes les durées ×motion() (R134).
 const FUSION_DURATIONS: Dictionary = {
-	"echec":     {"gather": 0.40, "fuse": 0.58, "swell": 0.28, "burst": 0.62, "expr": 0.82},
-	"partiel":   {"gather": 0.50, "fuse": 0.70, "swell": 0.35, "burst": 0.80, "expr": 1.10},
-	"reussite":  {"gather": 0.60, "fuse": 0.85, "swell": 0.40, "burst": 0.95, "expr": 1.20},
-	"eclatante": {"gather": 0.70, "fuse": 1.00, "swell": 0.45, "burst": 1.20, "expr": 1.45},
+	"echec":     {"gf": 0.38, "burst": 0.34, "decrue": 0.18},
+	"partiel":   {"gf": 0.46, "burst": 0.42, "decrue": 0.22},
+	"reussite":  {"gf": 0.55, "burst": 0.49, "decrue": 0.26},
+	"eclatante": {"gf": 0.72, "burst": 0.63, "decrue": 0.35},
 }
 const FUSION_SHAKE_PX: Dictionary = {"echec": 5.0, "partiel": 10.0, "reussite": 15.0, "eclatante": 24.0}
 const FUSION_VIGNETTE_A: Dictionary = {"echec": 0.60, "partiel": 0.42, "reussite": 0.36, "eclatante": 0.55}
@@ -76,7 +76,7 @@ static func play(host: Control, res: Dictionary, played: Array, card_views: Arra
 	return fx
 
 
-# Animation 4 phases : Gather → Fuse → Burst → Décrue (+ sustain skippable). Awaitable.
+# Animation 3 phases : Rassemblement → Burst → Décrue+Dé (+ sustain skippable). Awaitable.
 # Reparente les MerlinCardView passées par l'appelant DANS ce layer, anime, puis se détruit
 # (les cartes reparentées sont free'd avec). Pendant l'animation, le clic est absorbé par le
 # layer (mouse_filter STOP). À la fin, l'appelant render hand/combo + show prose.
@@ -132,48 +132,29 @@ func run() -> void:
 		cv.z_index = 100 + i
 		cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	# === Phase 1 — Gather === convergence vers le centre, scale 1.0 → 1.3, glow 0 → 18%.
-	var p1: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	for i in card_views.size():
-		var cv: Control = card_views[i]
-		var t_off: float = float(i) - float(card_views.size() - 1) / 2.0
-		var target: Vector2 = center - cv.size / 2.0 + Vector2(t_off * 90.0, -20.0)
-		p1.tween_property(cv, "position", target, dur["gather"])
-		p1.tween_property(cv, "scale", Vector2(1.30, 1.30), dur["gather"])
-		p1.tween_property(cv, "rotation", 0.0, dur["gather"])
-	p1.tween_property(glow, "color:a", 0.18, dur["gather"])
-	p1.tween_method(_set_vignette_intensity.bind(vig_mat), 0.0, vig_alpha * 0.40, dur["gather"])
-	await p1.finished
-
-	# === Phase 2 — Fuse === superposition serrée, scale 1.3 → 1.55, rotation éventail, glow 18 → 45%.
-	var p2: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	# === Phase 1 — Rassemblement === v11-W1 : gather+fuse FUSIONNÉS (spec panel — l'enchaînement en
+	# 3 temps « punissait » chaque geste par l'attente). Les cartes convergent DIRECTEMENT vers la pose
+	# fusionnée (éventail serré, scale 1.55, teinte chaude) ; glow 0 → 45 %, vignette 0 → 75 %.
+	var m: float = MerlinVisual.motion()
+	var gf: float = float(dur["gf"]) * m
+	var p1: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	var mid_idx: float = float(card_views.size() - 1) / 2.0
 	for i in card_views.size():
 		var cv: Control = card_views[i]
 		var rot: float = deg_to_rad((float(i) - mid_idx) * 8.0)
 		var nudge: Vector2 = Vector2((float(i) - mid_idx) * 18.0, 0.0)
 		var target: Vector2 = center - cv.size / 2.0 + nudge
-		p2.tween_property(cv, "position", target, dur["fuse"])
-		p2.tween_property(cv, "rotation", rot, dur["fuse"])
-		p2.tween_property(cv, "scale", Vector2(1.55, 1.55), dur["fuse"])
-		p2.tween_property(cv, "modulate", Color(1.15, 1.10, 0.95, 1.0), dur["fuse"])
-	p2.tween_property(glow, "color:a", 0.45, dur["fuse"] * 0.85)
-	p2.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha * 0.40, vig_alpha * 0.75, dur["fuse"])
-	await p2.finished
-
-	# === Phase 2.5 — Swell === (v10.20) souffle d'anticipation : le glow enfle 45→70 %, les cartes
-	# « inspirent » (micro-pulse 1.55→1.64), la vignette se resserre — un temps suspendu avant l'impact.
-	var sw: float = float(dur.get("swell", 0.30))
-	var psw: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	psw.tween_property(glow, "color:a", 0.70, sw)
-	psw.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha * 0.75, vig_alpha * 0.88, sw)
-	for cv_s in card_views:
-		psw.tween_property(cv_s, "scale", Vector2(1.64, 1.64), sw)
-	await psw.finished
+		p1.tween_property(cv, "position", target, gf)
+		p1.tween_property(cv, "rotation", rot, gf)
+		p1.tween_property(cv, "scale", Vector2(1.55, 1.55), gf)
+		p1.tween_property(cv, "modulate", Color(1.15, 1.10, 0.95, 1.0), gf)
+	p1.tween_property(glow, "color:a", 0.45, gf * 0.85)
+	p1.tween_method(_set_vignette_intensity.bind(vig_mat), 0.0, vig_alpha * 0.75, gf)
+	await p1.finished
 
 	# === Impact freeze + flash (Hades-style dramatic pause) ===
 	MerlinAudio.play_sfx("seal_stamp", 0.85)
-	await get_tree().create_timer(MerlinVisual.DUR_IMPACT_FREEZE).timeout
+	await get_tree().create_timer(MerlinVisual.DUR_IMPACT_FREEZE * m).timeout
 	if not MerlinVisual.reduced_motion:
 		var flash_rect: ColorRect = ColorRect.new()
 		flash_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -185,8 +166,8 @@ func run() -> void:
 		flash_tw.tween_property(flash_rect, "color:a", 0.0, MerlinVisual.DUR_FLASH * 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		flash_tw.tween_callback(flash_rect.queue_free)
 
-	# === Phase 3 — Burst === flash glow + 3 vagues de sparks (cascade) + cards explose + screen shake.
-	var burst_dur: float = dur["burst"]
+	# === Phase 2 — Burst === flash glow + 4 vagues de sparks (cascade) + cards explose + screen shake.
+	var burst_dur: float = float(dur["burst"]) * m
 	var w1: int = int(spark_count * 0.34)
 	var w2: int = int(spark_count * 0.28)
 	var w3: int = int(spark_count * 0.22)
@@ -226,23 +207,22 @@ func run() -> void:
 		spark_wave(center, glow_col.darkened(0.30), w4, burst_dur * 1.05, 90.0, 50.0, Vector2(2.6, 2.6), 0.40)
 	await p3_glow.finished
 
-	# === v10.14 (B8) — Révélation du dé PRÉ-TIRÉ, entre Burst et Expression. SEUL lieu
-	# d'affichage du dé (monolocalité R112, cascade Wave2). L'animation ne fait que RÉVÉLER :
-	# res.die/die_mod/die_rarity sont calculés par MerlinResolution.resolve (preview = vérité).
+	# === Phase 3 — Décrue + Dé en CHEVAUCHEMENT === v11-W1 (spec panel) : UN SEUL dé — MerlinDice
+	# (v10.23, culbute fausse-3D) lancé PENDANT la décrue du glow. Le disque B8 en doublon est
+	# supprimé (deux dés successifs = l'« animation bizarre » du feedback user). La face est
+	# PRÉ-TIRÉE au beat (R120 preview = résolution) ; l'animation ne fait que révéler.
+	var decrue: float = float(dur["decrue"]) * m
+	var p4_fade: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	p4_fade.tween_property(glow, "color:a", 0.0, decrue)
+	p4_fade.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha, 0.0, decrue)
 	if int(_res.get("die", 0)) >= 1:
-		await _reveal_die(center, int(_res.get("die", 0)), int(_res.get("die_mod", 0)), str(_res.get("die_rarity", "Commune")))
+		var dice: MerlinDice = MerlinDice.roll(self, int(_res.get("die", 0)),
+			str(_res.get("die_rarity", "Commune")), int(_res.get("die_mod", 0)))
+		await dice.done
 		if not is_inside_tree():
 			return
-
-	# === Phase 4 — Décrue === v11-W0 (user 2026-07-04) : le label EXPRESSION jaune géant + ses copies
-	# d'aberration chromatique + le zoom slow-mo sont SUPPRIMÉS (« animation bizarre, texte jaune mal
-	# placé »). Après le burst : simple décrue du glow + de la vignette — l'issue parle, pas un slogan.
-	var expr_dur: float = dur["expr"] * 0.5  # phase raccourcie : plus d'expression à lire
-	await get_tree().create_timer(expr_dur * 0.25).timeout
-	var p4_fade: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	p4_fade.tween_property(glow, "color:a", 0.0, expr_dur * 0.55)
-	p4_fade.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha, 0.0, expr_dur * 0.55)
-	await p4_fade.finished
+	if p4_fade.is_running():
+		await p4_fade.finished
 
 	# === SUSTAIN (v10.12) — anime l'attente JUSQU'À ce que la prose LLM soit prête (cap 20s) : laisse
 	# le moteur natif (lent) interpréter la fusion → l'issue « suit » vraiment (user 2026-06-07). Cache-hit
@@ -335,72 +315,8 @@ func run() -> void:
 		queue_free()  # auto-destruction du layer : cartes reparentées, sparks et tweens partent avec
 
 
-# v10.14 (B8) — Révélation du dé : disque flat crème liseré couleur RARETÉ, chiffres décélérés
-# vers la face pré-tirée (séquence DÉTERMINISTE dérivée de la face — rejouable), « +1 » or flottant
-# si bonus. ~0.65s ; reduced_motion → face statique 0.3s. Nodes/tweens liés au layer (meurent avec).
-func _reveal_die(center: Vector2, die: int, mod: int, rarity: String) -> void:
-	var rstyle: Dictionary = MerlinCardView.RARITY_STYLE.get(rarity, MerlinCardView.RARITY_STYLE["Commune"])
-	var rcol: Color = rstyle["col"] as Color
-	var dia: float = 64.0
-	var disc: Panel = Panel.new()
-	disc.size = Vector2(dia, dia)
-	disc.pivot_offset = Vector2(dia, dia) * 0.5
-	disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	disc.z_index = 110
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = MerlinVisual.CREAM
-	sb.set_corner_radius_all(int(dia * 0.5))
-	sb.set_border_width_all(4)
-	sb.border_color = rcol
-	disc.add_theme_stylebox_override("panel", sb)
-	var lbl: Label = Label.new()
-	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	lbl.add_theme_color_override("font_color", MerlinVisual.INK)
-	lbl.add_theme_font_size_override("font_size", 30)
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	disc.add_child(lbl)
-	add_child(disc)
-	disc.global_position = center - Vector2(dia, dia) * 0.5 + Vector2(0.0, -120.0)
-	disc.scale = Vector2(0.6, 0.6)
-	disc.modulate.a = 0.0
-	var tin: Tween = disc.create_tween().set_parallel(true)
-	tin.tween_property(disc, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tin.tween_property(disc, "modulate:a", 1.0, 0.12)
-	if MerlinVisual.reduced_motion:
-		lbl.text = str(die)
-		await get_tree().create_timer(0.3).timeout
-	else:
-		var ticks: Array = [0.05, 0.07, 0.09, 0.12]
-		for i in ticks.size():
-			lbl.text = str(((die + i * 2) % 6) + 1)
-			await get_tree().create_timer(float(ticks[i])).timeout
-			if not is_inside_tree() or not is_instance_valid(disc):
-				return
-		lbl.text = str(die)
-		var settle: Tween = disc.create_tween()
-		settle.tween_property(disc, "scale", Vector2(1.15, 1.15), 0.08)
-		settle.tween_property(disc, "scale", Vector2.ONE, 0.10)
-		if mod > 0:
-			var plus: Label = Label.new()
-			plus.text = "+1"
-			plus.add_theme_color_override("font_color", MerlinVisual.GOLD)
-			plus.add_theme_font_size_override("font_size", 24)
-			plus.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			plus.z_index = 111
-			add_child(plus)
-			plus.global_position = disc.global_position + Vector2(dia + 8.0, 8.0)
-			var pt: Tween = plus.create_tween().set_parallel(true)
-			pt.tween_property(plus, "global_position:y", plus.global_position.y - 22.0, 0.5).set_trans(Tween.TRANS_SINE)
-			pt.tween_property(plus, "modulate:a", 0.0, 0.5)
-			pt.chain().tween_callback(plus.queue_free)
-		await get_tree().create_timer(0.25).timeout
-	if not is_inside_tree() or not is_instance_valid(disc):
-		return
-	var tout: Tween = disc.create_tween()
-	tout.tween_property(disc, "modulate:a", 0.0, 0.12)
-	tout.tween_callback(disc.queue_free)
+# (v11-W1 : le disque B8 `_reveal_die` est supprimé — le dé unique est MerlinDice, lancé dans run()
+# en chevauchement sur la décrue. Monolocalité R112 restaurée : UN dé, UN lieu.)
 
 
 # Prédicat injecté « la prose est prête » — Callable invalide = prêt (pas de sustain), comme

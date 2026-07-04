@@ -70,6 +70,13 @@ func ` ≠ `static func`) —
       attrapé par SMOKE (pas validate_step0 !), restauré depuis HEAD. Gate R109 en mesure.
 - [ ] Panel design v11 (wf wayiaqt56) : spec finale mapping 4 actions + ~16 traits, séquence de
       résolution, vagues incrémentales, guardrails migration (saves/probe_soak/autoplay).
-- [ ] Vagues v11 selon le panel : jouable + gate R109 vert entre CHAQUE vague.
+- [x] Spec panel persistée : docs/spec_v11_pivot.md (eb34ee7a) — 4 vagues W1-W4, guardrails, cibles soak.
+- [x] W1 résolution dégraissée (GATE VERT : soak 200/200 + autoplay 3/3, 7,2 min ; code-review 5
+      findings corrigés dont 1 CRITICAL — done.emit manquant en reduced-motion = softlock du layer fx) : fusion 3 phases recapée {0,90/1,10/1,30/1,70 s} ×motion(),
+      dé UNIQUE MerlinDice compressé (~1,15 s) lancé PAR fx en chevauchement sur la décrue (disque B8
+      doublon supprimé), pill degré 170×48 (badge 58 px purgé), anneaux en commit différé post-typewriter
+      (_gauges_deferred/_flush_gauges — fix « deltas sous le layer fx »), PARTIEL = ledger seul,
+      sceau mort _slam_degree_seal purgé. Gate R109 + code-review en cours.
+- [ ] W2 moteur Action+Trait + harnais réécrit · W3 greffes · W4 R131/saves/BIBLE (spec §vagues).
 - [ ] Fleet QA « agents humains » cohérence visuelle + gameplay (re-demandé par le user) — après Vague 1.
 

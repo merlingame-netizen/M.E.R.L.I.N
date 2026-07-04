@@ -113,7 +113,8 @@ var _glitch_d: float = 0.0   # tween_property sur shader_parameter/* ne les voit
 var _interstitial_open: bool = false           # B3 : interstitiel actif (entre Accept et Beat 1)
 var _interstitial_wait: MerlinWaitStage = null # B3 : attente animée en cours (skippée par autoplay)
 var _intro_reveal_tw: Tween = null             # B2 : typewriter du pop-up d'intro (kill au clic)
-var _degree_seal: Control = null               # B9 : sceau circulaire de degré (haut-droit encart)
+var _gauges_deferred: bool = false             # v11-W1 : anneaux GELÉS pendant la résolution (le layer
+                                               # MerlinFx couvre l'écran) — commit visuel post-typewriter
 var _draft_open_ms: int = 0                    # F2 : anti pick-aveugle pendant le deal du draft
 
 
@@ -232,7 +233,6 @@ func _present_current_beat() -> void:
 	vout.tween_property(veil, "modulate:a", 0.0, MerlinVisual.DUR_VEIL_OUT * MerlinVisual.motion())
 	vout.tween_callback(veil.queue_free)
 	_interstitial_open = false  # v10.13 (B3) : défense — l'interstitiel est forcément clos ici
-	_clear_degree_seal()        # v10.13 (B9) : le sceau du beat précédent ne survit pas au suivant
 	# v10.21 — reset au nouveau beat : situation pleine opacité, vignette d'effet cachée (l'issue R128 vit
 	# dans _situation_text, réécrit par _show_situation au beat suivant).
 	if _res_block != null:
@@ -536,6 +536,10 @@ func _on_resolve() -> void:
 	# v10.20 — capture des Δ jauges (net : coût + effets + résolution) pour la VIGNETTE d'effet. user 2026-06-29.
 	var int_before: int = int(run.get("integrite"))
 	var corr_before: int = int(run.get("corruption"))
+	# v11-W1 (spec panel, CRITICAL UX) — le MODÈLE s'applique immédiatement (invariants soak intacts)
+	# mais le COMMIT VISUEL des anneaux est différé : joués maintenant, les deltas seraient INVISIBLES
+	# sous le layer plein écran de MerlinFx. _flush_gauges() rejoue tout après le typewriter.
+	_gauges_deferred = true
 	run.play_and_discard(_combo)
 	run.consume_blessings(played_cards)  # R131 : une bénédiction sert UNE fois (érodée à la pose)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
@@ -603,14 +607,8 @@ func _on_resolve() -> void:
 				_scene_art.thicken_mist()
 				_scene_art.sway_trees()
 
-	# v10.23 (user) — JET DE DÉ animé (2D fausse-3D, ~2 s) : culbute → ralenti → pose sur la face
-	# pré-tirée du beat ; éclat d'or si le sort sourit (die_mod > 0), face terne s'il reste muet.
-	var die_face: int = int(situ.get("die", 0))
-	if die_face >= 1 and is_inside_tree():
-		var dice: MerlinDice = MerlinDice.roll(self, die_face, str(res.get("die_rarity", "")), int(res.get("die_mod", 0)))
-		await dice.done
-		if not _fresh(ep):
-			return
+	# v11-W1 : le jet de dé vit DANS la fusion (MerlinFx.run Phase 3, en chevauchement sur la décrue) —
+	# plus de second dé séquentiel ici (le doublon rallongeait la séquence et brouillait la lecture).
 	_set_choice_ui(false)   # v10.10 : cartes redescendent → l'issue occupe l'encart central, SEULE (user 2026-06-06)
 	_render_combo()         # _combo vide → clear _combo_box (les vues précédentes ont été reparented/free'd)
 
@@ -634,9 +632,9 @@ func _on_resolve() -> void:
 	# non avancé → la reprise REJOUAIT le beat (coûts double-appliqués). Save unique dans _advance_to_next.
 
 
-# === v10.13 (A2) — L'animation de fusion (4 phases + sustain skippable) vit dans MerlinFx ===
-# scripts/game/merlin_fx.gd : consts FUSION_* / VIGNETTE_SHADER_CODE / TAG_NOUNS / DEGREE_ECHO,
-# _fusion_expression, run() (Gather→Fuse→Burst→Expression + sustain), spark_wave public, shake static.
+# === v10.13 (A2) / v11-W1 — L'animation de fusion (3 phases + sustain skippable) vit dans MerlinFx ===
+# scripts/game/merlin_fx.gd : consts FUSION_* / VIGNETTE_SHADER_CODE, run() (Rassemblement→Burst→
+# Décrue+Dé + sustain), spark_wave public, shake static. Le dé (MerlinDice) est lancé PAR MerlinFx.
 
 
 func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:
@@ -857,7 +855,8 @@ func _on_push_choice(push: bool) -> void:
 		_push_res_raw["corruption_delta"] = int(_push_res_raw.get("corruption_delta", 0)) + MerlinResolution.PUSH_PRICE
 		_push_res_raw["label"] = str(_push_res_raw.get("label", "")) + " (forcé)"
 		run.set("pushes_left_quest", int(run.get("pushes_left_quest")) - 1)
-	run.apply_resolution(_push_res_raw)  # application UNIQUE différée (jauges animées ici)
+	run.apply_resolution(_push_res_raw)  # application UNIQUE différée
+	_flush_gauges()  # v11-W1 : le choix est fait → les anneaux jouent le delta cumulé (coût + résolution finale)
 	run.faits_marquants.append("%s → %s" % [str(_push_situ.get("type", "")), str(_push_res_raw.get("label", ""))])
 	if run.faits_marquants.size() > 6:
 		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
@@ -886,24 +885,48 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 		return
 	for c in _effect_vignette.get_children():
 		c.queue_free()
-	var badge: Panel = Panel.new()
-	badge.custom_minimum_size = Vector2(58, 58)
-	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var bsb: StyleBoxFlat = StyleBoxFlat.new()
-	bsb.bg_color = _degree_color(degree)
-	bsb.set_corner_radius_all(29)
-	badge.add_theme_stylebox_override("panel", bsb)
+	# v11-W1 (spec panel) — PILL de degré 170×48 : UN SEUL marqueur, lisible (l'ancien badge rond 58 px
+	# au libellé 11 px violait §23). Pastille 32 px = couleur du degré ; libellé 19 px CREAM sur SURFACE.
+	var pill: PanelContainer = PanelContainer.new()
+	pill.custom_minimum_size = Vector2(170, 48)
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var psb: StyleBoxFlat = StyleBoxFlat.new()
+	psb.bg_color = MerlinVisual.SURFACE
+	psb.set_corner_radius_all(24)
+	psb.set_border_width_all(1)
+	psb.border_color = _degree_color(degree)
+	psb.set_content_margin_all(8)
+	pill.add_theme_stylebox_override("panel", psb)
+	var prow: HBoxContainer = HBoxContainer.new()
+	prow.add_theme_constant_override("separation", 10)
+	prow.alignment = BoxContainer.ALIGNMENT_CENTER
+	prow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.add_child(prow)
+	var pdot: Panel = Panel.new()
+	pdot.custom_minimum_size = Vector2(32, 32)
+	pdot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pdot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var dsb: StyleBoxFlat = StyleBoxFlat.new()
+	dsb.bg_color = _degree_color(degree)
+	dsb.set_corner_radius_all(16)
+	pdot.add_theme_stylebox_override("panel", dsb)
+	prow.add_child(pdot)
 	var blbl: Label = Label.new()
-	blbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	blbl.text = str(DEGREE_SEAL_LABEL.get(degree, "RÉUSSITE"))
 	blbl.add_theme_color_override("font_color", MerlinVisual.CREAM)
-	blbl.add_theme_font_size_override("font_size", 11)
-	blbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	blbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	blbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	blbl.add_theme_font_size_override("font_size", 19)
+	blbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	blbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	badge.add_child(blbl)
-	_effect_vignette.add_child(badge)
+	prow.add_child(blbl)
+	_effect_vignette.add_child(pill)
+	# Slam bref — le sceau se pose (0,25 s ×motion), sans écraser la lecture. Pivot recalé au layout
+	# réel (review : la min-size 170 peut être dépassée par le libellé — jamais de moitié en dur).
+	if not MerlinVisual.reduced_motion:
+		pill.resized.connect(func() -> void: pill.pivot_offset = pill.size * 0.5)
+		pill.pivot_offset = pill.custom_minimum_size * 0.5
+		pill.scale = Vector2(1.35, 1.35)
+		pill.create_tween().tween_property(pill, "scale", Vector2.ONE,
+			0.25 * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	# v11-W0 (user : « un compteur avec des chiffres ») — les chips chiffrées Intégrité/Corruption sont
 	# SUPPRIMÉES : les deltas de jauges vivent dans les ANNEAUX animés (float_delta), un seul endroit (§23).
 	# v10.23 — la CONTRIBUTION du sort devient lisible dans la vignette.
@@ -941,65 +964,21 @@ func _vignette_chip(text: String, col: Color) -> Control:
 	return p
 
 
-# v10.13 (B9) — Sceau de degré : cercle flat (fond = MerlinVisual.degree_color), libellé CREAM,
-# slam scale 2.2 → 1.0 (TRANS_BACK 0.3s) en haut-droit de l'encart ; micro-secousse si échec.
-# Décalé du bord droit pour ne pas chevaucher la map CHEMIN. Nettoyé à _present_current_beat.
+# v11-W1 — libellés de degré de la PILL (_build_effect_vignette). L'ancien sceau circulaire B9
+# (_slam_degree_seal, 96 px haut-droit) était du code MORT depuis R128 — supprimé, la pill est
+# l'UNIQUE marqueur de degré (§23 : l'info ne vit qu'à UN endroit).
 const DEGREE_SEAL_LABEL: Dictionary = {
 	"echec": "ÉCHEC", "partiel": "PARTIEL", "reussite": "RÉUSSITE", "eclatante": "ÉCLATANTE",
 }
-const SEAL_D: float = 96.0  # diamètre du sceau (≥44 px — non cliquable mais lisible)
-
-
-func _slam_degree_seal(degree: String) -> void:
-	_clear_degree_seal()
-	if _situ_panel == null:
-		return
-	var seal: Panel = Panel.new()
-	seal.custom_minimum_size = Vector2(SEAL_D, SEAL_D)
-	seal.size = Vector2(SEAL_D, SEAL_D)
-	seal.pivot_offset = Vector2(SEAL_D, SEAL_D) * 0.5
-	seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	seal.z_index = 60
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = MerlinVisual.degree_color(degree)
-	sb.set_corner_radius_all(int(SEAL_D * 0.5))  # cercle plein flat (DA : zéro dégradé)
-	seal.add_theme_stylebox_override("panel", sb)
-	var lbl: Label = Label.new()
-	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	lbl.text = str(DEGREE_SEAL_LABEL.get(degree, "RÉUSSITE"))
-	lbl.add_theme_color_override("font_color", MerlinVisual.CREAM)
-	lbl.add_theme_font_size_override("font_size", 16)  # §21.5 : minimum 16px (audit ux_flow T1)
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	seal.add_child(lbl)
-	add_child(seal)
-	seal.global_position = _situ_panel.global_position + Vector2(_situ_panel.size.x - SEAL_D - 24.0, 14.0)
-	_degree_seal = seal
-	seal.scale = Vector2(2.2, 2.2)
-	seal.modulate.a = 0.0
-	var tw: Tween = seal.create_tween().set_parallel(true)
-	tw.tween_property(seal, "scale", Vector2.ONE, MerlinVisual.DUR_SEAL_POP * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(seal, "modulate:a", 1.0, MerlinVisual.DUR_SEAL_FADE * MerlinVisual.motion())
-	if degree == "echec" and not MerlinVisual.reduced_motion:
-		MerlinFx.shake(_situ_panel, 4.0, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())  # micro-secousse : l'échec se SENT (B9)
-	_play_seal_audio(degree)  # v10.13.1 (§22, Wave1) : le sceau SONNE — seal_stamp + stinger
 
 
 func _play_seal_audio(degree: String) -> void:
 	MerlinAudio.play_stinger(degree)
 
 
-func _clear_degree_seal() -> void:
-	if _degree_seal != null and is_instance_valid(_degree_seal):
-		_degree_seal.queue_free()
-	_degree_seal = null
-
-
 func _advance_to_next() -> void:
 	_set_caret(false)
 	_can_advance = false
-	_clear_degree_seal()  # audit ux_flow M2 : le sceau du beat résolu ne flotte pas sur le modal de draft
 	var run: Node = get_node("/root/MerlinRun")
 	# Wave D — offrande du PILIER au beat « Rencontre » (1×/run, INDÉPENDANTE du degré) : le PNJ tend une carte
 	# signée par sa nature. REMPLACE le draft standard ce beat. current_beat() = le beat JUSTE résolu (advance_beat
@@ -1242,9 +1221,11 @@ func _on_typewriter_done() -> void:
 				_res_block.visible = true
 			_pending_res = {}
 		# v10.21 (Wave G, R130) — PARTIEL différé : le choix Encaisser/Pousser REMPLACE l'avance au clic.
+		# v11-W1 : sur PARTIEL les deltas vivent dans le LEDGER des boutons SEULEMENT — anneaux après le choix.
 		if _push_pending:
 			_build_push_choice()
 			return
+		_flush_gauges()  # v11-W1 : l'issue est lue → les anneaux jouent le delta cumulé (un seul endroit §23)
 		_can_advance = true
 		if _caret != null:
 			_caret.text = "▮ cliquer pour continuer"
@@ -1331,6 +1312,8 @@ func _degree_color(degree: String) -> Color:
 
 
 func _on_gauges(integrite: int, corruption: int) -> void:
+	if _gauges_deferred:
+		return  # v11-W1 : _prev_* intouchés → le flush rejouera le delta CUMULÉ de la résolution
 	var di: int = integrite - _prev_integrite
 	var dc: int = corruption - _prev_corruption
 	var life_r: float = clampf(float(integrite) / 10.0, 0.0, 1.0)
@@ -1450,6 +1433,16 @@ func _pop(node: Control, peak: float) -> void:
 
 func _float_delta(anchor: Control, delta: int, col: Color) -> void:
 	MerlinFx.float_delta(self, anchor, delta, col)
+
+
+# v11-W1 — rejoue le commit visuel des anneaux avec les valeurs FINALES (delta cumulé coût+effets+
+# résolution). Appelé après le typewriter (issue lue) ou après le choix Encaisser/Pousser (R130).
+func _flush_gauges() -> void:
+	if not _gauges_deferred:
+		return
+	_gauges_deferred = false
+	var run: Node = get_node("/root/MerlinRun")
+	_on_gauges(int(run.get("integrite")), int(run.get("corruption")))
 
 
 func _combo_complete_pulse() -> void:
