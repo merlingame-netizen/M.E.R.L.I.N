@@ -12,7 +12,12 @@ const CARD_SIZE_COMPACT: Vector2 = Vector2(170, 104)  # zone de combinaison (ét
 const HOVER_SCALE: float = 1.18
 const HOVER_LIFT: float = 30.0
 const COMPACT_HOVER_SCALE: float = 1.06
-const ANIM: float = 0.12
+# v10.24 (user : « animations de cartes cohérentes et travaillées ») — CHARTE DE MOUVEMENT unique :
+#   ARRIVÉES  (deal, pop)   = TRANS_BACK  EASE_OUT (un seul overshoot franc, jamais de double-élastique)
+#   SORTIES   (défausse)    = anticipation brève PUIS chute parabolique TRANS_CUBIC EASE_IN + tumble
+#   FEEDBACK  (tap)         = PRESS 0.96 (même langage que les boutons §21) → retour CONTEXTUEL
+#   REFLOW/HOVER            = TRANS_CUBIC EASE_OUT, base ANIM — TOUT ×MerlinVisual.motion() via _dur()
+const ANIM: float = 0.12  # base hover/reflow (multipliée par motion() via _dur)
 
 # DA flat rétro-minimaliste (décision 2026-05-26).
 const COL_CARD: Color = MerlinVisual.CREAM    # crème (fond carte)
@@ -59,6 +64,10 @@ var _t: float = 0.0
 var _rarity_rank: int = 0
 var _panel_sb: StyleBoxFlat
 var _glow_col: Color = MerlinVisual.GOLD
+
+
+func _dur(base: float) -> float:
+	return base * MerlinVisual.motion()
 
 
 func setup(c: MerlinCard, role: String = "", compact: bool = false) -> void:
@@ -330,7 +339,7 @@ func _scale_to(scl: float) -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	_tw = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_tw.tween_property(self, "scale", Vector2(scl, scl), ANIM)
+	_tw.tween_property(self, "scale", Vector2(scl, scl), _dur(ANIM))
 
 
 func deal_in(delay: float) -> void:
@@ -340,14 +349,17 @@ func deal_in(delay: float) -> void:
 	set_process(_rarity_rank >= 1)
 	modulate.a = 0.0
 	scale = Vector2(0.7, 0.7)
-	position = _base_pos + Vector2(0.0, 140.0)
+	# ARC d'entrée : la carte vole vers sa place depuis le bas, décalée du CÔTÉ de son inclinaison
+	# d'éventail (trajectoire courbe crédible, plus une montée verticale mécanique).
+	position = _base_pos + Vector2(-_base_rot * 220.0, 140.0)
 	rotation = _base_rot + deg_to_rad((randf() - 0.5) * 16.0)
 	MerlinAudio.play_sfx("deal", randf_range(0.95, 1.05))
 	var d: float = MerlinVisual.DUR_DEAL * MerlinVisual.motion() * 1.3
 	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "modulate:a", 1.0, 0.18).set_delay(delay)
-	_tw.tween_property(self, "position", _base_pos, d).set_delay(delay).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	_tw.tween_property(self, "scale", Vector2.ONE, d).set_delay(delay).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "modulate:a", 1.0, _dur(0.18)).set_delay(delay)
+	# Charte ARRIVÉE : BACK out unique (un overshoot franc) — fini le double-élastique caoutchouteux.
+	_tw.tween_property(self, "position", _base_pos, d).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "scale", Vector2.ONE, d * 0.85).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_tw.tween_property(self, "rotation", _base_rot, d * 0.7).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_tw.chain().tween_callback(func() -> void:
 		_sway_active = not _compact
@@ -364,11 +376,16 @@ func discard_out() -> void:
 		_tw.kill()
 	var d: float = MerlinVisual.DUR_DISCARD * MerlinVisual.motion()
 	var dir: float = -1.0 if randf() < 0.7 else 1.0
-	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "position", position + Vector2(dir * 60.0, 40.0), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	_tw.tween_property(self, "rotation", rotation + deg_to_rad(dir * -35.0), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	_tw.tween_property(self, "scale", Vector2(0.55, 0.55), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	_tw.tween_property(self, "modulate:a", 0.0, d * 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	# Charte SORTIE : ANTICIPATION brève (la carte se soulève — le regard la suit) PUIS chute
+	# PARABOLIQUE (x régulier, y accéléré) avec tumble ample. Plus travaillé qu'une glissade raide.
+	_tw = create_tween()
+	_tw.tween_property(self, "position:y", position.y - 12.0, _dur(0.07)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_tw.set_parallel(true)
+	_tw.tween_property(self, "position:x", position.x + dir * 90.0, d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "position:y", position.y + 110.0, d).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_tw.tween_property(self, "rotation", rotation + deg_to_rad(dir * -55.0), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_tw.tween_property(self, "scale", Vector2(0.5, 0.5), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_tw.tween_property(self, "modulate:a", 0.0, d * 0.85).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_tw.chain().tween_callback(queue_free)
 
 
@@ -380,17 +397,20 @@ func pop_in(delay: float = 0.0) -> void:
 	modulate.a = 0.0
 	scale = Vector2(0.8, 0.8)
 	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "modulate:a", 1.0, 0.14).set_delay(delay)
-	_tw.tween_property(self, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(delay)
+	_tw.tween_property(self, "modulate:a", 1.0, _dur(0.14)).set_delay(delay)
+	_tw.tween_property(self, "scale", Vector2.ONE, _dur(0.2)).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(delay)
 
 
 func _animate(pos: Vector2, rot: float, scl: float) -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
+	var d: float = _dur(ANIM)
 	_tw = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_tw.tween_property(self, "position", pos, ANIM)
-	_tw.tween_property(self, "rotation", rot, ANIM)
-	_tw.tween_property(self, "scale", Vector2(scl, scl), ANIM)
+	_tw.tween_property(self, "position", pos, d)
+	_tw.tween_property(self, "rotation", rot, d)
+	# Le scale d'ENTRÉE en survol a une pointe BACK (la carte « répond ») ; le retour reste CUBIC (calme).
+	var st: Tween.TransitionType = Tween.TRANS_BACK if scl > 1.0 else Tween.TRANS_CUBIC
+	_tw.tween_property(self, "scale", Vector2(scl, scl), d).set_trans(st)
 
 
 func _on_gui_input(event: InputEvent) -> void:
@@ -405,7 +425,12 @@ func _on_gui_input(event: InputEvent) -> void:
 func _tap_feedback() -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
-	var press_scale: float = 1.04 if _compact else 1.08
+	# Charte FEEDBACK : PRESS vers le bas (0.96) — même langage que les boutons (§21), fini le pop
+	# vers le haut incohérent. Retour CONTEXTUEL : la carte survolée REVIENT à sa scale de survol
+	# (avant : elle retombait à 1.0 sous le curseur — rétraction fantôme).
+	var back_scale: float = 1.0
+	if _hovering:
+		back_scale = COMPACT_HOVER_SCALE if _compact else HOVER_SCALE
 	_tw = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_tw.tween_property(self, "scale", Vector2(press_scale, press_scale), 0.06)
-	_tw.tween_property(self, "scale", Vector2.ONE, 0.10)  # retour systématique à 1.0 (couvre cas tactile sans hover)
+	_tw.tween_property(self, "scale", Vector2(0.96, 0.96) * back_scale, _dur(0.06))
+	_tw.tween_property(self, "scale", Vector2(back_scale, back_scale), _dur(0.10))

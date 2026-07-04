@@ -593,6 +593,9 @@ static func ghost_flight(host: Control, from_rect: Rect2, to_pos: Vector2, accen
 	tw.tween_method(_ghost_step.bind(ghost, from_p, mid, to_tl), 0.0, 1.0, d) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(ghost, "scale", Vector2(0.62, 0.62), d).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	# v10.24 (charte cartes) — le ghost S'INCLINE dans le sens de son vol (banking léger, artisanat).
+	if not MerlinVisual.reduced_motion:
+		tw.tween_property(ghost, "rotation", 0.10 if to_tl.x >= from_p.x else -0.10, d * 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	var fade: Tween = ghost.create_tween()
 	fade.tween_interval(d)
 	fade.tween_property(ghost, "modulate:a", 0.0, 0.08)
