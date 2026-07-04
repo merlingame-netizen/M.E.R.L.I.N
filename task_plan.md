@@ -57,3 +57,19 @@
 - [x] v10.23 (2026-07-04) : jet de dé animé fausse-3D + indice de dé + contribution lisible (566f6027) —
       gate R109 VERT en config propre (soak 200/200 + autoplay 3/3, 9 min, chaîne 14 beats).
       Leçon : ne PAS mesurer le gate en mode capture (fenêtre visible + I/O = runs 2-3× plus lents).
+
+## v11 PIVOT (2026-07-04, user : « le jeu est trop complexe ») — EN COURS
+Décisions verrouillées (AskUserQuestion) : 4 VERBES fixes évolutifs (PERCEVOIR/AGIR/PARLER/RESSENTIR,
+tuiles permanentes) + TRAITS = qualités/manières (main ~4 repiochée chaque beat) + GREFFES par draft.
+Gênes résolution confirmées : texte jaune géant + chips chiffrées + empilement.
+- [x] Wave 0 quick-wins : phase « Expression » de la fusion SUPPRIMÉE (label jaune + aberration
+      chromatique + zoom slow-mo → simple décrue glow/vignette) + chips chiffrées Intégrité/Corruption
+      retirées de la vignette (les deltas vivent dans les ANNEAUX float_delta, un seul endroit §23).
+      Incident : la purge python a emporté les statics Juice pack (`
+func ` ≠ `static func`) —
+      attrapé par SMOKE (pas validate_step0 !), restauré depuis HEAD. Gate R109 en mesure.
+- [ ] Panel design v11 (wf wayiaqt56) : spec finale mapping 4 actions + ~16 traits, séquence de
+      résolution, vagues incrémentales, guardrails migration (saves/probe_soak/autoplay).
+- [ ] Vagues v11 selon le panel : jouable + gate R109 vert entre CHAQUE vague.
+- [ ] Fleet QA « agents humains » cohérence visuelle + gameplay (re-demandé par le user) — après Vague 1.
+

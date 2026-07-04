@@ -2,7 +2,9 @@ class_name MerlinFx
 extends Control
 ## v10.13 (A2) — Animation cinématique de fusion (extraite VERBATIM de merlin_game.gd, v10.2→v10.13).
 ## MerlinFx EST le layer overlay : il s'ajoute au host (plein écran, absorbe les clics), anime les
-## 4 phases (Gather → Fuse → Burst → Expression) + le SUSTAIN skippable, puis se queue_free().
+## 4 phases (Gather → Fuse → Burst → Décrue) + le SUSTAIN skippable, puis se queue_free().
+## v11-W0 : la phase « Expression » (slogan jaune + aberration chromatique + zoom slow-mo) est SUPPRIMÉE
+## (user 2026-07-04 : « animation bizarre, texte jaune mal placé ») — après le burst, simple décrue.
 ## Correction « tweens orphelins » PAR CONSTRUCTION : tout tween interne est créé sur CE node
 ## (create_tween() d'un Control = tween lié au node) → la mort du layer emporte ses animations.
 ## Découplage LLM : le sustain ne lit PLUS /root/MerlinScenario — prédicat `ready` injecté (Callable).
@@ -13,8 +15,8 @@ extends Control
 ##   await fx.run()
 
 # Avant la prose de résolution, les cartes du combo se rassemblent au centre, fusionnent dans un
-# glow coloré par degré, éclatent en sparks, et révèlent une "expression" — la synthèse verbale
-# de la combinaison. Puis fondu vers la résolution textuelle existante. Awaitable, ~2.5s total.
+# glow coloré par degré, éclatent en sparks, puis le glow décroit et fondu vers la résolution
+# textuelle existante (même fil que la situation, R128). Awaitable, ~2-3,5s total.
 
 const FUSION_COLORS: Dictionary = {
 	"echec": MerlinVisual.DEGREE_FAIL,
@@ -36,9 +38,7 @@ const FUSION_DURATIONS: Dictionary = {
 	"eclatante": {"gather": 0.70, "fuse": 1.00, "swell": 0.45, "burst": 1.20, "expr": 1.45},
 }
 const FUSION_SHAKE_PX: Dictionary = {"echec": 5.0, "partiel": 10.0, "reussite": 15.0, "eclatante": 24.0}
-const FUSION_ZOOM: Dictionary = {"echec": 1.05, "partiel": 1.08, "reussite": 1.12, "eclatante": 1.16}
 const FUSION_VIGNETTE_A: Dictionary = {"echec": 0.60, "partiel": 0.42, "reussite": 0.36, "eclatante": 0.55}
-const FUSION_CA_OFFSET: Dictionary = {"echec": 1.5, "partiel": 2.0, "reussite": 2.5, "eclatante": 4.0}
 const FUSION_SPARK_COUNT: Dictionary = {"echec": 22, "partiel": 30, "reussite": 38, "eclatante": 52}
 
 # Vignette via shader canvas_item : sombre les coins selon `intensity`, teinte `tint` (selon degré).
@@ -53,21 +53,6 @@ void fragment() {
 	COLOR = vec4(tint.rgb, v * tint.a);
 }
 """
-
-# Cartographie tag → substantif évocateur (pour l'expression de fusion).
-const TAG_NOUNS: Dictionary = {
-	"Sens": "le Regard", "Savoir": "la Mémoire", "Mémoire": "le Souvenir",
-	"Force": "le Choc", "Agilité": "le Pas", "Endurance": "le Souffle",
-	"Empathie": "la Compassion", "Verbe": "la Voix", "Ruse": "la Feinte",
-	"Instinct": "l'Élan", "Nature": "le Lien",
-}
-
-const DEGREE_ECHO: Dictionary = {
-	"echec": " — et rien ne répond.",
-	"partiel": " — à demi.",
-	"reussite": " — et la voie s'entrouvre.",
-	"eclatante": " — et Brocéliande s'incline.",
-}
 
 # Paramètres injectés par play() — figés pour toute la durée de l'animation.
 var _res: Dictionary = {}
@@ -91,7 +76,7 @@ static func play(host: Control, res: Dictionary, played: Array, card_views: Arra
 	return fx
 
 
-# Animation 4 phases : Gather → Fuse → Burst → Expression (+ sustain skippable). Awaitable.
+# Animation 4 phases : Gather → Fuse → Burst → Décrue (+ sustain skippable). Awaitable.
 # Reparente les MerlinCardView passées par l'appelant DANS ce layer, anime, puis se détruit
 # (les cartes reparentées sont free'd avec). Pendant l'animation, le clic est absorbé par le
 # layer (mouse_filter STOP). À la fin, l'appelant render hand/combo + show prose.
@@ -100,14 +85,11 @@ func run() -> void:
 	var glow_col: Color = FUSION_COLORS.get(degree, FUSION_COLORS["reussite"])
 	var dur: Dictionary = FUSION_DURATIONS.get(degree, FUSION_DURATIONS["reussite"])
 	var shake_px: float = float(FUSION_SHAKE_PX.get(degree, 12.0))
-	var zoom_target: float = float(FUSION_ZOOM.get(degree, 1.08))
 	var vig_alpha: float = float(FUSION_VIGNETTE_A.get(degree, 0.36))
-	var ca_offset: float = float(FUSION_CA_OFFSET.get(degree, 2.5))
 	var spark_count: int = int(FUSION_SPARK_COUNT.get(degree, 30))
 
 	var screen_size: Vector2 = get_viewport().get_visible_rect().size
 	var center: Vector2 = screen_size / 2.0
-	pivot_offset = center  # zoom slow-mo Phase 4 démarre depuis le centre du layer
 
 	# Glow plein écran, fade-in pendant la fusion. Couleur = degré.
 	var glow: ColorRect = ColorRect.new()
@@ -252,51 +234,14 @@ func run() -> void:
 		if not is_inside_tree():
 			return
 
-	# === Phase 4 — Expression === typewriter caractère par caractère + chromatic aberration + zoom slow-mo.
-	var expr_text: String = _fusion_expression(_played, _res)
-	var expr_dur: float = dur["expr"]
-
-	# Container expression : position directe (Control sans anchors) pour éviter le décalage
-	# DPI/viewport observé en v10.2 où l'anchor offset_top * 0.42 plaçait le label trop haut.
-	var lbl_h: int = 96
-	var lbl_w: int = int(screen_size.x * 0.82)
-	var expr_box: Control = Control.new()
-	expr_box.position = Vector2((screen_size.x - lbl_w) / 2.0, screen_size.y * 0.46)
-	expr_box.size = Vector2(lbl_w, lbl_h)
-	expr_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(expr_box)
-
-	var bbcode: String = "[center][color=#%s]%s[/color][/center]" % [glow_col.to_html(false), expr_text]
-	# Chromatic aberration : copies décalées rouge (gauche) + cyan (droite) DERRIÈRE le label principal.
-	var ca_red: RichTextLabel = _make_expr_label(bbcode, Color(1.0, 0.20, 0.20, 0.55), Vector2(-ca_offset, 0.0), Vector2(lbl_w, lbl_h))
-	expr_box.add_child(ca_red)
-	var ca_blue: RichTextLabel = _make_expr_label(bbcode, Color(0.20, 0.55, 1.0, 0.55), Vector2(ca_offset, 0.0), Vector2(lbl_w, lbl_h))
-	expr_box.add_child(ca_blue)
-	var expr_lbl: RichTextLabel = _make_expr_label(bbcode, Color(1, 1, 1, 1), Vector2.ZERO, Vector2(lbl_w, lbl_h))
-	expr_box.add_child(expr_lbl)
-
-	# Typewriter : visible_characters 0 → N sur 50% de la phase, sur les 3 layers (main + CA).
-	var n_chars: int = expr_lbl.get_total_character_count()
-	expr_lbl.visible_characters = 0
-	ca_red.visible_characters = 0
-	ca_blue.visible_characters = 0
-	var typer: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_LINEAR)
-	typer.tween_property(expr_lbl, "visible_characters", n_chars, expr_dur * 0.50)
-	typer.tween_property(ca_red, "visible_characters", n_chars, expr_dur * 0.50)
-	typer.tween_property(ca_blue, "visible_characters", n_chars, expr_dur * 0.50)
-	# Slow-mo zoom sur le layer entier (centre = pivot_offset déjà set).
-	typer.tween_property(self, "scale", Vector2(zoom_target, zoom_target), expr_dur * 0.70).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	await typer.finished
-
-	# Hold + fade simultané expression, glow, vignette, zoom retour.
-	await get_tree().create_timer(expr_dur * 0.28).timeout
+	# === Phase 4 — Décrue === v11-W0 (user 2026-07-04) : le label EXPRESSION jaune géant + ses copies
+	# d'aberration chromatique + le zoom slow-mo sont SUPPRIMÉS (« animation bizarre, texte jaune mal
+	# placé »). Après le burst : simple décrue du glow + de la vignette — l'issue parle, pas un slogan.
+	var expr_dur: float = dur["expr"] * 0.5  # phase raccourcie : plus d'expression à lire
+	await get_tree().create_timer(expr_dur * 0.25).timeout
 	var p4_fade: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	p4_fade.tween_property(expr_lbl, "modulate:a", 0.0, expr_dur * 0.40)
-	p4_fade.tween_property(ca_red, "modulate:a", 0.0, expr_dur * 0.40)
-	p4_fade.tween_property(ca_blue, "modulate:a", 0.0, expr_dur * 0.40)
 	p4_fade.tween_property(glow, "color:a", 0.0, expr_dur * 0.55)
 	p4_fade.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha, 0.0, expr_dur * 0.55)
-	p4_fade.tween_property(self, "scale", Vector2.ONE, expr_dur * 0.55)
 	await p4_fade.finished
 
 	# === SUSTAIN (v10.12) — anime l'attente JUSQU'À ce que la prose LLM soit prête (cap 20s) : laisse
@@ -466,37 +411,7 @@ func _is_ready() -> bool:
 	return bool(_ready_pred.call())
 
 
-# Synthèse verbale de la combinaison : 1-3 substantifs des tags dominants + écho de degré.
-# Le joueur lit son geste APRÈS l'animation de fusion, avant la prose narrative.
-func _fusion_expression(played: Array, res: Dictionary) -> String:
-	var nouns: PackedStringArray = []
-	var seen: Dictionary = {}
-	for c in played:
-		if c == null or not "tags" in c:
-			continue
-		for t in c.tags:
-			var key: String = str(t)
-			if seen.has(key):
-				continue
-			seen[key] = true
-			nouns.append(str(TAG_NOUNS.get(key, key)))
-			if nouns.size() >= 3:
-				break
-		if nouns.size() >= 3:
-			break
-	var phrase: String
-	if nouns.size() == 0:
-		phrase = "Ton geste s'élance"
-	elif nouns.size() == 1:
-		phrase = "%s s'élance" % nouns[0]
-	elif nouns.size() == 2:
-		phrase = "%s se mêle à %s" % [nouns[0], nouns[1]]
-	else:
-		phrase = "Tu mêles %s, %s et %s" % [nouns[0], nouns[1], nouns[2]]
-	return phrase + str(DEGREE_ECHO.get(str(res.get("degree", "reussite")), ""))
-
-
-# === v10.3 — Helpers de fusion (sparks waves, screen shake, vignette setter, CA labels) ===
+# === v10.3 — Helpers de fusion (sparks waves, screen shake, vignette setter) ===
 
 # Vague de sparks émise radialement depuis `center`. PUBLIC (réutilisable par le sustain et,
 # en phase B, par d'autres écrans via une instance MerlinFx). Non-bloquante : crée les ColorRect
@@ -544,21 +459,6 @@ static func shake(target: Control, amplitude: float, duration: float) -> void:
 func _set_vignette_intensity(v: float, mat: ShaderMaterial) -> void:
 	if mat != null:
 		mat.set_shader_parameter("intensity", v)
-
-
-# Fabrique un RichTextLabel pour l'expression de fusion (utilisé pour main + 2 copies CA).
-func _make_expr_label(bbcode: String, mod: Color, offset_px: Vector2, sz: Vector2) -> RichTextLabel:
-	var lbl: RichTextLabel = RichTextLabel.new()
-	lbl.bbcode_enabled = true
-	lbl.fit_content = true
-	lbl.scroll_active = false
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lbl.add_theme_font_size_override("normal_font_size", 32)
-	lbl.text = bbcode
-	lbl.position = offset_px
-	lbl.size = sz
-	lbl.modulate = mod
-	return lbl
 
 
 # === v10.13.1 — Juice pack 1 (BIBLE §21 R116) : helpers statics réutilisables ===

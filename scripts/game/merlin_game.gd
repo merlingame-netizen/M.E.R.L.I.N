@@ -904,12 +904,8 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 	blbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	badge.add_child(blbl)
 	_effect_vignette.add_child(badge)
-	var di: int = int(res.get("integrite_delta", 0))
-	var dc: int = int(res.get("corruption_delta", 0))
-	if di != 0:
-		_effect_vignette.add_child(_vignette_chip("Intégrité %+d" % di, MerlinVisual.GREEN if di > 0 else MerlinVisual.VIOLET))
-	if dc != 0:
-		_effect_vignette.add_child(_vignette_chip("Corruption %+d" % dc, MerlinVisual.VIOLET if dc > 0 else MerlinVisual.GREEN))
+	# v11-W0 (user : « un compteur avec des chiffres ») — les chips chiffrées Intégrité/Corruption sont
+	# SUPPRIMÉES : les deltas de jauges vivent dans les ANNEAUX animés (float_delta), un seul endroit (§23).
 	# v10.23 — la CONTRIBUTION du sort devient lisible dans la vignette.
 	if int(res.get("die", 0)) >= 1:
 		var dmod: int = int(res.get("die_mod", 0))
