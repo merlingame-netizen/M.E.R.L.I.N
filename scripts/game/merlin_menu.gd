@@ -700,7 +700,8 @@ func _say(line: String) -> void:
 	var mood: String = MerlinSceneArt.mood_for_text(line)
 	if _scene_art != null:
 		_scene_art.set_eye_mood(mood)
-	_bubble.show_line(line, Callable(self, "_head_screen"), mood)
+	# v10.22 (user) — placement ALÉATOIRE (5 slots hors UI) + en-tête « MERLIN » : la bulle habite l'écran.
+	_bubble.show_line(line, Callable(self, "_head_screen"), mood, true)
 
 
 func _update_parallax_cursor() -> void:
