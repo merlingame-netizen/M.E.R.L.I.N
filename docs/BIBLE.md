@@ -1820,6 +1820,19 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R135 — Résolution DÉGRAISSÉE, pivot v11 W0+W1 (2026-07-04, user « le jeu est trop complexe »)** :
+  la lecture de l'issue prime sur le spectacle. SUPPRIMÉS : le slogan « expression » jaune (typewriter +
+  aberration chromatique + zoom slow-mo), les chips chiffrées Intégrité/Corruption de la vignette, le
+  sceau circulaire B9, le disque de dé B8 (doublon du MerlinDice v10.23). Fusion recapée en 3 phases
+  (Rassemblement [gather+fuse fusionnés] → Burst → Décrue+Dé) totaux {0,90/1,10/1,30/1,70 s} ×motion() ;
+  le dé UNIQUE (compressé ~1,15 s) se lance en chevauchement sur la décrue — overhead fixe ~2,1-2,4 s
+  (−60 %). UN SEUL marqueur de degré : pill 170×48 (pastille 32 px degree_color + libellé 19 px CREAM)
+  dans la vignette [pill → chip dé → chips effets, rien d'autre]. Deltas de jauges : UNIQUEMENT les
+  anneaux, en COMMIT VISUEL DIFFÉRÉ post-typewriter (`_gauges_deferred`/`_flush_gauges` — le modèle
+  s'applique immédiatement, invariants soak intacts ; avant, les deltas jouaient SOUS le layer plein
+  écran de MerlinFx, invisibles). PARTIEL : deltas dans le ledger Encaisser/Pousser seul, anneaux APRÈS
+  le choix (R130). Spec complète du pivot : `docs/spec_v11_pivot.md` (panel 4 lentilles + auditeur).
+
 - **R134 — Charte de mouvement des cartes (2026-07-04, user)** : UN langage — arrivées = BACK out
   unique + arc d'entrée au deal (fini le double-élastique) ; sorties = anticipation + chute parabolique +
   tumble ; tap = PRESS 0.96 (langage boutons) avec retour CONTEXTUEL (fix rétraction fantôme sous hover) ;
