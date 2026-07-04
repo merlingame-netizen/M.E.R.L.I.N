@@ -109,17 +109,33 @@ func _play_one(k: int) -> bool:
 				game._interstitial_skip = true  # attente inline (encart) → clic simulé (fallback servi)
 			await process_frame
 			continue
-		# Draft ouvert (v11-V2b : dans les zones — les 3 cartes vivent dans _hand_box) ? Choisir ou passer.
+		# Draft ouvert (v11-W3 : il sert des GREFFES, 2 gestes) ? Choisir la greffe PUIS cliquer une
+		# tuile ÉLIGIBLE (grafts.size() < 3) — ou passer. Duck-typing pur : un renommage côté jeu
+		# casse BRUYAMMENT (gate 0/N), jamais de faux vert.
 		if game._draft_active:
 			await create_timer(0.4).timeout
 			if is_instance_valid(game) and game._draft_active:
 				var cv: Node = _find_card_view(game._hand_box)
 				if take_draft and cv != null:
 					game._on_draft_card(cv.card)
-					print("[AUTOPLAY] run#%d — draft pris : %s" % [k, cv.card.card_name])
+					# Sélection rejetée par la garde anti-pick-aveugle (500 ms) ? Re-servi au tour
+					# suivant de la boucle maîtresse — on ne loggue que les gestes RÉELS.
+					if not (game._pending_graft as Dictionary).is_empty():
+						print("[AUTOPLAY] run#%d — greffe choisie : %s" % [k, cv.card.card_name])
+						# 2e geste : la tuile cible (première action éligible, duck-typé).
+						await create_timer(0.3).timeout
+						if is_instance_valid(game) and game._draft_active:
+							var acts: Array = run.actions
+							for a in acts:
+								if (a.get("grafts") as Array).size() < int(run.MAX_GRAFTS_PER_ACTION):
+									game._on_action_tile(a)
+									if game._draft_done_flag:
+										print("[AUTOPLAY] run#%d — greffe posée sur %s" % [k, str(a.get("card_name"))])
+									break
 				else:
 					game._on_draft_skip()
-					print("[AUTOPLAY] run#%d — draft passé" % k)
+					if game._draft_done_flag:
+						print("[AUTOPLAY] run#%d — draft passé" % k)  # loggé sur geste RÉEL uniquement (garde 500 ms)
 			await process_frame
 			continue
 		# Typewriter en cours ? On le saute (accélère sans changer la logique).

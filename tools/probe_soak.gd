@@ -47,6 +47,8 @@ var _variant_swaps: int = 0       # ramification v1 mesurée (§K : fréquence l
 var _secours_injected: int = 0
 var _x1_emissions: Dictionary = {}  # tag ×1 -> nb d'émissions (Franchise/Mystère/Rituel...)
 var _arch_stats: Dictionary = {}    # arch -> {"degrees": {}, "ends": {}, "runs": 0}
+var _grafts_total: int = 0          # v11-W3 : greffes posées (toutes runs)
+var _grafts_clean: int = 0          # ... runs saines (rapport §K : E[acquisitions] cible 5-6)
 
 
 func _init() -> void:
@@ -63,6 +65,7 @@ func _init() -> void:
 			per_arch = true
 	print("[SOAK] start v11 — runs=%d archetype=%s per_arch=%s" % [runs, archetype, str(per_arch)])
 	_selftest_whitelist()  # plomberie spec §F éprouvée AVANT la campagne (validation LLM incluse)
+	_selftest_grafts()     # v11-W3 : banques, cap 3, dérivations, table de dé, prix one-shot
 	# Préserve la sauvegarde RÉELLE du joueur : le cas S5 écrit/efface user://merlin_run.json —
 	# snapshot avant la campagne, restauration après.
 	var save_path: String = "user://merlin_run.json"
@@ -133,6 +136,72 @@ func _st(cond: bool, label: String) -> void:
 		print("[SOAK]   FAIL self-test — %s" % label)
 
 
+# --- Self-test greffes (v11-W3, spec §E) : banques, guardrail corruption, dérivations, dé. ---
+func _selftest_grafts() -> void:
+	var seen: Dictionary = {}
+	for pk in ["", "choeur", "etre", "compagnon", "chevalier", "enfant"]:
+		var bank: Array = CardScript.graft_banks(str(pk))
+		var min_n: int = 3 if str(pk) == "" else 2
+		_st(bank.size() >= min_n, "banque '%s' >= %d greffes (%d)" % [str(pk), min_n, bank.size()])
+		for g in bank:
+			var gd: Dictionary = g
+			var gid: String = str(gd.get("id", ""))
+			_st(gid != "" and not seen.has(gid), "id de greffe unique '%s'" % gid)
+			seen[gid] = true
+			# GUARDRAIL CRITICAL : prix one-shot ≤ 1 — aucune greffe ne porte de coût récurrent.
+			_st(int(gd.get("corr_cost", 0)) <= 1, "corr_cost <= 1 one-shot (%s)" % gid)
+			var kind: String = str(gd.get("kind", ""))
+			_st(kind == "tag" or kind == "die" or kind == "charge", "kind valide (%s=%s)" % [gid, kind])
+			if kind == "tag":
+				_st(str(gd.get("tag", "")) != "", "greffe tag porte un tag (%s)" % gid)
+			if kind == "charge":
+				_st(int(gd.get("charges", 0)) >= 1 and str(gd.get("effect_type", "")) != "",
+					"charges valides (%s)" % gid)
+	# Dérivations UNIQUES : rarity = f(nb greffes), tags = base + greffés, corruption JAMAIS récurrente.
+	var act: Variant = CardScript.make_actions()[0]
+	var etre_bank: Array = CardScript.graft_banks("etre")
+	var gen_bank: Array = CardScript.graft_banks("")
+	act.grafts.append(etre_bank[0])
+	act.refresh_from_grafts()
+	_st(str(act.rarity) == "Rare", "1 greffe -> Rare (%s)" % str(act.rarity))
+	_st(int(act.corruption) == 0, "action greffée reste corruption 0 (récurrent interdit)")
+	var atags: Array = act.tags
+	_st(atags.size() == 3 and str(atags[2]) == str((etre_bank[0] as Dictionary).get("tag", "")),
+		"tags = 2 base + greffé (%s)" % str(atags))
+	act.grafts.append(gen_bank[0])
+	act.grafts.append(gen_bank[1])
+	act.refresh_from_grafts()
+	_st(str(act.rarity) == "Mythique", "3 greffes -> Mythique (%s)" % str(act.rarity))
+	# Round-trip save : grafts additifs dans to_dict/from_dict, dérivations rejouées au load.
+	var act2: Variant = CardScript.from_dict(act.to_dict())
+	_st((act2.grafts as Array).size() == 3 and str(act2.rarity) == "Mythique",
+		"round-trip to_dict/from_dict conserve les greffes")
+	# Table de dé v11-W3 RELÂCHÉE d'un cran (recalibrage gate V3, 2026-07-04) : 33/50/67/83 % —
+	# la 6/6 garantie reste absente (dé garanti = dé mort) et la progression reste strictement +1/cran.
+	var bands: Dictionary = ResolutionScript.DIE_BANDS
+	_st((bands["Commune"] as Array).count(1) == 2 and (bands["Rare"] as Array).count(1) == 3 \
+		and (bands["Épique"] as Array).count(1) == 4 and (bands["Mythique"] as Array).count(1) == 5,
+		"DIE_BANDS 33/50/67/83%% (mesuré %s)" % str(bands))
+	# Cap 3/action + prix one-shot via une run réelle (API merlin_run).
+	var run: Node = RunScript.new()
+	run._rng.seed = 99
+	run.new_run({"title": "st_grafts", "beats": [{"type": "Exploration", "n": 1}], "total": 1})
+	var corr0: int = run.corruption
+	_st(run.apply_graft("action_percevoir", etre_bank[1]), "apply_graft OK")
+	_st(run.corruption == corr0 + int((etre_bank[1] as Dictionary).get("corr_cost", 0)),
+		"prix one-shot payé à la pose (%d -> %d)" % [corr0, run.corruption])
+	_st(run.apply_graft("action_percevoir", gen_bank[2]), "2e greffe OK")
+	_st(run.apply_graft("action_percevoir", gen_bank[3]), "3e greffe OK")
+	_st(not run.apply_graft("action_percevoir", gen_bank[4]), "cap 3/action -> refus de la 4e")
+	var picks: Array = run.graft_choices(3)
+	var placed: Dictionary = run.placed_graft_ids()
+	_st(placed.size() == 3, "placed_graft_ids = 3 (%d)" % placed.size())
+	for p in picks:
+		_st(not placed.has(str((p as Dictionary).get("id", ""))), "graft_choices exclut les greffes posées")
+	run.free()
+	print("[SOAK] self-test §E greffes : %d greffes en banques, cap/dérivations/dé OK" % seen.size())
+
+
 func _ensure_arch(arch: String) -> void:
 	if not _arch_stats.has(arch):
 		_arch_stats[arch] = {"degrees": {}, "ends": {}, "runs": 0}
@@ -172,6 +241,8 @@ func _soak_one(i: int, arch: String) -> void:
 	var push_flip: bool = (i % 2 == 0)     # « les autres alternent » (R130) : phase initiale variée
 	var corr_gained_run: int = 0
 	var run_pushes: int = 0
+	var action_plays: Dictionary = {}      # v11-W3 : action_id -> poses (cible « optimal » des greffes)
+	var grafts_run: int = 0                # v11-W3 : greffes posées cette run (rapport §K)
 
 	var guard: int = 0
 	while not run.ended and guard < GUARD_BEATS:
@@ -249,6 +320,7 @@ func _soak_one(i: int, arch: String) -> void:
 		# v11 : dé PRÉ-TIRÉ du beat AVANT le choix (miroir build_situation — R120 preview=résolution).
 		var die: int = rng.randi_range(1, 6)
 		var combo: Array = _pick_combo(arch, run, required, die, rng)
+		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
 		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo))
 		run.consume_blessings(combo)  # R131 : une bénédiction sert UNE fois (miroir du jeu)
 		# v10.21 (Wave G, R130) — miroir « Pousser » : optimal pousse si Intégrité ≤ 4 ;
@@ -286,29 +358,36 @@ func _soak_one(i: int, arch: String) -> void:
 				_climax_full += 1
 		run.play_and_discard(combo)
 		run.apply_card_effects(combo)
+		# v11-W3 — miroir merlin_game._on_resolve : les charges de greffe du verbe joué (HEAL/PURGE/
+		# DRAW) se consomment à la pose, AVANT apply_resolution (un HEAL peut sauver — même ordre).
+		run.apply_graft_charges(combo[0])
 		run.apply_resolution(res)
-		# Wave D — offrande du PILIER au beat Rencontre : 1×/run, REMPLACE le draft standard ce beat.
-		# W2 transitoire : la banque offre des cartes legacy qui rejoignent le deck de TRAITS (leurs
-		# tags entrent dans la whitelist ; Sacrifice/Équilibre/Corrompus restent gardés côté pool).
+		# v11-W3 — le draft sert des GREFFES (miroir merlin_game._advance_to_next) : offrande du
+		# pilier au beat Rencontre (1×/run, banque signée) sinon draft générique aux réussites ;
+		# ~70 % de prise conservé ; cible = action ÉLIGIBLE (archétype greffe-aware) ; les tags
+		# greffés entrent dans la whitelist au beat suivant (Sacrifice/Équilibre débloqués §F).
 		var did_offering: bool = false
 		if btype == "Rencontre" and not run.pilier_offering_done and not run.ended:
 			run.pilier_offering_done = true
-			var offer: Array = run.pilier_offering(_soak_draw_pilier(rng), 2)
-			if not offer.is_empty():
-				did_offering = true
-				_drafts_offered += 1
-				if rng.randf() < 0.7:
-					run.add_card_to_deck(offer[rng.randi_range(0, offer.size() - 1)])
-					_drafts_taken += 1
-		# Draft logique standard (mêmes conditions que merlin_game._on_resolve) — sauté si offrande.
+			if run.has_graftable_action():
+				var offer: Array = run.pilier_graft_offering(_soak_draw_pilier(rng), 2)
+				if not offer.is_empty():
+					did_offering = true
+					_drafts_offered += 1
+					if rng.randf() < 0.7 and _apply_soak_graft(run, arch,
+							offer[rng.randi_range(0, offer.size() - 1)], action_plays, rng, i):
+						_drafts_taken += 1
+						grafts_run += 1
+		# Draft logique standard (mêmes conditions que merlin_game) — sauté si offrande / actions pleines.
 		if not did_offering and (deg == ResolutionScript.REUSSITE or deg == ResolutionScript.ECLATANTE) \
-				and not run.is_climax() and not run.ended:
-			var choices: Array = run.draft_choices(3)
+				and not run.is_climax() and not run.ended and run.has_graftable_action():
+			var choices: Array = run.graft_choices(3)
 			if not choices.is_empty():
 				_drafts_offered += 1
-				if rng.randf() < 0.7:
-					run.add_card_to_deck(choices[rng.randi_range(0, choices.size() - 1)])
+				if rng.randf() < 0.7 and _apply_soak_graft(run, arch,
+						choices[rng.randi_range(0, choices.size() - 1)], action_plays, rng, i):
 					_drafts_taken += 1
+					grafts_run += 1
 		# Corruption GAGNÉE sur le beat (net positif : résolution + pactes − purges du même beat).
 		var dcorr: int = run.corruption - corr_before
 		if dcorr > 0:
@@ -323,6 +402,7 @@ func _soak_one(i: int, arch: String) -> void:
 				resume_tested = true
 				_check_resume(run, i)
 	_check(run.ended, i, "run terminée (guard=%d)" % guard, run)
+	_grafts_total += grafts_run
 	if run.ended:
 		_ends[run.end_type] = int(_ends.get(run.end_type, 0)) + 1
 		_bump_arch(arch, "ends", run.end_type)
@@ -331,6 +411,7 @@ func _soak_one(i: int, arch: String) -> void:
 			_ends_clean[run.end_type] = int(_ends_clean.get(run.end_type, 0)) + 1
 			_pushes_clean += run_pushes
 			_corr_gained_clean += corr_gained_run
+			_grafts_clean += grafts_run
 	run.clear_save()
 	run.free()
 
@@ -355,6 +436,34 @@ func _assert_required(required: Array, pool_info: Dictionary, x1_seen: Dictionar
 		_offpool_beats += 1
 	_check(off == 0, i, "tags requis hors-pool : %s" % str(required), run)
 	_check(not required.is_empty(), i, "requis non vide", run)
+
+
+# v11-W3 — pose une greffe sur une action ÉLIGIBLE : « optimal » vise l'action la PLUS JOUÉE
+# (greffe là où le dé et les tags serviront) ; les autres archétypes tirent une éligible au hasard.
+# Vérifie au passage le guardrail CRITICAL : prix ONE-SHOT exactement corr_cost à la pose.
+func _apply_soak_graft(run: Node, arch: String, graft: Dictionary, action_plays: Dictionary, rng: RandomNumberGenerator, i: int) -> bool:
+	var eligible: Array = []
+	for a in run.actions:
+		if (a.get("grafts") as Array).size() < int(run.MAX_GRAFTS_PER_ACTION):
+			eligible.append(a)
+	if eligible.is_empty():
+		return false
+	var target: Variant = eligible[rng.randi_range(0, eligible.size() - 1)]
+	if arch == "optimal":
+		var best_n: int = -1
+		for a in eligible:
+			var n: int = int(action_plays.get(str(a.get("id")), 0))
+			if n > best_n:
+				best_n = n
+				target = a
+	var corr_before2: int = run.corruption
+	var ok: bool = run.apply_graft(str(target.get("id")), graft)
+	_check(ok, i, "apply_graft sur action éligible", run)
+	if ok:
+		_check(run.corruption == corr_before2 + int(graft.get("corr_cost", 0)), i,
+			"prix de greffe ONE-SHOT (%d->%d, coût %d)" % [
+				corr_before2, run.corruption, int(graft.get("corr_cost", 0))], run)
+	return ok
 
 
 # Wave D — tire le pilier de l'offrande aux poids de MerlinScenario (faction 30/30/30/8 → choeur/
@@ -417,7 +526,24 @@ func _check_resume(run: Node, i: int) -> void:
 		var pool_a: int = run.deck.size() + run.hand.size() + run.discard.size()
 		var pool_b: int = run2.deck.size() + run2.hand.size() + run2.discard.size()
 		_check(pool_a == pool_b, i, "resume pool %d==%d" % [pool_b, pool_a], run)
+		# v11-W3 (review M2) : les greffes ET leurs compteurs de charges décrémentés survivent au
+		# resume (R108) — signature (action|greffe:charges) comparée, pas un simple comptage.
+		_check(_graft_sig(run2) == _graft_sig(run), i,
+			"resume greffes+charges identiques (%s == %s)" % [_graft_sig(run2), _graft_sig(run)], run)
+		_check(int(run2.next_draw_bonus) == int(run.next_draw_bonus), i,
+			"resume next_draw_bonus %d==%d" % [int(run2.next_draw_bonus), int(run.next_draw_bonus)], run)
 	run2.free()
+
+
+# v11-W3 — signature des greffes posées (id:charges par action, ordre stable des actions) :
+# duck-typé (règle tools/), sert l'assertion R108 charges comprises.
+func _graft_sig(r: Node) -> String:
+	var parts: Array = []
+	for a in r.actions:
+		for g in (a.get("grafts") as Array):
+			parts.append("%s|%s:%d" % [str(a.get("id")), str((g as Dictionary).get("id", "")),
+				int((g as Dictionary).get("charges", 0))])
+	return ";".join(parts)
 
 
 # --- POLITIQUES par archétype (spec v11-W2) : le geste = [ACTION permanente, TRAIT de la main]. ---
@@ -510,6 +636,7 @@ func _report_k() -> void:
 	_band("corruption gagnée/run", float(_corr_gained_clean) / cr, 3.9, 6.9, false)
 	if _climax_beats > 0:
 		_band("couverture pleine climax (3 requis)", 100.0 * float(_climax_full) / float(_climax_beats), 45.0, 55.0)
+	print("[SOAK]   %-36s %5.2f    (info §E : E[acquisitions] cible 5-6)" % ["greffes posées/run (saines)", float(_grafts_clean) / cr])
 	print("[SOAK]   %-36s %5d     (ASSERTION DURE == 0)" % ["beats à requis hors-pool", _offpool_beats])
 	print("[SOAK]   %-36s %5.1f%%   (info §C : A/B réserve de trait si > 45)" % ["deadhand (0 trait couvrant)", 100.0 * float(_deadhand_beats) / float(maxi(_beats_total, 1))])
 	print("[SOAK]   variantes basculées=%d · sabotage R66 non simulé (aucun antagoniste côté probe) · émissions ×1=%s" % [_variant_swaps, str(_x1_emissions)])

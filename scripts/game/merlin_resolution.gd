@@ -24,17 +24,19 @@ const PARTIEL_CORRUPTION_PRICE: int = 1  # le "succès à un prix" (R65)
 const PUSH_PRICE: int = 1
 const PUSH_BUDGET_PER_QUEST: int = 1
 
-# v10.14 — Dé PRÉ-TIRÉ (4 bandes par rareté de la carte PRINCIPALE — cascade Wave1 2026-06-12).
-# JAMAIS de malus (R20 quasi-déterministe) : la Commune ne bouge qu'1 fois sur 6 (+1),
-# la Mythique GARANTIT +1. Le modificateur est clampé à la fourchette de couverture (comme la
-# synergie). Le dé est tiré UNE fois par beat (build_situation) → preview = résolution finale.
-# Tuning 2e passe (mesures soak 5×100, designer 2026-06-12) : Commune/Rare +1 cran généreuses
-# pour ramener les archétypes joueur-plausible vers la cible (greedy/chaotic 47% → ~38-42%).
+# v11-W3 (spec §D.3) — Dé PRÉ-TIRÉ : die_rarity = f(nb de GREFFES de l'action jouée) — la rareté
+# de l'action est dérivée par MerlinCard.refresh_from_grafts (Commune=0 greffe … Mythique=3).
+# Table spec : 17 % · 33 % · 50 % · 67 %. La 6/6 garantie DISPARAÎT (dé garanti = dé mort — le
+# jet doit rester un événement). JAMAIS de malus (R20) ; modificateur clampé à la fourchette de
+# couverture ; dé tiré UNE fois par beat (build_situation) → preview = résolution finale (R120).
+# Constante gatée TweaksOverlay-style : le recalibrage soak (gate V3) relâche d'UN cran si
+# éclatante < 8 % ou morts > 25 %. RELÂCHÉE d'un cran (2026-07-04, mesure soak 300 : éclatante
+# 2,3 % / morts 47,2 %) → 33/50/67/83 % — la 6/6 garantie reste absente (dé garanti = dé mort).
 const DIE_BANDS: Dictionary = {
 	"Commune":  [0, 0, 0, 0, 1, 1],
 	"Rare":     [0, 0, 0, 1, 1, 1],
 	"Épique":   [0, 0, 1, 1, 1, 1],
-	"Mythique": [1, 1, 1, 1, 1, 1],
+	"Mythique": [0, 1, 1, 1, 1, 1],
 }
 
 # Ordre croissant des degrés — sert à borner l'affinage par synergie (hybride, user 2026-05-28).

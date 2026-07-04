@@ -102,6 +102,14 @@ var _draft_active: bool = false          # draft/offrande ouvert dans les zones 
 var _draft_bar: HBoxContainer = null     # Z4 : titre + « Passer » pendant le draft
 var _draft_pick: MerlinCard = null       # carte choisie (null = passer)
 var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer)
+# v11-W3 (spec §E) — le draft sert des GREFFES en 2 GESTES : clic greffe (carte levée + GOLD) →
+# clic tuile cible (pose via run.apply_graft). Les cartes affichées sont des MerlinCard de
+# PRÉSENTATION ; le dict de greffe vit dans _graft_by_id (id → graft).
+var _graft_by_id: Dictionary = {}        # id de greffe → dict (draft courant)
+var _pending_graft: Dictionary = {}      # greffe sélectionnée en attente de cible ({} = étape 1)
+var _graft_applied: bool = false         # une greffe a été posée pendant ce draft (→ mark_draft)
+var _draft_title_lbl: Label = null       # libellé Z4 (re-titré à l'étape cible, cross-fade)
+var _draft_title_base: String = ""       # titre de l'étape 1 (restauré à la désélection)
 
 # v10.13.1 — juice pack 1 (§21) : gardes d'animation.
 var _beat_transition: bool = false  # review HIGH-1 : anti double-fire de _present_current_beat (voile)
@@ -449,6 +457,11 @@ func _on_trait_card(card: MerlinCard) -> void:
 
 # v11-W2 — sélection de l'ACTION sur la tuile : bordure GOLD 3 px ; re-clic = désélection.
 func _on_action_tile(card: MerlinCard) -> void:
+	# v11-W3 — pendant le draft de greffe, la tuile est une CIBLE : dispatch AVANT le check _state
+	# (le draft vit en _state 2 — la garde _draft_active prime, vigilance V2b #2).
+	if _draft_active:
+		_on_graft_target(card)
+		return
 	if _state != 1 or not _choice_open:
 		return  # v11-V2a : même garde que les traits — clic hors phase de choix ignoré
 	if _tuto_b_active:
@@ -621,6 +634,9 @@ func _on_resolve() -> void:
 	run.play_and_discard(combo)  # v11 : l'action (permanente) y est ignorée côté défausse
 	run.consume_blessings(played_cards)  # R131 : une bénédiction sert UNE fois (érodée à la pose)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
+	# v11-W3 (spec §E) — charges de GREFFE du verbe joué (HEAL/PURGE/DRAW, 1 charge consommée par
+	# greffe "charge"), à côté des effets de cartes — mêmes règles, AVANT le check de mort.
+	var graft_fx: Dictionary = run.apply_graft_charges(combo[0])
 	# v10.21 (Wave G, R130) — PARTIEL = CHOIX : si budget Pousser disponible, l'application de la
 	# résolution est DIFFÉRÉE jusqu'au choix Encaisser/Pousser (post-lecture). Sinon flux inchangé.
 	var deg_raw: String = str(res.get("degree", ""))
@@ -638,6 +654,13 @@ func _on_resolve() -> void:
 	for c in played_cards:
 		if c is MerlinCard and str(c.effect_type) != "":
 			fx_effects.append(str(c.effect_type))
+	# v11-W3 — les charges de greffe déclenchées alimentent les mêmes chips (info à UN endroit §23).
+	if int(graft_fx.get("heal", 0)) > 0 and not fx_effects.has("HEAL"):
+		fx_effects.append("HEAL")
+	if int(graft_fx.get("purge", 0)) > 0 and not fx_effects.has("PURGE"):
+		fx_effects.append("PURGE")
+	if int(graft_fx.get("draw", 0)) > 0 and not fx_effects.has("DRAW"):
+		fx_effects.append("DRAW")
 	res["fx_effects"] = fx_effects
 	# Draft « 1 carte sur 3 » armé : SEULEMENT aux beats clés (réussite/éclatante) tant qu'il reste des beats.
 	var deg: String = str(res.get("degree", ""))
@@ -670,6 +693,7 @@ func _on_resolve() -> void:
 		vues_du_combo.append(trait_view)
 	if tile != null:
 		tile.set_selected(false)
+		tile.queue_redraw()  # v11-W3 : compteurs de charges décrémentés → slots redessinés
 		tile.fusion_pulse(true)  # la tuile bat au rythme de la fusion — jamais aspirée
 	if _scene_art != null:
 		_scene_art.set_thinking(true)  # R128 : Merlin « réfléchit » (halo lune accéléré) pendant la fusion + l'attente LLM
@@ -1097,7 +1121,9 @@ func _advance_to_next() -> void:
 	# Wave D — offrande du PILIER au beat « Rencontre » (1×/run, INDÉPENDANTE du degré) : le PNJ tend une carte
 	# signée par sa nature. REMPLACE le draft standard ce beat. current_beat() = le beat JUSTE résolu (advance_beat
 	# n'a pas encore tourné). Le flag pilier_offering_done (posé à l'ouverture, persisté) garantit l'unicité au resume.
-	if str(run.current_beat().get("type", "")) == "Rencontre" and not run.pilier_offering_done and not run.ended:
+	# v11-W3 : les 4 actions pleines (12 greffes) → plus AUCUN draft/offrande ne se déclenche.
+	if str(run.current_beat().get("type", "")) == "Rencontre" and not run.pilier_offering_done \
+			and not run.ended and run.has_graftable_action():
 		var pk: String = _current_offer_pilier()
 		if pk != "":
 			_pending_draft = false  # l'offrande du pilier remplace le draft standard ce beat
@@ -1105,13 +1131,14 @@ func _advance_to_next() -> void:
 			await _present_pilier_offering(pk)
 			if not is_inside_tree():
 				return
-	# v10.11 — Draft « 1 carte sur 3 » aux beats clés, AVANT de passer au beat suivant.
+	# v10.11/v11-W3 — Draft de GREFFE « 1 sur 3 » aux beats clés, AVANT de passer au beat suivant.
 	if _pending_draft:
 		_pending_draft = false
-		_scene_epoch += 1  # v10.13 (Fix 10) : tout enrichissement LLM en vol ne s'écrit pas sous le modal
-		await _present_draft()
-		if not is_inside_tree():
-			return
+		if run.has_graftable_action():
+			_scene_epoch += 1  # v10.13 (Fix 10) : tout enrichissement LLM en vol ne s'écrit pas sous le modal
+			await _present_draft()
+			if not is_inside_tree():
+				return
 	run.advance_beat()
 	if run.ended:
 		return
@@ -1123,26 +1150,125 @@ func _advance_to_next() -> void:
 	_present_current_beat()
 
 
-# === v10.11 — Draft « 1 carte sur 3 » (style Slay the Spire) ===
+# === v10.11/v11-W3 — Draft de GREFFES « 1 sur 3 » : choisir la greffe PUIS toucher le verbe ===
 # v11-V2b : le draft vit DANS les zones (_open_draft_zone) — l'await-loop structurel est conservé.
+# Le 2e geste (cible) passe par _on_action_tile (dispatch _draft_active) qui pose la greffe via
+# run.apply_graft et lève _draft_done_flag. « Passer » inchangé.
 func _present_draft() -> void:
 	var run: Node = get_node("/root/MerlinRun")
-	var choices: Array = run.draft_choices(3)
-	if choices.is_empty():
+	var grafts: Array = run.graft_choices(3)
+	if grafts.is_empty():
 		return
-	_draft_pick = null
-	_draft_done_flag = false
-	_open_draft_zone(choices, "Une voie s'offre à toi — choisis une carte", "")
+	_begin_graft_draft(grafts, "Une greffe s'offre à toi — choisis, puis touche un verbe", "")
 	# v10.13 (Fix 1) : gardes STRUCTURELLES (pas de timeout mural — un joueur AFK sur un choix n'est
 	# pas un bug). Les seuls vrais états de blocage = zone refermée / run terminée / scène quittée :
-	# tous font sortir la boucle ; sortie sans flag = passer (aucune carte).
+	# tous font sortir la boucle ; sortie sans flag = passer (aucune greffe).
 	while not _draft_done_flag and is_inside_tree() and _draft_active and not run.ended:
 		await get_tree().process_frame
-	if _draft_pick != null:
-		run.add_card_to_deck(_draft_pick)
-		if _beat_map != null:  # v10.12 : une carte draftée = déviation visible sur le chemin
-			_beat_map.mark_draft()
+	if _graft_applied and _beat_map != null:
+		_beat_map.mark_draft()  # v10.12 : une greffe posée = déviation visible sur le chemin
 	_close_draft_zone()
+
+
+# v11-W3 — ouverture commune draft/offrande : fabrique les MerlinCard de PRÉSENTATION depuis les
+# dicts de greffe (mapping id → graft conservé à part) puis ouvre la zone de draft existante.
+func _begin_graft_draft(grafts: Array, title_text: String, pilier: String) -> void:
+	_graft_by_id = {}
+	_pending_graft = {}
+	_graft_applied = false
+	_draft_pick = null
+	_draft_done_flag = false
+	_draft_title_base = title_text
+	var cards: Array = []
+	for g in grafts:
+		if not (g is Dictionary):
+			continue
+		_graft_by_id[str((g as Dictionary).get("id", ""))] = g
+		cards.append(_graft_presentation_card(g))
+	_open_draft_zone(cards, title_text, pilier)
+
+
+# v11-W3 — carte de PRÉSENTATION d'une greffe (MerlinCardView réutilisé tel quel) : nom + évocation,
+# pastille famille si +tag, badge d'effet si charges, gemme de coût si corr_cost (prix affiché §E).
+func _graft_presentation_card(g: Dictionary) -> MerlinCard:
+	var kind: String = str(g.get("kind", ""))
+	var tags_p: Array = []
+	var eff_t: String = ""
+	var eff_v: int = 0
+	if kind == "tag":
+		tags_p = [str(g.get("tag", ""))]
+	elif kind == "charge":
+		eff_t = str(g.get("effect_type", ""))
+		eff_v = int(g.get("effect_value", 1))
+	return MerlinCard.make(str(g.get("id", "")), str(g.get("name", "")), tags_p,
+		str(g.get("evocation", "")), int(g.get("corr_cost", 0)), "Commune", eff_t, eff_v)
+
+
+# v11-W3 — étape 2 : Z6 se rallume de façon CIBLÉE (vigilance V2b : Z6 est estompée souris OFF
+# pendant le draft), les tuiles ÉLIGIBLES (< 3 greffes) pulsent, les pleines restent estompées
+# localement (modulate tuile ≠ alpha de zone — un seul propriétaire par niveau, R136).
+func _set_draft_target_mode(on: bool) -> void:
+	if _action_bar == null:
+		return
+	MerlinVisual.set_zone_active(_action_bar, on)
+	for v in _action_views:
+		if not is_instance_valid(v):
+			continue
+		var av: MerlinActionView = v
+		var eligible: bool = ((av.card.grafts as Array).size() < MerlinRun.MAX_GRAFTS_PER_ACTION)
+		av.await_pulse(on and eligible)
+		av.modulate.a = 0.45 if (on and not eligible) else 1.0
+
+
+# v11-W3 — reflète la sélection de greffe SUR les cartes du draft (levée + GOLD, set_selected
+# existant). card == null → tout désélectionné.
+func _select_draft_view(card: MerlinCard) -> void:
+	if _hand_box == null:
+		return
+	for c in _hand_box.get_children():
+		if c is MerlinCardView and not c.is_queued_for_deletion():
+			(c as MerlinCardView).set_selected((c as MerlinCardView).card == card)
+
+
+# v11-W3 — re-titre la barre Z4 (cross-fade du LIBELLÉ seul : la zone reste posée, « Passer »
+# reste cliquable pendant toute la séquence).
+func _set_draft_title(txt: String) -> void:
+	if _draft_title_lbl == null or not is_instance_valid(_draft_title_lbl):
+		return
+	var lbl: Label = _draft_title_lbl
+	if not lbl.is_inside_tree() or MerlinVisual.reduced_motion:
+		lbl.text = txt
+		lbl.modulate.a = 1.0
+		return
+	if lbl.has_meta("_tw_title"):
+		var prev: Tween = lbl.get_meta("_tw_title")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	var t: Tween = lbl.create_tween()
+	t.tween_property(lbl, "modulate:a", 0.0, 0.10 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	t.tween_callback(func() -> void: lbl.text = txt)
+	t.tween_property(lbl, "modulate:a", 1.0, 0.18 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	lbl.set_meta("_tw_title", t)
+
+
+# v11-W3 — étape 2, clic tuile : pose de la greffe (cap 3 géré par run.apply_graft, prix one-shot),
+# micro-anim slot (pop + flash) + liseré re-dérivé, puis _draft_done_flag → le driver referme la
+# zone et le flux normal reprend (_advance_to_next → advance_beat → save unique, R108).
+func _on_graft_target(action: MerlinCard) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	var g: Dictionary = _pending_graft
+	if g.is_empty():
+		return  # aucune greffe sélectionnée (étape 1) — clic de tuile ignoré
+	if not run.apply_graft(str(action.id), g):
+		return  # tuile pleine (non éligible, déjà estompée) — le geste reste ouvert
+	_pending_graft = {}
+	_graft_applied = true
+	var tile: MerlinActionView = _tile_for(action)
+	if tile != null:
+		tile.graft_pop()                         # glyphe pop TRANS_BACK + flash GOLD
+		tile.set_die_rarity(str(action.rarity))  # liseré re-dérivé (rim_for_rarity, R133)
+	_set_draft_target_mode(false)
+	_draft_done_flag = true
 
 
 # === Wave D — Offrande du pilier (modal de draft réutilisé, titre thémé par le PNJ) ===
@@ -1166,32 +1292,29 @@ func _pilier_offer_text(pilier_key: String) -> Dictionary:
 		"etre":
 			return {"title": "L'Être Indéfinissable te propose un pacte", "sub": "Un pouvoir réel — contre une part de toi."}
 		"compagnon":
-			return {"title": "Le Compagnon te tend une carte", "sub": "Sa main est chaude. Ce qu'elle coûte l'est moins."}
+			return {"title": "Le Compagnon te tend un présent", "sub": "Sa main est chaude. Ce qu'elle coûte l'est moins."}
 		"chevalier":
 			return {"title": "Le Chevalier déchu te confie une lame", "sub": "L'acier reste tranchant, même terni."}
 		"enfant":
 			return {"title": "L'Enfant te montre ce qu'il a trouvé", "sub": "« C'est pour toi », dit-il en souriant."}
-	return {"title": "Une voie s'offre à toi — choisis une carte", "sub": "Elle rejoint ton grimoire."}
+	return {"title": "Une greffe s'offre à toi — choisis, puis touche un verbe", "sub": "Elle rejoint tes verbes."}
 
 
-# Présente l'offrande signée. Calque exact de _present_draft (mêmes gardes structurelles, même cycle),
-# mais cartes = banque du pilier et titre thémé. Flag d'unicité posé à l'OUVERTURE (résiste resume/replay).
+# Présente l'offrande signée — v11-W3 : la banque du pilier sert des GREFFES (calque exact de
+# _present_draft : mêmes gardes structurelles, même cycle 2 gestes). Flag d'unicité posé à
+# l'OUVERTURE (résiste resume/replay).
 func _present_pilier_offering(pilier_key: String) -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	run.pilier_offering_done = true  # AVANT le filtre vide : même un skip (banque épuisée) ne re-tente jamais
-	var choices: Array = run.pilier_offering(pilier_key, 2)
-	if choices.is_empty():
-		return  # tout déjà possédé → pas d'offrande vide
-	_draft_pick = null
-	_draft_done_flag = false
+	var grafts: Array = run.pilier_graft_offering(pilier_key, 2)
+	if grafts.is_empty():
+		return  # tout déjà greffé → pas d'offrande vide
 	var txt: Dictionary = _pilier_offer_text(pilier_key)
-	_open_draft_zone(choices, str(txt["title"]), pilier_key)
+	_begin_graft_draft(grafts, str(txt["title"]), pilier_key)
 	while not _draft_done_flag and is_inside_tree() and _draft_active and not run.ended:
 		await get_tree().process_frame
-	if _draft_pick != null:
-		run.add_card_to_deck(_draft_pick)
-		if _beat_map != null:
-			_beat_map.mark_draft()
+	if _graft_applied and _beat_map != null:
+		_beat_map.mark_draft()
 	_close_draft_zone()
 
 
@@ -1219,6 +1342,7 @@ func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_draft_bar.add_child(title)
+		_draft_title_lbl = title  # v11-W3 : re-titré à l'étape cible (cross-fade du libellé)
 		var skip: Button = Button.new()
 		skip.text = "Passer"
 		skip.custom_minimum_size = Vector2(180, 52)  # ≥44 px (pilier TACTILE)
@@ -1262,6 +1386,11 @@ func _close_draft_zone() -> void:
 	if not _draft_active:
 		return
 	_draft_active = false
+	# v11-W3 : hygiène du mode cible — pulses éteints, tuiles restaurées, sélection purgée.
+	_set_draft_target_mode(false)
+	_pending_graft = {}
+	_graft_by_id = {}
+	_draft_title_lbl = null
 	if _draft_bar != null and is_instance_valid(_draft_bar):
 		_draft_bar.queue_free()
 	_draft_bar = null
@@ -1298,11 +1427,24 @@ func _swap_hand_zone(build: Callable) -> void:
 	_hand_box.set_meta("_fx_tw_swap", t)
 
 
+# v11-W3 — étape 1 du draft de greffe : clic greffe = sélection (carte levée + GOLD) → Z4 re-titrée
+# « Touche l'action qui recevra la greffe » + tuiles éligibles en pulse ; re-clic = désélection.
 func _on_draft_card(card: MerlinCard) -> void:
 	if _draft_done_flag or Time.get_ticks_msec() - _draft_open_ms < 500:
 		return  # audit ux_flow F2 : pas de pick AVEUGLE pendant le deal (contrôles encore à alpha 0)
-	_draft_pick = card
-	_draft_done_flag = true
+	var g: Dictionary = _graft_by_id.get(str(card.id), {})
+	if g.is_empty():
+		return  # défense : carte étrangère au draft courant
+	if not _pending_graft.is_empty() and str(_pending_graft.get("id", "")) == str(card.id):
+		_pending_graft = {}  # re-clic = désélection → retour étape 1
+		_select_draft_view(null)
+		_set_draft_target_mode(false)
+		_set_draft_title(_draft_title_base)
+		return
+	_pending_graft = g
+	_select_draft_view(card)
+	_set_draft_target_mode(true)
+	_set_draft_title("Touche l'action qui recevra la greffe")
 
 
 func _on_draft_skip() -> void:

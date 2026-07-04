@@ -2,6 +2,38 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-07-04 — v11-V3 GREFFES (la profondeur du pivot)
+
+### Réalisé
+- **Données** : `MerlinCard.grafts` ADDITIF (saves W2 OK, pas de bump), `refresh_from_grafts()`
+  (tags = 2 base + greffés ; rarity = f(nb greffes)), `graft_banks()` 21 greffes (lore 100 % conservé).
+- **Moteur** : DIE_BANDS = f(greffes), 6/6 supprimée ; relâchée d'un cran au recalibrage (33/50/67/83).
+- **État** : `apply_graft` (cap 3, prix ONE-SHOT, zéro save — R108), `apply_graft_charges` (HEAL/PURGE/
+  DRAW à la pose du verbe, DRAW pioche des traits), `graft_choices`/`pilier_graft_offering` runtime.
+- **UI** : draft 2 gestes (greffe levée+GOLD → « Touche l'action » → tuile éligible pulse →
+  `_on_graft_target` → pop+flash+liseré) ; slots remplis dessinés (pastille famille/pip or/✚n❖n✦n).
+- **Harnais MÊME COMMIT** : probe_soak greffe-aware (self-tests §E, optimal cible l'action la plus
+  jouée, greffes/run loguées §K, resume greffes) ; autoplay 2 gestes (clic tuile éligible).
+
+### Code-review (agent) — 0 CRITICAL, tous findings traités
+- H1 : probe n'appelait pas apply_graft_charges (miroir incomplet) → ajouté + campagne §K re-mesurée.
+- M1 : DRAW de greffe MORT (redraw complet → pioche défaussée, Retour Promis payait 1 corr pour
+  rien) → `next_draw_bonus` : la pioche porte sur la main du beat SUIVANT (persisté, additif).
+- M2 : assertion resume renforcée (signature id:charges par action + next_draw_bonus).
+- L1-L4 : cap non codé en dur (autoplay), log skip fidèle, SFX de pose hors reduce-motion,
+  tweens de pose killés avant re-pose. L5 (legacy hors W3) et L6 (add_corruption sans check de
+  cap immédiat — cohérent pactes R131) documentés en vigilances.
+
+### Gates (config finale, post-fixes)
+- validate_step0 0/0 · smoke Game+Menu passed · soak 200/200 · soak 300/300 · autoplay 3/3
+  (greffes posées en conditions réelles, cap 3 observé). 0 SCRIPT ERROR.
+- Recalibrage dé : table spec 17/33/50/67 mesurée (éclatante 2,3 %/morts 47,2 %) → relâchée d'UN
+  cran 33/50/67/83 (une fois, comme mandaté) → re-mesure.
+- §K final (n=216 saines, 1738 beats, miroir charges inclus) : échec 25,3 % · partiel 28,5 % IN ·
+  réussite 43,4 % · éclatante 2,8 % · morts 36,6 % · corrompues 0 % IN · pushes 1,32 IN ·
+  corruption 5,94 IN · climax plein 1,1 % · greffes/run 2,69 · hors-pool 0 · deadhand 34,9 %.
+  PAS committé (décision orchestrateur sur l'équilibrage restant).
+
 ## Session: 2026-06-29 — v10.20 Yeux à humeurs, voix procédurale, DA alignée
 
 ### Context

@@ -111,5 +111,21 @@ interventions 1/run / greffes V3 / transitions invisibles.
       Code-review : 6 findings corrigés (2 HIGH courses de tweens au double-clic — un seul
       propriétaire d'alpha par zone ; pacte en done-path — l'await sur _tw.finished perdait le
       pacte au skip ; skip d'interstitiel des outils capture ré-aligné).
-- [ ] V3 greffes (task #48, spec §E + spec_v11_pivot) · V4 fleet QA + purge + BIBLE.
+- [x] V2 CLOSE : R136 au canon (70f6fb31), commits a87bdc9c (V2a) + 006fadc0 (V2b).
+- [x] V3 GREFFES LIVRÉE (2026-07-04, task #48, gate vert : validate 0/0, smoke Game+Menu, soak
+      200/200 + self-tests §E, autoplay 3/3 greffes réellement posées) : graft_banks 21 greffes
+      (pilier_bank+enriched_pool convertis, lore conservé — Chœur gratuit / Être +1 one-shot /
+      Compagnon +1 one-shot / Chevalier corr 0 / Enfant narratif ×1), champ grafts ADDITIF
+      (refresh_from_grafts : tags=base+greffés, rarity=f(nb greffes), PAS de bump SAVE_VERSION),
+      run.apply_graft (cap 3, prix one-shot, pas de save — atomicité _advance_to_next) +
+      apply_graft_charges à la pose du verbe (chips vignette mutualisées), draft 2 GESTES
+      (sélection levée+GOLD → Z4 re-titrée → tuiles éligibles await_pulse, dispatch
+      _on_action_tile par _draft_active AVANT _state, 4 pleines = draft coupé), slots remplis
+      dessinés (pastille famille / pip or / ✚n❖n✦n) + graft_pop + liseré re-dérivé.
+      RECALIBRAGE mesuré : DIE_BANDS spec 17/33/50/67 → éclatante 2,3 %/morts 47,2 % (300 runs)
+      → relâchée d'UN cran 33/50/67/83 → éclatante 2,9 %/morts 38,0 %, partiel IN. Distribution
+      §K encore hors cible (échec 25,4 %, éclatante 2,9 %, morts 38 %, climax plein 1,1 %) —
+      décision orchestrateur requise (le dé seul ne suffit pas ; voir vigilances V4).
+- [ ] V4 : fleet QA captures 8 phases ×2 biomes (charte/anim/overlap/UX §23), purge banques legacy
+      du chemin runtime, R137 + re-spec lore R49/R90/R92, tasks #45/#48 close.
 

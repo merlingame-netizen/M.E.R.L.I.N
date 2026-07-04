@@ -19,6 +19,8 @@ const SAVE_PATH: String = "user://merlin_run.json"
 const SAVE_VERSION: int = 2
 # v11 (R113 re-spécifié) : cap 1 trait corrompu par main (re-tirage silencieux de l'excédent).
 const MAX_CORRUPTED_IN_HAND: int = 1
+# v11-W3 (spec §E) : cap de greffes par action — 3 slots fixes (12 total, jamais saturé en pratique).
+const MAX_GRAFTS_PER_ACTION: int = 3
 
 # v10.11 (user 2026-06-07) — Deck enrichi + Draft + Carte Destin (Slay the Spire allégé).
 # Poids de rareté du draft (somme = 100) ; barème merlin-game-designer.
@@ -72,6 +74,11 @@ var pushes_left_quest: int = 1
 var intervention_beats: Array = []
 var pilier_interventions: int = 0
 var blessed_tags: Dictionary = {}
+# v11-W3 (review M1) — DRAW de greffe : la pioche porte sur la MAIN SUIVANTE. Le redraw COMPLET
+# par beat rendait une pioche immédiate MORTE (traits défaussés avant d'être jouables — coût
+# affiché > valeur réelle, pilier ÉVIDENT violé). Persisté (champ additif, défaut 0) : le save de
+# _advance_to_next précède le redraw du beat suivant (R108).
+var next_draw_bonus: int = 0
 
 
 # Tags bénis portés par les cartes de ce combo (canal bonus de MerlinResolution.resolve, R131).
@@ -142,6 +149,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	intervention_beats = []
 	pilier_interventions = 0
 	blessed_tags = {}
+	next_draw_bonus = 0
 	actions = MerlinCard.make_actions()  # v11 : les 4 verbes fixes évolutifs
 	deck = MerlinCard.starter_traits()   # v11 : 16 traits (12 canon retagués + 4 nouveaux)
 	hand = []
@@ -232,6 +240,11 @@ func redraw_hand() -> void:
 	while not hand.is_empty():
 		discard.append(hand.pop_back())
 	draw_to_full()
+	# v11-W3 (review M1) — bonus de pioche des greffes DRAW, consommé ICI : la main de ce beat
+	# est élargie d'autant (borné par le cap de main dans _draw_extra).
+	if next_draw_bonus > 0:
+		_draw_extra(next_draw_bonus)
+		next_draw_bonus = 0
 	_enforce_hand_caps()
 
 
@@ -433,6 +446,115 @@ func add_card_to_deck(card: MerlinCard) -> void:
 	deck.append(card)
 	if not cartes_notables.has(card.card_name):
 		cartes_notables.append(card.card_name)
+
+
+# === v11-W3 (spec §E) — GREFFES : le draft pose une greffe sur une ACTION (cap 3/action) ===
+
+# Retrouve l'action par id — les ids action_* sont STABLES (survivent au resume R108).
+func _action_by_id(action_id: String) -> MerlinCard:
+	for a in actions:
+		if a is MerlinCard and str((a as MerlinCard).id) == action_id:
+			return a
+	return null
+
+
+# Ids des greffes DÉJÀ posées (toutes actions) — le draft les exclut (jamais de doublon).
+func placed_graft_ids() -> Dictionary:
+	var out: Dictionary = {}
+	for a in actions:
+		if not (a is MerlinCard):
+			continue
+		for g in (a as MerlinCard).grafts:
+			if g is Dictionary:
+				out[str((g as Dictionary).get("id", ""))] = true
+	return out
+
+
+# Y a-t-il encore une action greffable ? (les 4 pleines → le draft ne se déclenche plus)
+func has_graftable_action() -> bool:
+	for a in actions:
+		if a is MerlinCard and ((a as MerlinCard).grafts as Array).size() < MAX_GRAFTS_PER_ACTION:
+			return true
+	return false
+
+
+# Pose une greffe sur l'action ciblée. Cap 3/action → false si pleine. Le prix est ONE-SHOT à la
+# pose (corr_cost via add_corruption — guardrail CRITICAL : jamais récurrent, l'action reste à
+# corruption 0). N'APPELLE PAS save() : atomicité via le save unique de _advance_to_next (R108).
+func apply_graft(action_id: String, graft: Dictionary) -> bool:
+	var act: MerlinCard = _action_by_id(action_id)
+	if act == null or graft.is_empty():
+		return false
+	if (act.grafts as Array).size() >= MAX_GRAFTS_PER_ACTION:
+		return false
+	act.grafts.append(graft.duplicate(true))
+	act.refresh_from_grafts()  # dérivation unique : tags = base + greffés, rarity = f(nb greffes)
+	var price: int = int(graft.get("corr_cost", 0))
+	if price > 0:
+		add_corruption(price)
+	var gname: String = str(graft.get("name", ""))
+	if gname != "" and not cartes_notables.has(gname):
+		cartes_notables.append(gname)  # la greffe nourrit la mémoire du run (état LLM)
+	return true
+
+
+# À la pose du VERBE : consomme 1 charge de chaque greffe "charge" de l'action jouée (HEAL/PURGE/
+# DRAW — mêmes règles qu'apply_card_effects ; DRAW pioche des TRAITS pour la main du beat SUIVANT,
+# review M1 : le redraw complet rend toute pioche immédiate morte). Appelée par merlin_game.
+# _on_resolve à côté d'apply_card_effects (AVANT le check de mort — un HEAL peut sauver).
+func apply_graft_charges(action: MerlinCard) -> Dictionary:
+	var heal: int = 0
+	var purge: int = 0
+	var draw: int = 0
+	if action == null:
+		return {"heal": 0, "purge": 0, "draw": 0}
+	for g in action.grafts:
+		if not (g is Dictionary) or str((g as Dictionary).get("kind", "")) != "charge":
+			continue
+		var gd: Dictionary = g
+		if int(gd.get("charges", 0)) <= 0:
+			continue  # greffe épuisée — le glyphe reste dessiné (compteur 0, estompé)
+		gd["charges"] = int(gd.get("charges", 0)) - 1
+		match str(gd.get("effect_type", "")):
+			"HEAL": heal += int(gd.get("effect_value", 1))
+			"PURGE": purge += int(gd.get("effect_value", 1))
+			"DRAW": draw += int(gd.get("effect_value", 1))
+	if heal > 0:
+		integrite = clampi(integrite + heal, 0, _max_integrite())
+	if purge > 0:
+		corruption = maxi(0, corruption - purge)
+	if draw > 0:
+		next_draw_bonus += draw  # consommé par redraw_hand au beat suivant (cap main + R113 là-bas)
+	if heal > 0 or purge > 0:
+		emit_signal("gauges_changed", integrite, corruption)
+	return {"heal": heal, "purge": purge, "draw": draw}
+
+
+# Draft runtime v11-W3 : n greffes GÉNÉRIQUES distinctes (remplace draft_choices au runtime —
+# l'ancienne fonction reste pour compat outillage mais n'est plus appelée par le jeu).
+func graft_choices(n: int = 3) -> Array:
+	return _graft_pick(MerlinCard.graft_banks(""), n)
+
+
+# Offrande du pilier v11-W3 : n greffes de la banque SIGNÉE (remplace pilier_offering au runtime).
+func pilier_graft_offering(pilier: String, n: int = 2) -> Array:
+	return _graft_pick(MerlinCard.graft_banks(pilier), n)
+
+
+# Tirage commun : filtre les greffes déjà posées (par id), mélange via le RNG de la run (variance
+# entre runs, même pattern Fisher-Yates que pilier_offering), tronque à n. [] si banque épuisée.
+func _graft_pick(bank: Array, n: int) -> Array:
+	var placed: Dictionary = placed_graft_ids()
+	var avail: Array = []
+	for g in bank:
+		if g is Dictionary and not placed.has(str((g as Dictionary).get("id", ""))):
+			avail.append(g)
+	for i in range(avail.size() - 1, 0, -1):
+		var j: int = _rng.randi_range(0, i)
+		var tmp: Variant = avail[i]
+		avail[i] = avail[j]
+		avail[j] = tmp
+	return avail.slice(0, mini(n, avail.size()))
 
 
 # --- Carte Destin (archétype dominant du run) ---
@@ -650,6 +772,7 @@ func save() -> void:
 		"pushes_left_quest": pushes_left_quest,  # Wave G (R130) : budget Pousser persisté (additif)
 		"intervention_beats": intervention_beats, "pilier_interventions": pilier_interventions,
 		"blessed_tags": blessed_tags,  # Wave I (R131) : planning + bénédictions persistés (R108)
+		"next_draw_bonus": next_draw_bonus,  # v11-W3 (M1) : pioche DRAW due à la main suivante (additif)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -694,6 +817,7 @@ func load_run() -> bool:
 	intervention_beats = data.get("intervention_beats", [])  # Wave I (R131), défauts = saves legacy OK
 	pilier_interventions = int(data.get("pilier_interventions", 0))
 	blessed_tags = data.get("blessed_tags", {})
+	next_draw_bonus = int(data.get("next_draw_bonus", 0))  # v11-W3 (M1) : défaut 0 (saves W2/W3 précoces OK)
 	actions = _dicts_to_cards(data.get("actions", []))
 	if actions.is_empty():
 		actions = MerlinCard.make_actions()  # filet : jamais de run sans les 4 verbes

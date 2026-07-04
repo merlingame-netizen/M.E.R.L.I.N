@@ -15,6 +15,12 @@ var effect_value: int = 0      # intensité (PV soignés / Corruption purgée / 
 # "" pour les traits et cartes legacy. La famille de synergie de l'action ne change JAMAIS,
 # même quand des tags sont greffés (W3).
 var family: String = ""
+# v11-W3 (spec §E) — GREFFES posées sur une ACTION (cap 3). Dicts {id, name, evocation,
+# kind: "tag"|"die"|"charge", tag, effect_type, effect_value, charges, corr_cost, pilier}.
+# Champ ADDITIF (défaut []) : les saves W2 chargent sans bump de SAVE_VERSION.
+# GUARDRAIL CRITICAL : le prix d'une greffe est ONE-SHOT à la pose (corr_cost, payé par
+# merlin_run.apply_graft) ou PAR CHARGE — jamais récurrent (corruption de l'action reste 0).
+var grafts: Array = []
 var _archetype_cache: String = ""  # v10.5 : archétype dérivé memoïsé (to_dict appelé ~1Hz × deck)
 
 
@@ -77,6 +83,7 @@ func to_dict() -> Dictionary:
 		"tags": tags.duplicate(), "corruption": corruption, "rarity": rarity,
 		"effect_type": effect_type, "effect_value": effect_value,
 		"family": family,  # v11 : "" pour les traits — champ additif
+		"grafts": grafts.duplicate(true),  # v11-W3 : additif (défaut [] — saves W2 compatibles)
 		"archetype": archetype(),
 	}
 
@@ -88,7 +95,32 @@ static func from_dict(d: Dictionary) -> MerlinCard:
 		int(d.get("corruption", 0)), str(d.get("rarity", "Commune")),
 		str(d.get("effect_type", "")), int(d.get("effect_value", 0)))
 	c.family = str(d.get("family", ""))
+	var gv: Variant = d.get("grafts", [])
+	c.grafts = (gv as Array).duplicate(true) if gv is Array else []
+	c.refresh_from_grafts()  # v11-W3 : dérivation UNIQUE tags/rarity au load (no-op pour les traits)
 	return c
+
+
+## v11-W3 (spec §E) — DÉRIVATION UNIQUE depuis les greffes, à la pose ET au load :
+##   tags   = 2 tags de BASE + tags greffés (kind "tag", dédupliqués) ;
+##   rarity = ["Commune","Rare","Épique","Mythique"][min(nb greffes, 3)] — la qualité de dé
+##            EST le nombre de greffes (langage R133 : liseré de tuile = qualité).
+## No-op pour les traits (pas de famille canonique). Ne touche JAMAIS `corruption` (guardrail :
+## zéro coût récurrent sur les greffes).
+func refresh_from_grafts() -> void:
+	if not is_action():
+		return
+	var base: Array = tags.slice(0, 2)
+	var out: Array = base.duplicate()
+	for g in grafts:
+		if g is Dictionary and str((g as Dictionary).get("kind", "")) == "tag":
+			var t: String = str((g as Dictionary).get("tag", ""))
+			if t != "" and not out.has(t):
+				out.append(t)
+	tags = out
+	var ladder: Array = ["Commune", "Rare", "Épique", "Mythique"]
+	rarity = str(ladder[mini(grafts.size(), 3)])
+	_archetype_cache = ""  # les tags ont pu changer → archétype re-dérivé à la demande
 
 
 ## === v11 (spec panel W2) — Les 4 ACTIONS fixes évolutives (tuiles permanentes) ===
@@ -223,6 +255,113 @@ static func enriched_pool() -> Array:
 		make("dissolution_consentie", "La Dissolution Consentie", ["Dissolution", "Sacrifice"],
 			"Tu effaces une part de toi pour qu'une autre passe. Ce n'est pas de la faiblesse — c'est du calcul froid.", 2, "Mythique", "HEAL", 3),
 	]
+
+
+## === v11-W3 (spec §E + mapping_actions) — BANQUES DE GREFFES ===
+## Conversion de pilier_bank() + enriched_pool() : noms + évocations CONSERVÉS (zéro perte de lore).
+## pilier "" = draft générique (mix +tag / +bande de dé / charges) ; sinon banque SIGNÉE du PNJ :
+##   choeur    = charges HEAL/PURGE gratuites + tag Mémoire (L'Eau Claire), corr 0
+##   etre      = +tag Mystère/Vision/Sacrifice contre +1 Corruption ONE-SHOT (affichée au modal)
+##   compagnon = tentation DRAW/HEAL contre +1 Corruption one-shot
+##   chevalier = +bande de dé ou +tag Force/Autorité/Endurance, corr 0
+##   enfant    = piège 100 % NARRATIF, corr 0 (charges ×1 médiocres honnêtes, jouet = dé de bois)
+## GUARDRAIL CRITICAL : corr_cost ≤ 1, payé UNE fois à la pose — aucun coût récurrent, sans exception.
+static func graft_banks(pilier: String = "") -> Array:
+	match pilier:
+		"":
+			return [
+				_graft_die("g_oeil_du_druide", "L'Œil du Druide",
+					"Tu lis les traces que d'autres effacent ; le mensonge devient transparent sous ton regard."),
+				_graft_charge("g_bras_de_fer", "Le Bras de Fer",
+					"Tu encaisses, tu tiens, tu retournes la pression — le premier qui cède n'est pas toi.",
+					"HEAL", 1, 2, 0),
+				_graft_tag("g_serment_tenu", "Le Serment Tenu",
+					"Tu as promis. Tu paies le prix. Et c'est précisément ce qui te donne du poids.",
+					"Franchise", 0),
+				_graft_die("g_voix_autorite", "La Voix d'Autorité",
+					"Un seul mot, dit au bon moment — et la salle cède sans qu'on sache pourquoi."),
+				_graft_tag("g_marche_equilibre", "La Marche d'Équilibre",
+					"Tu ne cherches pas la victoire — tu cherches la durée. Et tu dures.",
+					"Équilibre", 0),
+				_graft_die("g_transe_druidique", "La Transe Druidique",
+					"La frontière entre toi et la forêt s'efface. Tu vois ce que Brocéliande te cache depuis longtemps."),
+			]
+		"choeur":
+			return [
+				_graft_tag("g_eau_claire", "L'Eau Claire",
+					"Bois à la source que seuls les Druides connaissent ; elle lave plus que la gorge, elle lave la mémoire de la peur.",
+					"Mémoire", 0, "choeur"),
+				_graft_charge("g_baume_du_choeur", "Le Baume du Chœur",
+					"La druidesse presse une feuille contre ta plaie sans un mot ; la sève sait le chemin que le sang oublie.",
+					"PURGE", 1, 2, 0, "choeur"),
+				_graft_charge("g_main_qui_releve", "La Main qui Relève",
+					"Une paume calleuse se pose sur ton épaule ; tu n'es pas seul, et cette certitude vaut plus que dix remèdes.",
+					"HEAL", 1, 2, 0, "choeur"),
+			]
+		"etre":
+			return [
+				_graft_tag("g_pacte_de_lisiere", "Le Pacte de Lisière",
+					"L'Être te montre une vérité qu'aucun œil ne devrait voir ; tu la prends, et quelque chose en toi se ternit pour l'avoir vue.",
+					"Vision", 1, "etre"),
+				_graft_tag("g_offrande_sang", "L'Offrande de Sang",
+					"Tu ouvres la paume au-dessus de la coupe ; ce que tu y verses revient décuplé, mais ce n'est plus tout à fait du sang qui coule.",
+					"Sacrifice", 1, "etre"),
+				_graft_tag("g_faveur_indicible", "La Faveur Indicible",
+					"Elle murmure un mot que ta bouche refuse de retenir ; la porte s'ouvre, et tu sens qu'une part de toi est restée de l'autre côté.",
+					"Mystère", 1, "etre"),
+			]
+		"compagnon":
+			return [
+				_graft_charge("g_promesse_ancienne", "La Promesse Ancienne",
+					"Sa voix a le grain d'un ami que tu croyais perdu ; elle te promet de rester, et tu voudrais tant la croire.",
+					"HEAL", 2, 2, 1, "compagnon"),
+				_graft_charge("g_retour_promis", "Le Retour Promis",
+					"« Reviens vers moi », souffle-t-il, et chaque mot tisse un chemin si doux que tu oublies de regarder où il mène.",
+					"DRAW", 1, 2, 1, "compagnon"),
+				_graft_charge("g_main_tendue", "La Main Tendue",
+					"Il te tend la main par-dessus le gouffre ; sa poigne est chaude, ferme, sincère — et quelque chose en lui s'éteint un peu chaque fois qu'il t'aide.",
+					"HEAL", 1, 2, 1, "compagnon"),
+			]
+		"chevalier":
+			return [
+				_graft_tag("g_lame_ternie", "La Lame Ternie",
+					"Son épée n'a plus l'éclat des serments, mais elle tranche encore ; il te la confie sans un regard pour ce qu'elle a coûté.",
+					"Endurance", 0, "chevalier"),
+				_graft_die("g_charge_du_dechu", "La Charge du Déchu",
+					"Il fond sur l'obstacle comme aux jours de gloire ; ce qui le poussait jadis vers l'honneur le pousse aujourd'hui tout court.",
+					"chevalier"),
+				_graft_tag("g_serment_de_cendre", "Le Serment de Cendre",
+					"Tu jures sur ce qu'il te reste d'honneur ; le serment tient, mais il te brûle les lèvres à chaque fois qu'il sort.",
+					"Autorité", 0, "chevalier"),
+			]
+		"enfant":
+			return [
+				_graft_die("g_jouet_offert", "Le Jouet Offert",
+					"« Tiens, c'est pour toi », dit l'Enfant, et le petit objet de bois ne fait rien d'autre que tenir au creux de ta main.",
+					"enfant"),
+				_graft_charge("g_secret_chuchote", "Le Secret Chuchoté",
+					"« Garde-le pour toi », souffle l'enfant en riant ; mais son rire sonne faux, et le secret pèse déjà trop lourd dans ta poitrine.",
+					"DRAW", 1, 1, 0, "enfant"),
+				_graft_charge("g_main_chaude", "La Petite Main Chaude",
+					"Sa menotte se glisse dans la tienne, confiante ; le geste te réchauffe le cœur — mais tu sens, sans savoir pourquoi, qu'il ne faudrait pas la lâcher.",
+					"HEAL", 1, 1, 0, "enfant"),
+			]
+	return []
+
+
+static func _graft_tag(p_id: String, p_name: String, p_evo: String, p_tag: String, p_corr: int, p_pilier: String = "") -> Dictionary:
+	return {"id": p_id, "name": p_name, "evocation": p_evo, "kind": "tag", "tag": p_tag,
+		"effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": p_corr, "pilier": p_pilier}
+
+
+static func _graft_die(p_id: String, p_name: String, p_evo: String, p_pilier: String = "") -> Dictionary:
+	return {"id": p_id, "name": p_name, "evocation": p_evo, "kind": "die", "tag": "",
+		"effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": 0, "pilier": p_pilier}
+
+
+static func _graft_charge(p_id: String, p_name: String, p_evo: String, p_eff: String, p_val: int, p_charges: int, p_corr: int, p_pilier: String = "") -> Dictionary:
+	return {"id": p_id, "name": p_name, "evocation": p_evo, "kind": "charge", "tag": "",
+		"effect_type": p_eff, "effect_value": p_val, "charges": p_charges, "corr_cost": p_corr, "pilier": p_pilier}
 
 
 ## Wave D (Wave D, co-design user 2026-06-30 + panel équilibrage adversarial) — BANQUES D'OFFRANDE PAR PILIER.
