@@ -54,6 +54,7 @@ var _res_block: VBoxContainer = null
 var _effect_vignette: HBoxContainer = null
 var _pending_res: Dictionary = {}    # res/degré mémorisés au resolve → fade-in vignette post-typewriter
 var _pending_degree: String = ""
+var _die_hint: MerlinDice = null     # v10.23 — indice « ce choix jettera un dé » (liseré = rareté de la principale)
 # v10.21 (Wave G, R130) — PARTIEL = CHOIX « Encaisser / Pousser » : l'application de la résolution est
 # DIFFÉRÉE jusqu'au choix (play_and_discard + effets de cartes restent immédiats — un HEAL sauve avant).
 var _push_pending: bool = false
@@ -496,12 +497,19 @@ func _update_preview() -> void:
 	var n: int = _combo.size()
 	if n < 2:
 		_resolve_btn.disabled = true
+		if _die_hint != null:
+			_die_hint.visible = false
 		return
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [], int(_current_situation.get("die", 0)),
 		get_node("/root/MerlinRun").blessed_bonus(_combo))  # R131 : bénédictions dans la preview (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_resolve_btn.disabled = false
+	# v10.23 — l'indice de dé s'allume avec le bouton : liseré = rareté de la carte PRINCIPALE (_combo[0]).
+	if _die_hint != null:
+		_die_hint.visible = int(_current_situation.get("die", 0)) >= 1
+		if _combo.size() > 0 and _combo[0] is MerlinCard:
+			_die_hint.set_hint_rarity(str((_combo[0] as MerlinCard).rarity))
 	if was_disabled and _resolve_btn.visible:
 		MerlinAudio.play_sfx("draft_reveal")
 		_pop(_resolve_btn, 1.15)
@@ -595,6 +603,14 @@ func _on_resolve() -> void:
 				_scene_art.thicken_mist()
 				_scene_art.sway_trees()
 
+	# v10.23 (user) — JET DE DÉ animé (2D fausse-3D, ~2 s) : culbute → ralenti → pose sur la face
+	# pré-tirée du beat ; éclat d'or si le sort sourit (die_mod > 0), face terne s'il reste muet.
+	var die_face: int = int(situ.get("die", 0))
+	if die_face >= 1 and is_inside_tree():
+		var dice: MerlinDice = MerlinDice.roll(self, die_face, str(res.get("die_rarity", "")), int(res.get("die_mod", 0)))
+		await dice.done
+		if not _fresh(ep):
+			return
 	_set_choice_ui(false)   # v10.10 : cartes redescendent → l'issue occupe l'encart central, SEULE (user 2026-06-06)
 	_render_combo()         # _combo vide → clear _combo_box (les vues précédentes ont été reparented/free'd)
 
@@ -894,6 +910,13 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 		_effect_vignette.add_child(_vignette_chip("Intégrité %+d" % di, MerlinVisual.GREEN if di > 0 else MerlinVisual.VIOLET))
 	if dc != 0:
 		_effect_vignette.add_child(_vignette_chip("Corruption %+d" % dc, MerlinVisual.VIOLET if dc > 0 else MerlinVisual.GREEN))
+	# v10.23 — la CONTRIBUTION du sort devient lisible dans la vignette.
+	if int(res.get("die", 0)) >= 1:
+		var dmod: int = int(res.get("die_mod", 0))
+		if dmod > 0:
+			_effect_vignette.add_child(_vignette_chip("⚄ Le sort a souri (+%d)" % dmod, MerlinVisual.GOLD_DARK))
+		else:
+			_effect_vignette.add_child(_vignette_chip("⚄ Le sort resta muet", MerlinVisual.INK_DIM))
 	for e in res.get("fx_effects", []):
 		match str(e):
 			"HEAL": _effect_vignette.add_child(_vignette_chip("✚ Soin", MerlinVisual.EFFECT_HEAL))
@@ -2077,6 +2100,11 @@ func _build_ui() -> void:
 	_resolve_btn.pressed.connect(_on_resolve)
 	btn_row.add_child(_resolve_btn)
 	MerlinVisual.connect_button_feedback(_resolve_btn)  # v10.13.1 — feedback canon §21 `tap`
+	# v10.23 (user) — INDICE DE DÉ : ce choix jettera un dé, et sa qualité vient de la carte PRINCIPALE
+	# (liseré à sa rareté). Visible uniquement quand le combo est complet (comme le bouton).
+	_die_hint = MerlinDice.hint(26.0)
+	_die_hint.visible = false
+	btn_row.add_child(_die_hint)
 
 	# v10.5 : label « Ta main : » retiré (user 2026-06-06). L'éventail se suffit visuellement.
 	_hand_box = Control.new()
