@@ -173,3 +173,25 @@ interventions 1/run / greffes V3 / transitions invisibles.
 | 7 | Assertions dures : gates morts/archétype + 4 bandes si atteintes | probe_soak | pending |
 
 Gates finaux : validate_step0 0/0 → smoke MerlinGame+MerlinMenu → soak 200 → soak 300 (tableau §K) → autoplay 3/3. JAMAIS committer.
+
+## Clôture V4a (2026-07-05) — VAGUE VERTE, commit 4562371b
+- 8 leviers mesurés (L5 dé 17/33/50/67 REJETÉ par mesure — repli 33/50/67/83 ; L7 couverture
+  retag 4 traits + biais greffés ; L8 barème échec par difficulté −2/−2/−3 via resolve(diff)).
+- §K final : réussite 50,1 IN · éclatante 11,1 IN · corruption 5,63 IN · 0 hors-pool DUR ·
+  gates morts archétype TOUS PASS (0/0/9,3/0). OUT logués BAL-20-B : échec 18,9 · partiel 19,9 ·
+  climax 12,2 · morts 4,6 sous-bande (sur-amorti L7+L8 — re-serrage par répit BAL-06, pas barème).
+- BIBLE R139 posée. Autoplay budget 600→960 s (faux rouge deadline sur chaîne 3 quêtes).
+- Reste tracé : bug pré-existant resume beat 0 (chip spawn_task task_65ee520d).
+
+---
+
+# task_plan — #52 fix « Invalid polygon data » MerlinEnd (2026-07-05)
+
+- Cause : polygones AUTO-INTERSECTANTS dans merlin_scene_art._draw() — (a) rubans d'onde falaises
+  (bords haut ±0.008h / bas +0.012h±0.006h se croisent au fil de _t) ; (b) creux de survol brume
+  v10.21 cassait l'invariant v10.22 (bord haut poussé à 1.35×th sous le bord bas). Build exporté
+  seulement : curseur réel + biome falaises hérité de la run.
+- Fix : amplitudes bornées (invariant « bords ne se croisent jamais » par construction) +
+  garde réutilisable MerlinVisual.polygon_drawable() sur les 7 polygones générés par boucle.
+- Gates : validate 0/0 · smoke MerlinEnd (forêt + falaises) + MerlinGame + MerlinMenu tous PASS,
+  0 « triangulation failed ». Preuve build : export_gate biome falaises EN COURS (bnlw96nyj).

@@ -618,7 +618,8 @@ func _draw() -> void:
 			hills.append(Vector2(hx, hy) + _parallax * 0.25)
 		hills.append(Vector2(w, h))
 		hills.append(Vector2(0.0, h))
-		draw_colored_polygon(hills, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.30 * _stage(0.05, 0.35)))
+		if MerlinVisual.polygon_drawable(hills):  # #52 : garde sur tout polygone généré
+			draw_colored_polygon(hills, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.30 * _stage(0.05, 0.35)))
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * (0.17 if _watch_eyes else 0.13)  # lune agrandie en mode œil-lune (lisibilité)
@@ -816,7 +817,8 @@ func _draw() -> void:
 			gnd_pts.append(Vector2(w, h))
 			gnd_pts.append(Vector2(0.0, h))
 			var gnd_a: float = float(bspec["a"]) * _stage(0.55, 0.85) * (0.5 if rm else 1.0)
-			draw_colored_polygon(gnd_pts, Color(gnd_col.r, gnd_col.g, gnd_col.b, gnd_a))
+			if MerlinVisual.polygon_drawable(gnd_pts):  # #52 : garde sur tout polygone généré
+				draw_colored_polygon(gnd_pts, Color(gnd_col.r, gnd_col.g, gnd_col.b, gnd_a))
 		# Touffes d'herbe : éventails de 3 brins sur la crête avant, sway par touffe (déterministe).
 		if not front_crest.is_empty():
 			var g_a: float = 0.55 * _stage(0.55, 0.85) * (0.5 if rm else 1.0)
@@ -862,14 +864,20 @@ func _draw() -> void:
 			var wob: float = sin(fx * 6.0 + drift + float(li) * 2.1) * m_th * 0.35 \
 				+ sin(fx * 13.0 - drift * 1.7) * m_th * 0.15
 			# v10.21 (goal hover++) — la brume S'ÉCARTE du curseur qui la traverse (creux local).
+			# v1.0-V4b (#52 « triangulation failed » build exporté, MerlinEnd) : le creux cassait
+			# l'invariant v10.22 — bord haut jusqu'à 1.35×th SOUS m_y, SOUS le bord bas (min 0.75×th)
+			# → auto-intersection quand le curseur réel survole un ruban (menu_decor auto-alimente le
+			# curseur sur End/Selection/Options). Offset total du bord haut PLAFONNÉ à 0.65×th →
+			# les deux bords ne peuvent plus JAMAIS se croiser (marge 0.10×th).
 			var part: float = _hover_f(Vector2(px, m_y + m_th * 0.5), m_th * 2.6)
-			ribbon.append(Vector2(px, m_y + wob + part * m_th * 0.85))
+			ribbon.append(Vector2(px, m_y + minf(wob + part * m_th * 0.85, m_th * 0.65)))
 		for si3 in seg + 1:  # bord INFÉRIEUR sinueux (retour, phase décalée)
 			var fx2: float = 1.0 - float(si3) / float(seg)
 			var px2: float = m_x + fx2 * m_w
 			var wob2: float = sin(fx2 * 5.0 - drift * 0.8 + float(li)) * m_th * 0.25
 			ribbon.append(Vector2(px2, m_y + m_th + wob2))
-		draw_colored_polygon(ribbon, Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha))
+		if MerlinVisual.polygon_drawable(ribbon):  # #52 : garde sur tout polygone généré
+			draw_colored_polygon(ribbon, Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha))
 		# (QA v10.21 : le « cœur » rectangulaire créait des coutures droites — retiré, le ruban seul suffit.)
 
 	# v10.21 — SILHOUETTE DU PNJ PILIER : dessinée APRÈS la brume (premier plan, jamais délavée — QA probe).
@@ -951,7 +959,8 @@ func _draw() -> void:
 			m_pts.append(Vector2(lerpf(float(mo["x0"]), float(mo["x1"]), 1.0) * w + float(mo["off"]), h * 1.04))
 			m_pts.append(Vector2(float(mo["x0"]) * w + float(mo["off"]), h * 1.04))
 			var m_col: Color = mo["col"]
-			draw_colored_polygon(m_pts, Color(m_col.r, m_col.g, m_col.b, 0.16 * dr))
+			if MerlinVisual.polygon_drawable(m_pts):  # #52 : garde sur tout polygone généré
+				draw_colored_polygon(m_pts, Color(m_col.r, m_col.g, m_col.b, 0.16 * dr))
 		var star_i: int = 0
 		for sp in [Vector2(0.40, 0.18), Vector2(0.62, 0.28), Vector2(0.72, 0.50), Vector2(0.30, 0.40)]:
 			var a: float = 1.0
@@ -1128,13 +1137,18 @@ func _draw_falaises(w: float, h: float, dr: float, rm: bool) -> void:
 		var wave: PackedVector2Array = PackedVector2Array()
 		var segs: int = 16
 		var drift2: float = (_t * (0.35 + wf * 0.12)) if (_animated and not rm) else 0.0
+		# v1.0-V4b (#52 « triangulation failed » build exporté, MerlinEnd — biome hérité de la run) :
+		# amplitudes BORNÉES comme la brume v10.22 — haut ±0.005h < bas min +0.008h (0.012h − 0.004h)
+		# → les deux bords du ruban d'onde ne peuvent JAMAIS se croiser (avant : haut ±0.008h
+		# recouvrait bas min +0.006h → auto-intersection par rafales au fil de la dérive).
 		for si in segs + 1:
 			var fx: float = float(si) / float(segs)
-			wave.append(Vector2(fx * w, wy + sin(fx * 9.0 + drift2 + wf * 2.0) * h * 0.008))
+			wave.append(Vector2(fx * w, wy + sin(fx * 9.0 + drift2 + wf * 2.0) * h * 0.005))
 		for si2 in range(segs, -1, -1):
 			var fx2: float = float(si2) / float(segs)
-			wave.append(Vector2(fx2 * w, wy + h * 0.012 + sin(fx2 * 7.0 - drift2) * h * 0.006))
-		draw_colored_polygon(wave, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, (0.05 + 0.02 * wf) * sdr))
+			wave.append(Vector2(fx2 * w, wy + h * 0.012 + sin(fx2 * 7.0 - drift2) * h * 0.004))
+		if MerlinVisual.polygon_drawable(wave):
+			draw_colored_polygon(wave, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, (0.05 + 0.02 * wf) * sdr))
 	# CAPS ROCHEUX : masses irrégulières — l'anse s'ouvre sous la lune.
 	if cdr <= 0.01:
 		return
@@ -1231,7 +1245,8 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	for shi in 10:
 		var sha: float = float(shi) / 10.0 * TAU
 		sh_pts.append(sh_c + Vector2(cos(sha) * half_w * 1.15, sin(sha) * half_w * 0.22))
-	draw_colored_polygon(sh_pts, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.28 * a_cloak))
+	if MerlinVisual.polygon_drawable(sh_pts):  # #52 : garde sur tout polygone généré
+		draw_colored_polygon(sh_pts, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.28 * a_cloak))
 	# Cape à OURLET VIVANT : le bas ondule (3 points animés entre les deux coins).
 	var hem_w: float = 0.0 if not menu else 1.0
 	var cloak: PackedVector2Array = PackedVector2Array([

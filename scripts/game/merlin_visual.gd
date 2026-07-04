@@ -110,6 +110,26 @@ static func motion() -> float:
 	return 0.5 if reduced_motion else 1.0
 
 
+# v1.0-V4b (#52) — Garde de dégénérescence AVANT tout draw_colored_polygon / polygon= GÉNÉRÉ
+# (boucles sin/randf) : la triangulation Godot échoue (« Invalid polygon data, triangulation
+# failed ») si le polygone a <3 points uniques ou une aire quasi-nulle (points dupliqués /
+# colinéaires). Ne détecte PAS l'auto-intersection : les générateurs doivent la rendre
+# impossible par construction (amplitudes bornées — cf. merlin_scene_art.gd v10.22).
+static func polygon_drawable(pts: PackedVector2Array) -> bool:
+	if pts.size() < 3:
+		return false
+	var uniq: int = 1
+	var area2: float = 0.0  # aire signée ×2 (shoelace)
+	var prev: Vector2 = pts[pts.size() - 1]
+	for i in pts.size():
+		var p: Vector2 = pts[i]
+		area2 += prev.x * p.y - p.x * prev.y
+		if i > 0 and not p.is_equal_approx(pts[i - 1]):
+			uniq += 1
+		prev = p
+	return uniq >= 3 and absf(area2) > 1.0  # aire réelle > 0.5 px²
+
+
 static func load_prefs() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	if cfg.load(PREFS_PATH) == OK:
