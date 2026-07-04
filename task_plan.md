@@ -104,7 +104,12 @@ interventions 1/run / greffes V3 / transitions invisibles.
       _choice_open, fix dim/fusion, suppression slide-up + beat_veil, chips dé-jargonnées,
       autoplay _choice_open même commit. Vigilances V2b : contraste chips sur BG_PAGE, cross-fade
       vignette↔push dans Z4 (114 px > 72), interstitiel à migrer, purger beat_veil/DUR_SLIDE_UP.
-- [ ] V2b : modals→zones (intro, interstitiel, draft _open_draft_zone/_draft_active, push/pacte/
-      vignette → Z4), 2 hints tuto persistés, interventions cap 1. Gate + captures 8 phases + §23.
+- [x] V2b LIVRÉE (gate vert : validate 0/0, smoke, soak 200/200, autoplay 3/3) : intro et draft/
+      offrande DANS les zones (plus aucun modal), interstitiel sans WaitStage (attente inline +
+      _interstitial_skip), push/pacte/vignette cross-fadés en Z4 (vignette du PARTIEL frappée APRÈS
+      le choix), interventions 1/run, 2 hints tuto persistés [tuto], purges beat_veil/DUR_SLIDE_UP.
+      Code-review : 6 findings corrigés (2 HIGH courses de tweens au double-clic — un seul
+      propriétaire d'alpha par zone ; pacte en done-path — l'await sur _tw.finished perdait le
+      pacte au skip ; skip d'interstitiel des outils capture ré-aligné).
 - [ ] V3 greffes (task #48, spec §E + spec_v11_pivot) · V4 fleet QA + purge + BIBLE.
 

@@ -218,7 +218,7 @@ func _soak_one(i: int, arch: String) -> void:
 			var t1: int = run.beat_index + 1 + rng.randi_range(0, 1)
 			if t1 < int(run.scenario.get("total", 5)) - 1:
 				run.intervention_beats.append(t1)
-		if run.intervention_beats.has(run.beat_index) and int(run.pilier_interventions) < 2:
+		if run.intervention_beats.has(run.beat_index) and int(run.pilier_interventions) < 1:  # v11-V2b : cap 1/run
 			run.intervention_beats.erase(run.beat_index)
 			run.pilier_interventions += 1
 			var ipk: String = _soak_draw_pilier(rng)

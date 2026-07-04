@@ -75,8 +75,11 @@ var _push_row: HBoxContainer = null
 # QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
 var _scene_epoch: int = 0
 var _tw: Tween
-var _intro_layer: Control = null  # pop-up modal d'intro de quête (R56)
+# v11-V2b (spec écran stable) — l'intro de quête vit DANS les zones : plus de layer modal. Le
+# titre/pitch/objectif occupent l'encart (Z3), « Accepter ✦ » le slot central de Z4.
 var _intro_open: bool = false
+var _intro_accept_btn: Button = null  # bouton « Accepter ✦ » (Z4) — cross-fadé par _accept_quest
+var _intro_data: Dictionary = {}      # titre/pitch/objectif figés → recomposition à l'enrichissement LLM
 var _pulse_tw: Tween
 var _prev_integrite: int = -999  # pour animer les deltas de jauges (-999 = pas encore initialisé)
 var _prev_corruption: int = -999
@@ -92,8 +95,11 @@ var _resolve_tw: Tween = null  # v11-V2a : fade armé/désarmé du bouton Résou
 var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
 
 # v10.11/12 (user 2026-06-07) — Map du chemin (coin droit) + Draft « 1 carte sur 3 » aux beats clés.
+# v11-V2b (spec matrice ligne 9) : le draft vit DANS les zones — les 3 cartes remplacent l'éventail,
+# titre + « Passer » dans Z4. Le flag _draft_active REMPLACE l'ancien overlay modal _draft_layer.
 var _pending_draft: bool = false         # armé en résolution (réussite/éclatante, beats restants) → draft à l'avance
-var _draft_layer: Control = null         # overlay modal du draft
+var _draft_active: bool = false          # draft/offrande ouvert dans les zones (outillé par l'autoplay)
+var _draft_bar: HBoxContainer = null     # Z4 : titre + « Passer » pendant le draft
 var _draft_pick: MerlinCard = null       # carte choisie (null = passer)
 var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer)
 
@@ -117,13 +123,20 @@ var _corr_dot: Panel = null  # pastille statique VIOLET (R74/R75 : l'info survit
 var _glitch_i: float = 0.0   # valeurs courantes des uniforms (source des tween_method — le
 var _glitch_d: float = 0.0   # tween_property sur shader_parameter/* ne les voit pas toujours)
 
-# v10.13 (Phase B) — interstitiel « Merlin raconte » (B3), hint intro (B2), sceau de degré (B9).
+# v10.13 (Phase B) — interstitiel « Merlin raconte » (B3), sceau de degré (B9).
 var _interstitial_open: bool = false           # B3 : interstitiel actif (entre Accept et Beat 1)
-var _interstitial_wait: MerlinWaitStage = null # B3 : attente animée en cours (skippée par autoplay)
-var _intro_reveal_tw: Tween = null             # B2 : typewriter du pop-up d'intro (kill au clic)
+var _interstitial_wait: MerlinWaitStage = null # v11-V2b : TOUJOURS null — l'attente LLM vit DANS
+                                               # l'encart (_interstitial_skip). Membre conservé :
+                                               # l'outillage capture teste encore `!= null`.
+var _interstitial_skip: bool = false           # v11-V2b : clic pendant l'attente inline → fallback servi
 var _gauges_deferred: bool = false             # v11-W1 : anneaux GELÉS pendant la résolution (le layer
                                                # MerlinFx couvre l'écran) — commit visuel post-typewriter
 var _draft_open_ms: int = 0                    # F2 : anti pick-aveugle pendant le deal du draft
+# v11-V2b (spec §tuto) — micro-tuto : 2 hints one-shot, labels PASSIFS (MOUSE_FILTER_IGNORE — jamais
+# bloquants, l'autoplay n'a rien à servir) dans Z4, persistés via MerlinVisual (section [tuto]).
+var _tuto_lbl: Label = null
+var _tuto_a_active: bool = false               # hint A affiché (beat 1) — désarmé à la 1re paire complète
+var _tuto_b_active: bool = false               # hint B affiché (beat 2) — désarmé au 1er clic de tuile
 
 
 # v10.13 (Fix 0) — garde canonique post-await : la scène est-elle toujours « fraîche » ?
@@ -238,6 +251,8 @@ func _present_current_beat() -> void:
 	if _pact_row != null and is_instance_valid(_pact_row):  # R131 : idem pour le pacte
 		_pact_row.queue_free()
 		_pact_row = null
+	_pact_pending_pilier = ""  # review V2b MEDIUM-5 : un pacte non consommé ne traverse pas les beats
+	_clear_tuto_hint()  # v11-V2b : hygiène — un hint non désarmé ne survit pas au beat (non consommé)
 	_intervention_done_this_beat = false
 	if _situation_text != null:
 		_situation_text.modulate.a = 1.0
@@ -321,17 +336,14 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		# JAMAIS angry à l'apparition — réservé au degré échec). Le mood pilier PRIME sur mood_for_text.
 		var pk2: String = _current_offer_pilier()
 		if btype == "Rencontre" and pk2 != "":
-			# v10.21 (Wave I, R131) — PLANIFICATION des interventions (persistée R108, cap 2, jamais le
-			# climax final, jamais consécutives) : le pilier reviendra se mêler de 1-2 beats ultérieurs.
+			# v10.21 (Wave I, R131) / v11-V2b — PLANIFICATION des interventions (persistée R108,
+			# jamais le climax final) : UNE seule par run désormais (spec écran stable — la
+			# planification du 2e beat est retirée ; le cap d'exécution vit dans _maybe_intervention).
 			if (run.intervention_beats as Array).is_empty() and int(run.pilier_interventions) == 0:
 				var total_b: int = int(run.scenario.get("total", 5))
 				var t1: int = run.beat_index + 1 + (randi() % 2)
 				if t1 < total_b - 1:
 					run.intervention_beats.append(t1)
-					if randf() < 0.5:
-						var t2: int = t1 + 2 + (randi() % 2)
-						if t2 < total_b - 1:
-							run.intervention_beats.append(t2)
 			_scene_art.set_pilier(pk2, true)
 			MerlinAudio.play_pad("pad_" + pk2)  # v10.21 Wave A : la nappe SIGNÉE s'installe avec lui
 			if pk2 == "choeur" or pk2 == "chevalier":
@@ -391,8 +403,8 @@ func _render_hand(deal: bool = false) -> void:
 
 # Dispose la main en éventail dynamique : cartes centrées, arc + rotation depuis le centre.
 func _layout_fan() -> void:
-	if _hand_box == null:
-		return
+	if _hand_box == null or _draft_active:
+		return  # v11-V2b : pendant le draft, l'éventail appartient aux 3 cartes (positions manuelles)
 	var cards: Array = []
 	for c in _hand_box.get_children():
 		if c is MerlinCardView and not c.is_queued_for_deletion():
@@ -439,6 +451,12 @@ func _on_trait_card(card: MerlinCard) -> void:
 func _on_action_tile(card: MerlinCard) -> void:
 	if _state != 1 or not _choice_open:
 		return  # v11-V2a : même garde que les traits — clic hors phase de choix ignoré
+	if _tuto_b_active:
+		# v11-V2b — hint B désarmé au PREMIER clic de tuile du beat 2 (one-shot, persisté [tuto]).
+		_tuto_b_active = false
+		MerlinVisual.tuto_hint_b_done = true
+		MerlinVisual.save_prefs()
+		_clear_tuto_hint()
 	_selected_action = null if _selected_action == card else card
 	for v in _action_views:
 		if is_instance_valid(v):
@@ -567,6 +585,12 @@ func _update_preview() -> void:
 		MerlinAudio.play_sfx("draft_reveal")
 		_pop(_resolve_btn, 1.15)
 		_selection_complete_pulse()
+	if _tuto_a_active:
+		# v11-V2b — hint A désarmé à la PREMIÈRE paire complète (one-shot, persisté [tuto]).
+		_tuto_a_active = false
+		MerlinVisual.tuto_hint_a_done = true
+		MerlinVisual.save_prefs()
+		_clear_tuto_hint()
 	# v10.4 — pré-génération LLM spéculative sur la SÉLECTION courante uniquement (guardrail spec :
 	# jamais les 16 combos). Dédupée par signature combo [action, trait] côté MerlinScenario.
 	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, combo.duplicate(), res)
@@ -739,6 +763,10 @@ const INTERVENTION_LINES: Dictionary = {
 }
 var _intervention_done_this_beat: bool = false
 var _pact_row: HBoxContainer = null
+# Review V2b MEDIUM-5 — pacte en DONE-PATH : posé par _play_intervention, consommé par
+# _on_typewriter_done (appelé AUSSI au skip — un tween tué n'émet jamais `finished`, l'ancien
+# `await _tw.finished` perdait le pacte unique de la run sur un simple clic de skip).
+var _pact_pending_pilier: String = ""
 
 
 # Ce beat est-il planifié pour une intervention ? Consommation à l'OUVERTURE (R108) + save atomique.
@@ -746,7 +774,8 @@ func _maybe_intervention() -> bool:
 	var run: Node = get_node("/root/MerlinRun")
 	if _intervention_done_this_beat or run.ended or run.is_climax():
 		return false
-	if not (run.intervention_beats as Array).has(run.beat_index) or int(run.pilier_interventions) >= 2:
+	# v11-V2b : cap 1/run (était 2) — une save W2 avec 2 beats planifiés reste valide, le cap coupe ici.
+	if not (run.intervention_beats as Array).has(run.beat_index) or int(run.pilier_interventions) >= 1:
 		return false
 	var pk: String = _current_offer_pilier()
 	if pk == "":
@@ -762,7 +791,6 @@ func _maybe_intervention() -> bool:
 # Séquence scriptée (~1.8s, spec panel) : silhouette + nappe + réaction lune + ligne signée dans le fil
 # + effet. Les effets SANS consentement (bénédictions) s'appliquent à l'ouverture ; les pactes via boutons.
 func _play_intervention(pk: String) -> void:
-	var run: Node = get_node("/root/MerlinRun")
 	if _scene_art != null:
 		_scene_art.set_pilier(pk, true)
 		if pk == "choeur" or pk == "chevalier":
@@ -779,12 +807,10 @@ func _play_intervention(pk: String) -> void:
 	var combined: String = _situation_text.text.replace("[/center]",
 		"\n\n« %s »[/center]" % str(INTERVENTION_LINES.get(pk, "")))
 	_typewriter(combined, true, _situation_text, situ_chars)
-	# Pactes opt-in (Être / Compagnon) : boutons après l'écriture de la ligne (jamais de timer, R99).
+	# Pactes opt-in (Être / Compagnon) : boutons à la FIN de l'écriture — done-path, jamais d'await
+	# sur _tw.finished (review V2b MEDIUM-5 : le skip tue le tween sans émettre `finished`).
 	if pk == "etre" or pk == "compagnon":
-		if _tw != null and _tw.is_valid():
-			await _tw.finished
-		if is_inside_tree() and not run.ended:
-			_build_pact_choice(pk)
+		_pact_pending_pilier = pk
 
 
 # Bénédiction (v11-W2, spec §G) : une ACTION gagne un tag temporaire VISIBLE (badge sur la tuile),
@@ -827,6 +853,12 @@ func _bless_action(tag: String) -> void:
 # Compagnon = pioche 1 contre +1 Corruption. Refuser = rien. Ignorable (la main reste jouable).
 func _build_pact_choice(pk: String) -> void:
 	var run: Node = get_node("/root/MerlinRun")
+	# v11-V2b (vigilance V2a #2) — le slot central Z4 ne porte qu'UN contenu à la fois : la vignette
+	# du beat précédent est purgée et le hint tuto s'efface (sans être consommé) devant le pacte.
+	_clear_tuto_hint()
+	if _effect_vignette != null:
+		for c in _effect_vignette.get_children():
+			c.queue_free()
 	_pact_row = HBoxContainer.new()
 	_pact_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_pact_row.add_theme_constant_override("separation", 24)
@@ -880,6 +912,12 @@ const PUSH_CODAS: Array = [
 
 func _build_push_choice() -> void:
 	var run: Node = get_node("/root/MerlinRun")
+	# v11-V2b (vigilance V2a #1) — Z4 ne porte qu'UN contenu : boutons+ledger D'ABORD, la vignette
+	# sera re-frappée APRÈS le choix au degré FINAL (_on_push_choice). Purge du slot avant pose.
+	_clear_tuto_hint()
+	if _effect_vignette != null:
+		for c in _effect_vignette.get_children():
+			c.queue_free()
 	_push_row = HBoxContainer.new()
 	_push_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_push_row.add_theme_constant_override("separation", 24)
@@ -931,17 +969,25 @@ func _on_push_choice(push: bool) -> void:
 		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
 	sc.note_outcome(_push_res_raw, _push_situ, _push_cards)  # fil rouge avec le degré FINAL (R120)
 	if push and _situation_text != null:
-		# Coda procédurale écrite dans le MÊME fil (R128) + vignette re-frappée au degré final.
+		# Coda procédurale écrite dans le MÊME fil (R128).
 		_situation_text.text = _situation_text.text.replace("[/center]",
 			"\n\n" + str(PUSH_CODAS[randi() % PUSH_CODAS.size()]) + "[/center]")
 		_situation_text.visible_characters = -1
-		_build_effect_vignette(_push_res_raw, MerlinResolution.REUSSITE)
-	if _push_row != null and is_instance_valid(_push_row):
-		_push_row.queue_free()
-		_push_row = null
+	# v11-V2b (vigilance V2a #1) — cross-fade Z4 : les boutons partent, la vignette re-frappée au
+	# degré FINAL arrive (encaissé = partiel, poussé = réussite forcée). Un contenu à la fois.
+	var final_res: Dictionary = _push_res_raw
+	var final_deg: String = str(_push_res_raw.get("degree", MerlinResolution.PARTIEL))
+	var row: HBoxContainer = _push_row
+	_push_row = null
 	_push_res_raw = {}
 	if run.ended:
+		if row != null and is_instance_valid(row):
+			row.queue_free()
 		return  # mort/fin via l'application différée → run_ended a pris la main
+	MerlinVisual.swap_zone(_res_block, func() -> void:
+		if row != null and is_instance_valid(row):
+			row.queue_free()
+		_build_effect_vignette(final_res, final_deg))
 	_can_advance = true
 	if _caret != null:
 		_caret.text = "▮ cliquer pour continuer"
@@ -1015,7 +1061,9 @@ func _vignette_chip(text: String, col: Color) -> Control:
 	var p: PanelContainer = PanelContainer.new()
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = Color(col.r, col.g, col.b, 0.18)
+	# v11-V2b — chips re-calibrées pour BG_PAGE (elles vivaient sur la crème en amont de V2a) :
+	# fond 0.18→0.30 + libellé éclairci (dérivé de la couleur de palette, zéro hex nouveau).
+	sb.bg_color = Color(col.r, col.g, col.b, 0.30)
 	sb.set_corner_radius_all(8)
 	sb.set_border_width_all(1)
 	sb.border_color = col
@@ -1023,7 +1071,7 @@ func _vignette_chip(text: String, col: Color) -> Control:
 	p.add_theme_stylebox_override("panel", sb)
 	var l: Label = Label.new()
 	l.text = text
-	l.add_theme_color_override("font_color", col)
+	l.add_theme_color_override("font_color", col.lightened(0.35))
 	l.add_theme_font_size_override("font_size", 18)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(l)
@@ -1076,6 +1124,7 @@ func _advance_to_next() -> void:
 
 
 # === v10.11 — Draft « 1 carte sur 3 » (style Slay the Spire) ===
+# v11-V2b : le draft vit DANS les zones (_open_draft_zone) — l'await-loop structurel est conservé.
 func _present_draft() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var choices: Array = run.draft_choices(3)
@@ -1083,19 +1132,17 @@ func _present_draft() -> void:
 		return
 	_draft_pick = null
 	_draft_done_flag = false
-	_build_draft_layer(choices)
+	_open_draft_zone(choices, "Une voie s'offre à toi — choisis une carte", "")
 	# v10.13 (Fix 1) : gardes STRUCTURELLES (pas de timeout mural — un joueur AFK sur un choix n'est
-	# pas un bug). Les seuls vrais états de blocage = layer libéré / run terminée / scène quittée :
+	# pas un bug). Les seuls vrais états de blocage = zone refermée / run terminée / scène quittée :
 	# tous font sortir la boucle ; sortie sans flag = passer (aucune carte).
-	while not _draft_done_flag and is_inside_tree() and is_instance_valid(_draft_layer) and not run.ended:
+	while not _draft_done_flag and is_inside_tree() and _draft_active and not run.ended:
 		await get_tree().process_frame
 	if _draft_pick != null:
 		run.add_card_to_deck(_draft_pick)
 		if _beat_map != null:  # v10.12 : une carte draftée = déviation visible sur le chemin
 			_beat_map.mark_draft()
-	if _draft_layer != null:
-		_draft_layer.queue_free()
-		_draft_layer = null
+	_close_draft_zone()
 
 
 # === Wave D — Offrande du pilier (modal de draft réutilisé, titre thémé par le PNJ) ===
@@ -1127,109 +1174,128 @@ func _pilier_offer_text(pilier_key: String) -> Dictionary:
 	return {"title": "Une voie s'offre à toi — choisis une carte", "sub": "Elle rejoint ton grimoire."}
 
 
-# Présente l'offrande signée. Calque exact de _present_draft (mêmes gardes structurelles, même cycle de modal),
+# Présente l'offrande signée. Calque exact de _present_draft (mêmes gardes structurelles, même cycle),
 # mais cartes = banque du pilier et titre thémé. Flag d'unicité posé à l'OUVERTURE (résiste resume/replay).
 func _present_pilier_offering(pilier_key: String) -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	run.pilier_offering_done = true  # AVANT le filtre vide : même un skip (banque épuisée) ne re-tente jamais
 	var choices: Array = run.pilier_offering(pilier_key, 2)
 	if choices.is_empty():
-		return  # tout déjà possédé → pas de modal vide
+		return  # tout déjà possédé → pas d'offrande vide
 	_draft_pick = null
 	_draft_done_flag = false
 	var txt: Dictionary = _pilier_offer_text(pilier_key)
-	_build_draft_layer(choices, str(txt["title"]), str(txt["sub"]))
-	while not _draft_done_flag and is_inside_tree() and is_instance_valid(_draft_layer) and not run.ended:
+	_open_draft_zone(choices, str(txt["title"]), pilier_key)
+	while not _draft_done_flag and is_inside_tree() and _draft_active and not run.ended:
 		await get_tree().process_frame
 	if _draft_pick != null:
 		run.add_card_to_deck(_draft_pick)
 		if _beat_map != null:
 			_beat_map.mark_draft()
-	if _draft_layer != null:
-		_draft_layer.queue_free()
-		_draft_layer = null
+	_close_draft_zone()
 
 
-func _build_draft_layer(choices: Array, title_text: String = "Une voie s'offre à toi — choisis une carte", sub_text: String = "Elle rejoint ton grimoire — de nouvelles forces ouvrent d'autres voies.") -> void:
+# v11-V2b (spec matrice ligne 9) — Draft/Offrande DANS les zones : les 3 cartes REMPLACENT
+# l'éventail (cross-fade + deal_in conservé) ; titre + « Passer » dans le slot central de Z4 ;
+# le texte d'issue reste dans l'encart (contexte). `pilier` = signature du PNJ (déjà résolue dans
+# le titre par l'appelant) — paramètre gardé pour la greffe V3 (tuiles éligibles qui pulsent).
+func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 	_draft_open_ms = Time.get_ticks_msec()  # arme la garde F2 (pas de pick aveugle pendant le deal)
-	var layer: Control = Control.new()
-	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layer.mouse_filter = Control.MOUSE_FILTER_STOP  # modal : absorbe les clics derrière
-	var dim: ColorRect = ColorRect.new()
-	dim.color = MerlinVisual.DIM_MODAL
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layer.add_child(dim)
-	var center: CenterContainer = CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layer.add_child(center)
-	var box: VBoxContainer = VBoxContainer.new()
-	box.add_theme_constant_override("separation", 20)
-	center.add_child(box)
-	var title: Label = Label.new()
-	title.text = title_text  # Wave D : titre thémé pour l'offrande du pilier (défaut = draft standard)
-	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 30)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
-	# v10.20.1 (O4) — explique la VALEUR du draft (avant, il apparaissait sans dire pourquoi).
-	var sub: Label = Label.new()
-	sub.text = sub_text
-	sub.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
-	sub.add_theme_font_size_override("font_size", 18)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(sub)
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 30)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_child(row)
-	for card in choices:
-		var cv: MerlinCardView = MerlinCardView.new()
-		row.add_child(cv)
-		cv.setup(card)
-		cv.card_clicked.connect(_on_draft_card)
-	var skip: Button = Button.new()
-	skip.text = "Passer"
-	skip.custom_minimum_size = Vector2(180, 52)
-	skip.add_theme_font_size_override("font_size", 22)
-	MerlinVisual.apply_button_da(skip)
-	skip.pressed.connect(_on_draft_skip)
-	MerlinVisual.connect_button_feedback(skip)  # v10.13.1 — feedback canon §21 `tap`
-	var skip_center: CenterContainer = CenterContainer.new()
-	skip_center.add_child(skip)
-	box.add_child(skip_center)
-	add_child(layer)
-	_draft_layer = layer
-	_stagger_draft_in(title, row, skip_center)  # v10.13 (B5) : entrée staggered (titre→cartes→Passer)
+	_draft_active = true
+	# Z4 : titre + « Passer » sur UNE rangée (72 px — jamais d'empilement), via cross-fade du slot.
+	MerlinVisual.swap_zone(_res_block, func() -> void:
+		if not _draft_active:
+			return  # review V2b LOW-6 : fermé pendant la fenêtre du swap → pas de barre fantôme
+		if _effect_vignette != null:
+			for c in _effect_vignette.get_children():
+				c.queue_free()  # la vignette d'issue cède le slot (un contenu à la fois)
+		if _draft_bar != null and is_instance_valid(_draft_bar):
+			_draft_bar.queue_free()  # défense : jamais deux barres (re-entrée improbable)
+		_draft_bar = HBoxContainer.new()
+		_draft_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+		_draft_bar.add_theme_constant_override("separation", 24)
+		var title: Label = MerlinVisual.make_label(COL_GOLD, MerlinVisual.FS_CAPTION)
+		title.text = title_text
+		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_draft_bar.add_child(title)
+		var skip: Button = Button.new()
+		skip.text = "Passer"
+		skip.custom_minimum_size = Vector2(180, 52)  # ≥44 px (pilier TACTILE)
+		skip.add_theme_font_size_override("font_size", MerlinVisual.FS_CAPTION)
+		MerlinVisual.apply_button_da(skip)
+		MerlinVisual.connect_button_feedback(skip)  # feedback canon §21 `tap`
+		skip.pressed.connect(_on_draft_skip)
+		_draft_bar.add_child(skip)
+		if _res_block != null:
+			_res_block.add_child(_draft_bar))
+	# (Review V2b MEDIUM-3 : pas de _fade_res_block(true) ici — le swap_zone termine déjà à
+	# alpha 1.0 ; deux tweens sur le même modulate = pop sans cross-fade.)
+	# Z5 : les 3 cartes remplacent l'éventail — fade-out du contenu puis deal_in en cascade.
+	_swap_hand_zone(func() -> void:
+		if not _draft_active:
+			return  # review V2b LOW-6 : fermé pendant la fenêtre du swap → pas de contenu fantôme
+		for c in _hand_box.get_children():
+			if c is MerlinCardView:
+				c.queue_free()
+		var n: int = cards.size()
+		var cw: float = MerlinCardView.CARD_SIZE.x
+		var gap: float = 30.0
+		var w: float = _hand_box.size.x
+		if w <= 0.0:
+			w = float(get_viewport().get_visible_rect().size.x) - 56.0
+		var x0: float = (w - (float(n) * cw + float(maxi(n - 1, 0)) * gap)) * 0.5
+		for i in n:
+			var cv: MerlinCardView = MerlinCardView.new()
+			_hand_box.add_child(cv)
+			cv.setup(cards[i])
+			cv.card_clicked.connect(_on_draft_card)
+			cv.set_fan_transform(Vector2(x0 + float(i) * (cw + gap), 6.0), 0.0)  # base du deal (snap 1er layout)
+			cv.deal_in(float(i) * 0.12)
+		# Vigilance V2a #6 : vues créées pendant une zone éteinte → état souris + alpha re-appliqués.
+		MerlinVisual.set_zone_active(_hand_box, true))
 
 
-# v10.13 (B5) — Entrée staggered du draft : titre fade 0.2s, cartes deal_in en cascade (0.12s/i),
-# bouton Passer fade 0.3s en dernier. Attend 1 frame que le HBox pose les cartes : deal_in anime
-# vers _base_pos, qu'on fige sur la position container via set_fan_transform (sinon base = ZERO).
-func _stagger_draft_in(title: Control, row: Control, skip_c: Control) -> void:
-	title.modulate.a = 0.0
-	skip_c.modulate.a = 0.0
-	var cards: Array = []
-	for c in row.get_children():
-		if c is MerlinCardView:
-			(c as Control).modulate.a = 0.0  # invisibles jusqu'au deal_in (pas de flash 1 frame)
-			cards.append(c)
-	var t_title: Tween = title.create_tween()
-	t_title.tween_property(title, "modulate:a", 1.0, 0.2)
-	await get_tree().process_frame  # layout du HBox posé → positions container valides
-	if _draft_layer == null or not is_instance_valid(row) or not is_inside_tree():
-		return  # draft déjà refermé (run terminée / scène quittée pendant la frame)
-	for i in cards.size():
-		var cv: MerlinCardView = cards[i]
-		if not is_instance_valid(cv):
-			continue
-		cv.modulate.a = 1.0  # deal_in gère son propre fondu depuis 0
-		cv.set_fan_transform(cv.position, 0.0)  # fige la position container comme base du deal
-		cv.deal_in(0.20 + 0.12 * float(i))
-	var t_skip: Tween = skip_c.create_tween()
-	t_skip.tween_interval(0.20 + 0.12 * float(cards.size()))
-	t_skip.tween_property(skip_c, "modulate:a", 1.0, 0.3)
+# Referme la zone de draft : Z4 rendue, la main COURANTE revient ESTOMPÉE (elle sera de toute
+# façon redrawée au beat suivant). Idempotent — un double close est un no-op.
+func _close_draft_zone() -> void:
+	if not _draft_active:
+		return
+	_draft_active = false
+	if _draft_bar != null and is_instance_valid(_draft_bar):
+		_draft_bar.queue_free()
+	_draft_bar = null
+	_fade_res_block(false)
+	if not is_inside_tree() or _hand_box == null:
+		return  # scène en cours de libération : rien à ranger visuellement
+	_swap_hand_zone(func() -> void:
+		for c in _hand_box.get_children():
+			if c is MerlinCardView:
+				c.queue_free()
+		_render_hand(false)
+		MerlinVisual.set_zone_active(_hand_box, false))  # vigilance #6 : main rendue zone éteinte
+
+
+# v11-V2b — cross-fade du CONTENU de l'éventail (main ↔ 3 cartes de draft) : fade-out 0.18 s puis
+# build ; la REMONTÉE d'alpha appartient à set_zone_active, appelé PAR le build avec l'état cible
+# (swap_zone vise 1.0 en dur et se battrait avec l'estompe posée par _present_current_beat).
+# Même clé meta que swap_zone (_fx_tw_swap) : un swap relancé tue le précédent.
+func _swap_hand_zone(build: Callable) -> void:
+	if _hand_box == null or not is_instance_valid(_hand_box) or not _hand_box.is_inside_tree():
+		if build.is_valid():
+			build.call()  # zone absente → au moins poser le contenu
+		return
+	if _hand_box.has_meta("_fx_tw_swap"):
+		var prev: Tween = _hand_box.get_meta("_fx_tw_swap")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	if MerlinVisual.reduced_motion:
+		build.call()  # swap sec — set_zone_active (dans le build) restitue l'alpha cible
+		return
+	var t: Tween = _hand_box.create_tween()
+	t.tween_property(_hand_box, "modulate:a", 0.0, 0.18 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	t.tween_callback(build)
+	_hand_box.set_meta("_fx_tw_swap", t)
 
 
 func _on_draft_card(card: MerlinCard) -> void:
@@ -1251,8 +1317,8 @@ func _on_draft_skip() -> void:
 # Clic sur la zone récit (scène/narration). Pendant la frappe → révèle tout le texte ;
 # une fois l'issue entièrement écrite → passe au beat suivant. (Demande user 2026-05-26.)
 func _on_story_click(event: InputEvent) -> void:
-	if _intro_open or _draft_layer != null or _interstitial_open:
-		return  # interstitiel (B3) : clics gérés par _input (skip/avance) ou par le WaitStage
+	if _intro_open or _draft_active or _interstitial_open:
+		return  # intro/draft/interstitiel : clics gérés par _input ou par les contrôles des zones
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
 	if _tw != null and _tw.is_valid():
@@ -1271,6 +1337,10 @@ func _skip_typewriter() -> void:
 
 
 func _on_typewriter_done() -> void:
+	# v11-V2b — fin de frappe de l'INTRO : rien à piloter (« Accepter ✦ » attend en Z4).
+	if _intro_open:
+		_set_caret(false)
+		return
 	# v10.13 (B3) : ouverture de l'interstitiel entièrement écrite → clic = présenter le Beat 1.
 	if _interstitial_open:
 		_can_advance = true
@@ -1279,17 +1349,19 @@ func _on_typewriter_done() -> void:
 		_set_caret(true)
 		return
 	if _state == 2:
-		# Issue entièrement écrite → la VIGNETTE d'effet (degré + Δ jauges + effets) apparaît SOUS le texte
+		# v10.21 (Wave G, R130) — PARTIEL différé : le choix Encaisser/Pousser REMPLACE l'avance au clic.
+		# v11-V2b (vigilance V2a #1) : boutons+ledger D'ABORD — la vignette est re-frappée APRÈS le
+		# choix au degré FINAL (_on_push_choice) ; les anneaux aussi (v11-W1 : ledger seul avant).
+		if _push_pending:
+			_pending_res = {}  # la vignette de ce beat vivra dans _on_push_choice (degré final)
+			_build_push_choice()
+			return
+		# Issue entièrement écrite → la VIGNETTE d'effet (degré + Δ jauges + effets) apparaît en Z4
 		# (R128 : compacte, après coup, sans casser la prose), puis avance au clic + caret « continuer ».
 		if not _pending_res.is_empty():
 			_build_effect_vignette(_pending_res, _pending_degree)
 			_fade_res_block(true)
 			_pending_res = {}
-		# v10.21 (Wave G, R130) — PARTIEL différé : le choix Encaisser/Pousser REMPLACE l'avance au clic.
-		# v11-W1 : sur PARTIEL les deltas vivent dans le LEDGER des boutons SEULEMENT — anneaux après le choix.
-		if _push_pending:
-			_build_push_choice()
-			return
 		_flush_gauges()  # v11-W1 : l'issue est lue → les anneaux jouent le delta cumulé (un seul endroit §23)
 		_can_advance = true
 		if _caret != null:
@@ -1300,6 +1372,14 @@ func _on_typewriter_done() -> void:
 		# main (ligne signée écrite à la suite → re-typewriter → ce handler re-passe, flag posé).
 		if _maybe_intervention():
 			return
+		# Review V2b MEDIUM-5 — pacte pending (ligne signée entièrement écrite OU skippée) : les
+		# boutons se posent ICI. Pas de return : le choix de beat s'ouvre en parallèle (sémantique
+		# v10.21 — l'autoplay sert le pacte AVANT la branche state 1).
+		if _pact_pending_pilier != "":
+			var ppk: String = _pact_pending_pilier
+			_pact_pending_pilier = ""
+			if not get_node("/root/MerlinRun").ended:
+				_build_pact_choice(ppk)
 		# Situation entièrement écrite → caret masqué, les cartes MONTENT pour le choix (user 2026-06-06).
 		_set_caret(false)
 		# v10.15 — Prose breathing : le texte pulse doucement (alpha 0.88↔1.0) en attendant le choix.
@@ -1315,6 +1395,7 @@ func _on_typewriter_done() -> void:
 		_render_hand(true)
 		_refresh_action_tiles()  # v11-W2 : feedforward + sélection propres à l'ouverture du choix
 		_update_preview()        # paire incomplète → bouton Résoudre désarmé (alpha 0.35)
+		_maybe_tuto_hint()       # v11-V2b : micro-tuto one-shot (beats 1-2, labels passifs Z4)
 
 
 func _set_caret(on: bool) -> void:
@@ -1380,6 +1461,14 @@ func _fade_res_block(on: bool) -> void:
 		var prev: Tween = _res_block.get_meta("_tw_fade")
 		if prev != null and prev.is_valid():
 			prev.kill()
+	# Review V2b HIGH-1 — UN SEUL propriétaire d'alpha : un swap_zone encore en vol (double-clic
+	# Encaisser puis avance <0,18 s) survivrait au fade et RESSUSCITERAIT la vignette du beat
+	# précédent à pleine alpha. On le tue ici.
+	if _res_block.has_meta("_fx_tw_swap"):
+		var prev_swap: Tween = _res_block.get_meta("_fx_tw_swap")
+		if prev_swap != null and prev_swap.is_valid():
+			prev_swap.kill()
+		_res_block.remove_meta("_fx_tw_swap")
 	if _res_block.is_inside_tree():
 		var t: Tween = _res_block.create_tween()
 		t.tween_property(_res_block, "modulate:a", target,
@@ -1429,6 +1518,61 @@ func _show_skip_hint() -> void:
 	_caret_tw = null
 	_caret.text = "▶ clic pour passer"
 	_caret.modulate.a = 0.5  # v11-V2a : présence par alpha (jamais visible=false)
+
+
+# === v11-V2b (spec §tuto) — micro-tuto : 2 hints one-shot, labels PASSIFS dans Z4 ===
+# MOUSE_FILTER_IGNORE : jamais bloquants (l'autoplay n'a rien à servir, le harnais reste vert).
+const TUTO_HINT_A: String = "Choisis un verbe (tuile) et une manière (carte), puis Résous."
+const TUTO_HINT_B: String = "La forêt réclame — les tuiles soulignées d'or y répondent."
+
+
+# À l'ouverture du choix : hint A au beat 1, hint B au beat 2 — une seule fois par profil
+# (persistance [tuto] via MerlinVisual, pattern reduced_motion).
+func _maybe_tuto_hint() -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	if int(run.beat_index) == 0 and not MerlinVisual.tuto_hint_a_done:
+		_tuto_a_active = true
+		_show_tuto_hint(TUTO_HINT_A)
+	elif int(run.beat_index) == 1 and not MerlinVisual.tuto_hint_b_done:
+		_tuto_b_active = true
+		_show_tuto_hint(TUTO_HINT_B)
+
+
+func _show_tuto_hint(txt: String) -> void:
+	if _tuto_lbl == null or not is_instance_valid(_tuto_lbl):
+		_tuto_lbl = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
+		_tuto_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_tuto_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_status_line.add_child(_tuto_lbl)
+		_tuto_lbl.set_anchors_preset(Control.PRESET_CENTER)
+		_tuto_lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_tuto_lbl.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_tuto_lbl.text = txt
+	_tuto_lbl.modulate.a = 0.0
+	if _tuto_lbl.is_inside_tree():
+		var t: Tween = _tuto_lbl.create_tween()
+		t.tween_property(_tuto_lbl, "modulate:a", 0.9,
+			MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	else:
+		_tuto_lbl.modulate.a = 0.9
+
+
+# Efface le hint SANS le consommer (les désarmes one-shot posent les flags + save_prefs ailleurs).
+func _clear_tuto_hint() -> void:
+	_tuto_a_active = false
+	_tuto_b_active = false
+	if _tuto_lbl == null or not is_instance_valid(_tuto_lbl):
+		_tuto_lbl = null
+		return
+	var lbl: Label = _tuto_lbl
+	_tuto_lbl = null
+	if not lbl.is_inside_tree():
+		lbl.queue_free()
+		return
+	var t: Tween = lbl.create_tween()
+	t.tween_property(lbl, "modulate:a", 0.0,
+		MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	t.tween_callback(lbl.queue_free)
 
 
 func _degree_color(degree: String) -> Color:
@@ -1616,18 +1760,25 @@ func _input(event: InputEvent) -> void:
 	# la GUI), indépendant du z-order du catcher (qui était parfois bloqué par un conteneur au-dessus).
 	# En résolution (state 2) : clic gauche → skip typewriter si en cours, sinon avance au beat suivant.
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _intro_open or _draft_layer != null:
-			return  # le draft est modal : ses clics sont gérés par l'overlay, pas par l'avance de beat
-		# v10.13 (B3) — interstitiel « Merlin raconte » : clic = skip typewriter, puis avance Beat 1.
-		if _interstitial_open:
-			if _interstitial_wait != null:
-				return  # le WaitStage (modal) gère son propre clic-skip
+		# v11-V2b — intro DANS les zones (plus de modal) : clic 1 = tout révéler (skip typewriter) ;
+		# clic 2 = « Accepter ✦ » (Z4) via la GUI — jamais consommé ici quand la frappe est finie.
+		if _intro_open:
 			if _tw != null and _tw.is_valid():
 				_skip_typewriter()
 				get_viewport().set_input_as_handled()
+			return
+		if _draft_active:
+			return  # le draft vit dans les zones : cartes + « Passer » gèrent leurs propres clics
+		# v10.13 (B3) — interstitiel « Merlin raconte » : clic = skip (attente inline OU typewriter),
+		# puis avance Beat 1. L'attente LLM vit DANS l'encart (v11-V2b) — le clic arme le fallback.
+		if _interstitial_open:
+			if _tw != null and _tw.is_valid():
+				_skip_typewriter()
 			elif _can_advance:
 				_end_interstitial()
-				get_viewport().set_input_as_handled()
+			else:
+				_interstitial_skip = true  # attente inline → cesser d'attendre la prose LLM
+			get_viewport().set_input_as_handled()
 			return
 		if _state == 2:
 			if _tw != null and _tw.is_valid():
@@ -1684,11 +1835,9 @@ func _input(event: InputEvent) -> void:
 
 func _on_run_ended(_end_type: String) -> void:
 	MerlinAudio.stop_pad()  # v10.21 Wave A : la nappe du pilier ne survit pas à la run (autoload)
-	# v10.13 (Fix 1) : si la run se termine pendant le modal de draft, on le ferme proprement
-	# (la boucle de _present_draft sort via sa garde is_instance_valid/_draft_layer → skip).
-	if _draft_layer != null:
-		_draft_layer.queue_free()
-		_draft_layer = null
+	# v10.13 (Fix 1) / v11-V2b : si la run se termine pendant le draft, la boucle du driver
+	# (_present_draft/_present_pilier_offering) sort via run.ended et _close_draft_zone range la zone.
+	if _draft_active:
 		_draft_done_flag = true
 	_interstitial_open = false  # hygiène (review MEDIUM B3) : état net pendant la transition de fin
 	# v10.19 — Chronique cross-run (user 2026-06-29) : mémorise l'issue AVANT de purger la save,
@@ -1777,178 +1926,64 @@ func _hide_overlay() -> void:
 	_overlay.visible = false
 
 
-# --- Bandeau d'intro de quête (R56) : développement narratif + objectif, à accepter. ---
-# v10/C2 (audit UX bible §21.2 #1) : NE recouvre PLUS le plateau 3D — bandeau slide-up bottom ≤30%
-# hauteur. Le plateau reste visible au-dessus ; le layer absorbe les clics (modal soft) sans dim
-# plein-rect. (user 2026-05-31 /goal)
+# --- Intro de quête (R56) — v11-V2b : DANS les zones (spec écran stable, matrice ligne 1). ---
+# Plus de layer plein écran ni de DIM_MODAL : titre 40 px + pitch (typewriter) + ligne objectif
+# vivent dans l'encart Z3 (swap_zone) ; « Accepter ✦ » (pulse conservé) dans le slot central de
+# Z4 ; Z5/Z6 restent visibles ESTOMPÉES (teaser passif — la main du beat 1 est déjà piochée par
+# new_run). Clic 1 = tout révéler (via _input), clic 2 = Accepter (pilier FACILE, ≤2 gestes).
 func _show_intro_popup() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var data: Dictionary = get_node("/root/MerlinScenario").build_intro(run.scenario)
 	_intro_open = true
-
-	_intro_layer = Control.new()
-	_intro_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_intro_layer.mouse_filter = Control.MOUSE_FILTER_STOP  # absorbe les clics du plateau (modal soft)
-	add_child(_intro_layer)
-
-	# Voile léger limité au tiers bas (continuité visuelle bandeau↔plateau), pas de dim plein-rect.
-	var fade: ColorRect = ColorRect.new()
-	# v10.22 (QA user screenshot) : voile FRANC — l'encart crème vide derrière délavait toute la scène.
-	fade.color = MerlinVisual.DIM_MODAL
-	fade.set_anchors_preset(Control.PRESET_FULL_RECT)  # voile plein écran derrière l'encart central
-	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE  # le layer parent capte déjà
-	_intro_layer.add_child(fade)
-
-	# ENCART CENTRAL ~80% (user 2026-06-06) : l'intro occupe le centre, pas un bandeau bas.
-	var bandeau: PanelContainer = PanelContainer.new()
-	bandeau.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bandeau.anchor_left = 0.1
-	bandeau.anchor_right = 0.9
-	# v10.22 (QA user screenshot) : hauteur AU CONTENU, centré verticalement — fini l'immense panneau
-	# aux deux tiers vide (le texte flottait dans le noir).
-	bandeau.anchor_top = 0.5
-	bandeau.anchor_bottom = 0.5
-	bandeau.grow_vertical = Control.GROW_DIRECTION_BOTH
-	bandeau.offset_left = 0
-	bandeau.offset_right = 0
-	bandeau.offset_top = 0
-	bandeau.offset_bottom = 0
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = COL_SURFACE
-	sb.set_corner_radius_all(10)
-	sb.border_color = COL_GOLD
-	sb.border_width_top = 3
-	sb.set_content_margin_all(20)
-	bandeau.add_theme_stylebox_override("panel", sb)
-	bandeau.mouse_filter = Control.MOUSE_FILTER_PASS  # v10.13 (B2) : le clic remonte au layer (skip)
-	_intro_layer.add_child(bandeau)
-
-	# Layout vertical : titre + intro (scroll si long) + ligne objectif/accepter.
-	var v: VBoxContainer = VBoxContainer.new()
-	v.add_theme_constant_override("separation", 10)
-	v.mouse_filter = Control.MOUSE_FILTER_PASS  # v10.13 (B2) : idem — propagation vers _intro_layer
-	bandeau.add_child(v)
-
-	var title: Label = Label.new()
-	title.text = str(run.scenario.get("title", "La Quête"))
-	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 40)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(title)
-
-	# v10.11 (user 2026-06-06) : commentaire CENTRÉ verticalement dans l'encart (plus de vide en bas).
-	# CenterContainer extensible → centre le bloc (au lieu d'un scroll top-aligné qui laissait du vide).
-	var mid: CenterContainer = CenterContainer.new()
-	mid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	mid.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(mid)
-	var intro_lbl: RichTextLabel = RichTextLabel.new()
-	intro_lbl.bbcode_enabled = true
-	intro_lbl.fit_content = true
-	intro_lbl.custom_minimum_size = Vector2(1200, 0)  # bloc large, retour à la ligne, centré dans l'encart
-	intro_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro_lbl.add_theme_color_override("default_color", COL_TEXT)
-	intro_lbl.add_theme_font_size_override("normal_font_size", 26)  # commentaire Merlin lisible (user 2026-06-06)
-	intro_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE  # v10.13 (B2) : le clic atteint le layer
-	mid.add_child(intro_lbl)
-	# v10.13 (B3) : l'ouverture narrative ne vit PLUS dans le pop-up — elle est portée par
-	# l'interstitiel « Merlin raconte » après l'Accept (anti « info ×2 »). Pop-up = greeting seul.
-	var intro_text: String = str(data.get("intro", ""))
-
-	# v10.13 (B2) — hint « tout lire » dès le début du typewriter (pilier FACILE, ≤2 gestes :
-	# clic 1 = tout révéler, clic 2 = Accepter). Disparaît au clic ou à la fin de la frappe.
-	# DIM_WARM (clair) sur panneau sombre — INK_DIM était ≈2.4:1, sous le seuil 3:1 (audit ux_flow E1).
-	var read_hint: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
-	read_hint.text = "▶ clic pour tout lire"
-	read_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	read_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(read_hint)
-
-	_intro_reveal_tw = _reveal_into(intro_lbl, intro_text)
-	if _intro_reveal_tw != null:
-		_intro_reveal_tw.finished.connect(func() -> void:
-			if is_instance_valid(read_hint):
-				read_hint.visible = false)
-	else:
-		read_hint.visible = false  # rien à révéler → pas d'affordance
-	# 1er clic n'importe où sur le panneau (hors bouton Accepter) → tout le texte est révélé.
-	_intro_layer.gui_input.connect(func(e: InputEvent) -> void:
-		if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
-			return
-		if intro_lbl.visible_characters >= 0 and intro_lbl.visible_characters < intro_lbl.get_total_character_count():
-			if _intro_reveal_tw != null and _intro_reveal_tw.is_valid():
-				_intro_reveal_tw.kill()
-			intro_lbl.visible_characters = -1
-			if is_instance_valid(read_hint):
-				read_hint.visible = false)
-
-	# Ligne basse : Objectif (gauche, expand) + Accepter (droite, fixed). Une seule rangée → cibles
-	# tactiles ≥44 px (bible §21.1 pilier TACTILE+DESKTOP).
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 16)
-	v.add_child(row)
-
-	var obj_panel: PanelContainer = PanelContainer.new()
-	obj_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var osb: StyleBoxFlat = StyleBoxFlat.new()
-	osb.bg_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.12)
-	osb.set_corner_radius_all(6)
-	osb.set_content_margin_all(10)
-	osb.border_color = COL_GOLD
-	osb.border_width_left = 3
-	obj_panel.add_theme_stylebox_override("panel", osb)
-	row.add_child(obj_panel)
-	var obj_lbl: Label = Label.new()
-	obj_lbl.text = "✦ Objectif : " + str(data.get("objectif", ""))
-	obj_lbl.add_theme_color_override("font_color", COL_GOLD)
-	obj_lbl.add_theme_font_size_override("font_size", 22)
-	obj_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	obj_panel.add_child(obj_lbl)
-
-	var accept: Button = Button.new()
-	accept.text = "Accepter ✦"
-	accept.custom_minimum_size = Vector2(260, 66)  # ≥44 px (pilier TACTILE+DESKTOP)
-	accept.add_theme_font_size_override("font_size", 28)
-	MerlinVisual.apply_button_da(accept)
-	accept.pressed.connect(_accept_quest)
-	row.add_child(accept)
-	accept.resized.connect(func() -> void: accept.pivot_offset = accept.size / 2.0)
-	_pulse(accept)
-
-	# v10.22 — entrée en FONDU : le slide par position.y écrasait l'ancrage centré (leçon C1 boot :
-	# tweener `position` sur un Control ancré = le layout perd la main → popup collé en haut).
-	bandeau.modulate.a = 0.0
-	bandeau.create_tween().tween_property(bandeau, "modulate:a", 1.0, 0.35 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
-	fade.modulate = Color(1, 1, 1, 0)
-	fade.create_tween().tween_property(fade, "modulate:a", 1.0, 0.3)
-
+	_intro_data = {
+		"title": str(run.scenario.get("title", "La Quête")),
+		"intro": str(data.get("intro", "")),
+		"objectif": str(data.get("objectif", "")),
+	}
+	# Teaser Z5 : la main du beat 1, rendue puis re-éteinte (vigilance V2a #6 : vues créées pendant
+	# une zone estompée → état souris re-appliqué ; _set_choice_ui(false) est déjà passé dans _begin).
+	_render_hand(false)
+	MerlinVisual.set_zone_active(_hand_box, false)
+	# Z3 : le fil porte l'intro (titre révélé d'emblée, pitch au typewriter via from_chars R128).
+	MerlinVisual.swap_zone(_situ_panel, func() -> void:
+		_typewriter(_intro_bbcode(str(_intro_data["intro"])), true, _situation_text,
+			str(_intro_data["title"]).length() + 2)
+		_show_skip_hint()
+		if _caret != null:
+			_caret.text = "▶ clic pour tout lire")
+	_build_intro_accept()
 	# v10.13 (B3) : ouverture pré-générée en cache (priorité moteur BASSE — ne se lance que si le
 	# moteur est idle) AVANT l'enrichissement de greeting. Consommée par l'interstitiel à l'Accept.
 	get_node("/root/MerlinScenario").prefetch_opening(run.scenario)
-	_bg_intro(run.scenario, intro_lbl)
+	_bg_intro(run.scenario)
 
 
-# v10.13 (B2) : retourne le tween de frappe (null si rien à écrire) → skippable au clic.
-func _reveal_into(lbl: RichTextLabel, txt: String) -> Tween:
-	lbl.text = txt
-	lbl.visible_characters = 0
-	var n: int = lbl.get_total_character_count()
-	if n <= 0:
-		return null
-	var dur: float = clampf(float(n) / 55.0, 0.6, 4.0)
-	var t: Tween = lbl.create_tween()
-	t.tween_property(lbl, "visible_characters", n, dur)
-	# v10.20 — voix de Merlin sur l'intro/ouverture (était muette). Cadence ~1 blip / 3 lettres.
-	var mood: String = MerlinSceneArt.mood_for_text(txt)
-	var sess: int = MerlinAudio.begin_voice()  # voix unique (anti-superposition)
-	var ticks: int = maxi(n / 3, 1)
-	var iv: float = dur / float(maxi(ticks, 1))
-	var vt: Tween = lbl.create_tween()
-	for i in ticks:
-		vt.tween_interval(iv)
-		vt.tween_callback(func() -> void: MerlinAudio.play_voice_session(sess, mood))
-	return t
+# Compose le BBCode de l'intro — un seul fil dans _situation_text, recomposable quand le LLM
+# enrichit le pitch (_bg_intro). Titre en GOLD_DARK : l'or LISIBLE sur crème (GOLD pur ≈1.5:1,
+# sous le seuil 3:1 du §23 — même choix que degree_color réussite).
+func _intro_bbcode(intro_text: String) -> String:
+	var gold: String = MerlinVisual.GOLD_DARK.to_html(false)
+	return "[center][font_size=%d][color=#%s]%s[/color][/font_size]\n\n%s\n\n[color=#%s]✦ Objectif : %s[/color][/center]" % [
+		MerlinVisual.FS_TITLE_POPUP, gold, str(_intro_data.get("title", "")),
+		intro_text, gold, str(_intro_data.get("objectif", ""))]
+
+
+# Bouton « Accepter ✦ » dans le slot central de Z4 (56 px de haut : tient dans la ligne d'état 72 px).
+func _build_intro_accept() -> void:
+	var accept: Button = Button.new()
+	accept.text = "Accepter ✦"
+	accept.custom_minimum_size = Vector2(260, 56)  # ≥44 px (pilier TACTILE+DESKTOP)
+	accept.add_theme_font_size_override("font_size", 28)
+	accept.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	MerlinVisual.apply_button_da(accept)
+	MerlinVisual.connect_button_feedback(accept)  # feedback canon §21 `tap`
+	accept.pressed.connect(_accept_quest)
+	_intro_accept_btn = accept
+	if _res_block != null:
+		_res_block.add_child(accept)
+		_fade_res_block(true)
+	accept.resized.connect(func() -> void: accept.pivot_offset = accept.size / 2.0)
+	_pulse(accept)
 
 
 func _pulse(node: Control) -> void:
@@ -1957,19 +1992,20 @@ func _pulse(node: Control) -> void:
 	_pulse_tw.tween_property(node, "scale", Vector2(1.0, 1.0), 0.7).set_trans(Tween.TRANS_SINE)
 
 
-# Enrichit l'intro en arrière-plan ; ne remplace QUE si le pop-up est encore ouvert. Jamais bloquant.
-# v10.13 (B3) : plus de paramètre `opening` — l'ouverture vit dans l'interstitiel « Merlin raconte ».
-func _bg_intro(scenario: Dictionary, lbl: RichTextLabel) -> void:
+# Enrichit le PITCH d'intro en arrière-plan ; jamais bloquant. v11-V2b : recompose le BBCode complet
+# (titre + pitch enrichi + objectif) dans _situation_text — seulement si l'intro est encore ouverte
+# ET la frappe finie (ÉVIDENT : ne jamais muter un texte en cours de lecture).
+func _bg_intro(scenario: Dictionary) -> void:
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc == null:
 		return
 	# Greeting MERLIN enrichie (LLM, non bloquant).
 	var prose: String = await sc.narrate_intro(scenario)
-	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl):
+	if not _intro_open or _situation_text == null or not is_inside_tree():
 		return
-	# ÉVIDENT : ne pas muter un texte en cours de lecture → enrichir seulement si le typewriter a fini.
+	var lbl: RichTextLabel = _situation_text
 	if prose.length() >= 10 and not (lbl.visible_characters >= 0 and lbl.visible_characters < lbl.get_total_character_count()):
-		lbl.text = prose
+		lbl.text = _intro_bbcode(prose)
 		lbl.visible_characters = -1
 	# v10.13 (Fix 9) : le 2e appel LLM (narrate_opening) est SUPPRIMÉ ici — il occupait le moteur
 	# single-flight exactement pendant la composition du beat 1, affamant le prefetch de résolution
@@ -1984,13 +2020,22 @@ func _accept_quest() -> void:
 	if _pulse_tw != null and _pulse_tw.is_valid():
 		_pulse_tw.kill()
 	_pulse_tw = null
-	var layer: Control = _intro_layer
-	_intro_layer = null
-	if layer == null:
-		return
-	var t: Tween = create_tween()
-	t.tween_property(layer, "modulate:a", 0.0, MerlinVisual.DUR_VEIL_OUT * MerlinVisual.motion())
-	t.tween_callback(layer.queue_free)
+	_kill_tw()  # frappe d'intro encore en cours → coupée net (l'interstitiel reprend l'encart)
+	_set_caret(false)
+	# v11-V2b — cross-fade Z4 vers l'état suivant : le bouton part en fondu (souris off immédiate,
+	# zéro clic fantôme), le slot central s'éteint ; l'interstitiel posera le hint skip (caret).
+	if _intro_accept_btn != null and is_instance_valid(_intro_accept_btn):
+		var btn: Button = _intro_accept_btn
+		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if btn.is_inside_tree():
+			var t: Tween = btn.create_tween()
+			t.tween_property(btn, "modulate:a", 0.0,
+				MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+			t.tween_callback(btn.queue_free)
+		else:
+			btn.queue_free()
+	_intro_accept_btn = null
+	_fade_res_block(false)
 	get_node("/root/MerlinRun").save()  # v10.13 (Fix 6) : quitter pendant le beat 1 → reprise au beat 1
 	# v10.13 (B3) : l'intro cède la place à l'interstitiel « Merlin raconte » (ouverture narrative),
 	# qui présentera lui-même le Beat 1 au clic suivant. La save reste AVANT (Fix 6c).
@@ -1998,14 +2043,22 @@ func _accept_quest() -> void:
 
 
 # === v10.13 (B3) — Interstitiel « Merlin raconte » : entre l'Accept et le Beat 1 ===
-# Sert l'ouverture narrative (LLM si le cache prefetch_opening est prêt, sinon attente animée
+# Sert l'ouverture narrative (LLM si le cache prefetch_opening est prêt, sinon attente inline
 # bornée 8s puis procédural) ET couvre la gen d'arc en arrière-plan (retarde arc_locked → plus
 # d'arcs LLM gagnent la course). Clic pendant le typewriter = tout révéler ; clic ensuite =
 # _present_current_beat() (≤2 gestes, pilier FACILE). Piloté par _input via _interstitial_open.
+# v11-V2b : plus de MerlinWaitStage plein écran — l'attente vit DANS l'encart (caption + points
+# cyclants), le hint skip dans Z4 (caret). Les zones ne bougent jamais.
+const INTERSTITIAL_CAPTION: String = "Merlin rassemble les fils de l'histoire"
+const INTERSTITIAL_CAP_MS: int = 8000   # au-delà, l'ouverture procédurale sert (le LLM rattrapera)
+const INTERSTITIAL_DOT_MS: int = 450    # cadence des points cyclants (parité sustain fusion)
+
+
 func _play_opening_interstitial() -> void:
-	_scene_epoch += 1  # toute gen/anim liée au pop-up d'intro devient périmée
+	_scene_epoch += 1  # toute gen/anim liée à l'intro devient périmée
 	var ep: int = _scene_epoch
 	_interstitial_open = true
+	_interstitial_skip = false
 	_can_advance = false
 	_set_caret(false)
 	_set_choice_ui(false)
@@ -2013,41 +2066,65 @@ func _play_opening_interstitial() -> void:
 	var sc: Node = get_node("/root/MerlinScenario")
 	# Review HIGH (B3) : si le prefetch lancé à l'ouverture de l'intro a été SAUTÉ (moteur occupé
 	# par la gen d'arc — cas courant au cold start), on RETENTE ici : l'arc a eu toute la lecture
-	# de l'intro pour finir, et le WaitStage (8s) attend alors une VRAIE gen, pas du vide.
+	# de l'intro pour finir, et l'attente inline (8s) couvre alors une VRAIE gen, pas du vide.
 	# Jamais si déjà prête ou en vol (prefetch_opening fait une RAZ inconditionnelle).
 	if not sc.is_opening_ready() and not sc.is_opening_pending():
 		sc.prefetch_opening(run.scenario)
 	_set_encart_phase(MerlinVisual.INK_DIM)  # bordure neutre (même teinte que les situations)
-	if _situation_text != null:
-		_situation_text.text = ""
-	if _situ_panel != null:
-		_situ_panel.modulate.a = 0.45
-		if _situ_tw != null and _situ_tw.is_valid():
-			_situ_tw.kill()
-		_situ_tw = _situ_panel.create_tween()
-		_situ_tw.tween_property(_situ_panel, "modulate:a", 1.0, 0.22)
+	if _situ_tw != null and _situ_tw.is_valid():
+		_situ_tw.kill()  # fondu legacy en vol → les swaps de zone prennent la main sur l'alpha
 	var opening: String = ""
 	if bool(sc.is_opening_ready()):
 		opening = str(sc.take_opening())
 	else:
-		# Attente animée bornée (cap 8s, skippable) : couvre les gens de fond (arc/ouverture).
-		_interstitial_wait = MerlinWaitStage.start(self, {
-			"caption": "Merlin rassemble les fils de l'histoire",
-			"cap_ms": 8000,
-			"dim_alpha": 0.55,       # audit ux_flow E2 : caption or sur l'encart crème ≈1.8:1 → voile sombre
-			"skip_reveal_ms": 1500,  # audit ux_flow F1 : skip révélé à 1.5s (cap court 8s)
-		})
-		var issue: String = await _interstitial_wait.wait_until(func() -> bool: return bool(sc.is_opening_ready()))
-		_interstitial_wait = null
-		if not _fresh(ep):
-			_interstitial_open = false
-			return  # scène quittée / supplantée pendant l'attente
+		# v11-V2b — attente DANS l'encart : caption + points cyclants, skip au clic (cap 8s).
+		var issue: String = await _interstitial_inline_wait(ep, func() -> bool: return bool(sc.is_opening_ready()))
+		if not _fresh(ep) or not _interstitial_open:
+			return  # scène quittée / interstitiel clos par l'outillage pendant l'attente
 		if issue == "ready":
 			opening = str(sc.take_opening())
 	if opening.strip_edges() == "":
 		opening = str(sc.build_opening(run.scenario))  # procédural verbeux (cadre + accroche du pitch)
-	_typewriter("[center]" + opening + "[/center]", true)
+	# Review V2b HIGH-2 — TOUJOURS via swap_zone (même méta _fx_tw_swap → tue le swap de caption
+	# encore en vol) : en « frappe directe », un skip pendant la fenêtre 0,18 s laissait le callback
+	# du swap réécrire la caption PAR-DESSUS l'ouverture frappée — information détruite.
+	MerlinVisual.swap_zone(_situ_panel, func() -> void:
+		_typewriter("[center]" + opening + "[/center]", true))
 	# La suite (skip typewriter / avance au Beat 1) est pilotée par _input (_interstitial_open).
+
+
+# v11-V2b — attente LLM de l'interstitiel DANS l'encart (plus de WaitStage plein écran) : caption
+# GOLD_DARK + points cyclants écrits dans _situation_text (Z3), hint skip porté par le caret (Z4).
+# Sort sur "ready" (prédicat) / "skipped" (clic → _interstitial_skip) / "timeout" (cap 8 s).
+# Ne construit AUCUN node — les zones ne bougent jamais.
+func _interstitial_inline_wait(ep: int, pred: Callable) -> String:
+	_interstitial_skip = false
+	var cap_col: String = MerlinVisual.GOLD_DARK.to_html(false)
+	MerlinVisual.swap_zone(_situ_panel, func() -> void:
+		if _situation_text != null:
+			_situation_text.text = "[center][color=#%s]%s[/color][/center]" % [cap_col, INTERSTITIAL_CAPTION])
+	_show_skip_hint()  # affordance immédiate (« ▶ clic pour passer », Z4)
+	var t0: int = Time.get_ticks_msec()
+	var next_dot_ms: int = 0
+	var dots: int = 0
+	var issue: String = "timeout"
+	while _fresh(ep) and _interstitial_open:
+		if _interstitial_skip:
+			issue = "skipped"
+			break
+		if pred.is_valid() and bool(pred.call()):
+			issue = "ready"
+			break
+		var now: int = Time.get_ticks_msec()
+		if now - t0 >= INTERSTITIAL_CAP_MS:
+			break
+		if now >= next_dot_ms and _situation_text != null:
+			next_dot_ms = now + INTERSTITIAL_DOT_MS
+			dots = (dots + 1) % 4
+			_situation_text.text = "[center][color=#%s]%s %s[/color][/center]" % [
+				cap_col, INTERSTITIAL_CAPTION, ".".repeat(dots)]
+		await get_tree().process_frame
+	return issue
 
 
 # Sortie de l'interstitiel (clic « continuer » ou autoplay) → présentation du Beat 1.

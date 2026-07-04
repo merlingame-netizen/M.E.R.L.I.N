@@ -36,8 +36,8 @@ func _run() -> void:
 	await create_timer(1.0).timeout
 	# Traverse l'interstitiel « le récit s'ouvre » comme un joueur (skip + avance).
 	if "_interstitial_open" in game and game._interstitial_open:
-		if game._interstitial_wait != null:
-			game._interstitial_wait._skipped = true
+		if game.get("_interstitial_skip") != null:
+			game._interstitial_skip = true  # v11-V2b : attente inline (plus de WaitStage) — skip vivant
 			await create_timer(0.5).timeout
 		if game._tw != null and game._tw.is_valid():
 			game._skip_typewriter()

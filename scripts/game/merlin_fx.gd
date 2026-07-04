@@ -445,6 +445,7 @@ static func float_delta(host: Control, anchor: Control, delta: int, col: Color) 
 
 
 # Pop d'échelle 1-shot — promu de merlin_game v10.13 ; tween lié au node animé.
+# (v11-V2b : le static `beat_veil` est SUPPRIMÉ — les cross-fades de zone l'ont remplacé, spec écran stable.)
 static func pop(node: Control, peak: float) -> void:
 	if node == null or not node.is_inside_tree():
 		return
@@ -453,18 +454,3 @@ static func pop(node: Control, peak: float) -> void:
 	var t: Tween = node.create_tween()
 	t.tween_property(node, "scale", Vector2(p, p), 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.tween_property(node, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
-
-
-# Voile de transition de beat (§21 `veil`) : IGNORE (jamais STOP — un voile n'est pas un modal,
-# cascade Wave1 : il ne vole aucun clic, l'autoplay n'est jamais bloqué). L'appelant anime
-# l'entrée (await dans SA coroutine) puis la sortie fire-and-forget. Pas de caption : le swap
-# est instantané ; toute attente longue reste portée par MerlinWaitStage (R110/R111).
-static func beat_veil(host: Control) -> ColorRect:
-	var veil: ColorRect = ColorRect.new()
-	veil.color = MerlinVisual.BG_PAGE
-	veil.modulate.a = 0.0
-	veil.set_anchors_preset(Control.PRESET_FULL_RECT)
-	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	veil.z_index = 80
-	host.add_child(veil)
-	return veil

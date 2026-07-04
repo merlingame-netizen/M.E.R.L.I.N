@@ -79,7 +79,6 @@ const DUR_DISCARD: float = 0.25    # défausse (slide -40px, rot -6°, fade)
 const DUR_VEIL_IN: float = 0.20    # voile de transition de beat (entrée)
 const DUR_VEIL_OUT: float = 0.25   # voile (sortie)
 const STAGGER: float = 0.05        # décalage par carte dans un groupe
-const DUR_SLIDE_UP: float = 0.35   # situation slide-up à chaque beat
 const DUR_BREATHE: float = 3.0     # demi-période de respiration (titre, prose)
 const DUR_IMPACT_FREEZE: float = 0.08
 const DUR_FLASH: float = 0.12
@@ -101,6 +100,10 @@ const DUR_ZONE_FADE: float = 0.22  # v11-V2a (spec écran stable) : cross-fade d
 const PREFS_PATH: String = "user://options.cfg"
 static var reduced_motion: bool = false
 
+# ── v11-V2b (spec §tuto) — micro-tuto : 2 hints one-shot (labels passifs Z4), persistés [tuto] ──
+static var tuto_hint_a_done: bool = false  # hint A (beat 1) : « verbe + manière, puis Résous »
+static var tuto_hint_b_done: bool = false  # hint B (beat 2) : « tuiles soulignées d'or »
+
 
 # Facteur de durée global : reduce-motion = durées ÷2 (amplitudes ÷2 côté appelant).
 static func motion() -> float:
@@ -111,12 +114,16 @@ static func load_prefs() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	if cfg.load(PREFS_PATH) == OK:
 		reduced_motion = bool(cfg.get_value("a11y", "reduced_motion", false))
+		tuto_hint_a_done = bool(cfg.get_value("tuto", "hint_a_done", false))
+		tuto_hint_b_done = bool(cfg.get_value("tuto", "hint_b_done", false))
 
 
 static func save_prefs() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(PREFS_PATH)  # préserve d'éventuelles autres clés
 	cfg.set_value("a11y", "reduced_motion", reduced_motion)
+	cfg.set_value("tuto", "hint_a_done", tuto_hint_a_done)
+	cfg.set_value("tuto", "hint_b_done", tuto_hint_b_done)
 	cfg.save(PREFS_PATH)
 
 

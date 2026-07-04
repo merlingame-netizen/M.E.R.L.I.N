@@ -37,8 +37,8 @@ func _run() -> void:
 	await create_timer(1.2).timeout
 	await _cap("vp_2a_interstitiel")
 	if game != null and "_interstitial_open" in game and game._interstitial_open:
-		if game._interstitial_wait != null:
-			game._interstitial_wait._skipped = true  # clic simulé sur l'attente animée
+		if game.get("_interstitial_skip") != null:
+			game._interstitial_skip = true  # v11-V2b : attente inline (plus de WaitStage) — skip vivant  # clic simulé sur l'attente animée
 			await create_timer(0.5).timeout
 		if game._tw != null and game._tw.is_valid():
 			game._skip_typewriter()
@@ -55,7 +55,8 @@ func _run() -> void:
 	if run != null and "hand" in run:
 		print("[VP] run.hand = %d cartes" % (run.hand as Array).size())
 	if game != null and "_hand_box" in game and game._hand_box != null:
-		print("[VP] _hand_box visible=%s children=%d size=%s" % [str(game._hand_box.visible), game._hand_box.get_child_count(), str(game._hand_box.size)])
+		# v11-V2b : les zones ne se cachent plus (visible=true permanent) — l'état du choix est _choice_open.
+		print("[VP] _choice_open=%s children=%d size=%s" % [str(game.get("_choice_open")), game._hand_box.get_child_count(), str(game._hand_box.size)])
 	# v10.12 — drive un beat complet : combo (2 cartes) → résolution → fusion → issue.
 	if game != null and run != null and (run.hand as Array).size() >= 2 and game.has_method("_on_hand_card"):
 		game._on_hand_card(run.hand[0])

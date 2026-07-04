@@ -96,23 +96,24 @@ func _play_one(k: int) -> bool:
 			break  # scène libérée → bascule vers MerlinEnd en cours
 		if run.ended:
 			break
-		# v10.13 (B3) — Interstitiel « Merlin raconte » (entre Accept et Beat 1) : skip de
-		# l'attente animée (WaitStage), du typewriter, puis avance vers le Beat 1.
+		# v10.13 (B3) / v11-V2b — Interstitiel « Merlin raconte » (entre Accept et Beat 1) : skip du
+		# typewriter, avance vers le Beat 1 ; l'attente LLM vit désormais DANS l'encart (plus de
+		# WaitStage plein écran) → clic simulé via le flag _interstitial_skip.
 		if game._interstitial_open:
-			if game._interstitial_wait != null and is_instance_valid(game._interstitial_wait):
-				game._interstitial_wait._skipped = true  # clic simulé sur le WaitStage
-			elif game._tw != null and game._tw.is_valid():
+			if game._tw != null and game._tw.is_valid():
 				game._skip_typewriter()
 			elif game._can_advance:
 				game._end_interstitial()
 				print("[AUTOPLAY] run#%d — interstitiel passé" % k)
+			else:
+				game._interstitial_skip = true  # attente inline (encart) → clic simulé (fallback servi)
 			await process_frame
 			continue
-		# Modal draft ouvert ? Choisir ou passer.
-		if game._draft_layer != null:
+		# Draft ouvert (v11-V2b : dans les zones — les 3 cartes vivent dans _hand_box) ? Choisir ou passer.
+		if game._draft_active:
 			await create_timer(0.4).timeout
-			if is_instance_valid(game) and game._draft_layer != null:
-				var cv: Node = _find_card_view(game._draft_layer)
+			if is_instance_valid(game) and game._draft_active:
+				var cv: Node = _find_card_view(game._hand_box)
 				if take_draft and cv != null:
 					game._on_draft_card(cv.card)
 					print("[AUTOPLAY] run#%d — draft pris : %s" % [k, cv.card.card_name])
