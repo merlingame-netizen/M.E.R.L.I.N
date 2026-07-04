@@ -351,7 +351,7 @@ func ensure_selection_prefetch() -> void:
 func generate_selection() -> Array:
 	var mn: Node = _mn()
 	if mn != null and mn.is_ready():
-		var p: Dictionary = MerlinPromptBuilder.selection(_voice_prefix())
+		var p: Dictionary = MerlinPromptBuilder.selection(_voice_prefix(), _lieu_name())
 		var res: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 		if not res.has("error"):
 			var arr: Array = MerlinJson.extract_array(str(res.get("text", "")))
@@ -511,6 +511,13 @@ const _INTRO_WRAPPERS: Array = [
 ]
 
 
+
+# v10.22 — nom du LIEU du conte selon le biome de la run (prompts cohérents avec le monde choisi).
+func _lieu_name() -> String:
+	var run_l: Node = get_node_or_null("/root/MerlinRun")
+	return "les Falaises du Bout-du-Monde" if (run_l != null and str(run_l.biome) == "falaises") else "Broceliande"
+
+
 # v10.22 (user : « remplace le sentier s'ouvre par un préambule qui explique ce qu'on fait là ») —
 # PRÉAMBULE LORE en 3 paragraphes : §1 qui tu es · §2 le LIEU t'a appelé (par biome) · §3 ce que Merlin
 # attend + le titre de la quête. Banques procédurales, anti-répétition intra-session via _fb_served.
@@ -579,7 +586,7 @@ func narrate_intro(scenario: Dictionary) -> String:
 	var mn: Node = _mn()
 	if mn == null or not mn.is_ready():
 		return ""
-	var p: Dictionary = MerlinPromptBuilder.intro(_voice_prefix(), scenario, _build_memory_hint())
+	var p: Dictionary = MerlinPromptBuilder.intro(_voice_prefix(), scenario, _build_memory_hint(), _lieu_name())
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return ""
@@ -614,7 +621,7 @@ func narrate_opening(scenario: Dictionary) -> String:
 	if not engine_idle():
 		return ""
 	var mn: Node = _mn()
-	var p: Dictionary = MerlinPromptBuilder.opening(scenario)
+	var p: Dictionary = MerlinPromptBuilder.opening(scenario, _lieu_name())
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return ""
@@ -693,6 +700,9 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	if int(beat.get("n", 1)) > 1 and bridge != "":
 		narration = bridge + " " + narration
 	_run_thread["arc_locked"] = true
+	# v10.22 (user) — filet : la question rituelle est bannie PARTOUT (banque purgée, prompt réécrit,
+	# et ici on nettoie ce qui vient d'un arc LLM ancien ou d'une habitude du modèle).
+	narration = narration.replace(" Que décida le Voyageur ?", "").replace("Que décida le Voyageur ?", "").strip_edges()
 	return {
 		"narration": narration,
 		"required_tags": required,
@@ -736,32 +746,32 @@ func _fallback_situation(btype: String, _required: Array) -> String:
 # Ordre = [Exploration, Rencontre, Epreuve, Dilemme, Climax]. Style DIRECT et CONCRET.
 const FALLBACK_ARCS: Array = [
 	[
-		"Le sentier s'enfonça sous les arbres et se referma derrière le Voyageur. Il n'était pas seul : un pas léger le suivait, à distance. Que décida le Voyageur ?",
+		"Le sentier s'enfonça sous les arbres et se referma derrière le Voyageur. Il n'était pas seul : un pas léger le suivait, à distance.",
 		"Une vieille femme attendait, assise sur une souche, là où le chemin se divisait. « Je t'attendais », dit-elle sans se lever. Le Voyageur se demandait que faire.",
-		"Plus loin, un pont de corde enjambait un ravin, mais plusieurs planches manquaient et le bois craquait sous le vent. Que décida le Voyageur ?",
+		"Plus loin, un pont de corde enjambait un ravin, mais plusieurs planches manquaient et le bois craquait sous le vent.",
 		"Sur l'autre rive, le chemin se sépara en deux : à gauche des torches au loin, à droite le silence et une odeur de fumée. Que décida-t-il ?",
-		"Au bout l'attendait une porte de pierre entrouverte. Ce qu'il cherchait était derrière — et le pas qui le suivait venait de s'arrêter, juste là. Que décida le Voyageur ?",
+		"Au bout l'attendait une porte de pierre entrouverte. Ce qu'il cherchait était derrière — et le pas qui le suivait venait de s'arrêter, juste là.",
 	],
 	[
-		"Le Voyageur suivit le bruit d'une eau qui coulait, jusqu'à une source noire et parfaitement immobile au creux de la forêt. Que décida le Voyageur ?",
+		"Le Voyageur suivit le bruit d'une eau qui coulait, jusqu'à une source noire et parfaitement immobile au creux de la forêt.",
 		"Un enfant accroupi au bord le fixait sans peur. « Elle dort, ne la réveille pas », murmura-t-il en montrant l'eau. Le Voyageur se demandait que faire.",
-		"Le seul passage longeait la source sur une corniche étroite et glissante ; un faux pas, et c'était la chute dans l'eau noire. Que décida le Voyageur ?",
+		"Le seul passage longeait la source sur une corniche étroite et glissante ; un faux pas, et c'était la chute dans l'eau noire.",
 		"Une grosse racine barrait la route : la couper réveillerait quelque chose, l'enjamber prendrait un temps qu'il n'avait pas. Que décida-t-il ?",
-		"L'eau se mit à bouger : ce qu'il était venu chercher remontait lentement vers la surface, et le regardait. Que décida le Voyageur ?",
+		"L'eau se mit à bouger : ce qu'il était venu chercher remontait lentement vers la surface, et le regardait.",
 	],
 	[
-		"Le Voyageur arriva devant un village de huttes vides, les feux encore tièdes : tout le monde était parti en hâte, sans rien emporter. Que décida le Voyageur ?",
+		"Le Voyageur arriva devant un village de huttes vides, les feux encore tièdes : tout le monde était parti en hâte, sans rien emporter.",
 		"Un vieil homme sortit d'une hutte, une serpe à la main. « Ils ont fui ce qui descend des collines », dit-il en le jaugeant. Le Voyageur se demandait que faire.",
-		"La seule sortie passait par un éboulis de pierres branlantes, où le moindre faux mouvement pouvait tout faire glisser. Que décida le Voyageur ?",
+		"La seule sortie passait par un éboulis de pierres branlantes, où le moindre faux mouvement pouvait tout faire glisser.",
 		"Deux traces fraîches partaient de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Il ne pouvait en suivre qu'une. Que décida-t-il ?",
-		"Au bout de la trace, la chose des collines l'attendait, dos à lui. Elle savait déjà qu'il était là. Que décida le Voyageur ?",
+		"Au bout de la trace, la chose des collines l'attendait, dos à lui. Elle savait déjà qu'il était là.",
 	],
 	[
-		"Le Voyageur suivit une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottaient des visages qui n'étaient pas le sien. Que décida le Voyageur ?",
+		"Le Voyageur suivit une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottaient des visages qui n'étaient pas le sien.",
 		"Une femme se tenait pieds nus dans la source, sans se retourner. « Tu cherches un visage, toi aussi », dit-elle. Le Voyageur se demandait que faire.",
-		"Le sentier englouti reprenait sous l'eau, barré par une dalle de pierre tombée en travers, et le courant froid poussait fort contre ses jambes. Que décida le Voyageur ?",
+		"Le sentier englouti reprenait sous l'eau, barré par une dalle de pierre tombée en travers, et le courant froid poussait fort contre ses jambes.",
 		"De l'autre côté, deux galeries s'enfonçaient : l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelait. Que décida-t-il ?",
-		"La galerie déboucha sous la source, le monde à l'envers : l'eau noire au-dessus de sa tête, et au centre, son propre visage. Que décida le Voyageur ?",
+		"La galerie déboucha sous la source, le monde à l'envers : l'eau noire au-dessus de sa tête, et au centre, son propre visage.",
 	],
 ]
 
@@ -792,7 +802,7 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 	var fblock: String = MerlinPromptBuilder.faction_pilier_block(
 		str(_run_thread.get("faction", "")), str(_run_thread.get("pilier", "")),
 		str(_run_thread.get("pilier2", "")), bool(_run_thread.get("pnj_recog", false)))
-	var p: Dictionary = MerlinPromptBuilder.arc(scenario, req_tags, fblock)
+	var p: Dictionary = MerlinPromptBuilder.arc(scenario, req_tags, fblock, _lieu_name())
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return []

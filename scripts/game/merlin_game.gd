@@ -1658,7 +1658,8 @@ func _show_intro_popup() -> void:
 
 	# Voile léger limité au tiers bas (continuité visuelle bandeau↔plateau), pas de dim plein-rect.
 	var fade: ColorRect = ColorRect.new()
-	fade.color = MerlinVisual.DIM_LIGHT
+	# v10.22 (QA user screenshot) : voile FRANC — l'encart crème vide derrière délavait toute la scène.
+	fade.color = MerlinVisual.DIM_MODAL
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)  # voile plein écran derrière l'encart central
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE  # le layer parent capte déjà
 	_intro_layer.add_child(fade)
@@ -1668,8 +1669,11 @@ func _show_intro_popup() -> void:
 	bandeau.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bandeau.anchor_left = 0.1
 	bandeau.anchor_right = 0.9
-	bandeau.anchor_top = 0.1
-	bandeau.anchor_bottom = 0.9
+	# v10.22 (QA user screenshot) : hauteur AU CONTENU, centré verticalement — fini l'immense panneau
+	# aux deux tiers vide (le texte flottait dans le noir).
+	bandeau.anchor_top = 0.5
+	bandeau.anchor_bottom = 0.5
+	bandeau.grow_vertical = Control.GROW_DIRECTION_BOTH
 	bandeau.offset_left = 0
 	bandeau.offset_right = 0
 	bandeau.offset_top = 0
@@ -1777,11 +1781,10 @@ func _show_intro_popup() -> void:
 	accept.resized.connect(func() -> void: accept.pivot_offset = accept.size / 2.0)
 	_pulse(accept)
 
-	# Animation slide-up depuis sous l'écran + fade-in du voile (300 ms, BACK out).
-	var screen_h: float = float(get_viewport().get_visible_rect().size.y)
-	bandeau.position.y = screen_h * 0.3  # offset visuel = simule un slide-up depuis le bas
-	var t: Tween = bandeau.create_tween()
-	t.tween_property(bandeau, "position:y", 0.0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# v10.22 — entrée en FONDU : le slide par position.y écrasait l'ancrage centré (leçon C1 boot :
+	# tweener `position` sur un Control ancré = le layout perd la main → popup collé en haut).
+	bandeau.modulate.a = 0.0
+	bandeau.create_tween().tween_property(bandeau, "modulate:a", 1.0, 0.35 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
 	fade.modulate = Color(1, 1, 1, 0)
 	fade.create_tween().tween_property(fade, "modulate:a", 1.0, 0.3)
 
@@ -1995,6 +1998,11 @@ func _build_ui() -> void:
 	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
 	_scene_art.set_watch_eyes(true)  # v10.20 : les yeux de Merlin vivent dans la LUNE et suivent le curseur
 	_scene_art.set_biome(str(get_node("/root/MerlinRun").biome))  # v10.22 : le monde choisi au menu
+	# v10.22 (user) — le paysage se CONSTRUIT à l'entrée de scène (rampe reveal → étages du décor).
+	if not MerlinVisual.reduced_motion:
+		_scene_art.set_decor_reveal(0.0)
+		var rvl: Tween = create_tween()
+		rvl.tween_method(_scene_art.set_decor_reveal, 0.0, 1.0, 1.4 * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# ENCART CENTRAL (~80%) crème : porte l'intro/commentaire PUIS chaque situation/issue (user 2026-06-06).
 	# size_flags EXPAND → occupe tout l'espace restant quand les cartes sont cachées (hors phase de choix).

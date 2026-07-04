@@ -233,6 +233,14 @@ func set_decor_reveal(p: float) -> void:
 	queue_redraw()
 
 
+# v10.22 (user : « les transitions de paysage doivent se construire ») — révélation PAR ÉTAGES :
+# chaque couche du décor apparaît sur sa tranche de _decor_reveal (ciel → lointains → arbres/caps →
+# points d'intérêt → sol → brume). Toute rampe de reveal (boot, pop de biome, entrée de scène)
+# devient une CONSTRUCTION du paysage.
+func _stage(a: float, b: float) -> float:
+	return clampf((_decor_reveal - a) / maxf(b - a, 0.001), 0.0, 1.0)
+
+
 # v10.18 — Boot cinématique (yeux). set_eye_open(v<0) = clignement auto ; v∈[0..1] = ouverture forcée.
 func set_eye_open(v: float) -> void:
 	_eye_open_force = v
@@ -601,7 +609,7 @@ func _draw() -> void:
 				tw_a *= 0.5
 			draw_circle(sp2 + _parallax * 0.3, 1.4 + fmod(stf * 0.7, 1.2), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, tw_a))
 	# v10.21 — COLLINES LOINTAINES (forêt uniquement) : bande silhouette douce derrière les arbres.
-	if _biome == "foret":
+	if _biome == "foret" and _stage(0.05, 0.35) > 0.01:
 		var hills: PackedVector2Array = PackedVector2Array()
 		var h_steps: int = 16
 		for hi2 in h_steps + 1:
@@ -610,7 +618,7 @@ func _draw() -> void:
 			hills.append(Vector2(hx, hy) + _parallax * 0.25)
 		hills.append(Vector2(w, h))
 		hills.append(Vector2(0.0, h))
-		draw_colored_polygon(hills, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.30 * dr))
+		draw_colored_polygon(hills, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.30 * _stage(0.05, 0.35)))
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * (0.17 if _watch_eyes else 0.13)  # lune agrandie en mode œil-lune (lisibilité)
@@ -680,13 +688,15 @@ func _draw() -> void:
 		draw_circle(sh_head, 2.6, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, sh_a))
 
 	# Background trees (with reactive sway) — alpha = decor_reveal (boot : décor caché en gros plan yeux)
-	if _biome == "foret":
-		_tree(Vector2(w * 0.12 + _tree_sway * 0.8, h), h * 0.74, w, dr)
-		_tree(Vector2(w * 0.27 + _tree_sway * 0.5, h), h * 0.60, w, dr)
-		_tree(Vector2(w * 0.80 - _tree_sway * 0.5, h), h * 0.66, w, dr)
-		_tree(Vector2(w * 0.91 - _tree_sway * 0.8, h), h * 0.78, w, dr)
-		# Menhir
-		_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40), dr)
+	if _biome == "foret" and _stage(0.25, 0.60) > 0.01:
+		var tdr: float = _stage(0.25, 0.60)  # les arbres se dressent au 2e étage de la construction
+		_tree(Vector2(w * 0.12 + _tree_sway * 0.8, h), h * 0.74, w, tdr)
+		_tree(Vector2(w * 0.27 + _tree_sway * 0.5, h), h * 0.60, w, tdr)
+		_tree(Vector2(w * 0.80 - _tree_sway * 0.5, h), h * 0.66, w, tdr)
+		_tree(Vector2(w * 0.91 - _tree_sway * 0.8, h), h * 0.78, w, tdr)
+		# Menhir — point d'intérêt : avant-dernier étage
+		if _stage(0.50, 0.80) > 0.01:
+			_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40), _stage(0.50, 0.80))
 	elif _biome == "falaises":
 		_draw_falaises(w, h, dr, rm)
 
@@ -805,11 +815,11 @@ func _draw() -> void:
 				front_crest = gnd_pts.duplicate()
 			gnd_pts.append(Vector2(w, h))
 			gnd_pts.append(Vector2(0.0, h))
-			var gnd_a: float = float(bspec["a"]) * dr * (0.5 if rm else 1.0)
+			var gnd_a: float = float(bspec["a"]) * _stage(0.55, 0.85) * (0.5 if rm else 1.0)
 			draw_colored_polygon(gnd_pts, Color(gnd_col.r, gnd_col.g, gnd_col.b, gnd_a))
 		# Touffes d'herbe : éventails de 3 brins sur la crête avant, sway par touffe (déterministe).
 		if not front_crest.is_empty():
-			var g_a: float = 0.55 * dr * (0.5 if rm else 1.0)
+			var g_a: float = 0.55 * _stage(0.55, 0.85) * (0.5 if rm else 1.0)
 			var g_col: Color = Color(gnd_col.r, gnd_col.g, gnd_col.b, g_a)
 			for ti in 9:
 				var tf: float = float(ti)
@@ -834,7 +844,7 @@ func _draw() -> void:
 	]
 	for li in mist_layers.size():
 		var ml: Dictionary = mist_layers[li]
-		var alpha: float = float(ml["alpha"]) * _mist_factor * dr * (0.5 if rm else 1.0)
+		var alpha: float = float(ml["alpha"]) * _mist_factor * _stage(0.70, 1.0) * (0.5 if rm else 1.0)
 		if alpha <= 0.004:
 			continue
 		var m_w: float = w * float(ml["width"])
@@ -847,15 +857,17 @@ func _draw() -> void:
 		for si2 in seg + 1:  # bord SUPÉRIEUR sinueux (2 ondes superposées, dérive lente)
 			var fx: float = float(si2) / float(seg)
 			var px: float = m_x + fx * m_w
-			var wob: float = sin(fx * 6.0 + drift + float(li) * 2.1) * m_th * 0.45 \
-				+ sin(fx * 13.0 - drift * 1.7) * m_th * 0.20
+			# v10.22 (fix « triangulation failed » par rafales) : amplitudes BORNÉES — haut ≤ 0.50×th,
+			# bas ≤ 0.25×th → les deux bords du ruban ne peuvent JAMAIS se croiser (auto-intersection).
+			var wob: float = sin(fx * 6.0 + drift + float(li) * 2.1) * m_th * 0.35 \
+				+ sin(fx * 13.0 - drift * 1.7) * m_th * 0.15
 			# v10.21 (goal hover++) — la brume S'ÉCARTE du curseur qui la traverse (creux local).
 			var part: float = _hover_f(Vector2(px, m_y + m_th * 0.5), m_th * 2.6)
 			ribbon.append(Vector2(px, m_y + wob + part * m_th * 0.85))
 		for si3 in seg + 1:  # bord INFÉRIEUR sinueux (retour, phase décalée)
 			var fx2: float = 1.0 - float(si3) / float(seg)
 			var px2: float = m_x + fx2 * m_w
-			var wob2: float = sin(fx2 * 5.0 - drift * 0.8 + float(li)) * m_th * 0.35
+			var wob2: float = sin(fx2 * 5.0 - drift * 0.8 + float(li)) * m_th * 0.25
 			ribbon.append(Vector2(px2, m_y + m_th + wob2))
 		draw_colored_polygon(ribbon, Color(COL_MIST.r, COL_MIST.g, COL_MIST.b, alpha))
 		# (QA v10.21 : le « cœur » rectangulaire créait des coutures droites — retiré, le ruban seul suffit.)
@@ -1101,9 +1113,15 @@ func _draw_pilier(w: float, h: float, dr: float) -> void:
 func _draw_falaises(w: float, h: float, dr: float, rm: bool) -> void:
 	# MER : nappe teintée RARE_BLUE + colonne de reflet sous la lune + 3 rubans d'onde qui dérivent.
 	var sea_top: float = h * 0.66
+	var sdr: float = _stage(0.05, 0.35)   # la MER se devine en premier
+	var cdr: float = _stage(0.25, 0.60)   # les CAPS se dressent ensuite
+	var pdr: float = _stage(0.50, 0.80)   # le PHARE en avant-dernier
+	var edr: float = _stage(0.55, 0.85)   # l'écume en détail final
+	if sdr <= 0.01:
+		return
 	var sea: Color = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.30)
-	draw_rect(Rect2(Vector2(0.0, sea_top), Vector2(w, h - sea_top)), Color(sea.r, sea.g, sea.b, 0.85 * dr), true)
-	draw_rect(Rect2(Vector2(w * 0.47, sea_top), Vector2(w * 0.06, h - sea_top)), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, 0.05 * dr), true)
+	draw_rect(Rect2(Vector2(0.0, sea_top), Vector2(w, h - sea_top)), Color(sea.r, sea.g, sea.b, 0.85 * sdr), true)
+	draw_rect(Rect2(Vector2(w * 0.47, sea_top), Vector2(w * 0.06, h - sea_top)), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, 0.05 * sdr), true)
 	for wi in 3:
 		var wf: float = float(wi)
 		var wy: float = sea_top + (h - sea_top) * (0.18 + 0.28 * wf)
@@ -1116,16 +1134,18 @@ func _draw_falaises(w: float, h: float, dr: float, rm: bool) -> void:
 		for si2 in range(segs, -1, -1):
 			var fx2: float = float(si2) / float(segs)
 			wave.append(Vector2(fx2 * w, wy + h * 0.012 + sin(fx2 * 7.0 - drift2) * h * 0.006))
-		draw_colored_polygon(wave, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, (0.05 + 0.02 * wf) * dr))
+		draw_colored_polygon(wave, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, (0.05 + 0.02 * wf) * sdr))
 	# CAPS ROCHEUX : masses irrégulières — l'anse s'ouvre sous la lune.
+	if cdr <= 0.01:
+		return
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(0.0, h * 0.55), Vector2(w * 0.10, h * 0.62), Vector2(w * 0.16, h * 0.70),
 		Vector2(w * 0.22, h * 0.74), Vector2(w * 0.28, h * 0.80), Vector2(w * 0.30, h * 0.88),
-		Vector2(w * 0.26, h), Vector2(0.0, h)]), Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.9 * dr))
+		Vector2(w * 0.26, h), Vector2(0.0, h)]), Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.9 * cdr))
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(w, h * 0.50), Vector2(w * 0.88, h * 0.58), Vector2(w * 0.80, h * 0.66),
 		Vector2(w * 0.72, h * 0.72), Vector2(w * 0.68, h * 0.82), Vector2(w * 0.70, h),
-		Vector2(w, h)]), Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.9 * dr))
+		Vector2(w, h)]), Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.9 * cdr))
 	# ÉCUME au pied des caps : points crème qui scintillent au rythme des vagues.
 	if _animated:
 		for fi in 8:
@@ -1133,13 +1153,15 @@ func _draw_falaises(w: float, h: float, dr: float, rm: bool) -> void:
 			var ex: float = (w * (0.24 + 0.07 * fmod(ff * 0.61, 1.0))) if fi < 4 else (w * (0.64 + 0.08 * fmod(ff * 0.43, 1.0)))
 			var ey: float = h * (0.80 + 0.12 * fmod(ff * 0.37, 1.0))
 			var twk: float = 0.5 + 0.5 * sin(_t * (1.1 + fmod(ff, 0.7)) + ff * 1.9)
-			var ea: float = (0.10 + 0.30 * twk * twk) * dr * (0.5 if rm else 1.0)
+			var ea: float = (0.10 + 0.30 * twk * twk) * edr * (0.5 if rm else 1.0)
 			draw_circle(Vector2(ex, ey), 2.2 + fmod(ff, 2.0), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ea))
 	# PHARE RUINÉ (cap droit) : tour effilée, sommet brisé en dents, lueur d'or fantôme dans la lanterne.
+	if pdr <= 0.01:
+		return
 	var pb: Vector2 = Vector2(w * 0.755, h * 0.68)
 	var pt_h: float = h * 0.26
 	var pw2: float = maxf(w * 0.016, 8.0)
-	var stone2: Color = Color(COL_STONE.r, COL_STONE.g, COL_STONE.b, COL_STONE.a * dr)
+	var stone2: Color = Color(COL_STONE.r, COL_STONE.g, COL_STONE.b, COL_STONE.a * pdr)
 	draw_colored_polygon(PackedVector2Array([
 		pb + Vector2(-pw2 * 1.5, 0.0), pb + Vector2(pw2 * 1.5, 0.0),
 		pb + Vector2(pw2 * 0.85, -pt_h * 0.82), pb + Vector2(-pw2 * 0.85, -pt_h * 0.82)]), stone2)
@@ -1149,7 +1171,7 @@ func _draw_falaises(w: float, h: float, dr: float, rm: bool) -> void:
 		pb + Vector2(pw2 * 0.85, -pt_h * 0.82)]), stone2)
 	var gl: float = (0.5 + 0.5 * sin(_t * 0.6)) if (_animated and not rm) else 0.6
 	draw_circle(pb + Vector2(0.0, -pt_h * 0.88), pw2 * 0.55,
-		Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, (0.12 + 0.22 * gl) * dr))
+		Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, (0.12 + 0.22 * gl) * pdr))
 
 
 # v10.21 — Menhir ORGANIQUE : pierre effilée légèrement penchée (polygone irrégulier) + mousse au pied.

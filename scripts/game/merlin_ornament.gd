@@ -78,4 +78,13 @@ static func scene_backdrop(dim: float = 0.42) -> MerlinSceneArt:
 		var run_b: Node = (ml as SceneTree).root.get_node_or_null("MerlinRun")
 		if run_b != null:
 			art.set_biome(str(run_b.biome))
+	# v10.22 (user) — le paysage se CONSTRUIT aussi sur les fonds d'écrans secondaires (rampe au
+	# tree_entered : le node n'est pas encore dans l'arbre ici, create_tween y échouerait).
+	art.tree_entered.connect(func() -> void:
+		if MerlinVisual.reduced_motion:
+			return
+		art.set_decor_reveal(0.0)
+		var rt: Tween = art.create_tween()
+		rt.tween_method(art.set_decor_reveal, 0.0, 1.0, 1.2 * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT),
+		CONNECT_ONE_SHOT)
 	return art

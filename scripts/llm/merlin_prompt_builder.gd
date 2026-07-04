@@ -9,7 +9,7 @@ extends RefCounted
 ## API : chaque fonction renvoie {"system": String, "user": String, "opts": Dictionary},
 ## à consommer via `mn.generate(p["system"], p["user"], p["opts"])`.
 
-const SYSTEM_PREFIX: String = "Tu es MERLIN, l'enchanteur de Broceliande, et tu CONTES l'aventure du Voyageur comme une vieille legende celtique. REGLES: raconte a la 3e PERSONNE, parle TOUJOURS du « Voyageur » (JAMAIS 'tu', JAMAIS 'je'). Temps du CONTE: passe simple et imparfait (« le Voyageur s'enfonca », « la brume montait », « il choisit de »). Francais SIMPLE et CLAIR, phrases qui S'ENCHAINENT (une action PUIS sa consequence), CONCRETES (qui, quoi, ou) — JAMAIS d'enigme, de sujet abstrait ('le vide', 'le nom') ni de phrases hachees deconnectees. Raconte les EVENEMENTS et les GESTES precis, pas des descriptions vagues. Pas d'anglicismes. Reste dans Broceliande. Ne romps JAMAIS le 4e mur (INTERDIT 'jeu', 'carte', 'joueur', 'IA', 'simulation'). Evite les cliches ('union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne'). Ne recopie JAMAIS cette consigne dans ta reponse."
+const SYSTEM_PREFIX: String = "Tu es MERLIN, l'enchanteur de Broceliande, et tu CONTES l'aventure du Voyageur comme une vieille legende celtique. REGLES: raconte a la 3e PERSONNE, parle TOUJOURS du « Voyageur » (JAMAIS 'tu', JAMAIS 'je'). Temps du CONTE: passe simple et imparfait (« le Voyageur s'enfonca », « la brume montait », « il choisit de »). Francais SIMPLE et CLAIR, phrases qui S'ENCHAINENT (une action PUIS sa consequence), CONCRETES (qui, quoi, ou) — JAMAIS d'enigme, de sujet abstrait ('le vide', 'le nom') ni de phrases hachees deconnectees. Raconte les EVENEMENTS et les GESTES precis, pas des descriptions vagues. Pas d'anglicismes. Reste dans le LIEU du conte (jamais d'autre pays). Ne romps JAMAIS le 4e mur (INTERDIT 'jeu', 'carte', 'joueur', 'IA', 'simulation'). Evite les cliches ('union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne'). Ne recopie JAMAIS cette consigne dans ta reponse."
 
 # Voix de MERLIN (narrateur) pour les INTROS : il CONNAÎT le Voyageur et l'apostrophe — à l'inverse de
 # SYSTEM_PREFIX (narration de SCÈNE en résolution, sans apostrophe, conservée telle quelle). Persona
@@ -81,34 +81,35 @@ static func is_strong_moment(situ_type: String, degree: String) -> bool:
 
 
 # --- SÉLECTION : 3 scénarios (titre + pitch) — voix MERLIN (user 2026-05-29) ---
-static func selection(voice: String) -> Dictionary:
+static func selection(voice: String, lieu: String = "Broceliande") -> Dictionary:
 	# Le pitch reste un IMPERATIF tutoye SANS appellation (le wrapper Merlin de build_intro
-	# l'apostrophe ensuite — eviter le double 'Voyageur' empile).
-	var usr: String = "En tant que MERLIN, propose 3 aventures au Voyageur dans Broceliande. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur' (ex: 'Infiltre le marche aux noms voles.', 'Poursuis le gobelin jusque dans la foret.', 'Va sonder la source qui ne ment pas.'). Varie les tons (enigmatique, taquin, sombre, intrigant)."
+	# l'apostrophe ensuite — eviter le double 'Voyageur' empile). v10.22 : `lieu` = biome de la run
+	# (Broceliande | les Falaises du Bout-du-Monde) → titres COHÉRENTS avec le monde choisi.
+	var usr: String = "En tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur'. Varie les tons (enigmatique, taquin, sombre, intrigant)." % lieu
 	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 220, "label": "sélection (Merlin)"}}
 
 
 # --- INTRO DE QUÊTE : légende contée par MERLIN (enrichit le pop-up en arrière-plan) ---
 # `mem` = memory hint intra-run, construit par merlin_scenario._build_memory_hint() (lit MerlinRun).
-static func intro(voice: String, scenario: Dictionary, mem: String) -> Dictionary:
+static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String = "Broceliande") -> Dictionary:
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
 	var mem_line: String = ("\nSouviens-toi du Voyageur : %s." % mem) if mem != "" else ""
-	var usr: String = "Quete proposee au Voyageur: \"%s\" — %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 3 a 4 phrases la LEGENDE derriere cette quete a Broceliande : ce qu'on raconte du lieu, ce qui s'y serait perdu ou cache, le danger qui y rode. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line]
+	var usr: String = "Quete proposee au Voyageur: \"%s\" — %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 3 a 4 phrases la LEGENDE derriere cette quete a %s : ce qu'on raconte du lieu, ce qui s'y serait perdu ou cache, le danger qui y rode. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
 	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 120, "label": "intro de quête (Merlin)"}}
 
 
 # --- OUVERTURE NARRATIVE : lance VRAIMENT l'histoire de CE scénario (voix narrateur, 3-4 phrases) ---
-static func opening(scenario: Dictionary) -> Dictionary:
+static func opening(scenario: Dictionary, lieu: String = "Broceliande") -> Dictionary:
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var usr: String = ("Ouvre l'aventure « %s » a Broceliande (accroche : %s). Conte 3 a 4 phrases qui LANCENT l'histoire, a la 3e PERSONNE (« le Voyageur ») au temps du CONTE : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui le pousse au premier pas. Images celtiques concretes, SANS remplissage, pas de 4e mur. Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, pitch]
+	var usr: String = ("Ouvre l'aventure « %s » a %s (accroche : %s). Conte 3 a 4 phrases qui LANCENT l'histoire, a la 3e PERSONNE (« le Voyageur ») au temps du CONTE : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui le pousse au premier pas. Images celtiques concretes, SANS remplissage, pas de 4e mur. Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, lieu, pitch]
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "ouverture (histoire)"}}
 
 
 # --- ARC NARRATIF : 5 étapes liées, CHACUNE construite autour de ses 2 tags requis (req_tags) →
 #     la scène DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés). ---
-static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "") -> Dictionary:
+static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "", lieu: String = "Broceliande") -> Dictionary:
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
 	var roles: Array = [
@@ -126,7 +127,9 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 			cues.append(str(TAG_CUE.get(str(t), str(t))))
 		var cue_txt: String = " ET ".join(cues) if cues.size() > 0 else "agir"
 		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [i + 1, str(roles[i]), cue_txt]
-	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a Broceliande. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch]) + steps + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, et FINIT sur l'instant ou le Voyageur doit agir (« Que decida le Voyageur ? »).\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir. Que decida le Voyageur ?\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
+	# v10.22 (user) — la question rituelle « Que decida le Voyageur ? » est SUPPRIMEE : chaque etape finit
+	# sur l'instant suspendu ou le Voyageur doit agir, SANS formule systematique.
+	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch, lieu]) + steps + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, qui FINIT sur l'instant SUSPENDU ou le Voyageur doit agir — VARIE la chute, n'utilise JAMAIS de question rituelle repetee.\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir.\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": 340, "label": "arc narratif (5 étapes)"}}
 
 
