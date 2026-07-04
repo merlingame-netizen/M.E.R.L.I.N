@@ -66,7 +66,9 @@ const TYPE_TAG_BIAS: Dictionary = {
 # actions (spec §F, littéral) ; le climax diff 3 passe à 3 requis (contre-pression §E).
 # Table gatée : le recalibrage W2/W3 (2 passes soak 5×300) ajuste ICI sans toucher au flux.
 const REQ_TOTAL_BY_DIFF: Dictionary = {1: 2, 2: 2, 3: 3}
-const REQ_GAP_BY_DIFF: Dictionary = {1: 1, 2: 2, 3: 3}
+# v1.0-V4a (BAL-13-A) — climax « 2+1 » : 2 requis hors-base + 1 tag de base sur 3 (le 3 hors-base
+# rendait la couverture pleine du climax quasi impossible : 1,1 % mesuré pour une cible 45-55).
+const REQ_GAP_BY_DIFF: Dictionary = {1: 1, 2: 2, 3: 2}
 # Jamais requérables via le deck de traits — exclusifs aux greffes W3 (formes canon).
 const GRAFT_ONLY_TAGS: Array = ["sacrifice", "equilibre"]
 
@@ -134,7 +136,10 @@ static func build_tag_pool(actions: Array, traits: Array) -> Dictionary:
 		allowed[c6] = true
 	for c7 in gap:
 		allowed[c7] = true
-	return {"base": base, "gap": gap, "x1": x1, "allowed": allowed, "display": display, "counts": counts}
+	# v1.0-V4a LEVIER 7b — `grafted` exposé : pick_required_tags met les tags greffés EN TÊTE des
+	# candidats gap (le build devient la clé de la couverture pleine — BAL-13-A, lookahead-safe).
+	return {"base": base, "gap": gap, "x1": x1, "allowed": allowed, "display": display,
+		"counts": counts, "grafted": grafted}
 
 
 ## Tirage STATIQUE et pur des tags requis d'un beat (partagé jeu ↔ harnais, zéro drift).
@@ -160,20 +165,29 @@ static func pick_required_tags(btype: String, diff: int, pool_info: Dictionary, 
 	var bias_pool: Array = TYPE_TAG_BIAS.get(btype, TYPE_TAG_BIAS["Exploration"])
 	for bt in bias_pool:
 		bias_canon[MerlinTags.to_canon(str(bt))] = true
-	# Candidats HORS-BASE : biais du type d'abord (couleur du beat), complétés par le reste du pool.
+	# Candidats HORS-BASE : v1.0-V4a LEVIER 7b — les tags GREFFÉS passent EN TÊTE (le build paie :
+	# jouer le verbe greffé couvre le requis — BAL-13-A, stable/lookahead-safe car les greffes sont
+	# permanentes), puis le biais du type (couleur du beat), puis le reste du pool.
+	var grafted: Array = []
+	if pool_info.get("grafted") is Array:
+		grafted = pool_info["grafted"]
+	var gap_graft: Array = []
 	var gap_bias: Array = []
 	var gap_rest: Array = []
 	for c in gap:
 		if x1.has(c) and x1_used.has(c):
 			continue  # tag ×1 déjà émis dans cette quête (émission bornée, spec §F)
-		if bias_canon.has(c):
+		if grafted.has(c):
+			gap_graft.append(c)
+		elif bias_canon.has(c):
 			gap_bias.append(c)
 		else:
 			gap_rest.append(c)
+	_shuffle_rng(gap_graft, rng)
 	_shuffle_rng(gap_bias, rng)
 	_shuffle_rng(gap_rest, rng)
 	var picked: Array = []  # canon
-	for c in gap_bias + gap_rest:
+	for c in gap_graft + gap_bias + gap_rest:
 		if picked.size() >= gap_n:
 			break
 		picked.append(c)
@@ -254,6 +268,57 @@ static func pool_display_list(pool_info: Dictionary) -> Array:
 			for c in arr_v:
 				out.append(str(display.get(c, str(c))))
 	return out
+
+
+## v1.0-V4a (GD-32-B, contre-pression §E) — difficulté EFFECTIVE d'un beat : tout beat de la
+## quête 3 (index 2) passe à 3 requis (composition 2+1 via REQ_*_BY_DIFF) dès que le build porte
+## ≥ 3 greffes — la couverture pleine retombe là où le récit culmine. Statique pur (miroir probe).
+static func effective_difficulty(beat: Dictionary, total_grafts: int) -> int:
+	var d: int = int(beat.get("difficulte", 1))
+	if int(beat.get("quest", 0)) >= 2 and total_grafts >= 3:
+		d = maxi(d, 3)
+	return d
+
+
+## v1.0-V4a (BAL-14-A) — vérifie qu'un jeu de requis (arc re-validé) respecte la composition §F du
+## beat : total par difficulté, nb hors-base EXACT, zéro doublon, aucun ×1 déjà émis dans la quête.
+## Échec → l'appelant re-tire via pick_required_tags (filet de présentation, zéro drift harnais).
+static func composition_ok(required: Array, diff: int, pool_info: Dictionary, x1_used: Array) -> bool:
+	var d: int = clampi(diff, 1, 3)
+	var total: int = int(REQ_TOTAL_BY_DIFF.get(d, 2))
+	var gap_n: int = mini(int(REQ_GAP_BY_DIFF.get(d, 1)), total)
+	if required.size() != total:
+		return false
+	var base: Array = []
+	if pool_info.get("base") is Array:
+		base = pool_info["base"]
+	var x1: Array = []
+	if pool_info.get("x1") is Array:
+		x1 = pool_info["x1"]
+	var seen: Dictionary = {}
+	var hors_base: int = 0
+	for t in required:
+		var c: String = MerlinTags.to_canon(str(t))
+		if seen.has(c):
+			return false
+		seen[c] = true
+		if not base.has(c):
+			hors_base += 1
+		if x1.has(c) and x1_used.has(c):
+			return false  # tag ×1 déjà émis dans cette quête (émission bornée, spec §F)
+	return hors_base == gap_n
+
+
+## v1.0-V4a — consigne l'émission des tags ×1 d'un jeu de requis retenu (MUTE x1_used par append,
+## même contrat que pick_required_tags). Appelé quand les tags d'arc validés sont conservés.
+static func note_x1_emission(required: Array, pool_info: Dictionary, x1_used: Array) -> void:
+	var x1: Array = []
+	if pool_info.get("x1") is Array:
+		x1 = pool_info["x1"]
+	for t in required:
+		var c: String = MerlinTags.to_canon(str(t))
+		if x1.has(c) and not x1_used.has(c):
+			x1_used.append(c)
 
 
 static func _shuffle_rng(arr: Array, rng: RandomNumberGenerator) -> void:
@@ -396,6 +461,10 @@ var _opening_epoch: int = 0
 # orphelins « sans queue ni tête ». RAZ à chaque build_skeleton (= nouveau run).
 var _run_thread: Dictionary = {"title": "", "pitch": "", "last_gist": ""}
 var _fb_served: Dictionary = {}  # anti-répétition intra-run des fallbacks d'issue : "degré|pool" → [index servis]
+# v1.0-V4a (BAL-14-A) — émission des tags ×1 bornée à 1 beat/quête AU RUNTIME : quest_idx → [canon].
+# Transient volontaire (RAZ au build_skeleton) : au resume la borne repart de zéro — acceptable,
+# rien n'est rejoué (seuls les beats FUTURS re-tirent), même contrat que le dé de build_situation.
+var _x1_used_by_quest: Dictionary = {}
 
 
 func _ready() -> void:
@@ -414,6 +483,38 @@ func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:
 
 func _mn() -> Node:
 	return get_node_or_null("/root/MerlinNative")
+
+
+# v1.0-V4a (GD-32-B) — greffes posées sur le build RÉEL (0 hors-jeu : la contre-pression ne
+# s'applique alors pas, la difficulté du beat reste celle du squelette).
+func _live_total_grafts() -> int:
+	if not is_inside_tree():
+		return 0
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run != null and run.has_method("total_grafts"):
+		return int(run.total_grafts())
+	return 0
+
+
+# v1.0-V4a (BAL-14-A/TEC-17-A) — pool générable du RUN RÉEL (actions greffées + deck de traits
+# courant), calculé AU MOMENT de l'appel — jamais figé au squelette (les greffes font évoluer le
+# pool). {} hors-jeu (hors arbre / run absente / run jamais initialisée) : les harnais prose et
+# scénario gardent alors le chemin legacy (_pick_tags / arc brut).
+func _live_pool_info() -> Dictionary:
+	if not is_inside_tree():
+		return {}
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run == null:
+		return {}
+	var acts_v: Variant = run.get("actions")
+	if not (acts_v is Array) or (acts_v as Array).is_empty():
+		return {}
+	var traits_all: Array = []
+	for key in ["deck", "hand", "discard"]:
+		var arr_v: Variant = run.get(key)
+		if arr_v is Array:
+			traits_all += (arr_v as Array)
+	return build_tag_pool(acts_v, traits_all)
 
 
 # v10.13 (B0) — vrai si le moteur natif est prêt ET libre. Gate des générations de priorité
@@ -624,6 +725,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
+	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
 	var nq: int = 2 if _rng.randf() < 0.4 else 3
 	var quests: Array = [{"title": title, "pitch": pitch}]
 	var pool: Array = SEL_FALLBACK.duplicate(true)
@@ -880,7 +982,8 @@ func is_opening_pending() -> bool:
 #         le LLM réécrit la narration en arrière-plan (tags STABLES). ---
 func build_situation(beat: Dictionary) -> Dictionary:
 	var btype: String = str(beat.get("type", "Exploration"))
-	var diff: int = int(beat.get("difficulte", 1))
+	# v1.0-V4a (GD-32-B) — contre-pression §E : difficulté EFFECTIVE (quête 3 + ≥3 greffes → 3 requis).
+	var diff: int = effective_difficulty(beat, _live_total_grafts())
 	# La situation ET ses tags requis viennent du MÊME index de l'arc pré-établi → scène ⇄ tags alignés
 	# (user 2026-06-07 : « les tags ne correspondent pas à la scène »). Fallback générique si absent.
 	# On VERROUILLE l'arc dès la 1re consommation → prepare_arc ne swappera plus (jamais 2 histoires mêlées).
@@ -898,8 +1001,28 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		narration = str(arc[idx])
 	if idx >= 0 and idx < arc_tags.size() and (arc_tags[idx] is Array) and (arc_tags[idx] as Array).size() > 0:
 		required = (arc_tags[idx] as Array).duplicate()
-	if required.is_empty():
-		required = _pick_tags(btype, diff)
+	# v1.0-V4a (BAL-14-A/TEC-17-A) — WHITELIST branchée au JEU RÉEL : le pool générable est calculé
+	# ICI, au moment de la présentation (les greffes l'ont fait évoluer depuis le squelette). Les
+	# tags de l'arc (LLM ou fallback) sont RE-VALIDÉS contre ce pool (remplacement même index), puis
+	# la composition §F est vérifiée (total + hors-base par difficulté, ×1 borné 1 beat/quête) ;
+	# toute entorse → re-tirage pick_required_tags — MÊME chemin statique que le harnais probe_soak
+	# (zéro drift). Les requis ne changent plus après ce point (R120 : preview = résolution).
+	var pool_info: Dictionary = _live_pool_info()
+	if not pool_info.is_empty():
+		var quest_idx: int = int(beat.get("quest", 0))
+		if not _x1_used_by_quest.has(quest_idx):
+			_x1_used_by_quest[quest_idx] = []
+		var x1_used: Array = _x1_used_by_quest[quest_idx]
+		if not required.is_empty():
+			required = validate_required_tags(required, idx, pool_info)
+			if composition_ok(required, diff, pool_info, x1_used):
+				note_x1_emission(required, pool_info, x1_used)
+			else:
+				required = []  # composition hors-spec (arc const / pool ayant bougé) → re-tirage
+		if required.is_empty():
+			required = pick_required_tags(btype, diff, pool_info, _rng, x1_used)
+	elif required.is_empty():
+		required = _pick_tags(btype, diff)  # filet harnais hors-jeu (probe_prose/probe_scenario)
 	if narration == "":
 		narration = _fallback_situation(btype, required)
 	# v10.20.1 — PONT de continuité : la situation s'OUVRE sur ce que le Voyageur vient de faire (degré du
@@ -999,8 +1122,9 @@ func _fallback_arc() -> Dictionary:
 	return {"arc": (FALLBACK_ARCS[i] as Array).duplicate(), "tags": (FALLBACK_ARC_TAGS[i] as Array).duplicate(true)}
 
 
-# Arc LLM : 5 étapes liées, CHACUNE construite autour de ses 2 tags requis (req_tags) → la scène
-# DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés). [] si moteur KO/format inattendu.
+# Arc LLM : 5 étapes liées, CHACUNE construite autour de ses tags requis (req_tags, 2-3 par beat
+# selon la difficulté v1.0-V4a) → la scène DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés).
+# [] si moteur KO/format inattendu.
 # (A4 : prompt assemblé par MerlinPromptBuilder.arc, parsing par MerlinProse.parse_arc.)
 func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 	var mn: Node = _mn()
@@ -1010,7 +1134,10 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 	var fblock: String = MerlinPromptBuilder.faction_pilier_block(
 		str(_run_thread.get("faction", "")), str(_run_thread.get("pilier", "")),
 		str(_run_thread.get("pilier2", "")), bool(_run_thread.get("pnj_recog", false)))
-	var p: Dictionary = MerlinPromptBuilder.arc(scenario, req_tags, fblock, _lieu_name())
+	# v1.0-V4a (spec §F) — le pool générable est injecté comme LISTE FERMÉE dans le prompt d'arc :
+	# les scènes ne demandent que des forces atteignables ([] hors-jeu → prompt legacy inchangé).
+	var p: Dictionary = MerlinPromptBuilder.arc(scenario, req_tags, fblock, _lieu_name(),
+		pool_display_list(_live_pool_info()))
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return []
@@ -1027,12 +1154,23 @@ func prepare_arc(scenario: Dictionary) -> void:
 		var q0: int = int((beats_all[0] as Dictionary).get("quest", 0))
 		scenario = quest_view(scenario, q0)
 	var title: String = str(scenario.get("title", ""))  # garde anti-race : ne swappe que si TOUJOURS ce scénario
-	# Pré-pick les 2 tags requis par beat AVANT la génération → la scène est écrite AUTOUR (alignement),
+	# Pré-pick les tags requis par beat AVANT la génération → la scène est écrite AUTOUR (alignement),
 	# et build_situation utilise ces mêmes tags pour la couverture. (user 2026-06-07 #1)
+	# v1.0-V4a (BAL-14-A) — tirage dans le POOL GÉNÉRABLE du run réel (même chemin statique que le
+	# harnais) ; borne ×1 LOCALE à l'arc (la borne par quête fait foi à la présentation, qui
+	# re-valide — le pool aura pu bouger avec les greffes). Pool indisponible → legacy _pick_tags.
 	var beats: Array = scenario.get("beats", [])
 	var picked: Array = []
+	var arc_pool: Dictionary = _live_pool_info()
+	var arc_grafts: int = _live_total_grafts()
+	var x1_local: Array = []
 	for b in beats:
-		picked.append(_pick_tags(str(b.get("type", "Exploration")), int(b.get("difficulte", 1))))
+		var btype_a: String = str(b.get("type", "Exploration"))
+		var diff_a: int = effective_difficulty(b, arc_grafts)  # GD-32-B : meilleure estimation à l'arc
+		if arc_pool.is_empty():
+			picked.append(_pick_tags(btype_a, diff_a))
+		else:
+			picked.append(pick_required_tags(btype_a, diff_a, arc_pool, _rng, x1_local))
 	if picked.size() != 5:
 		return  # arc LLM réservé aux quêtes de 5 beats (k<5 → fallback procédural, mapping climax→arc[4])
 	var arc: Array = await narrate_arc(scenario, picked)

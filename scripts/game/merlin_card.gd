@@ -151,11 +151,22 @@ static func _action(p_id: String, p_name: String, p_family: String, p_tags: Arra
 ## Structure lentille 4 : les 8 tags gap ×2 slots + ≥1 slot secondaire par tag de base (synergie
 ## et couverture cross-action). RÈGLE DURE : tout trait porte ≥1 tag NON-dupliqué par une action.
 ## L'Appel de l'Ombre garde son corr 1 canon (retagué [Mystère, Nature] — Mystère ×1 dans le pool).
+##
+## v1.0-V4a LEVIER 7a (chantier couverture) — RETAGS mesurés au soak, comptages ×1 préservés
+## (Franchise/Mystère/Rituel restent les seuls ×1, tous les autres tags gap restent ×2) :
+##   geste_ancien   [Rituel, Mémoire] → [Rituel, Savoir]     : paire double-gap MORTE éliminée
+##       (Rituel ×1, émission bornée 1 beat/quête — la moitié Mémoire ne payait jamais double) ;
+##       base pertinente Savoir (« un geste plus vieux que toi » = savoir ancien).
+##   ecoute_silence [Vigilance]       → [Vigilance, Mémoire] : slot vide rempli — reprend le
+##       Mémoire orphelin de geste_ancien (×2 préservé) ; paire double-gap VIVE assumée (2 tags
+##       requérables ×2 = 2 chances de couvrir un requis gap, contrairement à la paire morte).
+##   souffle_tenace [Endurance]       → [Endurance, Force]   : slot vide → base (tagging canon v10).
+##   main_sure      [Finesse]         → [Finesse, Agilité]   : slot vide → base (adresse = Corps).
 static func starter_traits() -> Array:
 	return [
 		make("regard_percant", "Le Regard Perçant", ["Vigilance", "Sens"],
 			"Tes yeux fendent l'ombre ; rien ne reste caché à qui sait vraiment voir."),
-		make("ecoute_silence", "L'Écoute du Silence", ["Vigilance"],
+		make("ecoute_silence", "L'Écoute du Silence", ["Vigilance", "Mémoire"],
 			"Entre deux souffles du vent, la forêt confie ce qu'elle tait aux autres."),
 		make("memoire_lieux", "La Mémoire des Lieux", ["Mémoire", "Savoir"],
 			"Les pierres se souviennent. Pose la main, et leur passé remonte en toi."),
@@ -163,7 +174,7 @@ static func starter_traits() -> Array:
 			"Quand la douceur échoue, reste la poigne qui ne tremble pas."),
 		make("pas_leger", "Le Pas Léger", ["Agilité", "Finesse"],
 			"Tu glisses où d'autres trébuchent ; le danger ne saisit que le vide."),
-		make("souffle_tenace", "Le Souffle Tenace", ["Endurance"],
+		make("souffle_tenace", "Le Souffle Tenace", ["Endurance", "Force"],
 			"Le corps plie sans rompre ; tu tiens quand tout voudrait te briser."),
 		make("langue_de_miel", "La Langue de Miel", ["Ruse", "Empathie"],
 			"Tes mots coulent doux ; même les cœurs fermés s'entrouvrent."),
@@ -177,13 +188,13 @@ static func starter_traits() -> Array:
 			"Tu parles la langue des sèves et des racines ; Brocéliande répond."),
 		make("appel_ombre", "L'Appel de l'Ombre", ["Mystère", "Nature"],
 			"Tu appelles ce qui dort sous les racines. Il vient — mais il prélève son dû.", 1),
-		make("main_sure", "La Main Sûre", ["Finesse"],
+		make("main_sure", "La Main Sûre", ["Finesse", "Agilité"],
 			"Le geste juste, ni trop tôt ni trop fort — la précision est une patience."),
 		make("verbe_haut", "Le Verbe Haut", ["Autorité", "Verbe"],
 			"Ta voix porte sans crier ; on se tait pour l'entendre, pas parce qu'elle l'exige."),
 		make("coeur_franc", "Le Cœur Franc", ["Franchise", "Empathie"],
 			"Tu dis vrai même quand ça coûte — et c'est pour cela qu'on te croit."),
-		make("geste_ancien", "Le Geste Ancien", ["Rituel", "Mémoire"],
+		make("geste_ancien", "Le Geste Ancien", ["Rituel", "Savoir"],
 			"Tes mains refont un geste plus vieux que toi ; quelque chose, quelque part, le reconnaît."),
 	]
 

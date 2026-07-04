@@ -589,7 +589,8 @@ func _update_preview() -> void:
 	var combo: Array = [_selected_action, _selected_trait]
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
-		get_node("/root/MerlinRun").blessed_bonus(combo))  # R131 : bénédictions dans la preview (R120)
+		get_node("/root/MerlinRun").blessed_bonus(combo),
+		int(_current_situation.get("difficulte", 2)))  # R131 bénédictions + L8 barème : preview = résolution (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_set_resolve_armed(true)
 	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
@@ -620,7 +621,8 @@ func _on_resolve() -> void:
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
-		run.blessed_bonus(combo))  # R131 : mêmes tags bénis que la preview (invariant R120)
+		run.blessed_bonus(combo),
+		int(_current_situation.get("difficulte", 2)))  # R131 + L8 : mêmes bénis et même diff que la preview (R120)
 	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
@@ -1131,6 +1133,13 @@ func _advance_to_next() -> void:
 			await _present_pilier_offering(pk)
 			if not is_inside_tree():
 				return
+	# v1.0-V4a (BAL-11-B/GD-27) — draft GARANTI à chaque transition de quête : le beat tout juste
+	# résolu referme sa quête (qn == qtotal) et la run continue → une greffe s'offre quel que soit
+	# le degré. Le draft sur réussite/éclatante (armé par _on_resolve) reste inchangé.
+	var cb: Dictionary = run.current_beat()
+	if cb.has("qtotal") and int(cb.get("qn", 1)) >= int(cb.get("qtotal", 1)) \
+			and not run.is_climax() and not run.ended and run.has_graftable_action():
+		_pending_draft = true
 	# v10.11/v11-W3 — Draft de GREFFE « 1 sur 3 » aux beats clés, AVANT de passer au beat suivant.
 	if _pending_draft:
 		_pending_draft = false
@@ -2270,12 +2279,26 @@ func _interstitial_inline_wait(ep: int, pred: Callable) -> String:
 
 
 # Sortie de l'interstitiel (clic « continuer » ou autoplay) → présentation du Beat 1.
+# v1.0-V4a : coroutine (draft d'ouverture) — les appelants restent fire-and-forget.
 func _end_interstitial() -> void:
 	if not _interstitial_open:
 		return
 	_interstitial_open = false
 	_can_advance = false
 	_set_caret(false)
+	# v1.0-V4a (BAL-11-B/GD-27) — draft d'OUVERTURE : une greffe s'offre AVANT le 1er beat (le
+	# build démarre avec une direction). UNE fois par run : flag persisté opening_draft_done posé à
+	# l'OUVERTURE (review MEDIUM — un « Passer » n'est jamais re-proposé au resume, anti re-roll ;
+	# même contrat que pilier_offering_done).
+	var run: Node = get_node("/root/MerlinRun")
+	if run.beat_index == 0 and not run.ended and not run.opening_draft_done \
+			and run.has_graftable_action():
+		run.opening_draft_done = true
+		_scene_epoch += 1
+		await _present_draft()
+		if not is_inside_tree():
+			return
+		run.save()  # greffe d'ouverture + flag survivent à un quit pendant le beat 1 (R108)
 	_present_current_beat()
 
 

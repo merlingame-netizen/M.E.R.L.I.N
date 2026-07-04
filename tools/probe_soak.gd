@@ -12,9 +12,10 @@ extends SceneTree
 ##
 ## ASSERTIONS DURES (font échouer le soak) : invariants (jauges bornées, 4 actions permanentes,
 ## main ≥ 1 trait, cap 1 corrompu/main R113, ids uniques, run terminée R93, resume R108) +
-## 0 beat à requis hors-pool (whitelist spec §F) + émission des tags ×1 bornée à 1 beat/quête.
-## Les CIBLES de distribution §K sont LOGUÉES avec verdict IN/OUT par bande mais ne font PAS
-## échouer le run (recalibrage W2/W3 assumé — guardrail « période transitoire »).
+## 0 beat à requis hors-pool (whitelist spec §F, CHEMIN RÉEL du jeu vérifié par self-test) +
+## émission des tags ×1 bornée à 1 beat/quête + GATES DE MORTS PAR ARCHÉTYPE (BAL-04-B, v1.0-V4a).
+## Les 4 bandes de degrés §K deviennent dures à l'atteinte (BAL-20-B, HARD_DEGREE_BANDS) ; les
+## métriques de flux (pushes, drafts, deadhand, fins corrompues) restent LOGUÉES IN/OUT.
 
 const RunScript := preload("res://scripts/game/merlin_run.gd")
 const Scenario := preload("res://scripts/llm/merlin_scenario.gd")
@@ -25,7 +26,12 @@ const CardScript := preload("res://scripts/game/merlin_card.gd")
 const ARCHETYPES: Array = ["optimal", "greedy", "chaotic", "corrompu", "tag_ignorant"]
 const GUARD_BEATS: int = 90  # filet anti-boucle (chaîne de quêtes : jusqu'à 15 beats)
 
+# v1.0-V4a (BAL-20-B) — les 4 bandes de degrés deviennent DURES uniquement une fois ATTEINTES
+# (mesure IN sur les 4). Tant que false : OUT logué avec le delta restant explicite, non-bloquant.
+const HARD_DEGREE_BANDS: bool = false
+
 var _fail: int = 0
+var _gate_fail: int = 0           # v1.0-V4a : échecs de GATES §K (distincts des échecs de runs)
 var _runs_total: int = 0
 var _clean_runs: int = 0          # runs SANS cas dégénéré forcé (base des cibles §K)
 var _ends: Dictionary = {}
@@ -97,8 +103,10 @@ func _init() -> void:
 	print("[SOAK] drafts %d/%d pris · secours injectées=%d · pushes R130=%d" % [_drafts_taken, _drafts_offered, _secours_injected, _pushes])
 	_report_k()
 	_report_arch()
-	print("[SOAK] DONE — %d/%d PASS (%.1fs)" % [total_runs - _fail, total_runs, dt])
-	quit(1 if _fail > 0 else 0)
+	# v1.0-V4a — runs (fiabilité R109) et gates §K (équilibrage) comptés SÉPARÉMENT : un gate rouge
+	# ne maquille pas le compte de runs, mais bloque quand même la sortie (exit 1).
+	print("[SOAK] DONE — %d/%d PASS · gates §K durs : %d FAIL (%.1fs)" % [total_runs - _fail, total_runs, _gate_fail, dt])
+	quit(1 if (_fail > 0 or _gate_fail > 0) else 0)
 
 
 # --- Self-test whitelist (spec §F) : le pool, les gardes et la validation LLM, hors campagne. ---
@@ -127,6 +135,59 @@ func _selftest_whitelist() -> void:
 	var pool2: Dictionary = Scenario.build_tag_pool(acts, CardScript.starter_traits())
 	var allowed2: Dictionary = pool2.get("allowed", {})
 	_st(allowed2.has("sacrifice"), "greffe Sacrifice → tag requérable (W3)")
+	# v1.0-V4a LEVIER 7b — un tag GREFFÉ passe en tête des candidats gap : requis dès diff 2.
+	var rng_g := RandomNumberGenerator.new()
+	rng_g.seed = 4242
+	var req_g: Array = Scenario.pick_required_tags("Epreuve", 2, pool2, rng_g, [])
+	var has_graft_req: bool = false
+	for tg in req_g:
+		if TagsScript.to_canon(str(tg)) == "sacrifice":
+			has_graft_req = true
+	_st(has_graft_req, "tag greffé prioritaire dans les requis (%s)" % str(req_g))
+	# v1.0-V4a LEVIER 7a — retag du deck : les ×1 restent exactement {franchise, mystere, rituel}
+	# et tous les autres tags gap restent ×2 (aucun tag ne devient orphelin ni ×1 par accident).
+	var counts_st: Dictionary = pool.get("counts", {})
+	for gtag in ["vigilance", "memoire", "endurance", "finesse", "ruse", "autorite", "vision"]:
+		_st(int(counts_st.get(str(gtag), 0)) >= 2,
+			"gap '%s' reste ×2 après retag (%d)" % [str(gtag), int(counts_st.get(str(gtag), 0))])
+	_st((pool.get("x1", []) as Array).size() == 3, "exactement 3 tags ×1 après retag")
+	# v1.0-V4a (BAL-14-A) — composition §F : un tirage pick_required_tags passe composition_ok, et
+	# une paire base-only (ex-FALLBACK_ARC_TAGS) la VIOLE à diff 2 (elle serait re-tirée au présent).
+	var rng_st := RandomNumberGenerator.new()
+	rng_st.seed = 12345
+	for d_st in [1, 2, 3]:
+		var req_st: Array = Scenario.pick_required_tags("Epreuve", d_st, pool, rng_st, [])
+		_st(Scenario.composition_ok(req_st, d_st, pool, []),
+			"pick_required_tags diff %d respecte composition_ok (%s)" % [d_st, str(req_st)])
+	_st(not Scenario.composition_ok(["Sens", "Instinct"], 2, pool, []),
+		"paire base-only rejetée par composition_ok (diff 2)")
+	# v1.0-V4a LEVIER 8 (BAL-05-C) — barème d'échec PAR DIFFICULTÉ : −2 en diff 1-2, −3 en diff 3 ;
+	# partiel/réussite/éclatante inchangés (le push R130 garde sa valeur d'échange).
+	var cards_l8: Array = [CardScript.make_actions()[0]]
+	_st(int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 0, [], 2).get("integrite_delta", 0)) == -2 \
+		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 0, [], 3).get("integrite_delta", 0)) == -3 \
+		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 0, [], 1).get("integrite_delta", 0)) == -2,
+		"barème échec par difficulté (−2/−2/−3, L8)")
+	# v1.0-V4a (GD-32-B) — contre-pression §E : quête 3 (index 2) + ≥3 greffes → diff 3 ; sinon inchangé.
+	_st(Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 3) == 3 \
+		and Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 2) == 2 \
+		and Scenario.effective_difficulty({"difficulte": 2, "quest": 1}, 5) == 2 \
+		and Scenario.effective_difficulty({"difficulte": 3, "quest": 2}, 0) == 3,
+		"effective_difficulty (contre-pression quête 3, seuil 3 greffes)")
+	# v1.0-V4a (TEC-17-A) — le JEU passe par le MÊME chemin que le harnais (assertion anti-drift,
+	# grep source) : build_situation appelle validate_required_tags + pick_required_tags +
+	# composition_ok ; prepare_arc tire ses tags d'arc via pick_required_tags.
+	var src: String = FileAccess.get_file_as_string("res://scripts/llm/merlin_scenario.gd")
+	var bs0: int = src.find("func build_situation(")
+	var bs1: int = src.find("\nfunc ", bs0 + 1)
+	var bs_body: String = src.substr(bs0, bs1 - bs0) if (bs0 >= 0 and bs1 > bs0) else ""
+	_st(bs_body.find("pick_required_tags(") >= 0 and bs_body.find("validate_required_tags(") >= 0 \
+		and bs_body.find("composition_ok(") >= 0 and bs_body.find("effective_difficulty(") >= 0,
+		"build_situation branché whitelist (pick + validate + composition + contre-pression)")
+	var pa0: int = src.find("func prepare_arc(")
+	var pa1: int = src.find("\nfunc ", pa0 + 1)
+	var pa_body: String = src.substr(pa0, pa1 - pa0) if (pa0 >= 0 and pa1 > pa0) else ""
+	_st(pa_body.find("pick_required_tags(") >= 0, "prepare_arc branché pool générable")
 	print("[SOAK] self-test §F : pool base=%s gap=%s x1=%s" % [str(base), str(pool.get("gap", [])), str(x1)])
 
 
@@ -176,12 +237,13 @@ func _selftest_grafts() -> void:
 	var act2: Variant = CardScript.from_dict(act.to_dict())
 	_st((act2.grafts as Array).size() == 3 and str(act2.rarity) == "Mythique",
 		"round-trip to_dict/from_dict conserve les greffes")
-	# Table de dé v11-W3 RELÂCHÉE d'un cran (recalibrage gate V3, 2026-07-04) : 33/50/67/83 % —
-	# la 6/6 garantie reste absente (dé garanti = dé mort) et la progression reste strictement +1/cran.
+	# v1.0-V4a (BAL-12) — retour spec 17/33/50/67 MESURÉ puis REPLI (RECO C) : morts 30,6 → 44,9 %
+	# au soak 300 ⇒ table 33/50/67/83 conservée (le « 25/42/58/75 » du CDC n'existe pas sur un d6).
+	# Invariants : jamais de 6/6 (dé garanti = dé mort) et progression strictement +1/cran.
 	var bands: Dictionary = ResolutionScript.DIE_BANDS
 	_st((bands["Commune"] as Array).count(1) == 2 and (bands["Rare"] as Array).count(1) == 3 \
 		and (bands["Épique"] as Array).count(1) == 4 and (bands["Mythique"] as Array).count(1) == 5,
-		"DIE_BANDS 33/50/67/83%% (mesuré %s)" % str(bands))
+		"DIE_BANDS 33/50/67/83%% — repli BAL-12-C mesuré (mesuré %s)" % str(bands))
 	# Cap 3/action + prix one-shot via une run réelle (API merlin_run).
 	var run: Node = RunScript.new()
 	run._rng.seed = 99
@@ -202,9 +264,15 @@ func _selftest_grafts() -> void:
 	print("[SOAK] self-test §E greffes : %d greffes en banques, cap/dérivations/dé OK" % seen.size())
 
 
+# v1.0-V4a (BAL-04-B) — gates de morts PAR ARCHÉTYPE (runs saines), ASSERTIONS DURES du soak.
+# tag_ignorant = baseline non-lecteur, volontairement sans gate (mesure la sensibilité au signal).
+const ARCH_MORT_GATES: Dictionary = {"optimal": 10.0, "greedy": 30.0, "chaotic": 30.0, "corrompu": 25.0}
+const ARCH_GATE_MIN_RUNS: int = 20  # petit échantillon → gate non significatif (loguée seulement)
+
+
 func _ensure_arch(arch: String) -> void:
 	if not _arch_stats.has(arch):
-		_arch_stats[arch] = {"degrees": {}, "ends": {}, "runs": 0}
+		_arch_stats[arch] = {"degrees": {}, "ends": {}, "runs": 0, "ends_clean": {}, "runs_clean": 0}
 
 
 func _bump_arch(arch: String, kind: String, key: String) -> void:
@@ -244,6 +312,19 @@ func _soak_one(i: int, arch: String) -> void:
 	var action_plays: Dictionary = {}      # v11-W3 : action_id -> poses (cible « optimal » des greffes)
 	var grafts_run: int = 0                # v11-W3 : greffes posées cette run (rapport §K)
 
+	# v1.0-V4a (BAL-11-B/GD-27) — miroir du draft d'OUVERTURE (merlin_game._end_interstitial) :
+	# une greffe offerte AVANT le 1er beat, prise ~70 % (même politique que les autres drafts).
+	# Flag d'unicité posé comme au jeu (persisté — un « Passer » n'est jamais re-proposé, R108).
+	if run.has_graftable_action() and not run.opening_draft_done:
+		run.opening_draft_done = true
+		var open_choices: Array = run.graft_choices(3)
+		if not open_choices.is_empty():
+			_drafts_offered += 1
+			if rng.randf() < 0.7 and _apply_soak_graft(run, arch,
+					open_choices[rng.randi_range(0, open_choices.size() - 1)], action_plays, rng, i):
+				_drafts_taken += 1
+				grafts_run += 1
+
 	var guard: int = 0
 	while not run.ended and guard < GUARD_BEATS:
 		guard += 1
@@ -271,7 +352,9 @@ func _soak_one(i: int, arch: String) -> void:
 		var corr_before: int = run.corruption
 		var beat: Dictionary = run.current_beat()
 		var btype: String = str(beat.get("type", "Exploration"))
-		var diff: int = int(beat.get("difficulte", 2))
+		# v1.0-V4a (GD-32-B) — MIROIR de la contre-pression §E : difficulté effective (quête 3 +
+		# build ≥3 greffes → 3 requis 2+1), même statique que build_situation (zéro drift).
+		var diff: int = Scenario.effective_difficulty(beat, int(run.total_grafts()))
 		var quest_idx: int = int(beat.get("quest", 0))
 		if bool(beat.get("swapped", false)):
 			_variant_swaps += 1  # ramification v1 : fréquence loguée (§K)
@@ -319,9 +402,10 @@ func _soak_one(i: int, arch: String) -> void:
 			_deadhand_beats += 1
 		# v11 : dé PRÉ-TIRÉ du beat AVANT le choix (miroir build_situation — R120 preview=résolution).
 		var die: int = rng.randi_range(1, 6)
-		var combo: Array = _pick_combo(arch, run, required, die, rng)
+		var combo: Array = _pick_combo(arch, run, required, die, rng, diff)
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
-		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo))
+		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.
+		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff)
 		run.consume_blessings(combo)  # R131 : une bénédiction sert UNE fois (miroir du jeu)
 		# v10.21 (Wave G, R130) — miroir « Pousser » : optimal pousse si Intégrité ≤ 4 ;
 		# corrompu toujours ; greedy/chaotic/tag_ignorant ALTERNENT (spec v11-W2).
@@ -378,8 +462,11 @@ func _soak_one(i: int, arch: String) -> void:
 							offer[rng.randi_range(0, offer.size() - 1)], action_plays, rng, i):
 						_drafts_taken += 1
 						grafts_run += 1
-		# Draft logique standard (mêmes conditions que merlin_game) — sauté si offrande / actions pleines.
-		if not did_offering and (deg == ResolutionScript.REUSSITE or deg == ResolutionScript.ECLATANTE) \
+		# Draft logique standard (mêmes conditions que merlin_game) — sauté si offrande / actions
+		# pleines. v1.0-V4a (BAL-11-B/GD-27) : draft GARANTI en plus à chaque transition de quête
+		# (le beat résolu referme sa quête — qn == qtotal — et la run continue), degré indifférent.
+		var quest_close: bool = beat.has("qtotal") and int(beat.get("qn", 1)) >= int(beat.get("qtotal", 1))
+		if not did_offering and (deg == ResolutionScript.REUSSITE or deg == ResolutionScript.ECLATANTE or quest_close) \
 				and not run.is_climax() and not run.ended and run.has_graftable_action():
 			var choices: Array = run.graft_choices(3)
 			if not choices.is_empty():
@@ -412,6 +499,10 @@ func _soak_one(i: int, arch: String) -> void:
 			_pushes_clean += run_pushes
 			_corr_gained_clean += corr_gained_run
 			_grafts_clean += grafts_run
+			# v1.0-V4a (BAL-04-B) — base des gates de morts par archétype : runs SAINES uniquement
+			# (les cas dégénérés forcés meurent par construction et fausseraient le gate).
+			_bump_arch(arch, "ends_clean", run.end_type)
+			_arch_stats[arch]["runs_clean"] = int(_arch_stats[arch]["runs_clean"]) + 1
 	run.clear_save()
 	run.free()
 
@@ -553,7 +644,7 @@ func _graft_sig(r: Node) -> String:
 # chaotic      : uniforme aléatoire (action ET trait).
 # tag_ignorant : aléatoire SANS lire les requis — baseline non-lecteur, flux RNG distinct de
 #                chaotic (mesure la sensibilité du système au non-signal).
-func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: RandomNumberGenerator) -> Array:
+func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: RandomNumberGenerator, diff: int = 2) -> Array:
 	var acts: Array = run.actions.duplicate()
 	var traits_h: Array = run.hand.duplicate()
 	_shuffle_arr(acts, rng)      # départage des ex æquo : ordre pré-mélangé, argmax strict
@@ -576,7 +667,7 @@ func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: Random
 	var best_key: Array = []
 	for a in acts:
 		for t in traits_h:
-			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]))
+			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff)
 			var cov: Dictionary = r["coverage"]
 			var covered_arr: Array = cov["covered"]
 			var extra_arr: Array = cov["extra"]
@@ -621,22 +712,25 @@ func _shuffle_arr(arr: Array, rng: RandomNumberGenerator) -> void:
 		arr[j] = tmp
 
 
-# --- RAPPORT §K (cibles LOGUÉES, non bloquantes — recalibrage W2/W3 assumé) ---
+# --- RAPPORT §K — noyau dur BAL-20-B : 4 bandes de degrés (dures une fois atteintes, sinon delta
+# restant logué) + morts par archétype (dures, _report_arch) + 0 hors-pool (dure, _assert_required).
+# Les métriques de flux (pushes, drafts, deadhand, corrompues) restent LOGUÉES (anti faux-rouges). ---
 func _report_k() -> void:
 	var bt: float = float(maxi(_beats_clean, 1))
 	var cr: float = float(maxi(_clean_runs, 1))
-	print("[SOAK] — CIBLES §K v11 (runs saines n=%d, beats=%d — cas dégénérés forcés exclus ; LOGUÉ, ne bloque pas) —" % [_clean_runs, _beats_clean])
-	_band("échec", 100.0 * float(int(_degrees_clean.get("echec", 0))) / bt, 3.0, 8.0)
-	_band("partiel", 100.0 * float(int(_degrees_clean.get("partiel", 0))) / bt, 28.0, 38.0)
-	_band("réussite", 100.0 * float(int(_degrees_clean.get("reussite", 0))) / bt, 45.0, 55.0)
-	_band("éclatante", 100.0 * float(int(_degrees_clean.get("eclatante", 0))) / bt, 8.0, 15.0)
+	print("[SOAK] — CIBLES §K v1.0 (runs saines n=%d, beats=%d — cas dégénérés forcés exclus) —" % [_clean_runs, _beats_clean])
+	_band_deg("échec", 100.0 * float(int(_degrees_clean.get("echec", 0))) / bt, 3.0, 8.0)
+	_band_deg("partiel", 100.0 * float(int(_degrees_clean.get("partiel", 0))) / bt, 28.0, 38.0)
+	_band_deg("réussite", 100.0 * float(int(_degrees_clean.get("reussite", 0))) / bt, 45.0, 55.0)
+	_band_deg("éclatante", 100.0 * float(int(_degrees_clean.get("eclatante", 0))) / bt, 8.0, 15.0)
 	_band("morts", 100.0 * float(int(_ends_clean.get("mort", 0))) / cr, 10.0, 25.0)
 	_band("fins corrompues", 100.0 * float(int(_ends_clean.get("corrompu", 0))) / cr, 0.0, 18.0)
 	_band("pushes/run", float(_pushes_clean) / cr, 0.5, 1.5, false)
 	_band("corruption gagnée/run", float(_corr_gained_clean) / cr, 3.9, 6.9, false)
 	if _climax_beats > 0:
 		_band("couverture pleine climax (3 requis)", 100.0 * float(_climax_full) / float(_climax_beats), 45.0, 55.0)
-	print("[SOAK]   %-36s %5.2f    (info §E : E[acquisitions] cible 5-6)" % ["greffes posées/run (saines)", float(_grafts_clean) / cr])
+	print("[SOAK]   %-36s %5.2f    (info §E : E[acquisitions] cible 5-6 · offerts/run=%.2f)" % [
+		"greffes posées/run (saines)", float(_grafts_clean) / cr, float(_drafts_offered) / float(maxi(_runs_total, 1))])
 	print("[SOAK]   %-36s %5d     (ASSERTION DURE == 0)" % ["beats à requis hors-pool", _offpool_beats])
 	print("[SOAK]   %-36s %5.1f%%   (info §C : A/B réserve de trait si > 45)" % ["deadhand (0 trait couvrant)", 100.0 * float(_deadhand_beats) / float(maxi(_beats_total, 1))])
 	print("[SOAK]   variantes basculées=%d · sabotage R66 non simulé (aucun antagoniste côté probe) · émissions ×1=%s" % [_variant_swaps, str(_x1_emissions)])
@@ -647,6 +741,20 @@ func _band(label: String, value: float, lo: float, hi: float, pct: bool = true) 
 	var cible: String = ("%.0f-%.0f%%" % [lo, hi]) if pct else ("%.1f-%.1f" % [lo, hi])
 	var verdict: String = "IN " if value >= lo and value <= hi else "OUT"
 	print("[SOAK]   %-36s %s   cible %-8s [%s]" % [label, v, cible, verdict])
+
+
+# v1.0-V4a (BAL-20-B) — bande de DEGRÉ : dure quand HARD_DEGREE_BANDS (les 4 atteintes), sinon
+# OUT logué avec le delta restant EXPLICITE vers la borne la plus proche.
+func _band_deg(label: String, value: float, lo: float, hi: float) -> void:
+	var verdict: String = "IN " if value >= lo and value <= hi else "OUT"
+	if verdict == "IN ":
+		print("[SOAK]   %-36s %5.1f%%   cible %-8s [IN ]" % [label, value, "%.0f-%.0f%%" % [lo, hi]])
+		return
+	var delta: float = (lo - value) if value < lo else (value - hi)
+	var note: String = "DUR" if HARD_DEGREE_BANDS else "delta restant %.1f pts — non-bloquant (BAL-20-B : durcira à l'atteinte des 4 bandes)" % delta
+	print("[SOAK]   %-36s %5.1f%%   cible %-8s [OUT] %s" % [label, value, "%.0f-%.0f%%" % [lo, hi], note])
+	if HARD_DEGREE_BANDS:
+		_gate_fail += 1
 
 
 # Rapport par archétype (informatif — le signal canonique reste `optimal`, joueur qui lit les tags).
@@ -673,6 +781,26 @@ func _report_arch() -> void:
 			100.0 * float(int(degs.get("reussite", 0))) / td,
 			100.0 * float(int(degs.get("eclatante", 0))) / td,
 			morts * 100.0, str(ends)])
+	# v1.0-V4a (BAL-04-B) — GATES DE MORTS par archétype sur runs SAINES : optimal ≤10 % ·
+	# greedy/chaotic ≤30 % · corrompu ≤25 %. ASSERTION DURE (échantillon ≥ ARCH_GATE_MIN_RUNS).
+	print("[SOAK] — GATES MORTS PAR ARCHÉTYPE (runs saines, ASSERTION DURE) —")
+	for arch in _arch_stats:
+		var stc: Dictionary = _arch_stats[arch]
+		var rc: int = int(stc.get("runs_clean", 0))
+		var ec: Dictionary = stc.get("ends_clean", {})
+		var morts_c: float = 100.0 * float(int(ec.get("mort", 0))) / float(maxi(rc, 1))
+		if not ARCH_MORT_GATES.has(arch):
+			print("[SOAK]   %-12s morts saines=%5.1f%% (n=%d) — sans gate (baseline)" % [str(arch), morts_c, rc])
+			continue
+		var gate: float = float(ARCH_MORT_GATES[arch])
+		if rc < ARCH_GATE_MIN_RUNS:
+			print("[SOAK]   %-12s morts saines=%5.1f%% (n=%d) — échantillon < %d, gate non significatif" % [
+				str(arch), morts_c, rc, ARCH_GATE_MIN_RUNS])
+			continue
+		var verdict: String = "PASS" if morts_c <= gate else "FAIL"
+		print("[SOAK]   %-12s morts saines=%5.1f%%  gate ≤%2.0f%% (n=%d) [%s]" % [str(arch), morts_c, gate, rc, verdict])
+		if morts_c > gate:
+			_gate_fail += 1  # gate §K (équilibrage) — compté à part des échecs de runs (fiabilité)
 
 
 func _skel(i: int) -> Dictionary:

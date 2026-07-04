@@ -64,6 +64,10 @@ var last_degree: String = ""
 # Wave D — l'offrande du pilier (beat Rencontre) a déjà été proposée cette run. Persisté (R108) : posé à
 # l'OUVERTURE du modal → une offrande consommée n'est jamais re-proposée au resume / au replay de beat.
 var pilier_offering_done: bool = false
+# v1.0-V4a (BAL-11-B, review MEDIUM) — le draft d'OUVERTURE a été proposé (pris OU passé). Persisté
+# (champ additif, défaut false) : un « Passer » au beat 0 n'est jamais re-proposé au resume
+# (anti re-roll fishing — même contrat que pilier_offering_done).
+var opening_draft_done: bool = false
 # v10.22 — BIOME de la run (démo : "foret" | "falaises"). Choisi au menu (Nouvelle Partie), persisté
 # (R108 : resume = même monde). Override test/harnais : env MERLIN_BIOME. Champ additif (saves legacy OK).
 var biome: String = "foret"
@@ -145,6 +149,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	end_type = ""
 	_last_threshold = 0
 	pilier_offering_done = false
+	opening_draft_done = false
 	pushes_left_quest = MerlinResolution.PUSH_BUDGET_PER_QUEST
 	intervention_beats = []
 	pilier_interventions = 0
@@ -470,6 +475,16 @@ func placed_graft_ids() -> Dictionary:
 	return out
 
 
+# v1.0-V4a (GD-32-B) — nb TOTAL de greffes posées sur le build (contre-pression §E : tout beat de
+# quête 3 passe à 3 requis dès total ≥ 3). Lu par merlin_scenario.effective_difficulty + le probe.
+func total_grafts() -> int:
+	var n: int = 0
+	for a in actions:
+		if a is MerlinCard:
+			n += ((a as MerlinCard).grafts as Array).size()
+	return n
+
+
 # Y a-t-il encore une action greffable ? (les 4 pleines → le draft ne se déclenche plus)
 func has_graftable_action() -> bool:
 	for a in actions:
@@ -768,6 +783,7 @@ func save() -> void:
 		"archetype_scores": archetype_scores,
 		"last_threshold": _last_threshold,
 		"pilier_offering_done": pilier_offering_done,  # Wave D : unicité de l'offrande au resume (R108)
+		"opening_draft_done": opening_draft_done,  # v1.0-V4a : unicité du draft d'ouverture (additif)
 		"biome": biome,  # v10.22 : resume = même monde
 		"pushes_left_quest": pushes_left_quest,  # Wave G (R130) : budget Pousser persisté (additif)
 		"intervention_beats": intervention_beats, "pilier_interventions": pilier_interventions,
@@ -812,6 +828,7 @@ func load_run() -> bool:
 	archetype_scores = data.get("archetype_scores", {})
 	_last_threshold = int(data.get("last_threshold", 0))
 	pilier_offering_done = bool(data.get("pilier_offering_done", false))  # Wave D : défaut false (saves legacy)
+	opening_draft_done = bool(data.get("opening_draft_done", false))  # v1.0-V4a : défaut false (saves antérieures)
 	biome = str(data.get("biome", "foret"))  # v10.22 : défaut forêt (saves legacy)
 	pushes_left_quest = int(data.get("pushes_left_quest", MerlinResolution.PUSH_BUDGET_PER_QUEST))  # Wave G (R130)
 	intervention_beats = data.get("intervention_beats", [])  # Wave I (R131), défauts = saves legacy OK

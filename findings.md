@@ -360,3 +360,12 @@ const CHOICE_SYSTEM := """Merlin repond. Puis CHOIX: avec 4 options."""
 ---
 
 *Last updated: 2026-02-07 - POST AGENT REVIEW*
+
+## 2026-07-05 — v1.0-V4a recalibrage §K : enseignements
+
+- **La whitelist branchée (BAL-14-A) ne change PAS la distribution** : le probe l'utilisait déjà — le delta attendu par le CDC (BAL-03-A « cause racine ») était déjà consommé côté mesure. La cause racine restante du taux d'échec est la **probabilité de couverture** des requis hors-base par 1 trait (main 4, ~1 tag gap/trait), pas la génération.
+- **BAL-12-B mesuré et rejeté** : dé 17/33/50/67 → morts 30,6→44,9 %, échec 25,5→31,2 (soak 300). Repli RECO C acté ; « 25/42/58/75 » n'existe pas sur un d6 (bandes 0/1 × 6 faces) → 33/50/67/83 conservé.
+- **Éclatante** : la clause « trait couvre ≥1 requis » n'était PAS la contrainte liante (2,5→2,7 % après retrait). La contrainte = couverture PLEINE (rare à diff 2 : 2 requis hors-base pour 1 trait joué). Même goulot pour climax plein (2,4 %).
+- **Variance des gates par archétype** : n≈43 par archétype sur un soak 300 mixed → ±7 pts d'écart-type. Mesure de référence = soak 200 par archétype (n_clean=144) : optimal 0,0 · greedy 21,5 · chaotic 36,1 · corrompu 34,0.
+- Piège évité : `_end_interstitial` devenu coroutine — appels existants (fire-and-forget _input/autoplay) valides car `_draft_active` route les clics et `_interstitial_open` est posé à false AVANT le premier await.
+- **Autoplay 2/3 (2×) après leviers 7-8 = FAUX ROUGE de budget harnais, pas un bug jeu** : run#2 « MerlinEnd jamais atteint (ended=false beat=8) », 0 SCRIPT ERROR, session ~13 min → RUN_DEADLINE_S=600 s épuisé. Cause : morts 36,6→4,6 % ⇒ les chaînes 3 quêtes vont désormais AU BOUT (12-15 beats + drafts garantis) là où elles mouraient tôt. Même mode d'échec que v10.22 (480→600). Fix : budget 600→960 s (tools/autoplay_run.gd). Leçon : recalibrer les budgets harnais après tout levier qui allonge les runs.

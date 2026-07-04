@@ -3500,3 +3500,37 @@ sujets abstraits ('le vide','le nom').
 - Générateur `~/Downloads/build-marketing-workflow.mjs` (JSON.stringify, scoring unit-testé).
 
 **Vérif** : scoring testé (HOT 100 / WARM 40 / COLD 10) ; JSON valides ; import n8n OK (2 workflows) ; round-trip export funnel OK (19 nœuds, Switch HOT/WARM/COLD, branches IF intactes) ; agrégation rapport OK. `n8n execute` CLI bloqué (port 5679) → runtime via UI "Test workflow"/clé API. IDs : Funnel `UWf1S41Q0gCwb7Xu`, Rapport `F0lp2tTIfKxYM086`.
+
+---
+
+## 2026-07-04/05 — v1.0-V4a « recalibrage §K multi-leviers » (PRO-17-A, cdc_v1_questionnaire)
+
+**Méthode** : 1 levier → soak 300 → tableau §K (baseline : échec 25,3 · partiel 28,5 · réussite 43,4 ·
+éclatante 2,8 · morts 36,6 · climax plein 1,1 · drafts 2,69).
+
+| Levier | Δ mesuré (soak 300) |
+|---|---|
+| 1. Whitelist branchée au jeu réel (BAL-14-A/TEC-17-A) | iso-baseline (le probe l'utilisait déjà) — le JEU est maintenant prouvé aligné (self-tests durs) |
+| 2. Climax 2+1 (REQ_GAP[3]=2, BAL-13-A) | échec 25,1 · morts 35,2 · climax 1,1 (composition seule insuffisante) |
+| 3. Drafts garantis ouverture+transitions (BAL-11-B/GD-27) | greffes 2,69→3,83 · morts 30,6 · réussite 45,6 IN |
+| 4. Éclatante sans clause trait + delta +1 (BAL-02-B/BAL-25) | éclatante 2,5→2,7 (contrainte liante = couverture pleine, pas la clause) |
+| 5. Dé 17/33/50/67 (BAL-12-B) | morts 30,6→44,9 · échec 31,2 → **REPLI BAL-12-C acté** (33/50/67/83 conservé ; 25/42/58/75 inexprimable sur d6) |
+| 6. Contre-pression quête 3 (GD-32-B) | échec 24,5 · morts 27,3 · réussite 46,7 IN |
+
+**Final (soak 300)** : réussite 46,7 IN · fins corrompues 0,0 IN · pushes 1,35 IN · corruption 5,87 IN ·
+échec 24,5 OUT (Δ16,5) · partiel 26,2 OUT (Δ1,8) · éclatante 2,6 OUT (Δ5,4) · morts 27,3 OUT (Δ2,3) ·
+climax plein 2,4 OUT · greffes 3,88 (offerts 5,02). Hors-pool = 0 (DUR, chemin réel vérifié).
+**Gates archétype (durs, BAL-04-B)** : optimal 0 PASS · greedy 26,8 PASS · chaotic ~36 FAIL (n=144) · corrompu FAIL.
+**Fiabilité** : validate 0/0 · smoke Game+Menu OK · soak 200 → 200/200 · soak 300 → 300/300.
+
+### Suite v1.0-V4a — leviers 7-8 (coordinateur, 2026-07-05)
+
+| Levier | Δ mesuré (soak 300) |
+|---|---|
+| 7a. Retag deck traits (geste_ancien→[Rituel,Savoir], ecoute_silence→[Vigilance,Mémoire], souffle_tenace→[Endurance,Force], main_sure→[Finesse,Agilité] — ×1 = {franchise,mystere,rituel} préservés) + 7b. tags GREFFÉS en tête des candidats gap (pick_required_tags) | échec 24,5→18,9 · éclatante 2,6→**11,8 IN** · morts 27,3→**20,8 IN** · climax 2,4→14,0 · corrompu 34,1→**15,9 PASS** · greedy 26,8→7,3 |
+| 8. BAL-05-C : barème échec par difficulté (−2 diff 1-2, −3 diff 3) via resolve(diff=2), tous call-sites preview/résolution/probe (R120) | morts 20,8→4,6 · chaotic 34,9→**9,3 PASS** · tous gates archétype PASS |
+
+**Fix review** : flag persisté `opening_draft_done` (MEDIUM — « Passer » au beat 0 jamais re-proposé au resume). HIGH pré-existant (resume beat 0 perd faction/pilier/arc — save beat 0 de _accept_quest v10.13) → chantier séparé tracé (spawn_task).
+**Gates finaux** : validate 0/0 · smoke Game+Menu passed · soak 200 → 200/200, 0 gate FAIL · soak 300 → 300/300, 0 gate FAIL · gates archétype tous PASS (optimal 0,0 · greedy 0,0 · chaotic 9,3 · corrompu 0,0).
+**Restent OUT (logués BAL-20-B, deltas explicites)** : échec 18,9 (Δ10,9) · partiel 19,9 (Δ8,1) · morts 4,6 (sous la bande — sur-amorti, candidat re-serrage) · climax plein 12,2 (Δ32,8).
+**Gate autoplay final** : 2/3 (2×) = faux rouge budget harnais (RUN_DEADLINE_S 600 s épuisé au beat 8 d'une chaîne saine, 0 SCRIPT ERROR — morts 4,6 % ⇒ les chaînes vont au bout). Fix : 600→960 s (tools/autoplay_run.gd). Re-run : **3/3 PASS** (run#2 = 12 beats, accomplissement). VAGUE v1.0-V4a FERMÉE VERTE — tous gates durs PASS. Bible : règle R-numérotée à poser à la prochaine session (rien n'est commité sur ordre).

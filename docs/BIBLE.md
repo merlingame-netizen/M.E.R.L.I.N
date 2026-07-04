@@ -1820,6 +1820,25 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R139 — RECALIBRAGE §K MULTI-LEVIERS (2026-07-05, v1.0-V4a — vague fermée VERTE)** : la boucle
+  de résolution est recalibrée par 8 leviers MESURÉS (soak 300 après chacun). Canon : (a) whitelist
+  §F **branchée au jeu réel** — pool calculé À LA PRÉSENTATION du beat (`build_situation` →
+  `_live_pool_info` → `validate_required_tags`), assertion DURE 0 requis hors-pool, self-tests du
+  probe greppent le chemin réel ; (b) requis PAR DIFFICULTÉ (`REQ_GAP_BY_DIFF`, climax diff 3 =
+  3 requis) et barème d'échec PAR DIFFICULTÉ (`ECHEC_DELTA_BY_DIFF` : −2 diff 1-2, −3 diff 3) via
+  `resolve(..., diff)` — R120 tenu sur preview ET résolution ; (c) porte éclatante SANS la clause
+  « trait couvre » + `INTEGRITE_DELTA[ECLATANTE]=+1` ; (d) DIE_BANDS **33/50/67/83 conservé**
+  (17/33/50/67 REJETÉ par la mesure : morts 30,6→44,9 ; « 25/42/58/75 » inexprimable sur d6) ;
+  (e) couverture : retag de 4 traits (paire double-gap morte éliminée, 3 slots mono-tag remplis)
+  + tags GREFFÉS en tête des candidats requis (`pick_required_tags` — le build devient la clé,
+  BAL-13-A) ; (f) drafts GARANTIS (ouverture avant beat 1 + transitions de quête, flag persisté
+  `opening_draft_done` anti re-roll R108) ; (g) budget autoplay 600→960 s (chaînes 3 quêtes vont
+  au bout). Résultat soak 300 : réussite 50,1 IN · éclatante 11,1 IN · corruption 5,63 IN ·
+  0 hors-pool · gates morts par archétype TOUS PASS (durs). Restes logués BAL-20-B : échec 18,9 ·
+  partiel 19,9 · climax plein 12,2 · morts 4,6 sous-bande (sur-amorti L7+L8) — prochain chantier :
+  couverture du climax (greffes ciblées) + re-serrage fin par le répit de quête (BAL-06), PAS par
+  le barème (c'est lui qui tient chaotic ≤30).
+
 - **R138 — CAHIER DES CHARGES V1.0 ADOPTÉ (2026-07-04, user « adopte toutes les recos »)** :
   la V1.0 est définie par **docs/cdc_v1.md** — 200 règles CDC-XX-NN issues d'un questionnaire
   tous-métiers (docs/cdc_v1_questionnaire.md), 12 structurantes tranchées en session, 188 par

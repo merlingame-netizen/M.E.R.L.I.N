@@ -14,9 +14,15 @@ const LABELS: Dictionary = {
 
 # Deltas d'Intégrité par degré (R65). Corruption = somme coûts cartes + prix du partiel.
 # v10.14 (cascade 2026-06-12) : PARTIEL durci -1 → -2 (cible soak : partiel 25-35%, morts 10-25%).
+# v1.0-V4a (BAL-25) — l'éclatante REND +1 Intégrité (clampé au max par apply_resolution) : le
+# sommet du geste répare, et amortit la spirale de morts mesurée (36,6 % → cible 10-25).
 const INTEGRITE_DELTA: Dictionary = {
-	ECHEC: -3, PARTIEL: -2, REUSSITE: 0, ECLATANTE: 0,
+	ECHEC: -3, PARTIEL: -2, REUSSITE: 0, ECLATANTE: 1,
 }
+# v1.0-V4a LEVIER 8 (BAL-05-C) — barème d'ÉCHEC par difficulté : −2 en diff 1-2, −3 en diff 3
+# (le climax reste létal ; PARTIEL −2 INCHANGÉ → le push R130 garde toute sa valeur d'échange).
+# Précondition CDC consommée : la cause « génération » du taux d'échec est corrigée (BAL-03-A + L7).
+const ECHEC_DELTA_BY_DIFF: Dictionary = {1: -2, 2: -2, 3: -3}
 const PARTIEL_CORRUPTION_PRICE: int = 1  # le "succès à un prix" (R65)
 # v10.21 (Wave G, R130) — « Pousser » : sur un PARTIEL, payer +1 Corruption transforme en RÉUSSITE.
 # Le prix du partiel N'EST PAS remboursé (sinon push gratuit = stratégie dominante) : taux d'échange
@@ -29,9 +35,11 @@ const PUSH_BUDGET_PER_QUEST: int = 1
 # Table spec : 17 % · 33 % · 50 % · 67 %. La 6/6 garantie DISPARAÎT (dé garanti = dé mort — le
 # jet doit rester un événement). JAMAIS de malus (R20) ; modificateur clampé à la fourchette de
 # couverture ; dé tiré UNE fois par beat (build_situation) → preview = résolution finale (R120).
-# Constante gatée TweaksOverlay-style : le recalibrage soak (gate V3) relâche d'UN cran si
-# éclatante < 8 % ou morts > 25 %. RELÂCHÉE d'un cran (2026-07-04, mesure soak 300 : éclatante
-# 2,3 % / morts 47,2 %) → 33/50/67/83 % — la 6/6 garantie reste absente (dé garanti = dé mort).
+# Constante gatée TweaksOverlay-style. v1.0-V4a (BAL-12) — le retour spec 17/33/50/67 (RECO B)
+# a été MESURÉ (soak 300, 2026-07-04) : morts 30,6 → 44,9 % · échec 25,5 → 31,2 % · greedy
+# 24,4 → 43,9 % — les morts REMONTENT ⇒ POSITION DE REPLI (RECO C) actée. L'intermédiaire
+# « 25/42/58/75 » du CDC n'est pas exprimable sur un d6 (bandes 0/1 sur 6 faces) → repli
+# pratique = 33/50/67/83 conservé. La 6/6 garantie reste absente (dé garanti = dé mort).
 const DIE_BANDS: Dictionary = {
 	"Commune":  [0, 0, 0, 0, 1, 1],
 	"Rare":     [0, 0, 0, 1, 1, 1],
@@ -46,9 +54,12 @@ const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
 ## played_cards : Array de MerlinCard (ou Dict {tags:Array, corruption:int}).
 ## antagonist_tags : tags qui sabotent si joués (R41/R66).
 ## die : face 1-6 PRÉ-TIRÉE par l'appelant (0 = pas de dé, rétro-compatible probes).
+## diff : difficulté EFFECTIVE du beat (v1.0-V4a L8 — barème d'échec −2/−2/−3). Défaut 2
+## rétro-compatible (probes legacy) ; le jeu et le soak passent la MÊME valeur sur TOUS les
+## call-sites (preview, prefetch, résolution) — invariant R120.
 ## Retourne {degree, label, integrite_delta, corruption_delta, coverage, eclatante_bonus, sabotaged,
 ##           die, die_mod, die_rarity}.
-static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = []) -> Dictionary:
+static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = [], diff: int = 2) -> Dictionary:
 	var played_tags: Array = []
 	var cost: int = 0
 	for c in played_cards:
@@ -84,17 +95,14 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		if die_mod != 0:
 			degree = _apply_synergy(degree, die_mod, covered_n, req_n)
 
-	# v11 (spec panel §D, CRITICAL) — ÉCLATANTE redéfinie : couverture PLEINE + coût 0 + le TRAIT
-	# couvre ≥1 tag requis + (synergie +1 OU dé +1). Remplace l'ancien plafond « ≥2 cartes »
-	# (structurellement toujours satisfait avec action+trait → 43-67 % d'éclatantes mesurées).
-	# Porte UNIQUE : filtre aussi les promotions venues de _apply_synergy/dé. Cible soak : 8-15 %.
+	# v11 (spec panel §D, CRITICAL) — ÉCLATANTE : couverture PLEINE + coût 0 + (synergie +1 OU
+	# dé +1). Remplace l'ancien plafond « ≥2 cartes » (structurellement toujours satisfait).
+	# v1.0-V4a (BAL-02-B) — la clause « le TRAIT couvre ≥1 requis » est RETIRÉE : avec des requis
+	# majoritairement hors-base elle sur-punissait le geste où l'action greffée porte la couverture
+	# (éclatante mesurée 2,8 % pour une cible 8-15). Porte UNIQUE : filtre aussi les promotions
+	# venues de _apply_synergy/dé.
 	if degree == ECLATANTE:
-		var trait_covers: bool = false
-		for i in range(1, played_cards.size()):
-			for t in _card_tags(played_cards[i]):
-				if (cov["covered"] as Array).has(MerlinTags.to_canon(str(t))):
-					trait_covers = true
-		if not (covered_n >= req_n and req_n > 0 and cost == 0 and trait_covers \
+		if not (covered_n >= req_n and req_n > 0 and cost == 0 \
 				and (synergy == 1 or die_mod == 1)):
 			degree = REUSSITE
 
@@ -116,10 +124,16 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	if degree == PARTIEL:
 		corruption_delta += PARTIEL_CORRUPTION_PRICE
 
+	# v1.0-V4a LEVIER 8 (BAL-05-C) — seul l'ÉCHEC est modulé par la difficulté ; le reste du barème
+	# vient d'INTEGRITE_DELTA (partiel −2, réussite 0, éclatante +1 — inchangés).
+	var integrite_delta: int = int(INTEGRITE_DELTA.get(degree, 0))
+	if degree == ECHEC:
+		integrite_delta = int(ECHEC_DELTA_BY_DIFF.get(clampi(diff, 1, 3), -3))
+
 	return {
 		"degree": degree,
 		"label": LABELS.get(degree, degree),
-		"integrite_delta": int(INTEGRITE_DELTA.get(degree, 0)),
+		"integrite_delta": integrite_delta,
 		"corruption_delta": corruption_delta,
 		"card_cost": cost,
 		"coverage": cov,

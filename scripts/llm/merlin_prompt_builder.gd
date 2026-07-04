@@ -107,9 +107,11 @@ static func opening(scenario: Dictionary, lieu: String = "Broceliande") -> Dicti
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "ouverture (histoire)"}}
 
 
-# --- ARC NARRATIF : 5 étapes liées, CHACUNE construite autour de ses 2 tags requis (req_tags) →
+# --- ARC NARRATIF : 5 étapes liées, CHACUNE construite autour de ses tags requis (req_tags) →
 #     la scène DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés). ---
-static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "", lieu: String = "Broceliande") -> Dictionary:
+# v1.0-V4a (spec §F) — `pool_list` = pool générable AFFICHÉ, injecté comme LISTE FERMÉE (contrainte
+# dure) : les scènes ne réclament que des forces atteignables par le build courant. [] = legacy.
+static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "", lieu: String = "Broceliande", pool_list: Array = []) -> Dictionary:
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
 	var roles: Array = [
@@ -129,7 +131,14 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [i + 1, str(roles[i]), cue_txt]
 	# v10.22 (user) — la question rituelle « Que decida le Voyageur ? » est SUPPRIMEE : chaque etape finit
 	# sur l'instant suspendu ou le Voyageur doit agir, SANS formule systematique.
-	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch, lieu]) + steps + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, qui FINIT sur l'instant SUSPENDU ou le Voyageur doit agir — VARIE la chute, n'utilise JAMAIS de question rituelle repetee.\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir.\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
+	# v1.0-V4a (spec §F) — liste FERMEE des forces atteignables : l'arc ne met en scene rien d'autre.
+	var pool_line: String = ""
+	if not pool_list.is_empty():
+		var pl: PackedStringArray = []
+		for t in pool_list:
+			pl.append(str(t))
+		pool_line = "\nFORCES AUTORISEES (liste FERMEE) : %s. Chaque scene ne doit exiger QUE des forces de cette liste, jamais d'autres." % ", ".join(pl)
+	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch, lieu]) + steps + pool_line + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, qui FINIT sur l'instant SUSPENDU ou le Voyageur doit agir — VARIE la chute, n'utilise JAMAIS de question rituelle repetee.\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir.\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": 340, "label": "arc narratif (5 étapes)"}}
 
 
