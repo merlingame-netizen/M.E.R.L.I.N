@@ -46,3 +46,10 @@
 - [x] CLÔTURE GOAL v10.21 (2026-07-04) : gate R109 COMPLET VERT — soak 200/200 + autoplay 3/3, 0 SCRIPT
       ERROR, avec TOUS les systèmes exercés (pushes R130 dans les 2 branches, offrandes, chaînes 12 beats).
       2 régressions attrapées et corrigées par le gate lui-même (cast quests, harnais push-aware).
+
+## v10.22 (2026-07-04, feedback playtest + screenshot) — livré
+- [x] A/B hover subtil (fix jitter de phase) + Merlin sans chapeau (84a149e5)
+- [x] C cartes de sélection à la charte (84a149e5) · E bulles identifiées + aléatoires (bc1f0ce7)
+- [x] D préambule lore par biome (e9d9b044) · F 2 BIOMES + menu nu + pop progressif (59ac7e4d)
+- [x] BIBLE R132 · gate R109 v10.22 en mesure
+- [ ] G fleet QA (charte/anim/overlap/UX) — PROCHAINE SESSION avec captures fraîches des 2 biomes

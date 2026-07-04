@@ -1819,3 +1819,18 @@ préférences persistées (Options, R74) · clavier de base au MVP, manette post
 Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (game_design_auditor,
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
+
+- **R132 — v10.22 : 2 biomes, menu nu, préambule lore, polish playtest (2026-07-04, feedback user + screenshot)** :
+  - **2 BIOMES** : `set_biome(""|"foret"|"falaises")` — menu NU (ciel + étoiles + lune + Merlin seuls) ;
+    **Falaises du Bout-du-Monde** = mer animée (rubans d'onde, reflet de lune, écume), 2 caps rocheux,
+    **phare ruiné** à lanterne d'or fantôme, goélands ×3, embruns ascendants. Nouvelle Partie → **overlay
+    choix du biome** (2 cartes à la charte) → le monde choisi **pop progressivement** (rampe decor_reveal
+    2 s + gust + flash) → sélection. `run.biome` persisté (R108) ; env `MERLIN_BIOME` (harnais/probes).
+  - **Préambule lore** (remplace « le sentier s'ouvre ») : 3 paragraphes procéduraux — qui tu es / le LIEU
+    t'a appelé (banque PAR BIOME) / ce que Merlin attend + titre. 3 variantes/§, anti-répétition.
+  - **Bulles Merlin** : en-tête d'identification (yeux signature + « MERLIN ») + placement ALÉATOIRE
+    (5 slots hors UI, jamais 2× le même) ; queue supprimée en mode aléatoire.
+  - **Polish playtest** : Merlin SANS chapeau ; hover SUBTIL (fix jitter : fréquence modulée par la souris
+    = saut de phase → fréquence fixe, amplitude seule +30 % hov², lune/menhir/herbe divisés par ~2) ;
+    cartes de sélection à la charte (hauteur au contenu, ornement triskèle, typo menu).
+
