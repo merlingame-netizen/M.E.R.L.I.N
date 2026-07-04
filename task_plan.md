@@ -53,3 +53,4 @@
 - [x] D préambule lore par biome (e9d9b044) · F 2 BIOMES + menu nu + pop progressif (59ac7e4d)
 - [x] BIBLE R132 · gate R109 v10.22 en mesure
 - [ ] G fleet QA (charte/anim/overlap/UX) — PROCHAINE SESSION avec captures fraîches des 2 biomes
+- [x] GATE R109 v10.22 VERT (2026-07-04) : soak 200/200 + autoplay 3/3, 0 SCRIPT ERROR (budget 600s/2200s)
