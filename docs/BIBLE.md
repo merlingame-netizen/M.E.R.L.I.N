@@ -1820,6 +1820,21 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R137 — GREFFES : les 4 verbes évoluent (2026-07-04, v11-V3, spec §E)** : le draft ne donne plus
+  de cartes — il GREFFE un bonus visible sur UNE des 4 actions (cap 3 slots/action, toujours dessinés).
+  3 types : +1 tag permanent (Sacrifice/Équilibre exclusifs greffes) · +1 bande de dé · charges
+  ✚/❖/✦ consommées à la pose du verbe (DRAW = bonus de pioche à la main SUIVANTE). Banques : 21
+  greffes converties de pilier_bank + enriched_pool, noms/évocations conservés à l'octet. RÈGLES
+  DURES : prix ONE-SHOT à la pose (via add_corruption) ou par charge — JAMAIS de coût récurrent sur
+  une greffe ; `rarity = f(nb greffes)` = la qualité de dé (liseré de tuile, R133 — DIE_BANDS
+  33/50/67/83, la 6/6 garantie n'existe plus) ; dérivation unique `refresh_from_grafts` (tags =
+  2 base + greffés) à la pose ET au load ; atomicité greffe+prix par le save unique de
+  `_advance_to_next` (R108) ; champ `grafts` ADDITIF (saves W2 compatibles). Geste : 2 clics zéro
+  modal — les 3 greffes remplacent l'éventail, les tuiles éligibles pulsent, clic tuile = pose
+  (pop + flash + liseré re-dérivé). 4 actions pleines = plus de draft. RESTE V4 (mesuré au soak) :
+  brancher la whitelist §F au jeu réel (les tags greffés ne sont pas encore REQUIS en jeu),
+  contre-pression §E, fréquence de drafts (2,69/run vs 5-6 visés), éclatante 2,8 % vs 8-15.
+
 - **R136 — ÉCRAN STABLE « REIGNS » (2026-07-04, user « l'UI/UX change trop lors des phases, je veux
   de la simplicité à la REIGNS en lecture »)** : MerlinGame est UNE grille fixe de 6 zones permanentes
   (HUD 60 / décor 200 / encart 348 scroll_following type VN / ligne d'état 72 / éventail 208 /
