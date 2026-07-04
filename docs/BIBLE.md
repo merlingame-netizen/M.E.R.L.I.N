@@ -1820,6 +1820,14 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R133 — Le jet de dé mis en scène (2026-07-04, user)** : `MerlinDice` (procédural) — culbute fausse-3D
+  (faces qui défilent + squash/rotation, ticks qui ralentissent) → pose sur la face PRÉ-TIRÉE (~2 s
+  ×motion()) ; éclat d'or si `die_mod > 0`, face terne si le sort reste muet ; liseré = RARETÉ de la carte
+  principale. **Indice de dé** près du bouton Résolution (feedforward : ce choix jettera un dé, sa qualité
+  vient de ta principale) + chip vignette « ⚄ Le sort a souri (+n) / resta muet ». Séquence : fusion → dé →
+  issue. Mécanique R20 INTACTE (dé pré-tiré, jamais de malus) — elle devient LISIBLE (O2 clos).
+  Reduced-motion : face finale directe.
+
 - **R132 — v10.22 : 2 biomes, menu nu, préambule lore, polish playtest (2026-07-04, feedback user + screenshot)** :
   - **2 BIOMES** : `set_biome(""|"foret"|"falaises")` — menu NU (ciel + étoiles + lune + Merlin seuls) ;
     **Falaises du Bout-du-Monde** = mer animée (rubans d'onde, reflet de lune, écume), 2 caps rocheux,

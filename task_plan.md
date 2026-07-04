@@ -54,3 +54,6 @@
 - [x] BIBLE R132 · gate R109 v10.22 en mesure
 - [ ] G fleet QA (charte/anim/overlap/UX) — PROCHAINE SESSION avec captures fraîches des 2 biomes
 - [x] GATE R109 v10.22 VERT (2026-07-04) : soak 200/200 + autoplay 3/3, 0 SCRIPT ERROR (budget 600s/2200s)
+- [x] v10.23 (2026-07-04) : jet de dé animé fausse-3D + indice de dé + contribution lisible (566f6027) —
+      gate R109 VERT en config propre (soak 200/200 + autoplay 3/3, 9 min, chaîne 14 beats).
+      Leçon : ne PAS mesurer le gate en mode capture (fenêtre visible + I/O = runs 2-3× plus lents).
