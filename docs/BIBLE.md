@@ -1820,6 +1820,22 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R136 — ÉCRAN STABLE « REIGNS » (2026-07-04, user « l'UI/UX change trop lors des phases, je veux
+  de la simplicité à la REIGNS en lecture »)** : MerlinGame est UNE grille fixe de 6 zones permanentes
+  (HUD 60 / décor 200 / encart 348 scroll_following type VN / ligne d'état 72 / éventail 208 /
+  actions 120) — zéro `SIZE_EXPAND_FILL` vertical, `visible = true` à 100 % du temps. Les phases ne
+  changent que le CONTENU des zones par cross-fade `modulate` (`MerlinVisual.swap_zone` /
+  `set_zone_active`, DUR_ZONE_FADE 0,22 s ×motion()) ; l'interactivité s'éteint par `mouse_filter`,
+  jamais par `visible`. RÈGLE DURE : un seul propriétaire d'alpha par zone (méta `_fx_tw_swap` tuée
+  par tout fade concurrent). PLUS AUCUN MODAL : intro de quête dans l'encart (« Accepter ✦ » en
+  ligne d'état), attente LLM de l'interstitiel inline (caption + points, cap 8 s), draft/offrande =
+  les 3 cartes REMPLACENT l'éventail (titre + « Passer » en ligne d'état), push/pacte/vignette
+  cross-fadés dans la ligne d'état (vignette du PARTIEL frappée APRÈS le choix R130). Dé-jargonnage :
+  indice de dé supprimé (le liseré de tuile porte la qualité, R133), chips sans chiffres, vocabulaire
+  couleur en 4 règles (GOLD = à toi · famille = tag · VIOLET = corruption · liseré = chance).
+  Micro-tuto : 2 hints passifs one-shot persistés `[tuto]`. Interventions : 1/run max. Le pacte se
+  pose en DONE-PATH (jamais d'await sur un typewriter skippable). Spec : docs/spec_v11_ecran_stable.md.
+
 - **R135 — Résolution DÉGRAISSÉE, pivot v11 W0+W1 (2026-07-04, user « le jeu est trop complexe »)** :
   la lecture de l'issue prime sur le spectacle. SUPPRIMÉS : le slogan « expression » jaune (typewriter +
   aberration chromatique + zoom slow-mo), les chips chiffrées Intégrité/Corruption de la vignette, le
