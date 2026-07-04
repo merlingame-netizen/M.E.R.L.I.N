@@ -612,13 +612,13 @@ func _draw() -> void:
 	# Moon halos + disk — v10.21 (goal hover) : la lune S'ILLUMINE à l'approche du curseur.
 	var m_hov: float = _hover_f(moon_c, moon_r * 2.2)
 	if _animated:
-		var halo_outer_r: float = moon_r * (1.45 + 0.08 * sin(_halo_phase * 0.6) + m_hov * 0.10)
-		var halo_outer_a: float = (0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))) * dr * (1.0 + m_hov * 0.9)
+		var halo_outer_r: float = moon_r * (1.45 + 0.08 * sin(_halo_phase * 0.6) + m_hov * 0.05)
+		var halo_outer_a: float = (0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))) * dr * (1.0 + m_hov * 0.4)
 		if rm:
 			halo_outer_a *= 0.5
 		draw_circle(moon_c, halo_outer_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_outer_a))
 		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_halo_phase))
-		var halo_a: float = (0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))) * dr * (1.0 + m_hov * 0.9)
+		var halo_a: float = (0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))) * dr * (1.0 + m_hov * 0.4)
 		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
 
 	# Moon flash/dim reactive (+ chaleur selon l'heure, v10.18 ; + teinte de faction, Wave C)
@@ -631,7 +631,7 @@ func _draw() -> void:
 	# v10.21 — ANNEAU RUNIQUE : 6 segments d'arc en rotation TRÈS lente autour de la lune (mystique discret).
 	if _animated:
 		var ring_r: float = moon_r * 1.55
-		var ring_a: float = (0.07 + 0.02 * sin(_halo_phase * 0.5)) * dr * (0.5 if rm else 1.0) * (1.0 + m_hov * 1.3)
+		var ring_a: float = (0.07 + 0.02 * sin(_halo_phase * 0.5)) * dr * (0.5 if rm else 1.0) * (1.0 + m_hov * 0.6)
 		var ring_col: Color = Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ring_a)
 		var spin_r: float = _t * 0.04
 		for ai in 6:
@@ -789,10 +789,10 @@ func _draw() -> void:
 				var root: Vector2 = front_crest[ci]
 				var g_h: float = h * (0.020 + fmod(tf * 0.37, 0.014))
 				var lean: float = 0.0 if rm else sin(_t * (0.8 + fmod(tf, 0.5)) + tf * 2.2) * g_h * 0.35
-				# v10.21 (goal hover) — l'herbe SE COURBE en s'écartant du curseur qui passe.
+				# v10.22 — l'herbe s'écarte DOUCEMENT du curseur (QA user : moitié moins prononcé).
 				var gr_hov: float = _hover_f(root, h * 0.07)
 				if gr_hov > 0.02:
-					lean += signf(root.x - _cursor_pos.x) * gr_hov * g_h * 0.7
+					lean += signf(root.x - _cursor_pos.x) * gr_hov * gr_hov * g_h * 0.35
 				for bl2 in 3:
 					var spread: float = (float(bl2) - 1.0) * g_h * 0.45
 					draw_line(root, root + Vector2(spread + lean, -g_h * (0.75 + 0.25 * float(bl2 == 1))), g_col, 1.5, true)
@@ -940,9 +940,12 @@ func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0) -> vo
 	var col: Color = COL_SIL if alpha >= 1.0 else Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, alpha)
 	var tseed: float = fmod(absf(base.x) * 0.137, TAU)  # variation par arbre, stable d'une frame à l'autre
 	var rm2: bool = MerlinVisual.reduced_motion
-	# v10.21 (goal hover) — l'arbre FRÉMIT à l'approche du curseur : sway plus vif + plus ample.
+	# v10.22 (QA user : « trop crue, erratique ») — hover SUBTIL : la fréquence reste FIXE (une fréquence
+	# modulée par la souris SAUTE de phase → jitter) ; seule l'AMPLITUDE respire, +30 % max, courbe hov²
+	# (l'effet ne se sent qu'au cœur de l'arbre).
 	var hov: float = _hover_f(base + Vector2(0.0, -height * 0.55), height * 0.85)
-	var idle: float = 0.0 if rm2 else sin(_t * (0.22 + fmod(tseed, 0.13) + hov * 2.6) + tseed) * height * (0.012 + hov * 0.016)
+	hov = hov * hov
+	var idle: float = 0.0 if rm2 else sin(_t * (0.22 + fmod(tseed, 0.13)) + tseed) * height * 0.012 * (1.0 + hov * 0.30)
 	var swy: float = idle + _tree_sway * 0.35
 	var top: Vector2 = base + Vector2(swy * 2.2, -height)
 	var t_w: float = maxf(w_ref * 0.010, 3.0)
@@ -1083,7 +1086,7 @@ func _menhir(pos: Vector2, dim: Vector2, alpha: float = 1.0) -> void:
 	# v10.21 (goal hover) — les entailles ogham SCINTILLENT d'or à l'approche du curseur.
 	var g_hov: float = _hover_f(pos + dim * 0.5, dim.y * 1.1)
 	var glint: Color = Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b,
-		g_hov * (0.45 + 0.25 * sin(_t * 3.0)) * alpha)
+		g_hov * (0.22 + 0.12 * sin(_t * 1.6)) * alpha)  # v10.22 : scintillement discret (QA user)
 	for i in 4:
 		var ty: float = lerpf(y0, y1, float(i + 1) / 5.0)
 		draw_line(Vector2(cx - tick, ty), Vector2(cx + tick, ty), ink, 2.0, true)
@@ -1135,10 +1138,7 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	var head_c: Vector2 = Vector2(base.x, top + height * 0.06)
 	var hr: float = half_w * 0.42
 	draw_circle(head_c, hr, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
-	# Capuche en pointe (signature d'enchanteur, 1 triangle).
-	draw_colored_polygon(PackedVector2Array([
-		head_c + Vector2(-hr * 0.9, -hr * 0.25), head_c + Vector2(hr * 0.15, -hr * 1.55),
-		head_c + Vector2(hr * 0.95, -hr * 0.10)]), Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
+	# (Pas de chapeau/capuche — user 2026-07-04 : tête ronde nue, signature = les yeux.)
 	# BÂTON : hampe légèrement inclinée à sa droite + ORBE d'or qui pulse avec le halo de la lune.
 	var staff_top: Vector2 = Vector2(base.x + half_w * 1.30, top - height * 0.06)
 	var staff_bot: Vector2 = Vector2(base.x + half_w * 1.05, base.y)

@@ -88,34 +88,50 @@ func _force_wait_titles(sc: Node) -> void:
 		await get_tree().create_timer(0.25).timeout
 
 
+# v10.22 (QA user, screenshot) — carte À LA CHARTE du menu : hauteur AJUSTÉE AU CONTENU (fini le panneau
+# 560px aux 2/3 vide), ornement triskèle sous le titre (langage du menu), pitch centré, bouton collé au
+# texte. La carte se centre verticalement dans la rangée (SHRINK_CENTER).
 func _add_parchemin(title: String, pitch: String) -> void:
 	var panel: PanelContainer = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(460, 560)
+	panel.custom_minimum_size = Vector2(440, 0)  # hauteur = contenu
+	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	panel.add_theme_stylebox_override("panel", _surface_style())
+	var marg: MarginContainer = MarginContainer.new()
+	for side in ["margin_left", "margin_right"]:
+		marg.add_theme_constant_override(side, 30)
+	marg.add_theme_constant_override("margin_top", 26)
+	marg.add_theme_constant_override("margin_bottom", 26)
+	panel.add_child(marg)
 	var v: VBoxContainer = VBoxContainer.new()
-	v.add_theme_constant_override("separation", 14)
-	panel.add_child(v)
+	v.add_theme_constant_override("separation", 16)
+	marg.add_child(v)
 
 	var t: Label = Label.new()
 	t.text = title
 	t.add_theme_color_override("font_color", COL_GOLD)
-	t.add_theme_font_size_override("font_size", 34)
+	t.add_theme_font_size_override("font_size", 30)
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
 
+	v.add_child(MerlinOrnament.triskele_rule(18.0))  # ornement du menu — même langage partout (R125)
+
 	var p: Label = Label.new()
 	p.text = pitch
 	p.add_theme_color_override("font_color", COL_TEXT)
-	p.add_theme_font_size_override("font_size", 24)
+	p.add_theme_font_size_override("font_size", 22)
 	p.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	p.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	p.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(p)
+
+	var sp: Control = Control.new()
+	sp.custom_minimum_size = Vector2(0, 6)
+	v.add_child(sp)
 
 	var b: Button = Button.new()
 	b.text = "Suivre ce sentier"
-	b.custom_minimum_size = Vector2(0, 62)
-	b.add_theme_font_size_override("font_size", 24)
+	b.custom_minimum_size = Vector2(0, 56)
+	b.add_theme_font_size_override("font_size", 22)
 	MerlinVisual.apply_button_da(b)
 	b.pressed.connect(_on_pick.bind(title, pitch))
 	MerlinVisual.connect_button_feedback(b)
@@ -129,11 +145,12 @@ func _add_parchemin(title: String, pitch: String) -> void:
 # (l'HBox la pilote) → on anime modulate + scale (que le conteneur ne réécrit pas).
 func _card_in(node: Control, delay: float) -> void:
 	node.modulate.a = 0.0
-	node.pivot_offset = node.custom_minimum_size * 0.5
 	node.scale = Vector2(0.90, 0.90)
 	var m: float = MerlinVisual.motion()
 	var tw: Tween = node.create_tween()
 	tw.tween_interval(maxf(delay, 0.001))
+	# v10.22 : pivot posé APRÈS layout (hauteur = contenu → custom_minimum_size.y vaut 0 désormais).
+	tw.tween_callback(func() -> void: node.pivot_offset = node.size * 0.5)
 	tw.set_parallel(true)
 	tw.tween_property(node, "modulate:a", 1.0, 0.45 * m).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(node, "scale", Vector2.ONE, 0.55 * m).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
