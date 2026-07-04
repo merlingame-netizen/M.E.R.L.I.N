@@ -250,6 +250,9 @@ class GodotAdapter(BaseAdapter):
             "export": "Export project for a named preset (requires preset= kwarg)",
             "telemetry": "Aggregate JSON stats from Godot user:// save files",
             "list_presets": "List available export presets from export_presets.cfg",
+            "bible-site": "Generate the MERLIN Bible Site (docs/MERLIN_BIBLE_SITE.html)",
+            "bible-serve": "Start the interactive Bible Server (Flask, localhost:8080)",
+            "bible-serve-stop": "Stop the running Bible Server",
         }
 
     def run(self, action: str, **kwargs: Any) -> dict:
@@ -272,6 +275,12 @@ class GodotAdapter(BaseAdapter):
                 return self._telemetry()
             case "list_presets":
                 return self._list_presets()
+            case "bible-site":
+                return self._bible_site()
+            case "bible-serve":
+                return self._bible_serve(**kwargs)
+            case "bible-serve-stop":
+                return self._bible_serve_stop()
             case _:
                 raise NotImplementedError(action)
 
@@ -403,10 +412,10 @@ class GodotAdapter(BaseAdapter):
                 a_out, a_err, a_code = _run(
                     [godot, "--path", ".", "--script",
                      "res://tools/autoplay_run.gd", "--", f"--loops={loops}"],
-                    timeout=1600,  # v10.14 : chaînes 3 quêtes (jusqu'à 15 beats/run)
+                    timeout=2200,  # v10.22 : 3 runs × deadline 600 s + fins + settle (1600 coupait des runs sains)
                 )
             except subprocess.TimeoutExpired:
-                return self.error("autoplay_run timed out after 1600s")
+                return self.error("autoplay_run timed out after 2200s")
             except OSError as exc:
                 return self.error(f"Failed to launch autoplay_run: {exc}")
             a_combined = a_out + "\n" + a_err
@@ -1399,6 +1408,121 @@ class GodotAdapter(BaseAdapter):
                 "cfg_exists": (PROJECT_ROOT / "export_presets.cfg").exists(),
             }
         )
+
+    def _bible_site(self) -> dict:
+        """Generate the MERLIN Bible Site HTML."""
+        from tools.generate_bible_site import generate
+
+        out = generate(PROJECT_ROOT)
+        self.log(f"Generated {out} ({out.stat().st_size // 1024} KB)")
+        return self.ok({"path": str(out), "size_kb": out.stat().st_size // 1024})
+
+    def _bible_serve(self, port: str = "8080", host: str = "127.0.0.1", **_kwargs: Any) -> dict:
+        """Start the Bible Server (Flask) as a background process."""
+        import sys
+
+        try:
+            actual_port = int(port)
+        except (TypeError, ValueError):
+            actual_port = 8080
+
+        # Check if already running
+        try:
+            import urllib.request
+            urllib.request.urlopen(f"http://{host}:{actual_port}/api/status", timeout=2)
+            return self.ok({
+                "already_running": True,
+                "url": f"http://{host}:{actual_port}",
+                "message": f"Bible Server already running on port {actual_port}",
+            })
+        except Exception:
+            pass
+
+        app_path = PROJECT_ROOT / "tools" / "bible_server" / "app.py"
+        if not app_path.exists():
+            return self.error(f"Bible Server not found at {app_path}")
+
+        self.log(f"Starting Bible Server on {host}:{actual_port} …")
+        try:
+            proc = subprocess.Popen(
+                [sys.executable, str(app_path)],
+                cwd=str(PROJECT_ROOT),
+                env={**os.environ, "BIBLE_HOST": host, "BIBLE_PORT": str(actual_port)},
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError as exc:
+            return self.error(f"Failed to start Bible Server: {exc}")
+
+        # Wait briefly for startup
+        import time
+        for _ in range(10):
+            time.sleep(0.5)
+            try:
+                import urllib.request
+                urllib.request.urlopen(f"http://{host}:{actual_port}/api/status", timeout=2)
+                self.log(f"Bible Server started (PID {proc.pid})")
+                return self.ok({
+                    "pid": proc.pid,
+                    "url": f"http://{host}:{actual_port}",
+                    "message": f"Bible Server running at http://{host}:{actual_port}",
+                })
+            except Exception:
+                continue
+
+        return self.ok({
+            "pid": proc.pid,
+            "url": f"http://{host}:{actual_port}",
+            "message": "Bible Server started but health check not yet responding",
+        })
+
+    def _bible_serve_stop(self, port: str = "8080", **_kwargs: Any) -> dict:
+        """Stop the running Bible Server by finding processes on the target port."""
+        try:
+            actual_port = int(port)
+        except (TypeError, ValueError):
+            actual_port = 8080
+
+        self.log(f"Stopping Bible Server on port {actual_port} …")
+        pids: set[int] = set()
+        try:
+            result = subprocess.run(
+                ["netstat", "-ano"],
+                capture_output=True, timeout=10,
+            )
+            stdout = result.stdout.decode("utf-8", errors="replace")
+            for line in stdout.splitlines():
+                if f":{actual_port}" in line and "LISTEN" in line:
+                    parts = line.split()
+                    if parts:
+                        try:
+                            pids.add(int(parts[-1]))
+                        except ValueError:
+                            pass
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        pids = list(pids)
+
+        if not pids:
+            return self.ok({"stopped": False, "message": f"No Bible Server found on port {actual_port}"})
+
+        stopped: list[int] = []
+        for pid in pids:
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/PID", str(pid)],
+                    capture_output=True, text=True, timeout=10,
+                )
+                stopped.append(pid)
+            except (subprocess.TimeoutExpired, OSError):
+                pass
+
+        self.log(f"Stopped {len(stopped)} process(es): {stopped}")
+        return self.ok({
+            "stopped": True,
+            "pids": stopped,
+            "message": f"Stopped {len(stopped)} Bible Server process(es)",
+        })
 
     # ── Internal helpers ─────────────────────────────────────────────────────
 
