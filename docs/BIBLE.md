@@ -1820,6 +1820,12 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R134 — Charte de mouvement des cartes (2026-07-04, user)** : UN langage — arrivées = BACK out
+  unique + arc d'entrée au deal (fini le double-élastique) ; sorties = anticipation + chute parabolique +
+  tumble ; tap = PRESS 0.96 (langage boutons) avec retour CONTEXTUEL (fix rétraction fantôme sous hover) ;
+  hover = pointe BACK à l'entrée, CUBIC au retour ; ghost de vol avec banking ; TOUTES les durées ×motion()
+  via `_dur()` (les fixes 0.12/0.18 ignoraient reduce-motion). Documentée en tête de `merlin_card_view.gd`.
+
 - **R133 — Le jet de dé mis en scène (2026-07-04, user)** : `MerlinDice` (procédural) — culbute fausse-3D
   (faces qui défilent + squash/rotation, ticks qui ralentissent) → pose sur la face PRÉ-TIRÉE (~2 s
   ×motion()) ; éclat d'or si `die_mod > 0`, face terne si le sort reste muet ; liseré = RARETÉ de la carte
