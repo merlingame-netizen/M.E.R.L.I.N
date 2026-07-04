@@ -248,6 +248,7 @@ class GodotAdapter(BaseAdapter):
             "verify_all": "FORGE: parse-check + smoke ALL scenes/*.tscn, write JSON report (one-shot autonomy verify)",
             "test": "Run headless test suite via res://tests/headless_runner.tscn",
             "export": "Export project for a named preset (requires preset= kwarg)",
+            "export_gate": "TEC-07-A: export release 'windows' -> GGUF beside exe -> run EXPORTED build 1 autoplay loop -> PASS/FAIL",
             "telemetry": "Aggregate JSON stats from Godot user:// save files",
             "list_presets": "List available export presets from export_presets.cfg",
             "bible-site": "Generate the MERLIN Bible Site (docs/MERLIN_BIBLE_SITE.html)",
@@ -271,6 +272,8 @@ class GodotAdapter(BaseAdapter):
                 return self._test()
             case "export":
                 return self._export(**kwargs)
+            case "export_gate":
+                return self._export_gate(**kwargs)
             case "telemetry":
                 return self._telemetry()
             case "list_presets":
@@ -1343,6 +1346,220 @@ class GodotAdapter(BaseAdapter):
                 "stderr": stderr,
             }
         )
+
+    # ── TEC-07-A: export gate ────────────────────────────────────────────────
+
+    _GATE_GGUF_NAME = "gemma4-e2b-q4_k_m.gguf"
+    _GATE_DLLS = [
+        "merlin_llm.windows.release.x86_64.dll",
+        "llama.dll",
+        "llama-common.dll",
+        "ggml.dll",
+        "ggml-base.dll",
+        "ggml-cpu.dll",
+        "mtmd.dll",
+    ]
+
+    def _export_gate(
+        self,
+        preset: str = "windows",
+        loops: str = "1",
+        skip_export: str = "",
+        **_kwargs: Any,
+    ) -> dict:
+        """TEC-07-A (v1.0-V4b) — gate « le build EXPORTE tourne » : PASS/FAIL mesure.
+
+        Architecture (decisions documentees):
+          - GGUF HORS PACK: llama.cpp charge le modele par fopen() C
+            (native/src/merlin_llm.cpp: llama_model_load_from_file) — un fichier
+            dans le .pck est invisible pour lui, et 3,3 GB dans le pck serait de
+            toute facon toxique (export, patch, memoire). Le modele est livre A
+            COTE de l'exe: build/models/<gguf>. La resolution runtime est dans
+            merlin_native.gd::_resolve_model_path (editeur: res:// globalise;
+            build: OS.get_executable_path().get_base_dir()).
+          - DLL llama.cpp: copiees par l'export via la section [dependencies] de
+            merlin_llm.gdextension; ce gate re-verifie et complete si besoin
+            (belt & suspenders).
+          - AUTOPLAY DU BUILD: le build est lance avec
+            `--script <abs>/tools/autoplay_run.gd -- --loops=N`. --script est
+            disponible dans les templates release et ResourceLoader accepte un
+            chemin disque absolu → le harnais (duck-type pur, zero reference
+            statique) pilote le VRAI build sans etre embarque dans le pack
+            shipping. Le stdout est capture via le console wrapper
+            (MERLIN.console.exe, debug/export_console_wrapper=2) ET le log
+            fichier user://logs/godot.log (file logging actif par defaut PC).
+
+        Flow: (a) export release → build/MERLIN.exe  (b) livrer le GGUF
+        (hardlink même volume, sinon copie)  (c) run autoplay 1 loop
+        (d) grep SCRIPT ERROR + « k/n PASS » → verdict.
+        """
+        import shutil
+        import time
+
+        godot = self._require_godot()
+        if isinstance(godot, dict):
+            return godot
+
+        build_dir = PROJECT_ROOT / "build"
+        exe_path = build_dir / "MERLIN.exe"
+        data: dict[str, Any] = {"preset": preset, "exe": str(exe_path)}
+
+        # ── (a) Export release ───────────────────────────────────────────────
+        if str(skip_export).lower() not in ("1", "true", "yes"):
+            build_dir.mkdir(parents=True, exist_ok=True)
+            self.log(f"[gate] export release preset='{preset}' → {exe_path} …")
+            t0 = time.monotonic()
+            try:
+                stdout, stderr, code = _run(
+                    [godot, "--headless", "--path", ".", "--export-release", preset, str(exe_path)],
+                    timeout=900,
+                )
+            except subprocess.TimeoutExpired:
+                return self.error("export_gate: export timed out after 900s")
+            except OSError as exc:
+                return self.error(f"export_gate: failed to launch Godot: {exc}")
+            export_s = round(time.monotonic() - t0, 1)
+            classified = _classify_output(stdout + "\n" + stderr)
+            data["export"] = {
+                "exit_code": code,
+                "seconds": export_s,
+                "errors": classified["errors"][:20],
+            }
+            self.log(f"[gate] export exit={code} in {export_s}s | errors={len(classified['errors'])}")
+            if not exe_path.exists():
+                data["passed"] = False
+                data["verdict"] = "FAIL — export n'a pas produit MERLIN.exe"
+                data["stdout_tail"] = "\n".join(stdout.splitlines()[-30:])
+                data["stderr_tail"] = "\n".join(stderr.splitlines()[-30:])
+                return self.ok(data)
+        elif not exe_path.exists():
+            return self.error("export_gate: skip_export demandé mais build/MERLIN.exe absent")
+
+        pck_path = exe_path.with_suffix(".pck")
+        data["pck_bytes"] = pck_path.stat().st_size if pck_path.exists() else 0
+
+        # ── (b) GGUF à côté de l'exe + DLL belt-and-suspenders ──────────────
+        gguf_src = PROJECT_ROOT / "addons" / "merlin_llm" / "models" / self._GATE_GGUF_NAME
+        gguf_dst = build_dir / "models" / self._GATE_GGUF_NAME
+        if not gguf_src.exists():
+            data["passed"] = False
+            data["verdict"] = f"FAIL — GGUF source absent: {gguf_src}"
+            return self.ok(data)
+        if gguf_dst.exists() and gguf_dst.stat().st_size == gguf_src.stat().st_size:
+            data["gguf"] = {"delivered_via": "already-present", "path": str(gguf_dst)}
+        else:
+            gguf_dst.parent.mkdir(parents=True, exist_ok=True)
+            if gguf_dst.exists():
+                gguf_dst.unlink()
+            t0 = time.monotonic()
+            try:
+                os.link(gguf_src, gguf_dst)  # même volume NTFS → instantané, 0 octet dupliqué
+                via = "hardlink"
+            except OSError:
+                shutil.copy2(gguf_src, gguf_dst)  # fallback: vraie copie (~3,3 GB)
+                via = "copy"
+            data["gguf"] = {
+                "delivered_via": via,
+                "path": str(gguf_dst),
+                "seconds": round(time.monotonic() - t0, 1),
+            }
+            self.log(f"[gate] GGUF livré via {via} ({data['gguf']['seconds']}s)")
+
+        dll_src_dir = PROJECT_ROOT / "addons" / "merlin_llm" / "bin"
+        dlls_copied: list[str] = []
+        dlls_missing: list[str] = []
+        for dll in self._GATE_DLLS:
+            dst = build_dir / dll
+            if dst.exists():
+                continue
+            src = dll_src_dir / dll
+            if src.exists():
+                shutil.copy2(src, dst)
+                dlls_copied.append(dll)
+            else:
+                dlls_missing.append(dll)
+        data["dlls"] = {"copied_post_export": dlls_copied, "missing": dlls_missing}
+        if dlls_missing:
+            data["passed"] = False
+            data["verdict"] = f"FAIL — DLL introuvables: {dlls_missing}"
+            return self.ok(data)
+
+        # ── (c) Autoplay du BUILD (harnais chargé depuis le disque) ─────────
+        runner = build_dir / "MERLIN.console.exe"
+        if not runner.exists():
+            runner = exe_path  # GUI exe: stdout capturé via pipes + log fichier en secours
+        script_abs = (PROJECT_ROOT / "tools" / "autoplay_run.gd").as_posix()
+        try:
+            n_loops = max(1, int(loops))
+        except (TypeError, ValueError):
+            n_loops = 1
+        run_timeout = 240 + 900 * n_loops  # LLM load + RUN_DEADLINE 600s/run + fins + marge
+        launch_ts = time.time()
+        self.log(f"[gate] run build: {runner.name} --script {script_abs} (loops={n_loops}, timeout={run_timeout}s)")
+        try:
+            a_out, a_err, a_code = _run(
+                [str(runner), "--script", script_abs, "--", f"--loops={n_loops}"],
+                timeout=run_timeout,
+            )
+        except subprocess.TimeoutExpired:
+            return self.error(f"export_gate: run du build timeout après {run_timeout}s")
+        except OSError as exc:
+            return self.error(f"export_gate: échec lancement du build: {exc}")
+
+        # Sortie combinée: stdout/stderr + log fichier Godot écrit pendant CE run
+        # (user://logs/godot.log — filet si le GUI exe n'écrit pas dans les pipes).
+        combined = a_out + "\n" + a_err
+        logs_dir = _GODOT_APPDATA / "MERLIN" / "logs"
+        log_tail = ""
+        if logs_dir.exists():
+            for lf in sorted(logs_dir.glob("godot*.log")):
+                try:
+                    if lf.stat().st_mtime >= launch_ts - 5:
+                        log_tail += lf.read_text(encoding="utf-8", errors="replace") + "\n"
+                except OSError:
+                    continue
+        combined_all = combined + "\n" + log_tail
+
+        script_errors = [
+            line.strip() for line in combined_all.splitlines() if "SCRIPT ERROR" in line
+        ]
+        autoplay_lines = [
+            line.strip() for line in combined_all.splitlines() if "[AUTOPLAY]" in line
+        ]
+        started = any("[AUTOPLAY] start" in line for line in autoplay_lines)
+        m = re.search(r"(\d+)/(\d+) PASS", combined_all)
+        a_pass, a_total = (int(m.group(1)), int(m.group(2))) if m else (0, n_loops)
+        data["autoplay"] = {
+            "runner": runner.name,
+            "exit_code": a_code,
+            "started": started,
+            "pass": a_pass,
+            "total": a_total,
+            "lines": autoplay_lines[:60],
+        }
+        data["script_errors"] = script_errors[:20]
+
+        # ── (d) Verdict ──────────────────────────────────────────────────────
+        passed = a_code == 0 and started and a_pass == a_total and not script_errors
+        data["passed"] = passed
+        if passed:
+            data["verdict"] = f"PASS — build exporté: autoplay {a_pass}/{a_total}, 0 SCRIPT ERROR"
+        elif not started:
+            data["verdict"] = (
+                "FAIL — le harnais n'a jamais démarré ([AUTOPLAY] start absent). "
+                "Causes probables: --script refusé par le template, DLL manquante, pck illisible. "
+                "stdout_tail/stderr_tail joints."
+            )
+            data["stdout_tail"] = "\n".join(a_out.splitlines()[-40:])
+            data["stderr_tail"] = "\n".join(a_err.splitlines()[-40:])
+            data["log_tail"] = "\n".join(log_tail.splitlines()[-40:])
+        else:
+            data["verdict"] = (
+                f"FAIL — autoplay {a_pass}/{a_total}, exit={a_code}, "
+                f"script_errors={len(script_errors)}"
+            )
+        self.log(f"[gate] {data['verdict']}")
+        return self.ok(data)
 
     def _telemetry(self) -> dict:
         """Read and aggregate JSON stats from Godot user:// save files."""

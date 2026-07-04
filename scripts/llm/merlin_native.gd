@@ -86,12 +86,29 @@ func _boot() -> void:
 	_llm.set_context_size(N_CTX)
 	# v10.18 — load_model (bloquant ~2-3s) lancé DANS UN THREAD → ZÉRO freeze : l'écran de chargement
 	# anime pendant ce temps. _process détecte la fin (_load_done) et appelle _finish_load (thread principal).
-	_load_path = ProjectSettings.globalize_path(MODEL_E2B)
+	_load_path = _resolve_model_path()
 	_load_done = false
 	_load_err = 0
 	_load_thread = Thread.new()
 	_load_thread.start(_threaded_load)
 	set_process(true)  # pour poller la fin du thread de chargement
+
+
+# TEC-07-A — résout le chemin DISQUE du GGUF (llama.cpp lit par fopen : jamais depuis le .pck).
+# Éditeur (feature "editor", inclut smoke/soak via binaire dev) : res:// globalisé — inchangé.
+# Build EXPORTÉ : globalize_path(res://) ne fonctionne PAS hors éditeur et le modèle (3,3 GB)
+# n'est pas embarqué — il est livré À CÔTÉ de l'exe : <exe_dir>/models/<nom>, sinon <exe_dir>/<nom>.
+func _resolve_model_path() -> String:
+	if OS.has_feature("editor"):
+		return ProjectSettings.globalize_path(MODEL_E2B)
+	var exe_dir: String = OS.get_executable_path().get_base_dir()
+	var fname: String = MODEL_E2B.get_file()
+	var candidates: Array = [exe_dir.path_join("models").path_join(fname), exe_dir.path_join(fname)]
+	for cand in candidates:
+		if FileAccess.file_exists(cand):
+			return cand
+	push_error("[MerlinNative] GGUF introuvable à côté de l'exe (%s) — attendu : %s" % [exe_dir, fname])
+	return candidates[0]  # load_model échouera proprement → model_failed
 
 
 # Exécuté sur un thread SÉPARÉ : seule l'opération CPU de chargement (aucune interaction SceneTree).

@@ -6,3 +6,23 @@ reloadable = true
 [libraries]
 windows.release.x86_64 = "res://addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll"
 windows.debug.x86_64 = "res://addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll"
+
+; TEC-07-A — DLL llama.cpp copiées A COTE de l'exe a l'export (cible "" = racine du build).
+; Sans cette section, seule merlin_llm.*.dll est exportee et le build crashe au chargement.
+[dependencies]
+windows.release.x86_64 = {
+	"res://addons/merlin_llm/bin/llama.dll": "",
+	"res://addons/merlin_llm/bin/llama-common.dll": "",
+	"res://addons/merlin_llm/bin/ggml.dll": "",
+	"res://addons/merlin_llm/bin/ggml-base.dll": "",
+	"res://addons/merlin_llm/bin/ggml-cpu.dll": "",
+	"res://addons/merlin_llm/bin/mtmd.dll": ""
+}
+windows.debug.x86_64 = {
+	"res://addons/merlin_llm/bin/llama.dll": "",
+	"res://addons/merlin_llm/bin/llama-common.dll": "",
+	"res://addons/merlin_llm/bin/ggml.dll": "",
+	"res://addons/merlin_llm/bin/ggml-base.dll": "",
+	"res://addons/merlin_llm/bin/ggml-cpu.dll": "",
+	"res://addons/merlin_llm/bin/mtmd.dll": ""
+}
