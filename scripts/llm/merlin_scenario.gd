@@ -511,14 +511,60 @@ const _INTRO_WRAPPERS: Array = [
 ]
 
 
+# v10.22 (user : « remplace le sentier s'ouvre par un préambule qui explique ce qu'on fait là ») —
+# PRÉAMBULE LORE en 3 paragraphes : §1 qui tu es · §2 le LIEU t'a appelé (par biome) · §3 ce que Merlin
+# attend + le titre de la quête. Banques procédurales, anti-répétition intra-session via _fb_served.
+const PREAMBULE_QUI: Array = [
+	"Tu es le Voyageur — celui qui marche sans bannière ni serment, et que les chemins reconnaissent. Tu as laissé derrière toi un monde qui ne pose plus de questions ; ici, chaque pierre en pose une.",
+	"On ne t'a pas donné de nom en ces terres : Voyageur suffit. Tu portes douze forces anciennes en guise de bagage — perception, corps, parole, intuition — et c'est tout ce que ce lieu te laissera garder.",
+	"Tu marches depuis des jours, Voyageur, sans savoir qui de toi ou du chemin a choisi l'autre. Les tiens ne se souviennent déjà plus de ton départ ; ce pays, lui, semblait t'attendre.",
+]
+const PREAMBULE_LIEU: Dictionary = {
+	"foret": [
+		"Brocéliande n'est pas une forêt : c'est une mémoire qui pousse. Les arbres y gardent le compte des promesses tenues et brisées, et la brume ne s'écarte que devant ceux qu'elle veut éprouver. Cette nuit, elle s'est écartée devant toi.",
+		"On dit que Brocéliande rêve, et que ses rêves ont des sentiers. Y entrer, c'est marcher dans la pensée d'une chose très vieille — les korrigans s'y moquent, les pierres y murmurent, et rien n'y est donné sans dette.",
+		"La forêt t'a appelé comme elle appelle les orages : sans un mot, par simple gravité. Sous ses frondaisons vivent quatre puissances qui se disputent son cœur — et la Corruption, patiente, qui les écoute toutes.",
+	],
+	"falaises": [
+		"Les Falaises du Bout-du-Monde tombent dans une mer qui ne rend rien. Le vieux phare n'y guide plus personne : il compte les navires que l'écume a pris, et les esprits du sel remontent la nuit lécher ses pierres. C'est ici que ton chemin s'arrête — ou commence.",
+		"Ici, la terre s'achève en à-pic et la mer parle une langue d'avant les hommes. Les goélands portent des messages que nul ne lit plus, et l'embrun grave sur la roche des noms que la marée efface. Le tien vient d'y apparaître.",
+		"On ne vient pas aux Falaises : on y échoue, comme les épaves. Le vent y use les serments plus vite que la pierre, et quelque chose, sous l'eau noire, garde le compte de ceux qui se penchent trop près du bord.",
+	],
+}
+const PREAMBULE_ATTENTE: Array = [
+	"Je suis Merlin — gardien de ce seuil, et ta seule constante dans ce qui vient. Je ne peux pas marcher à ta place, mais je peux nommer ce que tu affrontes. Voici ce que le lieu exige de toi : « %s ».",
+	"Moi, Merlin, je veille sur ce passage depuis plus de lunes que tu n'as de souvenirs. Je te prêterai ma voix et mes yeux — le reste t'appartient. Ta quête a un nom, et le voici : « %s ».",
+	"Merlin, on m'appelle — et je t'observais bien avant que tu n'arrives. Chaque geste que tu poseras, je le lirai ; chaque prix, tu le paieras. Ce qui t'attend porte un nom : « %s ».",
+]
+
+
+func _pick_preamble(pool: Array, key: String) -> String:
+	var served: Array = _fb_served.get(key, [])
+	if served.size() >= pool.size():
+		served = []
+	var avail: Array = []
+	for i in pool.size():
+		if not served.has(i):
+			avail.append(i)
+	var idx: int = int(avail[_rng.randi_range(0, avail.size() - 1)])
+	served.append(idx)
+	_fb_served[key] = served
+	return str(pool[idx])
+
+
 func build_intro(scenario: Dictionary) -> Dictionary:
 	var title: String = str(scenario.get("title", "l'aventure"))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var wrap: String = str(_INTRO_WRAPPERS[_rng.randi_range(0, _INTRO_WRAPPERS.size() - 1)])
+	var biome: String = str(scenario.get("biome", "foret"))
+	var lieu_pool: Array = PREAMBULE_LIEU.get(biome, PREAMBULE_LIEU["foret"])
+	var intro: String = "%s\n\n%s\n\n%s" % [
+		_pick_preamble(PREAMBULE_QUI, "pre_qui"),
+		_pick_preamble(lieu_pool, "pre_lieu|" + biome),
+		_pick_preamble(PREAMBULE_ATTENTE, "pre_attente") % title,
+	]
 	var mem: String = _build_memory_hint()
 	if mem != "":
-		wrap += "\n\n(Et je me souviens, va : %s. On ne se refait pas, Voyageur.)" % mem
-	var intro: String = ("%s\n\n%s" % [pitch, wrap]) if pitch.strip_edges() != "" else wrap
+		intro += "\n\n(Et je me souviens, va : %s. On ne se refait pas, Voyageur.)" % mem
 	# Objectif spécifique : on réutilise l'accroche-action du pitch (déjà un impératif concret).
 	var p: String = pitch.strip_edges().trim_suffix(".")
 	# v10.14 — le run est une CHAÎNE de quêtes : l'objectif ne promet plus « cinq épreuves ».
