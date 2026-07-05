@@ -588,9 +588,11 @@ func _update_preview() -> void:
 		return
 	var combo: Array = [_selected_action, _selected_trait]
 	var reqs: Array = _current_situation.get("required_tags", [])
+	# v2-W1 — moteur d20 : skill_mod (talent W2) et graft_bonus (greffe-jet W3) = 0 en W1. La preview
+	# passe EXACTEMENT les mêmes arguments que la résolution (même die, même diff, mêmes 0) — R120.
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		get_node("/root/MerlinRun").blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)))  # R131 bénédictions + L8 barème : preview = résolution (R120)
+		int(_current_situation.get("difficulte", 2)), 0, 0)  # R131 bénédictions + d20 : preview = résolution (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_set_resolve_armed(true)
 	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
@@ -620,9 +622,10 @@ func _on_resolve() -> void:
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
 	var reqs: Array = _current_situation.get("required_tags", [])
+	# v2-W1 — mêmes arguments que la preview (die, diff, skill_mod=0, graft_bonus=0) → R120.
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		run.blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)))  # R131 + L8 : mêmes bénis et même diff que la preview (R120)
+		int(_current_situation.get("difficulte", 2)), 0, 0)  # R131 + d20 : mêmes bénis et même diff que la preview (R120)
 	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 

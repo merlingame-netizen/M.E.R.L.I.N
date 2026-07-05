@@ -1,4 +1,12 @@
 extends SceneTree
+## v2-W1 (2026-07-05) — MOTEUR d20-vs-DC : le dé du beat est un d20 (randi_range 1-20) ; resolve()
+## calcule total = die + skill_mod(0) + graft_bonus(0) + COVER_PER_TAG×couverts + synergy_bonus,
+## comparé à DC_BY_DIFF. §K RE-DÉRIVÉ par leviers (DC_BY_DIFF {11,15,18}, PARTIEL_LOW 13,
+## ECLAT_MARGIN 8) — 4 bandes de degrés IN à 300 (échec ~6 · partiel ~32 · réussite ~50 · éclatante
+## ~11). HARD_DEGREE_BANDS reste false : échec IN mais marge modeste, on ne DURCIT pas encore (une
+## variance de seed pourrait tiper échec à 8,x). Restes logués : pushes ~1,6 / corr ~7,2 (marginaux,
+## couplés au volume de partiel via le push R130). Le visuel du dé reste d6 (projeté clampi 1-6) → W4.
+##
 ## Soak Monte Carlo v11 (pivot ACTION+TRAIT, spec panel 2026-07-04 §K) — N runs logiques COMPLETS,
 ## sans LLM ni UI. Preuve mesurable R109 : chaque run atteint une fin, zéro erreur script,
 ## invariants tenus à chaque beat. Le geste v11 = [ACTION permanente (4 tuiles), TRAIT (main de 4)] ;
@@ -161,13 +169,25 @@ func _selftest_whitelist() -> void:
 			"pick_required_tags diff %d respecte composition_ok (%s)" % [d_st, str(req_st)])
 	_st(not Scenario.composition_ok(["Sens", "Instinct"], 2, pool, []),
 		"paire base-only rejetée par composition_ok (diff 2)")
-	# v1.0-V4a LEVIER 8 (BAL-05-C) — barème d'échec PAR DIFFICULTÉ : −2 en diff 1-2, −3 en diff 3 ;
-	# partiel/réussite/éclatante inchangés (le push R130 garde sa valeur d'échange).
+	# v2-W1 — barème d'échec PAR DIFFICULTÉ : −2 en diff 1-2, −3 en diff 3 (partiel/réussite/
+	# éclatante inchangés, le push R130 garde sa valeur). Sous le moteur d20 on FORCE l'échec par
+	# le plancher nat 1 (die=1 → ECHEC quels que soient couverture/mods) : test déterministe du barème.
 	var cards_l8: Array = [CardScript.make_actions()[0]]
-	_st(int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 0, [], 2).get("integrite_delta", 0)) == -2 \
-		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 0, [], 3).get("integrite_delta", 0)) == -3 \
-		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 0, [], 1).get("integrite_delta", 0)) == -2,
-		"barème échec par difficulté (−2/−2/−3, L8)")
+	_st(int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 1, [], 2).get("integrite_delta", 0)) == -2 \
+		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 1, [], 3).get("integrite_delta", 0)) == -3 \
+		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 1, [], 1).get("integrite_delta", 0)) == -2,
+		"barème échec par difficulté (−2/−2/−3, nat 1 forcé)")
+	# v2-W1 — planchers d20 : nat 1 → échec, nat 20 → éclatante (quels que soient les modificateurs).
+	var act_l8: Variant = CardScript.make_actions()[0]
+	_st(str(ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 1, [], 1).get("degree", "")) == ResolutionScript.ECHEC,
+		"plancher nat 1 → échec")
+	_st(str(ResolutionScript.resolve(["Ruse", "Vision"], [act_l8], [], 20, [], 3).get("degree", "")) == ResolutionScript.ECLATANTE,
+		"plancher nat 20 → éclatante (même à diff 3, 0 couvert)")
+	# v2-W1 — la MARGE décide entre les planchers : couverture pleine (2×COVER_PER_TAG) + jet médian
+	# passe le DC de diff 2 ; jet faible sur 0 couverture échoue. Vérifie les clés total/dc/margin/success.
+	var r_full: Dictionary = ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 10, [], 2)
+	_st(bool(r_full.get("success", false)) and r_full.has("total") and r_full.has("dc") and r_full.has("margin"),
+		"couverture pleine + d10 → succès (total=%d dc=%d)" % [int(r_full.get("total", 0)), int(r_full.get("dc", 0))])
 	# v1.0-V4a (GD-32-B) — contre-pression §E : quête 3 (index 2) + ≥3 greffes → diff 3 ; sinon inchangé.
 	_st(Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 3) == 3 \
 		and Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 2) == 2 \
@@ -237,13 +257,18 @@ func _selftest_grafts() -> void:
 	var act2: Variant = CardScript.from_dict(act.to_dict())
 	_st((act2.grafts as Array).size() == 3 and str(act2.rarity) == "Mythique",
 		"round-trip to_dict/from_dict conserve les greffes")
-	# v1.0-V4a (BAL-12) — retour spec 17/33/50/67 MESURÉ puis REPLI (RECO C) : morts 30,6 → 44,9 %
-	# au soak 300 ⇒ table 33/50/67/83 conservée (le « 25/42/58/75 » du CDC n'existe pas sur un d6).
-	# Invariants : jamais de 6/6 (dé garanti = dé mort) et progression strictement +1/cran.
-	var bands: Dictionary = ResolutionScript.DIE_BANDS
-	_st((bands["Commune"] as Array).count(1) == 2 and (bands["Rare"] as Array).count(1) == 3 \
-		and (bands["Épique"] as Array).count(1) == 4 and (bands["Mythique"] as Array).count(1) == 5,
-		"DIE_BANDS 33/50/67/83%% — repli BAL-12-C mesuré (mesuré %s)" % str(bands))
+	# v2-W1 — MODÈLE d20 : DC_BY_DIFF présent et strictement croissant ; bandes de marge cohérentes
+	# (PARTIEL_LOW ≥ 1, ECLAT_MARGIN > 0) ; COVER_PER_TAG et SYN positifs. Remplace le self-test
+	# des DIE_BANDS (les bandes de rareté d6 n'existent plus : le dé est un vrai d20).
+	var dc_by: Dictionary = ResolutionScript.DC_BY_DIFF
+	_st(dc_by.has(1) and dc_by.has(2) and dc_by.has(3) \
+		and int(dc_by[1]) < int(dc_by[2]) and int(dc_by[2]) < int(dc_by[3]),
+		"DC_BY_DIFF présent et croissant (%s)" % str(dc_by))
+	_st(int(ResolutionScript.PARTIEL_LOW) >= 1 and int(ResolutionScript.ECLAT_MARGIN) >= 1 \
+		and int(ResolutionScript.COVER_PER_TAG) >= 1 and int(ResolutionScript.SYN) >= 1,
+		"bandes/leviers d20 positifs (part_low=%d eclat=%d cover=%d syn=%d)" % [
+			int(ResolutionScript.PARTIEL_LOW), int(ResolutionScript.ECLAT_MARGIN),
+			int(ResolutionScript.COVER_PER_TAG), int(ResolutionScript.SYN)])
 	# Cap 3/action + prix one-shot via une run réelle (API merlin_run).
 	var run: Node = RunScript.new()
 	run._rng.seed = 99
@@ -400,8 +425,8 @@ func _soak_one(i: int, arch: String) -> void:
 			best_cov = maxi(best_cov, cvd_arr.size())
 		if best_cov == 0:
 			_deadhand_beats += 1
-		# v11 : dé PRÉ-TIRÉ du beat AVANT le choix (miroir build_situation — R120 preview=résolution).
-		var die: int = rng.randi_range(1, 6)
+		# v2-W1 : dé PRÉ-TIRÉ du beat AVANT le choix — d20 (miroir build_situation, R120 preview=résolution).
+		var die: int = rng.randi_range(1, 20)
 		var combo: Array = _pick_combo(arch, run, required, die, rng, diff)
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
 		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.

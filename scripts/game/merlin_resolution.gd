@@ -30,22 +30,23 @@ const PARTIEL_CORRUPTION_PRICE: int = 1  # le "succès à un prix" (R65)
 const PUSH_PRICE: int = 1
 const PUSH_BUDGET_PER_QUEST: int = 1
 
-# v11-W3 (spec §D.3) — Dé PRÉ-TIRÉ : die_rarity = f(nb de GREFFES de l'action jouée) — la rareté
-# de l'action est dérivée par MerlinCard.refresh_from_grafts (Commune=0 greffe … Mythique=3).
-# Table spec : 17 % · 33 % · 50 % · 67 %. La 6/6 garantie DISPARAÎT (dé garanti = dé mort — le
-# jet doit rester un événement). JAMAIS de malus (R20) ; modificateur clampé à la fourchette de
-# couverture ; dé tiré UNE fois par beat (build_situation) → preview = résolution finale (R120).
-# Constante gatée TweaksOverlay-style. v1.0-V4a (BAL-12) — le retour spec 17/33/50/67 (RECO B)
-# a été MESURÉ (soak 300, 2026-07-04) : morts 30,6 → 44,9 % · échec 25,5 → 31,2 % · greedy
-# 24,4 → 43,9 % — les morts REMONTENT ⇒ POSITION DE REPLI (RECO C) actée. L'intermédiaire
-# « 25/42/58/75 » du CDC n'est pas exprimable sur un d6 (bandes 0/1 sur 6 faces) → repli
-# pratique = 33/50/67/83 conservé. La 6/6 garantie reste absente (dé garanti = dé mort).
-const DIE_BANDS: Dictionary = {
-	"Commune":  [0, 0, 0, 0, 1, 1],
-	"Rare":     [0, 0, 0, 1, 1, 1],
-	"Épique":   [0, 0, 1, 1, 1, 1],
-	"Mythique": [0, 1, 1, 1, 1, 1],
-}
+# === v2-W1 (2026-07-05) — MOTEUR d20-vs-DC (PIVOT CANON, supersède R135 « zéro chiffre »/R139/§K) ===
+# total = die(1-20) + skill_mod + graft_bonus + COVER_PER_TAG*covered_n + synergy_bonus,
+# comparé à un DC fixé par la difficulté. La MARGE (total − DC) donne le degré ; deux PLANCHERS
+# durs : nat 20 (die==20) → éclatante · nat 1 (die==1) → échec (quels que soient les modificateurs).
+# skill_mod (talent W2) et graft_bonus (greffes-jet W3) sont des PARAMÈTRES à défaut 0 en W1 :
+# le jeu ET le probe passent 0 (§K re-dérivé sur la BASE = d20 + couverture + synergie).
+# Leviers de balance §K (re-dérivés par mesure soak, v2-W1) — cf. tableau de la vague.
+const DC_BY_DIFF: Dictionary = {1: 11, 2: 15, 3: 18}   # base {10,13,16} → L1 → L2 (voir §K)
+const COVER_PER_TAG: int = 3    # +3 par tag requis couvert (2 requis → +6 plein / +3 partiel / 0 nul)
+const SYN: int = 2              # synergie du geste : +SYN si +1, −SYN si −1, 0 sinon
+# Largeur des bandes de marge (planchers depuis DC). PARTIEL = [DC−PARTIEL_LOW, DC−1] ;
+# ÉCLATANTE = marge ≥ ECLAT_MARGIN. Échec strict sous PARTIEL_LOW.
+const PARTIEL_LOW: int = 13     # DC−13 ≤ total ≤ DC−1 → partiel ; total < DC−13 → échec (L3, final)
+const ECLAT_MARGIN: int = 8     # total ≥ DC+8 → éclatante (L2)
+# Dé « moyen » déterministe pour les vieux call-sites tools qui appellent resolve(..., die=0) :
+# ~jet médian d'un d20 (ne plante pas, produit une base réaliste). Le jeu et le soak passent 1-20.
+const DIE_FALLBACK: int = 10
 
 # Ordre croissant des degrés — sert à borner l'affinage par synergie (hybride, user 2026-05-28).
 const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
@@ -53,13 +54,14 @@ const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
 
 ## played_cards : Array de MerlinCard (ou Dict {tags:Array, corruption:int}).
 ## antagonist_tags : tags qui sabotent si joués (R41/R66).
-## die : face 1-6 PRÉ-TIRÉE par l'appelant (0 = pas de dé, rétro-compatible probes).
-## diff : difficulté EFFECTIVE du beat (v1.0-V4a L8 — barème d'échec −2/−2/−3). Défaut 2
-## rétro-compatible (probes legacy) ; le jeu et le soak passent la MÊME valeur sur TOUS les
-## call-sites (preview, prefetch, résolution) — invariant R120.
+## die : face 1-20 PRÉ-TIRÉE par l'appelant (0 = pas de dé → DIE_FALLBACK, rétro-compatible probes tools).
+## bonus_tags : tags bénis par un pilier (R131) — ajoutés à la couverture.
+## diff : difficulté EFFECTIVE du beat → DC via DC_BY_DIFF. Défaut 2. Le jeu ET le soak passent la
+## MÊME valeur sur TOUS les call-sites (preview, prefetch, résolution) — invariant R120.
+## skill_mod : bonus de talent (W2, défaut 0). graft_bonus : bonus de greffe-jet (W3, défaut 0).
 ## Retourne {degree, label, integrite_delta, corruption_delta, coverage, eclatante_bonus, sabotaged,
-##           die, die_mod, die_rarity}.
-static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = [], diff: int = 2) -> Dictionary:
+##           synergy, die, die_mod, die_rarity, total, dc, margin, success}.
+static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = [], diff: int = 2, skill_mod: int = 0, graft_bonus: int = 0) -> Dictionary:
 	var played_tags: Array = []
 	var cost: int = 0
 	for c in played_cards:
@@ -76,38 +78,21 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	var covered_n: int = cov["covered"].size()
 	var req_n: int = covered_n + cov["missing"].size()
 
-	var base_degree: String = _degree_from_coverage(covered_n, req_n, cov["extra"])
-
-	# Hybride (user 2026-05-28) : la COHÉRENCE de la combinaison affine le degré DANS la fourchette
-	# permise par la couverture (±1 cran, borné). Le code décide → instantané, non-bloquant ;
-	# le LLM, lui, NARRE la combinaison (cf. merlin_scenario.narrate_resolution).
+	# Synergie du geste ACTION + TRAIT (+1/−1/0 — logique inchangée depuis v11).
 	var synergy: int = _synergy(played_cards)
-	var degree: String = _apply_synergy(base_degree, synergy, covered_n, req_n)
 
-	# v10.14 — Dé pré-tiré : bonus par bande de rareté de la carte PRINCIPALE, clampé à la même
-	# fourchette de couverture que la synergie (jamais échec total → réussite). die=0 → neutre.
-	var die_mod: int = 0
-	var die_rarity: String = ""
-	if die >= 1 and die <= 6 and not played_cards.is_empty():
-		die_rarity = _card_rarity(played_cards[0])
-		var band: Array = DIE_BANDS.get(die_rarity, DIE_BANDS["Commune"])
-		die_mod = int(band[die - 1])
-		if die_mod != 0:
-			degree = _apply_synergy(degree, die_mod, covered_n, req_n)
+	# === MOTEUR d20 (v2-W1) — un SEUL nombre décide, la marge donne le degré ===
+	var face: int = die if die >= 1 and die <= 20 else DIE_FALLBACK
+	var synergy_bonus: int = SYN if synergy > 0 else (-SYN if synergy < 0 else 0)
+	var total: int = face + skill_mod + graft_bonus + COVER_PER_TAG * covered_n + synergy_bonus
+	var dc: int = int(DC_BY_DIFF.get(clampi(diff, 1, 3), DC_BY_DIFF[2]))
+	var margin: int = total - dc
 
-	# v11 (spec panel §D, CRITICAL) — ÉCLATANTE : couverture PLEINE + coût 0 + (synergie +1 OU
-	# dé +1). Remplace l'ancien plafond « ≥2 cartes » (structurellement toujours satisfait).
-	# v1.0-V4a (BAL-02-B) — la clause « le TRAIT couvre ≥1 requis » est RETIRÉE : avec des requis
-	# majoritairement hors-base elle sur-punissait le geste où l'action greffée porte la couverture
-	# (éclatante mesurée 2,8 % pour une cible 8-15). Porte UNIQUE : filtre aussi les promotions
-	# venues de _apply_synergy/dé.
-	if degree == ECLATANTE:
-		if not (covered_n >= req_n and req_n > 0 and cost == 0 \
-				and (synergy == 1 or die_mod == 1)):
-			degree = REUSSITE
+	var degree: String = _degree_from_margin(margin, face)
 
-	# Sabotage par tag antagoniste (R66) : dégrade d'un cran — APRÈS la synergie (un combo
-	# cohérent peut donc amortir une partie de la pénalité de sabotage).
+	# Sabotage par tag antagoniste (R66) : dégrade d'un cran — APRÈS le jet (garde son sens : même
+	# un jet éclatant est amorti par un tag qui sabote la situation). Ne peut PAS annuler un nat 20 ?
+	# → v2-W1 : le sabotage s'applique aussi au-dessus d'un nat 20 (le tag pollue le geste, R66).
 	var sabotaged: bool = false
 	if not antagonist_tags.is_empty():
 		var ant_canon: Array = []
@@ -124,11 +109,19 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	if degree == PARTIEL:
 		corruption_delta += PARTIEL_CORRUPTION_PRICE
 
-	# v1.0-V4a LEVIER 8 (BAL-05-C) — seul l'ÉCHEC est modulé par la difficulté ; le reste du barème
-	# vient d'INTEGRITE_DELTA (partiel −2, réussite 0, éclatante +1 — inchangés).
+	# Barème d'Intégrité : INTEGRITE_DELTA par degré (partiel −2, réussite 0, éclatante +1) ; seul
+	# l'ÉCHEC est modulé par la difficulté (ECHEC_DELTA_BY_DIFF : −2 diff 1-2, −3 diff 3, L8).
 	var integrite_delta: int = int(INTEGRITE_DELTA.get(degree, 0))
 	if degree == ECHEC:
 		integrite_delta = int(ECHEC_DELTA_BY_DIFF.get(clampi(diff, 1, 3), -3))
+
+	# Clés de dé rétro-compat (merlin_fx.MerlinDice, merlin_game vignette) : die_rarity n'est plus
+	# une bande d'action (le dé est un vrai d20) → "" ; die_mod = proxy « le sort a souri » (éclatante)
+	# pour conserver le flash d'or existant sans réintroduire les bandes de rareté (W4 fera le visuel d20).
+	# `success` est dérivé du degré FINAL (après sabotage) — un nat 20 sabordé jusqu'à partiel N'EST
+	# PAS un succès (le halo W4 et tout futur lecteur lisent la vérité, pas le jet brut). (review M2)
+	var success: bool = degree == REUSSITE or degree == ECLATANTE
+	var die_mod: int = 1 if degree == ECLATANTE else 0
 
 	return {
 		"degree": degree,
@@ -142,20 +135,27 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		"synergy": synergy,
 		"die": die,
 		"die_mod": die_mod,
-		"die_rarity": die_rarity,
+		"die_rarity": "",
+		"total": total,
+		"dc": dc,
+		"margin": margin,
+		"success": success,
 	}
 
 
-static func _degree_from_coverage(covered_n: int, req_n: int, extra: Array) -> String:
-	if req_n <= 0:
+# v2-W1 — degré par la MARGE (total − DC) + planchers nat 1 / nat 20. `face` est déjà normalisé en
+# amont (1-20, ou DIE_FALLBACK si le call-site n'a pas de dé) → les planchers ne s'arment que sur un
+# vrai jet 1/20 ; un call-site sans dé (fallback 10) passe donc par la marge, jamais par un plancher.
+static func _degree_from_margin(margin: int, face: int) -> String:
+	if face == 20:
+		return ECLATANTE   # plancher nat 20 (avant toute lecture de marge)
+	if face == 1:
+		return ECHEC       # plancher nat 1
+	if margin >= ECLAT_MARGIN:
+		return ECLATANTE
+	if margin >= 0:
 		return REUSSITE
-	if covered_n >= req_n:
-		# Tous couverts : éclatante si ≥1 tag pertinent (non-corrompu) en plus (R65).
-		for e in extra:
-			if not MerlinTags.is_corrupted_tag(str(e)):
-				return ECLATANTE
-		return REUSSITE
-	if covered_n > 0:
+	if margin >= -(PARTIEL_LOW):
 		return PARTIEL
 	return ECHEC
 
@@ -188,30 +188,6 @@ static func _synergy(played_cards: Array) -> int:
 			if not action_canon.has(c) and MerlinTags.family_of(c) == fam:
 				syn = 1
 	return syn
-
-
-# Affine le degré par la synergie, BORNÉ à la fourchette permise par la couverture (jamais
-# transformer un échec total en réussite, etc.). req_n == 0 → pas d'affinage (rien à couvrir).
-static func _apply_synergy(base: String, synergy: int, covered_n: int, req_n: int) -> String:
-	if synergy == 0 or req_n <= 0:
-		return base
-	var base_idx: int = ORDER.find(base)
-	if base_idx == -1:
-		push_error("MerlinResolution._apply_synergy: degré inconnu '%s'" % base)
-		return base  # entrée inattendue → pas d'affinage (évite un degré silencieusement faux)
-	var lo: int
-	var hi: int
-	if covered_n >= req_n:                       # couverture pleine
-		lo = ORDER.find(REUSSITE)
-		hi = ORDER.find(ECLATANTE)
-	elif covered_n > 0:                          # partielle
-		lo = ORDER.find(PARTIEL)
-		hi = ORDER.find(REUSSITE)
-	else:                                        # nulle
-		lo = ORDER.find(ECHEC)
-		hi = ORDER.find(PARTIEL)
-	var idx: int = clampi(base_idx + synergy, lo, hi)
-	return str(ORDER[idx])
 
 
 static func _degrade(degree: String) -> String:
@@ -255,13 +231,3 @@ static func _is_corrupted_card(c: Variant) -> bool:
 		if MerlinTags.is_corrupted_tag(str(t)):
 			return true
 	return false
-
-
-static func _card_rarity(c: Variant) -> String:
-	if c is Object and "rarity" in c:
-		var r: String = str(c.rarity)
-		return r if r != "" else "Commune"
-	if c is Dictionary and c.has("rarity"):
-		var rd: String = str(c["rarity"])
-		return rd if rd != "" else "Commune"
-	return "Commune"

@@ -1048,10 +1048,11 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		"quest_title": str(beat.get("quest_title", _run_thread.get("title", ""))),
 		"total": int(beat.get("qtotal", BEAT_TYPES.size())),
 		"title": str(_run_thread.get("title", "")),
-		# v10.14 — dé PRÉ-TIRÉ du beat (bandes par rareté dans MerlinResolution). Tiré ICI une
-		# seule fois → preview et résolution finale partagent le même dé (anti cache-miss prose).
+		# v2-W1 — dé PRÉ-TIRÉ du beat : d20 (moteur d20-vs-DC, MerlinResolution). Tiré ICI une
+		# seule fois → preview et résolution finale partagent le même dé (anti cache-miss prose, R120).
 		# NON persisté : rebuild au resume = re-tirage, acceptable (rien n'est joué avant le save).
-		"die": _rng.randi_range(1, 6),
+		# Le champ reste "die" ; le visuel du dé reste d6 (projeté) jusqu'à W4.
+		"die": _rng.randi_range(1, 20),
 	}
 
 

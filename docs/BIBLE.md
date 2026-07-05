@@ -1820,6 +1820,21 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R141 — RÉSOLUTION d20-vs-DC (2026-07-05, v2-W1 — pivot JDR « le dé tourne pour voir la réussite »)** :
+  la résolution passe du modèle « couverture de tags + dé d6 à bandes » à un **jet de d20 contre un seuil
+  de difficulté (DC)**. Formule : `total = d20(1-20) + skill_mod + graft_bonus + COVER_PER_TAG×(tags requis
+  couverts) + synergy_bonus`, comparé à `DC_BY_DIFF = {1:11, 2:15, 3:18}`. Degré par **marge** (total − DC) :
+  échec si total < DC−2 · partiel si DC−2 ≤ total ≤ DC−1 · réussite si DC ≤ total ≤ DC+4 · éclatante si
+  total ≥ DC+5. **Planchers durs** : nat 1 → échec, nat 20 → éclatante. Constantes : `COVER_PER_TAG=3`,
+  `SYN=2`, `DIE_FALLBACK=10` (call-sites sans dé). La couverture des tags requis (le geste ADAPTÉ) et la
+  synergie action+trait deviennent des **bonus au jet**, plus la source directe du degré. R120 tenu (preview
+  = résolution : même dé, mêmes mods). `skill_mod`/`graft_bonus` sont des **paramètres à défaut 0** en W1 ;
+  câblés par W2 (arbre de talent in-run) et W3 (greffes « +N au jet »). **Supersède** R135 côté « zéro
+  chiffre » (le d20 est visible — W4) et **R139/§K entièrement re-dérivé** : §K re-calibré sur d20 (soak 300 —
+  échec 6,8 / partiel 32,9 / réussite 49,7 / éclatante 10,7, toutes IN ; morts par archétype toutes PASS ;
+  restes logués BAL-20-B : corruption/run 7,37, pushes/run 1,60). Vague 2 : W2 talent, W3 greffes-jet,
+  W4 visuel d20 + halo réussi/raté.
+
 - **R140 — NARRATION JDR : 2e personne, présent, voix de MJ (2026-07-05, v11-N1 — user « plus orienté JDR »)** :
   la narration EN BEAT (situation + résolution + ouverture) passe de la 3e personne « le Voyageur » au
   temps du conte, à la **2e personne « Vous » au PRÉSENT, voix de Maître du Jeu** (« Vous prenez une grande

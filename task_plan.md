@@ -219,3 +219,23 @@ Fait (moteur d6 INCHANGÉ, R135/R139/§K non touchés) :
 
 Gates : validate 0/0 · smoke Game/Menu/Selection/End PASS · CATALOG_GATE pass · soak 200/200 (iso R139) ·
 autoplay 3/3 LLM ON [en cours] · capture d'œil ph4/ph6 [à faire post-autoplay].
+
+---
+
+# task_plan — VAGUE 2 : résolution d20 + arbre de talent in-run + bonus greffés (2026-07-05)
+
+Décisions verrouillées (AskUserQuestion) :
+- Math d20 : total = d20 + skill_mod + graft_bonus + coverage_bonus + synergy vs DC_BY_DIFF{1:10,2:13,3:16} ;
+  échec <DC-2 · partiel DC-2..-1 · réussite DC..+4 · éclatante ≥DC+5 ou nat20 ; nat1→échec.
+- Points de compétence IN-RUN : gagnés au degré (réussite/éclatante), alloués AU DRAFT (un choix = nœud de talent).
+- Arbre UI : nœuds rendus comme cartes de greffe dans le draft — ZÉRO nouvel écran (R136 tenu).
+- Affichage jet : d20 + halo vert/rouge réussi/raté + pill de degré ; mods/DC implicites.
+
+Sous-vagues gatées :
+- **W1 (en cours, agent abf072e772cee4d22)** : moteur d20+DC (marges) dans merlin_resolution.gd, call-sites R120,
+  probe_soak simule d20, RE-DÉRIVE §K par leviers (DC/COVER_PER_TAG/SYN/bandes). skill_mod/graft_bonus=0 (base).
+  Pivot canon : supersède R135 (chiffres)/R139/§K.
+- **W2** : points talent in-run (run state, gagnés au degré), nœuds de talent au draft, skill_mod câblé, re-tune §K, save additif.
+- **W3** : greffe « +N au jet » (kind roll) + badges bonus sur cartes/tuiles, graft_bonus câblé, re-tune §K.
+- **W4** : MerlinDice d6→d20 (20 faces) + halo vert/rouge réussi/raté ; résolution montre dé+halo+pill (mods/DC implicites).
+Chaque sous-vague : gate R109 complet + commit + BIBLE R-numérotée.
