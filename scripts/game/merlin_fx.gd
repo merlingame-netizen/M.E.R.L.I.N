@@ -208,16 +208,17 @@ func run() -> void:
 	await p3_glow.finished
 
 	# === Phase 3 — Décrue + Dé en CHEVAUCHEMENT === v11-W1 (spec panel) : UN SEUL dé — MerlinDice
-	# (v10.23, culbute fausse-3D) lancé PENDANT la décrue du glow. Le disque B8 en doublon est
-	# supprimé (deux dés successifs = l'« animation bizarre » du feedback user). La face est
-	# PRÉ-TIRÉE au beat (R120 preview = résolution) ; l'animation ne fait que révéler.
+	# (v2-W4, d20 culbute fausse-3D + halo success/échec) lancé PENDANT la décrue du glow. Le disque
+	# B8 en doublon est supprimé (deux dés successifs = l'« animation bizarre » du feedback user). La
+	# face 1-20 est PRÉ-TIRÉE au beat (R120 preview = résolution) ; l'animation ne fait que révéler.
+	# `success` (§K, degré FINAL) → halo VERT/ROUGE : plus AUCUNE lecture de die_mod/die_rarity ici.
 	var decrue: float = float(dur["decrue"]) * m
 	var p4_fade: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	p4_fade.tween_property(glow, "color:a", 0.0, decrue)
 	p4_fade.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha, 0.0, decrue)
 	if int(_res.get("die", 0)) >= 1:
 		var dice: MerlinDice = MerlinDice.roll(self, int(_res.get("die", 0)),
-			str(_res.get("die_rarity", "Commune")), int(_res.get("die_mod", 0)))
+			bool(_res.get("success", false)))
 		await dice.done
 		if not is_inside_tree():
 			return

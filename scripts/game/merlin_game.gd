@@ -1091,10 +1091,9 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 			0.25 * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	# v11-W0 (user : « un compteur avec des chiffres ») — les chips chiffrées Intégrité/Corruption sont
 	# SUPPRIMÉES : les deltas de jauges vivent dans les ANNEAUX animés (float_delta), un seul endroit (§23).
-	# v11-V2a (dé-jargonnage) — le sort ne parle que s'il a souri, SANS chiffre (le liseré de tuile
-	# porte déjà la qualité, R133) ; la chip « resta muet » est supprimée (bruit sans information).
-	if int(res.get("die", 0)) >= 1 and int(res.get("die_mod", 0)) > 0:
-		_effect_vignette.add_child(_vignette_chip("⚄ Le sort a souri", MerlinVisual.GOLD_DARK))
+	# v2-W4 (2026-07-05) — la chip « ⚄ Le sort a souri » (proxy die_mod) est SUPPRIMÉE : le HALO du d20
+	# (vert = réussi, rouge = raté, MerlinFx) porte désormais l'issue du jet, et la pill porte le degré.
+	# Plus AUCUN lecteur de rendu ne dépend de die_mod/die_rarity (§K, décision W4). MINIMAL (§23).
 	for e in res.get("fx_effects", []):
 		match str(e):
 			"HEAL": _effect_vignette.add_child(_vignette_chip("✚ Soin", MerlinVisual.EFFECT_HEAL))

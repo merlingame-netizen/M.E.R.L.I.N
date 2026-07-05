@@ -1820,6 +1820,18 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R144 — VISUEL d20 + HALO réussi/raté (2026-07-05, v2-W4 — « le dé tourne pour voir la réussite »)** :
+  `MerlinDice` passe du d6 au **d20** — silhouette icosaédrique fausse-3D (hexagone + facettes) portant un
+  GROS chiffre **1-20** centré (charte gravure), culbute (nombres 1-20 qui défilent) → ralenti → pose (~1,15 s
+  ×motion()). À la pose, un **HALO** : VERT `HALO_SUCCESS(#6E9450)` si le jet réussit (`res.success`), ROUGE
+  `HALO_FAIL(#A5453A)` sinon (glow diffus + liseré coloré, pulse qui reste visible). Nouvelle signature
+  `MerlinDice.roll(parent, final_face, success)`. Le flash OR « le sort a souri » (ancien `die_mod`) et le
+  liseré de rareté du JET sont SUPPRIMÉS — le halo binaire porte l'issue, la pill porte le degré. Les
+  modificateurs/DC restent **IMPLICITES** (décision verrouillée — pas de tableur à l'écran). Le dé chevauche
+  l'encart (R135/R136 inchangés). Mode INDICE de tuile (`hint`/`rim_for_rarity`, R133) préservé intact.
+  reduced_motion : face directe + halo plein + `done` émis (anti-softlock). **Clôt la Vague 2** (d20 R141 +
+  talent R142 + greffes-jet R143 + visuel R144) — le pivot JDR « d20 + arbre de talent » est complet et jouable.
+
 - **R143 — GREFFES « +N au jet » (2026-07-05, v2-W3 — graft_bonus du d20)** : la greffe `kind:"die"`
   (ancien « +1 bande de dé », INERTE depuis le pivot d20 R141) est migrée en `kind:"roll"` (« +N au jet ») :
   `graft_bonus` d'une résolution = somme des `amount` des greffes roll posées sur l'action jouée (câblé

@@ -239,3 +239,9 @@ Sous-vagues gatées :
 - **W3** : greffe « +N au jet » (kind roll) + badges bonus sur cartes/tuiles, graft_bonus câblé, re-tune §K.
 - **W4** : MerlinDice d6→d20 (20 faces) + halo vert/rouge réussi/raté ; résolution montre dé+halo+pill (mods/DC implicites).
 Chaque sous-vague : gate R109 complet + commit + BIBLE R-numérotée.
+
+## VAGUE 2 CLÔTURÉE (2026-07-05) — pivot JDR d20 + arbre de talent complet et jouable
+- W1 (a67329ab, R141) : moteur d20-vs-DC (marges) + §K re-dérivé. W2 (746284ba, R142) : talent in-run + nœuds au draft.
+- W3 (2ba0b1f3, R143) : greffes « +N au jet » + migration die→roll + re-tune stack (ROLL_BONUS 2→1).
+- W4 (R144) : visuel d20 (d6→20 faces) + halo vert/rouge réussi/raté. §K vert bout-à-bout, gates R109 par vague.
+- Arbitrage design ouvert (non-bloquant) : « Le Jouet Offert » (Enfant) donne un vrai +1 comme toute greffe roll.

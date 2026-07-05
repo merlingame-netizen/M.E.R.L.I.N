@@ -50,6 +50,12 @@ const DEGREE_PARTIAL: Color = Color("D8A030")
 const DEGREE_SUCCESS: Color = Color("E8C45A")
 const DEGREE_BRILLIANT: Color = Color("F4E0A8")
 
+# ── Halo binaire du jet d20 (v2-W4) — réussi/raté du geste, PAS le degré fin (§K success). Charte
+# gravure : vert SOURD de mousse (jamais fluo), rouge SOURD de braise (jamais alarme vive). Distincts
+# des DEGREE_* (couleurs de fusion vives, saturées) : le halo est un liseré/glow feutré autour du dé. ──
+const HALO_SUCCESS: Color = Color("6E9450")  # vert mousse sourd (réussite du jet)
+const HALO_FAIL: Color = Color("A5453A")     # rouge braise sourd (échec du jet)
+
 # ── Scène & décor ──
 const SCENE_BG: Color = Color("17130D")
 const SILHOUETTE: Color = Color("0E0B07")
