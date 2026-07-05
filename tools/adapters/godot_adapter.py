@@ -415,7 +415,9 @@ class GodotAdapter(BaseAdapter):
                 a_out, a_err, a_code = _run(
                     [godot, "--path", ".", "--script",
                      "res://tools/autoplay_run.gd", "--", f"--loops={loops}"],
-                    timeout=2200,  # v10.22 : 3 runs × deadline 600 s + fins + settle (1600 coupait des runs sains)
+                    timeout=3800,  # v10.22 : 3 runs × deadline 600 s + fins (1600 coupait des runs sains) → 2200.
+                    # v11-N1 : la prose enrichie ralentit les beats à moments forts (attente LLM ~1 tok/s) ; per-run
+                    # 960→1200 (autoplay_run.gd), donc l'enveloppe 3 runs monte à 3×1200=3600 < 3800. Harnais-seul.
                 )
             except subprocess.TimeoutExpired:
                 return self.error("autoplay_run timed out after 2200s")

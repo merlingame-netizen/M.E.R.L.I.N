@@ -88,9 +88,32 @@ static func first_sentence(t: String) -> String:
 	var s: String = t.strip_edges()
 	for i in s.length():
 		var ch: String = s[i]
-		if ch == "." or ch == "!" or ch == "?":
+		if ch == "." or ch == "!" or ch == "?" or ch == "…":
 			return s.substr(0, i + 1)
 	return s
+
+
+# v11-N1 (R140) — garantit que l'ISSUE de résolution s'ouvre sur une ACTION en italique BBCode :
+# la 1re phrase (le geste concret) est enveloppée dans [i]…[/i], le reste (la conséquence) reste
+# hors italique. Robustesse : le prompt le DEMANDE, les fallbacks sont déjà à cette forme, mais Gemma
+# peut oublier la balise → ce filet la pose. Balise déjà présente = respectée (juste équilibrée).
+static func ensure_italic_action(s: String) -> String:
+	var t: String = s.strip_edges()
+	if t.is_empty():
+		return t
+	# Forme CORRECTE (ouvre en italique, exactement UNE paire fermée) → respectée telle quelle.
+	if t.begins_with("[i]") and t.count("[i]") == 1 and t.count("[/i]") == 1:
+		return t
+	# Tout autre cas (aucune balise, balise mal placée en milieu de texte, non fermée, ou paires
+	# multiples) → on NORMALISE : on retire toute balise puis on enveloppe la SEULE 1re phrase (le geste).
+	# Robuste : jamais de span vide, jamais de balise déséquilibrée, jamais tout le bloc en italique.
+	t = t.replace("[i]", "").replace("[/i]", "").strip_edges()
+	if t.is_empty():
+		return t
+	var fs: String = first_sentence(t)
+	if fs.strip_edges().length() < 4:
+		return t  # pas de vraie phrase à isoler → laissé tel quel
+	return "[i]" + fs.strip_edges() + "[/i]" + t.substr(fs.length())
 
 
 static func norm(t: String) -> String:

@@ -3534,3 +3534,9 @@ climax plein 2,4 OUT · greffes 3,88 (offerts 5,02). Hors-pool = 0 (DUR, chemin 
 **Gates finaux** : validate 0/0 · smoke Game+Menu passed · soak 200 → 200/200, 0 gate FAIL · soak 300 → 300/300, 0 gate FAIL · gates archétype tous PASS (optimal 0,0 · greedy 0,0 · chaotic 9,3 · corrompu 0,0).
 **Restent OUT (logués BAL-20-B, deltas explicites)** : échec 18,9 (Δ10,9) · partiel 19,9 (Δ8,1) · morts 4,6 (sous la bande — sur-amorti, candidat re-serrage) · climax plein 12,2 (Δ32,8).
 **Gate autoplay final** : 2/3 (2×) = faux rouge budget harnais (RUN_DEADLINE_S 600 s épuisé au beat 8 d'une chaîne saine, 0 SCRIPT ERROR — morts 4,6 % ⇒ les chaînes vont au bout). Fix : 600→960 s (tools/autoplay_run.gd). Re-run : **3/3 PASS** (run#2 = 12 beats, accomplissement). VAGUE v1.0-V4a FERMÉE VERTE — tous gates durs PASS. Bible : règle R-numérotée à poser à la prochaine session (rien n'est commité sur ordre).
+
+## v11-N1 — Narration JDR 2e personne présent (2026-07-05)
+- Refonte narrative : narration en beat = MJ 2e pers. « Vous » présent (SYSTEM_PREFIX), situations 3-4 ph PNJ-actif (jamais « que faire »), résolution = action [i]italique[/i] + monde réagit par degré, pont générique supprimé (continuité last_gist). Moteur d6/degré INCHANGÉ (R135/R139/§K non touchés).
+- Fichiers : merlin_prompt_builder.gd, merlin_scenario.gd, merlin_game.gd, merlin_prose.gd (ensure_italic_action), tools/probe_prose.gd (CATALOG_GATE), tools/autoplay_run.gd (deadline reste 960 ; budgets tokens gardes PROUVES : la prose enrichie borne son wall-clock par max_tokens), docs/BIBLE.md (R140).
+- Revue de code : 0 CRITICAL / 0 HIGH ; 2 MEDIUM (robustesse ensure_italic_action) corrigés + L1 gate étendu.
+- Gates : validate 0/0 · smoke Game/Menu/Selection/End PASS · CATALOG_GATE pass · soak 200/200 (iso R139, morts 4,9  %) · autoplay 3 loops LLM ON [budgets tokens proven] · capture ph4/ph6 [post-autoplay].

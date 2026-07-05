@@ -343,69 +343,65 @@ const SEL_FALLBACK: Array = [
 # décor vite, laisser la place au geste. La VERBOSITÉ est réservée à l'ISSUE des moments forts.
 const SITU_FALLBACKS: Dictionary = {
 	"Exploration": [
-		"La clairière s'ouvre devant toi, trop calme. Quelque chose t'attend là, caché.",
-		"Le sentier disparaît sous les fougères. Pas un bruit. On te regarde sans se montrer.",
-		"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte dans l'air.",
-		"Devant toi, les arbres s'espacent et laissent passer un peu de lumière. C'est trop ouvert, trop facile. Tu avances quand même.",
-		"Le sol devient mou sous tes pas, couvert de mousse épaisse. Quelque part, une source coule sans qu'on la voie.",
+		"La clairière s'ouvre devant vous, trop calme. Quelque chose vous attend là, tapi, sans se montrer.",
+		"Le sentier disparaît sous les fougères. Pas un bruit — et pourtant on vous regarde, quelque part entre les troncs.",
+		"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte, et vos pas résonnent trop fort.",
+		"Devant vous, les arbres s'espacent et laissent passer un peu de lumière. C'est trop ouvert, trop facile ; vous avancez quand même, l'échine tendue.",
+		"Le sol devient mou sous vos pas, couvert de mousse épaisse. Quelque part tout près, une source coule sans qu'on la voie.",
 	],
 	"Rencontre": [
-		"Une silhouette sort des arbres et te fixe, sans un mot. Elle attend de voir qui tu es.",
-		"Quelque chose te barre la route, immobile. Son regard pèse lourd.",
-		"Une voix te salue avant que tu voies personne. Elle connaît déjà ton pas.",
-		"Un vieil homme est assis sur une pierre, comme s'il t'attendait. Il ne lève pas les yeux tout de suite.",
-		"Deux yeux brillent entre les troncs, à hauteur d'enfant. Ils ne clignent pas.",
+		"Une silhouette sort des arbres et se plante devant vous, sans un mot. Elle vous jauge, et attend de voir qui vous êtes.",
+		"Une forme immobile vous barre la route. Son regard pèse lourd ; elle ne bougera pas la première.",
+		"Une voix vous salue avant que vous ne voyiez personne. « Je connais ce pas », dit-elle, tout près.",
+		"Un vieil homme est assis sur une pierre, comme s'il vous attendait. Il ne lève pas les yeux tout de suite, puis crache : « Vous n'auriez pas dû venir. »",
+		"Deux yeux brillent entre les troncs, à hauteur d'enfant. Ils ne clignent pas, et une petite voix demande : « Tu viens jouer ? »",
 	],
 	"Epreuve": [
-		"La forêt bloque le passage : ronces, pierres, pente glissante. Rien ne cédera tout seul.",
-		"Le chemin se dresse contre toi, hostile. Il faudra forcer pour avancer.",
-		"Un vieil obstacle barre la route. Il faudra payer de tes bras ou de ta ruse.",
-		"Un torrent coupe le chemin, rapide et froid. L'autre rive est juste là, hors d'atteinte.",
-		"La pente monte d'un coup, raide et nue. Tes jambes brûlent rien qu'à la regarder.",
+		"La forêt vous barre le passage : ronces, pierres, pente glissante. Rien ne cédera tout seul.",
+		"Le chemin se dresse contre vous, hostile. Il faudra forcer pour avancer.",
+		"Un vieil obstacle barre la route. Il faudra payer de vos bras ou de votre ruse.",
+		"Un torrent coupe le chemin devant vous, rapide et froid. L'autre rive est juste là, hors d'atteinte.",
+		"La pente monte d'un coup, raide et nue. Vos jambes brûlent rien qu'à la regarder.",
 	],
 	"Dilemme": [
-		"Deux chemins s'ouvrent. Chacun a un prix, et aucun ne te laissera intact.",
-		"Un choix se pose, sans détour. Quoi que tu fasses, la forêt s'en souviendra.",
-		"Il faut trancher, là où il n'y a pas de bonne réponse. Ne pas choisir, c'est choisir aussi.",
-		"Une bête blessée gît en travers du sentier. La soigner coûte du temps ; l'achever, autre chose.",
-		"Deux voix t'appellent en même temps, de deux côtés opposés. Tu ne pourras en suivre qu'une.",
+		"Deux chemins s'ouvrent devant vous. Chacun a un prix, et aucun ne vous laissera intact.",
+		"Un choix se pose, sans détour. Quoi que vous fassiez, la forêt s'en souviendra.",
+		"Il faut trancher, là où il n'y a pas de bonne réponse. Ne rien choisir, c'est choisir aussi.",
+		"Une bête blessée gît en travers du sentier, le flanc battant. La soigner coûte du temps ; l'achever, autre chose.",
+		"Deux voix vous appellent en même temps, de deux côtés opposés. Vous ne pourrez en suivre qu'une.",
 	],
 	"Climax": [
 		"L'air se fige. La forêt retient son souffle. Ce qui vient ne se reprendra pas.",
-		"Tout se joue ici, maintenant. Les murmures se taisent d'un coup.",
-		"Le cœur de la forêt bat sous tes pieds. Ici se décide ce que tu deviens.",
-		"Le sentier débouche sur un cercle de pierres dressées. Au centre, ce que tu es venu chercher t'attend.",
-		"Tout le bois s'est tu d'un coup. Devant toi, la dernière porte, et derrière elle, la fin de l'histoire.",
+		"Tout se joue ici, maintenant. Les murmures se taisent d'un coup autour de vous.",
+		"Le cœur de la forêt bat sous vos pieds. Ici se décide ce que vous devenez.",
+		"Le sentier débouche sur un cercle de pierres dressées. Au centre, ce que vous êtes venu chercher vous attend.",
+		"Tout le bois s'est tu d'un coup. Devant vous, la dernière porte ; derrière elle, la fin de l'histoire.",
 	],
 }
 
 const RESO_FALLBACKS: Dictionary = {
 	"echec": [
-		"Le Voyageur tenta de mêler ses deux forces, mais elles se gênèrent l'une l'autre. La forêt refusa, le repoussa, et il se retrouva plus loin de son but qu'avant. Dans l'ombre, quelque chose parut s'en amuser.",
-		"Le mélange sonna faux, et le bois l'entendit aussitôt. Ce que le Voyageur toucha se déroba, ce qu'il crut tenir lui échappa, et il repartit les mains vides.",
-		"Le geste ne prit pas sur ce lieu. Le sentier se referma, indifférent, et le laissa en arrière. Ce faux pas-là, il lui faudrait le payer.",
-		"Les deux forces du Voyageur partirent de travers et s'annulèrent. Rien ne bougea, sinon lui qu'on repoussa en arrière. Il avait perdu du terrain, et un peu de lui-même avec.",
-		"Le mélange rata, et la forêt le sentit. Elle se referma d'un coup, sèche, et le laissa dehors. Le Voyageur repartit sans rien, le cœur plus lourd.",
+		"[i]Vous rassemblez vos deux forces et agissez d'un seul élan.[/i] Mais les deux se gênent, et le lieu vous repousse ; ce que vous cherchiez se dérobe, et vous vous retrouvez plus loin du but qu'avant. Dans l'ombre, quelque chose paraît s'en amuser.",
+		"[i]Vous tentez de mêler vos deux forces en un seul geste.[/i] Le mélange sonne faux, et le bois l'entend aussitôt ; ce que vous touchez se dérobe, et vous repartez les mains vides.",
+		"[i]Vous engagez vos deux forces d'un même mouvement.[/i] Le geste ne prend pas sur ce lieu : le sentier se referme, indifférent, et vous laisse en arrière. Ce faux pas-là, il vous faudra le payer.",
+		"[i]Vous jetez vos deux forces dans la brèche.[/i] Elles partent de travers et s'annulent ; rien ne bouge, sinon vous qu'on repousse. Vous avez perdu du terrain, et un peu de vous-même avec.",
 	],
 	"partiel": [
-		"Le Voyageur unit ses deux forces, mais de travers. Il obtint ce qu'il voulait — en en laissant un morceau. Une ombre, désormais, marchait dans ses pas.",
-		"Le geste fusionné n'ouvrit la voie qu'à demi. Le Voyageur avança tout de même, mais quelque chose l'avait vu faire. Le prix viendrait plus tard.",
-		"Le Voyageur arracha son dû, mais un reste lui colla à la peau. La voie s'entrouvrit, étroite, juste assez pour passer. La forêt n'oublia pas ce qu'il avait forcé.",
-		"Ses deux forces portèrent à demi. Le Voyageur passa, et quelque chose resta accroché à lui. La forêt avait pris sa part, en silence.",
-		"Le mélange ne marcha qu'à moitié. Le Voyageur obtint ce qu'il voulait, mais une dette se noua dans son dos. Elle se rappellerait à lui plus tard.",
+		"[i]Vous unissez vos deux forces, mais de travers.[/i] Vous obtenez ce que vous vouliez — en en laissant un morceau. Une ombre, désormais, marche dans vos pas.",
+		"[i]Vous forcez le geste jusqu'au bout.[/i] La voie s'entrouvre, étroite, juste assez pour passer ; mais quelque chose vous a vu faire, et le prix viendra plus tard.",
+		"[i]Vous arrachez votre dû d'un seul effort.[/i] Vous passez, et un reste vous colle à la peau ; la forêt a pris sa part, en silence.",
+		"[i]Vous mêlez vos deux forces tant bien que mal.[/i] Cela ne marche qu'à moitié : vous avancez, mais une dette se noue dans votre dos, et se rappellera à vous.",
 	],
 	"reussite": [
-		"Le Voyageur noua ses deux forces en un seul geste, net et juste. La forêt céda et le laissa avancer d'un pas plus sûr. Cette fois, le sentier ne réclama rien.",
-		"Le geste fusionné porta du premier coup. Le chemin s'ouvrit, sans éclat mais sans dette, et le Voyageur passa, entier.",
-		"Les deux forces s'accordèrent, et le sentier le laissa passer. La route se dégagea, nette. Le Voyageur avança sans rien laisser derrière lui.",
-		"Ses deux gestes s'emboîtèrent, et ce qui résistait céda d'un coup. Le Voyageur reprit sa marche, plus sûr, et rien ne le suivit.",
-		"Le mélange porta juste. La forêt recula, calme, et s'écarta devant le Voyageur. Cette fois, il ne paya rien.",
+		"[i]Vous nouez vos deux forces en un seul geste, net et juste.[/i] Le lieu cède et vous laisse avancer d'un pas plus sûr ; cette fois, le sentier ne réclame rien.",
+		"[i]Vous portez le geste du premier coup.[/i] Le chemin s'ouvre, sans éclat mais sans dette, et vous passez, entier.",
+		"[i]Vous accordez vos deux forces d'un même souffle.[/i] Ce qui résistait cède d'un coup ; la route se dégage, nette, et rien ne vous suit.",
+		"[i]Vous emboîtez vos deux gestes sans une hésitation.[/i] La forêt recule, calme, et s'écarte devant vous ; cette fois, vous ne payez rien.",
 	],
 	"eclatante": [
-		"Les deux forces du Voyageur n'en firent plus qu'une, si bien que la forêt elle-même retint son souffle. Le passage s'ouvrit en grand, sans résistance, et l'espace d'un instant il fut plus grand que lui-même.",
-		"L'accord fut total, et tout le bois le fêta en silence. La voie se déroula devant le Voyageur comme un tapis, et rien ne lui coûta. Pour une fois, la forêt donna plus qu'elle ne prit.",
-		"Les deux forces se fondirent à la perfection, et tout céda devant le Voyageur sans le moindre effort. La forêt sembla se ranger de son côté ; rien ne pouvait plus l'arrêter.",
-		"L'accord fut si juste que le bois entier s'inclina. Ce que le Voyageur cherchait vint à lui sans qu'il eût à le prendre, et la forêt, pour une fois, donna plus qu'elle ne réclama.",
+		"[i]Vous fondez vos deux forces en une seule, parfaitement.[/i] La forêt elle-même retient son souffle ; le passage s'ouvre en grand, sans résistance, et l'espace d'un instant vous êtes plus grand que vous-même.",
+		"[i]Vous accordez vos deux forces au-delà de l'espoir.[/i] Tout le bois le fête en silence ; la voie se déroule devant vous comme un tapis, et pour une fois la forêt donne plus qu'elle ne prend.",
+		"[i]Vous liez vos deux forces d'un geste si juste que tout cède.[/i] La forêt semble se ranger de votre côté ; ce que vous cherchiez vient à vous sans que vous ayez à le prendre.",
 	],
 }
 
@@ -414,20 +410,20 @@ const RESO_FALLBACKS: Dictionary = {
 # climax » ne s'afficherait jamais. Le procédural prend donc le relais EN LONG sur ces moments-là.
 const RESO_FALLBACKS_LONG: Dictionary = {
 	"echec": [
-		"Les deux forces du Voyageur s'élancèrent ensemble, mais au lieu de s'unir elles se brisèrent. La forêt ne se contenta pas de refuser : elle reprit, elle effaça, elle le repoussa. Quelque chose, dans l'ombre, avait vu sa tentative. Il resta seul au bord, les mains vides.",
-		"Le geste se retourna contre le Voyageur comme une bête mal tenue. Ce qu'il toucha se déroba, ce qu'il appela ne vint pas. Le lieu se referma, lentement, sur son échec. Il paierait ce moment, il le savait déjà.",
+		"[i]Vous lancez vos deux forces ensemble, de toute votre volonté.[/i] Mais au lieu de s'unir, elles se brisent. Le lieu ne se contente pas de refuser : il reprend, il efface, il vous repousse. Quelque chose, dans l'ombre, a vu votre tentative. Vous restez seul au bord, les mains vides.",
+		"[i]Vous engagez vos deux forces d'un même élan désespéré.[/i] Le geste se retourne contre vous comme une bête mal tenue ; ce que vous touchez se dérobe, ce que vous appelez ne vient pas. Le lieu se referme lentement sur votre échec. Vous paierez ce moment, vous le savez déjà.",
 	],
 	"partiel": [
-		"Les deux forces du Voyageur portèrent, mais de travers. Quelque chose céda, quelque chose s'ouvrit, et dans le même temps une ombre se glissa dans ses pas. Il obtint ce qu'il voulait, et repartit marqué. La forêt avait pris autre chose, sans dire quoi.",
-		"Le passage s'entrouvrit à demi sous le geste du Voyageur, juste assez pour s'y faufiler. Mais rien ici n'était gratuit : ce qu'il força lui coûta un morceau. On l'avait vu faire, on ne l'oublierait pas. Il avança, à moitié vainqueur, à moitié débiteur.",
+		"[i]Vous unissez vos deux forces et poussez jusqu'au bout.[/i] Quelque chose cède, quelque chose s'ouvre, et dans le même temps une ombre se glisse dans vos pas. Vous obtenez ce que vous vouliez, et repartez marqué. La forêt a pris autre chose, sans dire quoi.",
+		"[i]Vous forcez le passage d'un dernier effort.[/i] Il s'entrouvre à demi, juste assez pour vous y faufiler ; mais rien ici n'est gratuit, et ce que vous forcez vous coûte un morceau. On vous a vu faire, on ne l'oubliera pas. Vous avancez, à moitié vainqueur, à moitié débiteur.",
 	],
 	"reussite": [
-		"Les deux gestes du Voyageur se nouèrent enfin en un seul, large et juste, et le lieu céda dans un long soupir. La voie se dénoua devant lui, nette, comme si la forêt avait attendu ce moment. Il passa, entier, plus sûr de son pas, et le silence le suivit comme un accord rare.",
-		"Le geste fusionné toucha sa cible du premier coup, et tout le bois l'accusa. Le chemin s'ouvrit sans triomphe bruyant mais sans la moindre dette. Rien ne retenait plus le Voyageur : il franchit le seuil, et la forêt le laissa aller.",
+		"[i]Vous nouez enfin vos deux gestes en un seul, large et juste.[/i] Le lieu cède dans un long soupir ; la voie se dénoue devant vous, nette, comme si la forêt avait attendu ce moment. Vous passez, entier, plus sûr de votre pas, et le silence vous suit comme un accord rare.",
+		"[i]Vous portez le geste fondu droit sur sa cible.[/i] Tout le bois l'accuse ; le chemin s'ouvre sans triomphe bruyant mais sans la moindre dette. Rien ne vous retient plus : vous franchissez le seuil, et la forêt vous laisse aller.",
 	],
 	"eclatante": [
-		"Les deux gestes du Voyageur n'en firent soudain plus qu'un, si bien accordés que la forêt elle-même retint son souffle. Le seuil s'ouvrit en grand, sans résistance, et tout au fond, sous les racines, quelque chose d'ancien s'inclina. La voie se déroula comme un tapis. L'espace d'un instant, bref et vertigineux, il fut plus grand que lui-même.",
-		"L'accord fut total, et le bois entier le fêta en silence. Ce que le Voyageur venait d'accomplir, peu l'avaient fait avant lui. Le chemin devant n'était plus une épreuve mais un cadeau. Il avança, porté, et derrière lui une voix très douce prononça son nom.",
+		"[i]Vous fondez soudain vos deux gestes en un seul, si bien accordés que la forêt retient son souffle.[/i] Le seuil s'ouvre en grand, sans résistance, et tout au fond, sous les racines, quelque chose d'ancien s'incline. La voie se déroule comme un tapis. L'espace d'un instant, bref et vertigineux, vous êtes plus grand que vous-même.",
+		"[i]Vous liez vos deux forces dans un accord total.[/i] Le bois entier le fête en silence ; ce que vous venez d'accomplir, peu l'ont fait avant vous. Le chemin devant n'est plus une épreuve mais un cadeau. Vous avancez, porté, et derrière vous une voix très douce prononce votre nom.",
 	],
 }
 
@@ -722,7 +718,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	var fp: Dictionary = _draw_faction_pilier()  # v10.20.2 : faction + pilier PNJ de la run (fil rouge)
 	# Récurrence : si le pilier tiré est CELUI de la run précédente (chronique), il RECONNAÎT le Voyageur.
 	var recog: bool = str(fp["pilier"]) != "" and str(fp["pilier"]) == str(MerlinChronicle.read().get("last_pilier", ""))
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
 	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
@@ -799,14 +795,13 @@ func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
 	var qv: Dictionary = quest_view(scenario, quest_idx)
 	var fb: Dictionary = _fallback_arc()
 	var gist: String = str(_run_thread.get("last_gist", ""))
-	var bridge: String = str(_run_thread.get("bridge", ""))  # v10.20.1 : le pont TRAVERSE les quêtes
 	# v10.20.2 : la faction + le pilier PNJ (fil rouge) sont RUN-wide → ils survivent à la transition de quête.
 	var faction: String = str(_run_thread.get("faction", ""))
 	var pilier: String = str(_run_thread.get("pilier", ""))
 	var pilier2: String = str(_run_thread.get("pilier2", ""))
 	var recog: bool = bool(_run_thread.get("pnj_recog", false))
 	_run_thread = {"title": str(qv.get("title", "")), "pitch": str(qv.get("pitch", "")),
-		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+		"last_gist": gist, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
 		"faction": faction, "pilier": pilier, "pilier2": pilier2, "pnj_recog": recog}
 	prepare_arc(qv)  # fire-and-forget — l'arc LLM remplace le fallback s'il gagne la course
 
@@ -909,9 +904,9 @@ func narrate_intro(scenario: Dictionary) -> String:
 # décor + atmosphère + enjeu et donne envie du 1er pas, AVANT le Beat 1. Procédural verbeux INSTANTANÉ
 # (3-4 phrases) ; narrate_opening enrichit en arrière-plan. Voix narrateur (SYSTEM_PREFIX), pas d'apostrophe.
 const OPENING_FRAMES: Array = [
-	"À la lisière de Brocéliande s'ouvrait un chemin que les hommes avaient oublié. Les fougères s'écartèrent devant le Voyageur, comme si on l'attendait. Il fit un pas, et le bois se referma doucement derrière lui.",
-	"On parlait peu de ce lieu, et toujours à voix basse. Devant le Voyageur, le sentier s'enfonçait sous les arbres, sombre et silencieux. Ce qu'il cherchait l'attendait au bout ; ce qu'il craignait aussi.",
-	"La brume se leva sur une clairière que le Voyageur n'avait pas vue en arrivant. Tout y était calme, trop calme, comme avant l'orage. Il fit un premier pas, et la forêt ne le laisserait plus repartir.",
+	"À la lisière de Brocéliande s'ouvre un chemin que les hommes ont oublié. Les fougères s'écartent devant vous, comme si l'on vous attendait. Vous faites un pas, et le bois se referme doucement dans votre dos.",
+	"On parle peu de ce lieu, et toujours à voix basse. Devant vous, le sentier s'enfonce sous les arbres, sombre et silencieux. Ce que vous cherchez vous attend au bout ; ce que vous craignez aussi.",
+	"La brume se lève sur une clairière que vous n'aviez pas vue en arrivant. Tout y est calme, trop calme, comme avant l'orage. Vous faites un premier pas, et la forêt ne vous laissera plus repartir.",
 ]
 
 
@@ -1025,15 +1020,20 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		required = _pick_tags(btype, diff)  # filet harnais hors-jeu (probe_prose/probe_scenario)
 	if narration == "":
 		narration = _fallback_situation(btype, required)
-	# v10.20.1 — PONT de continuité : la situation s'OUVRE sur ce que le Voyageur vient de faire (degré du
-	# beat précédent). Tue le saut abrupt « rocher → chevreuil ». Pas au 1er beat de la run (rien avant).
-	var bridge: String = str(_run_thread.get("bridge", ""))
-	if int(beat.get("n", 1)) > 1 and bridge != "":
-		narration = bridge + " " + narration
+	# v11-N1 (R140) — le PONT procédural générique (« Sa voie ouverte, le Voyageur s'enfonça plus avant »)
+	# est SUPPRIMÉ : la continuité passe désormais par le last_gist injecté dans le prompt du beat suivant.
 	_run_thread["arc_locked"] = true
-	# v10.22 (user) — filet : la question rituelle est bannie PARTOUT (banque purgée, prompt réécrit,
-	# et ici on nettoie ce qui vient d'un arc LLM ancien ou d'une habitude du modèle).
-	narration = narration.replace(" Que décida le Voyageur ?", "").replace("Que décida le Voyageur ?", "").strip_edges()
+	# v11-N1 (R140) — filet : toute clause meta qui prend le joueur par la main est bannie PARTOUT (banques
+	# réécrites, prompts au « Vous » présent) ; ici on nettoie ce qui viendrait d'un arc LLM ancien ou d'une
+	# habitude du modèle (3e personne héritée ou « que faire »).
+	for _banned in [
+		" Que décida le Voyageur ?", "Que décida le Voyageur ?", " Que décida-t-il ?", "Que décida-t-il ?",
+		" Le Voyageur se demandait que faire.", "Le Voyageur se demandait que faire.",
+		" Il se demandait que faire.", "Il se demandait que faire.",
+		" Vous vous demandez que faire.", "Vous vous demandez que faire.",
+	]:
+		narration = narration.replace(str(_banned), "")
+	narration = narration.strip_edges()
 	return {
 		"narration": narration,
 		"required_tags": required,
@@ -1077,32 +1077,32 @@ func _fallback_situation(btype: String, _required: Array) -> String:
 # Ordre = [Exploration, Rencontre, Epreuve, Dilemme, Climax]. Style DIRECT et CONCRET.
 const FALLBACK_ARCS: Array = [
 	[
-		"Le sentier s'enfonça sous les arbres et se referma derrière le Voyageur. Il n'était pas seul : un pas léger le suivait, à distance.",
-		"Une vieille femme attendait, assise sur une souche, là où le chemin se divisait. « Je t'attendais », dit-elle sans se lever. Le Voyageur se demandait que faire.",
-		"Plus loin, un pont de corde enjambait un ravin, mais plusieurs planches manquaient et le bois craquait sous le vent.",
-		"Sur l'autre rive, le chemin se sépara en deux : à gauche des torches au loin, à droite le silence et une odeur de fumée. Que décida-t-il ?",
-		"Au bout l'attendait une porte de pierre entrouverte. Ce qu'il cherchait était derrière — et le pas qui le suivait venait de s'arrêter, juste là.",
+		"Le sentier s'enfonce sous les arbres et se referme derrière vous. Vous n'êtes pas seul : un pas léger vous suit, à distance, et s'arrête quand vous vous arrêtez.",
+		"Une vieille femme est assise sur une souche, là où le chemin se divise. « Je vous attendais », dit-elle sans se lever, et ses doigts ne cessent de tresser une cordelette d'herbe.",
+		"Plus loin, un pont de corde enjambe un ravin ; plusieurs planches manquent, et le bois craque à chaque rafale.",
+		"Sur l'autre rive, le chemin se sépare en deux : à gauche des torches au loin, à droite le silence et une odeur de fumée. La femme, derrière vous, murmure qu'un seul mène quelque part.",
+		"Au bout vous attend une porte de pierre entrouverte. Ce que vous cherchez est derrière — et le pas qui vous suivait vient de s'arrêter, juste là.",
 	],
 	[
-		"Le Voyageur suivit le bruit d'une eau qui coulait, jusqu'à une source noire et parfaitement immobile au creux de la forêt.",
-		"Un enfant accroupi au bord le fixait sans peur. « Elle dort, ne la réveille pas », murmura-t-il en montrant l'eau. Le Voyageur se demandait que faire.",
-		"Le seul passage longeait la source sur une corniche étroite et glissante ; un faux pas, et c'était la chute dans l'eau noire.",
-		"Une grosse racine barrait la route : la couper réveillerait quelque chose, l'enjamber prendrait un temps qu'il n'avait pas. Que décida-t-il ?",
-		"L'eau se mit à bouger : ce qu'il était venu chercher remontait lentement vers la surface, et le regardait.",
+		"Vous suivez le bruit d'une eau qui coule, jusqu'à une source noire et parfaitement immobile au creux de la forêt.",
+		"Un enfant accroupi au bord vous fixe sans peur. « Elle dort, ne la réveille pas », souffle-t-il en montrant l'eau, un doigt sur les lèvres.",
+		"Le seul passage longe la source sur une corniche étroite et glissante ; un faux pas, et c'est la chute dans l'eau noire.",
+		"Une grosse racine barre la route : la couper réveillerait quelque chose, l'enjamber prendrait un temps que vous n'avez pas. L'enfant vous observe, curieux de votre choix.",
+		"L'eau se met à bouger : ce que vous êtes venu chercher remonte lentement vers la surface, et vous regarde.",
 	],
 	[
-		"Le Voyageur arriva devant un village de huttes vides, les feux encore tièdes : tout le monde était parti en hâte, sans rien emporter.",
-		"Un vieil homme sortit d'une hutte, une serpe à la main. « Ils ont fui ce qui descend des collines », dit-il en le jaugeant. Le Voyageur se demandait que faire.",
-		"La seule sortie passait par un éboulis de pierres branlantes, où le moindre faux mouvement pouvait tout faire glisser.",
-		"Deux traces fraîches partaient de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Il ne pouvait en suivre qu'une. Que décida-t-il ?",
-		"Au bout de la trace, la chose des collines l'attendait, dos à lui. Elle savait déjà qu'il était là.",
+		"Vous arrivez devant un village de huttes vides, les feux encore tièdes : tout le monde est parti en hâte, sans rien emporter.",
+		"Un vieil homme sort d'une hutte, une serpe à la main. « Ils ont fui ce qui descend des collines », lâche-t-il en vous jaugeant, la lame basse mais prête.",
+		"La seule sortie passe par un éboulis de pierres branlantes, où le moindre faux mouvement peut tout faire glisser.",
+		"Deux traces fraîches partent de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Le vieil homme, sur le seuil, ne dit pas laquelle suivre.",
+		"Au bout de la trace, la chose des collines vous attend, dos à vous. Elle sait déjà que vous êtes là.",
 	],
 	[
-		"Le Voyageur suivit une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottaient des visages qui n'étaient pas le sien.",
-		"Une femme se tenait pieds nus dans la source, sans se retourner. « Tu cherches un visage, toi aussi », dit-elle. Le Voyageur se demandait que faire.",
-		"Le sentier englouti reprenait sous l'eau, barré par une dalle de pierre tombée en travers, et le courant froid poussait fort contre ses jambes.",
-		"De l'autre côté, deux galeries s'enfonçaient : l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelait. Que décida-t-il ?",
-		"La galerie déboucha sous la source, le monde à l'envers : l'eau noire au-dessus de sa tête, et au centre, son propre visage.",
+		"Vous suivez une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottent des visages qui ne sont pas le vôtre.",
+		"Une femme se tient pieds nus dans la source, sans se retourner. « Vous cherchez un visage, vous aussi », dit-elle, et l'eau ne ride pas autour de ses chevilles.",
+		"Le sentier englouti reprend sous l'eau, barré par une dalle de pierre tombée en travers ; le courant froid pousse fort contre vos jambes.",
+		"De l'autre côté, deux galeries s'enfoncent : l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelle. La femme, derrière vous, retient son souffle.",
+		"La galerie débouche sous la source, le monde à l'envers : l'eau noire au-dessus de votre tête, et au centre, votre propre visage.",
 	],
 ]
 
@@ -1333,9 +1333,11 @@ func fallback_resolution(degree: String, situ_type: String = "") -> String:
 func note_outcome(res: Dictionary, _situation: Dictionary = {}, played_cards: Array = []) -> void:
 	var degree: String = str(res.get("degree", "reussite"))
 	# Registre de l'ACTION depuis les archétypes des cartes jouées (ce que le geste FUT vraiment).
+	# v11-N1 (R140) — gist en 2e personne (passé composé : le beat qui vient de s'achever), consommé
+	# « Juste avant : … » par le prompt d'issue du beat suivant. ASCII (prompt LLM, comme le reste).
 	var reg_map: Dictionary = {
-		"Social": "trouva les mots", "Offensif": "agit de tout son corps",
-		"Mystique": "vit ce qui se cachait", "Défensif": "tint bon sans céder", "Corrompu": "appela l'ombre",
+		"Social": "avez trouve les mots", "Offensif": "avez agi de tout votre corps",
+		"Mystique": "avez vu ce qui se cachait", "Défensif": "avez tenu bon sans ceder", "Corrompu": "avez appele l'ombre",
 	}
 	var regs: Array = []
 	for c in played_cards:
@@ -1345,22 +1347,15 @@ func note_outcome(res: Dictionary, _situation: Dictionary = {}, played_cards: Ar
 			var r: String = str(reg_map.get(c.archetype(), ""))
 			if r != "" and not regs.has(r):
 				regs.append(r)
-	var action: String = " et ".join(PackedStringArray(regs)) if regs.size() > 0 else "agit"
+	var action: String = " et ".join(PackedStringArray(regs)) if regs.size() > 0 else "avez agi"
 	var result_map: Dictionary = {
-		"echec": "mais la foret resista", "partiel": "et n'obtint qu'a demi, en laissant un prix",
-		"reussite": "et la voie s'ouvrit", "eclatante": "et tout ceda d'un coup",
+		"echec": "mais le lieu a resiste", "partiel": "et n'avez obtenu qu'a demi, en laissant un prix",
+		"reussite": "et la voie s'est ouverte", "eclatante": "et tout a cede d'un coup",
 	}
-	var result: String = str(result_map.get(degree, "et la voie s'ouvrit"))
-	# Gist SPÉCIFIQUE (consommé « Juste avant, … » par le prompt d'issue du beat suivant).
-	_run_thread["last_gist"] = "le Voyageur %s %s" % [action, result]
-	# PONT de transition (degré) prepend à la SITUATION suivante (procédurale) → enchaînement, plus de saut.
-	var bridge_map: Dictionary = {
-		"echec": "Le revers dans le dos, le Voyageur ne renonca pas et s'enfonca plus loin.",
-		"partiel": "Le prix encore sur les epaules, le Voyageur reprit le sentier.",
-		"reussite": "Sa voie ouverte, le Voyageur s'enfonca plus avant.",
-		"eclatante": "Porte par son elan, le Voyageur poursuivit, sur de lui.",
-	}
-	_run_thread["bridge"] = str(bridge_map.get(degree, "Le Voyageur poursuivit sa route."))
+	var result: String = str(result_map.get(degree, "et la voie s'est ouverte"))
+	# v11-N1 (R140) — le PONT procédural générique est SUPPRIMÉ (plus de _run_thread["bridge"]) : la
+	# continuité passe ENTIÈREMENT par ce gist, injecté dans le prompt du beat suivant.
+	_run_thread["last_gist"] = "vous %s, %s" % [action, result]
 
 
 # A4 : helpers de prose (_clean_prose, _strip_scene_echo, _split_sentences, _sig_words,

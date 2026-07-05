@@ -1820,6 +1820,24 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R140 — NARRATION JDR : 2e personne, présent, voix de MJ (2026-07-05, v11-N1 — user « plus orienté JDR »)** :
+  la narration EN BEAT (situation + résolution + ouverture) passe de la 3e personne « le Voyageur » au
+  temps du conte, à la **2e personne « Vous » au PRÉSENT, voix de Maître du Jeu** (« Vous prenez une grande
+  inspiration… »). Le ton merveilleux‑inquiétant celtique (§1) est conservé — seul le registre change.
+  Règles : (a) **situations riches** — 3‑4 phrases (climax 5‑6), un **PNJ qui AGIT et PARLE** (pas un décor),
+  fin sur une **tension ouverte** ; **INTERDIT** de clore par « que faire », « que décidez‑vous », « vous vous
+  demandez » (filet de nettoyage dans build_situation + gate probe) ; (b) **résolution en deux temps** — la
+  1re phrase est l'**ACTION concrète** qui fond verbe+trait, écrite **en italique BBCode `[i]…[/i]`** (garantie
+  par `MerlinProse.ensure_italic_action`), **puis** 2‑4 phrases où le **monde/PNJ RÉAGIT selon le degré**
+  (échec = résiste/se ferme · partiel = cède à demi + prix · réussite = cède/explique/aide · éclatante = se
+  lie/donne plus) ; interdiction de « vous continuez le chemin » ; (c) **pont générique SUPPRIMÉ** (« Sa voie
+  ouverte, le Voyageur s'enfonça plus avant ») — la continuité beat→beat passe par le seul `last_gist` (« Juste
+  avant : vous… »). Merlin **garde sa voix de cadre** (menu, sélection, intro, épilogue : il vous apostrophe
+  « mon ami »). **Moteur INCHANGÉ** (dé d6, couverture de tags, degré, deltas) → R135/R139/§K non affectés
+  (soak 200/200 iso, morts 4,9 % ≈ R139). Gate dédié : `probe_prose` CATALOG_GATE (zéro 3e personne, zéro
+  filler, chaque fallback de résolution s'ouvre sur `[i]Vous…[/i]`). Le pivot d20 + arbre de talent in‑run +
+  bonus greffés (décidé en session) est une **Vague 2** distincte qui, elle, re‑dérivera §K.
+
 - **R139 — RECALIBRAGE §K MULTI-LEVIERS (2026-07-05, v1.0-V4a — vague fermée VERTE)** : la boucle
   de résolution est recalibrée par 8 leviers MESURÉS (soak 300 après chacun). Canon : (a) whitelist
   §F **branchée au jeu réel** — pool calculé À LA PRÉSENTATION du beat (`build_situation` →

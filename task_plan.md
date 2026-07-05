@@ -195,3 +195,27 @@ Gates finaux : validate_step0 0/0 → smoke MerlinGame+MerlinMenu → soak 200 �
   garde réutilisable MerlinVisual.polygon_drawable() sur les 7 polygones générés par boucle.
 - Gates : validate 0/0 · smoke MerlinEnd (forêt + falaises) + MerlinGame + MerlinMenu tous PASS,
   0 « triangulation failed ». Preuve build : export_gate biome falaises EN COURS (bnlw96nyj).
+
+---
+
+# task_plan — v11-N1 Narration JDR 2e personne présent (2026-07-05)
+
+User (screenshot beat) : texte situationnel trop court/passif, « le Voyageur se demandait que faire »,
+résolution générique 3e pers., pont « je continue le chemin ». Veut : 2e pers. présent (« Vous prenez… »),
+situations riches PNJ-actif, résolution = action italique + le monde réagit, d20+arbre de talent (→ Vague 2).
+
+Décisions verrouillées (AskUserQuestion ×2) : narratif d'abord / d20 superposé / talent in-run / greffes
+étendues ; puis présent voix MJ / action italique + conséquence riche / pont supprimé / situations 3-4 ph.
+
+Fait (moteur d6 INCHANGÉ, R135/R139/§K non touchés) :
+- prompt_builder : SYSTEM_PREFIX MJ 2e pers présent (zéro « Voyageur »), resolution() action [i]…[/i] +
+  monde réagit par degré, arc()/opening() 2e pers présent 3-4 ph PNJ-actif, faction_pilier_block « vous ».
+- scenario : SITU_FALLBACKS/RESO_FALLBACKS(_LONG)/FALLBACK_ARCS/OPENING_FRAMES réécrits ; note_outcome
+  gist « vous… » + bridge SUPPRIMÉ ; build_situation pont retiré + filet anti-filler étendu.
+- game : ensure_italic_action sur l'issue ; PUSH_CODAS « Vous ».
+- prose : ensure_italic_action() (garantit [i]1re phrase[/i], balises équilibrées).
+- probe_prose : CATALOG_GATE déterministe (zéro 3e pers / filler, [i]Vous…, balises).
+- BIBLE R140.
+
+Gates : validate 0/0 · smoke Game/Menu/Selection/End PASS · CATALOG_GATE pass · soak 200/200 (iso R139) ·
+autoplay 3/3 LLM ON [en cours] · capture d'œil ph4/ph6 [à faire post-autoplay].

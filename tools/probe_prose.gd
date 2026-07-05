@@ -25,6 +25,20 @@ func _run() -> void:
 	var sc: Node = await _await_node("MerlinScenario", 10000)
 	var mn: Node = await _await_node("MerlinNative", 10000)
 
+	# v11-N1 (R140) — GATE PROSE déterministe (constantes seules, ZÉRO LLM) : la narration en beat est
+	# au « Vous » présent, jamais 3e personne « le Voyageur », jamais « que faire » ; chaque fallback de
+	# résolution s'ouvre sur une action en [i]…[/i]. Toute entorse → quit(2) immédiat (gate rapide).
+	if sc != null:
+		var viol: Array = _prose_gate(sc)
+		if viol.is_empty():
+			print("[PROSE] CATALOG_GATE pass (2e personne, [i] action, zéro filler)")
+		else:
+			for v in viol:
+				print("[PROSE] CATALOG_GATE FAIL — %s" % str(v))
+			print("[PROSE] CATALOG_GATE : %d violation(s)" % viol.size())
+			quit(2)
+			return
+
 	# Attente du chargement du modèle (TEMPS réel, pas frames — headless tourne vite). Max 90s.
 	var llm_ready: bool = false
 	if mn != null:
@@ -147,6 +161,45 @@ func _write(out: Dictionary) -> void:
 		f.close()
 	else:
 		print("[PROSE] ERREUR écriture %s (err %d)" % [OUT_PATH, FileAccess.get_open_error()])
+
+
+# v11-N1 (R140) — vérifie les banques de prose (constantes) : retourne la liste des violations (vide = ok).
+func _prose_gate(sc: Node) -> Array:
+	var viol: Array = []
+	var banned: Array = ["le Voyageur", "Le Voyageur", "se demandait", "que faire", "Que décida", "que décida", "décidez-vous", "vous demandez"]
+	# 1) SYSTEM_PREFIX : plus de 3e personne « Voyageur » ni de directive « 3e PERSONNE ».
+	var sysp: String = str(sc.SYSTEM_PREFIX)
+	if sysp.find("Voyageur") != -1 or sysp.find("3e PERSONNE") != -1:
+		viol.append("SYSTEM_PREFIX contient encore 'Voyageur' ou '3e PERSONNE'")
+	# 2) Situations (SITU_FALLBACKS + FALLBACK_ARCS) : aucun filler, aucune 3e personne héritée.
+	var situ_pools: Array = []
+	for p in sc.SITU_FALLBACKS.values():
+		situ_pools.append(p)
+	for arc in sc.FALLBACK_ARCS:
+		situ_pools.append(arc)
+	for pool in situ_pools:
+		for line in pool:
+			var s: String = str(line)
+			for b in banned:
+				if s.find(str(b)) != -1:
+					viol.append("situation « %s… » contient '%s'" % [s.substr(0, 28), str(b)])
+	# 3) Résolutions (RESO_FALLBACKS + _LONG) : action en [i]…[/i], commence par [i]Vous, balises équilibrées.
+	var reso_pools: Array = []
+	for p2 in sc.RESO_FALLBACKS.values():
+		reso_pools.append(p2)
+	for p3 in sc.RESO_FALLBACKS_LONG.values():
+		reso_pools.append(p3)
+	for pool2 in reso_pools:
+		for line2 in pool2:
+			var r: String = str(line2)
+			for b2 in banned:
+				if r.find(str(b2)) != -1:
+					viol.append("résolution « %s… » contient '%s'" % [r.substr(0, 28), str(b2)])
+			if not r.begins_with("[i]Vous"):
+				viol.append("résolution « %s… » ne commence pas par '[i]Vous'" % r.substr(0, 28))
+			if r.count("[i]") != r.count("[/i]") or r.count("[i]") == 0:
+				viol.append("résolution « %s… » : balises [i]/[/i] déséquilibrées" % r.substr(0, 28))
+	return viol
 
 
 func _choose(hand: Array, required: Array) -> Array:

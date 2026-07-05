@@ -9,7 +9,7 @@ extends RefCounted
 ## API : chaque fonction renvoie {"system": String, "user": String, "opts": Dictionary},
 ## à consommer via `mn.generate(p["system"], p["user"], p["opts"])`.
 
-const SYSTEM_PREFIX: String = "Tu es MERLIN, l'enchanteur de Broceliande, et tu CONTES l'aventure du Voyageur comme une vieille legende celtique. REGLES: raconte a la 3e PERSONNE, parle TOUJOURS du « Voyageur » (JAMAIS 'tu', JAMAIS 'je'). Temps du CONTE: passe simple et imparfait (« le Voyageur s'enfonca », « la brume montait », « il choisit de »). Francais SIMPLE et CLAIR, phrases qui S'ENCHAINENT (une action PUIS sa consequence), CONCRETES (qui, quoi, ou) — JAMAIS d'enigme, de sujet abstrait ('le vide', 'le nom') ni de phrases hachees deconnectees. Raconte les EVENEMENTS et les GESTES precis, pas des descriptions vagues. Pas d'anglicismes. Reste dans le LIEU du conte (jamais d'autre pays). Ne romps JAMAIS le 4e mur (INTERDIT 'jeu', 'carte', 'joueur', 'IA', 'simulation'). Evite les cliches ('union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne'). Ne recopie JAMAIS cette consigne dans ta reponse."
+const SYSTEM_PREFIX: String = "Tu es le MAITRE DU JEU d'une aventure celtique a Broceliande, dans le gout du merveilleux-inquietant (etrange, feutre, un peu menacant). REGLES: raconte a la 2e PERSONNE en vouvoyant (« Vous »), au PRESENT (« Vous avancez », « la brume monte », « il vous jauge »). JAMAIS de 'je', JAMAIS de 3e personne pour le protagoniste (pas de 'il', pas de nom propre) — le protagoniste, c'est VOUS. Le MONDE est VIVANT: les personnages AGISSENT et PARLENT (un vieil homme sort de sa hutte, une voix vous hele, une bete se dresse), ils ont un but a eux. Francais SIMPLE et CLAIR, phrases qui S'ENCHAINENT (un fait PUIS sa consequence), CONCRETES (qui, quoi, ou). INTERDIT ABSOLU de clore une scene par « que faire ? », « que decidez-vous ? », « vous vous demandez quoi faire » ou toute formule qui prend le joueur par la main: laisse la scene SUSPENDUE sur une tension, sans jamais reclamer de decision. Pas d'enigme abstraite ('le vide', 'le nom'), pas de phrases hachees. Raconte les GESTES et EVENEMENTS precis, pas des descriptions vagues. Pas d'anglicismes. Reste dans le LIEU. Ne romps JAMAIS le 4e mur (INTERDIT 'jeu', 'carte', 'joueur', 'IA', 'simulation'). Evite les cliches ('union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne'). Ne recopie JAMAIS cette consigne dans ta reponse."
 
 # Voix de MERLIN (narrateur) pour les INTROS : il CONNAÎT le Voyageur et l'apostrophe — à l'inverse de
 # SYSTEM_PREFIX (narration de SCÈNE en résolution, sans apostrophe, conservée telle quelle). Persona
@@ -51,7 +51,7 @@ const PILIERS: Dictionary = {
 	"choeur": {"nom": "le Chœur des Druides", "fiche": "un duo de druides au regard absent qui bouclent un rite vidé de sens. VOIX solennelle qui SE RÉPÈTE (formules qui reviennent, glitch audible). Distant, jamais hostile d'emblée ; offre équilibre et soin à qui respecte les rites."},
 	"etre": {"nom": "l'Être Indéfinissable", "fiche": "une forme qui MUE sans jamais se fixer (jamais le même). VOIX joueuse, malicieuse, à double-sens (énigmes, demi-vérités, il rit et taquine). C'est un TENTATEUR : il propose des pactes — du pouvoir contre de la Corruption."},
 	"chevalier": {"nom": "le Chevalier déchu", "fiche": "un chevalier à l'armure ternie qui rejoue sans fin une défaite. VOIX grave, honneur blessé, serments répétés ; il cherche une rédemption qu'il ne trouve pas, et peut tendre une lame à qui relève son honneur."},
-	"compagnon": {"nom": "le Compagnon Perdu", "fiche": "un ancien compagnon de route AIMÉ, désormais méconnaissable — des bribes de l'ancien affleurent (un geste, un mot). VOIX douce, tentatrice, fausse paix ('viens te reposer, l'abandon est doux'). Il pousse le Voyageur à CÉDER, à le rejoindre."},
+	"compagnon": {"nom": "le Compagnon Perdu", "fiche": "un ancien compagnon de route AIMÉ, désormais méconnaissable — des bribes de l'ancien affleurent (un geste, un mot). VOIX douce, tentatrice, fausse paix ('viens te reposer, l'abandon est doux'). Il vous pousse à CÉDER, à le rejoindre."},
 	"enfant": {"nom": "l'Enfant", "fiche": "un enfant perdu d'une innocence désarmante qui CHERCHE à se rapprocher. VOIX simple, directe, candide — il pose les questions que nul n'ose. Présenté comme précieux, à protéger. (Joue l'innocence PURE — ne laisse JAMAIS deviner qu'il est autre chose.)"},
 }
 
@@ -65,8 +65,8 @@ static func faction_pilier_block(faction_key: String, pilier_key: String, pilier
 		out += "DOMAINE de l'aventure : %s — %s Que CE ton imprègne les scènes (sans jamais dire le mot 'faction').\n" % [str(f["nom"]), str(f["ton"])]
 	if PILIERS.has(pilier_key):
 		var p: Dictionary = PILIERS[pilier_key]
-		var rg: String = " Il RECONNAÎT le Voyageur, déjà croisé jadis." if recog else ""
-		out += "Un personnage RÉCURRENT traverse l'aventure — %s : %s%s Fais-le APPARAÎTRE à l'ÉTAPE 2 (la rencontre) puis REVENIR à une étape plus tardive (sa présence relie les scènes).\n" % [str(p["nom"]), str(p["fiche"]), rg]
+		var rg: String = " Il vous RECONNAÎT, déjà croisé jadis." if recog else ""
+		out += "Un personnage RÉCURRENT traverse l'aventure — %s : %s%s Fais-le APPARAÎTRE à l'ÉTAPE 2 (la rencontre) puis REVENIR à une étape plus tardive (sa présence relie les scènes) ; il s'adresse à VOUS.\n" % [str(p["nom"]), str(p["fiche"]), rg]
 	if PILIERS.has(pilier2_key):
 		var p2: Dictionary = PILIERS[pilier2_key]
 		out += "Une autre présence s'invite par moments — %s : %s\n" % [str(p2["nom"]), str(p2["fiche"])]
@@ -103,7 +103,7 @@ static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String
 static func opening(scenario: Dictionary, lieu: String = "Broceliande") -> Dictionary:
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var usr: String = ("Ouvre l'aventure « %s » a %s (accroche : %s). Conte 3 a 4 phrases qui LANCENT l'histoire, a la 3e PERSONNE (« le Voyageur ») au temps du CONTE : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui le pousse au premier pas. Images celtiques concretes, SANS remplissage, pas de 4e mur. Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, lieu, pitch]
+	var usr: String = ("Ouvre l'aventure « %s » a %s (accroche : %s). Conte 3 a 4 phrases qui LANCENT l'histoire, a la 2e PERSONNE (« Vous ») au PRESENT : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui vous pousse au premier pas. Images celtiques concretes, SANS remplissage, pas de 4e mur, JAMAIS « que faire ». Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, lieu, pitch]
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "ouverture (histoire)"}}
 
 
@@ -115,11 +115,11 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
 	var roles: Array = [
-		"arrivee : le Voyageur entre dans le lieu et DECOUVRE l'enjeu de la quete",
-		"une rencontre (un etre, une voix) qui lui APPREND un bout de legende sur le but a atteindre",
+		"arrivee : vous entrez dans le lieu et DECOUVREZ l'enjeu de la quete",
+		"une rencontre (un etre, une voix) qui AGIT et vous APPREND un bout de legende sur le but a atteindre",
 		"un obstacle physique sur le chemin du but",
 		"un choix a faire qui engage la suite",
-		"la confrontation finale qui RESOUT la quete : le Voyageur atteint, obtient ou affronte ce que « %s » promet" % title,
+		"la confrontation finale qui RESOUT la quete : vous atteignez, obtenez ou affrontez ce que « %s » promet" % title,
 	]
 	var steps: String = ""
 	for i in 5:
@@ -128,7 +128,7 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 		for t in pair:
 			cues.append(str(TAG_CUE.get(str(t), str(t))))
 		var cue_txt: String = " ET ".join(cues) if cues.size() > 0 else "agir"
-		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [i + 1, str(roles[i]), cue_txt]
+		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que vous devrez faire)." % [i + 1, str(roles[i]), cue_txt]
 	# v10.22 (user) — la question rituelle « Que decida le Voyageur ? » est SUPPRIMEE : chaque etape finit
 	# sur l'instant suspendu ou le Voyageur doit agir, SANS formule systematique.
 	# v1.0-V4a (spec §F) — liste FERMEE des forces atteignables : l'arc ne met en scene rien d'autre.
@@ -138,7 +138,7 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 		for t in pool_list:
 			pl.append(str(t))
 		pool_line = "\nFORCES AUTORISEES (liste FERMEE) : %s. Chaque scene ne doit exiger QUE des forces de cette liste, jamais d'autres." % ", ".join(pl)
-	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch, lieu]) + steps + pool_line + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, qui FINIT sur l'instant SUSPENDU ou le Voyageur doit agir — VARIE la chute, n'utilise JAMAIS de question rituelle repetee.\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir.\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
+	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [title, pitch, lieu]) + steps + pool_line + "\nChaque etape = 3 a 4 phrases CONCRETES (qui, quoi, ou) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU — VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ».\nEXEMPLE de MANIERE (pas le contenu) :\n1. Vous vous enfoncez sous les fougeres ; le sous-bois s'obscurcit, et un pas leger vous suit a distance.\n2. Au detour d'un tronc, une vieille femme se dresse, une serpe a la main, et vous barre le chemin sans un mot.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": 340, "label": "arc narratif (5 étapes)"}}
 
 
@@ -150,10 +150,10 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	# v10.6 — directive d'ISSUE explicite par degré : la lecture du batch (HTML contrôle) montrait
 	# que l'échec se lisait comme un succès. On force le ressenti du résultat. (user 2026-06-06)
 	var deg_directive: Dictionary = {
-		"echec": "Le geste ECHOUE : la foret RESISTE, repousse ou se referme ; rien n'est obtenu, ou pire quelque chose se retourne contre le Voyageur. MONTRE l'echec par des FAITS concrets (la voie reste fermee, un recul, une perte), ne DIS PAS 'echec'.",
-		"partiel": "Demi-succes a un PRIX : quelque chose cede mais incomplet, et une ombre ou un cout suit aussitot. MONTRE-le par des FAITS (on avance un peu, mais quelque chose est pris en echange), ne DIS PAS 'partiel'.",
-		"reussite": "REUSSITE franche : le geste porte, la voie s'ouvre, la foret cede. MONTRE-le par des FAITS, ne DIS PAS 'reussite'.",
-		"eclatante": "Reussite ECLATANTE au-dela de l'espoir : la voie s'ouvre en grand, la lumiere monte, la foret cede sans resistance. MONTRE-le par des FAITS concrets, ne DIS JAMAIS 'memorable' ni 'reussite'.",
+		"echec": "L'action ECHOUE : le monde RESISTE, se referme ou se retourne contre vous ; le personnage d'en face refuse, recule, se ferme. MONTRE l'echec par des FAITS concrets (la voie reste close, un recul, une perte), ne DIS PAS 'echec'.",
+		"partiel": "Demi-succes a un PRIX : quelque chose cede a demi, et une ombre ou un cout suit aussitot. Le personnage cede du bout des levres, ou vous aide mais retient quelque chose. MONTRE-le par des FAITS, ne DIS PAS 'partiel'.",
+		"reussite": "REUSSITE franche : le monde CEDE, le personnage se laisse convaincre, s'ouvre, vous aide ou vous laisse passer. MONTRE-le par des FAITS, ne DIS PAS 'reussite'.",
+		"eclatante": "REUSSITE ECLATANTE au-dela de l'espoir : le personnage se lie a vous, le monde s'ouvre en grand, on vous donne plus que demande. MONTRE-le par des FAITS concrets, ne DIS JAMAIS 'memorable' ni 'reussite'.",
 	}
 	# v10.6 (user 2026-06-06 : « la combinaison ne s'établit pas dans le scénario ») — on passe le
 	# SENS (évocation) de CHAQUE carte du combo de 2, et on demande explicitement de FAIRE SENTIR les
@@ -209,25 +209,25 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	var cover_hint: String = ""
 	if not required.is_empty():
 		if missed.is_empty():
-			cover_hint = " Les deux forces du Voyageur etaient EXACTEMENT celles que ce lieu reclamait."
+			cover_hint = " Vos deux forces etaient EXACTEMENT celles que ce lieu reclamait."
 		elif not covered.is_empty():
-			cover_hint = " L'une des forces du Voyageur etait celle qu'il fallait, l'autre attendue MANQUAIT : la reussite reste INCOMPLETE (un manque, une lenteur, un reste qui suit) — ne la presente JAMAIS comme parfaite."
+			cover_hint = " L'une de vos forces etait la bonne, l'autre attendue MANQUAIT : la reussite reste INCOMPLETE (un manque, une lenteur, un reste qui suit) — ne la presente JAMAIS comme parfaite."
 		else:
-			cover_hint = " Aucune des forces du Voyageur n'etait celle que ce lieu reclamait : il repond a cote de ce qui etait demande."
+			cover_hint = " Aucune de vos forces n'etait celle que ce lieu reclamait : vous repondez a cote de ce qui etait demande."
 	var syn: int = int(res.get("synergy", 0))
 	var syn_hint: String = ""
 	if syn > 0:
-		syn_hint = " Les deux forces se fondent en un geste fluide."
+		syn_hint = " Vos deux forces se fondent en un geste fluide."
 	elif syn < 0:
-		syn_hint = " Les deux forces tirent a hue et a dia (l'issue s'en ressent)."
+		syn_hint = " Vos deux forces tirent a hue et a dia (l'issue s'en ressent)."
 	# Cohérence + variété (user 2026-06-07, critique passe profonde : toutes les issues finissaient en
 	# « le chemin s'ouvre » et ignoraient le type de beat). On passe un FOCUS abstrait par type (sans
 	# recopier le décor) → l'issue RÉSOUT ce que le beat posait, et la conclusion varie.
 	var type_focus: Dictionary = {
-		"Exploration": "ce qui etait cache se revele au Voyageur (ou se derobe a lui)",
-		"Rencontre": "l'etre ou la voix d'en face reagit : il cede, se lie au Voyageur, ou se retourne contre lui",
-		"Epreuve": "l'obstacle concret (ronces, pente, pierre) est franchi ou resiste au Voyageur",
-		"Dilemme": "le Voyageur a TRANCHE : montre la voie qu'il choisit ET le prix immediat (ce qu'il gagne et ce qu'il abandonne), pas une simple ouverture de chemin",
+		"Exploration": "ce qui etait cache se revele a vous (ou se derobe)",
+		"Rencontre": "l'etre ou la voix d'en face REAGIT : il cede, se lie a vous, ou se retourne contre vous",
+		"Epreuve": "l'obstacle concret (ronces, pente, pierre) est franchi ou vous resiste",
+		"Dilemme": "vous avez TRANCHE : montre la voie choisie ET le prix immediat (ce que vous gagnez et ce que vous abandonnez), pas une simple ouverture de chemin",
 		"Climax": "c'est le MOMENT DECISIF du sentier : l'issue pese lourd et marque une vraie BASCULE (triomphe ou chute), jamais une simple avancee de routine",
 	}
 	var ftype: String = str(situation.get("type", ""))
@@ -244,18 +244,21 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	#  Le type de beat passe déjà par focus_hint ; la continuité par last_gist.)
 	var prev: String = str(run_thread.get("last_gist", "")).strip_edges()
 	if prev != "":
-		ctx += "Juste avant, %s enchaine sans rompre le fil.\n" % prev
+		ctx += "Juste avant : %s. Enchaine sans rompre le fil.\n" % prev
 	# Longueur VARIABLE (user 2026-06-06 : « plus variable sur la longueur … quelquefois plus long
 	# selon le déroulé ») : ample aux MOMENTS FORTS (Climax ou réussite éclatante), brève sinon.
 	var long_form: bool = is_strong_moment(str(situation.get("type", "")), degree)
-	var phrase_target: String = "4 a 5 phrases" if long_form else "2 a 3 phrases"
+	var phrase_target: String = "5 a 6 phrases" if long_form else "3 a 4 phrases"
+	# NB (v11-N1) : le wall-clock LLM (~1 tok/s) est borné par max_tokens, PAS par phrase_target. On garde
+	# les cibles de phrases enrichies mais on conserve les budgets tokens PROUVÉS (autoplay 3/3 en V4a) —
+	# les budgets ballonnés (300/200) faisaient FAIL le run#0 COLD du harnais.
 	var tok_budget: int = 260 if long_form else 150
 	# v10.17 (user 2026-06-07) : on PASSE la situation + un EXEMPLE gold (few-shot in-context) pour que
 	# l'issue RESOLVE la situation precise (pas un generique « le chemin s'ouvre ») en fondant les 2
 	# forces, calee sur la prose cible. MerlinProse.strip_scene_echo (côté scénario) reste le filet anti-recopiage.
 	var situ_txt: String = str(situation.get("narration", "")).strip_edges()
-	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu) — Situation: une dalle de pierre barrait le gue, le courant poussait fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): Le Voyageur choisit de caler ses pieds dans la vase et de pousser sans rompre. La dalle racla, bascula et libera le passage ; il franchit le gue, trempe mais debout."
-	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue en %s, a la 3e PERSONNE et au temps du CONTE (passe simple / imparfait). Ta TOUTE PREMIERE phrase DOIT commencer par « Le Voyageur choisit de » suivi de l'action concrete qui FOND les deux forces dans le registre attendu. (Sens des registres : PAROLE = il parle/convainc/ruse/charme ; FORCE = il agit physiquement, pousse/tient bon ; PERCEPTION = il voit/ressent/parle aux choses ; PROTECTION = il resiste/protege ; OMBRE = il appelle une force trouble a un prix.) Si c'est PAROLE, l'issue est VERBALE, JAMAIS un geste comme 'il pose la main'. TRADUIS les forces en actions ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS les formulations entre guillemets ; n'ecris JAMAIS 'fond deux gestes en un seul'. NE RE-DECRIS PAS la scene (le mur, le chemin, l'etre sont deja connus). PUIS raconte CE QUE CELA CAUSA : la consequence concrete qui RESOUT la situation (l'etre, l'obstacle ou le choix precis). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). LE RESULTAT PRIME sur les cartes : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix — ne narre JAMAIS un succes net si l'issue n'en est pas un, meme si une carte evoque la reussite. Varie la fin (pas toujours 'le chemin s'ouvre'). Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, reg_hint, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
+	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu) — Situation: une dalle de pierre barre le gue, le courant pousse fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): [i]Vous calez vos pieds dans la vase et poussez la dalle sans jamais rompre l'effort.[/i] La pierre racle, bascule, et libere le passage ; sur l'autre rive, le vieux passeur relache sa gaffe et vous fait signe d'avancer."
+	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en %s. Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. NE RE-DECRIS PAS le decor deja connu (le mur, le chemin, l'etre). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix — ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, reg_hint, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"}}
 
 

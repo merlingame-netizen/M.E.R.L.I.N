@@ -737,6 +737,7 @@ func _on_resolve() -> void:
 	var prose: String = str(sc.take_resolution(situ, played_cards, res))
 	if prose.length() < 10:
 		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")))
+	prose = MerlinProse.ensure_italic_action(prose)  # v11-N1 (R140) : 1re phrase = action en [i]…[/i] (robustesse si le LLM oublie l'italique)
 	if not _push_pending:  # R130 : différé → note_outcome au CHOIX avec le degré FINAL
 		sc.note_outcome(res, situ, played_cards)  # v10.20.1 : gist SPÉCIFIQUE (action réelle) + pont vers la situation suivante
 	run.summary = prose
@@ -930,9 +931,9 @@ func _on_pact_choice(pk: String, accepted: bool) -> void:
 # v10.21 (Wave G, R130) — Choix « Encaisser / Pousser » sous la vignette : 1 geste, zéro timer (R99),
 # boutons ≥44 px, LEDGER affiché par bouton (prix criant AVANT le clic). Anti-misclick : disabled 250 ms.
 const PUSH_CODAS: Array = [
-	"Tu pousses ta volonté dans la brèche — la forêt cède, mais quelque chose s'infiltre.",
-	"Tu forces le passage d'un souffle de plus. La voie s'ouvre en grand ; l'ombre retient ton nom.",
-	"Un dernier effort, arraché à toi-même. La forêt plie — et prélève sa part.",
+	"[i]Vous forcez votre volonté dans la brèche.[/i] La forêt cède — mais quelque chose s'infiltre dans votre sillage.",
+	"[i]Vous poussez le passage d'un souffle de plus.[/i] La voie s'ouvre en grand ; l'ombre, elle, retient votre nom.",
+	"[i]Vous arrachez ce dernier effort à vous-même.[/i] La forêt plie, et prélève sa part sans un mot.",
 ]
 
 

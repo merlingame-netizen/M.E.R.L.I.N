@@ -8,10 +8,13 @@ extends SceneTree
 ## Sortie : [AUTOPLAY] ... + « [AUTOPLAY] DONE — k/n PASS » ; exit 1 si échec.
 
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
-const RUN_DEADLINE_S: float = 960.0   # budget par run (v10.22 : chaînes 11-15 beats × fusion+sustain + cache-miss
+const RUN_DEADLINE_S: float = 1200.0  # budget par run (v10.22 : chaînes 11-15 beats × fusion+sustain + cache-miss
                                       # LLM — 480 s faisait FAIL des runs SAINS → 600). v1.0-V4a : morts 36,6→4,6 %
                                       # ⇒ les chaînes 3 quêtes vont désormais AU BOUT (12-15 beats + drafts garantis) ;
                                       # 600 s re-faisait FAIL un run SAIN au beat 8 (0 SCRIPT ERROR, mesuré 2×) → 960.
+                                      # v11-N1 : la prose enrichie ralentit les beats à MOMENTS FORTS (attente LLM
+                                      # ~1 tok/s) → un run long (15 beats, plusieurs climax) dépassait 960 (FAIL propre,
+                                      # 0 SCRIPT ERROR) → 1200. Le timeout externe adapter monte en parallèle (3×1200<3800).
 const END_DEADLINE_S: float = 25.0    # bascule run_ended → MerlinEnd (fade + change_scene différé)
 
 var _fail: int = 0
