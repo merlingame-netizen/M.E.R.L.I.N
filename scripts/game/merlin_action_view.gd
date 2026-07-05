@@ -39,6 +39,8 @@ var _flash_tw: Tween
 var _tw: Tween
 var _blessed_badge: Control = null
 var _blessed_tag: String = ""
+var _talent_lbl: Label = null     # v2-W2 : badge « +N » = niveau de talent du verbe (skill_mod, R120)
+var _talent_lvl: int = 0
 
 
 func _dur(base: float) -> float:
@@ -79,14 +81,28 @@ func _build() -> void:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
 
-	# VERBE — l'identité de la tuile (FS_BTN 26 px, CREAM sur SURFACE).
+	# VERBE — l'identité de la tuile (FS_BTN 26 px, CREAM sur SURFACE). v2-W2 : le verbe et le badge de
+	# talent « +N » vivent sur une rangée (le +N apparaît quand le talent monte, style charte GOLD).
+	var verb_row: HBoxContainer = HBoxContainer.new()
+	verb_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	verb_row.add_theme_constant_override("separation", 6)
+	verb_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(verb_row)
 	var verb: Label = Label.new()
 	verb.text = card.card_name
 	verb.add_theme_color_override("font_color", MerlinVisual.CREAM)
 	verb.add_theme_font_size_override("font_size", MerlinVisual.FS_BTN)
 	verb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	verb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(verb)
+	verb_row.add_child(verb)
+	# Badge de talent « +N » (skill_mod du verbe, R120) : GOLD sur SURFACE, caché à 0 (jamais de bruit).
+	_talent_lbl = Label.new()
+	_talent_lbl.text = ""
+	_talent_lbl.add_theme_color_override("font_color", MerlinVisual.GOLD)
+	_talent_lbl.add_theme_font_size_override("font_size", MerlinVisual.FS_BTN)
+	_talent_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_talent_lbl.visible = false
+	verb_row.add_child(_talent_lbl)
 
 	# Les 2 tags de base : pastille ronde 18 px (couleur de famille) + nom court (lisible <2 s, §23).
 	var tag_row: HBoxContainer = HBoxContainer.new()
@@ -236,6 +252,22 @@ func set_selected(on: bool) -> void:
 	if _sb != null:
 		_sb.border_color = MerlinVisual.GOLD if on else _rim
 		_sb.set_border_width_all(3 if on else 2)
+
+
+# v2-W2 — niveau de talent du verbe : badge « +N » à côté du nom (le joueur VOIT son skill_mod).
+# 0 → badge caché (pilier MINIMAL : aucun élément UI sans rôle actif). Idempotent.
+func set_talent(level: int) -> void:
+	if level == _talent_lvl and _talent_lbl != null:
+		return
+	_talent_lvl = level
+	if _talent_lbl == null or not is_instance_valid(_talent_lbl):
+		return
+	if level > 0:
+		_talent_lbl.text = "+%d" % level
+		_talent_lbl.visible = true
+	else:
+		_talent_lbl.text = ""
+		_talent_lbl.visible = false
 
 
 # W3 : le liseré se re-dérive quand les greffes changent la bande de dé (langage R133 conservé).

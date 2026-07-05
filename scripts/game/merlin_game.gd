@@ -485,6 +485,14 @@ func _tile_for(action: MerlinCard) -> MerlinActionView:
 	return null
 
 
+# v2-W2 — retrouve la tuile par VERBE (card_name de l'action) : la cible d'un nœud de talent.
+func _tile_for_verb(verb: String) -> MerlinActionView:
+	for v in _action_views:
+		if is_instance_valid(v) and str((v as MerlinActionView).card.card_name) == verb:
+			return v
+	return null
+
+
 # v11-W2 — construit les 4 tuiles PERMANENTES depuis run.actions (objets partagés : la sélection
 # compare par référence). Appelé à _begin (après new_run/load_run) ; re-render léger par beat via
 # _refresh_action_tiles — jamais de rebuild.
@@ -518,6 +526,7 @@ func _refresh_action_tiles() -> void:
 			continue
 		var av: MerlinActionView = v
 		av.set_selected(av.card == _selected_action)
+		av.set_talent(run.skill_mod_for(av.card))  # v2-W2 : badge « +N » = niveau de talent du verbe (skill_mod visible)
 		var btag: String = str(run.blessed_tags.get(str(av.card.id), ""))
 		av.set_blessed(btag)
 		var covers: bool = false
@@ -588,11 +597,13 @@ func _update_preview() -> void:
 		return
 	var combo: Array = [_selected_action, _selected_trait]
 	var reqs: Array = _current_situation.get("required_tags", [])
-	# v2-W1 — moteur d20 : skill_mod (talent W2) et graft_bonus (greffe-jet W3) = 0 en W1. La preview
-	# passe EXACTEMENT les mêmes arguments que la résolution (même die, même diff, mêmes 0) — R120.
+	var run_p: Node = get_node("/root/MerlinRun")
+	# v2-W2 — skill_mod = niveau de talent du VERBE de l'action sélectionnée (graft_bonus reste 0, W3).
+	# La preview passe EXACTEMENT les mêmes arguments que la résolution (die, diff, skill_mod) — R120.
+	var skill_mod_p: int = run_p.skill_mod_for(_selected_action)
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
-		get_node("/root/MerlinRun").blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)), 0, 0)  # R131 bénédictions + d20 : preview = résolution (R120)
+		run_p.blessed_bonus(combo),
+		int(_current_situation.get("difficulte", 2)), skill_mod_p, 0)  # R131 bénédictions + d20 + talent : preview = résolution (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_set_resolve_armed(true)
 	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
@@ -622,10 +633,11 @@ func _on_resolve() -> void:
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
 	var reqs: Array = _current_situation.get("required_tags", [])
-	# v2-W1 — mêmes arguments que la preview (die, diff, skill_mod=0, graft_bonus=0) → R120.
+	# v2-W2 — mêmes arguments que la preview (die, diff, skill_mod=talent du verbe, graft_bonus=0) → R120.
+	var skill_mod_r: int = run.skill_mod_for(_selected_action)
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		run.blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)), 0, 0)  # R131 + d20 : mêmes bénis et même diff que la preview (R120)
+		int(_current_situation.get("difficulte", 2)), skill_mod_r, 0)  # R131 + d20 + talent : mêmes args que la preview (R120)
 	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
@@ -637,6 +649,7 @@ func _on_resolve() -> void:
 	# sous le layer plein écran de MerlinFx. _flush_gauges() rejoue tout après le typewriter.
 	_gauges_deferred = true
 	run.play_and_discard(combo)  # v11 : l'action (permanente) y est ignorée côté défausse
+	run.note_verb_played(combo[0])  # v2-W2 : compteur d'usage du verbe (cible du nœud de talent au draft)
 	run.consume_blessings(played_cards)  # R131 : une bénédiction sert UNE fois (érodée à la pose)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
 	# v11-W3 (spec §E) — charges de GREFFE du verbe joué (HEAL/PURGE/DRAW, 1 charge consommée par
@@ -653,6 +666,7 @@ func _on_resolve() -> void:
 		_push_cards = played_cards
 	else:
 		run.apply_resolution(res)
+		run.gain_talent_points(str(res.get("degree", "")))  # v2-W2 : points de talent au degré FINAL (réussite +1 / éclatante +2)
 	res["integrite_delta"] = int(run.get("integrite")) - int_before
 	res["corruption_delta"] = int(run.get("corruption")) - corr_before
 	var fx_effects: Array = []  # effets actifs déclenchés (HEAL/PURGE/DRAW) pour les glyphes de la vignette
@@ -993,6 +1007,7 @@ func _on_push_choice(push: bool) -> void:
 		_push_res_raw["label"] = str(_push_res_raw.get("label", "")) + " (forcé)"
 		run.set("pushes_left_quest", int(run.get("pushes_left_quest")) - 1)
 	run.apply_resolution(_push_res_raw)  # application UNIQUE différée
+	run.gain_talent_points(str(_push_res_raw.get("degree", "")))  # v2-W2 : points de talent au degré FINAL (poussé = réussite → +1)
 	_flush_gauges()  # v11-W1 : le choix est fait → les anneaux jouent le delta cumulé (coût + résolution finale)
 	run.faits_marquants.append("%s → %s" % [str(_push_situ.get("type", "")), str(_push_res_raw.get("label", ""))])
 	if run.faits_marquants.size() > 6:
@@ -1192,13 +1207,31 @@ func _begin_graft_draft(grafts: Array, title_text: String, pilier: String) -> vo
 	_draft_pick = null
 	_draft_done_flag = false
 	_draft_title_base = title_text
+	var offered: Array = _inject_talent_node(grafts)  # v2-W2 : un des 3 choix peut être un NŒUD DE TALENT
 	var cards: Array = []
-	for g in grafts:
+	for g in offered:
 		if not (g is Dictionary):
 			continue
 		_graft_by_id[str((g as Dictionary).get("id", ""))] = g
 		cards.append(_graft_presentation_card(g))
 	_open_draft_zone(cards, title_text, pilier)
+
+
+# v2-W2 — quand le joueur a assez de points ET un verbe sous le cap, REMPLACE l'un des choix de draft
+# par un nœud de talent (rendu comme une carte de greffe, R136 : zéro nouvel écran). L'id "talent_node"
+# est stable → _graft_by_id le retrouve ; _on_draft_card l'applique en 1 geste (le verbe est déjà ciblé).
+func _inject_talent_node(grafts: Array) -> Array:
+	var run: Node = get_node("/root/MerlinRun")
+	if not run.can_offer_talent_node():
+		return grafts
+	var node: Dictionary = run.build_talent_node()
+	node["id"] = "talent_node"  # id stable (jamais confondu avec une greffe d'action)
+	var out: Array = grafts.duplicate()
+	if out.is_empty():
+		out.append(node)
+	else:
+		out[randi() % out.size()] = node  # remplace UN choix (jamais un 4e — l'écran reste à 3 cartes)
+	return out
 
 
 # v11-W3 — carte de PRÉSENTATION d'une greffe (MerlinCardView réutilisé tel quel) : nom + évocation,
@@ -1213,8 +1246,28 @@ func _graft_presentation_card(g: Dictionary) -> MerlinCard:
 	elif kind == "charge":
 		eff_t = str(g.get("effect_type", ""))
 		eff_v = int(g.get("effect_value", 1))
+	elif kind == "talent":
+		# v2-W2 — NŒUD DE TALENT rendu comme une carte de greffe : rareté Mythique (liseré GOLD épais,
+		# distinction visuelle immédiate SANS nouvel écran) ; le tag = famille du verbe ciblé (le glyphe
+		# de la carte reflète le verbe). Le badge « ✦ +N TALENT » est ajouté à la construction de la vue.
+		var fam: String = _verb_family(str(g.get("verb", "")))
+		if fam != "":
+			tags_p = [fam]
+		return MerlinCard.make(str(g.get("id", "")), str(g.get("name", "")), tags_p,
+			str(g.get("evocation", "")), 0, "Mythique")
 	return MerlinCard.make(str(g.get("id", "")), str(g.get("name", "")), tags_p,
 		str(g.get("evocation", "")), int(g.get("corr_cost", 0)), "Commune", eff_t, eff_v)
+
+
+# v2-W2 — famille (tag) représentative d'un verbe, pour que le glyphe de la carte-nœud reflète le
+# verbe ciblé (mêmes familles que MerlinCard.make_actions). "" si verbe inconnu.
+const VERB_FAMILY_TAG: Dictionary = {
+	"PERCEVOIR": "Sens", "AGIR": "Force", "PARLER": "Verbe", "RESSENTIR": "Instinct",
+}
+
+
+func _verb_family(verb: String) -> String:
+	return str(VERB_FAMILY_TAG.get(verb, ""))
 
 
 # v11-W3 — étape 2 : Z6 se rallume de façon CIBLÉE (vigilance V2b : Z6 est estompée souris OFF
@@ -1386,6 +1439,10 @@ func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 			var cv: MerlinCardView = MerlinCardView.new()
 			_hand_box.add_child(cv)
 			cv.setup(cards[i])
+			# v2-W2 — le nœud de talent porte un badge « ✦ +N TALENT » (distinct des greffes d'action).
+			var gcard: Dictionary = _graft_by_id.get(str((cards[i] as MerlinCard).id), {})
+			if str(gcard.get("kind", "")) == "talent":
+				cv.set_talent_node(int(gcard.get("amount", 1)))
 			cv.card_clicked.connect(_on_draft_card)
 			cv.set_fan_transform(Vector2(x0 + float(i) * (cw + gap), 6.0), 0.0)  # base du deal (snap 1er layout)
 			cv.deal_in(float(i) * 0.12)
@@ -1448,6 +1505,21 @@ func _on_draft_card(card: MerlinCard) -> void:
 	var g: Dictionary = _graft_by_id.get(str(card.id), {})
 	if g.is_empty():
 		return  # défense : carte étrangère au draft courant
+	# v2-W2 — NŒUD DE TALENT : le verbe est DÉJÀ ciblé (le plus utilisé) → application en 1 GESTE (pas
+	# d'étape « touche un verbe » : ce ne serait pas la cible du nœud). save après (progression réelle, R108).
+	if str(g.get("kind", "")) == "talent":
+		var run_t: Node = get_node("/root/MerlinRun")
+		if not run_t.apply_talent_node(g):
+			return  # points insuffisants / verbe au cap (course improbable) — le geste reste ouvert
+		_graft_applied = true
+		var tile_t: MerlinActionView = _tile_for_verb(str(g.get("verb", "")))
+		if tile_t != null:
+			tile_t.graft_pop()  # micro-retour SUR la tuile ciblée (le talent s'y grave)
+		_select_draft_view(card)
+		run_t.save()
+		_refresh_action_tiles()  # le « +N » de la tuile ciblée se met à jour immédiatement (ÉVIDENT)
+		_draft_done_flag = true
+		return
 	if not _pending_graft.is_empty() and str(_pending_graft.get("id", "")) == str(card.id):
 		_pending_graft = {}  # re-clic = désélection → retour étape 1
 		_select_draft_view(null)

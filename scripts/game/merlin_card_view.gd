@@ -214,6 +214,28 @@ func set_blessed(tag: String) -> void:
 	add_child(badge)
 
 
+# v2-W2 — badge NŒUD DE TALENT : pastille GOLD « ✦ +N TALENT » à cheval sur le bord haut de la carte
+# de draft (distinction du nœud de talent des greffes d'action — zéro info cachée, pilier ÉVIDENT).
+# Rendu comme set_blessed (même grammaire), texte distinct. Appelé par merlin_game au build du draft.
+func set_talent_node(amount: int) -> void:
+	var badge: PanelContainer = PanelContainer.new()
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb2: StyleBoxFlat = StyleBoxFlat.new()
+	sb2.bg_color = MerlinVisual.GOLD
+	sb2.set_corner_radius_all(8)
+	sb2.set_content_margin_all(4)
+	badge.add_theme_stylebox_override("panel", sb2)
+	var lbl2: Label = Label.new()
+	lbl2.text = "✦ +%d TALENT" % maxi(amount, 1)
+	lbl2.add_theme_color_override("font_color", MerlinVisual.INK)
+	lbl2.add_theme_font_size_override("font_size", 12)
+	lbl2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(lbl2)
+	var sz2: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE
+	badge.position = Vector2(sz2.x * 0.5 - 44.0, -10.0)  # centré sur le bord haut
+	add_child(badge)
+
+
 # Marqueurs de coin (overlay absolu sur self, hors flux du VBox) : gemme rareté/coût + badge d'effet.
 func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 	var sz: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE

@@ -22,6 +22,18 @@ const MAX_CORRUPTED_IN_HAND: int = 1
 # v11-W3 (spec §E) : cap de greffes par action — 3 slots fixes (12 total, jamais saturé en pratique).
 const MAX_GRAFTS_PER_ACTION: int = 3
 
+# === v2-W2 (2026-07-05) — ARBRE DE TALENT IN-RUN : alimente le skill_mod du moteur d20 (W1) ===
+# Talent PAR VERBE (PERCEVOIR/AGIR/PARLER/RESSENTIR), remis à zéro à chaque new_run (PAS de méta
+# cross-run). Points gagnés au degré (réussite +1 / éclatante +2) ; alloués AU DRAFT via un NŒUD
+# DE TALENT rendu comme une carte de greffe (zéro nouvel écran, R136). skill_mod d'une résolution =
+# niveau de talent du VERBE de l'action jouée. Constantes de départ (À TUNER par le probe §K).
+const TALENT_CAP: int = 5           # niveau max par verbe
+const TALENT_COST: int = 2          # points de talent par +1 de niveau
+const TALENT_GAIN_REUSSITE: int = 1 # points gagnés sur une réussite
+const TALENT_GAIN_ECLATANTE: int = 2 # ... sur une éclatante
+# Les 4 clés de verbe canoniques (== MerlinCard.card_name des actions). L'ordre est stable.
+const TALENT_VERBS: Array = ["PERCEVOIR", "AGIR", "PARLER", "RESSENTIR"]
+
 # v10.11 (user 2026-06-07) — Deck enrichi + Draft + Carte Destin (Slay the Spire allégé).
 # Poids de rareté du draft (somme = 100) ; barème merlin-game-designer.
 const DRAFT_WEIGHTS_NORMAL: Dictionary = {"Rare": 68, "Épique": 26, "Mythique": 6}
@@ -83,6 +95,13 @@ var blessed_tags: Dictionary = {}
 # affiché > valeur réelle, pilier ÉVIDENT violé). Persisté (champ additif, défaut 0) : le save de
 # _advance_to_next précède le redraw du beat suivant (R108).
 var next_draw_bonus: int = 0
+# v2-W2 (2026-07-05) — ARBRE DE TALENT IN-RUN (alimente skill_mod du d20). talent = niveau par verbe ;
+# talent_points = points non dépensés ; verb_usage = compteur de poses par verbe (cible du nœud de
+# draft). TOUS réinitialisés à new_run (pas de save méta). Persistés (champs ADDITIFS, défauts safe
+# au load — pas de bump SAVE_VERSION) : la prise d'un nœud est une progression réelle (R108).
+var talent: Dictionary = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
+var talent_points: int = 0
+var verb_usage: Dictionary = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
 
 
 # Tags bénis portés par les cartes de ce combo (canal bonus de MerlinResolution.resolve, R131).
@@ -155,6 +174,9 @@ func new_run(p_scenario: Dictionary) -> void:
 	pilier_interventions = 0
 	blessed_tags = {}
 	next_draw_bonus = 0
+	talent = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}  # v2-W2 : talent IN-RUN, remis à zéro
+	talent_points = 0
+	verb_usage = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
 	actions = MerlinCard.make_actions()  # v11 : les 4 verbes fixes évolutifs
 	deck = MerlinCard.starter_traits()   # v11 : 16 traits (12 canon retagués + 4 nouveaux)
 	hand = []
@@ -572,6 +594,113 @@ func _graft_pick(bank: Array, n: int) -> Array:
 	return avail.slice(0, mini(n, avail.size()))
 
 
+# === v2-W2 (2026-07-05) — ARBRE DE TALENT : verbe joué, gain au degré, nœud de draft ===
+
+# Clé de talent (verbe) d'une carte ACTION : son card_name (PERCEVOIR/AGIR/PARLER/RESSENTIR).
+# Duck-typé (une carte de trait renvoie "" → jamais de talent). "" si non-action / clé inconnue.
+func verb_of_action(card: Variant) -> String:
+	if card == null:
+		return ""
+	if card is Object and card.has_method("is_action") and card.is_action():
+		var v: String = str(card.card_name)
+		return v if talent.has(v) else ""
+	return ""
+
+
+# skill_mod d'un geste : niveau de talent du verbe de l'action jouée (0 si carte non-action).
+# Lu par merlin_game aux DEUX call-sites resolve (preview + résolution) — invariant R120.
+func skill_mod_for(action_card: Variant) -> int:
+	var v: String = verb_of_action(action_card)
+	return int(talent.get(v, 0)) if v != "" else 0
+
+
+# Incrémente le compteur d'usage du VERBE joué (cible du nœud de talent au draft). Appelé quand un
+# combo est posé (à côté de play_and_discard). No-op si la carte n'est pas une action canonique.
+func note_verb_played(action_card: Variant) -> void:
+	var v: String = verb_of_action(action_card)
+	if v != "":
+		verb_usage[v] = int(verb_usage.get(v, 0)) + 1
+
+
+# Gain de points de talent au DEGRÉ (réussite +1 / éclatante +2 ; partiel/échec 0). Appelé là où le
+# degré est appliqué (merlin_game._on_resolve / le probe), à côté d'apply_resolution.
+func gain_talent_points(degree: String) -> void:
+	if degree == MerlinResolution.REUSSITE:
+		talent_points += TALENT_GAIN_REUSSITE
+	elif degree == MerlinResolution.ECLATANTE:
+		talent_points += TALENT_GAIN_ECLATANTE
+
+
+# Y a-t-il un verbe encore améliorable (niveau < cap) ? Sinon le nœud de talent ne s'offre plus.
+func has_upgradable_verb() -> bool:
+	for v in TALENT_VERBS:
+		if int(talent.get(v, 0)) < TALENT_CAP:
+			return true
+	return false
+
+
+# Le nœud de talent peut-il s'offrir au draft ? Assez de points ET un verbe sous le cap.
+func can_offer_talent_node() -> bool:
+	return talent_points >= TALENT_COST and has_upgradable_verb()
+
+
+# Verbe CIBLE du nœud de talent : le plus utilisé (argmax verb_usage) parmi ceux encore sous le cap ;
+# à défaut d'usage, le verbe de plus BAS talent ; fallback final PERCEVOIR. Ordre TALENT_VERBS stable
+# pour départager les ex æquo (déterministe : le jeu ET le probe voient la même cible).
+func talent_node_target() -> String:
+	var best_v: String = ""
+	var best_n: int = -1
+	for v in TALENT_VERBS:
+		if int(talent.get(v, 0)) >= TALENT_CAP:
+			continue  # déjà au cap → jamais ciblé
+		var n: int = int(verb_usage.get(v, 0))
+		if n > best_n:
+			best_n = n
+			best_v = v
+	if best_v != "" and best_n > 0:
+		return best_v
+	# Aucun usage encore (best_n == 0) : cibler le verbe de plus BAS talent sous le cap.
+	var low_v: String = ""
+	var low_lvl: int = TALENT_CAP + 1
+	for v in TALENT_VERBS:
+		var lvl: int = int(talent.get(v, 0))
+		if lvl < TALENT_CAP and lvl < low_lvl:
+			low_lvl = lvl
+			low_v = v
+	if low_v != "":
+		return low_v
+	return best_v if best_v != "" else "PERCEVOIR"
+
+
+# Construit le NŒUD DE TALENT (dict rendu comme une carte de greffe au draft). kind "talent" le
+# distingue des greffes d'action (le rendu pose alors un liseré/badge talent, pas un slot de greffe).
+func build_talent_node() -> Dictionary:
+	var v: String = talent_node_target()
+	return {
+		"kind": "talent",
+		"verb": v,
+		"amount": 1,
+		"name": "Renforcer %s" % v,
+		"evocation": "Le geste se grave en toi ; %s te répond plus vite, plus sûr." % v,
+	}
+
+
+# Accepte le nœud de talent : monte le verbe d'1 (clampé au cap), consomme TALENT_COST points.
+# L'appelant SAUVE après (progression réelle, R108 — comme les greffes). Renvoie false si refus
+# (points insuffisants OU verbe déjà au cap) → le geste de draft reste ouvert.
+func apply_talent_node(node: Dictionary) -> bool:
+	if str(node.get("kind", "")) != "talent":
+		return false
+	var v: String = str(node.get("verb", ""))
+	if not talent.has(v):
+		return false
+	if talent_points < TALENT_COST or int(talent.get(v, 0)) >= TALENT_CAP:
+		return false
+	talent[v] = mini(TALENT_CAP, int(talent.get(v, 0)) + int(node.get("amount", 1)))
+	talent_points -= TALENT_COST
+	return true
+
+
 # --- Carte Destin (archétype dominant du run) ---
 
 func dominant_archetype() -> String:
@@ -789,6 +918,7 @@ func save() -> void:
 		"intervention_beats": intervention_beats, "pilier_interventions": pilier_interventions,
 		"blessed_tags": blessed_tags,  # Wave I (R131) : planning + bénédictions persistés (R108)
 		"next_draw_bonus": next_draw_bonus,  # v11-W3 (M1) : pioche DRAW due à la main suivante (additif)
+		"talent": talent, "talent_points": talent_points, "verb_usage": verb_usage,  # v2-W2 : talent IN-RUN (additif, R108)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -835,6 +965,11 @@ func load_run() -> bool:
 	pilier_interventions = int(data.get("pilier_interventions", 0))
 	blessed_tags = data.get("blessed_tags", {})
 	next_draw_bonus = int(data.get("next_draw_bonus", 0))  # v11-W3 (M1) : défaut 0 (saves W2/W3 précoces OK)
+	# v2-W2 — talent IN-RUN (champs additifs) : défauts SAFE au load (saves pré-W2 → 4 verbes à 0).
+	# _talent_dict garantit les 4 clés présentes même si le JSON est partiel/corrompu (robustesse R108).
+	talent = _talent_dict(data.get("talent", {}))
+	talent_points = int(data.get("talent_points", 0))
+	verb_usage = _talent_dict(data.get("verb_usage", {}))
 	actions = _dicts_to_cards(data.get("actions", []))
 	if actions.is_empty():
 		actions = MerlinCard.make_actions()  # filet : jamais de run sans les 4 verbes
@@ -863,4 +998,14 @@ func _dicts_to_cards(arr: Array) -> Array:
 	for d in arr:
 		if d is Dictionary:
 			out.append(MerlinCard.from_dict(d))
+	return out
+
+
+# v2-W2 — normalise un dict de talent chargé : les 4 verbes canoniques TOUJOURS présents (valeur int),
+# valeurs par défaut 0. JSON.parse rend des floats → int() explicite. Robuste à un save partiel/legacy.
+func _talent_dict(raw: Variant) -> Dictionary:
+	var out: Dictionary = {}
+	var src: Dictionary = raw if raw is Dictionary else {}
+	for v in TALENT_VERBS:
+		out[v] = int(src.get(v, 0))
 	return out

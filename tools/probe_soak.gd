@@ -63,6 +63,9 @@ var _x1_emissions: Dictionary = {}  # tag ×1 -> nb d'émissions (Franchise/Myst
 var _arch_stats: Dictionary = {}    # arch -> {"degrees": {}, "ends": {}, "runs": 0}
 var _grafts_total: int = 0          # v11-W3 : greffes posées (toutes runs)
 var _grafts_clean: int = 0          # ... runs saines (rapport §K : E[acquisitions] cible 5-6)
+var _talent_nodes_taken: int = 0    # v2-W2 : nœuds de talent pris au draft (toutes runs, info §K)
+var _talent_levels_sum: int = 0     # v2-W2 : somme des niveaux de talent en fin de run saine (moy. §K)
+var _talent_runs: int = 0           # ... nb de runs saines sommées (dénominateur)
 
 
 func _init() -> void:
@@ -80,6 +83,7 @@ func _init() -> void:
 	print("[SOAK] start v11 — runs=%d archetype=%s per_arch=%s" % [runs, archetype, str(per_arch)])
 	_selftest_whitelist()  # plomberie spec §F éprouvée AVANT la campagne (validation LLM incluse)
 	_selftest_grafts()     # v11-W3 : banques, cap 3, dérivations, table de dé, prix one-shot
+	_selftest_talent()     # v2-W2 : gain au degré, ciblage du nœud, cap/coût, skill_mod, save round-trip
 	# Préserve la sauvegarde RÉELLE du joueur : le cas S5 écrit/efface user://merlin_run.json —
 	# snapshot avant la campagne, restauration après.
 	var save_path: String = "user://merlin_run.json"
@@ -289,6 +293,65 @@ func _selftest_grafts() -> void:
 	print("[SOAK] self-test §E greffes : %d greffes en banques, cap/dérivations/dé OK" % seen.size())
 
 
+# --- Self-test talent (v2-W2) : gain au degré, ciblage du nœud, cap/coût, skill_mod, save round-trip. ---
+func _selftest_talent() -> void:
+	var run: Node = RunScript.new()
+	run._rng.seed = 4321
+	run.new_run({"title": "st_talent", "beats": [{"type": "Exploration", "n": 1}], "total": 1})
+	# À neuf : 0 point, 4 verbes à 0, aucun usage, nœud non offert.
+	_st(int(run.talent_points) == 0 and not run.can_offer_talent_node(), "talent neuf : 0 point, nœud non offert")
+	_st(int(run.skill_mod_for(run.actions[0])) == 0, "skill_mod neuf = 0")
+	# Gain au degré : réussite +1, éclatante +2, partiel/échec 0.
+	run.gain_talent_points(ResolutionScript.REUSSITE)
+	run.gain_talent_points(ResolutionScript.PARTIEL)
+	run.gain_talent_points(ResolutionScript.ECHEC)
+	run.gain_talent_points(ResolutionScript.ECLATANTE)
+	_st(int(run.talent_points) == int(run.TALENT_GAIN_REUSSITE) + int(run.TALENT_GAIN_ECLATANTE),
+		"gain au degré (réussite+éclatante = %d)" % int(run.talent_points))
+	# Ciblage : le verbe le plus utilisé est la cible du nœud.
+	run.note_verb_played(run.actions[1])  # AGIR
+	run.note_verb_played(run.actions[1])  # AGIR ×2
+	run.note_verb_played(run.actions[2])  # PARLER ×1
+	_st(str(run.talent_node_target()) == "AGIR", "cible = verbe le plus utilisé (%s)" % str(run.talent_node_target()))
+	# Offre + application : coût TALENT_COST consommé, verbe +1, skill_mod monte.
+	_st(run.can_offer_talent_node(), "nœud offert quand points >= coût")
+	var node: Dictionary = run.build_talent_node()
+	var pts_before: int = int(run.talent_points)
+	_st(run.apply_talent_node(node), "apply_talent_node OK")
+	_st(int(run.talent_points) == pts_before - int(run.TALENT_COST), "coût talent consommé (%d->%d)" % [pts_before, int(run.talent_points)])
+	_st(int(run.talent.get("AGIR", 0)) == 1, "verbe ciblé monté à 1")
+	# skill_mod du verbe AGIR (actions[1]) = 1 maintenant.
+	_st(int(run.skill_mod_for(run.actions[1])) == 1, "skill_mod du verbe amélioré = 1")
+	# Cap : monter AGIR au cap puis refuser au-delà.
+	run.talent["AGIR"] = int(run.TALENT_CAP)
+	run.talent_points = 100
+	_st(not run.apply_talent_node({"kind": "talent", "verb": "AGIR", "amount": 1}), "cap talent : refus au-delà de TALENT_CAP")
+	# Un verbe au cap n'est jamais ciblé.
+	run.verb_usage["AGIR"] = 999
+	_st(str(run.talent_node_target()) != "AGIR", "verbe au cap jamais ciblé (%s)" % str(run.talent_node_target()))
+	# Save round-trip : talent / points / usage survivent au resume (R108, champs additifs).
+	run.save()
+	var run2: Node = RunScript.new()
+	_st(run2.load_run(), "load_run() talent OK")
+	_st(int(run2.talent.get("AGIR", 0)) == int(run.talent.get("AGIR", 0)) \
+		and int(run2.talent_points) == int(run.talent_points) \
+		and int(run2.verb_usage.get("AGIR", 0)) == int(run.verb_usage.get("AGIR", 0)),
+		"resume talent/points/usage identiques")
+	# Save legacy (sans champs talent) : défauts safe (4 verbes à 0, pas de crash).
+	var run3: Node = RunScript.new()
+	run3.new_run({"title": "st_legacy", "beats": [{"type": "Exploration", "n": 1}], "total": 1})
+	run3.talent = run3._talent_dict({})  # simulate load partiel
+	_st((run3.talent as Dictionary).size() == 4 and int(run3.talent.get("PERCEVOIR", 0)) == 0,
+		"défaut safe talent (4 verbes à 0)")
+	var cap_v: int = int(run.TALENT_CAP)
+	var cost_v: int = int(run.TALENT_COST)
+	run.clear_save()
+	run.free()
+	run2.free()
+	run3.free()
+	print("[SOAK] self-test W2 talent : gain/ciblage/cap/coût/skill_mod/save OK (cap=%d coût=%d)" % [cap_v, cost_v])
+
+
 # v1.0-V4a (BAL-04-B) — gates de morts PAR ARCHÉTYPE (runs saines), ASSERTIONS DURES du soak.
 # tag_ignorant = baseline non-lecteur, volontairement sans gate (mesure la sensibilité au signal).
 const ARCH_MORT_GATES: Dictionary = {"optimal": 10.0, "greedy": 30.0, "chaotic": 30.0, "corrompu": 25.0}
@@ -430,7 +493,10 @@ func _soak_one(i: int, arch: String) -> void:
 		var combo: Array = _pick_combo(arch, run, required, die, rng, diff)
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
 		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.
-		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff)
+		# v2-W2 — skill_mod = talent du verbe joué (miroir merlin_game._on_resolve, R120 preview=résolution).
+		var skill_mod: int = int(run.skill_mod_for(combo[0]))
+		run.note_verb_played(combo[0])  # compteur d'usage du verbe (cible du nœud de talent au draft)
+		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff, skill_mod, 0)
 		run.consume_blessings(combo)  # R131 : une bénédiction sert UNE fois (miroir du jeu)
 		# v10.21 (Wave G, R130) — miroir « Pousser » : optimal pousse si Intégrité ≤ 4 ;
 		# corrompu toujours ; greedy/chaotic/tag_ignorant ALTERNENT (spec v11-W2).
@@ -471,6 +537,7 @@ func _soak_one(i: int, arch: String) -> void:
 		# DRAW) se consomment à la pose, AVANT apply_resolution (un HEAL peut sauver — même ordre).
 		run.apply_graft_charges(combo[0])
 		run.apply_resolution(res)
+		run.gain_talent_points(deg)  # v2-W2 : points de talent au degré FINAL (réussite +1 / éclatante +2), après le push R130
 		# v11-W3 — le draft sert des GREFFES (miroir merlin_game._advance_to_next) : offrande du
 		# pilier au beat Rencontre (1×/run, banque signée) sinon draft générique aux réussites ;
 		# ~70 % de prise conservé ; cible = action ÉLIGIBLE (archétype greffe-aware) ; les tags
@@ -483,7 +550,11 @@ func _soak_one(i: int, arch: String) -> void:
 				if not offer.is_empty():
 					did_offering = true
 					_drafts_offered += 1
-					if rng.randf() < 0.7 and _apply_soak_graft(run, arch,
+					# v2-W2 — le nœud de talent remplace un choix (miroir _inject_talent_node) : pris → draft consommé.
+					if _maybe_take_talent_node(run, arch, rng):
+						_drafts_taken += 1
+						_talent_nodes_taken += 1
+					elif rng.randf() < 0.7 and _apply_soak_graft(run, arch,
 							offer[rng.randi_range(0, offer.size() - 1)], action_plays, rng, i):
 						_drafts_taken += 1
 						grafts_run += 1
@@ -496,7 +567,11 @@ func _soak_one(i: int, arch: String) -> void:
 			var choices: Array = run.graft_choices(3)
 			if not choices.is_empty():
 				_drafts_offered += 1
-				if rng.randf() < 0.7 and _apply_soak_graft(run, arch,
+				# v2-W2 — nœud de talent (miroir _inject_talent_node) : pris → draft consommé, sinon greffe.
+				if _maybe_take_talent_node(run, arch, rng):
+					_drafts_taken += 1
+					_talent_nodes_taken += 1
+				elif rng.randf() < 0.7 and _apply_soak_graft(run, arch,
 						choices[rng.randi_range(0, choices.size() - 1)], action_plays, rng, i):
 					_drafts_taken += 1
 					grafts_run += 1
@@ -524,6 +599,12 @@ func _soak_one(i: int, arch: String) -> void:
 			_pushes_clean += run_pushes
 			_corr_gained_clean += corr_gained_run
 			_grafts_clean += grafts_run
+			# v2-W2 — talent final : somme des 4 niveaux en fin de run saine (moyenne §K = poussée du build).
+			var tl: int = 0
+			for tv in run.TALENT_VERBS:
+				tl += int((run.talent as Dictionary).get(tv, 0))
+			_talent_levels_sum += tl
+			_talent_runs += 1
 			# v1.0-V4a (BAL-04-B) — base des gates de morts par archétype : runs SAINES uniquement
 			# (les cas dégénérés forcés meurent par construction et fausseraient le gate).
 			_bump_arch(arch, "ends_clean", run.end_type)
@@ -580,6 +661,25 @@ func _apply_soak_graft(run: Node, arch: String, graft: Dictionary, action_plays:
 			"prix de greffe ONE-SHOT (%d->%d, coût %d)" % [
 				corr_before2, run.corruption, int(graft.get("corr_cost", 0))], run)
 	return ok
+
+
+# v2-W2 — MIROIR du nœud de talent au draft (merlin_game._inject_talent_node + _on_draft_card) :
+# quand un nœud de talent PEUT s'offrir (assez de points + un verbe sous le cap), il REMPLACE l'un
+# des 3 choix. Le bot le prend selon sa politique ; « optimal » le prend toujours (skill_mod permanent
+# rationnel sur le verbe le plus joué) ; les autres avec P ≈ 1/3 × 0,7 (nœud = 1 choix sur 3, pris ~70 %).
+# Renvoie true si le nœud a été PRIS (le draft est alors consommé — pas de greffe ce beat). save() posé
+# comme au jeu (progression réelle R108) — le probe teste ensuite le resume S5.
+func _maybe_take_talent_node(run: Node, arch: String, rng: RandomNumberGenerator) -> bool:
+	if not run.can_offer_talent_node():
+		return false
+	var take: bool = (arch == "optimal") or (rng.randf() < 0.233)
+	if not take:
+		return false
+	var node: Dictionary = run.build_talent_node()
+	if not run.apply_talent_node(node):
+		return false  # course improbable (verbe passé au cap entre-temps) — retombe sur la greffe
+	run.save()  # même contrat que la pose d'une greffe (R108)
+	return true
 
 
 # Wave D — tire le pilier de l'offrande aux poids de MerlinScenario (faction 30/30/30/8 → choeur/
@@ -691,8 +791,10 @@ func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: Random
 	var best: Array = [acts[0], traits_h[0]]
 	var best_key: Array = []
 	for a in acts:
+		# v2-W2 — skill_mod = talent du verbe de l'action évaluée (le bot lit la même preview, R120).
+		var sm: int = int(run.skill_mod_for(a))
 		for t in traits_h:
-			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff)
+			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff, sm, 0)
 			var cov: Dictionary = r["coverage"]
 			var covered_arr: Array = cov["covered"]
 			var extra_arr: Array = cov["extra"]
@@ -756,6 +858,11 @@ func _report_k() -> void:
 		_band("couverture pleine climax (3 requis)", 100.0 * float(_climax_full) / float(_climax_beats), 45.0, 55.0)
 	print("[SOAK]   %-36s %5.2f    (info §E : E[acquisitions] cible 5-6 · offerts/run=%.2f)" % [
 		"greffes posées/run (saines)", float(_grafts_clean) / cr, float(_drafts_offered) / float(maxi(_runs_total, 1))])
+	# v2-W2 — TALENT : nœuds pris + niveau moyen de talent en fin de run saine (le talent pousse §K vers
+	# plus de succès → la ligne trace l'ampleur du levier ; informatif, non-bloquant).
+	print("[SOAK]   %-36s %5.2f    (info W2 : nœuds pris/run · niveau talent moyen fin de run=%.2f)" % [
+		"nœuds de talent pris/run (saines)", float(_talent_nodes_taken) / float(maxi(_runs_total, 1)),
+		float(_talent_levels_sum) / float(maxi(_talent_runs, 1))])
 	print("[SOAK]   %-36s %5d     (ASSERTION DURE == 0)" % ["beats à requis hors-pool", _offpool_beats])
 	print("[SOAK]   %-36s %5.1f%%   (info §C : A/B réserve de trait si > 45)" % ["deadhand (0 trait couvrant)", 100.0 * float(_deadhand_beats) / float(maxi(_beats_total, 1))])
 	print("[SOAK]   variantes basculées=%d · sabotage R66 non simulé (aucun antagoniste côté probe) · émissions ×1=%s" % [_variant_swaps, str(_x1_emissions)])

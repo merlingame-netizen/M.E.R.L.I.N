@@ -1820,6 +1820,18 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R142 — ARBRE DE TALENT IN-RUN (2026-07-05, v2-W2 — « nos points de compétence »)** : un `skill_mod`
+  in-run alimente le jet d20 (R141). **Par verbe** (PERCEVOIR/AGIR/PARLER/RESSENTIR) : `talent[verbe]` 0..5 ;
+  `skill_mod` d'une résolution = `talent[verbe joué]` (câblé aux 2 call-sites resolve, R120). **Points**
+  gagnés au degré (réussite +1, éclatante +2 ; partiel/échec 0), pool `talent_points`. **Allocation AU DRAFT** :
+  quand `talent_points ≥ TALENT_COST(2)`, un nœud de talent **remplace UN des 3 choix** de greffe (cible =
+  verbe le plus utilisé non-cappé) — rendu comme carte Mythique GOLD « ✦ +N TALENT », **prise en 1 geste**,
+  ZÉRO nouvel écran/modal (R136). `TALENT_CAP=5`. Les 4 tuiles affichent leur « +N » GOLD (caché à 0, MINIMAL).
+  Save ADDITIF (talent/talent_points/verb_usage, pas de bump SAVE_VERSION), persisté à la prise (R108).
+  IN-RUN seulement (reset à new_run, pas de méta cross-run). §K tient SANS lever (talent modélisé : échec 6,6 ·
+  partiel 32,6 · réussite 49,5 · éclatante 11,3 — toutes IN ; morts archétype PASS ; ~1,3 nœud/run). W3 :
+  greffes « +N au jet » (graft_bonus). W4 : visuel d20 + halo.
+
 - **R141 — RÉSOLUTION d20-vs-DC (2026-07-05, v2-W1 — pivot JDR « le dé tourne pour voir la réussite »)** :
   la résolution passe du modèle « couverture de tags + dé d6 à bandes » à un **jet de d20 contre un seuil
   de difficulté (DC)**. Formule : `total = d20(1-20) + skill_mod + graft_bonus + COVER_PER_TAG×(tags requis
