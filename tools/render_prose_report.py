@@ -174,12 +174,14 @@ def render(d: dict) -> str:
     cat = d.get("catalog") or {}
     if cat:
         p.append('<section class="sec"><div class="sec-title">Catalogue procédural — toutes les variantes</div>')
-        p.append('<div style="color:var(--dim);font-size:12px;margin-bottom:14px">Textes garantis (tirés au sort en jeu), éditables dans <b style="color:var(--goldb)">merlin_scenario.gd</b> — SITU_FALLBACKS / RESO_FALLBACKS / fallback_epilogue.</div>')
-        for typ, variants in (cat.get("situations") or {}).items():
-            p.append(f'<div class="row"><div class="row-k">Situation · {esc(typ)}</div>')
-            for i, v in enumerate(variants or []):
-                p.append(prose(f"SITU {esc(typ)} #{i + 1}", v, "proc"))
-            p.append('</div>')
+        p.append('<div style="color:var(--dim);font-size:12px;margin-bottom:14px">Textes garantis (tirés au sort en jeu), éditables dans <b style="color:var(--goldb)">merlin_scenario.gd</b> — SITU_FALLBACKS_BY_BIOME / RESO_FALLBACKS / fallback_epilogue.</div>')
+        # N2a — situations désormais nichées par BIOME : {biome: {type: [variantes]}}.
+        for biome, by_type in (cat.get("situations") or {}).items():
+            for typ, variants in (by_type or {}).items():
+                p.append(f'<div class="row"><div class="row-k">Situation · {esc(biome)} · {esc(typ)}</div>')
+                for i, v in enumerate(variants or []):
+                    p.append(prose(f"SITU {esc(biome)}/{esc(typ)} #{i + 1}", v, "proc"))
+                p.append('</div>')
         for deg, variants in (cat.get("resolutions") or {}).items():
             p.append(f'<div class="row"><div class="row-k">Résolution · {esc(DEG_LABEL.get(deg, deg))}</div>')
             for i, v in enumerate(variants or []):

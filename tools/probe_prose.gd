@@ -65,7 +65,7 @@ func _run() -> void:
 	# Catalogue procédural COMPLET (toutes les variantes authored) — instantané, sans LLM.
 	# Garantit « toute la prose » dans le rapport même si le LLM stalle.
 	out["catalog"] = {
-		"situations": sc.SITU_FALLBACKS,
+		"situations": sc.SITU_FALLBACKS_BY_BIOME,
 		"resolutions": sc.RESO_FALLBACKS,
 		"epilogues": {
 			"accomplissement": sc.fallback_epilogue("accomplissement"),
@@ -164,26 +164,38 @@ func _write(out: Dictionary) -> void:
 
 
 # v11-N1 (R140) — vérifie les banques de prose (constantes) : retourne la liste des violations (vide = ok).
+# N2a (2026-07-05) — étendu : banques BIOME-aware (situations + arcs + conséquences par biome), résolution
+# COMPOSÉE (actions par registre commençant par « Vous », conséquences non-vides), et check de compo
+# falaises (zéro mot forestier + « [i]Vous » + mot de biome). Reste DÉTERMINISTE (constantes seules).
 func _prose_gate(sc: Node) -> Array:
 	var viol: Array = []
 	var banned: Array = ["le Voyageur", "Le Voyageur", "se demandait", "que faire", "Que décida", "que décida", "décidez-vous", "vous demandez"]
+	# Mots FORESTIERS interdits dans les banques FALAISES (N2a check a). Minuscule pour comparaison insensible.
+	var foret_words: Array = ["forêt", "foret", "bois", "arbre", "sous les arbres", "fougère", "mousse", "sentier sous"]
 	# 1) SYSTEM_PREFIX : plus de 3e personne « Voyageur » ni de directive « 3e PERSONNE ».
 	var sysp: String = str(sc.SYSTEM_PREFIX)
 	if sysp.find("Voyageur") != -1 or sysp.find("3e PERSONNE") != -1:
 		viol.append("SYSTEM_PREFIX contient encore 'Voyageur' ou '3e PERSONNE'")
-	# 2) Situations (SITU_FALLBACKS + FALLBACK_ARCS) : aucun filler, aucune 3e personne héritée.
-	var situ_pools: Array = []
-	for p in sc.SITU_FALLBACKS.values():
-		situ_pools.append(p)
-	for arc in sc.FALLBACK_ARCS:
-		situ_pools.append(arc)
-	for pool in situ_pools:
-		for line in pool:
-			var s: String = str(line)
-			for b in banned:
-				if s.find(str(b)) != -1:
-					viol.append("situation « %s… » contient '%s'" % [s.substr(0, 28), str(b)])
-	# 3) Résolutions (RESO_FALLBACKS + _LONG) : action en [i]…[/i], commence par [i]Vous, balises équilibrées.
+	# 2) Situations biome-aware (SITU_FALLBACKS_BY_BIOME + FALLBACK_ARCS_BY_BIOME) : aucun filler,
+	#    aucune 3e personne héritée ; et pour les banques FALAISES, zéro mot forestier (check a).
+	for biome_key in sc.SITU_FALLBACKS_BY_BIOME.keys():
+		var situ_pools: Array = []
+		for p in sc.SITU_FALLBACKS_BY_BIOME[biome_key].values():
+			situ_pools.append(p)
+		for arc in sc.FALLBACK_ARCS_BY_BIOME.get(biome_key, []):
+			situ_pools.append(arc)
+		for pool in situ_pools:
+			for line in pool:
+				var s: String = str(line)
+				for b in banned:
+					if s.find(str(b)) != -1:
+						viol.append("situation [%s] « %s… » contient '%s'" % [str(biome_key), s.substr(0, 28), str(b)])
+				if str(biome_key) == "falaises":
+					var sl: String = s.to_lower()
+					for fw in foret_words:
+						if sl.find(str(fw)) != -1:
+							viol.append("situation FALAISES « %s… » contient le mot forestier '%s'" % [s.substr(0, 28), str(fw)])
+	# 3) Filet neutre RESO_FALLBACKS + _LONG : action en [i]…[/i], commence par [i]Vous, balises équilibrées.
 	var reso_pools: Array = []
 	for p2 in sc.RESO_FALLBACKS.values():
 		reso_pools.append(p2)
@@ -199,7 +211,59 @@ func _prose_gate(sc: Node) -> Array:
 				viol.append("résolution « %s… » ne commence pas par '[i]Vous'" % r.substr(0, 28))
 			if r.count("[i]") != r.count("[/i]") or r.count("[i]") == 0:
 				viol.append("résolution « %s… » : balises [i]/[/i] déséquilibrées" % r.substr(0, 28))
+	# 4) Actions par registre (N2a check b) : chaque variante commence par « Vous », pas de filler.
+	for reg_key in sc.RESO_ACTION_BY_REGISTRE.keys():
+		for aline in sc.RESO_ACTION_BY_REGISTRE[reg_key]:
+			var a: String = str(aline)
+			if not a.begins_with("Vous"):
+				viol.append("action [%s] « %s… » ne commence pas par 'Vous'" % [str(reg_key), a.substr(0, 28)])
+			for b3 in banned:
+				if a.find(str(b3)) != -1:
+					viol.append("action [%s] « %s… » contient '%s'" % [str(reg_key), a.substr(0, 28), str(b3)])
+	# 5) Conséquences par (degré × biome) (N2a check c) : chacune NON-VIDE ; falaises = zéro mot forestier.
+	for deg_key in sc.RESO_CONSEQ_BY_DEGREE_BIOME.keys():
+		for cbiome in sc.RESO_CONSEQ_BY_DEGREE_BIOME[deg_key].keys():
+			var cpool: Array = sc.RESO_CONSEQ_BY_DEGREE_BIOME[deg_key][cbiome]
+			if cpool.is_empty():
+				viol.append("conséquence [%s|%s] : pool VIDE" % [str(deg_key), str(cbiome)])
+			for cline in cpool:
+				var cs: String = str(cline)
+				if cs.strip_edges().is_empty():
+					viol.append("conséquence [%s|%s] : entrée vide" % [str(deg_key), str(cbiome)])
+				if str(cbiome) == "falaises":
+					var csl: String = cs.to_lower()
+					for fw2 in foret_words:
+						if csl.find(str(fw2)) != -1:
+							viol.append("conséquence FALAISES [%s] « %s… » contient le mot forestier '%s'" % [str(deg_key), cs.substr(0, 28), str(fw2)])
+	# 6) Compo intégrée (N2a check d) : fallback_resolution(degré, "", [carte FORCE], "falaises") produit
+	#    « [i]Vous … [/i] » + ≥1 mot de biome falaises. Carte factice duck-typée (archetype()="Offensif"→FORCE).
+	var fake_force: Object = _FakeCard.new("Offensif")
+	var sea_words: Array = ["mer", "vent", "sel", "écume", "roche", "phare", "falaise", "marée", "embrun", "côte", "vague"]
+	for dtest in ["echec", "partiel", "reussite", "eclatante"]:
+		var comp: String = str(sc.fallback_resolution(dtest, "", [fake_force], "falaises"))
+		if not comp.begins_with("[i]Vous"):
+			viol.append("compo falaises [%s] « %s… » ne commence pas par '[i]Vous'" % [dtest, comp.substr(0, 28)])
+		if comp.find("[/i]") == -1:
+			viol.append("compo falaises [%s] : pas de balise fermante [/i]" % dtest)
+		var cl: String = comp.to_lower()
+		var has_sea: bool = false
+		for sw in sea_words:
+			if cl.find(str(sw)) != -1:
+				has_sea = true
+				break
+		if not has_sea:
+			viol.append("compo falaises [%s] « …%s » ne contient AUCUN mot de biome falaises" % [dtest, comp.substr(maxi(0, comp.length() - 40))])
 	return viol
+
+
+# N2a — carte factice minimale duck-typée pour la compo du gate : expose archetype() (le seul contrat
+# lu par _dominant_registre). Évite d'instancier MerlinCard (leçon soak : pas de dépendance de classe).
+class _FakeCard:
+	var _arch: String = "Offensif"
+	func _init(arch: String) -> void:
+		_arch = arch
+	func archetype() -> String:
+		return _arch
 
 
 func _choose(hand: Array, required: Array) -> Array:

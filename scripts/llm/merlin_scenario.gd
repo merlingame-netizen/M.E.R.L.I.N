@@ -337,93 +337,233 @@ const SEL_FALLBACK: Array = [
 ]
 
 # Narration procédurale = le texte VU par défaut (le LLM ≈1 tok/s ne gagne presque jamais la
-# course contre la lecture du joueur). Donc 3 variantes/type, tirées au sort → variété cross-run
+# course contre la lecture du joueur). Donc 5 variantes/type, tirées au sort → variété cross-run
 # (chaque type n'apparaît qu'1 fois par run). Ton « merveilleux-inquiétant » (bible §21).
 # Scènes COURTES (user 2026-06-06 : « moins avant chaque choix de carte »). 1-2 phrases : poser le
 # décor vite, laisser la place au geste. La VERBOSITÉ est réservée à l'ISSUE des moments forts.
-const SITU_FALLBACKS: Dictionary = {
-	"Exploration": [
-		"La clairière s'ouvre devant vous, trop calme. Quelque chose vous attend là, tapi, sans se montrer.",
-		"Le sentier disparaît sous les fougères. Pas un bruit — et pourtant on vous regarde, quelque part entre les troncs.",
-		"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte, et vos pas résonnent trop fort.",
-		"Devant vous, les arbres s'espacent et laissent passer un peu de lumière. C'est trop ouvert, trop facile ; vous avancez quand même, l'échine tendue.",
-		"Le sol devient mou sous vos pas, couvert de mousse épaisse. Quelque part tout près, une source coule sans qu'on la voie.",
+# N2a (2026-07-05) — BIOME-AWARE : le LLM (~1 tok/s) ne finit presque jamais sa résolution dans la
+# fenêtre du joueur → c'est TOUJOURS le secours qui s'affiche. Il DOIT donc coller au biome (mer /
+# falaises en biome falaises, pas « au creux de la forêt »). SITU_FALLBACKS_BY_BIOME[biome][type] :
+# la forêt garde ses banques ; les falaises ont leurs propres 5 variantes/type (mer/vent/phare/
+# épaves/rochers/sel/écume/marée/mouettes), même forme (2e pers présent, PNJ actif, jamais « que faire »).
+const SITU_FALLBACKS_BY_BIOME: Dictionary = {
+	"foret": {
+		"Exploration": [
+			"La clairière s'ouvre devant vous, trop calme. Quelque chose vous attend là, tapi, sans se montrer.",
+			"Le sentier disparaît sous les fougères. Pas un bruit — et pourtant on vous regarde, quelque part entre les troncs.",
+			"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte, et vos pas résonnent trop fort.",
+			"Devant vous, les arbres s'espacent et laissent passer un peu de lumière. C'est trop ouvert, trop facile ; vous avancez quand même, l'échine tendue.",
+			"Le sol devient mou sous vos pas, couvert de mousse épaisse. Quelque part tout près, une source coule sans qu'on la voie.",
+		],
+		"Rencontre": [
+			"Une silhouette sort des arbres et se plante devant vous, sans un mot. Elle vous jauge, et attend de voir qui vous êtes.",
+			"Une forme immobile vous barre la route. Son regard pèse lourd ; elle ne bougera pas la première.",
+			"Une voix vous salue avant que vous ne voyiez personne. « Je connais ce pas », dit-elle, tout près.",
+			"Un vieil homme est assis sur une pierre, comme s'il vous attendait. Il ne lève pas les yeux tout de suite, puis crache : « Vous n'auriez pas dû venir. »",
+			"Deux yeux brillent entre les troncs, à hauteur d'enfant. Ils ne clignent pas, et une petite voix demande : « Tu viens jouer ? »",
+		],
+		"Epreuve": [
+			"La forêt vous barre le passage : ronces, pierres, pente glissante. Rien ne cédera tout seul.",
+			"Le chemin se dresse contre vous, hostile. Il faudra forcer pour avancer.",
+			"Un vieil obstacle barre la route. Il faudra payer de vos bras ou de votre ruse.",
+			"Un torrent coupe le chemin devant vous, rapide et froid. L'autre rive est juste là, hors d'atteinte.",
+			"La pente monte d'un coup, raide et nue. Vos jambes brûlent rien qu'à la regarder.",
+		],
+		"Dilemme": [
+			"Deux chemins s'ouvrent devant vous. Chacun a un prix, et aucun ne vous laissera intact.",
+			"Un choix se pose, sans détour. Quoi que vous fassiez, la forêt s'en souviendra.",
+			"Il faut trancher, là où il n'y a pas de bonne réponse. Ne rien choisir, c'est choisir aussi.",
+			"Une bête blessée gît en travers du sentier, le flanc battant. La soigner coûte du temps ; l'achever, autre chose.",
+			"Deux voix vous appellent en même temps, de deux côtés opposés. Vous ne pourrez en suivre qu'une.",
+		],
+		"Climax": [
+			"L'air se fige. La forêt retient son souffle. Ce qui vient ne se reprendra pas.",
+			"Tout se joue ici, maintenant. Les murmures se taisent d'un coup autour de vous.",
+			"Le cœur de la forêt bat sous vos pieds. Ici se décide ce que vous devenez.",
+			"Le sentier débouche sur un cercle de pierres dressées. Au centre, ce que vous êtes venu chercher vous attend.",
+			"Tout le bois s'est tu d'un coup. Devant vous, la dernière porte ; derrière elle, la fin de l'histoire.",
+		],
+	},
+	"falaises": {
+		"Exploration": [
+			"La corniche s'ouvre devant vous, battue de vent. En contrebas, la mer noire se referme sur les rochers sans un cri d'écume.",
+			"Le sentier de sel longe le vide. Pas un bruit, sinon la marée qui monte — et pourtant on vous suit, quelque part parmi les épaves.",
+			"Les rochers s'écartent sur une crique sans nom. Une odeur d'algue et de goudron froid flotte, et vos pas glissent sur la roche mouillée.",
+			"Devant vous, la falaise s'abaisse et laisse voir la baie. C'est trop dégagé, trop offert au vent ; vous avancez quand même, l'échine tendue.",
+			"Le sol devient spongieux sous vos pas, gorgé d'embruns. Tout près, sous la roche, la mer travaille une faille qu'on n'aperçoit pas.",
+		],
+		"Rencontre": [
+			"Une silhouette surgit de derrière un rocher et se plante devant vous, sans un mot. Elle vous jauge, le dos à la mer, et attend de voir qui vous êtes.",
+			"Un vieux gardien de phare vous barre le passage, une lanterne éteinte à la main. « La mer a repris trois barques cette lune », lâche-t-il en vous toisant.",
+			"Une voix vous hèle avant que vous ne voyiez personne, portée par le vent. « Je connais ce pas », dit-elle, tout près, sous le fracas des vagues.",
+			"Une pêcheuse est assise sur une épave échouée, comme si elle vous attendait. Elle ne lève pas les yeux tout de suite, puis crache : « Vous n'auriez pas dû descendre jusqu'ici. »",
+			"Deux yeux brillent dans le renfoncement d'un rocher, à hauteur d'enfant. Ils ne clignent pas, et une petite voix demande, par-dessus l'écume : « Tu viens voir la marée ? »",
+		],
+		"Epreuve": [
+			"La falaise vous barre le passage : roche à pic, embruns, pierres qui roulent. Rien ne cédera tout seul.",
+			"Le sentier se dresse contre vous, taillé à même le roc et lustré de sel. Il faudra forcer pour avancer.",
+			"Un vieil escalier de pierre descend vers la crique, une marche manque, et le vide appelle en dessous. Il faudra payer de vos bras ou de votre ruse.",
+			"La marée montante coupe le passage devant vous, rapide et froide. L'autre rive de galets est juste là, hors d'atteinte.",
+			"La paroi se dresse d'un coup, nue et suintante d'écume. Vos bras brûlent rien qu'à la regarder.",
+		],
+		"Dilemme": [
+			"Deux sentiers s'ouvrent sur la corniche. Chacun a un prix, et aucun ne vous laissera intact.",
+			"Un choix se pose, sans détour, face au large. Quoi que vous fassiez, la mer, en bas, en gardera le compte.",
+			"Il faut trancher, là où il n'y a pas de bonne réponse. Rester sur le bord, c'est choisir aussi.",
+			"Un phoque blessé gît en travers des galets, le flanc battant. Le remettre à l'eau coûte du temps ; l'abandonner, autre chose.",
+			"Deux voix vous appellent en même temps, l'une du phare, l'autre de la grève. Vous ne pourrez en suivre qu'une.",
+		],
+		"Climax": [
+			"L'air se fige. Le vent tombe d'un coup, et la mer retient son souffle. Ce qui vient ne se reprendra pas.",
+			"Tout se joue ici, maintenant, au bord du vide. Les mouettes se taisent d'un coup au-dessus de vous.",
+			"La houle bat la falaise sous vos pieds. Ici, sur le sel, se décide ce que vous devenez.",
+			"Le sentier débouche au pied du vieux phare, sa porte de sel entrouverte. Au seuil, ce que vous êtes venu chercher vous attend.",
+			"Toute la côte s'est tue d'un coup. Devant vous, la dernière marche au-dessus des flots ; derrière, la fin de l'histoire.",
+		],
+	},
+}
+
+# N2a (2026-07-05) — RÉSOLUTION COMPOSÉE. Le secours de résolution ne reflétait NI la combinaison
+# jouée NI le biome. Nouveau modèle : ACTION (registre dominant des cartes) + CONSÉQUENCE (degré ×
+# biome). fallback_resolution(degree, situ_type, played_cards, biome) → "[i]" + action + "[/i] " +
+# conséquence. Les banques RESO_FALLBACKS/_LONG ci-dessous restent le FILET NEUTRE (registre inconnu /
+# hors-jeu) et l'ancre du gate probe (chaque entrée commence par « [i]Vous »).
+#
+# ACTION par REGISTRE dominant (arch_reg : Social→PAROLE, Offensif→FORCE, Mystique→PERCEPTION,
+# Défensif→PROTECTION, Corrompu→OMBRE ; "" = registre indéterminé → neutre). 2e pers présent,
+# commence TOUJOURS par « Vous ». Biome-AGNOSTIQUE (le geste du Voyageur ; le lieu vit dans la conséquence).
+const RESO_ACTION_BY_REGISTRE: Dictionary = {
+	"PAROLE": [
+		"Vous pesez chaque mot et parlez d'une voix qui ne tremble pas.",
+		"Vous cherchez le mot juste, celui qui désarme, et le laissez tomber au bon moment.",
+		"Vous nouez la parole et le regard en un seul aplomb, sans hausser le ton.",
 	],
-	"Rencontre": [
-		"Une silhouette sort des arbres et se plante devant vous, sans un mot. Elle vous jauge, et attend de voir qui vous êtes.",
-		"Une forme immobile vous barre la route. Son regard pèse lourd ; elle ne bougera pas la première.",
-		"Une voix vous salue avant que vous ne voyiez personne. « Je connais ce pas », dit-elle, tout près.",
-		"Un vieil homme est assis sur une pierre, comme s'il vous attendait. Il ne lève pas les yeux tout de suite, puis crache : « Vous n'auriez pas dû venir. »",
-		"Deux yeux brillent entre les troncs, à hauteur d'enfant. Ils ne clignent pas, et une petite voix demande : « Tu viens jouer ? »",
+	"FORCE": [
+		"Vous calez vos pieds et poussez de tout votre poids, sans rompre l'effort.",
+		"Vous engagez le corps entier dans le geste, muscles tendus jusqu'au bout.",
+		"Vous frappez d'un seul élan, franc, là où il faut et quand il faut.",
 	],
-	"Epreuve": [
-		"La forêt vous barre le passage : ronces, pierres, pente glissante. Rien ne cédera tout seul.",
-		"Le chemin se dresse contre vous, hostile. Il faudra forcer pour avancer.",
-		"Un vieil obstacle barre la route. Il faudra payer de vos bras ou de votre ruse.",
-		"Un torrent coupe le chemin devant vous, rapide et froid. L'autre rive est juste là, hors d'atteinte.",
-		"La pente monte d'un coup, raide et nue. Vos jambes brûlent rien qu'à la regarder.",
+	"PERCEPTION": [
+		"Vous fermez les yeux un instant, puis lisez ce que le lieu cache.",
+		"Vous suivez le fil ténu des signes que nul autre ne voit, et remontez jusqu'à la faille.",
+		"Vous laissez le regard se poser, patient, jusqu'à ce que le secret se découvre de lui-même.",
 	],
-	"Dilemme": [
-		"Deux chemins s'ouvrent devant vous. Chacun a un prix, et aucun ne vous laissera intact.",
-		"Un choix se pose, sans détour. Quoi que vous fassiez, la forêt s'en souviendra.",
-		"Il faut trancher, là où il n'y a pas de bonne réponse. Ne rien choisir, c'est choisir aussi.",
-		"Une bête blessée gît en travers du sentier, le flanc battant. La soigner coûte du temps ; l'achever, autre chose.",
-		"Deux voix vous appellent en même temps, de deux côtés opposés. Vous ne pourrez en suivre qu'une.",
+	"PROTECTION": [
+		"Vous vous campez sans reculer et tenez la garde, immobile comme la pierre.",
+		"Vous encaissez le choc et refusez de céder d'un pouce, ancré dans le sol.",
+		"Vous faites rempart de votre corps et laissez passer l'assaut sans plier.",
 	],
-	"Climax": [
-		"L'air se fige. La forêt retient son souffle. Ce qui vient ne se reprendra pas.",
-		"Tout se joue ici, maintenant. Les murmures se taisent d'un coup autour de vous.",
-		"Le cœur de la forêt bat sous vos pieds. Ici se décide ce que vous devenez.",
-		"Le sentier débouche sur un cercle de pierres dressées. Au centre, ce que vous êtes venu chercher vous attend.",
-		"Tout le bois s'est tu d'un coup. Devant vous, la dernière porte ; derrière elle, la fin de l'histoire.",
+	"OMBRE": [
+		"Vous appelez tout bas la part sombre, et la laissez guider votre main.",
+		"Vous ouvrez la porte à ce qui ronge, et vous en servez sans détourner les yeux.",
+		"Vous nourrissez le geste d'une force qui vous coûte, et qui répond aussitôt.",
+	],
+	"": [
+		"Vous rassemblez vos deux forces et agissez d'un seul élan.",
+		"Vous unissez vos deux forces en un seul geste, sans hésiter.",
+		"Vous engagez vos deux forces d'un même mouvement, jusqu'au bout.",
 	],
 }
 
+
+# CONSÉQUENCE par (degré × biome) — le MONDE réagit selon R140 (échec = résiste/se ferme · partiel =
+# cède à demi + prix · réussite = cède/ouvre · éclatante = se lie/donne plus). Imagery de biome :
+# falaises = mer/vent/sel/écume/rochers/phare ; foret = bois/arbres/mousse/source. ~3 variantes/case.
+const RESO_CONSEQ_BY_DEGREE_BIOME: Dictionary = {
+	"echec": {
+		"foret": [
+			"Le bois ne cède rien ; ce que vous cherchiez se dérobe entre les troncs, et vous vous retrouvez plus loin du but qu'avant. Dans l'ombre, quelque chose paraît s'en amuser.",
+			"Le sentier se referme, indifférent, et vous repousse en arrière ; la mousse étouffe même le bruit de votre effort. Ce faux pas-là, il vous faudra le payer.",
+			"Le geste ne prend pas sur ce lieu : les arbres se resserrent, la brume avale votre élan, et vous repartez les mains vides.",
+		],
+		"falaises": [
+			"La roche tient bon et vous repousse ; vous reculez d'un pas vers le vide, les mains vides, et l'écume, en bas, semble s'en réjouir.",
+			"Le vent renvoie votre effort à la figure ; ce que vous cherchiez glisse sur le sel et vous échappe, et la mer, indifférente, se referme sur les rochers.",
+			"Rien ne cède, sinon vous : la corniche vous rejette, les embruns brouillent vos yeux, et quelque part sous l'eau noire, on tient déjà le compte.",
+		],
+	},
+	"partiel": {
+		"foret": [
+			"La voie s'entrouvre, étroite, juste assez pour passer ; mais le bois vous a vu faire, et le prix viendra plus tard. Une ombre, désormais, marche dans vos pas.",
+			"Vous arrachez votre dû d'un seul effort, et un reste vous colle à la peau ; la forêt a pris sa part, en silence.",
+			"Cela ne marche qu'à moitié : vous avancez, mais une dette se noue dans votre dos, sous les fougères, et se rappellera à vous.",
+		],
+		"falaises": [
+			"La roche cède à demi ; vous passez, mais le vent arrache quelque chose de vous, et la mer, en bas, en garde le compte.",
+			"Le passage s'ouvre à l'arraché, juste assez pour vous y glisser ; l'embrun vous marque le visage, et le sel garde la trace de ce que vous laissez là.",
+			"Vous forcez la corniche, à moitié vainqueur : une prise vous file entre les doigts, et l'écume, en dessous, réclame déjà son dû.",
+		],
+	},
+	"reussite": {
+		"foret": [
+			"Le lieu cède et vous laisse avancer d'un pas plus sûr ; cette fois, le sentier ne réclame rien, et le silence du bois vous accompagne.",
+			"Ce qui résistait cède d'un coup ; la route se dégage sous les arbres, nette, et rien ne vous suit.",
+			"La forêt recule, calme, et s'écarte devant vous ; le chemin s'ouvre sans éclat mais sans dette, et vous passez, entier.",
+		],
+		"falaises": [
+			"La voie s'ouvre sur la corniche, nette ; le vent tombe d'un coup, et rien ne vous suit sur le sel.",
+			"La roche vous livre passage sans discuter ; la mer, en bas, s'apaise, et vous gagnez la crique d'un pas plus sûr.",
+			"Ce qui barrait la côte cède d'un coup ; l'écume se retire, le sentier de galets s'offre à vous, et vous passez, entier.",
+		],
+	},
+	"eclatante": {
+		"foret": [
+			"La forêt elle-même retient son souffle ; le passage s'ouvre en grand, sans résistance, et l'espace d'un instant vous êtes plus grand que vous-même.",
+			"Tout le bois le fête en silence ; la voie se déroule devant vous comme un tapis, et pour une fois la forêt donne plus qu'elle ne prend.",
+			"La forêt se range de votre côté ; ce que vous cherchiez vient à vous sans que vous ayez à le prendre, et sous les racines, quelque chose d'ancien s'incline.",
+		],
+		"falaises": [
+			"Tout cède d'un coup ; la mer elle-même retient son souffle, et le phare, un instant, se rallume pour vous seul.",
+			"Le vent s'agenouille et la houle se fige ; la côte s'ouvre en grand devant vous, et pour une fois la mer rend plus qu'elle ne prend.",
+			"La falaise entière semble se pencher vers vous ; ce que vous cherchiez remonte de l'écume et se pose dans votre main, et au loin une voix de sel prononce votre nom.",
+		],
+	},
+}
+
+
+# Filet NEUTRE (registre inconnu / hors-jeu) + ancre du gate probe : chaque entrée s'ouvre sur « [i]Vous ».
+# Utilisé tel quel par fallback_resolution quand aucune carte n'est passée (harnais legacy 2 args).
 const RESO_FALLBACKS: Dictionary = {
 	"echec": [
 		"[i]Vous rassemblez vos deux forces et agissez d'un seul élan.[/i] Mais les deux se gênent, et le lieu vous repousse ; ce que vous cherchiez se dérobe, et vous vous retrouvez plus loin du but qu'avant. Dans l'ombre, quelque chose paraît s'en amuser.",
-		"[i]Vous tentez de mêler vos deux forces en un seul geste.[/i] Le mélange sonne faux, et le bois l'entend aussitôt ; ce que vous touchez se dérobe, et vous repartez les mains vides.",
-		"[i]Vous engagez vos deux forces d'un même mouvement.[/i] Le geste ne prend pas sur ce lieu : le sentier se referme, indifférent, et vous laisse en arrière. Ce faux pas-là, il vous faudra le payer.",
+		"[i]Vous engagez vos deux forces d'un même mouvement.[/i] Le geste ne prend pas sur ce lieu : le passage se referme, indifférent, et vous laisse en arrière. Ce faux pas-là, il vous faudra le payer.",
 		"[i]Vous jetez vos deux forces dans la brèche.[/i] Elles partent de travers et s'annulent ; rien ne bouge, sinon vous qu'on repousse. Vous avez perdu du terrain, et un peu de vous-même avec.",
 	],
 	"partiel": [
 		"[i]Vous unissez vos deux forces, mais de travers.[/i] Vous obtenez ce que vous vouliez — en en laissant un morceau. Une ombre, désormais, marche dans vos pas.",
 		"[i]Vous forcez le geste jusqu'au bout.[/i] La voie s'entrouvre, étroite, juste assez pour passer ; mais quelque chose vous a vu faire, et le prix viendra plus tard.",
-		"[i]Vous arrachez votre dû d'un seul effort.[/i] Vous passez, et un reste vous colle à la peau ; la forêt a pris sa part, en silence.",
 		"[i]Vous mêlez vos deux forces tant bien que mal.[/i] Cela ne marche qu'à moitié : vous avancez, mais une dette se noue dans votre dos, et se rappellera à vous.",
 	],
 	"reussite": [
-		"[i]Vous nouez vos deux forces en un seul geste, net et juste.[/i] Le lieu cède et vous laisse avancer d'un pas plus sûr ; cette fois, le sentier ne réclame rien.",
+		"[i]Vous nouez vos deux forces en un seul geste, net et juste.[/i] Le lieu cède et vous laisse avancer d'un pas plus sûr ; cette fois, la voie ne réclame rien.",
 		"[i]Vous portez le geste du premier coup.[/i] Le chemin s'ouvre, sans éclat mais sans dette, et vous passez, entier.",
 		"[i]Vous accordez vos deux forces d'un même souffle.[/i] Ce qui résistait cède d'un coup ; la route se dégage, nette, et rien ne vous suit.",
-		"[i]Vous emboîtez vos deux gestes sans une hésitation.[/i] La forêt recule, calme, et s'écarte devant vous ; cette fois, vous ne payez rien.",
 	],
 	"eclatante": [
-		"[i]Vous fondez vos deux forces en une seule, parfaitement.[/i] La forêt elle-même retient son souffle ; le passage s'ouvre en grand, sans résistance, et l'espace d'un instant vous êtes plus grand que vous-même.",
-		"[i]Vous accordez vos deux forces au-delà de l'espoir.[/i] Tout le bois le fête en silence ; la voie se déroule devant vous comme un tapis, et pour une fois la forêt donne plus qu'elle ne prend.",
-		"[i]Vous liez vos deux forces d'un geste si juste que tout cède.[/i] La forêt semble se ranger de votre côté ; ce que vous cherchiez vient à vous sans que vous ayez à le prendre.",
+		"[i]Vous fondez vos deux forces en une seule, parfaitement.[/i] Le lieu lui-même retient son souffle ; le passage s'ouvre en grand, sans résistance, et l'espace d'un instant vous êtes plus grand que vous-même.",
+		"[i]Vous liez vos deux forces d'un geste si juste que tout cède.[/i] Le monde semble se ranger de votre côté ; ce que vous cherchiez vient à vous sans que vous ayez à le prendre.",
 	],
 }
 
-# Fallbacks LONGS (user 2026-06-06) — servis aux MOMENTS FORTS (Climax / éclatante). À ~1 tok/s, l'issue
-# LLM longue timeoute souvent en jeu (take_resolution borné ~95s) → sans ces variantes, « plus long au
-# climax » ne s'afficherait jamais. Le procédural prend donc le relais EN LONG sur ces moments-là.
+# Fallbacks LONGS (user 2026-06-06) — servis aux MOMENTS FORTS (Climax / éclatante) quand aucune carte
+# n'est passée (filet neutre). En jeu, la composition ajoute une 2e phrase de conséquence à ces moments
+# (voir fallback_resolution). Chaque entrée s'ouvre sur « [i]Vous » (ancre du gate probe).
 const RESO_FALLBACKS_LONG: Dictionary = {
 	"echec": [
 		"[i]Vous lancez vos deux forces ensemble, de toute votre volonté.[/i] Mais au lieu de s'unir, elles se brisent. Le lieu ne se contente pas de refuser : il reprend, il efface, il vous repousse. Quelque chose, dans l'ombre, a vu votre tentative. Vous restez seul au bord, les mains vides.",
 		"[i]Vous engagez vos deux forces d'un même élan désespéré.[/i] Le geste se retourne contre vous comme une bête mal tenue ; ce que vous touchez se dérobe, ce que vous appelez ne vient pas. Le lieu se referme lentement sur votre échec. Vous paierez ce moment, vous le savez déjà.",
 	],
 	"partiel": [
-		"[i]Vous unissez vos deux forces et poussez jusqu'au bout.[/i] Quelque chose cède, quelque chose s'ouvre, et dans le même temps une ombre se glisse dans vos pas. Vous obtenez ce que vous vouliez, et repartez marqué. La forêt a pris autre chose, sans dire quoi.",
+		"[i]Vous unissez vos deux forces et poussez jusqu'au bout.[/i] Quelque chose cède, quelque chose s'ouvre, et dans le même temps une ombre se glisse dans vos pas. Vous obtenez ce que vous vouliez, et repartez marqué. Le lieu a pris autre chose, sans dire quoi.",
 		"[i]Vous forcez le passage d'un dernier effort.[/i] Il s'entrouvre à demi, juste assez pour vous y faufiler ; mais rien ici n'est gratuit, et ce que vous forcez vous coûte un morceau. On vous a vu faire, on ne l'oubliera pas. Vous avancez, à moitié vainqueur, à moitié débiteur.",
 	],
 	"reussite": [
-		"[i]Vous nouez enfin vos deux gestes en un seul, large et juste.[/i] Le lieu cède dans un long soupir ; la voie se dénoue devant vous, nette, comme si la forêt avait attendu ce moment. Vous passez, entier, plus sûr de votre pas, et le silence vous suit comme un accord rare.",
-		"[i]Vous portez le geste fondu droit sur sa cible.[/i] Tout le bois l'accuse ; le chemin s'ouvre sans triomphe bruyant mais sans la moindre dette. Rien ne vous retient plus : vous franchissez le seuil, et la forêt vous laisse aller.",
+		"[i]Vous nouez enfin vos deux gestes en un seul, large et juste.[/i] Le lieu cède dans un long soupir ; la voie se dénoue devant vous, nette, comme si le monde avait attendu ce moment. Vous passez, entier, plus sûr de votre pas, et le silence vous suit comme un accord rare.",
+		"[i]Vous portez le geste fondu droit sur sa cible.[/i] Tout le lieu l'accuse ; le chemin s'ouvre sans triomphe bruyant mais sans la moindre dette. Rien ne vous retient plus : vous franchissez le seuil, et le monde vous laisse aller.",
 	],
 	"eclatante": [
-		"[i]Vous fondez soudain vos deux gestes en un seul, si bien accordés que la forêt retient son souffle.[/i] Le seuil s'ouvre en grand, sans résistance, et tout au fond, sous les racines, quelque chose d'ancien s'incline. La voie se déroule comme un tapis. L'espace d'un instant, bref et vertigineux, vous êtes plus grand que vous-même.",
-		"[i]Vous liez vos deux forces dans un accord total.[/i] Le bois entier le fête en silence ; ce que vous venez d'accomplir, peu l'ont fait avant vous. Le chemin devant n'est plus une épreuve mais un cadeau. Vous avancez, porté, et derrière vous une voix très douce prononce votre nom.",
+		"[i]Vous fondez soudain vos deux gestes en un seul, si bien accordés que le lieu retient son souffle.[/i] Le seuil s'ouvre en grand, sans résistance, et tout au fond, quelque chose d'ancien s'incline. La voie se déroule comme un tapis. L'espace d'un instant, bref et vertigineux, vous êtes plus grand que vous-même.",
+		"[i]Vous liez vos deux forces dans un accord total.[/i] Le lieu entier le fête en silence ; ce que vous venez d'accomplir, peu l'ont fait avant vous. Le chemin devant n'est plus une épreuve mais un cadeau. Vous avancez, porté, et derrière vous une voix très douce prononce votre nom.",
 	],
 }
 
@@ -823,6 +963,19 @@ func _lieu_name() -> String:
 	return "les Falaises du Bout-du-Monde" if (run_l != null and str(run_l.biome) == "falaises") else "Broceliande"
 
 
+# N2a — biome COURANT de la run (source de vérité : /root/MerlinRun.biome), duck-typé. Défaut "foret"
+# hors-jeu (harnais probe_soak/probe_prose : pas de run montée) → les banques falaises ne cassent pas
+# soak. Argument explicite `biome` non-vide → il prime (permet aux self-tests de forcer une casse).
+func _run_biome(biome: String = "") -> String:
+	if biome != "":
+		return biome
+	if is_inside_tree():
+		var run_b: Node = get_node_or_null("/root/MerlinRun")
+		if run_b != null and str(run_b.biome) != "":
+			return str(run_b.biome)
+	return "foret"
+
+
 # v10.22 (user : « remplace le sentier s'ouvre par un préambule qui explique ce qu'on fait là ») —
 # PRÉAMBULE LORE en 3 paragraphes : §1 qui tu es · §2 le LIEU t'a appelé (par biome) · §3 ce que Merlin
 # attend + le titre de la quête. Banques procédurales, anti-répétition intra-session via _fb_served.
@@ -1069,47 +1222,86 @@ func _pick_tags(btype: String, _diff: int) -> Array:
 
 
 func _fallback_situation(btype: String, _required: Array) -> String:
-	var pool: Array = SITU_FALLBACKS.get(btype, SITU_FALLBACKS["Exploration"])
+	# N2a — banque du BIOME courant (run.biome, défaut "foret" hors-jeu).
+	var by_type: Dictionary = SITU_FALLBACKS_BY_BIOME.get(_run_biome(), SITU_FALLBACKS_BY_BIOME["foret"])
+	var pool: Array = by_type.get(btype, by_type["Exploration"])
 	return str(pool[_rng.randi_range(0, pool.size() - 1)])
 
 
 # --- ARC NARRATIF (user 2026-06-07 : « décousu, ça doit se suivre, plus direct ») ---
 # 5 situations LIÉES qui racontent UNE histoire (début→fin) au lieu de tirages génériques par type.
 # Ordre = [Exploration, Rencontre, Epreuve, Dilemme, Climax]. Style DIRECT et CONCRET.
-const FALLBACK_ARCS: Array = [
-	[
-		"Le sentier s'enfonce sous les arbres et se referme derrière vous. Vous n'êtes pas seul : un pas léger vous suit, à distance, et s'arrête quand vous vous arrêtez.",
-		"Une vieille femme est assise sur une souche, là où le chemin se divise. « Je vous attendais », dit-elle sans se lever, et ses doigts ne cessent de tresser une cordelette d'herbe.",
-		"Plus loin, un pont de corde enjambe un ravin ; plusieurs planches manquent, et le bois craque à chaque rafale.",
-		"Sur l'autre rive, le chemin se sépare en deux : à gauche des torches au loin, à droite le silence et une odeur de fumée. La femme, derrière vous, murmure qu'un seul mène quelque part.",
-		"Au bout vous attend une porte de pierre entrouverte. Ce que vous cherchez est derrière — et le pas qui vous suivait vient de s'arrêter, juste là.",
+# N2a (2026-07-05) — BIOME-AWARE : FALLBACK_ARCS_BY_BIOME[biome] = 4 arcs ×5 étapes. Les DEUX biomes
+# partagent FALLBACK_ARC_TAGS (tags par étape, biome-AGNOSTIQUES) : seule la NARRATION change entre
+# forêt et falaises, jamais la structure de tags (scène ⇄ tags ⇄ cartes reste aligné). _fallback_arc
+# lit run.biome ; l'index d'arc tiré indexe le MÊME tuple de tags dans les deux biomes.
+const FALLBACK_ARCS_BY_BIOME: Dictionary = {
+	"foret": [
+		[
+			"Le sentier s'enfonce sous les arbres et se referme derrière vous. Vous n'êtes pas seul : un pas léger vous suit, à distance, et s'arrête quand vous vous arrêtez.",
+			"Une vieille femme est assise sur une souche, là où le chemin se divise. « Je vous attendais », dit-elle sans se lever, et ses doigts ne cessent de tresser une cordelette d'herbe.",
+			"Plus loin, un pont de corde enjambe un ravin ; plusieurs planches manquent, et le bois craque à chaque rafale.",
+			"Sur l'autre rive, le chemin se sépare en deux : à gauche des torches au loin, à droite le silence et une odeur de fumée. La femme, derrière vous, murmure qu'un seul mène quelque part.",
+			"Au bout vous attend une porte de pierre entrouverte. Ce que vous cherchez est derrière — et le pas qui vous suivait vient de s'arrêter, juste là.",
+		],
+		[
+			"Vous suivez le bruit d'une eau qui coule, jusqu'à une source noire et parfaitement immobile au creux de la forêt.",
+			"Un enfant accroupi au bord vous fixe sans peur. « Elle dort, ne la réveille pas », souffle-t-il en montrant l'eau, un doigt sur les lèvres.",
+			"Le seul passage longe la source sur une corniche étroite et glissante ; un faux pas, et c'est la chute dans l'eau noire.",
+			"Une grosse racine barre la route : la couper réveillerait quelque chose, l'enjamber prendrait un temps que vous n'avez pas. L'enfant vous observe, curieux de votre choix.",
+			"L'eau se met à bouger : ce que vous êtes venu chercher remonte lentement vers la surface, et vous regarde.",
+		],
+		[
+			"Vous arrivez devant un village de huttes vides, les feux encore tièdes : tout le monde est parti en hâte, sans rien emporter.",
+			"Un vieil homme sort d'une hutte, une serpe à la main. « Ils ont fui ce qui descend des collines », lâche-t-il en vous jaugeant, la lame basse mais prête.",
+			"La seule sortie passe par un éboulis de pierres branlantes, où le moindre faux mouvement peut tout faire glisser.",
+			"Deux traces fraîches partent de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Le vieil homme, sur le seuil, ne dit pas laquelle suivre.",
+			"Au bout de la trace, la chose des collines vous attend, dos à vous. Elle sait déjà que vous êtes là.",
+		],
+		[
+			"Vous suivez une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottent des visages qui ne sont pas le vôtre.",
+			"Une femme se tient pieds nus dans la source, sans se retourner. « Vous cherchez un visage, vous aussi », dit-elle, et l'eau ne ride pas autour de ses chevilles.",
+			"Le sentier englouti reprend sous l'eau, barré par une dalle de pierre tombée en travers ; le courant froid pousse fort contre vos jambes.",
+			"De l'autre côté, deux galeries s'enfoncent : l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelle. La femme, derrière vous, retient son souffle.",
+			"La galerie débouche sous la source, le monde à l'envers : l'eau noire au-dessus de votre tête, et au centre, votre propre visage.",
+		],
 	],
-	[
-		"Vous suivez le bruit d'une eau qui coule, jusqu'à une source noire et parfaitement immobile au creux de la forêt.",
-		"Un enfant accroupi au bord vous fixe sans peur. « Elle dort, ne la réveille pas », souffle-t-il en montrant l'eau, un doigt sur les lèvres.",
-		"Le seul passage longe la source sur une corniche étroite et glissante ; un faux pas, et c'est la chute dans l'eau noire.",
-		"Une grosse racine barre la route : la couper réveillerait quelque chose, l'enjamber prendrait un temps que vous n'avez pas. L'enfant vous observe, curieux de votre choix.",
-		"L'eau se met à bouger : ce que vous êtes venu chercher remonte lentement vers la surface, et vous regarde.",
+	"falaises": [
+		[
+			"Vous longez le bord de la falaise ; en contrebas, la mer noire se referme sur les rochers sans un bruit d'écume. Un pas vous suit, à distance, et s'arrête quand vous vous arrêtez.",
+			"Un vieux gardien de phare surgit d'une cabane de pierre, une lanterne éteinte à la main. « La mer a repris trois barques cette lune », lâche-t-il en vous jaugeant.",
+			"Le seul passage descend par un escalier taillé dans le roc, glissant d'embruns ; une marche manque, et le vide appelle en dessous.",
+			"Sur la corniche, le sentier se sépare : à gauche des feux de veille au loin, à droite le silence et l'odeur d'algue. Le gardien, derrière vous, murmure qu'un seul mène au phare.",
+			"Au bout, une porte de sel entrouverte bat au vent. Ce que vous cherchez est derrière — et le pas qui vous suivait vient de s'arrêter, juste là.",
+		],
+		[
+			"Vous suivez le fracas d'une eau qui frappe le roc, jusqu'à une crique noire et parfaitement immobile, à l'abri du vent.",
+			"Un enfant accroupi sur les galets vous fixe sans peur. « Elle dort sous la vague, ne la réveille pas », souffle-t-il en montrant l'eau, un doigt sur les lèvres.",
+			"Le seul passage longe la crique sur une corniche étroite et lustrée de sel ; un faux pas, et c'est la chute dans l'eau noire.",
+			"Une chaîne d'ancre rouillée barre la route : la briser réveillerait quelque chose, la contourner prendrait un temps que vous n'avez pas. L'enfant vous observe, curieux de votre choix.",
+			"L'eau se met à bouger : ce que vous êtes venu chercher remonte lentement de l'écume, et vous regarde.",
+		],
+		[
+			"Vous arrivez devant un hameau de pêcheurs désert, les feux de grève encore tièdes : tout le monde est parti en hâte, sans rien emporter.",
+			"Un vieux pêcheur sort d'une cabane, une gaffe à la main. « Ils ont fui ce qui remonte de la mer », lâche-t-il en vous jaugeant, la pointe basse mais prête.",
+			"La seule sortie passe par un éboulis de rochers branlants au-dessus des flots, où le moindre faux mouvement peut tout faire glisser.",
+			"Deux traces fraîches partent de l'éboulis : des pas mouillés vers la grève, des pas nus vers la grotte marine. Le pêcheur, sur le seuil, ne dit pas laquelle suivre.",
+			"Au bout de la trace, la chose de la mer vous attend, dos à vous. Elle sait déjà que vous êtes là.",
+		],
+		[
+			"Vous suivez une coulée d'eau noire entre les rochers, jusqu'à un bassin de marée rond et immobile où flottent des visages qui ne sont pas le vôtre.",
+			"Une femme se tient pieds nus dans le bassin, sans se retourner. « Vous cherchez un visage, vous aussi », dit-elle, et l'eau ne ride pas autour de ses chevilles.",
+			"Le sentier noyé reprend sous l'eau, barré par une dalle de roche tombée en travers ; le courant froid de la marée pousse fort contre vos jambes.",
+			"De l'autre côté, deux failles s'enfoncent : l'une tiède d'air marin, l'autre froide comme une cave, et dans chacune une voix d'enfant appelle. La femme, derrière vous, retient son souffle.",
+			"La faille débouche sous le bassin, le monde à l'envers : l'eau noire au-dessus de votre tête, et au centre, votre propre visage.",
+		],
 	],
-	[
-		"Vous arrivez devant un village de huttes vides, les feux encore tièdes : tout le monde est parti en hâte, sans rien emporter.",
-		"Un vieil homme sort d'une hutte, une serpe à la main. « Ils ont fui ce qui descend des collines », lâche-t-il en vous jaugeant, la lame basse mais prête.",
-		"La seule sortie passe par un éboulis de pierres branlantes, où le moindre faux mouvement peut tout faire glisser.",
-		"Deux traces fraîches partent de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Le vieil homme, sur le seuil, ne dit pas laquelle suivre.",
-		"Au bout de la trace, la chose des collines vous attend, dos à vous. Elle sait déjà que vous êtes là.",
-	],
-	[
-		"Vous suivez une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottent des visages qui ne sont pas le vôtre.",
-		"Une femme se tient pieds nus dans la source, sans se retourner. « Vous cherchez un visage, vous aussi », dit-elle, et l'eau ne ride pas autour de ses chevilles.",
-		"Le sentier englouti reprend sous l'eau, barré par une dalle de pierre tombée en travers ; le courant froid pousse fort contre vos jambes.",
-		"De l'autre côté, deux galeries s'enfoncent : l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelle. La femme, derrière vous, retient son souffle.",
-		"La galerie débouche sous la source, le monde à l'envers : l'eau noire au-dessus de votre tête, et au centre, votre propre visage.",
-	],
-]
+}
 
 
-# Tags requis par étape, ALIGNÉS sur chaque situation des FALLBACK_ARCS (même index) → ce que la scène
-# demande == les cartes à jouer (user 2026-06-07 : « les combos doivent faire sens »). Tags du deck starter.
+# Tags requis par étape, ALIGNÉS sur chaque situation des FALLBACK_ARCS_BY_BIOME (même index) → ce que
+# la scène demande == les cartes à jouer (user 2026-06-07 : « les combos doivent faire sens »). Tags du
+# deck starter. PARTAGÉ par les DEUX biomes (biome-agnostique) : l'index d'arc mappe le même tuple ici.
 const FALLBACK_ARC_TAGS: Array = [
 	[["Sens", "Instinct"], ["Empathie", "Verbe"], ["Agilité", "Endurance"], ["Instinct", "Ruse"], ["Force", "Instinct"]],
 	[["Sens", "Nature"], ["Empathie", "Verbe"], ["Agilité", "Endurance"], ["Ruse", "Instinct"], ["Nature", "Force"]],
@@ -1119,8 +1311,10 @@ const FALLBACK_ARC_TAGS: Array = [
 
 
 func _fallback_arc() -> Dictionary:
-	var i: int = _rng.randi_range(0, FALLBACK_ARCS.size() - 1)
-	return {"arc": (FALLBACK_ARCS[i] as Array).duplicate(), "tags": (FALLBACK_ARC_TAGS[i] as Array).duplicate(true)}
+	# N2a — arc du BIOME courant (run.biome, défaut "foret" hors-jeu) ; les tags restent partagés.
+	var arcs: Array = FALLBACK_ARCS_BY_BIOME.get(_run_biome(), FALLBACK_ARCS_BY_BIOME["foret"])
+	var i: int = _rng.randi_range(0, arcs.size() - 1)
+	return {"arc": (arcs[i] as Array).duplicate(), "tags": (FALLBACK_ARC_TAGS[i] as Array).duplicate(true)}
 
 
 # Arc LLM : 5 étapes liées, CHACUNE construite autour de ses tags requis (req_tags, 2-3 par beat
@@ -1297,20 +1491,31 @@ func invalidate_resolution() -> void:
 	_reso_epoch += 1
 
 
-# Procédural de résolution (INSTANT, déterministe). Public : l'appelant l'affiche immédiatement.
-func fallback_resolution(degree: String, situ_type: String = "") -> String:
-	# Longueur VARIABLE même en procédural (user 2026-06-06) : aux MOMENTS FORTS (Climax / éclatante)
-	# on sert le pool LONG → « plus long au climax » s'affiche EN JEU même quand l'issue LLM longue
-	# timeoute (cas fréquent à ~1 tok/s). Sinon pool de routine (plus court).
-	var strong: bool = is_strong_moment(situ_type, degree)
-	var src: Dictionary = RESO_FALLBACKS_LONG if strong else RESO_FALLBACKS
-	var pool: Array = src.get(degree, src.get("reussite", []))
+# N2a — arch_reg : archétype de carte → REGISTRE (miroir de MerlinPromptBuilder.resolution ; dupliqué
+# ici pour rester statique/duck-typé sans dépendre du builder). Clé "" du bank = registre indéterminé.
+const _ARCH_REG: Dictionary = {
+	"Social": "PAROLE", "Offensif": "FORCE", "Mystique": "PERCEPTION",
+	"Défensif": "PROTECTION", "Corrompu": "OMBRE",
+}
+
+
+# N2a — REGISTRE dominant d'une combinaison : 1er archétype résolu des cartes jouées (l'action
+# principale est played_cards[0], contrat resolve R20). "" si aucune carte / archétype inconnu.
+# Duck-typé (has_method("archetype")) — jamais `is MerlinCard` (leçon soak v10.20.1).
+func _dominant_registre(played_cards: Array) -> String:
+	for c in played_cards:
+		if c is Object and c.has_method("archetype"):
+			var reg: String = str(_ARCH_REG.get(str(c.archetype()), ""))
+			if reg != "":
+				return reg
+	return ""
+
+
+# N2a — tire une entrée d'un pool avec anti-répétition intra-run (_fb_served par `key`) ; pool épuisé
+# → RAZ. Factorisé (l'action ET la conséquence composée partagent ce mécanisme).
+func _pick_served(pool: Array, key: String) -> String:
 	if pool.is_empty():
-		pool = RESO_FALLBACKS["reussite"]
-	# Anti-générique (QA captures 2026-06-30 : même fallback « partiel » servi 2× mot pour mot dans une
-	# run) : mémoire intra-run des variantes servies par (degré, pool) — on ne repioche que parmi les
-	# AUTRES ; pool épuisé → RAZ. « partiel » = ~47 % des issues, la répétition se voyait vite.
-	var key: String = degree + ("|L" if strong else "|S")
+		return ""
 	var served: Array = _fb_served.get(key, [])
 	if served.size() >= pool.size():
 		served = []
@@ -1322,6 +1527,43 @@ func fallback_resolution(degree: String, situ_type: String = "") -> String:
 	served.append(idx)
 	_fb_served[key] = served
 	return str(pool[idx])
+
+
+# Procédural de résolution (INSTANT, déterministe). Public : l'appelant l'affiche immédiatement.
+# N2a (2026-07-05) — signature ADDITIVE (played_cards, biome) : l'issue de secours COMPOSE désormais
+#   [i] ACTION (registre dominant des cartes) [/i] + CONSÉQUENCE (degré × biome).
+# Les anciens appelants (harnais probe_* : 1-2 args) → played_cards vide → filet NEUTRE RESO_FALLBACKS
+# (rétro-compat parfaite). En jeu, merlin_game passe la combinaison + le biome → l'issue reflète le geste.
+func fallback_resolution(degree: String, situ_type: String = "", played_cards: Array = [], biome: String = "") -> String:
+	var strong: bool = is_strong_moment(situ_type, degree)
+	# Sans carte (harnais legacy) : filet neutre pré-écrit (déjà « [i]Vous … [/i] conséquence »).
+	if played_cards.is_empty():
+		var src: Dictionary = RESO_FALLBACKS_LONG if strong else RESO_FALLBACKS
+		var pool0: Array = src.get(degree, src.get("reussite", []))
+		if pool0.is_empty():
+			pool0 = RESO_FALLBACKS["reussite"]
+		return _pick_served(pool0, degree + ("|L" if strong else "|S"))
+	# En jeu : COMPOSITION. ACTION selon le registre dominant ; CONSÉQUENCE selon (degré × biome).
+	var reg: String = _dominant_registre(played_cards)
+	var act_pool: Array = RESO_ACTION_BY_REGISTRE.get(reg, RESO_ACTION_BY_REGISTRE[""])
+	if act_pool.is_empty():
+		act_pool = RESO_ACTION_BY_REGISTRE[""]
+	var action: String = _pick_served(act_pool, "act|" + reg)
+	var bio: String = _run_biome(biome)
+	var by_bio: Dictionary = RESO_CONSEQ_BY_DEGREE_BIOME.get(degree, RESO_CONSEQ_BY_DEGREE_BIOME["reussite"])
+	var conseq_pool: Array = by_bio.get(bio, by_bio.get("foret", []))
+	if conseq_pool.is_empty():
+		conseq_pool = RESO_CONSEQ_BY_DEGREE_BIOME["reussite"]["foret"]
+	var conseq: String = _pick_served(conseq_pool, "cons|%s|%s" % [degree, bio])
+	# Moment fort (Climax / éclatante) → conséquence PLUS AMPLE : on greffe une 2e conséquence du même
+	# (degré × biome) pour le souffle attendu, sans banque _LONG dédiée (anti-répétition partagé).
+	if strong:
+		var conseq2: String = _pick_served(conseq_pool, "cons|%s|%s" % [degree, bio])
+		if conseq2 != "" and conseq2 != conseq:
+			conseq = conseq + " " + conseq2
+	# Composition finale : commence DÉJÀ par « [i]Vous … [/i] » → ensure_italic_action (appelé ensuite
+	# par merlin_game) reconnaît la forme correcte (1 seule paire ouvrante) et NE double pas l'italique.
+	return "[i]" + action + "[/i] " + conseq
 
 
 # Mémorise le RÉSULTAT du beat courant dans le fil rouge → le prompt d'issue du beat SUIVANT

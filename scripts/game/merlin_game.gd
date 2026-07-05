@@ -755,7 +755,9 @@ func _on_resolve() -> void:
 	# au sustain animé (cap + skip). Cache prêt → prose LLM instantanée ; sinon filet procédural.
 	var prose: String = str(sc.take_resolution(situ, played_cards, res))
 	if prose.length() < 10:
-		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")))
+		# N2a — secours COMPOSÉ : reflète la combinaison (registre des cartes) + le biome + le degré.
+		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")),
+			played_cards, str(run.get("biome")))
 	prose = MerlinProse.ensure_italic_action(prose)  # v11-N1 (R140) : 1re phrase = action en [i]…[/i] (robustesse si le LLM oublie l'italique)
 	if not _push_pending:  # R130 : différé → note_outcome au CHOIX avec le degré FINAL
 		sc.note_outcome(res, situ, played_cards)  # v10.20.1 : gist SPÉCIFIQUE (action réelle) + pont vers la situation suivante

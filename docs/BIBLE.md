@@ -1820,6 +1820,20 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R145 — SECOURS biome + combinaison (2026-07-05, N2a — user « trop court, pas lié au scénario/biome »)** :
+  Gemma (~1 tok/s) ne finit jamais sa résolution LLM (~150 tok) dans la fenêtre ~20 s → c'est TOUJOURS le
+  secours procédural qui s'affiche. Ce secours devient **biome-aware** et **combinaison-aware** : (a)
+  `SITU_FALLBACKS_BY_BIOME` + `FALLBACK_ARCS_BY_BIOME` (arcs FALAISES dédiés — phare/épaves/marée/sel/grève —
+  en plus des arcs forêt ; **tags partagés** `FALLBACK_ARC_TAGS` → scène ⇄ tags ⇄ cartes reste aligné) ;
+  `_fallback_situation`/`_fallback_arc` lisent `run.biome`. (b) **Résolution COMPOSÉE** :
+  `fallback_resolution(degree, situ_type, played_cards, biome)` = `[i]ACTION[/i] CONSÉQUENCE` où ACTION vient
+  du REGISTRE dominant du combo (`RESO_ACTION_BY_REGISTRE` : PAROLE/FORCE/PERCEPTION/PROTECTION/OMBRE) et
+  CONSÉQUENCE de (degré × biome) (`RESO_CONSEQ_BY_DEGREE_BIOME`, imagery mer/vent/phare vs bois/mousse) ;
+  moment fort → 2e conséquence ample. Le secours reflète donc CE QUE vous avez fait + OÙ + le degré (mais
+  ne cite pas l'élément EXACT de la scène — ça, c'est N2b). `probe_prose` CATALOG_GATE étendu (zéro mot
+  forestier dans les banques falaises, action « Vous », compo valide). Suite : **N2b streaming LLM (TEC-01)**
+  pour le vrai texte sur-mesure qui nomme la scène (« l'eau noire se referme sur ce que vous avez pris »).
+
 - **R144 — VISUEL d20 + HALO réussi/raté (2026-07-05, v2-W4 — « le dé tourne pour voir la réussite »)** :
   `MerlinDice` passe du d6 au **d20** — silhouette icosaédrique fausse-3D (hexagone + facettes) portant un
   GROS chiffre **1-20** centré (charte gravure), culbute (nombres 1-20 qui défilent) → ralenti → pose (~1,15 s
