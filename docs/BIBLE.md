@@ -1820,6 +1820,17 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R143 — GREFFES « +N au jet » (2026-07-05, v2-W3 — graft_bonus du d20)** : la greffe `kind:"die"`
+  (ancien « +1 bande de dé », INERTE depuis le pivot d20 R141) est migrée en `kind:"roll"` (« +N au jet ») :
+  `graft_bonus` d'une résolution = somme des `amount` des greffes roll posées sur l'action jouée (câblé
+  aux 2 call-sites resolve, R120). 5 greffes migrées (générique + chevalier + enfant). `ROLL_BONUS_DEFAULT=1`
+  (tuné : +2 poussait l'éclatante hors bande quand talent R142 + greffes STACKENT sur le même jet). Badge
+  GOLD « ✦ +N JET » sur la carte-greffe (draft) et « +N » sur le slot de tuile. Save legacy `kind:"die"`
+  TOLÉRÉE au load (comptée comme roll, R108) — pas de bump SAVE_VERSION. §K tient avec le stack (talent +
+  greffes) : échec 6,3 · partiel 31,2 · réussite 49,2 · éclatante 13,2 — toutes IN ; morts archétype PASS.
+  ⚠ Arbitrage design ouvert : « Le Jouet Offert » (Enfant) accorde désormais un vrai +1 comme toute greffe
+  roll — à trancher si l'Enfant-tentateur doit garder un « cadeau médiocre ». Reste : W4 visuel d20 + halo.
+
 - **R142 — ARBRE DE TALENT IN-RUN (2026-07-05, v2-W2 — « nos points de compétence »)** : un `skill_mod`
   in-run alimente le jet d20 (R141). **Par verbe** (PERCEVOIR/AGIR/PARLER/RESSENTIR) : `talent[verbe]` 0..5 ;
   `skill_mod` d'une résolution = `talent[verbe joué]` (câblé aux 2 call-sites resolve, R120). **Points**

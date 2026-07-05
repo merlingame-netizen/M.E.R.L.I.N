@@ -598,12 +598,13 @@ func _update_preview() -> void:
 	var combo: Array = [_selected_action, _selected_trait]
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var run_p: Node = get_node("/root/MerlinRun")
-	# v2-W2 — skill_mod = niveau de talent du VERBE de l'action sélectionnée (graft_bonus reste 0, W3).
-	# La preview passe EXACTEMENT les mêmes arguments que la résolution (die, diff, skill_mod) — R120.
+	# v2-W2/W3 — skill_mod = talent du VERBE ; graft_bonus = greffes « roll » posées sur l'action.
+	# La preview passe EXACTEMENT les mêmes arguments que la résolution (die, diff, skill_mod, graft_bonus) — R120.
 	var skill_mod_p: int = run_p.skill_mod_for(_selected_action)
+	var graft_bonus_p: int = run_p.graft_roll_bonus(_selected_action)
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		run_p.blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)), skill_mod_p, 0)  # R131 bénédictions + d20 + talent : preview = résolution (R120)
+		int(_current_situation.get("difficulte", 2)), skill_mod_p, graft_bonus_p)  # R131 + d20 + talent + greffes-jet : preview = résolution (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_set_resolve_armed(true)
 	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
@@ -633,11 +634,12 @@ func _on_resolve() -> void:
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
 	var reqs: Array = _current_situation.get("required_tags", [])
-	# v2-W2 — mêmes arguments que la preview (die, diff, skill_mod=talent du verbe, graft_bonus=0) → R120.
+	# v2-W2/W3 — mêmes arguments que la preview (die, diff, skill_mod=talent du verbe, graft_bonus=greffes roll) → R120.
 	var skill_mod_r: int = run.skill_mod_for(_selected_action)
+	var graft_bonus_r: int = run.graft_roll_bonus(_selected_action)
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		run.blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)), skill_mod_r, 0)  # R131 + d20 + talent : mêmes args que la preview (R120)
+		int(_current_situation.get("difficulte", 2)), skill_mod_r, graft_bonus_r)  # R131 + d20 + talent + greffes-jet : mêmes args que la preview (R120)
 	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
@@ -1246,6 +1248,11 @@ func _graft_presentation_card(g: Dictionary) -> MerlinCard:
 	elif kind == "charge":
 		eff_t = str(g.get("effect_type", ""))
 		eff_v = int(g.get("effect_value", 1))
+	elif kind == "roll":
+		# v2-W3 — greffe « +N au jet » : rareté Rare (liseré bleu-acier — distinct du nœud de talent
+		# Mythique/GOLD) ; le badge « +N au jet » GOLD est ajouté au build de la vue (set_roll_bonus).
+		return MerlinCard.make(str(g.get("id", "")), str(g.get("name", "")), tags_p,
+			str(g.get("evocation", "")), 0, "Rare")
 	elif kind == "talent":
 		# v2-W2 — NŒUD DE TALENT rendu comme une carte de greffe : rareté Mythique (liseré GOLD épais,
 		# distinction visuelle immédiate SANS nouvel écran) ; le tag = famille du verbe ciblé (le glyphe
@@ -1443,6 +1450,9 @@ func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 			var gcard: Dictionary = _graft_by_id.get(str((cards[i] as MerlinCard).id), {})
 			if str(gcard.get("kind", "")) == "talent":
 				cv.set_talent_node(int(gcard.get("amount", 1)))
+			elif str(gcard.get("kind", "")) == "roll":
+				# v2-W3 — greffe « roll » : badge GOLD « +N au jet » (le bonus d20 est ÉVIDENT au draft).
+				cv.set_roll_bonus(int(gcard.get("amount", MerlinCard.ROLL_BONUS_DEFAULT)))
 			cv.card_clicked.connect(_on_draft_card)
 			cv.set_fan_transform(Vector2(x0 + float(i) * (cw + gap), 6.0), 0.0)  # base du deal (snap 1er layout)
 			cv.deal_in(float(i) * 0.12)

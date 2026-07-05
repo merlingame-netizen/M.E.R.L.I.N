@@ -16,7 +16,10 @@ var effect_value: int = 0      # intensité (PV soignés / Corruption purgée / 
 # même quand des tags sont greffés (W3).
 var family: String = ""
 # v11-W3 (spec §E) — GREFFES posées sur une ACTION (cap 3). Dicts {id, name, evocation,
-# kind: "tag"|"die"|"charge", tag, effect_type, effect_value, charges, corr_cost, pilier}.
+# kind: "tag"|"roll"|"charge", tag, effect_type, effect_value, charges, corr_cost, amount, pilier}.
+# v2-W3 (2026-07-05) — kind "die" (bande de dé) MIGRÉ en "roll" (+N au jet d20 via graft_bonus, W1).
+# Les vieilles greffes "die" (saves v11 posées avant le pivot) sont TOLÉRÉES au load : merlin_run.
+# graft_roll_bonus les compte comme roll (proxy amount ROLL_BONUS_DEFAULT) — jamais de crash.
 # Champ ADDITIF (défaut []) : les saves W2 chargent sans bump de SAVE_VERSION.
 # GUARDRAIL CRITICAL : le prix d'une greffe est ONE-SHOT à la pose (corr_cost, payé par
 # merlin_run.apply_graft) ou PAR CHARGE — jamais récurrent (corruption de l'action reste 0).
@@ -270,18 +273,19 @@ static func enriched_pool() -> Array:
 
 ## === v11-W3 (spec §E + mapping_actions) — BANQUES DE GREFFES ===
 ## Conversion de pilier_bank() + enriched_pool() : noms + évocations CONSERVÉS (zéro perte de lore).
-## pilier "" = draft générique (mix +tag / +bande de dé / charges) ; sinon banque SIGNÉE du PNJ :
+## pilier "" = draft générique (mix +tag / +N au jet / charges) ; sinon banque SIGNÉE du PNJ :
 ##   choeur    = charges HEAL/PURGE gratuites + tag Mémoire (L'Eau Claire), corr 0
 ##   etre      = +tag Mystère/Vision/Sacrifice contre +1 Corruption ONE-SHOT (affichée au modal)
 ##   compagnon = tentation DRAW/HEAL contre +1 Corruption one-shot
-##   chevalier = +bande de dé ou +tag Force/Autorité/Endurance, corr 0
-##   enfant    = piège 100 % NARRATIF, corr 0 (charges ×1 médiocres honnêtes, jouet = dé de bois)
+##   chevalier = +N au jet ou +tag Force/Autorité/Endurance, corr 0
+##   enfant    = piège 100 % NARRATIF, corr 0 (charges ×1 médiocres honnêtes, jouet = talisman muet)
 ## GUARDRAIL CRITICAL : corr_cost ≤ 1, payé UNE fois à la pose — aucun coût récurrent, sans exception.
+## v2-W3 — les greffes « roll » ajoutent ROLL_BONUS_DEFAULT au jet d20 (graft_bonus, moteur W1).
 static func graft_banks(pilier: String = "") -> Array:
 	match pilier:
 		"":
 			return [
-				_graft_die("g_oeil_du_druide", "L'Œil du Druide",
+				_graft_roll("g_oeil_du_druide", "L'Œil du Druide",
 					"Tu lis les traces que d'autres effacent ; le mensonge devient transparent sous ton regard."),
 				_graft_charge("g_bras_de_fer", "Le Bras de Fer",
 					"Tu encaisses, tu tiens, tu retournes la pression — le premier qui cède n'est pas toi.",
@@ -289,12 +293,12 @@ static func graft_banks(pilier: String = "") -> Array:
 				_graft_tag("g_serment_tenu", "Le Serment Tenu",
 					"Tu as promis. Tu paies le prix. Et c'est précisément ce qui te donne du poids.",
 					"Franchise", 0),
-				_graft_die("g_voix_autorite", "La Voix d'Autorité",
+				_graft_roll("g_voix_autorite", "La Voix d'Autorité",
 					"Un seul mot, dit au bon moment — et la salle cède sans qu'on sache pourquoi."),
 				_graft_tag("g_marche_equilibre", "La Marche d'Équilibre",
 					"Tu ne cherches pas la victoire — tu cherches la durée. Et tu dures.",
 					"Équilibre", 0),
-				_graft_die("g_transe_druidique", "La Transe Druidique",
+				_graft_roll("g_transe_druidique", "La Transe Druidique",
 					"La frontière entre toi et la forêt s'efface. Tu vois ce que Brocéliande te cache depuis longtemps."),
 			]
 		"choeur":
@@ -338,7 +342,7 @@ static func graft_banks(pilier: String = "") -> Array:
 				_graft_tag("g_lame_ternie", "La Lame Ternie",
 					"Son épée n'a plus l'éclat des serments, mais elle tranche encore ; il te la confie sans un regard pour ce qu'elle a coûté.",
 					"Endurance", 0, "chevalier"),
-				_graft_die("g_charge_du_dechu", "La Charge du Déchu",
+				_graft_roll("g_charge_du_dechu", "La Charge du Déchu",
 					"Il fond sur l'obstacle comme aux jours de gloire ; ce qui le poussait jadis vers l'honneur le pousse aujourd'hui tout court.",
 					"chevalier"),
 				_graft_tag("g_serment_de_cendre", "Le Serment de Cendre",
@@ -347,7 +351,7 @@ static func graft_banks(pilier: String = "") -> Array:
 			]
 		"enfant":
 			return [
-				_graft_die("g_jouet_offert", "Le Jouet Offert",
+				_graft_roll("g_jouet_offert", "Le Jouet Offert",
 					"« Tiens, c'est pour toi », dit l'Enfant, et le petit objet de bois ne fait rien d'autre que tenir au creux de ta main.",
 					"enfant"),
 				_graft_charge("g_secret_chuchote", "Le Secret Chuchoté",
@@ -365,9 +369,21 @@ static func _graft_tag(p_id: String, p_name: String, p_evo: String, p_tag: Strin
 		"effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": p_corr, "pilier": p_pilier}
 
 
-static func _graft_die(p_id: String, p_name: String, p_evo: String, p_pilier: String = "") -> Dictionary:
-	return {"id": p_id, "name": p_name, "evocation": p_evo, "kind": "die", "tag": "",
-		"effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": 0, "pilier": p_pilier}
+# v2-W3 (2026-07-05) — bonus AU JET d20 par défaut d'une greffe « roll » (+N au total de resolve via
+# graft_bonus, moteur W1). Levier de balance §K (mesuré soak 300, méthode V4a) : à +2, talent+greffes
+# stackés poussaient l'éclatante à 14,5-15,3 % (plafond 15 % effleuré/franchi selon la seed) →
+# L1 : ROLL_BONUS_DEFAULT 2→1 recentre l'éclatante à ~11 % (marge saine dans 8-15 %), les 3 autres
+# bandes restant IN. Baisser encore n'a pas de sens (+0 = greffe morte) ; monter re-déborderait.
+const ROLL_BONUS_DEFAULT: int = 1
+
+
+# v2-W3 — greffe « roll » : +amount au jet d20 (graft_bonus, moteur W1). Remplace l'ex-greffe « die »
+# (bande de dé, INERTE depuis W1 : le d6 à bandes n'existe plus). Le champ `amount` alimente
+# merlin_run.graft_roll_bonus, sommé dans resolve() aux DEUX call-sites (preview + résolution, R120).
+static func _graft_roll(p_id: String, p_name: String, p_evo: String, p_pilier: String = "") -> Dictionary:
+	return {"id": p_id, "name": p_name, "evocation": p_evo, "kind": "roll", "tag": "",
+		"effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": 0,
+		"amount": ROLL_BONUS_DEFAULT, "pilier": p_pilier}
 
 
 static func _graft_charge(p_id: String, p_name: String, p_evo: String, p_eff: String, p_val: int, p_charges: int, p_corr: int, p_pilier: String = "") -> Dictionary:

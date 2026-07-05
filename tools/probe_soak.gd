@@ -1,6 +1,9 @@
 extends SceneTree
+## v2-W3 (2026-07-05) — GREFFES « roll » : graft_bonus = somme des greffes kind=="roll" posées sur
+## l'action jouée (run.graft_roll_bonus), passé à resolve() aux DEUX call-sites (résolution + preview
+## du bot, R120). talent (W2) et greffes-jet (W3) STACKENT sur le total → §K re-dérivé (leviers infra).
 ## v2-W1 (2026-07-05) — MOTEUR d20-vs-DC : le dé du beat est un d20 (randi_range 1-20) ; resolve()
-## calcule total = die + skill_mod(0) + graft_bonus(0) + COVER_PER_TAG×couverts + synergy_bonus,
+## calcule total = die + skill_mod + graft_bonus + COVER_PER_TAG×couverts + synergy_bonus,
 ## comparé à DC_BY_DIFF. §K RE-DÉRIVÉ par leviers (DC_BY_DIFF {11,15,18}, PARTIEL_LOW 13,
 ## ECLAT_MARGIN 8) — 4 bandes de degrés IN à 300 (échec ~6 · partiel ~32 · réussite ~50 · éclatante
 ## ~11). HARD_DEGREE_BANDS reste false : échec IN mais marge modeste, on ne DURCIT pas encore (une
@@ -236,7 +239,9 @@ func _selftest_grafts() -> void:
 			# GUARDRAIL CRITICAL : prix one-shot ≤ 1 — aucune greffe ne porte de coût récurrent.
 			_st(int(gd.get("corr_cost", 0)) <= 1, "corr_cost <= 1 one-shot (%s)" % gid)
 			var kind: String = str(gd.get("kind", ""))
-			_st(kind == "tag" or kind == "die" or kind == "charge", "kind valide (%s=%s)" % [gid, kind])
+			_st(kind == "tag" or kind == "roll" or kind == "charge", "kind valide (%s=%s)" % [gid, kind])
+			if kind == "roll":  # v2-W3 : greffe « +N au jet » porte un amount >= 1 (graft_bonus)
+				_st(int(gd.get("amount", 0)) >= 1, "greffe roll porte amount >= 1 (%s)" % gid)
 			if kind == "tag":
 				_st(str(gd.get("tag", "")) != "", "greffe tag porte un tag (%s)" % gid)
 			if kind == "charge":
@@ -290,7 +295,40 @@ func _selftest_grafts() -> void:
 	for p in picks:
 		_st(not placed.has(str((p as Dictionary).get("id", ""))), "graft_choices exclut les greffes posées")
 	run.free()
-	print("[SOAK] self-test §E greffes : %d greffes en banques, cap/dérivations/dé OK" % seen.size())
+	# v2-W3 — graft_roll_bonus : somme des amount des greffes « roll » de l'action, 0 sinon, et
+	# TOLÉRANCE legacy d'une vieille greffe kind=="die" (compat save R108). Round-trip save inclus.
+	var run_r: Node = RunScript.new()
+	run_r._rng.seed = 77
+	run_r.new_run({"title": "st_roll", "beats": [{"type": "Exploration", "n": 1}], "total": 1})
+	var roll_default: int = int(CardScript.ROLL_BONUS_DEFAULT)
+	_st(int(run_r.graft_roll_bonus(run_r.actions[0])) == 0, "graft_roll_bonus neuf = 0")
+	var roll_g: Dictionary = {}
+	for g in gen_bank:
+		if str((g as Dictionary).get("kind", "")) == "roll":
+			roll_g = g
+			break
+	_st(not roll_g.is_empty(), "banque générique porte >=1 greffe roll")
+	_st(run_r.apply_graft("action_agir", roll_g), "pose greffe roll OK")
+	_st(int(run_r.graft_roll_bonus(run_r._action_by_id("action_agir"))) == int(roll_g.get("amount", roll_default)),
+		"graft_roll_bonus = amount de la greffe posée (%d)" % int(run_r.graft_roll_bonus(run_r._action_by_id("action_agir"))))
+	_st(int(run_r.graft_roll_bonus(run_r._action_by_id("action_percevoir"))) == 0, "graft_roll_bonus d'une autre action = 0")
+	# Legacy : greffe kind=="die" posée (save pré-pivot) → comptée comme roll d'amount ROLL_BONUS_DEFAULT.
+	var legacy_die: Dictionary = {"id": "g_legacy_die", "name": "Legacy", "evocation": "", "kind": "die",
+		"tag": "", "effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": 0, "pilier": ""}
+	_st(run_r.apply_graft("action_parler", legacy_die), "pose greffe legacy die OK (tolérée)")
+	_st(int(run_r.graft_roll_bonus(run_r._action_by_id("action_parler"))) == roll_default,
+		"greffe legacy die comptée comme roll (+%d)" % roll_default)
+	# Save round-trip : la greffe roll ET la legacy die survivent, bonus identique au resume.
+	run_r.save()
+	var run_r2: Node = RunScript.new()
+	_st(run_r2.load_run(), "load_run() roll OK")
+	_st(int(run_r2.graft_roll_bonus(run_r2._action_by_id("action_agir"))) == int(run_r.graft_roll_bonus(run_r._action_by_id("action_agir"))) \
+		and int(run_r2.graft_roll_bonus(run_r2._action_by_id("action_parler"))) == roll_default,
+		"resume graft_roll_bonus identique (roll + legacy die)")
+	run_r.clear_save()
+	run_r.free()
+	run_r2.free()
+	print("[SOAK] self-test §E greffes : %d greffes en banques, cap/dérivations/roll/legacy-die OK" % seen.size())
 
 
 # --- Self-test talent (v2-W2) : gain au degré, ciblage du nœud, cap/coût, skill_mod, save round-trip. ---
@@ -494,9 +532,11 @@ func _soak_one(i: int, arch: String) -> void:
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
 		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.
 		# v2-W2 — skill_mod = talent du verbe joué (miroir merlin_game._on_resolve, R120 preview=résolution).
+		# v2-W3 — graft_bonus = greffes « roll » posées sur l'action jouée (miroir merlin_game, R120).
 		var skill_mod: int = int(run.skill_mod_for(combo[0]))
+		var graft_bonus: int = int(run.graft_roll_bonus(combo[0]))
 		run.note_verb_played(combo[0])  # compteur d'usage du verbe (cible du nœud de talent au draft)
-		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff, skill_mod, 0)
+		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff, skill_mod, graft_bonus)
 		run.consume_blessings(combo)  # R131 : une bénédiction sert UNE fois (miroir du jeu)
 		# v10.21 (Wave G, R130) — miroir « Pousser » : optimal pousse si Intégrité ≤ 4 ;
 		# corrompu toujours ; greedy/chaotic/tag_ignorant ALTERNENT (spec v11-W2).
@@ -792,9 +832,11 @@ func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: Random
 	var best_key: Array = []
 	for a in acts:
 		# v2-W2 — skill_mod = talent du verbe de l'action évaluée (le bot lit la même preview, R120).
+		# v2-W3 — graft_bonus = greffes « roll » de l'action évaluée (même preview que la résolution, R120).
 		var sm: int = int(run.skill_mod_for(a))
+		var gb: int = int(run.graft_roll_bonus(a))
 		for t in traits_h:
-			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff, sm, 0)
+			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff, sm, gb)
 			var cov: Dictionary = r["coverage"]
 			var covered_arr: Array = cov["covered"]
 			var extra_arr: Array = cov["extra"]

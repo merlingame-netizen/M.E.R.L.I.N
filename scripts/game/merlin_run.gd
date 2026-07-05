@@ -567,6 +567,26 @@ func apply_graft_charges(action: MerlinCard) -> Dictionary:
 	return {"heal": heal, "purge": purge, "draw": draw}
 
 
+# v2-W3 (2026-07-05) — BONUS AU JET des greffes « roll » posées sur l'action jouée : somme des
+# `amount` de chaque greffe kind=="roll". Alimente graft_bonus du moteur d20 (resolve, W1), passé par
+# merlin_game aux DEUX call-sites (preview + résolution — R120 : mêmes args). 0 si carte non-action.
+# Migration legacy (save v11 posée AVANT le pivot) : une greffe kind=="die" est TOLÉRÉE et comptée
+# comme une roll d'amount ROLL_BONUS_DEFAULT (jamais de crash au load, jamais de bande inerte).
+func graft_roll_bonus(action: Variant) -> int:
+	if action == null or not (action is Object) or not (action.get("grafts") is Array):
+		return 0
+	var total: int = 0
+	for g in (action.grafts as Array):
+		if not (g is Dictionary):
+			continue
+		var kind: String = str((g as Dictionary).get("kind", ""))
+		if kind == "roll":
+			total += int((g as Dictionary).get("amount", MerlinCard.ROLL_BONUS_DEFAULT))
+		elif kind == "die":  # legacy pré-pivot : proxy roll par défaut (compat save R108, jamais inerte)
+			total += MerlinCard.ROLL_BONUS_DEFAULT
+	return total
+
+
 # Draft runtime v11-W3 : n greffes GÉNÉRIQUES distinctes (remplace draft_choices au runtime —
 # l'ancienne fonction reste pour compat outillage mais n'est plus appelée par le jeu).
 func graft_choices(n: int = 3) -> Array:

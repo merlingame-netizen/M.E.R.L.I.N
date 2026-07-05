@@ -140,8 +140,8 @@ func _tag_dot(tag: String) -> Control:
 
 func _draw() -> void:
 	# 3 slots de greffe FIXES, toujours dessinés : vide = cercle pointillé BORDER_BRUN (greffabilité
-	# ÉVIDENTE) ; rempli = glyphe du KIND sans hover (v11-W3 : pastille famille = tag, pip or = bande
-	# de dé, ✚n/❖n/✦n = charges avec compteur restant — épuisée = estompée).
+	# ÉVIDENTE) ; rempli = glyphe du KIND sans hover (v11-W3 : pastille famille = tag, badge « +N » OR
+	# = bonus au jet d20 (v2-W3), ✚n/❖n/✦n = charges avec compteur restant — épuisée = estompée).
 	var cy: float = size.y - 24.0
 	var total_w: float = SLOT_PX * 3.0 + SLOT_GAP * 2.0
 	var x0: float = (size.x - total_w) / 2.0 + SLOT_PX / 2.0
@@ -171,10 +171,15 @@ func _draw_graft_slot(center: Vector2, radius: float, g: Dictionary) -> void:
 			# Pastille pleine à la couleur de FAMILLE du tag greffé (même langage que les tags de base).
 			draw_circle(center, radius * 0.80, Color(MerlinTags.color_of(str(g.get("tag", "")))))
 			draw_arc(center, radius * 0.92, 0.0, TAU, 20, MerlinVisual.BORDER_BRUN, 1.5)
-		"die":
-			# Pip OR cerclé : la greffe élargit la bande de dé (langage R133, liseré = qualité).
-			draw_arc(center, radius * 0.85, 0.0, TAU, 20, MerlinVisual.GOLD, 2.0)
-			draw_circle(center, radius * 0.34, MerlinVisual.GOLD)
+		"roll", "die":
+			# v2-W3 — badge « +N » OR cerclé : la greffe ajoute N au jet d20 (graft_bonus, moteur W1).
+			# ("die" toléré : slot d'une greffe legacy pré-pivot, rendu identique — proxy +ROLL_BONUS_DEFAULT.)
+			var amt: int = int(g.get("amount", MerlinCard.ROLL_BONUS_DEFAULT)) if str(g.get("kind", "")) == "roll" else MerlinCard.ROLL_BONUS_DEFAULT
+			draw_arc(center, radius * 0.92, 0.0, TAU, 20, MerlinVisual.GOLD, 2.0)
+			var font_r: Font = get_theme_default_font()
+			if font_r != null:
+				draw_string(font_r, Vector2(center.x - SLOT_PX, center.y + 5.0), "+%d" % amt,
+					HORIZONTAL_ALIGNMENT_CENTER, SLOT_PX * 2.0, 13, MerlinVisual.GOLD)
 		"charge":
 			var left: int = int(g.get("charges", 0))
 			var icon: String = "✦"
