@@ -521,6 +521,143 @@ const RESO_CONSEQ_BY_DEGREE_BIOME: Dictionary = {
 }
 
 
+# N3-V1 (2026-07-06) : PONT INTELLIGENT inter-beats. R140 avait SUPPRIMÉ le pont GÉNÉRIQUE (« Sa voie
+# ouverte, le Voyageur s'enfonça plus avant ») car interchangeable/hors-sol ; la continuité reposait
+# alors sur le seul last_gist du prompt LLM. Mais le LLM (~1 tok/s) perd la course >95% du temps → la
+# situation de SECOURS s'affiche presque toujours SANS lien au beat précédent (playtest : « décroché en
+# event »). Ce pont RESTAURE la continuité VISIBLE, mais ANCRÉ (jamais générique) : il PORTE le degré du
+# beat qui s'achève ET l'imagery du BIOME → il ne pourrait pas apparaître ailleurs (test anti-R140). Il
+# COLORE selon le MOMENTUM (ton neutre / sombre / élan). Voix MJ 2e personne PRÉSENT ; il finit sur une
+# VIRGULE (amorce ouverte) → préposé à la situation, « pont + situation » coule en un paragraphe. Il dit
+# l'EMPREINTE du résultat (sensation résiduelle), jamais l'action elle-même (déjà narrée par la résolution) ;
+# il ne dit JAMAIS « poursuivez/continuez votre route/chemin » (le générique banni). Structure
+# [degré][biome][ton] : "neutre" (3 variantes, cas majoritaire momentum -1..+1), "sombre" (momentum <= -2),
+# "elan" (momentum >= +2). Ton absent pour un couple → fallback "neutre" (jamais de phrase cross-biome).
+const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
+	"echec": {
+		"foret": {
+			"neutre": [
+				"Le bois vous a refusé son passage, la mousse encore froide sous vos paumes, et vous cherchez une autre percée entre les arbres,",
+				"Ce que vous avez tenté s'est refermé comme une ronce, et vous longez le mur d'arbres à la recherche d'une faille,",
+				"Le refus du lieu vous colle à la peau, l'humus lourd sous vos pas, tandis que vous gagnez le couvert plus loin,",
+			],
+			"sombre": [
+				"Chaque tronc semble se resserrer un peu plus depuis vos derniers pas, et c'est entre deux ombres que vous reprenez,",
+			],
+			"elan": [
+				"Même ce revers ne vous arrête pas, la sève et la terre dans vos veines, et vous rouvrez la marche entre les fûts,",
+			],
+		},
+		"falaises": {
+			"neutre": [
+				"Le refus du lieu encore cuisant, le vent vous pousse plus loin sur le sel,",
+				"La roche ne vous a rien cédé, et l'écume ronge encore vos bottes quand vous reprenez la corniche,",
+				"Ce que le bord vous a refusé pèse dans vos jambes, et vous longez l'à-pic un peu plus loin,",
+			],
+			"sombre": [
+				"Le vent a tourné contre vous depuis un moment déjà, et c'est en aveugle presque que vous reprenez la corniche,",
+			],
+			"elan": [
+				"Même ce revers ne vous plie pas, le sel vif sur vos lèvres, et vous reprenez le fil de la falaise,",
+			],
+		},
+	},
+	"partiel": {
+		"foret": {
+			"neutre": [
+				"Il vous en a coûté, mais la source retrouvée murmure encore derrière vous quand vous reprenez entre les troncs,",
+				"À moitié payé, à moitié gagné, l'odeur de résine vous suit tandis que vous vous enfoncez plus avant,",
+				"Le prix payé et la voie entrouverte, vous vous enfoncez dans la mousse vers l'ombre suivante,",
+			],
+			"sombre": [
+				"Ce demi-gain a un goût de dette, et le bois se fait plus noir à chaque pas que vous risquez plus loin,",
+			],
+			"elan": [
+				"Même à demi, ce que vous avez arraché vous porte, et le sous-bois s'ouvre plus franc devant vous,",
+			],
+		},
+		"falaises": {
+			"neutre": [
+				"Ce que la mer vous a pris pèse encore, mais vous reprenez la corniche battue de vent,",
+				"À demi vainqueur du vertige, le sel sec sur vos lèvres, vous longez le bord un peu plus loin,",
+				"La prise à moitié tenue, l'embrun froid dans le cou, vous gagnez la roche suivante,",
+			],
+			"sombre": [
+				"Ce demi-gain sent la marée qui monte, et le vent se fait mauvais à mesure que vous avancez sur le sel,",
+			],
+			"elan": [
+				"Même écorné, ce que vous tenez vous soulève, et la falaise s'ouvre plus large devant vos pas,",
+			],
+		},
+	},
+	"reussite": {
+		"foret": {
+			"neutre": [
+				"Porté par ce qui vient de céder, vous gagnez le coeur du bois,",
+				"La forêt vous laisse passer, presque complice, et la lumière change entre les feuilles quand vous avancez,",
+				"La voie franchie sans dette, l'air vert et calme dans vos poumons, vous vous enfoncez plus avant,",
+			],
+			"sombre": [
+				"La voie s'est ouverte, mais quelque chose vous suit sous les fougères tandis que vous reprenez,",
+			],
+			"elan": [
+				"Tout, depuis vos derniers pas, semble s'écarter devant vous, et le bois s'ouvre plus large à mesure que vous avancez,",
+			],
+		},
+		"falaises": {
+			"neutre": [
+				"Le vent semble se ranger derrière vous, et vous gagnez le promontoire dans l'odeur du sel,",
+				"La falaise vous a laissés passer sans vous prendre, et l'horizon s'élargit tandis que vous avancez,",
+				"La corniche franchie sans prix, l'embrun clair sur le visage, vous poussez vers la roche suivante,",
+			],
+			"sombre": [
+				"La voie s'est ouverte, mais l'eau noire, en bas, garde l'oeil sur vous quand vous reprenez le bord,",
+			],
+			"elan": [
+				"Une confiance neuve vous porte depuis vos derniers pas, et le vent lui-même semble vous pousser vers le large,",
+			],
+		},
+	},
+	"eclatante": {
+		"foret": {
+			"neutre": [
+				"Ce que vous venez d'accomplir résonne encore sous l'écorce, et le bois entier semble s'incliner sur votre passage,",
+				"Les arbres eux-mêmes paraissent se souvenir de vous, et un chemin franc s'ouvre où il n'y en avait pas,",
+				"L'éclat de votre geste court de racine en racine, et la forêt vous ouvre sa profondeur,",
+			],
+			"sombre": [
+				"Votre éclat a réveillé quelque chose : le bois s'incline, mais une ombre neuve marche à côté de vous,",
+			],
+			"elan": [
+				"Rien ne semble pouvoir vous arrêter, et le coeur de la forêt se déplie de lui-même devant vous,",
+			],
+		},
+		"falaises": {
+			"neutre": [
+				"Ce que vous venez d'arracher à la roche résonne jusqu'au phare, et la mer elle-même semble reculer,",
+				"Les rochers paraissent vous reconnaître, et un sentier net s'ouvre devant vous au bord du vide,",
+				"L'éclat de votre geste court sur l'écume, et la côte entière s'ouvre devant vous,",
+			],
+			"sombre": [
+				"Votre éclat a réveillé la mer : elle recule devant vous, mais une voix de sel prononce déjà votre nom,",
+			],
+			"elan": [
+				"Rien ne semble pouvoir vous arrêter, et la falaise se penche d'elle-même pour vous livrer passage,",
+			],
+		},
+	},
+}
+
+
+# N3-V1 (2026-07-06) : ANCRAGE DU CLIMAX sur le but de quête. %s = quest_title. Préposé à la situation
+# du beat Climax (build_situation) pour que le climax NOMME ce que la quête promettait et le referme. Voix
+# MJ 2e personne présent, court (1 phrase). Le dernier climax du run = culmination de la chaîne de quêtes.
+const CLIMAX_ANCHORS: Array = [
+	"Au bout, ce que « %s » promettait vous attend enfin.",
+	"Tout ce qui vous a mené jusqu'ici n'était qu'un chemin vers « %s », et le voici.",
+]
+
+
 # Filet NEUTRE (registre inconnu / hors-jeu) + ancre du gate probe : chaque entrée s'ouvre sur « [i]Vous ».
 # Utilisé tel quel par fallback_resolution quand aucune carte n'est passée (harnais legacy 2 args).
 const RESO_FALLBACKS: Dictionary = {
@@ -858,7 +995,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	var fp: Dictionary = _draw_faction_pilier()  # v10.20.2 : faction + pilier PNJ de la run (fil rouge)
 	# Récurrence : si le pilier tiré est CELUI de la run précédente (chronique), il RECONNAÎT le Voyageur.
 	var recog: bool = str(fp["pilier"]) != "" and str(fp["pilier"]) == str(MerlinChronicle.read().get("last_pilier", ""))
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
 	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
@@ -935,13 +1072,16 @@ func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
 	var qv: Dictionary = quest_view(scenario, quest_idx)
 	var fb: Dictionary = _fallback_arc()
 	var gist: String = str(_run_thread.get("last_gist", ""))
+	# N3-V1 : le PONT traverse les quêtes comme last_gist → le 1er beat de la quête suivante s'ouvre sur
+	# le pont porteur du dernier résultat (continuité par-delà la frontière de quête, playtest N3).
+	var bridge: String = str(_run_thread.get("bridge", ""))
 	# v10.20.2 : la faction + le pilier PNJ (fil rouge) sont RUN-wide → ils survivent à la transition de quête.
 	var faction: String = str(_run_thread.get("faction", ""))
 	var pilier: String = str(_run_thread.get("pilier", ""))
 	var pilier2: String = str(_run_thread.get("pilier2", ""))
 	var recog: bool = bool(_run_thread.get("pnj_recog", false))
 	_run_thread = {"title": str(qv.get("title", "")), "pitch": str(qv.get("pitch", "")),
-		"last_gist": gist, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
 		"faction": faction, "pilier": pilier, "pilier2": pilier2, "pnj_recog": recog}
 	prepare_arc(qv)  # fire-and-forget — l'arc LLM remplace le fallback s'il gagne la course
 
@@ -1173,8 +1313,6 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		required = _pick_tags(btype, diff)  # filet harnais hors-jeu (probe_prose/probe_scenario)
 	if narration == "":
 		narration = _fallback_situation(btype, required)
-	# v11-N1 (R140) — le PONT procédural générique (« Sa voie ouverte, le Voyageur s'enfonça plus avant »)
-	# est SUPPRIMÉ : la continuité passe désormais par le last_gist injecté dans le prompt du beat suivant.
 	_run_thread["arc_locked"] = true
 	# v11-N1 (R140) — filet : toute clause meta qui prend le joueur par la main est bannie PARTOUT (banques
 	# réécrites, prompts au « Vous » présent) ; ici on nettoie ce qui viendrait d'un arc LLM ancien ou d'une
@@ -1187,6 +1325,28 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	]:
 		narration = narration.replace(str(_banned), "")
 	narration = narration.strip_edges()
+	# N3-V1 (2026-07-06) : CLIMAX ANCRÉ SUR LE BUT. Le beat Climax NOMME ce que la quête promettait pour
+	# le refermer (quest_title tissé en ouverture), voix MJ 2e personne présent. C'est l'ouverture du climax
+	# (le pont porteur-de-résultat n'est PAS ajouté au climax, cf. plus bas). Titre vide (hors-jeu) : sauté.
+	if btype == "Climax":
+		var qt: String = str(beat.get("quest_title", _run_thread.get("title", ""))).strip_edges()
+		if qt != "":
+			var anchor: String = str(CLIMAX_ANCHORS[_rng.randi_range(0, CLIMAX_ANCHORS.size() - 1)]) % qt
+			narration = anchor + " " + narration
+	# N3-V1 : PONT VISIBLE inter-beats. Pour tout beat n>1 NON-Climax (pont posé par note_outcome du beat
+	# précédent, traverse les quêtes comme last_gist), on prépose le pont ANCRÉ (degré, biome, momentum) à la
+	# narration : « pont + situation » coule en un paragraphe qui RÉFÉRENCE le beat précédent (playtest N3). Le
+	# Climax est EXCLU : son ouverture est déjà l'ancrage au but (ci-dessus) ; empiler pont + ancrage serait
+	# lourd et bancal (pont finit en virgule, ancrage est une phrase pleine). Beat 1 ou pont vide : situation seule.
+	if int(beat.get("n", 1)) > 1 and btype != "Climax":
+		var bridge: String = str(_run_thread.get("bridge", "")).strip_edges()
+		if bridge != "":
+			# Le pont finit en virgule (amorce) → la situation en devient la suite : sa 1re lettre passe en
+			# minuscule pour que « pont, situation » coule comme une phrase (évite « , Vous » bancal). On ne
+			# touche QUE le 1er caractère (le reste, majuscules propres incluses, est préservé).
+			if narration.length() > 0:
+				narration = narration.substr(0, 1).to_lower() + narration.substr(1)
+			narration = bridge + " " + narration
 	return {
 		"narration": narration,
 		"required_tags": required,
@@ -1596,9 +1756,51 @@ func note_outcome(res: Dictionary, _situation: Dictionary = {}, played_cards: Ar
 		"reussite": "et la voie s'est ouverte", "eclatante": "et tout a cede d'un coup",
 	}
 	var result: String = str(result_map.get(degree, "et la voie s'est ouverte"))
-	# v11-N1 (R140) — le PONT procédural générique est SUPPRIMÉ (plus de _run_thread["bridge"]) : la
-	# continuité passe ENTIÈREMENT par ce gist, injecté dans le prompt du beat suivant.
+	# last_gist (ASCII) alimente le prompt du beat suivant (« Juste avant : … ») quand le LLM gagne la course.
 	_run_thread["last_gist"] = "vous %s, %s" % [action, result]
+	# N3-V1 (2026-07-06) : PONT VISIBLE. Le LLM perd la course >95% du temps, donc on RESTAURE un pont
+	# procédural (retiré en R140 car alors générique) mais désormais ANCRÉ (degré, biome, momentum). Posé
+	# ici : build_situation le prépose à la narration du beat n>1 (fallback presque toujours affiché).
+	_run_thread["bridge"] = _compose_bridge(degree, _run_biome())
+
+
+# N3-V1 (2026-07-06) : MOMENTUM courant lu depuis la run (source de vérité /root/MerlinRun.momentum),
+# duck-typé comme _run_biome. 0 hors-jeu (harnais : pas de run montée). Le pont neutre est alors servi.
+func _run_momentum() -> int:
+	if is_inside_tree():
+		var run_m: Node = get_node_or_null("/root/MerlinRun")
+		if run_m != null and (run_m.get("momentum") != null):
+			return int(run_m.get("momentum"))
+	return 0
+
+
+# N3-V1 : TON du pont selon le momentum (bornes MerlinRun : sombre <= -2, élan >= +2, neutre entre).
+func _bridge_tone(momentum: int) -> String:
+	if momentum <= -2:
+		return "sombre"
+	if momentum >= 2:
+		return "elan"
+	return "neutre"
+
+
+# N3-V1 : COMPOSE le pont inter-beats (degré, biome, ton du momentum). Anti-répétition intra-run via
+# _pick_served (clé par degré|biome|ton). Ton absent pour un couple : fallback "neutre" ; couple absent
+# (degré/biome inconnu) : "" (build_situation sert alors la seule situation, jamais de générique cross-biome).
+func _compose_bridge(degree: String, biome: String) -> String:
+	var by_biome: Dictionary = BRIDGE_BY_DEGREE_BIOME.get(degree, {})
+	# Biome absent du dict : "" (jamais de fallback cross-biome, cf. garantie ci-dessus). _run_biome
+	# renvoie toujours "foret"/"falaises" (défaut "foret") → en pratique la clé est présente.
+	var by_tone: Dictionary = by_biome.get(biome, {})
+	if by_tone.is_empty():
+		return ""
+	var tone: String = _bridge_tone(_run_momentum())
+	var pool: Array = by_tone.get(tone, [])
+	if pool.is_empty():
+		pool = by_tone.get("neutre", [])  # ton extrême non écrit pour ce couple : neutre (jamais cross-biome)
+		tone = "neutre"
+	if pool.is_empty():
+		return ""
+	return _pick_served(pool, "bridge|%s|%s|%s" % [degree, biome, tone])
 
 
 # A4 : helpers de prose (_clean_prose, _strip_scene_echo, _split_sentences, _sig_words,

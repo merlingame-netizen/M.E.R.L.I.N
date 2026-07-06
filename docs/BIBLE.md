@@ -1820,7 +1820,21 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
-- **R145 — SECOURS biome + combinaison (2026-07-05, N2a — user « trop court, pas lié au scénario/biome »)** :
+- **R146 : CONTINUITÉ + RÉACTIVITÉ narratives (2026-07-06, N3-V1, user « les scénarios ne suivent pas, tout décroché en event »)** :
+  le PONT inter-beats supprimé en N1 (R140) est RESTAURÉ mais INTELLIGENT (non-générique) : composé dans
+  `note_outcome` depuis degré x biome x momentum (banque `BRIDGE_BY_DEGREE_BIOME`, 2e pers. présent, il PORTE
+  l'empreinte du résultat du beat précédent et enchaîne, jamais « vous poursuivez votre route »), préposé à la
+  situation `n>1` dans `build_situation`. La continuité ne dépend donc plus du seul `last_gist` LLM (qui perd
+  la course >95 % du temps). **MOMENTUM narratif** (`merlin_run.momentum` : +1 réussite/éclatante, -1
+  échec/partiel, clampé -3..+3, additif save, reset new_run) colore le TON du pont (sombre <= -2, élan >= +2)
+  SANS aucun effet mécanique : §K INCHANGÉ (soak iso, chiffres bit-identiques ; le momentum MÉCANIQUE =
+  difficulté est reporté en Vague 2). **CLIMAX ancré sur le but** : `build_situation` nomme `quest_title` au
+  climax (« Au bout, ce que « X » promettait vous attend enfin. ») pour refermer l'enjeu posé au début.
+  `probe_prose` étendu (ponts biome-purs, 2e pers., zéro « poursuivez/continuez votre route »). RÉVISE le
+  « pont supprimé » de R140 (il revient, spécifique). Vague 2 : MULTI-ÉTAPES (la situation PERSISTE tant qu'on
+  ne réussit pas : échec/partiel gardent la scène ouverte + escalade, réussite/éclatante ferme ; re-dérive §K).
+
+- **R145 : SECOURS biome + combinaison (2026-07-05, N2a, user « trop court, pas lié au scénario/biome »)** :
   Gemma (~1 tok/s) ne finit jamais sa résolution LLM (~150 tok) dans la fenêtre ~20 s → c'est TOUJOURS le
   secours procédural qui s'affiche. Ce secours devient **biome-aware** et **combinaison-aware** : (a)
   `SITU_FALLBACKS_BY_BIOME` + `FALLBACK_ARCS_BY_BIOME` (arcs FALAISES dédiés — phare/épaves/marée/sel/grève —

@@ -235,6 +235,37 @@ func _prose_gate(sc: Node) -> Array:
 					for fw2 in foret_words:
 						if csl.find(str(fw2)) != -1:
 							viol.append("conséquence FALAISES [%s] « %s… » contient le mot forestier '%s'" % [str(deg_key), cs.substr(0, 28), str(fw2)])
+	# 6bis) N3-V1 (2026-07-06) : PONTS BRIDGE_BY_DEGREE_BIOME : (a) chaque pont NON-VIDE ; (b) 2e personne
+	#       (contient « vous », insensible casse) ; (c) zéro générique « poursuivez/continuez votre route/
+	#       chemin » (raison de la suppression R140) ; (d) banques FALAISES = zéro mot forestier ; (e) pas de
+	#       filler hérité (banned). Déterministe (constantes seules). Structure [degré][biome][ton][liste].
+	var bridge_generic: Array = [
+		"poursuivez votre route", "poursuivez votre chemin", "continuez votre route", "continuez votre chemin",
+		"poursuivez votre marche", "continuez votre marche",
+	]
+	for bdeg in sc.BRIDGE_BY_DEGREE_BIOME.keys():
+		for bbio in sc.BRIDGE_BY_DEGREE_BIOME[bdeg].keys():
+			for btone in sc.BRIDGE_BY_DEGREE_BIOME[bdeg][bbio].keys():
+				var bpool: Array = sc.BRIDGE_BY_DEGREE_BIOME[bdeg][bbio][btone]
+				if bpool.is_empty():
+					viol.append("pont [%s|%s|%s] : pool VIDE" % [str(bdeg), str(bbio), str(btone)])
+				for bline in bpool:
+					var bs: String = str(bline)
+					var bsl: String = bs.to_lower()
+					if bs.strip_edges().is_empty():
+						viol.append("pont [%s|%s|%s] : entrée vide" % [str(bdeg), str(bbio), str(btone)])
+					if bsl.find("vous") == -1:
+						viol.append("pont [%s|%s|%s] « %s… » : pas de 2e personne 'vous'" % [str(bdeg), str(bbio), str(btone), bs.substr(0, 28)])
+					for bg in bridge_generic:
+						if bsl.find(str(bg)) != -1:
+							viol.append("pont [%s|%s|%s] « %s… » : générique interdit '%s'" % [str(bdeg), str(bbio), str(btone), bs.substr(0, 28), str(bg)])
+					for bb in banned:
+						if bs.find(str(bb)) != -1:
+							viol.append("pont [%s|%s|%s] « %s… » contient '%s'" % [str(bdeg), str(bbio), str(btone), bs.substr(0, 28), str(bb)])
+					if str(bbio) == "falaises":
+						for bfw in foret_words:
+							if bsl.find(str(bfw)) != -1:
+								viol.append("pont FALAISES [%s|%s] « %s… » contient le mot forestier '%s'" % [str(bdeg), str(btone), bs.substr(0, 28), str(bfw)])
 	# 6) Compo intégrée (N2a check d) : fallback_resolution(degré, "", [carte FORCE], "falaises") produit
 	#    « [i]Vous … [/i] » + ≥1 mot de biome falaises. Carte factice duck-typée (archetype()="Offensif"→FORCE).
 	var fake_force: Object = _FakeCard.new("Offensif")

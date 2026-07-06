@@ -245,3 +245,9 @@ Chaque sous-vague : gate R109 complet + commit + BIBLE R-numérotée.
 - W3 (2ba0b1f3, R143) : greffes « +N au jet » + migration die→roll + re-tune stack (ROLL_BONUS 2→1).
 - W4 (R144) : visuel d20 (d6→20 faces) + halo vert/rouge réussi/raté. §K vert bout-à-bout, gates R109 par vague.
 - Arbitrage design ouvert (non-bloquant) : « Le Jouet Offert » (Enfant) donne un vrai +1 comme toute greffe roll.
+
+## N3-V1 CLÔTURÉ (2026-07-06) : continuité + réactivité (R146)
+- Pont intelligent restauré (BRIDGE_BY_DEGREE_BIOME, degré x biome x momentum, non-générique) : les beats s'enchaînent.
+- Momentum narratif (merlin_run, +1/-1 clampé -3..+3, additif save) colore le ton du pont (sombre/élan). §K INCHANGÉ (soak iso).
+- Climax ancré sur quest_title (CLIMAX_ANCHORS). Gates verts, eyeball confirmé (pont mid-quête + climax nommant le but).
+- Reste : Vague 2 multi-étapes (situation persistante, re-dérive §K) ; N2b streaming ; cleanup em-dash des banques pré-règle.

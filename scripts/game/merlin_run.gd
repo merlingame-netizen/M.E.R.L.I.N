@@ -21,6 +21,9 @@ const SAVE_VERSION: int = 2
 const MAX_CORRUPTED_IN_HAND: int = 1
 # v11-W3 (spec §E) : cap de greffes par action — 3 slots fixes (12 total, jamais saturé en pratique).
 const MAX_GRAFTS_PER_ACTION: int = 3
+# N3-V1 (2026-07-06) : bornes du momentum narratif (voir var momentum). Purement narratif (ton du pont).
+const MOMENTUM_MIN: int = -3
+const MOMENTUM_MAX: int = 3
 
 # === v2-W2 (2026-07-05) — ARBRE DE TALENT IN-RUN : alimente le skill_mod du moteur d20 (W1) ===
 # Talent PAR VERBE (PERCEVOIR/AGIR/PARLER/RESSENTIR), remis à zéro à chaque new_run (PAS de méta
@@ -102,6 +105,11 @@ var next_draw_bonus: int = 0
 var talent: Dictionary = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
 var talent_points: int = 0
 var verb_usage: Dictionary = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
+# N3-V1 (2026-07-06) : MOMENTUM NARRATIF (colore le TON du pont inter-beats, ZÉRO impact §K/moteur).
+# +1 par réussite/éclatante, -1 par échec/partiel, clampé [MOMENTUM_MIN, MOMENTUM_MAX]. Remis à zéro
+# à new_run. Persisté (champ additif, défaut 0 au load : saves antérieures repartent neutres, pas de
+# bump SAVE_VERSION). Le momentum MÉCANIQUE (impact sur le jet) est réservé à une Vague 2 distincte.
+var momentum: int = 0
 
 
 # Tags bénis portés par les cartes de ce combo (canal bonus de MerlinResolution.resolve, R131).
@@ -177,6 +185,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	talent = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}  # v2-W2 : talent IN-RUN, remis à zéro
 	talent_points = 0
 	verb_usage = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
+	momentum = 0  # N3-V1 : le ton narratif repart neutre à chaque run
 	actions = MerlinCard.make_actions()  # v11 : les 4 verbes fixes évolutifs
 	deck = MerlinCard.starter_traits()   # v11 : 16 traits (12 canon retagués + 4 nouveaux)
 	hand = []
@@ -791,6 +800,13 @@ func destiny_snapshot() -> Dictionary:
 
 func apply_resolution(res: Dictionary) -> void:
 	last_degree = str(res.get("degree", ""))  # v10.14 : mémorisé pour la ramification v1
+	# N3-V1 : momentum NARRATIF (ton du pont), +1 réussite/éclatante, -1 échec/partiel, clampé.
+	# Aucun effet mécanique : ne touche ni les deltas ci-dessous, ni la difficulté, ni les tags (§K).
+	var mdeg: String = str(res.get("degree", ""))
+	if mdeg == "reussite" or mdeg == "eclatante":
+		momentum = clampi(momentum + 1, MOMENTUM_MIN, MOMENTUM_MAX)
+	elif mdeg == "echec" or mdeg == "partiel":
+		momentum = clampi(momentum - 1, MOMENTUM_MIN, MOMENTUM_MAX)
 	var di: int = int(res.get("integrite_delta", 0))
 	var dc: int = int(res.get("corruption_delta", 0))
 	# v10 dashboard : MAX_INTEGRITE peut être surchargé par TweaksOverlay (hot-reload).
@@ -939,6 +955,7 @@ func save() -> void:
 		"blessed_tags": blessed_tags,  # Wave I (R131) : planning + bénédictions persistés (R108)
 		"next_draw_bonus": next_draw_bonus,  # v11-W3 (M1) : pioche DRAW due à la main suivante (additif)
 		"talent": talent, "talent_points": talent_points, "verb_usage": verb_usage,  # v2-W2 : talent IN-RUN (additif, R108)
+		"momentum": momentum,  # N3-V1 : ton narratif du pont (additif, défaut 0 au load)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -990,6 +1007,7 @@ func load_run() -> bool:
 	talent = _talent_dict(data.get("talent", {}))
 	talent_points = int(data.get("talent_points", 0))
 	verb_usage = _talent_dict(data.get("verb_usage", {}))
+	momentum = clampi(int(data.get("momentum", 0)), MOMENTUM_MIN, MOMENTUM_MAX)  # N3-V1 : défaut 0 (saves antérieures neutres)
 	actions = _dicts_to_cards(data.get("actions", []))
 	if actions.is_empty():
 		actions = MerlinCard.make_actions()  # filet : jamais de run sans les 4 verbes
