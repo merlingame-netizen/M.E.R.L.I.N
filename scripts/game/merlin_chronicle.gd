@@ -7,6 +7,9 @@ extends RefCounted
 
 const PREFS_PATH: String = "user://options.cfg"
 const SECTION: String = "chronique"
+# P2 (chantier 4, design F4 / CDC-GD-02) : total canonique d'eclats du Graal (denominateur N/12
+# affiche a MerlinEnd + CHRONIQUES : ancre le but, sert l'argument de re-run). Purement descriptif.
+const GRAAL_TOTAL: int = 12
 
 # Schéma + valeurs par défaut (sert aussi de gabarit de lecture).
 const DEFAULTS: Dictionary = {
@@ -16,6 +19,10 @@ const DEFAULTS: Dictionary = {
 	"last_run_iso": "", "last_seen_iso": "",
 	# v10.20.2 — mémoire de la dernière run pour la RÉCURRENCE des PNJ (le pilier te reconnaît) + l'allusion menu.
 	"last_faction": "", "last_pilier": "",
+	# P2 (2026-07-11, chantier 4) : 1er cran de meta NON-restrictif. graal_fragments = eclats du Graal
+	# ramenes (+1 par fin accomplissement, cumule cross-run) ; last_voie = derniere Voie de la Carte
+	# Destin (palmares CHRONIQUES). Additifs : les cfg anterieurs lisent les defauts (aucune migration).
+	"graal_fragments": 0, "last_voie": "",
 	# N4-TUTO (2026-07-11) : le GUIDE de première traversée. Proposé UNE fois (chronique vierge),
 	# jamais relancé seul ; rejouable via Options (tuto_rearmed). Additif : les cfg antérieurs
 	# lisent les défauts (aucune migration).
@@ -24,7 +31,7 @@ const DEFAULTS: Dictionary = {
 
 
 # Enregistre la fin d'un run : +1 run, +1 au palmarès de l'issue, mémorise la dernière aventure + son PNJ.
-static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "") -> void:
+static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "", voie: String = "") -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(PREFS_PATH)  # préserve les autres sections (audio/a11y)
 	cfg.set_value(SECTION, "runs_played", int(cfg.get_value(SECTION, "runs_played", 0)) + 1)
@@ -41,6 +48,11 @@ static func record_end(end_type: String, scenario_title: String, integrite: int,
 	cfg.set_value(SECTION, "last_corruption", corruption)
 	cfg.set_value(SECTION, "last_faction", faction)
 	cfg.set_value(SECTION, "last_pilier", pilier)
+	# P2 (chantier 4a) : 1 eclat du Graal par fin accomplissement (cumul cross-run, additif).
+	if end_type == "accomplissement":
+		cfg.set_value(SECTION, "graal_fragments", int(cfg.get_value(SECTION, "graal_fragments", 0)) + 1)
+	if voie != "":
+		cfg.set_value(SECTION, "last_voie", voie)
 	cfg.set_value(SECTION, "last_run_iso", Time.get_datetime_string_from_system())
 	cfg.save(PREFS_PATH)
 

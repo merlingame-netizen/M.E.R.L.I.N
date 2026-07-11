@@ -231,6 +231,16 @@ func _build_ui() -> void:
 	_rule_box.add_child(_hline())
 	left.add_child(_rule_box)
 
+	# P2 (chantier 4a) : préambule méta discret, allusion aux fragments du Graal déjà ramenés.
+	var frag_n: int = int(MerlinChronicle.read().get("graal_fragments", 0))
+	if frag_n > 0:
+		var pre: Label = Label.new()
+		pre.text = _fragments_preamble(frag_n)
+		pre.add_theme_color_override("font_color", COL_DIM)
+		pre.add_theme_font_size_override("font_size", 16)
+		pre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		left.add_child(pre)
+
 	var gap: Control = Control.new()
 	gap.custom_minimum_size = Vector2(0, 22)
 	left.add_child(gap)
@@ -242,8 +252,9 @@ func _build_ui() -> void:
 	left.add_child(menu)
 	menu.add_child(_menu_row("spark", "CONTINUER", _on_continue, has_save))
 	menu.add_child(_menu_row("burst", "NOUVELLE PARTIE", _on_new, true))
-	menu.add_child(_menu_row("book", "CHRONIQUES", Callable(), false))
-	menu.add_child(_menu_row("cards", "CARTES", Callable(), false))
+	# P2 (chantier 4b) : CHRONIQUES devient un vrai écran de lecture (palmarès) ; l'entrée CARTES,
+	# grisée et sans fonction, est RETIRÉE (un bouton grisé sans condition lisible est pire qu'absent).
+	menu.add_child(_menu_row("book", "CHRONIQUES", _on_chronicles, true))
 	menu.add_child(_menu_row("target", "OPTIONS", _on_options, true))
 	menu.add_child(_menu_row("cross", "QUITTER", _on_quit, true))
 
@@ -947,3 +958,83 @@ func _on_options() -> void:
 
 func _on_quit() -> void:
 	get_tree().quit()
+
+
+# P2 (chantier 4b) : ÉCRAN CHRONIQUES v1 (lecture seule). Palmarès cross-run (MerlinChronicle) : nb de
+# traversées, issues, dernière fin + dernière Voie, fragments du Graal (N/12). Overlay sobre, clic =
+# fermer (même grammaire que _show_about). Remplace l'ancien bouton grisé sans fonction.
+func _on_chronicles() -> void:
+	if get_node_or_null("ChroniclesOverlay") != null:
+		return  # P2 (review M1) : garde de ré-entrance (pas d'empilement de voiles)
+	var c: Dictionary = MerlinChronicle.read()
+	var layer: Control = Control.new()
+	layer.name = "ChroniclesOverlay"
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(layer)
+	var dim: ColorRect = ColorRect.new()
+	dim.color = MerlinVisual.DIM_MODAL
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(dim)
+	var panel: PanelContainer = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(520, 0)
+	var psb: StyleBoxFlat = StyleBoxFlat.new()
+	psb.bg_color = MerlinVisual.SURFACE
+	psb.set_corner_radius_all(10)
+	psb.set_border_width_all(2)
+	psb.border_color = COL_GOLD
+	psb.set_content_margin_all(30)
+	panel.add_theme_stylebox_override("panel", psb)
+	layer.add_child(panel)
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(v)
+	var runs: int = int(c.get("runs_played", 0))
+	var lines: Array = [["CHRONIQUES", 36, COL_GOLD]]
+	if runs <= 0:
+		lines.append(["Aucune traversée encore. La brume garde ta place.", 18, COL_CREAM])
+	else:
+		lines.append(["Traversées : %d" % runs, 22, COL_CREAM])
+		lines.append(["Accomplies %d  ·  Perdues %d  ·  Corrompues %d" % [int(c.get("wins", 0)), int(c.get("deaths", 0)), int(c.get("corrupted", 0))], 18, COL_DIM])
+		var el: Dictionary = {"accomplissement": "Accomplissement", "mort": "Mort narrative", "corrompu": "Bascule corrompue"}
+		var last_end: String = str(c.get("last_end_type", ""))
+		if last_end != "":
+			var lt: String = str(c.get("last_scenario_title", ""))
+			var suffix: String = (" : %s" % lt) if lt != "" else ""
+			lines.append(["Dernière traversée : %s%s" % [str(el.get(last_end, "Fin")), suffix], 18, COL_DIM])
+		var lv: String = str(c.get("last_voie", ""))
+		if lv != "":
+			lines.append(["Dernière Voie : %s" % lv, 18, COL_CREAM])
+	lines.append(["✦ Fragments du Graal : %d / %d" % [int(c.get("graal_fragments", 0)), MerlinChronicle.GRAAL_TOTAL], 20, COL_GOLD])
+	lines.append(["", 6, COL_DIM])
+	lines.append(["cliquer pour fermer", 14, COL_DIM])
+	for ln in lines:
+		var l: Label = Label.new()
+		l.text = str(ln[0])
+		l.add_theme_font_size_override("font_size", int(ln[1]))
+		l.add_theme_color_override("font_color", ln[2] as Color)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(l)
+	layer.modulate.a = 0.0
+	var tw: Tween = layer.create_tween()
+	tw.tween_property(layer, "modulate:a", 1.0, MerlinVisual.DUR_VEIL_IN * MerlinVisual.motion())
+	layer.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed:
+			layer.queue_free())
+
+
+# P2 (chantier 4a) : phrase de préambule (menu) qui fait allusion aux fragments déjà ramenés. Nombre
+# écrit en toutes lettres jusqu'à douze, chiffre au-delà. "" si aucun fragment (pas de ligne).
+func _fragments_preamble(n: int) -> String:
+	if n <= 0:
+		return ""
+	var words: Array = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze"]
+	var num: String = str(words[n]) if n < words.size() else str(n)
+	var noun: String = "éclat déjà arraché" if n == 1 else "éclats déjà arrachés"
+	var line: String = "%s %s à la brume." % [num, noun]
+	return line.substr(0, 1).to_upper() + line.substr(1)

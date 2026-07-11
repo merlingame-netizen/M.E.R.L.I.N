@@ -1873,6 +1873,94 @@ func _compose_bridge(degree: String, biome: String) -> String:
 # MerlinProse (statique 100% pur, renommés sans underscore) — testables hors-arbre.
 
 
+# P2 (2026-07-11, chantier 3 NAR-05) : BANQUE D'ÉPILOGUES par [fin][biome][ton]. Même esprit que
+# BRIDGE_BY_DEGREE_BIOME (degré x biome x ton) : le LLM (~1 tok/s) perd la course >95% du temps, donc
+# l'épilogue AFFICHÉ est presque toujours le secours. Il DOIT donc coller au BIOME (forêt/falaises) et
+# à la FIN (accomplissement/mort/corrompu), et se TEINTER du momentum final (neutre / sombre <= -2 /
+# élan >= +2). Voix de MERLIN au Voyageur, 2e personne présent, ton merveilleux-inquiétant. La coda
+# LLM (narrate_epilogue) garde la priorité quand elle gagne (merlin_end._bg_epilogue).
+const EPILOGUE_BY_END_BIOME: Dictionary = {
+	"accomplissement": {
+		"foret": {
+			"neutre": [
+				"Tu franchis le dernier seuil, Voyageur, et la forêt te laisse repartir. Au loin tremble un éclat qui pourrait être le Graal, ou seulement la rosée sur tes cils. Reviens vers moi, mon ami : la brume gardera ta place au chaud.",
+				"Voilà, mon ami, le bois se referme derrière toi sans un bruit, comme on repose un secret. Tu emportes un fragment de lumière que Brocéliande croyait avoir perdu. Je t'attendrai sous les mêmes fougères.",
+			],
+			"elan": [
+				"Tu sors du bois la tête haute, Voyageur, et les arbres eux-mêmes s'écartent pour te saluer. Ce que tu as pris cette nuit, peu l'ont arraché à la forêt. Va, mon ami, et sache que je suis un peu fier.",
+			],
+			"sombre": [
+				"Tu franchis le seuil, Voyageur, mais tu ne repars pas tout à fait entier. La forêt t'a laissé passer, et elle a gardé quelque chose de toi entre ses racines. L'éclat que tu emportes a un prix que tu paieras plus tard.",
+			],
+		},
+		"falaises": {
+			"neutre": [
+				"Tu quittes la corniche, Voyageur, et le vent tombe d'un coup, comme s'il te laissait enfin la paix. Au ras des flots brille un éclat qui pourrait être le Graal, ou l'écume sous la lune. Reviens vers moi, mon ami.",
+				"Voilà, la mer s'apaise et te rend le passage, mon Voyageur. Tu emportes de ces falaises un fragment que le sel n'a pas su ronger. Le phare mort, un instant, semble te suivre des yeux.",
+			],
+			"elan": [
+				"Tu redresses les épaules face au large, Voyageur, et la houle elle-même s'incline. Ce que tu as arraché à la roche cette nuit, la mer ne le reprendra pas. Va, mon ami : j'ai vu peu de traversées aussi franches.",
+			],
+			"sombre": [
+				"Tu quittes le bord, Voyageur, mais la mer, en bas, garde l'oeil sur toi. Tu passes, oui, et une voix de sel a déjà prononcé ton nom. L'éclat que tu emportes pèse plus lourd qu'il n'en a l'air.",
+			],
+		},
+	},
+	"mort": {
+		"foret": {
+			"neutre": [
+				"Tu t'allonges dans la mousse, mon Voyageur, et la forêt se referme sur toi comme une paupière, sans rancune, juste fatiguée. Mais un murmure se réveille toujours, quelque part. Je veille, mon ami.",
+				"Te voilà rendu, Voyageur. Le bois te reprend doucement, feuille après feuille, et fait de toi une racine de plus. Ne crains rien : rien ne se perd tout à fait sous ces arbres, pas même toi.",
+			],
+			"elan": [
+				"Tu tombes le geste encore levé, Voyageur, et la forêt retient son souffle devant ta chute. Tu t'es battu jusqu'au dernier pas. Repose-toi sous la mousse, mon ami : on se souviendra de cet élan.",
+			],
+			"sombre": [
+				"Tu t'effondres, et l'ombre que tu traînais se referme enfin sur toi, mon Voyageur. La forêt ne pleure pas ; elle avait prévu ta place depuis longtemps. Dors. Je garderai ton nom, même si personne d'autre ne le fait.",
+			],
+		},
+		"falaises": {
+			"neutre": [
+				"Tu glisses vers les galets, Voyageur, et la mer se referme sur toi sans un cri, comme elle l'a fait de tant d'autres. Le vent porte encore ton nom un instant, puis se tait. Je veille, mon ami.",
+				"Te voilà rendu au sel, mon Voyageur. La marée t'emporte doucement là où le phare ne s'allume plus. Ne crains rien : la côte garde tous ses noyés, et toi avec eux.",
+			],
+			"elan": [
+				"Tu tombes face au large, le geste encore ouvert, Voyageur, et la houle s'arrête un instant pour te regarder partir. Tu as tenu jusqu'au bord. Repose sur les galets, mon ami : la mer respecte ce genre de courage.",
+			],
+			"sombre": [
+				"Tu cèdes enfin, et l'eau noire que tu sentais monter t'accueille sans surprise, mon Voyageur. Elle attendait son dû depuis le premier pas. Dors sous l'écume. Je garderai ton nom contre le vent.",
+			],
+		},
+	},
+	"corrompu": {
+		"foret": {
+			"neutre": [
+				"Tu cesses de lutter, Voyageur, et c'est presque doux, je l'ai vu cent fois. La forêt t'accueille parmi les siens, et déjà quelque part un autre marche en t'entendant. Je suis désolé. Et une part de moi, je l'avoue, n'est pas surprise.",
+				"Tu ouvres enfin la porte que tu tenais fermée, mon ami, et l'ombre entre en toi comme chez elle. Tu ne marches plus vers le Graal : tu deviens ce que la forêt cache aux autres. Adieu, Voyageur. Ou plutôt, à bientôt, sous une autre forme.",
+			],
+			"elan": [
+				"Tu embrasses l'ombre en pleine course, Voyageur, sans même ralentir, et Brocéliande frissonne de te voir si sûr. Ce que tu deviens fera de belles histoires pour effrayer les enfants. Va. Une part de moi t'admire encore.",
+			],
+			"sombre": [
+				"Tu sombres sans un cri, mon Voyageur, et la forêt referme sur toi une nuit qui ne connaît plus l'aube. Ce que tu étais s'efface, feuille à feuille. Je me souviendrai de qui tu fus, avant. C'est tout ce qu'il me reste à t'offrir.",
+			],
+		},
+		"falaises": {
+			"neutre": [
+				"Tu cesses de lutter, Voyageur, et le vent te porte sans résistance, presque tendre. La côte t'accueille parmi ses ombres, et déjà l'écume murmure ton nouveau nom. Je suis désolé. Et une part de moi, je l'avoue, n'est pas surprise.",
+				"Tu laisses la mer entrer en toi, mon ami, et le sel prend la place de ce que tu étais. Tu ne cherches plus le Graal : tu deviens la marée qui l'engloutit. Adieu, Voyageur. Ou plutôt, à bientôt, dans le ressac.",
+			],
+			"elan": [
+				"Tu te tournes vers l'ombre le pas assuré, Voyageur, face au large, et la houle applaudit tout bas. Ce que tu deviens, les gardiens de phare le chuchoteront longtemps. Va. Une part de moi t'admire encore.",
+			],
+			"sombre": [
+				"Tu sombres sans un cri sous l'eau noire, mon Voyageur, et la mer referme sur toi une nuit sans phare. Ce que tu étais se dissout dans le sel. Je me souviendrai de qui tu fus, avant. C'est tout ce qu'il me reste.",
+			],
+		},
+	},
+}
+
+
 # --- 5) ÉPILOGUE (fin de run, R69) : LLM, "" si échec → l'appelant garde le procédural. ---
 # Voix MERLIN qui referme l'aventure pour le Voyageur, avec souvenir intra-run câblé (user 2026-05-29).
 func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
@@ -1888,12 +1976,36 @@ func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
 	return s if s.length() >= 10 else ""
 
 
+# P2 (chantier 3 NAR-05) : COMPOSE l'épilogue de secours par [fin][biome][ton du momentum]. Miroir de
+# _compose_bridge (anti-répétition intra-run via _pick_served). Biome absent : repli forêt ; ton absent
+# pour un couple : repli neutre ; couple/fin inconnus : "" (fallback_epilogue sert alors le filet dur).
+func _compose_epilogue(end_type: String, biome: String) -> String:
+	var by_biome: Dictionary = EPILOGUE_BY_END_BIOME.get(end_type, {})
+	if by_biome.is_empty():
+		return ""
+	var by_tone: Dictionary = by_biome.get(biome, by_biome.get("foret", {}))
+	if by_tone.is_empty():
+		return ""
+	var tone: String = _bridge_tone(_run_momentum())
+	var pool: Array = by_tone.get(tone, [])
+	if pool.is_empty():
+		pool = by_tone.get("neutre", [])
+		tone = "neutre"
+	if pool.is_empty():
+		return ""
+	return _pick_served(pool, "epilogue|%s|%s|%s" % [end_type, biome, tone])
+
+
 func fallback_epilogue(end_type: String) -> String:
-	# Voix MERLIN (user 2026-05-29) — utilisé si le LLM échoue/timeout ; doit tenir seul.
+	# Voix MERLIN (user 2026-05-29) : utilisé si le LLM échoue/timeout ; doit tenir seul.
+	# P2 (chantier 3) : d'abord la banque biome/momentum-aware ; filet dur ci-dessous si couple absent.
+	var composed: String = _compose_epilogue(end_type, _run_biome())
+	if composed != "":
+		return composed
 	match end_type:
-		"mort": return "Tu pars dans la mousse, mon Voyageur. La forêt se referme sur toi comme une paupière — sans rancune, juste fatiguée de te voir. Mais un murmure se réveille toujours, mon ami. Je veille."
-		"corrompu": return "Tu cesses de lutter, Voyageur, et c'est presque doux — je l'ai vu cent fois. La forêt t'accueille parmi les siens ; quelque part déjà, un autre marche en t'entendant. Je suis désolé. Et un peu fier, je l'admets."
-		_: return "Tu franchis le dernier seuil, Voyageur. Au loin brille un éclat qui pourrait être le Graal — ou ton reflet dans tes yeux fatigués, je ne saurais dire. La forêt te laisse repartir, pour cette fois. Reviens-moi, mon ami."
+		"mort": return "Tu pars dans la mousse, mon Voyageur. La forêt se referme sur toi comme une paupière, sans rancune, juste fatiguée de te voir. Mais un murmure se réveille toujours, mon ami. Je veille."
+		"corrompu": return "Tu cesses de lutter, Voyageur, et c'est presque doux, je l'ai vu cent fois. La forêt t'accueille parmi les siens ; quelque part déjà, un autre marche en t'entendant. Je suis désolé. Et un peu fier, je l'admets."
+		_: return "Tu franchis le dernier seuil, Voyageur. Au loin brille un éclat qui pourrait être le Graal, ou ton reflet dans tes yeux fatigués, je ne saurais dire. La forêt te laisse repartir, pour cette fois. Reviens vers moi, mon ami."
 
 
 func _shuffle(arr: Array) -> void:

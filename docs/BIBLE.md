@@ -1820,6 +1820,19 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R151 : LA RECOMPENSE VISIBLE, draft lisible + MerlinEnd rempli + methode meta (2026-07-06, P2, revue joueur panel 6)** :
+  4 chantiers de LECTURE de la recompense (zero balance, soak 200/200 iso : degree_counts/corruption_max lus seulement par
+  end_recap). (1) DRAFT LISIBLE (CDC-UX-12) : une ligne d'effet en francais commun sous chaque carte de greffe (roll « +N a
+  tes jets sur ce verbe » / tag « ce verbe repondra a plus de scenes » / charge HEAL-PURGE-DRAW chiffree), et le noeud de
+  talent NOMME le verbe (« +1 · PARLER »), titres de-tronques. (2) MERLIN END REMPLI (CDC-UX-18 / GD-40) : recap grave de la
+  run (epreuves, degres avec accord singulier/pluriel, corruption au plus fort, greffes posees, verbes renforces, faits
+  marquants) + la VOIE de la Carte Destin enfin REVELEE (« Cette nuit, tu as marche La Voie de Miel : Epique »). (3) EPILOGUES
+  VARIES (CDC-NAR-05) : banque EPILOGUE_BY_END_BIOME (fin x biome x ton, 24 variantes teintees momentum), fin de l'epilogue
+  recycle ; coda LLM prioritaire conservee. (4) META 1er cran NON-RESTRICTIF : fragments du Graal persistes
+  (+1 / accomplissement, N/12), preambule au menu, CHRONIQUES v1 en lecture (palmares + derniere Voie), entree CARTES morte
+  retiree. Les Falaises restent OUVERTES (gating d'un biome reserve a l'utilisateur). Restes revue joueur : F2 (tooltip slots
+  poses) et P3 (session tenable / lecture / audio).
+
 - **R150 : LE BEAT QUI CLAQUE, lisibilite et drame de la resolution (2026-07-06, P1, revue joueur panel 6)** :
   7 corrections de RENDU PUR (zero balance, soak iso) : (1) AFFINITE dorée FRANCHE et GRADUÉE : lueur du
   CADRE des cartes/tuiles a 3 crans (0 rien / 1 nette / 2+ intense + pulse lent), remplace le souligné 3px ;

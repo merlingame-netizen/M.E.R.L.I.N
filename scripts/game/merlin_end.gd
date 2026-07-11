@@ -22,6 +22,7 @@ var _title_lbl: Label
 var _epilogue: RichTextLabel
 var _epilogue_panel: PanelContainer  # capte le clic pour skip-typewriter / advance (parité merlin_game.gd)
 var _state_lbl: Label
+var _recap_box: VBoxContainer = null  # P2 (chantier 2) : bloc récap gravure (VOIE + stats + fragment)
 var _continue_btn: Button
 var _tw: Tween
 # v10/C1 (audit UX 4 piliers bible §21) — port du mécanisme epoch + tw guard + caret de merlin_game.gd :
@@ -49,6 +50,7 @@ func _run_end() -> void:
 	_title_lbl.text = END_TITLES.get(et, "Fin")
 	_title_lbl.add_theme_color_override("font_color", _end_color(et))
 	_state_lbl.text = "Intégrité finale : %d/10    ·    Corruption finale : %d" % [run.integrite, run.corruption]
+	_fill_recap(run)  # P2 (chantier 2) : VOIE + récap du build + fragment (l'écran de fin donne envie de relancer)
 
 	# Épilogue procédural INSTANTANÉ, puis enrichissement LLM en arrière-plan (jamais bloquant).
 	var sc: Node = get_node("/root/MerlinScenario")
@@ -131,6 +133,24 @@ func _build_ui() -> void:
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_caret.visible = false
 	root.add_child(_caret)
+
+	# P2 (chantier 2, CDC-UX-18/GD-40) : bloc RÉCAP gravure entre l'épilogue et l'état final.
+	# Peuplé par _fill_recap (données run.end_recap + fragments Chronicle) : VOIE en tête (or),
+	# stats sobres, fragment révélé sur accomplissement. L'argument de re-run vit ici.
+	var recap_panel: PanelContainer = PanelContainer.new()
+	recap_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	recap_panel.custom_minimum_size = Vector2(600, 0)  # P2 : largeur mini (les valeurs de stats ne wrappent plus)
+	var rsb: StyleBoxFlat = StyleBoxFlat.new()
+	rsb.bg_color = COL_SURFACE
+	rsb.set_corner_radius_all(8)
+	rsb.set_content_margin_all(18)
+	rsb.set_border_width_all(1)
+	rsb.border_color = MerlinVisual.BORDER_BRUN
+	recap_panel.add_theme_stylebox_override("panel", rsb)
+	root.add_child(recap_panel)
+	_recap_box = VBoxContainer.new()
+	_recap_box.add_theme_constant_override("separation", 10)
+	recap_panel.add_child(_recap_box)
 
 	_state_lbl = Label.new()
 	_state_lbl.add_theme_color_override("font_color", COL_DIM)
@@ -232,7 +252,9 @@ func _animate_entrance() -> void:
 	_fade_in(_title_lbl, 0.00, 0.50)
 	_fade_in(_epilogue_panel, 0.25, 0.55)
 	_fade_in(_state_lbl, 0.50, 0.40)
-	_fade_in(_continue_btn, 0.65, 0.40)
+	if _recap_box != null and _recap_box.get_parent() is CanvasItem:
+		_fade_in(_recap_box.get_parent() as CanvasItem, 0.55, 0.45)  # P2 : le panneau récap fond avec l'écran
+	_fade_in(_continue_btn, 0.72, 0.40)
 
 
 func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
@@ -240,3 +262,96 @@ func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
 	var tw: Tween = create_tween()
 	tw.tween_interval(maxf(delay, 0.001))
 	tw.tween_property(node, "modulate:a", 1.0, dur * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+# P2 (chantier 2) : joint jusqu'à n éléments d'un tableau (n<=0 : tous). Petit utilitaire de récap.
+func _join_str(arr: Array, sep: String, n: int = -1) -> String:
+	var parts: PackedStringArray = []
+	for x in arr:
+		parts.append(str(x))
+		if n > 0 and parts.size() >= n:
+			break
+	return sep.join(parts)
+
+
+# P2 (chantier 2) : accord FR singulier/pluriel (0 et 1 → singulier, >=2 → pluriel).
+func _plur(n: int, sing: String, plur: String) -> String:
+	return "%d %s" % [n, sing if n <= 1 else plur]
+
+
+# P2 (chantier 2) : une ligne du récap (label estompé + valeur crème) dans la grille 2 colonnes.
+func _recap_row(grid: GridContainer, label_txt: String, value_txt: String) -> void:
+	var l: Label = Label.new()
+	l.text = label_txt
+	l.add_theme_color_override("font_color", COL_DIM)
+	l.add_theme_font_size_override("font_size", 20)
+	grid.add_child(l)
+	var v: Label = Label.new()
+	v.text = value_txt
+	v.add_theme_color_override("font_color", COL_TEXT)
+	v.add_theme_font_size_override("font_size", 20)
+	grid.add_child(v)
+
+
+# P2 (chantier 2, CDC-UX-18/GD-40) : peuple le bloc récap depuis run.end_recap() + Chronicle. VOIE en
+# tête (or, identité de run), stats sobres, faits marquants subtils, fragment du Graal (N/12) révélé
+# sur accomplissement. 100% lecture (ne mute rien). Vide → rien de bloquant (l'écran tient seul).
+func _fill_recap(run: Node) -> void:
+	if _recap_box == null or not is_instance_valid(_recap_box):
+		return
+	for c in _recap_box.get_children():
+		c.queue_free()
+	var rec: Dictionary = run.end_recap() if run.has_method("end_recap") else {}
+	# VOIE de la Carte Destin (identité de la run) : la reformulation narrative évite le tiret cadratin.
+	var voie_v: Variant = rec.get("voie", {})
+	if voie_v is Dictionary and not (voie_v as Dictionary).is_empty():
+		var voie: Dictionary = voie_v
+		var vlbl: Label = Label.new()
+		vlbl.text = "Cette nuit, tu as marché %s : %s." % [str(voie.get("nom", "")), str(voie.get("tier", ""))]
+		vlbl.add_theme_color_override("font_color", COL_GOLD)
+		vlbl.add_theme_font_size_override("font_size", 24)
+		vlbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vlbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_recap_box.add_child(vlbl)
+	# Grille de stats sobres (label → valeur) : le résultat mesurable de la run.
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 20)
+	grid.add_theme_constant_override("v_separation", 6)
+	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_recap_box.add_child(grid)
+	var deg: Dictionary = rec.get("degrees", {}) if rec.get("degrees") is Dictionary else {}
+	_recap_row(grid, "Épreuves traversées", str(int(rec.get("beats", 0))))
+	_recap_row(grid, "Degrés", "%s · %s · %s · %s" % [
+		_plur(int(deg.get("eclatante", 0)), "éclatante", "éclatantes"),
+		_plur(int(deg.get("reussite", 0)), "réussite", "réussites"),
+		_plur(int(deg.get("partiel", 0)), "partiel", "partiels"),
+		_plur(int(deg.get("echec", 0)), "échec", "échecs")])
+	_recap_row(grid, "Corruption, au plus fort", str(int(rec.get("corruption_max", 0))))
+	_recap_row(grid, "Greffes posées", str(int(rec.get("grafts", 0))))
+	var verbs_v: Variant = rec.get("verbs_leveled", [])
+	if verbs_v is Array and not (verbs_v as Array).is_empty():
+		_recap_row(grid, "Verbes renforcés", _join_str(verbs_v, ", "))
+	# Faits marquants (subtil, sous la grille) : la mémoire de ce qui a marqué la traversée.
+	var faits_v: Variant = rec.get("faits", [])
+	if not (faits_v is Array) or (faits_v as Array).is_empty():
+		faits_v = rec.get("cartes_notables", [])
+	if faits_v is Array and not (faits_v as Array).is_empty():
+		var f: Label = Label.new()
+		f.text = "Faits marquants : " + _join_str(faits_v, ", ", 4)
+		f.add_theme_color_override("font_color", COL_DIM)
+		f.add_theme_font_size_override("font_size", 18)
+		f.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		f.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_recap_box.add_child(f)
+	# Fragment du Graal révélé en scène (accomplissement) : N/12 ancre le but (design F4 / CDC-GD-02).
+	if str(run.end_type) == "accomplissement":
+		var chron: Dictionary = MerlinChronicle.read()
+		var frag: int = int(chron.get("graal_fragments", 0))
+		var fl: Label = Label.new()
+		fl.text = "✦ Fragment du Graal arraché à la brume · %d/%d" % [frag, MerlinChronicle.GRAAL_TOTAL]
+		fl.add_theme_color_override("font_color", COL_GOLD)
+		fl.add_theme_font_size_override("font_size", 20)
+		fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_recap_box.add_child(fl)

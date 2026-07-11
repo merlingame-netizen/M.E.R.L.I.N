@@ -110,6 +110,13 @@ var verb_usage: Dictionary = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR
 # à new_run. Persisté (champ additif, défaut 0 au load : saves antérieures repartent neutres, pas de
 # bump SAVE_VERSION). Le momentum MÉCANIQUE (impact sur le jet) est réservé à une Vague 2 distincte.
 var momentum: int = 0
+# P2 (2026-07-11) : TRAÇAGE DE RÉCOMPENSE (récap MerlinEnd, chantier 2 « la récompense visible »).
+# corruption_max = pic de Corruption atteint sur la run (elle peut retomber via PURGE) ;
+# degree_counts = distribution des degrés RÉSOLUS. PUREMENT DESCRIPTIFS : lus par end_recap()
+# seulement, JAMAIS par le moteur §K (résolution/tags/difficulté intacts, soak iso). Remis à zéro à
+# new_run, persistés ADDITIFS (défauts safe au load, pas de bump SAVE_VERSION).
+var corruption_max: int = 0
+var degree_counts: Dictionary = {"echec": 0, "partiel": 0, "reussite": 0, "eclatante": 0}
 
 
 # Tags bénis portés par les cartes de ce combo (canal bonus de MerlinResolution.resolve, R131).
@@ -131,6 +138,7 @@ func consume_blessings(combo: Array) -> void:
 # v10.21 (R131) — mutation de corruption via API unique : jauges + seuils + fin (spec panel).
 func add_corruption(n: int) -> void:
 	corruption = maxi(0, corruption + n)
+	corruption_max = maxi(corruption_max, corruption)  # P2 : pic pour le récap MerlinEnd (descriptif pur)
 	emit_signal("gauges_changed", integrite, corruption)
 	_check_corruption_threshold()
 
@@ -186,6 +194,8 @@ func new_run(p_scenario: Dictionary) -> void:
 	talent_points = 0
 	verb_usage = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
 	momentum = 0  # N3-V1 : le ton narratif repart neutre à chaque run
+	corruption_max = 0  # P2 : traçage de récompense remis à zéro
+	degree_counts = {"echec": 0, "partiel": 0, "reussite": 0, "eclatante": 0}
 	actions = MerlinCard.make_actions()  # v11 : les 4 verbes fixes évolutifs
 	deck = MerlinCard.starter_traits()   # v11 : 16 traits (12 canon retagués + 4 nouveaux)
 	hand = []
@@ -807,11 +817,14 @@ func apply_resolution(res: Dictionary) -> void:
 		momentum = clampi(momentum + 1, MOMENTUM_MIN, MOMENTUM_MAX)
 	elif mdeg == "echec" or mdeg == "partiel":
 		momentum = clampi(momentum - 1, MOMENTUM_MIN, MOMENTUM_MAX)
+	if degree_counts.has(mdeg):  # P2 : distribution des degrés pour le récap MerlinEnd (descriptif pur)
+		degree_counts[mdeg] = int(degree_counts[mdeg]) + 1
 	var di: int = int(res.get("integrite_delta", 0))
 	var dc: int = int(res.get("corruption_delta", 0))
 	# v10 dashboard : MAX_INTEGRITE peut être surchargé par TweaksOverlay (hot-reload).
 	integrite = clampi(integrite + di, 0, _max_integrite())
 	corruption = max(0, corruption + dc)
+	corruption_max = maxi(corruption_max, corruption)  # P2 : pic pour le récap MerlinEnd
 	emit_signal("gauges_changed", integrite, corruption)
 	_check_corruption_threshold()
 	_check_end_after_resolution()
@@ -956,6 +969,7 @@ func save() -> void:
 		"next_draw_bonus": next_draw_bonus,  # v11-W3 (M1) : pioche DRAW due à la main suivante (additif)
 		"talent": talent, "talent_points": talent_points, "verb_usage": verb_usage,  # v2-W2 : talent IN-RUN (additif, R108)
 		"momentum": momentum,  # N3-V1 : ton narratif du pont (additif, défaut 0 au load)
+		"corruption_max": corruption_max, "degree_counts": degree_counts,  # P2 : traçage récap (additif, R108)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -1008,6 +1022,8 @@ func load_run() -> bool:
 	talent_points = int(data.get("talent_points", 0))
 	verb_usage = _talent_dict(data.get("verb_usage", {}))
 	momentum = clampi(int(data.get("momentum", 0)), MOMENTUM_MIN, MOMENTUM_MAX)  # N3-V1 : défaut 0 (saves antérieures neutres)
+	corruption_max = maxi(int(data.get("corruption_max", corruption)), corruption)  # P2 : défaut = corruption courante (saves antérieures)
+	degree_counts = _degree_dict(data.get("degree_counts", {}))  # P2 : 4 clés garanties (save partiel/legacy)
 	actions = _dicts_to_cards(data.get("actions", []))
 	if actions.is_empty():
 		actions = MerlinCard.make_actions()  # filet : jamais de run sans les 4 verbes
@@ -1047,3 +1063,37 @@ func _talent_dict(raw: Variant) -> Dictionary:
 	for v in TALENT_VERBS:
 		out[v] = int(src.get(v, 0))
 	return out
+# P2 : normalise un dict de distribution de degres charge. 4 degres canoniques TOUJOURS presents
+# (int), defaut 0. Meme robustesse que _talent_dict (save partiel/legacy sans crash).
+func _degree_dict(raw: Variant) -> Dictionary:
+	var out: Dictionary = {}
+	var src: Dictionary = raw if raw is Dictionary else {}
+	for d in ["echec", "partiel", "reussite", "eclatante"]:
+		out[d] = int(src.get(d, 0))
+	return out
+
+
+# P2 (chantier 2, la recompense visible) : RECAP de fin de run pour MerlinEnd. 100% descriptif (lit
+# l'etat deja accumule, ne mute rien, ne touche pas le moteur K). verbs_leveled = verbes montes au
+# talent (ex. "PARLER x2"). beats = nb d'epreuves RESOLUES (somme des degres).
+func end_recap() -> Dictionary:
+	var verbs_leveled: Array = []
+	for v in TALENT_VERBS:
+		var lvl: int = int(talent.get(v, 0))
+		if lvl > 0:
+			verbs_leveled.append("%s ×%d" % [v, lvl])
+	var beats: int = 0
+	for d in degree_counts:
+		beats += int(degree_counts[d])
+	return {
+		"beats": beats,
+		"degrees": _degree_dict(degree_counts),
+		"corruption_max": corruption_max,
+		"grafts": total_grafts(),
+		"verbs_leveled": verbs_leveled,
+		"faits": faits_marquants.duplicate(),
+		"cartes_notables": cartes_notables.duplicate(),
+		"voie": destiny_snapshot(),
+		"integrite": integrite,
+		"corruption": corruption,
+	}

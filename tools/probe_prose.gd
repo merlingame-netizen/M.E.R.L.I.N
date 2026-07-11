@@ -266,6 +266,31 @@ func _prose_gate(sc: Node) -> Array:
 						for bfw in foret_words:
 							if bsl.find(str(bfw)) != -1:
 								viol.append("pont FALAISES [%s|%s] « %s… » contient le mot forestier '%s'" % [str(bdeg), str(btone), bs.substr(0, 28), str(bfw)])
+	# 6ter) P2 (2026-07-11) : ÉPILOGUES EPILOGUE_BY_END_BIOME (miroir du gate BRIDGE 6bis) : (a) chaque
+	#       pool NON-VIDE ; (b) 2e personne familière (tu/toi/t') ; (c) zéro filler hérité (banned) ;
+	#       (d) banques FALAISES = zéro mot forestier ; (e) zéro tiret cadratin (règle projet). Déterministe.
+	for edeg in sc.EPILOGUE_BY_END_BIOME.keys():
+		for ebio in sc.EPILOGUE_BY_END_BIOME[edeg].keys():
+			for etone in sc.EPILOGUE_BY_END_BIOME[edeg][ebio].keys():
+				var epool: Array = sc.EPILOGUE_BY_END_BIOME[edeg][ebio][etone]
+				if epool.is_empty():
+					viol.append("epilogue [%s|%s|%s] : pool VIDE" % [str(edeg), str(ebio), str(etone)])
+				for eline in epool:
+					var es: String = str(eline)
+					var esl: String = es.to_lower()
+					if es.strip_edges().is_empty():
+						viol.append("epilogue [%s|%s|%s] : entree vide" % [str(edeg), str(ebio), str(etone)])
+					if esl.find("tu") == -1 and es.find("t'") == -1 and esl.find("toi") == -1:
+						viol.append("epilogue [%s|%s|%s] « %s… » : pas de 2e personne familiere" % [str(edeg), str(ebio), str(etone), es.substr(0, 28)])
+					if es.find(char(0x2014)) != -1 or es.find(char(0x2015)) != -1:
+						viol.append("epilogue [%s|%s|%s] « %s… » : tiret cadratin interdit" % [str(edeg), str(ebio), str(etone), es.substr(0, 28)])
+					for eb in banned:
+						if es.find(str(eb)) != -1:
+							viol.append("epilogue [%s|%s|%s] « %s… » contient '%s'" % [str(edeg), str(ebio), str(etone), es.substr(0, 28), str(eb)])
+					if str(ebio) == "falaises":
+						for efw in foret_words:
+							if esl.find(str(efw)) != -1:
+								viol.append("epilogue FALAISES [%s|%s] « %s… » contient le mot forestier '%s'" % [str(edeg), str(etone), es.substr(0, 28), str(efw)])
 	# 6) Compo intégrée (N2a check d) : fallback_resolution(degré, "", [carte FORCE], "falaises") produit
 	#    « [i]Vous … [/i] » + ≥1 mot de biome falaises. Carte factice duck-typée (archetype()="Offensif"→FORCE).
 	var fake_force: Object = _FakeCard.new("Offensif")

@@ -53,6 +53,7 @@ const EFFECT_STYLE: Dictionary = {
 }
 
 var card: MerlinCard
+var _body: VBoxContainer = null  # P2 (chantier 1) : VBox de contenu, cible de set_effect_line (sous le glyphe)
 var _compact: bool = false
 var _base_pos: Vector2 = Vector2.ZERO
 var _base_rot: float = 0.0
@@ -135,6 +136,7 @@ func _build(role: String) -> void:
 	v.add_theme_constant_override("separation", 3 if _compact else 5)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
+	_body = v  # P2 (chantier 1) : set_effect_line appendra la ligne d'effet sous le glyphe
 
 	# N4-P1 (chantier 4) : RÉSERVE DE TITRE : le nom démarre SOUS la pastille de coût (28 px, posée
 	# en (4,4) par _add_corner_markers) : la bande du titre garde TOUTE la largeur de la carte, la
@@ -276,7 +278,7 @@ func set_blessed(_tag: String) -> void:
 # v2-W2 — badge NŒUD DE TALENT : pastille GOLD « ✦ +N TALENT » à cheval sur le bord haut de la carte
 # de draft (distinction du nœud de talent des greffes d'action — zéro info cachée, pilier ÉVIDENT).
 # Rendu comme set_blessed (même grammaire), texte distinct. Appelé par merlin_game au build du draft.
-func set_talent_node(amount: int) -> void:
+func set_talent_node(amount: int, verb: String = "") -> void:
 	var badge: PanelContainer = PanelContainer.new()
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb2: StyleBoxFlat = StyleBoxFlat.new()
@@ -285,13 +287,15 @@ func set_talent_node(amount: int) -> void:
 	sb2.set_content_margin_all(4)
 	badge.add_theme_stylebox_override("panel", sb2)
 	var lbl2: Label = Label.new()
-	lbl2.text = "✦ +%d TALENT" % maxi(amount, 1)
+	# P2 (chantier 1) : le badge NOMME le verbe monté (« ✦ +1 · PARLER »), fini le « TALENT » générique
+	# (le joueur voit quel verbe gagne du niveau d'un coup d'oeil, pilier ÉVIDENT §23).
+	lbl2.text = ("✦ +%d · %s" % [maxi(amount, 1), verb]) if verb != "" else ("✦ +%d TALENT" % maxi(amount, 1))
 	lbl2.add_theme_color_override("font_color", MerlinVisual.INK)
 	lbl2.add_theme_font_size_override("font_size", 12)
 	lbl2.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	badge.add_child(lbl2)
 	var sz2: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE
-	badge.position = Vector2(sz2.x * 0.5 - 44.0, -10.0)  # centré sur le bord haut
+	badge.position = Vector2(sz2.x * 0.5 - 52.0, -10.0)  # centré sur le bord haut (élargi pour le verbe)
 	add_child(badge)
 
 
@@ -315,6 +319,22 @@ func set_roll_bonus(amount: int) -> void:
 	var sz2: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE
 	badge.position = Vector2(sz2.x * 0.5 - 38.0, -10.0)  # centré sur le bord haut
 	add_child(badge)
+
+
+# P2 (chantier 1, CDC-UX-12) : LIGNE D'EFFET en français commun sous le glyphe (mode draft/greffe).
+# Le libellé DÉCIDE (pilier ÉVIDENT, lisible <2 s) : 16 px, charte INK, centré, autowrap. Appelé par
+# merlin_game après setup() avec le texte déjà résolu par kind (roll/tag/charge/talent). No-op hors mode.
+func set_effect_line(txt: String) -> void:
+	if txt == "" or _body == null or not is_instance_valid(_body):
+		return
+	var lbl: Label = Label.new()
+	lbl.text = txt
+	lbl.add_theme_color_override("font_color", COL_INK)
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.add_child(lbl)
 
 
 # Marqueurs de coin (overlay absolu sur self, hors flux du VBox) : gemme rareté/coût + badge d'effet.

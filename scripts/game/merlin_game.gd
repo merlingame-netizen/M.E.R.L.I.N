@@ -1324,6 +1324,31 @@ const VERB_FAMILY_TAG: Dictionary = {
 func _verb_family(verb: String) -> String:
 	return str(VERB_FAMILY_TAG.get(verb, ""))
 
+# P2 (chantier 1, CDC-UX-12) : LIGNE D'EFFET en français commun d'une carte de draft, par kind de
+# greffe. Rendue sous le glyphe par MerlinCardView.set_effect_line. Le tag greffé n'est plus nommable
+# (R147) : formulation d'INTENTION. "" pour un dict vide (pas de ligne). Charge : signe explicite +
+# nb d'utilisations si > 1 (honnêteté du prix, pilier ÉVIDENT, review F6).
+func _graft_effect_line(g: Dictionary) -> String:
+	var kind: String = str(g.get("kind", ""))
+	match kind:
+		"roll":
+			return "+%d à tes jets sur ce verbe" % maxi(int(g.get("amount", MerlinCard.ROLL_BONUS_DEFAULT)), 1)
+		"tag":
+			return "Ce verbe répondra à plus de scènes"
+		"talent":
+			return "Ce verbe frappe plus juste"
+		"charge":
+			var v: int = maxi(int(g.get("effect_value", 1)), 1)
+			var c: int = maxi(int(g.get("charges", 1)), 1)
+			var suffix: String = (" · %d fois" % c) if c > 1 else ""
+			match str(g.get("effect_type", "")):
+				"HEAL": return "Apaise ta blessure (+%d)%s" % [v, suffix]
+				"PURGE": return "Dissipe l'Emprise (-%d)%s" % [v, suffix]
+				"DRAW":
+					var body: String = "Rappelle une rune de plus" if v == 1 else "Rappelle %d runes de plus" % v
+					return body + suffix
+	return ""
+
 
 # v11-W3 — étape 2 : Z6 se rallume de façon CIBLÉE (vigilance V2b : Z6 est estompée souris OFF
 # pendant le draft), les tuiles ÉLIGIBLES (< 3 greffes) pulsent, les pleines restent estompées
@@ -1497,10 +1522,11 @@ func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 			# v2-W2 — le nœud de talent porte un badge « ✦ +N TALENT » (distinct des greffes d'action).
 			var gcard: Dictionary = _graft_by_id.get(str((cards[i] as MerlinCard).id), {})
 			if str(gcard.get("kind", "")) == "talent":
-				cv.set_talent_node(int(gcard.get("amount", 1)))
+				cv.set_talent_node(int(gcard.get("amount", 1)), str(gcard.get("verb", "")))
 			elif str(gcard.get("kind", "")) == "roll":
 				# v2-W3 — greffe « roll » : badge GOLD « +N au jet » (le bonus d20 est ÉVIDENT au draft).
 				cv.set_roll_bonus(int(gcard.get("amount", MerlinCard.ROLL_BONUS_DEFAULT)))
+			cv.set_effect_line(_graft_effect_line(gcard))  # P2 (chantier 1) : ligne d'effet FR sous le glyphe
 			cv.card_clicked.connect(_on_draft_card)
 			cv.set_fan_transform(Vector2(x0 + float(i) * (cw + gap), 6.0), 0.0)  # base du deal (snap 1er layout)
 			cv.deal_in(float(i) * 0.12)
@@ -2144,7 +2170,10 @@ func _on_run_ended(_end_type: String) -> void:
 	var sc_mem: Node = get_node_or_null("/root/MerlinScenario")
 	var faction: String = str(sc_mem.current_faction()) if sc_mem != null and sc_mem.has_method("current_faction") else ""
 	var pilier: String = str(sc_mem.current_pilier()) if sc_mem != null and sc_mem.has_method("current_pilier") else ""
-	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier)
+	var voie_nom: String = ""
+	if run.has_method("destiny_snapshot"):
+		voie_nom = str(run.destiny_snapshot().get("nom", ""))  # P2 (chantier 4a) : Voie pour le palmarès CHRONIQUES
+	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier, voie_nom)
 	# Audit design P1 : une run TERMINÉE n'a pas de save de reprise — un save ici créait une
 	# « save zombie » (Continuer rechargerait une run finie) si on quittait avant MerlinEnd.
 	run.clear_save()
