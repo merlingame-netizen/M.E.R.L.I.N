@@ -205,7 +205,14 @@ func run() -> void:
 	if w4 > 0:
 		await get_tree().create_timer(burst_dur * 0.18).timeout
 		spark_wave(center, glow_col.darkened(0.30), w4, burst_dur * 1.05, 90.0, 50.0, Vector2(2.6, 2.6), 0.40)
-	await p3_glow.finished
+	# N4-BUG (HIGH, latent) : p3_glow (0,68 x burst) court PENDANT les 3 timers séquentiels ci-dessus
+	# (0,58 x burst cumulés). Sous forte charge CPU (gen Gemma en vol : frames de 0,3-0,5 s), chaque
+	# await de timer déborde d'une frame entière → p3_glow peut être DÉJÀ fini ici, et awaiter le
+	# `finished` d'un tween terminé ne rend JAMAIS la main : fusion figée, _can_advance jamais posé
+	# (softlock 90 s reproduit par probe_bugres_fast --pace=think --wait-llm=1). Même garde que
+	# p4_fade plus bas.
+	if p3_glow.is_running():
+		await p3_glow.finished
 
 	# === Phase 3 — Décrue + Dé en CHEVAUCHEMENT === v11-W1 (spec panel) : UN SEUL dé — MerlinDice
 	# (v2-W4, d20 culbute fausse-3D + halo success/échec) lancé PENDANT la décrue du glow. Le disque

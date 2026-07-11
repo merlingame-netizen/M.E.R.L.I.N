@@ -719,6 +719,11 @@ var _reso_cache: Dictionary = {}   # signature -> prose
 var _reso_sig: String = ""         # signature actuellement en génération
 var _reso_state: String = "idle"   # idle / running / ready
 var _reso_epoch: int = 0
+# N4-BUG #2a (2026-07-11) : prefetch demandé AVANT que le modèle soit chargé (cold start) :
+# mémorisé ici puis RELANCÉ à model_ready. Sans ça, prefetch_resolution sortait en silence,
+# _reso_state restait « idle » pour toujours et le sustain de fusion attendait son cap ~12 s
+# en vain (100 % repro sur la 1re résolution à froid, mesuré 14,4-14,7 s clic→issue).
+var _pending_prefetch: Dictionary = {}  # {situation, cards, res, epoch} ; vidé si périmé/consommé
 
 # --- Pré-génération OUVERTURE (v10.13 B0/B3) — pattern _sel_* ---
 # Lancée à l'ouverture du pop-up d'intro (merlin_game._show_intro_popup) SI le moteur est idle ;
@@ -1582,11 +1587,19 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	if _reso_cache.has(sig):
 		return  # déjà en cache
 	var mn: Node = _mn()
-	if mn == null or not mn.is_ready():
+	if mn == null:
 		return
+	if not mn.is_ready():
+		# N4-BUG #2a : modèle en cours de chargement (cold start) : mémorise la demande et
+		# relance-la quand model_ready tombe (émis sur le thread principal, merlin_native._finish_load).
+		# Epoch mémorisé : un invalidate_resolution / prefetch frais la rend périmée (jamais rejouée).
+		_pending_prefetch = {"situation": situation, "cards": played_cards, "res": res, "epoch": _reso_epoch}
+		if mn.has_signal("model_ready") and not mn.is_connected("model_ready", _relaunch_pending_prefetch):
+			mn.connect("model_ready", _relaunch_pending_prefetch, CONNECT_ONE_SHOT)
+		return
+	_pending_prefetch = {}  # modèle prêt : ce prefetch frais supersède toute demande mémorisée
 	_reso_epoch += 1
 	var epoch: int = _reso_epoch
-	_reso_sig = sig
 	# v10.13 (Fix 3/8) : une gen PÉRIMÉE (combo abandonnée, arc, épilogue) qui occupe le moteur
 	# single-flight est annulée À LA POSE (take_resolution ne bloque plus jamais au resolve).
 	# Priorité moteur : la prose de résolution du beat courant passe devant tout le reste — c'est
@@ -1601,6 +1614,12 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		if mn.is_busy():
 			_reso_state = "idle"
 			return  # libération trop lente — le sustain servira le fallback si rien n'arrive
+	# N4-BUG (review MEDIUM) : sig posé APRÈS le drain, dans le même geste que « running ».
+	# Avant, _reso_sig était réécrit AVANT le drain pendant que _reso_state portait encore le
+	# « running » du vol PRÉCÉDENT : is_resolution_incoming(nouvelle combo) matchait par
+	# coïncidence (sig neuf + state périmé) pendant la fenêtre de drain (≤4 s). Invariant
+	# restauré : sig+running = une génération RÉELLEMENT en vol pour cette signature.
+	_reso_sig = sig
 	_reso_state = "running"
 	var prose: String = await narrate_resolution(situation, played_cards, res)
 	if epoch != _reso_epoch:
@@ -1617,11 +1636,28 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
 
 
+# N4-BUG #2a : relance le prefetch mémorisé quand le modèle vient de charger (one-shot, connecté
+# par prefetch_resolution au cold start). Ignoré si périmé : invalidate_resolution (nouveau beat)
+# ou un prefetch frais (modèle prêt) a bumpé l'epoch / vidé la demande.
+func _relaunch_pending_prefetch() -> void:
+	if _pending_prefetch.is_empty():
+		return
+	var p: Dictionary = _pending_prefetch
+	_pending_prefetch = {}
+	if int(p.get("epoch", -1)) != _reso_epoch:
+		return  # résolution périmée (le jeu a avancé pendant le chargement du modèle)
+	var situ: Dictionary = p.get("situation", {})
+	var cards: Array = p.get("cards", [])
+	var res: Dictionary = p.get("res", {})
+	prefetch_resolution(situ, cards, res)
+
+
 # Récupère l'issue LLM au clic Résolution — v10.13 (Fix 3) : NE BLOQUE PLUS JAMAIS. Contrat :
 # toute l'attente appartient au SUSTAIN animé de la fusion (cap 20s + clic-skip). Ici : cache-hit
 # → prose ; sinon "" → l'appelant sert le fallback procédural immédiatement. La continuité du fil
 # rouge est assurée par note_outcome() (appelé inconditionnellement par l'appelant, Fix 4).
 func take_resolution(_situation: Dictionary, played_cards: Array, res: Dictionary) -> String:
+	_pending_prefetch = {}  # N4-BUG #2a : résolution servie ; une relance tardive serait du gâchis moteur
 	var sig: String = _reso_signature(played_cards, res)
 	if _reso_cache.has(sig):
 		return str(_reso_cache[sig])
@@ -1632,6 +1668,34 @@ func take_resolution(_situation: Dictionary, played_cards: Array, res: Dictionar
 # instantané. L'appelant évite ainsi le flicker de l'overlay « Merlin assemble… » (review MEDIUM).
 func is_resolution_ready(played_cards: Array, res: Dictionary) -> bool:
 	return _reso_cache.has(_reso_signature(played_cards, res))
+
+
+# N4-BUG #2b : vrai si la prose de CETTE combo peut encore arriver pendant le sustain : déjà en
+# cache, ou génération EN VOL pour sa signature exacte. Tout le reste est une attente VAINE :
+# state « idle » (rien en vol ; take_resolution ne génère jamais, seul prefetch_resolution
+# remplit le cache et il ne peut plus être appelé pendant la fusion), moteur absent / modèle pas
+# chargé (cold start, model_failed), moteur occupé par une AUTRE gen (arc/lookahead : drain de
+# 4 s échoué à la pose, state retombé « idle »), ou gen en vol pour une autre combo. Le sustain
+# de fusion s'appuie dessus (prédicat injecté par merlin_game._on_resolve) pour servir le
+# fallback composé immédiatement (~2-3 s de fusion au lieu du cap ~12 s : 14,4-14,7 s
+# clic→issue mesurés avant fix). Une gen en vol pour LA combo garde sa fenêtre entière.
+func is_resolution_incoming(played_cards: Array, res: Dictionary) -> bool:
+	var sig: String = _reso_signature(played_cards, res)
+	if _reso_cache.has(sig):
+		return true
+	return _reso_state == "running" and _reso_sig == sig
+
+
+# N4-BUG #2b : décision d'attente prise UNE FOIS, AU CLIC Résoudre (sticky). Si l'attente est
+# VAINE au clic, la demande mémorisée (#2a) est abandonnée du MÊME geste : sans ça, model_ready
+# tombant PENDANT la fusion relançait une gen qui confisquait la fenêtre du sustain (re-mesuré
+# 14,6 s : la prose ne peut jamais arriver dans le cap ~12 s à ~3 tok/s) et occupait le moteur
+# single-flight au détriment de l'arc/du lookahead. La relance #2a ne sert donc que la POSE.
+func begin_resolution_wait(played_cards: Array, res: Dictionary) -> bool:
+	if is_resolution_incoming(played_cards, res):
+		return true
+	_pending_prefetch = {}
+	return false
 
 
 # Vide le cache d'issue à chaque nouveau beat (merlin_game._present_current_beat) : les ids de cartes
@@ -1649,6 +1713,7 @@ func invalidate_resolution() -> void:
 	_reso_sig = ""
 	_reso_state = "idle"
 	_reso_epoch += 1
+	_pending_prefetch = {}  # N4-BUG #2a : nouveau beat ; la demande mémorisée au cold start est périmée
 
 
 # N2a — arch_reg : archétype de carte → REGISTRE (miroir de MerlinPromptBuilder.resolution ; dupliqué

@@ -694,7 +694,17 @@ func _on_resolve() -> void:
 		tile.fusion_pulse(true)  # la tuile bat au rythme de la fusion — jamais aspirée
 	if _scene_art != null:
 		_scene_art.set_thinking(true)  # R128 : Merlin « réfléchit » (halo lune accéléré) pendant la fusion + l'attente LLM
-	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, func() -> bool: return sc.is_resolution_ready(played_cards, res))
+	# N4-BUG #2b : décision d'attente prise AU CLIC (sticky, begin_resolution_wait) : si AUCUNE prose
+	# n'est en route pour CETTE combo (cache vide + rien en vol : cold start, moteur pris par l'arc,
+	# drain échoué), la résolution est fallback-bound → AUCUN sustain (~2-3 s de fusion au lieu du cap
+	# ~12 s, mesuré 14,4-14,7 s clic→issue avant fix) et la demande #2a est abandonnée (model_ready
+	# mi-fusion ne confisque plus la fenêtre pour une prose trop tardive). Une gen en vol AU CLIC pour
+	# cette combo garde toute sa fenêtre (le prédicat reste dynamique : gen morte en route = fallback) ;
+	# le clic-skip du sustain reste intact.
+	var wait_worth: bool = sc.begin_resolution_wait(played_cards, res)
+	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, func() -> bool:
+		return not wait_worth or sc.is_resolution_ready(played_cards, res) \
+			or not sc.is_resolution_incoming(played_cards, res))
 	await fx.run()
 	if tile != null and is_instance_valid(tile):
 		tile.fusion_pulse(false)
@@ -1744,12 +1754,17 @@ func _show_tuto_hint(txt: String) -> void:
 	if _tuto_lbl == null or not is_instance_valid(_tuto_lbl):
 		_tuto_lbl = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
 		_tuto_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_tuto_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_tuto_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_status_line.add_child(_tuto_lbl)
-		_tuto_lbl.set_anchors_preset(Control.PRESET_CENTER)
-		_tuto_lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
-		_tuto_lbl.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_tuto_lbl.text = txt
+	# N4-BUG #3 : PRESET_CENTER posé sur un label VIDE (size 0 à la création) laissait le texte
+	# grandir depuis l'ORIGINE de _status_line → moitié gauche du hint hors écran (100 % repro).
+	# Fix : anchors + offsets PLEINE ZONE re-posés APRÈS la pose du texte, à CHAQUE affichage
+	# (setter la taille/le texte réécrit les offsets en Godot 4 : un simple set_anchors_preset à
+	# la création laissait le label collé à gauche, vérifié par capture). Le label épouse Z4 et
+	# les alignements centre centrent le texte quelle que soit sa longueur (hints A ET B).
+	_tuto_lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_tuto_lbl.modulate.a = 0.0
 	if _tuto_lbl.is_inside_tree():
 		var t: Tween = _tuto_lbl.create_tween()
@@ -2028,7 +2043,12 @@ func _input(event: InputEvent) -> void:
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	var ready_pred: Callable
 	if sc != null:
-		ready_pred = func() -> bool: return sc.is_resolution_ready(fake_played, fake_res)
+		# N4-BUG #2b (parité F12) : même court-circuit que la résolution réelle : rien en route
+		# pour la combo factice (jamais préfetchée) → pas d'attente vaine du cap, la fusion de
+		# debug se termine d'elle-même (elle teste l'animation, pas l'attente LLM).
+		ready_pred = func() -> bool:
+			return sc.is_resolution_ready(fake_played, fake_res) \
+				or not sc.is_resolution_incoming(fake_played, fake_res)
 	else:
 		ready_pred = func() -> bool: return true
 	var fx: MerlinFx = MerlinFx.play(self, fake_res, fake_played, vues, ready_pred)

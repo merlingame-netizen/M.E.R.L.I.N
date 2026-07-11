@@ -50,7 +50,12 @@ static func roll(parent: Control, final_face: int, success: bool) -> MerlinDice:
 	d.z_index = 30
 	parent.add_child(d)
 	var vp: Vector2 = parent.get_viewport_rect().size
-	d.position = Vector2(vp.x * 0.5 - SIZE_PX * 0.5, vp.y * 0.34 - SIZE_PX * 0.5)
+	# N4-BUG LOW : 0.34 posait le dé en plein MILIEU de l'encart de situation (il recouvrait la prose).
+	# 0.19 = zone DÉCOR (grille v11-V2a @1080p : marge 16 + HUD env. 60-80 + sép 8, donc décor env.
+	# y 90-290, encart dès y env. 292) : centre du dé vers 205, halo max (r x 1,38, soit env. 61 px)
+	# borné vers 266. Le dé et son halo chevauchent décor/haut d'encart SANS jamais recouvrir le
+	# texte ; le halo reste lisible sur le décor sombre.
+	d.position = Vector2(vp.x * 0.5 - SIZE_PX * 0.5, vp.y * 0.19 - SIZE_PX * 0.5)
 	d.pivot_offset = Vector2(SIZE_PX, SIZE_PX) * 0.5
 	d._run()
 	return d

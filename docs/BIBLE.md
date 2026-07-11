@@ -1820,6 +1820,18 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R148 : PREMIÈRE RÉSOLUTION INSTANTANÉE + robustesse fusion (2026-07-06, N4-BUG, bug playtest prouvé)** :
+  (a) le prefetch de résolution refusé pour « modèle pas prêt » est MÉMORISÉ et RELANCÉ au signal
+  `model_ready` (epoch-gardé, CONNECT_ONE_SHOT) : le LLM peut gagner dès que le modèle charge ; (b) l'attente
+  de fusion est COURT-CIRCUITÉE quand rien ne peut arriver (`is_resolution_incoming` : ni cache ni gen en vol
+  pour la signature exacte → fallback immédiat ; décision sticky au clic ; une gen EN VOL garde sa fenêtre
+  cap 12 s). Mesuré : clic→issue à froid **14,5 s → 2,2 s** ; pose longue → la prose Gemma est réellement
+  servie. (c) Softlock latent corrigé : `await tween.finished` sur un tween DÉJÀ FINI sous charge CPU =
+  suspension définitive → TOUJOURS garder `if tw.is_running():` avant l'await (audit complet merlin_fx/dice).
+  (d) Hint tuto recentré (les setters de taille réécrivent les offsets en Godot 4 : re-poser
+  PRESET_FULL_RECT APRÈS chaque set de texte) ; (e) d20 remonté en zone décor (vp.y*0.19), plus de
+  recouvrement de la prose. Leçons KB/mémoire capturées.
+
 - **R147 : CARTES-RUNES OGHAM + TAGS INVISIBLES (2026-07-06, N4-RUNES, user « enlève les dénominations
   hasardeuses, jouons des runes »)** : les cartes de TRAIT sont des RUNES celtiques inventées : glyphe de
   style ogham dessiné PROCÉDURALEMENT (`merlin_glyph.gd` : tige + 1-5 traits, motifs 0-46 canon / 47

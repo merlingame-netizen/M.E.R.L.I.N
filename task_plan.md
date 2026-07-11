@@ -260,3 +260,38 @@ User (playtest) : « dénominations hasardeuses » à retirer, runes à combiner
 - **N4-BUG (#61)** : diagnostic systématique en cours (agent lecture seule, symptômes = cascade 4/4). Fix après cause racine prouvée. Domaine : merlin_fx/merlin_dice/chaîne résolution.
 - **N4-RUNES (#62, agent en cours)** : display_name FR + rune_name celte inventé + glyphe ogham procédural (merlin_card, card_view, action_view) ; pastilles tags + chips requis retirés de l'UI ; mécanique tags intacte (§K iso). Interdit de toucher fx/dice.
 - **N4-TUTO (#63, séquencé après BUG+RUNES)** : proposé au 1er run, round d'exemple animé, clic par étape, rejouable Options.
+
+---
+
+# task_plan.md : N4-BUG : bug à la première résolution (2026-07-11)
+
+> Tâche déléguée (coordinateur committe après revue ; AUCUN commit ici).
+> Diagnostic DÉJÀ fait (preuves scratchpad/bugres_*.log : 14,4-14,7 s clic→issue à froid).
+
+## Dispatch Plan (task_dispatcher.md → type « Bug Fix »)
+- Primaire : agent dédié courant (implémentation directe, .gd)
+- Review : `merlin-gameplay-programmer` (diff review, CRITICAL/HIGH appliqués) ; couvre debug_qa/lead_godot
+- git_commit : EXCLU (contrainte coordinateur « NE COMMIT RIEN »)
+- Skills gate : `full_feature` et `everything-claude-code:learn-eval` INDISPONIBLES dans ce
+  contexte subagent (absents de la liste de skills) ; documenté ici en remplacement.
+
+## Phases
+1. [x] Lecture code (merlin_scenario/merlin_fx/merlin_game/merlin_dice/merlin_native) + logs AVANT
+2. [x] Fix #2a : relance du prefetch à model_ready (merlin_scenario.gd, pending + CONNECT_ONE_SHOT)
+3. [x] Fix #2b : court-circuit attente vaine (is_resolution_incoming + begin_resolution_wait sticky
+       au clic ; v1 « hopeless » insuffisante : la relance #2a mi-fusion confisquait la fenêtre
+       (re-mesuré 14,6 s), et l'état idle avec moteur pris par l'ARC attendait aussi le cap)
+4. [x] Fix #3 : hint tuto centré. set_anchors_preset(FULL_RECT) seul NE SUFFIT PAS (offsets réécrits
+       par les setters de taille Godot 4) : set_anchors_and_offsets_preset APRÈS la pose du texte,
+       à chaque affichage. Mesure pixel : AVANT centre x=135 (tronqué), APRÈS A x=954 / B x=955 (~960)
+5. [x] Fix LOW : d20 remonté zone décor (vp.y*0.34 vers 0.19), captures AVANT (sur la prose) / APRÈS (décor)
+5b.[x] Fix HIGH latent découvert : merlin_fx.gd `await p3_glow.finished` sur tween déjà fini sous
+       charge CPU (gen en vol) = fusion figée + softlock 90 s (repro --pace=think) : garde is_running()
+6. [x] Gates : validate_step0 0/0 · froid 14,4-14,7 s vers 2,2 s · arc-busy 14,6 vers 2,1-2,6 s ·
+       think : prose LLM GAGNE (reso=ready, texte Gemma servi) · smoke Game+Menu passed ·
+       soak logic 200/200 · autoplay 3/3 · bootcheck 5/5 · re-gate final post-review en cours
+7. [x] Revue merlin-gameplay-programmer : 0 CRITICAL, 0 HIGH, 1 MEDIUM (sig pose avant drain :
+       is_resolution_incoming matchait par coincidence pendant la fenetre de drain 4 s) APPLIQUE
+       (sig+running poses ensemble apres le drain), 2 LOW notes (couverture clic cold deja couverte
+       par n4fix_cold* ; ratio magique 0.19 pre-existant, non bloquant)
+8. [ ] Rapport final chiffré AVANT/APRÈS

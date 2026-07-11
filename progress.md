@@ -3540,3 +3540,14 @@ climax plein 2,4 OUT · greffes 3,88 (offerts 5,02). Hors-pool = 0 (DUR, chemin 
 - Fichiers : merlin_prompt_builder.gd, merlin_scenario.gd, merlin_game.gd, merlin_prose.gd (ensure_italic_action), tools/probe_prose.gd (CATALOG_GATE), tools/autoplay_run.gd (deadline reste 960 ; budgets tokens gardes PROUVES : la prose enrichie borne son wall-clock par max_tokens), docs/BIBLE.md (R140).
 - Revue de code : 0 CRITICAL / 0 HIGH ; 2 MEDIUM (robustesse ensure_italic_action) corrigés + L1 gate étendu.
 - Gates : validate 0/0 · smoke Game/Menu/Selection/End PASS · CATALOG_GATE pass · soak 200/200 (iso R139, morts 4,9  %) · autoplay 3 loops LLM ON [budgets tokens proven] · capture ph4/ph6 [post-autoplay].
+
+## 2026-07-11 : N4-BUG, bug a la premiere resolution (agent delegue, PAS de commit)
+- Fix #2a (HIGH) : prefetch memorise puis relance a model_ready (merlin_scenario.gd, _pending_prefetch + CONNECT_ONE_SHOT)
+- Fix #2b (HIGH) : is_resolution_incoming + begin_resolution_wait sticky au clic ; predicat sustain via _on_resolve
+- Fix #3 (MEDIUM) : hint tuto centre (set_anchors_and_offsets_preset FULL_RECT apres pose du texte)
+- Fix LOW : d20 en zone decor (vp.y*0.19)
+- Fix HIGH latent : garde is_running() sur await p3_glow.finished (softlock fusion sous charge CPU)
+- Mesures : 1re resolution a froid 14,4-14,7 s -> 2,2 s ; arc-busy 14,6 -> 2,1 s ; prose LLM gagne en pose longue
+- Gates : validate 0/0, smoke Game+Menu OK, soak 200/200, autoplay 3/3, bootcheck 5/5
+- Revue merlin-gameplay-programmer : 0 CRITICAL / 0 HIGH ; 1 MEDIUM applique (invariant sig+running poses ensemble apres le drain) ; 2 LOW notes
+- Post-review : validate 0/0, smoke Game OK, probes froid 2,2 s / warm 2,6 s re-verts ; re-gate soak+autoplay final lance
