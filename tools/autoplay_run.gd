@@ -114,6 +114,22 @@ func _play_one(k: int) -> bool:
 				game._interstitial_skip = true  # attente inline (encart) → clic simulé (fallback servi)
 			await process_frame
 			continue
+		# N4-TUTO (revue design B1) : proposition du guide ouverte (chronique vierge) ? Refuser
+		# proprement (« Je connais le chemin », 2e bouton) : l'autoplay ne doit JAMAIS tomber dans
+		# le tutoriel. Duck-typing pur (même contrat que les branches draft/pacte).
+		if game._tuto_prompt_row != null and is_instance_valid(game._tuto_prompt_row):
+			await create_timer(0.3).timeout
+			if is_instance_valid(game) and game._tuto_prompt_row != null \
+					and is_instance_valid(game._tuto_prompt_row):
+				var tuto_btns: Array = []
+				for tb in game._tuto_prompt_row.get_children():
+					if tb is Button:
+						tuto_btns.append(tb)
+				if tuto_btns.size() >= 2:
+					(tuto_btns[1] as Button).pressed.emit()  # [1] = « Je connais le chemin »
+					print("[AUTOPLAY] run#%d — guide de Merlin refusé" % k)
+			await process_frame
+			continue
 		# Draft ouvert (v11-W3 : il sert des GREFFES, 2 gestes) ? Choisir la greffe PUIS cliquer une
 		# tuile ÉLIGIBLE (grafts.size() < 3) — ou passer. Duck-typing pur : un renommage côté jeu
 		# casse BRUYAMMENT (gate 0/N), jamais de faux vert.

@@ -1820,6 +1820,18 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R149 : GUIDE DE MERLIN, tutoriel proposé au premier run (2026-07-06, N4-TUTO)** : à la toute première
+  traversée (chronique vierge : jamais proposé ET runs_played==0, OU ré-armé), Merlin PROPOSE dans la ligne
+  d'état (non-modal, R136) : « Premier pas dans la forêt, Voyageur... je te guide ? » [Guide-moi]
+  [Je connais le chemin] (≥44px). Refus persisté : jamais re-proposé ; ré-armable depuis Options (« Revoir
+  le guide de Merlin »). Accepté : `merlin_tutorial.gd` (CanvasLayer 120, machine à états, textes AUTHORED à
+  la voix de Merlin, zéro LLM) prend la main : spotlight zone par zone (dim + cadre GOLD), Merlin POSE
+  lui-même 1 verbe + 1 rune sur le VRAI premier beat (choix appliqués pour de vrai, R120 intact), lance la
+  résolution, explique d20/halo/pill/jauges/draft, **un CLIC par étape** (caret), « Passer le guide » à tout
+  moment. R108 : un run repris ne repasse JAMAIS par le guide. Harnais : l'autoplay refuse le guide (branche
+  duck-typée). Flags additifs `tuto_*` dans MerlinChronicle. Robustesse : poll-loops (zéro await
+  tween.finished), garde `_ok()` uniforme incluant run.ended.
+
 - **R148 : PREMIÈRE RÉSOLUTION INSTANTANÉE + robustesse fusion (2026-07-06, N4-BUG, bug playtest prouvé)** :
   (a) le prefetch de résolution refusé pour « modèle pas prêt » est MÉMORISÉ et RELANCÉ au signal
   `model_ready` (epoch-gardé, CONNECT_ONE_SHOT) : le LLM peut gagner dès que le modèle charge ; (b) l'attente

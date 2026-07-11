@@ -145,6 +145,13 @@ var _tuto_lbl: Label = null
 var _tuto_a_active: bool = false               # hint A affiché (beat 1) — désarmé à la 1re paire complète
 var _tuto_b_active: bool = false               # hint B affiché (beat 2) — désarmé au 1er clic de tuile
 
+# N4-TUTO (2026-07-11) : le GUIDE de première traversée (merlin_tutorial.gd), PROPOSÉ (jamais
+# imposé) sur chronique vierge après l'interstitiel : rangée Z4 [Guide-moi / Je connais le chemin]
+# outillée par l'autoplay (revue design B1) ; réponse persistée en SYNCHRONE (B2, MerlinChronicle).
+const TUTO_SCRIPT: GDScript = preload("res://scripts/game/merlin_tutorial.gd")  # R147bis
+var _tuto: Node = null                         # orchestrateur du guide (null hors guide)
+var _tuto_prompt_row: HBoxContainer = null     # rangée de proposition Z4 (duck-typée par l'autoplay)
+
 
 # v10.13 (Fix 0) — garde canonique post-await : la scène est-elle toujours « fraîche » ?
 # Toute coroutine qui reprend après un await DOIT vérifier _fresh(ep) avant de toucher l'UI.
@@ -427,8 +434,13 @@ func _layout_fan() -> void:
 		return  # v11-V2b : pendant le draft, l'éventail appartient aux 3 cartes (positions manuelles)
 	var cards: Array = []
 	for c in _hand_box.get_children():
-		if c is MerlinCardView and not c.is_queued_for_deletion():
-			cards.append(c)  # v10.13.1 : les vues en cours de discard_out ne comptent plus
+		# v10.13.1 : les vues en cours de discard_out ne comptent plus. N4-TUTO : le filtre
+		# _discarding est désormais EFFECTIF (le commentaire le promettait, le code ne le faisait
+		# pas) : sans lui, le deal_in du reflow TUE le tween de discard et RESSUSCITE la vue dans
+		# l'éventail (8 cartes au beat 1 du guide, mesuré par probe : d=true a=1.00 permanent).
+		# Le flow normal était masqué par le rebuild du draft d'ouverture (_swap_hand_zone).
+		if c is MerlinCardView and not c.is_queued_for_deletion() and not (c as MerlinCardView)._discarding:
+			cards.append(c)
 	var n: int = cards.size()
 	if n == 0:
 		return
@@ -1148,6 +1160,14 @@ func _advance_to_next() -> void:
 	if cb.has("qtotal") and int(cb.get("qn", 1)) >= int(cb.get("qtotal", 1)) \
 			and not run.is_climax() and not run.ended and run.has_graftable_action():
 		_pending_draft = true
+	# N4-TUTO (revue design B3) : le draft d'ouverture DÉCALÉ par le guide se fond dans le gate
+	# UNIQUE des drafts servis ici : jamais deux drafts coup sur coup au beat 1. Flag posé à
+	# l'armement (même contrat que _end_interstitial : un « Passer » n'est jamais re-proposé,
+	# persisté par le save de fin de fonction) ; hors guide, opening_draft_done est déjà true : no-op.
+	if run.beat_index == 0 and not run.opening_draft_done and not run.ended \
+			and run.has_graftable_action():
+		run.opening_draft_done = true
+		_pending_draft = true
 	# v10.11/v11-W3 — Draft de GREFFE « 1 sur 3 » aux beats clés, AVANT de passer au beat suivant.
 	if _pending_draft:
 		_pending_draft = false
@@ -1541,8 +1561,8 @@ func _on_draft_skip() -> void:
 # Clic sur la zone récit (scène/narration). Pendant la frappe → révèle tout le texte ;
 # une fois l'issue entièrement écrite → passe au beat suivant. (Demande user 2026-05-26.)
 func _on_story_click(event: InputEvent) -> void:
-	if _intro_open or _draft_active or _interstitial_open:
-		return  # intro/draft/interstitiel : clics gérés par _input ou par les contrôles des zones
+	if _intro_open or _draft_active or _interstitial_open or _tuto_blocks():
+		return  # intro/draft/interstitiel/guide : clics gérés par _input ou par les contrôles des zones
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
 	if _tw != null and _tw.is_valid():
@@ -1741,6 +1761,8 @@ const TUTO_HINT_B: String = "La forêt réclame : tuiles et cartes soulignées d
 # À l'ouverture du choix : hint A au beat 1, hint B au beat 2 — une seule fois par profil
 # (persistance [tuto] via MerlinVisual, pattern reduced_motion).
 func _maybe_tuto_hint() -> void:
+	if _tuto != null and is_instance_valid(_tuto):
+		return  # N4-TUTO : le guide couvre tout ce que les hints enseignent : zéro bruit par-dessus
 	var run: Node = get_node("/root/MerlinRun")
 	if int(run.beat_index) == 0 and not MerlinVisual.tuto_hint_a_done:
 		_tuto_a_active = true
@@ -1996,6 +2018,13 @@ func _input(event: InputEvent) -> void:
 			else:
 				_interstitial_skip = true  # attente inline → cesser d'attendre la prose LLM
 			get_viewport().set_input_as_handled()
+			return
+		# N4-TUTO : le guide confisque l'avance de beat (ses propres clics vivent dans son
+		# catcher) mais laisse vivre le skip du typewriter (lecture réactive pendant la démo).
+		if _tuto_blocks():
+			if _tw != null and _tw.is_valid():
+				_skip_typewriter()
+				get_viewport().set_input_as_handled()
 			return
 		if _state == 2:
 			if _tw != null and _tw.is_valid():
@@ -2357,12 +2386,27 @@ func _end_interstitial() -> void:
 	_interstitial_open = false
 	_can_advance = false
 	_set_caret(false)
+	# N4-TUTO : proposition du guide au tout premier run (chronique vierge ou ré-armé via les
+	# Options). La suite du flow (draft d'ouverture + beat 1) attend la réponse (_on_tuto_answer).
+	if MerlinChronicle.should_offer_tuto():
+		_build_tuto_prompt()
+		return
+	await _continue_after_interstitial()
+
+
+# N4-TUTO : suite du flow post-interstitiel (draft d'ouverture + beat 1), extraite de
+# _end_interstitial pour être rejouée après la réponse à la proposition du guide. Guide ACCEPTÉ :
+# le draft d'ouverture est DÉCALÉ (revue design B3) et se fondra dans le gate unique de
+# _advance_to_next (flag intact, GD-27 conservé : déplacé, jamais perdu).
+func _continue_after_interstitial() -> void:
 	# v1.0-V4a (BAL-11-B/GD-27) — draft d'OUVERTURE : une greffe s'offre AVANT le 1er beat (le
 	# build démarre avec une direction). UNE fois par run : flag persisté opening_draft_done posé à
 	# l'OUVERTURE (review MEDIUM — un « Passer » n'est jamais re-proposé au resume, anti re-roll ;
 	# même contrat que pilier_offering_done).
 	var run: Node = get_node("/root/MerlinRun")
-	if run.beat_index == 0 and not run.ended and not run.opening_draft_done \
+	# N4-TUTO : guide actif : le draft d'ouverture ne s'ouvre PAS ici (décalé, revue design B3) :
+	# opening_draft_done reste false et le gate unique de _advance_to_next le servira au beat 1.
+	if _tuto == null and run.beat_index == 0 and not run.ended and not run.opening_draft_done \
 			and run.has_graftable_action():
 		run.opening_draft_done = true
 		_scene_epoch += 1
@@ -2371,6 +2415,73 @@ func _end_interstitial() -> void:
 			return
 		run.save()  # greffe d'ouverture + flag survivent à un quit pendant le beat 1 (R108)
 	_present_current_beat()
+
+
+# === N4-TUTO : proposition + cycle de vie du guide de Merlin (merlin_tutorial.gd) ===
+
+
+# Le guide verrouille-t-il l'input de jeu ? (duck-typé : merlin_tutorial.blocking)
+func _tuto_blocks() -> bool:
+	return _tuto != null and is_instance_valid(_tuto) and bool(_tuto.get("blocking"))
+
+
+# Rangée de proposition (Z4, pattern « Accepter ✦ ») : question de Merlin + 2 boutons ≥44 px sur
+# UNE rangée (72 px : jamais d'empilement). Non-modale (R136 : les zones restent posées).
+func _build_tuto_prompt() -> void:
+	_clear_tuto_hint()
+	if _effect_vignette != null:
+		for c in _effect_vignette.get_children():
+			c.queue_free()  # le slot central de Z4 ne porte qu'UN contenu à la fois
+	_tuto_prompt_row = HBoxContainer.new()
+	_tuto_prompt_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_tuto_prompt_row.add_theme_constant_override("separation", 20)
+	var q: Label = MerlinVisual.make_label(MerlinVisual.CREAM, MerlinVisual.FS_CAPTION)
+	q.text = "Premier pas dans la forêt, Voyageur... je te guide ?"  # revue design M2 : court
+	q.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	q.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tuto_prompt_row.add_child(q)
+	var yes: Button = Button.new()
+	yes.text = "Guide-moi"
+	var no: Button = Button.new()
+	no.text = "Je connais le chemin"
+	for b in [yes, no]:
+		var btn: Button = b
+		btn.custom_minimum_size = Vector2(230, 52)  # ≥44 px (pilier TACTILE)
+		btn.add_theme_font_size_override("font_size", 18)
+		MerlinVisual.apply_button_da(btn)
+		MerlinVisual.connect_button_feedback(btn)
+		_tuto_prompt_row.add_child(btn)
+	yes.pressed.connect(_on_tuto_answer.bind(true))
+	no.pressed.connect(_on_tuto_answer.bind(false))
+	if _res_block != null:
+		_res_block.add_child(_tuto_prompt_row)
+		_fade_res_block(true)
+
+
+# Réponse à la proposition : persistée en SYNCHRONE (revue design B2 : un quit/crash juste après
+# le clic ne re-propose JAMAIS), puis le flow post-interstitiel reprend (guide actif ou non).
+func _on_tuto_answer(accepted: bool) -> void:
+	if _tuto_prompt_row == null:
+		return  # double-clic pendant le fondu : réponse déjà consommée
+	var row: HBoxContainer = _tuto_prompt_row
+	_tuto_prompt_row = null
+	MerlinChronicle.mark_tuto_proposed()
+	if row != null and is_instance_valid(row):
+		row.queue_free()
+	_fade_res_block(false)
+	if accepted:
+		_tuto = TUTO_SCRIPT.new()
+		add_child(_tuto)
+		_tuto.finished.connect(_on_tuto_finished)
+		_tuto.start(self, {
+			"encart": _situ_panel, "etat": _status_line, "main": _hand_box,
+			"resoudre": _resolve_btn, "vie": _life_gauge, "corruption": _corr_gauge,
+		})
+	_continue_after_interstitial()  # fire-and-forget (coroutine) : même contrat que _end_interstitial
+
+
+func _on_tuto_finished(_completed: bool) -> void:
+	_tuto = null  # le node se libère lui-même (teardown en fin de _run côté tutorial)
 
 
 func _build_ui() -> void:

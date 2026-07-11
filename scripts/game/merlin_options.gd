@@ -17,8 +17,12 @@ var _vol_sfx: HSlider
 var _vol_voice: HSlider
 var _title_lbl: Label
 var _back_btn: Button
+var _tuto_btn: Button = null  # N4-TUTO : « Revoir le guide de Merlin » (ré-arme pour la prochaine run)
 var _tw: Tween = null
 var _init_sliders: bool = false
+
+const TUTO_BTN_IDLE: String = "Revoir le guide de Merlin"
+const TUTO_BTN_ARMED: String = "Le guide t'attendra à la prochaine traversée"
 
 
 func _ready() -> void:
@@ -46,6 +50,7 @@ func _open() -> void:
 	_vol_sfx.value = MerlinAudio.sfx_vol * 100.0
 	_vol_voice.value = MerlinAudio.voice_vol * 100.0
 	_init_sliders = false
+	_refresh_tuto_btn()  # N4-TUTO : reflète l'état ré-armé (persisté chronique) à chaque ouverture
 	visible = true
 	_dim.modulate.a = 0.0
 	_panel.modulate.a = 0.0
@@ -143,6 +148,18 @@ func _build_ui() -> void:
 	voice_chk.toggled.connect(func(on: bool) -> void: MerlinVoicePrefs.set_enabled(on))
 	vbox.add_child(voice_chk)
 
+	# N4-TUTO : rejouer le guide de première traversée. RÉ-ARME la proposition pour la PROCHAINE
+	# run (le guide ne se relance JAMAIS seul en cours de partie). État relu à chaque ouverture.
+	_tuto_btn = Button.new()
+	_tuto_btn.text = TUTO_BTN_IDLE
+	_tuto_btn.custom_minimum_size = Vector2(420, 48)  # ≥44 px (pilier TACTILE)
+	_tuto_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_tuto_btn.add_theme_font_size_override("font_size", 17)
+	MerlinVisual.apply_button_da(_tuto_btn)
+	MerlinVisual.connect_button_feedback(_tuto_btn)
+	_tuto_btn.pressed.connect(_on_tuto_rearm)
+	vbox.add_child(_tuto_btn)
+
 	var spacer: Control = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
@@ -154,6 +171,21 @@ func _build_ui() -> void:
 	_back_btn.pressed.connect(toggle)
 	vbox.add_child(_back_btn)
 	MerlinVisual.connect_button_feedback(_back_btn)
+
+
+# N4-TUTO : clic = ré-armement persisté (MerlinChronicle) + confirmation SUR le bouton (un seul
+# endroit, pilier MINIMAL). Redevient cliquable si la proposition a été consommée entre-temps.
+func _on_tuto_rearm() -> void:
+	MerlinChronicle.rearm_tuto()
+	_refresh_tuto_btn()
+
+
+func _refresh_tuto_btn() -> void:
+	if _tuto_btn == null or not is_instance_valid(_tuto_btn):
+		return
+	var armed: bool = bool(MerlinChronicle.read().get("tuto_rearmed", false))
+	_tuto_btn.disabled = armed
+	_tuto_btn.text = TUTO_BTN_ARMED if armed else TUTO_BTN_IDLE
 
 
 func _slider_row(label: String, value: float, parent: Control) -> HSlider:

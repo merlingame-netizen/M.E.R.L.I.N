@@ -16,6 +16,10 @@ const DEFAULTS: Dictionary = {
 	"last_run_iso": "", "last_seen_iso": "",
 	# v10.20.2 — mémoire de la dernière run pour la RÉCURRENCE des PNJ (le pilier te reconnaît) + l'allusion menu.
 	"last_faction": "", "last_pilier": "",
+	# N4-TUTO (2026-07-11) : le GUIDE de première traversée. Proposé UNE fois (chronique vierge),
+	# jamais relancé seul ; rejouable via Options (tuto_rearmed). Additif : les cfg antérieurs
+	# lisent les défauts (aucune migration).
+	"tuto_proposed": false, "tuto_done": false, "tuto_rearmed": false,
 }
 
 
@@ -58,6 +62,44 @@ static func read() -> Dictionary:
 			out[k] = cfg.get_value(SECTION, k, DEFAULTS[k])
 	out["days_since_seen"] = _days_since(str(out.get("last_seen_iso", "")))
 	return out
+
+
+# ── N4-TUTO : le guide de Merlin (première traversée) ─────────────────────────────────────────
+# Contrat (revue design B2) : `tuto_proposed` est la condition PRIMAIRE (persistée en SYNCHRONE au
+# clic de réponse, AVANT le lancement du guide) ; `runs_played == 0` n'est qu'un garde-fou
+# secondaire. Un « Guide-moi » suivi d'un quit/crash ne re-propose donc JAMAIS tout seul.
+
+
+# Faut-il proposer le guide ? Tout premier run jamais répondu, OU ré-armé depuis les Options.
+static func should_offer_tuto() -> bool:
+	var c: Dictionary = read()
+	if bool(c.get("tuto_rearmed", false)):
+		return true
+	return not bool(c.get("tuto_proposed", false)) and int(c.get("runs_played", 0)) == 0
+
+
+# Réponse donnée (accepté OU refusé) : consomme aussi le ré-armement Options.
+static func mark_tuto_proposed() -> void:
+	_set_tuto_flags({"tuto_proposed": true, "tuto_rearmed": false})
+
+
+# Guide déroulé (complet ou écourté) : trace de chronique (matière pour la voix du menu).
+static func mark_tuto_done() -> void:
+	_set_tuto_flags({"tuto_done": true})
+
+
+# Options « Revoir le guide de Merlin » : ré-arme la proposition pour la PROCHAINE run.
+# Le guide ne se relance JAMAIS seul en cours de partie.
+static func rearm_tuto() -> void:
+	_set_tuto_flags({"tuto_rearmed": true})
+
+
+static func _set_tuto_flags(flags: Dictionary) -> void:
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(PREFS_PATH)  # préserve les autres sections (audio/a11y/tuto hints)
+	for k in flags.keys():
+		cfg.set_value(SECTION, str(k), flags[k])
+	cfg.save(PREFS_PATH)
 
 
 # Jours entiers écoulés depuis un timestamp ISO (-1 si vide/illisible, 0 si futur/aujourd'hui).
