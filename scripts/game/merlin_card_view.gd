@@ -1,8 +1,10 @@
 class_name MerlinCardView
 extends Control
-## Vue de carte — DA flat rétro-minimaliste. v10.5 (user 2026-06-06) : cartes plus grandes, glyphe
-## par TAG précis (logo reflète le concept), bordure ÉPAISSE colorée par RARETÉ (Commune/Rare/Épique/
-## Mythique), bande d'ARCHÉTYPE d'effet en bas (Offensif/Défensif/Social/Mystique/Corrompu).
+## Vue de carte, DA flat rétro-minimaliste. N4-RUNES (2026-07-11) : la carte-trait est une RUNE.
+## Nom français compréhensible en HAUT (display_name), GRAND glyphe ogham INVENTÉ gravé au centre
+## (motif procédural par carte), nom de rune celte inventé dessous (rune_name, INK_DIM). Zéro
+## pastille de tag (le jargon quitte l'écran, l'affinité se lit à la preview R120). Bordure ÉPAISSE
+## colorée par RARETÉ (Commune/Rare/Épique/Mythique), gemme de coût + badges d'effet conservés.
 ## S'agrandit/se soulève au survol. Émet card_clicked au clic.
 
 signal card_clicked(card: MerlinCard)
@@ -70,6 +72,14 @@ var _glow_col: Color = MerlinVisual.GOLD
 var _selected: bool = false
 var _rest_border_col: Color = MerlinVisual.BORDER_BRUN
 var _rest_border_w: int = 3
+# N4-RUNES (revue design, fix bloquant 2) : FEEDFORWARD sur la carte-rune, même vocabulaire que la
+# tuile (spec §I) : souligné GOLD alpha 0.15-0.4 pulsé quand le trait couvre >= 1 tag requis du
+# beat. Signal NON-VERBAL (zéro mot de tag). ColorRect overlay (au-dessus du panel), jamais _draw.
+const FF_ALPHA_MAX: float = 0.4
+const FF_ALPHA_MIN: float = 0.15
+var _ff_on: bool = false
+var _ff_rect: ColorRect = null
+var _ff_tw: Tween = null
 
 
 func _dur(base: float) -> float:
@@ -121,9 +131,10 @@ func _build(role: String) -> void:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
 
-	# Nom (main) ou rôle (compact legacy). v11-W2 : nom ≥16 px (spec §I, carte-trait 150×190).
+	# N4-RUNES (2026-07-11) : nom FRANÇAIS compréhensible en HAUT (16 px). display_label() =
+	# display_name de la rune, repli card_name (cartes de présentation de greffe/talent).
 	var top: Label = Label.new()
-	top.text = role if _compact else card.card_name
+	top.text = role if _compact else card.display_label()
 	top.add_theme_color_override("font_color", COL_INK_DIM if _compact else COL_INK)
 	top.add_theme_font_size_override("font_size", 11 if _compact else 16)
 	top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -131,45 +142,24 @@ func _build(role: String) -> void:
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(top)
 
-	# Glyphe HÉROS — par TAG précis (v10.5 : le logo reflète le concept exact, plus la famille).
-	var primary: String = str(card.tags[0]) if card.tags.size() > 0 else ""
+	# N4-RUNES : GRAND glyphe OGHAM INVENTÉ gravé au centre (ligne-tige + traits procéduraux,
+	# motif propre de la carte ou rune du concept en repli). Trait INK sur CREAM, épaisseur charte.
 	var glyph: MerlinGlyph = MerlinGlyph.new()
 	glyph.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	glyph.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	glyph.setup(MerlinGlyph.for_tag(primary), COL_INK, 2.4 if _compact else 3.2)
+	glyph.setup_rune(card.glyph_pattern(), COL_INK, 2.4 if _compact else 3.2)
 	v.add_child(glyph)
 
-	# v10.12 — Tags EN CLAIR (mots) = « ce que tu joues » : les forces apportées à la combinaison
-	# (elles déterminent la couverture/résolution). Remplace la rangée de pastilles + la bande archétype
-	# (surcharge, user 2026-06-07). 2 tags max affichés. Coût + effet portés par les gemmes de coin.
-	if not _compact and card.tags.size() > 0:
-		var tag_row: HBoxContainer = HBoxContainer.new()
-		tag_row.alignment = BoxContainer.ALIGNMENT_CENTER
-		tag_row.add_theme_constant_override("separation", 6)
-		tag_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(tag_row)
-		var shown: int = 0
-		for t in card.tags:
-			if shown >= 2:
-				break
-			var chip: PanelContainer = PanelContainer.new()
-			chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			var csb: StyleBoxFlat = StyleBoxFlat.new()
-			csb.bg_color = Color(0.16, 0.12, 0.08, 0.30)  # encre transparente (lisibilité sans bordure)
-			csb.set_corner_radius_all(3)
-			csb.content_margin_left = 6.0
-			csb.content_margin_right = 6.0
-			csb.content_margin_top = 1.0
-			csb.content_margin_bottom = 1.0
-			chip.add_theme_stylebox_override("panel", csb)
-			var clbl: Label = Label.new()
-			clbl.text = str(t).to_upper()
-			clbl.add_theme_color_override("font_color", Color(MerlinTags.color_of(str(t))))
-			clbl.add_theme_font_size_override("font_size", 11)
-			clbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			chip.add_child(clbl)
-			tag_row.add_child(chip)
-			shown += 1
+	# N4-RUNES : nom de RUNE CELTE inventé sous le glyphe (13 px, INK_DIM discret). Les pastilles
+	# de tags sont SUPPRIMÉES : le jargon quitte l'écran, l'affinité se lit à la preview (R120).
+	if not _compact and card.rune_label() != "":
+		var rune_lbl: Label = Label.new()
+		rune_lbl.text = card.rune_label()
+		rune_lbl.add_theme_color_override("font_color", COL_INK_DIM)
+		rune_lbl.add_theme_font_size_override("font_size", 13)
+		rune_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		rune_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(rune_lbl)
 
 	# v10.11 — Gemme rareté/coût (coin haut-gauche) + badge d'effet (coin haut-droit). DA flat conservée.
 	_add_corner_markers(rar, rstyle)
@@ -178,6 +168,38 @@ func _build(role: String) -> void:
 # v11-W2 — position de REPOS : la sélection lève la carte de 20 px (l'état se lit sur l'élément).
 func _rest_pos() -> Vector2:
 	return _base_pos + (Vector2(0.0, -SELECT_LIFT) if _selected else Vector2.ZERO)
+
+
+# N4-RUNES (revue design, fix bloquant 2) : souligné GOLD pulsé quand le trait couvre >= 1 tag
+# requis du beat (posé par merlin_game._render_hand). Reduce-motion : alpha statique 0.4, l'info
+# survit sans boucle (R74). Cousin exact de MerlinActionView.set_feedforward (spec §I).
+func set_feedforward(on: bool) -> void:
+	if _ff_on == on:
+		return
+	_ff_on = on
+	if _ff_tw != null and _ff_tw.is_valid():
+		_ff_tw.kill()
+	_ff_tw = null
+	if not on:
+		if _ff_rect != null and is_instance_valid(_ff_rect):
+			_ff_rect.modulate.a = 0.0
+		return
+	if _ff_rect == null or not is_instance_valid(_ff_rect):
+		_ff_rect = ColorRect.new()
+		_ff_rect.color = MerlinVisual.GOLD
+		_ff_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var sz3: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE
+		_ff_rect.position = Vector2(14.0, sz3.y - 9.0)
+		_ff_rect.size = Vector2(sz3.x - 28.0, 3.0)
+		add_child(_ff_rect)
+	if MerlinVisual.reduced_motion:
+		_ff_rect.modulate.a = FF_ALPHA_MAX
+		return
+	_ff_rect.modulate.a = FF_ALPHA_MIN
+	if _ff_rect.is_inside_tree():
+		_ff_tw = _ff_rect.create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_ff_tw.tween_property(_ff_rect, "modulate:a", FF_ALPHA_MAX, _dur(0.9))
+		_ff_tw.tween_property(_ff_rect, "modulate:a", FF_ALPHA_MIN, _dur(0.9))
 
 
 # v11-W2 — sélection du TRAIT sur l'élément : bordure GOLD + levée +20 px ; désélection au re-clic
@@ -193,9 +215,10 @@ func set_selected(on: bool) -> void:
 		_animate(_rest_pos(), _base_rot, 1.0)
 
 
-# v10.21 (Wave I, R131) — badge de BÉNÉDICTION : pastille GOLD portant le tag temporaire offert par le
-# pilier (zéro info cachée, pilier ÉVIDENT). Posée par merlin_game._render_hand quand la carte est bénie.
-func set_blessed(tag: String) -> void:
+# v10.21 (Wave I, R131) : badge de BÉNÉDICTION, pastille GOLD posée par merlin_game._render_hand
+# quand la carte est bénie. N4-RUNES : libellé neutre « ✦ Bénie » (le mot de tag quitte l'écran ;
+# le bonus reste mécanique et se lit à la preview R120). Le paramètre tag reste l'API des appelants.
+func set_blessed(_tag: String) -> void:
 	var badge: PanelContainer = PanelContainer.new()
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb2: StyleBoxFlat = StyleBoxFlat.new()
@@ -204,7 +227,7 @@ func set_blessed(tag: String) -> void:
 	sb2.set_content_margin_all(4)
 	badge.add_theme_stylebox_override("panel", sb2)
 	var lbl2: Label = Label.new()
-	lbl2.text = "✦ " + tag
+	lbl2.text = "✦ Bénie"
 	lbl2.add_theme_color_override("font_color", MerlinVisual.INK)
 	lbl2.add_theme_font_size_override("font_size", 12)
 	lbl2.mouse_filter = Control.MOUSE_FILTER_IGNORE

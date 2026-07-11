@@ -251,3 +251,12 @@ Chaque sous-vague : gate R109 complet + commit + BIBLE R-numérotée.
 - Momentum narratif (merlin_run, +1/-1 clampé -3..+3, additif save) colore le ton du pont (sombre/élan). §K INCHANGÉ (soak iso).
 - Climax ancré sur quest_title (CLIMAX_ANCHORS). Gates verts, eyeball confirmé (pont mid-quête + climax nommant le but).
 - Reste : Vague 2 multi-étapes (situation persistante, re-dérive §K) ; N2b streaming ; cleanup em-dash des banques pré-règle.
+
+---
+
+# task_plan : N4 (2026-07-06) : bug 1re résolution + runes ogham + tutoriel Merlin
+
+User (playtest) : « dénominations hasardeuses » à retirer, runes à combiner avec les actions, vignettes de tags invisibles, bug à la première résolution, tutoriel animé proposé par Merlin au 1er run.
+- **N4-BUG (#61)** : diagnostic systématique en cours (agent lecture seule, symptômes = cascade 4/4). Fix après cause racine prouvée. Domaine : merlin_fx/merlin_dice/chaîne résolution.
+- **N4-RUNES (#62, agent en cours)** : display_name FR + rune_name celte inventé + glyphe ogham procédural (merlin_card, card_view, action_view) ; pastilles tags + chips requis retirés de l'UI ; mécanique tags intacte (§K iso). Interdit de toucher fx/dice.
+- **N4-TUTO (#63, séquencé après BUG+RUNES)** : proposé au 1er run, round d'exemple animé, clic par étape, rejouable Options.

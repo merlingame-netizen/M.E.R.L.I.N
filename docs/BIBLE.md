@@ -1820,6 +1820,22 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R147 : CARTES-RUNES OGHAM + TAGS INVISIBLES (2026-07-06, N4-RUNES, user « enlève les dénominations
+  hasardeuses, jouons des runes »)** : les cartes de TRAIT sont des RUNES celtiques inventées : glyphe de
+  style ogham dessiné PROCÉDURALEMENT (`merlin_glyph.gd` : tige + 1-5 traits, motifs 0-46 canon / 47
+  générique / 50-74 tag-concepts, style gravure) + **nom FRANÇAIS compréhensible en haut** (Calme, Voix,
+  Poigne, Adresse…, jamais égal à un mot de tag canon) + **nom de rune CELTE INVENTÉ en bas** (Sioulan,
+  Gwezhen, Dornek, Braën… table complète `MerlinCard.RUNES`, 47 entrées). Champs additifs
+  display_name/rune_name/rune_pattern (save legacy OK) ; `card_name` reste INTERNE (ids, prompts LLM).
+  **Le jargon de tags disparaît de l'UI** : pastilles des cartes, pastilles de base des tuiles, chips de
+  requis au-dessus de la situation : SUPPRIMÉS. Les tags restent 100 % mécaniques (couverture, whitelist §F,
+  moteur d20). Lisibilité (§23 ÉVIDENT) : **feedforward GOLD** sur les cartes de la main qui couvrent un
+  requis + preview de résolution (R120) = seuls signaux d'affinité. Badge bénédiction neutre « ✦ Bénie »
+  (amende R131 : plus de mot de tag). Fix R147bis : appels inter-classes par `preload` (const _Glyph) au
+  lieu du nom de classe : un appel statique `MerlinGlyph.f()` créait un FLAKE de compilation intermittent
+  (1 boot/24, cascade softlock) : gate anti-flake bootcheck 20/20 requis sur toute vague touchant les
+  dépendances de scripts (KB 2026-07-06).
+
 - **R146 : CONTINUITÉ + RÉACTIVITÉ narratives (2026-07-06, N3-V1, user « les scénarios ne suivent pas, tout décroché en event »)** :
   le PONT inter-beats supprimé en N1 (R140) est RESTAURÉ mais INTELLIGENT (non-générique) : composé dans
   `note_outcome` depuis degré x biome x momentum (banque `BRIDGE_BY_DEGREE_BIOME`, 2e pers. présent, il PORTE

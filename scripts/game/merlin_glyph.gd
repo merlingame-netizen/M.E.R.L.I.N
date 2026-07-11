@@ -6,6 +6,72 @@ extends Control
 var glyph: String = "eye"
 var line_color: Color = MerlinVisual.INK
 var line_w: float = 2.5
+# N4-RUNES (2026-07-11) : >= 0 = mode RUNE OGHAM INVENTÉE (le _draw dessine le motif procédural
+# via draw_rune_on au lieu du glyphe nommé). -1 = mode glyphe nommé historique (menu, ornements).
+var rune_pattern: int = -1
+
+# N4-RUNES : tag canon -> motif de REPLI (cartes de présentation de greffe/talent, pips de slot).
+# La rune du CONCEPT quand la carte n'a pas de motif propre. Clés normalisées (MerlinTags.to_canon).
+# Revue de code N4 (MEDIUM-2) : plage 50-74, DISJOINTE des motifs propres des cartes canon (0-46)
+# et du motif générique 47 : un pip de tag ne peut jamais être confondu avec la rune d'une carte
+# (les motifs >= 50 portent leur propre marque, un anneau gravé au pied de la tige).
+const TAG_PATTERN_BASE: int = 50
+const PATTERN_GENERIC: int = 47  # rune générique (cartes de présentation roll/charge sans tag)
+const TAG_PATTERNS: Dictionary = {
+	"sens": 50, "savoir": 51, "memoire": 52, "vigilance": 53,
+	"force": 54, "agilite": 55, "endurance": 56, "finesse": 57,
+	"empathie": 58, "verbe": 59, "ruse": 60, "autorite": 61, "franchise": 62,
+	"instinct": 63, "nature": 64, "vision": 65,
+	"rituel": 66, "sacrifice": 67, "equilibre": 68, "mystere": 69,
+	"vide": 70, "glitch": 71, "dissolution": 72, "murmure": 73, "emprise": 74,
+}
+
+
+# N4-RUNES : motif ogham stable d'un tag-concept (repli des cartes sans motif propre).
+# Tag inconnu (garde-fou LLM) -> rune générique 47, jamais la rune d'une carte canon.
+static func pattern_for_tag(tag: String) -> int:
+	var n: String = MerlinTags.to_canon(tag)
+	return int(TAG_PATTERNS.get(n, PATTERN_GENERIC))
+
+
+# N4-RUNES : dessine le motif ogham `pattern` sur n'importe quel CanvasItem (grande carte-rune,
+# pip de slot de greffe). Style gravure : ligne-tige VERTICALE pleine hauteur + 1-5 traits
+# latéraux/traversants/obliques/chevrons. Encodage procédural du motif p :
+#   série  = p % 5   (0 droite, 1 gauche, 2 traversant, 3 oblique, 4 chevron)
+#   nombre = 1 + (p / 5) % 5   (1 à 5 traits)
+# Plages DISJOINTES (revue de code N4, MEDIUM-2) :
+#   0-24  = runes canon simples ; 25-49 = runes canon à marque-point (sommet de tige) ;
+#   50-74 = motifs de TAG-CONCEPT, marqués d'un ANNEAU gravé au pied de la tige (jamais confondus).
+static func draw_rune_on(ci: CanvasItem, center: Vector2, half_h: float, pattern: int, col: Color, w: float) -> void:
+	var p: int = maxi(pattern, 0)
+	var series: int = p % 5
+	var count: int = 1 + int(float(p) / 5.0) % 5
+	var len_x: float = half_h * 0.55
+	ci.draw_line(center + Vector2(0.0, -half_h), center + Vector2(0.0, half_h), col, w, true)
+	var span: float = half_h * 1.2
+	for i in count:
+		var t: float = 0.5 if count == 1 else float(i) / float(count - 1)
+		var y: float = -span * 0.5 + span * t
+		match series:
+			0:  # traits perpendiculaires à DROITE de la tige
+				ci.draw_line(center + Vector2(0.0, y), center + Vector2(len_x, y), col, w, true)
+			1:  # traits perpendiculaires à GAUCHE
+				ci.draw_line(center + Vector2(-len_x, y), center + Vector2(0.0, y), col, w, true)
+			2:  # traits TRAVERSANTS perpendiculaires
+				ci.draw_line(center + Vector2(-len_x, y), center + Vector2(len_x, y), col, w, true)
+			3:  # traits traversants OBLIQUES (gravure inclinée)
+				ci.draw_line(center + Vector2(-len_x, y + len_x * 0.35),
+					center + Vector2(len_x, y - len_x * 0.35), col, w, true)
+			4:  # CHEVRONS : pointe sur la tige, branches vers la droite
+				ci.draw_polyline(PackedVector2Array([
+					center + Vector2(len_x, y - len_x * 0.45), center + Vector2(0.0, y),
+					center + Vector2(len_x, y + len_x * 0.45)]), col, w, true)
+	if p >= TAG_PATTERN_BASE:
+		# Plage tag-concept (50-74) : ANNEAU gravé au pied de la tige, marque propre de la plage.
+		ci.draw_arc(center + Vector2(half_h * 0.35, half_h * 0.82), maxf(w * 1.1, 2.4),
+			0.0, TAU, 12, col, maxf(w * 0.6, 1.2), true)
+	elif p >= 25:
+		ci.draw_circle(center + Vector2(half_h * 0.35, -half_h * 0.82), maxf(w * 0.9, 2.0), col)
 
 
 # Famille de tag (MerlinTags) → clé de glyphe. (conservé : utilisé ailleurs)
@@ -66,6 +132,15 @@ func _ready() -> void:
 
 func setup(p_glyph: String, p_color: Color = MerlinVisual.INK, p_width: float = 2.5) -> void:
 	glyph = p_glyph
+	rune_pattern = -1
+	line_color = p_color
+	line_w = p_width
+	queue_redraw()
+
+
+# N4-RUNES : bascule la vue en mode rune ogham (motif procédural, voir draw_rune_on).
+func setup_rune(p_pattern: int, p_color: Color = MerlinVisual.INK, p_width: float = 2.5) -> void:
+	rune_pattern = maxi(p_pattern, 0)
 	line_color = p_color
 	line_w = p_width
 	queue_redraw()
@@ -76,6 +151,11 @@ func _draw() -> void:
 	if s.x <= 0.0 or s.y <= 0.0:
 		return
 	var c: Vector2 = s * 0.5
+	if rune_pattern >= 0:  # N4-RUNES : mode rune ogham (grand glyphe gravé, cartes-runes)
+		# fix flake bugres : appel SANS préfixe de classe (l'auto-référence MerlinGlyph. dans son
+		# propre _draw créait une arête de dépendance inutile pour le résolveur GDScript).
+		draw_rune_on(self, c, minf(s.x, s.y) * 0.45, rune_pattern, line_color, line_w)
+		return
 	var r: float = minf(s.x, s.y) * 0.34
 	match glyph:
 		"eye":

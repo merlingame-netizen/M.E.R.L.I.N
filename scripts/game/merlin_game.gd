@@ -37,7 +37,7 @@ var _hand_box: Control
 # Le combo panel (104 px) est SUPPRIMÉ : la sélection se lit SUR l'élément (bordure GOLD).
 var _action_bar: HBoxContainer = null
 var _action_views: Array = []          # les 4 MerlinActionView (construites à _begin depuis run.actions)
-var _req_row: HBoxContainer = null     # feedforward : pastilles FAMILY_COLORS des tags requis (encart)
+# N4-RUNES : _req_row (chips des tags requis) SUPPRIMÉE : zéro jargon à l'écran, preview R120.
 var _resolve_btn: Button
 var _overlay: Panel
 var _overlay_lbl: Label
@@ -90,7 +90,6 @@ var _life_tw: Tween  # tween de remplissage de l'anneau vie (tué avant un nouve
 var _corr_tw: Tween
 var _situ_tw: Tween  # fondu de l'encart (interstitiel) — tué avant réutilisation → pas de course de tweens
 var _prose_tw: Tween  # v10.15 : prose breathing loop (killed before next typewriter)
-var _req_tw: Tween = null      # v11-V2a : fade des pastilles requis (hauteur réservée, alpha seulement)
 var _resolve_tw: Tween = null  # v11-V2a : fade armé/désarmé du bouton Résoudre (self_modulate)
 var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
 
@@ -309,12 +308,13 @@ func _present_current_beat() -> void:
 			_beat_map.mark_draft()
 	get_node("/root/MerlinScenario").invalidate_resolution()  # v10.4 : cache issue propre à chaque beat
 	_hide_overlay()
-	# v11-W2 — sélection nettoyée + tuiles rafraîchies (feedforward du nouveau beat) + pastilles requis.
+	# v11-W2 : sélection nettoyée + tuiles rafraîchies (feedforward du nouveau beat).
+	# N4-RUNES (2026-07-11) : les chips de tags requis sont SUPPRIMÉES (zéro jargon à l'écran) ;
+	# l'affinité se lit au souligné feedforward des tuiles + à la preview de résolution (R120).
 	_selected_action = null
 	_selected_trait = null
 	_set_resolve_armed(false)  # Z6 : le bouton reste VISIBLE, simplement désarmé (alpha 0.35)
 	_refresh_action_tiles()
-	_render_required_tags()
 	# v10.10 (user 2026-06-06) : la SITUATION s'affiche SEULE dans l'encart central ; le choix ne
 	# s'ouvre qu'à la fin du typewriter (_on_typewriter_done state==1). Zones estompées d'ici là.
 	_set_choice_ui(false)
@@ -403,8 +403,20 @@ func _render_hand(deal: bool = false) -> void:
 			keep[card] = cv
 	for i in wanted.size():  # ordre des enfants = ordre de la main (recouvrement stable)
 		_hand_box.move_child(keep[wanted[i]], i)
+	# N4-RUNES (revue design, fix bloquant 2) : FEEDFORWARD sur les cartes-runes : souligné GOLD
+	# pulsé quand le trait couvre >= 1 tag requis du beat (même calcul que _refresh_action_tiles,
+	# même vocabulaire que les tuiles, zéro mot de tag à l'écran).
+	var reqs_hand: Array = []
+	for r in _current_situation.get("required_tags", []):
+		reqs_hand.append(MerlinTags.to_canon(str(r)))
 	for card in keep:  # v11-W2 : l'état de sélection se lit SUR la carte (levée + bordure GOLD)
-		(keep[card] as MerlinCardView).set_selected(card == _selected_trait)
+		var cvk: MerlinCardView = keep[card]
+		cvk.set_selected(card == _selected_trait)
+		var covers_hand: bool = false
+		for t in (card as MerlinCard).tags:
+			if reqs_hand.has(MerlinTags.to_canon(str(t))):
+				covers_hand = true
+		cvk.set_feedforward(covers_hand)
 	_deal_pending = deal  # anime la distribution seulement sur une main fraîche (beat/résolution)
 	call_deferred("_layout_fan")
 
@@ -538,45 +550,9 @@ func _refresh_action_tiles() -> void:
 		av.set_feedforward(covers)
 
 
-# v11-W2 — pastilles des tags REQUIS (« ce lieu réclame ») sur l'encart : rond 14 px FAMILY_COLORS +
-# nom INK sur crème. Rendues au beat, révélées avec l'éventail (_set_choice_ui).
-func _render_required_tags() -> void:
-	if _req_row == null:
-		return
-	for c in _req_row.get_children():
-		c.queue_free()
-	for r in _current_situation.get("required_tags", []):
-		var tag: String = str(r)
-		var chip: PanelContainer = PanelContainer.new()
-		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var csb: StyleBoxFlat = StyleBoxFlat.new()
-		csb.bg_color = Color(MerlinVisual.INK.r, MerlinVisual.INK.g, MerlinVisual.INK.b, 0.10)
-		csb.set_corner_radius_all(12)
-		csb.content_margin_left = 10.0
-		csb.content_margin_right = 10.0
-		csb.content_margin_top = 3.0
-		csb.content_margin_bottom = 3.0
-		chip.add_theme_stylebox_override("panel", csb)
-		var crow: HBoxContainer = HBoxContainer.new()
-		crow.add_theme_constant_override("separation", 6)
-		crow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		chip.add_child(crow)
-		var dot: Panel = Panel.new()
-		dot.custom_minimum_size = Vector2(14, 14)
-		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var dot_sb: StyleBoxFlat = StyleBoxFlat.new()
-		dot_sb.bg_color = Color(MerlinTags.color_of(tag))
-		dot_sb.set_corner_radius_all(7)
-		dot.add_theme_stylebox_override("panel", dot_sb)
-		crow.add_child(dot)
-		var lbl: Label = Label.new()
-		lbl.text = tag
-		lbl.add_theme_color_override("font_color", COL_INK)
-		lbl.add_theme_font_size_override("font_size", 16)
-		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		crow.add_child(lbl)
-		_req_row.add_child(chip)
+# N4-RUNES (2026-07-11) : _render_required_tags SUPPRIMÉE (chips « ce lieu réclame » retirées de
+# l'encart). Les required_tags restent 100 % MÉCANIQUES (couverture, feedforward, moteur d20) :
+# l'affinité se lit au souligné GOLD des tuiles + à la preview de résolution (R120).
 
 
 # Retrouve la vue d'une carte dans un conteneur (main ou combo) — null si absente/libérée.
@@ -1673,20 +1649,7 @@ func _set_resolve_armed(armed: bool) -> void:
 		_resolve_btn.self_modulate.a = target
 
 
-# v11-V2a (Z3) — pastilles des requis : hauteur RÉSERVÉE 26 px en tête d'encart, révélation par
-# alpha seul (zéro reflow, JAMAIS visible=false). Beat sans requis → la rangée reste éteinte.
-func _set_req_visible(on: bool) -> void:
-	if _req_row == null:
-		return
-	var target: float = 1.0 if on and _req_row.get_child_count() > 0 else 0.0
-	if _req_tw != null and _req_tw.is_valid():
-		_req_tw.kill()
-	if _req_row.is_inside_tree():
-		_req_tw = _req_row.create_tween()
-		_req_tw.tween_property(_req_row, "modulate:a", target,
-			MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
-	else:
-		_req_row.modulate.a = target
+# N4-RUNES : _set_req_visible SUPPRIMÉE avec la rangée de chips des tags requis (zéro jargon).
 
 
 # v11-V2a (Z4) — le slot central de la ligne d'état (vignette / choix différés) vit par alpha.
@@ -1730,7 +1693,7 @@ func _set_choice_ui(on: bool) -> void:
 	_choice_open = on
 	MerlinVisual.set_zone_active(_hand_box, on)
 	MerlinVisual.set_zone_active(_action_bar, on)
-	_set_req_visible(on)
+	# N4-RUNES : plus de rangée de tags requis à révéler (chips supprimées, preview R120).
 	if on and _scene_art != null:
 		_scene_art.set_reading_recess(false)  # v10.21 (L-a) : la main s'éveille → la forêt revit
 
@@ -1761,7 +1724,8 @@ func _show_skip_hint() -> void:
 # === v11-V2b (spec §tuto) — micro-tuto : 2 hints one-shot, labels PASSIFS dans Z4 ===
 # MOUSE_FILTER_IGNORE : jamais bloquants (l'autoplay n'a rien à servir, le harnais reste vert).
 const TUTO_HINT_A: String = "Choisis un verbe (tuile) et une manière (carte), puis Résous."
-const TUTO_HINT_B: String = "La forêt réclame — les tuiles soulignées d'or y répondent."
+# N4-RUNES (revue design, finding 4) : le hint couvre les DEUX moitiés du geste (tuiles ET cartes).
+const TUTO_HINT_B: String = "La forêt réclame : tuiles et cartes soulignées d'or y répondent."
 
 
 # À l'ouverture du choix : hint A au beat 1, hint B au beat 2 — une seule fois par profil
@@ -2484,15 +2448,9 @@ func _build_ui() -> void:
 	inner.add_theme_constant_override("separation", 6)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situ_panel.add_child(inner)
-	# v11-W2 (spec §I) — FEEDFORWARD : les tags REQUIS du beat en pastilles FAMILY_COLORS, en tête de
-	# l'encart, visibles pendant le choix uniquement (l'info ne vit qu'à UN endroit — §23 MINIMAL).
-	_req_row = HBoxContainer.new()
-	_req_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_req_row.add_theme_constant_override("separation", 10)
-	_req_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_req_row.custom_minimum_size = Vector2(0, 26)  # hauteur RÉSERVÉE : la tête de l'encart ne reflow jamais
-	_req_row.modulate.a = 0.0  # révélée par alpha (_set_req_visible), JAMAIS par visible=false
-	inner.add_child(_req_row)
+	# N4-RUNES (2026-07-11) : la rangée de chips des tags requis est SUPPRIMÉE de la tête d'encart
+	# (zéro jargon à l'écran). Le fil narratif récupère les 26 px ; l'affinité vit au souligné
+	# feedforward des tuiles + à la preview de résolution (R120).
 	# v11-V2a : fil type VN — toute longueur tient dans la hauteur fixe par SCROLL (suivi pendant la
 	# frappe) ; textes courts alignés en haut (le CenterContainer vertical est supprimé : zéro reflow).
 	_situation_text = RichTextLabel.new()

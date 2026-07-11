@@ -2,17 +2,22 @@ class_name MerlinActionView
 extends Control
 ## v11-W2 (pivot ACTION+TRAIT, spec §I) — TUILE d'action 260×116 : grammaire SURFACE volontairement
 ## DISTINCTE de la carte-trait CREAM (anti-confusion « je cherche à jouer 2 cartes »).
-## Anatomie : VERBE 26 px CREAM en tête · 2 pastilles rondes 18 px = tags de base (couleur
-## MerlinTags.color_of) · 3 slots de greffe 24 px TOUJOURS dessinés en pied (W2 : vides = cercles
+## Anatomie N4-RUNES (2026-07-11) : VERBE 26 px CREAM en tête, SANS pastilles de tags de base
+## (le jargon quitte l'écran : l'affinité se lit au souligné feedforward + preview R120 ; slot
+## « tag » rempli = pip de RUNE neutre, zéro mot)
+## · 3 slots de greffe 24 px TOUJOURS dessinés en pied (W2 : vides = cercles
 ## pointillés BORDER_BRUN — la greffabilité doit être ÉVIDENTE, les greffes arrivent en W3).
 ## Liseré = qualité de dé (MerlinDice.rim_for_rarity de la rareté de l'action, langage R133).
 ## Sélection = bordure GOLD 3 px + press 0.96 (langage §21). Toutes les durées ×MerlinVisual.motion().
 
 signal action_clicked(card: MerlinCard)
 
+# N4-RUNES (fix flake bugres) : référence par PRELOAD, jamais par nom de classe globale (course du
+# résolveur GDScript sur les arêtes class_name : Parse Error intermittent au boot). Déterministe.
+const _Glyph: GDScript = preload("res://scripts/game/merlin_glyph.gd")
+
 const TILE_SIZE: Vector2 = Vector2(260, 116)
 const HOVER_SCALE: float = 1.03
-const DOT_PX: float = 18.0        # pastille de tag de base
 const SLOT_PX: float = 24.0       # slot de greffe (3 fixes, spec §E)
 const SLOT_GAP: float = 12.0
 const SLOT_DASHES: int = 8        # segments du cercle pointillé (slot vide)
@@ -104,38 +109,8 @@ func _build() -> void:
 	_talent_lbl.visible = false
 	verb_row.add_child(_talent_lbl)
 
-	# Les 2 tags de base : pastille ronde 18 px (couleur de famille) + nom court (lisible <2 s, §23).
-	var tag_row: HBoxContainer = HBoxContainer.new()
-	tag_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	tag_row.add_theme_constant_override("separation", 12)
-	tag_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(tag_row)
-	for t in card.tags:
-		tag_row.add_child(_tag_dot(str(t)))
-
-
-# Pastille de tag : rond 18 px FAMILY_COLORS + libellé DIM_WARM (deux tags d'une même famille
-# resteraient indiscernables en couleur seule — le mot lève l'ambiguïté).
-func _tag_dot(tag: String) -> Control:
-	var box: HBoxContainer = HBoxContainer.new()
-	box.add_theme_constant_override("separation", 5)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var dot: Panel = Panel.new()
-	dot.custom_minimum_size = Vector2(DOT_PX, DOT_PX)
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var dsb: StyleBoxFlat = StyleBoxFlat.new()
-	dsb.bg_color = Color(MerlinTags.color_of(tag))
-	dsb.set_corner_radius_all(int(DOT_PX / 2.0))
-	dot.add_theme_stylebox_override("panel", dsb)
-	box.add_child(dot)
-	var lbl: Label = Label.new()
-	lbl.text = tag
-	lbl.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
-	lbl.add_theme_font_size_override("font_size", 13)
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(lbl)
-	return box
+	# N4-RUNES : les 2 pastilles de tags de base sont SUPPRIMÉES (zéro jargon à l'écran). Les tags
+	# de base restent 100 % MÉCANIQUES (couverture, feedforward, moteur d20) : seul l'affichage part.
 
 
 func _draw() -> void:
@@ -168,9 +143,11 @@ func _draw() -> void:
 func _draw_graft_slot(center: Vector2, radius: float, g: Dictionary) -> void:
 	match str(g.get("kind", "")):
 		"tag":
-			# Pastille pleine à la couleur de FAMILLE du tag greffé (même langage que les tags de base).
-			draw_circle(center, radius * 0.80, Color(MerlinTags.color_of(str(g.get("tag", "")))))
+			# N4-RUNES : la pastille famille (jargon couleur) devient un PIP DE RUNE neutre, le mini
+			# ogham du concept greffé (même vocabulaire gravé que les cartes-runes), CREAM sur SURFACE.
 			draw_arc(center, radius * 0.92, 0.0, TAU, 20, MerlinVisual.BORDER_BRUN, 1.5)
+			_Glyph.draw_rune_on(self, center, radius * 0.62,
+				_Glyph.pattern_for_tag(str(g.get("tag", ""))), MerlinVisual.CREAM, 1.6)
 		"roll", "die":
 			# v2-W3 — badge « +N » OR cerclé : la greffe ajoute N au jet d20 (graft_bonus, moteur W1).
 			# ("die" toléré : slot d'une greffe legacy pré-pivot, rendu identique — proxy +ROLL_BONUS_DEFAULT.)
@@ -389,7 +366,8 @@ func set_blessed(tag: String) -> void:
 	bsb.set_content_margin_all(4)
 	badge.add_theme_stylebox_override("panel", bsb)
 	var lbl: Label = Label.new()
-	lbl.text = "✦ " + tag
+	# N4-RUNES : libellé neutre (le mot de tag quitte l'écran ; le bonus reste mécanique, R120).
+	lbl.text = "✦ Bénie"
 	lbl.add_theme_color_override("font_color", MerlinVisual.INK)
 	lbl.add_theme_font_size_override("font_size", 12)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -3,6 +3,12 @@ extends RefCounted
 ## Carte MERLIN (bible R3/R33/R51/R102). Une carte = nom + évocation + tags + coût Corruption + rareté.
 ## Rôle flexible : toute carte peut être principale OU modificateur (R3).
 
+# N4-RUNES (fix flake bugres) : référence par PRELOAD et non par nom de classe globale. La course
+# du résolveur GDScript sur les arêtes de dépendance par class_name (MerlinGlyph.xxx) produisait un
+# Parse Error intermittent (~1 boot/24) -> merlin_run KO -> zéro tuile d'action -> softlock beat 1.
+# Le preload rend l'ordre de chargement DÉTERMINISTE.
+const _Glyph: GDScript = preload("res://scripts/game/merlin_glyph.gd")
+
 var id: String = ""
 var card_name: String = ""
 var evocation: String = ""
@@ -24,7 +30,123 @@ var family: String = ""
 # GUARDRAIL CRITICAL : le prix d'une greffe est ONE-SHOT à la pose (corr_cost, payé par
 # merlin_run.apply_graft) ou PAR CHARGE — jamais récurrent (corruption de l'action reste 0).
 var grafts: Array = []
+# N4-RUNES (2026-07-11) : identité de RUNE d'un TRAIT (UI uniquement, mécanique tags INTACTE).
+#   display_name = nom français compréhensible affiché en HAUT de carte (Acuité, Vigueur, Adresse...)
+#   rune_name    = nom de rune celtique INVENTÉ affiché sous le glyphe (sonorité bretonne/galloise)
+#   rune_pattern = index de motif ogham procédural (MerlinGlyph.draw_rune_on, 0-49)
+# Champs ADDITIFS : défauts dérivés via _apply_rune_identity() (table RUNES par id, préfixes
+# secours_/corrompu_ inclus), donc les saves legacy chargent sans bump de SAVE_VERSION. card_name
+# RESTE le nom canon interne (ids, prompts LLM, cartes_notables, clés de verbe) : seul l'AFFICHAGE
+# passe aux runes (spec N4, user 2026-07-11 : le jargon quitte l'écran, la preview R120 porte l'affinité).
+var display_name: String = ""
+var rune_name: String = ""
+var rune_pattern: int = -1
 var _archetype_cache: String = ""  # v10.5 : archétype dérivé memoïsé (to_dict appelé ~1Hz × deck)
+
+
+# N4-RUNES : table canon id -> [nom français, rune celte inventée, motif ogham 0-49].
+# Motif UNIQUE par carte (50 combinaisons procédurales : série x nombre de traits x marque-point).
+# Les clés "secours" / "corrompu" couvrent les cartes DYNAMIQUES (ids suffixés _N à la création).
+# RÈGLE (revue design N4, finding bloquant 1) : un display_name ne DOIT JAMAIS être identique à
+# l'une des 25 valeurs canon de MerlinTags.FAMILIES (le mot-tag exact ne revient pas à l'écran).
+# Les recouvrements avec la table SYNONYMS (interne, jamais affichée) restent acceptés.
+const RUNES: Dictionary = {
+	# Traits de départ (16)
+	"regard_percant": ["Acuité", "Sulwen", 0],
+	"ecoute_silence": ["Écoute", "Klewen", 1],
+	"memoire_lieux": ["Souvenance", "Kovren", 2],
+	"main_de_fer": ["Poigne", "Dornek", 3],
+	"pas_leger": ["Légèreté", "Skanvel", 4],
+	"souffle_tenace": ["Ténacité", "Padwen", 5],
+	"langue_de_miel": ["Charme", "Melgan", 6],
+	"mot_ruse": ["Malice", "Kelvor", 7],
+	"presence_calme": ["Calme", "Sioulan", 8],
+	"pressentiment": ["Flair", "Awenel", 9],
+	"voix_foret": ["Voix", "Gwezhen", 10],
+	"appel_ombre": ["Ombre", "Duvael", 11],
+	"main_sure": ["Adresse", "Kervoal", 12],
+	"verbe_haut": ["Prestance", "Uhelvan", 13],
+	"coeur_franc": ["Droiture", "Gwiren", 14],
+	"geste_ancien": ["Coutume", "Henwaz", 15],
+	# Pool enrichi (14)
+	"oeil_du_druide": ["Clairvoyance", "Drewyn", 16],
+	"voix_autorite": ["Éloquence", "Taelgur", 17],
+	"pas_de_loup": ["Discrétion", "Bleizan", 18],
+	"bras_de_fer": ["Vigueur", "Braën", 19],
+	"lecture_augure": ["Présage", "Argoel", 20],
+	"serment_tenu": ["Serment", "Ledoun", 21],
+	"transe_druidique": ["Transe", "Hunvael", 22],
+	"colere_juste": ["Colère", "Fulvan", 23],
+	"empathie_profonde": ["Compassion", "Kalonad", 24],
+	"marche_equilibre": ["Constance", "Kemwez", 25],
+	"appel_profond": ["Appel", "Donvor", 26],
+	"verbe_primordial": ["Incantation", "Gerwan", 27],
+	"memoire_ancienne": ["Souvenir", "Envorec", 28],
+	"dissolution_consentie": ["Effacement", "Teuzwen", 29],
+	# Banques d'offrande des piliers (15)
+	"choeur_baume_vert": ["Baume", "Luzawen", 30],
+	"choeur_eau_claire": ["Source", "Dourwen", 31],
+	"choeur_main_qui_releve": ["Réconfort", "Skoazen", 32],
+	"etre_pacte_de_lisiere": ["Pacte", "Gwelvor", 33],
+	"etre_offrande_sang": ["Offrande", "Gwadec", 34],
+	"etre_faveur_indicible": ["Faveur", "Kuzhwen", 35],
+	"compagnon_promesse_ancienne": ["Promesse", "Gedwen", 36],
+	"compagnon_main_tendue": ["Entraide", "Dornwel", 37],
+	"compagnon_retour_promis": ["Retour", "Distrew", 38],
+	"chevalier_lame_ternie": ["Lame", "Klevdur", 39],
+	"chevalier_charge_du_dechu": ["Charge", "Ruthrec", 40],
+	"chevalier_serment_de_cendre": ["Cendre", "Ludwen", 41],
+	"enfant_jouet_offert": ["Jouet", "Koarig", 42],
+	"enfant_secret_chuchote": ["Secret", "Kuzhig", 43],
+	"enfant_main_chaude": ["Tendresse", "Tomwen", 44],
+	# Cartes dynamiques (préfixes d'id). Toutes les corrompues injectées partagent le MÊME gabarit
+	# mécanique (mêmes tags/coût), donc la MÊME identité de rune : visuel identique = carte identique.
+	"secours": ["Souffle", "Anadlen", 45],
+	"corrompu": ["Chuchotis", "Morgrez", 46],
+}
+
+
+# N4-RUNES : complète les champs de rune MANQUANTS depuis la table canon (id exact, sinon préfixe
+# dynamique). No-op pour les actions et les ids inconnus (cartes de présentation de greffe/talent :
+# display_label() retombe sur card_name, glyph_pattern() dérive du tag primaire).
+func _apply_rune_identity() -> void:
+	if display_name != "" and rune_name != "" and rune_pattern >= 0:
+		return
+	var key: String = id
+	if key.begins_with("secours_"):
+		key = "secours"
+	elif key.begins_with("corrompu_"):
+		key = "corrompu"
+	if not RUNES.has(key):
+		return
+	var e: Array = RUNES[key]
+	if display_name == "":
+		display_name = str(e[0])
+	if rune_name == "":
+		rune_name = str(e[1])
+	if rune_pattern < 0:
+		rune_pattern = int(e[2])
+
+
+# N4-RUNES : nom affiché en HAUT de carte (UI). Le canon card_name reste le repli (greffes/talent).
+func display_label() -> String:
+	return display_name if display_name != "" else card_name
+
+
+# N4-RUNES : nom de rune celtique affiché SOUS le glyphe ("" = pas de ligne, cartes de présentation).
+func rune_label() -> String:
+	return rune_name
+
+
+# N4-RUNES : motif ogham à dessiner. Motif propre de la carte, sinon rune du CONCEPT (tag primaire,
+# cartes de présentation de greffe/talent, plage 50-74), sinon rune GÉNÉRIQUE 47 (greffes
+# roll/charge sans tag). Revue de code N4 (MEDIUM-2) : jamais le motif d'une carte canon en repli.
+func glyph_pattern() -> int:
+	if rune_pattern >= 0:
+		return rune_pattern
+	if tags.size() > 0:
+		return _Glyph.pattern_for_tag(str(tags[0]))
+	return _Glyph.PATTERN_GENERIC
 
 
 # v11 — une carte est une ACTION (tuile permanente) si elle porte une famille canonique.
@@ -52,6 +174,7 @@ static func make(p_id: String, p_name: String, p_tags: Array, p_evocation: Strin
 	c.rarity = p_rarity
 	c.effect_type = p_effect_type
 	c.effect_value = p_effect_value
+	c._apply_rune_identity()  # N4-RUNES : identité dérivée de la table canon (no-op si id inconnu)
 	return c
 
 
@@ -87,6 +210,8 @@ func to_dict() -> Dictionary:
 		"effect_type": effect_type, "effect_value": effect_value,
 		"family": family,  # v11 : "" pour les traits — champ additif
 		"grafts": grafts.duplicate(true),  # v11-W3 : additif (défaut [] — saves W2 compatibles)
+		# N4-RUNES : champs additifs (les saves legacy sans ces clés re-dérivent au load)
+		"display_name": display_name, "rune_name": rune_name, "rune_pattern": rune_pattern,
 		"archetype": archetype(),
 	}
 
@@ -100,6 +225,12 @@ static func from_dict(d: Dictionary) -> MerlinCard:
 	c.family = str(d.get("family", ""))
 	var gv: Variant = d.get("grafts", [])
 	c.grafts = (gv as Array).duplicate(true) if gv is Array else []
+	# N4-RUNES : champs additifs. Absents (save legacy) = valeurs déjà dérivées par make() ;
+	# présents = les valeurs persistées priment, puis _apply_rune_identity comble les trous.
+	c.display_name = str(d.get("display_name", c.display_name))
+	c.rune_name = str(d.get("rune_name", c.rune_name))
+	c.rune_pattern = int(d.get("rune_pattern", c.rune_pattern))
+	c._apply_rune_identity()
 	c.refresh_from_grafts()  # v11-W3 : dérivation UNIQUE tags/rarity au load (no-op pour les traits)
 	return c
 
