@@ -1820,6 +1820,20 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R150 : LE BEAT QUI CLAQUE, lisibilite et drame de la resolution (2026-07-06, P1, revue joueur panel 6)** :
+  7 corrections de RENDU PUR (zero balance, soak iso) : (1) AFFINITE dorée FRANCHE et GRADUÉE : lueur du
+  CADRE des cartes/tuiles a 3 crans (0 rien / 1 nette / 2+ intense + pulse lent), remplace le souligné 3px ;
+  (2) ORDRE DRAMATIQUE geste > dé > pause > verdict : la fusion est NEUTRE (ne lit plus le degré, teinte
+  GOLD unique : elle ne spoile plus), pose du d20, micro-pause de lecture 0,35 s, PUIS halo (renforcé ~x2,
+  2 couches, 2 pulses persistants) + stinger de degré (joué AU halo) ; le dé est hébergé chez l'HOTE (survit
+  au layer fx) ; (3) italique d'ACTION à FS_NARRATIVE (le geste du joueur pese autant que la réaction du
+  monde) ; (4) éventail DE-TRONQUÉ (pas clampé : nom francais entier lisible jusqu'a 8 cartes) + réserve de
+  titre ; (5) gemme VIOLETTE si cout corruption > 0 (la rarete reste au liseré R133) ; (6) ANNEAUX identifiés :
+  glyphe procédural au centre (coeur = Intégrité, spirale voilée = Corruption) + liseré de présence a 0 ;
+  (7) « + N » talent GOLD flottant pres de la pill au gain (degré FINAL, R130) + halo GOLD prolongé du d20
+  sur l'éclatante (célébration rare). Amende R144 (halo/sequencage) et la mise en scene de R135 (fusion
+  neutre). Restes de la revue joueur : P2 (récompense visible/MerlinEnd/méta) et P3 (session/lecture/audio).
+
 - **R149 : GUIDE DE MERLIN, tutoriel proposé au premier run (2026-07-06, N4-TUTO)** : à la toute première
   traversée (chronique vierge : jamais proposé ET runs_played==0, OU ré-armé), Merlin PROPOSE dans la ligne
   d'état (non-modal, R136) : « Premier pas dans la forêt, Voyageur... je te guide ? » [Guide-moi]

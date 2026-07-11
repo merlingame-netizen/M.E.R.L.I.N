@@ -72,14 +72,19 @@ var _glow_col: Color = MerlinVisual.GOLD
 var _selected: bool = false
 var _rest_border_col: Color = MerlinVisual.BORDER_BRUN
 var _rest_border_w: int = 3
-# N4-RUNES (revue design, fix bloquant 2) : FEEDFORWARD sur la carte-rune, même vocabulaire que la
-# tuile (spec §I) : souligné GOLD alpha 0.15-0.4 pulsé quand le trait couvre >= 1 tag requis du
-# beat. Signal NON-VERBAL (zéro mot de tag). ColorRect overlay (au-dessus du panel), jamais _draw.
-const FF_ALPHA_MAX: float = 0.4
-const FF_ALPHA_MIN: float = 0.15
-var _ff_on: bool = false
-var _ff_rect: ColorRect = null
-var _ff_tw: Tween = null
+# N4-P1 (panel 6 joueurs, chantier 1 — BLOQUANT_FUN) : AFFINITÉ dorée FRANCHE et GRADUÉE. L'ancien
+# souligné 3 px alpha 0.15-0.4 ne portait pas la décision : le CADRE ENTIER de la carte s'illumine
+# désormais (liseré GOLD net + halo diffus, dessinés en _draw autour du panel) à 3 crans :
+#   0 requis couvert = rien · 1 = lueur GOLD nette (statique) · 2+ = lueur intense + pulse LENT.
+# Signal NON-VERBAL (zéro mot de tag), lisible <2 s (§23 ÉVIDENT), charte gravure (GOLD canon, pas
+# de fluo). Reduce-motion : alpha statique par cran, l'info survit sans boucle (R74).
+const AFF_ALPHA_1: float = 0.55   # cran 1 : lueur nette
+const AFF_ALPHA_2: float = 0.90   # cran 2+ : lueur intense (pic du pulse)
+const AFF_PULSE_LO: float = 0.60  # creux du pulse lent (cran 2+)
+var _aff_level: int = 0
+var _aff_alpha: float = 0.0
+var _aff_tw: Tween = null
+var _aff_rings: Array = []        # StyleBoxFlat des couches de halo (cachés — jamais realloués en _draw)
 
 
 func _dur(base: float) -> float:
@@ -131,6 +136,15 @@ func _build(role: String) -> void:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
 
+	# N4-P1 (chantier 4) : RÉSERVE DE TITRE : le nom démarre SOUS la pastille de coût (28 px, posée
+	# en (4,4) par _add_corner_markers) : la bande du titre garde TOUTE la largeur de la carte, la
+	# gemme ne mord plus dessus (panel : noms tronqués). Compact : pas de gemme haute, pas de pad.
+	if not _compact:
+		var title_pad: Control = Control.new()
+		title_pad.custom_minimum_size = Vector2(0, 24)
+		title_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(title_pad)
+
 	# N4-RUNES (2026-07-11) : nom FRANÇAIS compréhensible en HAUT (16 px). display_label() =
 	# display_name de la rune, repli card_name (cartes de présentation de greffe/talent).
 	var top: Label = Label.new()
@@ -170,36 +184,58 @@ func _rest_pos() -> Vector2:
 	return _base_pos + (Vector2(0.0, -SELECT_LIFT) if _selected else Vector2.ZERO)
 
 
-# N4-RUNES (revue design, fix bloquant 2) : souligné GOLD pulsé quand le trait couvre >= 1 tag
-# requis du beat (posé par merlin_game._render_hand). Reduce-motion : alpha statique 0.4, l'info
-# survit sans boucle (R74). Cousin exact de MerlinActionView.set_feedforward (spec §I).
-func set_feedforward(on: bool) -> void:
-	if _ff_on == on:
+# N4-P1 (chantier 1, BLOQUANT_FUN) : AFFINITÉ dorée GRADUÉE, posée par merlin_game._render_hand
+# avec le NOMBRE de tags requis couverts. 0 = rien · 1 = lueur GOLD nette (statique) · 2+ = lueur
+# intense + pulse LENT. Le cadre ENTIER s'illumine (_draw : liseré + halo autour du panel), plus
+# de souligné 3 px. Reduce-motion : alpha statique par cran (l'info survit sans boucle, R74).
+func set_affinity(level: int) -> void:
+	var lv: int = clampi(level, 0, 2)
+	if _aff_level == lv:
 		return
-	_ff_on = on
-	if _ff_tw != null and _ff_tw.is_valid():
-		_ff_tw.kill()
-	_ff_tw = null
-	if not on:
-		if _ff_rect != null and is_instance_valid(_ff_rect):
-			_ff_rect.modulate.a = 0.0
+	_aff_level = lv
+	if _aff_tw != null and _aff_tw.is_valid():
+		_aff_tw.kill()
+	_aff_tw = null
+	if lv <= 0:
+		_set_aff_alpha(0.0)
 		return
-	if _ff_rect == null or not is_instance_valid(_ff_rect):
-		_ff_rect = ColorRect.new()
-		_ff_rect.color = MerlinVisual.GOLD
-		_ff_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var sz3: Vector2 = CARD_SIZE_COMPACT if _compact else CARD_SIZE
-		_ff_rect.position = Vector2(14.0, sz3.y - 9.0)
-		_ff_rect.size = Vector2(sz3.x - 28.0, 3.0)
-		add_child(_ff_rect)
-	if MerlinVisual.reduced_motion:
-		_ff_rect.modulate.a = FF_ALPHA_MAX
+	if lv == 1 or MerlinVisual.reduced_motion or not is_inside_tree():
+		_set_aff_alpha(AFF_ALPHA_1 if lv == 1 else AFF_ALPHA_2)
 		return
-	_ff_rect.modulate.a = FF_ALPHA_MIN
-	if _ff_rect.is_inside_tree():
-		_ff_tw = _ff_rect.create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		_ff_tw.tween_property(_ff_rect, "modulate:a", FF_ALPHA_MAX, _dur(0.9))
-		_ff_tw.tween_property(_ff_rect, "modulate:a", FF_ALPHA_MIN, _dur(0.9))
+	_set_aff_alpha(AFF_ALPHA_2)
+	_aff_tw = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_aff_tw.tween_method(_set_aff_alpha, AFF_ALPHA_2, AFF_PULSE_LO, _dur(1.1))
+	_aff_tw.tween_method(_set_aff_alpha, AFF_PULSE_LO, AFF_ALPHA_2, _dur(1.1))
+
+
+func _set_aff_alpha(v: float) -> void:
+	_aff_alpha = v
+	queue_redraw()
+
+
+# Lueur d'affinité dessinée SOUS les enfants (Control._draw passe sous le panel) : seules les
+# couches qui DÉBORDENT du cadre sont visibles = liseré net + halo diffus. StyleBoxFlat border-only
+# CACHÉS (construits une fois, alpha muté) : zéro allocation par frame pendant le pulse.
+func _draw() -> void:
+	if _aff_level <= 0 or _aff_alpha <= 0.005:
+		return
+	if _aff_rings.is_empty():
+		for w in [3, 5, 7]:
+			var sb: StyleBoxFlat = StyleBoxFlat.new()
+			sb.draw_center = false
+			sb.set_border_width_all(int(w))
+			sb.set_corner_radius_all(10)
+			sb.anti_aliasing = true
+			_aff_rings.append(sb)
+	var g: Color = MerlinVisual.GOLD
+	var rect: Rect2 = Rect2(Vector2.ZERO, size)
+	(_aff_rings[0] as StyleBoxFlat).border_color = Color(g.r, g.g, g.b, _aff_alpha)
+	draw_style_box(_aff_rings[0], rect.grow(2.0))          # liseré net collé au cadre
+	(_aff_rings[1] as StyleBoxFlat).border_color = Color(g.r, g.g, g.b, _aff_alpha * 0.40)
+	draw_style_box(_aff_rings[1], rect.grow(6.0))          # halo proche
+	if _aff_level >= 2:
+		(_aff_rings[2] as StyleBoxFlat).border_color = Color(g.r, g.g, g.b, _aff_alpha * 0.22)
+		draw_style_box(_aff_rings[2], rect.grow(11.0))     # halo large (cran intense seulement)
 
 
 # v11-W2 — sélection du TRAIT sur l'élément : bordure GOLD + levée +20 px ; désélection au re-clic
@@ -292,7 +328,9 @@ func _add_corner_markers(rar: String, rstyle: Dictionary) -> void:
 	gem.position = Vector2(4, 4)
 	gem.size = Vector2(gsz, gsz)
 	var gsb: StyleBoxFlat = StyleBoxFlat.new()
-	gsb.bg_color = (rstyle["col"] as Color)
+	# N4-P1 (chantier 5) : coût de CORRUPTION > 0 → gemme VIOLETTE (le coût se lit d'un coup d'œil,
+	# feedforward de prix) ; la rareté reste portée par le liseré de la carte (R133).
+	gsb.bg_color = MerlinVisual.VIOLET if card.corruption > 0 else (rstyle["col"] as Color)
 	gsb.set_corner_radius_all(int(gsz / 2.0))
 	gsb.set_border_width_all(2)
 	gsb.border_color = COL_CARD

@@ -19,10 +19,18 @@ const SIZE_PX: float = 96.0
 const TUMBLE_S: float = 0.35     # phase 1 : culbute rapide
 const SLOW_S: float = 0.40       # phase 2 : le défilement ralentit
 const SETTLE_S: float = 0.25     # phase 3 : pose + rebond
+# N4-P1 (chantier 2b) : micro-pause de LECTURE entre la pose (face visible) et le verdict
+# (halo + stinger). Ordre dramatique : geste, puis de, puis pause, puis verdict. En x motion().
+const PAUSE_READ_S: float = 0.35
+# N4-P1 (chantier 7) : a l'eclatante uniquement, halo GOLD PROLONGE (celebration rare) : tenue
+# supplementaire avant le fondu, APRES l'emission de done (jamais bloquant pour le flux).
+const BRILLIANT_HOLD_S: float = 0.90
 
 var _face: int = 1               # face AFFICHÉE (défile pendant la culbute, 1-20)
 var _final_face: int = 1
 var _success: bool = false       # issue du jet → couleur du halo à la pose
+var _brilliant: bool = false     # N4-P1 (chantier 7) : éclatante → halo GOLD prolongé
+var _on_verdict: Callable = Callable()  # N4-P1 (chantier 2b) : appelé À l'instant du halo (stinger)
 var _rim: Color = MerlinVisual.BORDER_BRUN  # (mode INDICE uniquement — liseré de rareté)
 var _squash: Vector2 = Vector2.ONE
 var _settled: bool = false
@@ -40,10 +48,15 @@ static func rim_for_rarity(rarity: String) -> Color:
 
 # Lance le d20 au-dessus du parent : culbute → ralenti → pose. `await dice.done` puis auto-fondu.
 # `success` (issue FINALE du jet, §K) → halo VERT si réussi, ROUGE sinon. `final_face` clampé 1-20.
-static func roll(parent: Control, final_face: int, success: bool) -> MerlinDice:
+# N4-P1 : `brilliant` (chantier 7) = halo GOLD prolonge a l'eclatante ; `on_verdict` (chantier 2b)
+# = Callable appelee A l'instant du halo (le stinger de degre joue LA, jamais avant la pause).
+static func roll(parent: Control, final_face: int, success: bool,
+		brilliant: bool = false, on_verdict: Callable = Callable()) -> MerlinDice:
 	var d: MerlinDice = MerlinDice.new()
 	d._final_face = clampi(final_face, 1, 20)
 	d._success = success
+	d._brilliant = brilliant
+	d._on_verdict = on_verdict
 	d.custom_minimum_size = Vector2(SIZE_PX, SIZE_PX)
 	d.size = Vector2(SIZE_PX, SIZE_PX)
 	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -52,9 +65,10 @@ static func roll(parent: Control, final_face: int, success: bool) -> MerlinDice:
 	var vp: Vector2 = parent.get_viewport_rect().size
 	# N4-BUG LOW : 0.34 posait le dé en plein MILIEU de l'encart de situation (il recouvrait la prose).
 	# 0.19 = zone DÉCOR (grille v11-V2a @1080p : marge 16 + HUD env. 60-80 + sép 8, donc décor env.
-	# y 90-290, encart dès y env. 292) : centre du dé vers 205, halo max (r x 1,38, soit env. 61 px)
-	# borné vers 266. Le dé et son halo chevauchent décor/haut d'encart SANS jamais recouvrir le
-	# texte ; le halo reste lisible sur le décor sombre.
+	# y 90-290, encart dès y env. 292) : centre du dé vers 205. N4-P1 (chantier 2c, review MEDIUM-2) :
+	# halo renforcé max = r x 1,75 soit env. 77 px, borné vers 282 : toujours AU-DESSUS de l'encart
+	# (marge fine env. 9 px, vérifiée par capture probe_dice_capture). Ne pas re-grossir le halo
+	# sans redescendre ce plafond ; le halo reste lisible sur le décor sombre.
 	d.position = Vector2(vp.x * 0.5 - SIZE_PX * 0.5, vp.y * 0.19 - SIZE_PX * 0.5)
 	d.pivot_offset = Vector2(SIZE_PX, SIZE_PX) * 0.5
 	d._run()
@@ -78,12 +92,21 @@ func set_hint_rarity(rarity: String) -> void:
 func _run() -> void:
 	var m: float = MerlinVisual.motion()
 	if MerlinVisual.reduced_motion:
+		# N4-P1 (chantier 2b, R148) : meme ORDRE degrade proprement : face posee NEUTRE, micro-pause
+		# de lecture (x motion), PUIS verdict (halo statique + stinger via callback). Jamais de softlock.
 		_face = _final_face
 		_settled = true
+		queue_redraw()
+		await get_tree().create_timer(PAUSE_READ_S * m).timeout
+		if not is_inside_tree():
+			done.emit()  # v11-W1 (review CRITICAL) : sans lui, `await dice.done` dans MerlinFx = softlock
+			return
+		if _on_verdict.is_valid():
+			_on_verdict.call()
 		_halo = 1.0
 		queue_redraw()
 		await get_tree().create_timer(0.5).timeout
-		done.emit()  # v11-W1 (review CRITICAL) : sans lui, `await dice.done` dans MerlinFx = softlock
+		done.emit()
 		_fade_out()
 		return
 	MerlinAudio.play_sfx("card_pick", 0.7)  # petit claquement de lancer (recette existante, grave)
@@ -120,19 +143,39 @@ func _run() -> void:
 	settle.tween_method(func(v: float) -> void:
 		_squash = Vector2(1.0 + 0.22 * (1.0 - v), 1.0 - 0.22 * (1.0 - v))
 		queue_redraw(), 0.0, 1.0, SETTLE_S * m).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	# Halo : montée rapide puis pulse redescendu (le liseré/glow coloré reste visible au repos).
+	if settle.is_running():  # R148 : jamais d'await sur un tween deja fini
+		await settle.finished
+	# N4-P1 (chantier 2b) : micro-pause de LECTURE : la face posee se lit AVANT le verdict.
+	# Pendant la pause, bordure et halo restent NEUTRES (_halo = 0, voir _draw) : rien ne spoile.
+	await get_tree().create_timer(PAUSE_READ_S * m).timeout
+	if not is_inside_tree():
+		done.emit()  # R148 : le parent a pu mourir pendant la pause : jamais de softlock amont
+		return
+	# VERDICT : le stinger de degre joue ICI (callback merlin_game._play_seal_audio), en meme temps
+	# que le halo. N4-P1 (chantier 2c) : halo RENFORCE (rayon/alpha ~x2) + 2 pulses PERSISTANTS.
+	if _on_verdict.is_valid():
+		_on_verdict.call()
 	var halo_tw: Tween = create_tween()
-	halo_tw.tween_method(func(v: float) -> void:
-		_halo = v
-		queue_redraw(), 0.0, 1.0, 0.18 * m)
-	halo_tw.tween_interval(0.4 * m)
-	halo_tw.tween_method(func(v: float) -> void:
-		_halo = v
-		queue_redraw(), 1.0, 0.65, 0.3 * m)
-	await settle.finished
-	await get_tree().create_timer(0.15 * m).timeout  # v11-W1 : hold 0,55 → 0,15 s
+	halo_tw.tween_method(_set_halo, 0.0, 1.0, 0.18 * m)
+	halo_tw.tween_method(_set_halo, 1.0, 0.62, 0.30 * m)   # pulse 1
+	halo_tw.tween_method(_set_halo, 0.62, 1.0, 0.30 * m)
+	halo_tw.tween_method(_set_halo, 1.0, 0.62, 0.30 * m)   # pulse 2
+	halo_tw.tween_method(_set_halo, 0.62, 0.85, 0.25 * m)  # repos haut : le verdict reste lisible
+	await get_tree().create_timer(0.15 * m).timeout  # le flux repart des le verdict pose (+~0,35 s vs v11-W1)
 	done.emit()
+	# Queue de vie APRES done (fire-and-forget pour le flux) : les 2 pulses s'achevent, l'eclatante
+	# tient BRILLIANT_HOLD_S de plus (chantier 7, celebration rare), puis fondu. Gardes R148.
+	if halo_tw.is_running():
+		await halo_tw.finished
+	if _brilliant and is_inside_tree():
+		await get_tree().create_timer(BRILLIANT_HOLD_S * m).timeout
 	_fade_out()
+
+
+# N4-P1 : setter du halo (tween_method) : une seule ecriture + redraw, reutilise par les pulses.
+func _set_halo(v: float) -> void:
+	_halo = v
+	queue_redraw()
 
 
 # (Jamais appelé en mode indice — l'indice vit avec le bouton Résolution, pas de cycle de vie propre.)
@@ -159,7 +202,10 @@ func _draw() -> void:
 	var half: Vector2 = s * 0.5
 	var r: float = s.x * 0.46
 	var face_col: Color = MerlinVisual.CREAM
+	# N4-P1 (chantier 7) : eclatante = halo GOLD (celebration rare), sinon vert/rouge sourd (v2-W4).
 	var halo_col: Color = MerlinVisual.HALO_SUCCESS if _success else MerlinVisual.HALO_FAIL
+	if _brilliant:
+		halo_col = MerlinVisual.GOLD
 
 	# Mode INDICE : petite pastille « ? » au liseré de rareté (langage R133, inchangé).
 	if _static_mode:
@@ -173,9 +219,14 @@ func _draw() -> void:
 		return
 
 	# Halo à la pose : glow diffus (cercle translucide) + liseré coloré autour de la silhouette.
+	# N4-P1 (chantier 2c) : halo RENFORCE (le panel le trouvait timide) : rayon et alpha ~doubles,
+	# en 2 couches (coeur net + aureole large). Extension max ~1,75 r : le halo ne mord jamais
+	# l'encart de situation (voir la note de positionnement 0.19 dans roll()).
 	if _settled and _halo > 0.0:
-		draw_circle(half, r * (1.28 + 0.10 * _halo),
-			Color(halo_col.r, halo_col.g, halo_col.b, 0.22 * _halo))
+		draw_circle(half, r * (1.45 + 0.30 * _halo),
+			Color(halo_col.r, halo_col.g, halo_col.b, 0.16 * _halo))
+		draw_circle(half, r * (1.18 + 0.22 * _halo),
+			Color(halo_col.r, halo_col.g, halo_col.b, 0.30 * _halo))
 
 	# Ombre portée (ancre le dé).
 	var shadow_pts: PackedVector2Array = _hex_pts(half + Vector2(3, 5), r)
@@ -188,7 +239,9 @@ func _draw() -> void:
 		draw_colored_polygon(pts, face_col)
 	# Bordure : liseré coloré success/échec à la pose (pulse via _halo), brun neutre pendant la culbute.
 	var border_col: Color = MerlinVisual.BORDER_BRUN
-	if _settled:
+	# N4-P1 (chantier 2b) : le lisere ne se teinte qu'AVEC le halo (_halo > 0). Pendant la
+	# micro-pause de lecture (face posee, verdict pas encore tombe), il reste brun NEUTRE.
+	if _settled and _halo > 0.0:
 		border_col = MerlinVisual.BORDER_BRUN.lerp(halo_col, 0.55 + 0.45 * _halo)
 	var n: int = pts.size()
 	for i in n:

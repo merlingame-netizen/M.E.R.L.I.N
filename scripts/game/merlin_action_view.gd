@@ -23,8 +23,11 @@ const SLOT_GAP: float = 12.0
 const SLOT_DASHES: int = 8        # segments du cercle pointillé (slot vide)
 const DUR_HOVER: float = 0.12     # §21 `fast`
 const DUR_PRESS: float = 0.06     # §21 `tap`
-const FF_ALPHA_MAX: float = 0.4   # souligné feedforward GOLD (spec §I : alpha 0.4 pulsé)
-const FF_ALPHA_MIN: float = 0.15
+# N4-P1 (chantier 1) : le feedforward passe du souligné 3 px au CADRE lumineux GOLD (liseré +
+# halo autour de la tuile), même vocabulaire que l'affinité des cartes-runes. Alphas relevés :
+# le souligné 0.15-0.4 « ne portait pas la décision » (panel BLOQUANT_FUN).
+const FF_ALPHA_MAX: float = 0.65  # pic du pulse (lueur nette)
+const FF_ALPHA_MIN: float = 0.35  # creux du pulse
 
 var card: MerlinCard
 var _sb: StyleBoxFlat
@@ -32,8 +35,9 @@ var _rim: Color = MerlinVisual.BORDER_BRUN
 var _selected: bool = false
 var _hovering: bool = false
 var _ff_on: bool = false
-var _ff_alpha: float = 0.0        # alpha courant du souligné (source du _draw, tweené)
+var _ff_alpha: float = 0.0        # alpha courant du cadre lumineux (source du _draw, tweené)
 var _ff_tw: Tween
+var _ff_rings: Array = []         # StyleBoxFlat border-only du cadre lumineux (cachés, N4-P1)
 var _pulse_tw: Tween              # pulse SUR PLACE pendant la fusion (la tuile n'est jamais aspirée)
 var _await_tw: Tween              # v11-W3 : pulse « en attente de cible » du draft de greffe
 var _slot_pop_i: int = -1         # v11-W3 : index du slot qui vient d'être rempli (micro-anim de pose)
@@ -128,10 +132,23 @@ func _draw() -> void:
 			_draw_graft_slot(c, (SLOT_PX / 2.0) * k, grafts[i])
 		else:
 			_draw_dashed_circle(c, SLOT_PX / 2.0, MerlinVisual.BORDER_BRUN)
-	# Souligné FEEDFORWARD (spec §I) : la tuile couvre ≥1 tag requis → trait GOLD alpha 0.4 pulsé.
+	# N4-P1 (chantier 1) : FEEDFORWARD = CADRE lumineux GOLD (liseré net + halo diffus), cohérent
+	# avec l'affinité des cartes-runes. StyleBoxFlat border-only cachés (zéro alloc par frame).
 	if _ff_alpha > 0.005:
+		if _ff_rings.is_empty():
+			for w in [3, 5]:
+				var rsb: StyleBoxFlat = StyleBoxFlat.new()
+				rsb.draw_center = false
+				rsb.set_border_width_all(int(w))
+				rsb.set_corner_radius_all(10)
+				rsb.anti_aliasing = true
+				_ff_rings.append(rsb)
 		var g: Color = MerlinVisual.GOLD
-		draw_rect(Rect2(14.0, size.y - 6.0, size.x - 28.0, 3.0), Color(g.r, g.g, g.b, _ff_alpha))
+		var rect_ff: Rect2 = Rect2(Vector2.ZERO, size)
+		(_ff_rings[0] as StyleBoxFlat).border_color = Color(g.r, g.g, g.b, _ff_alpha)
+		draw_style_box(_ff_rings[0], rect_ff.grow(2.0))
+		(_ff_rings[1] as StyleBoxFlat).border_color = Color(g.r, g.g, g.b, _ff_alpha * 0.40)
+		draw_style_box(_ff_rings[1], rect_ff.grow(6.0))
 	# Flash GOLD de POSE (v11-W3) : le cadre s'embrase brièvement quand une greffe se pose.
 	if _flash_a > 0.005:
 		var fg: Color = MerlinVisual.GOLD
@@ -259,8 +276,8 @@ func set_die_rarity(rarity: String) -> void:
 		_sb.border_color = _rim
 
 
-# Feedforward (spec §I) : souligné GOLD pulsé quand la tuile couvre ≥1 tag requis du beat.
-# Reduce-motion : alpha statique 0.4 — l'information survit sans boucle (R74).
+# Feedforward (spec §I, rendu N4-P1) : CADRE lumineux GOLD pulsé quand la tuile couvre ≥1 tag
+# requis du beat. Reduce-motion : alpha statique au pic — l'information survit sans boucle (R74).
 func set_feedforward(on: bool) -> void:
 	if _ff_on == on:
 		return

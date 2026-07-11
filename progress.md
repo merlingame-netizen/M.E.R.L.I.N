@@ -2,6 +2,42 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-07-11 : P1 « le beat qui claque » (7 fixes rendu pur, panel 6 joueurs) : EN COURS (subagent, zero commit)
+
+### Phases
+- [x] Etat save joueur : user://merlin_run.json ABSENTE au depart (rien a sauvegarder ; etat final = absence)
+- [x] Captures AVANT a HEAD 8d17fe66 (capture_qa_v11 foret + falaises) -> output/captures/qa_v11/_avant_p1/
+- [x] Gate hook : dispatcher lu + Dispatch Plan (task_plan.md) + skill dispatching-parallel-agents ; learn-eval ABSENT de la session (signale)
+- [x] Chantier 1 : affinite doree graduee (cadre entier 3 crans, cartes + tuiles) : merlin_card_view/set_affinity, merlin_action_view (cadre), merlin_game._render_hand (comptage requis couverts)
+- [x] Chantier 2 : fusion NEUTRE (merlin_fx : GOLD unique, profil unique) + pose -> pause 0.35 s -> verdict (merlin_dice) + halo x2 / 2 pulses + stinger au halo (callback _play_seal_audio)
+- [x] Chantier 3 : italics_font_size + bold_italics = FS_NARRATIVE sur _situation_text
+- [x] Chantier 4 : eventail pas 142..195 px (clampf) + reserve de titre 24 px sous la gemme
+- [x] Chantier 5 : gemme VIOLETTE si cout corruption > 0 (rarete = lisere R133)
+- [x] Chantier 6 : anneaux identifies (coeur/spirale procedural + lisere de presence a 0)
+- [x] Chantier 7 : « + N » talent flottant pres de la pill (degre FINAL R130) + halo GOLD prolonge du d20 a l'eclatante
+- [x] Gates courts : validate_step0 0/0 · smoke Game 8 s + Menu 6 s passed=true, script_errors=[] · soak 200/200 logic, 0 FAIL Kdur (preuve zero-balance)
+- [x] Gate long #1 : soak 200/200 + autoplay 3/3 LLM ON PASS (pre-review)
+- [x] Review merlin-gameplay-programmer : GO WITH FIXES ; HIGH-1 (guard is_instance_valid dans la lambda verdict), MEDIUM-2 (comment marge halo re-verifie + capture), LOW-4 (dedupe reqs) APPLIQUES ; LOW-3/5/6 non bloquants laisses
+- [x] Re-gates post-fixes : validate 0/0 · smoke Game + Menu verts · soak logic 200/200, 0 FAIL Kdur
+- [x] Bootcheck x5 : 5/5 OK
+- [x] Captures APRES (ph5/ph6 foret + falaises) -> output/captures/qa_v11/_apres_p1/ ; d20 pose/pause/halo/gold -> output/captures/bugres/dice_p1/ (sonde probe_dice_capture.gd, duck-typee)
+- [x] Guide de Merlin re-verifie sur le nouveau rendu : probe_tuto_capture 4 captures, toutes etapes servies, 0 anomalie
+- [x] Gate long #2 (final, post-fixes) : soak 200/200 + autoplay 3/3 LLM ON PASS, 0 SCRIPT ERROR
+- [x] Nettoyage final : merlin_run.json ABSENTE (etat initial restaure, l'autoplay s'est auto-nettoye), 0 processus Godot residuel
+
+## Session: 2026-07-11 : N4-TUTO (le guide de Merlin, premier run) : EN COURS (subagent, zéro commit)
+
+### Phases
+- [x] Backup save joueur (merlin_run.json beat 0 falaises + options.cfg) vers scratchpad
+- [x] Baseline : validate_step0 0/0 · smoke MerlinOptions passed
+- [x] Cascade design merlin-game-designer : GO AVEC CORRECTIONS (B1/B2/B3 + I1-I5 + M2/M3)
+- [x] Implémentation (chronicle, tutorial, game, options, autoplay, sonde captures)
+- [x] Fix parse : static var via preload const (voir findings.md) ; smoke Game re-vert
+- [x] Captures E2E chronique vierge : 7/7, 0 anomalie (output/captures/tuto/)
+- [x] Gates : validate 0/0 · smoke 3/3 passed · bootcheck 5/5 · soak logic 200/200
+- [ ] Review merlin-gameplay-programmer (en cours) + application CRITICAL/HIGH
+- [ ] Gate long : soak 200 + autoplay 3/3 (en cours) ; autoplay chronique vierge ; restauration save
+
 ## Session: 2026-07-04 — v11-V3 GREFFES (la profondeur du pivot)
 
 ### Réalisé

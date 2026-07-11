@@ -410,20 +410,26 @@ func _render_hand(deal: bool = false) -> void:
 			keep[card] = cv
 	for i in wanted.size():  # ordre des enfants = ordre de la main (recouvrement stable)
 		_hand_box.move_child(keep[wanted[i]], i)
-	# N4-RUNES (revue design, fix bloquant 2) : FEEDFORWARD sur les cartes-runes : souligné GOLD
-	# pulsé quand le trait couvre >= 1 tag requis du beat (même calcul que _refresh_action_tiles,
-	# même vocabulaire que les tuiles, zéro mot de tag à l'écran).
+	# N4-P1 (chantier 1, BLOQUANT_FUN) : AFFINITÉ dorée GRADUÉE sur les cartes-runes : le CADRE
+	# entier s'illumine selon le NOMBRE de tags requis couverts (0 = rien · 1 = lueur nette ·
+	# 2+ = intense + pulse lent). Même calcul canon que _refresh_action_tiles, zéro mot de tag.
 	var reqs_hand: Array = []
 	for r in _current_situation.get("required_tags", []):
 		reqs_hand.append(MerlinTags.to_canon(str(r)))
 	for card in keep:  # v11-W2 : l'état de sélection se lit SUR la carte (levée + bordure GOLD)
 		var cvk: MerlinCardView = keep[card]
 		cvk.set_selected(card == _selected_trait)
-		var covers_hand: bool = false
-		for t in (card as MerlinCard).tags:
-			if reqs_hand.has(MerlinTags.to_canon(str(t))):
-				covers_hand = true
-		cvk.set_feedforward(covers_hand)
+		var covered_count: int = 0
+		var seen_reqs: Array = []  # review P1 LOW-4 : dedupe (un requis duplique ne compte qu'une fois)
+		for rq in reqs_hand:  # tags REQUIS couverts (distincts) : c'est le degré qui se joue (§K)
+			if seen_reqs.has(rq):
+				continue
+			seen_reqs.append(rq)
+			for t in (card as MerlinCard).tags:
+				if MerlinTags.to_canon(str(t)) == str(rq):
+					covered_count += 1
+					break
+		cvk.set_affinity(covered_count)
 	_deal_pending = deal  # anime la distribution seulement sur une main fraîche (beat/résolution)
 	call_deferred("_layout_fan")
 
@@ -449,9 +455,13 @@ func _layout_fan() -> void:
 	if w <= 0.0:
 		w = float(get_viewport().get_visible_rect().size.x) - 56.0
 	var center_x: float = w / 2.0
-	# Éventail allégé (demande user 2026-05-26) : resserré (pas de carte clippée à droite),
-	# peu courbé (arc plat) et remonté.
-	var spacing: float = min(cw * 0.62, (w - cw) / float(maxi(n - 1, 1)))
+	# N4-P1 (chantier 4, MAJEUR) : eventail DE-TRONQUE. L'ancien pas 0,62 x carte coupait les noms
+	# (Tenacit...) des 4 cartes et laissait Z5 aux 2/3 vide a 1920. Nouveau pas :
+	#   plafond 1,30 x carte (fan aere, zero chevauchement des que la largeur le permet) ;
+	#   plancher 142 px = reserve de NOM (le titre, pleine largeur depuis la reserve chantier 4b,
+	#   finit a x=141 : la carte suivante ne mord jamais le nom, verifie jusqu'a 8 cartes a 1920
+	#   comme a 1280 : 7 x 142 + 150 = 1144 px, ca tient).
+	var spacing: float = clampf((w - cw) / float(maxi(n - 1, 1)), 142.0, cw * 1.30)
 	var base_y: float = 3.0   # éventail remonté (demande user 2026-05-27)
 	for i in n:
 		var t: float = float(i) - float(n - 1) / 2.0  # négatif à gauche, 0 au centre, positif à droite
@@ -714,9 +724,15 @@ func _on_resolve() -> void:
 	# cette combo garde toute sa fenêtre (le prédicat reste dynamique : gen morte en route = fallback) ;
 	# le clic-skip du sustain reste intact.
 	var wait_worth: bool = sc.begin_resolution_wait(played_cards, res)
+	# N4-P1 (chantier 2b) : le stinger de degré (_play_seal_audio) est déclenché PAR le d20 à
+	# l'instant du halo (pose → pause 0,35 s → verdict), plus jamais avant. Sans dé sur ce beat,
+	# _show_resolution garde le stinger (repli inchangé).
 	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, func() -> bool:
 		return not wait_worth or sc.is_resolution_ready(played_cards, res) \
-			or not sc.is_resolution_incoming(played_cards, res))
+			or not sc.is_resolution_incoming(played_cards, res),
+		func() -> void:
+			if is_instance_valid(self):  # review P1 HIGH-1 : le dé (hébergé hors layer) peut survivre à la scène
+				_play_seal_audio(deg))
 	await fx.run()
 	if tile != null and is_instance_valid(tile):
 		tile.fusion_pulse(false)
@@ -781,7 +797,10 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	_pending_degree = degree
 	if degree == "echec" and not MerlinVisual.reduced_motion and _situ_panel != null:
 		MerlinFx.shake(_situ_panel, 4.0, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())  # l'échec se SENT (B9)
-	_play_seal_audio(degree)  # stinger de degré (seal_stamp + stinger)
+	# N4-P1 (chantier 2b) : avec un d20 sur ce beat, le stinger a DÉJÀ joué à l'instant du halo
+	# (callback passé à MerlinFx.play). Il ne joue ici qu'en repli sans dé (res["die"] < 1).
+	if int(res.get("die", 0)) < 1:
+		_play_seal_audio(degree)  # stinger de degré (repli sans jet)
 	# Humeur de l'œil-lune selon l'issue : échec → rouge, éclatante → jaune, sinon depuis le texte.
 	if _scene_art != null:
 		var mood: String = "angry" if degree == "echec" else ("surprise" if degree == "eclatante" else MerlinSceneArt.mood_for_text(narration))
@@ -1089,6 +1108,19 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 		pill.scale = Vector2(1.35, 1.35)
 		pill.create_tween().tween_property(pill, "scale", Vector2.ONE,
 			0.25 * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# N4-P1 (chantier 7, MAJEUR) : le gain de talent (R142, silencieux jusqu'ici) devient VISIBLE :
+	# micro-label GOLD flottant pres de la pill, meme canal que les deltas d'anneaux (float_delta).
+	# R130 : la vignette est TOUJOURS batie au degre FINAL (partiel pousse = reussite via
+	# _on_push_choice) : l'affichage colle exactement a run.gain_talent_points. Differe d'une frame
+	# (call_deferred) : la pill vient d'entrer dans le HBox, son global_position attend le layout.
+	var run_tp: Node = get_node("/root/MerlinRun")
+	var tp_gain: int = 0
+	if degree == MerlinResolution.REUSSITE:
+		tp_gain = int(run_tp.TALENT_GAIN_REUSSITE)
+	elif degree == MerlinResolution.ECLATANTE:
+		tp_gain = int(run_tp.TALENT_GAIN_ECLATANTE)
+	if tp_gain > 0:
+		call_deferred("_float_talent_gain", pill, tp_gain)
 	# v11-W0 (user : « un compteur avec des chiffres ») — les chips chiffrées Intégrité/Corruption sont
 	# SUPPRIMÉES : les deltas de jauges vivent dans les ANNEAUX animés (float_delta), un seul endroit (§23).
 	# v2-W4 (2026-07-05) — la chip « ⚄ Le sort a souri » (proxy die_mod) est SUPPRIMÉE : le HALO du d20
@@ -1134,6 +1166,15 @@ const DEGREE_SEAL_LABEL: Dictionary = {
 
 func _play_seal_audio(degree: String) -> void:
 	MerlinAudio.play_stinger(degree)
+
+
+# N4-P1 (chantier 7) : « ✦ +N » GOLD flottant pres de la pill de degre (gain de talent R142).
+# Appele en deferred depuis _build_effect_vignette (layout du HBox pose). Gardes : la pill a pu
+# mourir si la zone a ete re-swappee dans la meme frame (R130 push) : silence, jamais de crash.
+func _float_talent_gain(anchor: Control, gain: int) -> void:
+	if anchor == null or not is_instance_valid(anchor) or not anchor.is_inside_tree():
+		return
+	MerlinFx.float_text(self, anchor, "✦ +%d" % gain, MerlinVisual.GOLD)
 
 
 func _advance_to_next() -> void:
@@ -1755,7 +1796,7 @@ func _show_skip_hint() -> void:
 # MOUSE_FILTER_IGNORE : jamais bloquants (l'autoplay n'a rien à servir, le harnais reste vert).
 const TUTO_HINT_A: String = "Choisis un verbe (tuile) et une manière (carte), puis Résous."
 # N4-RUNES (revue design, finding 4) : le hint couvre les DEUX moitiés du geste (tuiles ET cartes).
-const TUTO_HINT_B: String = "La forêt réclame : tuiles et cartes soulignées d'or y répondent."
+const TUTO_HINT_B: String = "La forêt réclame : tuiles et cartes nimbées d'or y répondent."  # N4-P1 : cadre lumineux (ex-souligné)
 
 
 # À l'ouverture du choix : hint A au beat 1, hint B au beat 2 — une seule fois par profil
@@ -2520,7 +2561,8 @@ func _build_ui() -> void:
 	root.add_child(hud)
 	_life_gauge = MerlinRingGauge.new()
 	hud.add_child(_life_gauge)
-	_life_gauge.setup(COL_GREEN, true)  # jauge « vivante » : respiration continue
+	# N4-P1 (chantier 6) : glyphe grave au centre (souffle/coeur = Integrite) : l'anneau se nomme sans texte.
+	_life_gauge.setup(COL_GREEN, true, "coeur")
 	var sp_l: Control = Control.new()
 	sp_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud.add_child(sp_l)
@@ -2534,7 +2576,9 @@ func _build_ui() -> void:
 	hud.add_child(sp_r)
 	_corr_gauge = MerlinRingGauge.new()
 	hud.add_child(_corr_gauge)
-	_corr_gauge.setup(COL_VIOLET, true)  # jauge « vivante » : respiration continue
+	# N4-P1 (chantier 6) : spirale voilee = Corruption ; le lisere de presence a 0 (dans la classe)
+	# dit qu'une 2e jauge existe avant meme le premier point de corruption.
+	_corr_gauge.setup(COL_VIOLET, true, "spirale")
 	# v10.21 (L-b) — PRÉ-ALERTE de seuil : pastille statique 6px collée à l'anneau (visible à 1 du
 	# prochain seuil /5, silencieuse, persiste — porte l'info même en reduce-motion).
 	_thr_dot = ColorRect.new()
@@ -2594,6 +2638,11 @@ func _build_ui() -> void:
 	_situation_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situation_text.add_theme_color_override("default_color", COL_INK)
 	_situation_text.add_theme_font_size_override("normal_font_size", MerlinVisual.FS_NARRATIVE)
+	# N4-P1 (chantier 3, MAJEUR) : l'italique d'ACTION (R140 : 1re phrase [i]…[/i]) se rendait à la
+	# taille de thème (~16 px) face au récit 36 px. Overrides italics/bold_italics = FS_NARRATIVE.
+	# (Pas de fonte italique dédiée au thème : le fallback rend l'italique en romain, la TAILLE prime.)
+	_situation_text.add_theme_font_size_override("italics_font_size", MerlinVisual.FS_NARRATIVE)
+	_situation_text.add_theme_font_size_override("bold_italics_font_size", MerlinVisual.FS_NARRATIVE)
 	inner.add_child(_situation_text)
 
 	# v11-V2a (Z4) — LIGNE D'ÉTAT 72 px FIXE entre l'encart et l'éventail : slot central (vignette

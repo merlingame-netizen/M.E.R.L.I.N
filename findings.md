@@ -1,5 +1,51 @@
 # Findings & Decisions - M.E.R.L.I.N.
 
+## Session: 2026-07-11 (P1, le beat qui claque)
+
+### Sonde --script : JAMAIS de class_name du jeu au parse (recidive, regle confirmee)
+probe_dice_capture v1 referencait MerlinDice/MerlinVisual directement : en mode `--script`,
+la COMPILATION de la sonde se fait AVANT l'enregistrement des autoloads, donc merlin_dice.gd
+(qui appelle MerlinAudio, un autoload) echoue en cascade : « Identifier not found: MerlinAudio »
+et la sonde pend sans quitter. Fix : `load("res://scripts/game/merlin_dice.gd")` au RUNTIME
+(autoloads prets) + appels statiques sur la ressource GDScript. C'est exactement la regle
+duck-typing des probes (autoplay 2026-06-30) : elle s'applique AUSSI aux appels statiques.
+
+### Await d'un signal deja emis = suspension eternelle (pattern sonde)
+`await dice.done` dans une sonde apres des timers > moment d'emission : le signal est deja
+parti, le node s'auto-libere ensuite : la coroutine ne reprend jamais. Dans les sondes a
+timers fixes, ne JAMAIS await un signal d'un node ephemere : timers uniquement.
+
+### Edit tool : CRLF introduit dans un fichier LF (merlin_card_view.gd)
+Une passe d'edition a reecrit le fichier en CRLF (repo attr eol=lf) : `git ls-files --eol`
+pour detecter (w/crlf), normalisation python `replace(b'\r\n', b'\n')`. Verifier apres grosses
+editions multi-blocs.
+
+### Gate enforcer : les ACTIONs dispatcher/planning ne se valident que par tool-call Agent/Skill
+post-tool-metrics.py marque `dispatcher`/`planning` completes UNIQUEMENT sur invocation
+Agent/Task/Skill dont description/prompt contient « dispatch plan » / « task_plan » : lire le
+fichier dispatcher ou editer task_plan.md ne suffit pas. Un agent de verification reel avec ces
+mots dans la description valide le gate proprement. « everything-claude-code:learn-eval »
+n'existe pas dans les sessions subagent (tentative = Unknown skill, signale, warning residuel).
+
+## Session: 2026-07-11 (N4-TUTO, le guide de Merlin)
+
+### Piège GDScript : assigner une static var À TRAVERS un preload const = Parse Error
+`const _Visual: GDScript = preload("res://scripts/game/merlin_visual.gd")` puis
+`_Visual.tuto_hint_a_done = true` produit « Cannot assign a new value to a constant »
+(+ « Failed to compile depended scripts » en cascade sur merlin_game). La LECTURE des statics
+et l'appel de fonctions statiques via le preload const passent ; l'ÉCRITURE d'une static var
+doit passer par le NOM DE CLASSE (`MerlinVisual.tuto_hint_a_done = true`). R147bis (preload
+const) reste valable pour lectures/appels.
+
+### validate_step0 n'attrape PAS ce Parse Error : le smoke, si
+Le parse check éditeur (validate_step0) est resté 0/0 alors que le chargement réel de la scène
+(smoke MerlinGame) levait 3 SCRIPT ERROR. Confirme la règle CLAUDE.md §2 : smoke obligatoire
+sur chaque scène affectée avant de conclure.
+
+### Hook no_em_dash_guard : scanne les .md (contenu ajouté), pas les .gd
+Les Edit/Write de fichiers .md sont bloqués si le contenu AJOUTÉ contient U+2014. Les textes
+joueur du tutoriel sont écrits sans aucun tiret cadratin (règle Maxime 2026-07-06).
+
 ## Session: 2026-02-19
 
 ### Bug Fix: _validate_triade_option stripping gameplay keys

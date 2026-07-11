@@ -16,30 +16,25 @@ extends Control
 ##   await fx.run()
 
 # Avant la prose de résolution, les cartes du combo se rassemblent au centre, fusionnent dans un
-# glow coloré par degré, éclatent en sparks, puis le glow décroit et fondu vers la résolution
-# textuelle existante (même fil que la situation, R128). Awaitable, ~2-3,5s total.
-
-const FUSION_COLORS: Dictionary = {
-	"echec": MerlinVisual.DEGREE_FAIL,
-	"partiel": MerlinVisual.DEGREE_PARTIAL,
-	"reussite": MerlinVisual.DEGREE_SUCCESS,
-	"eclatante": MerlinVisual.DEGREE_BRILLIANT,
-}
+# glow NEUTRE, éclatent en sparks, puis le glow décroit et fondu vers la résolution textuelle
+# existante (même fil que la situation, R128). Awaitable, ~2-3,5s total.
+#
+# N4-P1 (chantier 2a, panel BLOQUANT_FUN) : fusion NEUTRE : la fusion SPOILAIT le degré (couleur,
+# durées, shake, sparks tous clés par degré AVANT le dé). Plus AUCUNE lecture du degré dans les
+# phases 1-3 : teinte unique GOLD sobre + profil d'intensité UNIQUE (mid). Le degré ne colore que
+# l'APRÈS-pose : halo du d20 (MerlinDice), stinger, pill, encart. Les FUSION_* par degré sont morts.
 
 # v10.3 — Amplification dramatique par degré (user 2026-06-06 AskUserQuestion) : échec court & mat,
 # éclatante longue & ample.
 # v11-W1 (spec panel 2026-07-04, user « le jeu est trop complexe ») — fusion RECAPÉE : gather+fuse
 # FUSIONNÉS en un seul rassemblement, swell supprimé, totaux {0,90 / 1,10 / 1,30 / 1,70 s} (vs
 # 1,88-3,35 s). Le dé se lance EN CHEVAUCHEMENT sur la décrue. Toutes les durées ×motion() (R134).
-const FUSION_DURATIONS: Dictionary = {
-	"echec":     {"gf": 0.38, "burst": 0.34, "decrue": 0.18},
-	"partiel":   {"gf": 0.46, "burst": 0.42, "decrue": 0.22},
-	"reussite":  {"gf": 0.55, "burst": 0.49, "decrue": 0.26},
-	"eclatante": {"gf": 0.72, "burst": 0.63, "decrue": 0.35},
-}
-const FUSION_SHAKE_PX: Dictionary = {"echec": 5.0, "partiel": 10.0, "reussite": 15.0, "eclatante": 24.0}
-const FUSION_VIGNETTE_A: Dictionary = {"echec": 0.60, "partiel": 0.42, "reussite": 0.36, "eclatante": 0.55}
-const FUSION_SPARK_COUNT: Dictionary = {"echec": 22, "partiel": 30, "reussite": 38, "eclatante": 52}
+const FUSION_GF: float = 0.50        # rassemblement (profil unique mid, ex-"reussite" moyenne)
+const FUSION_BURST: float = 0.45
+const FUSION_DECRUE: float = 0.24
+const FUSION_SHAKE_PX: float = 12.0
+const FUSION_VIGNETTE_A: float = 0.42
+const FUSION_SPARK_COUNT: int = 32
 
 # Vignette via shader canvas_item : sombre les coins selon `intensity`, teinte `tint` (selon degré).
 const VIGNETTE_SHADER_CODE: String = """
@@ -59,16 +54,21 @@ var _res: Dictionary = {}
 var _played: Array = []
 var _card_views: Array = []   # MerlinCardView encore parentées chez l'appelant (reparentées dans run())
 var _ready_pred: Callable     # prédicat « la prose LLM est prête » (remplace /root/MerlinScenario)
+var _verdict_cb: Callable = Callable()  # N4-P1 (chantier 2b) : stinger de degré, joué PAR le dé au halo
 
 
 # Crée le layer de fusion, le configure plein écran et l'ajoute au host. NE lance PAS l'animation :
 # l'appelant fait `await fx.run()` (même frame → les global_position des card views restent valides).
-static func play(host: Control, res: Dictionary, played: Array, card_views: Array, ready: Callable) -> MerlinFx:
+# N4-P1 : `verdict` (optionnel) = Callable jouée à l'instant du halo du d20 (séquence pose → pause
+# → verdict, chantier 2b). Callable() invalide = aucun stinger déclenché par le dé (ex. debug F12).
+static func play(host: Control, res: Dictionary, played: Array, card_views: Array, ready: Callable,
+		verdict: Callable = Callable()) -> MerlinFx:
 	var fx: MerlinFx = MerlinFx.new()
 	fx._res = res
 	fx._played = played
 	fx._card_views = card_views
 	fx._ready_pred = ready
+	fx._verdict_cb = verdict
 	# Layer overlay au-dessus du plateau, plein écran. Absorbe les clics pendant la fusion.
 	fx.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fx.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -81,12 +81,13 @@ static func play(host: Control, res: Dictionary, played: Array, card_views: Arra
 # (les cartes reparentées sont free'd avec). Pendant l'animation, le clic est absorbé par le
 # layer (mouse_filter STOP). À la fin, l'appelant render hand/combo + show prose.
 func run() -> void:
+	# N4-P1 (chantier 2a) : le degré n'est plus lu que pour le DÉ (halo/célébration après la pose).
+	# Toute l'intensité des phases 1-3 est NEUTRE : teinte GOLD sobre unique, profil mid unique.
 	var degree: String = str(_res.get("degree", "reussite"))
-	var glow_col: Color = FUSION_COLORS.get(degree, FUSION_COLORS["reussite"])
-	var dur: Dictionary = FUSION_DURATIONS.get(degree, FUSION_DURATIONS["reussite"])
-	var shake_px: float = float(FUSION_SHAKE_PX.get(degree, 12.0))
-	var vig_alpha: float = float(FUSION_VIGNETTE_A.get(degree, 0.36))
-	var spark_count: int = int(FUSION_SPARK_COUNT.get(degree, 30))
+	var glow_col: Color = MerlinVisual.GOLD
+	var shake_px: float = FUSION_SHAKE_PX
+	var vig_alpha: float = FUSION_VIGNETTE_A
+	var spark_count: int = FUSION_SPARK_COUNT
 
 	var screen_size: Vector2 = get_viewport().get_visible_rect().size
 	var center: Vector2 = screen_size / 2.0
@@ -98,8 +99,8 @@ func run() -> void:
 	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(glow)
 
-	# Vignette shader : sombre les coins, teinte selon degré (rouge sombre pour échec, or pour
-	# éclatante). Intensity 0 → vig_alpha pendant Gather/Fuse/Burst, fade out en Phase 4.
+	# Vignette shader : sombre les coins, teinte NEUTRE dérivée du glow GOLD (N4-P1 chantier 2a :
+	# plus de teinte par degré). Intensity 0 → vig_alpha pendant Gather/Fuse/Burst, fade out en Phase 4.
 	var vignette: ColorRect = ColorRect.new()
 	vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -136,7 +137,7 @@ func run() -> void:
 	# 3 temps « punissait » chaque geste par l'attente). Les cartes convergent DIRECTEMENT vers la pose
 	# fusionnée (éventail serré, scale 1.55, teinte chaude) ; glow 0 → 45 %, vignette 0 → 75 %.
 	var m: float = MerlinVisual.motion()
-	var gf: float = float(dur["gf"]) * m
+	var gf: float = FUSION_GF * m
 	var p1: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	var mid_idx: float = float(card_views.size() - 1) / 2.0
 	for i in card_views.size():
@@ -167,7 +168,7 @@ func run() -> void:
 		flash_tw.tween_callback(flash_rect.queue_free)
 
 	# === Phase 2 — Burst === flash glow + 4 vagues de sparks (cascade) + cards explose + screen shake.
-	var burst_dur: float = float(dur["burst"]) * m
+	var burst_dur: float = FUSION_BURST * m
 	var w1: int = int(spark_count * 0.34)
 	var w2: int = int(spark_count * 0.28)
 	var w3: int = int(spark_count * 0.22)
@@ -219,13 +220,21 @@ func run() -> void:
 	# B8 en doublon est supprimé (deux dés successifs = l'« animation bizarre » du feedback user). La
 	# face 1-20 est PRÉ-TIRÉE au beat (R120 preview = résolution) ; l'animation ne fait que révéler.
 	# `success` (§K, degré FINAL) → halo VERT/ROUGE : plus AUCUNE lecture de die_mod/die_rarity ici.
-	var decrue: float = float(dur["decrue"]) * m
+	var decrue: float = FUSION_DECRUE * m
 	var p4_fade: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	p4_fade.tween_property(glow, "color:a", 0.0, decrue)
 	p4_fade.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha, 0.0, decrue)
 	if int(_res.get("die", 0)) >= 1:
-		var dice: MerlinDice = MerlinDice.roll(self, int(_res.get("die", 0)),
-			bool(_res.get("success", false)))
+		# N4-P1 (chantiers 2b/2c/7) : séquence pose → pause 0,35 s → verdict VIT dans MerlinDice.
+		# `_verdict_cb` (stinger de degré) est appelé PAR le dé à l'instant du halo, jamais avant.
+		# Le dé est parenté à l'HÔTE (pas à ce layer) : ses 2 pulses persistants et la célébration
+		# éclatante survivent au queue_free() du layer en fin de run() (il se fade/free tout seul).
+		var dice_host: Control = self
+		var par: Node = get_parent()
+		if par is Control and is_instance_valid(par):
+			dice_host = par
+		var dice: MerlinDice = MerlinDice.roll(dice_host, int(_res.get("die", 0)),
+			bool(_res.get("success", false)), degree == "eclatante", _verdict_cb)
 		await dice.done
 		if not is_inside_tree():
 			return
@@ -435,10 +444,16 @@ static func _ghost_step(t: float, ghost: Control, a: Vector2, m: Vector2, b: Vec
 # Chiffre delta de jauge qui monte et s'évanouit (§21 `float_delta`) — promu de merlin_game v10.13.
 # Tween lié au LABEL (et non à la scène) : meurt avec lui, jamais orphelin.
 static func float_delta(host: Control, anchor: Control, delta: int, col: Color) -> void:
+	float_text(host, anchor, ("+%d" % delta) if delta > 0 else str(delta), col)
+
+
+# N4-P1 (chantier 7) : variante TEXTE LIBRE du même canal §21 `float_delta` (ex. « ✦ +1 » du gain
+# de talent près de la pill de degré). Le corps historique de float_delta vit ici, inchangé.
+static func float_text(host: Control, anchor: Control, text: String, col: Color) -> void:
 	if host == null or not host.is_inside_tree() or anchor == null:
 		return
 	var f: Label = Label.new()
-	f.text = ("+%d" % delta) if delta > 0 else str(delta)
+	f.text = text
 	f.add_theme_color_override("font_color", col)
 	f.add_theme_font_size_override("font_size", 22)
 	f.mouse_filter = Control.MOUSE_FILTER_IGNORE

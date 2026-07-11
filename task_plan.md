@@ -1,9 +1,87 @@
-# task_plan.md — v10.21 « Présences » : personnages, events, lisibilité, G1 (2026-06-30)
+# task_plan.md : P1 le beat qui claque, 7 corrections de rendu pur (panel 6 joueurs), 2026-07-11
+
+> Session subagent P1. NE RIEN COMMITTER (le coordinateur committe apres revue + eyeball).
+> Save joueur user://merlin_run.json ABSENTE au depart (verifie app_userdata/MERLIN) : l'etat a
+> restaurer en fin de session est « pas de save » (supprimer toute save creee par les tests).
+> ZERO changement de balance : merlin_resolution.gd INTERDIT, le soak §K doit le prouver.
+
+## Dispatch Plan (task_dispatcher.md : types « UI Layout / Animation / UX feel », complexite MODEREE+)
+- Wave 0 (baseline) : captures AVANT a HEAD 8d17fe66 via capture_qa_v11 (foret + falaises) :
+  FAIT, archivees dans output/captures/qa_v11/_avant_p1/.
+- Wave 1 (implementation directe, fichiers de RENDU uniquement) :
+  1. merlin_card_view.gd : affinite doree graduee (cadre entier, 3 crans) + reserve de titre + gemme violette
+  2. merlin_action_view.gd : feedforward souligne devient cadre lumineux (coherence chantier 1)
+  3. merlin_fx.gd : fusion NEUTRE (plus aucune lecture du degre dans les phases 1-3) + float_text
+  4. merlin_dice.gd : sequence pose, pause 0.35 s x motion(), halo renforce (x2, 2 pulses) + callback verdict
+  5. merlin_game.gd : stinger au verdict (pas avant), italique pleine taille, eventail elargi,
+     glyphes d'anneaux, « + N » talent, hint B reformule
+  6. merlin_ring_gauge.gd : glyphe central procedural (coeur/spirale) + lisere de presence a 0
+- Wave 2 (review) : merlin-gameplay-programmer sur le diff complet ; CRITICAL/HIGH appliques.
+  (Taxonomie dispatcher : ui_impl/motion_designer/debug_qa non disponibles comme agent types de
+  cette session subagent ; couverts par merlin-gameplay-programmer + gates R109.)
+- Wave 3 (gates R109) : validate_step0 0/0 ; smoke MerlinGame 8 s + MerlinMenu 6 s ; soak 200
+  autoplay=false (0 §K dur FAIL = preuve zero-balance) ; soak 200 + autoplay 3/3 LLM ON ;
+  bootcheck x5 ; captures APRES (ph5_combo + ph6_resolution, foret + falaises) + d20 halo si possible.
+- Skills gate : superpowers-dispatching-parallel-agents INVOQUE ; « everything-claude-code:learn-eval »
+  ABSENT de la liste des skills disponibles de cette session subagent (non invocable sans deviner :
+  signale au coordinateur, meme constat que la session N4-TUTO ci-dessous).
+
+## Les 7 chantiers P1
+| # | Chantier | Fichiers | Statut |
+|---|---|---|---|
+| 1 | Affinite doree franche et graduee (cadre, 3 crans, + tuiles) | merlin_card_view, merlin_action_view, merlin_game | FAIT (capture ph5) |
+| 2 | Ordre dramatique geste, de, pause, verdict (fusion neutre, pause 0.35 s, halo x2) | merlin_fx, merlin_dice, merlin_game | FAIT (captures dice_p1) |
+| 3 | Italique d'action a pleine taille (italics_font_size = FS_NARRATIVE) | merlin_game | FAIT (capture ph6) |
+| 4 | Eventail de-tronque (pas elargi + reserve de titre) | merlin_game (_layout_fan), merlin_card_view | FAIT (capture ph5) |
+| 5 | Gemme violette si cout corruption > 0 | merlin_card_view | FAIT (1 ligne) |
+| 6 | Anneaux identifies (glyphe central + lisere de presence a 0) | merlin_ring_gauge, merlin_game | FAIT (captures ph5/ph6) |
+| 7 | « + N » talent visible + halo GOLD prolonge a l'eclatante | merlin_game, merlin_fx, merlin_dice | FAIT (capture d20_gold) |
+
+Review merlin-gameplay-programmer : GO WITH FIXES. HIGH-1 + MEDIUM-2 + LOW-4 appliques ;
+LOW-3 (fallback dice_host silencieux), LOW-5 (alias locaux de couleurs), LOW-6 (selection +
+affinite meme teinte, a arbitrer en eyeball) laisses NON bloquants au coordinateur.
+
+# (archive) task_plan N4-TUTO, le guide de Merlin (premier run), 2026-07-11
+
+> Session subagent N4-TUTO. NE RIEN COMMITTER (le coordinateur committe après revue + eyeball).
+> Save joueur (user://merlin_run.json, beat 0 falaises) + options.cfg SAUVEGARDÉS dans le
+> scratchpad (save_backup/) : à RESTAURER après les gates.
+
+## Dispatch Plan (task_dispatcher.md : type « tutoriel / onboarding », complexité COMPLEXE)
+- Wave 1 (design) : merlin-game-designer, audit spec 10 étapes + wording. VERDICT : GO AVEC
+  CORRECTIONS (B1 branche autoplay, B2 tuto_proposed synchrone condition primaire, B3 draft
+  d'ouverture fondu dans le gate unique de _advance_to_next ; I1-I5 + M2/M3 appliqués).
+- Wave 2 (implémentation) : merlin_chronicle.gd (flags additifs) puis merlin_tutorial.gd
+  (nouveau, orchestrateur) puis merlin_game.gd (proposition Z4 + hooks) puis merlin_options.gd
+  (bouton revoir) puis tools/autoplay_run.gd (branche anti-tuto) puis tools/probe_tuto_capture.gd.
+- Wave 3 (review) : merlin-gameplay-programmer sur le diff complet, CRITICAL/HIGH appliqués.
+- Wave 4 (gates R109) : validate_step0 0/0 · smoke Game 8s + Menu 6s + Options 6s · soak 200
+  autoplay false · soak 200 + autoplay 3/3 (+ 1 run autoplay chronique vierge) · bootcheck x5 ·
+  captures tuto (proposition, 3-4 étapes, reprise en main).
+- Skills gate : superpowers-dispatching-parallel-agents INVOQUÉ ; « debug_cycle » et
+  « learn-eval » absents de la liste des skills disponibles de cette session subagent
+  (non invocables sans deviner : signalé au coordinateur).
+
+## Phases N4-TUTO
+| Phase | Contenu | Fichiers | Gate |
+|---|---|---|---|
+| 1 Design | Cascade merlin-game-designer | (aucun) | GO obtenu, bloquants appliqués |
+| 2 Data | Flags chronique tuto_proposed/tuto_done/tuto_rearmed (additif) | merlin_chronicle.gd | validate |
+| 3 Core | Orchestrateur d'étapes (spotlight + bandeau + machine à états) | merlin_tutorial.gd (NOUVEAU) | validate |
+| 4 Jeu | Proposition Z4 post-interstitiel + gardes input + draft fondu (B3) | merlin_game.gd | validate + smoke |
+| 5 Options | « Revoir le guide de Merlin » (ré-arme) | merlin_options.gd | smoke Options |
+| 6 Harnais | Branche refus tuto (duck-typée, B1) + sonde captures | autoplay_run.gd, probe_tuto_capture.gd | autoplay 3/3 + vierge |
+| 7 Review | merlin-gameplay-programmer sur le diff | (aucun) | CRITICAL/HIGH appliqués |
+| 8 Gates | R109 complet + captures + restauration save joueur | (aucun) | tout vert |
+
+---
+
+# (archive) task_plan v10.21 « Présences » : personnages, events, lisibilité, G1 (2026-06-30)
 
 > Co-designé avec le joueur (2 rounds AskUserQuestion). Spec passée au panel adversarial
 > (canon/UX/balance + audit). Tasks harness #30-35.
 
-## Décisions verrouillées (user)
+## Décisions verrouillées v10.21 (user)
 - Silhouette PAR PILIER dans le décor (pas de sigil), SEULEMENT aux beats du PNJ (Rencontre + retour + interventions)
 - Ambiance signée complète : lumière/particules + nappe sonore + réaction œil-lune
 - Interventions du pilier 1-2×/run, séquence scriptée ~1.5s skippable, les 3 mécanismes (bénir carte / altérer beat / don-prix)
