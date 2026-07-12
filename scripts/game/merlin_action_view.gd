@@ -50,6 +50,12 @@ var _blessed_badge: Control = null
 var _blessed_tag: String = ""
 var _talent_lbl: Label = null     # v2-W2 : badge « +N » = niveau de talent du verbe (skill_mod, R120)
 var _talent_lvl: int = 0
+# N5-C2 : JAUGE de MAÎTRISE par usage (progression vers le prochain palier). Le « +N courant » est sur
+# le badge de talent (fondu talent+maîtrise) ; cette jauge montre « combien avant le prochain +1 ».
+var _mastery_bonus: int = 0
+var _mastery_frac: float = 0.0
+var _mastery_at_cap: bool = false
+const MASTERY_SEGMENTS: int = 2   # miroir MerlinRun.MASTERY_CAP (nb de paliers de maîtrise)
 # P3 (chantier 7, F2) — LISIBILITÉ des greffes posées SANS hover (viole §23 pilier 4) : à la SÉLECTION
 # de la tuile (tap = geste déjà fait pour jouer le verbe), une pastille lisible au-dessus liste ce que
 # les greffes apportent (libellés d'INTENTION, zéro nom de tag brut R147). Poussée par merlin_game.
@@ -138,6 +144,7 @@ func _draw() -> void:
 			_draw_graft_slot(c, (SLOT_PX / 2.0) * k, grafts[i])
 		else:
 			_draw_dashed_circle(c, SLOT_PX / 2.0, MerlinVisual.BORDER_BRUN)
+	_draw_mastery_gauge()  # N5-C2 : progression de maîtrise (jauge de paliers) sous le verbe
 	# N4-P1 (chantier 1) : FEEDFORWARD = CADRE lumineux GOLD (liseré net + halo diffus), cohérent
 	# avec l'affinité des cartes-runes. StyleBoxFlat border-only cachés (zéro alloc par frame).
 	if _ff_alpha > 0.005:
@@ -331,6 +338,41 @@ func set_talent(level: int) -> void:
 	else:
 		_talent_lbl.text = ""
 		_talent_lbl.visible = false
+
+
+# N5-C2 - JAUGE de maîtrise (progression vers le prochain palier). bonus = paliers atteints (0..cap),
+# frac = progression [0,1] dans le palier courant, at_cap = plafond atteint. Idempotente ; redraw si change.
+func set_mastery(bonus: int, frac: float, at_cap: bool) -> void:
+	if bonus == _mastery_bonus and is_equal_approx(frac, _mastery_frac) and at_cap == _mastery_at_cap:
+		return
+	_mastery_bonus = bonus
+	_mastery_frac = frac
+	_mastery_at_cap = at_cap
+	queue_redraw()
+
+
+# N5-C2 - 2 segments (les 2 paliers de maîtrise) dessinés dans la bande libre sous le verbe : segment
+# atteint = plein GOLD, segment en cours = rempli par frac, sinon piste BORDER_BRUN. Rien tant que le
+# verbe n'a jamais été joué (pilier MINIMAL : aucune jauge morte). Statique (pas de motion → reduce-motion OK).
+func _draw_mastery_gauge() -> void:
+	if _mastery_bonus <= 0 and _mastery_frac <= 0.0:
+		return
+	var total_w: float = 150.0
+	var gap: float = 4.0
+	var seg_w: float = (total_w - gap * float(MASTERY_SEGMENTS - 1)) / float(MASTERY_SEGMENTS)
+	var y: float = 40.0
+	var h: float = 4.0
+	var x0: float = (size.x - total_w) / 2.0
+	for i in MASTERY_SEGMENTS:
+		var sx: float = x0 + float(i) * (seg_w + gap)
+		draw_rect(Rect2(sx, y, seg_w, h), MerlinVisual.BORDER_BRUN, true)
+		var fill: float = 0.0
+		if i < _mastery_bonus:
+			fill = 1.0
+		elif i == _mastery_bonus and not _mastery_at_cap:
+			fill = _mastery_frac
+		if fill > 0.0:
+			draw_rect(Rect2(sx, y, seg_w * fill, h), MerlinVisual.GOLD, true)
 
 
 # W3 : le liseré se re-dérive quand les greffes changent la bande de dé (langage R133 conservé).

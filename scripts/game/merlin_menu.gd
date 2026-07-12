@@ -904,6 +904,13 @@ func _on_biome_picked(bio: String) -> void:
 	_biome_layer = null
 	var run: Node = get_node("/root/MerlinRun")
 	run.biome = bio
+	# N5-C1 (fix biome) - le warmup du menu a pré-généré la sélection AVANT que le biome ne soit posé
+	# (défaut foret → titres/scénarios Brocéliande). On INVALIDE cette pré-gen périmée : l'écran de
+	# Sélection relancera ensure_selection_prefetch avec run.biome désormais correct (falaises → titres
+	# mer), et le secours retombe sur le pool du bon biome (_sel_fallback_pool). Zéro impact balance.
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc != null and sc.has_method("invalidate_selection"):
+		sc.invalidate_selection()
 	# L'overlay s'efface, le MONDE choisi apparaît en pop progressif (rampe decor_reveal du boot),
 	# la forêt/mer accueille le Voyageur (gust + flash), puis la transition s'enclenche.
 	var m: float = MerlinVisual.motion()

@@ -43,7 +43,7 @@ const SYN: int = 2              # synergie du geste : +SYN si +1, −SYN si −1
 # Largeur des bandes de marge (planchers depuis DC). PARTIEL = [DC−PARTIEL_LOW, DC−1] ;
 # ÉCLATANTE = marge ≥ ECLAT_MARGIN. Échec strict sous PARTIEL_LOW.
 const PARTIEL_LOW: int = 13     # DC−13 ≤ total ≤ DC−1 → partiel ; total < DC−13 → échec (L3, final)
-const ECLAT_MARGIN: int = 8     # total ≥ DC+8 → éclatante (L2)
+const ECLAT_MARGIN: int = 9     # total ≥ DC+9 → éclatante (N5-C2 : 8→9, la maîtrise poussait éclatante à 14,8 % contre plafond 15 % - levier chirurgical §K, ne touche QUE le seuil éclatante, cf. spec game-designer N5)
 # Dé « moyen » déterministe pour les vieux call-sites tools qui appellent resolve(..., die=0) :
 # ~jet médian d'un d20 (ne plante pas, produit une base réaliste). Le jeu et le soak passent 1-20.
 const DIE_FALLBACK: int = 10

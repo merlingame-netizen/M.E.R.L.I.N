@@ -66,6 +66,8 @@ var _tw_target: RichTextLabel = null  # v10.20 — cible du typewriter (situatio
 var _res_block: VBoxContainer = null
 var _effect_vignette: HBoxContainer = null
 var _status_line: Control = null     # v11-V2a — Z4 « ligne d'état » 72 px FIXE (vignette/choix au centre, caret à droite)
+var _quest_obj_lbl: Label = null     # N5-C4 - ligne d'objectif « Quête : <titre> · étape N/M » en tête de l'encart récit
+var _meca_lbl: Label = null          # N5-C3 - ligne méca lisible sous la vignette (verbe · jet d20 · degré · Δ · maîtrise)
 var _choice_open: bool = false       # v11-V2a — garde anti-clic du choix (reprend le rôle de _hand_box.visible)
 var _pending_res: Dictionary = {}    # res/degré mémorisés au resolve → fade-in vignette post-typewriter
 var _pending_degree: String = ""
@@ -299,12 +301,23 @@ func _present_current_beat() -> void:
 		if _beat_map != null:
 			_beat_map.setup(int(cur_b.get("qtotal", int(run.scenario.get("total", 5)))))
 			# v10.21 (Wave L-d) — frontières de CHAÎNE visibles : quêtes accomplies/futures autour du chemin.
-			# Garde de type : les squelettes harnais/legacy peuvent porter « quests » sous une autre forme
-			# (cast direct = SCRIPT ERROR + beat jamais présenté — attrapé par le gate R109 2026-07-04).
-			var qv2: Variant = run.scenario.get("quests", [])
-			_beat_map.set_quest_context(int(cur_b.get("quest", 0)), (qv2 as Array).size() if qv2 is Array else 1)
+			# N5-C4 (bug latent corrigé, spec game-designer) : build_skeleton stocke « quests » comme un
+			# ENTIER (quests.size()), jamais un Array - l'ancien `qv2 as Array` valait donc TOUJOURS false
+			# → quest_count=1 en repli, les losanges de frontière ne s'affichaient jamais pour une chaîne
+			# 2-3 quêtes. Lecture directe de l'entier (défaut 1 pour squelettes legacy sans le champ).
+			_beat_map.set_quest_context(int(cur_b.get("quest", 0)), maxi(int(run.scenario.get("quests", 1)), 1))
 		if (was >= 0 and bq != was) or (was == -1 and run.beat_index > 0):
 			get_node("/root/MerlinScenario").begin_quest(run.scenario, bq)
+	# N5-C4 - objectif TOUJOURS visible : « Quête : <titre> · étape N/M » (N = beat dans la quête, M =
+	# longueur de la quête). Mis à jour à CHAQUE beat (l'étape change même sans transition de quête).
+	if _quest_obj_lbl != null:
+		var q_title: String = str(cur_b.get("quest_title", run.scenario.get("title", "")))
+		var q_n: int = int(cur_b.get("qn", local_i + 1))
+		var q_m: int = int(cur_b.get("qtotal", int(run.scenario.get("total", 5))))
+		if q_title != "":
+			_quest_obj_lbl.text = "Quête : %s · étape %d/%d" % [q_title, q_n, q_m]
+		else:
+			_quest_obj_lbl.text = "Étape %d/%d" % [q_n, q_m]
 	if _beat_map != null:  # v10.12 : avance « tu es ici » (index PAR QUÊTE depuis v10.14)
 		if local_i > 0:
 			_beat_map.animate_advance(local_i)  # v10.13 (B4) : le connecteur POUSSE + pop du halo
@@ -578,7 +591,10 @@ func _refresh_action_tiles() -> void:
 		var av: MerlinActionView = v
 		av.set_graft_summary(_graft_summary_for(av.card))  # P3 (chantier 7) : lecture des greffes posées (révélée à la sélection)
 		av.set_selected(av.card == _selected_action)
-		av.set_talent(run.skill_mod_for(av.card))  # v2-W2 : badge « +N » = niveau de talent du verbe (skill_mod visible)
+		av.set_talent(run.skill_mod_for(av.card))  # v2-W2 : badge « +N » = talent+maîtrise du verbe (skill_mod visible)
+		# N5-C2 : jauge de maîtrise (progression vers le prochain palier) sous le verbe de la tuile.
+		var mp: Dictionary = run.mastery_progress(run.verb_of_action(av.card))
+		av.set_mastery(int(mp.get("bonus", 0)), float(mp.get("frac", 0.0)), bool(mp.get("at_cap", false)))
 		var btag: String = str(run.blessed_tags.get(str(av.card.id), ""))
 		av.set_blessed(btag)
 		var covers: bool = false
@@ -668,6 +684,17 @@ func _on_resolve() -> void:
 	_gauges_deferred = true
 	run.play_and_discard(combo)  # v11 : l'action (permanente) y est ignorée côté défausse
 	run.note_verb_played(combo[0])  # v2-W2 : compteur d'usage du verbe (cible du nœud de talent au draft)
+	# N5-C3 (ligne méca) - fige le VERBE joué + le palier de MAÎTRISE franchi par CETTE pose (verb_usage
+	# vient d'être incrémenté). Ces champs voyagent dans res → _push_res_raw → la vignette FINALE les lit
+	# (la vignette est bâtie au degré final, après un éventuel push R130 : le verbe/maîtrise sont stables).
+	var mverb: String = run.verb_of_action(combo[0])
+	res["meca_verb"] = mverb
+	if mverb != "":
+		var uafter: int = int(run.verb_usage.get(mverb, 0))
+		var mafter: int = int(run.mastery_bonus_for(uafter))
+		res["meca_mastery_bonus"] = mafter
+		res["meca_mastery_gain"] = mafter - int(run.mastery_bonus_for(maxi(uafter - 1, 0)))
+		res["meca_mastery_cap"] = mafter >= int(run.MASTERY_CAP)
 	run.consume_blessings(played_cards)  # R131 : une bénédiction sert UNE fois (érodée à la pose)
 	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
 	# v11-W3 (spec §E) — charges de GREFFE du verbe joué (HEAL/PURGE/DRAW, 1 charge consommée par
@@ -942,6 +969,8 @@ func _build_pact_choice(pk: String) -> void:
 	if _effect_vignette != null:
 		for c in _effect_vignette.get_children():
 			c.queue_free()
+	if _meca_lbl != null:  # N5-C3 : un seul contenu à la fois dans Z4 → la ligne méca cède au pacte
+		_meca_lbl.text = ""
 	_pact_row = HBoxContainer.new()
 	_pact_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_pact_row.add_theme_constant_override("separation", 24)
@@ -1001,6 +1030,8 @@ func _build_push_choice() -> void:
 	if _effect_vignette != null:
 		for c in _effect_vignette.get_children():
 			c.queue_free()
+	if _meca_lbl != null:  # N5-C3 : Z4 ne porte qu'UN contenu → la ligne méca cède au choix Encaisser/Pousser
+		_meca_lbl.text = ""
 	_push_row = HBoxContainer.new()
 	_push_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_push_row.add_theme_constant_override("separation", 24)
@@ -1151,6 +1182,9 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 			"DRAW": _effect_vignette.add_child(_vignette_chip("✦ Pioche", MerlinVisual.EFFECT_DRAW))
 	_effect_vignette.modulate.a = 0.0
 	_effect_vignette.create_tween().tween_property(_effect_vignette, "modulate:a", 1.0, MerlinVisual.DUR_SEAL_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	# N5-C3 - la ligne méca lisible se pose SOUS la pill, au degré FINAL (post-push). "" si carte non-action.
+	if _meca_lbl != null:
+		_meca_lbl.text = _build_meca_line(res, degree)
 
 
 func _vignette_chip(text: String, col: Color) -> Control:
@@ -1342,6 +1376,47 @@ const VERB_FAMILY_TAG: Dictionary = {
 func _verb_family(verb: String) -> String:
 	return str(VERB_FAMILY_TAG.get(verb, ""))
 
+
+# N5-C3 (ligne méca) - clause d'action en clair par verbe (voix « Vous », registre du jeu R140).
+const VERB_CLAUSE: Dictionary = {
+	"PERCEVOIR": "Vous scrutez les environs",
+	"AGIR": "Vous forcez le passage",
+	"PARLER": "Vous prenez la parole",
+	"RESSENTIR": "Vous suivez votre instinct",
+}
+
+
+# N5-C3 - LIGNE MÉCA lisible en clair : « <clause> (<Registre>) · d20 <face> +<mods> = <degré> ·
+# Intégrité ±N[, Corruption ±N][ · Maîtrise de <Registre> (+N au jet)] ». Traduit « ce que ça donne »
+# sous le verdict (P1 : apparaît AVEC/APRÈS la pill, jamais avant). "" si carte non-action (cas legacy).
+# Le jet : face = die 1-20, ou DIE_FALLBACK si le beat n'a pas de dé (mêmes semantics que resolve).
+func _build_meca_line(res: Dictionary, degree: String) -> String:
+	var verb: String = str(res.get("meca_verb", ""))
+	if verb == "":
+		return ""
+	var clause: String = str(VERB_CLAUSE.get(verb, "Vous agissez"))
+	var reg: String = str(VERB_FAMILY_TAG.get(verb, ""))
+	var die: int = int(res.get("die", 0))
+	var face: int = die if (die >= 1 and die <= 20) else int(MerlinResolution.DIE_FALLBACK)
+	var total: int = int(res.get("total", face))
+	var mods: int = total - face
+	var mods_str: String = ("+%d" % mods) if mods >= 0 else str(mods)
+	var deg_lbl: String = str(MerlinResolution.LABELS.get(degree, degree)).to_lower()
+	var line: String = "%s (%s) · d20 %d %s = %s" % [clause, reg, face, mods_str, deg_lbl]
+	var di: int = int(res.get("integrite_delta", 0))
+	line += " · Intégrité %s%d" % ["+" if di >= 0 else "", di]
+	var dcorr: int = int(res.get("corruption_delta", 0))
+	if dcorr != 0:
+		line += ", Corruption %s%d" % ["+" if dcorr >= 0 else "", dcorr]
+	# Maîtrise gagnée : SEULEMENT si CETTE pose vient de franchir un palier (affecte les jets suivants).
+	if int(res.get("meca_mastery_gain", 0)) > 0 and reg != "":
+		var mb: int = int(res.get("meca_mastery_bonus", 0))
+		if bool(res.get("meca_mastery_cap", false)):
+			line += " · Maîtrise de %s au sommet (+%d au jet)" % [reg, mb]
+		else:
+			line += " · Maîtrise de %s (+%d au jet)" % [reg, mb]
+	return line
+
 # P2 (chantier 1, CDC-UX-12) : LIGNE D'EFFET en français commun d'une carte de draft, par kind de
 # greffe. Rendue sous le glyphe par MerlinCardView.set_effect_line. Le tag greffé n'est plus nommable
 # (R147) : formulation d'INTENTION. "" pour un dict vide (pas de ligne). Charge : signe explicite +
@@ -1511,6 +1586,8 @@ func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 		if _effect_vignette != null:
 			for c in _effect_vignette.get_children():
 				c.queue_free()  # la vignette d'issue cède le slot (un contenu à la fois)
+		if _meca_lbl != null:  # N5-C3 : la ligne méca cède aussi le slot Z4 au draft
+			_meca_lbl.text = ""
 		if _draft_bar != null and is_instance_valid(_draft_bar):
 			_draft_bar.queue_free()  # défense : jamais deux barres (re-entrée improbable)
 		_draft_bar = HBoxContainer.new()
@@ -2605,6 +2682,8 @@ func _build_tuto_prompt() -> void:
 	if _effect_vignette != null:
 		for c in _effect_vignette.get_children():
 			c.queue_free()  # le slot central de Z4 ne porte qu'UN contenu à la fois
+	if _meca_lbl != null:  # N5-C3 : la ligne méca cède le slot Z4 au prompt de tuto
+		_meca_lbl.text = ""
 	_tuto_prompt_row = HBoxContainer.new()
 	_tuto_prompt_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tuto_prompt_row.add_theme_constant_override("separation", 20)
@@ -2755,6 +2834,16 @@ func _build_ui() -> void:
 	inner.add_theme_constant_override("separation", 6)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situ_panel.add_child(inner)
+	# N5-C4 - LIGNE D'OBJECTIF en tête de l'encart récit (À CÔTÉ du texte d'ambiance, jamais à sa place) :
+	# « Quête : <titre> · étape N/M ». Le joueur voit toujours ce qu'il poursuit et où il en est dans la
+	# quête courante. INK_DIM (secondaire FONCÉ sur crème), sobre, mis à jour à chaque beat (_present_current_beat).
+	_quest_obj_lbl = Label.new()
+	_quest_obj_lbl.add_theme_color_override("font_color", MerlinVisual.INK_DIM)
+	_quest_obj_lbl.add_theme_font_size_override("font_size", MerlinVisual.FS_HINT)
+	_quest_obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quest_obj_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_quest_obj_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(_quest_obj_lbl)
 	# N4-RUNES (2026-07-11) : la rangée de chips des tags requis est SUPPRIMÉE de la tête d'encart
 	# (zéro jargon à l'écran). Le fil narratif récupère les 26 px ; l'affinité vit au souligné
 	# feedforward des tuiles + à la preview de résolution (R120).
@@ -2796,6 +2885,16 @@ func _build_ui() -> void:
 	_effect_vignette.add_theme_constant_override("separation", 16)
 	_effect_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_res_block.add_child(_effect_vignette)
+	# N5-C3 - LIGNE MÉCA sous la vignette (dans le MÊME slot Z4, sous la pill de degré) : traduction en
+	# clair du geste (verbe · jet d20 · degré · Δ jauges · maîtrise). DIM_WARM (secondaire clair sur fond
+	# sombre), ≥16 px, sobre. Peuplée par _build_effect_vignette (degré FINAL) ; vidée aux autres contenus Z4.
+	_meca_lbl = Label.new()
+	_meca_lbl.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
+	_meca_lbl.add_theme_font_size_override("font_size", 16)
+	_meca_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_meca_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_meca_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_res_block.add_child(_meca_lbl)
 
 	# Caret « cliquer pour continuer » : clignote quand l'issue est écrite — alpha-fade, jamais caché.
 	_caret = _mk_label(MerlinVisual.GOLD_DARK, 20)

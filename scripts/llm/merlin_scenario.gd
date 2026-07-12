@@ -330,11 +330,30 @@ static func _shuffle_rng(arr: Array, rng: RandomNumberGenerator) -> void:
 
 # Pitch = UNE ligne d'accroche-action (appel à l'aventure), pas un paragraphe.
 # Le développement complet de la quête arrive dans l'INTRO (pop-up à accepter, voir build_intro).
-const SEL_FALLBACK: Array = [
-	{"title": "Le Marché des Murmures", "pitch": "Infiltre le marché où l'on troque des noms volés."},
-	{"title": "Le Rite sans Fin", "pitch": "Interromps le rite que nul ne sait plus arrêter."},
-	{"title": "La Fontaine qui Rêve", "pitch": "Sonde la source noire où dorment les visages."},
-]
+# N5-C1 (2026-07-12, fix biome) - le secours est BIOME-AWARE : le LLM (~1 tok/s) ne gagne presque
+# jamais la course, donc ce secours s'affiche >95 % du temps ET sert de pool pour la chaîne de quêtes
+# (build_skeleton). Il DOIT coller au biome choisi (mer/falaises en falaises, jamais Brocéliande).
+# _sel_fallback_pool() pioche par _run_biome() aux 3 call-sites (take_selection, generate_selection,
+# build_skeleton). Ton merveilleux-inquiétant, chaque pitch lisible en UNE lecture (action + enjeu).
+const SEL_FALLBACK_BY_BIOME: Dictionary = {
+	"foret": [
+		{"title": "Le Marché des Murmures", "pitch": "Infiltre le marché où l'on troque des noms volés."},
+		{"title": "Le Rite sans Fin", "pitch": "Interromps le rite que nul ne sait plus arrêter."},
+		{"title": "La Fontaine qui Rêve", "pitch": "Sonde la source noire où dorment les visages."},
+	],
+	"falaises": [
+		{"title": "Le Phare qui Compte", "pitch": "Rallume le phare mort avant que la mer ne réclame un nom de plus."},
+		{"title": "Le Chant du Ressac", "pitch": "Suis le chant qui monte des vagues avant qu'il n'attire une âme de plus vers le fond."},
+		{"title": "L'Épave qui Revient", "pitch": "Fouille l'épave qui n'aurait jamais dû revenir avec la marée."},
+	],
+}
+
+
+# N5-C1 - pool de secours de sélection du biome COURANT (défaut foret hors-jeu / biome inconnu).
+func _sel_fallback_pool() -> Array:
+	var b: String = _run_biome()
+	var pool: Variant = SEL_FALLBACK_BY_BIOME.get(b, SEL_FALLBACK_BY_BIOME["foret"])
+	return (pool as Array).duplicate(true)
 
 # Narration procédurale = le texte VU par défaut (le LLM ≈1 tok/s ne gagne presque jamais la
 # course contre la lecture du joueur). Donc 5 variantes/type, tirées au sort → variété cross-run
@@ -658,6 +677,18 @@ const CLIMAX_ANCHORS: Array = [
 ]
 
 
+# N5-C4 (2026-07-12) - au 1er beat d'une NOUVELLE quête de la chaîne, le pont d'issue (qui ne parle que
+# du beat précédent) ne suffit pas : sans ça le joueur enchaîne sur une quête dont il ignore et le titre
+# et le pitch (playtest : « discours trop énigmatique »). On cite le pitch de la nouvelle quête comme une
+# parole de Merlin rapportée (même procédé que CLIMAX_ANCHORS). %s = quest_pitch (ou quest_title en repli).
+# Registre VOUS de la narration ; la citation entre guillemets absorbe le tutoiement propre au pitch.
+const QUEST_TRANSITION_ANCHORS: Array = [
+	"Vous entendez encore la voix de Merlin, quelque part derrière vous : « %s ».",
+	"Une seule phrase de Merlin vous accompagne dans ce nouveau chapitre : « %s ».",
+	"Ce que Merlin vous a chargé de faire résonne encore en vous : « %s ».",
+]
+
+
 # Filet NEUTRE (registre inconnu / hors-jeu) + ancre du gate probe : chaque entrée s'ouvre sur « [i]Vous ».
 # Utilisé tel quel par fallback_resolution quand aucune carte n'est passée (harnais legacy 2 args).
 const RESO_FALLBACKS: Dictionary = {
@@ -907,7 +938,7 @@ func take_selection() -> Array:
 	if _sel_state == "ready" and _sel_cache.size() >= 3:
 		return _sel_cache.duplicate(true)
 	if _sel_state == "running":
-		return SEL_FALLBACK.duplicate(true)  # encore en vol mais on a dépassé le budget
+		return _sel_fallback_pool()  # encore en vol mais on a dépassé le budget
 	return await generate_selection()
 
 
@@ -945,7 +976,7 @@ func generate_selection() -> Array:
 			var clean: Array = MerlinProse.clean_selection(arr)
 			if clean.size() >= 3:
 				return clean.slice(0, 3)
-	return SEL_FALLBACK.duplicate(true)
+	return _sel_fallback_pool()
 
 
 # --- 2) SQUELETTE : CHAÎNE de quêtes (CODE). INSTANTANÉ — le pitch EST le synopsis. ---
@@ -1006,7 +1037,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
 	var nq: int = 2 if _rng.randf() < 0.4 else 3
 	var quests: Array = [{"title": title, "pitch": pitch}]
-	var pool: Array = SEL_FALLBACK.duplicate(true)
+	var pool: Array = _sel_fallback_pool()
 	_shuffle(pool)
 	for q in pool:
 		if quests.size() >= nq:
@@ -1142,9 +1173,9 @@ const PREAMBULE_LIEU: Dictionary = {
 	],
 }
 const PREAMBULE_ATTENTE: Array = [
-	"Je suis Merlin — gardien de ce seuil, et ta seule constante dans ce qui vient. Je ne peux pas marcher à ta place, mais je peux nommer ce que tu affrontes. Voici ce que le lieu exige de toi : « %s ».",
-	"Moi, Merlin, je veille sur ce passage depuis plus de lunes que tu n'as de souvenirs. Je te prêterai ma voix et mes yeux — le reste t'appartient. Ta quête a un nom, et le voici : « %s ».",
-	"Merlin, on m'appelle — et je t'observais bien avant que tu n'arrives. Chaque geste que tu poseras, je le lirai ; chaque prix, tu le paieras. Ce qui t'attend porte un nom : « %s ».",
+	"Je suis Merlin, gardien de ce seuil et ta seule constante dans ce qui vient. Je ne peux pas marcher à ta place, mais je peux te dire ce que le lieu exige de toi : %s.",
+	"Moi, Merlin, je veille sur ce passage depuis plus de lunes que tu n'as de souvenirs. Je te prêterai ma voix et mes yeux ; le reste t'appartient. Voici ce que tu dois faire : %s.",
+	"Merlin, on m'appelle, et je t'observais bien avant que tu n'arrives. Chaque geste que tu poseras, je le lirai ; chaque prix, tu le paieras. Ce qu'il te faut accomplir, dès maintenant : %s.",
 ]
 
 
@@ -1194,20 +1225,23 @@ func build_intro(scenario: Dictionary) -> Dictionary:
 		var run_b: Node = get_node_or_null("/root/MerlinRun")
 		biome = str(run_b.biome) if run_b != null else "foret"
 	var lieu_pool: Array = PREAMBULE_LIEU.get(biome, PREAMBULE_LIEU["foret"])
+	# N5-C4 - le §3 (ATTENTE) nomme désormais l'ACTION concrète (le pitch), plus le titre poétique : le
+	# joueur sait ce qu'il doit FAIRE dès le pop-up d'intro (playtest « discours trop énigmatique »).
+	var p: String = pitch.strip_edges().trim_suffix(".")
+	var stake: String = p if p != "" else ("mener « %s » à son terme" % title)
 	# P3 (chantier 4) : §0 = préambule du MONDE (Graal), PUIS §1 qui tu es · §2 le lieu (biome) · §3 attente.
 	var intro: String = "%s\n\n%s\n\n%s\n\n%s" % [
 		world_preamble(),
 		_pick_preamble(PREAMBULE_QUI, "pre_qui"),
 		_pick_preamble(lieu_pool, "pre_lieu|" + biome),
-		_pick_preamble(PREAMBULE_ATTENTE, "pre_attente") % title,
+		_pick_preamble(PREAMBULE_ATTENTE, "pre_attente") % stake,
 	]
 	var mem: String = _build_memory_hint()
 	if mem != "":
 		intro += "\n\n(Et je me souviens, va : %s. On ne se refait pas, Voyageur.)" % mem
-	# Objectif spécifique : on réutilise l'accroche-action du pitch (déjà un impératif concret).
-	var p: String = pitch.strip_edges().trim_suffix(".")
-	# v10.14 — le run est une CHAÎNE de quêtes : l'objectif ne promet plus « cinq épreuves ».
-	var objectif: String = ("%s — et revenir entier des épreuves du sentier." % p) if p != "" else ("Mener « %s » à son terme, et revenir entier du sentier." % title)
+	# v10.14 - le run est une CHAÎNE de quêtes : l'objectif ne promet plus « cinq épreuves ». La ligne
+	# « ✦ Objectif » RÉPÈTE le pitch sous le §3 (renforcement voulu, pas confusion).
+	var objectif: String = ("%s, et revenir entier des épreuves du sentier." % p) if p != "" else ("Mener « %s » à son terme, et revenir entier du sentier." % title)
 	return {"intro": intro.strip_edges(), "objectif": objectif}
 
 
@@ -1370,14 +1404,26 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	# Climax est EXCLU : son ouverture est déjà l'ancrage au but (ci-dessus) ; empiler pont + ancrage serait
 	# lourd et bancal (pont finit en virgule, ancrage est une phrase pleine). Beat 1 ou pont vide : situation seule.
 	if int(beat.get("n", 1)) > 1 and btype != "Climax":
-		var bridge: String = str(_run_thread.get("bridge", "")).strip_edges()
-		if bridge != "":
-			# Le pont finit en virgule (amorce) → la situation en devient la suite : sa 1re lettre passe en
-			# minuscule pour que « pont, situation » coule comme une phrase (évite « , Vous » bancal). On ne
-			# touche QUE le 1er caractère (le reste, majuscules propres incluses, est préservé).
-			if narration.length() > 0:
-				narration = narration.substr(0, 1).to_lower() + narration.substr(1)
-			narration = bridge + " " + narration
+		# N5-C4 - 1er beat d'une NOUVELLE quête (qn==1, quest>0) : le pont d'issue ne parle que du beat
+		# précédent → on ANNONCE d'abord l'objectif de la nouvelle quête (cite le pitch, voix de Merlin
+		# rapportée) pour que le joueur ne change jamais de but sans en être informé (playtest N5).
+		var is_new_quest_opening: bool = int(beat.get("qn", 1)) == 1 and int(beat.get("quest", 0)) > 0
+		if is_new_quest_opening:
+			var qpitch: String = str(beat.get("quest_pitch", "")).strip_edges().trim_suffix(".")
+			var qtitle: String = str(beat.get("quest_title", ""))
+			var quoted: String = qpitch if qpitch != "" else qtitle
+			if quoted != "":
+				var qanchor: String = str(QUEST_TRANSITION_ANCHORS[_rng.randi_range(0, QUEST_TRANSITION_ANCHORS.size() - 1)]) % quoted
+				narration = qanchor + " " + narration
+		else:
+			var bridge: String = str(_run_thread.get("bridge", "")).strip_edges()
+			if bridge != "":
+				# Le pont finit en virgule (amorce) → la situation en devient la suite : sa 1re lettre passe en
+				# minuscule pour que « pont, situation » coule comme une phrase (évite « , Vous » bancal). On ne
+				# touche QUE le 1er caractère (le reste, majuscules propres incluses, est préservé).
+				if narration.length() > 0:
+					narration = narration.substr(0, 1).to_lower() + narration.substr(1)
+				narration = bridge + " " + narration
 	return {
 		"narration": narration,
 		"required_tags": required,

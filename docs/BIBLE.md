@@ -1820,6 +1820,24 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R153 : RETOURS PLAYTEST, fix biome + maitrise par usage + ligne meca + objectif de quete (2026-07-12, N5, revue joueur)** :
+  4 chantiers issus du playtest. (1) FIX BIOME (balance-neutre) : selectionner un autre biome donnait encore des
+  scenarios de Broceliande. Cause double : SEL_FALLBACK etait biome-agnostique (servi >95% du temps ET pool de la
+  chaine de quetes) et le prefetch de selection tournait AVANT le choix du biome. Fix : SEL_FALLBACK_BY_BIOME
+  {foret, falaises} + _sel_fallback_pool() par _run_biome() aux 3 call-sites, et invalidate_selection() a _on_biome_picked
+  (re-prefetch avec le bon biome). Titres Falaises : Le Phare qui Compte / Le Chant du Ressac / L'Epave qui Revient.
+  (2) MAITRISE PAR USAGE (§K RE-DERIVE) : chaque verbe (Sens/Force/Verbe/Instinct) monte quand on le JOUE ; paliers
+  usage {3 -> +1, 6 -> +2, cap +2} FONDUS dans skill_mod existant (talent + maitrise, PAS un 5e terme d20). Jauge 2
+  segments sous le verbe dans les 4 briques. verb_usage deja persiste -> save additive, zero bump SAVE_VERSION.
+  Levier §K : ECLAT_MARGIN 8 -> 9 (la maitrise poussait eclatante a 14,8% contre plafond 15% ; levier chirurgical qui
+  ne touche QUE le seuil eclatante). Soak 200/200, 4 bandes IN (echec 6,5 / partiel 29,9 / reussite 51,3 / eclatante
+  12,3), morts par archetype PASS. (3) LIGNE MECA A LA RESOLUTION : sous le verdict, traduction en clair du geste
+  « Vous scrutez les environs (Sens) · d20 18 +3 = reussite eclatante · Integrite +0 » (+ clause maitrise si un palier
+  est franchi). LEVE R144 (modificateurs implicites) : decision joueur assumee de rendre la meca lisible. (4) OBJECTIF
+  DE QUETE LISIBLE + prose moins cryptique : ligne « Quete : <titre> · etape N/M » en tete d'encart (bug latent corrige :
+  scenario.quests etait un int lu as Array) ; build_intro cite le PITCH (l'action concrete) et une annonce de quete au
+  1er beat d'une nouvelle quete evite le changement d'objectif en silence. Amende R140 (l'action reste en « Vous »).
+
 - **R152 : LA SESSION TENABLE, pause + lecture reglable + clavier + preambule monde + audio biome/fin (2026-07-12, P3, revue joueur panel 6)** :
   7 chantiers de confort de session (zero balance, soak 200/200 iso : defauts = comportement historique). (1) MENU PAUSE
   (Echap) : overlay CanvasLayer PROCESS_MODE_ALWAYS (get_tree().paused), Reprendre / Options / Menu principal ; « Menu

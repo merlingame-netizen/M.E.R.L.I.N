@@ -646,11 +646,70 @@ func verb_of_action(card: Variant) -> String:
 	return ""
 
 
-# skill_mod d'un geste : niveau de talent du verbe de l'action jouée (0 si carte non-action).
-# Lu par merlin_game aux DEUX call-sites resolve (preview + résolution) — invariant R120.
+# === N5-C2 (2026-07-12) - MAÎTRISE PAR USAGE : le verbe JOUÉ monte en jet à mesure qu'on le pose ===
+# verb_usage[verbe] (compteur de poses, déjà incrémenté par note_verb_played + persisté R108) donne
+# un bonus de jet PAR PALIER, CANALISÉ dans skill_mod (même voie que le talent W2). Le total d20 garde
+# ainsi EXACTEMENT ses 4 sources additives (skill_mod + graft_bonus + couverture + synergie) - pas de
+# 5e terme → §K reste re-dérivable par mesure soak. Paliers dérivés de la LONGUEUR de run (~7-11 beats,
+# build_chain_beats) : entrée à 3 poses (palier +1 en milieu de run pour un verbe favori), +2 à 6 poses
+# (spécialisation nette, fin de run). Un jeu généraliste (~2 poses/verbe) ne franchit JAMAIS le 1er palier :
+# la maîtrise récompense la SPÉCIALISATION. À TUNER par le probe §K (levier préféré si éclatante > 15% :
+# ECLAT_MARGIN, pas DC - cf. spec game-designer N5).
+const MASTERY_PALIERS: Dictionary = {0: 0, 3: 1, 6: 2}  # usage >= clé -> bonus (palier le plus haut qui matche)
+const MASTERY_CAP: int = 2       # bonus de maîtrise max par verbe (canal skill_mod)
+
+
+# Bonus de maîtrise pour un compteur d'usage donné : palier le plus haut atteint, plafonné MASTERY_CAP.
+# Prend l'usage (int) et non le verbe → réutilisable pour comparer usage vs usage-1 (palier franchi ?).
+func mastery_bonus_for(usage: int) -> int:
+	var b: int = 0
+	for k in MASTERY_PALIERS:
+		if usage >= int(k):
+			b = maxi(b, int(MASTERY_PALIERS[k]))
+	return mini(b, MASTERY_CAP)
+
+
+# Bonus de maîtrise COURANT du verbe (lu par la tuile + la ligne méca). 0 si verbe inconnu.
+func verb_mastery_bonus(verb: String) -> int:
+	if verb == "" or not verb_usage.has(verb):
+		return 0
+	return mastery_bonus_for(int(verb_usage.get(verb, 0)))
+
+
+# N5-C2 - progression de maîtrise du verbe pour la JAUGE de tuile : {bonus, frac, at_cap, usage}.
+# frac = progression [0,1] vers le PROCHAIN palier (1.0 au plafond). Purement descriptif (zéro §K).
+func mastery_progress(verb: String) -> Dictionary:
+	if verb == "" or not verb_usage.has(verb):
+		return {"bonus": 0, "frac": 0.0, "at_cap": false, "usage": 0}
+	var u: int = int(verb_usage.get(verb, 0))
+	var bonus: int = mastery_bonus_for(u)
+	if bonus >= MASTERY_CAP:
+		return {"bonus": bonus, "frac": 1.0, "at_cap": true, "usage": u}
+	# Seuils triés : palier courant (dernier <= u) et palier suivant → fraction de progression entre eux.
+	var thresholds: Array = MASTERY_PALIERS.keys()
+	thresholds.sort()
+	var cur_t: int = 0
+	var next_t: int = -1
+	for k in thresholds:
+		var ki: int = int(k)
+		if u >= ki:
+			cur_t = ki
+		elif next_t < 0:
+			next_t = ki
+	if next_t < 0:
+		return {"bonus": bonus, "frac": 1.0, "at_cap": true, "usage": u}
+	var span: int = next_t - cur_t
+	var frac: float = 0.0 if span <= 0 else clampf(float(u - cur_t) / float(span), 0.0, 1.0)
+	return {"bonus": bonus, "frac": frac, "at_cap": false, "usage": u}
+
+
+# skill_mod d'un geste : talent du verbe (nœud de draft W2) + MAÎTRISE par usage (N5-C2). 0 si carte
+# non-action. Lu par merlin_game aux DEUX call-sites resolve (preview + résolution) - invariant R120.
 func skill_mod_for(action_card: Variant) -> int:
 	var v: String = verb_of_action(action_card)
-	return int(talent.get(v, 0)) if v != "" else 0
+	if v == "":
+		return 0
+	return int(talent.get(v, 0)) + mastery_bonus_for(int(verb_usage.get(v, 0)))
 
 
 # Incrémente le compteur d'usage du VERBE joué (cible du nœud de talent au draft). Appelé quand un

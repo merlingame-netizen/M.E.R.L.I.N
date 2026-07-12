@@ -85,7 +85,7 @@ static func selection(voice: String, lieu: String = "Broceliande") -> Dictionary
 	# Le pitch reste un IMPERATIF tutoye SANS appellation (le wrapper Merlin de build_intro
 	# l'apostrophe ensuite — eviter le double 'Voyageur' empile). v10.22 : `lieu` = biome de la run
 	# (Broceliande | les Falaises du Bout-du-Monde) → titres COHÉRENTS avec le monde choisi.
-	var usr: String = "En tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur'. Varie les tons (enigmatique, taquin, sombre, intrigant)." % lieu
+	var usr: String = "En tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur', COMPREHENSIBLE EN UNE SEULE LECTURE : nomme une action concrete ET ce qui est en jeu (quoi chercher, qui affronter, quoi risquer) -- mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre, intrigant) sans jamais sacrifier la clarte de l'enjeu." % lieu
 	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 220, "label": "sélection (Merlin)"}}
 
 
@@ -95,7 +95,7 @@ static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
 	var mem_line: String = ("\nSouviens-toi du Voyageur : %s." % mem) if mem != "" else ""
-	var usr: String = "Quete proposee au Voyageur: \"%s\" — %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 3 a 4 phrases la LEGENDE derriere cette quete a %s : ce qu'on raconte du lieu, ce qui s'y serait perdu ou cache, le danger qui y rode. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
+	var usr: String = "Quete proposee au Voyageur: \"%s\" -- %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 3 a 4 phrases la LEGENDE derriere cette quete a %s : ce qu'on raconte du lieu, ce qui s'y serait perdu ou cache, le danger qui y rode. Nomme CLAIREMENT, en au moins une phrase, CE QUI EST EN JEU (ce qui est cherche, menace ou risque) -- le mystere doit rester dans l'AMBIANCE, jamais dans la comprehension du but. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
 	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 120, "label": "intro de quête (Merlin)"}}
 
 
