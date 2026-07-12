@@ -221,22 +221,29 @@ func _ready() -> void:
 
 func _begin() -> void:
 	var run: Node = get_node("/root/MerlinRun")
+	run.varied_drafts = true  # A3 : le JEU tire des drafts variés (anti-répétition + libellés distincts) ; le soak, non.
 	if run.scenario.is_empty():
 		# Squelette INSTANTANÉ (le pitch est le synopsis) — aucune attente.
 		var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(DEFAULT_TITLE, DEFAULT_PITCH)
 		run.new_run(skel)
 		get_node("/root/MerlinScenario").prepare_arc(skel)  # arc narratif LLM en fond (swappe le fallback avant beat 1)
 	_build_action_tiles()  # v11-W2 : les 4 tuiles permanentes (run.actions n'existe qu'après new_run/load_run)
+	_refresh_action_tiles()  # A2 (item 6) : « +N » (même « +0 ») lisible dès le frame 0, avant tout beat
 	_on_gauges(run.integrite, run.corruption)
 	if _beat_map != null:  # v10.12 : la map dessine le chemin du run (total beats + position courante)
 		_beat_map.setup(int(run.scenario.get("total", 5)))
 		_beat_map.set_current(run.beat_index)
+	# A1 (item 3) : laisser le layout des ZONES se calculer AVANT le 1er texte — sinon la course de
+	# layout au 1er frame fait peindre la capsule Z3 à (0,0). Précédent exact : merlin_menu.gd:594.
+	await get_tree().process_frame
+	if not is_inside_tree():
+		return  # scène libérée pendant l'attente (teardown défensif)
 	if run.beat_index == 0:
-		# Intro d'abord : encart central plein, cartes CACHÉES. Le 1er beat n'est présenté qu'à l'Accept.
+		# Nouvelle partie : la PROPOSITION du guide (A4) remplace le monologue. Cartes cachées d'ici là.
 		_set_choice_ui(false)
 		_show_intro_popup()
 	else:
-		_present_current_beat()  # run repris → directement au beat courant
+		_present_current_beat()  # run repris → directement au beat courant (zones déjà dimensionnées)
 
 
 func _setup_gameplay_music() -> void:
@@ -1261,23 +1268,27 @@ func _advance_to_next() -> void:
 			and run.has_graftable_action():
 		run.opening_draft_done = true
 		_pending_draft = true
-	# v10.11/v11-W3 — Draft de GREFFE « 1 sur 3 » aux beats clés, AVANT de passer au beat suivant.
-	if _pending_draft:
-		_pending_draft = false
-		if run.has_graftable_action():
-			_scene_epoch += 1  # v10.13 (Fix 10) : tout enrichissement LLM en vol ne s'écrit pas sous le modal
-			await _present_draft()
-			if not is_inside_tree():
-				return
+	# A3 (item 4) — le draft s'ouvre APRÈS le reveal du nouveau beat : on avance, on RÉVÈLE la scène +
+	# la main, PUIS (si un draft est armé) on offre la greffe contre cette scène affichée (jamais
+	# contre une main estompée d'un beat périmé). La boucle d'attente vit dans _present_draft (:1296).
 	run.advance_beat()
 	if run.ended:
 		return
-	# v10.13 (Fix 6) : save UNIQUE — au DÉBUT de beat (index avancé + carte draftée, atomique).
-	# Resume = toujours au début de beat (canon BIBLE.md R73) ; transients (_selected_*/_state) jamais persistés.
-	run.save()
+	_present_current_beat()  # reveal scène + main du nouveau beat AVANT le draft (A3)
+	# v10.11/v11-W3 — Draft de GREFFE « 1 sur 3 » aux beats clés, désormais SUR la scène révélée.
+	if _pending_draft:
+		_pending_draft = false
+		if run.has_graftable_action():
+			_scene_epoch += 1  # v10.13 (Fix 10) : tout enrichissement LLM en vol ne s'écrit pas sous le draft
+			await _present_draft()
+			if not is_inside_tree():
+				return  # scène libérée pendant le draft (teardown) — pas de save fantôme
+	# v10.13 (Fix 6) : save UNIQUE au DÉBUT de beat (index avancé + carte draftée, atomique). Resume =
+	# toujours au début de beat (R73) ; transients (_selected_*/_state) jamais persistés. A3 : la save
+	# suit le reveal + le draft — l'état persisté reste le début-de-beat complet (greffe comprise).
 	if not is_inside_tree():
-		return  # la scène a pu être libérée pendant le draft / via run_ended (sécurité teardown)
-	_present_current_beat()
+		return  # sécurité teardown (run_ended pendant le reveal)
+	run.save()
 
 
 # === v10.11/v11-W3 — Draft de GREFFES « 1 sur 3 » : choisir la greffe PUIS toucher le verbe ===
@@ -1429,7 +1440,11 @@ func _graft_effect_line(g: Dictionary) -> String:
 		"tag":
 			return "Ce verbe répondra à plus de scènes"
 		"talent":
-			return "Ce verbe frappe plus juste"
+			# A3 (item 4, clarté) : le nœud de talent cible un verbe PRÉCIS (talent_node_target). On le
+			# NOMME (verbe = action, jamais un tag brut, R147-safe) pour que l'effet soit ÉVIDENT au draft.
+			# Séparateur point-médian (revue narrative) : « PARLER · frappe plus juste » (zéro cadratin).
+			var vb: String = str(g.get("verb", ""))
+			return ("%s · frappe plus juste" % vb) if vb != "" else "Ce verbe frappe plus juste"
 		"charge":
 			var v: int = maxi(int(g.get("effect_value", 1)), 1)
 			var c: int = maxi(int(g.get("charges", 1)), 1)
@@ -2434,18 +2449,23 @@ func _hide_overlay() -> void:
 # new_run). Clic 1 = tout révéler (via _input), clic 2 = Accepter (pilier FACILE, ≤2 gestes).
 func _show_intro_popup() -> void:
 	var run: Node = get_node("/root/MerlinRun")
-	var data: Dictionary = get_node("/root/MerlinScenario").build_intro(run.scenario)
+	var sc: Node = get_node("/root/MerlinScenario")
 	_intro_open = true
+	# A4 : plus de long préambule §0-§3 ni d'interstitiel-monologue. La capsule Z3 porte un CADRAGE
+	# COURT du monde (2 phrases, voix Merlin), le titre de la quête et son objectif. Le guide animé est
+	# proposé juste APRÈS « Accepter » (_accept_quest → _offer_tuto_or_begin) ; refus → on enchaîne au beat 1.
+	var pitch: String = str(run.scenario.get("pitch", "")).strip_edges().trim_suffix(".")
+	var title: String = str(run.scenario.get("title", "La Quête"))
 	_intro_data = {
-		"title": str(run.scenario.get("title", "La Quête")),
-		"intro": str(data.get("intro", "")),
-		"objectif": str(data.get("objectif", "")),
+		"title": title,
+		"intro": str(sc.world_setup_short(str(run.biome))),
+		"objectif": pitch if pitch != "" else ("Mener « %s » à son terme" % title),
 	}
 	# Teaser Z5 : la main du beat 1, rendue puis re-éteinte (vigilance V2a #6 : vues créées pendant
 	# une zone estompée → état souris re-appliqué ; _set_choice_ui(false) est déjà passé dans _begin).
 	_render_hand(false)
 	MerlinVisual.set_zone_active(_hand_box, false)
-	# Z3 : le fil porte l'intro (titre révélé d'emblée, pitch au typewriter via from_chars R128).
+	# Z3 : le fil porte le cadrage court (titre révélé d'emblée, cadrage au typewriter via from_chars R128).
 	MerlinVisual.swap_zone(_situ_panel, func() -> void:
 		_typewriter(_intro_bbcode(str(_intro_data["intro"])), true, _situation_text,
 			str(_intro_data["title"]).length() + 2)
@@ -2453,10 +2473,6 @@ func _show_intro_popup() -> void:
 		if _caret != null:
 			_caret.text = "▶ clic pour tout lire")
 	_build_intro_accept()
-	# v10.13 (B3) : ouverture pré-générée en cache (priorité moteur BASSE — ne se lance que si le
-	# moteur est idle) AVANT l'enrichissement de greeting. Consommée par l'interstitiel à l'Accept.
-	get_node("/root/MerlinScenario").prefetch_opening(run.scenario)
-	_bg_intro(run.scenario)
 
 
 # Compose le BBCode de l'intro — un seul fil dans _situation_text, recomposable quand le LLM
@@ -2521,26 +2537,31 @@ func _accept_quest() -> void:
 	if _pulse_tw != null and _pulse_tw.is_valid():
 		_pulse_tw.kill()
 	_pulse_tw = null
-	_kill_tw()  # frappe d'intro encore en cours → coupée net (l'interstitiel reprend l'encart)
+	_kill_tw()  # frappe de cadrage encore en cours → coupée net (la suite reprend l'encart)
 	_set_caret(false)
-	# v11-V2b — cross-fade Z4 vers l'état suivant : le bouton part en fondu (souris off immédiate,
-	# zéro clic fantôme), le slot central s'éteint ; l'interstitiel posera le hint skip (caret).
+	# A4 : le bouton « Accepter » cède la place à la PROPOSITION du guide. Retiré du LAYOUT
+	# immédiatement (remove_child avant queue_free) pour éviter tout saut de la rangée centrale Z4
+	# quand _build_tuto_prompt y pose ses boutons ; zéro clic fantôme (souris off puis libération).
 	if _intro_accept_btn != null and is_instance_valid(_intro_accept_btn):
-		var btn: Button = _intro_accept_btn
-		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		if btn.is_inside_tree():
-			var t: Tween = btn.create_tween()
-			t.tween_property(btn, "modulate:a", 0.0,
-				MerlinVisual.DUR_ZONE_FADE * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
-			t.tween_callback(btn.queue_free)
-		else:
-			btn.queue_free()
+		_intro_accept_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if _intro_accept_btn.get_parent() != null:
+			_intro_accept_btn.get_parent().remove_child(_intro_accept_btn)
+		_intro_accept_btn.queue_free()
 	_intro_accept_btn = null
-	_fade_res_block(false)
-	get_node("/root/MerlinRun").save()  # v10.13 (Fix 6) : quitter pendant le beat 1 → reprise au beat 1
-	# v10.13 (B3) : l'intro cède la place à l'interstitiel « Merlin raconte » (ouverture narrative),
-	# qui présentera lui-même le Beat 1 au clic suivant. La save reste AVANT (Fix 6c).
-	_play_opening_interstitial()
+	get_node("/root/MerlinRun").save()  # v10.13 (Fix 6) : quitter au beat 1 → reprise au beat 1 (PRÉSERVÉ)
+	# A4 : plus d'interstitiel-monologue « Merlin raconte ». On propose le guide animé (chaque nouvelle
+	# partie) ; refus → le beat 1 s'enchaîne (le cadrage court a déjà campé le monde dans la capsule Z3).
+	_offer_tuto_or_begin()
+
+
+# A4 — après « Accepter » : proposition du guide animé à CHAQUE nouvelle partie (Z4 non-modal, réutilise
+# _build_tuto_prompt + le preload TUTO_SCRIPT via _on_tuto_answer). L'ancien monologue est retiré du
+# flow. Cas défensif (guide non proposable) : on enchaîne directement au beat 1 (draft d'ouverture inclus).
+func _offer_tuto_or_begin() -> void:
+	if MerlinChronicle.should_offer_tuto():
+		_build_tuto_prompt()
+	else:
+		_continue_after_interstitial()  # fire-and-forget (coroutine)
 
 
 # === v10.13 (B3) — Interstitiel « Merlin raconte » : entre l'Accept et le Beat 1 ===
@@ -2654,7 +2675,10 @@ func _continue_after_interstitial() -> void:
 	# l'OUVERTURE (review MEDIUM — un « Passer » n'est jamais re-proposé au resume, anti re-roll ;
 	# même contrat que pilier_offering_done).
 	var run: Node = get_node("/root/MerlinRun")
-	# N4-TUTO : guide actif : le draft d'ouverture ne s'ouvre PAS ici (décalé, revue design B3) :
+	# A3 (item 4) : la scène + la main du beat 1 sont RÉVÉLÉES d'abord ; la greffe d'ouverture se choisit
+	# ENSUITE, contre la scène affichée (jamais contre une main estompée avant la scène).
+	_present_current_beat()
+	# N4-TUTO : guide actif → le draft d'ouverture ne s'ouvre PAS ici (décalé, revue design B3) :
 	# opening_draft_done reste false et le gate unique de _advance_to_next le servira au beat 1.
 	if _tuto == null and run.beat_index == 0 and not run.ended and not run.opening_draft_done \
 			and run.has_graftable_action():
@@ -2664,7 +2688,6 @@ func _continue_after_interstitial() -> void:
 		if not is_inside_tree():
 			return
 		run.save()  # greffe d'ouverture + flag survivent à un quit pendant le beat 1 (R108)
-	_present_current_beat()
 
 
 # === N4-TUTO : proposition + cycle de vie du guide de Merlin (merlin_tutorial.gd) ===

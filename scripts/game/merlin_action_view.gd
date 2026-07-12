@@ -116,13 +116,14 @@ func _build() -> void:
 	verb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	verb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	verb_row.add_child(verb)
-	# Badge de talent « +N » (skill_mod du verbe, R120) : GOLD sur SURFACE, caché à 0 (jamais de bruit).
+	# Badge de talent « +N » (skill_mod du verbe, R120) : GOLD sur SURFACE. Vague A (A2) : TOUJOURS
+	# visible dès l'apparition de la tuile, « +0 » compris — le niveau d'action est lisible d'emblée.
 	_talent_lbl = Label.new()
-	_talent_lbl.text = ""
+	_talent_lbl.text = "+0"
 	_talent_lbl.add_theme_color_override("font_color", MerlinVisual.GOLD)
 	_talent_lbl.add_theme_font_size_override("font_size", MerlinVisual.FS_BTN)
 	_talent_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_talent_lbl.visible = false
+	_talent_lbl.visible = true
 	verb_row.add_child(_talent_lbl)
 
 	# N4-RUNES : les 2 pastilles de tags de base sont SUPPRIMÉES (zéro jargon à l'écran). Les tags
@@ -325,19 +326,17 @@ func _hide_graft_reveal() -> void:
 
 
 # v2-W2 — niveau de talent du verbe : badge « +N » à côté du nom (le joueur VOIT son skill_mod).
-# 0 → badge caché (pilier MINIMAL : aucun élément UI sans rôle actif). Idempotent.
+# Vague A (A2) : le badge est TOUJOURS affiché (« +0 » compris) pour que le niveau d'action soit
+# lisible dès l'apparition des tuiles — l'ancienne garde « 0 → caché » est levée. Idempotent.
 func set_talent(level: int) -> void:
 	if level == _talent_lvl and _talent_lbl != null:
 		return
 	_talent_lvl = level
 	if _talent_lbl == null or not is_instance_valid(_talent_lbl):
 		return
-	if level > 0:
-		_talent_lbl.text = "+%d" % level
-		_talent_lbl.visible = true
-	else:
-		_talent_lbl.text = ""
-		_talent_lbl.visible = false
+	# A2 (item 6) : le niveau d'action reste TOUJOURS affiché, « +0 » compris (plus de garde level > 0).
+	_talent_lbl.text = "+%d" % level
+	_talent_lbl.visible = true
 
 
 # N5-C2 - JAUGE de maîtrise (progression vers le prochain palier). bonus = paliers atteints (0..cap),

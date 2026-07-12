@@ -82,12 +82,12 @@ static func read() -> Dictionary:
 # secondaire. Un « Guide-moi » suivi d'un quit/crash ne re-propose donc JAMAIS tout seul.
 
 
-# Faut-il proposer le guide ? Tout premier run jamais répondu, OU ré-armé depuis les Options.
+# Faut-il proposer le guide ? Vague A (A4, 2026-07-12) : le guide est proposé à CHAQUE nouvelle
+# partie (au beat 0), plus de one-shot sur `runs_played == 0`. Le ré-armement Options (« Revoir le
+# guide ») reste honoré — redondant désormais, mais on n'ôte rien du contrat existant. Appelé
+# UNIQUEMENT au beat 0 côté jeu (merlin_game._offer_tuto_or_begin) : jamais relancé en cours de partie.
 static func should_offer_tuto() -> bool:
-	var c: Dictionary = read()
-	if bool(c.get("tuto_rearmed", false)):
-		return true
-	return not bool(c.get("tuto_proposed", false)) and int(c.get("runs_played", 0)) == 0
+	return true
 
 
 # Réponse donnée (accepté OU refusé) : consomme aussi le ré-armement Options.

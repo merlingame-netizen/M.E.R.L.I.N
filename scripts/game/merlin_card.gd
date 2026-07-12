@@ -495,6 +495,25 @@ static func graft_banks(pilier: String = "") -> Array:
 	return []
 
 
+# Vague A (A3, 2026-07-12) — BANQUE GÉNÉRIQUE ENRICHIE, réservée au JEU (merlin_run.varied_drafts).
+# La banque canonique graft_banks("") (6 entrées, 3 « roll » au libellé identique) ne porte que 3
+# libellés d'effet distincts (+jet / +tag / soin) : dès le 2e draft d'une run, les cartes se répètent.
+# On AJOUTE deux charges à libellé DISTINCT (PURGE « Dissipe l'Emprise », DRAW « Rappelle une rune »)
+# pour porter la diversité à 5 libellés — de quoi tenir toute une run avec l'anti-répétition
+# (merlin_run.offered_graft_ids). Le SOAK conserve la banque canonique graft_banks("") → bandes de
+# degrés ISO : ces deux charges sont douces (valeur 1, coût 0) et neutres sur le degré (survie/main,
+# pas le d20). corr_cost 0 (guardrail CRITICAL ≤ 1). ids uniques (jamais confondus avec les banques signées).
+static func graft_bank_generic_varied() -> Array:
+	var bank: Array = graft_banks("").duplicate()
+	bank.append(_graft_charge("g_source_claire", "La Source Claire",
+		"Une eau sans nom sourd de la mousse ; gorgée après gorgée, elle emporte ce que l'Emprise avait déposé en toi.",
+		"PURGE", 1, 2, 0))
+	bank.append(_graft_charge("g_fil_de_laine", "Le Fil de Laine",
+		"Un brin rouge noué à ta ceinture par une main que tu n'as pas vue ; tant qu'il tient, la forêt te rend une rune de plus.",
+		"DRAW", 1, 2, 0))
+	return bank
+
+
 static func _graft_tag(p_id: String, p_name: String, p_evo: String, p_tag: String, p_corr: int, p_pilier: String = "") -> Dictionary:
 	return {"id": p_id, "name": p_name, "evocation": p_evo, "kind": "tag", "tag": p_tag,
 		"effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": p_corr, "pilier": p_pilier}

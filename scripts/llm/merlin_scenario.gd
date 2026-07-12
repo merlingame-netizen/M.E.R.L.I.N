@@ -1217,6 +1217,22 @@ func world_preamble() -> String:
 	return "Écoute-moi bien, Voyageur, car cette nuit ne se répétera pas. Au cœur de Brocéliande dort le Graal, brisé en mille éclats que le monde a laissés filer jusque sur ces terres. Chaque traversée peut t'en rendre un, si tu survis à ce que le sentier réclame. %s" % compte
 
 
+# Vague A (A4, 2026-07-12) — CADRAGE COURT du monde : 2 phrases (voix Merlin, merveilleux-inquiétant)
+# affichées dans la capsule Z3 À LA PLACE du long préambule §0-§3 de build_intro, quand le joueur
+# n'ouvre PAS le guide animé. Plante le LIEU et son enjeu en deux souffles, sans monologue. Zéro tiret
+# cadratin (U+2014). Défaut foret (biome inconnu / hors-jeu, via _run_biome). Le titre + l'objectif de
+# la quête restent portés par le pop-up d'ouverture ; ceci ne fait que camper le monde en deux phrases.
+const WORLD_SETUP_SHORT: Dictionary = {
+	"foret": "Nous voici à Brocéliande, Voyageur, là où la brume garde le compte des promesses et des dettes. Avance : le sentier ne s'ouvre qu'à ceux qu'il a choisi d'éprouver.",
+	"falaises": "Nous voici aux Falaises du Bout-du-Monde, Voyageur, là où la terre s'achève et où la mer ne rend rien. Avance : sous l'eau noire, quelque chose compte déjà tes pas.",
+}
+
+
+func world_setup_short(biome: String = "") -> String:
+	var b: String = _run_biome(biome)
+	return str(WORLD_SETUP_SHORT.get(b, WORLD_SETUP_SHORT["foret"]))
+
+
 func build_intro(scenario: Dictionary) -> Dictionary:
 	var title: String = str(scenario.get("title", "l'aventure"))
 	var pitch: String = str(scenario.get("pitch", ""))

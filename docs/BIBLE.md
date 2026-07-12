@@ -1820,6 +1820,20 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R154 : VAGUE A, lisibilite du beat (2026-07-13, retours playtest) - 4 fixes zero-balance** :
+  (A1) l'intro se redigeait HORS de la capsule (course de layout au 1er frame) -> `_begin` passe coroutine,
+  `await get_tree().process_frame` avant le 1er typewriter (precedent merlin_menu). (A2) le niveau d'action
+  (+N talent/maitrise) est desormais TOUJOURS visible des l'apparition des tuiles (meme +0 ; garde >0 retiree,
+  refresh au frame 0) - renverse le pilier MINIMAL sur ce point. (A3) draft de greffe : desormais APRES le
+  reveal de la scene+main (plus contre une main estompee) ; save unique atomique fin de beat (index + greffe,
+  R108) ; dedup `offered_graft_ids` persiste (additif, defaut {}, reset new_run) + banque jeu elargie
+  `graft_bank_generic_varied` (fini les 3 rolls identiques) + verbe cible nomme sur la carte. (A4) le monologue
+  de Merlin apres Nouvelle Partie est REMPLACE : `world_setup_short(biome)` (cadrage 1-2 lignes) puis le tuto
+  anime est PROPOSE a chaque nouvelle partie (`should_offer_tuto` -> true, beat 0 uniquement) ; refus -> entree
+  directe dans la 1re scene ; save-avant-beat-1 preserve. Amende R149 (tuto propose a chaque run, plus one-shot).
+  Balance ISO (resolve()/§K non touches : soak 200/200 identique). Reste : Vague B (contenu/quetes) puis C (2d6
+  + 5 actions + §K).
+
 - **R153 : RETOURS PLAYTEST, fix biome + maitrise par usage + ligne meca + objectif de quete (2026-07-12, N5, revue joueur)** :
   4 chantiers issus du playtest. (1) FIX BIOME (balance-neutre) : selectionner un autre biome donnait encore des
   scenarios de Broceliande. Cause double : SEL_FALLBACK etait biome-agnostique (servi >95% du temps ET pool de la

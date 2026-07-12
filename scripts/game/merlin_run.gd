@@ -93,6 +93,15 @@ var pushes_left_quest: int = 1
 var intervention_beats: Array = []
 var pilier_interventions: int = 0
 var blessed_tags: Dictionary = {}
+# Vague A (A3, 2026-07-12) — DRAFT VARIÉ (anti-répétition). varied_drafts : mode piloté par le JEU
+# (merlin_game._begin le pose à true) ; il aiguille graft_choices vers la banque enrichie + le tri à
+# libellés distincts + l'anti-répétition. Le SOAK et les self-tests ne le posent JAMAIS (RunScript.new()
+# → défaut false) → chemin historique de _graft_pick byte-identique (bandes de degrés ISO). NON persisté.
+var varied_drafts: bool = false
+# offered_graft_ids {graft_id: true} = greffes déjà OFFERTES cette run (pas seulement posées) : une
+# greffe proposée puis passée ne revient plus tant que le pool n'est pas épuisé (réarmé alors). Remis
+# à zéro à new_run, persisté (R108, champ ADDITIF, défaut {} au load — pas de bump SAVE_VERSION).
+var offered_graft_ids: Dictionary = {}
 # v11-W3 (review M1) — DRAW de greffe : la pioche porte sur la MAIN SUIVANTE. Le redraw COMPLET
 # par beat rendait une pioche immédiate MORTE (traits défaussés avant d'être jouables — coût
 # affiché > valeur réelle, pilier ÉVIDENT violé). Persisté (champ additif, défaut 0) : le save de
@@ -189,6 +198,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	intervention_beats = []
 	pilier_interventions = 0
 	blessed_tags = {}
+	offered_graft_ids = {}  # A3 : anti-répétition des drafts, propre à chaque run
 	next_draw_bonus = 0
 	talent = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}  # v2-W2 : talent IN-RUN, remis à zéro
 	talent_points = 0
@@ -606,31 +616,90 @@ func graft_roll_bonus(action: Variant) -> int:
 	return total
 
 
-# Draft runtime v11-W3 : n greffes GÉNÉRIQUES distinctes (remplace draft_choices au runtime —
-# l'ancienne fonction reste pour compat outillage mais n'est plus appelée par le jeu).
+# Draft runtime v11-W3 : n greffes GÉNÉRIQUES distinctes. Vague A (A3) : en mode JEU (varied_drafts),
+# la banque ENRICHIE + l'anti-répétition + le tri à libellés distincts s'appliquent ; en mode SOAK /
+# self-test (varied_drafts=false), banque canonique + chemin historique STRICT (bandes de degrés ISO).
 func graft_choices(n: int = 3) -> Array:
-	return _graft_pick(MerlinCard.graft_banks(""), n)
+	if varied_drafts:
+		return _graft_pick(MerlinCard.graft_bank_generic_varied(), n, true)
+	return _graft_pick(MerlinCard.graft_banks(""), n, false)
 
 
 # Offrande du pilier v11-W3 : n greffes de la banque SIGNÉE (remplace pilier_offering au runtime).
+# Toujours en chemin historique (varied=false) : l'offrande est UNIQUE par run (pilier_offering_done),
+# aucune répétition à dédupliquer, et le soak la mesure par ce même chemin (ISO).
 func pilier_graft_offering(pilier: String, n: int = 2) -> Array:
-	return _graft_pick(MerlinCard.graft_banks(pilier), n)
+	return _graft_pick(MerlinCard.graft_banks(pilier), n, false)
 
 
-# Tirage commun : filtre les greffes déjà posées (par id), mélange via le RNG de la run (variance
-# entre runs, même pattern Fisher-Yates que pilier_offering), tronque à n. [] si banque épuisée.
-func _graft_pick(bank: Array, n: int) -> Array:
+# Tirage commun. varied=false (SOAK / pilier) : chemin HISTORIQUE STRICT — filtre les posées,
+# Fisher-Yates via le RNG de la run, tronque à n (byte-identique à avant → bandes de degrés ISO).
+# varied=true (JEU) : ajoute l'anti-répétition (offered_graft_ids, réarmé quand le pool s'épuise) + la
+# diversité de LIBELLÉ intra-draft (jamais deux cartes au même libellé). JAMAIS pris par le soak.
+func _graft_pick(bank: Array, n: int, varied: bool = false) -> Array:
 	var placed: Dictionary = placed_graft_ids()
-	var avail: Array = []
+	var not_placed: Array = []
 	for g in bank:
 		if g is Dictionary and not placed.has(str((g as Dictionary).get("id", ""))):
-			avail.append(g)
-	for i in range(avail.size() - 1, 0, -1):
+			not_placed.append(g)
+	if not varied:
+		# Chemin HISTORIQUE : mélange in-place puis tronque (consommation RNG ET résultat inchangés).
+		for i in range(not_placed.size() - 1, 0, -1):
+			var j: int = _rng.randi_range(0, i)
+			var tmp: Variant = not_placed[i]
+			not_placed[i] = not_placed[j]
+			not_placed[j] = tmp
+		return not_placed.slice(0, mini(n, not_placed.size()))
+	# Chemin VARIÉ (jeu). Anti-répétition : ne garde que les greffes jamais offertes cette run ; si le
+	# pool ne peut plus fournir assez de neuf, on RÉARME (les non-posées redeviennent proposables).
+	var want: int = mini(n, not_placed.size())
+	var fresh: Array = []
+	for g in not_placed:
+		if not offered_graft_ids.has(str((g as Dictionary).get("id", ""))):
+			fresh.append(g)
+	if fresh.size() < want:
+		for g in not_placed:
+			offered_graft_ids.erase(str((g as Dictionary).get("id", "")))
+		fresh = not_placed.duplicate()
+	# Mélange (RNG de la run — jamais atteint par le soak, aucun impact ISO).
+	for i in range(fresh.size() - 1, 0, -1):
 		var j: int = _rng.randi_range(0, i)
-		var tmp: Variant = avail[i]
-		avail[i] = avail[j]
-		avail[j] = tmp
-	return avail.slice(0, mini(n, avail.size()))
+		var tmp: Variant = fresh[i]
+		fresh[i] = fresh[j]
+		fresh[j] = tmp
+	# Sélection à LIBELLÉS DISTINCTS : jamais deux cartes au même libellé d'effet dans un même draft.
+	var picked: Array = []
+	var seen: Dictionary = {}
+	for g in fresh:
+		var key: String = _graft_label_key(g)
+		if not seen.has(key):
+			seen[key] = true
+			picked.append(g)
+			if picked.size() >= want:
+				break
+	# Complète si la diversité n'a pas suffi (pool trop pauvre) — accepte alors un libellé répété plutôt
+	# que de servir moins de cartes (jamais de draft amputé quand des greffes restent disponibles).
+	if picked.size() < want:
+		for g in fresh:
+			if not picked.has(g):
+				picked.append(g)
+				if picked.size() >= want:
+					break
+	# Mémorise les greffes OFFERTES (persisté R108) — elles ne reviennent plus avant réarmement du pool.
+	for g in picked:
+		offered_graft_ids[str((g as Dictionary).get("id", ""))] = true
+	return picked
+
+
+# A3 — clé d'ÉQUIVALENCE de libellé d'une greffe (miroir de merlin_game._graft_effect_line) : deux
+# greffes qui produiraient la MÊME ligne d'effet partagent la clé → jamais offertes ensemble.
+func _graft_label_key(g: Dictionary) -> String:
+	match str(g.get("kind", "")):
+		"roll": return "roll:%d" % int(g.get("amount", MerlinCard.ROLL_BONUS_DEFAULT))
+		"tag": return "tag"
+		"talent": return "talent"
+		"charge": return "charge:%s:%d" % [str(g.get("effect_type", "")), int(g.get("effect_value", 1))]
+	return str(g.get("kind", ""))
 
 
 # === v2-W2 (2026-07-05) — ARBRE DE TALENT : verbe joué, gain au degré, nœud de draft ===
@@ -1025,6 +1094,7 @@ func save() -> void:
 		"pushes_left_quest": pushes_left_quest,  # Wave G (R130) : budget Pousser persisté (additif)
 		"intervention_beats": intervention_beats, "pilier_interventions": pilier_interventions,
 		"blessed_tags": blessed_tags,  # Wave I (R131) : planning + bénédictions persistés (R108)
+		"offered_graft_ids": offered_graft_ids,  # A3 : anti-répétition des drafts persistée (additif, défaut {} au load)
 		"next_draw_bonus": next_draw_bonus,  # v11-W3 (M1) : pioche DRAW due à la main suivante (additif)
 		"talent": talent, "talent_points": talent_points, "verb_usage": verb_usage,  # v2-W2 : talent IN-RUN (additif, R108)
 		"momentum": momentum,  # N3-V1 : ton narratif du pont (additif, défaut 0 au load)
@@ -1074,6 +1144,8 @@ func load_run() -> bool:
 	intervention_beats = data.get("intervention_beats", [])  # Wave I (R131), défauts = saves legacy OK
 	pilier_interventions = int(data.get("pilier_interventions", 0))
 	blessed_tags = data.get("blessed_tags", {})
+	var og: Variant = data.get("offered_graft_ids", {})  # A3 : défaut {} (saves antérieures) — robuste au type
+	offered_graft_ids = og if og is Dictionary else {}
 	next_draw_bonus = int(data.get("next_draw_bonus", 0))  # v11-W3 (M1) : défaut 0 (saves W2/W3 précoces OK)
 	# v2-W2 — talent IN-RUN (champs additifs) : défauts SAFE au load (saves pré-W2 → 4 verbes à 0).
 	# _talent_dict garantit les 4 clés présentes même si le JSON est partiel/corrompu (robustesse R108).
