@@ -19,6 +19,12 @@ const DEFAULT_TITLE: String = "Le Sentier des Murmures"
 const DEFAULT_PITCH: String = "Un chemin s'ouvre sous les fougères, là où nul n'a marché. La forêt t'y attend, patiente."
 const END_SCENE: String = "res://scenes/MerlinEnd.tscn"
 const GAMEPLAY_MUSIC: String = "res://music/gameplay/gameplay_calm.wav"
+# P3 (chantier 5) — variante musicale PAR BIOME (défaut = nappe calme forêt). Filet dans
+# _setup_gameplay_music : une variante manquante retombe sur gameplay_calm (jamais de silence/crash).
+const GAMEPLAY_MUSIC_BY_BIOME: Dictionary = {
+	"foret": "res://music/gameplay/gameplay_calm.wav",
+	"falaises": "res://music/gameplay/gameplay_falaises.wav",
+}
 const GAMEPLAY_MUSIC_FADE: float = 4.0
 
 var _life_gauge: MerlinRingGauge
@@ -152,6 +158,10 @@ const TUTO_SCRIPT: GDScript = preload("res://scripts/game/merlin_tutorial.gd")  
 var _tuto: Node = null                         # orchestrateur du guide (null hors guide)
 var _tuto_prompt_row: HBoxContainer = null     # rangée de proposition Z4 (duck-typée par l'autoplay)
 
+# P3 (chantier 1, CDC-UX-04) — overlay PAUSE système (Échap). Node ALWAYS (survit à get_tree().paused).
+const PAUSE_SCRIPT: GDScript = preload("res://scripts/game/merlin_pause.gd")  # R147bis
+var _pause: CanvasLayer = null
+
 
 # v10.13 (Fix 0) — garde canonique post-await : la scène est-elle toujours « fraîche » ?
 # Toute coroutine qui reprend après un await DOIT vérifier _fresh(ep) avant de toucher l'UI.
@@ -228,9 +238,16 @@ func _begin() -> void:
 
 
 func _setup_gameplay_music() -> void:
-	if not ResourceLoader.exists(GAMEPLAY_MUSIC):
+	# P3 (chantier 5) — sélection par biome (run.biome), transition douce via play_music (fondu depuis
+	# le silence à l'entrée de scène → aucune superposition/coupure brutale).
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	var biome: String = str(run.biome) if run != null else "foret"
+	var path: String = str(GAMEPLAY_MUSIC_BY_BIOME.get(biome, GAMEPLAY_MUSIC))
+	if not ResourceLoader.exists(path):
+		path = GAMEPLAY_MUSIC  # filet : variante absente → nappe forêt (jamais de silence/crash)
+	if not ResourceLoader.exists(path):
 		return
-	var stream: AudioStream = load(GAMEPLAY_MUSIC)
+	var stream: AudioStream = load(path)
 	if stream == null:
 		return
 	if stream is AudioStreamWAV:
@@ -559,6 +576,7 @@ func _refresh_action_tiles() -> void:
 		if not is_instance_valid(v):
 			continue
 		var av: MerlinActionView = v
+		av.set_graft_summary(_graft_summary_for(av.card))  # P3 (chantier 7) : lecture des greffes posées (révélée à la sélection)
 		av.set_selected(av.card == _selected_action)
 		av.set_talent(run.skill_mod_for(av.card))  # v2-W2 : badge « +N » = niveau de talent du verbe (skill_mod visible)
 		var btag: String = str(run.blessed_tags.get(str(av.card.id), ""))
@@ -1350,6 +1368,21 @@ func _graft_effect_line(g: Dictionary) -> String:
 	return ""
 
 
+# P3 (chantier 7, F2) — résumé LISIBLE des greffes posées sur une action (une ligne d'INTENTION par
+# greffe, réutilise _graft_effect_line — zéro nom de tag brut, R147). "" si aucune greffe. Poussé aux
+# tuiles par _refresh_action_tiles ; la tuile le révèle À la sélection (tap), jamais au survol (§23).
+func _graft_summary_for(card: MerlinCard) -> String:
+	if card == null:
+		return ""
+	var lines: Array = []
+	for g in (card.grafts as Array):
+		if g is Dictionary:
+			var ln: String = _graft_effect_line(g)
+			if ln != "":
+				lines.append(ln)
+	return "\n".join(lines)
+
+
 # v11-W3 — étape 2 : Z6 se rallume de façon CIBLÉE (vigilance V2b : Z6 est estompée souris OFF
 # pendant le draft), les tuiles ÉLIGIBLES (< 3 greffes) pulsent, les pleines restent estompées
 # localement (modulate tuile ≠ alpha de zone — un seul propriétaire par niveau, R136).
@@ -1645,6 +1678,39 @@ func _skip_typewriter() -> void:
 	var lbl: RichTextLabel = _tw_target if _tw_target != null else _situation_text
 	lbl.visible_characters = -1
 	_on_typewriter_done()
+
+
+# P3 (chantier 3) — Espace/Entrée : skip du typewriter en cours SINON valide le bouton principal du
+# contexte. Miroir clavier des mêmes gestes que le tactile — appelle EXACTEMENT les mêmes handlers
+# (aucun chemin nouveau). Retourne true SI une action a eu lieu (l'événement est alors consommé).
+# Les phases à choix explicite (draft, Encaisser/Pousser, pacte, proposition de guide) rendent false
+# (aucun « bouton principal » unique) → l'événement n'est pas avalé.
+func _keyboard_confirm() -> bool:
+	if _tw != null and _tw.is_valid():
+		_skip_typewriter()
+		return true
+	if _draft_active or _push_pending or _push_row != null or _pact_row != null or _tuto_prompt_row != null:
+		return false
+	if _intro_open:
+		if _intro_accept_btn != null and is_instance_valid(_intro_accept_btn):
+			_accept_quest()
+			return true
+		return false
+	if _interstitial_open:
+		if _can_advance:
+			_end_interstitial()
+			return true
+		return false
+	if _tuto_blocks():
+		return false  # le guide pilote ses propres avancées (le skip typewriter ci-dessus reste actif)
+	if _state == 2 and _can_advance:
+		_advance_to_next()
+		return true
+	if _state == 1 and _resolve_btn != null and not _resolve_btn.disabled \
+			and _selected_action != null and _selected_trait != null:
+		_on_resolve()
+		return true
+	return false
 
 
 func _on_typewriter_done() -> void:
@@ -2102,6 +2168,27 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 		return
 
+	# ── P3 (chantiers 1 & 3) — clavier desktop, purement ADDITIF au tactile (no hover-only) ──
+	if event is InputEventKey and event.pressed and not event.echo:
+		# Échap (chantier 1) : ouvre la pause système (gèle la boucle). Jamais quand la pause ou les
+		# Options sont déjà ouvertes (elles gèrent Échap elles-mêmes — voir merlin_pause.gd).
+		if event.is_action_pressed("ui_cancel"):
+			if _pause != null and not _pause.is_open() and not MerlinOptions.is_open():
+				_pause.open()
+				get_viewport().set_input_as_handled()
+			return
+		# Espace/Entrée (chantier 3) : skip du typewriter en cours, SINON valide le bouton principal
+		# courant (Accepter / avancer le beat / Résoudre). Ne consomme QUE si une action a lieu →
+		# n'avale jamais l'activation d'un bouton de choix (draft/pousser/pacte/guide).
+		if event.is_action_pressed("ui_accept"):
+			if _keyboard_confirm():
+				get_viewport().set_input_as_handled()
+			elif _draft_active or _push_pending or _push_row != null or _pact_row != null or _tuto_prompt_row != null:
+				# Phase a choix explicite : Espace/Entree ne valide rien, mais on AVALE l'evenement pour
+				# qu'il n'active jamais par le focus GUI un bouton de choix (revue design, defensif).
+				get_viewport().set_input_as_handled()
+			return
+
 	if not OS.is_debug_build():
 		return
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -2188,6 +2275,18 @@ func _goto_end() -> void:
 	MerlinTransition.change_scene(END_SCENE)
 
 
+# P3 (chantier 2) — applique la taille de récit du pack lecture au fil narratif (normal + italique +
+# gras-italique, mêmes 3 overrides que _build_ui). Relu à chaque frappe → un changement dans les
+# Options s'applique au prochain texte, sans recharger la scène (CDC-UX-05).
+func _apply_reading_font() -> void:
+	if _situation_text == null:
+		return
+	var fs: int = MerlinVisual.narrative_font_size()
+	_situation_text.add_theme_font_size_override("normal_font_size", fs)
+	_situation_text.add_theme_font_size_override("italics_font_size", fs)
+	_situation_text.add_theme_font_size_override("bold_italics_font_size", fs)
+
+
 # R128 — `from_chars` : pour la CONTINUATION (issue à la suite de la situation), l'animation part de la fin de
 # la situation (visible_characters = from_chars) → seule la portion ajoutée se révèle ; le reste demeure écrit.
 func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null, from_chars: int = 0) -> void:
@@ -2197,9 +2296,12 @@ func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null
 		_prose_tw.kill()
 	lbl.modulate.a = 1.0
 	_kill_tw()
+	_apply_reading_font()  # P3 (chantier 2) : taille du récit lue live depuis le pack lecture
 	lbl.text = txt
-	if not animate:
-		lbl.visible_characters = -1  # tout révélé (swap d'enrichissement)
+	# P3 (chantier 2) — « Instantané » : le récit se révèle d'un coup (aucune anim), même contrat que
+	# le swap d'enrichissement (visible=-1 + _on_typewriter_done). Cohérent avec un monde motion()=0.
+	if not animate or MerlinVisual.typewriter_instant():
+		lbl.visible_characters = -1  # tout révélé (swap d'enrichissement / lecture instantanée)
 		_on_typewriter_done()
 		return
 	var n: int = lbl.get_total_character_count()
@@ -2214,7 +2316,8 @@ func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null
 		_show_skip_hint()  # affordance « clic = passer » visible DÈS le début (user 2026-06-07)
 	_tw_tick_count = 0
 	var added: int = n - start  # nombre de caractères réellement animés (l'issue seule en continuation)
-	var dur: float = clampf(float(added) / 30.0, 0.8, 10.0)
+	# P3 (chantier 2) — vitesse lue depuis le pack lecture (Lent/Normal/Rapide) au lieu du 30 c/s figé.
+	var dur: float = clampf(float(added) / MerlinVisual.typewriter_cps(), 0.8, 10.0)
 	_tw = create_tween()
 	_tw.tween_property(lbl, "visible_characters", n, dur)
 	_tw.finished.connect(_on_typewriter_done)
@@ -2804,6 +2907,11 @@ func _build_ui() -> void:
 	think_t.autostart = true
 	add_child(think_t)
 	think_t.timeout.connect(_on_think_tick)
+
+	# P3 (chantier 1) — overlay PAUSE (Échap). Enfant de la scène (auto-libéré au changement de scène),
+	# process_mode ALWAYS → vivant pendant que l'arbre est gelé. Ouvert par _input (Échap).
+	_pause = PAUSE_SCRIPT.new()
+	add_child(_pause)
 
 
 func _on_think_tick() -> void:

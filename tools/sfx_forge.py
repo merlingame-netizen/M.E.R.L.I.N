@@ -335,6 +335,23 @@ RECIPES: dict[str, Callable[[], list[float]]] = {
         _fm_tone(2.3, 1046.5, 3.0, 0.20, attack=0.18, tau=0.75))),
         decay=0.75, mix=0.55),
 
+    # ── P3 (chantier 6, CDC-AUD-06) — 3 STINGERS DE FIN (MerlinEnd), volumes doux (§22, peak -14 dB) ──
+    # accomplissement — RESOLUTION CHAUDE : accord ouvert majeur, ample et long (le seuil se referme en paix)
+    "stinger_fin_accomplissement": lambda: _reverb(_warmth(
+        _chord(2.8, (196.0, 261.63, 329.63, 392.0, 523.25), attack=0.030, tau=0.95)),
+        decay=0.72, mix=0.58),
+
+    # mort — COUPURE + RESONANCE SOURDE : ton grave descendant (souffle coupe) + thud feutre + traine noire
+    "stinger_fin_mort": lambda: _reverb(_warmth(_mix(
+        _fm_tone(2.4, 130.81, 1.19, 0.7, attack=0.035, tau=0.85, bend=-0.10),
+        _noise(0.30, seed=150, attack=0.004, tau=0.14, lowpass=0.10))),
+        decay=0.70, mix=0.60),
+
+    # corrompu — DISSONANCE QUI AVALE LA NAPPE : cluster desaccorde (secondes mineures) grave, gonflement sombre
+    "stinger_fin_corrompu": lambda: _reverb(_warmth(
+        _chord(2.7, (174.61, 185.0, 233.08, 246.94), attack=0.055, tau=0.90), detune=0.013),
+        decay=0.70, mix=0.60),
+
     # plume grattant le parchemin — texture fibreuse, zero tonal
     "quill_tick": lambda: _reverb(_warmth(_mix(
         _resonant_filter(

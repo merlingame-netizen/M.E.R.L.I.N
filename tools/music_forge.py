@@ -193,6 +193,23 @@ def _gameplay_calm() -> list[float]:
     return _make_seamless(soft, CROSSFADE)
 
 
+def _gameplay_falaises() -> list[float]:
+    # P3 (chantier 5, CDC-NAR-02 « mélancolie du bout du monde ») — VARIANTE FALAISES de la nappe de
+    # jeu. Même palette que gameplay_calm (drone + cloches pentatoniques + vent) → cohérence de biome ;
+    # infléchie maritime : drone plus grave et plus désaccordé (solitude), cloches PLUS RARES (distance),
+    # vent PLUS PRÉSENT (embruns/ressac), lowpass plus sombre (brume de sel), réverb plus ample (à-pic).
+    # DOUCE et sans superposition brutale : play_music la cross-fade depuis le silence à l'entrée de scène.
+    drone_lo = _drone(DURATION, 65.41, mod_depth=0.13, mod_rate=0.055, mod_index=0.22)   # C2, plus grave que le D2 forêt
+    drone_hi = _drone(DURATION, 98.00, detune=0.007, mod_depth=0.10, mod_rate=0.048, mod_index=0.16)  # G2 désaccordé
+    bells = _sequence_bells(DURATION, PENTA_D, seed=311, density=0.20, decay=5.2, vol_range=(0.20, 0.45))
+    shimmer = _sequence_bells(DURATION, PENTA_D_HIGH, seed=312, density=0.08, decay=3.4, vol_range=(0.08, 0.20))
+    atmosphere = _wind(DURATION, seed=313, intensity=0.30, sweep_period=9.0)  # embruns/vent du large plus soutenus
+    raw = _mix(drone_lo, drone_hi, bells, shimmer, atmosphere)
+    wet = _pad_reverb(raw, size=0.74, mix=0.52)
+    soft = _lowpass_gentle(wet, 3800.0)  # plus sombre/feutré que la forêt (4200)
+    return _make_seamless(soft, CROSSFADE)
+
+
 def _boot_eveil() -> list[float]:
     # Éveil du boot : drone GRAVE qui sourd + cloches éparses basses + souffle, réverb cathédrale.
     # Sombre-merveilleux, court (boucle seamless). Enchaîne sur le thème menu (pistes différentes).
@@ -246,6 +263,7 @@ def _pad_enfant() -> list[float]:      # boîte à musique inquiète — G3 clai
 
 TRACKS: dict[str, Callable[[], list[float]]] = {
     "gameplay_calm": _gameplay_calm,
+    "gameplay_falaises": _gameplay_falaises,  # P3 (chantier 5) : variante musicale du biome falaises
     "boot_eveil": _boot_eveil,
     "pad_choeur": _pad_choeur,
     "pad_etre": _pad_etre,

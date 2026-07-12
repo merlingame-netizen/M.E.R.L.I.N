@@ -1820,6 +1820,20 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R152 : LA SESSION TENABLE, pause + lecture reglable + clavier + preambule monde + audio biome/fin (2026-07-12, P3, revue joueur panel 6)** :
+  7 chantiers de confort de session (zero balance, soak 200/200 iso : defauts = comportement historique). (1) MENU PAUSE
+  (Echap) : overlay CanvasLayer PROCESS_MODE_ALWAYS (get_tree().paused), Reprendre / Options / Menu principal ; « Menu
+  principal » save-safe R108 (aucun save mi-beat, la save disque reste debut-de-beat) ; Echap coordonne avec MerlinOptions.
+  (2) PACK LECTURE (persiste [reading]) : vitesse typewriter (Lent/Normal/Rapide/Instantane) + taille de texte
+  (Standard/Confort), cablee dans le typewriter de merlin_game ET merlin_end ; defauts = Normal 30 c/s + 36px (iso).
+  (3) CLAVIER desktop : Espace/Entree = skip typewriter SINON valide le bouton principal (additif au tactile, no
+  hover-only, ne consomme que si action). (4) PREAMBULE DU MONDE : world_preamble() prefixe l'intro (monde/Graal, qui,
+  biome, attente), une fois par run, relie le compteur de Fragments (R151). (5) VARIANTE MUSICALE FALAISES : music_forge
+  _gameplay_falaises (drone maritime), WAV regenere, selection par biome (cross-fade, zero superposition). (6) STINGERS DE
+  FIN : sfx_forge 3 recettes (accomplissement/mort/corrompu), WAV regeneres (§22, -14 dBFS), joues a l'entree de MerlinEnd
+  par end_type. (7) LISIBILITE DES SLOTS POSES (F2) : pastille d'intention revelee A LA SELECTION (tap, jamais au survol
+  §23 pilier 4), zero nom de tag brut (R147). Sert §23 (session tenable, lecture, desktop).
+
 - **R151 : LA RECOMPENSE VISIBLE, draft lisible + MerlinEnd rempli + methode meta (2026-07-06, P2, revue joueur panel 6)** :
   4 chantiers de LECTURE de la recompense (zero balance, soak 200/200 iso : degree_counts/corruption_max lus seulement par
   end_recap). (1) DRAFT LISIBLE (CDC-UX-12) : une ligne d'effet en francais commun sous chaque carte de greffe (roll « +N a

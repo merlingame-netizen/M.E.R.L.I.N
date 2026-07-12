@@ -7,6 +7,8 @@ const SFX_IDS: Array = [
 	"gauge_up", "gauge_down", "corruption_tick", "seal_stamp",
 	"beat_turn", "draft_reveal", "whisper_threshold",
 	"stinger_echec", "stinger_partiel", "stinger_reussite", "stinger_eclatante",
+	# P3 (chantier 6, CDC-AUD-06) — stingers de FIN (MerlinEnd) par type de fin.
+	"stinger_fin_accomplissement", "stinger_fin_mort", "stinger_fin_corrompu",
 	"quill_tick", "ink_wash", "voice_blip",
 ]
 const VOICE_POOL: int = 4
@@ -166,6 +168,13 @@ func play_stinger(degree: String) -> void:
 	play_sfx(id, 1.0)
 	_duck_music()
 	duck_stems()
+
+
+# P3 (chantier 6, CDC-AUD-06) — stinger de FIN par type de run (accomplissement/mort/corrompu), joué
+# à l'entrée de MerlinEnd. No-op si l'id n'est pas chargé (WAV absent → jamais de crash). Volumes doux
+# (le WAV sort du forge à peak -14 dB, §22). Pas de duck (la musique est déjà en fondu à l'écran de fin).
+func play_end_stinger(end_type: String) -> void:
+	play_sfx("stinger_fin_" + end_type)
 
 
 func _kill_music_tweens() -> void:

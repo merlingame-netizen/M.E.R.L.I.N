@@ -110,10 +110,44 @@ static var reduced_motion: bool = false
 static var tuto_hint_a_done: bool = false  # hint A (beat 1) : « verbe + manière, puis Résous »
 static var tuto_hint_b_done: bool = false  # hint B (beat 2) : « tuiles soulignées d'or »
 
+# ── P3 (CDC-UX-06) — PACK LECTURE : vitesse du typewriter + taille du récit, persistés [reading].
+# Indépendants de reduce-motion (CDC-DA-17/UX-06 : confort de lecture ≠ accessibilité vestibulaire).
+# Défauts = comportement HISTORIQUE (Normal = 30 c/s, Standard = FS_NARRATIVE) → soak/autoplay ISO.
+const TW_LENT: int = 0
+const TW_NORMAL: int = 1
+const TW_RAPIDE: int = 2
+const TW_INSTANT: int = 3
+const TW_LABELS: Array = ["Lent", "Normal", "Rapide", "Instantané"]
+const TW_CPS: Array = [16.0, 30.0, 60.0]   # caractères/seconde par palier (index INSTANT = pas d'anim)
+const TEXT_STANDARD: int = 0
+const TEXT_CONFORT: int = 1
+const TEXT_LABELS: Array = ["Standard", "Confort"]
+const TEXT_FS: Array = [FS_NARRATIVE, 44]  # tailles de police du récit (Z3) — au moins 2 crans
+static var typewriter_speed: int = TW_NORMAL  # 0 Lent · 1 Normal · 2 Rapide · 3 Instantané
+static var text_scale: int = TEXT_STANDARD    # 0 Standard · 1 Confort
+
 
 # Facteur de durée global : reduce-motion = durées ÷2 (amplitudes ÷2 côté appelant).
 static func motion() -> float:
 	return 0.5 if reduced_motion else 1.0
+
+
+# P3 (chantier 2) — « Instantané » : le récit se révèle d'un coup (aucune animation de frappe).
+static func typewriter_instant() -> bool:
+	return typewriter_speed == TW_INSTANT
+
+
+# P3 (chantier 2) — vitesse de frappe (caractères/seconde) du palier courant. Bornée pour rester
+# valide même si une pref corrompue sort de l'intervalle (clamp) ; Instantané n'appelle jamais ceci.
+static func typewriter_cps() -> float:
+	var i: int = clampi(typewriter_speed, TW_LENT, TW_RAPIDE)
+	return float(TW_CPS[i])
+
+
+# P3 (chantier 2) — taille de police du récit selon le cran de lecture (Standard/Confort).
+static func narrative_font_size() -> int:
+	var i: int = clampi(text_scale, TEXT_STANDARD, TEXT_CONFORT)
+	return int(TEXT_FS[i])
 
 
 # v1.0-V4b (#52) — Garde de dégénérescence AVANT tout draw_colored_polygon / polygon= GÉNÉRÉ
@@ -142,6 +176,9 @@ static func load_prefs() -> void:
 		reduced_motion = bool(cfg.get_value("a11y", "reduced_motion", false))
 		tuto_hint_a_done = bool(cfg.get_value("tuto", "hint_a_done", false))
 		tuto_hint_b_done = bool(cfg.get_value("tuto", "hint_b_done", false))
+		# P3 (chantier 2) — pack lecture (défauts = comportement historique si la section manque).
+		typewriter_speed = clampi(int(cfg.get_value("reading", "typewriter_speed", TW_NORMAL)), TW_LENT, TW_INSTANT)
+		text_scale = clampi(int(cfg.get_value("reading", "text_scale", TEXT_STANDARD)), TEXT_STANDARD, TEXT_CONFORT)
 
 
 static func save_prefs() -> void:
@@ -150,6 +187,8 @@ static func save_prefs() -> void:
 	cfg.set_value("a11y", "reduced_motion", reduced_motion)
 	cfg.set_value("tuto", "hint_a_done", tuto_hint_a_done)
 	cfg.set_value("tuto", "hint_b_done", tuto_hint_b_done)
+	cfg.set_value("reading", "typewriter_speed", typewriter_speed)  # P3 (chantier 2)
+	cfg.set_value("reading", "text_scale", text_scale)
 	cfg.save(PREFS_PATH)
 
 

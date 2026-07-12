@@ -50,6 +50,12 @@ var _blessed_badge: Control = null
 var _blessed_tag: String = ""
 var _talent_lbl: Label = null     # v2-W2 : badge « +N » = niveau de talent du verbe (skill_mod, R120)
 var _talent_lvl: int = 0
+# P3 (chantier 7, F2) — LISIBILITÉ des greffes posées SANS hover (viole §23 pilier 4) : à la SÉLECTION
+# de la tuile (tap = geste déjà fait pour jouer le verbe), une pastille lisible au-dessus liste ce que
+# les greffes apportent (libellés d'INTENTION, zéro nom de tag brut R147). Poussée par merlin_game.
+const REVEAL_W: float = 300.0
+var _graft_summary: String = ""
+var _reveal: PanelContainer = null
 
 
 func _dur(base: float) -> float:
@@ -251,6 +257,64 @@ func set_selected(on: bool) -> void:
 	if _sb != null:
 		_sb.border_color = MerlinVisual.GOLD if on else _rim
 		_sb.set_border_width_all(3 if on else 2)
+	# P3 (chantier 7) : révèle la lecture des greffes À LA SÉLECTION (tap), jamais au survol.
+	if on and _graft_summary != "":
+		_build_reveal_pill()
+	else:
+		_hide_graft_reveal()
+
+
+# P3 (chantier 7) — texte lisible des greffes posées (libellés d'intention, poussé par merlin_game).
+# "" = aucune greffe. Mis à jour à chaque refresh ; ré-affiché si la tuile est sélectionnée.
+func set_graft_summary(text: String) -> void:
+	if text == _graft_summary:
+		return
+	_graft_summary = text
+	if _selected:
+		if text != "":
+			_build_reveal_pill()
+		else:
+			_hide_graft_reveal()
+
+
+func _build_reveal_pill() -> void:
+	_hide_graft_reveal()
+	if _graft_summary == "":
+		return
+	var pill: PanelContainer = PanelContainer.new()
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.z_index = 6  # au-dessus de l'éventail voisin (qui déborde sur la rangée d'actions)
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = MerlinVisual.TOAST_BG
+	sb.set_corner_radius_all(8)
+	sb.set_border_width_all(1)
+	sb.border_color = MerlinVisual.GOLD_DARK
+	sb.set_content_margin_all(8)
+	pill.add_theme_stylebox_override("panel", sb)
+	var lbl: Label = Label.new()
+	lbl.text = _graft_summary
+	lbl.add_theme_color_override("font_color", MerlinVisual.CREAM)
+	lbl.add_theme_font_size_override("font_size", 16)  # ≥16 px (lisibilité CDC-UX-12)
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.custom_minimum_size = Vector2(REVEAL_W - 16.0, 0)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.add_child(lbl)
+	add_child(pill)
+	_reveal = pill
+	# Centrée AU-DESSUS de la tuile ; position recalée après le layout (la taille dépend du texte).
+	pill.resized.connect(func() -> void:
+		if is_instance_valid(pill):
+			pill.position = Vector2((TILE_SIZE.x - pill.size.x) * 0.5, -pill.size.y - 8.0))
+	if not MerlinVisual.reduced_motion and pill.is_inside_tree():
+		pill.modulate.a = 0.0
+		pill.create_tween().tween_property(pill, "modulate:a", 1.0, _dur(0.14)).set_trans(Tween.TRANS_SINE)
+
+
+func _hide_graft_reveal() -> void:
+	if _reveal != null and is_instance_valid(_reveal):
+		_reveal.queue_free()
+	_reveal = null
 
 
 # v2-W2 — niveau de talent du verbe : badge « +N » à côté du nom (le joueur VOIT son skill_mod).

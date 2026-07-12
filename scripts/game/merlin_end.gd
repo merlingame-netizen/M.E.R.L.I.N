@@ -47,6 +47,7 @@ func _run_end() -> void:
 	var et: String = str(run.end_type)
 	if et == "":
 		et = "accomplissement"
+	MerlinAudio.play_end_stinger(et)  # P3 (chantier 6) : stinger de fin par type de run (à l'entrée de scène)
 	_title_lbl.text = END_TITLES.get(et, "Fin")
 	_title_lbl.add_theme_color_override("font_color", _end_color(et))
 	_state_lbl.text = "Intégrité finale : %d/10    ·    Corruption finale : %d" % [run.integrite, run.corruption]
@@ -174,15 +175,29 @@ func _on_continue() -> void:
 	MerlinTransition.change_scene(MENU_SCENE)
 
 
+# P3 (chantier 2, revue design BLOCKER) : la taille du pack lecture s'applique AUSSI a l'epilogue
+# (le plus haut enjeu de lecture de la session). Base 30 conservee au cran Standard ; +delta au cran
+# Confort (delta = narrative_font_size() - FS_NARRATIVE). Overrides normal + italiques (prose R140).
+func _apply_reading_font() -> void:
+	if _epilogue == null:
+		return
+	var fs: int = 30 + (MerlinVisual.narrative_font_size() - MerlinVisual.FS_NARRATIVE)
+	_epilogue.add_theme_font_size_override("normal_font_size", fs)
+	_epilogue.add_theme_font_size_override("italics_font_size", fs)
+	_epilogue.add_theme_font_size_override("bold_italics_font_size", fs)
+
+
 func _typewriter(txt: String, animate: bool = true) -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	_tw = null
 	_can_advance = false
 	_set_caret(false)
+	_apply_reading_font()  # P3 (chantier 2) : taille du recit lue live depuis le pack lecture
 	_epilogue.text = txt
-	if not animate:
-		_epilogue.visible_characters = -1  # tout révélé (swap d'enrichissement LLM)
+	# P3 (chantier 2) — « Instantané » du pack lecture : l'épilogue se révèle d'un coup (parité MerlinGame).
+	if not animate or MerlinVisual.typewriter_instant():
+		_epilogue.visible_characters = -1  # tout révélé (swap d'enrichissement LLM / lecture instantanée)
 		_on_typewriter_done()
 		return
 	_epilogue.visible_characters = 0
@@ -190,7 +205,8 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 	if n <= 0:
 		_on_typewriter_done()
 		return
-	var dur: float = clampf(float(n) / 30.0, 0.8, 10.0)
+	# P3 (chantier 2) — vitesse lue depuis le pack lecture (Lent/Normal/Rapide) au lieu du 30 c/s figé.
+	var dur: float = clampf(float(n) / MerlinVisual.typewriter_cps(), 0.8, 10.0)
 	_tw = create_tween()
 	_tw.tween_property(_epilogue, "visible_characters", n, dur)
 	_tw.tween_callback(_on_typewriter_done)

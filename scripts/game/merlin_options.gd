@@ -148,6 +148,19 @@ func _build_ui() -> void:
 	voice_chk.toggled.connect(func(on: bool) -> void: MerlinVoicePrefs.set_enabled(on))
 	vbox.add_child(voice_chk)
 
+	# P3 (chantier 2, CDC-UX-06) — PACK LECTURE : vitesse du typewriter + taille du récit. Persistés
+	# via MerlinVisual (section [reading]), appliqués live au prochain texte de MerlinGame/MerlinEnd.
+	_segmented_row("Vitesse du texte", MerlinVisual.TW_LABELS,
+		func() -> int: return MerlinVisual.typewriter_speed,
+		func(i: int) -> void:
+			MerlinVisual.typewriter_speed = i
+			MerlinVisual.save_prefs(), vbox)
+	_segmented_row("Taille du texte", MerlinVisual.TEXT_LABELS,
+		func() -> int: return MerlinVisual.text_scale,
+		func(i: int) -> void:
+			MerlinVisual.text_scale = i
+			MerlinVisual.save_prefs(), vbox)
+
 	# N4-TUTO : rejouer le guide de première traversée. RÉ-ARME la proposition pour la PROCHAINE
 	# run (le guide ne se relance JAMAIS seul en cours de partie). État relu à chaque ouverture.
 	_tuto_btn = Button.new()
@@ -205,6 +218,56 @@ func _slider_row(label: String, value: float, parent: Control) -> HSlider:
 	row.add_child(s)
 	parent.add_child(row)
 	return s
+
+
+# P3 (chantier 2) — segmented control : libellé + rangée de boutons dont UN est actif (bordure GOLD
+# + fond éclairci). Zéro hover-only (l'état actif est PERSISTANT), cibles ≥44 px (pilier TACTILE).
+# get_idx lit la valeur courante ; set_idx la pose (persistance côté appelant). Un refresh local
+# rejoue les styles après chaque clic (l'info « quelle option est active » vit à UN endroit : le bouton).
+func _segmented_row(label_txt: String, options: Array, get_idx: Callable, set_idx: Callable, parent: Control) -> void:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var l: Label = Label.new()
+	l.text = label_txt
+	l.custom_minimum_size = Vector2(280, 0)
+	l.add_theme_color_override("font_color", COL_TEXT)
+	l.add_theme_font_size_override("font_size", 17)
+	row.add_child(l)
+	var seg: HBoxContainer = HBoxContainer.new()
+	seg.add_theme_constant_override("separation", 8)
+	var btns: Array = []
+	for i in options.size():
+		var b: Button = Button.new()
+		b.text = str(options[i])
+		b.custom_minimum_size = Vector2(96, 44)  # ≥44 px (pilier TACTILE)
+		b.add_theme_font_size_override("font_size", 16)
+		MerlinVisual.apply_button_da(b)
+		MerlinVisual.connect_button_feedback(b)
+		seg.add_child(b)
+		btns.append(b)
+	var refresh: Callable = func() -> void:
+		var cur: int = clampi(int(get_idx.call()), 0, btns.size() - 1)
+		for j in btns.size():
+			var bb: Button = btns[j]
+			var active: bool = j == cur
+			# Revue design BLOCKER : override des 4 slots (normal/hover/pressed/focus). Sinon le survol
+			# d'une option INACTIVE lui donne l'allure « selectionnee » (apply_button_da met hover=GOLD
+			# pour toutes). La selection (bordure GOLD + fond eclairci) devient immunisee au hover ; le
+			# seul canal de survol restant est la luminosite x1.06 de connect_button_feedback (dimension
+			# distincte, n'imite jamais la selection).
+			var box: StyleBoxFlat = MerlinVisual.button_style_hover() if active else MerlinVisual.button_style_normal()
+			var fc: Color = COL_TEXT if active else COL_GOLD
+			for slot in ["normal", "hover", "pressed", "focus"]:
+				bb.add_theme_stylebox_override(slot, box)
+			for col_name in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+				bb.add_theme_color_override(col_name, fc)
+	for i in options.size():
+		(btns[i] as Button).pressed.connect(func() -> void:
+			set_idx.call(i)
+			refresh.call())
+	refresh.call()
+	row.add_child(seg)
+	parent.add_child(row)
 
 
 func _check_row(label: String, on: bool) -> CheckButton:

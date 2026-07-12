@@ -1162,6 +1162,30 @@ func _pick_preamble(pool: Array, key: String) -> String:
 	return str(pool[idx])
 
 
+# P3 (chantier 4) — PRÉAMBULE DU MONDE : ouverture courte (voix Merlin, merveilleux-inquiétant) qui
+# plante Brocéliande et l'enjeu du Graal, et relie le compteur de Fragments (méta P2/R151, source
+# MerlinChronicle). DISTINCT du préambule de BIOME (PREAMBULE_LIEU) : le monde D'ABORD, le lieu ENSUITE.
+# Composé UNE fois par run (build_intro, §0). Zéro tiret cadratin.
+func world_preamble() -> String:
+	var frag: int = int(MerlinChronicle.read().get("graal_fragments", 0))
+	var total: int = int(MerlinChronicle.GRAAL_TOTAL)
+	var reste: int = maxi(total - frag, 0)
+	var compte: String
+	if frag <= 0:
+		compte = "Tu n'en as encore arraché aucun ; les %d dorment toujours dans la nuit." % total
+	elif reste <= 0:
+		compte = "Tu les as presque tous rassemblés, et pourtant la brume ne rend jamais vraiment tout."
+	elif frag == 1:
+		compte = "Un seul éclat repose déjà entre tes mains ; %d se dérobent encore." % reste
+	else:
+		# Accord singulier/pluriel : un seul reste manquant → « se dérobe » (revue narrative BLOCKER 2).
+		var verbe: String = "se dérobe" if reste == 1 else "se dérobent"
+		compte = "Tu en as déjà ravi %d à l'oubli ; %d %s encore." % [frag, reste, verbe]
+	# Brocéliande = réalme MYTHIQUE d'origine du Graal (on ne dit jamais « tu es DANS Brocéliande » :
+	# la run peut se dérouler aux Falaises) ; « jusque sur ces terres » relie les éclats au biome courant.
+	return "Écoute-moi bien, Voyageur, car cette nuit ne se répétera pas. Au cœur de Brocéliande dort le Graal, brisé en mille éclats que le monde a laissés filer jusque sur ces terres. Chaque traversée peut t'en rendre un, si tu survis à ce que le sentier réclame. %s" % compte
+
+
 func build_intro(scenario: Dictionary) -> Dictionary:
 	var title: String = str(scenario.get("title", "l'aventure"))
 	var pitch: String = str(scenario.get("pitch", ""))
@@ -1170,7 +1194,9 @@ func build_intro(scenario: Dictionary) -> Dictionary:
 		var run_b: Node = get_node_or_null("/root/MerlinRun")
 		biome = str(run_b.biome) if run_b != null else "foret"
 	var lieu_pool: Array = PREAMBULE_LIEU.get(biome, PREAMBULE_LIEU["foret"])
-	var intro: String = "%s\n\n%s\n\n%s" % [
+	# P3 (chantier 4) : §0 = préambule du MONDE (Graal), PUIS §1 qui tu es · §2 le lieu (biome) · §3 attente.
+	var intro: String = "%s\n\n%s\n\n%s\n\n%s" % [
+		world_preamble(),
 		_pick_preamble(PREAMBULE_QUI, "pre_qui"),
 		_pick_preamble(lieu_pool, "pre_lieu|" + biome),
 		_pick_preamble(PREAMBULE_ATTENTE, "pre_attente") % title,
