@@ -30,18 +30,18 @@ const VOICE_TICK_S: float = 0.14     # cadence des syllabes procédurales pendan
 # ── Textes du guide : voix canon de Merlin (tutoiement, « Voyageur / mon ami », taquin-mélancolique,
 # images celtiques brèves ; « tuile / rune / bouton / dé » OK en atelier, jamais de meta au-delà).
 # STATIQUES : le guide est instantané et fiable, zéro LLM. ──
-const TXT_SITUATION: String = "Ici, la forêt te parle. Chaque pas t'offre une scène... Lis-la bien, mon ami : elle réclame toujours quelque chose."
+const TXT_SITUATION: String = "Ici, le lieu te parle. Chaque pas t'offre une scène... Lis-la bien, mon ami : elle réclame toujours quelque chose."
 const TXT_VERBES: String = "Ces quatre tuiles sont tes verbes : percevoir, agir, parler, ressentir. Tout geste commence par l'un d'eux."
 const TXT_RUNES: String = "Et voilà tes runes, ta manière de faire. Quand l'or souligne une tuile ou une rune, c'est qu'elle répond à ce que le lieu réclame. Suis l'or, il ment rarement."
 const TXT_COMBO: String = "Laisse-moi faire, pour cette fois. Un verbe... une rune... et le geste prend forme."
 const TXT_PREVIEW: String = "Vois : le bouton s'éveille, notre geste est prêt. Clique, et regarde bien... je le scelle."
-const TXT_SCEAU: String = "Le dé a roulé. Halo vert, la forêt cède ; rouge, elle se cabre. Et le sceau, lui, te dit combien."
+const TXT_SCEAU: String = "Le dé a roulé. Halo vert, le lieu cède ; rouge, il se cabre. Et le sceau, lui, te dit combien."
 const TXT_JAUGES: String = "Deux anneaux veillent là-haut. Le vert, ton Intégrité : garde-la vivante. Le violet, la Corruption... elle ne demande qu'à grandir. Entre les deux, le chemin qu'il te reste à parcourir."
 # I2 : la variante s'ancre sur ce qui vient RÉELLEMENT de se passer (partiel servi ou non).
-const TXT_POUSSER_REEL: String = "La forêt n'a cédé qu'à moitié, Voyageur. Encaisser le coup, ou pousser le passage en payant d'un peu de toi... Cette fois, j'encaisse pour nous."
-const TXT_POUSSER_INFO: String = "La forêt a tranché net, cette fois. Mais quand elle ne cède qu'à moitié, tu choisiras : encaisser le coup, ou pousser le passage... en payant d'un peu de toi."
+const TXT_POUSSER_REEL: String = "Le lieu n'a cédé qu'à moitié, Voyageur. Encaisser le coup, ou pousser le passage en payant d'un peu de toi... Cette fois, j'encaisse pour nous."
+const TXT_POUSSER_INFO: String = "Le lieu a tranché net, cette fois. Mais quand il ne cède qu'à moitié, tu choisiras : encaisser le coup, ou pousser le passage... en payant d'un peu de toi."
 const TXT_GREFFES: String = "En chemin, on t'offrira des greffes et des talents pour nourrir tes verbes. La première t'attend au prochain pas... choisis, ou passe ton chemin."
-const TXT_ENVOI: String = "À toi de jouer, Voyageur. La forêt t'attend... et moi, je regarde."
+const TXT_ENVOI: String = "À toi de jouer, Voyageur. Le sentier t'attend... et moi, je regarde."
 
 # lu duck-typé par merlin_game (_tuto_blocks) et l'outillage : true = le guide confisque les clics
 var blocking: bool = false
@@ -518,10 +518,11 @@ func _build_ui() -> void:
 	fsb.set_corner_radius_all(10)
 	_frame.add_theme_stylebox_override("panel", fsb)
 	_root.add_child(_frame)
-	# Bandeau parchemin : la voix de Merlin (INK sur CREAM, même grammaire que l'encart).
+	# Vague D (D3) : bandeau = VOIX DE MERLIN dans son cartouche BLEUTÉ (bleu-nuit + liseré bleu), texte
+	# MERLIN_BLUE - nettement distinct du récit de scène (encart crème/INK). Fonte de thème (lisibilité).
 	_banner = PanelContainer.new()
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.add_theme_stylebox_override("panel", _Visual.cream_style())
+	_banner.add_theme_stylebox_override("panel", _Visual.merlin_speech_style())
 	_root.add_child(_banner)
 	var col: VBoxContainer = VBoxContainer.new()
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -533,8 +534,11 @@ func _build_ui() -> void:
 	_banner_text.scroll_active = false
 	_banner_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_banner_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_banner_text.add_theme_color_override("default_color", _Visual.INK)
+	_banner_text.add_theme_color_override("default_color", _Visual.MERLIN_BLUE)  # D3 : voix bleutée de Merlin
 	_banner_text.add_theme_font_size_override("normal_font_size", _Visual.FS_CAPTION)
+	# D3 (revue design §23) : PAS de fonte serif ornée ici - le bandeau porte des PARAGRAPHES longs
+	# relus à chaque etape du guide (lisibilité prioritaire, R118/R154). La teinte bleue + le cartouche
+	# suffisent à distinguer la voix ; la fonte serif reste sur les surfaces courtes/one-shot (intro, proposition).
 	_banner_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_banner_text)
 	_caret = _Visual.make_label(_Visual.GOLD_DARK, _Visual.FS_HINT)

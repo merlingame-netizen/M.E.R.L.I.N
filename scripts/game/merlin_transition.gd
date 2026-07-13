@@ -135,19 +135,23 @@ func change_scene_merlin(path: String, line: String, gate: Callable = Callable()
 	var z1: float = 1.0 if rm else 1.7
 	art.scale = Vector2.ONE
 	art.modulate.a = 0.0
-	var bubble: MerlinSpeechBubble = MerlinSpeechBubble.new()
-	bubble.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_overlay.add_child(bubble)
 	var t_in: Tween = create_tween().set_parallel(true)
 	t_in.tween_property(art, "modulate:a", 1.0, 0.4 * m).set_trans(Tween.TRANS_SINE)
 	if not rm:
 		t_in.tween_property(art, "scale", Vector2(z1, z1), 2.2 * m).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	# Vague D (D1) : caption de transition NEUTRALISÉE. Plus de réplique CANNÉE - Merlin ne « parle »
+	# (bulle) QUE si une VRAIE réplique vivante est fournie (menu : voix pré-générée). Réplique vide →
+	# on garde le montage visuel (voile + zoom vers Merlin) SANS bulle : zéro panneau de texte qui traîne.
 	var spoken: String = line.strip_edges()
-	if spoken == "":
-		spoken = "Le sentier s'ouvre, Voyageur… avançons."  # filet si la réplique LLM n'était pas prête
-	var mood: String = MerlinSceneArt.mood_for_text(spoken)
+	var mood: String = "neutral"
+	var bubble: MerlinSpeechBubble = null
+	if spoken != "":
+		mood = MerlinSceneArt.mood_for_text(spoken)
+		bubble = MerlinSpeechBubble.new()
+		bubble.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_overlay.add_child(bubble)
+		bubble.show_line(spoken, _montage_head.bind(art), mood)
 	art.set_eye_mood(mood)
-	bubble.show_line(spoken, _montage_head.bind(art), mood)
 
 	# 3) Laisse parler, + éventuel gate (montage d'arc) borné.
 	await get_tree().create_timer((1.2 if rm else 2.6) * m).timeout
@@ -160,11 +164,12 @@ func change_scene_merlin(path: String, line: String, gate: Callable = Callable()
 	# 4) Fondu du montage → swap → révélation.
 	var t_out: Tween = create_tween().set_parallel(true)
 	t_out.tween_property(art, "modulate:a", 0.0, 0.35 * m).set_trans(Tween.TRANS_SINE)
-	t_out.tween_property(bubble, "modulate:a", 0.0, 0.25 * m).set_trans(Tween.TRANS_SINE)
+	if bubble != null:
+		t_out.tween_property(bubble, "modulate:a", 0.0, 0.25 * m).set_trans(Tween.TRANS_SINE)
 	await t_out.finished
 	if is_instance_valid(art):
 		art.queue_free()
-	if is_instance_valid(bubble):
+	if bubble != null and is_instance_valid(bubble):
 		bubble.queue_free()
 	get_tree().change_scene_to_file(path)
 	await get_tree().process_frame

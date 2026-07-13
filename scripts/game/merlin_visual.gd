@@ -24,6 +24,14 @@ const BORDER_BRUN: Color = Color("4A3B28")# liseré brun (panneau / carte Commun
 const RING_BG: Color = Color("3A3228")    # fond d'anneau de jauge / nœud futur de la map
 const RARE_BLUE: Color = Color("5A7A8C")  # bleu-acier (rareté Rare / déviation map)
 
+# ── Vague D (D3) - VOIX DE MERLIN : registre BLEUTÉ distinct du récit de scène (crème/INK) et des
+# jauges. Le guide/narrateur qui s'adresse au Voyageur parle en bleu, dans un cartouche bleu-nuit.
+# Calibré sur EYE_NEUTRAL / RARE_BLUE mais ÉCLAIRCI pour rester LISIBLE (pilier §23) sur fond sombre. ──
+const MERLIN_BLUE: Color = Color("A6CFF0")         # texte de la voix de Merlin (clair, fort contraste sur bleu-nuit)
+const MERLIN_SPEECH_BG: Color = Color(0.08, 0.11, 0.17, 0.94)  # cartouche bleu-nuit (récit reste crème)
+const MERLIN_SPEECH_BORDER: Color = Color("5F8FBE") # liseré bleuté (≠ liseré or du récit)
+const MERLIN_FONT_PATH: String = "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # serif roman élégant + lisible
+
 # ── Yeux de Merlin — humeurs (R124, user 2026-06-29) ──
 const EYE_NEUTRAL: Color = Color("5FB8E8")  # bleu BRILLANT (humeur neutre)
 const EYE_SURPRISE: Color = Color("F2D24A") # jaune lumineux (surprise / suspicion)
@@ -331,6 +339,31 @@ static func cream_style() -> StyleBoxFlat:
 	sb.border_color = GOLD
 	sb.set_content_margin_all(18)
 	return sb
+
+
+# Vague D (D3) - Cartouche de la VOIX DE MERLIN : fond bleu-nuit + liseré bleuté, même géométrie que
+# cream_style (respiration identique) mais registre DISTINCT du récit de scène (crème). N'habille QUE
+# la parole de Merlin (guide, proposition, cadrage d'intro) ; jamais le récit du monde ni les piliers.
+static func merlin_speech_style() -> StyleBoxFlat:
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = MERLIN_SPEECH_BG
+	sb.set_corner_radius_all(8)
+	sb.set_border_width_all(3)
+	sb.border_color = MERLIN_SPEECH_BORDER
+	sb.set_content_margin_all(18)
+	return sb
+
+
+# Vague D (D3) - Fonte distincte de la voix de Merlin (serif roman élégant, lisible). Chargée à la
+# demande et mise en cache. Renvoie null si la ressource manque : l'appelant garde alors la fonte de
+# thème (teinte + cartouche bleutés suffisent à distinguer la voix). Jamais appelée par les probes/soak.
+static var _merlin_font: FontFile = null
+static func merlin_speech_font() -> FontFile:
+	if _merlin_font == null and ResourceLoader.exists(MERLIN_FONT_PATH):
+		var res: Resource = load(MERLIN_FONT_PATH)
+		if res is FontFile:
+			_merlin_font = res
+	return _merlin_font
 
 
 # Label typé couleur+taille (source : merlin_game._mk_label).

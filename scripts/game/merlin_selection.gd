@@ -165,9 +165,10 @@ func _on_pick(title: String, pitch: String) -> void:
 	get_node("/root/MerlinRun").new_run(skel)
 	# Arc narratif LLM en arrière-plan (fire-and-forget) ; l'interstitiel in-game (R111) le couvre.
 	get_node("/root/MerlinScenario").prepare_arc(skel)
-	# v10.19 — montage du scénario : transition « zoom vers Merlin qui parle » (réplique fixe : l'arc
-	# génère déjà, single-flight → pas de génération ici).
-	MerlinTransition.change_scene_merlin(GAME_SCENE, "Le sentier se dessine sous mes doigts, Voyageur…")
+	# v10.19 - montage du scénario : transition « zoom vers Merlin ». Vague D (D1) : plus de caption
+	# CANNÉE (« Le sentier se dessine sous mes doigts… ») - on garde le montage VISUEL (voile + zoom
+	# vers Merlin), sans bulle de texte (réplique vide → change_scene_merlin n'affiche aucun panneau).
+	MerlinTransition.change_scene_merlin(GAME_SCENE, "")
 
 
 func _build_ui() -> void:

@@ -1820,6 +1820,21 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R155 : VOIX DE MERLIN + biome-agnostique (2026-07-13, retours playtest) - zero-balance** :
+  (D1) plus de caption de transition « Le sentier se dessine sous mes doigts » : `change_scene_merlin` ne cree
+  la bulle QUE si une vraie replique vivante est fournie ; le fondu visuel reste, le filet canne disparait.
+  (D2) TEXTES BIOME-AGNOSTIQUES : la foret n'est qu'UN biome parmi d'autres (regle permanente) -> tout texte
+  GENERIQUE (tuto TXT_*, proposition « Premier pas sur le sentier », PUSH_CODAS, DEFAULT_PITCH) ne dit plus
+  « foret » mais « le lieu » (entite personnifiee) / « le sentier ». Les banques *_BY_BIOME (foret/falaises)
+  restent biome-keyees (legitimes). (D3) VOIX DE MERLIN distincte : `MERLIN_BLUE` (A6CFF0, contraste ~10:1) +
+  `merlin_speech_style()` (cartouche bleu-nuit borde) + `merlin_speech_font()` dans merlin_visual.gd. Appliquee a
+  TOUTE parole de Merlin (tuto, proposition, cadrage d'intro world_setup_short) ; le RECIT de scene reste creme
+  (voix du monde), les piliers/PNJ gardent leur style. Anti-bleed : `_restore_encart_cream` (tween, pas de snap)
+  remet l'encart partage en creme a chaque beat + au resume. Fonte ornee Morris reservee aux surfaces courtes
+  (proposition) ; les paragraphes longs gardent la fonte de theme (lisibilite §23), la distinction portee par
+  couleur + cartouche. Amende R149/R154 (le cadrage d'intro = voix de Merlin bleutee). Balance ISO. Restes
+  signales : balayage cadratin des textes player-facing pre-existants + accents LLM (« repond ») en post-process.
+
 - **R154 : VAGUE A, lisibilite du beat (2026-07-13, retours playtest) - 4 fixes zero-balance** :
   (A1) l'intro se redigeait HORS de la capsule (course de layout au 1er frame) -> `_begin` passe coroutine,
   `await get_tree().process_frame` avant le 1er typewriter (precedent merlin_menu). (A2) le niveau d'action

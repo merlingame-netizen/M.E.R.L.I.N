@@ -16,7 +16,7 @@ const COL_VIOLET: Color = MerlinVisual.VIOLET
 const COL_DIM: Color = MerlinVisual.DIM_WARM
 
 const DEFAULT_TITLE: String = "Le Sentier des Murmures"
-const DEFAULT_PITCH: String = "Un chemin s'ouvre sous les fougères, là où nul n'a marché. La forêt t'y attend, patiente."
+const DEFAULT_PITCH: String = "Un chemin s'ouvre là où nul n'a marché. Le sentier t'y attend, patient."  # Vague D (D2) : biome-agnostique (repli lancement direct)
 const END_SCENE: String = "res://scenes/MerlinEnd.tscn"
 const GAMEPLAY_MUSIC: String = "res://music/gameplay/gameplay_calm.wav"
 # P3 (chantier 5) — variante musicale PAR BIOME (défaut = nappe calme forêt). Filet dans
@@ -100,6 +100,7 @@ var _situ_tw: Tween  # fondu de l'encart (interstitiel) — tué avant réutilis
 var _prose_tw: Tween  # v10.15 : prose breathing loop (killed before next typewriter)
 var _resolve_tw: Tween = null  # v11-V2a : fade armé/désarmé du bouton Résoudre (self_modulate)
 var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
+var _encart_bg_tw: Tween = null  # Vague D (D3) : fondu du fond d'encart (bleu-nuit voix de Merlin ↔ crème récit)
 
 # v10.11/12 (user 2026-06-07) — Map du chemin (coin droit) + Draft « 1 carte sur 3 » aux beats clés.
 # v11-V2b (spec matrice ligne 9) : le draft vit DANS les zones — les 3 cartes remplacent l'éventail,
@@ -366,6 +367,12 @@ func _present_current_beat() -> void:
 	# de zone (fade-out → contenu → fade-in), JAMAIS par tween de position (leçon C1 : tweener la
 	# position d'un Control ancré fait perdre la main au layout). Le slide-up v10.15 est supprimé.
 	_set_encart_phase(MerlinVisual.INK_DIM)
+	# Vague D (D3, ANTI-BLEED) : la capsule d'intro teintait l'encart en bleu-nuit (cartouche de la voix
+	# de Merlin) ; le récit du monde reprend TOUJOURS le parchemin crème. On restaure le fond ICI (hors du
+	# callback de swap_zone : ce reset synchrone préserve le flow de beat, cf. autoplay 1/1), mais en TWEEN
+	# parallèle au cross-fade (jamais de snap dark->light) → aucun flash bas-contraste. Idempotent : au beat
+	# 2+ et au resume le fond est déjà crème, le tween est sauté (garde is_equal_approx).
+	_restore_encart_cream()
 	if _situ_tw != null and _situ_tw.is_valid():
 		_situ_tw.kill()  # fondu d'interstitiel en vol → le swap de zone prend la main sur l'alpha
 	MerlinVisual.swap_zone(_situ_panel, func() -> void:
@@ -1023,9 +1030,9 @@ func _on_pact_choice(pk: String, accepted: bool) -> void:
 # v10.21 (Wave G, R130) — Choix « Encaisser / Pousser » sous la vignette : 1 geste, zéro timer (R99),
 # boutons ≥44 px, LEDGER affiché par bouton (prix criant AVANT le clic). Anti-misclick : disabled 250 ms.
 const PUSH_CODAS: Array = [
-	"[i]Vous forcez votre volonté dans la brèche.[/i] La forêt cède — mais quelque chose s'infiltre dans votre sillage.",
+	"[i]Vous forcez votre volonté dans la brèche.[/i] Le lieu cède - mais quelque chose s'infiltre dans votre sillage.",
 	"[i]Vous poussez le passage d'un souffle de plus.[/i] La voie s'ouvre en grand ; l'ombre, elle, retient votre nom.",
-	"[i]Vous arrachez ce dernier effort à vous-même.[/i] La forêt plie, et prélève sa part sans un mot.",
+	"[i]Vous arrachez ce dernier effort à vous-même.[/i] Le lieu plie, et prélève sa part sans un mot.",
 ]
 
 
@@ -1964,6 +1971,21 @@ func _set_encart_phase(col: Color) -> void:
 	_encart_phase_tw.tween_property(_situ_sb, "border_color", col, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())
 
 
+# Vague D (D3) - restaure le fond CRÈME de l'encart (récit du monde) après la capsule d'intro bleu-nuit
+# (voix de Merlin). Tween parallèle au cross-fade → jamais de snap dark->light (pilier §23, anti-flash).
+# Idempotent : fond déjà crème (beat 2+, resume) → no-op via is_equal_approx. reduced_motion : snap direct.
+func _restore_encart_cream() -> void:
+	if _situ_sb == null or _situ_sb.bg_color.is_equal_approx(COL_TEXT):
+		return
+	if _encart_bg_tw != null and _encart_bg_tw.is_valid():
+		_encart_bg_tw.kill()
+	if MerlinVisual.reduced_motion:
+		_situ_sb.bg_color = COL_TEXT
+		return
+	_encart_bg_tw = create_tween()
+	_encart_bg_tw.tween_property(_situ_sb, "bg_color", COL_TEXT, MerlinVisual.DUR_ENCART_TINT * MerlinVisual.motion())
+
+
 # Affordance « clic pour passer » affichée DÈS le début du typewriter (avant le caret « continuer »
 # clignotant qui n'apparaît qu'à la fin) — comble le temps mort perçu (user 2026-06-07, pilier FACILE).
 func _show_skip_hint() -> void:
@@ -1980,7 +2002,7 @@ func _show_skip_hint() -> void:
 # MOUSE_FILTER_IGNORE : jamais bloquants (l'autoplay n'a rien à servir, le harnais reste vert).
 const TUTO_HINT_A: String = "Choisis un verbe (tuile) et une manière (carte), puis Résous."
 # N4-RUNES (revue design, finding 4) : le hint couvre les DEUX moitiés du geste (tuiles ET cartes).
-const TUTO_HINT_B: String = "La forêt réclame : tuiles et cartes nimbées d'or y répondent."  # N4-P1 : cadre lumineux (ex-souligné)
+const TUTO_HINT_B: String = "Le sentier réclame : tuiles et cartes nimbées d'or y répondent."  # N4-P1 : cadre lumineux (ex-souligné) ; Vague D (D2) : biome-agnostique
 
 
 # À l'ouverture du choix : hint A au beat 1, hint B au beat 2 — une seule fois par profil
@@ -2465,6 +2487,12 @@ func _show_intro_popup() -> void:
 	# une zone estompée → état souris re-appliqué ; _set_choice_ui(false) est déjà passé dans _begin).
 	_render_hand(false)
 	MerlinVisual.set_zone_active(_hand_box, false)
+	# Vague D (D3) : la capsule d'intro EST la voix de Merlin → cartouche BLEU-NUIT (bg + liseré bleutés).
+	# Fonte de THÈME conservée (encart Z3 PARTAGÉ avec le récit de scène : pas d'override de fonte à laver,
+	# et lisibilité du cadrage §23). Le fond est restauré en crème par _present_current_beat (anti-bleed).
+	if _situ_sb != null:
+		_situ_sb.bg_color = MerlinVisual.MERLIN_SPEECH_BG
+	_set_encart_phase(MerlinVisual.MERLIN_SPEECH_BORDER)
 	# Z3 : le fil porte le cadrage court (titre révélé d'emblée, cadrage au typewriter via from_chars R128).
 	MerlinVisual.swap_zone(_situ_panel, func() -> void:
 		_typewriter(_intro_bbcode(str(_intro_data["intro"])), true, _situation_text,
@@ -2479,10 +2507,15 @@ func _show_intro_popup() -> void:
 # enrichit le pitch (_bg_intro). Titre en GOLD_DARK : l'or LISIBLE sur crème (GOLD pur ≈1.5:1,
 # sous le seuil 3:1 du §23 — même choix que degree_color réussite).
 func _intro_bbcode(intro_text: String) -> String:
-	var gold: String = MerlinVisual.GOLD_DARK.to_html(false)
-	return "[center][font_size=%d][color=#%s]%s[/color][/font_size]\n\n%s\n\n[color=#%s]✦ Objectif : %s[/color][/center]" % [
+	# Vague D (D3) : la capsule d'intro devient le CARTOUCHE de la voix de Merlin (fond bleu-nuit, posé
+	# par _show_intro_popup). Le cadrage du monde (parole de Merlin) passe en MERLIN_BLUE ; titre +
+	# objectif en GOLD plein (lisible sur bleu-nuit, GOLD_DARK y muddait). Le récit de scène, lui, garde
+	# le parchemin crème (_present_current_beat restaure bg crème + fonte de thème : zéro bleed).
+	var gold: String = MerlinVisual.GOLD.to_html(false)
+	var blue: String = MerlinVisual.MERLIN_BLUE.to_html(false)
+	return "[center][font_size=%d][color=#%s]%s[/color][/font_size]\n\n[color=#%s]%s[/color]\n\n[color=#%s]✦ Objectif : %s[/color][/center]" % [
 		MerlinVisual.FS_TITLE_POPUP, gold, str(_intro_data.get("title", "")),
-		intro_text, gold, str(_intro_data.get("objectif", ""))]
+		blue, intro_text, gold, str(_intro_data.get("objectif", ""))]
 
 
 # Bouton « Accepter ✦ » dans le slot central de Z4 (56 px de haut : tient dans la ligne d'état 72 px).
@@ -2710,8 +2743,13 @@ func _build_tuto_prompt() -> void:
 	_tuto_prompt_row = HBoxContainer.new()
 	_tuto_prompt_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tuto_prompt_row.add_theme_constant_override("separation", 20)
-	var q: Label = MerlinVisual.make_label(MerlinVisual.CREAM, MerlinVisual.FS_CAPTION)
-	q.text = "Premier pas dans la forêt, Voyageur... je te guide ?"  # revue design M2 : court
+	# Vague D - D3 : la question est la VOIX DE MERLIN (MERLIN_BLUE + fonte dédiée, sur le fond sombre
+	# de Z4 : fort contraste) ; D2 : wording biome-agnostique (« sur le sentier », plus « dans la forêt »).
+	var q: Label = MerlinVisual.make_label(MerlinVisual.MERLIN_BLUE, MerlinVisual.FS_CAPTION)
+	q.text = "Premier pas sur le sentier, Voyageur... je te guide ?"  # revue design M2 : court
+	var qfont: FontFile = MerlinVisual.merlin_speech_font()
+	if qfont != null:
+		q.add_theme_font_override("font", qfont)
 	q.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	q.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tuto_prompt_row.add_child(q)
