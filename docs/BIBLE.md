@@ -1830,6 +1830,19 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R162 : MUSIQUE DE GAMEPLAY MELODIQUE (tools/melody_forge.py, 2026-07-15)** : les musiques Stable Audio
+  (diffusion) etaient jugees trop bizarres/ambiantes et NON controlables. Remplacees par un COMPOSITEUR celtique
+  algorithmique 100% pur-numpy pilotant les synthes physiques existants (harpe Karplus-Strong, bodhran membrane)
+  + une voix tin-whistle additive band-limitee (zero aliasing). La MELODIE est garantie par construction :
+  mode-snap (dorien/mixolydien/eolien/penta), contour ~70% conjoint + arche + anti-monotonie, cadence croissante
+  vers tonique/quinte, structure AABB, ambitus D4-A5. CONTROLE natif (le besoin que la diffusion ne pouvait pas) :
+  --bpm (vitesse), --mode/--key/--mood sain|trouble (teinte), --beats/--pattern jig|reel|air/--density (beats),
+  --bars, --motif/--seed (« partir d'un son »). Rendu physical-modeling -> reverb CIRCULAIRE (boucle seamless,
+  discontinuite <0.5 pas d'echantillon) -> -24 LUFS / TP -12 (sfx_normalize). Defauts : gameplay_calm (foret,
+  dorien D, air melodique + pulsation douce, harpe+whistle) ; gameplay_falaises (eolien D, air rubato, whistle +
+  cordes + vent, mood trouble). Byte-reproductible (R119). Variantes A/B stagees output/gen_music, audition via
+  output/audio_control.html. Amende R160/R161 (musique diffusion -> composition symbolique controlable).
+
 - **R161 : AUDIO ROUND 2, son unitaire/carte + ticks organiques + vraie musique (2026-07-14, retours ecoute)** :
   (1) DISTRIBUTION SONORE PAR CARTE : un flick UNITAIRE par carte REELLEMENT tiree (vue neuve), empile en cascade
   decalee DEAL_STAGGER_MS(55) x motion(), round-robin deal/__v2/__v3 sur pool 8 voix. 1 carte=1 son, N=N, 0=silence.

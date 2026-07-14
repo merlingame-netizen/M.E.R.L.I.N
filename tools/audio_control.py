@@ -16,8 +16,13 @@ import base64, io, json, os, sys, html, wave, contextlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SFX_DIR = os.path.join(ROOT, "audio", "sfx")
-MUSIC_DIRS = [os.path.join(ROOT, "music", "gameplay"), os.path.join(ROOT, "music", "intro")]
+GEN_MUSIC_DIR = os.path.join(ROOT, "output", "gen_music")
+MUSIC_DIRS = [os.path.join(ROOT, "music", "gameplay"), os.path.join(ROOT, "music", "intro"),
+              GEN_MUSIC_DIR]
 MANIFEST = os.path.join(SFX_DIR, "manifest.json")
+# Manifests de musique (stats LUFS/TP) fusionnes pour l'affichage.
+MUSIC_MANIFESTS = [os.path.join(ROOT, "music", "gameplay", "manifest.json"),
+                   os.path.join(GEN_MUSIC_DIR, "manifest.json")]
 OUT = os.path.join(ROOT, "output", "audio_control.html")
 
 # Sons generatifs (Stable Audio 3) : 13 sons riches + 5 ticks UI bascules en organique (R161).
@@ -46,8 +51,13 @@ SECTIONS = [
         "card_pick", "card_pick__v2", "card_pick__v3", "card_play", "card_discard",
         "deal", "deal__v2", "deal__v3", "seal_stamp", "beat_turn", "ogham_chime"]),
 ]
-MUSIC_IDS = ["gameplay_calm", "gameplay_falaises", "boot_eveil",
+MUSIC_IDS = ["boot_eveil",
              "pad_choeur", "pad_etre", "pad_chevalier", "pad_compagnon", "pad_enfant"]
+# Musique de gameplay MELODIQUE (melody_forge R162) : 2 defauts + variantes A/B a
+# comparer (seeds/modes/bpm differents) pour choisir le reglage.
+MELODY_IDS = ["gameplay_calm", "gameplay_falaises",
+              "gameplay_calm__v2", "gameplay_calm__mixo", "gameplay_calm__jig",
+              "gameplay_falaises__v2"]
 
 
 def _wav_meta(path):
@@ -95,6 +105,23 @@ def _manifest():
     return {}
 
 
+def _merge_music_manifests(flat):
+    """Fusionne les manifests de musique (LUFS/TP) dans le dict aplati."""
+    key_map = {"true_peak_db": "true_peak"}
+    for mp in MUSIC_MANIFESTS:
+        with contextlib.suppress(Exception):
+            m = json.load(io.open(mp, encoding="utf-8"))
+            for sid, entry in m.items():
+                if not isinstance(entry, dict):
+                    continue
+                out = dict(entry)
+                for src, dst in key_map.items():
+                    if src in out and dst not in out:
+                        out[dst] = out[src]
+                flat.setdefault(sid, out)
+    return flat
+
+
 def _card(sid, man, dirs):
     path = _find(dirs, sid)
     gen = sid in GENERATIVE
@@ -135,13 +162,17 @@ def _card(sid, man, dirs):
 
 
 def build():
-    man = _manifest()
+    man = _merge_music_manifests(_manifest())
     sections_html = []
     for title, ids in SECTIONS:
         cards = "".join(_card(i, man, [SFX_DIR]) for i in ids)
         sections_html.append(f'<section><h2>{html.escape(title)}</h2><div class="grid">{cards}</div></section>')
+    melody_cards = "".join(_card(i, man, MUSIC_DIRS) for i in MELODY_IDS)
+    sections_html.append('<section><h2>Musique GAMEPLAY melodique (melody_forge R162) - '
+                         '2 defauts + variantes A/B a comparer</h2>'
+                         f'<div class="grid">{melody_cards}</div></section>')
     music_cards = "".join(_card(i, man, MUSIC_DIRS) for i in MUSIC_IDS)
-    sections_html.append(f'<section><h2>Musique &amp; nappes</h2><div class="grid">{music_cards}</div></section>')
+    sections_html.append(f'<section><h2>Musique &amp; nappes (boot + piliers)</h2><div class="grid">{music_cards}</div></section>')
     body = "\n".join(sections_html)
     n_gen = len(GENERATIVE)
     return PAGE.replace("__BODY__", body).replace("__NGEN__", str(n_gen))
