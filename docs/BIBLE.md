@@ -1830,6 +1830,18 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R160 : AUDIO HYBRIDE, 13 sons riches GENERATIFS (Stable Audio 3) + 12 ticks proceduraux (2026-07-14)** :
+  Retour joueur : la synthese physique v4 (R156) sonnait TROP BRUTE. Pivot vers du GENERATIF facon ElevenLabs,
+  GRATUIT et sans nouvelle inscription : les 13 SFX RICHES (7 stingers, magic_reveal, draft_reveal,
+  whisper_threshold, corruption_tick, ink_wash, question_transition) sont generes par Stable Audio 3 (modele
+  small-sfx) sur le HF Space stabilityai/stable-audio-3, pilote headless en gradio_client avec le token HF deja
+  present (compte Mhax69), quota ZeroGPU gratuit. Les 12 TICKS UI SECS (card_pick, button_tap, deal, seal_stamp,
+  gauge_*, voice_blip, ogham_chime...) RESTENT en procedural v4 (la diffusion floute le transitoire d'un clic).
+  MEME normalisation loudness pyloudnorm (-14 dBFS true-peak, cibles par categorie) sur genere + procedural =
+  catalogue homogene. Non-deterministe : la source de verite = les WAV committes (pas le seed). Outil
+  tools/sfx_generative.py (prompts par id, re-gen : --id X --force) pour affiner a l'oreille. Amende R156
+  (procedural pur -> hybride). merlin_audio charge tout par id : le remplacement de fichier suffit, zero code.
+
 - **R159 : LISIBILITE MECANIQUE (labels + pictos) + FIX SOFTLOCK swap_zone (2026-07-14, P0 retours playtest)** :
   (C1 labels §23) chaque tuile d'action porte son MOT joueur SOUS l'icone : Perception / Agir / Conflit /
   Mysticisme / Parole (`ACTION_LABELS`/`action_label`) ; `card_name` reste la cle interne. Un vocabulaire UNIQUE

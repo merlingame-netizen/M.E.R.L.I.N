@@ -64,12 +64,13 @@
     "model": "granular+reverb",
     "category": "foley",
     "target_lufs": -26.5,
-    "lufs": -26.5,
+    "lufs": -26.57,
     "true_peak_db": -14.63,
     "peak_db": -14.65,
     "dc": -6.7e-05,
     "duration_s": 0.95,
-    "samples": 41894
+    "samples": 41894,
+    "source": "generative(stable-audio-3)"
   },
   "quill_tick": {
     "family": "foley_parchemin",
@@ -141,19 +142,21 @@
     "peak_db": -14.29,
     "dc": -6.9e-05,
     "duration_s": 0.42,
-    "samples": 18522
+    "samples": 18522,
+    "source": "generative(stable-audio-3)"
   },
   "draft_reveal": {
     "family": "modal_inharmonique",
     "model": "modal arp+reverb",
     "category": "accent",
     "target_lufs": -25.5,
-    "lufs": -25.52,
+    "lufs": -25.5,
     "true_peak_db": -14.0,
     "peak_db": -14.01,
     "dc": 9e-06,
     "duration_s": 0.95,
-    "samples": 41894
+    "samples": 41894,
+    "source": "generative(stable-audio-3)"
   },
   "ogham_chime": {
     "family": "modal_inharmonique",
@@ -177,7 +180,8 @@
     "peak_db": -14.9,
     "dc": 8e-06,
     "duration_s": 1.65,
-    "samples": 72764
+    "samples": 72764,
+    "source": "generative(stable-audio-3)"
   },
   "seal_stamp": {
     "family": "membrane_resonance",
@@ -201,7 +205,8 @@
     "peak_db": -15.73,
     "dc": -3.4e-05,
     "duration_s": 0.9,
-    "samples": 39690
+    "samples": 39690,
+    "source": "generative(stable-audio-3)"
   },
   "question_transition": {
     "family": "friction_bourdon",
@@ -213,7 +218,8 @@
     "peak_db": -15.73,
     "dc": 0.000126,
     "duration_s": 1.1,
-    "samples": 48510
+    "samples": 48510,
+    "source": "generative(stable-audio-3)"
   },
   "voice_blip": {
     "family": "voix",
@@ -237,7 +243,8 @@
     "peak_db": -15.55,
     "dc": 0.000186,
     "duration_s": 2.4,
-    "samples": 105839
+    "samples": 105839,
+    "source": "generative(stable-audio-3)"
   },
   "stinger_partiel": {
     "family": "stinger_degre",
@@ -249,7 +256,8 @@
     "peak_db": -15.45,
     "dc": 0.000168,
     "duration_s": 2.15,
-    "samples": 94814
+    "samples": 94814,
+    "source": "generative(stable-audio-3)"
   },
   "stinger_reussite": {
     "family": "stinger_degre",
@@ -261,31 +269,34 @@
     "peak_db": -15.5,
     "dc": 0.000146,
     "duration_s": 2.5,
-    "samples": 110249
+    "samples": 110249,
+    "source": "generative(stable-audio-3)"
   },
   "stinger_eclatante": {
     "family": "stinger_degre",
     "model": "ks chord+bol",
     "category": "stinger",
     "target_lufs": -24.5,
-    "lufs": -24.5,
+    "lufs": -24.51,
     "true_peak_db": -14.74,
     "peak_db": -14.75,
     "dc": 2e-05,
     "duration_s": 3.0,
-    "samples": 132297
+    "samples": 132297,
+    "source": "generative(stable-audio-3)"
   },
   "stinger_fin_accomplissement": {
     "family": "stinger_fin",
     "model": "bol+ks+bourdon",
     "category": "ending",
     "target_lufs": -24.5,
-    "lufs": -24.5,
+    "lufs": -24.61,
     "true_peak_db": -14.8,
     "peak_db": -14.97,
     "dc": -1e-05,
     "duration_s": 3.6,
-    "samples": 158758
+    "samples": 158758,
+    "source": "generative(stable-audio-3)"
   },
   "stinger_fin_mort": {
     "family": "stinger_fin",
@@ -297,19 +308,21 @@
     "peak_db": -14.47,
     "dc": 0.000123,
     "duration_s": 3.45,
-    "samples": 152144
+    "samples": 152144,
+    "source": "generative(stable-audio-3)"
   },
   "stinger_fin_corrompu": {
     "family": "stinger_fin",
     "model": "bol+modal drift+bourdon",
     "category": "ending",
     "target_lufs": -24.5,
-    "lufs": -24.57,
+    "lufs": -24.5,
     "true_peak_db": -14.0,
     "peak_db": -14.04,
     "dc": 4.8e-05,
     "duration_s": 3.5,
-    "samples": 154349
+    "samples": 154349,
+    "source": "generative(stable-audio-3)"
   },
   "card_pick__v2": {
     "family": "foley_parchemin",
