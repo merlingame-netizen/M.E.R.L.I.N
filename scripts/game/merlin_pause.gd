@@ -209,7 +209,7 @@ func _rebuild_fiche() -> void:
 		icon.call("setup", a.glyph_key(), MerlinVisual.CREAM, 2.2)
 		row.add_child(icon)
 		var nom: Label = Label.new()
-		nom.text = str(a.card_name)
+		nom.text = a.action_label()  # R159 : vocabulaire joueur (Perception/Conflit/...), pas le verbe interne brut
 		nom.add_theme_color_override("font_color", MerlinVisual.CREAM)
 		nom.add_theme_font_size_override("font_size", 16)
 		nom.custom_minimum_size = Vector2(150, 0)

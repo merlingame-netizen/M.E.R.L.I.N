@@ -17,6 +17,8 @@ signal action_clicked(card: MerlinCard)
 const _Glyph: GDScript = preload("res://scripts/game/merlin_glyph.gd")
 
 const TILE_SIZE: Vector2 = Vector2(260, 116)
+const ICON_PX: float = 40.0       # R159 (Chantier 2) : icone un peu reduite pour loger le MOT dessous
+const WORD_FS: int = 18           # R159 : taille du MOT sous l'icone (>= 16 px, lisibilite §23)
 const HOVER_SCALE: float = 1.03
 const SLOT_PX: float = 24.0       # slot de greffe (3 fixes, spec §E)
 const SLOT_GAP: float = 12.0
@@ -109,11 +111,11 @@ func _build() -> void:
 	verb_row.add_theme_constant_override("separation", 6)
 	verb_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(verb_row)
-	# R158 : la tuile porte un GLYPHE-ICONE (oeil/main/epee/magie/bouche) a la place du texte du
-	# verbe. card_name reste la cle interne du talent ; le nom se lit sur la Fiche du Voyageur (Pause).
-	# Le badge « +N » (niveau d'action) reste TOUJOURS visible juste apres (R154/A2).
+	# R158 : la tuile porte un GLYPHE-ICONE (oeil/main/epee/magie/bouche) EN HAUT. R159 (Chantier 2) :
+	# le MOT s'affiche EN DESSOUS (« il faut le mot », user) ; card_name reste la cle interne du talent.
+	# Le badge « +N » (niveau d'action) reste TOUJOURS visible a cote de l'icone (R154/A2).
 	var icon: Control = _Glyph.new()
-	icon.custom_minimum_size = Vector2(46, 46)
+	icon.custom_minimum_size = Vector2(ICON_PX, ICON_PX)
 	icon.call("setup", card.glyph_key(), MerlinVisual.CREAM, 2.8)
 	verb_row.add_child(icon)
 	# Badge de talent « +N » (skill_mod du verbe, R120) : GOLD sur SURFACE. Vague A (A2) : TOUJOURS
@@ -125,6 +127,18 @@ func _build() -> void:
 	_talent_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_talent_lbl.visible = true
 	verb_row.add_child(_talent_lbl)
+
+	# R159 (Chantier 2) : le MOT sous l'icone — Perception / Agir / Conflit / Mysticisme / Parole.
+	# CREAM sur SURFACE, centre, >= 16 px (lisibilite §23). Le jargon de tag reste hors ecran (N4-RUNES) :
+	# ce libelle est le vocabulaire JOUEUR de l'action, pas un tag. card_name = cle interne (Fiche du Voyageur).
+	var word: Label = Label.new()
+	word.text = card.action_label()
+	word.add_theme_color_override("font_color", MerlinVisual.CREAM)
+	word.add_theme_font_size_override("font_size", WORD_FS)
+	word.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	word.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	word.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(word)
 
 	# N4-RUNES : les 2 pastilles de tags de base sont SUPPRIMÉES (zéro jargon à l'écran). Les tags
 	# de base restent 100 % MÉCANIQUES (couverture, feedforward, moteur d20) : seul l'affichage part.
@@ -359,7 +373,7 @@ func _draw_mastery_gauge() -> void:
 	var total_w: float = 150.0
 	var gap: float = 4.0
 	var seg_w: float = (total_w - gap * float(MASTERY_SEGMENTS - 1)) / float(MASTERY_SEGMENTS)
-	var y: float = 40.0
+	var y: float = 74.0   # R159 (Chantier 2) : jauge sous le MOT (etait 40 ; icone + mot occupent le haut)
 	var h: float = 4.0
 	var x0: float = (size.x - total_w) / 2.0
 	for i in MASTERY_SEGMENTS:

@@ -159,15 +159,44 @@ func _draw() -> void:
 	var r: float = minf(s.x, s.y) * 0.34
 	match glyph:
 		"eye":
-			draw_arc(c, r, 0.0, TAU, 48, line_color, line_w, true)
-			draw_circle(c, r * 0.30, line_color)
+			# R159 (Chantier 3) : oeil en AMANDE (vesica celtique) — 2 paupieres se rejoignant en pointe,
+			# iris cercle + pupille pleine + reflet. Silhouette d'oeil lisible (vs l'ancien cercle+point).
+			var ey_w: float = r * 1.15
+			var ey_h: float = r * 0.66
+			var ey_top: PackedVector2Array = PackedVector2Array()
+			var ey_bot: PackedVector2Array = PackedVector2Array()
+			for ey_i in 25:
+				var ey_t: float = float(ey_i) / 24.0
+				var ey_x: float = lerpf(-ey_w, ey_w, ey_t)
+				var ey_k: float = sin(ey_t * PI)  # 0 aux commissures, 1 au centre
+				ey_top.append(c + Vector2(ey_x, -ey_h * ey_k))
+				ey_bot.append(c + Vector2(ey_x, ey_h * ey_k))
+			draw_polyline(ey_top, line_color, line_w, true)
+			draw_polyline(ey_bot, line_color, line_w, true)
+			draw_arc(c, r * 0.40, 0.0, TAU, 32, line_color, line_w, true)   # iris
+			draw_circle(c, r * 0.17, line_color)                            # pupille pleine
+			draw_circle(c + Vector2(-r * 0.14, -r * 0.14), maxf(line_w * 0.55, 1.2), MerlinVisual.CREAM)  # reflet vif
 		"sword":
-			draw_line(c + Vector2(0, -r), c + Vector2(0, r * 0.65), line_color, line_w, true)        # lame
-			draw_line(c + Vector2(-r * 0.55, -r * 0.42), c + Vector2(r * 0.55, -r * 0.42), line_color, line_w, true)  # garde
-			var tip: PackedVector2Array = PackedVector2Array([
-				c + Vector2(-r * 0.16, -r), c + Vector2(0, -r * 1.28), c + Vector2(r * 0.16, -r)])
-			draw_polyline(tip, line_color, line_w, true)                                              # pointe
-			draw_line(c + Vector2(0, r * 0.65), c + Vector2(0, r), line_color, line_w * 1.7, true)    # pommeau
+			# R159 (Chantier 3) : epee — lame en FEUILLE pleine (silhouette solide) + garde relevee +
+			# fusee + pommeau annele. Remplace l'ancienne lame-fil + fleche (trop grele, « cheap »).
+			var sw_top: float = -r * 1.2
+			var sw_guard: float = r * 0.3
+			var sw_bw: float = r * 0.17
+			draw_colored_polygon(PackedVector2Array([
+				c + Vector2(0.0, sw_top),
+				c + Vector2(sw_bw, sw_top + r * 0.42),
+				c + Vector2(sw_bw * 0.5, sw_guard),
+				c + Vector2(-sw_bw * 0.5, sw_guard),
+				c + Vector2(-sw_bw, sw_top + r * 0.42)]), line_color)   # lame pleine
+			draw_line(c + Vector2(0.0, sw_top + r * 0.5), c + Vector2(0.0, sw_guard - r * 0.05),
+				MerlinVisual.SURFACE, maxf(line_w * 0.7, 1.4), true)   # gouttiere (fuller) gravee
+			draw_polyline(PackedVector2Array([
+				c + Vector2(-r * 0.62, sw_guard + r * 0.08),
+				c + Vector2(-r * 0.5, sw_guard - r * 0.02),
+				c + Vector2(r * 0.5, sw_guard - r * 0.02),
+				c + Vector2(r * 0.62, sw_guard + r * 0.08)]), line_color, line_w, true)   # garde
+			draw_line(c + Vector2(0.0, sw_guard), c + Vector2(0.0, r * 0.78), line_color, line_w * 1.5, true)  # fusee
+			draw_arc(c + Vector2(0.0, r * 0.92), r * 0.15, 0.0, TAU, 20, line_color, line_w, true)   # pommeau annele
 		"spiral":
 			var pts: PackedVector2Array = PackedVector2Array()
 			var steps: int = 64
@@ -268,9 +297,22 @@ func _draw() -> void:
 			draw_arc(c + Vector2(-r * 0.42, -r * 0.25), r * 0.45, deg_to_rad(150), deg_to_rad(390), 20, line_color, line_w, true)
 			draw_arc(c + Vector2(r * 0.42, -r * 0.25), r * 0.45, deg_to_rad(150), deg_to_rad(390), 20, line_color, line_w, true)
 			draw_polyline(PackedVector2Array([c + Vector2(-r * 0.8, r * 0.02), c + Vector2(0.0, r), c + Vector2(r * 0.8, r * 0.02)]), line_color, line_w, true)
-		"speech":  # verbe — bulle de parole avec queue
-			draw_arc(c + Vector2(0.0, -r * 0.1), r * 0.85, 0.0, TAU, 40, line_color, line_w, true)
-			draw_polyline(PackedVector2Array([c + Vector2(-r * 0.3, r * 0.65), c + Vector2(-r * 0.55, r * 1.1), c + Vector2(0.05, r * 0.7)]), line_color, line_w, true)
+		"speech":  # R159 (Chantier 3) : bulle de parole — ovale + queue triangulaire + 3 points (le propos)
+			var sp_w: float = r * 1.02
+			var sp_h: float = r * 0.72
+			var sp_cy: float = -r * 0.16
+			var sp_bub: PackedVector2Array = PackedVector2Array()
+			for sp_i in 41:
+				var sp_a: float = float(sp_i) / 40.0 * TAU
+				sp_bub.append(c + Vector2(cos(sp_a) * sp_w, sp_cy + sin(sp_a) * sp_h))
+			draw_polyline(sp_bub, line_color, line_w, true)          # contour de la bulle (ovale)
+			draw_polyline(PackedVector2Array([                       # queue triangulaire (le locuteur)
+				c + Vector2(-r * 0.34, sp_cy + sp_h * 0.72),
+				c + Vector2(-r * 0.52, r * 1.02),
+				c + Vector2(r * 0.02, sp_cy + sp_h * 0.86)]), line_color, line_w, true)
+			for sp_j in 3:                                           # « … » : le propos, lisible a petite taille
+				draw_circle(c + Vector2(lerpf(-r * 0.42, r * 0.42, float(sp_j) / 2.0), sp_cy),
+					maxf(line_w * 0.95, 1.6), line_color)
 		"knot":  # ruse — nœud celtique entrelacé (2 boucles croisées)
 			draw_arc(c + Vector2(-r * 0.3, 0.0), r * 0.55, deg_to_rad(-90), deg_to_rad(180), 24, line_color, line_w, true)
 			draw_arc(c + Vector2(r * 0.3, 0.0), r * 0.55, deg_to_rad(90), deg_to_rad(360), 24, line_color, line_w, true)
@@ -305,23 +347,39 @@ func _draw() -> void:
 		"chain":  # emprise : 2 maillons de chaine
 			draw_arc(c + Vector2(-r * 0.35, 0.0), r * 0.42, 0.0, TAU, 20, line_color, line_w, true)
 			draw_arc(c + Vector2(r * 0.35, 0.0), r * 0.42, 0.0, TAU, 20, line_color, line_w, true)
-		"hand":  # R158 : agir (main ouverte) : 4 doigts + pouce + base de paume
-			for hf in 4:
-				var hx: float = lerpf(-r * 0.45, r * 0.45, float(hf) / 3.0)
-				var hlen: float = r * 0.9 if hf != 0 else r * 0.7
-				draw_line(c + Vector2(hx, r * 0.2), c + Vector2(hx, -hlen), line_color, line_w, true)
-			draw_line(c + Vector2(-r * 0.45, r * 0.2), c + Vector2(-r * 0.85, -r * 0.15), line_color, line_w, true)
-			draw_arc(c + Vector2(0.0, r * 0.2), r * 0.5, 0.0, PI, 16, line_color, line_w, true)
-		"magie":  # R158 : reveler (baguette + etoile) : sortilege de revelation
-			draw_line(c + Vector2(-r * 0.55, r * 0.7), c + Vector2(r * 0.2, -r * 0.35), line_color, line_w, true)
-			var mt: Vector2 = c + Vector2(r * 0.4, -r * 0.6)
-			var mstar: PackedVector2Array = PackedVector2Array()
-			for mi in 8:
-				var ma: float = float(mi) / 8.0 * TAU - PI / 2.0
-				var mr: float = r * 0.5 if mi % 2 == 0 else r * 0.18
-				mstar.append(mt + Vector2(cos(ma), sin(ma)) * mr)
-			mstar.append(mstar[0])
-			draw_polyline(mstar, line_color, line_w, true)
-			draw_circle(c + Vector2(-r * 0.15, r * 0.05), line_w * 0.9, line_color)
+		"hand":  # R159 (Chantier 3) : main ouverte — paume arrondie + 4 doigts a bouts ronds (longueurs variees) + pouce ecarte
+			draw_arc(c + Vector2(0.0, r * 0.28), r * 0.6, deg_to_rad(8), deg_to_rad(172), 24, line_color, line_w, true)  # paume (base ronde)
+			draw_line(c + Vector2(-r * 0.6, r * 0.32), c + Vector2(-r * 0.5, -r * 0.02), line_color, line_w, true)   # cote gauche paume
+			draw_line(c + Vector2(r * 0.6, r * 0.32), c + Vector2(r * 0.5, -r * 0.05), line_color, line_w, true)     # cote droit
+			var hd_x: Array = [-r * 0.42, -r * 0.14, r * 0.14, r * 0.42]
+			var hd_top: Array = [-r * 0.64, -r * 0.98, -r * 0.9, -r * 0.66]  # majeur le plus long (proportions de main)
+			for hd_i in 4:
+				var hd_ft: Vector2 = c + Vector2(hd_x[hd_i] * 1.08, hd_top[hd_i])
+				draw_line(c + Vector2(hd_x[hd_i], -r * 0.02), hd_ft, line_color, line_w, true)
+				draw_circle(hd_ft, maxf(line_w * 0.7, 1.3), line_color)  # bout de doigt arrondi
+			var hd_tt: Vector2 = c + Vector2(-r * 0.95, -r * 0.12)
+			draw_line(c + Vector2(-r * 0.52, r * 0.28), hd_tt, line_color, line_w, true)  # pouce ecarte
+			draw_circle(hd_tt, maxf(line_w * 0.7, 1.3), line_color)
+		"magie":  # R159 (Chantier 3, revue design) : BAGUETTE druidique (tige + anneau au manche) qui
+			# lance une etincelle PLEINE a la pointe, + 2 petits eclats. La tige ANCRE « magie gravee »
+			# (distinct d'une simple etincelle flottante, cf. icones IA generiques). Silhouette lisible.
+			var mg_handle: Vector2 = c + Vector2(-r * 0.72, r * 0.92)
+			var mg_tip: Vector2 = c + Vector2(r * 0.3, -r * 0.34)
+			draw_line(mg_handle, mg_tip, line_color, line_w * 1.25, true)           # tige de baguette
+			draw_arc(mg_handle, r * 0.15, 0.0, TAU, 16, line_color, line_w, true)    # anneau grave au manche (celtique)
+			draw_colored_polygon(_sparkle_poly(mg_tip, r * 0.8, r * 0.22), line_color)               # grande etincelle a la pointe
+			draw_colored_polygon(_sparkle_poly(c + Vector2(-r * 0.16, -r * 0.52), r * 0.26, r * 0.08), line_color)  # petit eclat
+			draw_colored_polygon(_sparkle_poly(c + Vector2(-r * 0.46, r * 0.1), r * 0.19, r * 0.06), line_color)    # petit eclat
 		_:
 			draw_arc(c, r, 0.0, TAU, 48, line_color, line_w, true)
+
+
+# R159 (Chantier 3) : etoile-etincelle 4 branches CONCAVE (pleine) — sommets N/E/S/O a `outer`, creux
+# aux diagonales a `inner`. Sert le glyphe « magie » (sortilege). PackedVector2Array pour draw_colored_polygon.
+func _sparkle_poly(ctr: Vector2, outer: float, inner: float) -> PackedVector2Array:
+	var pts: PackedVector2Array = PackedVector2Array()
+	for k in 8:
+		var a: float = float(k) / 8.0 * TAU - PI / 2.0
+		var rr: float = outer if k % 2 == 0 else inner
+		pts.append(ctr + Vector2(cos(a), sin(a)) * rr)
+	return pts

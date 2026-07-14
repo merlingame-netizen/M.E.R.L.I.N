@@ -1830,6 +1830,22 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R159 : LISIBILITE MECANIQUE (labels + pictos) + FIX SOFTLOCK swap_zone (2026-07-14, P0 retours playtest)** :
+  (C1 labels §23) chaque tuile d'action porte son MOT joueur SOUS l'icone : Perception / Agir / Conflit /
+  Mysticisme / Parole (`ACTION_LABELS`/`action_label`) ; `card_name` reste la cle interne. Un vocabulaire UNIQUE
+  par action a l'ecran : `label_for_verb` route aussi la Fiche du Voyageur, le noeud de talent et le recap
+  MerlinEnd (fini « Conflit » sur le plateau et « COMBATTRE » en Pause). (C2 pictos) 5 glyphes REDESSINES
+  (oeil-amande, main ouverte, epee-feuille, baguette druidique + etincelle, bulle « … »), 100% proceduraux,
+  lisibles ~40 px (les precedents jugeaient « cheap »). (C3 fix softlock, classe R148) `MerlinVisual.swap_zone`
+  tuait le tween precedent SANS jouer son `build` : un `build` de `_present_current_beat` perdu laissait
+  `_beat_transition=true` et `_state != 1` -> le choix ne s'ouvrait JAMAIS (« le jeu se bloque des le 1er choix »,
+  reproduit par l'utilisateur : tuto ACCEPTE puis freeze apres le 1er bonus / draft d'ouverture). Correctif : le
+  build EN ATTENTE est suivi en meta et joue EXACTEMENT-UNE-FOIS (jamais perdu, meme si le tween est tue).
+  LECON PROCESS : l'autoplay REFUSE le tuto -> tout le chemin tuto-accepte n'etait JAMAIS teste (trou de
+  couverture). Nouveaux gates HEADLESS permanents : `probe_tuto_draft_headless` (tuto accepte + draft d'ouverture
+  pris -> asserte que le beat avance, deadline) et `probe_swapzone_test` (mecanisme build-loss). Gates :
+  validate 0/0, smoke 5/5, soak 200/200 ISO, autoplay 3/3, bootcheck 5/5, gates headless PASS.
+
 - **R158 : VAGUE MECANIQUE, 5 actions a icones + 2d6 + corruption nature x degre x geste + Fiche du Voyageur
   (2026-07-14, retours playtest)** : trois refontes verrouillees, §K re-derive UNE fois. (1) 5 ACTIONS A ICONES
   remplacent les 4 verbes : Observer (oeil, Sens/Savoir), Agir (main, Agilite/Finesse), Combattre (epee,

@@ -844,10 +844,10 @@ func build_talent_node() -> Dictionary:
 	var v: String = talent_node_target()
 	return {
 		"kind": "talent",
-		"verb": v,
+		"verb": v,  # clef interne conservee (indexe talent/verb_usage), jamais affichee brute (R159)
 		"amount": 1,
-		"name": "Renforcer %s" % v,
-		"evocation": "Le geste se grave en toi ; %s te répond plus vite, plus sûr." % v,
+		"name": "Renforcer %s" % MerlinCard.label_for_verb(v),  # R159 : vocabulaire joueur au draft
+		"evocation": "Le geste se grave en toi ; %s te répond plus vite, plus sûr." % MerlinCard.label_for_verb(v),
 	}
 
 
@@ -1208,7 +1208,7 @@ func end_recap() -> Dictionary:
 	for v in TALENT_VERBS:
 		var lvl: int = int(talent.get(v, 0))
 		if lvl > 0:
-			verbs_leveled.append("%s ×%d" % [v, lvl])
+			verbs_leveled.append("%s x%d" % [MerlinCard.label_for_verb(v), lvl])
 	var beats: int = 0
 	for d in degree_counts:
 		beats += int(degree_counts[d])

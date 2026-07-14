@@ -215,13 +215,29 @@ static func swap_zone(zone: Control, build: Callable) -> void:
 		build.call()
 		zone.modulate.a = 1.0
 		return
+	# R159 (fix softlock, classe R148) : un swap relance TUE le tween precedent AVANT que son
+	# tween_callback(build) n'ait pu s'executer si le relance survient dans la fenetre de fade-out
+	# (0.18 s). Or ce `build` repose le contenu ET pose l'ETAT CRITIQUE du beat (_beat_transition=false,
+	# _state=1). Un build perdu => l'encart reste fige, le choix ne s'ouvre JAMAIS (« le jeu se bloque »).
+	# Correctif : on suit le build EN ATTENTE en meta et on le JOUE avant de le remplacer (exactement-une-fois :
+	# soit le tween_callback le joue et efface le flag, soit ce kill-handler le joue et efface le flag).
 	if zone.has_meta("_fx_tw_swap"):
 		var prev: Tween = zone.get_meta("_fx_tw_swap")
 		if prev != null and prev.is_valid():
 			prev.kill()
+		if zone.has_meta("_fx_swap_build_pending"):
+			var pend: Callable = zone.get_meta("_fx_swap_build_pending")
+			zone.remove_meta("_fx_swap_build_pending")
+			if pend.is_valid():
+				pend.call()  # build precedent JAMAIS perdu (etat critique du beat preserve)
 	var t: Tween = zone.create_tween()
 	t.tween_property(zone, "modulate:a", 0.0, 0.18 * motion()).set_trans(Tween.TRANS_SINE)
-	t.tween_callback(build)
+	zone.set_meta("_fx_swap_build_pending", build)
+	t.tween_callback(func() -> void:
+		if zone != null and is_instance_valid(zone) and zone.has_meta("_fx_swap_build_pending"):
+			zone.remove_meta("_fx_swap_build_pending")
+		if build.is_valid():
+			build.call())
 	t.tween_property(zone, "modulate:a", 1.0, DUR_ZONE_FADE * motion()).set_trans(Tween.TRANS_SINE)
 	zone.set_meta("_fx_tw_swap", t)
 

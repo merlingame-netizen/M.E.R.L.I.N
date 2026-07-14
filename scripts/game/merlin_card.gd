@@ -266,6 +266,26 @@ const ACTION_GLYPHS: Dictionary = {
 	"action_observer": "eye", "action_agir": "hand", "action_combattre": "sword",
 	"action_reveler": "magie", "action_parler": "speech",
 }
+# R159 (Chantier 2) : le MOT affiche SOUS l'icone de la tuile (« il faut le mot », user). card_name
+# reste la CLE INTERNE du talent (OBSERVER/AGIR/COMBATTRE/RÉVÉLER/PARLER) ; ce libelle DISPLAY est le
+# vocabulaire joueur : Perception / Agir / Conflit / Mysticisme / Parole. Repli card_name si id inconnu.
+const ACTION_LABELS: Dictionary = {
+	"action_observer": "Perception", "action_agir": "Agir", "action_combattre": "Conflit",
+	"action_reveler": "Mysticisme", "action_parler": "Parole",
+}
+# R159 (Chantier 2, bloquant revue design) : meme table indexee par le VERBE (card_name) pour les
+# ecrans qui n'ont QUE le nom de verbe (Fiche du Voyageur, noeud de talent au draft, recap MerlinEnd) :
+# UN SEUL vocabulaire joueur par action a l'ecran. Sans ca, la tuile dit « Conflit » mais la Pause dit
+# « COMBATTRE » -> deux mots pour la meme action dans une run. Repli sur le verbe brut si inconnu.
+const VERB_LABELS: Dictionary = {
+	"OBSERVER": "Perception", "AGIR": "Agir", "COMBATTRE": "Conflit",
+	"RÉVÉLER": "Mysticisme", "PARLER": "Parole",
+}
+
+
+# R159 : label joueur d'un VERBE (card_name). Repli sur le verbe si inconnu (jamais de vide).
+static func label_for_verb(verb: String) -> String:
+	return str(VERB_LABELS.get(verb, verb))
 
 
 # R158 : les 5 ACTIONS fixes evolutives (tuiles permanentes, a ICONES). AGIR se scinde en Agir
@@ -297,6 +317,13 @@ func glyph_key() -> String:
 	if ACTION_GLYPHS.has(id):
 		return str(ACTION_GLYPHS[id])
 	return _Glyph.for_family(family)
+
+
+# R159 (Chantier 2) : le MOT affiche sous l'icone de la tuile. Repli sur card_name si id non canonique.
+func action_label() -> String:
+	if ACTION_LABELS.has(id):
+		return str(ACTION_LABELS[id])
+	return card_name
 
 
 ## === v11 (spec panel W2) — Deck de TRAITS de départ : 16 (main 4, cycle vrai) ===
