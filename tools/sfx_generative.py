@@ -76,6 +76,7 @@ except Exception:  # pragma: no cover — filet si l'import de la forge casse
 # pour que le son generatif s'aligne exactement sur son equivalent procedural.
 _NEG = "Single sound effect, no music, no melody, no speech, close, short."
 _NEG_LONG = "Single sound effect, no music, no melody, no speech, close."
+_NEG_VOICE = "Single soft sound, no music, no melody, close."  # voice_blip = syllabe soufflee : ne PAS interdire la voix
 
 # NOTE COMPORTEMENT (observe 2026-07-14) : le Space PLANCHE la duree a la seconde
 # ENTIERE inferieure (2.2/2.4/2.6 -> 2.0s ; 1.8/1.4/1.2 -> 1.0s ; 3.0 -> 3.0s).
@@ -93,9 +94,9 @@ MANIFEST_PROMPTS: dict[str, dict] = {
                   "half-resolved tone, bittersweet. " + _NEG,
         "duration": 2.2, "seed": 4102, "category": "stinger"},
     "stinger_reussite": {
-        "prompt": "Warm resolved celtic harp and low drone chord, single bright hopeful "
-                  "bloom. " + _NEG,
-        "duration": 2.4, "seed": 4103, "category": "stinger"},
+        "prompt": "Warm resolved celtic harp and glowing low drone chord, single full "
+                  "hopeful bloom, rich and rounded, gentle bell shimmer. " + _NEG,
+        "duration": 2.0, "seed": 4153, "category": "stinger"},
     "stinger_eclatante": {
         "prompt": "Radiant crystalline bell and harp burst, single triumphant shimmering "
                   "bloom. " + _NEG,
@@ -134,6 +135,29 @@ MANIFEST_PROMPTS: dict[str, dict] = {
         "prompt": "Soft mystical airy drone swell, single contemplative shimmer, magical "
                   "thinking. " + _NEG,
         "duration": 2.0, "seed": 4205, "category": "drone"},
+    # ── 5 TICKS UI ORGANIQUES (R161) — bascule procedural -> generatif ─────────
+    # Retour audio round 2 : « trop robotique/digital ». Ces id existaient en synthese
+    # physique (sfx_forge) ; on les rejoue en generatif ORGANIQUE. Sons COURTS -> `max_len_ms`
+    # coupe au transitoire (onset) puis plafonne la longueur (le Space plancher a 1s ; on
+    # taille ensuite). Categorie = MEME cible LUFS que la forge (homogeneite du bus SFX).
+    "button_tap": {
+        "prompt": "Single dry wooden knock, hollow tock on wood, close mic, no reverb. " + _NEG,
+        "duration": 1, "seed": 4301, "category": "tick", "max_len_ms": 320},
+    "gauge_up": {
+        "prompt": "Mystical rising ethereal shimmer, soft magical celtic chime bloom ascending, "
+                  "airy. " + _NEG_LONG,
+        "duration": 2, "seed": 4302, "category": "accent", "max_len_ms": 1200},
+    "gauge_down": {
+        "prompt": "Mystical descending soft ethereal tone, gentle magical celtic fade downward. "
+                  + _NEG_LONG,
+        "duration": 2, "seed": 4303, "category": "accent", "max_len_ms": 1200},
+    "slider_tick": {
+        "prompt": "Soft organic wooden tick, subtle dry click, no digital. " + _NEG,
+        "duration": 1, "seed": 4304, "category": "tick", "max_len_ms": 220},
+    "voice_blip": {
+        "prompt": "Breathy distant echoing voice syllable, windy ethereal whisper, far away, soft. "
+                  + _NEG_VOICE,
+        "duration": 1, "seed": 4305, "category": "tick", "max_len_ms": 160},
     # ── DEJA GENERE par le coordinateur (raw present) — pour reference/restage ──
     "magic_reveal": {
         "prompt": "Mystical celtic magic reveal, single shimmering enchanted bloom with a "
@@ -181,12 +205,24 @@ def _fade_edges(x: np.ndarray, ms: float) -> np.ndarray:
     return y
 
 
-def _postprocess(raw_path: Path, category: str) -> tuple[np.ndarray, dict]:
-    """downmix -> resample 44.1k -> highpass 30 Hz + trim + crest + loudness + TP -14
-    (norme forge v4) -> fade 10 ms. Retourne (audio float64, stats)."""
+def _postprocess(raw_path: Path, category: str,
+                 max_len_ms: float | None = None) -> tuple[np.ndarray, dict]:
+    """downmix -> resample 44.1k -> [onset-cap] -> highpass 30 Hz + trim + crest + loudness
+    + TP -14 (norme forge v4) -> fade 10 ms. Retourne (audio float64, stats).
+
+    `max_len_ms` (R161) : pour un son COURT dont le Space a rendu 1s floute, on coupe au
+    1er transitoire (onset, -40 dB sous le pic) puis on plafonne la longueur -> tick net."""
     x, sr = _load_wav_mono(raw_path)
     if sr != SR:
         x = signal.resample_poly(x, SR, sr).astype(np.float64)
+    if max_len_ms is not None and x.size:
+        peak: float = float(np.max(np.abs(x)))
+        if peak > 1e-9:
+            thr: float = peak * (10 ** (-40.0 / 20.0))  # onset = 1er echantillon a -40 dB sous le pic
+            above = np.flatnonzero(np.abs(x) > thr)
+            onset: int = int(above[0]) if above.size else 0
+            n_max: int = max(1, int(max_len_ms * SR / 1000.0))
+            x = x[onset:onset + n_max]
     target = TARGETS[category]
     audio, stats = norm.normalize(
         x, target_lufs=target, peak_ceiling_db=-14.0, trim=True,
@@ -326,7 +362,7 @@ def action_prompts() -> None:
 def _stage_from_raw(sfx_id: str, man: dict) -> None:
     """Post-traite le raw existant -> staged (0 GPU)."""
     spec = MANIFEST_PROMPTS[sfx_id]
-    audio, stats = _postprocess(_raw(sfx_id), spec["category"])
+    audio, stats = _postprocess(_raw(sfx_id), spec["category"], spec.get("max_len_ms"))
     norm.write_wav16(audio, _staged(sfx_id))
     man[sfx_id] = {"prompt": spec["prompt"], "seed": spec["seed"],
                    "duration_req": spec["duration"], "category": spec["category"],
@@ -393,7 +429,7 @@ def action_generate(space: str, only: str | None, force: bool, max_gen: int) -> 
             print(f"XX  {sfx_id:30s} echec non-quota: {str(e)[:180]} -> skip cet id")
             remaining.append(sfx_id)
             continue
-        audio, stats = _postprocess(_raw(sfx_id), spec["category"])
+        audio, stats = _postprocess(_raw(sfx_id), spec["category"], spec.get("max_len_ms"))
         norm.write_wav16(audio, _staged(sfx_id))
         man[sfx_id] = {"prompt": spec["prompt"], "seed": spec["seed"],
                        "duration_req": spec["duration"], "category": spec["category"],

@@ -1830,6 +1830,20 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R161 : AUDIO ROUND 2, son unitaire/carte + ticks organiques + vraie musique (2026-07-14, retours ecoute)** :
+  (1) DISTRIBUTION SONORE PAR CARTE : un flick UNITAIRE par carte REELLEMENT tiree (vue neuve), empile en cascade
+  decalee DEAL_STAGGER_MS(55) x motion(), round-robin deal/__v2/__v3 sur pool 8 voix. 1 carte=1 son, N=N, 0=silence.
+  Cause du bug : play_sfx('deal') par-carte etait ECRASE a 1 seul son par le gap-guard SFX_MIN_GAP_MS. Remplace par
+  MerlinAudio.play_deal_sequence(count), pilote par _layout_fan + _open_draft_zone (compte les vues NEUVES).
+  (2) 5 TICKS UI bascules procedural -> GENERATIF organique (retour « trop robotique/digital ») : button_tap = TOC
+  de bois, gauge_up/down = mystique montant/descendant, slider_tick = bois sec, voice_blip = voix soufflee lointaine
+  (Stable Audio small-sfx, cap onset max_len_ms, meme cible LUFS que la forge). card_pick reste procedural (coherence
+  round-robin). (3) VRAIES MUSIQUES celtiques de gameplay (gameplay_calm foret / gameplay_falaises falaises) via
+  tools/music_generative.py (Stable Audio small-music, cfg 7, ~42 s, boucle seamless par crossfade, -24 LUFS/TP -12)
+  remplacant les nappes pauvres. Amende R156/R160 (hybride etendu). NON-deterministe : source de verite = WAV committes.
+  A l'oreille : voice_blip (rejoue vite, risque de wash) et la richesse musique (8 steps) a valider ; raws caches pour
+  re-gen. Gates : validate 0/0, smoke 3/3, soak 200/200 ISO, autoplay 3/3, bootcheck 5/5.
+
 - **R160 : AUDIO HYBRIDE, 13 sons riches GENERATIFS (Stable Audio 3) + 12 ticks proceduraux (2026-07-14)** :
   Retour joueur : la synthese physique v4 (R156) sonnait TROP BRUTE. Pivot vers du GENERATIF facon ElevenLabs,
   GRATUIT et sans nouvelle inscription : les 13 SFX RICHES (7 stingers, magic_reveal, draft_reveal,

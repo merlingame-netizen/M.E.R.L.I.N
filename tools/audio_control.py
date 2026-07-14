@@ -20,12 +20,15 @@ MUSIC_DIRS = [os.path.join(ROOT, "music", "gameplay"), os.path.join(ROOT, "music
 MANIFEST = os.path.join(SFX_DIR, "manifest.json")
 OUT = os.path.join(ROOT, "output", "audio_control.html")
 
-# Les 13 sons RICHES = generatifs (Stable Audio 3). Le reste des SFX = procedural v4.
+# Sons generatifs (Stable Audio 3) : 13 sons riches + 5 ticks UI bascules en organique (R161).
+# Le reste des SFX (card/deal/seal/beat/ogham) = procedural v4 (physical-modeling forge).
 GENERATIVE = {
     "stinger_echec", "stinger_partiel", "stinger_reussite", "stinger_eclatante",
     "stinger_fin_accomplissement", "stinger_fin_mort", "stinger_fin_corrompu",
     "magic_reveal", "draft_reveal", "whisper_threshold", "corruption_tick",
     "ink_wash", "question_transition",
+    # R161 — ticks UI bascules procedural -> generatif organique
+    "button_tap", "gauge_up", "gauge_down", "slider_tick", "voice_blip",
 }
 
 # (titre section, [ids]) — ordre d'ecoute recommande.
@@ -37,10 +40,11 @@ SECTIONS = [
     ("Revelations & transitions (generatif)", [
         "magic_reveal", "draft_reveal", "whisper_threshold", "corruption_tick",
         "ink_wash", "question_transition"]),
+    ("Ticks UI ORGANIQUES (generatif R161) - A RE-AUDITIONNER EN PRIORITE", [
+        "button_tap", "gauge_up", "gauge_down", "slider_tick", "voice_blip"]),
     ("Ticks UI (procedural v4 - doivent claquer sec)", [
         "card_pick", "card_pick__v2", "card_pick__v3", "card_play", "card_discard",
-        "deal", "deal__v2", "deal__v3", "button_tap", "gauge_up", "gauge_down",
-        "seal_stamp", "beat_turn", "slider_tick", "voice_blip", "ogham_chime"]),
+        "deal", "deal__v2", "deal__v3", "seal_stamp", "beat_turn", "ogham_chime"]),
 ]
 MUSIC_IDS = ["gameplay_calm", "gameplay_falaises", "boot_eveil",
              "pad_choeur", "pad_etre", "pad_chevalier", "pad_compagnon", "pad_enfant"]

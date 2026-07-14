@@ -94,7 +94,8 @@
     "peak_db": -14.92,
     "dc": -2.2e-05,
     "duration_s": 0.34,
-    "samples": 14994
+    "samples": 14994,
+    "source": "generative(stable-audio-3)"
   },
   "gauge_down": {
     "family": "pince_harpe",
@@ -106,31 +107,34 @@
     "peak_db": -16.2,
     "dc": -6.2e-05,
     "duration_s": 0.42,
-    "samples": 18522
+    "samples": 18522,
+    "source": "generative(stable-audio-3)"
   },
   "button_tap": {
     "family": "pince_harpe",
     "model": "karplus-strong",
     "category": "tick",
     "target_lufs": -26.5,
-    "lufs": -26.5,
+    "lufs": -26.6,
     "true_peak_db": -14.44,
     "peak_db": -14.44,
     "dc": -0.001501,
     "duration_s": 0.14,
-    "samples": 6174
+    "samples": 6174,
+    "source": "generative(stable-audio-3)"
   },
   "slider_tick": {
     "family": "pince_harpe",
     "model": "karplus-strong",
     "category": "tick",
     "target_lufs": -26.5,
-    "lufs": -26.5,
+    "lufs": -27.74,
     "true_peak_db": -14.09,
     "peak_db": -14.28,
     "dc": 0.00174,
     "duration_s": 0.06,
-    "samples": 2646
+    "samples": 2646,
+    "source": "generative(stable-audio-3)"
   },
   "corruption_tick": {
     "family": "modal_inharmonique",
@@ -226,12 +230,13 @@
     "model": "fm 4x-os",
     "category": "tick",
     "target_lufs": -26.5,
-    "lufs": -26.5,
+    "lufs": -27.05,
     "true_peak_db": -14.76,
     "peak_db": -14.77,
     "dc": 0.000171,
     "duration_s": 0.085,
-    "samples": 3748
+    "samples": 3748,
+    "source": "generative(stable-audio-3)"
   },
   "stinger_echec": {
     "family": "stinger_degre",

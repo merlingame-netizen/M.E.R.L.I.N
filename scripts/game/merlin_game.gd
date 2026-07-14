@@ -89,6 +89,7 @@ var _prev_corruption: int = -999
 var _tw_tick_count: int = 0
 var _quill_tw: Tween
 var _deal_pending: bool = false  # déclenche l'anim de distribution au prochain _layout_fan
+var _deal_new_count: int = 0     # R161 : nb de cartes REELLEMENT tirees (vue creee) au dernier render -> nb de flicks audio
 var _life_tw: Tween  # tween de remplissage de l'anneau vie (tué avant un nouveau → pas de snap arrière)
 var _corr_tw: Tween
 var _situ_tw: Tween  # fondu de l'encart (interstitiel) — tué avant réutilisation → pas de course de tweens
@@ -433,6 +434,7 @@ func _render_hand(deal: bool = false) -> void:
 				cv.discard_out()
 			else:
 				cv.queue_free()
+	var new_views: int = 0  # R161 : compte les cartes REELLEMENT tirees (vue neuve) -> nb de flicks audio
 	for card in wanted:
 		if not keep.has(card):
 			var cv: MerlinCardView = MerlinCardView.new()
@@ -442,6 +444,8 @@ func _render_hand(deal: bool = false) -> void:
 				cv.set_blessed(str(run.blessed_tags[str(card.id)]))
 			cv.card_clicked.connect(_on_trait_card)
 			keep[card] = cv
+			new_views += 1
+	_deal_new_count = new_views
 	for i in wanted.size():  # ordre des enfants = ordre de la main (recouvrement stable)
 		_hand_box.move_child(keep[wanted[i]], i)
 	# N4-P1 (chantier 1, BLOQUANT_FUN) : AFFINITÉ dorée GRADUÉE sur les cartes-runes : le CADRE
@@ -509,6 +513,7 @@ func _layout_fan() -> void:
 		_deal_pending = false
 		for i in n:
 			(cards[i] as MerlinCardView).deal_in(float(i) * 0.05)  # distribution en cascade
+		MerlinAudio.play_deal_sequence(_deal_new_count)  # R161 : un flick unitaire par carte reellement tiree
 
 
 # v11-W2 — sélection du TRAIT sur l'élément : levée +20 px + bordure GOLD ; re-clic = désélection.
@@ -1553,6 +1558,7 @@ func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 			cv.card_clicked.connect(_on_draft_card)
 			cv.set_fan_transform(Vector2(x0 + float(i) * (cw + gap), 6.0), 0.0)  # base du deal (snap 1er layout)
 			cv.deal_in(float(i) * 0.12)
+		MerlinAudio.play_deal_sequence(n)  # R161 : un flick unitaire par carte de draft revelee (n cartes)
 		# Vigilance V2a #6 : vues créées pendant une zone éteinte → état souris + alpha re-appliqués.
 		MerlinVisual.set_zone_active(_hand_box, true))
 

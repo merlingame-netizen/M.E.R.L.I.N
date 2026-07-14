@@ -28,6 +28,8 @@ var _rr_idx: Dictionary = {}
 const VOICE_POOL: int = 4
 const POOL_SIZE: int = 8
 const SFX_MIN_GAP_MS: int = 40   # anti-superposition : intervalle mini avant de rejouer un MÊME SFX
+# R161 (distribution de cartes) : espacement (x motion()) entre deux flicks unitaires empiles.
+const DEAL_STAGGER_MS: float = 55.0
 const DUCK_DB: float = -6.0
 const DUCK_RETURN: float = 0.8
 const PREFS_PATH: String = "user://options.cfg"
@@ -114,15 +116,30 @@ func play_sfx(id: String, pitch_scale: float = 1.0) -> void:
 	if now - int(_sfx_last_ms.get(id, -10000)) < SFX_MIN_GAP_MS:
 		return
 	# v4 audio (BIBLE §22) — round-robin baked-in : rotation des variantes anti-mitraillette.
-	var play_id: String = id
-	if ROUND_ROBIN.has(id):
-		var variants: Array = ROUND_ROBIN[id]
-		var k: int = int(_rr_idx.get(id, 0))
-		play_id = str(variants[k % variants.size()])
-		_rr_idx[id] = k + 1
+	var play_id: String = _rr_pick(id)
 	if not _sfx_cache.has(play_id):
 		return
 	_sfx_last_ms[id] = now
+	_play_raw(play_id, pitch_scale)
+
+
+# Round-robin d'un id de base (deal / card_pick -> variantes __v2/__v3). Avance l'index.
+# Un id hors round-robin est renvoye tel quel.
+func _rr_pick(id: String) -> String:
+	if not ROUND_ROBIN.has(id):
+		return id
+	var variants: Array = ROUND_ROBIN[id]
+	var k: int = int(_rr_idx.get(id, 0))
+	_rr_idx[id] = k + 1
+	return str(variants[k % variants.size()])
+
+
+# Lecture BRUTE sur le pool 8 voix (sans gap-guard, sans round-robin) : prend la voix
+# suivante, coupe si occupee, joue. Base commune de play_sfx (apres garde + RR) et de
+# play_deal_sequence (empilement intentionnel decale).
+func _play_raw(play_id: String, pitch_scale: float) -> void:
+	if not _sfx_cache.has(play_id):
+		return
 	var p: AudioStreamPlayer = _sfx_pool[_sfx_idx]
 	_sfx_idx = (_sfx_idx + 1) % POOL_SIZE
 	if p.playing:
@@ -131,6 +148,28 @@ func play_sfx(id: String, pitch_scale: float = 1.0) -> void:
 	p.pitch_scale = pitch_scale
 	p.volume_db = 0.0
 	p.play()
+
+
+# R161 — DISTRIBUTION : joue EXACTEMENT `count` sons unitaires (un par carte reellement
+# tiree), empiles en cascade decalee de DEAL_STAGGER_MS x motion(). 1 carte -> 1 son ;
+# N -> N sons ; count <= 0 -> silence (repioche partielle : rien tire = rien joue). Les
+# variantes tournent en round-robin (deal/__v2/__v3) pour la variete ; le pool 8 voix
+# evite toute coupure entre flicks. On CONTOURNE le gap-guard same-id : l'empilement est
+# voulu et l'espacement est deja porte par le stagger.
+func play_deal_sequence(count: int, base_id: String = "deal") -> void:
+	if count <= 0 or not _sfx_cache.has(base_id):
+		return
+	var stagger_s: float = (DEAL_STAGGER_MS * MerlinVisual.motion()) / 1000.0
+	var tree: SceneTree = get_tree()
+	for i in count:
+		var pid: String = _rr_pick(base_id)
+		var pitch: float = randf_range(0.95, 1.05)
+		if i == 0 or tree == null:
+			_play_raw(pid, pitch)
+		else:
+			tree.create_timer(stagger_s * float(i)).timeout.connect(_play_raw.bind(pid, pitch))
+	# marque le gap-guard : un play_sfx(base_id) concurrent ne s'empile pas sur la cascade.
+	_sfx_last_ms[base_id] = Time.get_ticks_msec()
 
 
 func _create_voice_pool() -> void:

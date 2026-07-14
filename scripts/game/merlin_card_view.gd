@@ -505,7 +505,9 @@ func deal_in(delay: float) -> void:
 	# d'éventail (trajectoire courbe crédible, plus une montée verticale mécanique).
 	position = _base_pos + Vector2(-_base_rot * 220.0, 140.0)
 	rotation = _base_rot + deg_to_rad((randf() - 0.5) * 16.0)
-	MerlinAudio.play_sfx("deal", randf_range(0.95, 1.05))
+	# R161 : le SON de distribution N'EST PLUS joue ici (1 appel par carte -> le gap-guard
+	# same-id ecrasait tout a 1 son). Il est pilote par l'appelant via MerlinAudio.play_deal_sequence
+	# (un flick unitaire par carte REELLEMENT tiree, empile en cascade decalee).
 	var d: float = MerlinVisual.DUR_DEAL * MerlinVisual.motion() * 1.3
 	_tw = create_tween().set_parallel(true)
 	_tw.tween_property(self, "modulate:a", 1.0, _dur(0.18)).set_delay(delay)
