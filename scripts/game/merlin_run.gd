@@ -16,7 +16,7 @@ const CORRUPTION_CAP: int = 18
 const SAVE_PATH: String = "user://merlin_run.json"
 # v11 (spec §J) : bump — les saves v10.x (deck de cartes 2-combo) sont INVALIDÉES proprement
 # (load_run → false → le menu ne propose que Nouvelle Partie). JAMAIS de conversion mid-run (R108).
-const SAVE_VERSION: int = 2
+const SAVE_VERSION: int = 3  # R158 : 5 actions a icones + renommage ids -> saves pre-R158 invalidees proprement (R108)
 # v11 (R113 re-spécifié) : cap 1 trait corrompu par main (re-tirage silencieux de l'excédent).
 const MAX_CORRUPTED_IN_HAND: int = 1
 # v11-W3 (spec §E) : cap de greffes par action — 3 slots fixes (12 total, jamais saturé en pratique).
@@ -35,7 +35,7 @@ const TALENT_COST: int = 2          # points de talent par +1 de niveau
 const TALENT_GAIN_REUSSITE: int = 1 # points gagnés sur une réussite
 const TALENT_GAIN_ECLATANTE: int = 2 # ... sur une éclatante
 # Les 4 clés de verbe canoniques (== MerlinCard.card_name des actions). L'ordre est stable.
-const TALENT_VERBS: Array = ["PERCEVOIR", "AGIR", "PARLER", "RESSENTIR"]
+const TALENT_VERBS: Array = ["OBSERVER", "AGIR", "COMBATTRE", "PARLER", "RÉVÉLER"]  # R158 : 5 verbes (card_name des actions)
 
 # v10.11 (user 2026-06-07) — Deck enrichi + Draft + Carte Destin (Slay the Spire allégé).
 # Poids de rareté du draft (somme = 100) ; barème merlin-game-designer.
@@ -86,8 +86,8 @@ var opening_draft_done: bool = false
 # v10.22 — BIOME de la run (démo : "foret" | "falaises"). Choisi au menu (Nouvelle Partie), persisté
 # (R108 : resume = même monde). Override test/harnais : env MERLIN_BIOME. Champ additif (saves legacy OK).
 var biome: String = "foret"
-# v10.21 (Wave G, R130) — budget « Pousser » restant pour la QUÊTE courante (1/quête, rechargé au répit).
-var pushes_left_quest: int = 1
+# R158 : « Pousser » (Encaisser/Pousser) RETIRE. La corruption/sante est desormais AUTOMATIQUE
+# (nature de l'evenement x degre x geste, calculee dans MerlinResolution.resolve).
 # v10.21 (Wave I, R131) — INTERVENTIONS du pilier : beats planifiés (à la Rencontre) + compteur (cap 2),
 # persistés (R108). blessed_tags {card_id: tag} = bénédictions actives, consommées à la pose.
 var intervention_beats: Array = []
@@ -111,9 +111,9 @@ var next_draw_bonus: int = 0
 # talent_points = points non dépensés ; verb_usage = compteur de poses par verbe (cible du nœud de
 # draft). TOUS réinitialisés à new_run (pas de save méta). Persistés (champs ADDITIFS, défauts safe
 # au load — pas de bump SAVE_VERSION) : la prise d'un nœud est une progression réelle (R108).
-var talent: Dictionary = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
+var talent: Dictionary = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}
 var talent_points: int = 0
-var verb_usage: Dictionary = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
+var verb_usage: Dictionary = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}
 # N3-V1 (2026-07-06) : MOMENTUM NARRATIF (colore le TON du pont inter-beats, ZÉRO impact §K/moteur).
 # +1 par réussite/éclatante, -1 par échec/partiel, clampé [MOMENTUM_MIN, MOMENTUM_MAX]. Remis à zéro
 # à new_run. Persisté (champ additif, défaut 0 au load : saves antérieures repartent neutres, pas de
@@ -194,15 +194,14 @@ func new_run(p_scenario: Dictionary) -> void:
 	_last_threshold = 0
 	pilier_offering_done = false
 	opening_draft_done = false
-	pushes_left_quest = MerlinResolution.PUSH_BUDGET_PER_QUEST
 	intervention_beats = []
 	pilier_interventions = 0
 	blessed_tags = {}
 	offered_graft_ids = {}  # A3 : anti-répétition des drafts, propre à chaque run
 	next_draw_bonus = 0
-	talent = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}  # v2-W2 : talent IN-RUN, remis à zéro
+	talent = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}  # R158 : talent IN-RUN, 5 verbes
 	talent_points = 0
-	verb_usage = {"PERCEVOIR": 0, "AGIR": 0, "PARLER": 0, "RESSENTIR": 0}
+	verb_usage = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}
 	momentum = 0  # N3-V1 : le ton narratif repart neutre à chaque run
 	corruption_max = 0  # P2 : traçage de récompense remis à zéro
 	degree_counts = {"echec": 0, "partiel": 0, "reussite": 0, "eclatante": 0}
@@ -836,7 +835,7 @@ func talent_node_target() -> String:
 			low_v = v
 	if low_v != "":
 		return low_v
-	return best_v if best_v != "" else "PERCEVOIR"
+	return best_v if best_v != "" else "OBSERVER"
 
 
 # Construit le NŒUD DE TALENT (dict rendu comme une carte de greffe au draft). kind "talent" le
@@ -1003,7 +1002,6 @@ func advance_beat() -> void:
 		if integrite <= 4:
 			repit += 2
 		integrite = clampi(integrite + repit, 0, _max_integrite())
-		pushes_left_quest = MerlinResolution.PUSH_BUDGET_PER_QUEST  # v10.21 (R130) : le budget Pousser se recharge avec le répit
 		emit_signal("gauges_changed", integrite, corruption)
 	# v10.14 — Ramification v1 : à l'ARRIVÉE sur un beat à variante (avant-climax des quêtes
 	# k>=4), si le degré précédent est échec/partiel, le beat BASCULE (Epreuve<->Dilemme),
@@ -1091,7 +1089,6 @@ func save() -> void:
 		"pilier_offering_done": pilier_offering_done,  # Wave D : unicité de l'offrande au resume (R108)
 		"opening_draft_done": opening_draft_done,  # v1.0-V4a : unicité du draft d'ouverture (additif)
 		"biome": biome,  # v10.22 : resume = même monde
-		"pushes_left_quest": pushes_left_quest,  # Wave G (R130) : budget Pousser persisté (additif)
 		"intervention_beats": intervention_beats, "pilier_interventions": pilier_interventions,
 		"blessed_tags": blessed_tags,  # Wave I (R131) : planning + bénédictions persistés (R108)
 		"offered_graft_ids": offered_graft_ids,  # A3 : anti-répétition des drafts persistée (additif, défaut {} au load)
@@ -1140,7 +1137,6 @@ func load_run() -> bool:
 	pilier_offering_done = bool(data.get("pilier_offering_done", false))  # Wave D : défaut false (saves legacy)
 	opening_draft_done = bool(data.get("opening_draft_done", false))  # v1.0-V4a : défaut false (saves antérieures)
 	biome = str(data.get("biome", "foret"))  # v10.22 : défaut forêt (saves legacy)
-	pushes_left_quest = int(data.get("pushes_left_quest", MerlinResolution.PUSH_BUDGET_PER_QUEST))  # Wave G (R130)
 	intervention_beats = data.get("intervention_beats", [])  # Wave I (R131), défauts = saves legacy OK
 	pilier_interventions = int(data.get("pilier_interventions", 0))
 	blessed_tags = data.get("blessed_tags", {})
@@ -1156,8 +1152,8 @@ func load_run() -> bool:
 	corruption_max = maxi(int(data.get("corruption_max", corruption)), corruption)  # P2 : défaut = corruption courante (saves antérieures)
 	degree_counts = _degree_dict(data.get("degree_counts", {}))  # P2 : 4 clés garanties (save partiel/legacy)
 	actions = _dicts_to_cards(data.get("actions", []))
-	if actions.is_empty():
-		actions = MerlinCard.make_actions()  # filet : jamais de run sans les 4 verbes
+	if actions.size() != 5:
+		actions = MerlinCard.make_actions()  # R158 : 5 actions a icones (repli/migration si save != 5)
 	deck = _dicts_to_cards(data.get("deck", []))
 	hand = _dicts_to_cards(data.get("hand", []))
 	discard = _dicts_to_cards(data.get("discard", []))

@@ -302,8 +302,26 @@ func _draw() -> void:
 			for wv_i in 3:
 				var wv_r: float = r * (0.35 + 0.32 * float(wv_i))
 				draw_arc(c + Vector2(-r * 0.6, 0.0), wv_r, deg_to_rad(-55), deg_to_rad(55), 16, line_color, line_w, true)
-		"chain":  # emprise — 2 maillons de chaîne
+		"chain":  # emprise : 2 maillons de chaine
 			draw_arc(c + Vector2(-r * 0.35, 0.0), r * 0.42, 0.0, TAU, 20, line_color, line_w, true)
 			draw_arc(c + Vector2(r * 0.35, 0.0), r * 0.42, 0.0, TAU, 20, line_color, line_w, true)
+		"hand":  # R158 : agir (main ouverte) : 4 doigts + pouce + base de paume
+			for hf in 4:
+				var hx: float = lerpf(-r * 0.45, r * 0.45, float(hf) / 3.0)
+				var hlen: float = r * 0.9 if hf != 0 else r * 0.7
+				draw_line(c + Vector2(hx, r * 0.2), c + Vector2(hx, -hlen), line_color, line_w, true)
+			draw_line(c + Vector2(-r * 0.45, r * 0.2), c + Vector2(-r * 0.85, -r * 0.15), line_color, line_w, true)
+			draw_arc(c + Vector2(0.0, r * 0.2), r * 0.5, 0.0, PI, 16, line_color, line_w, true)
+		"magie":  # R158 : reveler (baguette + etoile) : sortilege de revelation
+			draw_line(c + Vector2(-r * 0.55, r * 0.7), c + Vector2(r * 0.2, -r * 0.35), line_color, line_w, true)
+			var mt: Vector2 = c + Vector2(r * 0.4, -r * 0.6)
+			var mstar: PackedVector2Array = PackedVector2Array()
+			for mi in 8:
+				var ma: float = float(mi) / 8.0 * TAU - PI / 2.0
+				var mr: float = r * 0.5 if mi % 2 == 0 else r * 0.18
+				mstar.append(mt + Vector2(cos(ma), sin(ma)) * mr)
+			mstar.append(mstar[0])
+			draw_polyline(mstar, line_color, line_w, true)
+			draw_circle(c + Vector2(-r * 0.15, r * 0.05), line_w * 0.9, line_color)
 		_:
 			draw_arc(c, r, 0.0, TAU, 48, line_color, line_w, true)

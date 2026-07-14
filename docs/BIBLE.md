@@ -1830,6 +1830,24 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R158 : VAGUE MECANIQUE, 5 actions a icones + 2d6 + corruption nature x degre x geste + Fiche du Voyageur
+  (2026-07-14, retours playtest)** : trois refontes verrouillees, §K re-derive UNE fois. (1) 5 ACTIONS A ICONES
+  remplacent les 4 verbes : Observer (oeil, Sens/Savoir), Agir (main, Agilite/Finesse), Combattre (epee,
+  Force/Endurance), Reveler (magie, Mystere/Vision), Parler (bouche, Empathie/Verbe). 10 tags de base ; la tuile
+  ne montre qu'une ICONE (glyphes hand+magie ajoutes a merlin_glyph), le nom se lit sur la Fiche. Migration save
+  SAVE_VERSION 2->3 (saves pre-R158 rejetees proprement vers le menu, jamais de crash ; _talent_dict backfille 5).
+  (2) DE = 2d6 (cloche 2-12) au lieu du d20 plat : les stats pesent, la chance suit la cloche ; planchers 2=echec,
+  12=eclatante ; visuel = 2 des a points (dramaturgie P1 conservee). Leviers §K re-derives : DC {6,9,12}, COVER 3,
+  SYN 1, PARTIEL_LOW 5, ECLAT_MARGIN 8. (3) CORRUPTION ET SANTE AUTOMATIQUES = nature de l'evenement (type de beat,
+  escaladee si un tag Monde est requis) x degre x geste (carte corrompue / Combattre sur scene paisible amplifie).
+  Le choix Encaisser/Pousser ET le cout de carte disparaissent. (4) FICHE DU VOYAGEUR dans le menu Pause : lecture
+  live des 5 actions et bonus, Integrite, Corruption, Souffle (momentum), fragments du Graal. Gate de preuve : soak
+  200/200, 4 bandes IN (echec 6.5 / partiel 33.5 / reussite 49.6 / eclatante 10.4), morts par archetype PASS
+  (optimal 0 / greedy 0 / chaotic 14.3 / corrompu 13.3), 0 hors-pool, autoplay LLM 3/3, bootcheck actions=5.
+  Reserve honnete : morts-global 6.9% et couverture-climax 7.5% sous leur bande INFO (non-gate) ; les monter
+  cassait le gate mandate corrompu <= 25 (jeu du cote clement). A rediscuter (piste : decoupler le corrompu).
+  Amende R141-R144 (d20 -> 2d6), R130/G1 (push retire), R110 (4 verbes -> 5 actions).
+
 - **R157 : ZERO CADRATIN player-facing + repair_accents LLM (2026-07-14, petit) - zero-balance** :
   66 tirets cadratin U+2014 retires des STRINGS affiches au joueur (evocations de cartes, situations/ponts/
   epilogues/preambules, interventions de piliers, labels de draft, menu) -> ponctuation FR (`:`/`,`/`;`/`.`)

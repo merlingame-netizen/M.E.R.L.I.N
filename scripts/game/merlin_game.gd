@@ -71,13 +71,8 @@ var _meca_lbl: Label = null          # N5-C3 - ligne méca lisible sous la vigne
 var _choice_open: bool = false       # v11-V2a — garde anti-clic du choix (reprend le rôle de _hand_box.visible)
 var _pending_res: Dictionary = {}    # res/degré mémorisés au resolve → fade-in vignette post-typewriter
 var _pending_degree: String = ""
-# v10.21 (Wave G, R130) — PARTIEL = CHOIX « Encaisser / Pousser » : l'application de la résolution est
-# DIFFÉRÉE jusqu'au choix (play_and_discard + effets de cartes restent immédiats — un HEAL sauve avant).
-var _push_pending: bool = false
-var _push_res_raw: Dictionary = {}   # deltas BRUTS de resolve() préservés pour l'application différée
-var _push_situ: Dictionary = {}
-var _push_cards: Array = []
-var _push_row: HBoxContainer = null
+# R158 : « Pousser » retire : plus de vars _push_* (la resolution s'applique toujours immediatement,
+# la corruption/sante decoule de la scene via MerlinResolution.resolve).
 # Garde anti-clobber : incrémenté à CHAQUE transition d'affichage (nouvelle situation,
 # issue affichée, fin de run). Un enrichissement LLM en arrière-plan ne remplace le texte
 # QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
@@ -284,11 +279,6 @@ func _present_current_beat() -> void:
 	# v10.21 — reset au nouveau beat : situation pleine opacité, vignette d'effet estompée (elle vit
 	# en Z4 désormais ; l'issue R128 vit dans _situation_text, réécrit par _show_situation).
 	_fade_res_block(false)
-	if _push_row != null and is_instance_valid(_push_row):  # R130 : jamais de choix fantôme au beat suivant
-		_push_row.queue_free()
-		_push_row = null
-	_push_pending = false
-	_push_res_raw = {}
 	if _pact_row != null and is_instance_valid(_pact_row):  # R131 : idem pour le pacte
 		_pact_row.queue_free()
 		_pact_row = null
@@ -650,7 +640,8 @@ func _update_preview() -> void:
 	var graft_bonus_p: int = run_p.graft_roll_bonus(_selected_action)
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		run_p.blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)), skill_mod_p, graft_bonus_p)  # R131 + d20 + talent + greffes-jet : preview = résolution (R120)
+		int(_current_situation.get("difficulte", 2)), skill_mod_p, graft_bonus_p,
+		str(_current_situation.get("type", "")))  # R158 : + beat_type (nature) : preview = resolution (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_set_resolve_armed(true)
 	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
@@ -685,7 +676,8 @@ func _on_resolve() -> void:
 	var graft_bonus_r: int = run.graft_roll_bonus(_selected_action)
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
 		run.blessed_bonus(combo),
-		int(_current_situation.get("difficulte", 2)), skill_mod_r, graft_bonus_r)  # R131 + d20 + talent + greffes-jet : mêmes args que la preview (R120)
+		int(_current_situation.get("difficulte", 2)), skill_mod_r, graft_bonus_r,
+		str(_current_situation.get("type", "")))  # R158 : + beat_type (nature) : memes args que la preview (R120)
 	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
@@ -714,18 +706,10 @@ func _on_resolve() -> void:
 	# v11-W3 (spec §E) — charges de GREFFE du verbe joué (HEAL/PURGE/DRAW, 1 charge consommée par
 	# greffe "charge"), à côté des effets de cartes — mêmes règles, AVANT le check de mort.
 	var graft_fx: Dictionary = run.apply_graft_charges(combo[0])
-	# v10.21 (Wave G, R130) — PARTIEL = CHOIX : si budget Pousser disponible, l'application de la
-	# résolution est DIFFÉRÉE jusqu'au choix Encaisser/Pousser (post-lecture). Sinon flux inchangé.
-	var deg_raw: String = str(res.get("degree", ""))
-	_push_pending = deg_raw == MerlinResolution.PARTIEL \
-		and int(run.get("pushes_left_quest")) > 0 and not run.ended
-	if _push_pending:
-		_push_res_raw = res.duplicate(true)  # deltas BRUTS préservés pour l'application différée
-		_push_situ = situ
-		_push_cards = played_cards
-	else:
-		run.apply_resolution(res)
-		run.gain_talent_points(str(res.get("degree", "")))  # v2-W2 : points de talent au degré FINAL (réussite +1 / éclatante +2)
+	# R158 : le « Pousser » est retire. La resolution s'applique TOUJOURS immediatement (partiel = un
+	# resultat en soi) ; la corruption/sante decoule de la scene, plus jamais d'un choix a payer.
+	run.apply_resolution(res)
+	run.gain_talent_points(str(res.get("degree", "")))  # points de talent au degre FINAL (reussite +1 / eclatante +2)
 	res["integrite_delta"] = int(run.get("integrite")) - int_before
 	res["corruption_delta"] = int(run.get("corruption")) - corr_before
 	var fx_effects: Array = []  # effets actifs déclenchés (HEAL/PURGE/DRAW) pour les glyphes de la vignette
@@ -743,10 +727,9 @@ func _on_resolve() -> void:
 	# Draft « 1 carte sur 3 » armé : SEULEMENT aux beats clés (réussite/éclatante) tant qu'il reste des beats.
 	var deg: String = str(res.get("degree", ""))
 	_pending_draft = (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) and not run.is_climax() and not run.ended
-	if not _push_pending:  # R130 : différé → consigné au CHOIX avec le degré FINAL
-		run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
-		if run.faits_marquants.size() > 6:
-			run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
+	run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
+	if run.faits_marquants.size() > 6:
+		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
 
 	_scene_epoch += 1
 	var ep: int = _scene_epoch
@@ -832,8 +815,7 @@ func _on_resolve() -> void:
 		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")),
 			played_cards, str(run.get("biome")))
 	prose = MerlinProse.ensure_italic_action(prose)  # v11-N1 (R140) : 1re phrase = action en [i]…[/i] (robustesse si le LLM oublie l'italique)
-	if not _push_pending:  # R130 : différé → note_outcome au CHOIX avec le degré FINAL
-		sc.note_outcome(res, situ, played_cards)  # v10.20.1 : gist SPÉCIFIQUE (action réelle) + pont vers la situation suivante
+	sc.note_outcome(res, situ, played_cards)  # gist SPECIFIQUE (action reelle) + pont vers la situation suivante
 	run.summary = prose
 	_show_resolution(res, prose, true)
 	# v10.13 (Fix 6) : PLUS de save ici — il persistait les jauges post-résolution avec un beat_index
@@ -1027,100 +1009,8 @@ func _on_pact_choice(pk: String, accepted: bool) -> void:
 		_fade_res_block(false)  # rien d'autre à montrer dans le slot central
 
 
-# v10.21 (Wave G, R130) — Choix « Encaisser / Pousser » sous la vignette : 1 geste, zéro timer (R99),
-# boutons ≥44 px, LEDGER affiché par bouton (prix criant AVANT le clic). Anti-misclick : disabled 250 ms.
-const PUSH_CODAS: Array = [
-	"[i]Vous forcez votre volonté dans la brèche.[/i] Le lieu cède - mais quelque chose s'infiltre dans votre sillage.",
-	"[i]Vous poussez le passage d'un souffle de plus.[/i] La voie s'ouvre en grand ; l'ombre, elle, retient votre nom.",
-	"[i]Vous arrachez ce dernier effort à vous-même.[/i] Le lieu plie, et prélève sa part sans un mot.",
-]
-
-
-func _build_push_choice() -> void:
-	var run: Node = get_node("/root/MerlinRun")
-	# v11-V2b (vigilance V2a #1) — Z4 ne porte qu'UN contenu : boutons+ledger D'ABORD, la vignette
-	# sera re-frappée APRÈS le choix au degré FINAL (_on_push_choice). Purge du slot avant pose.
-	_clear_tuto_hint()
-	if _effect_vignette != null:
-		for c in _effect_vignette.get_children():
-			c.queue_free()
-	if _meca_lbl != null:  # N5-C3 : Z4 ne porte qu'UN contenu → la ligne méca cède au choix Encaisser/Pousser
-		_meca_lbl.text = ""
-	_push_row = HBoxContainer.new()
-	_push_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_push_row.add_theme_constant_override("separation", 24)
-	_push_row.mouse_filter = Control.MOUSE_FILTER_PASS
-	var corr_cost: int = int(_push_res_raw.get("corruption_delta", 0))
-	var enc: Button = Button.new()
-	enc.text = "Encaisser  (Intégrité %d · Corruption +%d)" % [int(_push_res_raw.get("integrite_delta", 0)), corr_cost]
-	var pou: Button = Button.new()
-	var proj: int = int(run.get("corruption")) + corr_cost + MerlinResolution.PUSH_PRICE
-	pou.text = "Pousser  (Réussite · Corruption +%d → %d)" % [corr_cost + MerlinResolution.PUSH_PRICE, proj]
-	for b in [enc, pou]:
-		var btn: Button = b
-		btn.custom_minimum_size = Vector2(320, 56)  # ≥44 px (pilier TACTILE)
-		btn.add_theme_font_size_override("font_size", 18)
-		MerlinVisual.apply_button_da(btn)
-		MerlinVisual.connect_button_feedback(btn)
-		btn.disabled = true  # anti-misclick : armés après 250 ms
-		_push_row.add_child(btn)
-	enc.pressed.connect(_on_push_choice.bind(false))
-	pou.pressed.connect(_on_push_choice.bind(true))
-	if _res_block != null:
-		_res_block.add_child(_push_row)
-		_fade_res_block(true)
-	var arm_tw: Tween = create_tween()
-	arm_tw.tween_interval(0.25)
-	arm_tw.tween_callback(func() -> void:
-		if is_instance_valid(enc):
-			enc.disabled = false
-		if is_instance_valid(pou):
-			pou.disabled = false)
-
-
-func _on_push_choice(push: bool) -> void:
-	if not _push_pending and _push_res_raw.is_empty():
-		return
-	_push_pending = false
-	var run: Node = get_node("/root/MerlinRun")
-	var sc: Node = get_node("/root/MerlinScenario")
-	if push:
-		_push_res_raw["degree"] = MerlinResolution.REUSSITE
-		_push_res_raw["integrite_delta"] = 0  # l'Intégrité est ÉPARGNÉE ; le prix du partiel reste dû
-		_push_res_raw["corruption_delta"] = int(_push_res_raw.get("corruption_delta", 0)) + MerlinResolution.PUSH_PRICE
-		_push_res_raw["label"] = str(_push_res_raw.get("label", "")) + " (forcé)"
-		run.set("pushes_left_quest", int(run.get("pushes_left_quest")) - 1)
-	run.apply_resolution(_push_res_raw)  # application UNIQUE différée
-	run.gain_talent_points(str(_push_res_raw.get("degree", "")))  # v2-W2 : points de talent au degré FINAL (poussé = réussite → +1)
-	_flush_gauges()  # v11-W1 : le choix est fait → les anneaux jouent le delta cumulé (coût + résolution finale)
-	run.faits_marquants.append("%s → %s" % [str(_push_situ.get("type", "")), str(_push_res_raw.get("label", ""))])
-	if run.faits_marquants.size() > 6:
-		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
-	sc.note_outcome(_push_res_raw, _push_situ, _push_cards)  # fil rouge avec le degré FINAL (R120)
-	if push and _situation_text != null:
-		# Coda procédurale écrite dans le MÊME fil (R128).
-		_situation_text.text = _situation_text.text.replace("[/center]",
-			"\n\n" + str(PUSH_CODAS[randi() % PUSH_CODAS.size()]) + "[/center]")
-		_situation_text.visible_characters = -1
-	# v11-V2b (vigilance V2a #1) — cross-fade Z4 : les boutons partent, la vignette re-frappée au
-	# degré FINAL arrive (encaissé = partiel, poussé = réussite forcée). Un contenu à la fois.
-	var final_res: Dictionary = _push_res_raw
-	var final_deg: String = str(_push_res_raw.get("degree", MerlinResolution.PARTIEL))
-	var row: HBoxContainer = _push_row
-	_push_row = null
-	_push_res_raw = {}
-	if run.ended:
-		if row != null and is_instance_valid(row):
-			row.queue_free()
-		return  # mort/fin via l'application différée → run_ended a pris la main
-	MerlinVisual.swap_zone(_res_block, func() -> void:
-		if row != null and is_instance_valid(row):
-			row.queue_free()
-		_build_effect_vignette(final_res, final_deg))
-	_can_advance = true
-	if _caret != null:
-		_caret.text = "▮ cliquer pour continuer"
-	_set_caret(true)
+# R158 : « Pousser » (Encaisser/Pousser) RETIRE : _build_push_choice / _on_push_choice /
+# PUSH_CODAS supprimes. La resolution s'applique toujours immediatement (corruption automatique).
 
 
 # v10.20 — Vignette d'effet (sous le filet) : badge de degré + Δ jauges + glyphes d'effet de carte. Fondu d'entrée.
@@ -1387,7 +1277,7 @@ func _graft_presentation_card(g: Dictionary) -> MerlinCard:
 # v2-W2 — famille (tag) représentative d'un verbe, pour que le glyphe de la carte-nœud reflète le
 # verbe ciblé (mêmes familles que MerlinCard.make_actions). "" si verbe inconnu.
 const VERB_FAMILY_TAG: Dictionary = {
-	"PERCEVOIR": "Sens", "AGIR": "Force", "PARLER": "Verbe", "RESSENTIR": "Instinct",
+	"OBSERVER": "Sens", "AGIR": "Agilité", "COMBATTRE": "Force", "PARLER": "Verbe", "RÉVÉLER": "Mystère",
 }
 
 
@@ -1397,10 +1287,11 @@ func _verb_family(verb: String) -> String:
 
 # N5-C3 (ligne méca) - clause d'action en clair par verbe (voix « Vous », registre du jeu R140).
 const VERB_CLAUSE: Dictionary = {
-	"PERCEVOIR": "Vous scrutez les environs",
-	"AGIR": "Vous forcez le passage",
+	"OBSERVER": "Vous scrutez les environs",
+	"AGIR": "Vous ajustez le geste avec adresse",
+	"COMBATTRE": "Vous engagez le fer",
 	"PARLER": "Vous prenez la parole",
-	"RESSENTIR": "Vous suivez votre instinct",
+	"RÉVÉLER": "Vous percez le voile",
 }
 
 
@@ -1415,12 +1306,12 @@ func _build_meca_line(res: Dictionary, degree: String) -> String:
 	var clause: String = str(VERB_CLAUSE.get(verb, "Vous agissez"))
 	var reg: String = str(VERB_FAMILY_TAG.get(verb, ""))
 	var die: int = int(res.get("die", 0))
-	var face: int = die if (die >= 1 and die <= 20) else int(MerlinResolution.DIE_FALLBACK)
+	var face: int = die if (die >= 2 and die <= 12) else int(MerlinResolution.DIE_FALLBACK)
 	var total: int = int(res.get("total", face))
 	var mods: int = total - face
 	var mods_str: String = ("+%d" % mods) if mods >= 0 else str(mods)
 	var deg_lbl: String = str(MerlinResolution.LABELS.get(degree, degree)).to_lower()
-	var line: String = "%s (%s) · d20 %d %s = %s" % [clause, reg, face, mods_str, deg_lbl]
+	var line: String = "%s (%s) · 2d6 %d %s = %s" % [clause, reg, face, mods_str, deg_lbl]
 	var di: int = int(res.get("integrite_delta", 0))
 	line += " · Intégrité %s%d" % ["+" if di >= 0 else "", di]
 	var dcorr: int = int(res.get("corruption_delta", 0))
@@ -1788,7 +1679,7 @@ func _keyboard_confirm() -> bool:
 	if _tw != null and _tw.is_valid():
 		_skip_typewriter()
 		return true
-	if _draft_active or _push_pending or _push_row != null or _pact_row != null or _tuto_prompt_row != null:
+	if _draft_active or _pact_row != null or _tuto_prompt_row != null:
 		return false
 	if _intro_open:
 		if _intro_accept_btn != null and is_instance_valid(_intro_accept_btn):
@@ -1825,13 +1716,6 @@ func _on_typewriter_done() -> void:
 		_set_caret(true)
 		return
 	if _state == 2:
-		# v10.21 (Wave G, R130) — PARTIEL différé : le choix Encaisser/Pousser REMPLACE l'avance au clic.
-		# v11-V2b (vigilance V2a #1) : boutons+ledger D'ABORD — la vignette est re-frappée APRÈS le
-		# choix au degré FINAL (_on_push_choice) ; les anneaux aussi (v11-W1 : ledger seul avant).
-		if _push_pending:
-			_pending_res = {}  # la vignette de ce beat vivra dans _on_push_choice (degré final)
-			_build_push_choice()
-			return
 		# Issue entièrement écrite → la VIGNETTE d'effet (degré + Δ jauges + effets) apparaît en Z4
 		# (R128 : compacte, après coup, sans casser la prose), puis avance au clic + caret « continuer ».
 		if not _pending_res.is_empty():
@@ -2297,7 +2181,7 @@ func _input(event: InputEvent) -> void:
 		if event.is_action_pressed("ui_accept"):
 			if _keyboard_confirm():
 				get_viewport().set_input_as_handled()
-			elif _draft_active or _push_pending or _push_row != null or _pact_row != null or _tuto_prompt_row != null:
+			elif _draft_active or _pact_row != null or _tuto_prompt_row != null:
 				# Phase a choix explicite : Espace/Entree ne valide rien, mais on AVALE l'evenement pour
 				# qu'il n'active jamais par le focus GUI un bouton de choix (revue design, defensif).
 				get_viewport().set_input_as_handled()

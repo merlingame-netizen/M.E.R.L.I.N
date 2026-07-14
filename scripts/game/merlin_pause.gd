@@ -15,9 +15,11 @@ const COL_GOLD: Color = MerlinVisual.GOLD
 const DUR_IN: float = MerlinVisual.DUR_PANEL_OPEN
 const DUR_OUT: float = MerlinVisual.DUR_VEIL_IN
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
+const _Glyph := preload("res://scripts/game/merlin_glyph.gd")  # R158 : icones des 5 actions sur la Fiche
 
 var _dim: ColorRect = null
 var _panel: MarginContainer = null
+var _fiche_box: VBoxContainer = null  # R158 : Fiche du Voyageur (peuplee a chaque open, lecture LIVE)
 var _tw: Tween = null
 var _leaving: bool = false   # garde anti double-clic « Menu principal » (une seule navigation)
 var _resuming: bool = false  # garde anti double-clic « Reprendre » (revue gameplay HIGH : sinon le 2e
@@ -39,6 +41,7 @@ func open() -> void:
 	if visible:
 		return
 	get_tree().paused = true  # GÈLE la boucle (tweens/typewriter/fusion/draft)
+	_rebuild_fiche()  # R158 : stats a jour a chaque ouverture (lecture LIVE de MerlinRun)
 	visible = true
 	_dim.modulate.a = 0.0
 	_panel.modulate.a = 0.0
@@ -147,6 +150,14 @@ func _build_ui() -> void:
 	vbox.add_child(rule)
 	MerlinOrnament.spin_triskele(rule)
 
+	# R158 : section « Fiche du Voyageur » (peuplee a l'ouverture par _rebuild_fiche).
+	_fiche_box = VBoxContainer.new()
+	_fiche_box.add_theme_constant_override("separation", 6)
+	vbox.add_child(_fiche_box)
+
+	var rule2: HBoxContainer = MerlinOrnament.triskele_rule(20.0)
+	vbox.add_child(rule2)
+
 	_menu_button("Reprendre", _resume, vbox)
 	_menu_button("Options", _on_options, vbox)
 	_menu_button("Menu principal", _to_menu, vbox)
@@ -161,3 +172,51 @@ func _menu_button(txt: String, cb: Callable, parent: Control) -> void:
 	MerlinVisual.connect_button_feedback(b)
 	b.pressed.connect(cb)
 	parent.add_child(b)
+
+
+# R158 : Fiche du Voyageur. Lit MerlinRun EN DIRECT (jamais de save) : les 5 actions (icone + nom +
+# bonus de jet talent+maitrise), Integrite, Corruption, Souffle (momentum), fragments du Graal.
+func _rebuild_fiche() -> void:
+	if _fiche_box == null:
+		return
+	for c in _fiche_box.get_children():
+		c.queue_free()
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run == null:
+		return
+	var titre: Label = Label.new()
+	titre.text = "Fiche du Voyageur"
+	titre.add_theme_color_override("font_color", COL_GOLD)
+	titre.add_theme_font_size_override("font_size", 20)
+	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_fiche_box.add_child(titre)
+	var frag: int = int(MerlinChronicle.read().get("graal_fragments", 0))
+	var gtot: int = int(MerlinChronicle.GRAAL_TOTAL)
+	var stats: Label = Label.new()
+	stats.text = "Intégrité %d / 10      Corruption %d      Souffle %+d      Graal %d / %d" % [
+		int(run.get("integrite")), int(run.get("corruption")), int(run.get("momentum")), frag, gtot]
+	stats.add_theme_color_override("font_color", MerlinVisual.CREAM)
+	stats.add_theme_font_size_override("font_size", 16)
+	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_fiche_box.add_child(stats)
+	# Les 5 actions : icone + nom + bonus de jet (talent + maitrise), lecture directe.
+	for a in run.get("actions"):
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		var icon: Control = _Glyph.new()
+		icon.custom_minimum_size = Vector2(26, 26)
+		icon.call("setup", a.glyph_key(), MerlinVisual.CREAM, 2.2)
+		row.add_child(icon)
+		var nom: Label = Label.new()
+		nom.text = str(a.card_name)
+		nom.add_theme_color_override("font_color", MerlinVisual.CREAM)
+		nom.add_theme_font_size_override("font_size", 16)
+		nom.custom_minimum_size = Vector2(150, 0)
+		row.add_child(nom)
+		var bonus: Label = Label.new()
+		bonus.text = "+%d au jet" % int(run.skill_mod_for(a))
+		bonus.add_theme_color_override("font_color", COL_GOLD)
+		bonus.add_theme_font_size_override("font_size", 16)
+		row.add_child(bonus)
+		_fiche_box.add_child(row)

@@ -31,7 +31,7 @@ const VOICE_TICK_S: float = 0.14     # cadence des syllabes procédurales pendan
 # images celtiques brèves ; « tuile / rune / bouton / dé » OK en atelier, jamais de meta au-delà).
 # STATIQUES : le guide est instantané et fiable, zéro LLM. ──
 const TXT_SITUATION: String = "Ici, le lieu te parle. Chaque pas t'offre une scène... Lis-la bien, mon ami : elle réclame toujours quelque chose."
-const TXT_VERBES: String = "Ces quatre tuiles sont tes verbes : percevoir, agir, parler, ressentir. Tout geste commence par l'un d'eux."
+const TXT_VERBES: String = "Ces cinq tuiles sont tes gestes : observer, agir, combattre, révéler, parler. Une icône pour chacun ; tout geste commence par l'un d'eux."
 const TXT_RUNES: String = "Et voilà tes runes, ta manière de faire. Quand l'or souligne une tuile ou une rune, c'est qu'elle répond à ce que le lieu réclame. Suis l'or, il ment rarement."
 const TXT_COMBO: String = "Laisse-moi faire, pour cette fois. Un verbe... une rune... et le geste prend forme."
 const TXT_PREVIEW: String = "Vois : le bouton s'éveille, notre geste est prêt. Clique, et regarde bien... je le scelle."
@@ -127,15 +127,9 @@ func _run_steps() -> bool:
 		return false
 	# I2 : si un partiel est RÉELLEMENT en attente (R130), le choix se traite AVANT les jauges
 	# (les anneaux ne jouent leur delta différé qu'après le choix : v11-W1 _flush_gauges).
-	var push_seen: bool = _push_open()
-	if push_seen:
-		if not await _step_pousser(true):
-			return false
+	# R158 : etape « Pousser » (Encaisser/Pousser) RETIREE : la corruption est automatique.
 	if not await _step("jauges", _zone_rect("jauges"), TXT_JAUGES):
 		return false
-	if not push_seen:
-		if not await _step_pousser(false):
-			return false
 	# B3 (revue design) : l'étape greffes ANNONCE seulement : le vrai draft d'ouverture (décalé)
 	# sortira du gate UNIQUE de _advance_to_next au premier clic du joueur. Jamais deux drafts.
 	if not await _step("greffes", _zone_rect("main"), TXT_GREFFES):
@@ -197,7 +191,7 @@ func _step_resolve() -> bool:
 	_game._on_resolve()  # fire-and-forget (pattern autoplay : la scène peut mourir mid-resolve)
 	await _until(func() -> bool:
 		return not _ok() or run == null or bool(run.get("ended")) \
-			or (int(_game.get("_state")) == 2 and (bool(_game.get("_can_advance")) or _push_open())))
+			or (int(_game.get("_state")) == 2 and bool(_game.get("_can_advance"))))
 	if not _ok() or run == null or bool(run.get("ended")):
 		return false
 	_set_overlay_visible(true)
@@ -212,22 +206,7 @@ func _step_resolve() -> bool:
 
 # Étape Encaisser/Pousser : expliquée UNE fois. real=true : un partiel est ouvert, Merlin tranche
 # lui-même Encaisser après son texte (prix affiché : la démo reste lisible).
-func _step_pousser(real: bool) -> bool:
-	if not _ok():
-		return false
-	step_id = "pousser"
-	_show_spotlight(_zone_rect("etat"))
-	await _speak(TXT_POUSSER_REEL if real else TXT_POUSSER_INFO)
-	if not _ok():
-		return false
-	if real and _push_open():
-		await _pause(POSE_PAUSE_S)
-		if not _ok():
-			return false
-		if _push_open():
-			_game._on_push_choice(false)  # Merlin encaisse (mêmes chemins que le joueur)
-	await _wait_click()
-	return _ok()
+# R158 : _step_pousser (etape Encaisser/Pousser) RETIREE : la corruption est desormais automatique.
 
 
 # ── Attentes & clics ───────────────────────────────────────────────────────────────────────────
@@ -453,11 +432,7 @@ func _kill_tw() -> void:
 # ── Aides de jeu (duck-typées : un renommage côté jeu casse BRUYAMMENT, jamais de faux vert) ────
 
 
-func _push_open() -> bool:
-	if _game == null or not is_instance_valid(_game):
-		return false
-	var row: Node = _game.get("_push_row") as Node
-	return bool(_game.get("_push_pending")) and row != null and is_instance_valid(row)
+# R158 : _push_open RETIRE (le choix de push n'existe plus).
 
 
 # La paire de démo de Merlin : tuile puis rune à MEILLEURE couverture des tags requis (I3 : la

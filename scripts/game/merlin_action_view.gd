@@ -109,13 +109,13 @@ func _build() -> void:
 	verb_row.add_theme_constant_override("separation", 6)
 	verb_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(verb_row)
-	var verb: Label = Label.new()
-	verb.text = card.card_name
-	verb.add_theme_color_override("font_color", MerlinVisual.CREAM)
-	verb.add_theme_font_size_override("font_size", MerlinVisual.FS_BTN)
-	verb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	verb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	verb_row.add_child(verb)
+	# R158 : la tuile porte un GLYPHE-ICONE (oeil/main/epee/magie/bouche) a la place du texte du
+	# verbe. card_name reste la cle interne du talent ; le nom se lit sur la Fiche du Voyageur (Pause).
+	# Le badge « +N » (niveau d'action) reste TOUJOURS visible juste apres (R154/A2).
+	var icon: Control = _Glyph.new()
+	icon.custom_minimum_size = Vector2(46, 46)
+	icon.call("setup", card.glyph_key(), MerlinVisual.CREAM, 2.8)
+	verb_row.add_child(icon)
 	# Badge de talent « +N » (skill_mod du verbe, R120) : GOLD sur SURFACE. Vague A (A2) : TOUJOURS
 	# visible dès l'apparition de la tuile, « +0 » compris — le niveau d'action est lisible d'emblée.
 	_talent_lbl = Label.new()

@@ -181,14 +181,7 @@ func _play_one(k: int) -> bool:
 					print("[AUTOPLAY] run#%d — pacte bouton %d cliqué" % [k, pbi])
 			await process_frame
 			continue
-		# v10.21 (R130) — choix « Encaisser / Pousser » pendant ? Trancher (alterné par run) pour avancer.
-		if game._push_pending and game._push_row != null:
-			await create_timer(0.3).timeout
-			if is_instance_valid(game) and game._push_pending:
-				game._on_push_choice(k % 2 == 0)
-				print("[AUTOPLAY] run#%d — partiel %s" % [k, "poussé" if k % 2 == 0 else "encaissé"])
-			await process_frame
-			continue
+		# R158 : choix « Encaisser / Pousser » RETIRE (corruption automatique) : plus rien a trancher.
 		if game._state == 1:
 			# v11-W2 — phase de choix : 1 TUILE d'action + 1 TRAIT, puis Résoudre. Duck-typing pur
 			# (accès propriétés/méthodes sur Node) : un renommage côté jeu = erreur runtime BRUYANTE

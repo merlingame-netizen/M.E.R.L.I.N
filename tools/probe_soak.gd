@@ -53,8 +53,7 @@ var _beats_total: int = 0
 var _beats_clean: int = 0
 var _drafts_offered: int = 0
 var _drafts_taken: int = 0
-var _pushes: int = 0              # v10.21 (R130) : « Pousser » simulés, toutes runs
-var _pushes_clean: int = 0
+# R158 : « Pousser » retire : plus de compteurs _pushes (corruption automatique nature x degre x geste).
 var _corr_gained_clean: int = 0   # somme des Δcorruption positifs par beat (runs saines)
 var _offpool_beats: int = 0       # beats à requis ENTIÈREMENT hors-pool (assertion dure : 0)
 var _deadhand_beats: int = 0      # beats où AUCUN trait de la main ne couvre un requis (info §C)
@@ -115,7 +114,7 @@ func _init() -> void:
 	var total_runs: int = runs * (ARCHETYPES.size() if per_arch else 1)
 	print("[SOAK] ends=%s (toutes runs)" % str(_ends))
 	print("[SOAK] degrees=%s (toutes runs, %d beats)" % [str(_degrees), _beats_total])
-	print("[SOAK] drafts %d/%d pris · secours injectées=%d · pushes R130=%d" % [_drafts_taken, _drafts_offered, _secours_injected, _pushes])
+	print("[SOAK] drafts %d/%d pris · secours injectées=%d" % [_drafts_taken, _drafts_offered, _secours_injected])
 	_report_k()
 	_report_arch()
 	# v1.0-V4a — runs (fiabilité R109) et gates §K (équilibrage) comptés SÉPARÉMENT : un gate rouge
@@ -130,12 +129,12 @@ func _selftest_whitelist() -> void:
 	var allowed: Dictionary = pool.get("allowed", {})
 	var base: Array = pool.get("base", [])
 	var x1: Array = pool.get("x1", [])
-	_st(base.size() == 8, "8 tags de base d'actions (mesuré %d)" % base.size())
+	_st(base.size() == 10, "10 tags de base d'actions (5 actions x 2, mesuré %d)" % base.size())
 	_st(not allowed.has("sacrifice") and not allowed.has("equilibre"),
 		"Sacrifice/Équilibre jamais requérables sans greffe")
 	_st(not allowed.has("vide") and not allowed.has("murmure") and not allowed.has("emprise"),
 		"tags Corrompus jamais requérables")
-	_st(x1.has("franchise") and x1.has("mystere") and x1.has("rituel"),
+	_st(x1.has("instinct") and x1.has("franchise") and x1.has("rituel"),
 		"tags ×1 détectés par comptage dynamique (%s)" % str(x1))
 	# Validation LLM : tag inventé → remplacé par le fallback du MÊME index, résultat in-pool.
 	var fixed: Array = Scenario.validate_required_tags(["Dragon", "Sens"], 0, pool)
@@ -179,22 +178,28 @@ func _selftest_whitelist() -> void:
 	# v2-W1 — barème d'échec PAR DIFFICULTÉ : −2 en diff 1-2, −3 en diff 3 (partiel/réussite/
 	# éclatante inchangés, le push R130 garde sa valeur). Sous le moteur d20 on FORCE l'échec par
 	# le plancher nat 1 (die=1 → ECHEC quels que soient couverture/mods) : test déterministe du barème.
-	var cards_l8: Array = [CardScript.make_actions()[0]]
-	_st(int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 1, [], 2).get("integrite_delta", 0)) == -2 \
-		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 1, [], 3).get("integrite_delta", 0)) == -3 \
-		and int(ResolutionScript.resolve(["Ruse", "Vision"], cards_l8, [], 1, [], 1).get("integrite_delta", 0)) == -2,
-		"barème échec par difficulté (−2/−2/−3, nat 1 forcé)")
-	# v2-W1 — planchers d20 : nat 1 → échec, nat 20 → éclatante (quels que soient les modificateurs).
+	# R158 (2d6) : planchers snake-eyes (die=2 -> echec) / boxcars (die=12 -> eclatante), quels que
+	# soient couverture/mods. act_l8 = 1re action (OBSERVER [Sens, Savoir]).
 	var act_l8: Variant = CardScript.make_actions()[0]
-	_st(str(ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 1, [], 1).get("degree", "")) == ResolutionScript.ECHEC,
-		"plancher nat 1 → échec")
-	_st(str(ResolutionScript.resolve(["Ruse", "Vision"], [act_l8], [], 20, [], 3).get("degree", "")) == ResolutionScript.ECLATANTE,
-		"plancher nat 20 → éclatante (même à diff 3, 0 couvert)")
-	# v2-W1 — la MARGE décide entre les planchers : couverture pleine (2×COVER_PER_TAG) + jet médian
-	# passe le DC de diff 2 ; jet faible sur 0 couverture échoue. Vérifie les clés total/dc/margin/success.
-	var r_full: Dictionary = ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 10, [], 2)
+	_st(str(ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 2, [], 1).get("degree", "")) == ResolutionScript.ECHEC,
+		"plancher 2d6=2 -> echec (meme a couverture pleine)")
+	_st(str(ResolutionScript.resolve(["Ruse", "Vision"], [act_l8], [], 12, [], 3).get("degree", "")) == ResolutionScript.ECLATANTE,
+		"plancher 2d6=12 -> eclatante (meme a diff 3, 0 couvert)")
+	# R158 : la MARGE decide entre les planchers : couverture pleine (2xCOVER) + face median passe le DC.
+	var r_full: Dictionary = ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 7, [], 1)
 	_st(bool(r_full.get("success", false)) and r_full.has("total") and r_full.has("dc") and r_full.has("margin"),
-		"couverture pleine + d10 → succès (total=%d dc=%d)" % [int(r_full.get("total", 0)), int(r_full.get("dc", 0))])
+		"couverture pleine + 2d6 median -> succes (total=%d dc=%d)" % [int(r_full.get("total", 0)), int(r_full.get("dc", 0))])
+	# R158 : corruption/sante AUTOMATIQUE nature x degre. Echec en Exploration (tier 0, sur) = Int -2/Corr 0 ;
+	# echec en Epreuve (tier 2, risque) = Int -3/Corr +2 (echec force par le plancher 2d6=2, geste neutre).
+	var e_sur: Dictionary = ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 2, [], 1, 0, 0, "Exploration")
+	var e_risk: Dictionary = ResolutionScript.resolve(["Sens", "Savoir"], [act_l8], [], 2, [], 3, 0, 0, "Epreuve")
+	_st(int(e_sur.get("integrite_delta", 0)) == -2 and int(e_sur.get("corruption_delta", 0)) == 0 \
+		and int(e_risk.get("integrite_delta", 0)) == -3 and int(e_risk.get("corruption_delta", 0)) == 2,
+		"nature x degre : echec sur Int -2/Corr 0 ; echec risque Int -3/Corr +2")
+	_st(ResolutionScript.nature_tier("Rencontre", ["Mystère"]) == 2 \
+		and ResolutionScript.nature_tier("Rencontre", ["Verbe"]) == 1 \
+		and ResolutionScript.nature_tier("Exploration", ["Sens"]) == 0,
+		"nature_tier : tag Monde requis monte d'un cran (cap 3)")
 	# v1.0-V4a (GD-32-B) — contre-pression §E : quête 3 (index 2) + ≥3 greffes → diff 3 ; sinon inchangé.
 	_st(Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 3) == 3 \
 		and Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 2) == 2 \
@@ -283,12 +288,12 @@ func _selftest_grafts() -> void:
 	run._rng.seed = 99
 	run.new_run({"title": "st_grafts", "beats": [{"type": "Exploration", "n": 1}], "total": 1})
 	var corr0: int = run.corruption
-	_st(run.apply_graft("action_percevoir", etre_bank[1]), "apply_graft OK")
+	_st(run.apply_graft("action_observer", etre_bank[1]), "apply_graft OK")
 	_st(run.corruption == corr0 + int((etre_bank[1] as Dictionary).get("corr_cost", 0)),
 		"prix one-shot payé à la pose (%d -> %d)" % [corr0, run.corruption])
-	_st(run.apply_graft("action_percevoir", gen_bank[2]), "2e greffe OK")
-	_st(run.apply_graft("action_percevoir", gen_bank[3]), "3e greffe OK")
-	_st(not run.apply_graft("action_percevoir", gen_bank[4]), "cap 3/action -> refus de la 4e")
+	_st(run.apply_graft("action_observer", gen_bank[2]), "2e greffe OK")
+	_st(run.apply_graft("action_observer", gen_bank[3]), "3e greffe OK")
+	_st(not run.apply_graft("action_observer", gen_bank[4]), "cap 3/action -> refus de la 4e")
 	var picks: Array = run.graft_choices(3)
 	var placed: Dictionary = run.placed_graft_ids()
 	_st(placed.size() == 3, "placed_graft_ids = 3 (%d)" % placed.size())
@@ -311,7 +316,7 @@ func _selftest_grafts() -> void:
 	_st(run_r.apply_graft("action_agir", roll_g), "pose greffe roll OK")
 	_st(int(run_r.graft_roll_bonus(run_r._action_by_id("action_agir"))) == int(roll_g.get("amount", roll_default)),
 		"graft_roll_bonus = amount de la greffe posée (%d)" % int(run_r.graft_roll_bonus(run_r._action_by_id("action_agir"))))
-	_st(int(run_r.graft_roll_bonus(run_r._action_by_id("action_percevoir"))) == 0, "graft_roll_bonus d'une autre action = 0")
+	_st(int(run_r.graft_roll_bonus(run_r._action_by_id("action_observer"))) == 0, "graft_roll_bonus d'une autre action = 0")
 	# Legacy : greffe kind=="die" posée (save pré-pivot) → comptée comme roll d'amount ROLL_BONUS_DEFAULT.
 	var legacy_die: Dictionary = {"id": "g_legacy_die", "name": "Legacy", "evocation": "", "kind": "die",
 		"tag": "", "effect_type": "", "effect_value": 0, "charges": 0, "corr_cost": 0, "pilier": ""}
@@ -379,8 +384,8 @@ func _selftest_talent() -> void:
 	var run3: Node = RunScript.new()
 	run3.new_run({"title": "st_legacy", "beats": [{"type": "Exploration", "n": 1}], "total": 1})
 	run3.talent = run3._talent_dict({})  # simulate load partiel
-	_st((run3.talent as Dictionary).size() == 4 and int(run3.talent.get("PERCEVOIR", 0)) == 0,
-		"défaut safe talent (4 verbes à 0)")
+	_st((run3.talent as Dictionary).size() == 5 and int(run3.talent.get("OBSERVER", 0)) == 0,
+		"défaut safe talent (5 verbes à 0)")
 	var cap_v: int = int(run.TALENT_CAP)
 	var cost_v: int = int(run.TALENT_COST)
 	run.clear_save()
@@ -432,9 +437,7 @@ func _soak_one(i: int, arch: String) -> void:
 
 	var x1_used_by_quest: Dictionary = {}  # quest_idx -> Array[canon] (émission ×1 bornée/quête)
 	var x1_seen: Dictionary = {}           # "quest|tag" -> occurrences (assertion dure)
-	var push_flip: bool = (i % 2 == 0)     # « les autres alternent » (R130) : phase initiale variée
 	var corr_gained_run: int = 0
-	var run_pushes: int = 0
 	var action_plays: Dictionary = {}      # v11-W3 : action_id -> poses (cible « optimal » des greffes)
 	var grafts_run: int = 0                # v11-W3 : greffes posées cette run (rapport §K)
 
@@ -456,7 +459,7 @@ func _soak_one(i: int, arch: String) -> void:
 		guard += 1
 		# v11 (spec §C) : REDRAW COMPLET de la main de traits au début de CHAQUE beat (cycle vrai).
 		run.redraw_hand()
-		if not _check(run.actions.size() == 4, i, "4 actions permanentes (%d)" % run.actions.size(), run):
+		if not _check(run.actions.size() == 5, i, "5 actions permanentes (%d)" % run.actions.size(), run):
 			break
 		if not _check(run.hand.size() >= 1, i, "main de traits >= 1 (%d)" % run.hand.size(), run):
 			break
@@ -527,8 +530,8 @@ func _soak_one(i: int, arch: String) -> void:
 		if best_cov == 0:
 			_deadhand_beats += 1
 		# v2-W1 : dé PRÉ-TIRÉ du beat AVANT le choix — d20 (miroir build_situation, R120 preview=résolution).
-		var die: int = rng.randi_range(1, 20)
-		var combo: Array = _pick_combo(arch, run, required, die, rng, diff)
+		var die: int = rng.randi_range(1, 6) + rng.randi_range(1, 6)  # R158 : 2d6 (cloche 2-12), meme tirage que build_situation
+		var combo: Array = _pick_combo(arch, run, required, die, rng, diff, btype)
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
 		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.
 		# v2-W2 — skill_mod = talent du verbe joué (miroir merlin_game._on_resolve, R120 preview=résolution).
@@ -536,28 +539,9 @@ func _soak_one(i: int, arch: String) -> void:
 		var skill_mod: int = int(run.skill_mod_for(combo[0]))
 		var graft_bonus: int = int(run.graft_roll_bonus(combo[0]))
 		run.note_verb_played(combo[0])  # compteur d'usage du verbe (cible du nœud de talent au draft)
-		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff, skill_mod, graft_bonus)
+		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff, skill_mod, graft_bonus, btype)  # R158 : + beat_type (nature), R120 preview=resolution
 		run.consume_blessings(combo)  # R131 : une bénédiction sert UNE fois (miroir du jeu)
-		# v10.21 (Wave G, R130) — miroir « Pousser » : optimal pousse si Intégrité ≤ 4 ;
-		# corrompu toujours ; greedy/chaotic/tag_ignorant ALTERNENT (spec v11-W2).
-		if str(res.get("degree", "")) == ResolutionScript.PARTIEL and int(run.pushes_left_quest) > 0:
-			var wants: bool = false
-			match arch:
-				"optimal":
-					wants = run.integrite <= 4
-				"corrompu":
-					wants = true
-				_:
-					wants = push_flip
-					push_flip = not push_flip
-			if wants:
-				res = res.duplicate(true)
-				res["degree"] = ResolutionScript.REUSSITE
-				res["integrite_delta"] = 0
-				res["corruption_delta"] = int(res.get("corruption_delta", 0)) + ResolutionScript.PUSH_PRICE
-				run.pushes_left_quest -= 1
-				_pushes += 1
-				run_pushes += 1
+		# R158 : miroir « Pousser » RETIRE (plus de conversion partiel->reussite ; corruption automatique).
 		var deg: String = str(res.get("degree", ""))
 		_degrees[deg] = int(_degrees.get(deg, 0)) + 1
 		_beats_total += 1
@@ -636,7 +620,6 @@ func _soak_one(i: int, arch: String) -> void:
 		if not forced:
 			_clean_runs += 1
 			_ends_clean[run.end_type] = int(_ends_clean.get(run.end_type, 0)) + 1
-			_pushes_clean += run_pushes
 			_corr_gained_clean += corr_gained_run
 			_grafts_clean += grafts_run
 			# v2-W2 — talent final : somme des 4 niveaux en fin de run saine (moyenne §K = poussée du build).
@@ -809,7 +792,7 @@ func _graft_sig(r: Node) -> String:
 # chaotic      : uniforme aléatoire (action ET trait).
 # tag_ignorant : aléatoire SANS lire les requis — baseline non-lecteur, flux RNG distinct de
 #                chaotic (mesure la sensibilité du système au non-signal).
-func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: RandomNumberGenerator, diff: int = 2) -> Array:
+func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: RandomNumberGenerator, diff: int = 2, btype: String = "") -> Array:
 	var acts: Array = run.actions.duplicate()
 	var traits_h: Array = run.hand.duplicate()
 	_shuffle_arr(acts, rng)      # départage des ex æquo : ordre pré-mélangé, argmax strict
@@ -836,7 +819,7 @@ func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: Random
 		var sm: int = int(run.skill_mod_for(a))
 		var gb: int = int(run.graft_roll_bonus(a))
 		for t in traits_h:
-			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff, sm, gb)
+			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff, sm, gb, btype)
 			var cov: Dictionary = r["coverage"]
 			var covered_arr: Array = cov["covered"]
 			var extra_arr: Array = cov["extra"]
@@ -894,7 +877,6 @@ func _report_k() -> void:
 	_band_deg("éclatante", 100.0 * float(int(_degrees_clean.get("eclatante", 0))) / bt, 8.0, 15.0)
 	_band("morts", 100.0 * float(int(_ends_clean.get("mort", 0))) / cr, 10.0, 25.0)
 	_band("fins corrompues", 100.0 * float(int(_ends_clean.get("corrompu", 0))) / cr, 0.0, 18.0)
-	_band("pushes/run", float(_pushes_clean) / cr, 0.5, 1.5, false)
 	_band("corruption gagnée/run", float(_corr_gained_clean) / cr, 3.9, 6.9, false)
 	if _climax_beats > 0:
 		_band("couverture pleine climax (3 requis)", 100.0 * float(_climax_full) / float(_climax_beats), 45.0, 55.0)

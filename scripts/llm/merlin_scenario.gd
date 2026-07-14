@@ -1458,7 +1458,7 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		# seule fois → preview et résolution finale partagent le même dé (anti cache-miss prose, R120).
 		# NON persisté : rebuild au resume = re-tirage, acceptable (rien n'est joué avant le save).
 		# Le champ reste "die" ; le visuel du dé reste d6 (projeté) jusqu'à W4.
-		"die": _rng.randi_range(1, 20),
+		"die": _rng.randi_range(1, 6) + _rng.randi_range(1, 6),  # R158 : 2d6 (cloche 2-12) remplace le d20 plat
 	}
 
 

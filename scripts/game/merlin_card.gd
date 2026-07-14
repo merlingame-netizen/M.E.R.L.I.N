@@ -261,16 +261,28 @@ func refresh_from_grafts() -> void:
 ## Action-as-card : MerlinCard avec `family` canonique FIXE, 2 tags de base EXACTEMENT (jamais la
 ## famille entière — arbitrage lentilles 2+4 : couverture pleine ~67 %, partiel ~31 %). rarity =
 ## qualité de dé dérivée du nb de greffes (W2 transitoire : "Commune" = bande 33 %, greffes en W3).
+# R158 : glyphe-icone d'une ACTION (5 actions a icones : oeil/main/epee/magie/bouche).
+const ACTION_GLYPHS: Dictionary = {
+	"action_observer": "eye", "action_agir": "hand", "action_combattre": "sword",
+	"action_reveler": "magie", "action_parler": "speech",
+}
+
+
+# R158 : les 5 ACTIONS fixes evolutives (tuiles permanentes, a ICONES). AGIR se scinde en Agir
+# (adresse) + Combattre (force) ; RESSENTIR devient Reveler (mystere/vision). 10 tags de base au
+# total (2/action). card_name = cle interne du talent ; l'affichage passe au glyphe (glyph_key()).
 static func make_actions() -> Array:
 	return [
-		_action("action_percevoir", "PERCEVOIR", "Perception", ["Sens", "Savoir"],
+		_action("action_observer", "OBSERVER", "Perception", ["Sens", "Savoir"],
 			"Regarder vraiment, et laisser ce qui se cache remonter à la surface."),
-		_action("action_agir", "AGIR", "Corps", ["Force", "Agilité"],
-			"Le corps tranche là où l'esprit hésite ; un geste, et le monde change."),
+		_action("action_agir", "AGIR", "Corps", ["Agilité", "Finesse"],
+			"La main trouve le geste juste là où la force s'entête ; agir sans briser."),
+		_action("action_combattre", "COMBATTRE", "Corps", ["Force", "Endurance"],
+			"Le fer répond quand les mots s'épuisent ; frapper, tenir, ne jamais rompre."),
+		_action("action_reveler", "RÉVÉLER", "Intuition", ["Mystère", "Vision"],
+			"Fermer les yeux, ouvrir l'autre ; ce que Brocéliande cache remonte, et se paie en silence."),
 		_action("action_parler", "PARLER", "Parole", ["Empathie", "Verbe"],
 			"Les mots ouvrent ce que la force brise ; parler, c'est déjà agir sur les cœurs."),
-		_action("action_ressentir", "RESSENTIR", "Intuition", ["Instinct", "Nature"],
-			"Fermer les yeux et écouter ce que Brocéliande murmure sous la peau du monde."),
 	]
 
 
@@ -278,6 +290,13 @@ static func _action(p_id: String, p_name: String, p_family: String, p_tags: Arra
 	var c: MerlinCard = make(p_id, p_name, p_tags, p_evocation, 0, "Commune")
 	c.family = p_family
 	return c
+
+
+# R158 : cle de glyphe-icone de la tuile d'action. Repli sur la famille si id non canonique.
+func glyph_key() -> String:
+	if ACTION_GLYPHS.has(id):
+		return str(ACTION_GLYPHS[id])
+	return _Glyph.for_family(family)
 
 
 ## === v11 (spec panel W2) — Deck de TRAITS de départ : 16 (main 4, cycle vrai) ===
