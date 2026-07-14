@@ -347,7 +347,7 @@ func _present_current_beat() -> void:
 	# précédent. Indice micro-narratif d'UNE phrase (Wave2 : jamais d'explication mécanique)
 	# + déviation marquée sur la map. Le beat basculé est déjà persisté (swap avant save, R108).
 	if bool(beat.get("swapped", false)):
-		_current_situation["narration"] = "Le sentier se déroba sous ses pas — un autre chemin s'imposa.\n\n" \
+		_current_situation["narration"] = "Le sentier se déroba sous ses pas ; un autre chemin s'imposa.\n\n" \
 			+ str(_current_situation.get("narration", ""))
 		if _beat_map != null:
 			_beat_map.mark_draft()
@@ -879,11 +879,11 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 # === v10.21 (Wave I, R131) — INTERVENTIONS du pilier : il revient se mêler du sentier (1-2×/run) ===
 # Lignes SIGNÉES (panel design, docs/spec_v10.21_presences.md) écrites À LA SUITE du fil (R128).
 const INTERVENTION_LINES: Dictionary = {
-	"choeur": "Nous avons chanté sur celle-ci, Voyageur — quand ta main la lâchera, la forêt se souviendra que tu fus des nôtres.",
-	"chevalier": "Je n'ai plus de cause, alors prends mon fer — qu'il tranche pour toi ce que je n'ai pas su défendre.",
-	"etre": "Accepte, et ce que tu ne sais pas nommer ouvrira les portes à ta place — il suffit que tu me laisses entrer, un peu.",
-	"compagnon": "Prends, comme avant — là où je marche on ne garde rien, et ce que cela te coûte, tu me le rendras plus tard.",
-	"enfant": "Regarde, j'ai écarté les ronces pour toi — c'est facile, quand on me laisse faire.",
+	"choeur": "Nous avons chanté sur celle-ci, Voyageur : quand ta main la lâchera, la forêt se souviendra que tu fus des nôtres.",
+	"chevalier": "Je n'ai plus de cause, alors prends mon fer : qu'il tranche pour toi ce que je n'ai pas su défendre.",
+	"etre": "Accepte, et ce que tu ne sais pas nommer ouvrira les portes à ta place : il suffit que tu me laisses entrer, un peu.",
+	"compagnon": "Prends, comme avant : là où je marche on ne garde rien, et ce que cela te coûte, tu me le rendras plus tard.",
+	"enfant": "Regarde, j'ai écarté les ronces pour toi : c'est facile, quand on me laisse faire.",
 }
 var _intervention_done_this_beat: bool = false
 var _pact_row: HBoxContainer = null
@@ -1307,7 +1307,7 @@ func _present_draft() -> void:
 	var grafts: Array = run.graft_choices(3)
 	if grafts.is_empty():
 		return
-	_begin_graft_draft(grafts, "Une greffe s'offre à toi — choisis, puis touche un verbe", "")
+	_begin_graft_draft(grafts, "Une greffe s'offre à toi : choisis, puis touche un verbe", "")
 	# v10.13 (Fix 1) : gardes STRUCTURELLES (pas de timeout mural — un joueur AFK sur un choix n'est
 	# pas un bug). Les seuls vrais états de blocage = zone refermée / run terminée / scène quittée :
 	# tous font sortir la boucle ; sortie sans flag = passer (aucune greffe).
@@ -1564,16 +1564,16 @@ func _current_offer_pilier() -> String:
 func _pilier_offer_text(pilier_key: String) -> Dictionary:
 	match pilier_key:
 		"choeur":
-			return {"title": "Le Chœur des Druides t'offre un présent", "sub": "Un don de la forêt — sans prix, sans ombre."}
+			return {"title": "Le Chœur des Druides t'offre un présent", "sub": "Un don de la forêt, sans prix, sans ombre."}
 		"etre":
-			return {"title": "L'Être Indéfinissable te propose un pacte", "sub": "Un pouvoir réel — contre une part de toi."}
+			return {"title": "L'Être Indéfinissable te propose un pacte", "sub": "Un pouvoir réel, contre une part de toi."}
 		"compagnon":
 			return {"title": "Le Compagnon te tend un présent", "sub": "Sa main est chaude. Ce qu'elle coûte l'est moins."}
 		"chevalier":
 			return {"title": "Le Chevalier déchu te confie une lame", "sub": "L'acier reste tranchant, même terni."}
 		"enfant":
 			return {"title": "L'Enfant te montre ce qu'il a trouvé", "sub": "« C'est pour toi », dit-il en souriant."}
-	return {"title": "Une greffe s'offre à toi — choisis, puis touche un verbe", "sub": "Elle rejoint tes verbes."}
+	return {"title": "Une greffe s'offre à toi : choisis, puis touche un verbe", "sub": "Elle rejoint tes verbes."}
 
 
 # Présente l'offrande signée — v11-W3 : la banque du pilier sert des GREFFES (calque exact de

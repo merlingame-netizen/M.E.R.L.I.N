@@ -11,7 +11,7 @@ extends RefCounted
 # Coupe la prose à la dernière phrase COMPLÈTE : évite les troncatures mid-mot (« se dess… »)
 # quand le modèle atteint le plafond de tokens, qui donnaient l'impression d'un blocage (user 2026-05-28).
 static func clean_prose(s: String) -> String:
-	var t: String = s.strip_edges()
+	var t: String = repair_accents(s.strip_edges())  # v11 (R156) : filet accents sur la prose LLM affichée
 	if t.is_empty():
 		return t
 	var last: String = t.right(1)
@@ -151,8 +151,76 @@ static func clean_selection(arr: Array) -> Array:
 	var out: Array = []
 	for item in arr:
 		if item is Dictionary and item.has("title") and item.has("pitch"):
-			var t: String = str(item["title"]).strip_edges()
-			var p: String = str(item["pitch"]).strip_edges()
+			# v11 (R156) : filet accents sur titre + pitch LLM (le pitch alimente aussi l'« ✦ Objectif »).
+			var t: String = repair_accents(str(item["title"]).strip_edges())
+			var p: String = repair_accents(str(item["pitch"]).strip_edges())
 			if t.length() >= 2 and p.length() >= 5:
 				out.append({"title": t, "pitch": p})
 	return out
+
+
+# v11 (R156, user 2026-07-14) — CORRECTION D'ACCENTS conservatrice de la sortie LLM AFFICHÉE.
+# Gemma laisse parfois tomber un accent (vu : « repond » pour « répond » dans un objectif généré).
+# Ce filet ne corrige QU'UNE liste CURÉE de mots français fréquents dont la forme SANS accent
+# (1) n'est PAS un mot valide et (2) n'a QU'UNE seule graphie accentuée correcte → zéro ambiguïté.
+# Exclus VOLONTAIREMENT : « a→à », « ou→où », « la→là », « sur→sûr », « cote→côté », « tache→tâche »,
+# et tout mot à double accent -e/-é (« ecoute/écoute vs écouté », « revele/révèle vs révélé »).
+# « meme→même » RETENU (registre celtique : le sens familier « meme » n'y apparaît jamais) ; « ca » ÉCARTÉ (collision sigle CA).
+# Remplacement PAR MOT ENTIER (frontière = suite de lettres), casse préservée (minuscule/Capitale/MAJ).
+# Appliqué dans clean_prose() (narration/issue/intro/ouverture LLM) et clean_selection() (titre+pitch,
+# donc aussi l'objectif dérivé). Déterministe et pur → testable hors-arbre ; no-op sur texte déjà correct.
+const _ACCENT_FIX: Dictionary = {
+	"deja": "déjà", "voila": "voilà", "tres": "très", "apres": "après",
+	"derriere": "derrière",
+	"etre": "être", "etres": "êtres", "etait": "était", "etaient": "étaient", "etais": "étais",
+	"meme": "même", "memes": "mêmes",
+	"foret": "forêt", "forets": "forêts",
+	"mystere": "mystère", "mysteres": "mystères",
+	"lumiere": "lumière", "lumieres": "lumières",
+	"verite": "vérité", "verites": "vérités",
+	"creature": "créature", "creatures": "créatures",
+	"etrange": "étrange", "etranges": "étranges",
+	"presence": "présence", "presences": "présences",
+	"reussite": "réussite", "reussir": "réussir", "reussi": "réussi",
+	"repond": "répond", "repondit": "répondit", "repondre": "répondre",
+	"repondu": "répondu", "repondait": "répondait", "repondent": "répondent",
+}
+const _WORD_CHARS: String = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZàâäéèêëîïôöùûüÿçñœæÀÂÄÉÈÊËÎÏÔÖÙÛÜŸÇÑŒÆ"
+
+
+static func repair_accents(text: String) -> String:
+	if text.is_empty():
+		return text
+	var out: String = ""
+	var n: int = text.length()
+	var i: int = 0
+	while i < n:
+		var ch: String = text[i]
+		if _WORD_CHARS.find(ch) == -1:
+			out += ch
+			i += 1
+			continue
+		# Accumuler un MOT (suite maximale de lettres) puis tenter une correction bornée au dictionnaire.
+		var word: String = ""
+		var j: int = i
+		while j < n and _WORD_CHARS.find(text[j]) != -1:
+			word += text[j]
+			j += 1
+		out += _fix_word(word)
+		i = j
+	return out
+
+
+static func _fix_word(word: String) -> String:
+	var low: String = word.to_lower()
+	if not _ACCENT_FIX.has(low):
+		return word
+	var repl: String = str(_ACCENT_FIX[low])
+	if word == low:
+		return repl  # minuscule
+	if word == word.to_upper():
+		return repl.to_upper()  # MAJUSCULE
+	# Capitale initiale (1re lettre majuscule, reste minuscule) : ex. « Repond » → « Répond ».
+	if word.substr(0, 1) == word.substr(0, 1).to_upper() and word.substr(1) == word.substr(1).to_lower():
+		return repl.substr(0, 1).to_upper() + repl.substr(1)
+	return word  # casse mixte inattendue → prudence, on ne touche pas

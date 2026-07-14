@@ -369,7 +369,7 @@ const SITU_FALLBACKS_BY_BIOME: Dictionary = {
 	"foret": {
 		"Exploration": [
 			"La clairière s'ouvre devant vous, trop calme. Quelque chose vous attend là, tapi, sans se montrer.",
-			"Le sentier disparaît sous les fougères. Pas un bruit — et pourtant on vous regarde, quelque part entre les troncs.",
+			"Le sentier disparaît sous les fougères. Pas un bruit, et pourtant on vous regarde, quelque part entre les troncs.",
 			"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte, et vos pas résonnent trop fort.",
 			"Devant vous, les arbres s'espacent et laissent passer un peu de lumière. C'est trop ouvert, trop facile ; vous avancez quand même, l'échine tendue.",
 			"Le sol devient mou sous vos pas, couvert de mousse épaisse. Quelque part tout près, une source coule sans qu'on la voie.",
@@ -406,7 +406,7 @@ const SITU_FALLBACKS_BY_BIOME: Dictionary = {
 	"falaises": {
 		"Exploration": [
 			"La corniche s'ouvre devant vous, battue de vent. En contrebas, la mer noire se referme sur les rochers sans un cri d'écume.",
-			"Le sentier de sel longe le vide. Pas un bruit, sinon la marée qui monte — et pourtant on vous suit, quelque part parmi les épaves.",
+			"Le sentier de sel longe le vide. Pas un bruit, sinon la marée qui monte, et pourtant on vous suit, quelque part parmi les épaves.",
 			"Les rochers s'écartent sur une crique sans nom. Une odeur d'algue et de goudron froid flotte, et vos pas glissent sur la roche mouillée.",
 			"Devant vous, la falaise s'abaisse et laisse voir la baie. C'est trop dégagé, trop offert au vent ; vous avancez quand même, l'échine tendue.",
 			"Le sol devient spongieux sous vos pas, gorgé d'embruns. Tout près, sous la roche, la mer travaille une faille qu'on n'aperçoit pas.",
@@ -698,7 +698,7 @@ const RESO_FALLBACKS: Dictionary = {
 		"[i]Vous jetez vos deux forces dans la brèche.[/i] Elles partent de travers et s'annulent ; rien ne bouge, sinon vous qu'on repousse. Vous avez perdu du terrain, et un peu de vous-même avec.",
 	],
 	"partiel": [
-		"[i]Vous unissez vos deux forces, mais de travers.[/i] Vous obtenez ce que vous vouliez — en en laissant un morceau. Une ombre, désormais, marche dans vos pas.",
+		"[i]Vous unissez vos deux forces, mais de travers.[/i] Vous obtenez ce que vous vouliez, en en laissant un morceau. Une ombre, désormais, marche dans vos pas.",
 		"[i]Vous forcez le geste jusqu'au bout.[/i] La voie s'entrouvre, étroite, juste assez pour passer ; mais quelque chose vous a vu faire, et le prix viendra plus tard.",
 		"[i]Vous mêlez vos deux forces tant bien que mal.[/i] Cela ne marche qu'à moitié : vous avancez, mais une dette se noue dans votre dos, et se rappellera à vous.",
 	],
@@ -1126,9 +1126,9 @@ func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
 # Procédural INSTANTANÉ (le pop-up s'ouvre sans attente) ; narrate_intro enrichit en fond.
 # C'est MERLIN qui conte : il connaît le Voyageur et l'apostrophe (user 2026-05-29).
 const _INTRO_WRAPPERS: Array = [
-	"Ah, te revoilà, Voyageur. Ce sentier-là, je le connais — il ne mène plus qu'en avant, désormais. Ce que tu cherches t'attend au bout ; ce que tu crains aussi, je ne vais pas te mentir. Avance, mon ami : je marche entre les lignes, à ton côté.",
-	"Tiens, mon Voyageur. La brume s'est écartée juste pour toi — ou pour me jouer un tour, avec elle on ne sait jamais. Le sentier se referme dans ton dos ; devant, ce que tu cherches et ce que tu crains, logés à la même enseigne. Allons. Je te suis, ou je te précède, l'un des deux.",
-	"Écoute, Voyageur. Le bois a choisi de te laisser entrer — c'est rare, savoure. Ce que tu cherches t'attend au bout du sentier ; ce que tu crains aussi, mais ça, tu le savais déjà. Avance d'un pas tranquille, mon ami. Je veille. Enfin... je crois que je veille.",
+	"Ah, te revoilà, Voyageur. Ce sentier-là, je le connais : il ne mène plus qu'en avant, désormais. Ce que tu cherches t'attend au bout ; ce que tu crains aussi, je ne vais pas te mentir. Avance, mon ami : je marche entre les lignes, à ton côté.",
+	"Tiens, mon Voyageur. La brume s'est écartée juste pour toi, ou pour me jouer un tour, avec elle on ne sait jamais. Le sentier se referme dans ton dos ; devant, ce que tu cherches et ce que tu crains, logés à la même enseigne. Allons. Je te suis, ou je te précède, l'un des deux.",
+	"Écoute, Voyageur. Le bois a choisi de te laisser entrer : c'est rare, savoure. Ce que tu cherches t'attend au bout du sentier ; ce que tu crains aussi, mais ça, tu le savais déjà. Avance d'un pas tranquille, mon ami. Je veille. Enfin... je crois que je veille.",
 ]
 
 
@@ -1156,18 +1156,18 @@ func _run_biome(biome: String = "") -> String:
 # PRÉAMBULE LORE en 3 paragraphes : §1 qui tu es · §2 le LIEU t'a appelé (par biome) · §3 ce que Merlin
 # attend + le titre de la quête. Banques procédurales, anti-répétition intra-session via _fb_served.
 const PREAMBULE_QUI: Array = [
-	"Tu es le Voyageur — celui qui marche sans bannière ni serment, et que les chemins reconnaissent. Tu as laissé derrière toi un monde qui ne pose plus de questions ; ici, chaque pierre en pose une.",
-	"On ne t'a pas donné de nom en ces terres : Voyageur suffit. Tu portes douze forces anciennes en guise de bagage — perception, corps, parole, intuition — et c'est tout ce que ce lieu te laissera garder.",
+	"Tu es le Voyageur, celui qui marche sans bannière ni serment, et que les chemins reconnaissent. Tu as laissé derrière toi un monde qui ne pose plus de questions ; ici, chaque pierre en pose une.",
+	"On ne t'a pas donné de nom en ces terres : Voyageur suffit. Tu portes douze forces anciennes en guise de bagage (perception, corps, parole, intuition), et c'est tout ce que ce lieu te laissera garder.",
 	"Tu marches depuis des jours, Voyageur, sans savoir qui de toi ou du chemin a choisi l'autre. Les tiens ne se souviennent déjà plus de ton départ ; ce pays, lui, semblait t'attendre.",
 ]
 const PREAMBULE_LIEU: Dictionary = {
 	"foret": [
 		"Brocéliande n'est pas une forêt : c'est une mémoire qui pousse. Les arbres y gardent le compte des promesses tenues et brisées, et la brume ne s'écarte que devant ceux qu'elle veut éprouver. Cette nuit, elle s'est écartée devant toi.",
-		"On dit que Brocéliande rêve, et que ses rêves ont des sentiers. Y entrer, c'est marcher dans la pensée d'une chose très vieille — les korrigans s'y moquent, les pierres y murmurent, et rien n'y est donné sans dette.",
-		"La forêt t'a appelé comme elle appelle les orages : sans un mot, par simple gravité. Sous ses frondaisons vivent quatre puissances qui se disputent son cœur — et la Corruption, patiente, qui les écoute toutes.",
+		"On dit que Brocéliande rêve, et que ses rêves ont des sentiers. Y entrer, c'est marcher dans la pensée d'une chose très vieille : les korrigans s'y moquent, les pierres y murmurent, et rien n'y est donné sans dette.",
+		"La forêt t'a appelé comme elle appelle les orages : sans un mot, par simple gravité. Sous ses frondaisons vivent quatre puissances qui se disputent son cœur, et la Corruption, patiente, qui les écoute toutes.",
 	],
 	"falaises": [
-		"Les Falaises du Bout-du-Monde tombent dans une mer qui ne rend rien. Le vieux phare n'y guide plus personne : il compte les navires que l'écume a pris, et les esprits du sel remontent la nuit lécher ses pierres. C'est ici que ton chemin s'arrête — ou commence.",
+		"Les Falaises du Bout-du-Monde tombent dans une mer qui ne rend rien. Le vieux phare n'y guide plus personne : il compte les navires que l'écume a pris, et les esprits du sel remontent la nuit lécher ses pierres. C'est ici que ton chemin s'arrête, ou commence.",
 		"Ici, la terre s'achève en à-pic et la mer parle une langue d'avant les hommes. Les goélands portent des messages que nul ne lit plus, et l'embrun grave sur la roche des noms que la marée efface. Le tien vient d'y apparaître.",
 		"On ne vient pas aux Falaises : on y échoue, comme les épaves. Le vent y use les serments plus vite que la pierre, et quelque chose, sous l'eau noire, garde le compte de ceux qui se penchent trop près du bord.",
 	],
@@ -1495,7 +1495,7 @@ const FALLBACK_ARCS_BY_BIOME: Dictionary = {
 			"Une vieille femme est assise sur une souche, là où le chemin se divise. « Je vous attendais », dit-elle sans se lever, et ses doigts ne cessent de tresser une cordelette d'herbe.",
 			"Plus loin, un pont de corde enjambe un ravin ; plusieurs planches manquent, et le bois craque à chaque rafale.",
 			"Sur l'autre rive, le chemin se sépare en deux : à gauche des torches au loin, à droite le silence et une odeur de fumée. La femme, derrière vous, murmure qu'un seul mène quelque part.",
-			"Au bout vous attend une porte de pierre entrouverte. Ce que vous cherchez est derrière — et le pas qui vous suivait vient de s'arrêter, juste là.",
+			"Au bout vous attend une porte de pierre entrouverte. Ce que vous cherchez est derrière, et le pas qui vous suivait vient de s'arrêter, juste là.",
 		],
 		[
 			"Vous suivez le bruit d'une eau qui coule, jusqu'à une source noire et parfaitement immobile au creux de la forêt.",
@@ -1525,7 +1525,7 @@ const FALLBACK_ARCS_BY_BIOME: Dictionary = {
 			"Un vieux gardien de phare surgit d'une cabane de pierre, une lanterne éteinte à la main. « La mer a repris trois barques cette lune », lâche-t-il en vous jaugeant.",
 			"Le seul passage descend par un escalier taillé dans le roc, glissant d'embruns ; une marche manque, et le vide appelle en dessous.",
 			"Sur la corniche, le sentier se sépare : à gauche des feux de veille au loin, à droite le silence et l'odeur d'algue. Le gardien, derrière vous, murmure qu'un seul mène au phare.",
-			"Au bout, une porte de sel entrouverte bat au vent. Ce que vous cherchez est derrière — et le pas qui vous suivait vient de s'arrêter, juste là.",
+			"Au bout, une porte de sel entrouverte bat au vent. Ce que vous cherchez est derrière, et le pas qui vous suivait vient de s'arrêter, juste là.",
 		],
 		[
 			"Vous suivez le fracas d'une eau qui frappe le roc, jusqu'à une crique noire et parfaitement immobile, à l'abri du vent.",

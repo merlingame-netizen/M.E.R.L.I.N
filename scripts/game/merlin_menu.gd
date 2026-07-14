@@ -489,7 +489,7 @@ func _show_about() -> void:
 	var lines: Array = [
 		["M·E·R·L·I·N", 40, COL_GOLD],
 		["Deck-building narratif celtique", 21, COL_CREAM],
-		["Brocéliande — un sort, une voie, un prix.", 16, COL_DIM],
+		["Brocéliande : un sort, une voie, un prix.", 16, COL_DIM],
 		["v10.18 · 100% local · Gemma 4 E2B natif", 15, COL_DIM],
 		["", 6, COL_DIM],
 		["cliquer pour fermer", 14, COL_DIM],
@@ -822,8 +822,8 @@ func _on_new() -> void:
 var _biome_layer: Control = null
 
 const BIOME_CARDS: Array = [
-	{"id": "foret", "titre": "Brocéliande", "desc": "La forêt qui rêve. Brumes, korrigans,\npierres qui murmurent — et quatre puissances\nqui se disputent son cœur."},
-	{"id": "falaises", "titre": "Les Falaises du Bout-du-Monde", "desc": "La terre s'achève en à-pic. Un phare mort,\nune mer qui ne rend rien — et le vent\nqui use les serments plus vite que la pierre."},
+	{"id": "foret", "titre": "Brocéliande", "desc": "La forêt qui rêve. Brumes, korrigans,\npierres qui murmurent, et quatre puissances\nqui se disputent son cœur."},
+	{"id": "falaises", "titre": "Les Falaises du Bout-du-Monde", "desc": "La terre s'achève en à-pic. Un phare mort,\nune mer qui ne rend rien, et le vent\nqui use les serments plus vite que la pierre."},
 ]
 
 

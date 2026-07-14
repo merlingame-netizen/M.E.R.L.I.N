@@ -1830,6 +1830,17 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R157 : ZERO CADRATIN player-facing + repair_accents LLM (2026-07-14, petit) - zero-balance** :
+  66 tirets cadratin U+2014 retires des STRINGS affiches au joueur (evocations de cartes, situations/ponts/
+  epilogues/preambules, interventions de piliers, labels de draft, menu) -> ponctuation FR (`:`/`,`/`;`/`.`)
+  selon le sens. Les exemples few-shot de merlin_prompt_builder aussi de-cadratinises (cause racine : le LLM
+  imitait la maniere et sortait des cadratins). Commentaires de code laisses (dette a part). 2 cadratins
+  fonctionnels conserves (merlin_prose:46 = jeu de char qui STRIPPE les cadratins LLM ; scenario:849 = push_warning).
+  Nouveau `MerlinProse.repair_accents(text)` : dico conservateur 35 mots (mot-entier, casse preservee) reparant
+  les accents que Gemma lache (repond->repond accentue, foret->accentue, etc.), applique dans clean_prose +
+  clean_selection (chokepoints de toute narration/titre LLM affiches). Regle canon : jamais de U+2014 dans le
+  texte joueur ni le nouveau code. Balance ISO (soak 200/200, resolve()/§K intacts).
+
 - **R156 : AUDIO v4, modelisation physique + normalisation loudness (2026-07-14, refonte SFX) - zero-balance** :
   Bruitages juges mauvais car procedural NAIF (sinus+FM+bruit filtre = meme moule pour tout, reverb Schroeder boxy
   universelle, aliasing, normalisation au PEAK seul donc loudness incoherente 10-15 LU). Refonte tools/sfx_forge.py en
