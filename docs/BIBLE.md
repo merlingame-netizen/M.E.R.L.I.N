@@ -1711,6 +1711,16 @@ casser l'identité parchemin). Le glitch Corruption (§23 et R75) se SUPERPOSE �
 
 ## §22 — R117 · Audio (canon)
 
+### Pipeline SFX v4 (physical-modeling + loudness par categorie) - R156
+tools/sfx_forge.py : modeles physiques numpy/scipy par famille (foley granulaire, harpe Karplus-Strong, modal
+inharmonique, bol banded-waveguide, membrane bodhran, bourdon frotte, voix FM anti-repliement). Anti-aliasing
+obligatoire (partiels sous Nyquist ; FM/waveshaping oversampling 4x). Reverb par convolution d'IR synthetique.
+Normalisation tools/sfx_normalize.py (pur-python, pyloudnorm BS.1770-4, fallback vendorise) : highpass 25 Hz -> trim
+-> loudness-match par categorie -> plafond true-peak -14 dBFS -> WAV 16-bit + manifest.json. Cibles LUFS/categorie :
+tick -26 / foley -26 / drone -25 / accent -25.5 / impact -26 / stinger -24 / ending -24. Determinisme seed fixe (R119)
+= WAV octet-identique ; gate CI = manifest (LUFS +/-1, true-peak <= -14, 0 DC) + double generation hashee. Round-robin
+3 variantes pour deal/card_pick. Musique alignee (-24 LUFS, -12 dBFS). Remplace l'ancien gate peak <= -3 dB.
+
 > Étend R30 (nappe réactive, SFX feutrés organiques, Merlin texte-seul) et R76 (drone celtique
 > sans mélodie, stems additifs, stingers samples au MVP). Le skill `.claude/skills/merlin-audio/SKILL.md`
 > outille cette section (génération procédurale `tools/sfx_forge.py` + MusicGen).
@@ -1819,6 +1829,19 @@ préférences persistées (Options, R74) · clavier de base au MVP, manette post
 Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (game_design_auditor,
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
+
+- **R156 : AUDIO v4, modelisation physique + normalisation loudness (2026-07-14, refonte SFX) - zero-balance** :
+  Bruitages juges mauvais car procedural NAIF (sinus+FM+bruit filtre = meme moule pour tout, reverb Schroeder boxy
+  universelle, aliasing, normalisation au PEAK seul donc loudness incoherente 10-15 LU). Refonte tools/sfx_forge.py en
+  MODELISATION PHYSIQUE numpy/scipy : harpe Karplus-Strong (Re/DADGAD), banque modale inharmonique (cloches),
+  bol chantant banded-waveguide, membrane bodhran, bourdon frotte, foley granulaire, voix FM anti-repliement.
+  Anti-aliasing (partiels sous Nyquist, FM/waveshaping oversampling 4x). Reverb par convolution d'IR synthetique.
+  SYNTH_MIX=0.15 (harpe/bol 100% acoustiques). Normalisation tools/sfx_normalize.py (pur-python, pyloudnorm BS.1770-4,
+  fallback vendorise) : highpass 25 Hz -> loudness-match par CATEGORIE -> plafond true-peak -14 dBFS. Determinisme :
+  seed fixe = WAV octet-identique (R119, double generation hashee). 30 sons (24 canon + slider_tick/question_transition/
+  ogham_chime/magic_reveal ex-muets + variantes round-robin deal/card_pick). music_forge aligne (-24 LUFS, -12 dBFS).
+  Sous -14 dBFS la fenetre de loudness ~2 LU (physique) ; contraste par duree/densite. Evenements ~8 dB plus doux
+  qu'avant : monter sfx_vol/bus a l'ecoute si besoin. Amende le gate audio (-3 dB -> -14 dBFS + LUFS/categorie).
 
 - **R155 : VOIX DE MERLIN + biome-agnostique (2026-07-13, retours playtest) - zero-balance** :
   (D1) plus de caption de transition « Le sentier se dessine sous mes doigts » : `change_scene_merlin` ne cree

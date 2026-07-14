@@ -1,0 +1,66 @@
+{
+  "gameplay_calm": {
+    "lufs": -24.0,
+    "true_peak_db": -12.94,
+    "peak_db": -12.95,
+    "dc": -4e-05,
+    "duration_s": 32.0,
+    "samples": 1411200
+  },
+  "gameplay_falaises": {
+    "lufs": -24.0,
+    "true_peak_db": -13.38,
+    "peak_db": -13.38,
+    "dc": -2.2e-05,
+    "duration_s": 32.0,
+    "samples": 1411200
+  },
+  "boot_eveil": {
+    "lufs": -24.0,
+    "true_peak_db": -13.25,
+    "peak_db": -13.26,
+    "dc": 0.000108,
+    "duration_s": 19.0,
+    "samples": 837900
+  },
+  "pad_choeur": {
+    "lufs": -24.0,
+    "true_peak_db": -13.02,
+    "peak_db": -13.03,
+    "dc": 3e-06,
+    "duration_s": 13.0,
+    "samples": 573300
+  },
+  "pad_etre": {
+    "lufs": -24.0,
+    "true_peak_db": -12.11,
+    "peak_db": -12.11,
+    "dc": -1.5e-05,
+    "duration_s": 13.0,
+    "samples": 573300
+  },
+  "pad_chevalier": {
+    "lufs": -24.0,
+    "true_peak_db": -12.06,
+    "peak_db": -12.07,
+    "dc": 6e-06,
+    "duration_s": 13.0,
+    "samples": 573300
+  },
+  "pad_compagnon": {
+    "lufs": -24.0,
+    "true_peak_db": -13.21,
+    "peak_db": -13.22,
+    "dc": 2.6e-05,
+    "duration_s": 13.0,
+    "samples": 573300
+  },
+  "pad_enfant": {
+    "lufs": -24.0,
+    "true_peak_db": -13.09,
+    "peak_db": -13.1,
+    "dc": 1.9e-05,
+    "duration_s": 13.0,
+    "samples": 573300
+  }
+}

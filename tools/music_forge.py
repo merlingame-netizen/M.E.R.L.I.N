@@ -14,16 +14,24 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import random
-import struct
 import sys
-import wave
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from tools import sfx_normalize as norm  # noqa: E402
+
 SAMPLE_RATE = 44100
-PEAK_TARGET = 10 ** (-12.0 / 20.0)  # -12 dB
+# Chantier 2 — normalisation loudness alignee (pyloudnorm), commune avec sfx_forge.
+# Cible LUFS proche du niveau median actuel (mix deja cale) + plafond true-peak
+# -12 dBFS (les beds ambiants gardent de la marge sous les SFX).
+MUSIC_TARGET_LUFS = -24.0
+MUSIC_PEAK_CEILING = -12.0
 DURATION = 35.0
 BOOT_DURATION = 22.0  # cue d'éveil (boot) — court, en boucle seamless
 CROSSFADE = 3.0
@@ -275,32 +283,31 @@ TRACKS: dict[str, Callable[[], list[float]]] = {
 
 # ── Ecriture WAV ─────────────────────────────────────────────────────────────
 
-def _write_wav(samples: list[float], path: Path) -> float:
-    peak = max((abs(s) for s in samples), default=0.0)
-    if peak <= 0.0:
-        raise ValueError(f"piste vide pour {path.name}")
-    gain = PEAK_TARGET / peak
-    ints = [max(-32768, min(32767, int(s * gain * 32767.0))) for s in samples]
-    frames = b"".join(struct.pack("<h", v) for v in ints)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(path), "wb") as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)
-        wf.setframerate(SAMPLE_RATE)
-        wf.writeframes(frames)
-    measured = max(abs(v) for v in ints) / 32767.0
-    return 20.0 * math.log10(measured) if measured > 0 else -99.0
+def _normalize_and_write(samples: list[float], path: Path) -> dict:
+    """Normalisation loudness (pyloudnorm) + true-peak, SANS trim ni fade de bord
+    (preserve la boucle seamless), puis WAV 16-bit deterministe. Retourne les stats."""
+    x = np.asarray(samples, dtype=np.float64)
+    audio, stats = norm.normalize(
+        x, target_lufs=MUSIC_TARGET_LUFS, peak_ceiling_db=MUSIC_PEAK_CEILING,
+        trim=False, crest_cap_db=None, fade_edges=False)
+    norm.write_wav16(audio, path)
+    return stats
 
 
-def forge(track_id: str) -> Path:
+MANIFEST = OUT_DIR / "manifest.json"
+
+
+def forge(track_id: str, manifest: dict | None = None) -> Path:
     if track_id not in TRACKS:
         raise KeyError(f"piste inconnue '{track_id}' — voir --list")
     print(f"Generating {track_id}... (this may take ~30s)")
     samples = TRACKS[track_id]()
     out = OUT_OVERRIDE.get(track_id, OUT_DIR) / f"{track_id}.wav"
-    peak_db = _write_wav(samples, out)
-    dur = len(samples) / SAMPLE_RATE
-    print(f"OK {out.name}  {dur:.1f}s  peak {peak_db:.1f} dBFS")
+    stats = _normalize_and_write(samples, out)
+    if manifest is not None:
+        manifest[track_id] = stats
+    print(f"OK {out.name}  {stats['duration_s']:.1f}s  LUFS {stats['lufs']:+.1f} "
+          f"(cible {MUSIC_TARGET_LUFS:+.0f})  TP {stats['true_peak_db']:+.1f}")
     return out
 
 
@@ -322,9 +329,11 @@ def main() -> int:
         forge(args.id)
         return 0
     if args.all:
+        manifest: dict = {}
         for name in TRACKS:
-            forge(name)
-        print(f"\n{len(TRACKS)} WAV genere(s) dans {OUT_DIR}")
+            forge(name, manifest)
+        MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"\n{len(TRACKS)} WAV genere(s) dans {OUT_DIR}\nmanifest -> {MANIFEST}")
         return 0
     parser.print_help()
     return 0

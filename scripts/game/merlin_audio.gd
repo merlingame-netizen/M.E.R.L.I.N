@@ -10,7 +10,21 @@ const SFX_IDS: Array = [
 	# P3 (chantier 6, CDC-AUD-06) — stingers de FIN (MerlinEnd) par type de fin.
 	"stinger_fin_accomplissement", "stinger_fin_mort", "stinger_fin_corrompu",
 	"quill_tick", "ink_wash", "voice_blip",
+	# v4 audio (BIBLE §22) — sons jusque-là muets (appelés mais absents du catalogue) :
+	"slider_tick",          # merlin_dice.gd : graduation du dé
+	"question_transition",  # merlin_fx.gd : « Merlin réfléchit » (drone LLM)
+	"ogham_chime", "magic_reveal",  # merlin_fx.gd : carillons de révélation
+	# round-robin anti-mitraillette : variantes baked-in de deal / card_pick
+	"card_pick__v2", "card_pick__v3", "deal__v2", "deal__v3",
 ]
+
+# Round-robin (anti-mitraillette) : play_sfx("deal") joue en rotation deal / __v2 / __v3.
+# Les sites d'appel passent toujours l'id de BASE — la rotation est transparente.
+const ROUND_ROBIN: Dictionary = {
+	"card_pick": ["card_pick", "card_pick__v2", "card_pick__v3"],
+	"deal": ["deal", "deal__v2", "deal__v3"],
+}
+var _rr_idx: Dictionary = {}
 const VOICE_POOL: int = 4
 const POOL_SIZE: int = 8
 const SFX_MIN_GAP_MS: int = 40   # anti-superposition : intervalle mini avant de rejouer un MÊME SFX
@@ -93,19 +107,27 @@ func _create_music_players() -> void:
 
 
 func play_sfx(id: String, pitch_scale: float = 1.0) -> void:
-	if not _sfx_cache.has(id):
-		return
 	# v10.20 — anti-superposition (user 2026-06-29) : un MÊME SFX ne se relance pas dans les SFX_MIN_GAP_MS
 	# (évite les double-déclenchements quasi simultanés qui s'empilent). N'affecte pas la voix (play_voice).
+	# Le gap est indexé sur l'id de BASE (pas la variante) → cohérent avec le round-robin.
 	var now: int = Time.get_ticks_msec()
 	if now - int(_sfx_last_ms.get(id, -10000)) < SFX_MIN_GAP_MS:
+		return
+	# v4 audio (BIBLE §22) — round-robin baked-in : rotation des variantes anti-mitraillette.
+	var play_id: String = id
+	if ROUND_ROBIN.has(id):
+		var variants: Array = ROUND_ROBIN[id]
+		var k: int = int(_rr_idx.get(id, 0))
+		play_id = str(variants[k % variants.size()])
+		_rr_idx[id] = k + 1
+	if not _sfx_cache.has(play_id):
 		return
 	_sfx_last_ms[id] = now
 	var p: AudioStreamPlayer = _sfx_pool[_sfx_idx]
 	_sfx_idx = (_sfx_idx + 1) % POOL_SIZE
 	if p.playing:
 		p.stop()
-	p.stream = _sfx_cache[id]
+	p.stream = _sfx_cache[play_id]
 	p.pitch_scale = pitch_scale
 	p.volume_db = 0.0
 	p.play()

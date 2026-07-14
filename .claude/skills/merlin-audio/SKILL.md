@@ -1,6 +1,6 @@
 ---
 name: merlin-audio
-description: "Pipeline audio M.E.R.L.I.N. (BIBLE §22) : SFX procéduraux feutrés-organiques (tools/sfx_forge.py), stingers par degré, musique MusicGen, bus/ducking, catalogue canon. Pour tout son/SFX/musique/stinger du jeu."
+description: "Pipeline audio M.E.R.L.I.N. (BIBLE §22) : SFX procéduraux physical-modeling numpy/scipy (harpe Karplus-Strong, cloches modales, bol banded-waveguide, membrane bodhran, foley granulaire ; tools/sfx_forge.py) + normalisation loudness pyloudnorm (tools/sfx_normalize.py, true-peak -14 dBFS, byte-reproductible), stingers par degré, musique, bus/ducking, catalogue canon. Pour tout son/SFX/musique/stinger du jeu."
 user-invokable: true
 metadata:
   version: "1.0.0"
@@ -37,7 +37,7 @@ allowed-tools:
 - **Autoload `MerlinAudio`** (cible v10.16) : `play_sfx(id: String)`, `play_stinger(degree: String)`,
   `set_corruption_layer(level: int)` — pré-chargement des WAV au boot
 - **Ducking** : musique -6dB pendant un stinger, retour en 0.8s
-- **Défauts** : Master 80% · Music 60% · SFX 80% · **peak ≤ -3dB sur tout asset (GATE)**
+- **Défauts** : Master 80% · Music 60% · SFX 80% · **loudness-match par catégorie + plafond true-peak -14 dBFS (GATE R156 ; tools/sfx_normalize.py + manifest.json)** ; note : sons ~8 dB plus doux qu'au peak-only, monter sfx_vol/bus à l'écoute si besoin
 
 ## Catalogue SFX v1 (ids CANON — BIBLE §22, ne pas inventer d'autres ids)
 
@@ -58,9 +58,8 @@ python tools/sfx_forge.py --id card_pick         # génère audio/sfx/card_pick.
 python tools/sfx_forge.py --all                  # tout le catalogue
 ```
 
-- Sortie : `audio/sfx/<id>.wav` — WAV mono 44.1 kHz 16-bit, normalisé peak -3 dB.
-- Recettes = synthèse paramétrique (bruit filtré + enveloppes, sinus amortis, accords) —
-  matière **feutrée-organique** (R30) : pas de bip 8-bit, pas de laser.
+- Sortie : `audio/sfx/<id>.wav` (WAV mono 44.1 kHz 16-bit), normalisé loudness (LUFS par catégorie, true-peak -14 dBFS) + `manifest.json`.
+- Recettes = **modélisation physique** (R156) : Karplus-Strong harpe, banque modale cloches, banded-waveguide bol, membrane bodhran, bourdon frotté, foley granulaire ; anti-aliasing (oversampling 4x) ; `SYNTH_MIX` 0.15 (harpe/bol 100% acoustiques). Matière celtique feutrée, pas de bip 8-bit, pas de laser. Déterministe (seed fixe R119, byte-reproductible).
 - Modifier une matière = éditer la recette dans `sfx_forge.py`, PAS remplacer par un sample
   externe sans décision user (100% local, génératif, rejouable).
 
