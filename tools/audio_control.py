@@ -53,11 +53,12 @@ SECTIONS = [
 ]
 MUSIC_IDS = ["boot_eveil",
              "pad_choeur", "pad_etre", "pad_chevalier", "pad_compagnon", "pad_enfant"]
-# Musique de gameplay MELODIQUE (melody_forge R162) : 2 defauts + variantes A/B a
-# comparer (seeds/modes/bpm differents) pour choisir le reglage.
+# Musique de gameplay MELODIQUE (melody_forge R163) : backend SF2 = VRAIS echantillons
+# d'instruments (GeneralUser GS). 2 defauts + variantes A/B a comparer : seed, mode, et
+# TIMBRE de la voix melodique (flute vs recorder vs pan-flute).
 MELODY_IDS = ["gameplay_calm", "gameplay_falaises",
-              "gameplay_calm__v2", "gameplay_calm__mixo", "gameplay_calm__jig",
-              "gameplay_falaises__v2"]
+              "gameplay_calm__v2", "gameplay_calm__mixo", "gameplay_calm__recorder",
+              "gameplay_falaises__panflute", "gameplay_falaises__v2"]
 
 
 def _wav_meta(path):
@@ -168,8 +169,8 @@ def build():
         cards = "".join(_card(i, man, [SFX_DIR]) for i in ids)
         sections_html.append(f'<section><h2>{html.escape(title)}</h2><div class="grid">{cards}</div></section>')
     melody_cards = "".join(_card(i, man, MUSIC_DIRS) for i in MELODY_IDS)
-    sections_html.append('<section><h2>Musique GAMEPLAY melodique (melody_forge R162) - '
-                         '2 defauts + variantes A/B a comparer</h2>'
+    sections_html.append('<section><h2>Musique GAMEPLAY melodique (melody_forge R163, backend SF2 - '
+                         'vrais instruments) - 2 defauts + variantes A/B (seed / mode / timbre voix)</h2>'
                          f'<div class="grid">{melody_cards}</div></section>')
     music_cards = "".join(_card(i, man, MUSIC_DIRS) for i in MUSIC_IDS)
     sections_html.append(f'<section><h2>Musique &amp; nappes (boot + piliers)</h2><div class="grid">{music_cards}</div></section>')

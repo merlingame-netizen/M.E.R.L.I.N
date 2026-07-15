@@ -19,11 +19,16 @@ Qualite melodique GARANTIE PAR CONSTRUCTION :
   - structure AABB (A ouverte sur 2e/5e degre, B fermee sur tonique)
   - `--seed` fige une bonne graine ; `--motif` amorce la grammaire de variation
 
-Rendu : chaque evenement-note (freq, t, duree, velocite) -> tin-whistle / harpe
-(ks_pluck) / drone / bodhran (membrane), assemble puis reverb CIRCULAIRE (loop-safe).
-Normalisation loudness -24 LUFS / true-peak -12 dBFS via sfx_normalize (comme la
-musique actuelle). Boucle SEAMLESS : bed strictement periodique (drone/vent snappes
-aux cycles entiers) + reverb circulaire + coupe sur frontiere de PHRASE.
+Rendu (2 backends, `--render`) :
+  - `sf2` (DEFAUT) : chaque evenement-note est joue par un VRAI echantillon d'instrument
+    via un SoundFont General MIDI (GeneralUser GS, tinysoundfont). Voix -> programme GM :
+    melodie -> Flute (73, `--whistle-prog` pour Recorder/PanFlute/Whistle), arpeges ->
+    Orchestral Harp (46), bourdon -> Slow Strings (49), bodhran -> toms graves du kit GM
+    (41/47 — GM n'a pas de vrai bodhran). Boucle SEAMLESS : on rend 3 boucles et on
+    extrait celle du MILIEU (regime permanent) ; reverb CIRCULAIRE periodique.
+  - `physical` (FALLBACK GPO-safe) : synthes purs (Karplus harpe + tin-whistle additif +
+    drone/vent synthetises), aucune dependance. Utilise si le SF2/tinysoundfont manque.
+Normalisation loudness -24 LUFS / true-peak -12 dBFS via sfx_normalize (identique).
 
 Usage :
     python tools/melody_forge.py --list
@@ -56,6 +61,36 @@ MUSIC_PEAK_CEILING = -12.0
 
 GEN_DIR = ROOT / "output" / "gen_music"
 GAMEPLAY_DIR = ROOT / "music" / "gameplay"
+
+# ── Backend de rendu SF2 (vrais echantillons d'instruments) ─────────────────────
+# GeneralUser GS v2.0.3 (License v2.0, S. Christian Collins) : banque GM 100%
+# echantillons reels (harpe/flute/cordes/percussion), usage libre commercial. Le
+# SF2 est GITIGNORE (~32 Mo) ; le re-telecharger via `python tools/fetch_soundfont.py`.
+SOUNDFONT = ROOT / "resources" / "soundfonts" / "GeneralUser-GS.sf2"
+
+# Programmes General MIDI (bank 0) — vrais instruments.
+GM_HARP = 46          # Orchestral Harp (melodie pincee + arpeges)
+GM_STRINGS = 49       # Slow Strings (lit/bourdon soutenu — remplace le drone synthe)
+GM_FLUTE = 73         # Flute (defaut voix "tin-whistle" : timbre de flute reel, chaud)
+GM_RECORDER = 74      # Recorder (fipple flute, plus proche du tin-whistle baroque)
+GM_PANFLUTE = 75      # Pan Flute (souffle andin)
+GM_WHISTLE = 78       # Whistle GM (sifflet — timbre plus mince)
+GM_PIZZ = 45          # Pizzicato Strings (alternative cordes)
+# GM n'a PAS de vrai bodhran : on approxime le tambour a cadre par les toms graves
+# du kit de batterie GM (canal percussion). Grave = Low Floor Tom, aigu = Low-Mid Tom.
+GM_DRUM_LOW = 41      # Low Floor Tom (frappe grave/centre)
+GM_DRUM_HIGH = 47     # Low-Mid Tom (frappe plus claire/bord)
+
+# Canaux MIDI dedies (9 = canal 10 GM = percussion).
+_CH_MEL, _CH_HARP, _CH_STR, _CH_DRUM = 0, 1, 2, 9
+
+# tinysoundfont : import paresseux (fallback physical si absent/GPO).
+try:
+    import tinysoundfont as _tsf  # type: ignore
+    _HAS_TSF = True
+except Exception:  # pragma: no cover
+    _tsf = None
+    _HAS_TSF = False
 
 # ── Modes celtiques (masques demi-tons depuis la tonique) ───────────────────────
 MODES: dict[str, list[int]] = {
@@ -120,6 +155,8 @@ class Cfg:
     seed: int = 41
     wind: bool = False
     biome: str = ""
+    render: str = "sf2"          # sf2 (vrais echantillons, defaut) | physical (fallback synthe)
+    melody_prog: int = GM_FLUTE  # programme GM de la voix melodique (whistle/flute)
 
 
 def midi_to_freq(m: float) -> float:
@@ -508,7 +545,9 @@ def _harp_chord(scale: list[int], root_idx: int, seed: int, level: float) -> np.
     return out * level
 
 
-def render(cfg: Cfg) -> tuple[np.ndarray, dict]:
+def render_physical(cfg: Cfg) -> tuple[np.ndarray, dict]:
+    """Backend historique : synthes physiques (Karplus harpe + tin-whistle additif
+    + drone/vent synthetises). Conserve comme FALLBACK GPO-safe (aucune dependance)."""
     notes, beats, harp, L, (scale, t0) = compose(cfg)
     ln = int(round(SR * L))
     dry = np.zeros(ln)
@@ -563,11 +602,159 @@ def render(cfg: Cfg) -> tuple[np.ndarray, dict]:
     room = 0.7 if cfg.wind else 0.55
     wetmix = circular_reverb(dry, cfg.seed + 33, room=room, wet=wet, damp_hz=damp)
 
-    meta = {"mode": cfg.mode, "key": cfg.key, "bpm": cfg.bpm, "pattern": cfg.pattern,
-            "mood": cfg.mood, "timbre": cfg.timbre, "seed": cfg.seed,
+    meta = {"backend": "physical", "mode": cfg.mode, "key": cfg.key, "bpm": cfg.bpm,
+            "pattern": cfg.pattern, "mood": cfg.mood, "timbre": cfg.timbre, "seed": cfg.seed,
             "bars": int(round(L / (30.0 / cfg.bpm) / BAR_PULSES[cfg.pattern])),
             "n_notes": len([n for n in notes if not n.grace]), "loop_s": round(L, 2)}
     return wetmix, meta
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  Backend SF2 (vrais echantillons — GeneralUser GS via tinysoundfont)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _freq_to_key(f: float) -> int:
+    """Frequence -> numero de note MIDI (69 = A4 440 Hz)."""
+    return int(round(69.0 + 12.0 * math.log2(f / 440.0)))
+
+
+def render_sf2(cfg: Cfg) -> tuple[np.ndarray, dict]:
+    """Rendu par ECHANTILLONS REELS : route les note-events de la composition
+    (identique au backend physical) vers un SoundFont GM via tinysoundfont.
+
+    Boucle SEAMLESS par construction : on rend 3 boucles consecutives et on extrait
+    celle du MILIEU. La boucle centrale est en REGIME PERMANENT (les queues de notes
+    de la boucle 1 alimentent sa tete, les attaques de la boucle 3 alimentent sa fin,
+    le bourdon cordes est tenu en continu sans re-attaque) -> x[L+k] ~= x[2L+k].
+    Reverb CIRCULAIRE (periodique) + micro-fondu equal-power finalisent le raccord.
+    """
+    notes, beats, harp, L, (scale, t0) = compose(cfg)
+    Lsamp = int(round(SR * L))
+    n_loops = 3
+    total = n_loops * Lsamp
+
+    syn = _tsf.Synth(samplerate=SR, gain=-6.0)   # -6 dB : headroom anti-clip (voix empilees)
+    sfid = syn.sfload(str(SOUNDFONT))
+    if sfid < 0:
+        raise RuntimeError(f"echec sfload : {SOUNDFONT}")
+    syn.program_select(_CH_MEL, sfid, 0, cfg.melody_prog)
+    syn.program_select(_CH_HARP, sfid, 0, GM_HARP)
+    syn.program_select(_CH_STR, sfid, 0, GM_STRINGS)
+    syn.program_select(_CH_DRUM, sfid, 128, 0, is_drums=True)
+    # Balance des voix (CC7 volume canal) : melodie devant, cordes discretes en lit.
+    syn.control_change(_CH_MEL, 7, 112)
+    syn.control_change(_CH_HARP, 7, 90 if cfg.timbre == "both" else 76)
+    syn.control_change(_CH_STR, 7, 52)
+    syn.control_change(_CH_DRUM, 7, 74)
+    if cfg.mood == "trouble":
+        syn.set_tuning(_CH_STR, -0.08)           # cordes ~8 cents bas : battement inquietant
+
+    # Construction des evenements MIDI (samp, kind[on=0/off=1], chan, key, vel).
+    ev: list[tuple[int, int, int, int, int]] = []
+
+    def _on(t: float, ch: int, key: int, vel: float) -> None:
+        ev.append((int(t * SR), 0, ch, int(_clamp(key, 0, 127)), int(np.clip(vel, 1, 127))))
+
+    def _off(t: float, ch: int, key: int) -> None:
+        ev.append((int(t * SR), 1, ch, int(_clamp(key, 0, 127)), 0))
+
+    melody_on_mel = cfg.timbre in ("whistle", "both")
+    tonic_key = scale[t0] - 24
+    fifth_key = tonic_key + 7
+    slen = len(scale)
+
+    for loop in range(n_loops):
+        base = loop * L
+        for nt in notes:
+            key = _freq_to_key(nt.freq)
+            if melody_on_mel:
+                vel = 30 + nt.vel * 70 if nt.grace else 46 + nt.vel * 72
+                _on(base + nt.t, _CH_MEL, key, vel)
+                _off(base + nt.t + max(nt.dur, 0.10), _CH_MEL, key)
+                # double harpe discrete sur les temps forts (timbre "both")
+                if not nt.grace and nt.vel >= 0.95 and cfg.timbre == "both":
+                    _on(base + nt.t, _CH_HARP, key, 52)
+                    _off(base + nt.t + min(nt.dur + 0.4, 1.4), _CH_HARP, key)
+            else:                                # timbre harpe : melodie pincee reelle
+                _on(base + nt.t, _CH_HARP, key, 40 + nt.vel * 74)
+                _off(base + nt.t + min(nt.dur + 0.5, 1.6), _CH_HARP, key)
+        # arpeges de harpe sur les debuts de mesure (harmonie)
+        if cfg.timbre != "whistle":
+            for (t, ridx) in harp:
+                for j, di in enumerate((0, 2, 4)):
+                    si = _clamp(ridx + di, 0, slen - 1)
+                    _on(base + t + j * 0.055, _CH_HARP, scale[si] - 12, 68 - j * 6)
+                    _off(base + t + 1.1, _CH_HARP, scale[si] - 12)
+        # percussion bodhran -> toms graves du kit GM
+        for (t, high, force) in beats:
+            key = GM_DRUM_HIGH if high else GM_DRUM_LOW
+            _on(base + t, _CH_DRUM, key, 38 + force * 74)
+            _off(base + t + 0.16, _CH_DRUM, key)
+
+    # Bourdon cordes TENU en continu sur les 3 boucles (aucune re-attaque aux raccords).
+    _on(0.0, _CH_STR, tonic_key, 78)
+    _on(0.0, _CH_STR, fifth_key, 60)
+    _off(n_loops * L, _CH_STR, tonic_key)
+    _off(n_loops * L, _CH_STR, fifth_key)
+
+    ev.sort(key=lambda e: (e[0], e[1]))
+
+    # Rendu par blocs entre evenements ; stereo float32 interleaved -> mono.
+    out = np.empty(total, dtype=np.float64)
+    pos = 0
+    for samp, kind, ch, key, vel in ev:
+        s = min(samp, total)
+        if s > pos:
+            buf = np.frombuffer(syn.generate(s - pos), dtype=np.float32).reshape(-1, 2)
+            out[pos:s] = buf.mean(axis=1)
+            pos = s
+        if kind == 0:
+            syn.noteon(ch, key, vel)
+        else:
+            syn.noteoff(ch, key)
+    if pos < total:
+        buf = np.frombuffer(syn.generate(total - pos), dtype=np.float32).reshape(-1, 2)
+        out[pos:total] = buf.mean(axis=1)
+
+    dry_peak = float(np.max(np.abs(out)) + 1e-12)
+
+    # Boucle du MILIEU (regime permanent) = boucle seamless.
+    loopseg = out[Lsamp:2 * Lsamp].copy()
+
+    # Ambiance de vent (bruit procedural STRICTEMENT periodique — pas un instrument).
+    if cfg.wind:
+        loopseg += wind_bed(loopseg.size, cfg.seed + 91, 0.09)
+
+    # Reverb circulaire (periodique -> queue de reverb qui reboucle proprement).
+    damp = 2900.0 if cfg.mood == "trouble" else 3800.0
+    wet = 0.24 if (cfg.mood == "trouble" or cfg.wind) else 0.18
+    room = 0.7 if cfg.wind else 0.5
+    wetmix = circular_reverb(loopseg, cfg.seed + 33, room=room, wet=wet, damp_hz=damp)
+
+    meta = {"backend": "sf2", "soundfont": SOUNDFONT.name, "mode": cfg.mode,
+            "key": cfg.key, "bpm": cfg.bpm, "pattern": cfg.pattern, "mood": cfg.mood,
+            "timbre": cfg.timbre, "melody_prog": cfg.melody_prog, "seed": cfg.seed,
+            "bars": int(round(L / (30.0 / cfg.bpm) / BAR_PULSES[cfg.pattern])),
+            "n_notes": len([n for n in notes if not n.grace]), "loop_s": round(L, 2),
+            "dry_peak": round(dry_peak, 3)}
+    return wetmix, meta
+
+
+def render(cfg: Cfg) -> tuple[np.ndarray, dict]:
+    """Dispatcher de rendu : SF2 (vrais echantillons, defaut) ou physical (fallback).
+
+    Si le backend SF2 est demande mais indisponible (tinysoundfont absent ou SF2
+    manquant), bascule sur le backend physical avec un avertissement explicite."""
+    if cfg.render == "sf2":
+        if not _HAS_TSF:
+            print("[WARN] tinysoundfont absent -> fallback backend 'physical'. "
+                  "pip install tinysoundfont pour le rendu par echantillons reels.")
+        elif not SOUNDFONT.exists():
+            print(f"[WARN] SoundFont introuvable ({SOUNDFONT}) -> fallback 'physical'. "
+                  "Recuperer via: python tools/fetch_soundfont.py")
+        else:
+            return render_sf2(cfg)
+    return render_physical(cfg)
 
 
 def write_track(cfg: Cfg, out: Path) -> dict:
@@ -577,14 +764,17 @@ def write_track(cfg: Cfg, out: Path) -> dict:
                                   trim=False, crest_cap_db=None, fade_edges=False)
     # Raccord de boucle POST-master : le highpass de normalize peut rouvrir un micro
     # pas au bord ; un fondu equal-power tout a la fin fait coincider x[0]~x[-1] a un
-    # pas d'echantillon interieur pres (seam ~1.0x), robuste pour TOUTES les pistes.
-    audio = _seam_xfade(audio, 0.008)
+    # pas d'echantillon interieur pres, robuste pour TOUTES les pistes. Le backend SF2
+    # a un bourdon cordes dont la boucle interne d'echantillon n'est pas alignee sur L
+    # (leger dephasage au raccord) -> fondu plus long (25 ms) pour le lisser.
+    seam_s = 0.025 if meta.get("backend") == "sf2" else 0.008
+    audio = _seam_xfade(audio, seam_s)
     stats["duration_s"] = round(audio.size / SR, 3)
     norm.write_wav16(audio, out)
     meta.update(stats)
-    print(f"OK {out.name:26s} {meta['mode']:10s} {cfg.key} {cfg.bpm}bpm {cfg.pattern:4s} "
-          f"seed={cfg.seed:<4d} {stats['duration_s']:.1f}s LUFS {stats['lufs']:+.1f} "
-          f"TP {stats['true_peak_db']:+.1f}")
+    print(f"OK [{meta.get('backend','?'):8s}] {out.name:26s} {meta['mode']:10s} {cfg.key} "
+          f"{cfg.bpm}bpm {cfg.pattern:4s} seed={cfg.seed:<4d} {stats['duration_s']:.1f}s "
+          f"LUFS {stats['lufs']:+.1f} TP {stats['true_peak_db']:+.1f}")
     return meta
 
 
@@ -605,12 +795,17 @@ PRESETS: dict[str, Cfg] = {
 }
 
 # (id de sortie, cfg, drop-in vers music/gameplay ?)
+# Backend SF2 par defaut -> vrais echantillons. Les variantes couvrent 3 axes de
+# choix : graine (melodie), mode, et TIMBRE DE LA VOIX (flute vs recorder vs pan-
+# flute — GM n'a pas de vrai tin-whistle, on laisse l'utilisateur choisir a l'oreille).
 VARIANTS: list[tuple[str, Cfg, bool]] = [
     ("gameplay_calm", PRESETS["foret"], True),
     ("gameplay_falaises", PRESETS["falaises"], True),
     ("gameplay_calm__v2", replace(PRESETS["foret"], seed=7), False),
     ("gameplay_calm__mixo", replace(PRESETS["foret"], mode="mixolydien", seed=12, bpm=80), False),
-    ("gameplay_calm__jig", replace(PRESETS["foret"], bpm=100, density=0.55, seed=23, timbre="whistle"), False),
+    # A/B de timbre de voix melodique (meme air foret, whistle seul) :
+    ("gameplay_calm__recorder", replace(PRESETS["foret"], timbre="whistle", melody_prog=GM_RECORDER, seed=3), False),
+    ("gameplay_falaises__panflute", replace(PRESETS["falaises"], melody_prog=GM_PANFLUTE, seed=11), False),
     ("gameplay_falaises__v2", replace(PRESETS["falaises"], seed=53, bpm=60, mode="eolien"), False),
 ]
 
@@ -646,6 +841,8 @@ def _cfg_from_args(a: argparse.Namespace) -> Cfg:
     if a.motif is not None: kw["motif"] = a.motif
     if a.seed is not None: kw["seed"] = a.seed
     if a.wind is not None: kw["wind"] = (a.wind == "on")
+    if a.render is not None: kw["render"] = a.render
+    if a.whistle_prog is not None: kw["melody_prog"] = a.whistle_prog
     return replace(base, **kw)
 
 
@@ -668,6 +865,11 @@ def main() -> int:
     p.add_argument("--motif", help='degres du mode, ex "1 2 3 5"')
     p.add_argument("--seed", type=int)
     p.add_argument("--wind", choices=["on", "off"])
+    p.add_argument("--render", choices=["sf2", "physical"],
+                   help="backend de rendu : sf2 (vrais echantillons, defaut) | physical (fallback synthe)")
+    p.add_argument("--whistle-prog", type=int, dest="whistle_prog",
+                   help=f"programme GM de la voix melodique (defaut {GM_FLUTE}=Flute ; "
+                        f"{GM_RECORDER}=Recorder, {GM_PANFLUTE}=PanFlute, {GM_WHISTLE}=Whistle)")
     p.add_argument("--out", help="chemin WAV de sortie")
     args = p.parse_args()
 
@@ -676,6 +878,8 @@ def main() -> int:
         print("Patterns :", ", ".join(RHYTHM_BANK))
         print("Biomes   :", ", ".join(PRESETS))
         print("Timbres  : harp, whistle, both   Mood: sain, trouble")
+        print(f"Backends : sf2 (defaut, {SOUNDFONT.name}, {'OK' if SOUNDFONT.exists() else 'ABSENT -> fetch_soundfont.py'}), physical")
+        print(f"Whistle  : {GM_FLUTE}=Flute {GM_RECORDER}=Recorder {GM_PANFLUTE}=PanFlute {GM_WHISTLE}=Whistle")
         return 0
     if args.variants:
         gen_variants()

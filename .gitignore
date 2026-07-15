@@ -77,6 +77,14 @@ addons/merlin_llm/models/*.bin
 !addons/merlin_llm/models/.gdignore
 
 # -------------------------------------------
+# SoundFonts (banques d'echantillons audio — melody_forge backend SF2)
+# ~32 Mo, re-telechargeable via: python tools/fetch_soundfont.py
+# -------------------------------------------
+resources/soundfonts/
+*.sf2
+*.sf3
+
+# -------------------------------------------
 # Native Build (GDExtension)
 # -------------------------------------------
 native/build/

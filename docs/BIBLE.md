@@ -1830,6 +1830,24 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+- **R163 : MUSIQUE DE GAMEPLAY PAR ECHANTILLONS REELS (backend SF2, 2026-07-15, retour ecoute)** : le rendu
+  physical-modeling de R162 sonnait encore « trop digital, il faut de vrais instruments ». melody_forge gagne un
+  SECOND backend de rendu (`--render sf2|physical`, sf2 par DEFAUT, physical = fallback GPO-safe) qui joue de VRAIS
+  echantillons d'instruments via un SoundFont General MIDI (GeneralUser GS v2.0.3, licence libre usage commercial,
+  ~32 Mo GITIGNORE, re-telechargeable + verif SHA-256 via `tools/fetch_soundfont.py`) lu par `tinysoundfont` (MIT,
+  synthe embarquee, AUCUN fluidsynth exe/DLL -> GPO-safe). La couche COMPOSITION celtique de R162 (modes / contour /
+  AABB / knobs bpm-mode-beats) est INCHANGEE : seul le moteur de rendu change. Voix -> programme GM : melodie = Flute
+  73 (`--whistle-prog` pour Recorder 74 / PanFlute 75 / Whistle 78 ; GM n'a PAS de tin-whistle), arpeges + double
+  melodie = Orchestral Harp 46, bourdon/nappe = Slow Strings 49 (remplace le drone additif « digital », la cause n°1
+  du grief), bodhran = toms graves du kit GM canal 10 (approximation HONNETE : GM n'a pas de vrai bodhran).
+  `--mood trouble` desaccorde les cordes ~8 cents + assombrit la reverb. Boucle SEAMLESS : rendre 3 boucles +
+  extraire la mediane (etat stationnaire, cordes tenues) + reverb circulaire + fondu equal-power 25 ms (saut au
+  raccord 0.002-0.003, sous les sauts internes du morceau = inaudible). Normalise -24 LUFS / TP -12. Defauts
+  re-rendus : gameplay_calm (foret, dorien D, flute+harpe+cordes+bodhran, 42.8 s) ; gameplay_falaises (eolien D, air
+  rubato + flute + cordes + vent, mood trouble, 45.0 s). Variantes A/B (voix whistle __recorder/__panflute ;
+  seed/mode) stagees output/gen_music, audition via output/audio_control.html. Gate : validate 0/0, smoke Game+Menu
+  passed, bootcheck 5/5 (audio pur, pas de soak). Amende R162 (physical-modeling -> echantillons reels).
+
 - **R162 : MUSIQUE DE GAMEPLAY MELODIQUE (tools/melody_forge.py, 2026-07-15)** : les musiques Stable Audio
   (diffusion) etaient jugees trop bizarres/ambiantes et NON controlables. Remplacees par un COMPOSITEUR celtique
   algorithmique 100% pur-numpy pilotant les synthes physiques existants (harpe Karplus-Strong, bodhran membrane)
