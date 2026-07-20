@@ -8,18 +8,36 @@ variable "tenancy_ocid" {
 
 variable "user_ocid" {
   type        = string
-  description = "OCID of your user. Console: Profile > My profile."
+  description = "OCID of your user. Console: Profile > My profile. (Only for auth = ApiKey.)"
+  default     = ""
 }
 
 variable "fingerprint" {
   type        = string
-  description = "Fingerprint of the API signing public key uploaded to the console."
+  description = "Fingerprint of the API signing public key. (Only for auth = ApiKey.)"
+  default     = ""
 }
 
 variable "private_key_path" {
   type        = string
-  description = "Local path to the API signing PRIVATE key (PEM)."
+  description = "Local path to the API signing PRIVATE key (PEM). (Only for auth = ApiKey.)"
   default     = "~/.oci/oci_api_key.pem"
+}
+
+variable "auth" {
+  type        = string
+  description = "OCI auth method: \"ApiKey\" (default) or \"SecurityToken\" (browser/Cloud Shell token via `oci session authenticate` — no private key)."
+  default     = "ApiKey"
+  validation {
+    condition     = contains(["ApiKey", "SecurityToken"], var.auth)
+    error_message = "auth must be \"ApiKey\" or \"SecurityToken\"."
+  }
+}
+
+variable "config_file_profile" {
+  type        = string
+  description = "OCI CLI profile used when auth = SecurityToken (e.g. from `oci session authenticate --profile-name merlin`)."
+  default     = "DEFAULT"
 }
 
 variable "region" {

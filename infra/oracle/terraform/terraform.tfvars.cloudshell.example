@@ -1,0 +1,10 @@
+# OCI CLOUD SHELL deploy (browser terminal, no private key). Copy to terraform.tfvars.
+# 1) In Cloud Shell:  oci session authenticate --region eu-paris-1 --profile-name merlin
+# 2) ssh-keygen -t ed25519 -f ~/.ssh/merlin_oracle -N ""   (then paste the .pub below)
+# 3) tenancy_ocid:    grep tenancy ~/.oci/config
+auth                = "SecurityToken"
+config_file_profile = "merlin"
+region              = "eu-paris-1"
+tenancy_ocid        = "ocid1.tenancy.oc1..aaaa..."
+ssh_public_key      = "ssh-ed25519 AAAA... cloudshell"
+# capacity workaround if an AD is full: availability_domain_number = 2
