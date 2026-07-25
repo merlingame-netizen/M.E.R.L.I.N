@@ -2045,6 +2045,25 @@ tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à 
 - CAP GLOBAL : 2-3 interventions par RUN, toutes sources confondues (scriptées et événementielles) ;
   étend le cap 1/run de R131/R136 à la mesure de la charte complète. Jamais pendant la frappe de
   prose (single-flight, R110) ni pendant la résolution (R112/R128) : Merlin attend son tour.
+- **RÉACTION COURTE (R167, retour Maxime sur l'étalon)** : distincte des interventions ci-dessus,
+  Merlin donne une réaction d'UNE ligne (voix bleutée) après chaque résolution marquante (éclatante,
+  échec, bascule de jauge, geste répété). Ce n'est pas une intervention (pas de mise en scène, pas
+  de cap 2-3) : c'est le compagnon qui commente la partie, présent sans être bavard. La forge peut
+  en pré-écrire (champ optionnel du beat), la banque procédurale couvre le reste.
+
+### 25.4bis Fil causal et verbalisation du geste (R167, NON NÉGOCIABLE)
+Retour fondateur de Maxime sur le premier étalon : « tout doit être logique et perdurer dans les
+actions ». Trois exigences de récit, vérifiées par le QC :
+- **INTRODUCTION COMPLÈTE obligatoire** : préambule de Merlin (qui tu es, où, ce que le lieu exige),
+  accroche de la quête RELIÉE à son climax (la promesse d'ouverture est tenue à la fin), acceptation.
+  Jamais d'entrée à froid sur le premier beat.
+- **LE GESTE EST VERBALISÉ** : la prose de résolution met en scène LA combinaison jouée (l'action et
+  les traits, nommés en fiction : jouer Parole + Vieux Signes = « tu récites les vieux signes »),
+  jamais une issue générique interchangeable. Étend R140 (action italique).
+- **LES CONSÉQUENCES PERDURENT** : tout état créé par un beat (blessure, dette, maladresse comptée,
+  bénédiction, apprentissage d'un rite) est SUIVI jusqu'à son paiement ou sa guérison, et chaque
+  beat référence au moins un événement antérieur du run. L'échec d'hier gêne le geste d'aujourd'hui ;
+  la dépense qui le soigne se sent ; le climax rappelle la promesse d'ouverture.
 
 ### 25.5 Contrôle qualité (gate dur)
 `tools/scenario_qc.py` (NOUVEAU, decision 16) : passe obligatoire sur tout scénario de bibliothèque
@@ -2062,6 +2081,13 @@ avant commit (cf. §9, §24). Vérifie :
   en plein beat).
 - **`figure` valide** : appartient au Roster canon (§6), aux clés pilier (§6), ou à
   `marchand`/`creancier` (R164) ; jamais un nom halluciné.
+- **Introduction complète** présente (préambule + accroche reliée au climax, 25.4bis) ; jamais
+  d'entrée à froid.
+- **Verbalisation du geste** : la prose de résolution de chaque beat nomme en fiction l'action et
+  au moins un trait joués (25.4bis) ; contrôle par présence des ancres de combinaison.
+- **Fil causal** : chaque beat (hors le premier) référence au moins un événement antérieur du run ;
+  tout état créé (blessure, dette, bénédiction, apprentissage) a son point de suivi ou de paiement
+  ultérieur dans le squelette (25.4bis).
 Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de changement »).
 
 - **R166 : CHARTE NARRATIVE COMPLÈTE, scénarios/mort/corruption/méta (2026-07-28, vague W-CANON, 16
