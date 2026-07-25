@@ -2495,3 +2495,10 @@ Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement p
 - **Bug équilibrage n°1** : quert (+10/CD4) = 70 PV-éq/run → proposition CD 6 / soin 8 (décision utilisateur pendante, canon §3.3).
 - **Équité factions** : druides 32.5% des options (> cap 30%), ankou 7.8% (< 8%) → passe de régénération LLM à planifier.
 - **Divergences flaggées** (spec §7) : cooldowns runes, MOS target 15-20 vs 25, card flip double-tap vs §21.5, §27.3 vs §3.2, BALANCE_FORMULA.md obsolète.
+
+#### Audit final (Wave 2) — PASS-WITH-NOTES, corrections appliquées
+- Table §5.3 spec recalculée depuis le modèle EV (cohérence spec ↔ JSON ↔ Monte-Carlo)
+- red clampé [12,15] (cap DAMAGE_LIFE §5.4) ; champs typés `params`/`anti_degenerescence_params` pour scenario_planner/MOS
+- Validator : enveloppe DANGER_BUDGET scalée par danger_modifier (27 faux positifs éliminés, score corpus 90.8/100)
+- Bible : §6.2 note caps par route + §6.3bis schéma carte skeleton étendu (rarity/emotion/verb/primary_faction/check)
+- Exception « options voilées » documentée (mist_wanderer + interference hide) ; finding « corpus trop doux » ajouté

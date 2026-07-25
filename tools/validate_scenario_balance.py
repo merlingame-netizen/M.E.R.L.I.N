@@ -286,6 +286,9 @@ def check_balance(s: dict, tpl: dict, findings: list, stats_out: dict):
 
         scale = pn / 25.0
         lo, hi = bal["danger_budget_25_cards"]["expected_gross_damage"]
+        # L'enveloppe cible est definie a danger_modifier 1.0 : on la scale par
+        # le modifier d'archetype (sinon faux positifs sur les archetypes doux).
+        lo, hi = lo * danger_mod, hi * danger_mod
         if not (lo * scale * 0.6 <= exp_damage <= hi * scale * 1.4):
             findings.append(Finding("warn", "DANGER_BUDGET",
                                     f"route {key}: EV degats {exp_damage:.0f} PV hors "

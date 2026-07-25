@@ -412,6 +412,12 @@ Les cartes Promesse creent des engagements avec countdown :
 
 **Merlin Direct** est a 10% (vs 5% en v2.4) car ces moments sont les plus IA-driven et les plus memorables.
 
+> **v3.9** : ces poids restent la cible GLOBALE du flux de cartes. En mode
+> scenario type (§30), les parts sont bornees PAR ROUTE jouee : NARRATIVE
+> 50-70%, EVENT 1-4, SHOP 1-2, MERLIN_DIRECT 0-3, PROMISE 0-2, RUNE_UNLOCK 0-1
+> (source : `data/ai/scenario_templates.json::card_type_caps`). Les types SHOP
+> et RUNE_UNLOCK, absents du tableau v3.0, sont canon depuis v7.7.22.
+
 ### 6.3 Carte — structure JSON
 
 ```json
@@ -430,6 +436,31 @@ Les cartes Promesse creent des engagements avec countdown :
   "tags": []
 }
 ```
+
+### 6.3bis Carte de skeleton scenario — schema etendu (v3.9)
+
+Les cartes issues du pipeline scenario (§30 + corpus de references) portent en
+plus les champs du contrat des scenarios types :
+
+```json
+{
+  "n": 1, "card_id": "c1",
+  "type": "NARRATIVE | EVENT | SHOP | PROMISE | MERLIN_DIRECT | RUNE_UNLOCK",
+  "rarity": "COMMUNE | RARE | EPIQUE | LEGENDAIRE",
+  "pole": "Ordre | Chaos | Liminal | Neutre",
+  "emotion": "curiosite | tension | peur | espoir | sagesse | fascination | colere | melancolie | emerveillement",
+  "summary": "1 phrase 8-22 mots (few-shot GM)",
+  "options": [
+    {"label": "...", "verb": "infinitif 1 mot", "primary_faction": "druides | anciens | korrigans | niamh | ankou | neutre",
+     "check": {"stat": "logic | empathie | volonte | instinct", "type": "white | contextuel | red | fatal"},
+     "leads_to_card_id": "c3"}
+  ],
+  "route_mask": [true, true, true], "branch_label": "trunk | ordre_b1 | ..."
+}
+```
+
+Le champ `check` est optionnel dans le corpus actuel (a generer lors de la
+passe de regeneration — spec §5.7). Reference : SCENARIO_TYPES_SPEC.md §2-§3.
 
 ### 6.4 MOS — Merlin Omniscient System
 

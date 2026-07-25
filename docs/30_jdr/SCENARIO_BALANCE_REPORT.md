@@ -2,7 +2,7 @@
 
 > Genere par `tools/validate_scenario_balance.py` contre `data/ai/scenario_templates.json` v1.0.0. 100 scenarios valides (validation PAR ROUTE : le pool branchant est projete sur les 3 chemins ordre/chaos/liminal).
 
-**Score moyen : 90.3/100** — min 79, max 97.
+**Score moyen : 90.8/100** — min 82, max 97.
 
 ## Findings par frequence
 
@@ -11,7 +11,6 @@
 | RARITY_DRIFT | warn | 104 | 68 |
 | FACTION_DRUID_HEAVY | warn | 100 | 100 |
 | FACTION_STARVED | warn | 89 | 72 |
-| DANGER_BUDGET | warn | 27 | 9 |
 | ARC_OPEN | warn | 20 | 20 |
 | LEN_BIAS | warn | 10 | 10 |
 | TITLE_WORDS | warn | 1 | 1 |
@@ -40,44 +39,14 @@ p50 = **22 PV** (min -10 / max 46) — cible : vie finale p50 dans [55, 70] => a
 | ancient_oak_counsel | 93.1 | 10 |
 | druid_lineage | 92.5 | 10 |
 | threshold_crossing | 91.9 | 10 |
+| druidic_awakening | 90.4 | 10 |
 | korrigan_trickery | 89.8 | 10 |
 | mist_wanderer | 89.8 | 10 |
 | forest_trial | 89.8 | 10 |
 | hidden_sanctuary | 89.2 | 10 |
 | beast_encounter | 88.0 | 10 |
-| druidic_awakening | 85.0 | 10 |
 
 ## 5 scenarios les plus faibles
-
-### broc_00_09 (druidic_awakening, 11 cartes) — 79/100
-- [WARN] RARITY_DRIFT: route ordre: RARE 0.00 vs cible 0.20
-- [WARN] RARITY_DRIFT: route liminal: COMMUNE 0.45 vs cible 0.68
-- [WARN] RARITY_DRIFT: route liminal: RARE 0.36 vs cible 0.20
-- [WARN] FACTION_STARVED: faction niamh = 7% des options (< 8%) — build associe sous-nourri
-- [WARN] FACTION_STARVED: faction ankou = 7% des options (< 8%) — build associe sous-nourri
-- [WARN] FACTION_DRUID_HEAVY: druides = 33% des options (> 30%)
-- [WARN] DANGER_BUDGET: route ordre: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
-- [WARN] DANGER_BUDGET: route chaos: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
-- [WARN] DANGER_BUDGET: route liminal: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
-
-### broc_00_03 (druidic_awakening, 17 cartes) — 82/100
-- [WARN] RARITY_DRIFT: route chaos: COMMUNE 0.53 vs cible 0.68
-- [WARN] FACTION_STARVED: faction korrigans = 7% des options (< 8%) — build associe sous-nourri
-- [WARN] FACTION_STARVED: faction ankou = 6% des options (< 8%) — build associe sous-nourri
-- [WARN] FACTION_DRUID_HEAVY: druides = 32% des options (> 30%)
-- [WARN] DANGER_BUDGET: route ordre: EV degats 22 PV hors [22-71] (len 17, mod 0.6)
-- [WARN] DANGER_BUDGET: route chaos: EV degats 22 PV hors [22-71] (len 17, mod 0.6)
-- [WARN] DANGER_BUDGET: route liminal: EV degats 22 PV hors [22-71] (len 17, mod 0.6)
-
-### broc_00_04 (druidic_awakening, 11 cartes) — 82/100
-- [WARN] RARITY_DRIFT: route ordre: RARE 0.00 vs cible 0.20
-- [WARN] RARITY_DRIFT: route liminal: COMMUNE 0.45 vs cible 0.68
-- [WARN] RARITY_DRIFT: route liminal: RARE 0.36 vs cible 0.20
-- [WARN] FACTION_STARVED: faction ankou = 7% des options (< 8%) — build associe sous-nourri
-- [WARN] FACTION_DRUID_HEAVY: druides = 32% des options (> 30%)
-- [WARN] DANGER_BUDGET: route ordre: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
-- [WARN] DANGER_BUDGET: route chaos: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
-- [WARN] DANGER_BUDGET: route liminal: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
 
 ### broc_07_03 (beast_encounter, 17 cartes) — 82/100
 - [WARN] LEN_BIAS: longueur 17 hors bias archetype [11, 15, 21]
@@ -87,14 +56,36 @@ p50 = **22 PV** (min -10 / max 46) — cible : vie finale p50 dans [55, 70] => a
 - [WARN] FACTION_STARVED: faction ankou = 5% des options (< 8%) — build associe sous-nourri
 - [WARN] FACTION_DRUID_HEAVY: druides = 33% des options (> 30%)
 
-### broc_00_01 (druidic_awakening, 11 cartes) — 85/100
+### broc_00_09 (druidic_awakening, 11 cartes) — 85/100
 - [WARN] RARITY_DRIFT: route ordre: RARE 0.00 vs cible 0.20
 - [WARN] RARITY_DRIFT: route liminal: COMMUNE 0.45 vs cible 0.68
 - [WARN] RARITY_DRIFT: route liminal: RARE 0.36 vs cible 0.20
+- [WARN] FACTION_STARVED: faction niamh = 7% des options (< 8%) — build associe sous-nourri
+- [WARN] FACTION_STARVED: faction ankou = 7% des options (< 8%) — build associe sous-nourri
 - [WARN] FACTION_DRUID_HEAVY: druides = 33% des options (> 30%)
-- [WARN] DANGER_BUDGET: route ordre: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
-- [WARN] DANGER_BUDGET: route chaos: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
-- [WARN] DANGER_BUDGET: route liminal: EV degats 14 PV hors [15-46] (len 11, mod 0.6)
+
+### broc_01_09 (korrigan_trickery, 11 cartes) — 85/100
+- [WARN] RARITY_DRIFT: route ordre: RARE 0.00 vs cible 0.20
+- [WARN] RARITY_DRIFT: route liminal: COMMUNE 0.45 vs cible 0.68
+- [WARN] RARITY_DRIFT: route liminal: RARE 0.36 vs cible 0.20
+- [WARN] FACTION_STARVED: faction niamh = 6% des options (< 8%) — build associe sous-nourri
+- [WARN] FACTION_STARVED: faction ankou = 6% des options (< 8%) — build associe sous-nourri
+- [WARN] FACTION_DRUID_HEAVY: druides = 33% des options (> 30%)
+
+### broc_03_05 (mist_wanderer, 17 cartes) — 85/100
+- [WARN] LEN_BIAS: longueur 17 hors bias archetype [11, 15, 21]
+- [WARN] RARITY_DRIFT: route chaos: COMMUNE 0.53 vs cible 0.68
+- [WARN] FACTION_STARVED: faction niamh = 6% des options (< 8%) — build associe sous-nourri
+- [WARN] FACTION_STARVED: faction ankou = 7% des options (< 8%) — build associe sous-nourri
+- [WARN] FACTION_DRUID_HEAVY: druides = 32% des options (> 30%)
+
+### broc_06_00 (hidden_sanctuary, 11 cartes) — 85/100
+- [WARN] RARITY_DRIFT: route ordre: RARE 0.00 vs cible 0.20
+- [WARN] RARITY_DRIFT: route liminal: COMMUNE 0.45 vs cible 0.68
+- [WARN] RARITY_DRIFT: route liminal: RARE 0.36 vs cible 0.20
+- [WARN] FACTION_STARVED: faction niamh = 7% des options (< 8%) — build associe sous-nourri
+- [WARN] FACTION_STARVED: faction ankou = 7% des options (< 8%) — build associe sous-nourri
+- [WARN] FACTION_DRUID_HEAVY: druides = 33% des options (> 30%)
 
 ---
 
@@ -120,3 +111,12 @@ p50 = **22 PV** (min -10 / max 46) — cible : vie finale p50 dans [55, 70] => a
 2. Sous quert actuel (+10/CD4), la mort par attrition PV est quasi impossible — confirme le retuning proposé (CD 6, soin 8).
 3. Les 4 builds spécialisés sont identiques en survie tant que les checks sont uniformes — l'expression de build doit venir du `stat_mix` par archétype et du contenu des cartes.
 4. Le Polyvalent (12 pts de stats vs 10) est le plus sûr — aligner les budgets ou biaiser les mix par acte.
+
+## Audit final (Wave 2 — game_design_auditor)
+
+**Verdict : PASS-WITH-NOTES.** Corrections appliquées post-audit : table §5.3 de la spec recalculée
+depuis le modèle EV, red clampé [12,15] (cap DAMAGE_LIFE), champs typés `params` par archétype +
+`anti_degenerescence_params` (consommables par scenario_planner/MOS), enveloppe DANGER_BUDGET du
+validator scalée par danger_modifier (faux positifs éliminés), bible §6.2 bornée par route + §6.3bis
+(schéma carte skeleton étendu), exception « options voilées » documentée, finding « corpus trop doux »
+(attrition EV 22 vs cible 30-45) ajouté aux findings ouverts.

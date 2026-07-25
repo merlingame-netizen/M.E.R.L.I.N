@@ -103,14 +103,21 @@ Contraintes PAR ROUTE (chemin réellement joué) :
 
 | Élément | Contrainte | Vérifié par |
 |---|---|---|
-| Titre | 2-7 mots, ≤ 60 caractères | validator + GBNF |
-| Intro | 5-8 phrases, 2e personne, présent | guardrails LLM 2 |
+| Titre | 2-7 mots, ≤ 60 caractères | validator ✅ + GBNF |
+| Intro | 5-8 phrases, 2e personne, présent | guardrails LLM 2 (runtime) |
 | Hook | 1 phrase sensorielle (odeur/son/texture/lumière) | prompt template |
-| Summary de beat | 8-22 mots | validator |
-| Options | exactement 3 ; verbe infinitif 1 mot ; 3 factions primaires distinctes | validator + GBNF |
-| Effets | ≤ 3 par option ; whitelist bible §5.4 ; caps ±20 rep, +18 heal, -15 dmg | GM + effect engine |
-| Interdits | forbidden words bible §9.4.2 (4e mur, anglicismes, cyber en prose) | guardrails HARD |
-| Répétition | Jaccard < 0.5 vs références et vs cartes du run | guardrails SOFT |
+| Summary de beat | 8-22 mots | validator ✅ |
+| Options | exactement 3 ; verbe infinitif 1 mot ; 3 factions primaires distinctes | validator ✅ + GBNF |
+| Effets | ≤ 3 par option ; whitelist bible §5.4 ; caps ±20 rep, +18 heal, -15 dmg | effect engine (runtime) |
+| Gradient EV (écart ≤ 2 PV-éq, variance croissante) | §3 ci-dessous | **futur** : planner + GM prompt |
+| Act gates checks (red III+, fatal IV-V, spacing) | §5.2 | **futur** : MOS + validator étendu |
+| Interdits | forbidden words bible §9.4.2 (4e mur, anglicismes, cyber en prose) | guardrails HARD (runtime) |
+| Répétition | Jaccard < 0.5 vs références et vs cartes du run | guardrails SOFT (runtime) |
+
+*✅ = enforced aujourd'hui par `validate_scenario_balance.py` sur le corpus.
+« runtime » = enforced en jeu par les guardrails/engine existants. « futur » =
+à câbler (roadmap §6) — le corpus de références ne contient pas encore les
+effets chiffrés ni les checks, ces règles ne sont donc auditables qu'en jeu.*
 
 **Gradient des 3 options** (contrat par carte, aligné UX §5) :
 - **Position fixe** : gauche = prudente, centre = équilibrée, droite = audacieuse
@@ -136,7 +143,10 @@ fixe + bordure du parchemin (calme → craquelée) + 1/2/3 étincelles — jamai
 texte « risqué ».
 
 **Anti-patterns interdits** dans un scénario généré :
-1. Option sans conséquence inférable depuis son verbe
+1. Option sans conséquence inférable depuis son verbe — *exception sanctionnée :
+   les options voilées « ??? » de `mist_wanderer` (30%) et de l'interférence
+   `hide` de Merlin. Le voile est alors une mécanique diégétique contrable
+   (beith révèle, saille détecte), jamais un défaut d'écriture.*
 2. Check caché (glyphe de stat toujours visible face avant)
 3. Info dupliquée HUD + carte
 4. Deux décisions sur une carte (choix + gestion de promesse simultanés)
@@ -192,7 +202,8 @@ comparer « +10 rep korrigans » à « -5 PV » sur une même échelle.
 
 `pass = 50% + stat × 10%` (+ modificateurs de carte ±10-20%).
 Types : white 75% (échec -3/-5 PV, retry-able), contextuel 15% (-7/-9),
-red 8% (-12/-16, jamais retry), fatal 2% (fin de run).
+red 8% (-12/-15, jamais retry — clamp au cap DAMAGE_LIFE §5.4), fatal 2%
+(fin de run).
 **Placement par acte** (25 cartes) : red à partir de l'acte III (1/acte max,
 jamais 2 dans une fenêtre de 3 cartes), fatal actes IV-V uniquement,
 télégraphié (détectable via saille). **Ember rule** : à vie ≤ 15, un fatal
@@ -203,14 +214,20 @@ garde de la tension sans retomber à l'auto-pass.
 ### 5.3 Budget de danger par acte (first-run, stats=1, pass 60%)
 
 Multiplicateurs d'acte [0.6, 0.8, 1.0, 1.3, 1.6] × danger_modifier d'archétype.
+EV dégâts par carte (mult 1.0) = 40% échec × 5.2 PV moyens ≈ 2.1 PV.
 
-| Acte | Dégâts bruts attendus | Soins budget | Net | Vie médiane fin d'acte |
-|---|---:|---:|---:|---:|
-| I | ~8 | +3 | -5 | ~95 |
-| II | ~14 | +6 (shop) | -8 | ~87 |
-| III | ~18 | +6 | -12 | ~75 |
-| IV | ~24 | +8 (shop) | -16 | ~59 |
-| V | ~28 | +8 | -21 | ~38-45 |
+| Acte | Dégâts bruts EV | Soins EV | Net EV cumulé |
+|---|---:|---:|---:|
+| I | ~6 | +4 | -2 |
+| II | ~8 | +12 (shop) | +2* |
+| III | ~11 | +4 | -5 |
+| IV | ~14 | +12 (shop) | -7 |
+| V | ~17 | +4 | -20 |
+
+Total : dégâts bruts ≈ 56 PV (bas de l'enveloppe [55-75]), soins nominaux
+≈ 36 PV. \*Le clamp à 100 (soins perdus à pleine vie, surtout actes I-II) et
+la variance ramènent l'attrition effective à ~30 PV : **vie finale p50
+observée en simulation = 70** (first-run).
 
 Ratio soins/dégâts global ≈ 0.33 (fourchette HoF2 : 0.3-0.4). Cibles de
 mortalité : first-run 15-30%, build spécialisé 5-15%, aucun profil à 0% ni
@@ -278,6 +295,7 @@ Deux outils ferment la boucle :
 | EPIQUE résiduel sur certaines routes | drift ≤ 15 pts sur 68 scénarios | ±15 pts | Acceptable (warn) — surveiller à la prochaine génération |
 | Builds spécialisés statistiquement identiques en survie | écarts < 0.4 pt | expression de build | Le mix de stats par archétype (§1) + le contenu des cartes portent l'expression, pas la survie — appliquer le `stat_mix` au tirage des checks |
 | Polyvalent = build le plus sûr | 10.1% vs 12.5-12.8% | équité | 12 pts de stats vs 10 : aligner les budgets à 12 pts OU biaiser le mix de stats par acte |
+| Corpus trop doux | attrition EV p50 = 22 PV | 30-45 | Les danger_modifiers doux dominent le corpus actuel — corriger à la régénération (plus d'archétypes hard) ou relever les dégâts de base |
 
 ---
 

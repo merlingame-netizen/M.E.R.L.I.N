@@ -143,7 +143,10 @@
     },
     "legendary_start_share": 0.7,
     "climax_rarity": "LEGENDAIRE",
-    "climax_card_type": "MERLIN_DIRECT"
+    "climax_card_type": "MERLIN_DIRECT",
+    "beat_act_sequence_mapping": {
+      "_comment": "Pour un skeleton de N beats (5-10) : prendre les N-1 premieres entrees puis 'boss' en derniere position (clamp scenario_planner.gd). Vocab acte -> CardType : standard=NARRATIVE, shop=SHOP, event=EVENT, boss=MERLIN_DIRECT (const ACT_TYPE_TO_CARDTYPE). Pour les longueurs jouees 11-25, la projection se fait par actes (5 actes egaux, roles §2.1 de la spec)."
+    }
   },
   "balance_model": {
     "exchange_rates_pv_equivalent": {
@@ -174,7 +177,7 @@
       ],
       "red": [
         12,
-        16
+        15
       ],
       "fatal": "fin de run"
     },
@@ -406,6 +409,22 @@
         "sous quert actuel (+10/CD4) la mort par attrition PV est quasi impossible -> confirme le retuning quert",
         "le Polyvalent (12 pts de stats vs 10) est le build le plus sur : biaiser le mix de stats par acte/archetype pour recompenser la specialisation, ou aligner les budgets a 12 pts"
       ]
+    },
+    "anti_degenerescence_params": {
+      "_comment": "Version typee des regles anti_degenerescence (prose ci-dessus) pour scenario_planner/MOS.",
+      "safe_streak_max": 3,
+      "rep_cap_per_card": 20,
+      "rep_cap_per_run_per_faction": 60,
+      "rep_soft_cap": 80,
+      "rep_gain_divisor_above_soft_cap": 2,
+      "heal_cap_per_card": 18,
+      "heal_cap_per_act": 24,
+      "same_stat_streak_max_for_xp": 3,
+      "global_multiplier_cap": 2.0,
+      "essence_gain_max_per_card": 10,
+      "cross_faction_tension_min_share": 0.1,
+      "faction_option_min_share": 0.08,
+      "druides_option_max_share": 0.3
     }
   },
   "deckbuilding_layer": {
@@ -467,7 +486,12 @@
       "merlin_interference_bias": 0,
       "notes": "Archetype d'onboarding. Tension douce, twist contemplatif, aucune carte fatale.",
       "heal_modifier": 1.0,
-      "special": "0 red/fatal (onboarding) ; tension douce"
+      "special": "0 red/fatal (onboarding) ; tension douce",
+      "params": {
+        "no_red_checks": true,
+        "no_fatal_checks": true,
+        "no_interference": true
+      }
     },
     "korrigan_trickery": {
       "name": "La Ruse des Korrigans",
@@ -500,7 +524,11 @@
       "merlin_interference_bias": 1,
       "notes": "Archetype des interferences : Merlin triche +1 slot (theme tromperie). Le marche a toujours une clause invisible.",
       "heal_modifier": 1.0,
-      "special": "interferences Merlin x1.5 ; Merlin Judges 15% -> 25%"
+      "special": "interferences Merlin x1.5 ; Merlin Judges 15% -> 25%",
+      "params": {
+        "interference_multiplier": 1.5,
+        "merlin_judges_share": 0.25
+      }
     },
     "ancient_oak_counsel": {
       "name": "Le Conseil du Chene Ancien",
@@ -533,7 +561,10 @@
       "merlin_interference_bias": 0,
       "notes": "Format long, dialogues. Charge Volonte/Logic : dilemmes de loyaute plutot que dangers physiques.",
       "heal_modifier": 1.0,
-      "special": "echec red = -15 reputation au lieu de PV"
+      "special": "echec red = -15 reputation au lieu de PV",
+      "params": {
+        "red_fail_converts_to_reputation": -15
+      }
     },
     "mist_wanderer": {
       "name": "Le Vagabond de Brume",
@@ -566,7 +597,11 @@
       "merlin_interference_bias": 0,
       "notes": "Egarement -> retrouvailles. Checks Instinct (orientation, survie) domines.",
       "heal_modifier": 1.0,
-      "special": "30% des cartes a options voilees (beith EV x2)"
+      "special": "30% des cartes a options voilees (beith EV x2)",
+      "params": {
+        "veiled_card_share": 0.3,
+        "veiled_counter_rune": "beith"
+      }
     },
     "forest_trial": {
       "name": "L'Epreuve de la Foret",
@@ -600,7 +635,10 @@
       "merlin_interference_bias": 0,
       "notes": "Archetype le plus letal (x1.25). Reserve : ne pas proposer si vie < 40 au moment du pick de titre.",
       "heal_modifier": 0.9,
-      "special": "rampe acte V +20% degats"
+      "special": "rampe acte V +20% degats",
+      "params": {
+        "act5_damage_multiplier": 1.2
+      }
     },
     "forgotten_ritual": {
       "name": "Le Rite Oublie",
@@ -632,7 +670,11 @@
       "merlin_interference_bias": 0,
       "notes": "Format epique (21-25). Sequence rituelle = checks Logic en escalier (DC croissant par etape du rite).",
       "heal_modifier": 1.0,
-      "special": "+1 carte PROMISE garantie ; seul archetype avec fatal possible en acte IV"
+      "special": "+1 carte PROMISE garantie ; seul archetype avec fatal possible en acte IV",
+      "params": {
+        "guaranteed_promise_cards": 1,
+        "fatal_allowed_act4": true
+      }
     },
     "hidden_sanctuary": {
       "name": "Le Sanctuaire Cache",
@@ -665,7 +707,12 @@
       "merlin_interference_bias": 0,
       "notes": "Archetype refuge/repos. A proposer en priorite quand vie <= 40 (pity systemique douce).",
       "heal_modifier": 1.5,
-      "special": "carte repos garantie acte III ; recompense Anam -5"
+      "special": "carte repos garantie acte III ; recompense Anam -5",
+      "params": {
+        "guaranteed_rest_card_act": 3,
+        "anam_end_of_run_delta": -5,
+        "_canal": "anam_end_of_run_delta s'applique au calcul de fin de run (pas un effet de carte — hors whitelist 5.4)"
+      }
     },
     "beast_encounter": {
       "name": "La Bete Cornue",
@@ -698,7 +745,12 @@
       "merlin_interference_bias": 0,
       "notes": "Letal mais avec voie pacifique : la route Empathie (communion) doit rester viable (twist wild_communion).",
       "heal_modifier": 0.75,
-      "special": "+1 red acte III autorise ; 50% des checks = Instinct ; route Empathie (communion) toujours viable"
+      "special": "+1 red acte III autorise ; 50% des checks = Instinct ; route Empathie (communion) toujours viable",
+      "params": {
+        "extra_red_act3_allowed": 1,
+        "instinct_check_share": 0.5,
+        "empathy_route_always_viable": true
+      }
     },
     "druid_lineage": {
       "name": "La Lignee des Druides",
@@ -731,7 +783,11 @@
       "merlin_interference_bias": 0,
       "notes": "Memoire/heritage. Fort potentiel promesses (serments ancestraux) : viser 1-2 cartes PROMISE.",
       "heal_modifier": 1.0,
-      "special": "+1 XP stat par acte (archetype d'apprentissage)"
+      "special": "+1 XP stat par acte (archetype d'apprentissage)",
+      "params": {
+        "bonus_stat_xp_per_act": 1,
+        "_canal": "bonus_stat_xp_per_act s'applique au reducer XP fin d'acte (pas un effet de carte)"
+      }
     },
     "threshold_crossing": {
       "name": "Le Passage des Seuils",
@@ -762,9 +818,14 @@
         "ankou"
       ],
       "merlin_interference_bias": 0,
-      "notes": "Archetype endgame : seul a mettre l'Ankou en primary_faction recurrente. Transformation = le climax change un element persistant (stat, rune, rep).",
+      "notes": "Archetype endgame. La regle LEGENDAIRE dans le dernier 30% est GLOBALE (structure_constraints.legendary_start_share) — pas une exception de cet archetype.",
       "heal_modifier": 1.0,
-      "special": "acte V x1.3 ; LEGENDAIRE autorise des 70% du run ; seul archetype avec ankou en primary_faction recurrente"
+      "special": "acte V x1.3 ; seul archetype avec ankou en primary_faction recurrente ; le climax modifie un element persistant (stat, rune ou rep)",
+      "params": {
+        "act5_damage_multiplier": 1.3,
+        "ankou_recurrent_faction": true,
+        "climax_mutates_persistent_element": true
+      }
     }
   }
 }
