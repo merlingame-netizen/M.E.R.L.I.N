@@ -56,7 +56,8 @@ Menu → lancer la scène de jeu **Brocéliande (Biome 1)** → sélectionner pa
 
 > **Sections additionnelles (post-questionnaire)** : §18 v10.13 Fondations prouvées (R108-R113) ·
 > §19 R114 Montée en gamme · §20 Direction Artistique (R115) · §21 Animations & Juice (R116) ·
-> §22 Audio (R117) · §23 Lisibilité & Accessibilité (R118) · §24 Pipeline Assets & Outillage (R119).
+> §22 Audio (R117) · §23 Lisibilité & Accessibilité (R118) · §24 Pipeline Assets & Outillage (R119) ·
+> §25 Charte des scénarios (R166).
 > (§17 : numéro non attribué — gap historique conservé.)
 
 ---
@@ -856,6 +857,12 @@ Menu → lancer la scène de jeu **Brocéliande (Biome 1)** → sélectionner pa
 - **Échec** : *La Main de Fer* `[Force]` (Force = **tag antagoniste** ici, R41) → aucun requis couvert + sabotage → **échec aggravé** ; **Intégrité -3 · Corruption +0**. _Narr._ : « Tu hausses le ton… le marché éclate de rire, la fiole se change en cendre. "On ne menace pas le Petit Peuple." La nuit te recrache, meurtri. »
 _(à préciser : structure d'une étape/scénario, conditions de fin de run — rounds à venir)_
 
+- **Climax final en deux temps (R166)** : seul le VRAI Climax (dernier beat de la dernière quête,
+  celui qu'exempte déjà la rampe R165) ajoute une passe d'approche avant le jet décisif. Réussite de
+  l'approche donne un avantage au jet décisif (même mécanique que le Coup de Pouce, R164, max des
+  deux faces pré-tirées) ; échec donne un handicap (min des deux). Même moteur 2d6, aucune règle
+  nouvelle. Détail complet : R166 et §25.
+
 ## 3. Deck-building
 - **Modèle** : le deck = **ton répertoire d'actions** (ce que le joueur PEUT faire). On joue des cartes pour répondre aux situations générées.
 - **Nature des cartes** : volontairement **multi-facettes** (action / pouvoir / personnage / fragment) — l'intérêt central est la **combinaison** de cartes pour résoudre une situation.
@@ -934,6 +941,15 @@ _(combos & antagonistes : voir §4 R79 ; génération de cartes : ci-dessus R90)
   - **3 types de fin** : **Accomplissement** (climax atteint ; ton ∝ degré + état final) · **Mort narrative** (Intégrité 0, §7) · **Bascule corrompue** (Corruption max, R64).
   - **Épilogue** : **prose générée par Gemma** selon l'état final + le type de fin, **+ dévoile un fragment du Graal** (méta §8).
   - **Écran de fin (MVP)** : épilogue (typewriter) + **état final** (jauges/Corruption) + bouton **'Continuer' → menu**. _(Écran-seuil onirique riche = post-MVP, R50.)_
+- **Charte des scénarios (§25, R166)** : casting (au moins 1 figure identifiée par quête), envergure
+  du scénario (brève/périple/odyssée, choisie à la sélection) et interventions de Merlin scriptées
+  aux charnières. Détail complet en §25.
+- **Mort-légende, corruption-voie, fins en matrice, climax en duel (R166)** : la mort narrative
+  nourrit désormais la Chronique (épitaphe, écho PNJ, Essence, §8) ; la Corruption devient une VOIE
+  à double tranchant (options et cartes exclusives, prix croissant par palier) ; les fins se lisent
+  en matrice type/Voie/faction (§8) ; le Climax final (dernier beat de la dernière quête) se joue en
+  deux temps, une passe d'approche puis le jet décisif. Reste bref ici : détail complet au journal
+  R166.
 
 ### Exemple de scénario (worked example — R47)
 **« Le Rite sans Fin »** (Chœur des Druides) — ton merveilleux-inquiétant.
@@ -1088,6 +1104,89 @@ _(combos & antagonistes : voir §4 R79 ; génération de cartes : ci-dessus R90)
 
 _(4 factions posées ✅ — à construire : les fiches canon du noyau ~6-8, puis le reste — rounds dédiés)_
 
+### Roster nommé (R166, decision 12) : 10 figures
+Étend R17 (roster tout pré-écrit, injecté en fiches au LLM) : les 10 figures suivantes forment le
+ROSTER NOMMÉ castées par la charte des scénarios (§25.2), distinctes du noyau récurrent (Merlin,
+Arthur, les 4 piliers, ci-dessus). Récurrence cross-run et mémoire dettes/trahisons identiques aux
+piliers (§8). Réparties entre les 2 biomes (forêt/falaises) et quelques figures transversales.
+
+- **L'Ankou** (transversal, hors-faction) : le passeur qui vient chercher ce qui a fini de vivre ;
+  apparaît quand une mort se profile ou se raconte. Voix : posée, sans malice ni pitié, factuelle.
+  Sait/Veut : sait tout ce qui va mourir ; ne veut rien, il recueille. Secret : c'est lui qui inscrit
+  l'épitaphe dans la Chronique et rend un peu d'Essence au voyageur fauché (mort-légende, §8).
+  Tags : Mémoire, Mystère, Sacrifice. Relation : ni ami ni ennemi ; croisé aux morts passées (pool 4
+  ci-dessous) et parfois annoncé avant un Climax dangereux.
+- **La Lavandière de Nuit** (forêt, Créatures & Êtres) : lave d'invisibles linceuls à la fontaine
+  sacrée, la nuit venue. Voix : chantonnante, répétitive (écho du motif de boucle, ci-dessus).
+  Sait/Veut : sait qui va mourir bientôt ; veut de l'aide pour tordre son linge, jamais sans prix.
+  Secret : aider vaut bénédiction (carte de soin), refuser ou tricher vaut malédiction discrète
+  (Corruption). Tags : Nature, Rituel, Vigilance. Relation : neutre à l'arrivée, sensible à la
+  politesse rituelle.
+- **Fañch le Trotteur** (forêt, Créatures & Êtres) : korrigan marchand ambulant, toujours entre deux
+  menhirs, toujours un troc en poche. Voix : rapide, gouailleuse, coupe la parole. Sait/Veut : connaît
+  le prix de tout, ignore la valeur de rien ; veut troquer, jamais donner. Secret : c'est souvent lui
+  qui tient le comptoir du marchand (R164) quand la forêt le pose sur le sentier. Tags : Ruse, Verbe,
+  Instinct. Relation : jovial par défaut ; la dette envers un korrigan ne s'oublie jamais (mémoire
+  ciblée, §8).
+- **Erwan Veilleur** (falaises, Chevalerie déchue) : ancien chevalier de mer devenu gardien d'un phare
+  qui n'éclaire plus personne. Voix : lente, répète des comptes (navires, marées, jours), sa propre
+  boucle de chevalier déchu. Sait/Veut : croit encore veiller sur un convoi sombré il y a longtemps ;
+  veut qu'on confirme que son compte est juste. Secret : le vrai naufrage, c'est le sien.
+  Tags : Vigilance, Gloire perdue, Mémoire. Relation : distant, hébété (R14), s'anime si on parle de
+  son convoi.
+- **Dame Aveline aux Corbeaux** (forêt, Druides) : druidesse solitaire, cercle de corbeaux apprivoisés,
+  vit trop près d'un bosquet gangrené. Voix : mesurée, savante, mais trouée (glitch de mémoire, R12)
+  qu'elle comble d'improvisations assurées. Sait/Veut : connaît les rites d'équilibre ; veut sauver son
+  bosquet avant qu'il cède à la Corruption. Secret : elle a déjà accepté un pacte pour le retarder,
+  elle glisse elle-même vers la Voie corrompue. Tags : Rituel, Équilibre, Sacrifice. Relation :
+  méfiante comme tout Druide, franchement reconnaissante si on l'aide contre son bosquet.
+- **Le Chevalier Sans Nom** (transversal, Chevalerie déchue) : armure cabossée sans blason, erre entre
+  forêt et falaises depuis toujours. Voix : formelle, des serments récités par cœur, jamais un prénom
+  donné. Sait/Veut : a oublié sa quête d'origine ; veut qu'on l'aide à s'en souvenir. Secret : son nom
+  fut effacé le jour où il a failli à son serment, indice discret sur ce qui guette au Graal mal
+  atteint (préfigure R44, comme Arthur). Tags : Honneur/serment, Peur, Fer. Relation : hébété,
+  s'illumine un instant si on tient une promesse devant lui.
+- **Le Passeur de Brumes** (forêt, Créatures & Êtres) : fait traverser la tourbière contre un prix qui
+  n'est jamais celui annoncé. Voix : chuchotée, sous-entendus, phrases inachevées. Sait/Veut : connaît
+  tous les chemins sûrs ; veut collectionner les dettes plus que les biens. Secret : chaque passage
+  impayé nourrit une Promesse qui reviendra (R164). Tags : Instinct, Mystère, Pacte/dette. Relation :
+  obligeant en apparence, créancier patient en vérité.
+- **Marc'harit la Noyée** (falaises, Corrompus) : silhouette qui chante depuis le ressac, reconnaissable
+  par bribes à ce qu'elle fut. Voix : douce, mélodique, adoucie par l'eau, la tentation faite chant
+  (écho du Compagnon Perdu, R84). Sait/Veut : veut qu'on la rejoigne dans les vagues, croit sincèrement
+  offrir le repos. Secret : une étincelle d'elle-même résiste encore sous le chant, comme le Compagnon.
+  Tags : Dissolution, Murmure, Vide. Relation : tentatrice dans la détresse, jamais agressive, toujours
+  patiente.
+- **Kado le Cordier** (falaises, humain perdu, hors-faction) : répare des filets qui ne prennent plus
+  rien depuis que la mer a changé. Voix : bourrue mais honnête, du sel dans chaque mot. Sait/Veut : sait
+  lire le vent et les navires ; veut qu'on lui rapporte des nouvelles du large. Secret : il ne se
+  souvient plus d'être arrivé ici, ni d'en être jamais reparti (indice ténu de la simulation, jamais
+  frontal). Tags : Endurance, Franchise, Vision. Relation : chaleureux avec qui rapporte une nouvelle,
+  froid avec qui ment.
+- **Ordalc'h** (forêt, Druides) : sentinelle muette du plus vieux menhir, laisse le silence répondre.
+  Voix : rare, brève, chaque mot pèse (contraste voulu avec le Chœur bavard). Sait/Veut : garde une
+  mémoire des rites plus ancienne que celle du Chœur ; ne veut qu'une chose, qu'on n'oublie pas de
+  saluer la pierre. Secret : il fut le premier gardien, avant même le Chœur, et le premier à avoir
+  glitché, en silence. Tags : Mémoire, Vigilance, Nature. Relation : hostile au bruit, favorable au
+  respect silencieux.
+
+### Les 4 pools de Voyageurs (R166, decision 8)
+Tout PNJ croisé en Rencontre (ou casté par §25.2) appartient à l'un de ces 4 pools :
+1. **Petit peuple du folklore** : le Roster nommé ci-dessus (korrigans, lavandière, être englouti…)
+   plus des figures anonymes générées à la volée par le LLM (Créatures & Êtres, R13).
+2. **Humains perdus** : voyageurs égarés dans la simulation, sans lien de faction (Kado le Cordier
+   ci-dessus, plus des figures anonymes de passage).
+3. **Émissaires des 4 factions** : le PILIER de la faction tirée pour le run (Chœur/Être/Chevalier/
+   Compagnon, plus Enfant wildcard, R127) EST l'émissaire de sa faction ; pas de figure supplémentaire
+   à caster, le pilier suffit.
+4. **Échos des anciens runs du joueur** : PROCÉDURAUX, pas pré-écrits ; silhouettes composées depuis
+   `MerlinChronicle` (une mort passée, une Promesse tenue ou trahie, une victoire) ; alimentent
+   directement la mort-légende et la mémoire dettes/trahisons (§8).
+
+Le tirage d'un beat de Rencontre pioche dans un de ces 4 pools ; l'ordre de priorité existant reste
+INCHANGÉ (pilier prioritaire à la 1ère Rencontre, R127 Wave D ; marchand dès la 2e, R164) : la charte
+ajoute la taxonomie, pas une nouvelle règle de tirage.
+
 ## 7. Ressources & Économie
 - **Deux jauges** :
   - **Intégrité** — survie/cohésion du joueur ; les dangers la réduisent.
@@ -1135,6 +1234,44 @@ _(à approfondir : tuning playtest, économie cross-run — rounds à venir)_
     - **Corruption totale** : la Corruption **enfante SON rêveur** — **l'Enfant/IA rivale naît à ta place** (R85), l'autre cycle l'emporte.
     - _(+ fin(s) cachée(s) possibles.)_
   - **New Game+ éclairé** : on rejoue **conscient** — Merlin **moins muselé**, PNJ qui te **reconnaissent**, **indices méta assumés** ; relecture transformée du monde.
+
+- **Mort-légende (R166, decision 1)** : la mort narrative (§7 R69) nourrit désormais la légende au
+  lieu de l'effacer. La Chronique (`MerlinChronicle`) gagne une ÉPITAPHE par mort (1-2 lignes générées
+  à l'épilogue, aux côtés de `last_end_type`/`last_scenario_title`) ; les figures du Roster (§6)
+  peuvent ÉVOQUER une mort passée en Rencontre (pool 4 de Voyageurs, §6) ; un petit gain d'Essence
+  (ci-dessous) est accordé MÊME en mourant, jamais nul. Le re-durcissement de la rampe R165 (limite
+  structurelle du levier DC seul, déjà documentée) ATTEND cette vague (W-MORT, §19) : la mort doit
+  devenir du contenu avant de coûter plus cher en fréquence.
+- **Essence (R166)** : nouvelle monnaie MÉTA, cross-run et persistante, à la différence du Gwenneg
+  (R164, in-run, remis à zéro chaque run). Gagnée par la PERFORMANCE (accomplissement, degrés
+  éclatants, fragments du Graal) et par la MORT (montant réduit mais jamais nul, decision 1). Seule
+  monnaie qui alimente l'arbre méta ci-dessous et les Ascensions.
+- **Arbre méta MIXTE (R166, decision 6)** : 5 branches, une par action (Observer/Agir/Combattre/
+  Révéler/Parler, R158). Chaque branche ALTERNE puissance douce (+talent, +bande de dé, cf. les
+  greffes R137) et nouvelles OPTIONS (type de greffe inédit, option de dialogue du verbe, marchandage
+  spécial chez le marchand R164). Payé en Essence ; persiste cross-run comme les déblocages de cartes
+  (R43).
+- **Graal à paliers révélés (R166, decision 5)** : le total canonique est `GRAAL_TOTAL=12` (déjà
+  implémenté, `MerlinChronicle`) ; AMENDE R80 (l'objectif « ~20-30 fragments » ci-dessus est abrogé,
+  12 devient la référence unique, alignée code). Tous les 4 fragments (4/8/12), un SOUVENIR de Merlin
+  se débloque : courte scène au menu (voix+texte, cohérent R122). Au 12e fragment, la VRAIE FIN
+  (fusion avec Merlin, capstone R44) devient accessible via un RUN SPÉCIAL depuis le menu.
+- **Fins en matrice (R166, decision 3)** : les 3 types de fin (Accomplissement/Mort/Corrompu, R69)
+  croisés avec la VOIE de la Carte Destin (`destiny_tier`, déjà implémenté : Commune/Rare/Épique/
+  Mythique) et la FACTION du run (`_run_thread`, R127) forment une matrice de combinaisons ; la
+  Chronique COLLECTIONNE celles déjà découvertes (étend les CHRONIQUES v1 de R151). L'objectif de
+  rejouabilité devient aussi horizontal (varier sa Voie et sa faction), pas seulement vertical
+  (accomplir).
+- **Mémoire PNJ ciblée : dettes et trahisons (R166, decision 7)** : étend R27/R42 (réputation à 3
+  états, PAR FACTION) d'une couche PAR FIGURE (Roster §6 plus piliers). Chaque Promesse (R91/R164)
+  tenue ou trahie envers une figure précise est mémorisée cross-run (champs additifs
+  `MerlinChronicle`, sur le modèle de `last_pilier`). Trahie = hostilité PERSISTANTE (prix plus hauts
+  chez le marchand lié à cette figure, options fermées) ; tenue = faveur (rabais, option bonus) : la
+  mémoire porte désormais sur le NOM, pas seulement la faction.
+- **Ascensions (R166, decision 9)** : débloquées APRÈS l'arbre méta (Essence suffisante investie),
+  paliers de difficulté OPTIONNELS choisis au LANCEMENT du run (même geste que le choix de biome,
+  R132), Essence accrue en récompense. Premier candidat pour dépasser la limite structurelle du
+  levier DC seul (R165 : 15-18% de mortalité hors bande de ressenti au levier DC seul).
 
 ## 9. Génération LLM (Gemma 4)
 **Pipeline (CPU-aware)** :
@@ -1204,6 +1341,13 @@ _(à approfondir : tuning playtest, économie cross-run — rounds à venir)_
 - **Sélection** : `{"scenarios":[ {"title":…,"pitch":…} ×3 ]}` (réutilise `string`/`ws`).
 - **Squelette** : `{"title":…,"synopsis":…,"beats":[{"n":int,"summary":…,"type":type,"difficulte":diff}…]}` (réutilise `string`/`diff`/`type`).
 - **Garde-fous (interdits)** : jamais briser le 4e mur · pas d'anglicismes/anachronismes · rester dans Brocéliande/lore · respecter les fiches PNJ.
+
+**Bibliothèque de scénarios & contrôle qualité (R166, §25)** : au-delà de la génération live, une
+bibliothèque de scénarios pré-écrits (même modèle de données §5/§25 : squelette, beats, `figure`
+castée, `merlin_slot`) peut alimenter la sélection. Tout scénario de bibliothèque passe
+`tools/scenario_qc.py` avant de rejoindre le pool (gate dur de commit, §25.5) : structure et pool de
+tags, longueurs, ton, zéro cadratin, casting minimal, envergure déclarée, `merlin_slot` aux seules
+charnières, `figure` valide.
 
 **Robustesse & validation (R61)** :
 - **Validation sémantique + auto-réparation** : au-delà du GBNF (forme), le code vérifie le SENS (tags non vides, difficulté 1-3, longueurs mini) → **répare** (clamp, valeur par défaut) ou **régénère** si irréparable.
@@ -1587,6 +1731,22 @@ pastille). **Gates : validate 0 · smoke 6/6 scènes · soak 200/200 · autoplay
   chaotic 47.4/22.7 · corrompu 47.0/16.7 — **gate 4/4 OK** · tag_ignorant 81/68 (bot adversarial,
   sans critère). Pools tags Epreuve/Dilemme élargis à 6 (couverture pleine atteignable).
 
+**Vagues de l'audit studio (post-v10.19, numérotation W indépendante des versions)** : reprise du
+jeu après mesure et tuning, cadence « vague W0, W1... » (R164/R165). Ordre révisé (2026-07-28,
+vague W-CANON) :
+
+| Vague | Objectif | Statut |
+|---|---|---|
+| W0 Économie in-run | Gwenneg, marchand garanti, Promesse, Coup de Pouce | LIVRÉE (R164) |
+| W1 Rampe de difficulté | DC en dents de scie par quête | LIVRÉE (R165) |
+| W2 Présentation | polish visuel/UX (reste à spécifier) | à venir |
+| W3 Voix de Merlin | renforcement voix/dialogue de Merlin | à venir |
+| W-MORT Mort-légende | épitaphe Chronique, échos PNJ, Essence à la mort, re-calibrage rampe (§8/R166) | à venir |
+| W4 Forge, bibliothèque, QC | Charte des scénarios (§25), `tools/scenario_qc.py`, bibliothèque de scénarios | à venir |
+| W5 Dialogues PNJ | mémoire dettes/trahisons ciblée (§8), Roster nommé (§6) approfondi en dialogues | à venir |
+| W6 Arbre méta, Graal | 5 branches mixtes (§8), Graal à paliers révélés et fin secrète (§8) | à venir |
+| W7 Ascensions, climax duel, corruption-voie | paliers de difficulté optionnels, Climax en deux temps, Corruption à double tranchant (§25, journal R166) | à venir |
+
 ---
 
 ## §20 — R115 · Direction Artistique (canon)
@@ -1830,6 +1990,115 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
+---
+
+## §25 · R166 · Charte des scénarios (canon)
+
+> Cœur de la vague W-CANON (16 décisions verrouillées, 4 rounds AskUserQuestion, 2026-07-28).
+> Étend §5 (scénarios), §6 (roster/piliers), §9 (génération), §24 (pipeline/QC). Rien ci-dessous ne
+> contredit le canon MVP (§16) ni R1-R165 ; c'est un CHANTIER DE DESIGN, l'implémentation suit §19.
+
+### 25.1 Modèle de données étendu
+- **beat** (additif, cf. §5 R47 / §9 R104) :
+  - `figure` (optionnel) : clé de casting du beat. Une clé PILIER du run (`choeur`/`etre`/`chevalier`/
+    `compagnon`/`enfant`, R127) OU un id du Roster nommé (§6, ex. `ankou`, `lavandiere`, `fanch`) OU
+    `marchand` (R164) OU `creancier` (le beat `debt_reclamation`, R164). Absent = beat sans figure
+    identifiée (Exploration solitaire, Climax générique).
+  - `merlin_slot` (optionnel) : `transition` (charnière entre deux quêtes) ou `veille_climax` (juste
+    avant le beat Climax de la DERNIÈRE quête). Porte la réplique scriptée de Merlin, cf. 25.4.
+- **scenario** : `envergure` ∈ {`breve`, `periple`, `odyssee`} ; tirée à la SÉLECTION, conservée toute
+  la run (comme `biome`, R108/R132), fixe le nombre de quêtes (25.3).
+- **entrée de sélection** (les 3 parchemins, §5 R56) : `{title, pitch, envergure}` ; `envergure`
+  s'affiche en badge lisible sur le parchemin (un mot, jamais un chiffre cru, §23 ÉVIDENT).
+
+### 25.2 Casting
+- Chaque QUÊTE (pas chaque beat) porte au moins un beat avec `figure` renseignée : aucune quête ne
+  défile sans visage identifié (decision 11).
+- Le PILIER du run apparaît au moins une fois PAR RUN : garantie déjà EN PLACE (offrande à la 1ère
+  Rencontre, R127 Wave D, plus retour tardif, R131) ; la charte énonce cette garantie comme règle de
+  casting, elle ne réinvente rien.
+- Pas de répétition d'une même figure dans un run, SAUF le pilier (revient PAR NATURE, R131) et le
+  créancier (revient par la Promesse, R164) : les deux seules figures à réapparition contractuelle.
+- Tirage : même RNG de run que le draft ou l'offrande de pilier (déterministe, jamais de RNG
+  parallèle, cohérent R164).
+- Articulation mémoire (§8, decision 7) : quand une figure du Roster est castée sur un beat de
+  Rencontre ou de Dilemme, le code consulte sa fiche de dette/trahison cross-run et colore le ton
+  et les options (prix, portes fermées ou ouvertes).
+
+### 25.3 Envergure
+- Trois tiers, choisis à la sélection : **brève** = 1 quête · **périple** = 2-3 quêtes (comportement
+  ACTUEL R120, inchangé) · **odyssée** = 4 quêtes (NOUVEAU, à calibrer au soak lors de
+  l'implémentation, decision 15).
+- Garantie de sélection : les 3 scénarios proposés couvrent TOUJOURS les 3 tiers, un de chaque,
+  jamais deux pareils ; étend la diversité déjà garantie par `SEL_FALLBACK_BY_BIOME` (R153).
+- L'envergure porte sur le NOMBRE de quêtes, pas leur longueur : chaque quête reste 2-5 beats (R120
+  inchangé).
+
+### 25.4 Interventions de Merlin
+- Deux slots SCRIPTÉS écrits par la forge au squelette (`merlin_slot`), jamais improvisés en jeu :
+  **transition** (charnière entre deux quêtes, peut enrichir l'interstitiel existant, R111) et
+  **veille_climax** (juste avant le Climax de la dernière quête, celui-là même qu'exempte déjà la
+  rampe R165).
+- Plus la VOIX ÉVÉNEMENTIELLE (non scriptée, déclenchée par seuil) : franchissement d'un palier de
+  Corruption (R75), série d'échecs à momentum ≤ -2 (`merlin_run.momentum`, R146), fin d'une quête
+  intermédiaire (pas la dernière).
+- CAP GLOBAL : 2-3 interventions par RUN, toutes sources confondues (scriptées et événementielles) ;
+  étend le cap 1/run de R131/R136 à la mesure de la charte complète. Jamais pendant la frappe de
+  prose (single-flight, R110) ni pendant la résolution (R112/R128) : Merlin attend son tour.
+
+### 25.5 Contrôle qualité (gate dur)
+`tools/scenario_qc.py` (NOUVEAU, decision 16) : passe obligatoire sur tout scénario de bibliothèque
+avant commit (cf. §9, §24). Vérifie :
+- **Structure** : beats conformes à l'enum fermé (5, R68) plus mutations connues (`debt_reclamation`,
+  `variant_type`, R120/R164) ; `required_tags` puisés dans le pool autorisé (cœur curé ~25+, R81,
+  cf. R120/R137 pour la whitelist du jeu réel).
+- **Longueurs** : narration 2-4 phrases (R101), pitch 2-3 lignes (R56), synopsis 2-3 phrases (R101).
+- **Ton** (§13) : zéro anglicisme/anachronisme, zéro bris du 4e mur (réutilise le filtre anti-dérive
+  R61, hors-ligne).
+- **Zéro cadratin** (R157) plus accents FR corrects (`repair_accents`, R157) sur tout texte joueur.
+- **Casting minimal** : au moins 1 `figure` par quête (25.2).
+- **Envergure déclarée** conforme au nombre RÉEL de quêtes du squelette (25.3).
+- **`merlin_slot`** posé UNIQUEMENT aux charnières autorisées (`transition`/`veille_climax`, jamais
+  en plein beat).
+- **`figure` valide** : appartient au Roster canon (§6), aux clés pilier (§6), ou à
+  `marchand`/`creancier` (R164) ; jamais un nom halluciné.
+Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de changement »).
+
+- **R166 : CHARTE NARRATIVE COMPLÈTE, scénarios/mort/corruption/méta (2026-07-28, vague W-CANON, 16
+  décisions verrouillées user en 4 rounds AskUserQuestion)** : (1) CHARTE DES SCÉNARIOS (§25, cœur de
+  la vague) : casting (≥1 figure par quête, pilier ≥1/run déjà garanti R127/R131, zéro répétition
+  hors pilier/créancier), 3 envergures (brève 1 quête, périple 2-3 INCHANGÉ, odyssée 4 NOUVELLE à
+  calibrer), 2 `merlin_slot` scriptés (transition, veille_climax) plus voix événementielle (seuils
+  Corruption, momentum ≤ -2, fin de quête intermédiaire), cap global 2-3/run, gate dur
+  `tools/scenario_qc.py` (structure, pool de tags, longueurs, ton, zéro cadratin, casting, envergure,
+  `merlin_slot`, `figure` valide). (2) MORT-LÉGENDE (§8) : épitaphe dans la Chronique, échos des
+  figures du Roster sur les morts passées (pool 4 de Voyageurs, §6), Essence gagnée MÊME en mourant.
+  Le re-durcissement de la rampe R165 ATTEND cette vague (W-MORT, §19) : mourir doit devenir du
+  contenu avant de coûter plus cher en fréquence. (3) CORRUPTION-VOIE : la Corruption devient une VOIE
+  à double tranchant, cartes et options EXCLUSIVES aux corrompus, chaque palier coûte davantage
+  (glitch renforcé, hostilité des PNJ, soin plus cher) ; câblage mécanique en implémentation (post
+  bible, roadmap §19). (4) FINS EN MATRICE : type (Accomplissement/Mort/Corrompu, R69) fois Voie
+  (`destiny_tier`, déjà codé) fois faction du run (`_run_thread`, R127) ; la Chronique collectionne les
+  combinaisons découvertes (§8). (5) CLIMAX EN DUEL : le VRAI Climax final (celui qu'exempte déjà la
+  rampe R165) se joue en deux temps, une passe d'approche puis le jet décisif ; réussite de
+  l'approche donne un avantage au décisif (même mécanique que le Coup de Pouce, R164, max des deux
+  faces pré-tirées), échec donne un handicap (min des deux) ; même moteur 2d6, zéro règle nouvelle.
+  (6) GRAAL À PALIERS : réconcilie R80 (« ~20-30 fragments », ABROGÉ) avec `GRAAL_TOTAL=12` déjà codé
+  (`MerlinChronicle`) ; un souvenir de Merlin se débloque tous les 4 fragments (4/8/12) ; au 12e, la
+  vraie fin (fusion avec Merlin, capstone R44) devient accessible via un run spécial. (7) ARBRE MÉTA
+  MIXTE : 5 branches (Observer/Agir/Combattre/Révéler/Parler, R158), chaque branche alterne puissance
+  douce et nouvelles options, payé en ESSENCE (NOUVELLE monnaie méta, cross-run, distincte du Gwenneg
+  in-run R164, gagnée par performance ET par la mort). (8) MÉMOIRE PNJ CIBLÉE : dettes et trahisons
+  PAR FIGURE (Roster §6 plus piliers), étend la réputation par faction (R42) d'une couche nominative.
+  (9) ASCENSIONS : paliers de difficulté optionnels choisis au lancement (comme le biome, R132),
+  APRÈS l'arbre méta, Essence accrue ; candidat naturel pour dépasser la limite structurelle du
+  levier DC seul documentée en R165 (15-18% de mortalité hors bande de ressenti). (10) ROSTER NOMMÉ
+  (§6, 10 figures : Ankou, Lavandière de Nuit, Fañch le Trotteur, Erwan Veilleur, Dame Aveline aux
+  Corbeaux, Chevalier Sans Nom, Passeur de Brumes, Marc'harit la Noyée, Kado le Cordier, Ordalc'h)
+  plus 4 POOLS DE VOYAGEURS (petit peuple/Roster, humains perdus, émissaires de faction = piliers,
+  échos procéduraux des runs passés). Rien ci-dessus ne contredit le canon MVP (§16) ni R108-R165 :
+  cette vague est un CHANTIER DE DESIGN, l'implémentation suit la roadmap révisée §19 (W2 à W7).
+
 - **R165 : RAMPE DE DIFFICULTE PAR QUETE (DC, dents de scie ; 2026-07-27, vague W1 de l'audit studio)** :
   la courbe plate (diff 2 partout) est remplacée par une rampe DETERMINISTE sur le DC seul :
   dc_effectif = DC_BY_DIFF[difficulte] + dc_ramp_bonus(beat), avec dc_ramp_bonus = PER_QUEST(1) x index
@@ -1879,6 +2148,16 @@ tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à 
   interactive probe_economie_ui PASS (14+ invariants, zéro softlock, leçon R159) · smoke Game+Menu ·
   soak 100 economie ON : 4 bandes IN (échec 4.5 / partiel 34.0 / réussite 50.2 / éclatante 11.3),
   corruption/run 5.50 IN, Coup de Pouce exercé 64x, 0 hors-pool, baseline sans économie inchangée.
+  Complément (2026-07-28, fusion de doublon) : deux justifications avaient été perdues à la fusion
+  d'un doublon de cette entrée. (a) `_maybe_swap_variant` NE PEUT PAS être réutilisé pour la
+  réclamation de dette : il ne s'arme que sur les beats à `variant_type` (~50% des quêtes, k≥4
+  seulement, R120) et se déclenche sur `last_degree` (la PERFORMANCE du beat précédent), alors qu'une
+  dette doit expirer sur son PROPRE calendrier (`beats_remaining`, indépendant du degré) ; d'où
+  `_maybe_mutate_debt_reclamation`, une fonction JUMELLE mais distincte. (b) Le barème de revente
+  (`SELL_ENABLED`, `merlin_game.gd`) est FIXÉ dès sa mise en service : Commune 2, Rare 4, Épique 7
+  (moitié du prix d'achat R164, Mythique non revendable comme non vendable à l'achat) ; INERTE en V1
+  car aucune source de carte vendable n'existe dans le flow actuel, rallumable dès qu'une telle
+  source apparaîtra (arbre méta §8, cartes-souvenir R90).
 
 - **R163 : MUSIQUE DE GAMEPLAY PAR ECHANTILLONS REELS (backend SF2, 2026-07-15, retour ecoute)** : le rendu
   physical-modeling de R162 sonnait encore « trop digital, il faut de vrais instruments ». melody_forge gagne un
