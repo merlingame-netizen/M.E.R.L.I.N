@@ -1830,50 +1830,26 @@ Game design → Wave 1 (game_designer + ux_flow + game_playtester) puis Wave 2 (
 4 piliers §23). Contenu → art_direction → content_card_writer → merlin_guardian. Le Game Director
 tranche les ambiguïtés créatives ; les piliers IMMUABLES (§1) escaladent à l'utilisateur.
 
-- **R164 : ECONOMIE DE RUN V1, le Gwenneg et la Promesse (2026-07-20)** : le run gagne une economie
-  MARCHANDE, decidee par 16 arbitrages utilisateur et durcie par une cascade design + audit qui a
-  VERIFIE le code. **Identite amendee** (Quickstart, §7) : le jeu garde **2 jauges de SURVIE**
-  (Integrite, Corruption) et y ajoute **1 monnaie de run**, le **Gwenneg**, qui n'est pas une jauge
-  (elle ne met jamais la survie en jeu, elle repart a zero chaque run).
-  **Monnaie hybride** : le Gwenneg paie l'ordinaire ; le Petit Peuple et les gros marches n'acceptent
-  QUE l'immateriel (un nom, une memoire), paye en **Promesse** (reutilise R91 : engagement suivi par
-  le jeu, tenue = faveur, trahie = Corruption + hostilite ; « dette » reste le mot d'ambiance).
-  **Gains** : echec 0, partiel 1, reussite 2, eclatante 4 ; butin d'Exploration 1d4 a 60% sur beat
-  reussi. **Revente HORS SCOPE V1** (drapeaux `MerlinGame.SELL_ENABLED` et
-  `probe_soak.SELL_ENABLED_MIRROR` a false, rallumables ENSEMBLE) : le levier n'a aucune source reelle,
-  car le draft greffe des bonus sur les ACTIONS et ne produit jamais de carte-trait autonome
-  (`add_card_to_deck()` n'est appele que par tools/probe_draft.gd). Le code et le bareme restent en
-  place, inertes (Commune 2, Rare 4, Epique 7 ; JAMAIS les 16 cartes canon de depart, JAMAIS une greffe
-  posee dont le corr_cost est deja consomme, Mythique non vendable R52). Environ 20-25 Gwenneg par run :
-  la rarete est voulue, jamais l'abondance.
-  **Prix** : information 3 (cap 1/quete), soin Integrite +2 = 6 (cap DUR 2/run), purge Corruption -1
-  = 8 (cap DUR 1/run, **exclusive aux marchands du Choeur des Druides** : §3/§6 reservent la
-  purification aux Druides comme contre-poids aux tentateurs, un tentateur ne peut pas etre son
-  propre remede), greffe/carte 5/9/15 selon rarete.
-  **Protections §K (le coeur de la regle)** : (1) l'information revele la NATURE et le niveau du beat
-  suivant, JAMAIS les tags exacts requis, car COVER_PER_TAG=3 est le plus gros multiplicateur du
-  moteur 2d6 et vendre des tags revient a vendre de la reussite ; (2) le coup de pouce au jet n'est
-  JAMAIS achetable en Gwenneg (paye en Promesse, cap 1/quete) et prend la forme d'un **avantage**
-  (2 sommes 2d6 pre-tirees, garder la meilleure) et non d'un +N additif, car le precedent
-  ROLL_BONUS_DEFAULT reduit de 2 a 1 prouve qu'un levier plat stacke avec skill_mod + graft_bonus
-  fait franchir le plafond eclatante au Climax.
-  **Promesse, mecanique** : champ `pending_debts` dedie (1 active max), `beats_remaining` tire 2-4,
-  decremente dans `advance_beat()` et **JAMAIS couple a last_degree** ; a echeance, mutation in-place
-  du prochain beat Rencontre/Epreuve en « Le creancier revient » ; si aucun beat eligible n'arrive,
-  reglement FORCE a l'epilogue. Interdiction explicite de reutiliser `_maybe_swap_variant` : verifie,
-  il ne s'arme que sur ~50% des quetes et se declenche sur la performance, pas sur l'echeance, donc
-  la dette expirerait en silence. **Priorite stricte sur un beat Rencontre**, une seule prise :
-  reclamation > offrande de pilier > marchand ordinaire (sinon course swap_zone, classe de bug R159).
-  **UX** : bourse et dette logees dans les conteneurs `sp_l`/`sp_r` DEJA presents autour du fil des
-  beats (zero zone nouvelle, R136 intact), bourse en GOLD, dette en GOLD_DARK (jamais violet, reserve
-  a la Corruption), cachees a zero ; noeud de reclamation **revele** sur le fil des beats (un piege
-  differe qu'on voit venir est plus lisible qu'un piege invisible) ; achat en Gwenneg = 1 geste,
-  achat en Promesse = 2 gestes ; le mot « Gwenneg » ne parait pas sur le HUD.
-  **Gate elargi (prerequis de merge)** : `probe_soak.gd` DOIT simuler une politique d'achat par
-  archetype et tourner avec/sans economie a seeds identiques ; les 4 bandes de degre, la mortalite
-  par archetype et les fins corrompues doivent rester en bande. Sans cela le harnais est aveugle sur
-  la feature, les seuils de mortalite ayant ete calibres sans aucune source de soin achetable.
-  Hors scope V1, reporte : arbre de talent meta, deblocage de cartes du pool, boutique Chroniques.
+- **R165 : RAMPE DE DIFFICULTE PAR QUETE (DC, dents de scie ; 2026-07-27, vague W1 de l'audit studio)** :
+  la courbe plate (diff 2 partout) est remplacée par une rampe DETERMINISTE sur le DC seul :
+  dc_effectif = DC_BY_DIFF[difficulte] + dc_ramp_bonus(beat), avec dc_ramp_bonus = PER_QUEST(1) x index
+  de quête, +CLIMAX_BUMP(1) si le beat est un Climax de quête, plafond CEILING=12, et le VRAI Climax
+  final (difficulte 3) EXEMPT de toute rampe (il garde son DC 12 historique, zéro stacking). Dents de
+  scie obtenues : 6 | 9,10 | 10,10,10,11 | 11,11 | 12. La difficulté de composition (1/2/3) reste
+  INTACTE et pilote seule REQ_TOTAL_BY_DIFF (le nombre de tags requis ne bouge jamais, §F préservé) ;
+  resolve() gagne un paramètre optionnel dc_bonus (défaut 0, call-sites legacy intacts) ; le bonus est
+  figé dans la situation (situ.dc_bonus) et lu par preview, résolution et soak depuis le même champ
+  (R120). REMPLACE l'élastique effective_difficulty (durcissement par compte de greffes), supprimé :
+  la montée du danger suit désormais le RECIT, pas le build. Calibrage MESURE (soak 100, économie ON) :
+  palier retenu (1,1) = mortalité 11,1% (bande dure 10-25), échec 7,8% IN, éclatante 9,6% IN,
+  partiel/réussite à <1 pt des bandes (non-bloquant), 53,8% des morts dans le DERNIER tiers (la mort
+  arrive au bon moment du récit). Paliers rejetés sur mesure : (2,1) mortalité 16,7% mais échec 11,5%
+  et réussite 39,6% (ressenti cassé) ; (1,2) climax-lourd 9,7% sous bande ET morts non concentrées aux
+  climax (on y arrive préparé : c'est l'usure des beats ordinaires qui tue). LIMITE STRUCTURELLE
+  documentée : le levier DC seul ne peut pas atteindre 15-18% de mortalité sans casser les bandes de
+  ressenti ; le re-durcissement d'un cran est PLANIFIE apres la vague mort-legende (quand mourir
+  devient du contenu, la letalite coute moins cher en frustration). Nouvelles mesures soak : DC
+  effectif moyen et mortalité par tiers de run.
 
 - **R164 : ECONOMIE IN-RUN V1 (Gwenneg, marchand garanti, Promesse, Coup de Pouce ; 2026-07-27, vague W0
   de l'audit studio)** : le jeu garde ses 2 jauges de SURVIE (Intégrité, Corruption) et gagne 1 MONNAIE de

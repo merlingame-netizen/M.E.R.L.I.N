@@ -275,14 +275,24 @@ static func pool_display_list(pool_info: Dictionary) -> Array:
 	return out
 
 
-## v1.0-V4a (GD-32-B, contre-pression §E) — difficulté EFFECTIVE d'un beat : tout beat de la
-## quête 3 (index 2) passe à 3 requis (composition 2+1 via REQ_*_BY_DIFF) dès que le build porte
-## ≥ 3 greffes — la couverture pleine retombe là où le récit culmine. Statique pur (miroir probe).
-static func effective_difficulty(beat: Dictionary, total_grafts: int) -> int:
-	var d: int = int(beat.get("difficulte", 1))
-	if int(beat.get("quest", 0)) >= 2 and total_grafts >= 3:
-		d = maxi(d, 3)
-	return d
+## v2-W1 (BIBLE R165) — rampe de difficulté par quête/climax : dc_ramp_bonus AJOUTE au DC de
+## résolution SEUL (DC_BY_DIFF[beat.difficulte] + dc_ramp_bonus(beat)) — la COMPOSITION des requis
+## (REQ_TOTAL_BY_DIFF/REQ_GAP_BY_DIFF) reste pilotée par beat.difficulte BRUT, jamais mutée ici
+## (remplace effective_difficulty, dont le rôle de muter la composition a disparu). Le VRAI Climax
+## final (difficulte==3) est EXEMPT : il reste au plafond historique DC=12, zéro stacking.
+const DC_RAMP_PER_QUEST: int = 1
+const DC_RAMP_CLIMAX_BUMP: int = 1
+const DC_RAMP_CEILING: int = 12   # = MerlinResolution.DC_BY_DIFF[3], garde-fou
+
+static func dc_ramp_bonus(beat: Dictionary) -> int:
+	var diff: int = int(beat.get("difficulte", 1))
+	if diff == 3:
+		return 0   # le VRAI Climax final est EXEMPT : il reste au plafond historique DC=12, zero stacking
+	var quest_idx: int = int(beat.get("quest", 0))
+	var bonus: int = DC_RAMP_PER_QUEST * quest_idx
+	if str(beat.get("type", "")) == "Climax":
+		bonus += DC_RAMP_CLIMAX_BUMP
+	return mini(bonus, DC_RAMP_CEILING - int(MerlinResolution.DC_BY_DIFF.get(diff, 9)))
 
 
 ## v1.0-V4a (BAL-14-A) — vérifie qu'un jeu de requis (arc re-validé) respecte la composition §F du
@@ -797,17 +807,6 @@ func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:
 
 func _mn() -> Node:
 	return get_node_or_null("/root/MerlinNative")
-
-
-# v1.0-V4a (GD-32-B) — greffes posées sur le build RÉEL (0 hors-jeu : la contre-pression ne
-# s'applique alors pas, la difficulté du beat reste celle du squelette).
-func _live_total_grafts() -> int:
-	if not is_inside_tree():
-		return 0
-	var run: Node = get_node_or_null("/root/MerlinRun")
-	if run != null and run.has_method("total_grafts"):
-		return int(run.total_grafts())
-	return 0
 
 
 # v1.0-V4a (BAL-14-A/TEC-17-A) — pool générable du RUN RÉEL (actions greffées + deck de traits
@@ -1408,8 +1407,9 @@ func is_opening_pending() -> bool:
 #         le LLM réécrit la narration en arrière-plan (tags STABLES). ---
 func build_situation(beat: Dictionary) -> Dictionary:
 	var btype: String = str(beat.get("type", "Exploration"))
-	# v1.0-V4a (GD-32-B) — contre-pression §E : difficulté EFFECTIVE (quête 3 + ≥3 greffes → 3 requis).
-	var diff: int = effective_difficulty(beat, _live_total_grafts())
+	# v2-W1 (R165) — composition des requis PILOTÉE par la difficulté BRUTE du beat (jamais mutée) ;
+	# la rampe de difficulté ne touche QUE le DC de résolution (dc_ramp_bonus, ci-dessous).
+	var diff: int = int(beat.get("difficulte", 1))
 	# La situation ET ses tags requis viennent du MÊME index de l'arc pré-établi → scène ⇄ tags alignés
 	# (user 2026-06-07 : « les tags ne correspondent pas à la scène »). Fallback générique si absent.
 	# On VERROUILLE l'arc dès la 1re consommation → prepare_arc ne swappera plus (jamais 2 histoires mêlées).
@@ -1502,6 +1502,9 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		"required_tags": required,
 		"type": btype,
 		"difficulte": diff,
+		# v2-W1 (R165) — rampe de difficulté : bonus de DC FIGÉ ICI (même dictionnaire que "difficulte")
+		# → preview (_update_preview) et résolution (_on_resolve) lisent la MÊME valeur (R120).
+		"dc_bonus": dc_ramp_bonus(beat),
 		"n": int(beat.get("n", 0)),
 		# v10.14 — la narration et le HUD comptent PAR QUÊTE (qn/qtotal) ; quest_title alimente
 		# le header. "total" reste la longueur de la quête courante (consommé par les prompts).
@@ -1672,11 +1675,11 @@ func prepare_arc(scenario: Dictionary) -> void:
 	var beats: Array = scenario.get("beats", [])
 	var picked: Array = []
 	var arc_pool: Dictionary = _live_pool_info()
-	var arc_grafts: int = _live_total_grafts()
 	var x1_local: Array = []
 	for b in beats:
 		var btype_a: String = str(b.get("type", "Exploration"))
-		var diff_a: int = effective_difficulty(b, arc_grafts)  # GD-32-B : meilleure estimation à l'arc
+		# v2-W1 (R165) — composition pilotée par la difficulté BRUTE (la rampe ne touche que le DC).
+		var diff_a: int = int(b.get("difficulte", 1))
 		if arc_pool.is_empty():
 			picked.append(_pick_tags(btype_a, diff_a))
 		else:

@@ -677,7 +677,8 @@ func _update_preview() -> void:
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], die_p,
 		run_p.blessed_bonus(combo),
 		int(_current_situation.get("difficulte", 2)), skill_mod_p, graft_bonus_p,
-		str(_current_situation.get("type", "")))  # R158 : + beat_type (nature) : preview = resolution (R120)
+		str(_current_situation.get("type", "")),  # R158 : + beat_type (nature) : preview = resolution (R120)
+		int(_current_situation.get("dc_bonus", 0)))  # v2-W1 (R165) : rampe de DC, meme dictionnaire fige que "difficulte" (R120)
 	var was_disabled: bool = _resolve_btn.disabled
 	_set_resolve_armed(true)
 	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
@@ -719,7 +720,8 @@ func _on_resolve() -> void:
 	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], die_r,
 		run.blessed_bonus(combo),
 		int(_current_situation.get("difficulte", 2)), skill_mod_r, graft_bonus_r,
-		str(_current_situation.get("type", "")))  # R158 : + beat_type (nature) : memes args que la preview (R120)
+		str(_current_situation.get("type", "")),  # R158 : + beat_type (nature) : memes args que la preview (R120)
+		int(_current_situation.get("dc_bonus", 0)))  # v2-W1 (R165) : rampe de DC, meme dictionnaire fige que "difficulte" (R120)
 	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 

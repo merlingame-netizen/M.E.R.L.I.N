@@ -68,6 +68,11 @@ var _grafts_clean: int = 0          # ... runs saines (rapport §K : E[acquisiti
 var _talent_nodes_taken: int = 0    # v2-W2 : nœuds de talent pris au draft (toutes runs, info §K)
 var _talent_levels_sum: int = 0     # v2-W2 : somme des niveaux de talent en fin de run saine (moy. §K)
 var _talent_runs: int = 0           # ... nb de runs saines sommées (dénominateur)
+# v2-W1 (R165) — rampe de DC par quête/climax : DC effectif moyen + mortalité, par TIERS de run
+# (tier 0/1/2 = début/milieu/fin, proportion beat_index/total_run_beats). Info §K, non-bloquant.
+var _dc_tier_sum: Dictionary = {}   # tier(int) -> somme des DC effectifs (DC_BY_DIFF[diff] + dc_bonus)
+var _dc_tier_n: Dictionary = {}     # tier(int) -> nb de beats mesurés
+var _deaths_by_tier: Dictionary = {}  # tier(int) -> nb de fins "mort" (toutes runs)
 
 # === Vague Economie V1 (in-run) — harnais d'achat par archétype (chantier 6, tools/ SEUL — l'API
 # économie vit dans merlin_run.gd/merlin_card.gd/merlin_resolution.gd, jamais réinventée ici). ===
@@ -138,6 +143,7 @@ func _init() -> void:
 	print("[SOAK] degrees=%s (toutes runs, %d beats)" % [str(_degrees), _beats_total])
 	print("[SOAK] drafts %d/%d pris · secours injectées=%d" % [_drafts_taken, _drafts_offered, _secours_injected])
 	_report_k()
+	_report_dc_ramp()
 	_report_arch()
 	_report_economy()
 	# v1.0-V4a — runs (fiabilité R109) et gates §K (équilibrage) comptés SÉPARÉMENT : un gate rouge
@@ -223,22 +229,24 @@ func _selftest_whitelist() -> void:
 		and ResolutionScript.nature_tier("Rencontre", ["Verbe"]) == 1 \
 		and ResolutionScript.nature_tier("Exploration", ["Sens"]) == 0,
 		"nature_tier : tag Monde requis monte d'un cran (cap 3)")
-	# v1.0-V4a (GD-32-B) — contre-pression §E : quête 3 (index 2) + ≥3 greffes → diff 3 ; sinon inchangé.
-	_st(Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 3) == 3 \
-		and Scenario.effective_difficulty({"difficulte": 2, "quest": 2}, 2) == 2 \
-		and Scenario.effective_difficulty({"difficulte": 2, "quest": 1}, 5) == 2 \
-		and Scenario.effective_difficulty({"difficulte": 3, "quest": 2}, 0) == 3,
-		"effective_difficulty (contre-pression quête 3, seuil 3 greffes)")
+	# v2-W1 (R165) — rampe de DC par quête/climax : PER_QUEST*quest_idx (+CLIMAX_BUMP si Climax),
+	# plafonné à DC_RAMP_CEILING - DC_BY_DIFF[diff] ; diff 3 (VRAI Climax final) toujours EXEMPT (0).
+	# Palier retenu (soak 100, v2-W1) : PER_QUEST=2, CLIMAX_BUMP=1 (mortalité 16.7%, cible 15-18%).
+	_st(Scenario.dc_ramp_bonus({"difficulte": 1, "quest": 0, "type": "Exploration"}) == 0 \
+		and Scenario.dc_ramp_bonus({"difficulte": 1, "quest": 2, "type": "Epreuve"}) == 4 \
+		and Scenario.dc_ramp_bonus({"difficulte": 2, "quest": 1, "type": "Climax"}) == 3 \
+		and Scenario.dc_ramp_bonus({"difficulte": 3, "quest": 2, "type": "Climax"}) == 0,
+		"dc_ramp_bonus (rampe par quête/climax, VRAI Climax final exempt)")
 	# v1.0-V4a (TEC-17-A) — le JEU passe par le MÊME chemin que le harnais (assertion anti-drift,
 	# grep source) : build_situation appelle validate_required_tags + pick_required_tags +
-	# composition_ok ; prepare_arc tire ses tags d'arc via pick_required_tags.
+	# composition_ok + dc_ramp_bonus ; prepare_arc tire ses tags d'arc via pick_required_tags.
 	var src: String = FileAccess.get_file_as_string("res://scripts/llm/merlin_scenario.gd")
 	var bs0: int = src.find("func build_situation(")
 	var bs1: int = src.find("\nfunc ", bs0 + 1)
 	var bs_body: String = src.substr(bs0, bs1 - bs0) if (bs0 >= 0 and bs1 > bs0) else ""
 	_st(bs_body.find("pick_required_tags(") >= 0 and bs_body.find("validate_required_tags(") >= 0 \
-		and bs_body.find("composition_ok(") >= 0 and bs_body.find("effective_difficulty(") >= 0,
-		"build_situation branché whitelist (pick + validate + composition + contre-pression)")
+		and bs_body.find("composition_ok(") >= 0 and bs_body.find("dc_ramp_bonus(") >= 0,
+		"build_situation branché whitelist (pick + validate + composition + rampe DC)")
 	var pa0: int = src.find("func prepare_arc(")
 	var pa1: int = src.find("\nfunc ", pa0 + 1)
 	var pa_body: String = src.substr(pa0, pa1 - pa0) if (pa0 >= 0 and pa1 > pa0) else ""
@@ -446,6 +454,7 @@ func _soak_one(i: int, arch: String) -> void:
 	# tirage naturel n'en produit pas assez). Verifie ici sur le scenario BRUT (avant toute mutation
 	# degeneree du soak, cf. plus bas) : c'est une propriete de build_chain_beats, pas du jeu joue.
 	var rencontre_n: int = 0
+	var total_run_beats: int = (run.scenario.get("beats", []) as Array).size()  # v2-W1 (R165) : denominateur des tiers DC/mortalite
 	for b in (run.scenario.get("beats", []) as Array):
 		if str((b as Dictionary).get("type", "")) == "Rencontre":
 			rencontre_n += 1
@@ -525,9 +534,15 @@ func _soak_one(i: int, arch: String) -> void:
 		var corr_before: int = run.corruption
 		var beat: Dictionary = run.current_beat()
 		var btype: String = str(beat.get("type", "Exploration"))
-		# v1.0-V4a (GD-32-B) — MIROIR de la contre-pression §E : difficulté effective (quête 3 +
-		# build ≥3 greffes → 3 requis 2+1), même statique que build_situation (zéro drift).
-		var diff: int = Scenario.effective_difficulty(beat, int(run.total_grafts()))
+		# v2-W1 (R165) — MIROIR de build_situation : composition pilotée par la difficulté BRUTE du
+		# beat (jamais mutée) ; dc_bonus (rampe par quête/climax) MIROIR de dc_ramp_bonus, zéro drift.
+		var diff: int = int(beat.get("difficulte", 1))
+		var dc_bonus: int = int(Scenario.dc_ramp_bonus(beat))
+		# v2-W1 (R165) — mesure DC effectif moyen par TIERS de run (info, non-bloquant §K).
+		var tier: int = clampi(int(float(run.beat_index) / float(maxi(total_run_beats, 1)) * 3.0), 0, 2)
+		var dc_eff: int = int(ResolutionScript.DC_BY_DIFF.get(clampi(diff, 1, 3), ResolutionScript.DC_BY_DIFF[2])) + dc_bonus
+		_dc_tier_sum[tier] = float(_dc_tier_sum.get(tier, 0.0)) + float(dc_eff)
+		_dc_tier_n[tier] = int(_dc_tier_n.get(tier, 0)) + 1
 		var quest_idx: int = int(beat.get("quest", 0))
 		if bool(beat.get("swapped", false)):
 			_variant_swaps += 1  # ramification v1 : fréquence loguée (§K)
@@ -587,7 +602,7 @@ func _soak_one(i: int, arch: String) -> void:
 		if run.consume_coup_de_pouce_if_armed():
 			die = maxi(die, face_adv)
 			_coup_de_pouce_uses += 1  # exercice REEL (distinct de l'achat, cf. _econ_phase)
-		var combo: Array = _pick_combo(arch, run, required, die, rng, diff, btype)
+		var combo: Array = _pick_combo(arch, run, required, die, rng, diff, btype, dc_bonus)
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
 		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.
 		# v2-W2 — skill_mod = talent du verbe joué (miroir merlin_game._on_resolve, R120 preview=résolution).
@@ -595,7 +610,7 @@ func _soak_one(i: int, arch: String) -> void:
 		var skill_mod: int = int(run.skill_mod_for(combo[0]))
 		var graft_bonus: int = int(run.graft_roll_bonus(combo[0]))
 		run.note_verb_played(combo[0])  # compteur d'usage du verbe (cible du nœud de talent au draft)
-		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff, skill_mod, graft_bonus, btype)  # R158 : + beat_type (nature), R120 preview=resolution
+		var res: Dictionary = ResolutionScript.resolve(required, combo, [], die, run.blessed_bonus(combo), diff, skill_mod, graft_bonus, btype, dc_bonus)  # R158 : + beat_type (nature) ; v2-W1 : + dc_bonus (rampe), R120 preview=resolution
 		run.consume_blessings(combo)  # R131 : une bénédiction sert UNE fois (miroir du jeu)
 		# R158 : miroir « Pousser » RETIRE (plus de conversion partiel->reussite ; corruption automatique).
 		var deg: String = str(res.get("degree", ""))
@@ -696,6 +711,11 @@ func _soak_one(i: int, arch: String) -> void:
 	if run.ended:
 		_ends[run.end_type] = int(_ends.get(run.end_type, 0)) + 1
 		_bump_arch(arch, "ends", run.end_type)
+		if run.end_type == "mort":
+			# v2-W1 (R165) — mortalité par TIERS de run (info §K) : beat_index N'A PAS avancé au moment
+			# de la mort (advance_beat sauté si run.ended) → il pointe encore le beat de la fin.
+			var death_tier: int = clampi(int(float(run.beat_index) / float(maxi(total_run_beats, 1)) * 3.0), 0, 2)
+			_deaths_by_tier[death_tier] = int(_deaths_by_tier.get(death_tier, 0)) + 1
 		if not forced:
 			_clean_runs += 1
 			_ends_clean[run.end_type] = int(_ends_clean.get(run.end_type, 0)) + 1
@@ -1004,7 +1024,7 @@ func _graft_sig(r: Node) -> String:
 # chaotic      : uniforme aléatoire (action ET trait).
 # tag_ignorant : aléatoire SANS lire les requis — baseline non-lecteur, flux RNG distinct de
 #                chaotic (mesure la sensibilité du système au non-signal).
-func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: RandomNumberGenerator, diff: int = 2, btype: String = "") -> Array:
+func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: RandomNumberGenerator, diff: int = 2, btype: String = "", dc_bonus: int = 0) -> Array:
 	var acts: Array = run.actions.duplicate()
 	var traits_h: Array = run.hand.duplicate()
 	_shuffle_arr(acts, rng)      # départage des ex æquo : ordre pré-mélangé, argmax strict
@@ -1031,7 +1051,7 @@ func _pick_combo(arch: String, run: Node, required: Array, die: int, rng: Random
 		var sm: int = int(run.skill_mod_for(a))
 		var gb: int = int(run.graft_roll_bonus(a))
 		for t in traits_h:
-			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff, sm, gb, btype)
+			var r: Dictionary = ResolutionScript.resolve(required, [a, t], [], die, run.blessed_bonus([a, t]), diff, sm, gb, btype, dc_bonus)
 			var cov: Dictionary = r["coverage"]
 			var covered_arr: Array = cov["covered"]
 			var extra_arr: Array = cov["extra"]
@@ -1104,6 +1124,22 @@ func _report_k() -> void:
 	print("[SOAK]   %-36s %5d     (ASSERTION DURE == 0)" % ["beats à requis hors-pool", _offpool_beats])
 	print("[SOAK]   %-36s %5.1f%%   (info §C : A/B réserve de trait si > 45)" % ["deadhand (0 trait couvrant)", 100.0 * float(_deadhand_beats) / float(maxi(_beats_total, 1))])
 	print("[SOAK]   variantes basculées=%d · sabotage R66 non simulé (aucun antagoniste côté probe) · émissions ×1=%s" % [_variant_swaps, str(_x1_emissions)])
+
+
+func _report_dc_ramp() -> void:
+	# v2-W1 (R165): rampe de DC par quete/climax, DC effectif moyen + mortalite, par TIERS de run
+	# (tier 0/1/2 = debut/milieu/fin). Info, non-bloquant : verifie la dent de scie attendue et le
+	# skew de mortalite vers la fin de run.
+	print("[SOAK] - RAMPE DC PAR TIERS (dc_ramp_bonus, info) -")
+	var deaths_tot: int = 0
+	for t in [0, 1, 2]:
+		deaths_tot += int(_deaths_by_tier.get(t, 0))
+	for t in [0, 1, 2]:
+		var n_t: int = int(_dc_tier_n.get(t, 0))
+		var avg_dc: float = float(_dc_tier_sum.get(t, 0.0)) / float(maxi(n_t, 1))
+		var d_t: int = int(_deaths_by_tier.get(t, 0))
+		print("[SOAK]   tiers %d/3   DC effectif moyen=%5.2f (n=%-4d beats)   morts=%3d (%5.1f%% des morts)" % [
+			t + 1, avg_dc, n_t, d_t, 100.0 * float(d_t) / float(maxi(deaths_tot, 1))])
 
 
 func _band(label: String, value: float, lo: float, hi: float, pct: bool = true) -> void:

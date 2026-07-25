@@ -58,12 +58,15 @@ const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
 ## antagonist_tags : tags qui sabotent si joués (R41/R66).
 ## die : somme 2d6 (2-12) PRE-TIREE par l'appelant (0 = pas de dé → DIE_FALLBACK, rétro-compatible probes tools).
 ## bonus_tags : tags bénis par un pilier (R131) — ajoutés à la couverture.
-## diff : difficulté EFFECTIVE du beat → DC via DC_BY_DIFF. Défaut 2. Le jeu ET le soak passent la
-## MÊME valeur sur TOUS les call-sites (preview, prefetch, résolution) — invariant R120.
+## diff : difficulté BRUTE du beat (beat.difficulte, jamais mutée) → DC de BASE via DC_BY_DIFF.
+## Défaut 2. Le jeu ET le soak passent la MÊME valeur sur TOUS les call-sites (preview, prefetch,
+## résolution) — invariant R120.
 ## skill_mod : bonus de talent (W2, défaut 0). graft_bonus : bonus de greffe-jet (W3, défaut 0).
+## dc_bonus : rampe de difficulté par quête/climax (v2-W1, R165, MerlinScenario.dc_ramp_bonus) —
+## AJOUTÉ au DC de base, jamais à la composition des requis. Défaut 0 (zéro régression legacy).
 ## Retourne {degree, label, integrite_delta, corruption_delta, coverage, eclatante_bonus, sabotaged,
 ##           synergy, die, die_mod, die_rarity, total, dc, margin, success}.
-static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = [], diff: int = 2, skill_mod: int = 0, graft_bonus: int = 0, beat_type: String = "") -> Dictionary:
+static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = [], diff: int = 2, skill_mod: int = 0, graft_bonus: int = 0, beat_type: String = "", dc_bonus: int = 0) -> Dictionary:
 	var played_tags: Array = []
 	for c in played_cards:
 		var tags: Array = _card_tags(c)
@@ -85,7 +88,7 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	var face: int = die if die >= 2 and die <= 12 else DIE_FALLBACK
 	var synergy_bonus: int = SYN if synergy > 0 else (-SYN if synergy < 0 else 0)
 	var total: int = face + skill_mod + graft_bonus + COVER_PER_TAG * covered_n + synergy_bonus
-	var dc: int = int(DC_BY_DIFF.get(clampi(diff, 1, 3), DC_BY_DIFF[2]))
+	var dc: int = int(DC_BY_DIFF.get(clampi(diff, 1, 3), DC_BY_DIFF[2])) + dc_bonus
 	var margin: int = total - dc
 
 	var degree: String = _degree_from_margin(margin, face)
