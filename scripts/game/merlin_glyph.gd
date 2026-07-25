@@ -347,6 +347,14 @@ func _draw() -> void:
 		"chain":  # emprise : 2 maillons de chaine
 			draw_arc(c + Vector2(-r * 0.35, 0.0), r * 0.42, 0.0, TAU, 20, line_color, line_w, true)
 			draw_arc(c + Vector2(r * 0.35, 0.0), r * 0.42, 0.0, TAU, 20, line_color, line_w, true)
+		"coin":  # Vague Economie V1 (bourse), piece frappee : 2 anneaux concentriques + 4 marques de
+			# tranche (distinct de "sun", rais courts hors-anneau, et de "target", croix centrale).
+			draw_arc(c, r, 0.0, TAU, 32, line_color, line_w, true)
+			draw_arc(c, r * 0.6, 0.0, TAU, 24, line_color, maxf(line_w * 0.75, 1.4), true)
+			for cn_i in 4:
+				var cn_a: float = float(cn_i) / 4.0 * TAU + PI / 4.0
+				var cn_d: Vector2 = Vector2(cos(cn_a), sin(cn_a))
+				draw_line(c + cn_d * (r * 0.62), c + cn_d * r, line_color, maxf(line_w * 0.6, 1.2), true)
 		"hand":  # R159 (Chantier 3) : main ouverte — paume arrondie + 4 doigts a bouts ronds (longueurs variees) + pouce ecarte
 			draw_arc(c + Vector2(0.0, r * 0.28), r * 0.6, deg_to_rad(8), deg_to_rad(172), 24, line_color, line_w, true)  # paume (base ronde)
 			draw_line(c + Vector2(-r * 0.6, r * 0.32), c + Vector2(-r * 0.5, -r * 0.02), line_color, line_w, true)   # cote gauche paume

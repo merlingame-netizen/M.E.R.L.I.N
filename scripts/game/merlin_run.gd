@@ -127,6 +127,69 @@ var momentum: int = 0
 var corruption_max: int = 0
 var degree_counts: Dictionary = {"echec": 0, "partiel": 0, "reussite": 0, "eclatante": 0}
 
+# === Vague Economie V1 (in-run, spec verrouillee 2026-07-20) — Gwenneg + Promesse (dette) ===
+# gwenneg = monnaie de run (gains au degre + butin d'exploration, depenses en info/soin/purge/greffe).
+# pending_debts : Array plafonnee a 1 entree active {beats_remaining, prix_convenu, pilier_source}
+# (La Promesse — R91 reutilise, PAS un terme parallele). soins_achetes/purges_achetees = caps DURS
+# PAR RUN (2 et 1, jamais remis a zero en cours de run). info_achetee_this_quest/
+# coup_de_pouce_used_this_quest = caps PAR QUETE (remis a zero a chaque changement de quete,
+# cf. advance_beat). pilier_favors/pilier_hostility = consequences du reglement de la dette
+# (settle_debt/refuse_debt), lues par la narration. TOUS champs ADDITIFS (defauts surs au load,
+# pas de bump SAVE_VERSION — R108).
+var gwenneg: int = 0
+var pending_debts: Array = []
+var soins_achetes: int = 0
+var purges_achetees: int = 0
+var info_achetee_this_quest: bool = false
+var coup_de_pouce_used_this_quest: bool = false
+# coup_de_pouce_armed = charge ACHETEE mais pas encore APPLIQUEE a un jet (fenetre entre l'achat,
+# beat Rencontre, et la resolution du PROCHAIN beat joue, quel qu'il soit). consume_coup_de_pouce_if_armed()
+# la consomme EXACTEMENT une fois. coup_de_pouce_exercised = compteur TELEMETRIE (additif, jamais
+# remis a zero en cours de run) du nombre de fois ou l'avantage a REELLEMENT ete applique (distinct
+# de coup_de_pouce_used_this_quest, qui ne track que le cap d'ACHAT). Les 2 sont R108-safe (defauts
+# surs au load des saves anterieures a ce cablage).
+var coup_de_pouce_armed: bool = false
+var coup_de_pouce_exercised: int = 0
+var pilier_favors: Dictionary = {}
+var pilier_hostility: Dictionary = {}
+# Chantier 2 (garantie marchand) : merchant_seen_this_run = telemetrie/garde (le marchand a-t-il
+# deja ete montre au joueur cette run ?). rencontre_count_this_run = nb de beats "Rencontre"
+# DEJA rencontres (utilise par le garde de priorite : des la 2e Rencontre, si le marchand n'a
+# jamais ete vu, il devient prioritaire sur l'offrande de pilier). Additifs, R108-safe.
+var merchant_seen_this_run: bool = false
+var rencontre_count_this_run: int = 0
+
+# Baremes GAINS (spec verrouillee) : echec 0, partiel 1, reussite 2, eclatante 4.
+const GWENNEG_BY_DEGREE: Dictionary = {"echec": 0, "partiel": 1, "reussite": 2, "eclatante": 4}
+# Butin d'Exploration : 60% de chance sur reussite+, valeur 1d4.
+const LOOT_CHANCE: float = 0.6
+const LOOT_MIN: int = 1
+const LOOT_MAX: int = 4
+# Prix (spec verrouillee) — Information 3 (cap 1/quete). Soin Integrite +2 = 6 (cap DUR 2/run).
+# Purge Corruption -1 = 8 (cap DUR 1/run, EXCLUSIF marchands lies au Choeur des Druides — le canon
+# reserve la purification aux Druides). Greffe/carte : Commune 5, Rare 9, Epique 15 (MerlinCard).
+const INFO_PRICE: int = 3
+const HEAL_PRICE: int = 6
+const HEAL_AMOUNT: int = 2
+const HEAL_CAP_PER_RUN: int = 2
+const PURGE_PRICE: int = 8
+const PURGE_AMOUNT: int = 1
+const PURGE_CAP_PER_RUN: int = 1
+const PURGE_EXCLUSIVE_PILIER: String = "choeur"  # seul marchand habilite a purger (R91 reserve aux Druides)
+# Promesse (dette) : duree tiree 2-4 beats. Coup de Pouce = AVANTAGE (max(die, face_adv), les DEUX
+# pre-tires par beat, cf. merlin_scenario.gd), jamais un +N additif — cap 1 par quete, paye en
+# Promesse (jamais Gwenneg).
+const DEBT_BEATS_MIN: int = 2
+const DEBT_BEATS_MAX: int = 4
+# Reglement (spec verrouillee) : echec = le creancier prend PLUS que prevu (interprete : double du
+# prix convenu) + Corruption +2. Refus explicite : Corruption +2 + hostilite. Fallback epilogue :
+# petite penalite Integrite/Corruption narree (zero nouveau champ persistant).
+const DEBT_ECHEC_MULTIPLIER: int = 2
+const DEBT_ECHEC_CORRUPTION: int = 2
+const DEBT_REFUSE_CORRUPTION: int = 2
+const DEBT_EPILOGUE_INTEGRITE_PENALTY: int = 1
+const DEBT_EPILOGUE_CORRUPTION_PENALTY: int = 1
+
 
 # Tags bénis portés par les cartes de ce combo (canal bonus de MerlinResolution.resolve, R131).
 func blessed_bonus(combo: Array) -> Array:
@@ -205,6 +268,18 @@ func new_run(p_scenario: Dictionary) -> void:
 	momentum = 0  # N3-V1 : le ton narratif repart neutre à chaque run
 	corruption_max = 0  # P2 : traçage de récompense remis à zéro
 	degree_counts = {"echec": 0, "partiel": 0, "reussite": 0, "eclatante": 0}
+	gwenneg = 0  # Vague Economie V1 : monnaie + dette remises a neuf a chaque run
+	pending_debts = []
+	soins_achetes = 0
+	purges_achetees = 0
+	info_achetee_this_quest = false
+	coup_de_pouce_used_this_quest = false
+	coup_de_pouce_armed = false
+	coup_de_pouce_exercised = 0
+	pilier_favors = {}
+	pilier_hostility = {}
+	merchant_seen_this_run = false
+	rencontre_count_this_run = 0
 	actions = MerlinCard.make_actions()  # v11 : les 4 verbes fixes évolutifs
 	deck = MerlinCard.starter_traits()   # v11 : 16 traits (12 canon retagués + 4 nouveaux)
 	hand = []
@@ -1003,11 +1078,18 @@ func advance_beat() -> void:
 			repit += 2
 		integrite = clampi(integrite + repit, 0, _max_integrite())
 		emit_signal("gauges_changed", integrite, corruption)
+		# Vague Economie V1 : les caps PAR QUETE (Information, Coup de Pouce) se remettent a zero a
+		# chaque nouvelle quete. Les caps PAR RUN (soins_achetes, purges_achetees) restent intacts.
+		info_achetee_this_quest = false
+		coup_de_pouce_used_this_quest = false
 	# v10.14 — Ramification v1 : à l'ARRIVÉE sur un beat à variante (avant-climax des quêtes
 	# k>=4), si le degré précédent est échec/partiel, le beat BASCULE (Epreuve<->Dilemme),
 	# IN PLACE dans le scenario — le save de l'appelant (juste après) persiste le beat basculé
 	# → resume déterministe (R108). Découverte AU beat : l'UI ajoute l'indice micro-narratif.
 	_maybe_swap_variant()
+	# Vague Economie V1 : decompte de la Promesse en cours, JAMAIS couple a last_degree (une dette
+	# expire sur le calendrier, pas sur la performance du beat precedent).
+	_tick_pending_debts()
 
 
 func _maybe_swap_variant() -> void:
@@ -1022,6 +1104,245 @@ func _maybe_swap_variant() -> void:
 	beat["type"] = str(beat["variant_type"])
 	beat["swapped"] = true
 	beats[beat_index] = beat
+
+
+# === Vague Economie V1 (in-run) — Gwenneg : gains, depenses, achats plafonnes ===
+
+# Gain de Gwenneg pour un degre resolu (echec 0 / partiel 1 / reussite 2 / eclatante 4).
+func gwenneg_gain_for_degree(degree: String) -> int:
+	return int(GWENNEG_BY_DEGREE.get(degree, 0))
+
+
+# Butin d'Exploration : 60% de chance sur un beat resolu en reussite ou mieux, valeur 1d4 (0 sinon).
+# Utilise le RNG de la run (meme source que draft/pilier_offering — jamais un RNG parallele).
+func roll_loot(degree: String) -> int:
+	if degree != MerlinResolution.REUSSITE and degree != MerlinResolution.ECLATANTE:
+		return 0
+	if _rng.randf() > LOOT_CHANCE:
+		return 0
+	return _rng.randi_range(LOOT_MIN, LOOT_MAX)
+
+
+func add_gwenneg(n: int) -> void:
+	gwenneg = maxi(0, gwenneg + n)
+
+
+# Refuse si la bourse est insuffisante (jamais de solde negatif).
+func spend_gwenneg(n: int) -> bool:
+	if n <= 0:
+		return true
+	if gwenneg < n:
+		return false
+	gwenneg -= n
+	return true
+
+
+func can_afford(n: int) -> bool:
+	return gwenneg >= n
+
+
+# --- Achats plafonnes (baremes verrouilles) ---
+
+func can_buy_info() -> bool:
+	return not info_achetee_this_quest and can_afford(INFO_PRICE)
+
+
+# Cap DUR 1 par quete, non cumulable (protection §K : ne revele QUE nature+niveau du beat suivant,
+# jamais les tags requis — l'affichage lit info_achetee_this_quest, pas de donnee tag exposee ici).
+func buy_info() -> bool:
+	if not can_buy_info() or not spend_gwenneg(INFO_PRICE):
+		return false
+	info_achetee_this_quest = true
+	return true
+
+
+func can_buy_heal() -> bool:
+	return soins_achetes < HEAL_CAP_PER_RUN and can_afford(HEAL_PRICE)
+
+
+# Cap DUR 2 achats par RUN (jamais remis a zero par quete).
+func buy_heal() -> bool:
+	if not can_buy_heal() or not spend_gwenneg(HEAL_PRICE):
+		return false
+	soins_achetes += 1
+	integrite = clampi(integrite + HEAL_AMOUNT, 0, _max_integrite())
+	emit_signal("gauges_changed", integrite, corruption)
+	return true
+
+
+# EXCLUSIF aux marchands lies au Choeur des Druides (R91 : la purification reste reservee aux
+# Druides, contre-poids aux tentateurs). Cap DUR 1 achat par RUN.
+func can_buy_purge(pilier: String) -> bool:
+	return pilier == PURGE_EXCLUSIVE_PILIER and purges_achetees < PURGE_CAP_PER_RUN and can_afford(PURGE_PRICE)
+
+
+func buy_purge(pilier: String) -> bool:
+	if not can_buy_purge(pilier) or not spend_gwenneg(PURGE_PRICE):
+		return false
+	purges_achetees += 1
+	corruption = maxi(0, corruption - PURGE_AMOUNT)
+	emit_signal("gauges_changed", integrite, corruption)
+	return true
+
+
+# === Vague Economie V1 — La Promesse (dette). JAMAIS couplee a _maybe_swap_variant (celui-ci ne
+# s'arme que si pattern.size() >= 4 et sur last_degree — une dette doit expirer sur son PROPRE
+# calendrier, pas sur la performance du beat precedent). Plafonnee a 1 entree active. ===
+
+func has_pending_debt() -> bool:
+	return not pending_debts.is_empty()
+
+
+# -1 si aucune dette active (sentinelle explicite — 0 serait ambigu avec "expire ce beat-ci").
+func debt_beats_remaining() -> int:
+	if pending_debts.is_empty():
+		return -1
+	return int(pending_debts[0].get("beats_remaining", 0))
+
+
+# Contracte une Promesse. Refuse si une entree est deja active (cap dur 1). Duree tiree 2-4 beats
+# (RNG de la run). N'appelle pas save() : atomicite via le save unique de l'appelant (R108/R137).
+func contract_debt(prix_convenu: int, pilier_source: String) -> bool:
+	if has_pending_debt():
+		return false
+	pending_debts = [{
+		"beats_remaining": _rng.randi_range(DEBT_BEATS_MIN, DEBT_BEATS_MAX),
+		"prix_convenu": prix_convenu,
+		"pilier_source": pilier_source,
+	}]
+	return true
+
+
+# Coup de Pouce (avantage au jet : max(die, face_adv), les 2 pre-tires par beat) : JAMAIS achetable
+# en Gwenneg, paye en Promesse. Cap 1 par quete (distinct du cap "1 entree active" de contract_debt).
+func can_use_coup_de_pouce() -> bool:
+	return not coup_de_pouce_used_this_quest and not has_pending_debt()
+
+
+func use_coup_de_pouce(prix_convenu: int, pilier_source: String) -> bool:
+	if not can_use_coup_de_pouce() or not contract_debt(prix_convenu, pilier_source):
+		return false
+	coup_de_pouce_used_this_quest = true
+	coup_de_pouce_armed = true  # arme l'avantage pour le PROCHAIN beat resolu (consume_coup_de_pouce_if_armed)
+	return true
+
+
+# Consomme la charge Coup de Pouce ARMEE, EXACTEMENT une fois, pour le beat en train d'etre resolu.
+# Retourne true si elle etait armee (et vient d'etre desarmee) — l'appelant applique alors
+# face effective = max(die, face_adv) AU BEAT COURANT, aux 3 call-sites (preview, resolution,
+# miroir soak), R120. Lecture SEULE (armed non modifie) : voir has_coup_de_pouce_armed() pour la
+# preview, qui ne doit JAMAIS consommer (seule la resolution reelle consomme).
+func consume_coup_de_pouce_if_armed() -> bool:
+	if not coup_de_pouce_armed:
+		return false
+	coup_de_pouce_armed = false
+	coup_de_pouce_exercised += 1
+	return true
+
+
+# Lecture seule (preview) — n'affecte jamais l'etat. La preview et la resolution doivent calculer
+# LA MEME face effective (R120) ; seule la resolution appelle consume_coup_de_pouce_if_armed().
+func has_coup_de_pouce_armed() -> bool:
+	return coup_de_pouce_armed
+
+
+# Decompte de la Promesse en cours — appelee dans advance_beat(), SANS aucun couplage a
+# last_degree. A 0, mute IN PLACE le prochain beat eligible (Rencontre/Epreuve) en beat de
+# reclamation (meme technique que _maybe_swap_variant, sans la garde sur last_degree). Aucun beat
+# eligible trouve avant la fin du run → force_settle_debt_at_epilogue() prend le relais (MerlinEnd).
+func _tick_pending_debts() -> void:
+	if pending_debts.is_empty():
+		return
+	var debt: Dictionary = pending_debts[0]
+	var remaining: int = maxi(0, int(debt.get("beats_remaining", 0)) - 1)
+	debt["beats_remaining"] = remaining
+	pending_debts[0] = debt
+	if remaining <= 0:
+		_maybe_mutate_debt_reclamation()
+
+
+const DEBT_RECLAMATION_TYPE: String = "Le créancier revient"
+const DEBT_ELIGIBLE_TYPES: Array = ["Rencontre", "Epreuve"]
+
+
+func _maybe_mutate_debt_reclamation() -> void:
+	var beats: Array = scenario.get("beats", [])
+	for i in range(beat_index, beats.size()):
+		var b: Dictionary = beats[i]
+		if bool(b.get("debt_reclamation", false)):
+			return  # deja mute — jamais une 2e reclamation sur le meme beat
+		if DEBT_ELIGIBLE_TYPES.has(str(b.get("type", ""))):
+			b["original_type"] = str(b.get("type", ""))
+			b["type"] = DEBT_RECLAMATION_TYPE
+			b["debt_reclamation"] = true
+			beats[i] = b
+			scenario["beats"] = beats
+			return
+	# Aucun beat eligible avant la fin du run : la dette reste active (beats_remaining a 0) —
+	# force_settle_debt_at_epilogue() la reglera au fallback MerlinEnd.
+
+
+# Resolution du beat de reclamation (resolution NORMALE avec ses propres tags requis) :
+#   reussite/eclatante : prix paye proprement, +1 faveur du pilier ;
+#   partiel            : paye comme convenu, sans bonus ;
+#   echec              : le creancier prend PLUS que prevu (double du prix convenu), Corruption +2.
+# Retourne {} si aucune dette active (no-op sur). Vide pending_debts (regle, jamais recurrente).
+func settle_debt(degree: String) -> Dictionary:
+	if pending_debts.is_empty():
+		return {}
+	var debt: Dictionary = pending_debts[0]
+	pending_debts = []
+	var pilier: String = str(debt.get("pilier_source", ""))
+	var prix: int = int(debt.get("prix_convenu", 0))
+	var out: Dictionary = {"pilier_source": pilier, "prix_convenu": prix, "degree": degree}
+	match degree:
+		MerlinResolution.REUSSITE, MerlinResolution.ECLATANTE:
+			gwenneg = maxi(0, gwenneg - prix)
+			pilier_favors[pilier] = int(pilier_favors.get(pilier, 0)) + 1
+			out["paid"] = prix
+			out["favor_gained"] = true
+		MerlinResolution.PARTIEL:
+			gwenneg = maxi(0, gwenneg - prix)
+			out["paid"] = prix
+			out["favor_gained"] = false
+		MerlinResolution.ECHEC:
+			var paid: int = prix * DEBT_ECHEC_MULTIPLIER
+			gwenneg = maxi(0, gwenneg - paid)
+			add_corruption(DEBT_ECHEC_CORRUPTION)
+			out["paid"] = paid
+			out["favor_gained"] = false
+		_:
+			out["paid"] = 0
+			out["favor_gained"] = false
+	return out
+
+
+# Refus explicite (option TOUJOURS disponible) : Corruption +2 + flag d'hostilite du pilier. Vide
+# pending_debts (la dette est soldee par le refus, pas reconduite).
+func refuse_debt() -> Dictionary:
+	if pending_debts.is_empty():
+		return {}
+	var debt: Dictionary = pending_debts[0]
+	pending_debts = []
+	var pilier: String = str(debt.get("pilier_source", ""))
+	add_corruption(DEBT_REFUSE_CORRUPTION)
+	pilier_hostility[pilier] = true
+	return {"pilier_source": pilier, "refused": true}
+
+
+# Fallback NON NEGOCIABLE : reglement force a l'epilogue MerlinEnd si aucun beat de reclamation
+# n'a pu etre trouve avant la fin du run. Petite penalite Integrite/Corruption narree — zero
+# nouveau champ persistant (pending_debts existe deja, R108 : transients jamais persistes au-dela).
+func force_settle_debt_at_epilogue() -> Dictionary:
+	if pending_debts.is_empty():
+		return {}
+	var debt: Dictionary = pending_debts[0]
+	pending_debts = []
+	var pilier: String = str(debt.get("pilier_source", ""))
+	integrite = clampi(integrite - DEBT_EPILOGUE_INTEGRITE_PENALTY, 0, _max_integrite())
+	add_corruption(DEBT_EPILOGUE_CORRUPTION_PENALTY)
+	emit_signal("gauges_changed", integrite, corruption)
+	return {"pilier_source": pilier, "forced": true}
 
 
 func _end(p_type: String) -> void:
@@ -1096,6 +1417,13 @@ func save() -> void:
 		"talent": talent, "talent_points": talent_points, "verb_usage": verb_usage,  # v2-W2 : talent IN-RUN (additif, R108)
 		"momentum": momentum,  # N3-V1 : ton narratif du pont (additif, défaut 0 au load)
 		"corruption_max": corruption_max, "degree_counts": degree_counts,  # P2 : traçage récap (additif, R108)
+		"gwenneg": gwenneg, "pending_debts": pending_debts,  # Vague Economie V1 : additif, defauts surs au load
+		"soins_achetes": soins_achetes, "purges_achetees": purges_achetees,
+		"info_achetee_this_quest": info_achetee_this_quest,
+		"coup_de_pouce_used_this_quest": coup_de_pouce_used_this_quest,
+		"coup_de_pouce_armed": coup_de_pouce_armed, "coup_de_pouce_exercised": coup_de_pouce_exercised,
+		"pilier_favors": pilier_favors, "pilier_hostility": pilier_hostility,
+		"merchant_seen_this_run": merchant_seen_this_run, "rencontre_count_this_run": rencontre_count_this_run,
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -1151,6 +1479,23 @@ func load_run() -> bool:
 	momentum = clampi(int(data.get("momentum", 0)), MOMENTUM_MIN, MOMENTUM_MAX)  # N3-V1 : défaut 0 (saves antérieures neutres)
 	corruption_max = maxi(int(data.get("corruption_max", corruption)), corruption)  # P2 : défaut = corruption courante (saves antérieures)
 	degree_counts = _degree_dict(data.get("degree_counts", {}))  # P2 : 4 clés garanties (save partiel/legacy)
+	# Vague Economie V1 : champs additifs — defauts surs (saves anterieurs a cette vague : bourse
+	# vide, aucune dette, aucun achat, aucune consequence de pilier — jamais de crash au load).
+	gwenneg = int(data.get("gwenneg", 0))
+	var pd: Variant = data.get("pending_debts", [])
+	pending_debts = pd if pd is Array else []
+	soins_achetes = int(data.get("soins_achetes", 0))
+	purges_achetees = int(data.get("purges_achetees", 0))
+	info_achetee_this_quest = bool(data.get("info_achetee_this_quest", false))
+	coup_de_pouce_used_this_quest = bool(data.get("coup_de_pouce_used_this_quest", false))
+	coup_de_pouce_armed = bool(data.get("coup_de_pouce_armed", false))
+	coup_de_pouce_exercised = int(data.get("coup_de_pouce_exercised", 0))
+	var pf: Variant = data.get("pilier_favors", {})
+	pilier_favors = pf if pf is Dictionary else {}
+	var ph: Variant = data.get("pilier_hostility", {})
+	pilier_hostility = ph if ph is Dictionary else {}
+	merchant_seen_this_run = bool(data.get("merchant_seen_this_run", false))
+	rencontre_count_this_run = int(data.get("rencontre_count_this_run", 0))
 	actions = _dicts_to_cards(data.get("actions", []))
 	if actions.size() != 5:
 		actions = MerlinCard.make_actions()  # R158 : 5 actions a icones (repli/migration si save != 5)

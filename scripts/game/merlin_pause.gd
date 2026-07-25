@@ -199,6 +199,20 @@ func _rebuild_fiche() -> void:
 	stats.add_theme_font_size_override("font_size", 16)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_fiche_box.add_child(stats)
+	# Vague Economie V1 : Bourse (Gwenneg) + Promesse (dette), lecture directe (jamais de save).
+	var bourse: Label = Label.new()
+	bourse.text = "Bourse : %d Gwenneg" % int(run.get("gwenneg"))
+	bourse.add_theme_color_override("font_color", MerlinVisual.GOLD)
+	bourse.add_theme_font_size_override("font_size", 16)
+	bourse.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_fiche_box.add_child(bourse)
+	var debt_left: int = int(run.debt_beats_remaining())
+	var dette: Label = Label.new()
+	dette.text = ("Promesse : %d beat(s) avant reclamation" % debt_left) if debt_left >= 0 else "Promesse : aucune"
+	dette.add_theme_color_override("font_color", MerlinVisual.GOLD_DARK)
+	dette.add_theme_font_size_override("font_size", 16)
+	dette.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_fiche_box.add_child(dette)
 	# Les 5 actions : icone + nom + bonus de jet (talent + maitrise), lecture directe.
 	for a in run.get("actions"):
 		var row: HBoxContainer = HBoxContainer.new()

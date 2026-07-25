@@ -15,6 +15,12 @@ const COL_GREEN: Color = MerlinVisual.GREEN
 const COL_VIOLET: Color = MerlinVisual.VIOLET
 const COL_DIM: Color = MerlinVisual.DIM_WARM
 
+# R164 : la revente de cartes est HORS SCOPE V1. Aucune source de carte vendable n'existe aujourd'hui
+# (le draft greffe des bonus sur les actions, il ne donne jamais de carte-trait autonome ;
+# add_card_to_deck() n'est appele que par tools/probe_draft.gd). Passer a true le jour ou une vraie
+# recompense en carte sera cablee : tout le code de vente est deja en place et teste.
+const SELL_ENABLED: bool = false
+
 const DEFAULT_TITLE: String = "Le Sentier des Murmures"
 const DEFAULT_PITCH: String = "Un chemin s'ouvre là où nul n'a marché. Le sentier t'y attend, patient."  # Vague D (D2) : biome-agnostique (repli lancement direct)
 const END_SCENE: String = "res://scenes/MerlinEnd.tscn"
@@ -114,6 +120,22 @@ var _pending_graft: Dictionary = {}      # greffe sélectionnée en attente de c
 var _graft_applied: bool = false         # une greffe a été posée pendant ce draft (→ mark_draft)
 var _draft_title_lbl: Label = null       # libellé Z4 (re-titré à l'étape cible, cross-fade)
 var _draft_title_base: String = ""       # titre de l'étape 1 (restauré à la désélection)
+
+# Vague Economie V1 : vitrine marchande (beats Rencontre, priorité reclamation > offrande pilier >
+# marchand). Réutilise _open_draft_zone/_close_draft_zone TEL QUEL (spec) : _on_draft_card bascule
+# vers _on_merchant_card quand _merchant_active. _merchant_items : id de carte présentée → dict
+# {kind: info/heal/purge/graft/sell, price, ...} — jamais persisté (transient, R108).
+var _merchant_active: bool = false
+var _merchant_items: Dictionary = {}
+# HUD bourse (sp_l, GOLD) / dette (sp_r, GOLD_DARK) — R136 : ZÉRO nouvelle zone, peuplées dans les
+# spacers existants du HUD. Cachées quand 0 Gwenneg / sans Promesse (spec).
+var _bourse_box: HBoxContainer = null
+var _bourse_lbl: Label = null
+var _dette_box: HBoxContainer = null
+var _dette_lbl: Label = null
+# Bouton « Refuser » de la Promesse (beat « Le créancier revient ») — option TOUJOURS disponible,
+# coexiste avec la résolution normale par cartes (spec). Retiré au clic ou au beat suivant.
+var _debt_refuse_btn: Button = null
 
 # v10.13.1 — juice pack 1 (§21) : gardes d'animation.
 var _beat_transition: bool = false  # review HIGH-1 : anti double-fire de _present_current_beat (voile)
@@ -230,6 +252,7 @@ func _begin() -> void:
 	if _beat_map != null:  # v10.12 : la map dessine le chemin du run (total beats + position courante)
 		_beat_map.setup(int(run.scenario.get("total", 5)))
 		_beat_map.set_current(run.beat_index)
+	_refresh_economy_hud()  # Vague Economie V1 : état initial (bourse/dette), y compris au resume
 	# A1 (item 3) : laisser le layout des ZONES se calculer AVANT le 1er texte — sinon la course de
 	# layout au 1er frame fait peindre la capsule Z3 à (0,0). Précédent exact : merlin_menu.gd:594.
 	await get_tree().process_frame
@@ -284,6 +307,7 @@ func _present_current_beat() -> void:
 		_pact_row.queue_free()
 		_pact_row = null
 	_pact_pending_pilier = ""  # review V2b MEDIUM-5 : un pacte non consommé ne traverse pas les beats
+	_clear_debt_refuse_btn()  # un « Refuser » non consommé ne traverse pas les beats non plus
 	_clear_tuto_hint()  # v11-V2b : hygiène — un hint non désarmé ne survit pas au beat (non consommé)
 	_intervention_done_this_beat = false
 	if _situation_text != null:
@@ -322,6 +346,7 @@ func _present_current_beat() -> void:
 			_beat_map.animate_advance(local_i)  # v10.13 (B4) : le connecteur POUSSE + pop du halo
 		else:
 			_beat_map.set_current(local_i)
+	_refresh_economy_hud()  # Vague Economie V1 : la Promesse décompte à chaque beat (advance_beat)
 	_scene_epoch += 1  # toute issue LLM en vol du beat précédent devient périmée
 	_can_advance = false
 	_set_caret(false)
@@ -643,7 +668,13 @@ func _update_preview() -> void:
 	# La preview passe EXACTEMENT les mêmes arguments que la résolution (die, diff, skill_mod, graft_bonus) — R120.
 	var skill_mod_p: int = run_p.skill_mod_for(_selected_action)
 	var graft_bonus_p: int = run_p.graft_roll_bonus(_selected_action)
-	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
+	# Vague Economie V1 — Coup de Pouce : preview LECTURE SEULE (has_coup_de_pouce_armed, ne consomme
+	# jamais) — face effective = max(die, face_adv) si la charge est armée, IDENTIQUE au calcul de
+	# _on_resolve (R120 : preview = résolution, même valeurs, seule la résolution consomme la charge).
+	var die_p: int = int(_current_situation.get("die", 0))
+	if run_p.has_coup_de_pouce_armed():
+		die_p = maxi(die_p, int(_current_situation.get("face_adv", 0)))
+	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], die_p,
 		run_p.blessed_bonus(combo),
 		int(_current_situation.get("difficulte", 2)), skill_mod_p, graft_bonus_p,
 		str(_current_situation.get("type", "")))  # R158 : + beat_type (nature) : preview = resolution (R120)
@@ -672,6 +703,7 @@ func _on_resolve() -> void:
 		return
 	_state = 2
 	_set_resolve_armed(false)  # Z6 : désarmé (alpha 0.35 + disabled) — le bouton ne disparaît jamais
+	_clear_debt_refuse_btn()  # la voie « Refuser » cède devant la résolution normale choisie
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
@@ -679,7 +711,12 @@ func _on_resolve() -> void:
 	# v2-W2/W3 — mêmes arguments que la preview (die, diff, skill_mod=talent du verbe, graft_bonus=greffes roll) → R120.
 	var skill_mod_r: int = run.skill_mod_for(_selected_action)
 	var graft_bonus_r: int = run.graft_roll_bonus(_selected_action)
-	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], int(_current_situation.get("die", 0)),
+	# Vague Economie V1 — Coup de Pouce : la RÉSOLUTION RÉELLE consomme la charge armée (exactement
+	# une fois, consume_coup_de_pouce_if_armed) — même calcul max(die, face_adv) que la preview (R120).
+	var die_r: int = int(_current_situation.get("die", 0))
+	if run.consume_coup_de_pouce_if_armed():
+		die_r = maxi(die_r, int(_current_situation.get("face_adv", 0)))
+	var res: Dictionary = MerlinResolution.resolve(reqs, combo, [], die_r,
 		run.blessed_bonus(combo),
 		int(_current_situation.get("difficulte", 2)), skill_mod_r, graft_bonus_r,
 		str(_current_situation.get("type", "")))  # R158 : + beat_type (nature) : memes args que la preview (R120)
@@ -731,6 +768,14 @@ func _on_resolve() -> void:
 	res["fx_effects"] = fx_effects
 	# Draft « 1 carte sur 3 » armé : SEULEMENT aux beats clés (réussite/éclatante) tant qu'il reste des beats.
 	var deg: String = str(res.get("degree", ""))
+	# Vague Economie V1 : gain de Gwenneg au degré (+ Butin d'Exploration 60%/1d4). Le modèle
+	# s'applique ICI (comme les jauges) ; le commit visuel HUD attend _flush_gauges (bug #1).
+	run.add_gwenneg(run.gwenneg_gain_for_degree(deg) + run.roll_loot(deg))
+	# Si ce beat est la reclamation de la Promesse (« Le créancier revient », muté par
+	# merlin_run._tick_pending_debts), la résolution normale règle AUSSI la dette (le refus
+	# explicite est une voie ALTERNATIVE, cf. _offer_debt_refusal/_on_debt_refuse).
+	if str(run.current_beat().get("type", "")) == str(run.DEBT_RECLAMATION_TYPE):
+		res["debt_settled"] = run.settle_debt(deg)
 	_pending_draft = (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) and not run.is_climax() and not run.ended
 	run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
 	if run.faits_marquants.size() > 6:
@@ -962,7 +1007,10 @@ func _bless_action(tag: String) -> void:
 
 # Pacte opt-in (1 geste, prix AFFICHÉ) : Être = la porte s'ouvre (tag requis béni) contre +1 Corruption ;
 # Compagnon = pioche 1 contre +1 Corruption. Refuser = rien. Ignorable (la main reste jouable).
-func _build_pact_choice(pk: String) -> void:
+# Vague Economie V1 : pk == "coup_de_pouce" (2e geste de l'achat en Promesse, armé par le 1er clic
+# dans la vitrine, cf. _on_merchant_card) : libellés EXACTS imposés par la spec, prix (durée de la
+# Promesse à venir) écrit en toutes lettres ; `price` = prix_convenu (Gwenneg dus à la reclamation).
+func _build_pact_choice(pk: String, price: int = 0, pilier: String = "") -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	# v11-V2b (vigilance V2a #2) — le slot central Z4 ne porte qu'UN contenu à la fois : la vignette
 	# du beat précédent est purgée et le hint tuto s'efface (sans être consommé) devant le pacte.
@@ -976,10 +1024,14 @@ func _build_pact_choice(pk: String) -> void:
 	_pact_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_pact_row.add_theme_constant_override("separation", 24)
 	var acc: Button = Button.new()
-	acc.text = ("Accepter  (la voie s'ouvre · Corruption +1)" if pk == "etre"
-		else "Accepter  (pioche 1 · Corruption +1)")
 	var ref: Button = Button.new()
-	ref.text = "Refuser"
+	if pk == "coup_de_pouce":
+		acc.text = "Ceder ton nom, il viendra le reprendre  (%d Gwenneg dus)" % price
+		ref.text = "Garder"
+	else:
+		acc.text = ("Accepter  (la voie s'ouvre · Corruption +1)" if pk == "etre"
+			else "Accepter  (pioche 1 · Corruption +1)")
+		ref.text = "Refuser"
 	for b in [acc, ref]:
 		var btn: Button = b
 		btn.custom_minimum_size = Vector2(300, 52)
@@ -987,16 +1039,28 @@ func _build_pact_choice(pk: String) -> void:
 		MerlinVisual.apply_button_da(btn)
 		MerlinVisual.connect_button_feedback(btn)
 		_pact_row.add_child(btn)
-	acc.pressed.connect(_on_pact_choice.bind(pk, true))
-	ref.pressed.connect(_on_pact_choice.bind(pk, false))
+	acc.pressed.connect(_on_pact_choice.bind(pk, true, price, pilier))
+	ref.pressed.connect(_on_pact_choice.bind(pk, false, price, pilier))
 	if _res_block != null:
 		_res_block.add_child(_pact_row)
 		_fade_res_block(true)
 
 
-func _on_pact_choice(pk: String, accepted: bool) -> void:
+func _on_pact_choice(pk: String, accepted: bool, price: int = 0, pilier: String = "") -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if accepted:
+		if pk == "coup_de_pouce":
+			# Vague Economie V1 : 2e geste de l'achat en Promesse : contracte la dette (cap 1/quête,
+			# géré par use_coup_de_pouce ; no-op défensif si une Promesse s'est armée entre-temps).
+			run.use_coup_de_pouce(price, pilier)
+			_refresh_economy_hud()
+			run.save()  # hors du save unique de _advance_to_next (ce pacte vit PENDANT le choix du beat)
+			if _pact_row != null and is_instance_valid(_pact_row):
+				_pact_row.queue_free()
+				_pact_row = null
+			if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
+				_fade_res_block(false)
+			return
 		if pk == "etre":
 			# v11-W2 : le pacte de l'Être bénit une ACTION (tag requis → la porte s'ouvre par le verbe).
 			var reqs3: Array = _current_situation.get("required_tags", [])
@@ -1012,6 +1076,63 @@ func _on_pact_choice(pk: String, accepted: bool) -> void:
 		_pact_row = null
 	if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
 		_fade_res_block(false)  # rien d'autre à montrer dans le slot central
+
+
+# === Vague Economie V1 : La Promesse : reclamation (beat muté « Le créancier revient ») ===
+# L'option de refus reste TOUJOURS disponible (spec, non-négociable) : posée dans le slot central Z4
+# à côté de la résolution normale par cartes (même geste que le pacte : coexiste, n'importe pas
+# sur le choix action+trait). Un clic « Refuser » règle le beat SANS jouer de carte.
+func _offer_debt_refusal() -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	if _res_block == null or run.ended:
+		return
+	_clear_debt_refuse_btn()
+	var btn: Button = Button.new()
+	btn.text = "Refuser (Corruption +2 · le pilier s'en souviendra)"
+	btn.custom_minimum_size = Vector2(360, 52)
+	btn.add_theme_font_size_override("font_size", 16)
+	MerlinVisual.apply_button_da(btn)
+	MerlinVisual.connect_button_feedback(btn)
+	btn.pressed.connect(_on_debt_refuse)
+	_debt_refuse_btn = btn
+	_res_block.add_child(btn)
+	_fade_res_block(true)
+
+
+func _clear_debt_refuse_btn() -> void:
+	if _debt_refuse_btn != null and is_instance_valid(_debt_refuse_btn):
+		_debt_refuse_btn.queue_free()
+	_debt_refuse_btn = null
+
+
+# Refus explicite : règle le beat immédiatement (pas de fusion de cartes — rien n'a été joué),
+# narre l'issue, puis rejoint le flux normal (caret « continuer » → _advance_to_next).
+func _on_debt_refuse() -> void:
+	if _state != 1:
+		return
+	_clear_debt_refuse_btn()
+	_state = 2
+	_set_resolve_armed(false)
+	_set_choice_ui(false)
+	var run: Node = get_node("/root/MerlinRun")
+	var int_before: int = int(run.get("integrite"))
+	var corr_before: int = int(run.get("corruption"))
+	var out: Dictionary = run.refuse_debt()
+	if out.is_empty():
+		return  # défense : la Promesse a déjà été réglée entre-temps (course improbable)
+	_gauges_deferred = true  # même contrat que _on_resolve : commit visuel différé (bug #1)
+	var res: Dictionary = {
+		"degree": MerlinResolution.PARTIEL, "label": "Refus de la Promesse",
+		"integrite_delta": int(run.get("integrite")) - int_before,
+		"corruption_delta": int(run.get("corruption")) - corr_before,
+		"fx_effects": [],
+	}
+	_pending_draft = false
+	run.faits_marquants.append("Le créancier revient → Refus")
+	if run.faits_marquants.size() > 6:
+		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
+	var prose: String = "[i]Tu détournes le regard et refuses de payer.[/i] Le créancier se retire sans un mot, mais son silence pèsera plus lourd que sa dette."
+	_show_resolution(res, prose, true)
 
 
 # R158 : « Pousser » (Encaisser/Pousser) RETIRE : _build_push_choice / _on_push_choice /
@@ -1146,15 +1267,35 @@ func _advance_to_next() -> void:
 	# signée par sa nature. REMPLACE le draft standard ce beat. current_beat() = le beat JUSTE résolu (advance_beat
 	# n'a pas encore tourné). Le flag pilier_offering_done (posé à l'ouverture, persisté) garantit l'unicité au resume.
 	# v11-W3 : les 4 actions pleines (12 greffes) → plus AUCUN draft/offrande ne se déclenche.
-	if str(run.current_beat().get("type", "")) == "Rencontre" and not run.pilier_offering_done \
-			and not run.ended and run.has_graftable_action():
+	# Vague Economie V1 : priorite STRICTE sur un beat « Rencontre », une seule prise par beat.
+	# Ordre : reclamation de Promesse (deja tranchee en amont : le beat mute vers « Le creancier
+	# revient », le type n'est donc plus « Rencontre » ici, la priorite #1 se resout d'elle-meme),
+	# puis offrande de pilier, puis marchand ordinaire. `rencontre_slot_used` empeche les deux
+	# dernieres de coexister (sans cette exclusion : course swap_zone, classe de bug R159, softlock).
+	var rencontre_beat: bool = str(run.current_beat().get("type", "")) == "Rencontre"
+	var rencontre_slot_used: bool = false
+	if rencontre_beat:
+		run.rencontre_count_this_run += 1
+	# Chantier 2 (garantie marchand) — a partir de la 2e Rencontre, si le marchand n'a JAMAIS ete vu
+	# cette run, il devient PRIORITAIRE sur l'offrande de pilier (mais reste soumis a la reclamation
+	# de Promesse, deja tranchee en amont : un beat "Le creancier revient" n'est plus de type
+	# "Rencontre" ici). Une reclamation ne peut exister que si le marchand a deja ete vu (la dette se
+	# contracte chez lui) : elle ne peut donc jamais l'affamer.
+	var force_merchant: bool = rencontre_beat and run.rencontre_count_this_run >= 2 and not run.merchant_seen_this_run
+	if rencontre_beat and not force_merchant and not run.pilier_offering_done and not run.ended and run.has_graftable_action():
 		var pk: String = _current_offer_pilier()
 		if pk != "":
+			rencontre_slot_used = true
 			_pending_draft = false  # l'offrande du pilier remplace le draft standard ce beat
 			_scene_epoch += 1
 			await _present_pilier_offering(pk)
 			if not is_inside_tree():
 				return
+	if rencontre_beat and not rencontre_slot_used and not run.ended:
+		_scene_epoch += 1
+		await _present_merchant_stall()
+		if not is_inside_tree():
+			return
 	# v1.0-V4a (BAL-11-B/GD-27) — draft GARANTI à chaque transition de quête : le beat tout juste
 	# résolu referme sa quête (qn == qtotal) et la run continue → une greffe s'offre quel que soit
 	# le degré. Le draft sur réussite/éclatante (armé par _on_resolve) reste inchangé.
@@ -1490,6 +1631,198 @@ func _present_pilier_offering(pilier_key: String) -> void:
 	_close_draft_zone()
 
 
+# === Vague Economie V1 : vitrine marchande (beats « Rencontre », priorite en dessous de
+# l'offrande de pilier, cf. _advance_to_next). Reutilise _open_draft_zone/_close_draft_zone TEL
+# QUEL (spec) : le dispatch de clic passe par _on_draft_card qui bascule vers _on_merchant_card
+# quand _merchant_active. Items : Information/Soin/Purge (prix fixes), une Greffe/carte a l'achat
+# (prix par rarete), le Coup de Pouce (paye en Promesse, pas en Gwenneg), et jusqu'a 2 cartes de la
+# reserve proposees a la vente (prix par rarete). Rien a offrir, pas de vitrine vide.
+func _present_merchant_stall() -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	var pk: String = _current_offer_pilier()
+	_merchant_items = {}
+	var cards: Array = []
+	if run.can_buy_info():
+		var info_price: int = int(run.INFO_PRICE)
+		var c_info: MerlinCard = MerlinCard.make("shop_info", "Une rumeur du chemin", ["Savoir"],
+			"Il te dit ce qui t'attend, pas comment le franchir. (Prix : %d Gwenneg)" % info_price, 0, "Commune")
+		_merchant_items["shop_info"] = {"kind": "info", "price": info_price}
+		cards.append(c_info)
+	if run.can_buy_heal():
+		var heal_price: int = int(run.HEAL_PRICE)
+		var c_heal: MerlinCard = MerlinCard.make("shop_heal", "Onguent de fortune", ["Endurance"],
+			"Un baume simple, la blessure se referme un peu. (Prix : %d Gwenneg)" % heal_price, 0, "Commune")
+		_merchant_items["shop_heal"] = {"kind": "heal", "price": heal_price}
+		cards.append(c_heal)
+	if run.can_buy_purge(pk):
+		var purge_price: int = int(run.PURGE_PRICE)
+		var c_purge: MerlinCard = MerlinCard.make("shop_purge", "Eau claire du Choeur", ["Equilibre"],
+			"Les Druides seuls savent laver ce que l'ombre a tache. (Prix : %d Gwenneg)" % purge_price, 0, "Rare")
+		_merchant_items["shop_purge"] = {"kind": "purge", "price": purge_price, "pilier": pk}
+		cards.append(c_purge)
+	if run.can_use_coup_de_pouce():
+		# Prix convenu (Gwenneg dus a la reclamation) aligne sur la rarete Rare des greffes "roll"
+		# (meme registre de puissance que l'avantage au jet qu'il finance).
+		var cdp_price: int = int(MerlinCard.PURCHASE_PRICE.get("Rare", 9))
+		var c_cdp: MerlinCard = MerlinCard.make("shop_cdp", "Un coup de pouce du sentier", ["Instinct"],
+			"Le chemin s'aplanit sous tes pas, pour cette fois. (Promesse : %d Gwenneg dus au retour du creancier)" % cdp_price, 0, "Rare")
+		_merchant_items["shop_cdp"] = {"kind": "coup_de_pouce", "price": cdp_price, "pilier": pk}
+		cards.append(c_cdp)
+	var graft_choices: Array = run.graft_choices(1)
+	if not graft_choices.is_empty():
+		var g: Dictionary = graft_choices[0]
+		var gcard: MerlinCard = _graft_presentation_card(g)
+		var gprice: int = MerlinCard.price_for_purchase(gcard)
+		gcard.evocation = "%s (Prix : %d Gwenneg)" % [str(gcard.evocation), gprice]
+		_merchant_items[str(gcard.id)] = {"kind": "graft", "price": gprice, "graft": g}
+		cards.append(gcard)
+	# Reserve vendable : DESACTIVEE au V1 (R164). Le levier de revente n'a aujourd'hui aucune source :
+	# `add_card_to_deck()` n'est appele nulle part dans le flow de jeu (seulement dans tools/probe_draft.gd),
+	# car le draft greffe des bonus sur les ACTIONS permanentes et ne produit jamais de carte-trait
+	# autonome. La vitrine n'afficherait donc que du vide, ou pire, pousserait a vendre les 16 traits
+	# canon de depart (etat degenere ferme par l'audit). Le code de vente reste en place, inerte, et se
+	# rallume en basculant ce drapeau le jour ou une vraie recompense en carte existera.
+	# CLONES de presentation, jamais la carte reelle mutee en place ; meme id que l'original
+	# (_sell_reserve_card la retrouve par cet id, et _merchant_items est indexe sur card.id).
+	if SELL_ENABLED:
+		var sellable: Array = MerlinCard.sellable_cards(run.deck, run.discard)
+		for i in mini(2, sellable.size()):
+			var orig: MerlinCard = sellable[i]
+			var s_price: int = MerlinCard.price_for_sale(orig)
+			var s_view: MerlinCard = MerlinCard.make(str(orig.id), str(orig.card_name),
+				(orig.tags as Array).duplicate(),
+				"%s (Vendre : %d Gwenneg)" % [str(orig.evocation), s_price], 0, str(orig.rarity))
+			_merchant_items[str(s_view.id)] = {"kind": "sell", "price": s_price, "card_id": str(orig.id)}
+			cards.append(s_view)
+	if cards.is_empty():
+		return  # rien a offrir, pas de vitrine vide
+	_merchant_active = true
+	run.merchant_seen_this_run = true  # chantier 2 : telemetrie + garde de priorite (_advance_to_next)
+	_begin_merchant_draft(cards, "Un marchand croise ta route")
+	while not _draft_done_flag and is_inside_tree() and _draft_active and not run.ended:
+		await get_tree().process_frame
+	if _graft_applied and _beat_map != null:
+		_beat_map.mark_draft()
+	_merchant_active = false
+	_merchant_items = {}
+	_close_draft_zone()
+
+
+# Ouverture de la vitrine : meme squelette que _begin_graft_draft (id -> dict conserve a part),
+# mais _graft_by_id reste vide (les items marchands n'ont pas de badge talent/roll). Estompe les
+# items non payables (alpha 0.35, non cliquables) APRES le deal_in en cascade (spec).
+func _begin_merchant_draft(cards: Array, title_text: String) -> void:
+	_graft_by_id = {}
+	_pending_graft = {}
+	_graft_applied = false
+	_draft_pick = null
+	_draft_done_flag = false
+	_draft_title_base = title_text
+	_open_draft_zone(cards, title_text, "")
+	var stagger: float = float(cards.size()) * 0.12 + 0.3
+	get_tree().create_timer(stagger).timeout.connect(_apply_merchant_affordability)
+
+
+# Estompe (alpha 0.35, mouse_filter IGNORE) les cartes dont le prix depasse la bourse courante. La
+# vente n'a pas de prix a l'achat : toujours cliquable.
+func _apply_merchant_affordability() -> void:
+	if not _merchant_active or not is_inside_tree() or _hand_box == null:
+		return
+	var run: Node = get_node("/root/MerlinRun")
+	for c in _hand_box.get_children():
+		if not (c is MerlinCardView):
+			continue
+		var cv: MerlinCardView = c
+		if cv.card == null:
+			continue
+		var item: Dictionary = _merchant_items.get(str(cv.card.id), {})
+		if item.is_empty() or str(item.get("kind", "")) == "sell":
+			continue
+		if not run.can_afford(int(item.get("price", 0))):
+			cv.modulate.a = 0.35
+			cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+# Dispatch d'achat/vente (appele par _on_draft_card quand _merchant_active). Une seule prise par
+# visite : le geste referme la vitrine (meme contrat que le draft de greffe standard), SAUF pour
+# une greffe achetee qui entre dans le meme cycle 2 gestes que le draft gratuit (paiement au 1er
+# clic, cible au 2e via _on_graft_target deja cable), et SAUF pour le Coup de Pouce qui arme le
+# choix Promesse (_build_pact_choice, libelles EXACTS imposes par la spec).
+func _on_merchant_card(card: MerlinCard) -> void:
+	if _draft_done_flag or Time.get_ticks_msec() - _draft_open_ms < 500:
+		return
+	# Une greffe DEJA PAYEE attend sa cible (2e geste) ou son annulation (re-clic sur la meme
+	# carte) : tout autre clic est ignore (garde anti double-transaction, le Gwenneg est deja debite).
+	if not _pending_graft.is_empty() and str(_pending_graft.get("id", "")) != str(card.id):
+		return
+	var item: Dictionary = _merchant_items.get(str(card.id), {})
+	if item.is_empty():
+		return
+	var run: Node = get_node("/root/MerlinRun")
+	var kind: String = str(item.get("kind", ""))
+	if kind == "graft":
+		if not _pending_graft.is_empty() and str(_pending_graft.get("id", "")) == str(card.id):
+			# re-clic = desengagement + remboursement (le paiement n'est definitif qu'a la pose)
+			run.add_gwenneg(int(item.get("price", 0)))
+			_pending_graft = {}
+			_select_draft_view(null)
+			_set_draft_target_mode(false)
+			_set_draft_title(_draft_title_base)
+			_refresh_economy_hud()
+			return
+		if not run.spend_gwenneg(int(item.get("price", 0))):
+			return  # fonds insuffisants (garde defensive, la carte est deja estompee)
+		_pending_graft = item.get("graft", {})
+		_select_draft_view(card)
+		_set_draft_target_mode(true)
+		_set_draft_title("Touche l'action qui recevra la greffe (payee)")
+		_refresh_economy_hud()
+		return
+	if kind == "coup_de_pouce":
+		var price: int = int(item.get("price", 0))
+		var pilier: String = str(item.get("pilier", ""))
+		_draft_pick = null
+		_draft_done_flag = true  # la vitrine se referme, le pacte s'ouvre ENSUITE dans Z4
+		call_deferred("_build_pact_choice", "coup_de_pouce", price, pilier)
+		return
+	var ok: bool = false
+	match kind:
+		"info": ok = run.buy_info()
+		"heal": ok = run.buy_heal()
+		"purge": ok = run.buy_purge(str(item.get("pilier", "")))
+		"sell": ok = _sell_reserve_card(str(item.get("card_id", "")))
+	if not ok:
+		return  # geste refuse (fonds insuffisants/cap atteint/carte deja cedee) : le clic reste ouvert
+	# Bug d'integration #2 (spec) : PAS de save() ici. Le debit/vente est couvert par le save unique
+	# de _advance_to_next (ce flux vit AVANT run.advance_beat, meme atomicite que l'offrande pilier).
+	_refresh_economy_hud()
+	_draft_done_flag = true
+
+
+# Vend une carte de la RESERVE (deck/defausse), jamais la main posee, jamais les 16 cartes canon,
+# jamais une greffe deja posee (garde deja assuree par MerlinCard.sellable_cards en amont, cf.
+# _present_merchant_stall). Retourne false si la carte n'est plus dans la reserve (course improbable).
+func _sell_reserve_card(card_id: String) -> bool:
+	var run: Node = get_node("/root/MerlinRun")
+	var deck: Array = run.deck
+	for i in deck.size():
+		if deck[i] is MerlinCard and str((deck[i] as MerlinCard).id) == card_id:
+			var price: int = MerlinCard.price_for_sale(deck[i])
+			deck.remove_at(i)
+			run.deck = deck
+			run.add_gwenneg(price)
+			return true
+	var discard: Array = run.discard
+	for j in discard.size():
+		if discard[j] is MerlinCard and str((discard[j] as MerlinCard).id) == card_id:
+			var s_price: int = MerlinCard.price_for_sale(discard[j])
+			discard.remove_at(j)
+			run.discard = discard
+			run.add_gwenneg(s_price)
+			return true
+	return false
+
+
 # v11-V2b (spec matrice ligne 9) — Draft/Offrande DANS les zones : les 3 cartes REMPLACENT
 # l'éventail (cross-fade + deal_in conservé) ; titre + « Passer » dans le slot central de Z4 ;
 # le texte d'issue reste dans l'encart (contexte). `pilier` = signature du PNJ (déjà résolue dans
@@ -1613,6 +1946,12 @@ func _swap_hand_zone(build: Callable) -> void:
 # v11-W3 — étape 1 du draft de greffe : clic greffe = sélection (carte levée + GOLD) → Z4 re-titrée
 # « Touche l'action qui recevra la greffe » + tuiles éligibles en pulse ; re-clic = désélection.
 func _on_draft_card(card: MerlinCard) -> void:
+	if _merchant_active:
+		# Vague Economie V1 : la vitrine marchande reutilise EXACTEMENT le meme cablage de clic
+		# (_open_draft_zone connecte toujours card_clicked a _on_draft_card) ; le dispatch bascule
+		# ici vers le handler d'achat/vente, jamais vers la logique de greffe gratuite.
+		_on_merchant_card(card)
+		return
 	if _draft_done_flag or Time.get_ticks_msec() - _draft_open_ms < 500:
 		return  # audit ux_flow F2 : pas de pick AVEUGLE pendant le deal (contrôles encore à alpha 0)
 	var g: Dictionary = _graft_by_id.get(str(card.id), {})
@@ -1648,6 +1987,15 @@ func _on_draft_card(card: MerlinCard) -> void:
 func _on_draft_skip() -> void:
 	if _draft_done_flag or Time.get_ticks_msec() - _draft_open_ms < 500:
 		return  # audit ux_flow F2 : idem — un double-clic d'avance ne doit pas skipper sans voir
+	# Vague Economie V1 : une greffe marchande DEJA PAYEE mais sans cible choisie ne doit jamais se
+	# perdre au « Passer » : remboursement avant de fermer (garde symetrique du re-clic annulateur).
+	if _merchant_active and not _pending_graft.is_empty():
+		var run: Node = get_node("/root/MerlinRun")
+		var paid_item: Dictionary = _merchant_items.get(str(_pending_graft.get("id", "")), {})
+		if not paid_item.is_empty():
+			run.add_gwenneg(int(paid_item.get("price", 0)))
+			_refresh_economy_hud()
+		_pending_graft = {}
 	_draft_pick = null
 	_draft_done_flag = true
 
@@ -1762,6 +2110,11 @@ func _on_typewriter_done() -> void:
 		_refresh_action_tiles()  # v11-W2 : feedforward + sélection propres à l'ouverture du choix
 		_update_preview()        # paire incomplète → bouton Résoudre désarmé (alpha 0.35)
 		_maybe_tuto_hint()       # v11-V2b : micro-tuto one-shot (beats 1-2, labels passifs Z4)
+		# Vague Economie V1 : beat de reclamation de la Promesse : l'option « Refuser » reste
+		# TOUJOURS disponible (spec), à côté de la résolution normale par cartes.
+		if str(get_node("/root/MerlinRun").current_beat().get("type", "")) \
+				== str(get_node("/root/MerlinRun").DEBT_RECLAMATION_TYPE):
+			_offer_debt_refusal()
 
 
 func _set_caret(on: bool) -> void:
@@ -2087,6 +2440,48 @@ func _flush_gauges() -> void:
 	_gauges_deferred = false
 	var run: Node = get_node("/root/MerlinRun")
 	_on_gauges(int(run.get("integrite")), int(run.get("corruption")))
+	# Bug d'intégration #1 (spec) : le GAIN de Gwenneg à la résolution est appliqué au modèle dès
+	# _on_resolve, mais le COMMIT VISUEL du HUD attend ICI — sinon il jouerait sous le layer plein
+	# écran de MerlinFx et serait invisible.
+	_refresh_economy_hud()
+
+
+# Vague Economie V1 : HUD bourse (sp_l, GOLD) + dette (sp_r, GOLD_DARK) : ZÉRO nouvelle zone (R136),
+# cachés à 0 Gwenneg / sans Promesse (spec). Rafraîchi explicitement (jamais lu au tick) : après
+# _flush_gauges (bug #1 ci-dessus) et à chaque révélation de beat (la Promesse décompte dans
+# advance_beat, cf. merlin_run.gd _tick_pending_debts).
+func _refresh_economy_hud() -> void:
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run == null:
+		return
+	var g: int = int(run.get("gwenneg"))
+	if _bourse_box != null:
+		_bourse_box.visible = g > 0
+	if _bourse_lbl != null:
+		_bourse_lbl.text = str(g)
+	var db: int = int(run.debt_beats_remaining())
+	if _dette_box != null:
+		_dette_box.visible = db >= 0
+	if _dette_lbl != null:
+		_dette_lbl.text = str(maxi(db, 0))
+	if _beat_map != null:
+		_beat_map.set_debt_node(_debt_reclamation_local_index())
+
+
+# Index LOCAL (dans la quête actuellement affichée par _beat_map) du beat muté en « Le créancier
+# revient », -1 si aucune Promesse active ou si la reclamation tombe hors de la quête courante
+# (rien à marquer sur le tronçon affiché). Même convention que le local_i de _present_current_beat.
+func _debt_reclamation_local_index() -> int:
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run == null or not run.has_pending_debt():
+		return -1
+	var beats: Array = run.scenario.get("beats", [])
+	var cur_quest: int = int(run.current_beat().get("quest", 0))
+	for i in beats.size():
+		var b: Dictionary = beats[i]
+		if bool(b.get("debt_reclamation", false)) and int(b.get("quest", 0)) == cur_quest:
+			return int(b.get("qn", i + 1)) - 1
+	return -1
 
 
 # v11-W2 — la paire ACTION + TRAIT est complète : onde + sparks centrées sur le bouton Résoudre
@@ -2728,6 +3123,21 @@ func _build_ui() -> void:
 	var sp_l: Control = Control.new()
 	sp_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud.add_child(sp_l)
+	# Vague Economie V1 : Bourse (Gwenneg) peuplée DANS le spacer existant sp_l (R136 : zéro nouvelle
+	# zone). Glyphe "coin" + nombre, GOLD, mouse_filter IGNORE, caché à 0 (peuplé par _refresh_economy_hud).
+	_bourse_box = HBoxContainer.new()
+	_bourse_box.set_anchors_preset(Control.PRESET_CENTER)
+	_bourse_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bourse_box.add_theme_constant_override("separation", 6)
+	_bourse_box.visible = false
+	sp_l.add_child(_bourse_box)
+	var bourse_glyph: MerlinGlyph = MerlinGlyph.new()
+	bourse_glyph.custom_minimum_size = Vector2(26, 26)
+	bourse_glyph.setup("coin", MerlinVisual.GOLD, 2.2)
+	_bourse_box.add_child(bourse_glyph)
+	_bourse_lbl = MerlinVisual.make_label(MerlinVisual.GOLD, MerlinVisual.FS_HINT)
+	_bourse_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bourse_box.add_child(_bourse_lbl)
 	_beat_map = MerlinBeatMap.new()
 	_beat_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_beat_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2736,6 +3146,21 @@ func _build_ui() -> void:
 	var sp_r: Control = Control.new()
 	sp_r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud.add_child(sp_r)
+	# Vague Economie V1 : Promesse (dette) peuplée DANS le spacer existant sp_r (R136). Glyphe "chain"
+	# (déjà existant) en GOLD_DARK — PAS de violet (R136 : violet = corruption, une dette n'en est pas).
+	_dette_box = HBoxContainer.new()
+	_dette_box.set_anchors_preset(Control.PRESET_CENTER)
+	_dette_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dette_box.add_theme_constant_override("separation", 6)
+	_dette_box.visible = false
+	sp_r.add_child(_dette_box)
+	var dette_glyph: MerlinGlyph = MerlinGlyph.new()
+	dette_glyph.custom_minimum_size = Vector2(26, 26)
+	dette_glyph.setup("chain", MerlinVisual.GOLD_DARK, 2.2)
+	_dette_box.add_child(dette_glyph)
+	_dette_lbl = MerlinVisual.make_label(MerlinVisual.GOLD_DARK, MerlinVisual.FS_HINT)
+	_dette_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dette_box.add_child(_dette_lbl)
 	_corr_gauge = MerlinRingGauge.new()
 	hud.add_child(_corr_gauge)
 	# N4-P1 (chantier 6) : spirale voilee = Corruption ; le lisere de presence a 0 (dans la classe)

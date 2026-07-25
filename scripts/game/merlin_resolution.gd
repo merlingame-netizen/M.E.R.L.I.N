@@ -147,6 +147,22 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	}
 
 
+# === Vague Economie V1 (in-run) — Coup de Pouce = AVANTAGE, JAMAIS un +N additif ===
+# Pre-tire 2 sommes 2d6 INDEPENDANTES (die + face_adv) et garde la MEILLEURE. Ne touche NI
+# DC_BY_DIFF, NI COVER_PER_TAG, NI SYN, NI PARTIEL_LOW, NI ECLAT_MARGIN (constantes fraichement
+# calibrees, R158) : c'est un simple pre-tirage de dé, au même titre que merlin_scenario.gd (die +
+# face_adv, PRE-TIRES ENSEMBLE, une seule fois par beat). Respecte R120 : `die` et `face_adv` sont
+# PRE-TIRES ordinaires, stockés UNE fois par l'appelant (beat["die"]/beat["face_adv"]) et partagés
+# tels quels entre preview/résolution/soak — resolve() ne change pas et ignore d'où vient `die`.
+# R120 (2026-07-25) : l'ancien resolve_with_advantage(rng) tirait le dé AU MOMENT DE L'USAGE (hors
+# sémantique pré-tirée, cache-miss possible entre preview et résolution) — SUPPRIMÉ. Le MAX(die,
+# face_adv) se calcule désormais EN AMONT de resolve(), par l'appelant (merlin_game.gd/probe_soak.gd),
+# à partir des DEUX valeurs pré-tirées de CE beat, si la charge Coup de Pouce est armée
+# (MerlinRun.consume_coup_de_pouce_if_armed) — une seule vérité, aucun tirage caché dans le moteur.
+static func roll_2d6(rng: RandomNumberGenerator) -> int:
+	return rng.randi_range(1, 6) + rng.randi_range(1, 6)
+
+
 # v2-W1 — degré par la MARGE (total − DC) + planchers nat 1 / nat 20. `face` est déjà normalisé en
 # amont (1-20, ou DIE_FALLBACK si le call-site n'a pas de dé) → les planchers ne s'arment que sur un
 # vrai jet 1/20 ; un call-site sans dé (fallback 10) passe donc par la marge, jamais par un plancher.

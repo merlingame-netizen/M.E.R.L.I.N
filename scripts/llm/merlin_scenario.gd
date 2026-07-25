@@ -39,6 +39,11 @@ const QUEST_PATTERNS: Dictionary = {
 	5: ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Climax"],
 }
 
+# Chantier 2 (2026-07-25) — le marchand ne vit QU'aux beats "Rencontre" (QUEST_PATTERNS k>=4) : un
+# run dont TOUTES les quêtes tirent k<=3 n'en a AUCUN (~25% des runs mesurés). GARANTIE : au moins
+# MIN_RENCONTRE_PER_RUN beats "Rencontre" par run, cf. _ensure_min_rencontres (build_chain_beats).
+const MIN_RENCONTRE_PER_RUN: int = 2
+
 # Biais de tags-cœur par type de beat (R68/R81).
 # v11 (spec §F) : le biais ne définit plus le pool tirable — il ne fait que COLORER le tirage
 # (les candidats du biais passent en premier). La source de vérité de ce qui est requérable est
@@ -1081,7 +1086,59 @@ static func build_chain_beats(quests: Array, rng: RandomNumberGenerator) -> Arra
 			if pattern.size() >= 4 and j == pattern.size() - 2:
 				beat["variant_type"] = "Dilemme" if btype == "Epreuve" else "Epreuve"
 			beats.append(beat)
+	_ensure_min_rencontres(beats, rng)
 	return beats
+
+
+# Chantier 2 (garantie marchand) : GARANTIT au moins MIN_RENCONTRE_PER_RUN beats "Rencontre" au
+# global du run. Si le tirage naturel (QUEST_PATTERNS) n'en a pas produit assez, mute IN PLACE un
+# beat en Rencontre : JAMAIS le 1er beat du run (n==1), JAMAIS un Climax (aucune exception). Source
+# de mutation en 3 PALIERS (le plus proche de l'esprit "Epreuve mediane" d'abord, elargi seulement
+# si le tirage naturel n'a produit AUCUNE Epreuve exploitable, cas k=2 sans quete ni Epreuve ni
+# Rencontre) : 1) Epreuve, 2) Dilemme (variante avant-climax des quetes k=5), 3) Exploration
+# (ouverture d'une quete NON initiale, n>1). PREFERE une quete qui n'a pas deja de Rencontre
+# (l'alternance offrande/marchand nait alors naturellement, cf. merlin_game._advance_to_next).
+# rng DEJA passe (deterministe, avant tout save), n'affecte aucun tirage de tags/difficulte en aval.
+# Residuel mathematique honnete : un run a 2 quetes toutes deux k=2 (4 beats : Exploration/Climax
+# x2) n'a qu'UN SEUL beat eligible (n=3, Exploration de la 2e quete) : MIN_RENCONTRE_PER_RUN=2 y est
+# structurellement inatteignable SANS toucher le 1er beat ou un Climax (jamais fait ici), mesure et
+# rapporte honnetement au soak (Economie), pas maquille.
+const _MUTATION_TIERS: Array = ["Epreuve", "Dilemme", "Exploration"]
+
+
+static func _ensure_min_rencontres(beats: Array, rng: RandomNumberGenerator) -> void:
+	var quests_with_rencontre: Dictionary = {}
+	var count: int = 0
+	for b in beats:
+		if str(b.get("type", "")) == "Rencontre":
+			count += 1
+			quests_with_rencontre[int(b.get("quest", -1))] = true
+	while count < MIN_RENCONTRE_PER_RUN:
+		var candidates: Array = []
+		for tier_type in _MUTATION_TIERS:
+			for i in beats.size():
+				var b2: Dictionary = beats[i]
+				if int(b2.get("n", 0)) <= 1:
+					continue  # jamais le 1er beat du run
+				if str(b2.get("type", "")) != str(tier_type):
+					continue
+				candidates.append(i)
+			if not candidates.is_empty():
+				break  # palier suivant SEULEMENT si celui-ci n'a rien produit
+		if candidates.is_empty():
+			break  # garde defensive : residuel mathematique (cf. commentaire), mesure au soak, jamais un softlock
+		var preferred: Array = []
+		for i in candidates:
+			if not quests_with_rencontre.has(int((beats[i] as Dictionary).get("quest", -1))):
+				preferred.append(i)
+		var pool: Array = preferred if not preferred.is_empty() else candidates
+		var pick_i: int = int(pool[rng.randi_range(0, pool.size() - 1)])
+		var beat: Dictionary = beats[pick_i]
+		beat["type"] = "Rencontre"
+		beat.erase("variant_type")  # une Rencontre ne porte jamais de variante avant-climax (R159-safe)
+		beats[pick_i] = beat
+		quests_with_rencontre[int(beat.get("quest", -1))] = true
+		count += 1
 
 
 # Vue PAR-QUÊTE du scénario (title/pitch/beats de la quête) — consommée par prepare_arc
@@ -1458,7 +1515,12 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		# seule fois → preview et résolution finale partagent le même dé (anti cache-miss prose, R120).
 		# NON persisté : rebuild au resume = re-tirage, acceptable (rien n'est joué avant le save).
 		# Le champ reste "die" ; le visuel du dé reste d6 (projeté) jusqu'à W4.
-		"die": _rng.randi_range(1, 6) + _rng.randi_range(1, 6),  # R158 : 2d6 (cloche 2-12) remplace le d20 plat
+		"die": MerlinResolution.roll_2d6(_rng),  # R158 : 2d6 (cloche 2-12) remplace le d20 plat
+		# Vague Economie V1 — Coup de Pouce : 2e 2d6 PRÉ-TIRÉ, GRATUIT, pour CHAQUE beat (même
+		# discipline que "die" ci-dessus), quelle que soit la charge soit armée ou non. Si la charge
+		# Coup de Pouce est armée (MerlinRun.consume_coup_de_pouce_if_armed), l'appelant applique
+		# face effective = max(die, face_adv) — jamais de tirage "à la demande" (R120).
+		"face_adv": MerlinResolution.roll_2d6(_rng),
 	}
 
 

@@ -448,6 +448,57 @@ static func enriched_pool() -> Array:
 	]
 
 
+## === Vague Economie V1 (in-run, spec verrouillee 2026-07-20) — REVENTE / ACHAT de cartes ===
+## Revente : UNIQUEMENT les cartes gagnees en draft, EN RESERVE (deck/defausse, jamais posee — les
+## ACTIONS n'entrent jamais dans deck/discard). JAMAIS les 16 cartes canon de depart (starter_traits,
+## verifiees ci-dessous, PAS starter_deck() qui est le gabarit legacy 12 cartes non utilise par
+## new_run). JAMAIS une greffe deja posee (corr_cost one-shot deja consomme — double-compte sinon).
+## Mythique non vendable (R52).
+const STARTER_TRAIT_IDS: Array = [
+	"regard_percant", "ecoute_silence", "memoire_lieux", "main_de_fer", "pas_leger",
+	"souffle_tenace", "langue_de_miel", "mot_ruse", "presence_calme", "pressentiment",
+	"voix_foret", "appel_ombre", "main_sure", "verbe_haut", "coeur_franc", "geste_ancien",
+]  # == ids de starter_traits() (deck initial de new_run), verifie ligne 345+ ci-dessus.
+
+const SALE_PRICE: Dictionary = {"Commune": 2, "Rare": 4, "Épique": 7}  # Mythique absent = non vendable
+const PURCHASE_PRICE: Dictionary = {"Commune": 5, "Rare": 9, "Épique": 15}  # greffe/carte
+
+# Cartes REVENDABLES : deck + defausse (jamais la main posee, jamais les actions), en excluant les
+# 16 ids canon et toute carte dont l'id est une greffe DEJA POSEE (placed_graft_ids, dict id->true —
+# defensif : les greffes ne vivent normalement pas dans deck/discard, mais l'exclusion protege quand
+# meme le guardrail "jamais un corr_cost compte deux fois" si l'architecture évolue). Dédoublonne par
+# id (une carte physique = un exemplaire vendable, jamais compté deux fois deck+discard).
+static func sellable_cards(deck: Array, discard: Array, placed_graft_ids: Dictionary = {}) -> Array:
+	var out: Array = []
+	var seen: Dictionary = {}
+	for c in (deck + discard):
+		if not (c is MerlinCard):
+			continue
+		var card: MerlinCard = c
+		if seen.has(card.id):
+			continue
+		seen[card.id] = true
+		if STARTER_TRAIT_IDS.has(card.id):
+			continue
+		if placed_graft_ids.has(card.id):
+			continue
+		if card.rarity == "Mythique":
+			continue
+		out.append(card)
+	return out
+
+
+# Prix de revente (bareme verrouille). 0 si non vendable (Mythique / rarete inconnue) — l'appelant
+# doit filtrer via sellable_cards() avant d'afficher un prix.
+static func price_for_sale(card: MerlinCard) -> int:
+	return int(SALE_PRICE.get(card.rarity, 0))
+
+
+# Prix d'achat d'une greffe/carte (bareme verrouille).
+static func price_for_purchase(card: MerlinCard) -> int:
+	return int(PURCHASE_PRICE.get(card.rarity, 0))
+
+
 ## === v11-W3 (spec §E + mapping_actions) — BANQUES DE GREFFES ===
 ## Conversion de pilier_bank() + enriched_pool() : noms + évocations CONSERVÉS (zéro perte de lore).
 ## pilier "" = draft générique (mix +tag / +N au jet / charges) ; sinon banque SIGNÉE du PNJ :

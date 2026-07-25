@@ -69,6 +69,26 @@ var _talent_nodes_taken: int = 0    # v2-W2 : nœuds de talent pris au draft (to
 var _talent_levels_sum: int = 0     # v2-W2 : somme des niveaux de talent en fin de run saine (moy. §K)
 var _talent_runs: int = 0           # ... nb de runs saines sommées (dénominateur)
 
+# === Vague Economie V1 (in-run) — harnais d'achat par archétype (chantier 6, tools/ SEUL — l'API
+# économie vit dans merlin_run.gd/merlin_card.gd/merlin_resolution.gd, jamais réinventée ici). ===
+var ECONOMY_ON: bool = false         # --economy=true/false (defaut false : comportement historique inchange)
+# R164 : miroir OBLIGATOIRE de MerlinGame.SELL_ENABLED. La revente est hors scope V1 (aucune source de
+# carte vendable en jeu). Ces deux drapeaux se rallument ENSEMBLE : si le harnais vend alors que le jeu
+# ne le permet pas, il mesure un flux de Gwenneg fictif et les bandes §K deviennent un mensonge.
+const SELL_ENABLED_MIRROR: bool = false
+var _econ: Dictionary = {}           # compteurs globaux : info/heal/purge/sell/coup_de_pouce/debt_settled/debt_refused/dettes_impayees
+var _econ_arch: Dictionary = {}      # arch -> memes compteurs (mesure PAR archetype)
+var _gwenneg_earned_total: int = 0   # gains degre+butin, TOUTES runs
+var _gwenneg_earned_clean: int = 0   # ... runs saines uniquement (base de la cible spec 20-25/run)
+var _dettes_incurred: int = 0        # nb de Promesses contractees (seule voie actuelle : Coup de Pouce)
+var _dettes_impayees: int = 0        # nb de Promesses reglees au FALLBACK epilogue (jamais reclamees en jeu)
+var _coup_de_pouce_uses: int = 0     # nb total d'usages EXERCES (verifie l'exigence #4 : doit etre >= 1)
+var _rencontre_runs_ge2: int = 0     # chantier 2 : nb de runs (TOUTES, avant meme le tirage economie) avec >= MIN_RENCONTRE_PER_RUN beats "Rencontre"
+var _rencontre_beats_total: int = 0  # ... total cumule (info)
+var _cov_before_info_sum: int = 0    # couverture (best_cov main/requis) au moment de l'achat info, AVANT
+var _cov_after_info_sum: int = 0     # ... APRES achat (doit etre IDENTIQUE : l'info ne revele jamais les tags, §K)
+var _cov_info_n: int = 0
+
 
 func _init() -> void:
 	var runs: int = 200
@@ -82,7 +102,9 @@ func _init() -> void:
 			archetype = s.trim_prefix("--archetype=")
 		elif s == "--per-archetype":
 			per_arch = true
-	print("[SOAK] start v11 — runs=%d archetype=%s per_arch=%s" % [runs, archetype, str(per_arch)])
+		elif s.begins_with("--economy="):
+			ECONOMY_ON = s.trim_prefix("--economy=") == "true"
+	print("[SOAK] start v11 — runs=%d archetype=%s per_arch=%s economy=%s" % [runs, archetype, str(per_arch), str(ECONOMY_ON)])
 	_selftest_whitelist()  # plomberie spec §F éprouvée AVANT la campagne (validation LLM incluse)
 	_selftest_grafts()     # v11-W3 : banques, cap 3, dérivations, table de dé, prix one-shot
 	_selftest_talent()     # v2-W2 : gain au degré, ciblage du nœud, cap/coût, skill_mod, save round-trip
@@ -117,6 +139,7 @@ func _init() -> void:
 	print("[SOAK] drafts %d/%d pris · secours injectées=%d" % [_drafts_taken, _drafts_offered, _secours_injected])
 	_report_k()
 	_report_arch()
+	_report_economy()
 	# v1.0-V4a — runs (fiabilité R109) et gates §K (équilibrage) comptés SÉPARÉMENT : un gate rouge
 	# ne maquille pas le compte de runs, mais bloque quand même la sortie (exit 1).
 	print("[SOAK] DONE — %d/%d PASS · gates §K durs : %d FAIL (%.1fs)" % [total_runs - _fail, total_runs, _gate_fail, dt])
@@ -418,6 +441,19 @@ func _soak_one(i: int, arch: String) -> void:
 	var run: Node = RunScript.new()
 	run._rng.seed = 1000 + i  # runs variés ET reproductibles (hors arbre : pas de randomize())
 	run.new_run(_skel(i))
+	# Chantier 2 (garantie marchand) — ASSERTION DURE : build_chain_beats GARANTIT au moins
+	# Scenario.MIN_RENCONTRE_PER_RUN beats "Rencontre" par run (mutation d'une Epreuve mediane si le
+	# tirage naturel n'en produit pas assez). Verifie ici sur le scenario BRUT (avant toute mutation
+	# degeneree du soak, cf. plus bas) : c'est une propriete de build_chain_beats, pas du jeu joue.
+	var rencontre_n: int = 0
+	for b in (run.scenario.get("beats", []) as Array):
+		if str((b as Dictionary).get("type", "")) == "Rencontre":
+			rencontre_n += 1
+	_rencontre_beats_total += rencontre_n
+	if rencontre_n >= int(Scenario.MIN_RENCONTRE_PER_RUN):
+		_rencontre_runs_ge2 += 1
+	_check(rencontre_n >= int(Scenario.MIN_RENCONTRE_PER_RUN), i,
+		"chantier 2 : >= %d beats Rencontre/run (%d)" % [int(Scenario.MIN_RENCONTRE_PER_RUN), rencontre_n], run)
 	var resume_tested: bool = false
 	_runs_total += 1
 	_ensure_arch(arch)
@@ -440,6 +476,14 @@ func _soak_one(i: int, arch: String) -> void:
 	var corr_gained_run: int = 0
 	var action_plays: Dictionary = {}      # v11-W3 : action_id -> poses (cible « optimal » des greffes)
 	var grafts_run: int = 0                # v11-W3 : greffes posées cette run (rapport §K)
+	# Vague Economie V1 — flux RNG DÉDIÉ aux décisions d'achat : isolé du rng de jeu (interventions,
+	# pool, dé, combo) afin que le diff SANS/AVEC économie mesure l'EFFET réel des achats (gauges,
+	# corruption de dette), pas un bruit de désynchronisation RNG. Seule exception volontaire : le
+	# Coup de Pouce altère le tirage du dé de JEU lui-même (2 pré-tirages au lieu d'1) — c'est l'effet
+	# recherché de l'avantage, pas un artefact de mesure.
+	var econ_rng := RandomNumberGenerator.new()
+	econ_rng.seed = 31337 * (i + 1)
+	var gwenneg_earned_run: int = 0        # gains degré+butin cette run (cible spec §Economie 20-25/run saine)
 
 	# v1.0-V4a (BAL-11-B/GD-27) — miroir du draft d'OUVERTURE (merlin_game._end_interstitial) :
 	# une greffe offerte AVANT le 1er beat, prise ~70 % (même politique que les autres drafts).
@@ -529,8 +573,20 @@ func _soak_one(i: int, arch: String) -> void:
 			best_cov = maxi(best_cov, cvd_arr.size())
 		if best_cov == 0:
 			_deadhand_beats += 1
-		# v2-W1 : dé PRÉ-TIRÉ du beat AVANT le choix — d20 (miroir build_situation, R120 preview=résolution).
-		var die: int = rng.randi_range(1, 6) + rng.randi_range(1, 6)  # R158 : 2d6 (cloche 2-12), meme tirage que build_situation
+		# Vague Economie V1 — phase d'achat (flux econ_rng isolé, cf. commentaire plus haut) : info/
+		# soin/purge/vente + achat eventuel du Coup de Pouce (arme run.coup_de_pouce_armed via la VRAIE
+		# API merlin_run.gd). No-op total si ECONOMY_ON == false.
+		_econ_phase(run, arch, econ_rng, required, beat, diff, btype)
+		# v2-W1 : de PRE-TIRE du beat AVANT le choix — 2d6 (miroir build_situation, R120 preview=résolution).
+		# Coup de Pouce : face_adv est un 2e 2d6 TOUJOURS pre-tire (cout nul, meme discipline que
+		# build_situation:face_adv, R158) — l'ancien resolve_with_advantage(rng) tirait "a la demande"
+		# au moment de l'usage (hors semantique pre-tiree) : SUPPRIME (R120, chantier 1). L'avantage se
+		# consomme via la VRAIE API (run.consume_coup_de_pouce_if_armed), miroir exact de merlin_game._on_resolve.
+		var die: int = ResolutionScript.roll_2d6(rng)
+		var face_adv: int = ResolutionScript.roll_2d6(rng)
+		if run.consume_coup_de_pouce_if_armed():
+			die = maxi(die, face_adv)
+			_coup_de_pouce_uses += 1  # exercice REEL (distinct de l'achat, cf. _econ_phase)
 		var combo: Array = _pick_combo(arch, run, required, die, rng, diff, btype)
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
 		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.
@@ -561,6 +617,21 @@ func _soak_one(i: int, arch: String) -> void:
 		# DRAW) se consomment à la pose, AVANT apply_resolution (un HEAL peut sauver — même ordre).
 		run.apply_graft_charges(combo[0])
 		run.apply_resolution(res)
+		# Vague Economie V1 — gain de Gwenneg (degré + butin d'exploration) APRÈS résolution, AVANT le
+		# draft ; règlement/refus de la Promesse si CE beat est la réclamation (muté par _tick_pending_debts
+		# à l'advance_beat() précédent — btype le reflète déjà en tête de boucle).
+		if ECONOMY_ON:
+			var gain: int = run.gwenneg_gain_for_degree(deg) + run.roll_loot(deg)
+			run.add_gwenneg(gain)
+			gwenneg_earned_run += gain
+			if btype == run.DEBT_RECLAMATION_TYPE and run.has_pending_debt():
+				var refuse: bool = arch == "corrompu" or (arch == "chaotic" and econ_rng.randf() < 0.3)
+				if refuse:
+					run.refuse_debt()
+					_bump_econ(arch, "debt_refused")
+				else:
+					run.settle_debt(deg)
+					_bump_econ(arch, "debt_settled")
 		run.gain_talent_points(deg)  # v2-W2 : points de talent au degré FINAL (réussite +1 / éclatante +2), après le push R130
 		# v11-W3 — le draft sert des GREFFES (miroir merlin_game._advance_to_next) : offrande du
 		# pilier au beat Rencontre (1×/run, banque signée) sinon draft générique aux réussites ;
@@ -613,7 +684,15 @@ func _soak_one(i: int, arch: String) -> void:
 				resume_tested = true
 				_check_resume(run, i)
 	_check(run.ended, i, "run terminée (guard=%d)" % guard, run)
+	# Vague Economie V1 — fallback NON NEGOCIABLE : si la Promesse n'a jamais trouvé de beat de
+	# réclamation éligible avant la fin du run, réglée de force à l'épilogue (MerlinEnd, R108 : zéro
+	# nouveau champ persistant au-delà de pending_debts).
+	if ECONOMY_ON and run.has_pending_debt():
+		run.force_settle_debt_at_epilogue()
+		_dettes_impayees += 1
+		_bump_econ(arch, "dettes_impayees")
 	_grafts_total += grafts_run
+	_gwenneg_earned_total += gwenneg_earned_run
 	if run.ended:
 		_ends[run.end_type] = int(_ends.get(run.end_type, 0)) + 1
 		_bump_arch(arch, "ends", run.end_type)
@@ -622,6 +701,7 @@ func _soak_one(i: int, arch: String) -> void:
 			_ends_clean[run.end_type] = int(_ends_clean.get(run.end_type, 0)) + 1
 			_corr_gained_clean += corr_gained_run
 			_grafts_clean += grafts_run
+			_gwenneg_earned_clean += gwenneg_earned_run
 			# v2-W2 — talent final : somme des 4 niveaux en fin de run saine (moyenne §K = poussée du build).
 			var tl: int = 0
 			for tv in run.TALENT_VERBS:
@@ -718,6 +798,138 @@ func _soak_draw_pilier(rng: RandomNumberGenerator) -> String:
 	if roll <= 90:
 		return "chevalier"
 	return "compagnon"
+
+
+# === Vague Economie V1 (in-run) — chantier 6 : politiques d'achat par archétype (harnais SEUL ;
+# l'API vit dans merlin_run.gd/merlin_card.gd/merlin_resolution.gd, jamais réinventée ici). ===
+
+func _bump_econ(arch: String, key: String, amount: int = 1) -> void:
+	_econ[key] = int(_econ.get(key, 0)) + amount
+	if not _econ_arch.has(arch):
+		_econ_arch[arch] = {}
+	var d: Dictionary = _econ_arch[arch]
+	d[key] = int(d.get(key, 0)) + amount
+
+
+func _coverage_n(run: Node, required: Array) -> int:
+	var best: int = 0
+	for tr in run.hand:
+		var cvd: Dictionary = TagsScript.coverage(required, tr.tags)
+		var covered_arr: Array = cvd["covered"]
+		best = maxi(best, covered_arr.size())
+	return best
+
+
+# Politique d'achat par archétype (spec verrouillée 2026-07-20). RNG DÉDIÉ (econ_rng) — jamais le rng
+# de jeu du beat. Neutre (aucune décision, aucun appel run.*) si ECONOMY_ON == false. Le Coup de
+# Pouce, s'il est acheté ici, ARME run.coup_de_pouce_armed via la VRAIE API (run.use_coup_de_pouce) —
+# l'appelant consomme la charge (run.consume_coup_de_pouce_if_armed) au moment du tirage du dé de
+# CE beat (chantier 1, R120 : plus de tirage "à la demande", cf. commentaire au call-site).
+func _econ_phase(run: Node, arch: String, econ_rng: RandomNumberGenerator, required: Array,
+		beat: Dictionary, diff: int, btype: String) -> void:
+	if not ECONOMY_ON:
+		return
+	# --- VENTE : DÉSACTIVÉE au V1 (R164), miroir de MerlinGame.SELL_ENABLED = false. Le levier n'a
+	# aucune source réelle (le draft ne produit pas de carte-trait autonome), donc le simuler ici
+	# mesurerait un flux de Gwenneg qui n'existe pas en jeu et fausserait les bandes §K.
+	# Rallumer EN MÊME TEMPS que MerlinGame.SELL_ENABLED, jamais seul, sinon le harnais ment.
+	# Règle conservée : jamais starter/greffe posée/mythique ; tag_ignorant ne vend jamais (baseline).
+	if SELL_ENABLED_MIRROR and arch != "tag_ignorant":
+		var placed: Dictionary = run.placed_graft_ids()
+		var sellable: Array = CardScript.sellable_cards(run.deck, run.discard, placed)
+		for card in sellable:
+			var do_sell: bool = false
+			match arch:
+				"greedy":
+					do_sell = true
+				"corrompu":
+					do_sell = run.corruption >= 6
+				"optimal":
+					do_sell = run.gwenneg < int(run.HEAL_PRICE) and run.integrite <= 6
+				"chaotic":
+					do_sell = econ_rng.randf() < 0.5
+			if not do_sell:
+				continue
+			var price: int = CardScript.price_for_sale(card)
+			if run.deck.has(card):
+				run.deck.erase(card)
+			elif run.discard.has(card):
+				run.discard.erase(card)
+			else:
+				continue
+			run.add_gwenneg(price)
+			_bump_econ(arch, "sell")
+	# --- INFORMATION : cap DUR 1/quête (quest_idx borné par la run elle-même) — ne révèle QUE nature+
+	# niveau du beat suivant, JAMAIS les tags requis (protection §K) : la couverture main/requis est
+	# mesurée avant/après pour PROUVER que rien ne fuit (doit rester identique).
+	var quest_start: bool = int(beat.get("qn", 1)) == 1
+	if quest_start and run.can_buy_info():
+		var want_info: bool = arch == "optimal" or arch == "greedy" or (arch == "chaotic" and econ_rng.randf() < 0.5)
+		if want_info:
+			var cov_before: int = _coverage_n(run, required)
+			if run.buy_info():
+				_bump_econ(arch, "info")
+				var cov_after: int = _coverage_n(run, required)
+				_cov_before_info_sum += cov_before
+				_cov_after_info_sum += cov_after
+				_cov_info_n += 1
+	# --- SOIN : cap DUR 2/run, déclenché à intégrité basse.
+	if run.integrite <= 4 and run.can_buy_heal():
+		var want_heal: bool = arch == "optimal" or arch == "greedy" or (arch == "chaotic" and econ_rng.randf() < 0.5)
+		if want_heal and run.buy_heal():
+			_bump_econ(arch, "heal")
+	# --- PURGE : EXCLUSIVE Chœur des Druides, cap DUR 1/run — le marchand du beat Rencontre est tiré
+	# au MÊME barème que l'offrande de pilier, mais via econ_rng (n'affecte jamais le tirage de jeu).
+	if btype == "Rencontre":
+		var pilier_here: String = _soak_draw_pilier(econ_rng)
+		if run.corruption >= 6 and run.can_buy_purge(pilier_here):
+			var want_purge: bool = arch == "corrompu" or arch == "optimal" or (arch == "chaotic" and econ_rng.randf() < 0.5)
+			if want_purge and run.buy_purge(pilier_here):
+				_bump_econ(arch, "purge")
+	# --- COUP DE POUCE : JAMAIS en Gwenneg (payé en Promesse), cap 1/quête — réservé aux beats
+	# risqués (diff >= 3, quasi-climax/climax). Exigence #4 : DOIT être EXERCÉ (pas seulement
+	# ACHETÉ) >= 1x dans le soak — _coup_de_pouce_uses compte l'exercice REEL (au call-site du
+	# dé, run.consume_coup_de_pouce_if_armed), pas cet achat (armement).
+	if diff >= 3 and run.can_use_coup_de_pouce():
+		var want_advantage: bool = arch == "greedy" or arch == "optimal" \
+			or (arch == "corrompu" and econ_rng.randf() < 0.7) or (arch == "chaotic" and econ_rng.randf() < 0.5)
+		if want_advantage:
+			var pilier_debt: String = _soak_draw_pilier(econ_rng)
+			var prix: int = 4 + econ_rng.randi_range(0, 3)
+			if run.use_coup_de_pouce(prix, pilier_debt):
+				_bump_econ(arch, "coup_de_pouce")
+				_dettes_incurred += 1
+
+
+# Rapport §Economie — chiffré, jamais maquillé : si un archétype n'a jamais exercé le Coup de Pouce,
+# la mesure est aveugle sur le point le plus risqué (spec exigence #4) → compté comme un gate rouge.
+func _report_economy() -> void:
+	if not ECONOMY_ON:
+		print("[SOAK] — ÉCONOMIE V1 : désactivée (--economy=false, baseline historique inchangée) —")
+		return
+	print("[SOAK] — ÉCONOMIE V1 (in-run, chantier 6) — %d runs (economy ON) —" % _runs_total)
+	var cr: float = float(maxi(_clean_runs, 1))
+	print("[SOAK]   %-40s %6.2f   (cible spec 20-25/run, runs saines)" % [
+		"gwenneg gagné/run (saines)", float(_gwenneg_earned_clean) / cr])
+	print("[SOAK]   achats par type (toutes runs, cumulés) : %s" % str(_econ))
+	print("[SOAK]   %-40s %6d    (Promesses contractées — seule voie actuelle : Coup de Pouce)" % [
+		"dettes contractées (toutes runs)", _dettes_incurred])
+	print("[SOAK]   %-40s %6d    (jamais réclamées en jeu -> fallback épilogue MerlinEnd)" % [
+		"dettes impayées (fallback épilogue)", _dettes_impayees])
+	print("[SOAK]   %-40s %6d    (ASSERTION #4 : doit être >= 1)" % [
+		"Coup de Pouce — usages totaux", _coup_de_pouce_uses])
+	if _cov_info_n > 0:
+		var cb: float = float(_cov_before_info_sum) / float(_cov_info_n)
+		var ca: float = float(_cov_after_info_sum) / float(_cov_info_n)
+		print("[SOAK]   couverture avant/après achat info : %.2f / %.2f  (doivent être IDENTIQUES — preuve non-fuite tags §K, n=%d)" % [cb, ca, _cov_info_n])
+	else:
+		print("[SOAK]   couverture avant/après achat info : aucun achat observé (n=0)")
+	print("[SOAK]   — par archétype (achats + dettes) —")
+	for arch in ARCHETYPES:
+		print("[SOAK]     %-12s %s" % [str(arch), str(_econ_arch.get(arch, {}))])
+	if _coup_de_pouce_uses == 0:
+		print("[SOAK]   FAIL économie — Coup de Pouce JAMAIS exercé dans ce soak (mesure aveugle sur le point le plus risqué)")
+		_gate_fail += 1
 
 
 func _check(cond: bool, i: int, label: String, run: Node) -> bool:
@@ -878,6 +1090,8 @@ func _report_k() -> void:
 	_band("morts", 100.0 * float(int(_ends_clean.get("mort", 0))) / cr, 10.0, 25.0)
 	_band("fins corrompues", 100.0 * float(int(_ends_clean.get("corrompu", 0))) / cr, 0.0, 18.0)
 	_band("corruption gagnée/run", float(_corr_gained_clean) / cr, 3.9, 6.9, false)
+	print("[SOAK]   %-36s %5d / %-5d  (chantier 2 : GARANTIE >= %d Rencontre/run, ASSERTION DURE, cible 100%%)" % [
+		"runs avec >= N Rencontre", _rencontre_runs_ge2, _runs_total, int(Scenario.MIN_RENCONTRE_PER_RUN)])
 	if _climax_beats > 0:
 		_band("couverture pleine climax (3 requis)", 100.0 * float(_climax_full) / float(_climax_beats), 45.0, 55.0)
 	print("[SOAK]   %-36s %5.2f    (info §E : E[acquisitions] cible 5-6 · offerts/run=%.2f)" % [

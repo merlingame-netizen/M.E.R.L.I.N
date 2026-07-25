@@ -16,10 +16,15 @@ const COL_DIM: Color = MerlinVisual.INK_DIM
 const COL_GOLD: Color = MerlinVisual.GOLD
 const COL_FUTURE: Color = MerlinVisual.RING_BG
 const COL_DEV: Color = MerlinVisual.RARE_BLUE
+# Vague Economie V1 : reclamation de la Promesse : constante DISTINCTE du losange de deviation
+# (COL_DEV/RARE_BLUE) pour ne jamais melanger les deux grammaires visuelles (spec, non-negociable).
+const COL_DEBT: Color = MerlinVisual.GOLD_DARK
 
 var _total: int = 0
 var _current: int = 0
 var _draft_marks: Dictionary = {}
+# Index LOCAL (dans la quete affichee) du beat de reclamation, -1 si aucun/hors quete courante.
+var _debt_node: int = -1
 # v10.21 (Wave L-d) — contexte de CHAÎNE : quêtes passées (losanges pleins à gauche du chemin) et
 # futures (creux à droite) → la frontière de quête devient lisible d'un coup d'œil.
 var _quest_idx: int = 0
@@ -80,6 +85,16 @@ func mark_draft() -> void:
 	queue_redraw()
 
 
+# Vague Economie V1 : REVELE (jamais floute) le noeud ou la Promesse sera reclamee : `idx` = index
+# LOCAL a la quete affichee (meme convention que set_current/animate_advance), -1 si aucune dette
+# active ou si la reclamation tombe hors de la quete courante (rien a marquer ici).
+func set_debt_node(idx: int) -> void:
+	if idx == _debt_node:
+		return
+	_debt_node = idx
+	queue_redraw()
+
+
 # v10.21 (Wave L-d) — position dans la CHAÎNE de quêtes (qi = index courant 0-based, qc = total).
 func set_quest_context(qi: int, qc: int) -> void:
 	_quest_idx = maxi(qi, 0)
@@ -132,6 +147,13 @@ func _draw() -> void:
 			var d: Vector2 = p + Vector2(0.0, -10.0)
 			draw_line(p, d, COL_DEV, 2.0)
 			draw_circle(d, 3.0, COL_DEV)
+		if i == _debt_node:
+			# Marque SOUS le nœud (grammaire distincte du losange de déviation, posé au-dessus) :
+			# 2 maillons de chaîne (motif "chain" de MerlinGlyph), en GOLD_DARK, la reclamation
+			# de la Promesse est révélée, jamais floutée (spec).
+			var dn: Vector2 = p + Vector2(0.0, 11.0)
+			draw_arc(dn + Vector2(-3.2, 0.0), 3.2, 0.0, TAU, 12, COL_DEBT, 1.6, true)
+			draw_arc(dn + Vector2(3.2, 0.0), 3.2, 0.0, TAU, 12, COL_DEBT, 1.6, true)
 		if i < _current:
 			draw_circle(p, NODE_R, COL_INK)
 		elif i == _current:
