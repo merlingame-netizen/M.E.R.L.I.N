@@ -1,4 +1,4 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. v3.8
+# GAME DESIGN BIBLE — M.E.R.L.I.N. v3.9
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
@@ -285,7 +285,7 @@ Score attribue par Merlin : 20-80 (jamais extremes sauf T3).
 | 0-20 | Echec critique | Negatifs x1.5 |
 | 21-50 | Echec | Negatifs x1.0 |
 | 51-79 | Reussite partielle | Positifs x0.5 |
-| 80-100 | Reussite | Positifs x1.0 |
+| 80-94 | Reussite | Positifs x1.0 |
 | 95-100 | Reussite critique | Positifs x1.5 + bonus |
 
 ---
@@ -1416,8 +1416,9 @@ Les palettes sont exposées dans `scripts/board_narration/biome_palettes.gd` (à
 
 ---
 
-*GAME_DESIGN_BIBLE v3.8 — M.E.R.L.I.N.*
+*GAME_DESIGN_BIBLE v3.9 — M.E.R.L.I.N.*
 *v3.8 (2026-05-16) — §20.6 reframed : KayKit = RÉFÉRENCE technique pour assets custom + §20.7 Persona digital UI accents (menu_test v7.7.11) + subtitle definitively removed*
+*v3.9 (2026-07-25) — §30 Scénarios Types & Équilibrage Deck-Building + dédoublonnage §25-§29 + fix bandes score §4.6 (80-94/95-100) + fix math §28.2*
 *Refonte majeure 2026-05-09 — Inscryption x AI Dungeon x Cyber-Druidique*
 *v3.1 (2026-05-14) — §19 UI/UX Coherence Rules added*
 *v3.2 (2026-05-14) — §20 Cel-Shading + Outline Noir : marque de fabrique du jeu*
@@ -1544,8 +1545,8 @@ Sur 810 cards FastRoute pool actuel :
 
 ### 28.2 Run équilibrage (target 25 cartes)
 
-- Avg check pass rate first-run (stats=1) : 60% → ~15 success / 25 cartes
-- Life damage potentiel sans heal : ~10 × 4 PV = 40 PV (mort improbable first-run)
+- Avg check pass rate first-run (stats=1) : 60% → ~15 succès / ~10 échecs sur 25 cartes
+- Dégâts bruts attendus (mix white/contextuel/red 75/15/8, multiplicateurs d'acte 0.6→1.6) : ~55-75 PV ; soins ~20-35 → attrition nette 30-45 PV, mort possible actes IV-V, jamais garantie (détail : §30 + SCENARIO_TYPES_SPEC.md §5.3)
 - Anam gain estimé : 10 base + 8 boss + 4 critiques = ~22 Anam
 - Lv up estimé first-run : 25 choix × 1 XP = ~25 XP répartis = +2-3 stats moyens
 
@@ -1590,175 +1591,6 @@ Sur 810 cards FastRoute pool actuel :
 - Faction route endings (5 routes)
 - Polish + balance pass
 *v3.6 (2026-05-16) — Disco-style maitrise : 4 stats + skill checks + Grimoire meta + équilibrage formula (§25-§27)*
-
----
-
-## 25. Système 4 Stats — Maitrise Disco-style (NON-NÉGOCIABLE)
-
-> **Source** : 16 réponses AskUserQuestion 2026-05-16 R5-R8. Inspiration : **Disco Elysium** (skill checks RPG), **Hand of Fate 2** (failure consequences), **Pentiment** (hidden background gates).
-
-### 25.1 Les 4 stats
-
-| Stat | Domaine | Faction affine | Exemples cards |
-|---|---|---|---|
-| **Logic** | Raison, déduction, observation | Druides | "Examiner les runes gravées" / "Décrypter le rêve" |
-| **Empathie** | Coeur, intuition relationnelle | Niamh | "Apaiser le korrigan" / "Lire l'âme du voyageur" |
-| **Volonté** | Discipline, résistance, courage | Anciens | "Résister à l'illusion" / "Trancher l'attache" |
-| **Instinct** | Survie animale, intuition brute | Korrigans | "Sentir la trace" / "Fuir l'ombre" |
-
-**Ankou** (5e faction) : pas de stat dédiée — agit comme **trait modifier global** (penalty/bonus selon mood).
-
-### 25.2 Stats baseline + croissance
-
-- **First-run** : tous les 4 stats = **1/10** (low baseline organique).
-- **XP par choix cohérent** (Disco-style) : chaque choix d'option = +1 XP à la stat associée.
-- **Lv up** : tous les 10 XP. Maxi 10.
-- **Persistence** : stats XP **persistent cross-run** (death penalty : faction rep reset + life reset, stats KEEP).
-- **Estimation** : ~25 runs pour atteindre Lv 5 sur une stat focused (~250 XP).
-
-### 25.3 Visibilité
-
-**HUD top-right permanent** : 4 icônes + chiffres (Logic 3 / Emp 1 / Vol 2 / Ins 4). Le joueur sait son build, construit consciemment. Bible §19.4 align.
-
----
-
-## 26. Système de Checks — White & Red (Disco-style)
-
-> **Source** : 16 réponses AskUserQuestion R5-R8.
-
-### 26.1 Formula
-
-```
-pass_chance = stat_value × 10% + base 50%
-```
-
-| Stat level | Pass chance |
-|---|---|
-| 1 (baseline) | 60% |
-| 3 | 80% |
-| 5 | 100% (auto-pass standard) |
-| 7 | 120% (auto-pass + bonus) |
-| 10 | 150% (criticité++) |
-
-**Modifiers** : cards peuvent ajouter `+modifier` temporaire (e.g. "Logic +20% pour cette carte").
-
-### 26.2 Check types
-
-| Type | Comportement | % cards |
-|---|---|---|
-| **Standard (white)** | Retry-able après level up stat. Échec = branche narrative + 3-5 PV damage. | ~75% |
-| **Contextuel** | Stat unique, pas de retry mais pas one-shot. Échec = -8 PV + bad outcome. | ~15% |
-| **Red (one-shot)** | Non-retryable JAMAIS. Échec critique = -15 PV ou branche permanente. | ~8% |
-| **Critique (red fatal)** | Échec = run terminate ou faction lock-out. | ~2% |
-
-### 26.3 Failure handling
-
-- Échec standard → carte génère **branche narrative alternative** + 3-5 PV damage.
-- Échec red → -15 PV + Merlin commentary acerbe.
-- Échec critique → run terminate (rare, ~2% cards).
-
-Compatible bible §5.1 HoF2-style (équilibre via card effects, pas drain auto).
-
----
-
-## 27. Grimoire — Meta-Progression visible
-
-> **Source** : 16 réponses AskUserQuestion R5-R8. Remplace l'arbre de talents v2.4.
-
-### 27.1 Structure : 5 sections + 1 lore (110 pages total)
-
-| Section | Pages | Trigger d'unlock | Contenu |
-|---|:---:|---|---|
-| **Druides** | 20 | Faction rep ≥ 50 | Rune-Circuits Druidiques + cards logiques + lore |
-| **Anciens** | 20 | Faction rep ≥ 50 | Volonté unlocks + cards résistance |
-| **Korrigans** | 20 | Faction rep ≥ 50 | Instinct unlocks + cards trickster |
-| **Niamh** | 20 | Faction rep ≥ 50 | Empathie unlocks + cards émotionnelles |
-| **Ankou** | 20 | Total runs ≥ 10 | Death-related cards + endgame faction route |
-| **Lore Brocéliande** | 10 | Triggers narratifs spéciaux | Histoire monde + legendes |
-
-### 27.2 Anam economy (linear)
-
-- **Premier unlock** : 10 Anam
-- **Subsequent unlocks** : +10 Anam chaque (20, 30, 40, ...)
-- **Anam gain par run** : ~10-25 (base 10 + bonus victoire +15)
-- **Estimation** : 5-10 unlocks par run cycle complet
-- **Total Anam pour 100% Grimoire** : ~5500 Anam (~220 runs)
-
-### 27.3 Cross-run persistence
-
-| State | Persistance |
-|---|---|
-| Anam | ✅ Persistent |
-| Grimoire unlocks | ✅ Persistent |
-| Faction rep | ✅ Persistent (reset à 0 sauf si ≥ 80 → faction route locked-in) |
-| Stats XP | ✅ Persistent (stats keep cross-run) |
-| Life | ❌ Reset à 100 each run |
-| Equipped Rune-Circuits | ✅ Persistent |
-| Active modifiers per-run | ❌ Reset |
-
----
-
-## 28. Équilibrage Proposals v3.6
-
-### 28.1 Card pool target distribution
-
-Sur 810 cards FastRoute pool (état actuel) :
-
-| Type | % | Count cible |
-|---|:---:|:---:|
-| Standard (white check) | 75% | 608 |
-| Contextuel | 15% | 121 |
-| Red one-shot | 8% | 65 |
-| Critique fatal | 2% | 16 |
-
-### 28.2 Run équilibrage (target 25 cartes)
-
-- Avg check pass rate first-run (stats=1) : 60% → ~10 success / 25 cartes
-- Avg success score : ~70% → effects modérés
-- Life damage potentiel max sans heal : 25 × 5 PV = 125 PV → mort possible mais pas garantie (HoF2 tension via choix)
-- Anam gain estimé : 10 base + 8 boss + 4 critiques = ~22 Anam
-
-### 28.3 Skill expression validation
-
-| Build archétype | Stats focus | Run signature |
-|---|---|---|
-| **Druide pur** | Logic 5+, Vol 3+ | Solve puzzles, peace via réflexion |
-| **Berserker** | Vol 5+, Ins 3+ | Force confronte, low Empathie |
-| **Diplomate** | Emp 5+, Logic 3+ | Tisse alliances factions |
-| **Survivant** | Ins 5+, Vol 3+ | Évite combats, lit signs |
-| **Polyvalent** | 3/3/3/3 | Adaptable mais médiocre |
-
-5 archétypes viables = système expression confirmée.
-
----
-
-## 29. Implementation Phasing v3.6 → v8.0.0
-
-### Phase 1 (v7.7.4) — 4 stats + check formula (~6h)
-- Add `MerlinStatsSystem` autoload + persistence in profile.json
-- HUD top-right 4 icons + values
-- Check formula in `merlin_effect_engine.gd` : `stat × 10% + 50%`
-- White/red check types in card schema
-- XP per choice in `RESOLVE_CHOICE` reducer
-
-### Phase 2 (v7.7.5) — Grimoire UI + meta-progression (~8h)
-- New scene `GrimoireScreen.tscn` (callable from Hub)
-- 5 sections + 1 lore navigation
-- Anam linear cost UI
-- Faction-rep gate visual
-- 30 page unlock content (seed initial)
-
-### Phase 3 (v7.7.6) — 9 Rune-Circuits refacto (~6h)
-- Refactor `OGHAM_FULL_SPECS` 18 → 9 entries per bible §3
-- Update card schema `ogham_used` field
-- Migrate FastRoute 810 cards old→new ogham_id mapping
-
-### Phase 4 (v7.8.0) — Full release
-- All 110 Grimoire pages populated
-- Tutorial v2 (free choice, 4 stats demo cards)
-- Faction route endings (5 routes)
-- Polish + balance pass
-
 ---
 
 ## 24. Politique Systematique MERLIN (NON-NEGOCIABLE)
@@ -1824,4 +1656,49 @@ Detail : voir `task_plan.md` Active Feature v7.7.3.
 
 ---
 
-*Fin de bible v3.5*
+## 30. Scénarios Types & Équilibrage Deck-Building (v3.9)
+
+> **Ajout 2026-07-25.** Source de vérité déléguée : `docs/30_jdr/SCENARIO_TYPES_SPEC.md` v1.0
+> + jumeau machine-readable `data/ai/scenario_templates.json`.
+> Outils : `tools/validate_scenario_balance.py` (audit statique par route, score 0-100)
+> et `tools/patch_reference_scenarios.py` (mise en conformité métadonnées du corpus).
+
+### 30.1 Contrat des scénarios types (résumé)
+
+- **10 archétypes canon**, mapping 1:1 archétype ↔ pôle ↔ twist_pattern, chacun avec
+  danger_modifier / heal_modifier / palette émotionnelle / stats dominantes / règle spéciale.
+- **5 actes aux rôles fixes** (Ouverture / Pacte / Épreuve / Bascule / Climax), multiplicateurs
+  de danger [0.6, 0.8, 1.0, 1.3, 1.6]. SHOP garanti acte II (+ acte IV si ≥ 21 cartes),
+  twist EPIQUE ~50%, climax final **LEGENDAIRE + MERLIN_DIRECT** sur chaque route.
+- **3 routes isométriques** (ordre/chaos/liminal) : caps de types, raretés 68/20/8/4,
+  LEGENDAIRE dans le dernier 30% uniquement.
+- **Écriture contrôlée** : titre 2-7 mots, intro 5-8 phrases 2e personne, summaries 8-22 mots,
+  3 options verbes infinitifs à factions distinctes, arc émotionnel sans répétition consécutive,
+  finale ∈ {sagesse, peur, émerveillement}.
+
+### 30.2 Équilibrage (résumé)
+
+- **PV-équivalent** (méthode Dominion) : vie 1.0 / essence 0.8 / rep 0.4 / anam 2.0 / XP 1.5.
+- **Checks par acte** : red à partir de l'acte III (jamais 2 dans 3 cartes), fatal actes IV-V
+  télégraphié, **ember rule** (vie ≤ 15 : fatal → red), requirement croissant actes IV-V.
+- **Budget de danger first-run** : dégâts bruts ~55-75 PV, soins ~20-35, ratio ~0.33 (HoF2).
+  Cibles mortalité : first-run 15-30%, build spécialisé 5-15%, aucun profil 0% ou > 40%.
+  **Validé Monte-Carlo** (10k runs × 6 profils) : les dégâts pilotent la tension, le placement
+  des fatales pilote la mortalité — fatales concentrées actes IV-V (5% du tirage) → 100% des
+  morts en actes IV-V, first-run 17.9%, builds 10-13%.
+- **Garde-fous anti-dégénérescence** : anti-safe-spam (3 choix zéro-risque → carte forcée),
+  rep ±60/faction/run et gains ÷2 au-dessus de 80, soins +24/acte max, 0 XP après 3 choix
+  même stat, cap multiplicateur ×2.0 appliqué après tout cumul, équité factions ≥ 8% des options.
+- **Économie Rune-Circuits** : cible 35-45 PV-éq de valeur totale/run.
+  ⚠ Décision pendante : retuning quert (CD 6, soin 8) / luis (CD 5) / straif (CD 7) / nuin (CD 5)
+  — voir SCENARIO_TYPES_SPEC.md §7 (divergences flaggées).
+
+### 30.3 État du corpus de référence
+
+Patch métadonnées 2026-07-25 (types/raretés uniquement, prose et embeddings intacts) :
+score validator 24.2 → **90.3/100, 0 erreur**. Findings ouverts (passe de régénération LLM) :
+druides 32.5% des options (> 30%), ankou 7.8% (< 8%), 20 arcs ouvrant sur `tension`.
+
+---
+
+*Fin de bible v3.9*

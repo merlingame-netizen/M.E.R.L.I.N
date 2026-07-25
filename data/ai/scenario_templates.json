@@ -1,0 +1,770 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "date": "2026-07-25",
+    "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
+    "bible_ref": "GAME_DESIGN_BIBLE.md v3.9 (sections 5, 6, 9, 25-28, 30)",
+    "inspirations": {
+      "slay_the_spire": "courbe de danger par acte, rarete croissante, EV egal / variance croissante entre options",
+      "dominion": "taux de change unifie entre ressources (PV-equivalent), economie a caps",
+      "hand_of_fate_2": "no-drain, tension via composition du deck de rencontres, dealer adversarial",
+      "gloomhaven": "deblocages de cartes par reputation de faction (deck unlocks)",
+      "disco_elysium": "checks de stats white/red, echec = branche narrative, build par accumulation de choix"
+    }
+  },
+  "writing_constraints": {
+    "title": {
+      "min_words": 2,
+      "max_words": 7,
+      "max_chars": 60
+    },
+    "intro": {
+      "min_sentences": 5,
+      "max_sentences": 8,
+      "person": "deuxieme",
+      "tense": "present"
+    },
+    "hook": {
+      "sentences": 1,
+      "style": "sensoriel (odeur, son, texture, lumiere)"
+    },
+    "beat_summary": {
+      "min_words": 8,
+      "max_words": 22
+    },
+    "options": {
+      "count": 3,
+      "verb_form": "infinitif, 1 mot",
+      "gradient": [
+        "prudente",
+        "equilibree",
+        "audacieuse"
+      ],
+      "distinct_primary_factions": true,
+      "max_effects_per_option": 3
+    },
+    "emotions_allowed": [
+      "curiosite",
+      "tension",
+      "peur",
+      "espoir",
+      "sagesse",
+      "fascination",
+      "colere",
+      "melancolie",
+      "emerveillement"
+    ],
+    "emotion_no_repeat_consecutive": true,
+    "final_beat_emotions": [
+      "sagesse",
+      "peur",
+      "emerveillement"
+    ],
+    "first_beat_emotions": [
+      "curiosite"
+    ],
+    "jaccard_max_vs_references": 0.5,
+    "forbidden_words_ref": "data/ai/config/merlin_persona.json + docs/50_lore/NARRATIVE_GUARDRAILS.md (bible 9.4.2)"
+  },
+  "structure_constraints": {
+    "canonical_lengths": [
+      11,
+      15,
+      17,
+      21,
+      25
+    ],
+    "acts": 5,
+    "act_roles": [
+      "ouverture",
+      "pacte",
+      "epreuve",
+      "bascule",
+      "climax"
+    ],
+    "beat_act_sequence": [
+      "standard",
+      "shop",
+      "standard",
+      "event",
+      "standard",
+      "event",
+      "standard",
+      "shop",
+      "event",
+      "boss"
+    ],
+    "branching": {
+      "routes": 3,
+      "route_poles": [
+        "ordre",
+        "chaos",
+        "liminal"
+      ],
+      "pattern": "trunk -> branch1 (3 voies) -> twist (convergence) -> branch2 (3 voies) -> convergence finale",
+      "route_choice_card": "c2 (fin acte I) : chaque option pointe vers une voie de Pole distincte"
+    },
+    "card_type_caps": {
+      "NARRATIVE": {
+        "min_share": 0.5,
+        "max_share": 0.7
+      },
+      "EVENT": {
+        "min_count": 1,
+        "max_count": 4
+      },
+      "SHOP": {
+        "min_count": 1,
+        "max_count": 2
+      },
+      "MERLIN_DIRECT": {
+        "min_count": 0,
+        "max_count": 3
+      },
+      "PROMISE": {
+        "min_count": 0,
+        "max_count": 2
+      },
+      "RUNE_UNLOCK": {
+        "min_count": 0,
+        "max_count": 1
+      }
+    },
+    "no_repeat_cardtypes": [
+      "SHOP",
+      "MERLIN_DIRECT",
+      "RUNE_UNLOCK"
+    ],
+    "rarity_targets": {
+      "COMMUNE": 0.68,
+      "RARE": 0.2,
+      "EPIQUE": 0.08,
+      "LEGENDAIRE": 0.04
+    },
+    "legendary_start_share": 0.7,
+    "climax_rarity": "LEGENDAIRE",
+    "climax_card_type": "MERLIN_DIRECT"
+  },
+  "balance_model": {
+    "exchange_rates_pv_equivalent": {
+      "_comment": "Unite commune type Dominion : tout effet est convertible en PV-equivalent pour calculer l'EV d'une option.",
+      "life": 1.0,
+      "essence": 0.8,
+      "reputation_point": 0.4,
+      "anam": 2.0,
+      "stat_xp": 1.5,
+      "promise_kept": 8.0,
+      "promise_broken": -10.0
+    },
+    "check_formula": "pass_chance = 0.50 + 0.10 * stat (bible 26.1)",
+    "check_mix_global": {
+      "white": 0.75,
+      "contextuel": 0.15,
+      "red": 0.08,
+      "fatal": 0.02
+    },
+    "check_damage_on_fail": {
+      "white": [
+        3,
+        5
+      ],
+      "contextuel": [
+        7,
+        9
+      ],
+      "red": [
+        12,
+        16
+      ],
+      "fatal": "fin de run"
+    },
+    "check_act_gates": {
+      "_comment": "Courbe de tension type Slay the Spire : pas de piege letal avant que le joueur ait pu construire.",
+      "act_1": {
+        "red": false,
+        "fatal": false
+      },
+      "act_2": {
+        "red": false,
+        "fatal": false
+      },
+      "act_3": {
+        "red": true,
+        "fatal": false
+      },
+      "act_4": {
+        "red": true,
+        "fatal": true
+      },
+      "act_5": {
+        "red": true,
+        "fatal": true
+      }
+    },
+    "check_act_distribution_25": {
+      "_comment": "Repartition cible des checks par acte sur un run 25 cartes (review game_designer 2026-07-25). Regles : jamais 2 red dans 3 cartes consecutives ; fatal exclusivement actes IV-V, telegraphe (detectable via saille) ; 'ember rule' : a vie <= 15, un fatal degrade en red.",
+      "act_1": {
+        "white": 5,
+        "contextuel": 0,
+        "red": 0,
+        "fatal": 0
+      },
+      "act_2": {
+        "white": 4,
+        "contextuel": 1,
+        "red": 0,
+        "fatal": 0
+      },
+      "act_3": {
+        "white": 3,
+        "contextuel": 1,
+        "red": 1,
+        "fatal": 0
+      },
+      "act_4": {
+        "white": 3,
+        "contextuel": 1,
+        "red": 1,
+        "fatal": "0-1"
+      },
+      "act_5": {
+        "white": 3,
+        "contextuel": 1,
+        "red": 1,
+        "fatal": "0-1"
+      },
+      "red_spacing_rule": "jamais 2 checks red dans une fenetre de 3 cartes",
+      "ember_rule": "vie <= 15 : fatal degrade en red",
+      "late_game_requirement": "actes IV-V : pass = 50% + (stat - requirement) x 10%, requirement 1-3 croissant (evite l'auto-pass mort a stat 5+)",
+      "fatal_concentration_rule": "le budget global fatal (2% du pool) est CONCENTRE actes IV-V : 5% du tirage sur les 10 dernieres cartes, 0% avant (valide Monte-Carlo 2026-07-25 : 100% des morts en actes IV-V, taux de mort inchanges)"
+    },
+    "act_danger_multipliers": [
+      0.6,
+      0.8,
+      1.0,
+      1.3,
+      1.6
+    ],
+    "heal_policy": {
+      "success_heal_share": 0.3,
+      "success_heal_amount": [
+        2,
+        4
+      ],
+      "critical_heal_amount": 5,
+      "shop_heal_ev": 8,
+      "rest_card_heal": 18,
+      "max_heal_per_card": 18
+    },
+    "danger_budget_25_cards": {
+      "_comment": "Budget global first-run (stats=1, pass 60%). Attrition nette visee ~30-45 PV -> fin de run p50 entre 55 et 70 PV, mort possible en actes IV-V.",
+      "expected_gross_damage": [
+        55,
+        75
+      ],
+      "expected_gross_heal": [
+        20,
+        35
+      ],
+      "target_final_life_p50_first_run": [
+        55,
+        70
+      ],
+      "death_rate_targets": {
+        "first_run": [
+          0.15,
+          0.3
+        ],
+        "specialized_build": [
+          0.05,
+          0.15
+        ],
+        "any_build_max": 0.4
+      }
+    },
+    "option_gradient_ev": {
+      "_comment": "Principe deck-builder : les 3 options ont un EV proche (ecart max 2 PV-eq) mais une variance croissante. L'audacieuse paie via le critique (x1.5 + bonus), pas via l'EV brut.",
+      "prudente": {
+        "ev_pv_eq": [
+          0.0,
+          1.5
+        ],
+        "variance": "faible",
+        "check_modifier": 0.1
+      },
+      "equilibree": {
+        "ev_pv_eq": [
+          0.5,
+          2.0
+        ],
+        "variance": "moyenne",
+        "check_modifier": 0.0
+      },
+      "audacieuse": {
+        "ev_pv_eq": [
+          0.5,
+          2.5
+        ],
+        "variance": "forte",
+        "check_modifier": -0.1,
+        "critical_bonus_xp": 1.5
+      },
+      "max_ev_gap_between_options": 2.0
+    },
+    "effects_caps": {
+      "ADD_REPUTATION": 20,
+      "HEAL_LIFE": 18,
+      "DAMAGE_LIFE": 15,
+      "DAMAGE_LIFE_CRITIQUE": 22,
+      "ADD_ESSENCE": 10,
+      "effects_per_option": 3,
+      "global_multiplier_cap": 2.0
+    },
+    "rune_circuit_economy": {
+      "_comment": "Valeur cible : 35-45 PV-eq de valeur totale par run de 25 cartes (60-75% des degats bruts attendus). Activations = 1 + floor(24/CD).",
+      "value_per_activation_pv_eq": [
+        4,
+        6
+      ],
+      "total_value_per_run_pv_eq_target": [
+        35,
+        45
+      ],
+      "cooldowns_current": {
+        "beith": 3,
+        "luis": 4,
+        "quert": 4,
+        "duir": 5,
+        "nuin": 6,
+        "saille": 5,
+        "muin": 7,
+        "straif": 8,
+        "ioho": 10
+      },
+      "cooldowns_recommended": {
+        "_comment": "PROPOSITION review game_designer 2026-07-25 — DECISION UTILISATEUR REQUISE avant de toucher au canon bible 3.3. quert actuel = 70 PV-eq/run (annule 130% de l'attrition des actes I-III) : bug d'equilibrage n1.",
+        "beith": 3,
+        "luis": 5,
+        "quert": 6,
+        "duir": 5,
+        "nuin": 5,
+        "saille": 5,
+        "muin": 7,
+        "straif": 7,
+        "ioho": 10,
+        "quert_heal_recommended": 8
+      }
+    },
+    "anti_degenerescence": {
+      "no_safe_spam": "apres 3 options zero-risque choisies consecutivement, le MOS force une carte sans option neutre (les 3 options portent >= 1 negatif ou un check)",
+      "rep_farm_caps": "±20 par carte (canon) + NOUVEAU cap ±60 par faction par run ; au-dela de rep 80, gains divises par 2",
+      "heal_stacking_cap": "+18 par carte (canon) + NOUVEAU +24 par acte (quert + repos + critique ne stackent plus)",
+      "stat_grind_guard": "0 XP au-dela de 3 choix consecutifs alignes sur la meme stat",
+      "multiplier_stack_rule": "le cap global x2.0 s'applique APRES tout cumul (critique x1.5 x duir x2.0 = x3.0 -> clamp x2.0)",
+      "essence_prices": {
+        "petit_soin": 8,
+        "soin_moyen": 15,
+        "don_majeur": 25,
+        "gain_max_par_carte": 10
+      },
+      "cross_faction_tension": "au moins 10% des cartes ont un trade-off cross-faction (aider X = -rep Y)",
+      "faction_option_diversity": "chaque faction non-neutre apparait comme primary_faction sur >= 8% des options du scenario ; druides <= 30%"
+    },
+    "simulation_validation": {
+      "_comment": "Monte-Carlo 10 000 runs x 6 profils x 2 seeds (tools/simulate_run_balance.py, 2026-07-25)",
+      "tuning_valide": "white -4 / contextuel -8 / red -15 / fatales 5% actes IV-V uniquement / courbe [0.6,0.8,1.0,1.3,1.6] / heal 30% succes +2, crit +5 / shop 2x +8",
+      "resultats": {
+        "first_run": {
+          "mort": 0.179,
+          "vie_finale_p50": 70.0,
+          "morts_actes_4_5": 1.0
+        },
+        "druide_pur": {
+          "mort": 0.125,
+          "vie_finale_p50": 85.5
+        },
+        "berserker": {
+          "mort": 0.127,
+          "vie_finale_p50": 85.8
+        },
+        "diplomate": {
+          "mort": 0.126,
+          "vie_finale_p50": 85.3
+        },
+        "survivant": {
+          "mort": 0.128,
+          "vie_finale_p50": 85.8
+        },
+        "polyvalent": {
+          "mort": 0.101,
+          "vie_finale_p50": 92.2
+        }
+      },
+      "lecons": [
+        "les degats white/red pilotent la TENSION (vie finale), pas la mortalite",
+        "la mortalite est pilotee a ~100% par le placement des cartes fatales -> le gating par acte est LE levier",
+        "sous quert actuel (+10/CD4) la mort par attrition PV est quasi impossible -> confirme le retuning quert",
+        "le Polyvalent (12 pts de stats vs 10) est le build le plus sur : biaiser le mix de stats par acte/archetype pour recompenser la specialisation, ou aligner les budgets a 12 pts"
+      ]
+    }
+  },
+  "deckbuilding_layer": {
+    "_comment": "Le 'deck' MERLIN n'est pas une pioche de cartes possedees mais l'ensemble des modificateurs persistants qui filtrent/colorent le flux de cartes genere.",
+    "layers": {
+      "rune_circuits": "1 equipe + 1 trouvable en run (= choix de 'relique de depart' StS)",
+      "stats_build": "4 stats persistantes, +1 XP par choix aligne (= deck thinning Disco : chaque choix construit le personnage)",
+      "faction_reputation": "rep >= 50 debloque les cartes speciales de faction (= deck unlocks Gloomhaven)",
+      "promesses": "max 2 actives, echeance en cartes (= quests HoF2, engagement a EV differee)",
+      "dons_per_run": "modificateurs run-only proposes en carte SHOP (= draft Vampire-Survivors)"
+    },
+    "per_scenario_requirements": {
+      "min_viable_builds": 5,
+      "builds_ref": "bible 28.3 : Druide pur / Berserker / Diplomate / Survivant / Polyvalent",
+      "stat_mix_tolerance": 0.1,
+      "each_act_has_one_option_per_gradient": true,
+      "min_faction_special_slots": 1,
+      "shop_offers_don_choice": true
+    }
+  },
+  "onboarding_overrides": {
+    "_comment": "Contraintes additionnelles du scenario type joue en premier run (bible 6.1 + 13).",
+    "forced_archetype": "druidic_awakening",
+    "scripted_cards": 3,
+    "max_new_mechanics_per_act": 1,
+    "no_red_checks": true,
+    "no_fatal_checks": true,
+    "no_interference": true,
+    "danger_modifier_override": 0.6
+  },
+  "archetypes": {
+    "druidic_awakening": {
+      "name": "L'Eveil Druidique",
+      "pole_dominant": "Liminal",
+      "twist_pattern": "calm_revelation",
+      "difficulty": "easy",
+      "danger_modifier": 0.6,
+      "length_bias": [
+        11,
+        15,
+        17
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "emerveillement",
+        "fascination",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.35,
+        "empathie": 0.3,
+        "volonte": 0.15,
+        "instinct": 0.2
+      },
+      "primary_factions": [
+        "druides",
+        "niamh"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Archetype d'onboarding. Tension douce, twist contemplatif, aucune carte fatale.",
+      "heal_modifier": 1.0,
+      "special": "0 red/fatal (onboarding) ; tension douce"
+    },
+    "korrigan_trickery": {
+      "name": "La Ruse des Korrigans",
+      "pole_dominant": "Chaos",
+      "twist_pattern": "deception_unveiled",
+      "difficulty": "medium",
+      "danger_modifier": 0.8,
+      "length_bias": [
+        11,
+        15,
+        21
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "fascination",
+        "peur",
+        "colere",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.3,
+        "empathie": 0.2,
+        "volonte": 0.15,
+        "instinct": 0.35
+      },
+      "primary_factions": [
+        "korrigans",
+        "druides"
+      ],
+      "merlin_interference_bias": 1,
+      "notes": "Archetype des interferences : Merlin triche +1 slot (theme tromperie). Le marche a toujours une clause invisible.",
+      "heal_modifier": 1.0,
+      "special": "interferences Merlin x1.5 ; Merlin Judges 15% -> 25%"
+    },
+    "ancient_oak_counsel": {
+      "name": "Le Conseil du Chene Ancien",
+      "pole_dominant": "Ordre",
+      "twist_pattern": "wisdom_arc",
+      "difficulty": "medium",
+      "danger_modifier": 0.7,
+      "length_bias": [
+        17,
+        21,
+        25
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "tension",
+        "emerveillement",
+        "melancolie",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.35,
+        "empathie": 0.2,
+        "volonte": 0.3,
+        "instinct": 0.15
+      },
+      "primary_factions": [
+        "druides",
+        "anciens"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Format long, dialogues. Charge Volonte/Logic : dilemmes de loyaute plutot que dangers physiques.",
+      "heal_modifier": 1.0,
+      "special": "echec red = -15 reputation au lieu de PV"
+    },
+    "mist_wanderer": {
+      "name": "Le Vagabond de Brume",
+      "pole_dominant": "Liminal",
+      "twist_pattern": "lost_then_found",
+      "difficulty": "medium",
+      "danger_modifier": 1.0,
+      "length_bias": [
+        11,
+        15,
+        21
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "tension",
+        "peur",
+        "fascination",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.2,
+        "empathie": 0.2,
+        "volonte": 0.25,
+        "instinct": 0.35
+      },
+      "primary_factions": [
+        "niamh",
+        "anciens"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Egarement -> retrouvailles. Checks Instinct (orientation, survie) domines.",
+      "heal_modifier": 1.0,
+      "special": "30% des cartes a options voilees (beith EV x2)"
+    },
+    "forest_trial": {
+      "name": "L'Epreuve de la Foret",
+      "pole_dominant": "Chaos",
+      "twist_pattern": "physical_test",
+      "difficulty": "hard",
+      "danger_modifier": 1.1,
+      "length_bias": [
+        17,
+        21,
+        25
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "peur",
+        "colere",
+        "espoir",
+        "tension",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.15,
+        "empathie": 0.2,
+        "volonte": 0.35,
+        "instinct": 0.3
+      },
+      "primary_factions": [
+        "korrigans",
+        "anciens"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Archetype le plus letal (x1.25). Reserve : ne pas proposer si vie < 40 au moment du pick de titre.",
+      "heal_modifier": 0.9,
+      "special": "rampe acte V +20% degats"
+    },
+    "forgotten_ritual": {
+      "name": "Le Rite Oublie",
+      "pole_dominant": "Ordre",
+      "twist_pattern": "ritual_completion",
+      "difficulty": "hard",
+      "danger_modifier": 1.0,
+      "length_bias": [
+        21,
+        25
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "tension",
+        "emerveillement",
+        "fascination",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.4,
+        "empathie": 0.2,
+        "volonte": 0.25,
+        "instinct": 0.15
+      },
+      "primary_factions": [
+        "druides",
+        "anciens"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Format epique (21-25). Sequence rituelle = checks Logic en escalier (DC croissant par etape du rite).",
+      "heal_modifier": 1.0,
+      "special": "+1 carte PROMISE garantie ; seul archetype avec fatal possible en acte IV"
+    },
+    "hidden_sanctuary": {
+      "name": "Le Sanctuaire Cache",
+      "pole_dominant": "Liminal",
+      "twist_pattern": "calm_decision",
+      "difficulty": "easy",
+      "danger_modifier": 0.9,
+      "length_bias": [
+        11,
+        15,
+        17
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "espoir",
+        "emerveillement",
+        "melancolie",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.25,
+        "empathie": 0.35,
+        "volonte": 0.2,
+        "instinct": 0.2
+      },
+      "primary_factions": [
+        "niamh",
+        "druides"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Archetype refuge/repos. A proposer en priorite quand vie <= 40 (pity systemique douce).",
+      "heal_modifier": 1.5,
+      "special": "carte repos garantie acte III ; recompense Anam -5"
+    },
+    "beast_encounter": {
+      "name": "La Bete Cornue",
+      "pole_dominant": "Chaos",
+      "twist_pattern": "wild_communion",
+      "difficulty": "hard",
+      "danger_modifier": 1.25,
+      "length_bias": [
+        11,
+        15,
+        21
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "peur",
+        "fascination",
+        "espoir",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.15,
+        "empathie": 0.25,
+        "volonte": 0.2,
+        "instinct": 0.4
+      },
+      "primary_factions": [
+        "korrigans",
+        "niamh"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Letal mais avec voie pacifique : la route Empathie (communion) doit rester viable (twist wild_communion).",
+      "heal_modifier": 0.75,
+      "special": "+1 red acte III autorise ; 50% des checks = Instinct ; route Empathie (communion) toujours viable"
+    },
+    "druid_lineage": {
+      "name": "La Lignee des Druides",
+      "pole_dominant": "Ordre",
+      "twist_pattern": "ancestral_echo",
+      "difficulty": "medium",
+      "danger_modifier": 1.0,
+      "length_bias": [
+        17,
+        21,
+        25
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "emerveillement",
+        "melancolie",
+        "fascination",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.3,
+        "empathie": 0.3,
+        "volonte": 0.25,
+        "instinct": 0.15
+      },
+      "primary_factions": [
+        "druides",
+        "anciens"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Memoire/heritage. Fort potentiel promesses (serments ancestraux) : viser 1-2 cartes PROMISE.",
+      "heal_modifier": 1.0,
+      "special": "+1 XP stat par acte (archetype d'apprentissage)"
+    },
+    "threshold_crossing": {
+      "name": "Le Passage des Seuils",
+      "pole_dominant": "Liminal",
+      "twist_pattern": "transformation",
+      "difficulty": "hard",
+      "danger_modifier": 1.15,
+      "length_bias": [
+        21,
+        25
+      ],
+      "emotional_palette": [
+        "curiosite",
+        "tension",
+        "peur",
+        "fascination",
+        "emerveillement",
+        "sagesse"
+      ],
+      "stat_mix": {
+        "logic": 0.2,
+        "empathie": 0.25,
+        "volonte": 0.3,
+        "instinct": 0.25
+      },
+      "primary_factions": [
+        "niamh",
+        "ankou"
+      ],
+      "merlin_interference_bias": 0,
+      "notes": "Archetype endgame : seul a mettre l'Ankou en primary_faction recurrente. Transformation = le climax change un element persistant (stat, rune, rep).",
+      "heal_modifier": 1.0,
+      "special": "acte V x1.3 ; LEGENDAIRE autorise des 70% du run ; seul archetype avec ankou en primary_faction recurrente"
+    }
+  }
+}

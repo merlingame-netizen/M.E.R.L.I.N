@@ -2470,3 +2470,28 @@ Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement p
 
 
 - **Cycle 0 AI Diagnosis**: 0 issues (0 critical, 0 high) — Health: 10/10
+
+---
+
+## Session: 2026-07-25 (Scénarios Types — contrat d'écriture + équilibrage deck-building)
+
+### Phase: Scénarios types v1.0 — bible §30
+- **Status:** complete
+- **Cascade §21.4:** Wave 1 (game_designer + ux_flow + game_playtester Monte-Carlo) → Wave 2 (game_design_auditor)
+- **Branche:** claude/godot-merlin-scenario-templates-ylgdwr
+
+#### Livrables
+1. **`docs/30_jdr/SCENARIO_TYPES_SPEC.md`** (NEW) — spec canon : 10 archétypes (mapping 1:1 pôle/twist, danger/heal modifiers, règles spéciales), structure 5 actes × 3 routes, contraintes d'écriture mesurables, couche deck-building (5 couches : runes/stats/rep/promesses/dons), équilibrage PV-équivalent, garde-fous anti-dégénérescence, divergences flaggées.
+2. **`data/ai/scenario_templates.json`** (NEW) — jumeau machine-readable v1.0.0 (writing/structure/balance/deckbuilding/onboarding + 10 archétypes).
+3. **`tools/validate_scenario_balance.py`** (NEW) — validateur route-aware, score 0-100/scénario, rapport markdown, exit 1 sous --min-score.
+4. **`tools/patch_reference_scenarios.py`** (NEW) — patch conservateur métadonnées (types/raretés) du corpus 100 références, prose + embeddings intacts.
+5. **`tools/simulate_run_balance.py`** (NEW) — Monte-Carlo 10k runs × 6 profils (adopté du game_playtester).
+6. **`docs/30_jdr/SCENARIO_BALANCE_REPORT.md`** (NEW) — rapport validator + addendum Monte-Carlo.
+7. **`docs/GAME_DESIGN_BIBLE.md`** v3.8 → **v3.9** : +§30, dédoublonnage §25-§29 (bloc dupliqué supprimé), fix bandes §4.6 (80-94/95-100), fix math §28.2.
+8. **`data/ai/scenarios_reference_broceliande.json`** — patché : score validator 24.2 → **90.3/100, 0 erreur** (climax LEGENDAIRE+MERLIN_DIRECT sur 300 routes, 100 légendaires mi-run rétrogradés, 124 SHOP/EVENT injectés, 841 raretés rééquilibrées, caps fixpoint).
+
+#### Résultats clés
+- **Monte-Carlo** : les dégâts white/red pilotent la tension, le placement des fatales pilote la mortalité → fatales concentrées actes IV-V (5% du tirage) = toutes cibles PASS (first-run 17.9% mort, builds 10-13%, 100% des morts actes IV-V).
+- **Bug équilibrage n°1** : quert (+10/CD4) = 70 PV-éq/run → proposition CD 6 / soin 8 (décision utilisateur pendante, canon §3.3).
+- **Équité factions** : druides 32.5% des options (> cap 30%), ankou 7.8% (< 8%) → passe de régénération LLM à planifier.
+- **Divergences flaggées** (spec §7) : cooldowns runes, MOS target 15-20 vs 25, card flip double-tap vs §21.5, §27.3 vs §3.2, BALANCE_FORMULA.md obsolète.
