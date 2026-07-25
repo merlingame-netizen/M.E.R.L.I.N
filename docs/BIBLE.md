@@ -2081,6 +2081,12 @@ avant commit (cf. §9, §24). Vérifie :
   en plein beat).
 - **`figure` valide** : appartient au Roster canon (§6), aux clés pilier (§6), ou à
   `marchand`/`creancier` (R164) ; jamais un nom halluciné.
+- **Registre de prose (R168)** : sobre et direct, phrases courtes, vocabulaire courant, UNE image
+  simple par scène MAXIMUM. Le merveilleux vient de ce qui arrive, pas des tournures.
+- **Mots-indices (R168)** : 2-3 mots-clés de la prose portent la COULEUR de leur famille de tag
+  (BBCode, couleurs MerlinVisual par famille), intensité (gras / gras+italique) = difficulté ;
+  PLUS le bandeau discret sous la scène : « Type : Famille x Famille, difficulté N » (généré par le
+  code depuis les requis, jamais par le LLM ; exact par construction).
 - **Introduction complète** présente (préambule + accroche reliée au climax, 25.4bis) ; jamais
   d'entrée à froid.
 - **Verbalisation du geste** : la prose de résolution de chaque beat nomme en fiction l'action et
@@ -2089,6 +2095,23 @@ avant commit (cf. §9, §24). Vérifie :
   tout état créé (blessure, dette, bénédiction, apprentissage) a son point de suivi ou de paiement
   ultérieur dans le squelette (25.4bis).
 Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de changement »).
+
+- **R168 : MAIN VIVANTE ET INDICES DE NATURE (repioche, conversion, mots-indices, registre ; 2026-07-28,
+  retours Maxime sur l'etalon)** : quatre decisions liees pour que le joueur REPONDE au besoin au lieu
+  de subir sa main, en restant simple et transparent. (1) REPIOCHE : 1 gratuite par beat, ciblee
+  (defausser 1 carte de la main, repiocher 1, avant de jouer ; un geste). (2) CONVERSION : 1 par beat,
+  une carte jouee peut compter comme une nature REQUISE au prix de +1 Corruption (tordre la nature
+  laisse une trace ; nourrit la voie corrompue R166). Implementation : reutilise le canal blessed_tags
+  (benediction auto-payee posee a la carte), donc R120 tient sans toucher resolve(). (3) MOTS-INDICES :
+  2-3 mots-cles de la prose prennent la couleur BBCode de leur famille de tag (palette MerlinVisual),
+  intensite gras / gras+italique = difficulte ; PLUS un bandeau discret sous la scene, genere par le
+  CODE depuis les requis (« Epreuve : Nature x Endurance, difficulte II ») : exact par construction,
+  jamais hallucine. L'achat d'Information (R164) reste utile : il revele le beat SUIVANT. (4) REGISTRE
+  SIMPLIFIE : sobre et direct, phrases courtes, une image simple par scene maximum ; le merveilleux
+  vient de ce qui arrive, pas des tournures (integre au QC §25.5). GATE : la conversion et la repioche
+  montent la couverture et la Corruption par run ; soak obligatoire avec politiques d'archetype
+  (repiocher si main morte, convertir si budget de corruption) ; bandes a surveiller : corruption/run
+  (3.9-6.9, deja a ~6) et eclatante ; ajustement single-lever documente si sortie de bande.
 
 - **R166 : CHARTE NARRATIVE COMPLÈTE, scénarios/mort/corruption/méta (2026-07-28, vague W-CANON, 16
   décisions verrouillées user en 4 rounds AskUserQuestion)** : (1) CHARTE DES SCÉNARIOS (§25, cœur de
