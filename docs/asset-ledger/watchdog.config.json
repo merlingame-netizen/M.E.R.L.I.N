@@ -1,0 +1,6 @@
+{
+  "warn_gb": 20,
+  "critical_gb": 5,
+  "godot_cache_gb": 2,
+  "retention_days": 30
+}

@@ -434,3 +434,7 @@ tools/autodev/mission-control/dist/
 .env.local
 *.local.cfg
 secrets.json
+
+# asset-ledger transient artifacts (regenerated each run; bible graph.json + BIBLE.md ARE tracked)
+docs/asset-ledger/ALERTS.md
+docs/asset-ledger/CLEANUP-PROPOSAL-*.md

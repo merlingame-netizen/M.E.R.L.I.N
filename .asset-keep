@@ -1,0 +1,20 @@
+# .asset-keep : protege des fichiers de la quarantaine cleanup.py
+#
+# Format :
+#   - un motif glob par ligne (fnmatch, teste sur le chemin relatif, ex: music/base/*)
+#   - les lignes commencant par # sont des commentaires
+#   - lignes vides ignorees
+#   - le prefixe optionnel "KEEP:" est retire (KEEP: music/base/* == music/base/*)
+#
+# Rappel : sont DEJA proteges par le scanner (jamais candidats a suppression) :
+#   addons/, docs/, tests/, scenes/, scripts/, data/i18n/, *.translation,
+#   project.godot, export_presets.cfg, icon.svg, default_bus_layout.tres,
+#   tout fichier reference (statique/dynamique) ou de type lore (.md/.txt).
+#
+# Ajoute ci-dessous les dossiers/fichiers a garder meme s'ils sont detectes
+# comme orphelins (par exemple des pistes audio que tu comptes reutiliser).
+#
+# Exemples (decommente pour activer) :
+# music/base/*
+# Assets/Music/*
+# KEEP: sprites/pixel_art/*
