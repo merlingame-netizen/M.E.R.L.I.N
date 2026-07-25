@@ -380,79 +380,85 @@ func _sel_fallback_pool() -> Array:
 # falaises en biome falaises, pas « au creux de la forêt »). SITU_FALLBACKS_BY_BIOME[biome][type] :
 # la forêt garde ses banques ; les falaises ont leurs propres 5 variantes/type (mer/vent/phare/
 # épaves/rochers/sel/écume/marée/mouettes), même forme (2e pers présent, PNJ actif, jamais « que faire »).
+# R168 (chantier 4, 2026-07-28) — REGISTRE SIMPLIFIÉ : sobre et direct, phrases courtes, vocabulaire
+# courant, UNE image simple par scène MAXIMUM (le merveilleux vient de ce qui arrive, pas des
+# tournures). MOTS-INDICES : 2-3 mots-clés par entrée, marqués [kw]Mot[/kw] — résolus en BBCode coloré
+# (couleur = famille du tag via MerlinTags, cf. _style_keywords) UNIQUEMENT à l'affichage (l'intensité
+# gras/gras+italique dépend de la difficulté du beat, inconnue à l'écriture). Les mots choisis
+# correspondent aux familles RÉELLEMENT probables du type de beat (TYPE_TAG_BIAS ci-dessus).
 const SITU_FALLBACKS_BY_BIOME: Dictionary = {
 	"foret": {
 		"Exploration": [
-			"La clairière s'ouvre devant vous, trop calme. Quelque chose vous attend là, tapi, sans se montrer.",
-			"Le sentier disparaît sous les fougères. Pas un bruit, et pourtant on vous regarde, quelque part entre les troncs.",
-			"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte, et vos pas résonnent trop fort.",
-			"Devant vous, les arbres s'espacent et laissent passer un peu de lumière. C'est trop ouvert, trop facile ; vous avancez quand même, l'échine tendue.",
-			"Le sol devient mou sous vos pas, couvert de mousse épaisse. Quelque part tout près, une source coule sans qu'on la voie.",
+			"La clairière s'ouvre, trop calme. Vos [kw]Sens[/kw] et votre [kw]Instinct[/kw] disent qu'on vous observe, caché entre les arbres.",
+			"Le sentier se perd sous les fougères. Votre [kw]Instinct[/kw] vous pousse à ralentir : la [kw]Nature[/kw] du lieu a changé.",
+			"Une odeur de cendre froide flotte dans l'air. Votre [kw]Mémoire[/kw] cherche d'où elle vient, mais votre [kw]Savoir[/kw] ne trouve rien.",
+			"Les arbres s'écartent sur un endroit trop ouvert, trop facile. Votre [kw]Instinct[/kw] et vos [kw]Sens[/kw] du danger vous retiennent.",
+			"Le sol devient mousseux. Une source coule tout près : votre [kw]Savoir[/kw] des bois et votre [kw]Nature[/kw] curieuse vous y mènent.",
 		],
 		"Rencontre": [
-			"Une silhouette sort des arbres et se plante devant vous, sans un mot. Elle vous jauge, et attend de voir qui vous êtes.",
-			"Une forme immobile vous barre la route. Son regard pèse lourd ; elle ne bougera pas la première.",
-			"Une voix vous salue avant que vous ne voyiez personne. « Je connais ce pas », dit-elle, tout près.",
-			"Un vieil homme est assis sur une pierre, comme s'il vous attendait. Il ne lève pas les yeux tout de suite, puis crache : « Vous n'auriez pas dû venir. »",
-			"Deux yeux brillent entre les troncs, à hauteur d'enfant. Ils ne clignent pas, et une petite voix demande : « Tu viens jouer ? »",
+			"Une silhouette sort des arbres et vous barre la route, sans un mot. Un peu d'[kw]Empathie[/kw] ou de [kw]Ruse[/kw] pourrait la calmer.",
+			"Une forme immobile vous observe, le regard lourd. Elle attend votre premier [kw]Verbe[/kw], ou un geste de [kw]Ruse[/kw].",
+			"Une voix vous salue avant même que vous voyiez personne. « Je connais ce pas », dit-elle. Votre [kw]Verbe[/kw] et votre [kw]Empathie[/kw] décideront de la suite.",
+			"Un vieil homme, assis sur une pierre, semble vous attendre. Il crache : « Vous n'auriez pas dû venir. » Un peu de [kw]Ruse[/kw], ou beaucoup d'[kw]Empathie[/kw], désarmerait sa colère.",
+			"Deux yeux brillent entre les troncs, à hauteur d'enfant. Une petite voix demande : « Tu viens jouer ? » Votre [kw]Verbe[/kw] et votre [kw]Empathie[/kw] feront toute la différence.",
 		],
 		"Epreuve": [
-			"La forêt vous barre le passage : ronces, pierres, pente glissante. Rien ne cédera tout seul.",
-			"Le chemin se dresse contre vous, hostile. Il faudra forcer pour avancer.",
-			"Un vieil obstacle barre la route. Il faudra payer de vos bras ou de votre ruse.",
-			"Un torrent coupe le chemin devant vous, rapide et froid. L'autre rive est juste là, hors d'atteinte.",
-			"La pente monte d'un coup, raide et nue. Vos jambes brûlent rien qu'à la regarder.",
+			"La forêt vous barre le passage : ronces, pierres, pente glissante. Il faudra de la [kw]Force[/kw] ou de l'[kw]Agilité[/kw].",
+			"Le chemin se dresse contre vous, hostile. Il faudra de l'[kw]Endurance[/kw] pour forcer le passage, ou du [kw]Savoir[/kw] pour le contourner.",
+			"Un vieil obstacle barre la route. Votre [kw]Savoir[/kw] du terrain vaut peut-être mieux que la [kw]Force[/kw] brute.",
+			"Un torrent coupe le chemin, rapide et froid. L'autre rive est là, hors d'atteinte sans [kw]Agilité[/kw] ni [kw]Instinct[/kw].",
+			"La pente monte d'un coup, raide et nue. Vos jambes tiennent sur la seule [kw]Endurance[/kw], et votre [kw]Nature[/kw] robuste.",
 		],
 		"Dilemme": [
-			"Deux chemins s'ouvrent devant vous. Chacun a un prix, et aucun ne vous laissera intact.",
-			"Un choix se pose, sans détour. Quoi que vous fassiez, la forêt s'en souviendra.",
-			"Il faut trancher, là où il n'y a pas de bonne réponse. Ne rien choisir, c'est choisir aussi.",
-			"Une bête blessée gît en travers du sentier, le flanc battant. La soigner coûte du temps ; l'achever, autre chose.",
-			"Deux voix vous appellent en même temps, de deux côtés opposés. Vous ne pourrez en suivre qu'une.",
+			"Deux chemins s'ouvrent devant vous. Chacun a un prix ; ni votre [kw]Instinct[/kw] ni votre [kw]Mémoire[/kw] ne tranchent pour vous.",
+			"Un choix se pose, sans détour. Ni la [kw]Force[/kw] ni la [kw]Ruse[/kw] ne le rendront facile.",
+			"Il faut trancher, là où il n'y a pas de bonne réponse. Votre [kw]Nature[/kw] et votre [kw]Ruse[/kw] tirent chacune de leur côté.",
+			"Une bête blessée gît en travers du sentier. La soigner demande de l'[kw]Empathie[/kw] ; l'achever, de la [kw]Force[/kw].",
+			"Deux voix vous appellent en même temps, de deux côtés opposés. Votre [kw]Mémoire[/kw] ne vous aide pas à choisir.",
 		],
 		"Climax": [
-			"L'air se fige. La forêt retient son souffle. Ce qui vient ne se reprendra pas.",
-			"Tout se joue ici, maintenant. Les murmures se taisent d'un coup autour de vous.",
-			"Le cœur de la forêt bat sous vos pieds. Ici se décide ce que vous devenez.",
-			"Le sentier débouche sur un cercle de pierres dressées. Au centre, ce que vous êtes venu chercher vous attend.",
-			"Tout le bois s'est tu d'un coup. Devant vous, la dernière porte ; derrière elle, la fin de l'histoire.",
+			"L'air se fige. Ce qui vient ne se reprendra pas. Votre [kw]Instinct[/kw] le sait déjà, et votre [kw]Force[/kw] se tend.",
+			"Tout se joue ici, maintenant. Les murmures se taisent d'un coup ; votre [kw]Savoir[/kw] ne suffira peut-être pas seul.",
+			"Le cœur de la forêt bat sous vos pieds. Votre [kw]Force[/kw] et votre [kw]Savoir[/kw] décident de la suite.",
+			"Le sentier débouche sur un cercle de pierres dressées. Au centre, ce que vous cherchiez vous attend ; votre [kw]Ruse[/kw] et votre [kw]Instinct[/kw] vous y ont menés.",
+			"Tout le bois s'est tu d'un coup. Devant vous, la dernière porte ; derrière elle, la fin de l'histoire. Votre [kw]Force[/kw] tremble un peu.",
 		],
 	},
 	"falaises": {
 		"Exploration": [
-			"La corniche s'ouvre devant vous, battue de vent. En contrebas, la mer noire se referme sur les rochers sans un cri d'écume.",
-			"Le sentier de sel longe le vide. Pas un bruit, sinon la marée qui monte, et pourtant on vous suit, quelque part parmi les épaves.",
-			"Les rochers s'écartent sur une crique sans nom. Une odeur d'algue et de goudron froid flotte, et vos pas glissent sur la roche mouillée.",
-			"Devant vous, la falaise s'abaisse et laisse voir la baie. C'est trop dégagé, trop offert au vent ; vous avancez quand même, l'échine tendue.",
-			"Le sol devient spongieux sous vos pas, gorgé d'embruns. Tout près, sous la roche, la mer travaille une faille qu'on n'aperçoit pas.",
+			"La corniche s'ouvre, battue de vent. Vos [kw]Sens[/kw] et votre [kw]Instinct[/kw] disent qu'on vous suit, entre les rochers.",
+			"Le sentier de sel longe le vide. Votre [kw]Instinct[/kw] vous pousse à ralentir : la [kw]Nature[/kw] du lieu a changé.",
+			"Une odeur d'algue et de goudron froid flotte. Votre [kw]Mémoire[/kw] cherche d'où elle vient, mais votre [kw]Savoir[/kw] ne trouve rien.",
+			"La falaise s'abaisse sur la baie, trop dégagée. Votre [kw]Instinct[/kw] et vos [kw]Sens[/kw] du danger vous retiennent.",
+			"Le sol devient spongieux, gorgé d'embruns. Une faille travaille la roche : votre [kw]Savoir[/kw] de la côte et votre [kw]Nature[/kw] curieuse vous guident.",
 		],
 		"Rencontre": [
-			"Une silhouette surgit de derrière un rocher et se plante devant vous, sans un mot. Elle vous jauge, le dos à la mer, et attend de voir qui vous êtes.",
-			"Un vieux gardien de phare vous barre le passage, une lanterne éteinte à la main. « La mer a repris trois barques cette lune », lâche-t-il en vous toisant.",
-			"Une voix vous hèle avant que vous ne voyiez personne, portée par le vent. « Je connais ce pas », dit-elle, tout près, sous le fracas des vagues.",
-			"Une pêcheuse est assise sur une épave échouée, comme si elle vous attendait. Elle ne lève pas les yeux tout de suite, puis crache : « Vous n'auriez pas dû descendre jusqu'ici. »",
-			"Deux yeux brillent dans le renfoncement d'un rocher, à hauteur d'enfant. Ils ne clignent pas, et une petite voix demande, par-dessus l'écume : « Tu viens voir la marée ? »",
+			"Une silhouette surgit d'un rocher et vous barre la route, sans un mot. Un peu d'[kw]Empathie[/kw] ou de [kw]Ruse[/kw] pourrait la calmer.",
+			"Un vieux gardien de phare vous barre le passage, lanterne éteinte. « La mer a repris trois barques cette lune », lâche-t-il. Votre [kw]Verbe[/kw] et votre [kw]Empathie[/kw] décideront de la suite.",
+			"Une voix vous hèle avant que vous ne voyiez personne, portée par le vent. « Je connais ce pas », dit-elle. Votre [kw]Verbe[/kw] fera la différence, un peu de [kw]Ruse[/kw] aussi.",
+			"Une pêcheuse, assise sur une épave échouée, semble vous attendre. Elle crache : « Vous n'auriez pas dû descendre. » Un peu de [kw]Ruse[/kw], ou beaucoup d'[kw]Empathie[/kw], désarmerait sa colère.",
+			"Deux yeux brillent dans un renfoncement de roche, à hauteur d'enfant. Une petite voix demande, par-dessus l'écume : « Tu viens voir la marée ? » Votre [kw]Verbe[/kw] et votre [kw]Empathie[/kw] feront toute la différence.",
 		],
 		"Epreuve": [
-			"La falaise vous barre le passage : roche à pic, embruns, pierres qui roulent. Rien ne cédera tout seul.",
-			"Le sentier se dresse contre vous, taillé à même le roc et lustré de sel. Il faudra forcer pour avancer.",
-			"Un vieil escalier de pierre descend vers la crique, une marche manque, et le vide appelle en dessous. Il faudra payer de vos bras ou de votre ruse.",
-			"La marée montante coupe le passage devant vous, rapide et froide. L'autre rive de galets est juste là, hors d'atteinte.",
-			"La paroi se dresse d'un coup, nue et suintante d'écume. Vos bras brûlent rien qu'à la regarder.",
+			"La falaise vous barre le passage : roche à pic, embruns, pierres qui roulent. Il faudra de la [kw]Force[/kw] ou de l'[kw]Agilité[/kw].",
+			"Le sentier, taillé dans le roc et lustré de sel, se dresse contre vous. Il faudra de l'[kw]Endurance[/kw], ou du [kw]Savoir[/kw] pour le contourner.",
+			"Un vieil escalier de pierre descend vers la crique, une marche manque. Votre [kw]Savoir[/kw] du terrain vaut peut-être mieux que la [kw]Force[/kw] brute.",
+			"La marée montante coupe le passage, rapide et froide. L'autre rive de galets est là, hors d'atteinte sans [kw]Agilité[/kw] ni [kw]Instinct[/kw].",
+			"La paroi se dresse d'un coup, nue et suintante d'écume. Vos bras tiennent sur la seule [kw]Endurance[/kw], et votre [kw]Nature[/kw] robuste.",
 		],
 		"Dilemme": [
-			"Deux sentiers s'ouvrent sur la corniche. Chacun a un prix, et aucun ne vous laissera intact.",
-			"Un choix se pose, sans détour, face au large. Quoi que vous fassiez, la mer, en bas, en gardera le compte.",
-			"Il faut trancher, là où il n'y a pas de bonne réponse. Rester sur le bord, c'est choisir aussi.",
-			"Un phoque blessé gît en travers des galets, le flanc battant. Le remettre à l'eau coûte du temps ; l'abandonner, autre chose.",
-			"Deux voix vous appellent en même temps, l'une du phare, l'autre de la grève. Vous ne pourrez en suivre qu'une.",
+			"Deux sentiers s'ouvrent sur la corniche. Chacun a un prix ; ni votre [kw]Instinct[/kw] ni votre [kw]Mémoire[/kw] ne tranchent pour vous.",
+			"Un choix se pose, sans détour, face au large. Ni la [kw]Force[/kw] ni la [kw]Ruse[/kw] ne le rendront facile.",
+			"Il faut trancher, là où il n'y a pas de bonne réponse. Votre [kw]Nature[/kw] et votre [kw]Ruse[/kw] tirent chacune de leur côté.",
+			"Un phoque blessé gît en travers des galets. Le remettre à l'eau demande de l'[kw]Empathie[/kw] ; l'abandonner, de la [kw]Force[/kw].",
+			"Deux voix vous appellent en même temps, l'une du phare, l'autre de la grève. Votre [kw]Mémoire[/kw] ne vous aide pas à choisir.",
 		],
 		"Climax": [
-			"L'air se fige. Le vent tombe d'un coup, et la mer retient son souffle. Ce qui vient ne se reprendra pas.",
-			"Tout se joue ici, maintenant, au bord du vide. Les mouettes se taisent d'un coup au-dessus de vous.",
-			"La houle bat la falaise sous vos pieds. Ici, sur le sel, se décide ce que vous devenez.",
-			"Le sentier débouche au pied du vieux phare, sa porte de sel entrouverte. Au seuil, ce que vous êtes venu chercher vous attend.",
-			"Toute la côte s'est tue d'un coup. Devant vous, la dernière marche au-dessus des flots ; derrière, la fin de l'histoire.",
+			"L'air se fige, le vent tombe d'un coup. Ce qui vient ne se reprendra pas. Votre [kw]Instinct[/kw] le sait déjà, et votre [kw]Force[/kw] se tend.",
+			"Tout se joue ici, maintenant, au bord du vide. Les mouettes se taisent d'un coup ; votre [kw]Savoir[/kw] ne suffira peut-être pas seul.",
+			"La houle bat la falaise sous vos pieds. Votre [kw]Force[/kw] et votre [kw]Savoir[/kw] décident de la suite.",
+			"Le sentier débouche au pied du vieux phare, sa porte entrouverte. Ce que vous cherchiez vous attend ; votre [kw]Ruse[/kw] et votre [kw]Instinct[/kw] vous y ont menés.",
+			"Toute la côte s'est tue d'un coup. Devant vous, la dernière marche au-dessus des flots. Votre [kw]Force[/kw] tremble un peu.",
 		],
 	},
 }
@@ -1450,7 +1456,7 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	elif required.is_empty():
 		required = _pick_tags(btype, diff)  # filet harnais hors-jeu (probe_prose/probe_scenario)
 	if narration == "":
-		narration = _fallback_situation(btype, required)
+		narration = _fallback_situation(btype, required, diff)
 	_run_thread["arc_locked"] = true
 	# v11-N1 (R140) — filet : toute clause meta qui prend le joueur par la main est bannie PARTOUT (banques
 	# réécrites, prompts au « Vous » présent) ; ici on nettoie ce qui viendrait d'un arc LLM ancien ou d'une
@@ -1539,11 +1545,31 @@ func _pick_tags(btype: String, _diff: int) -> Array:
 	return out
 
 
-func _fallback_situation(btype: String, _required: Array) -> String:
+func _fallback_situation(btype: String, _required: Array, diff: int = 2) -> String:
 	# N2a — banque du BIOME courant (run.biome, défaut "foret" hors-jeu).
 	var by_type: Dictionary = SITU_FALLBACKS_BY_BIOME.get(_run_biome(), SITU_FALLBACKS_BY_BIOME["foret"])
 	var pool: Array = by_type.get(btype, by_type["Exploration"])
-	return str(pool[_rng.randi_range(0, pool.size() - 1)])
+	var raw: String = str(pool[_rng.randi_range(0, pool.size() - 1)])
+	return _style_keywords(raw, diff)  # R168 (chantier 4) : marqueurs [kw] -> BBCode coloré + gras
+
+
+# R168 (chantier 4) — transforme les marqueurs [kw]Mot[/kw] des banques de secours en BBCode coloré
+# (couleur = famille du tag, MerlinTags.color_of) ; intensité = difficulté du beat (gras aux
+# difficultés I-II, gras+italique à la difficulté III). Généré par le CODE, jamais par le LLM
+# (les banques LLM/arc ne portent pas ces marqueurs — seul le filet procédural en profite).
+func _style_keywords(text: String, diff: int) -> String:
+	var out: String = text
+	var start: int = out.find("[kw]")
+	while start >= 0:
+		var end: int = out.find("[/kw]", start)
+		if end < 0:
+			break
+		var word: String = out.substr(start + 4, end - (start + 4))
+		var inner: String = ("[b][i]%s[/i][/b]" % word) if diff >= 3 else ("[b]%s[/b]" % word)
+		var replacement: String = "[color=#%s]%s[/color]" % [MerlinTags.color_of(word), inner]
+		out = out.substr(0, start) + replacement + out.substr(end + 5)
+		start = out.find("[kw]", start + replacement.length())
+	return out
 
 
 # --- ARC NARRATIF (user 2026-06-07 : « décousu, ça doit se suivre, plus direct ») ---

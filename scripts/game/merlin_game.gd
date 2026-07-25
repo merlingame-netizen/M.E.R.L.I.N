@@ -306,6 +306,8 @@ func _present_current_beat() -> void:
 	if _pact_row != null and is_instance_valid(_pact_row):  # R131 : idem pour le pacte
 		_pact_row.queue_free()
 		_pact_row = null
+	_pact_active_pk = ""  # R168 (chantier 2) — une offre de conversion non tranchée ne traverse pas les beats
+	_convert_offer_tag = ""
 	_pact_pending_pilier = ""  # review V2b MEDIUM-5 : un pacte non consommé ne traverse pas les beats
 	_clear_debt_refuse_btn()  # un « Refuser » non consommé ne traverse pas les beats non plus
 	_clear_tuto_hint()  # v11-V2b : hygiène — un hint non désarmé ne survit pas au beat (non consommé)
@@ -429,12 +431,43 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		else:
 			_scene_art.set_pilier("", false)
 			MerlinAudio.stop_pad()  # le pilier s'en va → sa nappe s'éteint (canal unique, jamais superposé)
-	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
+	_typewriter("[center]" + str(situ.get("narration", "")) + _build_nature_bandeau(situ) + "[/center]", animate)
 	# v10.21 — feedforward « Ce lieu réclame » RETIRÉ (user 2026-06-30) : immersion narrative ; l'issue continue le fil.
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
 	# jamais pendant la lecture (Wave1 : amplitude ≤2px), off en reduce-motion (pastille = info).
 	if animate and _corruption_palier >= 2 and not MerlinVisual.reduced_motion and _situ_panel != null:
 		MerlinFx.shake(_situ_panel, 2.0, 0.2)
+
+
+# R168 (chantier 3) — BANDEAU discret sous la narration (MÊME capsule Z3, zéro zone nouvelle) :
+# « Type : Famille x Famille, difficulté N ». Généré par le CODE depuis required_tags + difficulte
+# (situ, déjà figée par build_situation) — JAMAIS par le LLM, exact par construction (R168). Chaque
+# nature porte la couleur BBCode de sa famille (MerlinTags.color_of) ; le reste en INK_DIM/FS_HINT.
+const BANDEAU_TYPE_LABELS: Dictionary = {
+	"Exploration": "Exploration", "Rencontre": "Rencontre", "Epreuve": "Épreuve",
+	"Dilemme": "Dilemme", "Climax": "Climax",
+}
+const BANDEAU_DIFF_ROMAN: Dictionary = {1: "I", 2: "II", 3: "III"}
+
+
+func _build_nature_bandeau(situ: Dictionary) -> String:
+	var reqs: Array = situ.get("required_tags", [])
+	if reqs.is_empty():
+		return ""
+	var btype: String = str(situ.get("type", ""))
+	# Le beat de réclamation de dette (« Le créancier revient », R164) mute `type` mais garde les
+	# requis/difficulté du beat original : libellé dédié plutôt qu'un type hors-liste brut.
+	var label: String = str(BANDEAU_TYPE_LABELS.get(btype, "Réclamation" if btype == "Le créancier revient" else btype))
+	var roman: String = str(BANDEAU_DIFF_ROMAN.get(int(situ.get("difficulte", 2)), "II"))
+	var natures: String = ""
+	for i in reqs.size():
+		if i > 0:
+			natures += " x "
+		var tag: String = str(reqs[i])
+		natures += "[color=#%s]%s[/color]" % [MerlinTags.color_of(tag), tag]
+	var line: String = "%s : %s, difficulté %s" % [label, natures, roman]
+	var neutral_hex: String = MerlinVisual.INK_DIM.to_html(false)  # zéro hex hors merlin_visual.gd
+	return "\n\n[font_size=%d][color=#%s]%s[/color][/font_size]" % [MerlinVisual.FS_HINT, neutral_hex, line]
 
 
 func _render_hand(deal: bool = false) -> void:
@@ -551,6 +584,30 @@ func _on_trait_card(card: MerlinCard) -> void:
 		if c is MerlinCardView and not c.is_queued_for_deletion():
 			(c as MerlinCardView).set_selected((c as MerlinCardView).card == _selected_trait)
 	_update_preview()
+	_refresh_redraw_btn()  # R168 (chantier 1) — l'affordance dépend de la carte sélectionnée
+
+
+# R168 (chantier 1) — visible SEULEMENT quand : choix ouvert, en jeu (pas draft/vitrine/résolution),
+# un trait est sélectionné (repioche CIBLÉE), et le budget du beat n'est pas déjà consommé.
+func _refresh_redraw_btn() -> void:
+	if _redraw_btn == null:
+		return
+	var run: Node = get_node("/root/MerlinRun")
+	_redraw_btn.visible = _choice_open and _state == 1 and not _draft_active and not _merchant_active \
+		and _selected_trait != null and run.can_redraw()
+
+
+func _on_redraw_pressed() -> void:
+	if _selected_trait == null:
+		return
+	var run: Node = get_node("/root/MerlinRun")
+	if not run.redraw_one(str(_selected_trait.id)):
+		return
+	_selected_trait = null
+	run.save()  # geste hors du save unique de _advance_to_next (pattern pacte/achat, R108)
+	_render_hand(true)  # la nouvelle carte arrive par le deal_in habituel (MerlinAudio.play_deal_sequence)
+	_update_preview()
+	_refresh_redraw_btn()
 
 
 # v11-W2 — sélection de l'ACTION sur la tuile : bordure GOLD 3 px ; re-clic = désélection.
@@ -660,6 +717,7 @@ func _update_preview() -> void:
 	# (bouton Résoudre CONSERVÉ, spec §A — jamais de résolution auto au 2e clic).
 	if _selected_action == null or _selected_trait == null:
 		_set_resolve_armed(false)
+		_clear_convert_offer()  # R168 (chantier 2) — combo incomplet : jamais d'offre de conversion
 		return
 	var combo: Array = [_selected_action, _selected_trait]
 	var reqs: Array = _current_situation.get("required_tags", [])
@@ -696,6 +754,63 @@ func _update_preview() -> void:
 	# v10.4 — pré-génération LLM spéculative sur la SÉLECTION courante uniquement (guardrail spec :
 	# jamais les 16 combos). Dédupée par signature combo [action, trait] côté MerlinScenario.
 	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, combo.duplicate(), res)
+	_maybe_offer_convert(res)  # R168 (chantier 2) — propose la conversion si un requis manque encore
+	_refresh_redraw_btn()  # R168 (chantier 1) — dépend aussi de la sélection courante
+
+
+# R168 (chantier 2) — CONVERSION : si le combo COMPLET ne couvre pas un requis, propose (via la
+# grammaire _build_pact_choice existante) de compter la carte jouée comme cette nature manquante, au
+# prix AFFICHÉ, croissant par run (décision utilisateur 2026-07-28 : N = conversions_this_run + 1,
+# cf. run.next_convert_cost()). Décision coordinateur 2026-07-28 (calibration finale) — CONDITION
+# D'URGENCE : l'offre n'apparaît QUE si aucune carte de la MAIN COMPLÈTE ne couvre déjà la nature
+# visée (run.can_convert_tag, « on ne tord la nature que quand la main ne peut pas répondre »).
+# BUG CORRIGÉ (2026-07-28, trouvé en sondant le cas 2 requis) : ne teste plus SEULEMENT missing[0] —
+# avec 2 requis manquants dont le 1er est couvrable par une AUTRE carte de la main (donc écarté à
+# raison) et le 2e ne l'est par AUCUNE, l'ancien code écartait l'offre EN ENTIER au lieu de la
+# proposer pour le 2e. On cherche désormais le PREMIER manque réellement éligible à l'urgence.
+# Jamais pendant draft/vitrine ; jamais si déjà consommée ce beat ; jamais si un AUTRE pacte
+# (pilier/coup_de_pouce) occupe déjà le slot. Idempotent : ne reconstruit la rangée que si la nature
+# manquante a changé (évite le flicker à chaque re-sélection identique).
+func _maybe_offer_convert(res: Dictionary) -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	if _draft_active or _merchant_active:
+		return
+	var missing: Array = (res.get("coverage", {}) as Dictionary).get("missing", [])
+	var eligible_canon: String = ""
+	for m in missing:
+		if run.can_convert_tag(str(m)):
+			eligible_canon = str(m)
+			break
+	if eligible_canon == "":
+		_clear_convert_offer()
+		return
+	if _pact_active_pk != "" and _pact_active_pk != "convert":
+		return  # un pacte pilier/coup_de_pouce occupe déjà le slot Z4 — la conversion attendra
+	# Retrouve le libellé ORIGINAL (accents/casse, R157) du tag manquant éligible : `missing` est en
+	# forme CANON (MerlinTags.to_canon), les required_tags affichés sont la forme authored.
+	var reqs: Array = _current_situation.get("required_tags", [])
+	var tag_display: String = eligible_canon
+	for r in reqs:
+		if MerlinTags.to_canon(str(r)) == eligible_canon:
+			tag_display = str(r)
+			break
+	if _pact_active_pk == "convert" and _convert_offer_tag == tag_display and _pact_row != null and is_instance_valid(_pact_row):
+		return  # déjà proposé pour cette nature — rien à refaire
+	_clear_convert_offer()
+	_convert_offer_tag = tag_display
+	_build_pact_choice("convert", 0, "", tag_display)
+
+
+func _clear_convert_offer() -> void:
+	if _pact_active_pk != "convert":
+		return
+	_convert_offer_tag = ""
+	_pact_active_pk = ""
+	if _pact_row != null and is_instance_valid(_pact_row):
+		_pact_row.queue_free()
+		_pact_row = null
+	if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
+		_fade_res_block(false)
 
 
 func _on_resolve() -> void:
@@ -705,6 +820,7 @@ func _on_resolve() -> void:
 	_state = 2
 	_set_resolve_armed(false)  # Z6 : désarmé (alpha 0.35 + disabled) — le bouton ne disparaît jamais
 	_clear_debt_refuse_btn()  # la voie « Refuser » cède devant la résolution normale choisie
+	_clear_convert_offer()  # R168 (chantier 2) — une offre non tranchée cède devant la résolution choisie
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
@@ -925,6 +1041,13 @@ var _pact_row: HBoxContainer = null
 # _on_typewriter_done (appelé AUSSI au skip — un tween tué n'émet jamais `finished`, l'ancien
 # `await _tw.finished` perdait le pacte unique de la run sur un simple clic de skip).
 var _pact_pending_pilier: String = ""
+# R168 (chantier 2, « main vivante ») — pk du _pact_row actuellement affiché ("" = aucun), pour que
+# l'offre de CONVERSION (issue de _update_preview, à chaque changement de sélection) ne se
+# reconstruise QUE si elle change, et ne referme jamais un pacte pilier/coup_de_pouce en cours.
+var _pact_active_pk: String = ""
+var _convert_offer_tag: String = ""  # nature manquante actuellement proposée à la conversion
+# R168 (chantier 1) — affordance discrète de repioche (Z5), visible seulement quand disponible.
+var _redraw_btn: Button = null
 
 
 # Ce beat est-il planifié pour une intervention ? Consommation à l'OUVERTURE (R108) + save atomique.
@@ -1012,8 +1135,9 @@ func _bless_action(tag: String) -> void:
 # Vague Economie V1 : pk == "coup_de_pouce" (2e geste de l'achat en Promesse, armé par le 1er clic
 # dans la vitrine, cf. _on_merchant_card) : libellés EXACTS imposés par la spec, prix (durée de la
 # Promesse à venir) écrit en toutes lettres ; `price` = prix_convenu (Gwenneg dus à la reclamation).
-func _build_pact_choice(pk: String, price: int = 0, pilier: String = "") -> void:
+func _build_pact_choice(pk: String, price: int = 0, pilier: String = "", tag: String = "") -> void:
 	var run: Node = get_node("/root/MerlinRun")
+	_pact_active_pk = pk  # R168 (chantier 2) — identifie l'offre courante (_maybe_offer_convert)
 	# v11-V2b (vigilance V2a #2) — le slot central Z4 ne porte qu'UN contenu à la fois : la vignette
 	# du beat précédent est purgée et le hint tuto s'efface (sans être consommé) devant le pacte.
 	_clear_tuto_hint()
@@ -1030,6 +1154,11 @@ func _build_pact_choice(pk: String, price: int = 0, pilier: String = "") -> void
 	if pk == "coup_de_pouce":
 		acc.text = "Ceder ton nom, il viendra le reprendre  (%d Gwenneg dus)" % price
 		ref.text = "Garder"
+	elif pk == "convert":
+		# Chantier 2 (R168, décision utilisateur 2026-07-28) — CONVERSION : coût CROISSANT par run,
+		# le libellé affiche le coût RÉEL courant (N = conversions_this_run + 1), jamais un « +1 » figé.
+		acc.text = "Compter comme %s  (+%d Corruption)" % [tag, int(run.next_convert_cost())]
+		ref.text = "Garder"
 	else:
 		acc.text = ("Accepter  (la voie s'ouvre · Corruption +1)" if pk == "etre"
 			else "Accepter  (pioche 1 · Corruption +1)")
@@ -1041,14 +1170,14 @@ func _build_pact_choice(pk: String, price: int = 0, pilier: String = "") -> void
 		MerlinVisual.apply_button_da(btn)
 		MerlinVisual.connect_button_feedback(btn)
 		_pact_row.add_child(btn)
-	acc.pressed.connect(_on_pact_choice.bind(pk, true, price, pilier))
-	ref.pressed.connect(_on_pact_choice.bind(pk, false, price, pilier))
+	acc.pressed.connect(_on_pact_choice.bind(pk, true, price, pilier, tag))
+	ref.pressed.connect(_on_pact_choice.bind(pk, false, price, pilier, tag))
 	if _res_block != null:
 		_res_block.add_child(_pact_row)
 		_fade_res_block(true)
 
 
-func _on_pact_choice(pk: String, accepted: bool, price: int = 0, pilier: String = "") -> void:
+func _on_pact_choice(pk: String, accepted: bool, price: int = 0, pilier: String = "", tag: String = "") -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if accepted:
 		if pk == "coup_de_pouce":
@@ -1060,6 +1189,25 @@ func _on_pact_choice(pk: String, accepted: bool, price: int = 0, pilier: String 
 			if _pact_row != null and is_instance_valid(_pact_row):
 				_pact_row.queue_free()
 				_pact_row = null
+			_pact_active_pk = ""
+			if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
+				_fade_res_block(false)
+			return
+		if pk == "convert":
+			# Chantier 2 (R168) — la conversion cible la carte ACTION actuellement sélectionnée : le
+			# coût CROISSANT (N = conversions_this_run + 1) est payé par convert_card lui-même
+			# (jamais 2 fois, cf. plus bas ; le libellé affiché à l'ouverture montrait déjà ce N).
+			if _selected_action != null:
+				run.convert_card(str(_selected_action.id), tag)
+				_refresh_action_tiles()  # badge ✦tag visible immédiatement (feedforward)
+				_refresh_economy_hud()
+				_update_preview()
+			run.save()
+			if _pact_row != null and is_instance_valid(_pact_row):
+				_pact_row.queue_free()
+				_pact_row = null
+			_pact_active_pk = ""
+			_convert_offer_tag = ""
 			if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
 				_fade_res_block(false)
 			return
@@ -1076,6 +1224,7 @@ func _on_pact_choice(pk: String, accepted: bool, price: int = 0, pilier: String 
 	if _pact_row != null and is_instance_valid(_pact_row):
 		_pact_row.queue_free()
 		_pact_row = null
+	_pact_active_pk = ""  # R168 (chantier 2) — un « Refuser » (etre/compagnon) libère aussi l'offre
 	if _res_block != null and _effect_vignette != null and _effect_vignette.get_child_count() == 0:
 		_fade_res_block(false)  # rien d'autre à montrer dans le slot central
 
@@ -1699,6 +1848,7 @@ func _present_merchant_stall() -> void:
 	if cards.is_empty():
 		return  # rien a offrir, pas de vitrine vide
 	_merchant_active = true
+	_refresh_redraw_btn()  # R168 (chantier 1) — jamais disponible pendant la vitrine
 	run.merchant_seen_this_run = true  # chantier 2 : telemetrie + garde de priorite (_advance_to_next)
 	_begin_merchant_draft(cards, "Un marchand croise ta route")
 	while not _draft_done_flag and is_inside_tree() and _draft_active and not run.ended:
@@ -1708,6 +1858,7 @@ func _present_merchant_stall() -> void:
 	_merchant_active = false
 	_merchant_items = {}
 	_close_draft_zone()
+	_refresh_redraw_btn()
 
 
 # Ouverture de la vitrine : meme squelette que _begin_graft_draft (id -> dict conserve a part),
@@ -1832,6 +1983,7 @@ func _sell_reserve_card(card_id: String) -> bool:
 func _open_draft_zone(cards: Array, title_text: String, pilier: String) -> void:
 	_draft_open_ms = Time.get_ticks_msec()  # arme la garde F2 (pas de pick aveugle pendant le deal)
 	_draft_active = true
+	_refresh_redraw_btn()  # R168 (chantier 1) — jamais disponible pendant le draft
 	# Z4 : titre + « Passer » sur UNE rangée (72 px — jamais d'empilement), via cross-fade du slot.
 	MerlinVisual.swap_zone(_res_block, func() -> void:
 		if not _draft_active:
@@ -1904,6 +2056,7 @@ func _close_draft_zone() -> void:
 	if not _draft_active:
 		return
 	_draft_active = false
+	_refresh_redraw_btn()  # R168 (chantier 1) — redevient disponible hors draft (si conditions reunies)
 	# v11-W3 : hygiène du mode cible — pulses éteints, tuiles restaurées, sélection purgée.
 	_set_draft_target_mode(false)
 	_pending_graft = {}
@@ -2203,6 +2356,7 @@ func _set_choice_ui(on: bool) -> void:
 	# N4-RUNES : plus de rangée de tags requis à révéler (chips supprimées, preview R120).
 	if on and _scene_art != null:
 		_scene_art.set_reading_recess(false)  # v10.21 (L-a) : la main s'éveille → la forêt revit
+	_refresh_redraw_btn()  # R168 (chantier 1) — jamais disponible pendant résolution/draft/vitrine
 
 
 # Teinte la bordure de l'encart selon la phase (situation neutre / issue = couleur du degré) — signal
@@ -3293,6 +3447,23 @@ func _build_ui() -> void:
 	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
 	_hand_box.resized.connect(_layout_fan)
 	root.add_child(_hand_box)
+
+	# R168 (chantier 1) — affordance de REPIOCHE : petit bouton discret, MARGE GAUCHE de Z5 (l'éventail
+	# reste centré et ne mord jamais dessus, cf. _layout_fan). _layout_fan ignore les enfants non
+	# MerlinCardView : ce bouton coexiste sans jamais entrer dans le calcul de l'éventail. Visible
+	# SEULEMENT quand disponible (pilier MINIMAL) — _refresh_redraw_btn() pilote visible/disabled.
+	_redraw_btn = Button.new()
+	_redraw_btn.text = "↺ Repiocher"
+	_redraw_btn.custom_minimum_size = Vector2(150, 48)  # ≥44 px (pilier TACTILE)
+	_redraw_btn.add_theme_font_size_override("font_size", MerlinVisual.FS_HINT)
+	_redraw_btn.set_anchors_preset(Control.PRESET_CENTER_LEFT)  # centré verticalement, calé à gauche
+	_redraw_btn.offset_left += 12  # petite marge (ne mord jamais l'éventail centré, cf. _layout_fan)
+	_redraw_btn.offset_right += 12
+	MerlinVisual.apply_button_da(_redraw_btn)
+	MerlinVisual.connect_button_feedback(_redraw_btn)
+	_redraw_btn.pressed.connect(_on_redraw_pressed)
+	_redraw_btn.visible = false
+	_hand_box.add_child(_redraw_btn)
 
 	# v11-W2 (spec §I) — RANGÉE D'ACTIONS permanente : 4 tuiles 260×116 (SURFACE, grammaire distincte
 	# des traits CREAM) + bouton Résoudre + indice de dé, centrés. Le combo panel (104 px) est SUPPRIMÉ.

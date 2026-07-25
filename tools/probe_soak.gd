@@ -94,6 +94,19 @@ var _cov_before_info_sum: int = 0    # couverture (best_cov main/requis) au mome
 var _cov_after_info_sum: int = 0     # ... APRES achat (doit etre IDENTIQUE : l'info ne revele jamais les tags, §K)
 var _cov_info_n: int = 0
 
+# R168 (2026-07-28, chantiers 1-2-5, main vivante) : harnais REPIOCHE + CONVERSION.
+var MAIN_VIVANTE_ON: bool = false     # --main_vivante=true/false (defaut false : chemin historique inchange)
+var _redraws_used: int = 0            # repioches REELLEMENT effectuees (run.redraw_one -> true), toutes runs
+var _conversions_used: int = 0        # conversions REELLEMENT effectuees (run.convert_card -> true), toutes runs
+var _redraws_by_arch: Dictionary = {}
+var _conversions_by_arch: Dictionary = {}
+var _deadhand_after: int = 0          # deadhand mesure APRES la politique de repioche (meme calcul, meme beats)
+# Decision coordinateur 2026-07-28 (iteration finale, post-R166) : corruption gagnee/run PAR
+# ARCHETYPE (runs saines) - la mesure globale datait d'avant la decision corruption-voie (R166) qui
+# rend "corrompu" volontairement plus corrupteur ; on rapporte donc hors-corrompu (bande re-derivee)
+# et corrompu seul (informatif, sans bande - sa corruption haute est SON CONTENU).
+var _corr_gained_by_arch: Dictionary = {}   # arch -> somme des corruptions positives gagnees (runs saines)
+
 
 func _init() -> void:
 	var runs: int = 200
@@ -109,7 +122,10 @@ func _init() -> void:
 			per_arch = true
 		elif s.begins_with("--economy="):
 			ECONOMY_ON = s.trim_prefix("--economy=") == "true"
-	print("[SOAK] start v11 — runs=%d archetype=%s per_arch=%s economy=%s" % [runs, archetype, str(per_arch), str(ECONOMY_ON)])
+		elif s.begins_with("--main_vivante="):
+			MAIN_VIVANTE_ON = s.trim_prefix("--main_vivante=") == "true"
+	print("[SOAK] start v11 : runs=%d archetype=%s per_arch=%s economy=%s main_vivante=%s" % [
+		runs, archetype, str(per_arch), str(ECONOMY_ON), str(MAIN_VIVANTE_ON)])
 	_selftest_whitelist()  # plomberie spec §F éprouvée AVANT la campagne (validation LLM incluse)
 	_selftest_grafts()     # v11-W3 : banques, cap 3, dérivations, table de dé, prix one-shot
 	_selftest_talent()     # v2-W2 : gain au degré, ciblage du nœud, cap/coût, skill_mod, save round-trip
@@ -492,6 +508,12 @@ func _soak_one(i: int, arch: String) -> void:
 	# recherché de l'avantage, pas un artefact de mesure.
 	var econ_rng := RandomNumberGenerator.new()
 	econ_rng.seed = 31337 * (i + 1)
+	# R168 (chantiers 1-2-5) : flux RNG DEDIE aux decisions repioche/conversion (main vivante), isole
+	# du rng de jeu ET de econ_rng, meme discipline que econ_rng ci-dessus : le diff SANS/AVEC
+	# main_vivante mesure l'EFFET reel du chantier (memes seeds, memes runs), pas un bruit de
+	# desynchronisation RNG.
+	var mv_rng := RandomNumberGenerator.new()
+	mv_rng.seed = 52021 * (i + 1)
 	var gwenneg_earned_run: int = 0        # gains degré+butin cette run (cible spec §Economie 20-25/run saine)
 
 	# v1.0-V4a (BAL-11-B/GD-27) — miroir du draft d'OUVERTURE (merlin_game._end_interstitial) :
@@ -588,6 +610,18 @@ func _soak_one(i: int, arch: String) -> void:
 			best_cov = maxi(best_cov, cvd_arr.size())
 		if best_cov == 0:
 			_deadhand_beats += 1
+		# R168 (chantier 5, main vivante) : politique de REPIOCHE par archetype (main morte -> repioche
+		# gratuite ciblee) ; deadhand APRES, meme calcul, mesure honnete de l'effet du chantier. No-op
+		# total si le drapeau est OFF (chemin historique inchange).
+		if MAIN_VIVANTE_ON and _maybe_redraw(arch, run, required, mv_rng):
+			_redraws_used += 1
+			_redraws_by_arch[arch] = int(_redraws_by_arch.get(arch, 0)) + 1
+		var best_cov_after: int = 0
+		for tr2 in run.hand:
+			var cvd2: Dictionary = TagsScript.coverage(required, tr2.tags)
+			best_cov_after = maxi(best_cov_after, (cvd2["covered"] as Array).size())
+		if best_cov_after == 0:
+			_deadhand_after += 1
 		# Vague Economie V1 — phase d'achat (flux econ_rng isolé, cf. commentaire plus haut) : info/
 		# soin/purge/vente + achat eventuel du Coup de Pouce (arme run.coup_de_pouce_armed via la VRAIE
 		# API merlin_run.gd). No-op total si ECONOMY_ON == false.
@@ -604,6 +638,11 @@ func _soak_one(i: int, arch: String) -> void:
 			_coup_de_pouce_uses += 1  # exercice REEL (distinct de l'achat, cf. _econ_phase)
 		var combo: Array = _pick_combo(arch, run, required, die, rng, diff, btype, dc_bonus)
 		action_plays[str(combo[0].id)] = int(action_plays.get(str(combo[0].id), 0)) + 1
+		# R168 (chantier 5, main vivante) : politique de CONVERSION par archetype, AVANT resolve() -
+		# blessed_tags doit etre pose avant blessed_bonus(combo), meme contrat que merlin_game._on_resolve.
+		if MAIN_VIVANTE_ON and _maybe_convert(arch, run, required, combo, mv_rng):
+			_conversions_used += 1
+			_conversions_by_arch[arch] = int(_conversions_by_arch.get(arch, 0)) + 1
 		# v1.0-V4a L8 — même diff que la preview du bot (_pick_combo) : barème d'échec par difficulté.
 		# v2-W2 — skill_mod = talent du verbe joué (miroir merlin_game._on_resolve, R120 preview=résolution).
 		# v2-W3 — graft_bonus = greffes « roll » posées sur l'action jouée (miroir merlin_game, R120).
@@ -720,6 +759,7 @@ func _soak_one(i: int, arch: String) -> void:
 			_clean_runs += 1
 			_ends_clean[run.end_type] = int(_ends_clean.get(run.end_type, 0)) + 1
 			_corr_gained_clean += corr_gained_run
+			_corr_gained_by_arch[arch] = float(_corr_gained_by_arch.get(arch, 0.0)) + float(corr_gained_run)
 			_grafts_clean += grafts_run
 			_gwenneg_earned_clean += gwenneg_earned_run
 			# v2-W2 — talent final : somme des 4 niveaux en fin de run saine (moyenne §K = poussée du build).
@@ -1096,6 +1136,78 @@ func _shuffle_arr(arr: Array, rng: RandomNumberGenerator) -> void:
 		arr[j] = tmp
 
 
+# R168 (chantier 5, main vivante) : politique de REPIOCHE par archetype (miroir merlin_run.gd).
+# optimal/greedy/corrompu : repioche la carte la MOINS couvrante si la main est MORTE (best_cov==0,
+# meme lecture que la mesure deadhand ci-dessus). chaotic : au hasard (ne lit jamais les requis pour
+# CIBLER, tire la carte a repiocher au hasard aussi), 1 fois sur 2. tag_ignorant : jamais (controle,
+# baseline non-lecteur). RNG DEDIE mv_rng (jamais le rng de jeu ni econ_rng).
+func _maybe_redraw(arch: String, run: Node, required: Array, mv_rng: RandomNumberGenerator) -> bool:
+	if arch == "tag_ignorant" or not run.can_redraw() or (run.hand as Array).is_empty():
+		return false
+	if arch == "chaotic":
+		if mv_rng.randf() >= 0.5:
+			return false
+		var pick: Variant = run.hand[mv_rng.randi_range(0, (run.hand as Array).size() - 1)]
+		return run.redraw_one(str(pick.id))
+	var best_cov: int = 0
+	var worst_id: String = str(run.hand[0].id)
+	var worst_cov: int = 999
+	for tr in run.hand:
+		var n: int = (TagsScript.coverage(required, tr.tags)["covered"] as Array).size()
+		best_cov = maxi(best_cov, n)
+		if n < worst_cov:
+			worst_cov = n
+			worst_id = str(tr.id)
+	if best_cov != 0:
+		return false
+	return run.redraw_one(worst_id)
+
+
+# R168 (chantier 5, main vivante) : politique de CONVERSION par archetype (miroir merlin_run.gd).
+# Decision coordinateur 2026-07-28 (iteration finale, REALISME DES POLITIQUES, post-R166) :
+# CONDITION D URGENCE inchangee - le harnais n offre/n applique la conversion QUE si la main
+# COMPLETE ne couvre pas deja la nature visee (run.can_convert_tag, meme regle que le jeu,
+# R120-like). Cout CROISSANT PAR RUN inchange (N = conversions_this_run+1). Politiques desormais
+# REALISTES : optimal ET greedy simulent le cout AVANT de decider (budget 12, un joueur avide mais
+# conscient voit le glitch monter et s arrete - l ancien budget 15 aveugle ne modelisait personne).
+# chaotic : 50% au hasard, gate par un budget large (14, moins prudent qu optimal/greedy mais pas
+# suicidaire). corrompu : INCHANGE (85%, sans plafond, decision coordinateur) - il modelise la
+# VOIE CORROMPUE (R166), sa corruption haute est son contenu, pas une derive a corriger.
+# tag_ignorant : jamais (controle, inchange).
+func _maybe_convert(arch: String, run: Node, required: Array, combo: Array, mv_rng: RandomNumberGenerator) -> bool:
+	if arch == "tag_ignorant" or not run.can_convert():
+		return false
+	var played_tags: Array = []
+	for c in combo:
+		played_tags.append_array(c.tags as Array)
+	played_tags.append_array(run.blessed_bonus(combo))
+	var missing: Array = (TagsScript.coverage(required, played_tags)["missing"] as Array)
+	var eligible: String = ""
+	# BUG CORRIGE (2026-07-28, trouve en sondant le cas 2 requis) : ne teste plus SEULEMENT
+	# missing[0] - avec 2+ manques dont le 1er est couvrable par une AUTRE carte de la main (donc
+	# ecarte a raison) et un autre ne l est par aucune, l ancien code ecartait la conversion EN
+	# ENTIER au lieu de la proposer pour ce 2e manque. On cherche le PREMIER manque eligible.
+	for m in missing:
+		if run.can_convert_tag(str(m)):
+			eligible = str(m)
+			break
+	if eligible == "":
+		return false
+	var should_convert: bool = false
+	match arch:
+		"optimal":
+			should_convert = int(run.corruption) + int(run.next_convert_cost()) < 12
+		"greedy":
+			should_convert = int(run.corruption) + int(run.next_convert_cost()) < 12
+		"chaotic":
+			should_convert = mv_rng.randf() < 0.5 and (int(run.corruption) + int(run.next_convert_cost()) < 14)
+		"corrompu":
+			should_convert = mv_rng.randf() < 0.85
+	if not should_convert:
+		return false
+	return run.convert_card(str(combo[0].id), eligible)
+
+
 # --- RAPPORT §K — noyau dur BAL-20-B : 4 bandes de degrés (dures une fois atteintes, sinon delta
 # restant logué) + morts par archétype (dures, _report_arch) + 0 hors-pool (dure, _assert_required).
 # Les métriques de flux (pushes, drafts, deadhand, corrompues) restent LOGUÉES (anti faux-rouges). ---
@@ -1107,9 +1219,26 @@ func _report_k() -> void:
 	_band_deg("partiel", 100.0 * float(int(_degrees_clean.get("partiel", 0))) / bt, 28.0, 38.0)
 	_band_deg("réussite", 100.0 * float(int(_degrees_clean.get("reussite", 0))) / bt, 45.0, 55.0)
 	_band_deg("éclatante", 100.0 * float(int(_degrees_clean.get("eclatante", 0))) / bt, 8.0, 15.0)
-	_band("morts", 100.0 * float(int(_ends_clean.get("mort", 0))) / cr, 10.0, 25.0)
-	_band("fins corrompues", 100.0 * float(int(_ends_clean.get("corrompu", 0))) / cr, 0.0, 18.0)
-	_band("corruption gagnée/run", float(_corr_gained_clean) / cr, 3.9, 6.9, false)
+	_band("morts (global, informatif)", 100.0 * float(int(_ends_clean.get("mort", 0))) / cr, 10.0, 25.0)
+	_band("fins corrompues (global, informatif legacy)", 100.0 * float(int(_ends_clean.get("corrompu", 0))) / cr, 0.0, 18.0)
+	# Decision coordinateur 2026-07-28 (iteration finale, post-R166) : la mesure globale de corruption
+	# gagnee/run datait d'avant la decision corruption-voie (R166) qui rend "corrompu" volontairement
+	# plus corrupteur - la moyenne globale melangeait donc une DERIVE (archetypes non-corrompu) avec
+	# du CONTENU VOULU (corrompu). On rapporte desormais separement : hors-corrompu (bande RE-DERIVEE
+	# 5.0-8.5, R168, la conversion est une source volontaire, decision utilisateur 2026-07-28) et
+	# corrompu seul (informatif, sans bande - sa corruption haute est son contenu, R166).
+	var corr_hors_sum: float = 0.0
+	var corr_hors_n: int = 0
+	for a_hc in _arch_stats:
+		if a_hc == "corrompu":
+			continue
+		corr_hors_sum += float(_corr_gained_by_arch.get(a_hc, 0.0))
+		corr_hors_n += int(_arch_stats[a_hc].get("runs_clean", 0))
+	_band("corruption gagnée/run (hors corrompu)", corr_hors_sum / float(maxi(corr_hors_n, 1)), 5.0, 8.5, false)
+	var corr_corrompu_n: int = int((_arch_stats.get("corrompu", {}) as Dictionary).get("runs_clean", 0))
+	var corr_corrompu_avg: float = float(_corr_gained_by_arch.get("corrompu", 0.0)) / float(maxi(corr_corrompu_n, 1))
+	print("[SOAK]   %-36s %5.2f    (R168, decision coordinateur 2026-07-28 : informatif, sans bande - la voie corrompue est SON CONTENU, R166)" % [
+		"corruption gagnée/run (corrompu seul)", corr_corrompu_avg])
 	print("[SOAK]   %-36s %5d / %-5d  (chantier 2 : GARANTIE >= %d Rencontre/run, ASSERTION DURE, cible 100%%)" % [
 		"runs avec >= N Rencontre", _rencontre_runs_ge2, _runs_total, int(Scenario.MIN_RENCONTRE_PER_RUN)])
 	if _climax_beats > 0:
@@ -1122,7 +1251,13 @@ func _report_k() -> void:
 		"nœuds de talent pris/run (saines)", float(_talent_nodes_taken) / float(maxi(_runs_total, 1)),
 		float(_talent_levels_sum) / float(maxi(_talent_runs, 1))])
 	print("[SOAK]   %-36s %5d     (ASSERTION DURE == 0)" % ["beats à requis hors-pool", _offpool_beats])
-	print("[SOAK]   %-36s %5.1f%%   (info §C : A/B réserve de trait si > 45)" % ["deadhand (0 trait couvrant)", 100.0 * float(_deadhand_beats) / float(maxi(_beats_total, 1))])
+	print("[SOAK]   %-36s %5.1f%% -> %5.1f%%   (chantier 1 : avant -> apres repioche)" % [
+		"deadhand (0 trait couvrant)", 100.0 * float(_deadhand_beats) / float(maxi(_beats_total, 1)),
+		100.0 * float(_deadhand_after) / float(maxi(_beats_total, 1))])
+	print("[SOAK]   %-36s %5.2f    (chantier 1 : main_vivante=%s)" % [
+		"repioches/run", float(_redraws_used) / float(maxi(_runs_total, 1)), str(MAIN_VIVANTE_ON)])
+	print("[SOAK]   %-36s %5.2f    (chantier 2 : cout croissant par run, main_vivante=%s)" % [
+		"conversions/run", float(_conversions_used) / float(maxi(_runs_total, 1)), str(MAIN_VIVANTE_ON)])
 	print("[SOAK]   variantes basculées=%d · sabotage R66 non simulé (aucun antagoniste côté probe) · émissions ×1=%s" % [_variant_swaps, str(_x1_emissions)])
 
 
@@ -1187,6 +1322,9 @@ func _report_arch() -> void:
 			100.0 * float(int(degs.get("reussite", 0))) / td,
 			100.0 * float(int(degs.get("eclatante", 0))) / td,
 			morts * 100.0, str(ends)])
+		print("[SOAK]   %-12s repioches/run=%4.2f  conversions/run=%4.2f  (main_vivante=%s)" % [
+			str(arch), float(_redraws_by_arch.get(arch, 0)) / float(maxi(int(st["runs"]), 1)),
+			float(_conversions_by_arch.get(arch, 0)) / float(maxi(int(st["runs"]), 1)), str(MAIN_VIVANTE_ON)])
 	# v1.0-V4a (BAL-04-B) — GATES DE MORTS par archétype sur runs SAINES : optimal ≤10 % ·
 	# greedy/chaotic ≤30 % · corrompu ≤25 %. ASSERTION DURE (échantillon ≥ ARCH_GATE_MIN_RUNS).
 	print("[SOAK] — GATES MORTS PAR ARCHÉTYPE (runs saines, ASSERTION DURE) —")
@@ -1207,6 +1345,27 @@ func _report_arch() -> void:
 		print("[SOAK]   %-12s morts saines=%5.1f%%  gate ≤%2.0f%% (n=%d) [%s]" % [str(arch), morts_c, gate, rc, verdict])
 		if morts_c > gate:
 			_gate_fail += 1  # gate §K (équilibrage) — compté à part des échecs de runs (fiabilité)
+	# Decision coordinateur 2026-07-28 (iteration finale, post-R166) - GATES FINS CORROMPUES PAR
+	# ARCHETYPE : chaque archetype NON-corrompu doit rester <=18% (runs saines) - une fin corrompue y
+	# est une DERIVE. "corrompu" est INFORMATIF SANS GATE : sa corruption haute (60-90% attendu)
+	# est SON CONTENU (la voie corrompue R166 fonctionne), pas une derive a corriger.
+	print("[SOAK] - GATES FINS CORROMPUES PAR ARCHETYPE (runs saines, ASSERTION DURE sauf corrompu) -")
+	for arch in _arch_stats:
+		var stf: Dictionary = _arch_stats[arch]
+		var rcf: int = int(stf.get("runs_clean", 0))
+		var ecf: Dictionary = stf.get("ends_clean", {})
+		var corr_pct: float = 100.0 * float(int(ecf.get("corrompu", 0))) / float(maxi(rcf, 1))
+		if arch == "corrompu":
+			print("[SOAK]   %-12s fins corrompues=%5.1f%% (n=%d) - informatif (voie corrompue R166, attendu 60-90%%)" % [str(arch), corr_pct, rcf])
+			continue
+		if rcf < ARCH_GATE_MIN_RUNS:
+			print("[SOAK]   %-12s fins corrompues=%5.1f%% (n=%d) - echantillon < %d, gate non significatif" % [
+				str(arch), corr_pct, rcf, ARCH_GATE_MIN_RUNS])
+			continue
+		var verdict_c: String = "PASS" if corr_pct <= 18.0 else "FAIL"
+		print("[SOAK]   %-12s fins corrompues=%5.1f%%  gate <=18%% (n=%d) [%s]" % [str(arch), corr_pct, rcf, verdict_c])
+		if corr_pct > 18.0:
+			_gate_fail += 1  # gate §K (derive non voulue vers la voie corrompue) - distinct des morts
 
 
 func _skel(i: int) -> Dictionary:

@@ -2101,6 +2101,28 @@ avant commit (cf. §9, §24). Vérifie :
   ultérieur dans le squelette (25.4bis).
 Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de changement »).
 
+- **R168bis : CONVERSION CALIBREE EN RECOURS D'URGENCE (addendum final, 2026-07-29, 4 iterations
+  mesurees)** : la conversion de nature exige desormais qu'AUCUNE carte de la MAIN COMPLETE ne couvre
+  la nature visee (« on ne tord la nature que quand la main ne peut pas repondre », fidele a
+  l'intention d'origine), PLUS le cout croissant par run (Nieme conversion = N Corruption, affiche
+  sur le bouton), PLUS le cap 1/beat. BUG REEL corrige en route : l'offre ne testait que le premier
+  requis manquant (missing[0]) et ratait des recours legitimes quand le 1er manque etait couvrable
+  mais pas le 2e ; corrige jeu + harnais. MESURE (soak 100, politiques de bots realistes : greedy et
+  chaotic budgetes prospectifs 12/14, corrompu volontairement sans plafond car il EST la voie
+  corrompue) : conversions/run 2.52, repioches/run 2.78, les 4 bandes de degre IN pour la premiere
+  fois (6.9/30.0/50.7/12.4), fins corrompues par archetype non-corrompu toutes <= 14.3 (corrompu
+  86.7, informatif : c'est son contenu), 0 hors-pool, sondes interactives 15/15. LECTURE PAR
+  ARCHETYPE ACTEE : depuis R166 la corruption est une voie, les compteurs corruption et fins
+  corrompues se lisent par archetype (bande hors-corrompu 5.0-8.5 posee au harnais), plus en global.
+  CALIBRATION OUVERTE, assumee et documentee : corruption/run hors-corrompu mesuree a 11.02 (au-dessus
+  de la bande cible) et mortalite globale 4.2 (le filet d'urgence, parfaitement chronometre par
+  construction, neutralise la plupart des morts ; un budget de bot agit en attracteur vers son
+  plafond). DECISION : ces deux curseurs se rejouent a la vague MORT-LEGENDE (le moment deja planifie
+  pour re-durcir la letalite, R165), avec le ressenti manette en main de Maxime comme juge, plutot
+  qu'une 5e iteration de bots. LECON D'OUTILLAGE : validate_step0 ne detecte PAS une fonction
+  supprimee dans un script-outil SceneTree (parse-only) ; tout patch structurel d'un outil exige une
+  invocation runtime minimale (--runs=2) avant campagne.
+
 - **R169 : REGISTRE DE RECIT EQUILIBRE (2026-07-29, 2e retour d'ecriture de Maxime sur les 10
   sentiers)** : « Tout est trop image et trop destructure, ca fait too much, l'ecriture est trop
   enigmatique. » Le pendule est recale : ni le soutenu de l'etalon v1, ni le hache de R168.

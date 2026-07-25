@@ -138,6 +138,12 @@ var degree_counts: Dictionary = {"echec": 0, "partiel": 0, "reussite": 0, "eclat
 # pas de bump SAVE_VERSION — R108).
 var gwenneg: int = 0
 var pending_debts: Array = []
+# === R168 (2026-07-28, chantiers 1-2 « main vivante ») — REPIOCHE + CONVERSION, 1x/beat chacune. ===
+# redraw_used_this_beat / convert_used_this_beat : remis a neuf a CHAQUE beat (advance_beat), jamais
+# par quete (distinct des caps Economie ci-dessus). Champs ADDITIFS (defauts surs au load, R108,
+# pas de bump SAVE_VERSION).
+var redraw_used_this_beat: bool = false
+var convert_used_this_beat: bool = false
 var soins_achetes: int = 0
 var purges_achetees: int = 0
 var info_achetee_this_quest: bool = false
@@ -205,6 +211,95 @@ func consume_blessings(combo: Array) -> void:
 	for c in combo:
 		if c is Object and c.get("id") != null:
 			blessed_tags.erase(str(c.id))
+
+
+# === R168 (2026-07-28, chantiers 1-2 « main vivante ») ===
+# Décision utilisateur 2026-07-28 (post-mesure) — COÛT CROISSANT PAR RUN remplace le coût fixe +1 :
+# la Nième conversion de la run coûte N Corruption (1re +1, 2e +2, 3e +3...). conversions_this_run
+# compte les conversions RÉELLEMENT appliquées cette run (jamais remis à zéro en cours de run,
+# uniquement à new_run) — alimente next_convert_cost() ET la politique par archétype du soak. Le cap
+# 1 conversion PAR BEAT reste (convert_used_this_beat, inchangé).
+var conversions_this_run: int = 0
+
+
+func can_redraw() -> bool:
+	return not redraw_used_this_beat
+
+
+# Chantier 1 — REPIOCHE gratuite, 1x/beat, CIBLEE : défausse la carte `card_id` de la main (si
+# présente), repioche 1 trait (même cycle deck/défausse que redraw_hand — reshuffle si le paquet
+# est vide). Le cap R113 (≤1 corrompu/main, ≥1 trait en main) reste garanti par _enforce_hand_caps.
+# Refuse si déjà utilisée ce beat ou si card_id n'est pas dans la main (carte déjà jouée/action).
+func redraw_one(card_id: String) -> bool:
+	if redraw_used_this_beat or card_id == "":
+		return false
+	var idx: int = -1
+	for i in hand.size():
+		if str((hand[i] as MerlinCard).id) == card_id:
+			idx = i
+			break
+	if idx < 0:
+		return false
+	var discarded: MerlinCard = hand[idx]
+	hand.remove_at(idx)
+	discard.append(discarded)
+	var replacement: MerlinCard = _draw_one()
+	if replacement != null:
+		hand.append(replacement)
+	redraw_used_this_beat = true
+	_enforce_hand_caps()
+	return true
+
+
+func can_convert() -> bool:
+	return not convert_used_this_beat
+
+
+# Décision coordinateur 2026-07-28 (calibration finale, alignée sur l'intention d'origine « pour
+# pouvoir répondre au besoin ») — CONDITION D'URGENCE : « on ne tord la nature que quand la main ne
+# peut pas répondre. » Vrai si une carte de la main COMPLÈTE (pas seulement les cartes jouées) porte
+# déjà la nature `tag` (comparaison canon, MerlinTags.to_canon — mêmes synonymes que la couverture).
+func hand_covers_tag(tag: String) -> bool:
+	var canon: String = MerlinTags.to_canon(tag)
+	for c in hand:
+		if not (c is Object) or not (c.get("tags") is Array):
+			continue
+		for t in (c.tags as Array):
+			if MerlinTags.to_canon(str(t)) == canon:
+				return true
+	return false
+
+
+# Éligibilité RÉELLE d'une offre de conversion pour la nature `tag` : budget du beat (can_convert)
+# ET la main complète ne la couvre pas déjà (hand_covers_tag). Lu par l'UI (merlin_game._maybe_offer_convert)
+# ET par le soak (_maybe_convert) — même règle, un seul endroit (R120-like).
+func can_convert_tag(tag: String) -> bool:
+	return can_convert() and not hand_covers_tag(tag)
+
+
+# Coût de la PROCHAINE conversion (celle qui serait appliquée MAINTENANT) : N = conversions_this_run+1.
+# Lu par l'UI (libellé du bouton, affiché AVANT le clic) ET par convert_card (même valeur — pas de
+# surprise entre le prix affiché et le prix payé).
+func next_convert_cost() -> int:
+	return conversions_this_run + 1
+
+
+# Chantier 2 — CONVERSION : une carte JOUÉE compte comme une nature REQUISE non couverte, au prix
+# CROISSANT par run (décision utilisateur 2026-07-28 : 1re +1, 2e +2, 3e +3... — tordre la nature
+# laisse une trace de plus en plus lourde, nourrit la voie corrompue R166). Réutilise le canal
+# blessed_tags existant (bénédiction auto-payée, R131) : blessed_tags[card_id] = tag, consommée à la
+# pose par consume_blessings (comme les bénédictions de pilier) — resolve() n'est PAS touché, preview
+# et résolution lisent le même état (R120). 1 par beat (remis à neuf par advance_beat) ; le compteur
+# conversions_this_run, lui, ne se remet JAMAIS à zéro en cours de run (seulement à new_run).
+func convert_card(card_id: String, tag: String) -> bool:
+	if convert_used_this_beat or card_id == "" or tag == "":
+		return false
+	var cost: int = next_convert_cost()
+	blessed_tags[card_id] = tag
+	convert_used_this_beat = true
+	conversions_this_run += 1
+	add_corruption(cost)
+	return true
 
 
 # v10.21 (R131) — mutation de corruption via API unique : jauges + seuils + fin (spec panel).
@@ -280,6 +375,9 @@ func new_run(p_scenario: Dictionary) -> void:
 	pilier_hostility = {}
 	merchant_seen_this_run = false
 	rencontre_count_this_run = 0
+	redraw_used_this_beat = false  # R168 : budget du 1er beat, remis a neuf par advance_beat ensuite
+	convert_used_this_beat = false
+	conversions_this_run = 0  # R168 (coût croissant) : remis à zéro UNIQUEMENT à new_run
 	actions = MerlinCard.make_actions()  # v11 : les 4 verbes fixes évolutifs
 	deck = MerlinCard.starter_traits()   # v11 : 16 traits (12 canon retagués + 4 nouveaux)
 	hand = []
@@ -1061,6 +1159,10 @@ func _check_end_after_resolution() -> void:
 func advance_beat() -> void:
 	var prev_quest: int = int(current_beat().get("quest", 0))
 	beat_index += 1
+	# R168 (chantiers 1-2) — repioche/conversion : budget remis a neuf a CHAQUE beat (jamais par
+	# quete), que la run continue ou se termine ici (sans effet si ended, par simplicite).
+	redraw_used_this_beat = false
+	convert_used_this_beat = false
 	if ended:
 		return
 	var total: int = int(scenario.get("total", 5))
@@ -1424,6 +1526,8 @@ func save() -> void:
 		"coup_de_pouce_armed": coup_de_pouce_armed, "coup_de_pouce_exercised": coup_de_pouce_exercised,
 		"pilier_favors": pilier_favors, "pilier_hostility": pilier_hostility,
 		"merchant_seen_this_run": merchant_seen_this_run, "rencontre_count_this_run": rencontre_count_this_run,
+		"redraw_used_this_beat": redraw_used_this_beat, "convert_used_this_beat": convert_used_this_beat,  # R168
+		"conversions_this_run": conversions_this_run,  # R168 (coût croissant, additif, défaut 0 au load)
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f != null:
@@ -1496,6 +1600,9 @@ func load_run() -> bool:
 	pilier_hostility = ph if ph is Dictionary else {}
 	merchant_seen_this_run = bool(data.get("merchant_seen_this_run", false))
 	rencontre_count_this_run = int(data.get("rencontre_count_this_run", 0))
+	redraw_used_this_beat = bool(data.get("redraw_used_this_beat", false))  # R168 : défaut false (saves antérieures)
+	convert_used_this_beat = bool(data.get("convert_used_this_beat", false))
+	conversions_this_run = int(data.get("conversions_this_run", 0))  # R168 (coût croissant) : défaut 0 (saves antérieures)
 	actions = _dicts_to_cards(data.get("actions", []))
 	if actions.size() != 5:
 		actions = MerlinCard.make_actions()  # R158 : 5 actions a icones (repli/migration si save != 5)
