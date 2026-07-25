@@ -2081,8 +2081,13 @@ avant commit (cf. §9, §24). Vérifie :
   en plein beat).
 - **`figure` valide** : appartient au Roster canon (§6), aux clés pilier (§6), ou à
   `marchand`/`creancier` (R164) ; jamais un nom halluciné.
-- **Registre de prose (R168)** : sobre et direct, phrases courtes, vocabulaire courant, UNE image
-  simple par scène MAXIMUM. Le merveilleux vient de ce qui arrive, pas des tournures.
+- **Registre de prose (R169, remplace R168 sur ce point)** : NARRATION DE RECIT, equilibree.
+  Phrases de longueur moyenne qui s'enchainent naturellement (alterner les longueurs, JAMAIS de
+  staccato de fragments, JAMAIS de periode litteraire). CLARTE D'ABORD : dire ce qui se passe, qui,
+  ou, pourquoi ; l'enigme vit dans les evenements, jamais dans la formulation (zero aphorisme
+  gnomique, zero sous-entendu obscur). Images RARES et fonctionnelles : une par quete suffit,
+  jamais deux dans la meme phrase, zero personnification systematique. STYLES VARIES entre
+  scenarios (conte, chronique, temoignage, geste) mais tenus, sans exces de procedes.
 - **Mots-indices (R168)** : 2-3 mots-clés de la prose portent la COULEUR de leur famille de tag
   (BBCode, couleurs MerlinVisual par famille), intensité (gras / gras+italique) = difficulté ;
   PLUS le bandeau discret sous la scène : « Type : Famille x Famille, difficulté N » (généré par le
@@ -2095,6 +2100,18 @@ avant commit (cf. §9, §24). Vérifie :
   tout état créé (blessure, dette, bénédiction, apprentissage) a son point de suivi ou de paiement
   ultérieur dans le squelette (25.4bis).
 Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de changement »).
+
+- **R169 : REGISTRE DE RECIT EQUILIBRE (2026-07-29, 2e retour d'ecriture de Maxime sur les 10
+  sentiers)** : « Tout est trop image et trop destructure, ca fait too much, l'ecriture est trop
+  enigmatique. » Le pendule est recale : ni le soutenu de l'etalon v1, ni le hache de R168.
+  La cible est la NARRATION DE RECIT : phrases de longueur moyenne, equilibrees, qui coulent ;
+  alternance naturelle des longueurs ; CLARTE d'abord (on comprend qui, quoi, ou, pourquoi a la
+  premiere lecture) ; l'enigme vit dans les EVENEMENTS, jamais dans la formulation ; images rares
+  et fonctionnelles (une par quete peut suffire, jamais deux par phrase) ; personnifications et
+  aphorismes gnomiques bannis. PLUSIEURS STYLES d'ecriture d'un scenario a l'autre (conte du soir,
+  chronique, temoignage de voyageur, geste sobre, parler franc) pour la variete, chaque style TENU
+  sans exces de procedes. Amende le point registre de R168 ; le QC §25.5 est mis a jour. Les 10
+  sentiers de l'artefact de lecture sont reecrits sous cette regle.
 
 - **R168 : MAIN VIVANTE ET INDICES DE NATURE (repioche, conversion, mots-indices, registre ; 2026-07-28,
   retours Maxime sur l'etalon)** : quatre decisions liees pour que le joueur REPONDE au besoin au lieu
