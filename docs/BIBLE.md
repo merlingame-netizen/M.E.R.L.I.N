@@ -2113,6 +2113,18 @@ Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de c
   (repiocher si main morte, convertir si budget de corruption) ; bandes a surveiller : corruption/run
   (3.9-6.9, deja a ~6) et eclatante ; ajustement single-lever documente si sortie de bande.
 
+- **R167 : FIL CAUSAL, GESTE VERBALISE, MERLIN COMPAGNON (2026-07-28, retour fondateur de Maxime sur
+  le premier etalon)** : trois exigences de recit NON NEGOCIABLES, detaillees en §25.4bis et verifiees
+  par le QC §25.5. (1) INTRODUCTION complete obligatoire : preambule de Merlin + accroche de quete
+  RELIEE a son climax (la promesse d'ouverture est tenue a la fin), jamais d'entree a froid.
+  (2) Le GESTE est VERBALISE : la prose de resolution met en scene la combinaison jouee, action et
+  traits nommes en fiction (etend R140). (3) Les CONSEQUENCES PERDURENT : blessure, dette, maladresse,
+  benediction, apprentissage sont suivis jusqu'a leur paiement ; chaque beat reference au moins un
+  evenement anterieur du run. S'y ajoute la REACTION COURTE de Merlin : une ligne (voix bleutee) apres
+  chaque resolution marquante, distincte des 2-3 interventions aux charnieres (§25.4), sans cap :
+  le compagnon commente la partie. Etalon de reference : le run « Le Linge de l'Aube » (session
+  2026-07-28), a verser en worked example §25.
+
 - **R166 : CHARTE NARRATIVE COMPLÈTE, scénarios/mort/corruption/méta (2026-07-28, vague W-CANON, 16
   décisions verrouillées user en 4 rounds AskUserQuestion)** : (1) CHARTE DES SCÉNARIOS (§25, cœur de
   la vague) : casting (≥1 figure par quête, pilier ≥1/run déjà garanti R127/R131, zéro répétition
