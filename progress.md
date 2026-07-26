@@ -2612,3 +2612,18 @@ Les cartes d'arc `arc_broceliande_01/02/03` n'apparaissaient dans **aucun** des 
 Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 titres au banc, 12 cartes au pool. Seule la génération LLM native les lève — la mesure est en place pour le vérifier.
 
 - Tableau de contrôle réalimenté : https://claude.ai/code/artifact/03b49e7f-d42a-470e-95d7-7b7b558c9741
+
+### Phase: Décisions AskUserQuestion round 1 — bible v4.0 (2026-07-26)
+- **Status:** décisions inscrites, implémentation à venir
+- Quatre décisions utilisateur qui **écrasent** le canon antérieur :
+
+| Décision | Écrase | Conséquence |
+|---|---|---|
+| Longueur **variable par archétype** (11/15/17/21/25) | CLAUDE.md §10.4 (25 fixe), bible §6.4 (15-20) | Équilibrage à rendre paramétrique en N ; `MIN_CARDS_FOR_VICTORY=25` caduc ; `ACT_SEQUENCE` en dur à supprimer |
+| **Tout afficher** — 5 réputations chiffrées au HUD | position actuelle de `_refresh_hud` | ⚠ conflit ouvert avec pilier MINIMAL §21.2 (10 affordances au lieu de 7 max) |
+| Branchement **narratif, pas topologique** | spec §2.2 (3 routes isométriques) + modèle des 100 références | `route_mask` / `leads_to_card_id` sortent du contrat ; golden et corpus caducs |
+| Pool statique **supprimé** | rôle du pool dans board_narration | ⚠ conflit ouvert : supprime toute testabilité hors ligne (harnais, smoke, mesure de diversité) |
+
+- **Round 2 non répondu** : budget d'écran, testabilité sans pool, définition de la victoire, sort du golden. Consigné comme ouvert dans bible §31.
+- **Livrables invalidés** (§31.5) : golden 3 routes, corpus 100 références, 36 résolutions du pool, mélange + anti-répétition + ordre des arcs, équilibrage calibré sur 25.
+- **Restent valides** : grammaire de carte, beat de résolution, graine de variation, porte de nouveauté, tout l'outillage de mesure.

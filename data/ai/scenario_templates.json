@@ -1,9 +1,9 @@
 {
   "_meta": {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "date": "2026-07-25",
     "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
-    "bible_ref": "GAME_DESIGN_BIBLE.md v3.9 (sections 5, 6, 9, 25-28, 30)",
+    "bible_ref": "GAME_DESIGN_BIBLE.md v4.0 (section 31 : decisions du 2026-07-26)",
     "inspirations": {
       "slay_the_spire": "courbe de danger par acte, rarete croissante, EV egal / variance croissante entre options",
       "dominion": "taux de change unifie entre ressources (PV-equivalent), economie a caps",
@@ -95,14 +95,9 @@
       "boss"
     ],
     "branching": {
-      "routes": 3,
-      "route_poles": [
-        "ordre",
-        "chaos",
-        "liminal"
-      ],
-      "pattern": "trunk -> branch1 (3 voies) -> twist (convergence) -> branch2 (3 voies) -> convergence finale",
-      "route_choice_card": "derniere carte de l'acte I (c2 sur 17 cartes, c5 sur 25) : chaque option ouvre une voie de Pole distincte. C'est la SEULE carte dont les options changent la topologie ; ailleurs les 3 options menent a la meme carte suivante."
+      "_statut": "ABANDONNE le 2026-07-26 — remplace par le branchement narratif",
+      "regle": "aucun branchement de topologie. Tous les joueurs voient la meme sequence ; la resolution et le texte de chaque carte varient selon l'etat accumule (reputations, marqueurs, arc en cours, promesses).",
+      "ancien_modele": "3 routes isometriques ordre/chaos/liminal avec aiguillage et convergence"
     },
     "card_type_caps": {
       "NARRATIVE": {
@@ -146,7 +141,8 @@
     "climax_card_type": "MERLIN_DIRECT",
     "beat_act_sequence_mapping": {
       "_comment": "Pour un skeleton de N beats (5-10) : prendre les N-1 premieres entrees puis 'boss' en derniere position (clamp scenario_planner.gd). Vocab acte -> CardType : standard=NARRATIVE, shop=SHOP, event=EVENT, boss=MERLIN_DIRECT (const ACT_TYPE_TO_CARDTYPE). Pour les longueurs jouees 11-25, la projection se fait par actes (5 actes egaux, roles §2.1 de la spec)."
-    }
+    },
+    "length_rule": "variable selon l'archetype (length_bias), parmi canonical_lengths. Toutes les regles chiffrees se projettent sur N, jamais sur 25 en dur."
   },
   "balance_model": {
     "exchange_rates_pv_equivalent": {
@@ -1062,6 +1058,30 @@
         "carte 5 : Gwenn te demande d'examiner le Chene — l'etape 1 de l'arc, servie APRES l'etape 2"
       ],
       "diagnostic": "trois manquements imbriques : pas de resolution narree, pas de lien causal entre cartes, et sequence d'arc servie dans le desordre."
+    }
+  },
+  "decisions_2026_07_26": {
+    "_source": "AskUserQuestion round 1. Ces decisions ECRASENT le contrat anterieur.",
+    "longueur_run": {
+      "regle": "variable selon l'archetype — 11, 15, 17, 21 ou 25 cartes",
+      "ecrase": "CLAUDE.md 10.4 (25 fixe) et bible 6.4 (15-20)",
+      "consequence": "tout l'equilibrage devient parametrique en N : budget de danger, check_act_distribution, economie des Rune-Circuits (1 + floor((N-1)/CD)), projection des actes (acte = 1 + floor(i*5/N)). MIN_CARDS_FOR_VICTORY=25 caduc.",
+      "en_attente": "definition de la victoire (round 2 sans reponse)"
+    },
+    "affichage_consequences": {
+      "regle": "les 5 reputations de faction sont affichees chiffrees au HUD",
+      "ecrase": "la position actuelle de _refresh_hud (aucun affichage HUD des reputations)",
+      "conflit_ouvert": "pilier MINIMAL bible 21.2 (max 7 affordances) : on atteindrait 10. Viser la forme la plus compacte — une barre unique a 5 segments — tant que le conflit n'est pas tranche."
+    },
+    "branchement": {
+      "regle": "narratif, pas topologique — meme sequence pour tous, resolutions et textes variables selon l'etat",
+      "ecrase": "SCENARIO_TYPES_SPEC 2.2 (3 routes isometriques) + modele des 100 references",
+      "consequence": "route_mask, leads_to_card_id et le pattern tronc/branche/twist sortent du contrat"
+    },
+    "pool_statique": {
+      "regle": "supprime — aucune carte pre-ecrite servie au joueur, tout est genere",
+      "ecrase": "le role du pool fastroute_cards.json dans board_narration",
+      "conflit_ouvert": "supprime toute testabilite hors ligne : harnais de transcript, smoke, mesure de diversite entre runs. Options non tranchees : pool reserve aux tests (invisible en jeu) ou faux LLM deterministe."
     }
   }
 }

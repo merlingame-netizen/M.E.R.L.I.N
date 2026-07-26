@@ -1,4 +1,4 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. v3.9
+# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.0
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
@@ -1447,7 +1447,8 @@ Les palettes sont exposées dans `scripts/board_narration/biome_palettes.gd` (à
 
 ---
 
-*GAME_DESIGN_BIBLE v3.9 — M.E.R.L.I.N.*
+*GAME_DESIGN_BIBLE v4.0 — M.E.R.L.I.N.*
+*v4.0 (2026-07-26) — §31 Décisions AskUserQuestion : longueur variable, réputations affichées, branchement narratif, pool supprimé*
 *v3.8 (2026-05-16) — §20.6 reframed : KayKit = RÉFÉRENCE technique pour assets custom + §20.7 Persona digital UI accents (menu_test v7.7.11) + subtitle definitively removed*
 *v3.9 (2026-07-25) — §30 Scénarios Types & Équilibrage Deck-Building + dédoublonnage §25-§29 + fix bandes score §4.6 (80-94/95-100) + fix math §28.2*
 *Refonte majeure 2026-05-09 — Inscryption x AI Dungeon x Cyber-Druidique*
@@ -1732,4 +1733,90 @@ druides 32.5% des options (> 30%), ankou 7.8% (< 8%), 20 arcs ouvrant sur `tensi
 
 ---
 
-*Fin de bible v3.9*
+## 31. Décisions du 2026-07-26 — AskUserQuestion round 1 (ÉCRASE le canon antérieur)
+
+> Quatre décisions prises par l'utilisateur en réponse directe aux divergences mesurées
+> sur des runs réels. Elles **écrasent** les sections indiquées. Deux d'entre elles
+> ouvrent un conflit avec un autre point de la bible : ces conflits sont signalés ici et
+> restent à trancher.
+
+### 31.1 Longueur de run — VARIABLE selon l'archétype
+
+**Écrase** : CLAUDE.md §10.4 (« 5 actes × 5 = 25 cartes ») et bible §6.4 (« target 15-20,
+soft max 30, hard max 40 »).
+
+Un run dure désormais **11, 15, 17, 21 ou 25 cartes** selon l'archétype du scénario tiré
+(`canonical_lengths` du contrat). Conséquences directes :
+
+- `MIN_CARDS_FOR_VICTORY = 25` (`merlin_constants.gd:103`) devient **caduc** : la victoire
+  ne peut plus être un nombre fixe. Question ouverte (round 2, sans réponse) : victoire =
+  atteindre la fin du scénario tiré, accomplir la mission narrative, seuil relatif, ou
+  issues graduées.
+- Tout l'équilibrage chiffré doit devenir **paramétrique** en N : budget de danger,
+  `check_act_distribution`, économie des Rune-Circuits (`1 + floor((N-1)/CD)`), projection
+  des 5 actes (`acte = 1 + floor(i × 5 / N)`).
+- `ACT_SEQUENCE` en dur à 5 entrées dans `board_narration.gd:2914` doit disparaître.
+
+### 31.2 Conséquences — TOUT AFFICHER
+
+**Écrase** : la position implicite actuelle (`_refresh_hud` : « Réputations sont META […]
+aucun affichage HUD »).
+
+Les **5 réputations de faction sont affichées chiffrées** au HUD. Le joueur doit pouvoir
+arbitrer en connaissance de cause ; un JdR ne se joue pas à l'aveugle.
+
+> ⚠ **Conflit ouvert avec §21.2** — le pilier MINIMAL interdit plus de 7 affordances
+> simultanées (loi de Miller). Avec vie, Anam, compteur, acte, rune active et 5 réputations,
+> on atteint 10. Le round 2 proposait une barre unique à 5 segments (1 affordance au lieu
+> de 5) ou l'écrasement assumé du pilier. **Non tranché.** En attendant, l'implémentation
+> doit viser la forme la plus compacte possible.
+
+### 31.3 Branchement — NARRATIF, PAS TOPOLOGIQUE
+
+**Écrase** : `SCENARIO_TYPES_SPEC.md` §2.2 (3 routes isométriques, aiguillage, convergence)
+et le modèle des 100 scénarios de référence.
+
+Il n'y a **pas de branchement de topologie**. Tous les joueurs voient la même séquence de
+cartes ; ce sont la **résolution et le texte qui varient** selon l'état accumulé
+(réputations, marqueurs, arc en cours, promesses). Le sentiment d'une histoire qui tient
+compte de vous, sans tripler le volume de contenu à générer.
+
+Conséquences : `route_mask`, `leads_to_card_id` et le pattern
+`tronc → branche → twist → branche → convergence` sortent du contrat. Le scénario golden
+(53 cartes, 3 voies) et le corpus de références sont bâtis dessus et deviennent caducs
+dans leur forme actuelle.
+
+### 31.4 Pool statique — SUPPRIMÉ
+
+**Écrase** : le rôle actuel du pool `fastroute_cards.json` dans `board_narration.gd`, et
+partiellement §9.6 (le blocage devient la seule issue en l'absence de LLM).
+
+Le jeu ne sert **plus aucune carte pré-écrite** : tout est généré par le LLM, sans filet.
+C'est la lecture stricte de la directive « 100 % LLM natif, aucun scénario qui se
+ressemble ».
+
+> ⚠ **Conflit ouvert avec la testabilité** — le harnais de transcript, les smoke tests, la
+> mesure de diversité entre runs et les douze runs joués cette session fonctionnent tous
+> **sans Ollama**, grâce à ce pool. Le supprimer sans remplacement supprime la boucle
+> mesure → correction → mesure qui a mis au jour tous les défauts de cette session. Le
+> round 2 proposait un pool réservé aux tests (invisible en jeu) ou un faux LLM
+> déterministe. **Non tranché.**
+
+### 31.5 Ce que ces décisions invalident dans le travail de cette session
+
+Par honnêteté de suivi, les livrables devenus caducs ou à refaire :
+
+| Livrable | État |
+|---|---|
+| Scénario golden « Le Rite des Neuf Souffles » (53 cartes, 3 routes) | à refaire en linéaire à résolutions variables |
+| Corpus de 100 références (bâti sur 3 routes, 0/6 en diversité) | ne sert plus de modèle de contenu |
+| 36 résolutions écrites pour les 12 cartes du pool | perdues avec le pool, sauf si le pool survit en test |
+| Mélange du pool + garde-fou anti-répétition + ordre des arcs | portent sur le pool ; deviennent sans objet |
+| Équilibrage calibré sur 25 cartes | à rendre paramétrique en N |
+
+Restent valides : la grammaire de carte (§30 + `card_grammar`), le beat de résolution, la
+graine de variation, la porte de nouveauté, et tout l'outillage de mesure.
+
+---
+
+*Fin de bible v4.0*
