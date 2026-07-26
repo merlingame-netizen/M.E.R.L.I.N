@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "date": "2026-07-25",
   "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
   "bible_ref": "GAME_DESIGN_BIBLE.md v4.0 (section 31 : decisions du 2026-07-26)",
@@ -451,6 +451,15 @@
     "DAMAGE_LIFE": 15,
     "ADD_ESSENCE": 10,
     "ADD_ANAM": 8
+   },
+   "_moteur": {
+    "_comment": "Correspondance contrat -> code du moteur d'effets (merlin_effect_engine.gd parle en codes textuels). Cablee dans merlin_store.gd::_apply_effect le 2026-07-26 : six types etaient silencieusement ignores, dont ADD_TAG et CREATE_PROMISE dont depend tout le branchement narratif.",
+    "ADD_ESSENCE": "ADD_BIOME_CURRENCY:<amount> — l'essence EST la monnaie de biome",
+    "PROMISE": "ADD_PROMISE:<promise_id>:<deadline_cards>",
+    "CREATE_PROMISE": "CREATE_PROMISE:<promise_id>:<deadline_cards>:<description>",
+    "ADD_TAG": "ADD_TAG:<tag>",
+    "REMOVE_TAG": "REMOVE_TAG:<tag>",
+    "PLAY_SFX": "PLAY_SFX:<sfx>"
    }
   },
   "check_schema": {

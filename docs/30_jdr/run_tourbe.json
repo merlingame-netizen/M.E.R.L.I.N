@@ -1,0 +1,1934 @@
+{
+  "anam_gagne": 0,
+  "biome": "marais_korrigans",
+  "cartes_jouees": 11,
+  "entrees": [
+    {
+      "biome": "marais_korrigans",
+      "evenement": "debut_run",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 1 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 100.0,
+          "druides": 100.0,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [],
+        "vie": 100
+      }
+    },
+    {
+      "acte_index": 1,
+      "acte_type_demande": "standard",
+      "acte_type_servi": "standard",
+      "carte_id": "c1",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 1 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 100.0,
+          "druides": 100.0,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [],
+        "vie": 100
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 6.0,
+              "faction": "anciens",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 3.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "anciens",
+          "gradient": "prudente",
+          "label": "Frapper et attendre",
+          "verbe": "frapper"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "faction": "druides",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "tag": "bottes_seches",
+              "type": "ADD_TAG"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "druides",
+          "gradient": "equilibree",
+          "label": "Examiner les bottes",
+          "verbe": "examiner"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 10.0,
+              "faction": "korrigans",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "korrigans",
+          "gradient": "audacieuse",
+          "label": "Entrer sans annoncer",
+          "verbe": "entrer"
+        }
+      ],
+      "texte": "La maison de la veuve fume sans feu. Sur le seuil, une paire de bottes d'homme, seches, tournees vers la porte comme si quelqu'un venait de rentrer."
+    },
+    {
+      "acte_index": 1,
+      "effets_appliques": [
+        {
+          "amount": 8.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        },
+        {
+          "tag": "bottes_seches",
+          "type": "ADD_TAG"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 8.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        },
+        {
+          "tag": "bottes_seches",
+          "type": "ADD_TAG"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 0,
+        "jet": 0.431506961584091,
+        "niveau": 1,
+        "stat": "logic",
+        "succes": true,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "druides",
+      "gradient": "equilibree",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 1 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 100.0,
+          "druides": 100,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 100
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 1 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 100,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 100
+      },
+      "label_choisi": "Examiner les bottes",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 1,
+      "reponse_store": {
+        "cards_played": 1,
+        "ok": true,
+        "option": 1
+      },
+      "source_resolution": "reussite",
+      "texte_resolution": "Le cuir est sec et la semelle propre. La tourbe ne pardonne pas : personne n'a marche dans le marais avec ces bottes. Elles ont ete posees la pour etre vues."
+    },
+    {
+      "acte_index": 2,
+      "acte_type_demande": "standard",
+      "acte_type_servi": "standard",
+      "carte_id": "c2",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 2 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 100,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 100
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 6.0,
+              "faction": "niamh",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 3.0,
+            "stat": "empathie",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "niamh",
+          "gradient": "prudente",
+          "label": "Demander ce qu'il attend",
+          "verbe": "demander"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "faction": "anciens",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "anciens",
+          "gradient": "equilibree",
+          "label": "Reposer les pieces sur la table",
+          "verbe": "reposer"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 10.0,
+              "faction": "druides",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "tag": "vu_la_fenetre",
+              "type": "ADD_TAG"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "druides",
+          "gradient": "audacieuse",
+          "label": "Suivre son regard",
+          "verbe": "suivre"
+        }
+      ],
+      "texte": "La veuve pose les trois pieces sur la table sans les compter et les repousse vers toi. « Ce n'est pas ca qu'il attend », dit-elle en regardant la fenetre."
+    },
+    {
+      "acte_index": 2,
+      "effets_appliques": [
+        {
+          "amount": 5,
+          "type": "DAMAGE_LIFE"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 10.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        },
+        {
+          "tag": "vu_la_fenetre",
+          "type": "ADD_TAG"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 5,
+        "jet": 0.707069993019104,
+        "niveau": 1,
+        "stat": "logic",
+        "succes": false,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "druides",
+      "gradient": "audacieuse",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 2 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 100,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 95
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 2 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 95
+      },
+      "label_choisi": "Suivre son regard",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 2,
+      "reponse_store": {
+        "cards_played": 2,
+        "ok": true,
+        "option": 2
+      },
+      "source_resolution": "echec",
+      "texte_resolution": "Tu regardes par la fenetre et tu ne vois que du brouillard bas. Le temps que tes yeux s'y fassent, elle a tire le volet et la conversation est finie."
+    },
+    {
+      "acte_index": 3,
+      "acte_type_demande": "event",
+      "acte_type_servi": "event",
+      "carte_id": "c3",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 3 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 95
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 6.0,
+              "faction": "anciens",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "amount": 2.0,
+              "type": "HEAL_LIFE"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 3.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "anciens",
+          "gradient": "prudente",
+          "label": "Rester immobile",
+          "verbe": "attendre"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "faction": "korrigans",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "tag": "trace_fumee",
+              "type": "ADD_TAG"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "korrigans",
+          "gradient": "equilibree",
+          "label": "Chercher l'origine de l'odeur",
+          "verbe": "flairer"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 10.0,
+              "faction": "ankou",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "ankou",
+          "gradient": "audacieuse",
+          "label": "Appeler le nom du mort",
+          "verbe": "appeler"
+        }
+      ],
+      "texte": "Dehors, l'odeur de pain brule s'epaissit d'un coup. Trois oiseaux partent ensemble de la meme touffe de bruyere, sans qu'aucun bruit ne les ait leves."
+    },
+    {
+      "acte_index": 3,
+      "effets_appliques": [
+        {
+          "amount": 3,
+          "type": "DAMAGE_LIFE"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 6.0,
+          "faction": "anciens",
+          "type": "ADD_REPUTATION"
+        },
+        {
+          "amount": 2.0,
+          "type": "HEAL_LIFE"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 3,
+        "jet": 0.900402843952179,
+        "niveau": 1,
+        "stat": "volonte",
+        "succes": false,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "anciens",
+      "gradient": "prudente",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 3 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 81.0
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 92
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 3 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 92
+      },
+      "label_choisi": "Rester immobile",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 0,
+      "reponse_store": {
+        "cards_played": 3,
+        "ok": true,
+        "option": 0
+      },
+      "source_resolution": "echec",
+      "texte_resolution": "Tu tiens en place trop longtemps. Le froid de la tourbe monte par les semelles, tes jambes se raidissent, et quand tu bouges enfin, quelque chose s'est deja eloigne."
+    },
+    {
+      "acte_index": 4,
+      "acte_type_demande": "shop",
+      "acte_type_servi": "shop",
+      "carte_id": "c4",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 4 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 92
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 6.0,
+              "type": "ADD_ESSENCE"
+            },
+            {
+              "tag": "corde",
+              "type": "ADD_TAG"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 3.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "anciens",
+          "gradient": "prudente",
+          "label": "Acheter la corde",
+          "verbe": "acheter"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "type": "ADD_ESSENCE"
+            },
+            {
+              "tag": "lampe",
+              "type": "ADD_TAG"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "druides",
+          "gradient": "equilibree",
+          "label": "Acheter la lampe",
+          "verbe": "acheter"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 12.0,
+              "faction": "korrigans",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "tag": "tourbier_parle",
+              "type": "ADD_TAG"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "korrigans",
+          "gradient": "audacieuse",
+          "label": "Lui demander qui traverse",
+          "verbe": "questionner"
+        }
+      ],
+      "texte": "Un tourbier charge sa brouette au bord du chemin. Il vend ce qu'il trouve dans le marais : de la corde grasse, une lampe a huile, un couteau a lame courte."
+    },
+    {
+      "acte_index": 4,
+      "effets_appliques": [
+        {
+          "amount": 4,
+          "type": "DAMAGE_LIFE"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 8.0,
+          "type": "ADD_ESSENCE"
+        },
+        {
+          "tag": "lampe",
+          "type": "ADD_TAG"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 4,
+        "jet": 0.670574307441711,
+        "niveau": 1,
+        "stat": "logic",
+        "succes": false,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "druides",
+      "gradient": "equilibree",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 4 / 11",
+        "factions_backend": {
+          "anciens": 63.0,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 88
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 4 / 11",
+        "factions_backend": {
+          "anciens": 62,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 88
+      },
+      "label_choisi": "Acheter la lampe",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 1,
+      "reponse_store": {
+        "cards_played": 4,
+        "ok": true,
+        "option": 1
+      },
+      "source_resolution": "echec",
+      "texte_resolution": "Tu prends la lampe sans verifier la meche. Elle s'eteint au premier souffle du marais, et il est deja trop loin pour t'entendre le rappeler."
+    },
+    {
+      "acte_index": 5,
+      "acte_type_demande": "standard",
+      "acte_type_servi": "standard",
+      "carte_id": "c5",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 5 / 11",
+        "factions_backend": {
+          "anciens": 62,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 88
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 6.0,
+              "faction": "druides",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 3.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "druides",
+          "gradient": "prudente",
+          "label": "Sonder avant de passer",
+          "verbe": "sonder"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "faction": "korrigans",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "korrigans",
+          "gradient": "equilibree",
+          "label": "Traverser en courant",
+          "verbe": "traverser"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 10.0,
+              "faction": "ankou",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "ankou",
+          "gradient": "audacieuse",
+          "label": "Retirer la planche",
+          "verbe": "retirer"
+        }
+      ],
+      "texte": "La planche jetee en travers de la fosse tient a peine. Dessous, l'eau noire ne bouge pas, et l'odeur de pain brule monte de la, pas du reste du marais."
+    },
+    {
+      "acte_index": 5,
+      "effets_appliques": [
+        {
+          "amount": 5,
+          "type": "DAMAGE_LIFE"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 10.0,
+          "faction": "ankou",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 5,
+        "jet": 0.80031955242157,
+        "niveau": 1,
+        "stat": "volonte",
+        "succes": false,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "ankou",
+      "gradient": "audacieuse",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 5 / 11",
+        "factions_backend": {
+          "anciens": 62,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 83
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 5 / 11",
+        "factions_backend": {
+          "anciens": 61,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 83
+      },
+      "label_choisi": "Retirer la planche",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 2,
+      "reponse_store": {
+        "cards_played": 5,
+        "ok": true,
+        "option": 2
+      },
+      "source_resolution": "echec",
+      "texte_resolution": "Le bois est plus lourd qu'il n'en a l'air et il t'echappe. La planche part dans la fosse, l'eau te gifle jusqu'au visage, et personne ne passera plus — toi non plus."
+    },
+    {
+      "acte_index": 6,
+      "acte_type_demande": "boss",
+      "acte_type_servi": "boss",
+      "carte_id": "c6",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 6 / 11",
+        "factions_backend": {
+          "anciens": 61,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 83
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "faction": "druides",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "druides",
+          "gradient": "prudente",
+          "label": "Demander qui est en bas",
+          "verbe": "demander"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 11.0,
+              "faction": "anciens",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 8.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "contextuel"
+          },
+          "faction": "anciens",
+          "gradient": "equilibree",
+          "label": "Refuser d'ecouter",
+          "verbe": "refuser"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 13.0,
+              "faction": "ankou",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 9.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "contextuel"
+          },
+          "faction": "ankou",
+          "gradient": "audacieuse",
+          "label": "Descendre voir",
+          "verbe": "descendre"
+        }
+      ],
+      "texte": "Merlin parle sans que tu l'aies appele. « Regarde mieux la fosse, voyageur. On n'y a rien jete. On y a amenage une place, et elle est occupee. »"
+    },
+    {
+      "acte_index": 6,
+      "effets_appliques": [
+        {
+          "amount": 4,
+          "type": "DAMAGE_LIFE"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 8.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 4,
+        "jet": 0.755683362483978,
+        "niveau": 1,
+        "stat": "logic",
+        "succes": false,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "druides",
+      "gradient": "prudente",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 6 / 11",
+        "factions_backend": {
+          "anciens": 61,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 6 / 11",
+        "factions_backend": {
+          "anciens": 61,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "label_choisi": "Demander qui est en bas",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 0,
+      "reponse_store": {
+        "cards_played": 6,
+        "ok": true,
+        "option": 0
+      },
+      "source_resolution": "echec",
+      "texte_resolution": "Tu poses mal ta question et Merlin te retourne le silence. « Tu demandes un nom », dit-il enfin. « Tu n'es pas encore pret a l'entendre. »"
+    },
+    {
+      "acte_index": 7,
+      "acte_type_demande": "standard",
+      "acte_type_servi": "standard",
+      "carte_id": "c7",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 7 / 11",
+        "factions_backend": {
+          "anciens": 61,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 10.0,
+              "faction": "niamh",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "empathie",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "niamh",
+          "gradient": "prudente",
+          "label": "Ecouter son histoire",
+          "verbe": "ecouter"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 12.0,
+              "faction": "anciens",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 8.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "contextuel"
+          },
+          "faction": "anciens",
+          "gradient": "equilibree",
+          "label": "Le sortir de la",
+          "verbe": "extraire"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 16.0,
+              "faction": "ankou",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "amount": 4.0,
+              "type": "ADD_ESSENCE"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 13.0,
+            "stat": "instinct",
+            "telegraphed": true,
+            "type": "red"
+          },
+          "faction": "ankou",
+          "gradient": "audacieuse",
+          "label": "Le laisser et partir",
+          "verbe": "abandonner"
+        }
+      ],
+      "texte": "L'homme dans la fosse est vivant, maigre, et il te reconnait. « Ne le dis pas a elle », souffle Mael Kerlan. « Tant qu'elle me croit noye, elle est en vie. »"
+    },
+    {
+      "acte_index": 7,
+      "effets_appliques": [
+        {
+          "amount": 12.0,
+          "faction": "anciens",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 12.0,
+          "faction": "anciens",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 0,
+        "jet": 0.0480339080095291,
+        "niveau": 1,
+        "stat": "volonte",
+        "succes": true,
+        "type": "contextuel"
+      },
+      "evenement": "resolution",
+      "faction_option": "anciens",
+      "gradient": "equilibree",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 7 / 11",
+        "factions_backend": {
+          "anciens": 73,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 7 / 11",
+        "factions_backend": {
+          "anciens": 72,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "label_choisi": "Le sortir de la",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 1,
+      "reponse_store": {
+        "cards_played": 7,
+        "ok": true,
+        "option": 1
+      },
+      "source_resolution": "reussite",
+      "texte_resolution": "Tu le hisses par les aisselles. Il pese le poids d'un an de tourbe et ses jambes ne le portent plus. Une fois dehors, il regarde la maison qui fume au loin et se met a trembler — de froid, ou d'autre chose."
+    },
+    {
+      "acte_index": 8,
+      "acte_type_demande": "standard",
+      "acte_type_servi": "standard",
+      "carte_id": "c8",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 8 / 11",
+        "factions_backend": {
+          "anciens": 72,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 0,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "deadline_cards": 3.0,
+              "description": "Taire que Mael Kerlan est vivant",
+              "promise_id": "trois_jours",
+              "type": "CREATE_PROMISE"
+            },
+            {
+              "amount": 8.0,
+              "faction": "anciens",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "anciens",
+          "gradient": "prudente",
+          "label": "Jurer les trois jours",
+          "verbe": "jurer"
+        },
+        {
+          "effets_caches": [
+            {
+              "deadline_cards": 4.0,
+              "description": "Revenir le chercher",
+              "promise_id": "revenir",
+              "type": "CREATE_PROMISE"
+            },
+            {
+              "amount": 10.0,
+              "faction": "niamh",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "empathie",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "niamh",
+          "gradient": "equilibree",
+          "label": "Promettre de revenir",
+          "verbe": "promettre"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 12.0,
+              "faction": "korrigans",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "korrigans",
+          "gradient": "audacieuse",
+          "label": "Ne rien jurer",
+          "verbe": "refuser"
+        }
+      ],
+      "texte": "Il te demande de jurer. « Trois jours », dit-il. « Donne-moi trois jours pour partir loin, et ensuite dis-lui ce que tu voudras. »"
+    },
+    {
+      "acte_index": 8,
+      "effets_appliques": [
+        {
+          "deadline_cards": 3.0,
+          "description": "Taire que Mael Kerlan est vivant",
+          "promise_id": "trois_jours",
+          "type": "CREATE_PROMISE"
+        },
+        {
+          "amount": 8.0,
+          "faction": "anciens",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "effets_declares": [
+        {
+          "deadline_cards": 3.0,
+          "description": "Taire que Mael Kerlan est vivant",
+          "promise_id": "trois_jours",
+          "type": "CREATE_PROMISE"
+        },
+        {
+          "amount": 8.0,
+          "faction": "anciens",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 0,
+        "jet": 0.196469217538834,
+        "niveau": 1,
+        "stat": "volonte",
+        "succes": true,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "anciens",
+      "gradient": "prudente",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 8 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 22.0,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 8 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "label_choisi": "Jurer les trois jours",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 0,
+      "reponse_store": {
+        "cards_played": 8,
+        "ok": true,
+        "option": 0
+      },
+      "source_resolution": "reussite",
+      "texte_resolution": "Tu jures, et il te fait repeter le serment avec ses mots a lui. Le marais n'a pas d'oreilles, mais les Anciens en ont, et un serment prononce sur la tourbe ne s'efface pas."
+    },
+    {
+      "acte_index": 9,
+      "acte_type_demande": "standard",
+      "acte_type_servi": "standard",
+      "carte_id": "c9",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 9 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 79
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 6.0,
+              "faction": "druides",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "druides",
+          "gradient": "prudente",
+          "label": "Le saluer sans t'arreter",
+          "verbe": "saluer"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "faction": "niamh",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "empathie",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "niamh",
+          "gradient": "equilibree",
+          "label": "Lui demander son nom",
+          "verbe": "questionner"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 10.0,
+              "faction": "ankou",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "ankou",
+          "gradient": "audacieuse",
+          "label": "Lui barrer le chemin",
+          "verbe": "barrer"
+        }
+      ],
+      "texte": "Sur le chemin du retour, un homme du bourg vient a ta rencontre. Il sourit, et il sent le pain brule alors qu'il n'a pas mis un pied dans la tourbe."
+    },
+    {
+      "acte_index": 9,
+      "effets_appliques": [
+        {
+          "amount": 5,
+          "type": "DAMAGE_LIFE"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 10.0,
+          "faction": "ankou",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 5,
+        "jet": 0.862905561923981,
+        "niveau": 1,
+        "stat": "volonte",
+        "succes": false,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "ankou",
+      "gradient": "audacieuse",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 9 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 99,
+          "druides": 99,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 74
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 9 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 99,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 74
+      },
+      "label_choisi": "Lui barrer le chemin",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 2,
+      "reponse_store": {
+        "cards_played": 9,
+        "ok": true,
+        "option": 2
+      },
+      "source_resolution": "echec",
+      "texte_resolution": "Tu te mets en travers et il te contourne comme on contourne une pierre. Tu te retournes trop tard : il a pris le chemin de la maison qui fume."
+    },
+    {
+      "acte_index": 10,
+      "acte_type_demande": "standard",
+      "acte_type_servi": "standard",
+      "carte_id": "c10",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 10 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 99,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 74
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 8.0,
+              "faction": "korrigans",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "korrigans",
+          "gradient": "prudente",
+          "label": "Dire que la dette est payee",
+          "verbe": "mentir"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 12.0,
+              "faction": "druides",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 8.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "contextuel"
+          },
+          "faction": "druides",
+          "gradient": "equilibree",
+          "label": "Lui parler de son beau-frere",
+          "verbe": "avertir"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 14.0,
+              "faction": "niamh",
+              "type": "ADD_REPUTATION"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 9.0,
+            "stat": "empathie",
+            "telegraphed": false,
+            "type": "contextuel"
+          },
+          "faction": "niamh",
+          "gradient": "audacieuse",
+          "label": "Tout lui dire",
+          "verbe": "avouer"
+        }
+      ],
+      "texte": "La veuve t'attend sur le seuil, les trois pieces dans la main. Elle a vu d'ou tu reviens. « Alors ? » demande-t-elle, et sa voix ne tremble pas."
+    },
+    {
+      "acte_index": 10,
+      "effets_appliques": [
+        {
+          "amount": 12.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 12.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 0,
+        "jet": 0.382029086351395,
+        "niveau": 1,
+        "stat": "logic",
+        "succes": true,
+        "type": "contextuel"
+      },
+      "evenement": "resolution",
+      "faction_option": "druides",
+      "gradient": "equilibree",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 10 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 100,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 69
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 10 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 99,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 69
+      },
+      "label_choisi": "Lui parler de son beau-frere",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 1,
+      "reponse_store": {
+        "cards_played": 10,
+        "ok": true,
+        "option": 1
+      },
+      "source_resolution": "reussite",
+      "texte_resolution": "Tu ne parles pas du vivant, tu parles de celui qui sent le pain brule sans avoir marche dans la tourbe. Elle blemit — non pas de surprise, mais parce que quelqu'un d'autre le sait enfin."
+    },
+    {
+      "acte_index": 11,
+      "acte_type_demande": "boss",
+      "acte_type_servi": "boss",
+      "carte_id": "c11",
+      "dialogue_merlin": "",
+      "evenement": "carte_affichee",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 11 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 99,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 69
+      },
+      "options_visibles": [
+        {
+          "effets_caches": [
+            {
+              "amount": 12.0,
+              "faction": "anciens",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "amount": 4.0,
+              "type": "ADD_ANAM"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 4.0,
+            "stat": "volonte",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "anciens",
+          "gradient": "prudente",
+          "label": "Payer et partir",
+          "verbe": "payer"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 13.0,
+              "faction": "druides",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "amount": 5.0,
+              "type": "ADD_ANAM"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "logic",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "druides",
+          "gradient": "equilibree",
+          "label": "Nommer ta vraie dette",
+          "verbe": "nommer"
+        },
+        {
+          "effets_caches": [
+            {
+              "amount": 15.0,
+              "faction": "ankou",
+              "type": "ADD_REPUTATION"
+            },
+            {
+              "amount": 5.0,
+              "type": "ADD_ANAM"
+            }
+          ],
+          "epreuve_telegraphiee": {
+            "fail_damage": 5.0,
+            "stat": "instinct",
+            "telegraphed": false,
+            "type": "white"
+          },
+          "faction": "ankou",
+          "gradient": "audacieuse",
+          "label": "Retourner au marais",
+          "verbe": "retourner"
+        }
+      ],
+      "texte": "Merlin est assis sur la borne, au bout du chemin. « Trois pieces », dit-il. « Voila ce que tu croyais devoir. Dis-moi ce que tu dois maintenant. »"
+    },
+    {
+      "acte_index": 11,
+      "effets_appliques": [
+        {
+          "amount": 13.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        },
+        {
+          "amount": 5.0,
+          "type": "ADD_ANAM"
+        }
+      ],
+      "effets_declares": [
+        {
+          "amount": 13.0,
+          "faction": "druides",
+          "type": "ADD_REPUTATION"
+        },
+        {
+          "amount": 5.0,
+          "type": "ADD_ANAM"
+        }
+      ],
+      "epreuve": {
+        "chance": 0.6,
+        "degats": 0,
+        "jet": 0.0407643467187881,
+        "niveau": 1,
+        "stat": "logic",
+        "succes": true,
+        "type": "white"
+      },
+      "evenement": "resolution",
+      "faction_option": "druides",
+      "gradient": "equilibree",
+      "hud_apres_choix": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 11 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 100,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 69
+      },
+      "hud_apres_des_du_destin": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 11 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 100,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 69
+      },
+      "label_choisi": "Nommer ta vraie dette",
+      "modificateur_marchand_actif": "",
+      "option_choisie": 1,
+      "reponse_store": {
+        "cards_played": 11,
+        "ok": true,
+        "option": 1
+      },
+      "source_resolution": "variante_promesse:trois_jours",
+      "texte_resolution": "Tu dis ce que tu dois, et Merlin t'arrete a mi-phrase. « Tu as jure trois jours et tu n'en as pas tenu un. Ce que tu dois maintenant, ce n'est plus a eux — c'est a ta propre parole, et elle est plus chere. »"
+    },
+    {
+      "anam_gagne": 0,
+      "evenement": "fin_run",
+      "hud": {
+        "anam_affiche": 0,
+        "compteur_cartes": "Carte 11 / 11",
+        "factions_backend": {
+          "anciens": 80,
+          "ankou": 98,
+          "druides": 100,
+          "korrigans": 21,
+          "niamh": 80
+        },
+        "modificateur_marchand": "",
+        "promesses_actives": 1,
+        "scenario_actif": "la_forge_du_korrigan",
+        "tags_actifs": [
+          "bottes_seches"
+        ],
+        "vie": 69
+      },
+      "issue": "live"
+    }
+  ],
+  "issue": "live",
+  "scenario": {
+    "archetype": "mist_wanderer",
+    "essence": "Tu viens payer ta dette à un noyé, et le noyé respire encore.",
+    "graine": {
+      "entite_centrale": "un vivant qu'on croit mort",
+      "lieu": "tourbiere",
+      "mecanisme_du_twist": "identite (qui est vraiment la)",
+      "pression": "une dette a honorer",
+      "registre_sensoriel": "odeur"
+    },
+    "intro": "Il y a un an, Maël Kerlan s'est enfoncé dans la tourbière du Yeun et n'en est pas ressorti. Tu lui devais trois pièces et une promesse, et on ne laisse pas une dette à un mort. Sa veuve vit encore au bord du marais, dans une maison qui sent la fumée froide. Tu marches depuis l'aube avec les pièces cousues dans ta manche. L'odeur te prévient avant le paysage : la tourbe ne sent pas la vase, elle sent le pain brûlé et le fer. On dit que le Yeun garde ce qu'il prend et ne le rend jamais entier. Tu vas apprendre que ce n'est pas tout à fait vrai.",
+    "longueur": 11,
+    "titre": "La Dette de Tourbe"
+  },
+  "sequence_actes": [
+    "standard",
+    "standard",
+    "event",
+    "shop",
+    "standard",
+    "boss",
+    "standard",
+    "standard",
+    "standard",
+    "standard",
+    "boss"
+  ]
+}

@@ -379,6 +379,29 @@ def build_flags(data: dict, cards: list, resols: dict) -> str:
                           "Un effet non déclaré s'est ajouté — passif de biome, talent passif "
                           "ou dé du destin — sans que rien ne l'annonce au joueur."))
 
+    # Réputation déclarée vs appliquée : au plafond 100, un gain vaut zéro alors
+    # que le modèle d'équilibrage le compte 0.4 PV-eq le point.
+    perdus = []
+    for c in cards:
+        r = resols.get(c.get("acte_index"), {})
+        if not r:
+            continue
+        avant = c.get("hud", {}).get("factions_backend", {})
+        apres = r.get("hud_apres_choix", {}).get("factions_backend", {})
+        for e in r.get("effets_appliques", r.get("effets_declares", [])):
+            if e.get("type") != "ADD_REPUTATION":
+                continue
+            f = e.get("faction", "")
+            declare, reel = num(e.get("amount")), num(apres.get(f)) - num(avant.get(f))
+            if declare > 0 and reel < declare:
+                perdus.append((c["acte_index"], f, declare, reel))
+    if perdus:
+        detail = ", ".join(f"carte {i} {f} {d:+d} → {r:+d}" for i, f, d, r in perdus[:4])
+        flags.append(("critique", f"{len(perdus)} gains de réputation absorbés par le plafond",
+                      f"{detail}. Le modèle d'équilibrage compte chaque point 0,4 PV-équivalent : "
+                      "au plafond de 100 il n'en vaut plus rien, et l'EV calculée de l'option "
+                      "s'effondre sans que rien ne le signale au joueur."))
+
     order = {"critique": 0, "alerte": 1, "info": 2}
     flags.sort(key=lambda f: order.get(f[0], 9))
     return "".join(

@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Run marais_korrigans — tableau de contrôle</title>
+<style>
+:root{
+  --ground:#0A0A12; --ground-2:#11111c; --ground-3:#171724;
+  --ink:#d9dce6; --ink-dim:#7b8194; --ink-faint:#565c6e;
+  --terminal:#00FF88; --amber:#FFB347; --cyan:#00D4FF;
+  --rune:#FF3366; --chaos:#9B59FF; --stone:#2a2a3a;
+  --mono:ui-monospace,"JetBrains Mono","Fira Code",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --r:3px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--mono);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.tab{font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px;
+  display:flex;flex-direction:column;gap:34px}
+
+/* En-tête */
+.masthead{border-bottom:1px solid var(--stone);padding-bottom:22px;
+  display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--terminal)}
+h1{margin:0;font-size:30px;line-height:1.15;font-weight:600;text-wrap:balance;
+  letter-spacing:-.01em}
+.sub{color:var(--ink-dim);max-width:68ch;font-size:13px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pill{border:1px solid var(--stone);border-radius:99px;padding:3px 11px;
+  font-size:11px;color:var(--ink-dim)}
+.pill strong{color:var(--ink);font-weight:600}
+
+/* Vitals */
+.vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.tile{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  padding:14px 16px;display:flex;flex-direction:column;gap:5px}
+.tile .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.tile .v{font-size:25px;font-weight:600;line-height:1}
+.tile .n{font-size:11px;color:var(--ink-dim)}
+.tile.bad .v{color:var(--rune)} .tile.good .v{color:var(--terminal)}
+.tile.warn .v{color:var(--amber)}
+
+/* Panneaux */
+.panel{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.panel h2{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:600}
+.duo{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+@media(max-width:860px){.duo{grid-template-columns:1fr}}
+
+/* Graphiques */
+.chart{width:100%;height:auto;overflow:visible}
+.grid{stroke:var(--stone);stroke-width:1}
+.axis{fill:var(--ink-faint);font-size:10px;font-family:var(--mono);text-anchor:end}
+.axis.mid{text-anchor:middle}
+.life-line{fill:none;stroke:var(--terminal);stroke-width:2;
+  stroke-linejoin:round;stroke-linecap:round}
+.dot{fill:var(--ground);stroke:var(--terminal);stroke-width:1.5}
+.dot-end{fill:var(--terminal);stroke:var(--ground);stroke-width:2}
+
+/* Factions */
+.fac-row{display:grid;grid-template-columns:74px 1fr 92px 44px;gap:10px;align-items:center;
+  font-size:12px}
+.fac-name{color:var(--ink-dim)}
+.fac-track{position:relative;height:8px;background:var(--ground-3);border-radius:99px;
+  overflow:hidden;display:block}
+.fac-base{position:absolute;inset-block:0;left:0;background:var(--stone);border-radius:99px}
+.fac-fill{position:absolute;inset-block:0;left:0;border-radius:99px;opacity:.9}
+.fac-mark{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--ink-faint)}
+.fac-val{color:var(--ink-dim)} .fac-val strong{color:var(--ink)}
+.fac-delta{text-align:right}
+.pos{color:var(--terminal)} .neg{color:var(--rune)} .flat{color:var(--ink-faint)}
+
+/* Cartes */
+.timeline{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  overflow:hidden}
+.card.is-degraded{border-left:2px solid var(--amber)}
+.card-head{display:flex;align-items:center;gap:12px;padding:11px 16px;
+  background:var(--ground-3);border-bottom:1px solid var(--stone);flex-wrap:wrap}
+.card-n{font-size:12px;color:var(--ink-faint)}
+.act-badge{font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:2px 9px}
+.card-id{font-size:11px;color:var(--ink-faint)}
+.card-hud{margin-left:auto;font-size:11px;color:var(--ink-dim)}
+.split{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+.screen{padding:18px 20px;border-right:1px solid var(--stone)}
+@media(max-width:860px){.screen{border-right:0;border-bottom:1px solid var(--stone)}}
+.engine-col{padding:18px 20px;background:#0d0d16}
+.col-label{margin:0 0 12px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:600}
+.col-label.engine{color:var(--cyan)}
+.narrative{font-family:var(--serif);font-size:17px;line-height:1.6;color:#efe6d2;
+  margin:0 0 12px;max-width:52ch}
+.merlin{font-family:var(--serif);font-style:italic;color:var(--amber);margin:0 0 12px}
+.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.opt{display:grid;grid-template-columns:20px 1fr;gap:9px;align-items:baseline;
+  padding:7px 9px;border:1px solid var(--stone);border-radius:var(--r);
+  background:var(--ground)}
+.opt.picked{border-color:var(--terminal);background:rgba(0,255,136,.05)}
+.opt-n{color:var(--ink-faint);font-size:11px}
+.opt-label{font-family:var(--serif);font-size:15px;color:#efe6d2}
+.opt-eff{grid-column:2;display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.chip{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--stone);
+  color:var(--ink-dim);white-space:nowrap}
+.chip.pos{color:var(--terminal);border-color:rgba(0,255,136,.3)}
+.chip.neg{color:var(--rune);border-color:rgba(255,51,102,.3)}
+.chip.neutre{color:var(--ink-faint)}
+.kv{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:12px}
+.kv dt{color:var(--ink-faint)}
+.kv dd{margin:0;display:flex;flex-wrap:wrap;gap:5px;align-items:baseline}
+.delta{margin-left:6px}
+.warn{margin:0 0 12px;font-size:12px;color:var(--amber);
+  border-left:2px solid var(--amber);padding-left:10px}
+.resolution{margin-top:14px;padding:12px 14px;border-left:2px solid var(--amber);
+  background:rgba(255,179,71,.05);border-radius:0 var(--r) var(--r) 0}
+.resolution.missing{border-left-color:var(--rune);background:rgba(255,51,102,.05)}
+.res-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+.resolution.missing .res-tag{color:var(--rune)}
+.res-text{margin:6px 0 0;font-size:15px;line-height:1.55}
+.missing-text{font-family:var(--mono);font-size:12px;color:var(--ink-dim);font-style:italic}
+.hidden-note{margin:14px 0 0;font-size:11px;color:var(--ink-faint);font-style:italic}
+
+/* Gradient d'option + épreuve télégraphiée (v4.1) */
+.opt{grid-template-columns:20px 1fr auto}
+.grad{font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 8px;border-radius:99px;border:1px solid var(--stone);color:var(--ink-dim);
+  white-space:nowrap;align-self:center}
+.grad.prudente{color:#7fd6a4;border-color:rgba(127,214,164,.35)}
+.grad.equilibree{color:var(--cyan);border-color:rgba(0,212,255,.32)}
+.grad.audacieuse{color:var(--amber);border-color:rgba(255,179,71,.4)}
+.check{grid-column:2;justify-self:start;font-size:10px;margin-top:5px;
+  padding:2px 8px;border-radius:var(--r);border:1px solid var(--stone);
+  color:var(--ink-dim);white-space:nowrap}
+.check.ctx{color:var(--cyan);border-color:rgba(0,212,255,.3)}
+.check.red{color:var(--rune);border-color:rgba(255,51,102,.45);
+  background:rgba(255,51,102,.07);font-weight:600}
+.resolution.fail{border-left-color:var(--rune);background:rgba(255,51,102,.06)}
+.resolution.fail .res-tag{color:var(--rune)}
+.resolution.variant{border-left-color:var(--chaos);background:rgba(155,89,255,.07)}
+.resolution.variant .res-tag{color:var(--chaos)}
+.kv .pos{color:var(--terminal)} .kv .neg{color:var(--rune)}
+
+/* Graine de variation + essence + intro */
+.essence{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--amber);
+  margin:2px 0 0;max-width:60ch}
+.graine{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:8px}
+.graine-lbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chaos)}
+.seed{font-size:11px;padding:3px 10px;border-radius:99px;
+  border:1px solid rgba(155,89,255,.32);color:var(--ink);white-space:nowrap}
+.seed-k{color:var(--ink-faint);margin-right:6px;font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase}
+.intro-parchemin{font-family:var(--serif);font-size:15px;line-height:1.65;
+  color:#efe6d2;max-width:66ch;margin:12px 0 0;padding-left:14px;
+  border-left:2px solid var(--stone)}
+
+/* Alertes */
+.flags{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.flag{background:var(--ground-3);border-radius:var(--r);padding:13px 16px;
+  border-left:2px solid var(--ink-faint)}
+.flag.critique{border-left-color:var(--rune)}
+.flag.alerte{border-left-color:var(--amber)}
+.flag.info{border-left-color:var(--cyan)}
+.flag-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+.flag.critique .flag-tag{color:var(--rune)}
+.flag.alerte .flag-tag{color:var(--amber)}
+.flag.info .flag-tag{color:var(--cyan)}
+.flag h4{margin:3px 0 5px;font-size:14px;font-weight:600}
+.flag p{margin:0;font-size:12.5px;color:var(--ink-dim);max-width:80ch}
+code{background:var(--ground);padding:1px 5px;border-radius:2px;font-size:11.5px;
+  color:var(--cyan)}
+.tablewrap{overflow-x:auto}
+table.series{width:100%;border-collapse:collapse;font-size:12px}
+table.series th{text-align:left;font-weight:600;color:var(--ink-faint);font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;padding:6px 10px 6px 0;
+  border-bottom:1px solid var(--stone)}
+table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-align:middle}
+.narr-cell{font-family:var(--serif);font-size:14px;color:#efe6d2}
+.seq{display:inline-flex;gap:4px}
+.seq-chip{font-size:10px;padding:2px 6px;border-radius:2px;border:1px solid var(--sc);
+  color:var(--sc);font-variant-numeric:tabular-nums}
+.vchecks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.vcheck{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12.5px;
+  padding:7px 10px;border-radius:var(--r);background:var(--ground-3)}
+.vtag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;min-width:64px}
+.vcheck.ok .vtag{color:var(--terminal)} .vcheck.ko .vtag{color:var(--rune)}
+.vdetail{color:var(--ink-faint);font-size:11.5px}
+.foot{border-top:1px solid var(--stone);padding-top:18px;font-size:11px;
+  color:var(--ink-faint);display:flex;flex-direction:column;gap:5px}
+</style></head><body>
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">M.E.R.L.I.N. · contrôle de run</span>
+    <h1>La Dette de Tourbe</h1>
+    <p class="sub">Capturé pendant une partie réelle du moteur, pas reconstitué.
+      Chaque carte est présentée en deux colonnes : ce que le joueur a sous les
+      yeux, et ce que le moteur applique sans le dire. C'est cet écart qui se contrôle.</p>
+    <p class="essence">Tu viens payer ta dette à un noyé, et le noyé respire encore.</p>
+    <div class="meta">
+      <span class="pill">biome <strong>marais_korrigans</strong></span>
+      <span class="pill">archétype <strong>mist_wanderer</strong></span>
+      <span class="pill">longueur <strong>11 cartes</strong></span>
+      <span class="pill">issue <strong>live</strong></span>
+      <span class="pill">actes <strong>Standard · Standard · Événement · Marchand · Standard · Climax · Standard · Standard · Standard · Standard · Climax</strong></span>
+    </div>
+    <div class="graine"><span class="graine-lbl">graine de variation</span><span class="seed"><span class="seed-k">entite centrale</span>un vivant qu&#x27;on croit mort</span><span class="seed"><span class="seed-k">lieu</span>tourbiere</span><span class="seed"><span class="seed-k">mecanisme du twist</span>identite (qui est vraiment la)</span><span class="seed"><span class="seed-k">pression</span>une dette a honorer</span><span class="seed"><span class="seed-k">registre sensoriel</span>odeur</span></div>
+    <p class="intro-parchemin">Il y a un an, Maël Kerlan s&#x27;est enfoncé dans la tourbière du Yeun et n&#x27;en est pas ressorti. Tu lui devais trois pièces et une promesse, et on ne laisse pas une dette à un mort. Sa veuve vit encore au bord du marais, dans une maison qui sent la fumée froide. Tu marches depuis l&#x27;aube avec les pièces cousues dans ta manche. L&#x27;odeur te prévient avant le paysage : la tourbe ne sent pas la vase, elle sent le pain brûlé et le fer. On dit que le Yeun garde ce qu&#x27;il prend et ne le rend jamais entier. Tu vas apprendre que ce n&#x27;est pas tout à fait vrai.</p>
+  </header>
+
+  <section class="vitals">
+    <div class="tile"><span class="k">Cartes jouées</span>
+      <span class="v tab">11</span><span class="n">sur 11 au scénario</span></div>
+    <div class="tile good"><span class="k">Vie finale</span>
+      <span class="v tab">69</span><span class="n">départ 100 · creux 69</span></div>
+    <div class="tile bad"><span class="k">Anam gagné</span>
+      <span class="v tab">0</span><span class="n">premier déblocage du Grimoire : 10</span></div>
+    <div class="tile good"><span class="k">Actes dégradés</span>
+      <span class="v tab">0</span><span class="n">sur 11 cartes</span></div>
+    <div class="tile warn"><span class="k">Effets cachés</span>
+      <span class="v tab">46</span><span class="n">appliqués sans être montrés</span></div>
+  </section>
+
+  <div class="duo">
+    <section class="panel">
+      <h2>Vie du voyageur</h2>
+      <svg viewBox="0 0 640 120" class="chart" role="img" aria-label="Vie du voyageur carte par carte"><defs><linearGradient id="lifeFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00FF88" stop-opacity=".28"/><stop offset="1" stop-color="#00FF88" stop-opacity="0"/></linearGradient></defs><line x1="34" y1="98.0" x2="628" y2="98.0" class="grid"/><text x="26" y="102.0" class="axis">0</text><line x1="34" y1="55.0" x2="628" y2="55.0" class="grid"/><text x="26" y="59.0" class="axis">50</text><line x1="34" y1="12.0" x2="628" y2="12.0" class="grid"/><text x="26" y="16.0" class="axis">100</text><path d="M34.0,12.0 L88.0,12.0 L142.0,16.3 L196.0,18.9 L250.0,22.3 L304.0,26.6 L358.0,30.1 L412.0,30.1 L466.0,30.1 L520.0,34.4 L574.0,38.7 L628.0,38.7 L628.0,98.0 L34.0,98.0 Z" fill="url(#lifeFill)"/><path d="M34.0,12.0 L88.0,12.0 L142.0,16.3 L196.0,18.9 L250.0,22.3 L304.0,26.6 L358.0,30.1 L412.0,30.1 L466.0,30.1 L520.0,34.4 L574.0,38.7 L628.0,38.7" class="life-line"/><circle cx="34.0" cy="12.0" r="2.5" class="dot"/><circle cx="88.0" cy="12.0" r="2.5" class="dot"/><circle cx="142.0" cy="16.3" r="2.5" class="dot"/><circle cx="196.0" cy="18.9" r="2.5" class="dot"/><circle cx="250.0" cy="22.3" r="2.5" class="dot"/><circle cx="304.0" cy="26.6" r="2.5" class="dot"/><circle cx="358.0" cy="30.1" r="2.5" class="dot"/><circle cx="412.0" cy="30.1" r="2.5" class="dot"/><circle cx="466.0" cy="30.1" r="2.5" class="dot"/><circle cx="520.0" cy="34.4" r="2.5" class="dot"/><circle cx="574.0" cy="38.7" r="2.5" class="dot"/><circle cx="628.0" cy="38.7" r="4" class="dot-end"/><text x="34.0" y="114" class="axis mid">départ</text><text x="88.0" y="114" class="axis mid">1</text><text x="142.0" y="114" class="axis mid">2</text><text x="196.0" y="114" class="axis mid">3</text><text x="250.0" y="114" class="axis mid">4</text><text x="304.0" y="114" class="axis mid">5</text><text x="358.0" y="114" class="axis mid">6</text><text x="412.0" y="114" class="axis mid">7</text><text x="466.0" y="114" class="axis mid">8</text><text x="520.0" y="114" class="axis mid">9</text><text x="574.0" y="114" class="axis mid">10</text><text x="628.0" y="114" class="axis mid">11</text></svg>
+      <p class="sub" style="font-size:12px">La barre de vie n'a jamais approché
+        le seuil d'alerte. Rien n'a été mis en jeu sur ce run.</p>
+    </section>
+    <section class="panel">
+      <h2>Réputations — invisibles en jeu</h2>
+      <div class="fac-row"><span class="fac-name">druides</span><span class="fac-track"><span class="fac-base" style="width:100%"></span><span class="fac-fill" style="width:100%;background:#FFB347"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">100 → <strong>100</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">anciens</span><span class="fac-track"><span class="fac-base" style="width:63%"></span><span class="fac-fill" style="width:80%;background:#C98A3C"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">63 → <strong>80</strong></span><span class="fac-delta tab pos">+17</span></div><div class="fac-row"><span class="fac-name">korrigans</span><span class="fac-track"><span class="fac-base" style="width:22%"></span><span class="fac-fill" style="width:21%;background:#9B59FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">22 → <strong>21</strong></span><span class="fac-delta tab neg">-1</span></div><div class="fac-row"><span class="fac-name">niamh</span><span class="fac-track"><span class="fac-base" style="width:81%"></span><span class="fac-fill" style="width:80%;background:#00D4FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">81 → <strong>80</strong></span><span class="fac-delta tab neg">-1</span></div><div class="fac-row"><span class="fac-name">ankou</span><span class="fac-track"><span class="fac-base" style="width:100%"></span><span class="fac-fill" style="width:98%;background:#FF3366"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">100 → <strong>98</strong></span><span class="fac-delta tab neg">-2</span></div>
+      <p class="sub" style="font-size:12px">Le trait central marque le seuil 50,
+        qui débloque une section du Grimoire. Aucun de ces chiffres n'apparaît à l'écran.</p>
+    </section>
+  </div>
+
+  
+
+  <section class="panel">
+    <h2>Ce qu'il faut regarder</h2>
+    <ul class="flags"><li class="flag critique"><span class="flag-tag">critique</span><h4>Aucune récompense accordée</h4><p><code>calculate_run_rewards</code> n'est appelé que sur victoire ou mort. La victoire exige 25 cartes pour un scénario qui en compte 11 : aucun calcul n'a lieu, le joueur repart avec 0 Anam.</p></li><li class="flag critique"><span class="flag-tag">critique</span><h4>3 gains de réputation absorbés par le plafond</h4><p>carte 1 druides +8 → +0, carte 10 druides +12 → +1, carte 11 druides +13 → +1. Le modèle d'équilibrage compte chaque point 0,4 PV-équivalent : au plafond de 100 il n'en vaut plus rien, et l'EV calculée de l'option s'effondre sans que rien ne le signale au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>46 effets appliqués sans être montrés</h4><p>Le HUD n'affiche que le compteur de cartes, la vie et l'Anam. Les cinq réputations bougent à chaque carte sans jamais apparaître — la décision du 2026-07-26 (tout afficher) n'est pas encore câblée.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 10 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag info"><span class="flag-tag">info</span><h4>6 épreuves ratées sur 11</h4><p>Coût total 26 PV. À stat 1 la chance de réussite est de 60 % : on attend environ 4 échecs sur ce run. Un écart durable signale un tirage biaisé, pas un défaut d'écriture.</p></li><li class="flag info"><span class="flag-tag">info</span><h4>1 résolution(s) conditionnées par l&#x27;état</h4><p>Déclenchées par : trois_jours. C'est le branchement narratif à l'œuvre — même carte, même option, texte différent.</p></li></ul>
+  </section>
+
+  <section class="timeline">
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">01</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c1</span>
+    <span class="card-hud tab">Carte 1 / 11 · vie 100 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La maison de la veuve fume sans feu. Sur le seuil, une paire de bottes d&#x27;homme, seches, tournees vers la porte comme si quelqu&#x27;un venait de rentrer.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Frapper et attendre</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Examiner les bottes</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span><span class="chip neutre">ADD_TAG 0</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Entrer sans annoncer</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +10</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Le cuir est sec et la semelle propre. La tourbe ne pardonne pas : personne n&#x27;a marche dans le marais avec ces bottes. Elles ont ete posees la pour etre vues.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Examiner les bottes
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.43 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">100 → <strong>100</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">ankou -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">02</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c2</span>
+    <span class="card-hud tab">Carte 2 / 11 · vie 100 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La veuve pose les trois pieces sur la table sans les compter et les repousse vers toi. « Ce n&#x27;est pas ca qu&#x27;il attend », dit-elle en regardant la fenetre.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Demander ce qu&#x27;il attend</span><span class="grad prudente">prudente</span><span class="check white">empathie · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +6</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Reposer les pieces sur la table</span><span class="grad equilibree">equilibree</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +8</span></span></li><li class="opt picked"><span class="opt-n">3</span><span class="opt-label">Suivre son regard</span><span class="grad audacieuse">audacieuse</span><span class="check white">logic · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">druides +10</span><span class="chip neutre">ADD_TAG 0</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu regardes par la fenetre et tu ne vois que du brouillard bas. Le temps que tes yeux s&#x27;y fassent, elle a tire le volet et la conversation est finie.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 3 — Suivre son regard
+            <span class="grad audacieuse">audacieuse</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.71 → <strong class="neg">échec</strong> · −5 PV</dd>
+        <dt>Vie</dt><dd class="tab">100 → <strong>95</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">druides -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">03</span>
+    <span class="act-badge" style="--ac:#00D4FF">Événement</span>
+    <span class="card-id engine tab">c3</span>
+    <span class="card-hud tab">Carte 3 / 11 · vie 95 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Dehors, l&#x27;odeur de pain brule s&#x27;epaissit d&#x27;un coup. Trois oiseaux partent ensemble de la meme touffe de bruyere, sans qu&#x27;aucun bruit ne les ait leves.</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Rester immobile</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span><span class="chip pos">vie +2</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Chercher l&#x27;origine de l&#x27;odeur</span><span class="grad equilibree">equilibree</span><span class="check white">instinct · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +8</span><span class="chip neutre">ADD_TAG 0</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Appeler le nom du mort</span><span class="grad audacieuse">audacieuse</span><span class="check white">volonte · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +10</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu tiens en place trop longtemps. Le froid de la tourbe monte par les semelles, tes jambes se raidissent, et quand tu bouges enfin, quelque chose s&#x27;est deja eloigne.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Rester immobile
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.90 → <strong class="neg">échec</strong> · −3 PV</dd>
+        <dt>Vie</dt><dd class="tab">95 → <strong>92</strong>
+            <span class="delta neg">-3</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">niamh -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">04</span>
+    <span class="act-badge" style="--ac:#FFB347">Marchand</span>
+    <span class="card-id engine tab">c4</span>
+    <span class="card-hud tab">Carte 4 / 11 · vie 92 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Un tourbier charge sa brouette au bord du chemin. Il vend ce qu&#x27;il trouve dans le marais : de la corde grasse, une lampe a huile, un couteau a lame courte.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Acheter la corde</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">essence +6</span><span class="chip neutre">ADD_TAG 0</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Acheter la lampe</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">essence +8</span><span class="chip neutre">ADD_TAG 0</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Lui demander qui traverse</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +12</span><span class="chip neutre">ADD_TAG 0</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu prends la lampe sans verifier la meche. Elle s&#x27;eteint au premier souffle du marais, et il est deja trop loin pour t&#x27;entendre le rappeler.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Acheter la lampe
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.67 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">92 → <strong>88</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">05</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c5</span>
+    <span class="card-hud tab">Carte 5 / 11 · vie 88 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La planche jetee en travers de la fosse tient a peine. Dessous, l&#x27;eau noire ne bouge pas, et l&#x27;odeur de pain brule monte de la, pas du reste du marais.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Sonder avant de passer</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">druides +6</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Traverser en courant</span><span class="grad equilibree">equilibree</span><span class="check white">instinct · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +8</span></span></li><li class="opt picked"><span class="opt-n">3</span><span class="opt-label">Retirer la planche</span><span class="grad audacieuse">audacieuse</span><span class="check white">volonte · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +10</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Le bois est plus lourd qu&#x27;il n&#x27;en a l&#x27;air et il t&#x27;echappe. La planche part dans la fosse, l&#x27;eau te gifle jusqu&#x27;au visage, et personne ne passera plus — toi non plus.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 3 — Retirer la planche
+            <span class="grad audacieuse">audacieuse</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.80 → <strong class="neg">échec</strong> · −5 PV</dd>
+        <dt>Vie</dt><dd class="tab">88 → <strong>83</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">06</span>
+    <span class="act-badge" style="--ac:#FF3366">Climax</span>
+    <span class="card-id engine tab">c6</span>
+    <span class="card-hud tab">Carte 6 / 11 · vie 83 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Merlin parle sans que tu l&#x27;aies appele. « Regarde mieux la fosse, voyageur. On n&#x27;y a rien jete. On y a amenage une place, et elle est occupee. »</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Demander qui est en bas</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Refuser d&#x27;ecouter</span><span class="grad equilibree">equilibree</span><span class="check ctx">volonte · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +11</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Descendre voir</span><span class="grad audacieuse">audacieuse</span><span class="check ctx">instinct · contextuelle · échec −9 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +13</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu poses mal ta question et Merlin te retourne le silence. « Tu demandes un nom », dit-il enfin. « Tu n&#x27;es pas encore pret a l&#x27;entendre. »</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Demander qui est en bas
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.76 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">83 → <strong>79</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">07</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c7</span>
+    <span class="card-hud tab">Carte 7 / 11 · vie 79 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">L&#x27;homme dans la fosse est vivant, maigre, et il te reconnait. « Ne le dis pas a elle », souffle Mael Kerlan. « Tant qu&#x27;elle me croit noye, elle est en vie. »</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Ecouter son histoire</span><span class="grad prudente">prudente</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +10</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Le sortir de la</span><span class="grad equilibree">equilibree</span><span class="check ctx">volonte · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +12</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Le laisser et partir</span><span class="grad audacieuse">audacieuse</span><span class="check red">instinct · ROUGE · échec −13 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +16</span><span class="chip pos">essence +4</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu le hisses par les aisselles. Il pese le poids d&#x27;un an de tourbe et ses jambes ne le portent plus. Une fois dehors, il regarde la maison qui fume au loin et se met a trembler — de froid, ou d&#x27;autre chose.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Le sortir de la
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.05 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">79 → <strong>79</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#C98A3C">anciens +12</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">08</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c8</span>
+    <span class="card-hud tab">Carte 8 / 11 · vie 79 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Il te demande de jurer. « Trois jours », dit-il. « Donne-moi trois jours pour partir loin, et ensuite dis-lui ce que tu voudras. »</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Jurer les trois jours</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip neutre">CREATE_PROMISE 0</span><span class="chip pos">anciens +8</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Promettre de revenir</span><span class="grad equilibree">equilibree</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip neutre">CREATE_PROMISE 0</span><span class="chip pos">niamh +10</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Ne rien jurer</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +12</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu jures, et il te fait repeter le serment avec ses mots a lui. Le marais n&#x27;a pas d&#x27;oreilles, mais les Anciens en ont, et un serment prononce sur la tourbe ne s&#x27;efface pas.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Jurer les trois jours
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.20 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">79 → <strong>79</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#C98A3C">anciens +8</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">korrigans -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">09</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c9</span>
+    <span class="card-hud tab">Carte 9 / 11 · vie 79 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Sur le chemin du retour, un homme du bourg vient a ta rencontre. Il sourit, et il sent le pain brule alors qu&#x27;il n&#x27;a pas mis un pied dans la tourbe.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Le saluer sans t&#x27;arreter</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +6</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Lui demander son nom</span><span class="grad equilibree">equilibree</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +8</span></span></li><li class="opt picked"><span class="opt-n">3</span><span class="opt-label">Lui barrer le chemin</span><span class="grad audacieuse">audacieuse</span><span class="check white">volonte · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +10</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu te mets en travers et il te contourne comme on contourne une pierre. Tu te retournes trop tard : il a pris le chemin de la maison qui fume.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 3 — Lui barrer le chemin
+            <span class="grad audacieuse">audacieuse</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.86 → <strong class="neg">échec</strong> · −5 PV</dd>
+        <dt>Vie</dt><dd class="tab">79 → <strong>74</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">ankou -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">10</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c10</span>
+    <span class="card-hud tab">Carte 10 / 11 · vie 74 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La veuve t&#x27;attend sur le seuil, les trois pieces dans la main. Elle a vu d&#x27;ou tu reviens. « Alors ? » demande-t-elle, et sa voix ne tremble pas.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Dire que la dette est payee</span><span class="grad prudente">prudente</span><span class="check white">instinct · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +8</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Lui parler de son beau-frere</span><span class="grad equilibree">equilibree</span><span class="check ctx">logic · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">druides +12</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Tout lui dire</span><span class="grad audacieuse">audacieuse</span><span class="check ctx">empathie · contextuelle · échec −9 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +14</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu ne parles pas du vivant, tu parles de celui qui sent le pain brule sans avoir marche dans la tourbe. Elle blemit — non pas de surprise, mais parce que quelqu&#x27;un d&#x27;autre le sait enfin.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Lui parler de son beau-frere
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.38 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">74 → <strong>69</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FFB347">druides +1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">druides -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">11</span>
+    <span class="act-badge" style="--ac:#FF3366">Climax</span>
+    <span class="card-id engine tab">c11</span>
+    <span class="card-hud tab">Carte 11 / 11 · vie 69 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Merlin est assis sur la borne, au bout du chemin. « Trois pieces », dit-il. « Voila ce que tu croyais devoir. Dis-moi ce que tu dois maintenant. »</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Payer et partir</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +12</span><span class="chip pos">Anam +4</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Nommer ta vraie dette</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">druides +13</span><span class="chip pos">Anam +5</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Retourner au marais</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +15</span><span class="chip pos">Anam +5</span></span></li></ol>
+      <div class="resolution variant"><span class="res-tag">ce qui se produit — trois_jours</span><p class="narrative res-text">Tu dis ce que tu dois, et Merlin t&#x27;arrete a mi-phrase. « Tu as jure trois jours et tu n&#x27;en as pas tenu un. Ce que tu dois maintenant, ce n&#x27;est plus a eux — c&#x27;est a ta propre parole, et elle est plus chere. »</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Nommer ta vraie dette
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.04 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">69 → <strong>69</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FFB347">druides +1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article></section>
+
+  <footer class="foot">
+    <span>Généré par <code>tools/render_run_dashboard.py</code> depuis le transcript
+      d'un run réel — instrumentation <code>MERLIN_TRANSCRIPT</code> de
+      <code>board_narration.gd</code>.</span>
+    <span>Rejouer un run et régénérer :
+      <code>MERLIN_AUTOPLAY=1 MERLIN_TRANSCRIPT=run.json godot --headless --path . scenes/BoardNarration.tscn --quit-after 30000</code></span>
+  </footer>
+</div>
+</body></html>

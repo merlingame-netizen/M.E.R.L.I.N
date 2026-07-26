@@ -658,6 +658,43 @@ func _apply_effect(effect: Dictionary) -> void:
 		"ADD_ANAM":
 			var anam_amount: int = int(effect.get("amount", MerlinConstants.ANAM_BASE_REWARD))
 			effects._apply_add_anam(state, anam_amount)
+		# v7.7.29 — les six types ci-dessous etaient silencieusement ignores : le
+		# `match` n'avait pas de branche pour eux et aucun `_:` ne le signalait.
+		# Consequence mesuree sur un run reel du 2026-07-26 : un ADD_TAG et un
+		# CREATE_PROMISE traverses par le joueur ne laissaient aucune trace, donc
+		# aucune resolution conditionnee par l'etat ne pouvait se declencher.
+		# Le moteur d'effets les connait tous — il ne recevait rien.
+		"ADD_TAG":
+			_apply_effect_code("ADD_TAG:%s" % str(effect.get("tag", "")))
+		"REMOVE_TAG":
+			_apply_effect_code("REMOVE_TAG:%s" % str(effect.get("tag", "")))
+		"PROMISE", "ADD_PROMISE":
+			_apply_effect_code("ADD_PROMISE:%s:%d" % [
+				str(effect.get("promise_id", effect.get("id", ""))),
+				int(effect.get("deadline_cards", 3))])
+		"CREATE_PROMISE":
+			_apply_effect_code("CREATE_PROMISE:%s:%d:%s" % [
+				str(effect.get("promise_id", effect.get("id", ""))),
+				int(effect.get("deadline_cards", 3)),
+				str(effect.get("description", ""))])
+		"ADD_ESSENCE":
+			# L'essence du contrat de cartes EST la monnaie de biome.
+			_apply_effect_code("ADD_BIOME_CURRENCY:%d" % int(effect.get("amount", 0)))
+		"PLAY_SFX":
+			_apply_effect_code("PLAY_SFX:%s" % str(effect.get("sfx", effect.get("id", ""))))
+		_:
+			push_warning("[MerlinStore] effet ignore : type '%s' inconnu de _apply_effect"
+				% effect_type)
+
+
+## Route un effet vers le moteur d'effets, qui parle en codes textuels
+## ("ADD_TAG:bottes_seches") la ou les cartes parlent en dictionnaires.
+func _apply_effect_code(code: String) -> void:
+	var parts: PackedStringArray = code.split(":")
+	if parts.size() < 2 or parts[1].strip_edges().is_empty():
+		push_warning("[MerlinStore] effet mal forme, ignore : %s" % code)
+		return
+	effects.apply_effects(state, [code], "RESOLVE_CHOICE")
 
 # --- OGHAM SYSTEM — Delegates to StoreOghams ---
 
