@@ -1,1087 +1,1096 @@
 {
-  "_meta": {
-    "version": "2.0.0",
-    "date": "2026-07-25",
-    "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
-    "bible_ref": "GAME_DESIGN_BIBLE.md v4.0 (section 31 : decisions du 2026-07-26)",
-    "inspirations": {
-      "slay_the_spire": "courbe de danger par acte, rarete croissante, EV egal / variance croissante entre options",
-      "dominion": "taux de change unifie entre ressources (PV-equivalent), economie a caps",
-      "hand_of_fate_2": "no-drain, tension via composition du deck de rencontres, dealer adversarial",
-      "gloomhaven": "deblocages de cartes par reputation de faction (deck unlocks)",
-      "disco_elysium": "checks de stats white/red, echec = branche narrative, build par accumulation de choix"
+ "_meta": {
+  "version": "2.1.0",
+  "date": "2026-07-25",
+  "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
+  "bible_ref": "GAME_DESIGN_BIBLE.md v4.0 (section 31 : decisions du 2026-07-26)",
+  "inspirations": {
+   "slay_the_spire": "courbe de danger par acte, rarete croissante, EV egal / variance croissante entre options",
+   "dominion": "taux de change unifie entre ressources (PV-equivalent), economie a caps",
+   "hand_of_fate_2": "no-drain, tension via composition du deck de rencontres, dealer adversarial",
+   "gloomhaven": "deblocages de cartes par reputation de faction (deck unlocks)",
+   "disco_elysium": "checks de stats white/red, echec = branche narrative, build par accumulation de choix"
+  },
+  "updated": "2026-07-26"
+ },
+ "writing_constraints": {
+  "title": {
+   "min_words": 2,
+   "max_words": 7,
+   "max_chars": 60
+  },
+  "intro": {
+   "min_sentences": 5,
+   "max_sentences": 8,
+   "person": "deuxieme",
+   "tense": "present"
+  },
+  "hook": {
+   "sentences": 1,
+   "style": "sensoriel (odeur, son, texture, lumiere)"
+  },
+  "beat_summary": {
+   "min_words": 8,
+   "max_words": 22,
+   "_comment": "Identite courte d'un beat de skeleton, et champ `summary` d'une carte. Ce n'est PAS le texte affiche au joueur : voir card_text."
+  },
+  "card_text": {
+   "_comment": "Champ `text` d'une carte : la SITUATION lue a l'ecran (beat 1 de card_grammar). Mesure sur le pool FastRoute existant : mediane 19 mots, max 32. La borne haute laisse la place a une scene decrite sans noyer le joueur.",
+   "min_words": 18,
+   "max_words": 38
+  },
+  "options": {
+   "count": 3,
+   "verb_form": "infinitif, 1 mot",
+   "gradient": [
+    "prudente",
+    "equilibree",
+    "audacieuse"
+   ],
+   "distinct_primary_factions": true,
+   "max_effects_per_option": 3
+  },
+  "emotions_allowed": [
+   "curiosite",
+   "tension",
+   "peur",
+   "espoir",
+   "sagesse",
+   "fascination",
+   "colere",
+   "melancolie",
+   "emerveillement"
+  ],
+  "emotion_no_repeat_consecutive": true,
+  "final_beat_emotions": [
+   "sagesse",
+   "peur",
+   "emerveillement"
+  ],
+  "first_beat_emotions": [
+   "curiosite"
+  ],
+  "jaccard_max_vs_references": 0.5,
+  "forbidden_words_ref": "data/ai/config/merlin_persona.json + docs/50_lore/NARRATIVE_GUARDRAILS.md (bible 9.4.2)"
+ },
+ "structure_constraints": {
+  "canonical_lengths": [
+   11,
+   15,
+   17,
+   21,
+   25
+  ],
+  "acts": 5,
+  "act_roles": [
+   "ouverture",
+   "pacte",
+   "epreuve",
+   "bascule",
+   "climax"
+  ],
+  "beat_act_sequence": [
+   "standard",
+   "shop",
+   "standard",
+   "event",
+   "standard",
+   "event",
+   "standard",
+   "shop",
+   "event",
+   "boss"
+  ],
+  "branching": {
+   "_statut": "ABANDONNE le 2026-07-26 — remplace par le branchement narratif",
+   "regle": "aucun branchement de topologie. Tous les joueurs voient la meme sequence ; la resolution et le texte de chaque carte varient selon l'etat accumule (reputations, marqueurs, arc en cours, promesses).",
+   "ancien_modele": "3 routes isometriques ordre/chaos/liminal avec aiguillage et convergence"
+  },
+  "card_type_caps": {
+   "NARRATIVE": {
+    "min_share": 0.5,
+    "max_share": 0.7
+   },
+   "EVENT": {
+    "min_count": 1,
+    "max_count": 4
+   },
+   "SHOP": {
+    "min_count": 1,
+    "max_count": 2
+   },
+   "MERLIN_DIRECT": {
+    "min_count": 0,
+    "max_count": 3
+   },
+   "PROMISE": {
+    "min_count": 0,
+    "max_count": 2
+   },
+   "RUNE_UNLOCK": {
+    "min_count": 0,
+    "max_count": 1
+   }
+  },
+  "no_repeat_cardtypes": [
+   "SHOP",
+   "MERLIN_DIRECT",
+   "RUNE_UNLOCK"
+  ],
+  "rarity_targets": {
+   "COMMUNE": 0.68,
+   "RARE": 0.2,
+   "EPIQUE": 0.08,
+   "LEGENDAIRE": 0.04
+  },
+  "legendary_start_share": 0.7,
+  "climax_rarity": "LEGENDAIRE",
+  "climax_card_type": "MERLIN_DIRECT",
+  "beat_act_sequence_mapping": {
+   "_comment": "Pour un skeleton de N beats (5-10) : prendre les N-1 premieres entrees puis 'boss' en derniere position (clamp scenario_planner.gd). Vocab acte -> CardType : standard=NARRATIVE, shop=SHOP, event=EVENT, boss=MERLIN_DIRECT (const ACT_TYPE_TO_CARDTYPE). Pour les longueurs jouees 11-25, la projection se fait par actes (5 actes egaux, roles §2.1 de la spec)."
+  },
+  "length_rule": "variable selon l'archetype (length_bias), parmi canonical_lengths. Toutes les regles chiffrees se projettent sur N, jamais sur 25 en dur."
+ },
+ "balance_model": {
+  "exchange_rates_pv_equivalent": {
+   "_comment": "Unite commune type Dominion : tout effet est convertible en PV-equivalent pour calculer l'EV d'une option.",
+   "life": 1.0,
+   "essence": 0.8,
+   "reputation_point": 0.4,
+   "anam": 2.0,
+   "stat_xp": 1.5,
+   "promise_kept": 8.0,
+   "promise_broken": -10.0
+  },
+  "check_formula": "pass_chance = 0.50 + 0.10 * stat (bible 26.1)",
+  "check_mix_global": {
+   "white": 0.75,
+   "contextuel": 0.15,
+   "red": 0.08,
+   "fatal": 0.02,
+   "_comment": "Mesure PAR CARTE, sur l'epreuve la plus dure de ses trois options — c'est la colonne « % cards » de la bible 26.2. Une carte dont l'option audacieuse est contextuelle compte comme contextuelle. Corollaire de design : la majorite des cartes sont entierement blanches, et le gradient s'y exprime par la marche des degats d'echec (3/4/5) et un gain croissant, pas par un type d'epreuve plus dur."
+  },
+  "check_damage_on_fail": {
+   "white": [
+    3,
+    5
+   ],
+   "contextuel": [
+    7,
+    9
+   ],
+   "red": [
+    12,
+    15
+   ],
+   "fatal": "fin de run"
+  },
+  "check_act_gates": {
+   "_comment": "Courbe de tension type Slay the Spire : pas de piege letal avant que le joueur ait pu construire.",
+   "act_1": {
+    "red": false,
+    "fatal": false
+   },
+   "act_2": {
+    "red": false,
+    "fatal": false
+   },
+   "act_3": {
+    "red": true,
+    "fatal": false
+   },
+   "act_4": {
+    "red": true,
+    "fatal": true
+   },
+   "act_5": {
+    "red": true,
+    "fatal": true
+   }
+  },
+  "check_act_distribution_25": {
+   "_comment": "Repartition cible des checks par acte sur un run 25 cartes (review game_designer 2026-07-25). Regles : jamais 2 red dans 3 cartes consecutives ; fatal exclusivement actes IV-V, telegraphe (detectable via saille) ; 'ember rule' : a vie <= 15, un fatal degrade en red.",
+   "act_1": {
+    "white": 5,
+    "contextuel": 0,
+    "red": 0,
+    "fatal": 0
+   },
+   "act_2": {
+    "white": 4,
+    "contextuel": 1,
+    "red": 0,
+    "fatal": 0
+   },
+   "act_3": {
+    "white": 3,
+    "contextuel": 1,
+    "red": 1,
+    "fatal": 0
+   },
+   "act_4": {
+    "white": 3,
+    "contextuel": 1,
+    "red": 1,
+    "fatal": "0-1"
+   },
+   "act_5": {
+    "white": 3,
+    "contextuel": 1,
+    "red": 1,
+    "fatal": "0-1"
+   },
+   "red_spacing_rule": "jamais 2 checks red dans une fenetre de 3 cartes",
+   "ember_rule": "vie <= 15 : fatal degrade en red",
+   "late_game_requirement": "actes IV-V : pass = 50% + (stat - requirement) x 10%, requirement 1-3 croissant (evite l'auto-pass mort a stat 5+)",
+   "fatal_concentration_rule": "le budget global fatal (2% du pool) est CONCENTRE actes IV-V : 5% du tirage sur les 10 dernieres cartes, 0% avant (valide Monte-Carlo 2026-07-25 : 100% des morts en actes IV-V, taux de mort inchanges)"
+  },
+  "act_danger_multipliers": [
+   0.6,
+   0.8,
+   1.0,
+   1.3,
+   1.6
+  ],
+  "heal_policy": {
+   "success_heal_share": 0.3,
+   "success_heal_amount": [
+    2,
+    4
+   ],
+   "critical_heal_amount": 5,
+   "shop_heal_ev": 8,
+   "rest_card_heal": 18,
+   "max_heal_per_card": 18
+  },
+  "danger_budget_25_cards": {
+   "_comment": "Budget global first-run (stats=1, pass 60%). Attrition nette visee ~30-45 PV -> fin de run p50 entre 55 et 70 PV, mort possible en actes IV-V.",
+   "expected_gross_damage": [
+    55,
+    75
+   ],
+   "expected_gross_heal": [
+    20,
+    35
+   ],
+   "target_final_life_p50_first_run": [
+    55,
+    70
+   ],
+   "death_rate_targets": {
+    "first_run": [
+     0.15,
+     0.3
+    ],
+    "specialized_build": [
+     0.05,
+     0.15
+    ],
+    "any_build_max": 0.4
+   }
+  },
+  "option_gradient_ev": {
+   "_comment": "Principe deck-builder : les 3 options ont un EV proche (ecart max 2 PV-eq) mais une variance croissante. L'audacieuse paie via le critique (x1.5 + bonus), pas via l'EV brut.",
+   "prudente": {
+    "ev_pv_eq": [
+     0.0,
+     1.5
+    ],
+    "variance": "faible",
+    "check_modifier": 0.1
+   },
+   "equilibree": {
+    "ev_pv_eq": [
+     0.5,
+     2.0
+    ],
+    "variance": "moyenne",
+    "check_modifier": 0.0
+   },
+   "audacieuse": {
+    "ev_pv_eq": [
+     0.5,
+     2.5
+    ],
+    "variance": "forte",
+    "check_modifier": -0.1,
+    "critical_bonus_xp": 1.5
+   },
+   "max_ev_gap_between_options": 2.0,
+   "_regle_effets": "Les `effects` d'une option sont le GAIN en cas de reussite. Le cout du risque vit exclusivement dans `check.fail_damage`. Porter un DAMAGE_LIFE dans les effets d'une option audacieuse la facture deux fois et fait exploser l'ecart d'EV : c'est un rejet."
+  },
+  "effects_caps": {
+   "ADD_REPUTATION": 20,
+   "HEAL_LIFE": 18,
+   "DAMAGE_LIFE": 15,
+   "DAMAGE_LIFE_CRITIQUE": 22,
+   "ADD_ESSENCE": 10,
+   "effects_per_option": 3,
+   "global_multiplier_cap": 2.0
+  },
+  "rune_circuit_economy": {
+   "_comment": "Valeur cible : 35-45 PV-eq de valeur totale par run de 25 cartes (60-75% des degats bruts attendus). Activations = 1 + floor(24/CD).",
+   "value_per_activation_pv_eq": [
+    4,
+    6
+   ],
+   "total_value_per_run_pv_eq_target": [
+    35,
+    45
+   ],
+   "cooldowns_current": {
+    "beith": 3,
+    "luis": 4,
+    "quert": 4,
+    "duir": 5,
+    "nuin": 6,
+    "saille": 5,
+    "muin": 7,
+    "straif": 8,
+    "ioho": 10
+   },
+   "cooldowns_recommended": {
+    "_comment": "PROPOSITION review game_designer 2026-07-25 — DECISION UTILISATEUR REQUISE avant de toucher au canon bible 3.3. quert actuel = 70 PV-eq/run (annule 130% de l'attrition des actes I-III) : bug d'equilibrage n1.",
+    "beith": 3,
+    "luis": 5,
+    "quert": 6,
+    "duir": 5,
+    "nuin": 5,
+    "saille": 5,
+    "muin": 7,
+    "straif": 7,
+    "ioho": 10,
+    "quert_heal_recommended": 8
+   }
+  },
+  "anti_degenerescence": {
+   "no_safe_spam": "apres 3 options zero-risque choisies consecutivement, le MOS force une carte sans option neutre (les 3 options portent >= 1 negatif ou un check)",
+   "rep_farm_caps": "±20 par carte (canon) + NOUVEAU cap ±60 par faction par run ; au-dela de rep 80, gains divises par 2",
+   "heal_stacking_cap": "+18 par carte (canon) + NOUVEAU +24 par acte (quert + repos + critique ne stackent plus)",
+   "stat_grind_guard": "0 XP au-dela de 3 choix consecutifs alignes sur la meme stat",
+   "multiplier_stack_rule": "le cap global x2.0 s'applique APRES tout cumul (critique x1.5 x duir x2.0 = x3.0 -> clamp x2.0)",
+   "essence_prices": {
+    "petit_soin": 8,
+    "soin_moyen": 15,
+    "don_majeur": 25,
+    "gain_max_par_carte": 10
+   },
+   "cross_faction_tension": "au moins 10% des cartes ont un trade-off cross-faction (aider X = -rep Y)",
+   "faction_option_diversity": "chaque faction non-neutre apparait comme primary_faction sur >= 8% des options du scenario ; druides <= 30%"
+  },
+  "simulation_validation": {
+   "_comment": "Monte-Carlo 10 000 runs x 6 profils x 2 seeds (tools/simulate_run_balance.py, 2026-07-25)",
+   "tuning_valide": "white -4 / contextuel -8 / red -15 / fatales 5% actes IV-V uniquement / courbe [0.6,0.8,1.0,1.3,1.6] / heal 30% succes +2, crit +5 / shop 2x +8",
+   "resultats": {
+    "first_run": {
+     "mort": 0.179,
+     "vie_finale_p50": 70.0,
+     "morts_actes_4_5": 1.0
+    },
+    "druide_pur": {
+     "mort": 0.125,
+     "vie_finale_p50": 85.5
+    },
+    "berserker": {
+     "mort": 0.127,
+     "vie_finale_p50": 85.8
+    },
+    "diplomate": {
+     "mort": 0.126,
+     "vie_finale_p50": 85.3
+    },
+    "survivant": {
+     "mort": 0.128,
+     "vie_finale_p50": 85.8
+    },
+    "polyvalent": {
+     "mort": 0.101,
+     "vie_finale_p50": 92.2
     }
+   },
+   "lecons": [
+    "les degats white/red pilotent la TENSION (vie finale), pas la mortalite",
+    "la mortalite est pilotee a ~100% par le placement des cartes fatales -> le gating par acte est LE levier",
+    "sous quert actuel (+10/CD4) la mort par attrition PV est quasi impossible -> confirme le retuning quert",
+    "le Polyvalent (12 pts de stats vs 10) est le build le plus sur : biaiser le mix de stats par acte/archetype pour recompenser la specialisation, ou aligner les budgets a 12 pts"
+   ]
   },
-  "writing_constraints": {
-    "title": {
-      "min_words": 2,
-      "max_words": 7,
-      "max_chars": 60
-    },
-    "intro": {
-      "min_sentences": 5,
-      "max_sentences": 8,
-      "person": "deuxieme",
-      "tense": "present"
-    },
-    "hook": {
-      "sentences": 1,
-      "style": "sensoriel (odeur, son, texture, lumiere)"
-    },
-    "beat_summary": {
-      "min_words": 8,
-      "max_words": 22
-    },
-    "options": {
-      "count": 3,
-      "verb_form": "infinitif, 1 mot",
-      "gradient": [
-        "prudente",
-        "equilibree",
-        "audacieuse"
-      ],
-      "distinct_primary_factions": true,
-      "max_effects_per_option": 3
-    },
-    "emotions_allowed": [
-      "curiosite",
-      "tension",
-      "peur",
-      "espoir",
-      "sagesse",
-      "fascination",
-      "colere",
-      "melancolie",
-      "emerveillement"
-    ],
-    "emotion_no_repeat_consecutive": true,
-    "final_beat_emotions": [
-      "sagesse",
-      "peur",
-      "emerveillement"
-    ],
-    "first_beat_emotions": [
-      "curiosite"
-    ],
-    "jaccard_max_vs_references": 0.5,
-    "forbidden_words_ref": "data/ai/config/merlin_persona.json + docs/50_lore/NARRATIVE_GUARDRAILS.md (bible 9.4.2)"
+  "anti_degenerescence_params": {
+   "_comment": "Version typee des regles anti_degenerescence (prose ci-dessus) pour scenario_planner/MOS.",
+   "safe_streak_max": 3,
+   "rep_cap_per_card": 20,
+   "rep_cap_per_run_per_faction": 60,
+   "rep_soft_cap": 80,
+   "rep_gain_divisor_above_soft_cap": 2,
+   "heal_cap_per_card": 18,
+   "heal_cap_per_act": 24,
+   "same_stat_streak_max_for_xp": 3,
+   "global_multiplier_cap": 2.0,
+   "essence_gain_max_per_card": 10,
+   "cross_faction_tension_min_share": 0.1,
+   "faction_option_min_share": 0.08,
+   "druides_option_max_share": 0.3
   },
-  "structure_constraints": {
-    "canonical_lengths": [
-      11,
-      15,
-      17,
-      21,
-      25
-    ],
-    "acts": 5,
-    "act_roles": [
-      "ouverture",
-      "pacte",
-      "epreuve",
-      "bascule",
-      "climax"
-    ],
-    "beat_act_sequence": [
-      "standard",
-      "shop",
-      "standard",
-      "event",
-      "standard",
-      "event",
-      "standard",
-      "shop",
-      "event",
-      "boss"
-    ],
-    "branching": {
-      "_statut": "ABANDONNE le 2026-07-26 — remplace par le branchement narratif",
-      "regle": "aucun branchement de topologie. Tous les joueurs voient la meme sequence ; la resolution et le texte de chaque carte varient selon l'etat accumule (reputations, marqueurs, arc en cours, promesses).",
-      "ancien_modele": "3 routes isometriques ordre/chaos/liminal avec aiguillage et convergence"
-    },
-    "card_type_caps": {
-      "NARRATIVE": {
-        "min_share": 0.5,
-        "max_share": 0.7
-      },
-      "EVENT": {
-        "min_count": 1,
-        "max_count": 4
-      },
-      "SHOP": {
-        "min_count": 1,
-        "max_count": 2
-      },
-      "MERLIN_DIRECT": {
-        "min_count": 0,
-        "max_count": 3
-      },
-      "PROMISE": {
-        "min_count": 0,
-        "max_count": 2
-      },
-      "RUNE_UNLOCK": {
-        "min_count": 0,
-        "max_count": 1
-      }
-    },
-    "no_repeat_cardtypes": [
-      "SHOP",
-      "MERLIN_DIRECT",
-      "RUNE_UNLOCK"
-    ],
-    "rarity_targets": {
-      "COMMUNE": 0.68,
-      "RARE": 0.2,
-      "EPIQUE": 0.08,
-      "LEGENDAIRE": 0.04
-    },
-    "legendary_start_share": 0.7,
-    "climax_rarity": "LEGENDAIRE",
-    "climax_card_type": "MERLIN_DIRECT",
-    "beat_act_sequence_mapping": {
-      "_comment": "Pour un skeleton de N beats (5-10) : prendre les N-1 premieres entrees puis 'boss' en derniere position (clamp scenario_planner.gd). Vocab acte -> CardType : standard=NARRATIVE, shop=SHOP, event=EVENT, boss=MERLIN_DIRECT (const ACT_TYPE_TO_CARDTYPE). Pour les longueurs jouees 11-25, la projection se fait par actes (5 actes egaux, roles §2.1 de la spec)."
-    },
-    "length_rule": "variable selon l'archetype (length_bias), parmi canonical_lengths. Toutes les regles chiffrees se projettent sur N, jamais sur 25 en dur."
+  "effects_whitelist": {
+   "_comment": "Types d'effets autorises sur une option (bible 5.4 + contrat GM 9.8). Tout autre type est un rejet.",
+   "types": [
+    "ADD_REPUTATION",
+    "HEAL_LIFE",
+    "DAMAGE_LIFE",
+    "ADD_ESSENCE",
+    "ADD_ANAM",
+    "ADD_TAG",
+    "REMOVE_TAG",
+    "PROMISE",
+    "CREATE_PROMISE",
+    "PLAY_SFX"
+   ],
+   "amount_caps": {
+    "ADD_REPUTATION": 20,
+    "HEAL_LIFE": 18,
+    "DAMAGE_LIFE": 15,
+    "ADD_ESSENCE": 10,
+    "ADD_ANAM": 8
+   }
   },
-  "balance_model": {
-    "exchange_rates_pv_equivalent": {
-      "_comment": "Unite commune type Dominion : tout effet est convertible en PV-equivalent pour calculer l'EV d'une option.",
-      "life": 1.0,
-      "essence": 0.8,
-      "reputation_point": 0.4,
-      "anam": 2.0,
-      "stat_xp": 1.5,
-      "promise_kept": 8.0,
-      "promise_broken": -10.0
-    },
-    "check_formula": "pass_chance = 0.50 + 0.10 * stat (bible 26.1)",
-    "check_mix_global": {
-      "white": 0.75,
-      "contextuel": 0.15,
-      "red": 0.08,
-      "fatal": 0.02
-    },
-    "check_damage_on_fail": {
-      "white": [
-        3,
-        5
-      ],
-      "contextuel": [
-        7,
-        9
-      ],
-      "red": [
-        12,
-        15
-      ],
-      "fatal": "fin de run"
-    },
-    "check_act_gates": {
-      "_comment": "Courbe de tension type Slay the Spire : pas de piege letal avant que le joueur ait pu construire.",
-      "act_1": {
-        "red": false,
-        "fatal": false
-      },
-      "act_2": {
-        "red": false,
-        "fatal": false
-      },
-      "act_3": {
-        "red": true,
-        "fatal": false
-      },
-      "act_4": {
-        "red": true,
-        "fatal": true
-      },
-      "act_5": {
-        "red": true,
-        "fatal": true
-      }
-    },
-    "check_act_distribution_25": {
-      "_comment": "Repartition cible des checks par acte sur un run 25 cartes (review game_designer 2026-07-25). Regles : jamais 2 red dans 3 cartes consecutives ; fatal exclusivement actes IV-V, telegraphe (detectable via saille) ; 'ember rule' : a vie <= 15, un fatal degrade en red.",
-      "act_1": {
-        "white": 5,
-        "contextuel": 0,
-        "red": 0,
-        "fatal": 0
-      },
-      "act_2": {
-        "white": 4,
-        "contextuel": 1,
-        "red": 0,
-        "fatal": 0
-      },
-      "act_3": {
-        "white": 3,
-        "contextuel": 1,
-        "red": 1,
-        "fatal": 0
-      },
-      "act_4": {
-        "white": 3,
-        "contextuel": 1,
-        "red": 1,
-        "fatal": "0-1"
-      },
-      "act_5": {
-        "white": 3,
-        "contextuel": 1,
-        "red": 1,
-        "fatal": "0-1"
-      },
-      "red_spacing_rule": "jamais 2 checks red dans une fenetre de 3 cartes",
-      "ember_rule": "vie <= 15 : fatal degrade en red",
-      "late_game_requirement": "actes IV-V : pass = 50% + (stat - requirement) x 10%, requirement 1-3 croissant (evite l'auto-pass mort a stat 5+)",
-      "fatal_concentration_rule": "le budget global fatal (2% du pool) est CONCENTRE actes IV-V : 5% du tirage sur les 10 dernieres cartes, 0% avant (valide Monte-Carlo 2026-07-25 : 100% des morts en actes IV-V, taux de mort inchanges)"
-    },
-    "act_danger_multipliers": [
-      0.6,
-      0.8,
-      1.0,
-      1.3,
-      1.6
-    ],
-    "heal_policy": {
-      "success_heal_share": 0.3,
-      "success_heal_amount": [
-        2,
-        4
-      ],
-      "critical_heal_amount": 5,
-      "shop_heal_ev": 8,
-      "rest_card_heal": 18,
-      "max_heal_per_card": 18
-    },
-    "danger_budget_25_cards": {
-      "_comment": "Budget global first-run (stats=1, pass 60%). Attrition nette visee ~30-45 PV -> fin de run p50 entre 55 et 70 PV, mort possible en actes IV-V.",
-      "expected_gross_damage": [
-        55,
-        75
-      ],
-      "expected_gross_heal": [
-        20,
-        35
-      ],
-      "target_final_life_p50_first_run": [
-        55,
-        70
-      ],
-      "death_rate_targets": {
-        "first_run": [
-          0.15,
-          0.3
-        ],
-        "specialized_build": [
-          0.05,
-          0.15
-        ],
-        "any_build_max": 0.4
-      }
-    },
-    "option_gradient_ev": {
-      "_comment": "Principe deck-builder : les 3 options ont un EV proche (ecart max 2 PV-eq) mais une variance croissante. L'audacieuse paie via le critique (x1.5 + bonus), pas via l'EV brut.",
-      "prudente": {
-        "ev_pv_eq": [
-          0.0,
-          1.5
-        ],
-        "variance": "faible",
-        "check_modifier": 0.1
-      },
-      "equilibree": {
-        "ev_pv_eq": [
-          0.5,
-          2.0
-        ],
-        "variance": "moyenne",
-        "check_modifier": 0.0
-      },
-      "audacieuse": {
-        "ev_pv_eq": [
-          0.5,
-          2.5
-        ],
-        "variance": "forte",
-        "check_modifier": -0.1,
-        "critical_bonus_xp": 1.5
-      },
-      "max_ev_gap_between_options": 2.0
-    },
-    "effects_caps": {
-      "ADD_REPUTATION": 20,
-      "HEAL_LIFE": 18,
-      "DAMAGE_LIFE": 15,
-      "DAMAGE_LIFE_CRITIQUE": 22,
-      "ADD_ESSENCE": 10,
-      "effects_per_option": 3,
-      "global_multiplier_cap": 2.0
-    },
-    "rune_circuit_economy": {
-      "_comment": "Valeur cible : 35-45 PV-eq de valeur totale par run de 25 cartes (60-75% des degats bruts attendus). Activations = 1 + floor(24/CD).",
-      "value_per_activation_pv_eq": [
-        4,
-        6
-      ],
-      "total_value_per_run_pv_eq_target": [
-        35,
-        45
-      ],
-      "cooldowns_current": {
-        "beith": 3,
-        "luis": 4,
-        "quert": 4,
-        "duir": 5,
-        "nuin": 6,
-        "saille": 5,
-        "muin": 7,
-        "straif": 8,
-        "ioho": 10
-      },
-      "cooldowns_recommended": {
-        "_comment": "PROPOSITION review game_designer 2026-07-25 — DECISION UTILISATEUR REQUISE avant de toucher au canon bible 3.3. quert actuel = 70 PV-eq/run (annule 130% de l'attrition des actes I-III) : bug d'equilibrage n1.",
-        "beith": 3,
-        "luis": 5,
-        "quert": 6,
-        "duir": 5,
-        "nuin": 5,
-        "saille": 5,
-        "muin": 7,
-        "straif": 7,
-        "ioho": 10,
-        "quert_heal_recommended": 8
-      }
-    },
-    "anti_degenerescence": {
-      "no_safe_spam": "apres 3 options zero-risque choisies consecutivement, le MOS force une carte sans option neutre (les 3 options portent >= 1 negatif ou un check)",
-      "rep_farm_caps": "±20 par carte (canon) + NOUVEAU cap ±60 par faction par run ; au-dela de rep 80, gains divises par 2",
-      "heal_stacking_cap": "+18 par carte (canon) + NOUVEAU +24 par acte (quert + repos + critique ne stackent plus)",
-      "stat_grind_guard": "0 XP au-dela de 3 choix consecutifs alignes sur la meme stat",
-      "multiplier_stack_rule": "le cap global x2.0 s'applique APRES tout cumul (critique x1.5 x duir x2.0 = x3.0 -> clamp x2.0)",
-      "essence_prices": {
-        "petit_soin": 8,
-        "soin_moyen": 15,
-        "don_majeur": 25,
-        "gain_max_par_carte": 10
-      },
-      "cross_faction_tension": "au moins 10% des cartes ont un trade-off cross-faction (aider X = -rep Y)",
-      "faction_option_diversity": "chaque faction non-neutre apparait comme primary_faction sur >= 8% des options du scenario ; druides <= 30%"
-    },
-    "simulation_validation": {
-      "_comment": "Monte-Carlo 10 000 runs x 6 profils x 2 seeds (tools/simulate_run_balance.py, 2026-07-25)",
-      "tuning_valide": "white -4 / contextuel -8 / red -15 / fatales 5% actes IV-V uniquement / courbe [0.6,0.8,1.0,1.3,1.6] / heal 30% succes +2, crit +5 / shop 2x +8",
-      "resultats": {
-        "first_run": {
-          "mort": 0.179,
-          "vie_finale_p50": 70.0,
-          "morts_actes_4_5": 1.0
-        },
-        "druide_pur": {
-          "mort": 0.125,
-          "vie_finale_p50": 85.5
-        },
-        "berserker": {
-          "mort": 0.127,
-          "vie_finale_p50": 85.8
-        },
-        "diplomate": {
-          "mort": 0.126,
-          "vie_finale_p50": 85.3
-        },
-        "survivant": {
-          "mort": 0.128,
-          "vie_finale_p50": 85.8
-        },
-        "polyvalent": {
-          "mort": 0.101,
-          "vie_finale_p50": 92.2
-        }
-      },
-      "lecons": [
-        "les degats white/red pilotent la TENSION (vie finale), pas la mortalite",
-        "la mortalite est pilotee a ~100% par le placement des cartes fatales -> le gating par acte est LE levier",
-        "sous quert actuel (+10/CD4) la mort par attrition PV est quasi impossible -> confirme le retuning quert",
-        "le Polyvalent (12 pts de stats vs 10) est le build le plus sur : biaiser le mix de stats par acte/archetype pour recompenser la specialisation, ou aligner les budgets a 12 pts"
-      ]
-    },
-    "anti_degenerescence_params": {
-      "_comment": "Version typee des regles anti_degenerescence (prose ci-dessus) pour scenario_planner/MOS.",
-      "safe_streak_max": 3,
-      "rep_cap_per_card": 20,
-      "rep_cap_per_run_per_faction": 60,
-      "rep_soft_cap": 80,
-      "rep_gain_divisor_above_soft_cap": 2,
-      "heal_cap_per_card": 18,
-      "heal_cap_per_act": 24,
-      "same_stat_streak_max_for_xp": 3,
-      "global_multiplier_cap": 2.0,
-      "essence_gain_max_per_card": 10,
-      "cross_faction_tension_min_share": 0.1,
-      "faction_option_min_share": 0.08,
-      "druides_option_max_share": 0.3
-    },
-    "effects_whitelist": {
-      "_comment": "Types d'effets autorises sur une option (bible 5.4 + contrat GM 9.8). Tout autre type est un rejet.",
-      "types": [
-        "ADD_REPUTATION",
-        "HEAL_LIFE",
-        "DAMAGE_LIFE",
-        "ADD_ESSENCE",
-        "ADD_ANAM",
-        "ADD_TAG",
-        "REMOVE_TAG",
-        "PROMISE",
-        "CREATE_PROMISE",
-        "PLAY_SFX"
-      ],
-      "amount_caps": {
-        "ADD_REPUTATION": 20,
-        "HEAL_LIFE": 18,
-        "DAMAGE_LIFE": 15,
-        "ADD_ESSENCE": 10,
-        "ADD_ANAM": 8
-      }
-    },
-    "check_schema": {
-      "_comment": "Schema du champ check porte par chaque option (bible 6.3bis).",
-      "stats": [
-        "logic",
-        "empathie",
-        "volonte",
-        "instinct"
-      ],
-      "types": [
-        "white",
-        "contextuel",
-        "red",
-        "fatal"
-      ],
-      "telegraphed_required_for": [
-        "red",
-        "fatal"
-      ],
-      "gradient_order": [
-        "prudente",
-        "equilibree",
-        "audacieuse"
-      ],
-      "prudente_max_check": "white",
-      "fatal_ev_exempt": true,
-      "fatal_ev_penalty_pv_eq": 35.0
-    }
+  "check_schema": {
+   "_comment": "Schema du champ check porte par chaque option (bible 6.3bis).",
+   "stats": [
+    "logic",
+    "empathie",
+    "volonte",
+    "instinct"
+   ],
+   "types": [
+    "white",
+    "contextuel",
+    "red",
+    "fatal"
+   ],
+   "telegraphed_required_for": [
+    "red",
+    "fatal"
+   ],
+   "gradient_order": [
+    "prudente",
+    "equilibree",
+    "audacieuse"
+   ],
+   "prudente_max_check": "white",
+   "fatal_ev_exempt": true,
+   "fatal_ev_penalty_pv_eq": 35.0
+  }
+ },
+ "deckbuilding_layer": {
+  "_comment": "Le 'deck' MERLIN n'est pas une pioche de cartes possedees mais l'ensemble des modificateurs persistants qui filtrent/colorent le flux de cartes genere.",
+  "layers": {
+   "rune_circuits": "1 equipe + 1 trouvable en run (= choix de 'relique de depart' StS)",
+   "stats_build": "4 stats persistantes, +1 XP par choix aligne (= deck thinning Disco : chaque choix construit le personnage)",
+   "faction_reputation": "rep >= 50 debloque les cartes speciales de faction (= deck unlocks Gloomhaven)",
+   "promesses": "max 2 actives, echeance en cartes (= quests HoF2, engagement a EV differee)",
+   "dons_per_run": "modificateurs run-only proposes en carte SHOP (= draft Vampire-Survivors)"
   },
-  "deckbuilding_layer": {
-    "_comment": "Le 'deck' MERLIN n'est pas une pioche de cartes possedees mais l'ensemble des modificateurs persistants qui filtrent/colorent le flux de cartes genere.",
-    "layers": {
-      "rune_circuits": "1 equipe + 1 trouvable en run (= choix de 'relique de depart' StS)",
-      "stats_build": "4 stats persistantes, +1 XP par choix aligne (= deck thinning Disco : chaque choix construit le personnage)",
-      "faction_reputation": "rep >= 50 debloque les cartes speciales de faction (= deck unlocks Gloomhaven)",
-      "promesses": "max 2 actives, echeance en cartes (= quests HoF2, engagement a EV differee)",
-      "dons_per_run": "modificateurs run-only proposes en carte SHOP (= draft Vampire-Survivors)"
-    },
-    "per_scenario_requirements": {
-      "min_viable_builds": 5,
-      "builds_ref": "bible 28.3 : Druide pur / Berserker / Diplomate / Survivant / Polyvalent",
-      "stat_mix_tolerance": 0.1,
-      "each_act_has_one_option_per_gradient": true,
-      "min_faction_special_slots": 1,
-      "shop_offers_don_choice": true
-    }
-  },
-  "onboarding_overrides": {
-    "_comment": "Contraintes additionnelles du scenario type joue en premier run (bible 6.1 + 13).",
-    "forced_archetype": "druidic_awakening",
-    "scripted_cards": 3,
-    "max_new_mechanics_per_act": 1,
+  "per_scenario_requirements": {
+   "min_viable_builds": 5,
+   "builds_ref": "bible 28.3 : Druide pur / Berserker / Diplomate / Survivant / Polyvalent",
+   "stat_mix_tolerance": 0.1,
+   "each_act_has_one_option_per_gradient": true,
+   "min_faction_special_slots": 1,
+   "shop_offers_don_choice": true
+  }
+ },
+ "onboarding_overrides": {
+  "_comment": "Contraintes additionnelles du scenario type joue en premier run (bible 6.1 + 13).",
+  "forced_archetype": "druidic_awakening",
+  "scripted_cards": 3,
+  "max_new_mechanics_per_act": 1,
+  "no_red_checks": true,
+  "no_fatal_checks": true,
+  "no_interference": true,
+  "danger_modifier_override": 0.6
+ },
+ "archetypes": {
+  "druidic_awakening": {
+   "name": "L'Éveil Druidique",
+   "pole_dominant": "Liminal",
+   "twist_pattern": "calm_revelation",
+   "difficulty": "easy",
+   "danger_modifier": 0.6,
+   "length_bias": [
+    11,
+    15,
+    17
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "emerveillement",
+    "fascination",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.35,
+    "empathie": 0.3,
+    "volonte": 0.15,
+    "instinct": 0.2
+   },
+   "primary_factions": [
+    "druides",
+    "niamh"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Archetype d'onboarding. Tension douce, twist contemplatif, aucune carte fatale.",
+   "heal_modifier": 1.0,
+   "special": "0 red/fatal (onboarding) ; tension douce",
+   "params": {
     "no_red_checks": true,
     "no_fatal_checks": true,
-    "no_interference": true,
-    "danger_modifier_override": 0.6
+    "no_interference": true
+   }
   },
-  "archetypes": {
-    "druidic_awakening": {
-      "name": "L'Éveil Druidique",
-      "pole_dominant": "Liminal",
-      "twist_pattern": "calm_revelation",
-      "difficulty": "easy",
-      "danger_modifier": 0.6,
-      "length_bias": [
-        11,
-        15,
-        17
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "emerveillement",
-        "fascination",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.35,
-        "empathie": 0.3,
-        "volonte": 0.15,
-        "instinct": 0.2
-      },
-      "primary_factions": [
-        "druides",
-        "niamh"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Archetype d'onboarding. Tension douce, twist contemplatif, aucune carte fatale.",
-      "heal_modifier": 1.0,
-      "special": "0 red/fatal (onboarding) ; tension douce",
-      "params": {
-        "no_red_checks": true,
-        "no_fatal_checks": true,
-        "no_interference": true
-      }
-    },
-    "korrigan_trickery": {
-      "name": "La Ruse des Korrigans",
-      "pole_dominant": "Chaos",
-      "twist_pattern": "deception_unveiled",
-      "difficulty": "medium",
-      "danger_modifier": 0.8,
-      "length_bias": [
-        11,
-        15,
-        21
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "fascination",
-        "peur",
-        "colere",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.3,
-        "empathie": 0.2,
-        "volonte": 0.15,
-        "instinct": 0.35
-      },
-      "primary_factions": [
-        "korrigans",
-        "druides"
-      ],
-      "merlin_interference_bias": 1,
-      "notes": "Archetype des interferences : Merlin triche +1 slot (theme tromperie). Le marche a toujours une clause invisible.",
-      "heal_modifier": 1.0,
-      "special": "interferences Merlin x1.5 ; Merlin Judges 15% -> 25%",
-      "params": {
-        "interference_multiplier": 1.5,
-        "merlin_judges_share": 0.25
-      }
-    },
-    "ancient_oak_counsel": {
-      "name": "Le Conseil du Chêne Ancien",
-      "pole_dominant": "Ordre",
-      "twist_pattern": "wisdom_arc",
-      "difficulty": "medium",
-      "danger_modifier": 0.7,
-      "length_bias": [
-        17,
-        21,
-        25
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "tension",
-        "emerveillement",
-        "melancolie",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.35,
-        "empathie": 0.2,
-        "volonte": 0.3,
-        "instinct": 0.15
-      },
-      "primary_factions": [
-        "druides",
-        "anciens"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Format long, dialogues. Charge Volonte/Logic : dilemmes de loyaute plutot que dangers physiques.",
-      "heal_modifier": 1.0,
-      "special": "echec red = -15 reputation au lieu de PV",
-      "params": {
-        "red_fail_converts_to_reputation": -15
-      }
-    },
-    "mist_wanderer": {
-      "name": "Le Vagabond de Brume",
-      "pole_dominant": "Liminal",
-      "twist_pattern": "lost_then_found",
-      "difficulty": "medium",
-      "danger_modifier": 1.0,
-      "length_bias": [
-        11,
-        15,
-        21
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "tension",
-        "peur",
-        "fascination",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.2,
-        "empathie": 0.2,
-        "volonte": 0.25,
-        "instinct": 0.35
-      },
-      "primary_factions": [
-        "niamh",
-        "anciens"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Egarement -> retrouvailles. Checks Instinct (orientation, survie) domines.",
-      "heal_modifier": 1.0,
-      "special": "30% des cartes a options voilees (beith EV x2)",
-      "params": {
-        "veiled_card_share": 0.3,
-        "veiled_counter_rune": "beith"
-      }
-    },
-    "forest_trial": {
-      "name": "L'Épreuve de la Forêt",
-      "pole_dominant": "Chaos",
-      "twist_pattern": "physical_test",
-      "difficulty": "hard",
-      "danger_modifier": 1.1,
-      "length_bias": [
-        17,
-        21,
-        25
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "peur",
-        "colere",
-        "espoir",
-        "tension",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.15,
-        "empathie": 0.2,
-        "volonte": 0.35,
-        "instinct": 0.3
-      },
-      "primary_factions": [
-        "korrigans",
-        "anciens"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Archetype le plus letal (x1.25). Reserve : ne pas proposer si vie < 40 au moment du pick de titre.",
-      "heal_modifier": 0.9,
-      "special": "rampe acte V +20% degats",
-      "params": {
-        "act5_damage_multiplier": 1.2
-      }
-    },
-    "forgotten_ritual": {
-      "name": "Le Rite Oublié",
-      "pole_dominant": "Ordre",
-      "twist_pattern": "ritual_completion",
-      "difficulty": "hard",
-      "danger_modifier": 1.0,
-      "length_bias": [
-        21,
-        25
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "tension",
-        "emerveillement",
-        "fascination",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.4,
-        "empathie": 0.2,
-        "volonte": 0.25,
-        "instinct": 0.15
-      },
-      "primary_factions": [
-        "druides",
-        "anciens"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Format epique (21-25). Sequence rituelle = checks Logic en escalier (DC croissant par etape du rite).",
-      "heal_modifier": 1.0,
-      "special": "+1 carte PROMISE garantie ; seul archetype avec fatal possible en acte IV",
-      "params": {
-        "guaranteed_promise_cards": 1,
-        "fatal_allowed_act4": true
-      }
-    },
-    "hidden_sanctuary": {
-      "name": "Le Sanctuaire Caché",
-      "pole_dominant": "Liminal",
-      "twist_pattern": "calm_decision",
-      "difficulty": "easy",
-      "danger_modifier": 0.9,
-      "length_bias": [
-        11,
-        15,
-        17
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "espoir",
-        "emerveillement",
-        "melancolie",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.25,
-        "empathie": 0.35,
-        "volonte": 0.2,
-        "instinct": 0.2
-      },
-      "primary_factions": [
-        "niamh",
-        "druides"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Archetype refuge/repos. A proposer en priorite quand vie <= 40 (pity systemique douce).",
-      "heal_modifier": 1.5,
-      "special": "carte repos garantie acte III ; recompense Anam -5",
-      "params": {
-        "guaranteed_rest_card_act": 3,
-        "anam_end_of_run_delta": -5,
-        "_canal": "anam_end_of_run_delta s'applique au calcul de fin de run (pas un effet de carte — hors whitelist 5.4)"
-      }
-    },
-    "beast_encounter": {
-      "name": "La Bête Cornue",
-      "pole_dominant": "Chaos",
-      "twist_pattern": "wild_communion",
-      "difficulty": "hard",
-      "danger_modifier": 1.25,
-      "length_bias": [
-        11,
-        15,
-        21
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "peur",
-        "fascination",
-        "espoir",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.15,
-        "empathie": 0.25,
-        "volonte": 0.2,
-        "instinct": 0.4
-      },
-      "primary_factions": [
-        "korrigans",
-        "niamh"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Letal mais avec voie pacifique : la route Empathie (communion) doit rester viable (twist wild_communion).",
-      "heal_modifier": 0.75,
-      "special": "+1 red acte III autorise ; 50% des checks = Instinct ; route Empathie (communion) toujours viable",
-      "params": {
-        "extra_red_act3_allowed": 1,
-        "instinct_check_share": 0.5,
-        "empathy_route_always_viable": true
-      }
-    },
-    "druid_lineage": {
-      "name": "La Lignée des Druides",
-      "pole_dominant": "Ordre",
-      "twist_pattern": "ancestral_echo",
-      "difficulty": "medium",
-      "danger_modifier": 1.0,
-      "length_bias": [
-        17,
-        21,
-        25
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "emerveillement",
-        "melancolie",
-        "fascination",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.3,
-        "empathie": 0.3,
-        "volonte": 0.25,
-        "instinct": 0.15
-      },
-      "primary_factions": [
-        "druides",
-        "anciens"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Memoire/heritage. Fort potentiel promesses (serments ancestraux) : viser 1-2 cartes PROMISE.",
-      "heal_modifier": 1.0,
-      "special": "+1 XP stat par acte (archetype d'apprentissage)",
-      "params": {
-        "bonus_stat_xp_per_act": 1,
-        "_canal": "bonus_stat_xp_per_act s'applique au reducer XP fin d'acte (pas un effet de carte)"
-      }
-    },
-    "threshold_crossing": {
-      "name": "Le Passage des Seuils",
-      "pole_dominant": "Liminal",
-      "twist_pattern": "transformation",
-      "difficulty": "hard",
-      "danger_modifier": 1.15,
-      "length_bias": [
-        21,
-        25
-      ],
-      "emotional_palette": [
-        "curiosite",
-        "tension",
-        "peur",
-        "fascination",
-        "emerveillement",
-        "sagesse"
-      ],
-      "stat_mix": {
-        "logic": 0.2,
-        "empathie": 0.25,
-        "volonte": 0.3,
-        "instinct": 0.25
-      },
-      "primary_factions": [
-        "niamh",
-        "ankou"
-      ],
-      "merlin_interference_bias": 0,
-      "notes": "Archetype endgame. La regle LEGENDAIRE dans le dernier 30% est GLOBALE (structure_constraints.legendary_start_share) — pas une exception de cet archetype.",
-      "heal_modifier": 1.0,
-      "special": "acte V x1.3 ; seul archetype avec ankou en primary_faction recurrente ; le climax modifie un element persistant (stat, rune ou rep)",
-      "params": {
-        "act5_damage_multiplier": 1.3,
-        "ankou_recurrent_faction": true,
-        "climax_mutates_persistent_element": true
-      }
-    }
+  "korrigan_trickery": {
+   "name": "La Ruse des Korrigans",
+   "pole_dominant": "Chaos",
+   "twist_pattern": "deception_unveiled",
+   "difficulty": "medium",
+   "danger_modifier": 0.8,
+   "length_bias": [
+    11,
+    15,
+    21
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "fascination",
+    "peur",
+    "colere",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.3,
+    "empathie": 0.2,
+    "volonte": 0.15,
+    "instinct": 0.35
+   },
+   "primary_factions": [
+    "korrigans",
+    "druides"
+   ],
+   "merlin_interference_bias": 1,
+   "notes": "Archetype des interferences : Merlin triche +1 slot (theme tromperie). Le marche a toujours une clause invisible.",
+   "heal_modifier": 1.0,
+   "special": "interferences Merlin x1.5 ; Merlin Judges 15% -> 25%",
+   "params": {
+    "interference_multiplier": 1.5,
+    "merlin_judges_share": 0.25
+   }
   },
-  "generation_contract": {
-    "_principe": "Les scenarios sont generes a 100% par le LLM. Le corpus de references ne fournit PAS de contenu a imiter — il fournit le BORNAGE (regles, structure, economie, voix). Injecter un scenario de reference complet comme modele produit mecaniquement de la ressemblance : mesure sur le corpus actuel, 18 libelles d'options distincts sur 8982 et 90 resumes distincts sur 2994. Le few-shot de contenu est donc INTERDIT sur les champs creatifs.",
-    "invariants_bornage": {
-      "_comment": "Ce que le LLM DOIT respecter — non negociable, verifie par validate_scenario_balance.py.",
-      "structure": "structure_constraints (longueurs canon, 5 actes, 3 routes, caps de types, raretes)",
-      "economie": "balance_model (caps d'effets, act gates des checks, budget de danger, ecart d'EV)",
-      "forme_ecriture": "writing_constraints (longueurs de titre/intro/resume, 3 options, verbe infinitif)",
-      "univers": "bible §7 (biomes), §3 (9 Rune-Circuits), §25.1 (5 factions), §9.4.2 (mots interdits)",
-      "voix": "bible §9.7 (contrat Narrator) — 2e personne, present, registre celtique breton"
-    },
-    "surface_creative": {
-      "_comment": "Ce que le LLM DOIT inventer a neuf a CHAQUE generation. Aucun de ces champs ne doit etre repris d'une reference, meme reformule.",
-      "champs": [
-        "title",
-        "intro",
-        "premise",
-        "essence",
-        "hook",
-        "summary de chaque carte",
-        "label et verb de chaque option",
-        "noms de lieux",
-        "noms et nature des PNJ",
-        "objet ou enjeu central",
-        "mecanisme precis du twist"
-      ],
-      "interdits": [
-        "reprendre un titre existant",
-        "reprendre une structure de phrase d'intro",
-        "reutiliser un trio d'options (ex. Affronter / Fuir / Apaiser)",
-        "reutiliser le meme objet-pivot (chene, brume, cercle de champignons) sans en changer la fonction narrative"
-      ]
-    },
-    "axes_de_variation": {
-      "_comment": "Graine combinatoire : a chaque generation, on tire UNE valeur par axe et on l'impose au LLM. C'est ce qui garantit la divergence sans sortir du bornage de la bible. Espace couvert : 9 x 9 x 8 x 5 x 8 = 25 920 combinaisons, avant meme la liberte de prose.",
-      "lieu": [
-        "nemeton",
-        "gue",
-        "tourbiere",
-        "carriere abandonnee",
-        "hetraie",
-        "clairiere brulee",
-        "pont de pierres seches",
-        "source captive",
-        "lisiere qui recule"
-      ],
-      "entite_centrale": [
-        "un mort qui parle",
-        "un enfant sans ombre",
-        "une bete blessee",
-        "un objet qui refuse d'etre pris",
-        "une absence (quelqu'un manque)",
-        "un vivant qu'on croit mort",
-        "une foule silencieuse",
-        "un double du voyageur",
-        "une voix sans corps"
-      ],
-      "pression": [
-        "un delai qui court",
-        "une dette a honorer",
-        "un serment deja prononce",
-        "une faim",
-        "une traque",
-        "un secret qui va s'eventer",
-        "une reparation impossible",
-        "un heritage a accepter ou refuser"
-      ],
-      "registre_sensoriel": [
-        "odeur",
-        "son",
-        "texture",
-        "lumiere",
-        "froid"
-      ],
-      "mecanisme_du_twist": [
-        "identite (qui est vraiment la)",
-        "temporalite (quand cela se passe)",
-        "intention (ce qui etait voulu)",
-        "echelle (c'est plus grand ou plus petit)",
-        "causalite (l'effet precede la cause)",
-        "point de vue (le voyageur est l'objet)",
-        "prix (ce qu'il en coute vraiment)",
-        "reciprocite (l'autre fait la meme chose)"
-      ],
-      "regle_de_tirage": "tirage sans remise sur les 5 axes tant que le joueur n'a pas epuise l'espace ; aucune valeur d'axe ne peut se repeter avant 3 scenarios."
-    },
-    "porte_de_nouveaute": {
-      "_comment": "Garde-fou de sortie, applique APRES generation, avant de servir le scenario. Reutilise l'infrastructure d'embeddings existante (ScenariosRAG) en l'INVERSANT : au lieu de chercher le plus proche pour l'imiter, on rejette ce qui est trop proche.",
-      "compare_a": "les N derniers scenarios joues par ce joueur (cross-run, user://scenarios_rag_learned.json)",
-      "n_derniers": 20,
-      "seuil_rejet_cosinus": 0.9,
-      "seuil_rejet_jaccard_intro": 0.35,
-      "action_si_rejet": "1 regeneration avec les axes de variation re-tires + mention explicite de ce qu'il faut eviter",
-      "action_si_second_rejet": "accepter mais journaliser — ne jamais bloquer le joueur pour un motif de style"
-    },
-    "role_des_references": {
-      "_comment": "Ce que le corpus de references a le droit de fournir au prompt, et rien d'autre.",
-      "autorise": [
-        "la voix (registre, rythme, longueur de phrase) via 1-2 extraits COURTS",
-        "les bornes chiffrees (longueurs, caps, quotas)",
-        "la liste des motifs deja utilises, en NEGATIF (a eviter)"
-      ],
-      "interdit": [
-        "injecter un scenario de reference complet",
-        "injecter des resumes de cartes comme modeles",
-        "injecter des trios d'options comme modeles"
-      ]
-    }
+  "ancient_oak_counsel": {
+   "name": "Le Conseil du Chêne Ancien",
+   "pole_dominant": "Ordre",
+   "twist_pattern": "wisdom_arc",
+   "difficulty": "medium",
+   "danger_modifier": 0.7,
+   "length_bias": [
+    17,
+    21,
+    25
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "tension",
+    "emerveillement",
+    "melancolie",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.35,
+    "empathie": 0.2,
+    "volonte": 0.3,
+    "instinct": 0.15
+   },
+   "primary_factions": [
+    "druides",
+    "anciens"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Format long, dialogues. Charge Volonte/Logic : dilemmes de loyaute plutot que dangers physiques.",
+   "heal_modifier": 1.0,
+   "special": "echec red = -15 reputation au lieu de PV",
+   "params": {
+    "red_fail_converts_to_reputation": -15
+   }
   },
-  "diversity_contract": {
-    "_comment": "Seuils mesures par tools/check_scenario_diversity.py. La diversite est une contrainte de premiere classe, au meme titre que l'equilibrage.",
-    "thresholds": {
-      "max_pair_cosine": 0.9,
-      "max_mean_cosine": 0.75,
-      "max_pair_jaccard": 0.35,
-      "min_unique_summaries": 0.95,
-      "min_unique_labels": 0.9,
-      "min_distinct_verbs_per_scenario": 12,
-      "min_unique_signatures": 0.8,
-      "max_motif_share": 0.5
-    },
-    "etat_corpus_2026_07_26": {
-      "verdict": "0/6 axes conformes",
-      "semantique": "80 paires > 0.95, plusieurs a 1.000 (embeddings identiques)",
-      "situationnel": "90 resumes distincts sur 2994",
-      "verbal": "18 libelles distincts sur 8982 — Affronter/Fuir/Apaiser x803 chacun",
-      "structurel": "35 signatures distinctes sur 100",
-      "motifs": "« merlin » dans 100% des scenarios, « voix » dans 95%",
-      "consequence": "ce corpus ne peut pas servir de few-shot de contenu : il enseigne la ressemblance. Il reste valable comme source de bornage et comme jeu de test structurel."
-    }
+  "mist_wanderer": {
+   "name": "Le Vagabond de Brume",
+   "pole_dominant": "Liminal",
+   "twist_pattern": "lost_then_found",
+   "difficulty": "medium",
+   "danger_modifier": 1.0,
+   "length_bias": [
+    11,
+    15,
+    21
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "tension",
+    "peur",
+    "fascination",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.2,
+    "empathie": 0.2,
+    "volonte": 0.25,
+    "instinct": 0.35
+   },
+   "primary_factions": [
+    "niamh",
+    "anciens"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Egarement -> retrouvailles. Checks Instinct (orientation, survie) domines.",
+   "heal_modifier": 1.0,
+   "special": "30% des cartes a options voilees (beith EV x2)",
+   "params": {
+    "veiled_card_share": 0.3,
+    "veiled_counter_rune": "beith"
+   }
   },
-  "card_grammar": {
-    "_principe": "Une carte n'est pas une question a choix multiple : c'est un battement narratif complet. Le manquement constate en jeu (2026-07-26) : le joueur choisissait « creuser avec precaution », il ne se passait RIEN, et la carte suivante — un marchand, puis un feu de camp — n'avait aucun rapport. Le geste du joueur n'existait pas.",
-    "sequence_obligatoire": [
-      {
-        "beat": "1. SITUATION",
-        "champ": "text / summary",
-        "role": "decrire la scene : ou l'on est, ce qui se presente, ce qui est en jeu",
-        "etat": "existait deja"
-      },
-      {
-        "beat": "2. CHOIX",
-        "champ": "options[].label",
-        "role": "trois gestes distincts, lisibles, aux intentions differentes",
-        "etat": "existait deja"
-      },
-      {
-        "beat": "3. RESOLUTION",
-        "champ": "options[].outcome",
-        "role": "raconter CE QUI SE PRODUIT et CE QUE CELA APPORTE. Une a trois phrases. L'effet mecanique doit se lire dans la scene, jamais en chiffres : « un fil de seve te brule le poignet » et non « -3 PV ».",
-        "etat": "AJOUTE v7.7.28 — n'existait dans aucun schema"
-      },
-      {
-        "beat": "4. SUITE",
-        "champ": "continuite (voir ci-dessous)",
-        "role": "la carte suivante doit decouler de ce qui vient de se produire",
-        "etat": "AJOUTE v7.7.28 — a cabler cote generation"
-      }
-    ],
-    "regles_de_resolution": {
-      "longueur": "1 a 3 phrases",
-      "personne": "deuxieme du singulier, present",
-      "chiffres_interdits": true,
-      "doit_rendre_lisible": "le gain ou la perte : un soin se sent dans le corps, des degats laissent une marque, une reputation se gagne sous le regard d'un temoin",
-      "doit_differer_par_option": "les trois resolutions d'une meme carte racontent trois issues nettement differentes — sinon le choix n'en etait pas un",
-      "interdits": [
-        "repeter la situation",
-        "annoncer la carte suivante explicitement",
-        "resumer par un jugement (« bon choix », « tu as bien fait »)"
-      ]
-    },
-    "continuite": {
-      "_comment": "« Une suite logique » : deux cartes consecutives ne peuvent pas etre independantes. Trois mecanismes, du plus fort au plus faible.",
-      "sequences_ordonnees": "les cartes portant un `arc` + `arc_stage` racontent une histoire en plusieurs temps : leur ordre EST le sens. Une etape n'est jouable que si la precedente a ete jouee dans ce run. Enforce v7.7.28 dans _pick_fallback_card.",
-      "report_d_etat": "la resolution de la carte N est injectee dans le contexte de generation de la carte N+1 : le LLM ecrit en sachant ce qui vient de se produire.",
-      "echo_minimal": "a defaut, la carte suivante doit au moins partager un element concret avec la precedente — lieu, temoin, objet, trace."
-    },
-    "anti_pattern_constate": {
-      "run_du_2026_07_26": [
-        "carte 1 : Gwenn dit qu'il faut creuser -> tu creuses -> aucune resolution",
-        "carte 2 : un feu de camp abandonne, sans lien",
-        "carte 3 : un corbeau, sans lien",
-        "carte 4 : un sentier qui se divise, sans lien",
-        "carte 5 : Gwenn te demande d'examiner le Chene — l'etape 1 de l'arc, servie APRES l'etape 2"
-      ],
-      "diagnostic": "trois manquements imbriques : pas de resolution narree, pas de lien causal entre cartes, et sequence d'arc servie dans le desordre."
-    }
+  "forest_trial": {
+   "name": "L'Épreuve de la Forêt",
+   "pole_dominant": "Chaos",
+   "twist_pattern": "physical_test",
+   "difficulty": "hard",
+   "danger_modifier": 1.1,
+   "length_bias": [
+    17,
+    21,
+    25
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "peur",
+    "colere",
+    "espoir",
+    "tension",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.15,
+    "empathie": 0.2,
+    "volonte": 0.35,
+    "instinct": 0.3
+   },
+   "primary_factions": [
+    "korrigans",
+    "anciens"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Archetype le plus letal (x1.25). Reserve : ne pas proposer si vie < 40 au moment du pick de titre.",
+   "heal_modifier": 0.9,
+   "special": "rampe acte V +20% degats",
+   "params": {
+    "act5_damage_multiplier": 1.2
+   }
   },
-  "decisions_2026_07_26": {
-    "_source": "AskUserQuestion round 1. Ces decisions ECRASENT le contrat anterieur.",
-    "longueur_run": {
-      "regle": "variable selon l'archetype — 11, 15, 17, 21 ou 25 cartes",
-      "ecrase": "CLAUDE.md 10.4 (25 fixe) et bible 6.4 (15-20)",
-      "consequence": "tout l'equilibrage devient parametrique en N : budget de danger, check_act_distribution, economie des Rune-Circuits (1 + floor((N-1)/CD)), projection des actes (acte = 1 + floor(i*5/N)). MIN_CARDS_FOR_VICTORY=25 caduc.",
-      "en_attente": "definition de la victoire (round 2 sans reponse)"
-    },
-    "affichage_consequences": {
-      "regle": "les 5 reputations de faction sont affichees chiffrees au HUD",
-      "ecrase": "la position actuelle de _refresh_hud (aucun affichage HUD des reputations)",
-      "conflit_ouvert": "pilier MINIMAL bible 21.2 (max 7 affordances) : on atteindrait 10. Viser la forme la plus compacte — une barre unique a 5 segments — tant que le conflit n'est pas tranche."
-    },
-    "branchement": {
-      "regle": "narratif, pas topologique — meme sequence pour tous, resolutions et textes variables selon l'etat",
-      "ecrase": "SCENARIO_TYPES_SPEC 2.2 (3 routes isometriques) + modele des 100 references",
-      "consequence": "route_mask, leads_to_card_id et le pattern tronc/branche/twist sortent du contrat"
-    },
-    "pool_statique": {
-      "regle": "supprime — aucune carte pre-ecrite servie au joueur, tout est genere",
-      "ecrase": "le role du pool fastroute_cards.json dans board_narration",
-      "conflit_ouvert": "supprime toute testabilite hors ligne : harnais de transcript, smoke, mesure de diversite entre runs. Options non tranchees : pool reserve aux tests (invisible en jeu) ou faux LLM deterministe."
-    }
+  "forgotten_ritual": {
+   "name": "Le Rite Oublié",
+   "pole_dominant": "Ordre",
+   "twist_pattern": "ritual_completion",
+   "difficulty": "hard",
+   "danger_modifier": 1.0,
+   "length_bias": [
+    21,
+    25
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "tension",
+    "emerveillement",
+    "fascination",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.4,
+    "empathie": 0.2,
+    "volonte": 0.25,
+    "instinct": 0.15
+   },
+   "primary_factions": [
+    "druides",
+    "anciens"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Format epique (21-25). Sequence rituelle = checks Logic en escalier (DC croissant par etape du rite).",
+   "heal_modifier": 1.0,
+   "special": "+1 carte PROMISE garantie ; seul archetype avec fatal possible en acte IV",
+   "params": {
+    "guaranteed_promise_cards": 1,
+    "fatal_allowed_act4": true
+   }
+  },
+  "hidden_sanctuary": {
+   "name": "Le Sanctuaire Caché",
+   "pole_dominant": "Liminal",
+   "twist_pattern": "calm_decision",
+   "difficulty": "easy",
+   "danger_modifier": 0.9,
+   "length_bias": [
+    11,
+    15,
+    17
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "espoir",
+    "emerveillement",
+    "melancolie",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.25,
+    "empathie": 0.35,
+    "volonte": 0.2,
+    "instinct": 0.2
+   },
+   "primary_factions": [
+    "niamh",
+    "druides"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Archetype refuge/repos. A proposer en priorite quand vie <= 40 (pity systemique douce).",
+   "heal_modifier": 1.5,
+   "special": "carte repos garantie acte III ; recompense Anam -5",
+   "params": {
+    "guaranteed_rest_card_act": 3,
+    "anam_end_of_run_delta": -5,
+    "_canal": "anam_end_of_run_delta s'applique au calcul de fin de run (pas un effet de carte — hors whitelist 5.4)"
+   }
+  },
+  "beast_encounter": {
+   "name": "La Bête Cornue",
+   "pole_dominant": "Chaos",
+   "twist_pattern": "wild_communion",
+   "difficulty": "hard",
+   "danger_modifier": 1.25,
+   "length_bias": [
+    11,
+    15,
+    21
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "peur",
+    "fascination",
+    "espoir",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.15,
+    "empathie": 0.25,
+    "volonte": 0.2,
+    "instinct": 0.4
+   },
+   "primary_factions": [
+    "korrigans",
+    "niamh"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Letal mais avec voie pacifique : la route Empathie (communion) doit rester viable (twist wild_communion).",
+   "heal_modifier": 0.75,
+   "special": "+1 red acte III autorise ; 50% des checks = Instinct ; route Empathie (communion) toujours viable",
+   "params": {
+    "extra_red_act3_allowed": 1,
+    "instinct_check_share": 0.5,
+    "empathy_route_always_viable": true
+   }
+  },
+  "druid_lineage": {
+   "name": "La Lignée des Druides",
+   "pole_dominant": "Ordre",
+   "twist_pattern": "ancestral_echo",
+   "difficulty": "medium",
+   "danger_modifier": 1.0,
+   "length_bias": [
+    17,
+    21,
+    25
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "emerveillement",
+    "melancolie",
+    "fascination",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.3,
+    "empathie": 0.3,
+    "volonte": 0.25,
+    "instinct": 0.15
+   },
+   "primary_factions": [
+    "druides",
+    "anciens"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Memoire/heritage. Fort potentiel promesses (serments ancestraux) : viser 1-2 cartes PROMISE.",
+   "heal_modifier": 1.0,
+   "special": "+1 XP stat par acte (archetype d'apprentissage)",
+   "params": {
+    "bonus_stat_xp_per_act": 1,
+    "_canal": "bonus_stat_xp_per_act s'applique au reducer XP fin d'acte (pas un effet de carte)"
+   }
+  },
+  "threshold_crossing": {
+   "name": "Le Passage des Seuils",
+   "pole_dominant": "Liminal",
+   "twist_pattern": "transformation",
+   "difficulty": "hard",
+   "danger_modifier": 1.15,
+   "length_bias": [
+    21,
+    25
+   ],
+   "emotional_palette": [
+    "curiosite",
+    "tension",
+    "peur",
+    "fascination",
+    "emerveillement",
+    "sagesse"
+   ],
+   "stat_mix": {
+    "logic": 0.2,
+    "empathie": 0.25,
+    "volonte": 0.3,
+    "instinct": 0.25
+   },
+   "primary_factions": [
+    "niamh",
+    "ankou"
+   ],
+   "merlin_interference_bias": 0,
+   "notes": "Archetype endgame. La regle LEGENDAIRE dans le dernier 30% est GLOBALE (structure_constraints.legendary_start_share) — pas une exception de cet archetype.",
+   "heal_modifier": 1.0,
+   "special": "acte V x1.3 ; seul archetype avec ankou en primary_faction recurrente ; le climax modifie un element persistant (stat, rune ou rep)",
+   "params": {
+    "act5_damage_multiplier": 1.3,
+    "ankou_recurrent_faction": true,
+    "climax_mutates_persistent_element": true
+   }
   }
+ },
+ "generation_contract": {
+  "_principe": "Les scenarios sont generes a 100% par le LLM. Le corpus de references ne fournit PAS de contenu a imiter — il fournit le BORNAGE (regles, structure, economie, voix). Injecter un scenario de reference complet comme modele produit mecaniquement de la ressemblance : mesure sur le corpus actuel, 18 libelles d'options distincts sur 8982 et 90 resumes distincts sur 2994. Le few-shot de contenu est donc INTERDIT sur les champs creatifs.",
+  "invariants_bornage": {
+   "_comment": "Ce que le LLM DOIT respecter — non negociable, verifie par validate_scenario_balance.py.",
+   "structure": "structure_constraints (longueurs canon, 5 actes, 3 routes, caps de types, raretes)",
+   "economie": "balance_model (caps d'effets, act gates des checks, budget de danger, ecart d'EV)",
+   "forme_ecriture": "writing_constraints (longueurs de titre/intro/resume, 3 options, verbe infinitif)",
+   "univers": "bible §7 (biomes), §3 (9 Rune-Circuits), §25.1 (5 factions), §9.4.2 (mots interdits)",
+   "voix": "bible §9.7 (contrat Narrator) — 2e personne, present, registre celtique breton"
+  },
+  "surface_creative": {
+   "_comment": "Ce que le LLM DOIT inventer a neuf a CHAQUE generation. Aucun de ces champs ne doit etre repris d'une reference, meme reformule.",
+   "champs": [
+    "title",
+    "intro",
+    "premise",
+    "essence",
+    "hook",
+    "summary de chaque carte",
+    "label et verb de chaque option",
+    "noms de lieux",
+    "noms et nature des PNJ",
+    "objet ou enjeu central",
+    "mecanisme precis du twist"
+   ],
+   "interdits": [
+    "reprendre un titre existant",
+    "reprendre une structure de phrase d'intro",
+    "reutiliser un trio d'options (ex. Affronter / Fuir / Apaiser)",
+    "reutiliser le meme objet-pivot (chene, brume, cercle de champignons) sans en changer la fonction narrative"
+   ]
+  },
+  "axes_de_variation": {
+   "_comment": "Graine combinatoire : a chaque generation, on tire UNE valeur par axe et on l'impose au LLM. C'est ce qui garantit la divergence sans sortir du bornage de la bible. Espace couvert : 9 x 9 x 8 x 5 x 8 = 25 920 combinaisons, avant meme la liberte de prose.",
+   "lieu": [
+    "nemeton",
+    "gue",
+    "tourbiere",
+    "carriere abandonnee",
+    "hetraie",
+    "clairiere brulee",
+    "pont de pierres seches",
+    "source captive",
+    "lisiere qui recule"
+   ],
+   "entite_centrale": [
+    "un mort qui parle",
+    "un enfant sans ombre",
+    "une bete blessee",
+    "un objet qui refuse d'etre pris",
+    "une absence (quelqu'un manque)",
+    "un vivant qu'on croit mort",
+    "une foule silencieuse",
+    "un double du voyageur",
+    "une voix sans corps"
+   ],
+   "pression": [
+    "un delai qui court",
+    "une dette a honorer",
+    "un serment deja prononce",
+    "une faim",
+    "une traque",
+    "un secret qui va s'eventer",
+    "une reparation impossible",
+    "un heritage a accepter ou refuser"
+   ],
+   "registre_sensoriel": [
+    "odeur",
+    "son",
+    "texture",
+    "lumiere",
+    "froid"
+   ],
+   "mecanisme_du_twist": [
+    "identite (qui est vraiment la)",
+    "temporalite (quand cela se passe)",
+    "intention (ce qui etait voulu)",
+    "echelle (c'est plus grand ou plus petit)",
+    "causalite (l'effet precede la cause)",
+    "point de vue (le voyageur est l'objet)",
+    "prix (ce qu'il en coute vraiment)",
+    "reciprocite (l'autre fait la meme chose)"
+   ],
+   "regle_de_tirage": "tirage sans remise sur les 5 axes tant que le joueur n'a pas epuise l'espace ; aucune valeur d'axe ne peut se repeter avant 3 scenarios."
+  },
+  "porte_de_nouveaute": {
+   "_comment": "Garde-fou de sortie, applique APRES generation, avant de servir le scenario. Reutilise l'infrastructure d'embeddings existante (ScenariosRAG) en l'INVERSANT : au lieu de chercher le plus proche pour l'imiter, on rejette ce qui est trop proche.",
+   "compare_a": "les N derniers scenarios joues par ce joueur (cross-run, user://scenarios_rag_learned.json)",
+   "n_derniers": 20,
+   "seuil_rejet_cosinus": 0.9,
+   "seuil_rejet_jaccard_intro": 0.35,
+   "action_si_rejet": "1 regeneration avec les axes de variation re-tires + mention explicite de ce qu'il faut eviter",
+   "action_si_second_rejet": "accepter mais journaliser — ne jamais bloquer le joueur pour un motif de style"
+  },
+  "role_des_references": {
+   "_comment": "Ce que le corpus de references a le droit de fournir au prompt, et rien d'autre.",
+   "autorise": [
+    "la voix (registre, rythme, longueur de phrase) via 1-2 extraits COURTS",
+    "les bornes chiffrees (longueurs, caps, quotas)",
+    "la liste des motifs deja utilises, en NEGATIF (a eviter)"
+   ],
+   "interdit": [
+    "injecter un scenario de reference complet",
+    "injecter des resumes de cartes comme modeles",
+    "injecter des trios d'options comme modeles"
+   ]
+  }
+ },
+ "diversity_contract": {
+  "_comment": "Seuils mesures par tools/check_scenario_diversity.py. La diversite est une contrainte de premiere classe, au meme titre que l'equilibrage.",
+  "thresholds": {
+   "max_pair_cosine": 0.9,
+   "max_mean_cosine": 0.75,
+   "max_pair_jaccard": 0.35,
+   "min_unique_summaries": 0.95,
+   "min_unique_labels": 0.9,
+   "min_distinct_verbs_per_scenario": 12,
+   "min_unique_signatures": 0.8,
+   "max_motif_share": 0.5
+  },
+  "etat_corpus_2026_07_26": {
+   "verdict": "0/6 axes conformes",
+   "semantique": "80 paires > 0.95, plusieurs a 1.000 (embeddings identiques)",
+   "situationnel": "90 resumes distincts sur 2994",
+   "verbal": "18 libelles distincts sur 8982 — Affronter/Fuir/Apaiser x803 chacun",
+   "structurel": "35 signatures distinctes sur 100",
+   "motifs": "« merlin » dans 100% des scenarios, « voix » dans 95%",
+   "consequence": "ce corpus ne peut pas servir de few-shot de contenu : il enseigne la ressemblance. Il reste valable comme source de bornage et comme jeu de test structurel."
+  }
+ },
+ "card_grammar": {
+  "_principe": "Une carte n'est pas une question a choix multiple : c'est un battement narratif complet. Le manquement constate en jeu (2026-07-26) : le joueur choisissait « creuser avec precaution », il ne se passait RIEN, et la carte suivante — un marchand, puis un feu de camp — n'avait aucun rapport. Le geste du joueur n'existait pas.",
+  "sequence_obligatoire": [
+   {
+    "beat": "1. SITUATION",
+    "champ": "text / summary",
+    "role": "decrire la scene : ou l'on est, ce qui se presente, ce qui est en jeu",
+    "etat": "existait deja"
+   },
+   {
+    "beat": "2. CHOIX",
+    "champ": "options[].label",
+    "role": "trois gestes distincts, lisibles, aux intentions differentes",
+    "etat": "existait deja"
+   },
+   {
+    "beat": "3. RESOLUTION",
+    "champ": "options[].outcome",
+    "role": "raconter CE QUI SE PRODUIT et CE QUE CELA APPORTE. Une a trois phrases. L'effet mecanique doit se lire dans la scene, jamais en chiffres : « un fil de seve te brule le poignet » et non « -3 PV ».",
+    "etat": "AJOUTE v7.7.28 — n'existait dans aucun schema"
+   },
+   {
+    "beat": "4. SUITE",
+    "champ": "continuite (voir ci-dessous)",
+    "role": "la carte suivante doit decouler de ce qui vient de se produire",
+    "etat": "AJOUTE v7.7.28 — a cabler cote generation"
+   }
+  ],
+  "regles_de_resolution": {
+   "longueur": "1 a 3 phrases",
+   "personne": "deuxieme du singulier, present",
+   "chiffres_interdits": true,
+   "doit_rendre_lisible": "le gain ou la perte : un soin se sent dans le corps, des degats laissent une marque, une reputation se gagne sous le regard d'un temoin",
+   "doit_differer_par_option": "les trois resolutions d'une meme carte racontent trois issues nettement differentes — sinon le choix n'en etait pas un",
+   "interdits": [
+    "repeter la situation",
+    "annoncer la carte suivante explicitement",
+    "resumer par un jugement (« bon choix », « tu as bien fait »)"
+   ]
+  },
+  "continuite": {
+   "_comment": "« Une suite logique » : deux cartes consecutives ne peuvent pas etre independantes. Trois mecanismes, du plus fort au plus faible.",
+   "sequences_ordonnees": "les cartes portant un `arc` + `arc_stage` racontent une histoire en plusieurs temps : leur ordre EST le sens. Une etape n'est jouable que si la precedente a ete jouee dans ce run. Enforce v7.7.28 dans _pick_fallback_card.",
+   "report_d_etat": "la resolution de la carte N est injectee dans le contexte de generation de la carte N+1 : le LLM ecrit en sachant ce qui vient de se produire.",
+   "echo_minimal": "a defaut, la carte suivante doit au moins partager un element concret avec la precedente — lieu, temoin, objet, trace."
+  },
+  "anti_pattern_constate": {
+   "run_du_2026_07_26": [
+    "carte 1 : Gwenn dit qu'il faut creuser -> tu creuses -> aucune resolution",
+    "carte 2 : un feu de camp abandonne, sans lien",
+    "carte 3 : un corbeau, sans lien",
+    "carte 4 : un sentier qui se divise, sans lien",
+    "carte 5 : Gwenn te demande d'examiner le Chene — l'etape 1 de l'arc, servie APRES l'etape 2"
+   ],
+   "diagnostic": "trois manquements imbriques : pas de resolution narree, pas de lien causal entre cartes, et sequence d'arc servie dans le desordre."
+  }
+ },
+ "decisions_2026_07_26": {
+  "_source": "AskUserQuestion round 1. Ces decisions ECRASENT le contrat anterieur.",
+  "longueur_run": {
+   "regle": "variable selon l'archetype — 11, 15, 17, 21 ou 25 cartes",
+   "ecrase": "CLAUDE.md 10.4 (25 fixe) et bible 6.4 (15-20)",
+   "consequence": "tout l'equilibrage devient parametrique en N : budget de danger, check_act_distribution, economie des Rune-Circuits (1 + floor((N-1)/CD)), projection des actes (acte = 1 + floor(i*5/N)). MIN_CARDS_FOR_VICTORY=25 caduc.",
+   "en_attente": "definition de la victoire (round 2 sans reponse)"
+  },
+  "affichage_consequences": {
+   "regle": "les 5 reputations de faction sont affichees chiffrees au HUD",
+   "ecrase": "la position actuelle de _refresh_hud (aucun affichage HUD des reputations)",
+   "conflit_ouvert": "pilier MINIMAL bible 21.2 (max 7 affordances) : on atteindrait 10. Viser la forme la plus compacte — une barre unique a 5 segments — tant que le conflit n'est pas tranche."
+  },
+  "branchement": {
+   "regle": "narratif, pas topologique — meme sequence pour tous, resolutions et textes variables selon l'etat",
+   "ecrase": "SCENARIO_TYPES_SPEC 2.2 (3 routes isometriques) + modele des 100 references",
+   "consequence": "route_mask, leads_to_card_id et le pattern tronc/branche/twist sortent du contrat"
+  },
+  "pool_statique": {
+   "regle": "supprime — aucune carte pre-ecrite servie au joueur, tout est genere",
+   "ecrase": "le role du pool fastroute_cards.json dans board_narration",
+   "conflit_ouvert": "supprime toute testabilite hors ligne : harnais de transcript, smoke, mesure de diversite entre runs. Options non tranchees : pool reserve aux tests (invisible en jeu) ou faux LLM deterministe."
+  }
+ }
 }

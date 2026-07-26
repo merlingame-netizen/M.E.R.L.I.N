@@ -1,7 +1,20 @@
 # ᚛ SCÉNARIOS TYPES — SPÉCIFICATION CANON ᚜
 
-**Version** : 1.0 — 2026-07-25
+**Version** : 1.1 — 2026-07-26
 **Statut** : Source de vérité pour le contrôle d'écriture + l'équilibrage des scénarios
+
+> ⚠ **Écrasements du 2026-07-26** — trois points de ce document ne sont plus canon.
+> Voir bible §31 (décisions utilisateur) et §32 (scénario type de référence).
+>
+> | Section ci-dessous | Statut |
+> |---|---|
+> | §2.2 Routes (branchement 3 pôles) | **ABANDONNÉ** — branchement narratif, séquence unique (bible §31.3) |
+> | §3 summaries 8-22 mots appliqués aux cartes | **CORRIGÉ** — `text` 18-38 mots à l'écran, `summary` 8-22 mots pour le skeleton (bible §32.1c) |
+> | §8 golden « Le Rite des Neuf Souffles » | **REMPLACÉ** par « La Dette de Tourbe », 11 cartes, linéaire (bible §32) |
+>
+> Deux règles s'ajoutent : les `effects` d'une option sont le **gain de réussite**, le
+> risque vit dans `fail_damage` (§32.1a) ; le mix d'épreuves de §5.2 se mesure **par
+> carte**, sur l'option la plus dure (§32.1b).
 **Jumeau machine-readable** : `data/ai/scenario_templates.json` (consommé par `tools/validate_scenario_balance.py`, à terme par `scenario_planner.gd::_balance_skeleton`)
 **Références bible** : `docs/GAME_DESIGN_BIBLE.md` v3.9 §5 (systèmes), §6 (structure run), §9 (pipeline 4-LLM), §25-§28 (stats/checks/équilibrage), §30 (ce document)
 

@@ -1,0 +1,898 @@
+[
+  {
+    "id": "type_broc_tourbe_11",
+    "title": "La Dette de Tourbe",
+    "archetype_id": "mist_wanderer",
+    "archetype_name": "Le Vagabond de Brume",
+    "pole_dominant": "Liminal",
+    "twist_pattern": "lost_then_found",
+    "biome": "marais_korrigans",
+    "length": 11,
+    "pool_size": 11,
+    "graine_de_variation": {
+      "lieu": "tourbiere",
+      "entite_centrale": "un vivant qu'on croit mort",
+      "pression": "une dette a honorer",
+      "registre_sensoriel": "odeur",
+      "mecanisme_du_twist": "identite (qui est vraiment la)"
+    },
+    "emotional_arc": [
+      "curiosite",
+      "fascination",
+      "tension",
+      "fascination",
+      "tension",
+      "peur",
+      "tension",
+      "fascination",
+      "peur",
+      "tension",
+      "sagesse"
+    ],
+    "intro": "Il y a un an, Maël Kerlan s'est enfoncé dans la tourbière du Yeun et n'en est pas ressorti. Tu lui devais trois pièces et une promesse, et on ne laisse pas une dette à un mort. Sa veuve vit encore au bord du marais, dans une maison qui sent la fumée froide. Tu marches depuis l'aube avec les pièces cousues dans ta manche. L'odeur te prévient avant le paysage : la tourbe ne sent pas la vase, elle sent le pain brûlé et le fer. On dit que le Yeun garde ce qu'il prend et ne le rend jamais entier. Tu vas apprendre que ce n'est pas tout à fait vrai.",
+    "essence": "Tu viens payer ta dette à un noyé, et le noyé respire encore.",
+    "hook": "La tourbe ne sent pas la vase : elle sent le pain brûlé, et cette odeur te suit depuis l'aube.",
+    "twist_card_id": "c6",
+    "cards": [
+      {
+        "n": 1,
+        "card_id": "c1",
+        "act": 1,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "emotion": "curiosite",
+        "text": "La maison de la veuve fume sans feu. Sur le seuil, une paire de bottes d'homme, seches, tournees vers la porte comme si quelqu'un venait de rentrer.",
+        "summary": "Arrivee chez la veuve : des bottes d'homme seches attendent sur le seuil.",
+        "options": [
+          {
+            "label": "Frapper et attendre",
+            "verb": "frapper",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 6
+              }
+            ],
+            "outcome": "Tu frappes trois coups et le silence dure assez pour que tu comptes tes battements. La porte s'ouvre sur une femme qui n'a pas l'air surprise. « Tu es en retard d'un an », dit-elle sans reproche."
+          },
+          {
+            "label": "Examiner les bottes",
+            "verb": "examiner",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              },
+              {
+                "type": "ADD_TAG",
+                "tag": "bottes_seches"
+              }
+            ],
+            "outcome": "Le cuir est sec et la semelle propre. La tourbe ne pardonne pas : personne n'a marche dans le marais avec ces bottes. Elles ont ete posees la pour etre vues."
+          },
+          {
+            "label": "Entrer sans annoncer",
+            "verb": "entrer",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 10
+              }
+            ],
+            "outcome": "Tu pousses la porte. La piece est tiede, la table mise pour deux, et une main referme derriere toi. « Il vaut mieux que personne ne t'ait vu entrer », dit la veuve."
+          }
+        ]
+      },
+      {
+        "n": 2,
+        "card_id": "c2",
+        "act": 1,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "emotion": "fascination",
+        "text": "La veuve pose les trois pieces sur la table sans les compter et les repousse vers toi. « Ce n'est pas ca qu'il attend », dit-elle en regardant la fenetre.",
+        "summary": "La veuve refuse les trois pieces : ce n'est pas la dette qu'on attend de toi.",
+        "options": [
+          {
+            "label": "Demander ce qu'il attend",
+            "verb": "demander",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 6
+              }
+            ],
+            "outcome": "Elle met longtemps a repondre. « Qu'on le sorte », finit-elle par dire, et elle ne precise pas d'ou. Tu comprends que la question etait la bonne et que la reponse ne t'aidera pas."
+          },
+          {
+            "label": "Reposer les pieces sur la table",
+            "verb": "reposer",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "outcome": "Tu remets les pieces au milieu de la table. Elle ne les touche pas, mais quelque chose se detend dans ses epaules : la dette existe encore, et tant qu'elle existe, il y a une raison de te garder."
+          },
+          {
+            "label": "Suivre son regard",
+            "verb": "suivre",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 10
+              },
+              {
+                "type": "ADD_TAG",
+                "tag": "vu_la_fenetre"
+              }
+            ],
+            "outcome": "Par la fenetre, la tourbiere fume au ras du sol. A deux cents pas, une planche a ete jetee en travers d'une fosse — recemment, le bois est encore clair. Quelqu'un traverse regulierement."
+          }
+        ]
+      },
+      {
+        "n": 3,
+        "card_id": "c3",
+        "act": 1,
+        "type": "EVENT",
+        "rarity": "COMMUNE",
+        "emotion": "tension",
+        "text": "Dehors, l'odeur de pain brule s'epaissit d'un coup. Trois oiseaux partent ensemble de la meme touffe de bruyere, sans qu'aucun bruit ne les ait leves.",
+        "summary": "Dehors, l'odeur s'epaissit et trois oiseaux se levent sans raison.",
+        "options": [
+          {
+            "label": "Rester immobile",
+            "verb": "attendre",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 6
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 2
+              }
+            ],
+            "outcome": "Tu ne bouges pas. Au bout d'un moment, la bruyere se referme et l'odeur reflue. Ce qui passait est passe sans te voir, et tu respires mieux d'avoir su ne rien faire."
+          },
+          {
+            "label": "Chercher l'origine de l'odeur",
+            "verb": "flairer",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              },
+              {
+                "type": "ADD_TAG",
+                "tag": "trace_fumee"
+              }
+            ],
+            "outcome": "Tu remontes l'odeur a contre-vent. Elle vient d'un trou dans la tourbe ou quelque chose a brule lentement, longtemps, et sous les cendres il y a du tissu qui n'a pas fini de se consumer."
+          },
+          {
+            "label": "Appeler le nom du mort",
+            "verb": "appeler",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 10
+              }
+            ],
+            "outcome": "Tu cries « Mael ». La tourbiere avale le son sans echo, puis te le rend — une seule fois, de beaucoup plus loin, et ce n'est pas ta voix. Quelque chose dans le marais vient d'apprendre le tien."
+          }
+        ]
+      },
+      {
+        "n": 4,
+        "card_id": "c4",
+        "act": 2,
+        "type": "SHOP",
+        "rarity": "RARE",
+        "emotion": "fascination",
+        "text": "Un tourbier charge sa brouette au bord du chemin. Il vend ce qu'il trouve dans le marais : de la corde grasse, une lampe a huile, un couteau a lame courte.",
+        "summary": "Un tourbier vend au bord du chemin ce que le marais lui rend.",
+        "options": [
+          {
+            "label": "Acheter la corde",
+            "verb": "acheter",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_ESSENCE",
+                "amount": 6
+              },
+              {
+                "type": "ADD_TAG",
+                "tag": "corde"
+              }
+            ],
+            "outcome": "Il te tend une corde epaisse de graisse de mouton. « Elle ne pourrit pas dans la tourbe », dit-il. « Et si tu tombes, elle ne te lachera pas — c'est toi qui la lacheras. »"
+          },
+          {
+            "label": "Acheter la lampe",
+            "verb": "acheter",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_ESSENCE",
+                "amount": 8
+              },
+              {
+                "type": "ADD_TAG",
+                "tag": "lampe"
+              }
+            ],
+            "outcome": "La lampe est cabossee et son verre fume. Il la remplit devant toi et te previent : « Dans le Yeun, elle ne t'eclaire pas, elle te signale. A toi de savoir a qui. »"
+          },
+          {
+            "label": "Lui demander qui traverse",
+            "verb": "questionner",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              },
+              {
+                "type": "ADD_TAG",
+                "tag": "tourbier_parle"
+              }
+            ],
+            "outcome": "Il arrete de charger. « Personne ne traverse », dit-il trop vite, puis il reprend sa brouette et ajoute sans se retourner : « Et si quelqu'un traversait, il vaudrait mieux ne pas l'avoir vu. »"
+          }
+        ]
+      },
+      {
+        "n": 5,
+        "card_id": "c5",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "emotion": "tension",
+        "text": "La planche jetee en travers de la fosse tient a peine. Dessous, l'eau noire ne bouge pas, et l'odeur de pain brule monte de la, pas du reste du marais.",
+        "summary": "Une planche recente franchit une fosse d'eau noire d'ou monte l'odeur.",
+        "options": [
+          {
+            "label": "Sonder avant de passer",
+            "verb": "sonder",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 6
+              }
+            ],
+            "outcome": "Tu enfonces ton baton. Il descend d'une brasse, puis butte sur quelque chose qui n'est ni pierre ni racine — quelque chose qui cede un peu, puis resiste. Tu ne recommences pas."
+          },
+          {
+            "label": "Traverser en courant",
+            "verb": "traverser",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "outcome": "Tu passes en trois enjambees. La planche plie au milieu et te lache juste apres ; tu t'etales de l'autre cote, les mains dans la tourbe tiede, et quelque chose sous la surface te rend ta poussee."
+          },
+          {
+            "label": "Retirer la planche",
+            "verb": "retirer",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 10
+              }
+            ],
+            "outcome": "Tu tires la planche et la jettes dans la bruyere. Celui qui traverse ne traversera plus — mais toi non plus, et il te faudra contourner par le nord, ou la tourbe est plus molle et te prend jusqu'aux genoux."
+          }
+        ]
+      },
+      {
+        "n": 6,
+        "card_id": "c6",
+        "act": 3,
+        "type": "MERLIN_DIRECT",
+        "rarity": "EPIQUE",
+        "emotion": "peur",
+        "text": "Merlin parle sans que tu l'aies appele. « Regarde mieux la fosse, voyageur. On n'y a rien jete. On y a amenage une place, et elle est occupee. »",
+        "summary": "Merlin intervient : la fosse n'est pas une tombe, c'est une cachette occupee.",
+        "options": [
+          {
+            "label": "Demander qui est en bas",
+            "verb": "demander",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "outcome": "« Celui a qui tu dois trois pieces », repond Merlin. « Il n'est pas mort dans le Yeun. Il s'y cache depuis un an, et quelqu'un le nourrit. »",
+            "outcome_variants": [
+              {
+                "si_marqueur": "bottes_seches",
+                "texte": "« Tu as deja la reponse », dit Merlin. « Des bottes seches devant une maison au bord d'un marais. Tu savais avant moi que Mael Kerlan marche encore ; tu attendais seulement qu'on te le dise. »"
+              }
+            ]
+          },
+          {
+            "label": "Refuser d'ecouter",
+            "verb": "refuser",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "contextuel",
+              "fail_damage": 8,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 11
+              }
+            ],
+            "outcome": "Tu lui dis de se taire. Il se tait — et le silence qu'il laisse est pire que ce qu'il allait dire, parce qu'il te laisse le remplir tout seul."
+          },
+          {
+            "label": "Descendre voir",
+            "verb": "descendre",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "instinct",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 13
+              }
+            ],
+            "outcome": "Tu te laisses glisser dans la fosse. L'eau t'arrive a la taille et sent le pain brule de tres pres. Une main sort de la tourbe et se referme sur ton poignet — pas pour te noyer : pour te retenir."
+          }
+        ]
+      },
+      {
+        "n": 7,
+        "card_id": "c7",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "emotion": "tension",
+        "text": "L'homme dans la fosse est vivant, maigre, et il te reconnait. « Ne le dis pas a elle », souffle Mael Kerlan. « Tant qu'elle me croit noye, elle est en vie. »",
+        "summary": "Mael Kerlan est vivant au fond de la fosse et supplie ton silence.",
+        "options": [
+          {
+            "label": "Ecouter son histoire",
+            "verb": "ecouter",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "outcome": "Il parle bas et vite. Ce n'est pas le marais qui l'a pris, c'est un homme du bourg a qui il devait plus que trois pieces — et cet homme a promis de prendre la veuve si le mari reparaissait."
+          },
+          {
+            "label": "Le sortir de la",
+            "verb": "extraire",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "contextuel",
+              "fail_damage": 8,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "outcome": "Tu le hisses par les aisselles. Il pese le poids d'un an de tourbe et ses jambes ne le portent plus. Une fois dehors, il regarde la maison qui fume au loin et se met a trembler — de froid, ou d'autre chose."
+          },
+          {
+            "label": "Le laisser et partir",
+            "verb": "abandonner",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "instinct",
+              "type": "red",
+              "fail_damage": 13,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 16
+              },
+              {
+                "type": "ADD_ESSENCE",
+                "amount": 4
+              }
+            ],
+            "outcome": "Tu remontes seul. Derriere toi, il ne crie pas, ne supplie pas, ne dit rien du tout — et c'est ce rien que tu emportes, plus lourd que trois pieces, et qui te suivra jusqu'au bout du marais."
+          }
+        ]
+      },
+      {
+        "n": 8,
+        "card_id": "c8",
+        "act": 4,
+        "type": "PROMISE",
+        "rarity": "RARE",
+        "emotion": "fascination",
+        "text": "Il te demande de jurer. « Trois jours », dit-il. « Donne-moi trois jours pour partir loin, et ensuite dis-lui ce que tu voudras. »",
+        "summary": "Il demande trois jours de silence, jures sur la tourbe.",
+        "options": [
+          {
+            "label": "Jurer les trois jours",
+            "verb": "jurer",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "CREATE_PROMISE",
+                "promise_id": "trois_jours",
+                "deadline_cards": 3,
+                "description": "Taire que Mael Kerlan est vivant"
+              },
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "outcome": "Tu jures, et il te fait repeter le serment avec ses mots a lui. Le marais n'a pas d'oreilles, mais les Anciens en ont, et un serment prononce sur la tourbe ne s'efface pas."
+          },
+          {
+            "label": "Promettre de revenir",
+            "verb": "promettre",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "CREATE_PROMISE",
+                "promise_id": "revenir",
+                "deadline_cards": 4,
+                "description": "Revenir le chercher"
+              },
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "outcome": "Tu ne promets pas le silence, tu promets le retour — ce qui n'est pas la meme chose et il le sait. Il accepte quand meme, parce qu'un homme dans une fosse accepte ce qu'on lui donne."
+          },
+          {
+            "label": "Ne rien jurer",
+            "verb": "refuser",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              }
+            ],
+            "outcome": "Tu refuses de jurer quoi que ce soit. Il hoche la tete lentement : « Alors tu es honnete, ou tu es dangereux. » Il ne te tourne pas le dos en remontant vers la bruyere."
+          }
+        ]
+      },
+      {
+        "n": 9,
+        "card_id": "c9",
+        "act": 4,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "emotion": "peur",
+        "text": "Sur le chemin du retour, un homme du bourg vient a ta rencontre. Il sourit, et il sent le pain brule alors qu'il n'a pas mis un pied dans la tourbe.",
+        "summary": "Sur le retour, un homme du bourg sent le pain brule sans avoir marche.",
+        "options": [
+          {
+            "label": "Le saluer sans t'arreter",
+            "verb": "saluer",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 6
+              }
+            ],
+            "outcome": "Tu le depasses en inclinant la tete. Il se retourne pour te regarder partir — tu ne le vois pas, tu l'entends : ses pas s'arretent quand les tiens continuent."
+          },
+          {
+            "label": "Lui demander son nom",
+            "verb": "questionner",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "outcome": "« Kerlan », repond-il. « Comme le noye. C'etait mon frere. » Il dit « etait » avec beaucoup de soin, comme un mot qu'on a beaucoup repete pour s'y habituer."
+          },
+          {
+            "label": "Lui barrer le chemin",
+            "verb": "barrer",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 10
+              }
+            ],
+            "outcome": "Tu te mets en travers. Il ne recule pas et ne contourne pas : il attend, tres calme, que tu comprennes que tu n'as aucune raison de le retenir — aucune que tu puisses dire a voix haute."
+          }
+        ]
+      },
+      {
+        "n": 10,
+        "card_id": "c10",
+        "act": 5,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "emotion": "tension",
+        "text": "La veuve t'attend sur le seuil, les trois pieces dans la main. Elle a vu d'ou tu reviens. « Alors ? » demande-t-elle, et sa voix ne tremble pas.",
+        "summary": "La veuve attend sur le seuil, les trois pieces en main, et demande.",
+        "options": [
+          {
+            "label": "Dire que la dette est payee",
+            "verb": "mentir",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "outcome": "Tu dis que tu as porte les pieces au marais et que c'est fini. Elle te regarde longtemps, referme la main sur les pieces, et ne te demande pas pourquoi tes bottes sont propres."
+          },
+          {
+            "label": "Lui parler de son beau-frere",
+            "verb": "avertir",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "contextuel",
+              "fail_damage": 8,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 12
+              }
+            ],
+            "outcome": "Tu ne parles pas du vivant, tu parles de celui qui sent le pain brule sans avoir marche dans la tourbe. Elle blemit — non pas de surprise, mais parce que quelqu'un d'autre le sait enfin."
+          },
+          {
+            "label": "Tout lui dire",
+            "verb": "avouer",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 14
+              }
+            ],
+            "outcome": "Tu dis tout, y compris le serment que tu viens de rompre. Elle s'assoit sur le seuil, les pieces toujours dans la main, et ne pleure pas : elle calcule combien d'annees elle a passees a porter un deuil qu'on lui avait vendu."
+          }
+        ]
+      },
+      {
+        "n": 11,
+        "card_id": "c11",
+        "act": 5,
+        "type": "MERLIN_DIRECT",
+        "rarity": "LEGENDAIRE",
+        "emotion": "sagesse",
+        "text": "Merlin est assis sur la borne, au bout du chemin. « Trois pieces », dit-il. « Voila ce que tu croyais devoir. Dis-moi ce que tu dois maintenant. »",
+        "summary": "Merlin, assis sur la borne, demande ce que tu dois vraiment.",
+        "options": [
+          {
+            "label": "Payer et partir",
+            "verb": "payer",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              },
+              {
+                "type": "ADD_ANAM",
+                "amount": 4
+              }
+            ],
+            "outcome": "Tu poses les pieces sur la borne et tu t'en vas. Merlin ne les ramasse pas. « Une dette payee au mauvais creancier reste une dette », dit-il dans ton dos, mais tu marches deja."
+          },
+          {
+            "label": "Nommer ta vraie dette",
+            "verb": "nommer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 13
+              },
+              {
+                "type": "ADD_ANAM",
+                "amount": 5
+              }
+            ],
+            "outcome": "Tu dis que tu dois la verite a une femme et trois jours a un homme, et que les deux ne tiennent pas ensemble. Merlin hoche la tete. « Voila. C'est la premiere chose juste que tu dis depuis l'aube. »",
+            "outcome_variants": [
+              {
+                "si_promesse_rompue": "trois_jours",
+                "texte": "Tu dis ce que tu dois, et Merlin t'arrete a mi-phrase. « Tu as jure trois jours et tu n'en as pas tenu un. Ce que tu dois maintenant, ce n'est plus a eux — c'est a ta propre parole, et elle est plus chere. »"
+              }
+            ]
+          },
+          {
+            "label": "Retourner au marais",
+            "verb": "retourner",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 15
+              },
+              {
+                "type": "ADD_ANAM",
+                "amount": 5
+              }
+            ],
+            "outcome": "Tu fais demi-tour sans repondre. Merlin ne te retient pas ; il te regarde reprendre le chemin de la tourbiere et murmure, pour lui seul : « Celui-la finira par comprendre ce qu'il est venu chercher. »"
+          }
+        ]
+      }
+    ],
+    "branchement": "narratif — sequence unique, resolutions variables selon l'etat"
+  }
+]

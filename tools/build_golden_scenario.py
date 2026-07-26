@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Générateur de scénario type — squelette mécanique déterministe.
+"""OBSOLÈTE depuis le 2026-07-26 — bâti sur les 3 routes isométriques abandonnées.
+
+    Remplacé par `tools/build_scenario_type.py`, qui produit le scénario type de
+    référence linéaire « La Dette de Tourbe » (bible §32). Le branchement de
+    topologie n'existe plus : la séquence est unique et ce sont les résolutions
+    qui varient selon l'état accumulé (bible §31.3).
+
+    Conservé pour la trace du modèle antérieur. Le scénario qu'il produit échoue
+    désormais le validateur sur ROUTES_OBSOLETES — c'est voulu.
+
+Générateur de scénario type — squelette mécanique déterministe.
 
 Un « scénario type » MERLIN se décompose en deux couches :
 

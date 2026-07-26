@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Validateur d'equilibrage des scenarios MERLIN contre les scenarios types.
 
-Un scenario de reference contient un POOL de cartes branchees (trunk ->
-branch1 x3 poles -> twist -> branch2 -> convergence) et 3 ROUTES (ordre /
-chaos / liminal). Ce qui est JOUE est un chemin de route de `length` cartes ;
-la validation structurelle s'applique donc PAR ROUTE, les validations
-d'ecriture et de diversite au POOL.
+Depuis le canon v4.0 (2026-07-26) un scenario est LINEAIRE : `cards` est la
+sequence jouee, de `length` cartes, et le branchement est narratif (la
+resolution de chaque carte varie selon l'etat accumule). La validation
+structurelle s'applique donc a cette sequence unique.
+
+Compatibilite ascendante : les fixtures de l'ancien modele a 3 routes
+(ordre / chaos / liminal) restent validables — si le scenario porte un tableau
+`routes`, chaque route est projetee et validee comme un chemin joue.
 
 Verifications contre `data/ai/scenario_templates.json` :
 
@@ -60,13 +63,25 @@ class Finding:
 
 
 def route_paths(s: dict):
-    """[(route_key, [card dict, ...]), ...] — chemins joues, dans l'ordre."""
-    idx = {c.get("card_id"): c for c in s.get("cards", [])}
+    """[(route_key, [card dict, ...]), ...] — chemins joues, dans l'ordre.
+
+    Canon v4.0 : un seul chemin, la sequence `cards` elle-meme. Les anciennes
+    fixtures a 3 routes restent supportees tant qu'elles portent `routes`.
+    """
+    cards = s.get("cards", [])
+    if not s.get("routes"):
+        return [("lineaire", list(cards))]
+    idx = {c.get("card_id"): c for c in cards}
     out = []
     for r in s.get("routes", []):
         path = [idx[cid] for cid in r.get("card_ids", []) if cid in idx]
         out.append((r.get("key", "?"), path))
     return out
+
+
+def branching_abandoned(tpl: dict) -> bool:
+    br = tpl["structure_constraints"].get("branching", {})
+    return "routes" not in br or str(br.get("_statut", "")).startswith("ABANDONNE")
 
 
 # ---------------------------------------------------------------- structure --
@@ -95,7 +110,14 @@ def check_structure(s: dict, tpl: dict, findings: list):
                                 f"archetype_id inconnu: {s.get('archetype_id')}"))
 
     paths = route_paths(s)
-    if len(paths) != st["branching"]["routes"]:
+    if branching_abandoned(tpl):
+        # Canon v4.0 : sequence unique. Porter encore des routes est une erreur
+        # de modele, pas seulement un ecart de compte.
+        if s.get("routes"):
+            findings.append(Finding("error", "ROUTES_OBSOLETES",
+                                    f"{len(s['routes'])} routes de topologie — le "
+                                    "branchement est narratif depuis le 2026-07-26"))
+    elif len(paths) != st["branching"]["routes"]:
         findings.append(Finding("error", "ROUTES_COUNT",
                                 f"{len(paths)} routes != {st['branching']['routes']}"))
     else:
@@ -201,15 +223,28 @@ def check_writing(s: dict, tpl: dict, findings: list):
                 findings.append(Finding("warn", "ARC_REPEAT",
                                         f"{repeats} repetitions consecutives d'emotion"))
 
-    # Verifications par carte, agregees en part du pool
+    # Verifications par carte, agregees en part du pool.
+    # `summary` = identite courte du beat (8-22 mots) ; `text` = la situation
+    # lue a l'ecran (18-38 mots). Les deux champs ne se substituent pas : une
+    # carte qui n'a que l'un des deux est mesuree sur celui qu'elle porte.
     opt_rule = w["options"]
     smin, smax = w["beat_summary"]["min_words"], w["beat_summary"]["max_words"]
+    ct_rule = w.get("card_text")
     total = max(len(cards), 1)
-    bad_summary = bad_verbs = bad_factions = 0
+    bad_summary = bad_text = bad_verbs = bad_factions = 0
     for c in cards:
-        sw = len(str(c.get("summary", "")).split())
-        if not (smin <= sw <= smax):
-            bad_summary += 1
+        if c.get("summary"):
+            sw = len(str(c["summary"]).split())
+            if not (smin <= sw <= smax):
+                bad_summary += 1
+        if ct_rule and c.get("text"):
+            tw = len(str(c["text"]).split())
+            if not (ct_rule["min_words"] <= tw <= ct_rule["max_words"]):
+                bad_text += 1
+        elif ct_rule and not c.get("summary"):
+            findings.append(Finding("error", "NO_SITUATION",
+                                    f"carte {c.get('card_id')}: ni `text` ni `summary` "
+                                    "— le beat 1 de card_grammar est absent"))
         opts = c.get("options", [])
         if c.get("type") == "MERLIN_DIRECT" and not opts:
             continue  # climax/twist : Merlin parle, pas de choix standard
@@ -226,6 +261,10 @@ def check_writing(s: dict, tpl: dict, findings: list):
     if bad_summary / total > 0.15:
         findings.append(Finding("warn", "SUMMARY_LEN",
                                 f"{bad_summary}/{total} summaries hors [{smin}-{smax}] mots (> 15%)"))
+    if ct_rule and bad_text / total > 0.15:
+        findings.append(Finding("warn", "CARD_TEXT_LEN",
+                                f"{bad_text}/{total} situations hors "
+                                f"[{ct_rule['min_words']}-{ct_rule['max_words']}] mots (> 15%)"))
     if bad_verbs:
         findings.append(Finding("warn", "OPT_VERB", f"{bad_verbs} cartes avec verbe multi-mots"))
     if bad_factions / total > 0.15:
@@ -435,6 +474,8 @@ def check_strict(s: dict, tpl: dict, findings: list):
             per_card.append(max(types, key=lambda t: hardest.get(t, 0)) if types else "white")
         counts = Counter(per_card)
         for t, target in mix.items():
+            if t.startswith("_"):
+                continue
             actual = counts.get(t, 0) / len(path)
             if abs(actual - target) > 0.10:
                 findings.append(Finding("warn", "CHECK_MIX",

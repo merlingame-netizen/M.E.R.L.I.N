@@ -1,4 +1,4 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.0
+# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.1
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
@@ -1819,4 +1819,69 @@ graine de variation, la porte de nouveauté, et tout l'outillage de mesure.
 
 ---
 
-*Fin de bible v4.0*
+## 32. Scénario type de référence — « La Dette de Tourbe » (v4.1)
+
+> **Ajout 2026-07-26.** Remplace le golden « Le Rite des Neuf Souffles », bâti sur les
+> 3 routes abandonnées (§31.3). Écrit à la main dans `tools/build_scenario_type.py`,
+> rendu lisible dans `docs/30_jdr/SCENARIO_TYPE_REFERENCE.md`, sérialisé dans
+> `data/ai/scenario_type_reference.json`. **Score validateur strict : 100/100.**
+
+C'est la **cible de forme** que la génération LLM doit atteindre — jamais un modèle de
+contenu à recopier (`generation_contract` interdit le few-shot de contenu). Sa fonction :
+rendre chaque règle de §30 et §31 vérifiable sur un objet complet.
+
+| Attribut | Valeur |
+|---|---|
+| Archétype | `mist_wanderer` — pôle Liminal, twist `lost_then_found` |
+| Longueur | **11 cartes** (borne basse de `canonical_lengths`, §31.1) |
+| Branchement | narratif : séquence unique, 2 résolutions variables selon l'état |
+| Graine de variation | tourbière / un vivant qu'on croit mort / une dette à honorer / odeur / identité |
+| Grammaire | 33 options, **33 résolutions narrées**, 0 chiffre dans les résolutions |
+
+### 32.1 Trois règles que ce scénario a fixées
+
+Les trois ont été établies en corrigeant des défauts du premier jet, mesurés par le
+validateur — elles sont donc canon, pas des préférences d'écriture.
+
+**a. Les `effects` sont le gain de réussite ; le risque vit dans `fail_damage`.**
+Porter un `DAMAGE_LIFE` dans les effets d'une option audacieuse facture l'audace deux
+fois : l'écart d'EV entre les trois options passait à 8.40 PV-eq sur la carte 7, contre
+une tolérance de 2.0. Aucune option ne porte de dégâts garantis. → `option_gradient_ev._regle_effets`.
+
+**b. Le mix d'épreuves de §26.2 se mesure PAR CARTE, sur l'option la plus dure.**
+La colonne « % cards » de §26.2 compte des cartes, pas des options. Conséquence de
+design, non triviale : **la majorité des cartes sont entièrement blanches**, et le
+gradient s'y exprime par la marche 3/4/5 des dégâts d'échec plus un gain croissant — pas
+par un type d'épreuve plus dur. Sur 11 cartes : 8 blanches (73 %), 2 contextuelles (18 %),
+1 rouge télégraphiée (9 %), 0 fatale. → `check_mix_global._comment`.
+
+**c. `text` et `summary` sont deux champs distincts.**
+`text` est la situation lue à l'écran (beat 1 de `card_grammar`, 18-38 mots — la mesure
+sur le pool FastRoute donne une médiane de 19 mots, max 32). `summary` est l'identité
+courte du beat (8-22 mots) que manipulent le skeleton, le RAG et le validateur. Les
+confondre faisait échouer 11 cartes sur 11 sur une contrainte qui ne les visait pas.
+→ `writing_constraints.card_text`.
+
+### 32.2 Profil d'équilibrage obtenu
+
+Écart d'EV entre options : **0.16 à 1.52 PV-eq** sur les 11 cartes, tolérance 2.0.
+L'option prudente n'est optimale que sur 5 cartes, ≤ 2 par acte : pas de safe-spam.
+Répartition des factions sur 33 options — anciens 8, druides 8 (24 %, sous le plafond de
+30 %), korrigans 6, ankou 6, niamh 5 (15 %, au-dessus du plancher de 8 %) : les quatre
+builds de stat sont nourris.
+
+### 32.3 Ce qui reste à câbler côté moteur
+
+Le scénario est conforme au contrat ; le moteur ne sait pas encore tout en servir.
+
+| Élément | État |
+|---|---|
+| `outcome` affiché après le choix | ✅ câblé (`board_narration.gd`, beat de résolution) |
+| `outcome_variants` conditionnés par marqueur / promesse rompue | ❌ à implémenter |
+| Longueur de run variable (11-25) | ❌ `ACT_SEQUENCE` en dur à 5 cartes |
+| Affichage numérique des 5 réputations (§31.2) | ❌ à implémenter |
+| Épreuves de stats (`check`) résolues en jeu | ❌ le moteur ne lit pas encore `check` |
+
+---
+
+*Fin de bible v4.1*
