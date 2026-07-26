@@ -2571,3 +2571,13 @@ Les « 100 références » sont 10 gabarits clonés 10×. **Mon validateur d'éq
 - Simulation 60 tirages : 60 graines distinctes, 8 lieux différents sur 10 scénarios consécutifs
 - Smoke ScenarioLoading : exit 0, 0 script error
 - Non-régression : golden 100/100 strict, corpus 90.8
+
+### Phase: Tableau de contrôle visuel d'un run (2026-07-26)
+- **Status:** complete
+- **`tools/render_run_dashboard.py`** (NEW) — génère `docs/30_jdr/RUN_DASHBOARD.html`, page autonome (0 ressource externe, 23 Ko) depuis le transcript d'un run réel.
+- **Thèse de la page** : la scission. Chaque carte en deux colonnes — « à l'écran » (sérif parchemin, ce que le joueur lit) / « moteur » (monospace, ce qui est appliqué sans le dire).
+- **Identité visuelle** : palette canonique bible §10.2 (fond terminal, vert terminal, ambre druide, cyan liminal, rouge rune) + couple monospace/sérif du jeu. Monde sombre assumé, thème unique.
+- **Contenu** : vitals (cartes, vie, Anam, actes dégradés, effets cachés), courbe de vie SVG, barres de réputation avec seuil 50, 5 alertes calculées, timeline des 5 cartes.
+- **Alertes détectées automatiquement** : 3 actes sans contenu propre · 0 Anam accordé · 19 effets appliqués sans être montrés · cartes 3 et 5 quasi identiques · carte 5 vie annoncée −3 / appliquée +2.
+- Publié : https://claude.ai/code/artifact/03b49e7f-d42a-470e-95d7-7b7b558c9741
+- **Bloqué** : jalon « générer 20 scénarios + mesurer la diversité » — Ollama injoignable dans ce conteneur.
