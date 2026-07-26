@@ -44,6 +44,12 @@ def effects_fr(effects: list) -> str:
     for e in effects:
         t = e.get("type", "?")
         amt = e.get("amount")
+        # Godot sérialise les nombres en flottants : on repasse en entier quand
+        # la valeur est ronde, pour ne pas afficher « +5.0 » à la place de « +5 ».
+        if isinstance(amt, float):
+            amt = int(amt) if amt == int(amt) else amt
+        if not isinstance(amt, int):
+            amt = 0 if amt is None else amt
         if t == "ADD_REPUTATION":
             parts.append(f"réputation {e.get('faction', '?')} {amt:+d}")
         elif t == "HEAL_LIFE":
@@ -66,7 +72,7 @@ def effects_fr(effects: list) -> str:
 def diff_factions(before: dict, after: dict) -> str:
     deltas = []
     for f in FACTIONS:
-        b, a = int(before.get(f, 0)), int(after.get(f, 0))
+        b, a = int(float(before.get(f, 0))), int(float(after.get(f, 0)))
         if a != b:
             deltas.append(f"{f} {a - b:+d} (→ {a})")
     return " · ".join(deltas) if deltas else "aucun changement"
