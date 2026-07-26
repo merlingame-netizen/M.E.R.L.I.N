@@ -134,6 +134,9 @@ func _ready() -> void:
 	var pt: Node = get_node_or_null("/root/PixelTransition")
 	if pt and pt.has_method("_force_complete"):
 		pt._force_complete()
+	# Le scenario scripte doit etre connu avant la construction de la scene :
+	# c'est lui qui fixe la longueur du run, donc la hauteur du deck 3D.
+	_load_scripted_scenario()
 	_build_scene_tree()
 	await _await_store_ready()
 	_resolve_dependencies()
@@ -778,7 +781,7 @@ func _run_biome_drop_choreography(biome_id: String) -> void:
 		add_child(_card_deck)
 		# v7.0 — Per GAME_DESIGN_BIBLE §19.1 : deck pioche en LEFT-BACK du plateau.
 		_card_deck.global_position = Vector3(-2.4, 0.5, -1.4)
-		_card_deck.setup(ACT_SEQUENCE.size())
+		_card_deck.setup(_act_sequence().size())
 		JuiceHelpers.materialize_reveal(self, _card_deck, 0.0)
 	# v7.0 — NEW : Discard pile en RIGHT-BACK du plateau (mirroir pioche).
 	# Hauteur du stack grandit à chaque RESOLVE_CHOICE (cartes jouées s'empilent).
@@ -1447,7 +1450,7 @@ func _refresh_hud() -> void:
 		_hud_anam_label.text = "Anam %d" % anam_val
 	# Card count : "Carte X / 5"
 	if _hud_card_count_label:
-		var total_acts: int = ACT_SEQUENCE.size()
+		var total_acts: int = _act_sequence().size()
 		var shown_idx: int = clampi(_live_acts_played + 1, 1, total_acts)
 		_hud_card_count_label.text = "Carte %d / %d" % [shown_idx, total_acts]
 	# v5.5 — Dominant faction shift ambient music variant.
@@ -1690,6 +1693,11 @@ func _fetch_card_with_fallback() -> Dictionary:
 ## Falls back to the unfiltered fetch when no LLM card matches and no act-specific
 ## fallback exists in the pool.
 func _fetch_card_for_act(act_type: String) -> Dictionary:
+	# Scenario scripte : la carte est imposee par la sequence, pas piochee.
+	# `_live_acts_played` est l'index de la carte courante, deja pose par la boucle.
+	if not _scripted_cards.is_empty():
+		var i: int = clampi(_live_acts_played, 0, _scripted_cards.size() - 1)
+		return _scripted_card_to_engine(_scripted_cards[i] as Dictionary, act_type)
 	# Filter fallback pool by act_type. "standard" matches both explicit and missing field.
 	if _fallback_pool.is_empty():
 		_load_fallback_pool()
@@ -1837,6 +1845,8 @@ func _save_anam_to_profile() -> void:
 func _prewarm_llm() -> void:
 	if _store == null or not _store.has_method("dispatch"):
 		return
+	if not _scripted_cards.is_empty():
+		return  # scenario scripte : aucune carte ne vient du LLM
 	# Lambda captures _store ; runs async ; result discarded.
 	var warmup_task := func() -> void:
 		var _r = await _store.dispatch({"type": "GET_CARD"})
@@ -2852,11 +2862,12 @@ func _run_live_loop() -> void:
 	_transcript.clear()
 	_tr_record({"evenement": "debut_run", "biome": _biome_id, "hud": _tr_hud_snapshot()})
 
-	var total_acts: int = ACT_SEQUENCE.size()
+	var act_seq: Array = _act_sequence()
+	var total_acts: int = act_seq.size()
 	for act_idx in range(total_acts):
 		if _skip_requested:
 			break
-		var act_type: String = ACT_SEQUENCE[act_idx]
+		var act_type: String = str(act_seq[act_idx])
 		# v5.2 — track current act for the "Carte X / 5" HUD label.
 		_live_acts_played = act_idx
 		_refresh_hud()
@@ -2874,6 +2885,8 @@ func _run_live_loop() -> void:
 
 		# Fetch a card filtered to this act type (LLM first, fallback pool filtered).
 		var card: Dictionary = await _fetch_card_for_act(act_type)
+		push_warning("[BoardNarration] carte %d/%d (%s) : %s" % [
+			act_idx + 1, total_acts, act_type, str(card.get("id", "?"))])
 		if card.is_empty() or not card.has("options"):
 			if _card_text_label and is_instance_valid(_card_text_label):
 				_card_text_label.text = "[i]Le silence répond à l'appel. Aucune carte ne vient.[/i]"
@@ -2889,6 +2902,9 @@ func _run_live_loop() -> void:
 				opts_vues.append({
 					"label": str(od.get("label", "")),
 					"verbe": str(od.get("verb", "")),
+					"gradient": str(od.get("gradient", "")),
+					"faction": str(od.get("primary_faction", "")),
+					"epreuve_telegraphiee": (od.get("check", {}) as Dictionary).duplicate(true),
 					"effets_caches": (od.get("effects", []) as Array).duplicate(true),
 				})
 			_tr_record({
@@ -2928,8 +2944,8 @@ func _run_live_loop() -> void:
 		if _skip_requested:
 			break
 		if _live_pending_choice < 0:
-			# Timeout — auto-pick option 0
-			_on_card_option_pressed(0)
+			# Timeout — choix automatique (suite imposee, sinon option 0).
+			_on_card_option_pressed(_autoplay_pick(act_idx))
 			await get_tree().create_timer(0.6).timeout
 		# Fly the 3D card to the marker where the new pion will spawn,
 		# then queue_free it. The pion's drop animation starts after.
@@ -2945,13 +2961,31 @@ func _run_live_loop() -> void:
 		if act_type == "boss":
 			await _resolve_boss_anam(card, _live_pending_choice)
 
-		# Resolve the chosen option through the Store.
+		# ── L'EPREUVE ──────────────────────────────────────────────────────
+		# Sur un scenario scripte, l'option porte un `check` : on le resout AVANT
+		# d'appliquer les effets. Reussite -> les effets declares. Echec -> aucun
+		# gain, et les degats d'echec. C'est ce qui donne son sens au gradient
+		# prudente/equilibree/audacieuse (bible §26).
+		var chosen_pre: Dictionary = {}
+		var opts_pre: Array = card.get("options", [])
+		if _live_pending_choice >= 0 and _live_pending_choice < opts_pre.size():
+			chosen_pre = opts_pre[_live_pending_choice] as Dictionary
+		var epreuve: Dictionary = {}
+		if not _scripted_cards.is_empty() and not chosen_pre.is_empty():
+			epreuve = _resolve_scripted_check(chosen_pre)
+
+		# Resolve the chosen option through the Store. Un echec d'epreuve annule
+		# les gains : on n'envoie que les degats.
 		var resolve_action: Dictionary = {
 			"type": "RESOLVE_CHOICE",
 			"card": card,
 			"option": _live_pending_choice,
 			"modulated_effects": [],
 		}
+		if not epreuve.is_empty() and not bool(epreuve.get("succes", true)):
+			resolve_action["modulated_effects"] = [
+				{"type": "DAMAGE_LIFE", "amount": int(epreuve.get("degats", 0))},
+			]
 		var res = await _store.dispatch(resolve_action)
 		_live_cards_played += 1
 
@@ -2968,6 +3002,12 @@ func _run_live_loop() -> void:
 		if _live_pending_choice >= 0 and _live_pending_choice < opts_for_outcome.size():
 			chosen_opt = opts_for_outcome[_live_pending_choice] as Dictionary
 		var outcome_text: String = str(chosen_opt.get("outcome", ""))
+		var outcome_source: String = "pool"
+		if not epreuve.is_empty():
+			var res_txt: Dictionary = _scripted_outcome_text(
+				chosen_opt, bool(epreuve.get("succes", true)))
+			outcome_text = str(res_txt.get("texte", outcome_text))
+			outcome_source = str(res_txt.get("source", ""))
 		if outcome_text != "" and not _skip_requested:
 			if _narration_label:
 				_narration_label.visible = true
@@ -2997,8 +3037,15 @@ func _run_live_loop() -> void:
 				"acte_index": act_idx + 1,
 				"option_choisie": opt_idx,
 				"label_choisi": str(chosen.get("label", "")),
-				"texte_resolution": str(chosen.get("outcome", "")),
+				"gradient": str(chosen.get("gradient", "")),
+				"faction_option": str(chosen.get("primary_faction", "")),
+				"epreuve": epreuve,
+				"texte_resolution": outcome_text,
+				"source_resolution": outcome_source,
 				"effets_declares": (chosen.get("effects", []) as Array).duplicate(true),
+				"effets_appliques": (resolve_action.get("modulated_effects", []) as Array
+					if not (resolve_action.get("modulated_effects", []) as Array).is_empty()
+					else (chosen.get("effects", []) as Array)),
 				"reponse_store": (res if res is Dictionary else {}),
 				"hud_apres_choix": hud_apres_choix,
 				"hud_apres_des_du_destin": _tr_hud_snapshot(),
@@ -3078,7 +3125,24 @@ func _run_live_loop() -> void:
 const LIVE_TYPEWRITER_CPS := 22.0
 ## Rogue-like 5-act sequence — deterministic positions so the player learns the rhythm.
 ## Standard cards stay backward-compatible (act_type defaults to "standard").
+## v7.7.29 — n'est plus qu'un DEFAUT : un scenario scripte impose sa propre
+## longueur (11/15/17/21/25, bible §31.1) via `_scripted_act_seq`.
 const ACT_SEQUENCE := ["standard", "shop", "standard", "event", "boss"]
+
+# ── Scenario scripte (opt-in) ────────────────────────────────────────────────
+# MERLIN_SCENARIO=<res://...json> fait jouer un scenario LINEAIRE ecrit d'avance
+# au lieu de piocher dans le pool. C'est le mode qui rend un scenario type
+# jouable de bout en bout : longueur variable, epreuves de stats resolues,
+# resolutions narrees, variantes conditionnees par l'etat accumule (bible §32).
+## CardType d'un scenario -> act_type du moteur.
+const SCENARIO_TYPE_TO_ACT := {
+	"NARRATIVE": "standard", "PROMISE": "standard", "RUNE_UNLOCK": "standard",
+	"SHOP": "shop", "EVENT": "event", "MERLIN_DIRECT": "boss",
+}
+var _scripted_scenario: Dictionary = {}
+var _scripted_cards: Array = []
+var _scripted_act_seq: Array = []
+var _scripted_rng := RandomNumberGenerator.new()
 var _card_badge_label: RichTextLabel = null
 var _hud_life_bar: ProgressBar = null
 var _hud_life_value_label: Label = null
@@ -3121,7 +3185,7 @@ func _tr_hud_snapshot() -> Dictionary:
 	var state: Dictionary = _store.state
 	var run: Dictionary = state.get("run", {})
 	var meta: Dictionary = state.get("meta", {})
-	var total_acts: int = ACT_SEQUENCE.size()
+	var total_acts: int = _act_sequence().size()
 	return {
 		"vie": int(run.get("life_essence", 100)),
 		"anam_affiche": int(meta.get("anam", 0)) + _run_anam_earned,
@@ -3132,6 +3196,177 @@ func _tr_hud_snapshot() -> Dictionary:
 		"promesses_actives": (run.get("active_promises", []) as Array).size(),
 		"scenario_actif": str(run.get("active_scenario", "")),
 		"modificateur_marchand": _active_modifier,
+	}
+
+
+# ── Scenario scripte : chargement, conversion, epreuves ──────────────────────
+
+## Sequence d'actes effective : celle du scenario scripte, sinon le defaut a 5.
+func _act_sequence() -> Array:
+	return _scripted_act_seq if not _scripted_act_seq.is_empty() else ACT_SEQUENCE
+
+
+## Charge le scenario designe par MERLIN_SCENARIO. Sans effet si la variable
+## n'est pas definie ou si le fichier est illisible : on retombe sur le pool.
+func _load_scripted_scenario() -> void:
+	var path: String = OS.get_environment("MERLIN_SCENARIO")
+	if path.is_empty():
+		return
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		push_warning("[BoardNarration] scenario scripte introuvable : %s" % path)
+		return
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+	var scen: Dictionary = {}
+	if parsed is Array and (parsed as Array).size() > 0:
+		scen = (parsed as Array)[0] as Dictionary
+	elif parsed is Dictionary:
+		scen = parsed as Dictionary
+	if scen.is_empty() or not scen.has("cards"):
+		push_warning("[BoardNarration] scenario scripte illisible : %s" % path)
+		return
+	_scripted_scenario = scen
+	_scripted_cards = (scen.get("cards", []) as Array).duplicate(true)
+	_scripted_act_seq.clear()
+	for c in _scripted_cards:
+		var ct: String = str((c as Dictionary).get("type", "NARRATIVE"))
+		_scripted_act_seq.append(str(SCENARIO_TYPE_TO_ACT.get(ct, "standard")))
+	var seed_env: String = OS.get_environment("MERLIN_SEED")
+	if seed_env.is_valid_int():
+		_scripted_rng.seed = int(seed_env)
+		push_warning("[BoardNarration] epreuves graine %s (run reproductible)" % seed_env)
+	else:
+		_scripted_rng.randomize()
+	push_warning("[BoardNarration] scenario scripte charge : « %s » — %d cartes" % [
+		str(scen.get("title", "?")), _scripted_cards.size()])
+
+
+## Niveau d'une stat (1 au premier run). MerlinStats est optionnel.
+func _stat_level(stat_name: String) -> int:
+	var stats: Node = get_node_or_null("/root/MerlinStats")
+	if stats and stats.has_method("get_level"):
+		return maxi(1, int(stats.call("get_level", stat_name)))
+	return 1
+
+
+## Resout l'epreuve d'une option : pass_chance = 50% + 10% x stat (bible §26.1).
+## Retourne {succes, stat, niveau, chance, jet, degats}.
+func _resolve_scripted_check(opt: Dictionary) -> Dictionary:
+	var ck: Dictionary = opt.get("check", {}) as Dictionary
+	if ck.is_empty():
+		return {"succes": true, "stat": "", "niveau": 0, "chance": 1.0, "jet": 0.0, "degats": 0}
+	var stat_name: String = str(ck.get("stat", "volonte"))
+	var level: int = _stat_level(stat_name)
+	var chance: float = clampf(0.50 + 0.10 * float(level), 0.0, 1.0)
+	var roll: float = _scripted_rng.randf()
+	var success: bool = roll < chance
+	return {
+		"succes": success, "stat": stat_name, "niveau": level,
+		"chance": chance, "jet": roll,
+		"type": str(ck.get("type", "white")),
+		"degats": 0 if success else int(ck.get("fail_damage", 0)),
+	}
+
+
+## La resolution a raconter. En cas d'echec on lit `outcome_fail` ; en cas de
+## reussite, la variante d'etat si sa condition est remplie, sinon `outcome`.
+## C'est ici que vit le branchement narratif (bible §31.3) : meme carte, meme
+## option, texte different selon ce que le joueur traine derriere lui.
+func _scripted_outcome_text(opt: Dictionary, success: bool) -> Dictionary:
+	if not success:
+		var fail_text: String = str(opt.get("outcome_fail", ""))
+		if fail_text != "":
+			return {"texte": fail_text, "source": "echec"}
+		return {"texte": str(opt.get("outcome", "")), "source": "echec_sans_texte"}
+	var state: Dictionary = _store.state if _store and (_store.get("state") is Dictionary) else {}
+	var run: Dictionary = state.get("run", {})
+	var tags: Array = run.get("active_tags", []) as Array
+	# Une promesse rompue reste dans `active_promises` avec status = "broken"
+	# (store_run.check_promise_deadlines) — c'est la qu'on la lit.
+	var broken: Array = []
+	for p in (run.get("active_promises", []) as Array):
+		var pd: Dictionary = p as Dictionary
+		if str(pd.get("status", "")) == "broken":
+			broken.append(str(pd.get("id", "")))
+	for v in (opt.get("outcome_variants", []) as Array):
+		var vd: Dictionary = v as Dictionary
+		var marker: String = str(vd.get("si_marqueur", ""))
+		if marker != "" and tags.has(marker):
+			return {"texte": str(vd.get("texte", "")), "source": "variante_marqueur:" + marker}
+		var promise: String = str(vd.get("si_promesse_rompue", ""))
+		if promise != "" and broken.has(promise):
+			return {"texte": str(vd.get("texte", "")), "source": "variante_promesse:" + promise}
+	return {"texte": str(opt.get("outcome", "")), "source": "reussite"}
+
+
+## Option choisie par l'autoplay pour la carte `idx`. MERLIN_AUTOPLAY_PICKS
+## permet d'imposer une suite ("1,2,0,...") : sans elle l'autoplay prend toujours
+## la premiere option, n'exerce jamais le gradient et ne peut declencher aucune
+## variante d'etat.
+func _autoplay_pick(idx: int) -> int:
+	var spec: String = OS.get_environment("MERLIN_AUTOPLAY_PICKS")
+	if spec.is_empty():
+		return 0
+	var parts: PackedStringArray = spec.split(",", false)
+	if parts.is_empty():
+		return 0
+	var raw: String = parts[idx % parts.size()].strip_edges()
+	return clampi(int(raw) if raw.is_valid_int() else 0, 0, 2)
+
+
+## Prefixe lisible de l'epreuve portee par l'option `i` de la carte courante.
+## Vide hors scenario scripte : le pool ne porte pas de `check`.
+func _telegraph_suffix(i: int) -> String:
+	if _live_current_card.is_empty():
+		return ""
+	var opts: Array = _live_current_card.get("options", [])
+	if i < 0 or i >= opts.size():
+		return ""
+	var ck: Dictionary = (opts[i] as Dictionary).get("check", {}) as Dictionary
+	if ck.is_empty():
+		return ""
+	var stat_fr: String = str(ck.get("stat", "")).capitalize()
+	var pct: int = int(round(clampf(0.50 + 0.10 * float(_stat_level(str(ck.get("stat", "")))), 0.0, 1.0) * 100.0))
+	match str(ck.get("type", "white")):
+		"red":
+			return "[ROUGE %s %d%%] " % [stat_fr, pct]
+		"fatal":
+			return "[FATAL %s %d%%] " % [stat_fr, pct]
+		"contextuel":
+			return "[%s %d%%] " % [stat_fr, pct]
+		_:
+			return "[%s %d%%] " % [stat_fr, pct]
+
+
+## Convertit une carte de scenario dans la forme {text, options, ...} attendue
+## par l'affichage. Les champs mecaniques (check, gradient, faction) sont
+## conserves sur chaque option pour la resolution.
+func _scripted_card_to_engine(card: Dictionary, act_type: String) -> Dictionary:
+	var opts: Array = []
+	for o in (card.get("options", []) as Array):
+		var od: Dictionary = o as Dictionary
+		opts.append({
+			"label": str(od.get("label", "")),
+			"text": str(od.get("label", "")),
+			"verb": str(od.get("verb", "")),
+			"effects": (od.get("effects", []) as Array).duplicate(true),
+			"outcome": str(od.get("outcome", "")),
+			"outcome_fail": str(od.get("outcome_fail", "")),
+			"outcome_variants": (od.get("outcome_variants", []) as Array).duplicate(true),
+			"check": (od.get("check", {}) as Dictionary).duplicate(true),
+			"gradient": str(od.get("gradient", "")),
+			"primary_faction": str(od.get("primary_faction", "")),
+		})
+	return {
+		"id": str(card.get("card_id", "c?")),
+		"text": str(card.get("text", card.get("summary", ""))),
+		"prompt": str(card.get("text", card.get("summary", ""))),
+		"act_type": act_type,
+		"rarity": str(card.get("rarity", "COMMUNE")),
+		"emotion": str(card.get("emotion", "")),
+		"scenario_act": int(card.get("act", 1)),
+		"options": opts,
 	}
 
 
@@ -3150,7 +3385,15 @@ func _tr_flush() -> void:
 		return
 	f.store_string(JSON.stringify({
 		"biome": _biome_id,
-		"sequence_actes": ACT_SEQUENCE,
+		"sequence_actes": _act_sequence(),
+		"scenario": {
+			"titre": str(_scripted_scenario.get("title", "")),
+			"archetype": str(_scripted_scenario.get("archetype_id", "")),
+			"longueur": int(_scripted_scenario.get("length", 0)),
+			"intro": str(_scripted_scenario.get("intro", "")),
+			"essence": str(_scripted_scenario.get("essence", "")),
+			"graine": (_scripted_scenario.get("graine_de_variation", {}) as Dictionary).duplicate(),
+		},
 		"issue": _outcome,
 		"anam_gagne": _run_anam_earned,
 		"cartes_jouees": _live_cards_played,
@@ -3392,6 +3635,10 @@ func _build_floating_option_buttons() -> void:
 		# gold border + white text + black outline + dark bg per user mandate.
 		# 16 lines inline styling replaced with single factory call.
 		var btn_text: String = str(texts[i]) if i < texts.size() else ("Option %d" % (i + 1))
+		# Telegraphie de l'epreuve (bible §26.2 / check_schema.telegraphed_required_for).
+		# Une epreuve rouge ou fatale doit se voir AVANT le choix, sinon le joueur
+		# subit un piege au lieu de prendre un risque.
+		btn_text = _telegraph_suffix(i) + btn_text
 		var btn: Button = MerlinVisual.digital_button(btn_text, "primary")
 		btn.name = "FloatOption_%d" % i
 		btn.flat = false

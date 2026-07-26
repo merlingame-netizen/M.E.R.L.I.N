@@ -90,6 +90,20 @@ def render(data: dict) -> str:
              "(`MERLIN_AUTOPLAY=1`), puis rendu par `tools/render_run_transcript.py`. "
              "Aucun élément n'est reconstitué à la main.")
     L.append("")
+    sc = data.get("scenario", {}) or {}
+    if sc.get("titre"):
+        L.append(f"## ᚛ {sc['titre']} ᚜")
+        L.append("")
+        L.append(f"*{sc.get('essence', '')}*")
+        L.append("")
+        if sc.get("graine"):
+            L.append("Graine de variation : "
+                     + " · ".join(f"**{k.replace('_', ' ')}** {v}"
+                                  for k, v in sc["graine"].items()))
+            L.append("")
+        if sc.get("intro"):
+            L.append("> " + sc["intro"])
+            L.append("")
     L.append(f"**Biome** : {data.get('biome', '?')} · "
              f"**Séquence d'actes** : {' → '.join(ACT_LABEL.get(a, a) for a in seq)} · "
              f"**Issue** : {data.get('issue', '?')} · "
@@ -144,12 +158,35 @@ def render(data: dict) -> str:
         L.append("Les trois options, telles qu'elles s'affichent :")
         L.append("")
         for i, o in enumerate(c.get("options_visibles", [])):
-            L.append(f"{i + 1}. **{o.get('label', '')}**")
+            ck = o.get("epreuve_telegraphiee", {}) or {}
+            suffix = ""
+            if ck.get("stat"):
+                dur = {"white": "blanche", "contextuel": "contextuelle",
+                       "red": "**ROUGE**", "fatal": "**FATALE**"}.get(ck.get("type"), ck.get("type"))
+                suffix = (f" — *{o.get('gradient', '')}* · épreuve {ck['stat']}/{dur}"
+                          f" · échec −{int(float(ck.get('fail_damage', 0)))} PV")
+            L.append(f"{i + 1}. **{o.get('label', '')}**{suffix}")
         L.append("")
 
         r_pre = resols.get(idx, {})
         outcome = str(r_pre.get("texte_resolution", "") or "").strip()
-        L.append("Ce qui se produit ensuite :")
+        src = str(r_pre.get("source_resolution", ""))
+        ep = r_pre.get("epreuve", {}) or {}
+        if ep.get("stat"):
+            ok = bool(ep.get("succes"))
+            L.append(f"Épreuve **{ep['stat']}** niveau {int(float(ep.get('niveau', 1)))} — "
+                     f"{int(round(float(ep.get('chance', 0)) * 100))} % de réussite, "
+                     f"jet {float(ep.get('jet', 0)):.2f} → "
+                     f"**{'réussite' if ok else 'échec'}**"
+                     + ("" if ok else f", −{int(float(ep.get('degats', 0)))} PV"))
+            L.append("")
+        entete = "Ce qui se produit ensuite :"
+        if src.startswith("echec"):
+            entete = "Ce qui se produit ensuite (**l'épreuve a échoué**) :"
+        elif src.startswith("variante"):
+            entete = (f"Ce qui se produit ensuite (**variante d'état** : "
+                      f"{src.split(':')[-1]}) :")
+        L.append(entete)
         L.append("")
         L.append(f"> {outcome}" if outcome
                  else "> *(rien — le choix du joueur n'appelle aucune conséquence narrée)*")

@@ -433,6 +433,21 @@ def check_strict(s: dict, tpl: dict, findings: list):
                                         f"{cid} opt{i}: la resolution contient un chiffre — "
                                         "l'effet doit se lire dans la scene"))
 
+            # Beat 3bis : la resolution d'echec. Sans elle, le moteur affiche le
+            # texte de la reussite apres un echec d'epreuve — le systeme de
+            # checks ment au joueur.
+            fail = str(o.get("outcome_fail", "")).strip()
+            if not fail:
+                findings.append(Finding("error", "NO_OUTCOME_FAIL",
+                                        f"{cid} opt{i}: aucune resolution d'echec narree "
+                                        "(card_grammar, beat 3bis)"))
+            elif any(ch.isdigit() for ch in fail):
+                findings.append(Finding("warn", "OUTCOME_FAIL_CHIFFRE",
+                                        f"{cid} opt{i}: la resolution d'echec contient un chiffre"))
+            elif fail == outcome:
+                findings.append(Finding("error", "OUTCOME_FAIL_IDENTIQUE",
+                                        f"{cid} opt{i}: echec et reussite racontent la meme chose"))
+
             # Effets : whitelist, caps, nombre
             eff = o.get("effects", [])
             if len(eff) > tpl["writing_constraints"]["options"]["max_effects_per_option"]:

@@ -366,6 +366,81 @@ CARTES = [
 ]
 
 
+# ── Les résolutions d'ÉCHEC ───────────────────────────────────────────────
+# Une épreuve qui échoue doit se raconter, sinon le joueur voit le texte de la
+# réussite après avoir raté — et le système de checks devient un mensonge.
+# Une phrase à deux, deuxième personne, présent, aucun chiffre : mêmes règles
+# que `outcome`. L'échec fait avancer la scène, il ne la répète pas.
+ECHECS = {
+ 1: ["Tu frappes trop fort, trois fois, et la porte reste close si longtemps que tu finis "
+     "par crier son nom au bois. Quand elle ouvre, son regard s'est ferme avant sa bouche.",
+     "Tu retournes une botte et la semelle te tombe dans la main, gorgee de tourbe noire. "
+     "Tu n'apprends rien, sinon que la porte s'est ouverte pendant que tu etais accroupi.",
+     "Tu pousses la porte du pied et le seuil cede : la premiere marche manque depuis "
+     "longtemps. Tu t'etales dans la piece sombre, et la femme qui te releve ne dit rien."],
+ 2: ["Tu poses la question trop vite, comme un percepteur. Elle se ferme, ramasse les "
+     "pieces, et te fait comprendre que la table n'est plus la tienne.",
+     "Tu repousses les pieces d'un geste qu'elle prend pour de l'aumone. Elle les balaie "
+     "au sol et te laisse les ramasser une par une sous son regard.",
+     "Tu regardes par la fenetre et tu ne vois que du brouillard bas. Le temps que tes "
+     "yeux s'y fassent, elle a tire le volet et la conversation est finie."],
+ 3: ["Tu tiens en place trop longtemps. Le froid de la tourbe monte par les semelles, tes "
+     "jambes se raidissent, et quand tu bouges enfin, quelque chose s'est deja eloigne.",
+     "Tu remontes le vent du mauvais cote. L'odeur t'echappe, la bruyere se referme, et tu "
+     "ressors du fourre avec des mains ouvertes de coupures fines.",
+     "Ta voix se casse au milieu du nom. Le marais ne te rend rien, mais quelque chose "
+     "cesse de bouger, tres loin, et le silence qui suit dure jusqu'a ce que tu recules."],
+ 4: ["Tu marchandes mal. Le tourbier te laisse la corde et te reprend la moitie de ce que "
+     "tu portes, en te souhaitant bonne chance d'un ton qui ne le pense pas.",
+     "Tu prends la lampe sans verifier la meche. Elle s'eteint au premier souffle du "
+     "marais, et il est deja trop loin pour t'entendre le rappeler.",
+     "Tu poses la question trop droit. Il charge sa brouette, crache dans la tourbe, et "
+     "s'en va sans rien dire — et le bourg saura ce soir que tu poses des questions."],
+ 5: ["Ton baton s'enfonce et ne remonte pas : la tourbe le garde. Tu restes au bord, sans "
+     "rien savoir de plus, et avec une main de moins pour te retenir.",
+     "La planche tourne sous ton pied au premier pas. Tu te rattrapes a plat ventre, les "
+     "jambes dans l'eau noire, et il te faut longtemps pour ressortir.",
+     "Le bois est plus lourd qu'il n'en a l'air et il t'echappe. La planche part dans la "
+     "fosse, l'eau te gifle jusqu'au visage, et personne ne passera plus — toi non plus."],
+ 6: ["Tu poses mal ta question et Merlin te retourne le silence. « Tu demandes un nom », "
+     "dit-il enfin. « Tu n'es pas encore pret a l'entendre. »",
+     "Tu lui dis de se taire et ta voix tremble a la fin. Il se tait, oui — mais il rit "
+     "d'abord, et ce rire te suit jusqu'au bord de la fosse.",
+     "Tu te laisses glisser trop vite. Le bord cede, tu tombes de tout ton long dans l'eau "
+     "noire, et tu remontes en crachant sans avoir rien vu."],
+ 7: ["Tu ecoutes mal, tu coupes, tu veux des dates. Il se referme au milieu d'une phrase "
+     "et ne reprend pas — tu emportes la moitie d'une histoire.",
+     "Tu tires et il glisse. Vous retombez tous les deux, lui au fond, toi contre la "
+     "paroi, et il te faut recommencer avec un bras qui ne repond plus bien.",
+     "Tu remontes trop vite et la tourbe cede sous toi. Tu retombes a cote de lui, face "
+     "contre l'eau, et il te regarde te debattre sans tendre la main."],
+ 8: ["Tu jures d'une voix plate, sans ses mots a lui. Il te fait recommencer trois fois et "
+     "n'y croit toujours pas — le serment tient, mais mal.",
+     "Tu promets le retour et tu entends toi-meme que ca sonne faux. Il detourne les yeux, "
+     "accepte quand meme, et vous savez tous les deux ce que ca vaut.",
+     "Tu refuses trop sechement. Il recule d'un pas dans la tourbe, met une main derriere "
+     "lui, et le reste de la conversation se fait a distance."],
+ 9: ["Tu acceleres et il accelere avec toi. Vous marchez cote a cote un long moment, en "
+     "silence, et c'est lui qui decide ou ca s'arrete.",
+     "Il te donne un nom qui n'existe pas et te demande le tien. Tu le donnes avant "
+     "d'avoir reflechi, et son sourire change.",
+     "Tu te mets en travers et il te contourne comme on contourne une pierre. Tu te "
+     "retournes trop tard : il a pris le chemin de la maison qui fume."],
+ 10: ["Tu mens et tes yeux vont vers le marais au mauvais moment. Elle suit ton regard, "
+      "referme la porte, et tu restes sur le seuil avec les pieces dans la main.",
+      "Tu t'embrouilles dans ce que tu as vu et ce que tu as deduit. Elle entend une "
+      "accusation contre un homme du bourg, sans preuve, et te demande de partir.",
+      "Tu dis tout, dans le desordre, et le pire arrive avant le reste. Elle n'entend que "
+      "le mensonge d'un an, s'assied, et ne te repond plus."],
+ 11: ["Tu poses les pieces et ta main tremble en les lachant. Merlin le voit. « Va », "
+      "dit-il seulement, et le mot pese plus lourd que la dette.",
+      "Tu cherches tes mots et tu n'en trouves qu'un : « rien ». Merlin hoche la tete sans "
+      "te contredire, et c'est pire que s'il l'avait fait.",
+      "Tu fais demi-tour et tes jambes ne suivent pas : la tourbe t'a pris quelque chose "
+      "que tu n'avais pas compte. Tu t'assieds sur la borne, a cote de lui, en silence."],
+}
+
+
 def acte(n: int, total: int) -> int:
     return min(1 + (n - 1) * 5 // total, 5)
 
@@ -375,7 +450,8 @@ def build() -> dict:
     for c in CARTES:
         n = c["n"]
         opts = []
-        for o in c["options"]:
+        echecs = ECHECS.get(n, [])
+        for i, o in enumerate(c["options"]):
             opt = {
                 "label": o["label"], "verb": o["verb"],
                 "gradient": o["gradient"], "primary_faction": o["faction"],
@@ -384,6 +460,7 @@ def build() -> dict:
                           "telegraphed": o.get("telegraphie", o["check"] in ("red", "fatal"))},
                 "effects": o["effects"],
                 "outcome": o["outcome"],
+                "outcome_fail": echecs[i] if i < len(echecs) else "",
             }
             if o.get("variantes"):
                 opt["outcome_variants"] = o["variantes"]
@@ -513,8 +590,11 @@ def render_markdown(s: dict) -> str:
                      f"EV {ev(o):+.2f}"
                      + (" · **télégraphiée**" if ck.get("telegraphed") else ""))
             L.append("")
-            L.append(f"> {o['outcome']}")
+            L.append(f"> **Réussite.** {o['outcome']}")
             L.append("")
+            if o.get("outcome_fail"):
+                L.append(f"> **Échec.** {o['outcome_fail']}")
+                L.append("")
             for v in o.get("outcome_variants", []):
                 cond = v.get("si_marqueur") or v.get("si_promesse_rompue") or "?"
                 kind = "marqueur" if "si_marqueur" in v else "promesse rompue"
@@ -550,9 +630,10 @@ def main() -> int:
     print(f"  factions : {dict(Counter(o['primary_faction'] for c in s['cards'] for o in c['options']))}")
     print(f"  épreuves : {dict(Counter(o['check']['type'] for c in s['cards'] for o in c['options']))}")
     nres = sum(1 for c in s['cards'] for o in c['options'] if o.get('outcome'))
+    nfail = sum(1 for c in s['cards'] for o in c['options'] if o.get('outcome_fail'))
     nvar = sum(len(o.get('outcome_variants', [])) for c in s['cards'] for o in c['options'])
     print(f"  résolutions : {nres}/{sum(len(c['options']) for c in s['cards'])} "
-          f"(+{nvar} variantes d'état)")
+          f"(+{nvar} variantes d'état) · {nfail} résolutions d'échec")
 
     if args.markdown:
         Path(args.markdown).write_text(render_markdown(s), encoding="utf-8")

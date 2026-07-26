@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "date": "2026-07-25",
   "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
   "bible_ref": "GAME_DESIGN_BIBLE.md v4.0 (section 31 : decisions du 2026-07-26)",
@@ -1034,6 +1034,13 @@
     "etat": "AJOUTE v7.7.28 — n'existait dans aucun schema"
    },
    {
+    "beat": "3bis. RESOLUTION D'ECHEC",
+    "champ": "options[].outcome_fail",
+    "role": "raconter ce qui se produit quand l'epreuve echoue. Memes regles que `outcome` : une a trois phrases, deuxieme personne, present, aucun chiffre. L'echec FAIT AVANCER la scene, il ne la repete pas et ne se contente pas de refuser l'action.",
+    "obligatoire_si": "l'option porte un `check` dont le type peut echouer (tous sauf une reussite automatique). Sans ce champ, le moteur affiche le texte de la reussite apres un echec : le systeme d'epreuves devient un mensonge.",
+    "etat": "AJOUTE v7.7.29 — constate en cablant le mode scenario scripte"
+   },
+   {
     "beat": "4. SUITE",
     "champ": "continuite (voir ci-dessous)",
     "role": "la carte suivante doit decouler de ce qui vient de se produire",
@@ -1050,7 +1057,8 @@
     "repeter la situation",
     "annoncer la carte suivante explicitement",
     "resumer par un jugement (« bon choix », « tu as bien fait »)"
-   ]
+   ],
+   "echec_distinct": "outcome_fail ne peut pas etre la negation de outcome (« tu n'y arrives pas »). Il raconte une autre issue : ce que le geste rate produit quand meme."
   },
   "continuite": {
    "_comment": "« Une suite logique » : deux cartes consecutives ne peuvent pas etre independantes. Trois mecanismes, du plus fort au plus faible.",

@@ -143,9 +143,34 @@ def faction_bars(start: dict, end: dict) -> str:
     return "".join(rows)
 
 
+def graine_html(graine: dict) -> str:
+    """Les cinq contraintes tirées avant génération. Sans elles, deux scénarios
+    d'un même archétype se ressemblent."""
+    if not graine:
+        return ""
+    chips = "".join(f'<span class="seed"><span class="seed-k">{esc(k.replace("_", " "))}</span>'
+                    f'{esc(v)}</span>' for k, v in graine.items())
+    return f'<div class="graine"><span class="graine-lbl">graine de variation</span>{chips}</div>'
+
+
 # ─────────────────────────────────────────────────────────────── sections ──
 
-def build_cards(cards: list, resols: dict) -> str:
+CHECK_LABEL = {"white": "blanche", "contextuel": "contextuelle",
+               "red": "ROUGE", "fatal": "FATALE"}
+
+
+def check_chip(ck: dict) -> str:
+    """L'epreuve telle qu'elle est telegraphiee au joueur, avant son choix."""
+    if not ck:
+        return ""
+    t = str(ck.get("type", "white"))
+    lbl = CHECK_LABEL.get(t, t)
+    cls = "red" if t in ("red", "fatal") else ("ctx" if t == "contextuel" else "white")
+    return (f'<span class="check {cls}">{esc(ck.get("stat", ""))} · {esc(lbl)}'
+            f' · échec −{num(ck.get("fail_damage"))} PV</span>')
+
+
+def build_cards(cards: list, resols: dict, total: int) -> str:
     out = []
     for c in cards:
         idx = c.get("acte_index")
@@ -164,10 +189,13 @@ def build_cards(cards: list, resols: dict) -> str:
             chips = "".join(f'<span class="chip {s}">{esc(t)}</span>' for t, s in eff) \
                 or '<span class="chip neutre">aucun effet</span>'
             out_cls = " picked" if i == chosen else ""
+            grad = str(o.get("gradient", ""))
+            grad_html = (f'<span class="grad {esc(grad)}">{esc(grad)}</span>' if grad else "")
             opts.append(
                 f'<li class="opt{out_cls}">'
                 f'<span class="opt-n">{i+1}</span>'
                 f'<span class="opt-label">{esc(o.get("label"))}</span>'
+                f'{grad_html}{check_chip(o.get("epreuve_telegraphiee", {}))}'
                 f'<span class="opt-eff engine">{chips}</span>'
                 f'</li>')
         opts_html = "".join(opts)
@@ -190,13 +218,32 @@ def build_cards(cards: list, resols: dict) -> str:
         # La resolution : ce qui se produit apres le choix. C'est le beat qui
         # manquait — le joueur agissait et rien ne lui repondait.
         outcome = str(r.get("texte_resolution", "") or "").strip()
+        src = str(r.get("source_resolution", ""))
+        ep = r.get("epreuve", {}) or {}
+        if src.startswith("echec"):
+            res_tag, res_cls = "l'épreuve échoue", " fail"
+        elif src.startswith("variante"):
+            res_tag, res_cls = f"ce qui se produit — {esc(src.split(':')[-1])}", " variant"
+        else:
+            res_tag, res_cls = "ce qui se produit", ""
         resolution_html = (
-            f'<div class="resolution"><span class="res-tag">ce qui se produit</span>'
+            f'<div class="resolution{res_cls}"><span class="res-tag">{res_tag}</span>'
             f'<p class="narrative res-text">{esc(outcome)}</p></div>'
             if outcome else
             '<div class="resolution missing"><span class="res-tag">ce qui se produit</span>'
             '<p class="res-text missing-text">Rien. Le joueur agit, le moteur applique ses '
             'effets en silence, et la carte suivante arrive sans rapport.</p></div>')
+        if ep and str(ep.get("stat", "")):
+            ok = bool(ep.get("succes"))
+            epreuve_html = (
+                f'<dt>Épreuve</dt><dd class="tab">{esc(ep.get("stat"))} niveau '
+                f'{num(ep.get("niveau"))} · {num(round(float(ep.get("chance", 0)) * 100))} % '
+                f'de réussite · jet {float(ep.get("jet", 0)):.2f} → '
+                f'<strong class="{"pos" if ok else "neg"}">'
+                f'{"réussite" if ok else "échec"}</strong>'
+                + ("" if ok else f' · −{num(ep.get("degats"))} PV') + '</dd>')
+        else:
+            epreuve_html = ""
 
         badge = (f'<span class="act-badge" style="--ac:{ACT_COLOR.get(demande, "#7b8194")}">'
                  f'{ACT_LABEL.get(demande, demande)}</span>')
@@ -210,7 +257,7 @@ def build_cards(cards: list, resols: dict) -> str:
     <span class="card-n tab">{idx:02d}</span>
     {badge}
     <span class="card-id engine tab">{esc(c.get('carte_id'))}</span>
-    <span class="card-hud tab">Carte {idx} / 5 · vie {life_before} · Anam {num(hud.get('anam_affiche'))}</span>
+    <span class="card-hud tab">Carte {idx} / {total} · vie {life_before} · Anam {num(hud.get('anam_affiche'))}</span>
   </header>
   <div class="split">
     <section class="screen">
@@ -224,7 +271,9 @@ def build_cards(cards: list, resols: dict) -> str:
       <h4 class="col-label engine">Moteur</h4>
       {warn}
       <dl class="kv">
-        <dt>Choix retenu</dt><dd>option {chosen+1} — {esc(r.get('label_choisi'))}</dd>
+        <dt>Choix retenu</dt><dd>option {chosen+1} — {esc(r.get('label_choisi'))}
+            {f'<span class="grad {esc(r.get("gradient"))}">{esc(r.get("gradient"))}</span>' if r.get('gradient') else ''}</dd>
+        {epreuve_html}
         <dt>Vie</dt><dd class="tab">{life_before} → <strong>{life_after}</strong>
             <span class="delta {dl_cls}">{dl:+d}</span></dd>
         <dt>Réputations</dt><dd>{''.join(deltas) or '<span class="chip neutre">inchangées</span>'}</dd>
@@ -238,48 +287,99 @@ def build_cards(cards: list, resols: dict) -> str:
 
 
 def build_flags(data: dict, cards: list, resols: dict) -> str:
+    """Ce qu'il faut regarder — établi sur ce run, pas sur une liste figée."""
     flags = []
+    scripted = bool((data.get("scenario", {}) or {}).get("titre"))
+    total = len(data.get("sequence_actes", [])) or max(len(cards), 1)
+
     degraded = [c for c in cards if c.get("acte_type_demande") != c.get("acte_type_servi")]
-    if degraded:
+    if degraded and not scripted:
         which = ", ".join(ACT_LABEL.get(c["acte_type_demande"], c["acte_type_demande"])
                           for c in degraded)
         flags.append(("critique", f"{len(degraded)} actes sans contenu propre",
                       f"Les actes {which} servent une carte narrative ordinaire : "
                       "aucune carte du pool ne porte de champ <code>act_type</code>."))
+
+    # Épreuves : ce que le système de checks a réellement produit.
+    eps = [r.get("epreuve", {}) for r in resols.values() if (r.get("epreuve") or {}).get("stat")]
+    if eps:
+        fails = [e for e in eps if not e.get("succes")]
+        dmg = sum(num(e.get("degats")) for e in fails)
+        lvl = "alerte" if not (0.25 <= len(fails) / len(eps) <= 0.55) else "info"
+        flags.append((lvl, f"{len(fails)} épreuves ratées sur {len(eps)}",
+                      f"Coût total {dmg} PV. À stat 1 la chance de réussite est de 60 % : "
+                      f"on attend environ {round(len(eps) * 0.4)} échecs sur ce run. "
+                      "Un écart durable signale un tirage biaisé, pas un défaut d'écriture."))
+    elif scripted:
+        flags.append(("critique", "Aucune épreuve résolue",
+                      "Les options portent un <code>check</code> mais le moteur ne l'a pas lu : "
+                      "le gradient prudente / équilibrée / audacieuse n'a aucun effet mécanique."))
+
+    # Résolutions : le beat qui manquait.
+    sans_res = [c["acte_index"] for c in cards
+                if not str(resols.get(c["acte_index"], {}).get("texte_resolution", "")).strip()]
+    if sans_res:
+        flags.append(("critique", f"{len(sans_res)} cartes sans résolution",
+                      f"Cartes {', '.join(str(i) for i in sans_res)} : le joueur agit et rien "
+                      "ne lui répond. C'est le manquement constaté le 2026-07-26."))
+
+    # Branchement narratif : les variantes d'état se sont-elles déclenchées ?
+    variants = [r for r in resols.values()
+                if str(r.get("source_resolution", "")).startswith("variante")]
+    if variants:
+        which = ", ".join(str(r.get("source_resolution", "")).split(":")[-1] for r in variants)
+        flags.append(("info", f"{len(variants)} résolution(s) conditionnées par l'état",
+                      f"Déclenchées par : {esc(which)}. C'est le branchement narratif à "
+                      "l'œuvre — même carte, même option, texte différent."))
+    elif scripted:
+        flags.append(("alerte", "Aucune variante d'état déclenchée",
+                      "Le scénario en porte, mais aucune condition n'a été remplie sur ce run. "
+                      "Attendu quand l'autoplay choisit toujours la première option."))
+
     if num(data.get("anam_gagne")) == 0:
         flags.append(("critique", "Aucune récompense accordée",
                       "<code>calculate_run_rewards</code> n'est appelé que sur victoire ou mort. "
-                      "La victoire exige 25 cartes pour une boucle qui en joue 5 : à 5 cartes "
-                      "sans mort, aucun calcul n'a lieu. Le joueur repart avec 0 Anam."))
+                      f"La victoire exige 25 cartes pour un scénario qui en compte {total} : "
+                      "aucun calcul n'a lieu, le joueur repart avec 0 Anam."))
+
     n_eff = sum(len(o.get("effets_caches", []))
                 for c in cards for o in c.get("options_visibles", []))
     flags.append(("alerte", f"{n_eff} effets appliqués sans être montrés",
                   "Le HUD n'affiche que le compteur de cartes, la vie et l'Anam. "
-                  "Les cinq réputations bougent à chaque carte sans jamais apparaître."))
-    # Quasi-doublons dans le run
+                  "Les cinq réputations bougent à chaque carte sans jamais apparaître — "
+                  "la décision du 2026-07-26 (tout afficher) n'est pas encore câblée."))
+
+    # Quasi-doublons : sur un scénario écrit, ce serait une faute d'écriture.
     pairs = []
     for i in range(len(cards)):
         for j in range(i + 1, len(cards)):
-            s = jaccard(toks(cards[i].get("texte", "")), toks(cards[j].get("texte", "")))
-            if s > 0.30:
-                pairs.append((s, cards[i], cards[j]))
-    for s, a, b in sorted(pairs, reverse=True)[:2]:
+            sim = jaccard(toks(cards[i].get("texte", "")), toks(cards[j].get("texte", "")))
+            if sim > 0.30:
+                pairs.append((sim, cards[i], cards[j]))
+    for sim, a, b in sorted(pairs, reverse=True)[:2]:
         flags.append(("alerte", f"Cartes {a['acte_index']} et {b['acte_index']} quasi identiques",
-                      f"Recouvrement lexical de {s:.0%} — mêmes options, mêmes effets. "
-                      "Sur un pool de 12 cartes pour ce biome, deux quasi-jumelles sont "
-                      "sorties dans le même run de 5."))
-    # Écart entre effet déclaré et vie appliquée
+                      f"Recouvrement lexical de {sim:.0%}. "
+                      + ("Sur un scénario écrit d'avance, c'est une faute d'écriture."
+                         if scripted else
+                         "Deux quasi-jumelles du pool sont sorties dans le même run.")))
+
+    # Écart entre effet déclaré et vie appliquée.
     for c in cards:
         r = resols.get(c.get("acte_index"), {})
+        if not r:
+            continue
+        applied = r.get("effets_appliques", r.get("effets_declares", []))
         declared = sum(-num(e.get("amount")) if e.get("type") == "DAMAGE_LIFE"
                        else (num(e.get("amount")) if e.get("type") == "HEAL_LIFE" else 0)
-                       for e in r.get("effets_declares", []))
+                       for e in applied)
         actual = num(r.get("hud_apres_choix", {}).get("vie"), -999) - num(c.get("hud", {}).get("vie"), -999)
-        if r and declared != actual:
-            flags.append(("alerte", f"Carte {c['acte_index']} : vie annoncée {declared:+d}, appliquée {actual:+d}",
-                          "Le passif de biome de Brocéliande ajoute <code>HEAL_LIFE 5</code> "
-                          "toutes les 5 cartes sans que rien ne l'annonce."))
-    order = {"critique": 0, "alerte": 1}
+        if declared != actual:
+            flags.append(("alerte",
+                          f"Carte {c['acte_index']} : vie appliquée {actual:+d}, attendue {declared:+d}",
+                          "Un effet non déclaré s'est ajouté — passif de biome, talent passif "
+                          "ou dé du destin — sans que rien ne l'annonce au joueur."))
+
+    order = {"critique": 0, "alerte": 1, "info": 2}
     flags.sort(key=lambda f: order.get(f[0], 9))
     return "".join(
         f'<li class="flag {lvl}"><span class="flag-tag">{lvl}</span>'
@@ -410,15 +510,51 @@ h1{margin:0;font-size:30px;line-height:1.15;font-weight:600;text-wrap:balance;
 .missing-text{font-family:var(--mono);font-size:12px;color:var(--ink-dim);font-style:italic}
 .hidden-note{margin:14px 0 0;font-size:11px;color:var(--ink-faint);font-style:italic}
 
+/* Gradient d'option + épreuve télégraphiée (v4.1) */
+.opt{grid-template-columns:20px 1fr auto}
+.grad{font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 8px;border-radius:99px;border:1px solid var(--stone);color:var(--ink-dim);
+  white-space:nowrap;align-self:center}
+.grad.prudente{color:#7fd6a4;border-color:rgba(127,214,164,.35)}
+.grad.equilibree{color:var(--cyan);border-color:rgba(0,212,255,.32)}
+.grad.audacieuse{color:var(--amber);border-color:rgba(255,179,71,.4)}
+.check{grid-column:2;justify-self:start;font-size:10px;margin-top:5px;
+  padding:2px 8px;border-radius:var(--r);border:1px solid var(--stone);
+  color:var(--ink-dim);white-space:nowrap}
+.check.ctx{color:var(--cyan);border-color:rgba(0,212,255,.3)}
+.check.red{color:var(--rune);border-color:rgba(255,51,102,.45);
+  background:rgba(255,51,102,.07);font-weight:600}
+.resolution.fail{border-left-color:var(--rune);background:rgba(255,51,102,.06)}
+.resolution.fail .res-tag{color:var(--rune)}
+.resolution.variant{border-left-color:var(--chaos);background:rgba(155,89,255,.07)}
+.resolution.variant .res-tag{color:var(--chaos)}
+.kv .pos{color:var(--terminal)} .kv .neg{color:var(--rune)}
+
+/* Graine de variation + essence + intro */
+.essence{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--amber);
+  margin:2px 0 0;max-width:60ch}
+.graine{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:8px}
+.graine-lbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chaos)}
+.seed{font-size:11px;padding:3px 10px;border-radius:99px;
+  border:1px solid rgba(155,89,255,.32);color:var(--ink);white-space:nowrap}
+.seed-k{color:var(--ink-faint);margin-right:6px;font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase}
+.intro-parchemin{font-family:var(--serif);font-size:15px;line-height:1.65;
+  color:#efe6d2;max-width:66ch;margin:12px 0 0;padding-left:14px;
+  border-left:2px solid var(--stone)}
+
 /* Alertes */
 .flags{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .flag{background:var(--ground-3);border-radius:var(--r);padding:13px 16px;
   border-left:2px solid var(--ink-faint)}
 .flag.critique{border-left-color:var(--rune)}
 .flag.alerte{border-left-color:var(--amber)}
+.flag.info{border-left-color:var(--cyan)}
 .flag-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
 .flag.critique .flag-tag{color:var(--rune)}
 .flag.alerte .flag-tag{color:var(--amber)}
+.flag.info .flag-tag{color:var(--cyan)}
 .flag h4{margin:3px 0 5px;font-size:14px;font-weight:600}
 .flag p{margin:0;font-size:12.5px;color:var(--ink-dim);max-width:80ch}
 code{background:var(--ground);padding:1px 5px;border-radius:2px;font-size:11.5px;
@@ -536,6 +672,8 @@ def render(data: dict, series_dir=None) -> str:
         life.append(num(r.get("hud_apres_des_du_destin", {}).get("vie"),
                         num(r.get("hud_apres_choix", {}).get("vie"), life[-1])))
 
+    sc = data.get("scenario", {}) or {}
+    total = len(data.get("sequence_actes", [])) or max(len(cards), 1)
     anam = num(data.get("anam_gagne"))
     n_played = num(data.get("cartes_jouees"))
     degraded = sum(1 for c in cards if c.get("acte_type_demande") != c.get("acte_type_servi"))
@@ -554,21 +692,25 @@ def render(data: dict, series_dir=None) -> str:
 
   <header class="masthead">
     <span class="eyebrow">M.E.R.L.I.N. · contrôle de run</span>
-    <h1>Un run entier, de la première carte au butin</h1>
+    <h1>{esc(sc.get('titre') or 'Un run entier, de la première carte au butin')}</h1>
     <p class="sub">Capturé pendant une partie réelle du moteur, pas reconstitué.
       Chaque carte est présentée en deux colonnes : ce que le joueur a sous les
       yeux, et ce que le moteur applique sans le dire. C'est cet écart qui se contrôle.</p>
+    {f'<p class="essence">{esc(sc.get("essence"))}</p>' if sc.get('essence') else ''}
     <div class="meta">
       <span class="pill">biome <strong>{esc(data.get('biome'))}</strong></span>
-      <span class="pill">scénario <strong>{esc(scen)}</strong></span>
+      <span class="pill">archétype <strong>{esc(sc.get('archetype') or scen or 'pool')}</strong></span>
+      <span class="pill">longueur <strong>{total} cartes</strong></span>
       <span class="pill">issue <strong>{esc(data.get('issue'))}</strong></span>
       <span class="pill">actes <strong>{' · '.join(ACT_LABEL.get(a, a) for a in data.get('sequence_actes', []))}</strong></span>
     </div>
+    {graine_html(sc.get('graine', {}))}
+    {f'<p class="intro-parchemin">{esc(sc.get("intro"))}</p>' if sc.get('intro') else ''}
   </header>
 
   <section class="vitals">
     <div class="tile"><span class="k">Cartes jouées</span>
-      <span class="v tab">{n_played}</span><span class="n">sur 25 requises pour une victoire</span></div>
+      <span class="v tab">{n_played}</span><span class="n">sur {total} au scénario</span></div>
     <div class="tile {'bad' if life[-1] < 40 else 'good'}"><span class="k">Vie finale</span>
       <span class="v tab">{life[-1]}</span><span class="n">départ 100 · creux {min(life)}</span></div>
     <div class="tile {'bad' if anam == 0 else 'good'}"><span class="k">Anam gagné</span>
@@ -601,7 +743,7 @@ def render(data: dict, series_dir=None) -> str:
     <ul class="flags">{build_flags(data, cards, resols)}</ul>
   </section>
 
-  <section class="timeline">{build_cards(cards, resols)}</section>
+  <section class="timeline">{build_cards(cards, resols, total)}</section>
 
   <footer class="foot">
     <span>Généré par <code>tools/render_run_dashboard.py</code> depuis le transcript
