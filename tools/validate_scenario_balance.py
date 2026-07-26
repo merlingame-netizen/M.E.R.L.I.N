@@ -298,6 +298,167 @@ def check_balance(s: dict, tpl: dict, findings: list, stats_out: dict):
             (exp_damage - exp_heal) / scale if scale else 0)
 
 
+# ------------------------------------------------------------------- strict --
+
+def pv_eq(effects: list, rates: dict) -> float:
+    total = 0.0
+    for e in effects or []:
+        t, amt = e.get("type"), e.get("amount", 0)
+        if t == "HEAL_LIFE":
+            total += amt * rates["life"]
+        elif t == "DAMAGE_LIFE":
+            total -= amt * rates["life"]
+        elif t == "ADD_REPUTATION":
+            total += amt * rates["reputation_point"]
+        elif t == "ADD_ESSENCE":
+            total += amt * rates["essence"]
+        elif t == "ADD_ANAM":
+            total += amt * rates["anam"]
+    return total
+
+
+def check_strict(s: dict, tpl: dict, findings: list):
+    """Contrôles de la couche mécanique enrichie : checks, gradient, effets, EV.
+
+    Ne s'applique qu'aux scénarios qui portent ces champs (golden fixture,
+    sorties futures du pipeline). Un scénario sans champ `check` est signalé
+    une seule fois, pas carte par carte.
+    """
+    bal = tpl["balance_model"]
+    schema = bal["check_schema"]
+    wl = bal["effects_whitelist"]
+    rates = bal["exchange_rates_pv_equivalent"]
+    gates = bal["check_act_gates"]
+    mix = bal["check_mix_global"]
+    grad_ev = bal["option_gradient_ev"]
+    hardest = {"white": 0, "contextuel": 1, "red": 2, "fatal": 3}
+
+    cards = s.get("cards", [])
+    with_check = [c for c in cards
+                  if any("check" in o for o in c.get("options", []))]
+    if not with_check:
+        findings.append(Finding("error", "NO_CHECK_LAYER",
+                                "aucune option ne porte de champ `check` — la couche "
+                                "mecanique (stats/gradient/effets) est absente"))
+        return
+
+    for c in cards:
+        cid = c.get("card_id", f"n{c.get('n')}")
+        act = int(c.get("act") or (min((int(c.get("n", 1)) - 1) // 5 + 1, 5)))
+        opts = c.get("options", [])
+        for i, o in enumerate(opts):
+            # Gradient : ordre canonique prudente / equilibree / audacieuse
+            g = o.get("gradient")
+            if g and i < len(schema["gradient_order"]) and g != schema["gradient_order"][i]:
+                findings.append(Finding("error", "GRADIENT_ORDER",
+                                        f"{cid} opt{i}: gradient '{g}' != "
+                                        f"'{schema['gradient_order'][i]}'"))
+            ck = o.get("check")
+            if not ck:
+                findings.append(Finding("error", "OPT_NO_CHECK", f"{cid} opt{i}: pas de check"))
+                continue
+            if ck.get("stat") not in schema["stats"]:
+                findings.append(Finding("error", "CHECK_STAT",
+                                        f"{cid} opt{i}: stat '{ck.get('stat')}' inconnue"))
+            ctype = ck.get("type")
+            if ctype not in schema["types"]:
+                findings.append(Finding("error", "CHECK_TYPE",
+                                        f"{cid} opt{i}: type '{ctype}' inconnu"))
+                continue
+            # Act gates
+            if ctype == "red" and not gates.get(f"act_{act}", {}).get("red", False):
+                findings.append(Finding("error", "CHECK_GATE_RED",
+                                        f"{cid} opt{i}: check red en acte {act} (interdit)"))
+            if ctype == "fatal" and not gates.get(f"act_{act}", {}).get("fatal", False):
+                findings.append(Finding("error", "CHECK_GATE_FATAL",
+                                        f"{cid} opt{i}: check fatal en acte {act} (interdit)"))
+            # L'option prudente ne porte jamais mieux que white
+            if g == "prudente" and hardest[ctype] > hardest[schema["prudente_max_check"]]:
+                findings.append(Finding("error", "GRADIENT_CONTRADICTION",
+                                        f"{cid}: option prudente avec check {ctype}"))
+            # Telegraphie obligatoire des checks red/fatal
+            if ctype in schema["telegraphed_required_for"] and not ck.get("telegraphed"):
+                findings.append(Finding("warn", "CHECK_NOT_TELEGRAPHED",
+                                        f"{cid} opt{i}: check {ctype} non telegraphe"))
+
+            # Effets : whitelist, caps, nombre
+            eff = o.get("effects", [])
+            if len(eff) > tpl["writing_constraints"]["options"]["max_effects_per_option"]:
+                findings.append(Finding("error", "EFFECTS_COUNT",
+                                        f"{cid} opt{i}: {len(eff)} effets (max 3)"))
+            for e in eff:
+                t = e.get("type")
+                if t not in wl["types"]:
+                    findings.append(Finding("error", "EFFECT_NOT_WHITELISTED",
+                                            f"{cid} opt{i}: effet '{t}' hors whitelist"))
+                    continue
+                cap = wl["amount_caps"].get(t)
+                if cap is not None and abs(int(e.get("amount", 0))) > cap:
+                    findings.append(Finding("error", "EFFECT_CAP",
+                                            f"{cid} opt{i}: {t} {e.get('amount')} > cap {cap}"))
+
+        # Ecart d'EV entre options (les options fatales sont exemptees)
+        evs = []
+        for o in opts:
+            ck = o.get("check") or {}
+            if ck.get("type") == "fatal" and schema.get("fatal_ev_exempt"):
+                continue
+            evs.append(0.6 * pv_eq(o.get("effects"), rates)
+                       - 0.4 * float(ck.get("fail_damage", 0)))
+        if len(evs) >= 2:
+            gap = max(evs) - min(evs)
+            if gap > grad_ev["max_ev_gap_between_options"] + 1e-9:
+                findings.append(Finding("warn", "EV_GAP",
+                                        f"{cid}: ecart d'EV {gap:.2f} > "
+                                        f"{grad_ev['max_ev_gap_between_options']} PV-eq"))
+
+    # Mix des checks PAR CARTE et espacement des red, sur chaque route jouee
+    for key, path in route_paths(s):
+        if not path:
+            continue
+        per_card = []
+        for c in path:
+            types = [(o.get("check") or {}).get("type", "white") for o in c.get("options", [])]
+            per_card.append(max(types, key=lambda t: hardest.get(t, 0)) if types else "white")
+        counts = Counter(per_card)
+        for t, target in mix.items():
+            actual = counts.get(t, 0) / len(path)
+            if abs(actual - target) > 0.10:
+                findings.append(Finding("warn", "CHECK_MIX",
+                                        f"route {key}: checks '{t}' {actual:.0%} vs cible "
+                                        f"{target:.0%} (tolerance 10 pts)"))
+        red_pos = [i for i, t in enumerate(per_card) if t == "red"]
+        for a, b in zip(red_pos, red_pos[1:]):
+            if b - a < 3:
+                findings.append(Finding("error", "RED_SPACING",
+                                        f"route {key}: 2 checks red en {a + 1} et {b + 1} "
+                                        "(< 3 cartes d'ecart)"))
+
+        # Anti-safe-spam : l'option prudente ne doit pas etre optimale plus de
+        # 2 fois par acte (sinon le joueur peut jouer safe en boucle).
+        by_act = defaultdict(list)
+        for i, c in enumerate(path):
+            by_act[min(i * 5 // len(path), 4)].append(c)
+        for act_i, act_cards in by_act.items():
+            best_prudente = 0
+            for c in act_cards:
+                evs, prud_ev = [], None
+                for o in c.get("options", []):
+                    ck = o.get("check") or {}
+                    if ck.get("type") == "fatal":
+                        continue
+                    ev = 0.6 * pv_eq(o.get("effects"), rates) - 0.4 * float(ck.get("fail_damage", 0))
+                    evs.append(ev)
+                    if o.get("gradient") == "prudente":
+                        prud_ev = ev
+                if evs and prud_ev is not None and prud_ev >= max(evs) - 1e-9:
+                    best_prudente += 1
+            if best_prudente > 2:
+                findings.append(Finding("warn", "SAFE_SPAM",
+                                        f"route {key} acte {act_i + 1}: l'option prudente est "
+                                        f"optimale sur {best_prudente}/5 cartes (max 2)"))
+
+
 # -------------------------------------------------------------------- main --
 
 def score_findings(findings: list) -> int:
@@ -310,7 +471,7 @@ def score_findings(findings: list) -> int:
     return max(0, 100 - pts)
 
 
-def validate(scenarios: list, tpl: dict):
+def validate(scenarios: list, tpl: dict, strict: bool = False):
     results = []
     agg = {}
     for s in scenarios:
@@ -318,6 +479,8 @@ def validate(scenarios: list, tpl: dict):
         check_structure(s, tpl, findings)
         check_writing(s, tpl, findings)
         check_balance(s, tpl, findings, agg)
+        if strict:
+            check_strict(s, tpl, findings)
         results.append({"id": s.get("id"), "archetype": s.get("archetype_id"),
                         "length": s.get("length"), "score": score_findings(findings),
                         "findings": findings})
@@ -410,13 +573,16 @@ def main() -> int:
     ap.add_argument("--report", default=None, help="Chemin du rapport markdown a ecrire")
     ap.add_argument("--min-score", type=int, default=60)
     ap.add_argument("--quiet", action="store_true")
+    ap.add_argument("--strict", action="store_true",
+                    help="Valide aussi la couche mecanique enrichie : checks de stats, "
+                         "act gates, gradient, effets et ecarts d'EV (golden fixture).")
     args = ap.parse_args()
 
     tpl = load_json(Path(args.templates))
     data = load_json(Path(args.file))
     scenarios = data if isinstance(data, list) else list(data.get("scenarios", {}).values())
 
-    results, agg = validate(scenarios, tpl)
+    results, agg = validate(scenarios, tpl, strict=args.strict)
 
     if not args.quiet:
         for r in results:

@@ -655,6 +655,20 @@ static func _balance_skeleton(skeleton: Dictionary, biome_id: String) -> Diction
 			bi["rarity"] = "COMMUNE"
 			beats[i] = bi
 
+	# 3bis. Enforce the NARRATIVE share bounds (min_share / max_share).
+	# v7.7.26 : ces bornes etaient declarees dans CARD_TYPE_CAPS mais JAMAIS
+	# appliquees — l'etape 2 ci-dessus les renvoyait a « l'etape 4 », qui traite
+	# en realite le placement des LEGENDAIRE. Consequence mesuree avant fix :
+	# 0/12 squelettes conformes (cf. tools/check_pipeline_output.py).
+	# Note : pour total < 11, la borne min_share est mathematiquement
+	# inatteignable (1 SHOP + 1 EVENT + 1 climax laissent trop peu de place) —
+	# on fait au mieux sans jamais casser les min_count ni le climax.
+	var narr_rules: Dictionary = CARD_TYPE_CAPS.get("NARRATIVE", {})
+	beats = _enforce_narrative_share(
+		beats, total,
+		float(narr_rules.get("min_share", 0.0)),
+		float(narr_rules.get("max_share", 1.0)))
+
 	# 4. Enforce LEGENDARY placement (only in last 30% of skeleton).
 	var legendary_threshold: int = int(ceil(float(total) * LEGENDARY_START_SHARE))
 	for i in range(total):
@@ -705,6 +719,71 @@ static func _balance_skeleton(skeleton: Dictionary, biome_id: String) -> Diction
 	var out: Dictionary = skeleton.duplicate(true)
 	out["beats"] = beats
 	return out
+
+
+## Ramene la part de beats NARRATIVE dans [min_share, max_share].
+## Trop de NARRATIVE -> promotion vers les types ayant encore de la marge sous
+## leur max_count. Pas assez -> retrogradation des types au-dessus de leur
+## min_count. Le premier beat (intro) et le dernier (climax) ne sont jamais
+## touches, et l'adjacence des types uniques est preservee.
+static func _enforce_narrative_share(beats: Array, total: int,
+		min_share: float, max_share: float) -> Array:
+	if total <= 2:
+		return beats
+	var counts: Dictionary = _count_card_types(beats)
+	var narr: int = int(counts.get("NARRATIVE", 0))
+	var max_allowed: int = int(floor(float(total) * max_share))
+	var min_allowed: int = int(ceil(float(total) * min_share))
+
+	if narr > max_allowed:
+		var excess: int = narr - max_allowed
+		for ct in ["EVENT", "SHOP", "PROMISE", "MERLIN_DIRECT"]:
+			if excess <= 0:
+				break
+			var rules: Dictionary = CARD_TYPE_CAPS.get(ct, {})
+			var headroom: int = int(rules.get("max_count", 0)) - int(counts.get(ct, 0))
+			var j: int = 1
+			while headroom > 0 and excess > 0 and j < total - 1:
+				var bj: Dictionary = beats[j]
+				if str(bj.get("card_type", "")) == "NARRATIVE" and not _breaks_adjacency(beats, j, ct):
+					bj["card_type"] = ct
+					if ct == "EVENT" or ct == "SHOP":
+						bj["rarity"] = "RARE"
+					beats[j] = bj
+					counts = _count_card_types(beats)
+					headroom -= 1
+					excess -= 1
+				j += 1
+	elif narr < min_allowed:
+		var need: int = min_allowed - narr
+		for k in range(1, total - 1):
+			if need <= 0:
+				break
+			var bk: Dictionary = beats[k]
+			var ct2: String = str(bk.get("card_type", ""))
+			if ct2 == "NARRATIVE":
+				continue
+			var rules2: Dictionary = CARD_TYPE_CAPS.get(ct2, {})
+			# Ne jamais descendre sous le min_count d'un type requis.
+			if int(counts.get(ct2, 0)) <= int(rules2.get("min_count", 0)):
+				continue
+			bk["card_type"] = "NARRATIVE"
+			bk["rarity"] = "COMMUNE"
+			beats[k] = bk
+			counts = _count_card_types(beats)
+			need -= 1
+	return beats
+
+
+## True si affecter `ct` au beat d'index `j` creerait deux types uniques adjacents.
+static func _breaks_adjacency(beats: Array, j: int, ct: String) -> bool:
+	if not NO_REPEAT_CARDTYPES.has(ct):
+		return false
+	for neighbour in [j - 1, j + 1]:
+		if neighbour >= 0 and neighbour < beats.size():
+			if str((beats[neighbour] as Dictionary).get("card_type", "")) == ct:
+				return true
+	return false
 
 
 ## Returns a Dict<card_type_name: String, count: int> for the beats array.

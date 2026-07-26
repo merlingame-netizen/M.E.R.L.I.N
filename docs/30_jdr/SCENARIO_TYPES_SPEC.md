@@ -80,9 +80,13 @@ sur **5 actes égaux** aux rôles fixes :
 
 ### 2.2 Routes (branchement 3 pôles)
 
-Pattern canon : `trunk (c1-c2) → branch1 ×3 (ordre/chaos/liminal) → twist
-(convergence) → branch2 ×3 → convergence finale`. La carte c2 est la **carte
-d'aiguillage** : ses 3 options pointent chacune vers une voie de pôle.
+Pattern canon : `tronc → branche 1 ×3 (ordre/chaos/liminal) → twist
+(convergence) → branche 2 ×3 → convergence finale`. La **carte d'aiguillage**
+est la dernière carte de l'acte I (c2 sur un scénario de 17 cartes, c5 sur un
+scénario de 25) : ses 3 options pointent chacune vers une voie de pôle, et ce
+sont les seules options du scénario qui changent la topologie. Partout ailleurs
+les 3 options mènent à la même carte suivante — le choix pèse sur l'état du
+joueur, pas sur le chemin.
 
 Contraintes PAR ROUTE (chemin réellement joué) :
 - longueur = `length` du scénario (les 3 routes sont isométriques)
@@ -108,16 +112,16 @@ Contraintes PAR ROUTE (chemin réellement joué) :
 | Hook | 1 phrase sensorielle (odeur/son/texture/lumière) | prompt template |
 | Summary de beat | 8-22 mots | validator ✅ |
 | Options | exactement 3 ; verbe infinitif 1 mot ; 3 factions primaires distinctes | validator ✅ + GBNF |
-| Effets | ≤ 3 par option ; whitelist bible §5.4 ; caps ±20 rep, +18 heal, -15 dmg | effect engine (runtime) |
-| Gradient EV (écart ≤ 2 PV-éq, variance croissante) | §3 ci-dessous | **futur** : planner + GM prompt |
-| Act gates checks (red III+, fatal IV-V, spacing) | §5.2 | **futur** : MOS + validator étendu |
+| Effets | ≤ 3 par option ; whitelist §5.4 ; caps ±20 rep, +18 heal, -15 dmg | validator `--strict` ✅ + effect engine |
+| Gradient (ordre, prudente jamais red, écart d'EV ≤ 2 PV-éq) | §3 ci-dessous | validator `--strict` ✅ |
+| Act gates checks (red III+, fatal IV-V, espacement, télégraphie) | §5.2 | validator `--strict` ✅ |
 | Interdits | forbidden words bible §9.4.2 (4e mur, anglicismes, cyber en prose) | guardrails HARD (runtime) |
 | Répétition | Jaccard < 0.5 vs références et vs cartes du run | guardrails SOFT (runtime) |
 
-*✅ = enforced aujourd'hui par `validate_scenario_balance.py` sur le corpus.
-« runtime » = enforced en jeu par les guardrails/engine existants. « futur » =
-à câbler (roadmap §6) — le corpus de références ne contient pas encore les
-effets chiffrés ni les checks, ces règles ne sont donc auditables qu'en jeu.*
+*✅ = vérifié aujourd'hui par `validate_scenario_balance.py` (les lignes
+`--strict` ne s'appliquent qu'aux scénarios portant la couche mécanique : le
+golden fixture, et à terme les sorties du pipeline). « runtime » = appliqué en
+jeu par les guardrails et l'effect engine existants.*
 
 **Gradient des 3 options** (contrat par carte, aligné UX §5) :
 - **Position fixe** : gauche = prudente, centre = équilibrée, droite = audacieuse
@@ -327,6 +331,75 @@ Deux outils ferment la boucle :
 5. **BALANCE_FORMULA.md (2026-04-26)** : obsolète (3 stats Souffle/Esprit/Cœur,
    runs 5 cartes, drain) — à archiver ou réécrire sur la base de ce document.
 
+## 8. Le scénario type de référence (golden fixture)
+
+Un contrat sans exemplaire reste théorique. Le projet maintient donc **un
+scénario type de référence** qui incarne toutes les règles ci-dessus et sert
+simultanément de trois choses :
+
+1. **Référence d'écriture** — few-shot injecté dans les prompts LLM (via ScenariosRAG).
+2. **Fixture de non-régression** — il doit scorer 100/100 au validateur en mode `--strict`.
+3. **Cible de conformité** — c'est cette forme que le pipeline in-game doit apprendre à produire.
+
+### 8.1 Deux couches séparées
+
+| Couche | Produite par | Propriété |
+|---|---|---|
+| **Mécanique** — graphe de cartes, routes, types, raretés, arc, pôles, factions, checks, effets | `tools/build_golden_scenario.py`, dérivée du contrat | déterministe, reproductible, garantie conforme |
+| **Prose** — titre, intro, hook, summaries, labels, verbes | LLM (ou humain), injectée via `--merge-prose` | créative, remplaçable sans toucher à l'équilibrage |
+
+Cette séparation est le cœur de la méthode : **on ne négocie jamais l'équilibrage
+en écrivant de la prose**. Le générateur mint un squelette parfait, la prose
+vient s'y couler.
+
+```bash
+python tools/build_golden_scenario.py --prose-slots /tmp/slots.json   # gabarits à remplir
+python tools/build_golden_scenario.py --merge-prose /tmp/prose.json \
+    --out data/ai/scenario_golden_broceliande.json \
+    --markdown docs/30_jdr/SCENARIO_TYPE_GOLDEN.md
+python tools/validate_scenario_balance.py \
+    --file data/ai/scenario_golden_broceliande.json --strict
+```
+
+### 8.2 Le validateur en mode strict
+
+`--strict` ajoute au validateur la couche mécanique que l'audit avait signalée
+comme non vérifiée (finding 6) : présence et validité des `check` (stat, type),
+**act gates** (pas de red avant l'acte III, pas de fatal avant l'acte IV),
+espacement des red, ordre du gradient, interdiction d'une option prudente
+portant un check dur, télégraphie des red/fatal, whitelist et caps des effets,
+écart d'EV entre options, et anti-safe-spam par acte.
+
+Sur le corpus de 100 références, `--strict` fait tomber le score de 90,8 à 80,8 :
+exactement 10 points, soit l'erreur `NO_CHECK_LAYER` — le corpus actuel ne porte
+aucune couche mécanique. C'est la mesure chiffrée de ce qu'il reste à générer.
+
+## 9. Vérification : le jeu produit-il ce contrat ?
+
+Le contrat ne vaut que si l'on peut mesurer l'écart avec le jeu réel. Deux outils
+ferment la boucle, **sans nécessiter Ollama** (`_balance_skeleton` est statique) :
+
+```bash
+godot --headless --path . --script res://tools/godot/conformance_pipeline.gd
+python tools/check_pipeline_output.py --report docs/30_jdr/PIPELINE_OUTPUT_AUDIT.md
+```
+
+Le harnais exécute le **vrai code d'équilibrage du jeu** sur trois familles
+d'entrées : les 8 squelettes de secours livrés en dur (cascade L3), des
+squelettes bruts au format GBNF (5/7/10 beats), et un squelette à 25 beats pour
+distinguer « le clamp bloque » de « l'équilibrage est faux ». Les entrées
+synthétiques sont volontairement **conformes** au contrat sur tout ce qu'elles
+peuvent porter, de sorte que toute non-conformité observée en sortie soit
+imputable au jeu et non au jeu de test.
+
+L'audit distingue deux familles de verdicts :
+
+- **CAPACITÉ** — le pipeline peut-il seulement produire la *forme* décrite ?
+  Un échec est structurel, aucun réglage ne le corrige.
+- **RÉGLAGE** — sur ce qu'il produit, respecte-t-il les règles d'équilibrage ?
+
+Résultats et roadmap : `docs/30_jdr/PIPELINE_OUTPUT_AUDIT.md` (chiffres) et
+`docs/30_jdr/PIPELINE_CONFORMANCE_REPORT.md` (analyse par fichier:ligne).
 ---
 
 *Scénarios types v1.0 — s'inspire de Slay the Spire (courbes acte/rareté),

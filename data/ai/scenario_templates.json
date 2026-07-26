@@ -102,7 +102,7 @@
         "liminal"
       ],
       "pattern": "trunk -> branch1 (3 voies) -> twist (convergence) -> branch2 (3 voies) -> convergence finale",
-      "route_choice_card": "c2 (fin acte I) : chaque option pointe vers une voie de Pole distincte"
+      "route_choice_card": "derniere carte de l'acte I (c2 sur 17 cartes, c5 sur 25) : chaque option ouvre une voie de Pole distincte. C'est la SEULE carte dont les options changent la topologie ; ailleurs les 3 options menent a la meme carte suivante."
     },
     "card_type_caps": {
       "NARRATIVE": {
@@ -425,6 +425,55 @@
       "cross_faction_tension_min_share": 0.1,
       "faction_option_min_share": 0.08,
       "druides_option_max_share": 0.3
+    },
+    "effects_whitelist": {
+      "_comment": "Types d'effets autorises sur une option (bible 5.4 + contrat GM 9.8). Tout autre type est un rejet.",
+      "types": [
+        "ADD_REPUTATION",
+        "HEAL_LIFE",
+        "DAMAGE_LIFE",
+        "ADD_ESSENCE",
+        "ADD_ANAM",
+        "ADD_TAG",
+        "REMOVE_TAG",
+        "PROMISE",
+        "CREATE_PROMISE",
+        "PLAY_SFX"
+      ],
+      "amount_caps": {
+        "ADD_REPUTATION": 20,
+        "HEAL_LIFE": 18,
+        "DAMAGE_LIFE": 15,
+        "ADD_ESSENCE": 10,
+        "ADD_ANAM": 8
+      }
+    },
+    "check_schema": {
+      "_comment": "Schema du champ check porte par chaque option (bible 6.3bis).",
+      "stats": [
+        "logic",
+        "empathie",
+        "volonte",
+        "instinct"
+      ],
+      "types": [
+        "white",
+        "contextuel",
+        "red",
+        "fatal"
+      ],
+      "telegraphed_required_for": [
+        "red",
+        "fatal"
+      ],
+      "gradient_order": [
+        "prudente",
+        "equilibree",
+        "audacieuse"
+      ],
+      "prudente_max_check": "white",
+      "fatal_ev_exempt": true,
+      "fatal_ev_penalty_pv_eq": 35.0
     }
   },
   "deckbuilding_layer": {

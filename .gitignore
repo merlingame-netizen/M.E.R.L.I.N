@@ -440,3 +440,4 @@ tools/autodev/mission-control/dist/
 .env.local
 *.local.cfg
 secrets.json
+.tmp_pipeline_output.json
