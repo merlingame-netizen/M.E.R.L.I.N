@@ -506,7 +506,7 @@
   },
   "archetypes": {
     "druidic_awakening": {
-      "name": "L'Eveil Druidique",
+      "name": "L'Éveil Druidique",
       "pole_dominant": "Liminal",
       "twist_pattern": "calm_revelation",
       "difficulty": "easy",
@@ -580,7 +580,7 @@
       }
     },
     "ancient_oak_counsel": {
-      "name": "Le Conseil du Chene Ancien",
+      "name": "Le Conseil du Chêne Ancien",
       "pole_dominant": "Ordre",
       "twist_pattern": "wisdom_arc",
       "difficulty": "medium",
@@ -653,7 +653,7 @@
       }
     },
     "forest_trial": {
-      "name": "L'Epreuve de la Foret",
+      "name": "L'Épreuve de la Forêt",
       "pole_dominant": "Chaos",
       "twist_pattern": "physical_test",
       "difficulty": "hard",
@@ -690,7 +690,7 @@
       }
     },
     "forgotten_ritual": {
-      "name": "Le Rite Oublie",
+      "name": "Le Rite Oublié",
       "pole_dominant": "Ordre",
       "twist_pattern": "ritual_completion",
       "difficulty": "hard",
@@ -726,7 +726,7 @@
       }
     },
     "hidden_sanctuary": {
-      "name": "Le Sanctuaire Cache",
+      "name": "Le Sanctuaire Caché",
       "pole_dominant": "Liminal",
       "twist_pattern": "calm_decision",
       "difficulty": "easy",
@@ -764,7 +764,7 @@
       }
     },
     "beast_encounter": {
-      "name": "La Bete Cornue",
+      "name": "La Bête Cornue",
       "pole_dominant": "Chaos",
       "twist_pattern": "wild_communion",
       "difficulty": "hard",
@@ -802,7 +802,7 @@
       }
     },
     "druid_lineage": {
-      "name": "La Lignee des Druides",
+      "name": "La Lignée des Druides",
       "pole_dominant": "Ordre",
       "twist_pattern": "ancestral_echo",
       "difficulty": "medium",

@@ -1,0 +1,4388 @@
+[
+  {
+    "id": "golden_broc_ritual_25",
+    "title": "Le Rite des Neuf Souffles",
+    "archetype_id": "forgotten_ritual",
+    "archetype_name": "Le Rite Oublié",
+    "pole_dominant": "Ordre",
+    "twist_pattern": "ritual_completion",
+    "biome": "foret_broceliande",
+    "length": 25,
+    "pool_size": 53,
+    "emotional_arc": [
+      "curiosite",
+      "fascination",
+      "tension",
+      "fascination",
+      "curiosite",
+      "emerveillement",
+      "tension",
+      "fascination",
+      "tension",
+      "emerveillement",
+      "fascination",
+      "tension",
+      "emerveillement",
+      "tension",
+      "fascination",
+      "emerveillement",
+      "tension",
+      "fascination",
+      "tension",
+      "emerveillement",
+      "tension",
+      "fascination",
+      "emerveillement",
+      "tension",
+      "sagesse"
+    ],
+    "intro": "Tu marches en Brocéliande depuis trois jours et la forêt ne t'a rien demandé. Ce matin ton pied glisse sur une bosse de mousse qui sonne creux, et sous la mousse il y a de la pierre taillée. Les entailles sont des oghams, plus vieux que les chemins, plus vieux que les noms qu'on donne ici aux clairières. Un peu plus loin, une autre bosse. Puis une autre, alignée. Neuf pierres dorment sous le tapis vert, neuf stations d'une cérémonie que personne n'a portée jusqu'au bout. Depuis ce jour-là la forêt n'expire plus : pas un souffle d'air entre les fûts, pas une feuille qui tourne. Quelqu'un a commencé le Rite des Neuf Souffles et l'a laissé ouvert au milieu — et te voilà, la paume sur la première pierre, à comprendre qu'il attendait quelqu'un.",
+    "premise": "D'abord ce n'est qu'une pierre sous la mousse, froide comme une bête endormie. Tu grattes, tu lis, tu comprends que ce n'est pas une tombe : c'est une bouche, et elle est restée ouverte.\n\nLe rite se marche. Une pierre, un souffle, une station. Entre chaque, la brume tient debout et ne bouge pas, et tu finis par entendre ce qui manque à la forêt : le bruit de l'air qui repart.\n\nÀ la quatrième station, la mousse se fend. Il y a la voie qui obéit à la lettre, celle qui triche avec les mots, celle qui refuse de trancher. Aucune n'est plus courte. Aucune ne rend le même homme à la fin.\n\nPuis Merlin parle, et ce qu'il dit ne se défait pas. Il n'en tire aucune joie. Il te laisse simplement porter la chose jusqu'à la dernière pierre, comme on porte un seau plein sans en renverser.\n\nÀ la fin il n'y a qu'un souffle et plusieurs poitrines. Brocéliande attend depuis des siècles de pouvoir expirer. Ce que tu décides là ne se raconte pas : ça se respire, une fois, et la mousse referme le reste.",
+    "essence": "Une cérémonie druidique laissée ouverte en plein milieu dort sous la mousse de Brocéliande, et attend qu'on lui rende son dernier souffle.",
+    "hook": "Dans cette forêt pas une feuille ne tourne : depuis des siècles, Brocéliande n'a pas expiré.",
+    "twist_card_id": "c11_twist",
+    "cards": [
+      {
+        "n": 1,
+        "card_id": "c1",
+        "act": 1,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "curiosite",
+        "segment": "trunk",
+        "summary": "Sous la mousse d'un talus, une pierre dressée porte des entailles que la forêt n'a pas faites.",
+        "options": [
+          {
+            "label": "Lire les entailles sans y toucher",
+            "verb": "lire",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c2"
+          },
+          {
+            "label": "Rester devant la pierre jusqu'au soir",
+            "verb": "rester",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c2"
+          },
+          {
+            "label": "Fouiller la fente à l'aveugle",
+            "verb": "fouiller",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c2"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 2,
+        "card_id": "c2",
+        "act": 1,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "fascination",
+        "segment": "trunk",
+        "summary": "L'air ne bouge plus entre les fûts : la brume tient debout comme si elle attendait un signe.",
+        "options": [
+          {
+            "label": "Retenir ton souffle avec la forêt",
+            "verb": "retenir",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c3"
+          },
+          {
+            "label": "Poser la paume contre l'écorce froide",
+            "verb": "poser",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c3"
+          },
+          {
+            "label": "Nommer à voix haute ce silence",
+            "verb": "nommer",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c3"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 3,
+        "card_id": "c3",
+        "act": 1,
+        "type": "EVENT",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "trunk",
+        "summary": "Les fougères s'ouvrent d'un coup sur ton passage et quelque chose file vers la pierre suivante.",
+        "options": [
+          {
+            "label": "Reculer sous le couvert des fougères",
+            "verb": "reculer",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c4"
+          },
+          {
+            "label": "Déchiffrer la trace dans la mousse",
+            "verb": "déchiffrer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c4"
+          },
+          {
+            "label": "Barrer le chemin à la chose",
+            "verb": "barrer",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c4"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 4,
+        "card_id": "c4",
+        "act": 1,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "fascination",
+        "segment": "trunk",
+        "summary": "Sur la troisième pierre, une main plus tardive a griffé les traits de l'ogham pour en changer le sens.",
+        "options": [
+          {
+            "label": "Comparer les traits anciens aux nouveaux",
+            "verb": "comparer",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c5"
+          },
+          {
+            "label": "Deviner la peur de cette main",
+            "verb": "deviner",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c5"
+          },
+          {
+            "label": "Regraver le trait tel qu'il fut",
+            "verb": "regraver",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c5"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 5,
+        "card_id": "c5",
+        "act": 1,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "curiosite",
+        "segment": "trunk",
+        "summary": "La pierre attend un souffle, et la mousse se fend en trois sentes qui ne se rejoignent plus.",
+        "options": [
+          {
+            "label": "Souffler exactement comme le rite l'ordonne",
+            "verb": "souffler",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c6_ordre_b1",
+            "opens_route": "ordre"
+          },
+          {
+            "label": "Fausser le souffle d'une syllabe",
+            "verb": "fausser",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c6_chaos_b1",
+            "opens_route": "chaos"
+          },
+          {
+            "label": "Mêler ton souffle à la brume",
+            "verb": "mêler",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c6_liminal_b1",
+            "opens_route": "liminal"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 6,
+        "card_id": "c6_ordre_b1",
+        "act": 2,
+        "type": "SHOP",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "emerveillement",
+        "segment": "b1",
+        "summary": "Sous le dolmen, le gui et la corde du rite dorment intacts, et la gardienne des Anciens attend.",
+        "options": [
+          {
+            "label": "Vérifier chaque offrande contre le texte",
+            "verb": "vérifier",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c7_ordre_b1"
+          },
+          {
+            "label": "Marchander au flair le gui coupé",
+            "verb": "marchander",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c7_ordre_b1"
+          },
+          {
+            "label": "Jeûner jusqu'à ce qu'elle cède",
+            "verb": "jeûner",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c7_ordre_b1"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b1"
+      },
+      {
+        "n": 6,
+        "card_id": "c6_chaos_b1",
+        "act": 2,
+        "type": "SHOP",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "emerveillement",
+        "segment": "b1",
+        "summary": "Sous le dolmen, un korrigan étale des syllabes volées au rite et attend que tu marchandes.",
+        "options": [
+          {
+            "label": "Lire les syllabes avant de payer",
+            "verb": "lire",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c7_chaos_b1"
+          },
+          {
+            "label": "Flairer le prix vrai, puis marchander",
+            "verb": "flairer",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c7_chaos_b1"
+          },
+          {
+            "label": "Payer par un serment tenu",
+            "verb": "payer",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c7_chaos_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b1"
+      },
+      {
+        "n": 6,
+        "card_id": "c6_liminal_b1",
+        "act": 2,
+        "type": "SHOP",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "emerveillement",
+        "segment": "b1",
+        "summary": "À la deuxième station, une passeuse de brume troque des souffles retenus contre des choses jamais tout à fait données.",
+        "options": [
+          {
+            "label": "Déchiffrer les oghams de son étal",
+            "verb": "déchiffrer",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c7_liminal_b1"
+          },
+          {
+            "label": "Soupeser le gage qu'elle te tend",
+            "verb": "soupeser",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c7_liminal_b1"
+          },
+          {
+            "label": "Offrir une veille entière en gage",
+            "verb": "offrir",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c7_liminal_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b1"
+      },
+      {
+        "n": 7,
+        "card_id": "c7_ordre_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "b1",
+        "summary": "La deuxième pierre exige une veille immobile jusqu'à la brume, et tes genoux saignent déjà sur la mousse.",
+        "options": [
+          {
+            "label": "Apaiser ton souffle contre la pierre",
+            "verb": "apaiser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c8_ordre_b1"
+          },
+          {
+            "label": "Tenir la veille des Anciens",
+            "verb": "tenir",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c8_ordre_b1"
+          },
+          {
+            "label": "Coucher ton corps sur la dalle",
+            "verb": "coucher",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c8_ordre_b1"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b1"
+      },
+      {
+        "n": 7,
+        "card_id": "c7_chaos_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "tension",
+        "segment": "b1",
+        "summary": "La station suivante recrache ton souffle faussé, et la mousse noircit en cercle autour de ta main.",
+        "options": [
+          {
+            "label": "Apaiser la pierre à mains nues",
+            "verb": "apaiser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c8_chaos_b1"
+          },
+          {
+            "label": "Tenir la fausse formule sans ciller",
+            "verb": "tenir",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c8_chaos_b1"
+          },
+          {
+            "label": "Braver la mousse morte, paume ouverte",
+            "verb": "braver",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c8_chaos_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b1"
+      },
+      {
+        "n": 7,
+        "card_id": "c7_liminal_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "tension",
+        "segment": "b1",
+        "summary": "La troisième pierre exige qu'on referme la station, et ta bouche reste ouverte sur un mot inachevé.",
+        "options": [
+          {
+            "label": "Apaiser la pierre sans la refermer",
+            "verb": "apaiser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c8_liminal_b1"
+          },
+          {
+            "label": "Tenir le mot en suspens longtemps",
+            "verb": "tenir",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c8_liminal_b1"
+          },
+          {
+            "label": "Laisser l'Ankou écouter ton silence",
+            "verb": "laisser",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c8_liminal_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b1"
+      },
+      {
+        "n": 8,
+        "card_id": "c8_ordre_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "fascination",
+        "segment": "b1",
+        "summary": "À la troisième station, une entaille manque au texte, et le rite tait le mot qu'il faudrait dire.",
+        "options": [
+          {
+            "label": "Compter les entailles des pierres voisines",
+            "verb": "compter",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c9_ordre_b1"
+          },
+          {
+            "label": "Garder le vide sans le combler",
+            "verb": "garder",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c9_ordre_b1"
+          },
+          {
+            "label": "Deviner le mot à l'oreille",
+            "verb": "deviner",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c9_ordre_b1"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b1"
+      },
+      {
+        "n": 8,
+        "card_id": "c8_chaos_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "fascination",
+        "segment": "b1",
+        "summary": "Une entaille de l'ogham se lit de deux façons, et la seconde arrange trop bien qui la lit.",
+        "options": [
+          {
+            "label": "Vérifier la seconde lecture ailleurs",
+            "verb": "vérifier",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c9_chaos_b1"
+          },
+          {
+            "label": "Taire la faille et poursuivre",
+            "verb": "taire",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c9_chaos_b1"
+          },
+          {
+            "label": "Retourner l'entaille contre le rite",
+            "verb": "retourner",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c9_chaos_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b1"
+      },
+      {
+        "n": 8,
+        "card_id": "c8_liminal_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "fascination",
+        "segment": "b1",
+        "summary": "Entre deux ifs, la quatrième station montre la forêt deux fois : celle qui respire, celle qui retient.",
+        "options": [
+          {
+            "label": "Comparer les oghams de chaque battant",
+            "verb": "comparer",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c9_liminal_b1"
+          },
+          {
+            "label": "Demeurer un pied de chaque côté",
+            "verb": "demeurer",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c9_liminal_b1"
+          },
+          {
+            "label": "Franchir le seuil à l'aveugle",
+            "verb": "franchir",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c9_liminal_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b1"
+      },
+      {
+        "n": 9,
+        "card_id": "c9_ordre_b1",
+        "act": 2,
+        "type": "PROMISE",
+        "rarity": "RARE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "b1",
+        "summary": "Devant la pierre des serments, la mousse s'écarte seule : ici, une parole donnée tient jusqu'à la neuvième station.",
+        "options": [
+          {
+            "label": "Jurer la formule brève des Anciens",
+            "verb": "jurer",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c10_ordre_b1"
+          },
+          {
+            "label": "Peser chaque mot avant de jurer",
+            "verb": "peser",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c10_ordre_b1"
+          },
+          {
+            "label": "Promettre de rendre chaque souffle",
+            "verb": "promettre",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "contextuel",
+              "fail_damage": 8,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 20
+              }
+            ],
+            "leads_to_card_id": "c10_ordre_b1"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b1"
+      },
+      {
+        "n": 9,
+        "card_id": "c9_chaos_b1",
+        "act": 2,
+        "type": "PROMISE",
+        "rarity": "RARE",
+        "pole": "Chaos",
+        "emotion": "tension",
+        "segment": "b1",
+        "summary": "Les korrigans prêtent un souffle d'emprunt, à rendre avant que la dernière pierre ne se referme.",
+        "options": [
+          {
+            "label": "Jurer un serment court et tenable",
+            "verb": "jurer",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c10_chaos_b1"
+          },
+          {
+            "label": "Fixer chaque terme dans un ogham",
+            "verb": "fixer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c10_chaos_b1"
+          },
+          {
+            "label": "Gager un souvenir que tu aimes",
+            "verb": "gager",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "contextuel",
+              "fail_damage": 8,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 20
+              }
+            ],
+            "leads_to_card_id": "c10_chaos_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b1"
+      },
+      {
+        "n": 9,
+        "card_id": "c9_liminal_b1",
+        "act": 2,
+        "type": "PROMISE",
+        "rarity": "RARE",
+        "pole": "Liminal",
+        "emotion": "tension",
+        "segment": "b1",
+        "summary": "La cinquième pierre ne s'ouvre qu'à un serment, et Niamh demande jusqu'à quand tu tiendras le seuil.",
+        "options": [
+          {
+            "label": "Jurer jusqu'à la prochaine lune",
+            "verb": "jurer",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c10_liminal_b1"
+          },
+          {
+            "label": "Fixer le terme dans les oghams",
+            "verb": "fixer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c10_liminal_b1"
+          },
+          {
+            "label": "Promettre de tenir tant qu'elle chantera",
+            "verb": "promettre",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "contextuel",
+              "fail_damage": 8,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 20
+              }
+            ],
+            "leads_to_card_id": "c10_liminal_b1"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b1"
+      },
+      {
+        "n": 10,
+        "card_id": "c10_ordre_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "emerveillement",
+        "segment": "b1",
+        "summary": "Tu as tenu la lettre du rite, et pour la première fois une feuille tourne : la forêt expire un peu.",
+        "options": [
+          {
+            "label": "Flairer la trace du vent revenu",
+            "verb": "flairer",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          },
+          {
+            "label": "Répondre au souffle de la forêt",
+            "verb": "répondre",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          },
+          {
+            "label": "Déduire le rythme des souffles restants",
+            "verb": "déduire",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b1"
+      },
+      {
+        "n": 10,
+        "card_id": "c10_chaos_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "emerveillement",
+        "segment": "b1",
+        "summary": "La pierre répond à un mot qui n'est pas le sien, et la forêt expire enfin, de travers.",
+        "options": [
+          {
+            "label": "Écouter où retombe le faux souffle",
+            "verb": "écouter",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          },
+          {
+            "label": "Sentir si la forêt respire mieux",
+            "verb": "sentir",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          },
+          {
+            "label": "Inscrire ton mot dans la pierre",
+            "verb": "inscrire",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b1"
+      },
+      {
+        "n": 10,
+        "card_id": "c10_liminal_b1",
+        "act": 2,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "emerveillement",
+        "segment": "b1",
+        "summary": "Entre deux stations la brume s'écarte, et le sidhe se montre le temps d'un souffle non rendu.",
+        "options": [
+          {
+            "label": "Flairer d'où vient la trouée",
+            "verb": "flairer",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          },
+          {
+            "label": "Saluer ceux qui passent la brume",
+            "verb": "saluer",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          },
+          {
+            "label": "Nommer tout haut ce qui passe",
+            "verb": "nommer",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c11_twist"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b1"
+      },
+      {
+        "n": 11,
+        "card_id": "c11_twist",
+        "act": 3,
+        "type": "MERLIN_DIRECT",
+        "rarity": "EPIQUE",
+        "pole": "Ordre",
+        "emotion": "fascination",
+        "segment": "twist",
+        "summary": "Merlin te dit enfin pourquoi le rite dort : le neuvième souffle se prend sur celui qui le clôt.",
+        "options": [
+          {
+            "label": "Demander la formule mot à mot",
+            "verb": "demander",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_rule": "next_in_active_route"
+          },
+          {
+            "label": "Porter seul cette révélation",
+            "verb": "porter",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "leads_to_rule": "next_in_active_route"
+          },
+          {
+            "label": "Dire que tu clôras le rite",
+            "verb": "dire",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 15
+              }
+            ],
+            "leads_to_rule": "next_in_active_route"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "twist"
+      },
+      {
+        "n": 12,
+        "card_id": "c12_ordre_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "La quatrième pierre attend la suite exacte de la formule, et ta main tremble sur la mousse froide.",
+        "options": [
+          {
+            "label": "Écouter le silence entre deux syllabes",
+            "verb": "écouter",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c13_ordre_b2"
+          },
+          {
+            "label": "Guetter le rythme juste du rite",
+            "verb": "guetter",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c13_ordre_b2"
+          },
+          {
+            "label": "Reprendre la formule à la syllabe",
+            "verb": "reprendre",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c13_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 12,
+        "card_id": "c12_chaos_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "Le rite ne nomme jamais l'officiant, et cette absence te paraît soudain plus large qu'une porte.",
+        "options": [
+          {
+            "label": "Apaiser la pierre avant de parler",
+            "verb": "apaiser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c13_chaos_b2"
+          },
+          {
+            "label": "Flairer la faille dans la formule",
+            "verb": "flairer",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c13_chaos_b2"
+          },
+          {
+            "label": "Prêter serment sous un nom volé",
+            "verb": "prêter",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c13_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 12,
+        "card_id": "c12_liminal_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "La station suivante réclame son souffle, et tu le gardes en toi sans le rendre ni le refuser.",
+        "options": [
+          {
+            "label": "Apaiser la pierre sans lui répondre",
+            "verb": "apaiser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c13_liminal_b2"
+          },
+          {
+            "label": "Flairer où le rite hésite encore",
+            "verb": "flairer",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c13_liminal_b2"
+          },
+          {
+            "label": "Tenir la station ouverte jusqu'à l'aube",
+            "verb": "tenir",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c13_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 13,
+        "card_id": "c13_ordre_b2",
+        "act": 3,
+        "type": "EVENT",
+        "rarity": "RARE",
+        "pole": "Ordre",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "À la cinquième pierre, un souffle tiède monte de la mousse et dessine la place des officiants disparus.",
+        "options": [
+          {
+            "label": "Tenir ton rang comme les Anciens",
+            "verb": "tenir",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c14_ordre_b2"
+          },
+          {
+            "label": "Endurer la tiedeur des places vides",
+            "verb": "endurer",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c14_ordre_b2"
+          },
+          {
+            "label": "Déchiffrer l'ogham tracé par leur souffle",
+            "verb": "déchiffrer",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "red",
+              "fail_damage": 14,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 4
+              }
+            ],
+            "leads_to_card_id": "c14_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 13,
+        "card_id": "c13_chaos_b2",
+        "act": 3,
+        "type": "EVENT",
+        "rarity": "RARE",
+        "pole": "Chaos",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "Des rires montent de sous les racines : les korrigans ont senti quelqu'un tordre une règle très ancienne.",
+        "options": [
+          {
+            "label": "Rester immobile jusqu'au dernier rire",
+            "verb": "rester",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c14_chaos_b2"
+          },
+          {
+            "label": "Nommer le prix devant les rieurs",
+            "verb": "nommer",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c14_chaos_b2"
+          },
+          {
+            "label": "Lire la formule entière aux korrigans",
+            "verb": "lire",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "red",
+              "fail_damage": 14,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 4
+              }
+            ],
+            "leads_to_card_id": "c14_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 13,
+        "card_id": "c13_liminal_b2",
+        "act": 3,
+        "type": "EVENT",
+        "rarity": "RARE",
+        "pole": "Liminal",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "Entre deux ifs la brume s'ouvre comme une porte, et l'autre forêt respire de l'autre côté.",
+        "options": [
+          {
+            "label": "Rester du côté des vivants",
+            "verb": "rester",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c14_liminal_b2"
+          },
+          {
+            "label": "Soutenir le regard du passeur pâle",
+            "verb": "soutenir",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c14_liminal_b2"
+          },
+          {
+            "label": "Lire les oghams de l'autre forêt",
+            "verb": "lire",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "red",
+              "fail_damage": 14,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 4
+              }
+            ],
+            "leads_to_card_id": "c14_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 14,
+        "card_id": "c14_ordre_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "L'if tombé couvre la sixième pierre, et le rite interdit autant de la découvrir que de l'abandonner.",
+        "options": [
+          {
+            "label": "Relire l'entaille qui règle ce cas",
+            "verb": "relire",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c15_ordre_b2"
+          },
+          {
+            "label": "Apaiser l'if avant de le déranger",
+            "verb": "apaiser",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c15_ordre_b2"
+          },
+          {
+            "label": "Écarter les racines d'un geste sec",
+            "verb": "écarter",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 1
+              }
+            ],
+            "leads_to_card_id": "c15_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 14,
+        "card_id": "c14_chaos_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "La mousse repousse sur l'entaille que tu viens de fausser, plus vite que l'herbe ne pousse.",
+        "options": [
+          {
+            "label": "Relire la pierre sous la mousse",
+            "verb": "relire",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c15_chaos_b2"
+          },
+          {
+            "label": "Sentir ce que la forêt refuse",
+            "verb": "sentir",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c15_chaos_b2"
+          },
+          {
+            "label": "Rouvrir la fausse entaille au couteau",
+            "verb": "rouvrir",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 1
+              }
+            ],
+            "leads_to_card_id": "c15_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 14,
+        "card_id": "c14_liminal_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "Ton haleine ne fait plus de buée, et tu ne sais plus depuis quelle station cela dure.",
+        "options": [
+          {
+            "label": "Compter les stations laissées ouvertes",
+            "verb": "compter",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c15_liminal_b2"
+          },
+          {
+            "label": "Confier ton trouble à la brume",
+            "verb": "confier",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c15_liminal_b2"
+          },
+          {
+            "label": "Suivre l'odeur du souffle manquant",
+            "verb": "suivre",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 1
+              }
+            ],
+            "leads_to_card_id": "c15_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 15,
+        "card_id": "c15_ordre_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "fascination",
+        "segment": "b2",
+        "summary": "À la septième station, les noms des officiants montent le long des fûts et le dernier reste inachevé.",
+        "options": [
+          {
+            "label": "Flairer la sève sous l'entaille inachevée",
+            "verb": "flairer",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c16_ordre_b2"
+          },
+          {
+            "label": "Réciter les noms jusqu'au dernier",
+            "verb": "réciter",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c16_ordre_b2"
+          },
+          {
+            "label": "Terminer le nom laissé ouvert",
+            "verb": "terminer",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c16_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 15,
+        "card_id": "c15_chaos_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "fascination",
+        "segment": "b2",
+        "summary": "L'entaille surchargée porte la même main qu'a la troisième pierre, et cette fois le trait a tremble.",
+        "options": [
+          {
+            "label": "Suivre la trace du faussaire",
+            "verb": "suivre",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c16_chaos_b2"
+          },
+          {
+            "label": "Effacer la fraude et graver droit",
+            "verb": "effacer",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c16_chaos_b2"
+          },
+          {
+            "label": "Ressentir la peur de cette main",
+            "verb": "ressentir",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c16_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 15,
+        "card_id": "c15_liminal_b2",
+        "act": 3,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "fascination",
+        "segment": "b2",
+        "summary": "Un homme se tient à la station, immobile depuis des siècles, ni mort ni tout à fait là.",
+        "options": [
+          {
+            "label": "Humer l'air autour de l'homme arrêté",
+            "verb": "humer",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c16_liminal_b2"
+          },
+          {
+            "label": "Veiller près de lui sans parler",
+            "verb": "veiller",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c16_liminal_b2"
+          },
+          {
+            "label": "Poser ta paume sur sa poitrine",
+            "verb": "poser",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c16_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 16,
+        "card_id": "c16_ordre_b2",
+        "act": 4,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "Le vent revenu ne passe plus entre les futs : il entre dans ta poitrine et s'y arrêté.",
+        "options": [
+          {
+            "label": "Accueillir le courant sans lui répondre",
+            "verb": "accueillir",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c17_ordre_b2"
+          },
+          {
+            "label": "Mesurer combien de temps il dure",
+            "verb": "mesurer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c17_ordre_b2"
+          },
+          {
+            "label": "Offrir ta poitrine au vent",
+            "verb": "offrir",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c17_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 16,
+        "card_id": "c16_chaos_b2",
+        "act": 4,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "La station avale ton faux souffle sans le recracher, et l'air qui repart entre les futs a le gout de l'if.",
+        "options": [
+          {
+            "label": "Remercier la pierre de son silence",
+            "verb": "remercier",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c17_chaos_b2"
+          },
+          {
+            "label": "Retenir le mot qui a menti",
+            "verb": "retenir",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c17_chaos_b2"
+          },
+          {
+            "label": "Offrir un souffle emprunté au mort",
+            "verb": "offrir",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c17_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 16,
+        "card_id": "c16_liminal_b2",
+        "act": 4,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "La clairière tenue en suspens ne fane plus : tout y fleurit sans jamais s'ouvrir tout à fait.",
+        "options": [
+          {
+            "label": "Respirer avec la clairière endormie",
+            "verb": "respirer",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c17_liminal_b2"
+          },
+          {
+            "label": "Déchiffrer les bourgeons hors saison",
+            "verb": "déchiffrer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c17_liminal_b2"
+          },
+          {
+            "label": "Refuser ce printemps sans fin",
+            "verb": "refuser",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c17_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 17,
+        "card_id": "c17_ordre_b2",
+        "act": 4,
+        "type": "SHOP",
+        "rarity": "RARE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "Au pied de l'if creux, une gardienne des Anciens pese ce qui manque a ta formule contre ce que tu portes.",
+        "options": [
+          {
+            "label": "Céder ta besace sans marchander",
+            "verb": "céder",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c18_ordre_b2"
+          },
+          {
+            "label": "Jauger l'offrande qu'elle attend vraiment",
+            "verb": "jauger",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c18_ordre_b2"
+          },
+          {
+            "label": "Échanger ton ogham contre la formule",
+            "verb": "échanger",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 20
+              },
+              {
+                "type": "ADD_ESSENCE",
+                "amount": 1
+              }
+            ],
+            "leads_to_card_id": "c18_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 17,
+        "card_id": "c17_chaos_b2",
+        "act": 4,
+        "type": "SHOP",
+        "rarity": "RARE",
+        "pole": "Chaos",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "Un korrigan tient le mot qui manque a ta formule et ne fixera son prix qu'une fois que tu l'auras dit.",
+        "options": [
+          {
+            "label": "Refuser le troc et tenir bon",
+            "verb": "refuser",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c18_chaos_b2"
+          },
+          {
+            "label": "Marchander le mot contre un secret",
+            "verb": "marchander",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c18_chaos_b2"
+          },
+          {
+            "label": "Déchiffrer le mot sans le payer",
+            "verb": "déchiffrer",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 20
+              },
+              {
+                "type": "ADD_ESSENCE",
+                "amount": 1
+              }
+            ],
+            "leads_to_card_id": "c18_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 17,
+        "card_id": "c17_liminal_b2",
+        "act": 4,
+        "type": "SHOP",
+        "rarity": "RARE",
+        "pole": "Liminal",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "Sur la pierre du gué, des offrandes attendent preneur : ici rien ne se donne, tout se prête.",
+        "options": [
+          {
+            "label": "Déposer ton offrande sans rien prendre",
+            "verb": "déposer",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "volonte",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c18_liminal_b2"
+          },
+          {
+            "label": "Emprunter ce que nul ne réclame",
+            "verb": "emprunter",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "instinct",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c18_liminal_b2"
+          },
+          {
+            "label": "Marchander au gué ce qui manque",
+            "verb": "marchander",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 20
+              },
+              {
+                "type": "ADD_ESSENCE",
+                "amount": 1
+              }
+            ],
+            "leads_to_card_id": "c18_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 18,
+        "card_id": "c18_ordre_b2",
+        "act": 4,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "fascination",
+        "segment": "b2",
+        "summary": "Sur la huitième pierre, une seconde main a retaillé la dernière ligne d'une entaille plus douce.",
+        "options": [
+          {
+            "label": "Comparer les entailles trait à trait",
+            "verb": "comparer",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c19_ordre_b2"
+          },
+          {
+            "label": "Reconnaître la main qui allait mourir",
+            "verb": "reconnaître",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c19_ordre_b2"
+          },
+          {
+            "label": "Suivre la main la plus douce",
+            "verb": "suivre",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c19_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 18,
+        "card_id": "c18_chaos_b2",
+        "act": 4,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "fascination",
+        "segment": "b2",
+        "summary": "Merlin regarde ta formule truquée sans un mot, et ce silence pèse plus lourd qu'un reproche.",
+        "options": [
+          {
+            "label": "Justifier chaque entaille devant lui",
+            "verb": "justifier",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c19_chaos_b2"
+          },
+          {
+            "label": "Compter ce que ta ruse coûtera",
+            "verb": "compter",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c19_chaos_b2"
+          },
+          {
+            "label": "Avouer à Merlin que tu jubiles",
+            "verb": "avouer",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c19_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 18,
+        "card_id": "c18_liminal_b2",
+        "act": 4,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "fascination",
+        "segment": "b2",
+        "summary": "Dans l'eau dormante, les neuf pierres sont closes, et un visage te regarde depuis un rite déjà achevé.",
+        "options": [
+          {
+            "label": "Comparer le reflet aux entailles réelles",
+            "verb": "comparer",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c19_liminal_b2"
+          },
+          {
+            "label": "Reconnaître le visage sous l'eau",
+            "verb": "reconnaître",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c19_liminal_b2"
+          },
+          {
+            "label": "Plonger la main dans le rite",
+            "verb": "plonger",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c19_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 19,
+        "card_id": "c19_ordre_b2",
+        "act": 4,
+        "type": "EVENT",
+        "rarity": "RARE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "La brume s'ouvre d'un coup : l'officiant arrêté est encore agenouillé devant la neuvième pierre.",
+        "options": [
+          {
+            "label": "Repérer où sa formule s'est brisée",
+            "verb": "repérer",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c20_ordre_b2"
+          },
+          {
+            "label": "Reconstituer la station qu'il a laissée",
+            "verb": "reconstituer",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c20_ordre_b2"
+          },
+          {
+            "label": "Prendre sa place devant la pierre",
+            "verb": "prendre",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "red",
+              "fail_damage": 15,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 5
+              }
+            ],
+            "leads_to_card_id": "c20_ordre_b2"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 19,
+        "card_id": "c19_chaos_b2",
+        "act": 4,
+        "type": "EVENT",
+        "rarity": "RARE",
+        "pole": "Chaos",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "La huitième pierre reclame le nom que le rite n'ecrit nulle part, et ta bouche dit le tien avant toi.",
+        "options": [
+          {
+            "label": "Relire la ligne qui te nomme",
+            "verb": "relire",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c20_chaos_b2"
+          },
+          {
+            "label": "Donner le nom du premier officiant",
+            "verb": "donner",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c20_chaos_b2"
+          },
+          {
+            "label": "Répondre par le nom d'un vivant",
+            "verb": "répondre",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "red",
+              "fail_damage": 15,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 5
+              }
+            ],
+            "leads_to_card_id": "c20_chaos_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 19,
+        "card_id": "c19_liminal_b2",
+        "act": 4,
+        "type": "EVENT",
+        "rarity": "RARE",
+        "pole": "Liminal",
+        "emotion": "tension",
+        "segment": "b2",
+        "summary": "Un vent se lève dans une forêt qui n'expire pas, et les stations derrière toi commencent à se refermer.",
+        "options": [
+          {
+            "label": "Deviner quelle station cède d'abord",
+            "verb": "deviner",
+            "gradient": "prudente",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c20_liminal_b2"
+          },
+          {
+            "label": "Retarder la clôture d'une station",
+            "verb": "retarder",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c20_liminal_b2"
+          },
+          {
+            "label": "Rouvrir ce que le vent ferme",
+            "verb": "rouvrir",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "red",
+              "fail_damage": 15,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 5
+              }
+            ],
+            "leads_to_card_id": "c20_liminal_b2"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 20,
+        "card_id": "c20_ordre_b2",
+        "act": 4,
+        "type": "RUNE_UNLOCK",
+        "rarity": "RARE",
+        "pole": "Ordre",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "L'ogham de l'if s'allume sous ta paume, chaud comme une braise que personne n'a soufflée.",
+        "options": [
+          {
+            "label": "Remercier avant de refermer ta main",
+            "verb": "remercier",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c21"
+          },
+          {
+            "label": "Nommer l'ogham selon l'ordre ancien",
+            "verb": "nommer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c21"
+          },
+          {
+            "label": "Inscrire l'ogham dans la formule finale",
+            "verb": "inscrire",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c21"
+          }
+        ],
+        "route_mask": [
+          true,
+          false,
+          false
+        ],
+        "branch_label": "ordre_b2"
+      },
+      {
+        "n": 20,
+        "card_id": "c20_chaos_b2",
+        "act": 4,
+        "type": "RUNE_UNLOCK",
+        "rarity": "RARE",
+        "pole": "Chaos",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "Sous la mousse arrachée dort un ogham que personne n'a gravé droit : le trait qui détourne.",
+        "options": [
+          {
+            "label": "Poser la paume sur le trait",
+            "verb": "poser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c21"
+          },
+          {
+            "label": "Lire l'ogham qui ment",
+            "verb": "lire",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c21"
+          },
+          {
+            "label": "Recopier le trait sur ta paume",
+            "verb": "recopier",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c21"
+          }
+        ],
+        "route_mask": [
+          false,
+          true,
+          false
+        ],
+        "branch_label": "chaos_b2"
+      },
+      {
+        "n": 20,
+        "card_id": "c20_liminal_b2",
+        "act": 4,
+        "type": "RUNE_UNLOCK",
+        "rarity": "RARE",
+        "pole": "Liminal",
+        "emotion": "emerveillement",
+        "segment": "b2",
+        "summary": "Entre deux entailles de la pierre, une troisième apparaît quand tu ne la regardes pas en face.",
+        "options": [
+          {
+            "label": "Laisser l'entaille venir à toi",
+            "verb": "laisser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 3,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 8
+              }
+            ],
+            "leads_to_card_id": "c21"
+          },
+          {
+            "label": "Nommer l'ogham qui n'est pas gravé",
+            "verb": "nommer",
+            "gradient": "equilibree",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 12
+              }
+            ],
+            "leads_to_card_id": "c21"
+          },
+          {
+            "label": "Tailler le seuil dans ta paume",
+            "verb": "tailler",
+            "gradient": "audacieuse",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c21"
+          }
+        ],
+        "route_mask": [
+          false,
+          false,
+          true
+        ],
+        "branch_label": "liminal_b2"
+      },
+      {
+        "n": 21,
+        "card_id": "c21",
+        "act": 5,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Ordre",
+        "emotion": "tension",
+        "segment": "conv",
+        "summary": "La huitième pierre s'éteint derrière toi et la dernière se lève, seule, au fond du nemeton.",
+        "options": [
+          {
+            "label": "Vérifier l'ordre des stations franchies",
+            "verb": "vérifier",
+            "gradient": "prudente",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c22"
+          },
+          {
+            "label": "Écouter ce que la forêt retient",
+            "verb": "écouter",
+            "gradient": "equilibree",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c22"
+          },
+          {
+            "label": "Chercher la faille dans le rite",
+            "verb": "chercher",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c22"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 22,
+        "card_id": "c22",
+        "act": 5,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Liminal",
+        "emotion": "fascination",
+        "segment": "conv",
+        "summary": "Entre les deux dernières pierres se tient un homme de brume, la bouche ouverte sur un souffle jamais rendu.",
+        "options": [
+          {
+            "label": "Épeler ce que sa bouche tait",
+            "verb": "épeler",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c23"
+          },
+          {
+            "label": "Compter les souffles qui lui manquent",
+            "verb": "compter",
+            "gradient": "equilibree",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c23"
+          },
+          {
+            "label": "Reprendre la formule où elle cesse",
+            "verb": "reprendre",
+            "gradient": "audacieuse",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "contextuel",
+              "fail_damage": 9,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 20
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 1
+              }
+            ],
+            "leads_to_card_id": "c23"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 23,
+        "card_id": "c23",
+        "act": 5,
+        "type": "MERLIN_DIRECT",
+        "rarity": "EPIQUE",
+        "pole": "Ordre",
+        "emotion": "emerveillement",
+        "segment": "conv",
+        "summary": "Merlin ouvre la main et tu entends d'un seul coup les huit souffles rendus avant toi.",
+        "options": [
+          {
+            "label": "Reconnaître la voix absente",
+            "verb": "reconnaître",
+            "gradient": "prudente",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c24"
+          },
+          {
+            "label": "Ranger les souffles dans leur ordre",
+            "verb": "ranger",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c24"
+          },
+          {
+            "label": "Ajouter ton souffle à leur suite",
+            "verb": "ajouter",
+            "gradient": "audacieuse",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c24"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 24,
+        "card_id": "c24",
+        "act": 5,
+        "type": "NARRATIVE",
+        "rarity": "COMMUNE",
+        "pole": "Chaos",
+        "emotion": "tension",
+        "segment": "conv",
+        "summary": "Les korrigans s'assoient en cercle autour de la dernière pierre et parient tout bas sur qui paiera le souffle.",
+        "options": [
+          {
+            "label": "Apaiser le cercle avant qu'il rie",
+            "verb": "apaiser",
+            "gradient": "prudente",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "empathie",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 10
+              }
+            ],
+            "leads_to_card_id": "c25"
+          },
+          {
+            "label": "Trancher qui doit ce souffle",
+            "verb": "trancher",
+            "gradient": "equilibree",
+            "primary_faction": "ankou",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "ankou",
+                "amount": 14
+              }
+            ],
+            "leads_to_card_id": "c25"
+          },
+          {
+            "label": "Retourner leur propre règle contre eux",
+            "verb": "retourner",
+            "gradient": "audacieuse",
+            "primary_faction": "korrigans",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "korrigans",
+                "amount": 15
+              }
+            ],
+            "leads_to_card_id": "c25"
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      },
+      {
+        "n": 25,
+        "card_id": "c25",
+        "act": 5,
+        "type": "MERLIN_DIRECT",
+        "rarity": "LEGENDAIRE",
+        "pole": "Ordre",
+        "emotion": "sagesse",
+        "segment": "conv",
+        "summary": "La neuvième pierre attend, et il n'y a plus qu'un souffle à donner : reste à savoir de qui.",
+        "options": [
+          {
+            "label": "Graver le nom d'un autre",
+            "verb": "graver",
+            "gradient": "prudente",
+            "primary_faction": "druides",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 4,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "druides",
+                "amount": 10
+              }
+            ]
+          },
+          {
+            "label": "Prêter ton souffle à l'homme arrêté",
+            "verb": "prêter",
+            "gradient": "equilibree",
+            "primary_faction": "anciens",
+            "check": {
+              "stat": "logic",
+              "type": "white",
+              "fail_damage": 5,
+              "telegraphed": false
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "anciens",
+                "amount": 14
+              }
+            ]
+          },
+          {
+            "label": "Achever la formule avec ton souffle",
+            "verb": "achever",
+            "gradient": "audacieuse",
+            "primary_faction": "niamh",
+            "check": {
+              "stat": "logic",
+              "type": "fatal",
+              "fail_damage": 15,
+              "telegraphed": true
+            },
+            "effects": [
+              {
+                "type": "ADD_REPUTATION",
+                "faction": "niamh",
+                "amount": 20
+              },
+              {
+                "type": "ADD_ANAM",
+                "amount": 8
+              }
+            ]
+          }
+        ],
+        "route_mask": [
+          true,
+          true,
+          true
+        ],
+        "branch_label": "trunk"
+      }
+    ],
+    "routes": [
+      {
+        "key": "ordre",
+        "name": "Voie de l'Ordre",
+        "label": "Accomplir le rite mot pour mot, dans la patience des Anciens, sans discuter une seule entaille de l'ogham.",
+        "card_ids": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6_ordre_b1",
+          "c7_ordre_b1",
+          "c8_ordre_b1",
+          "c9_ordre_b1",
+          "c10_ordre_b1",
+          "c11_twist",
+          "c12_ordre_b2",
+          "c13_ordre_b2",
+          "c14_ordre_b2",
+          "c15_ordre_b2",
+          "c16_ordre_b2",
+          "c17_ordre_b2",
+          "c18_ordre_b2",
+          "c19_ordre_b2",
+          "c20_ordre_b2",
+          "c21",
+          "c22",
+          "c23",
+          "c24",
+          "c25"
+        ]
+      },
+      {
+        "key": "chaos",
+        "name": "Voie du Chaos",
+        "label": "Réécrire le rite, chercher avec les korrigans la faille du texte, et faire dire à la formule autre chose que ce qu'elle exige.",
+        "card_ids": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6_chaos_b1",
+          "c7_chaos_b1",
+          "c8_chaos_b1",
+          "c9_chaos_b1",
+          "c10_chaos_b1",
+          "c11_twist",
+          "c12_chaos_b2",
+          "c13_chaos_b2",
+          "c14_chaos_b2",
+          "c15_chaos_b2",
+          "c16_chaos_b2",
+          "c17_chaos_b2",
+          "c18_chaos_b2",
+          "c19_chaos_b2",
+          "c20_chaos_b2",
+          "c21",
+          "c22",
+          "c23",
+          "c24",
+          "c25"
+        ]
+      },
+      {
+        "key": "liminal",
+        "name": "Voie Liminale",
+        "label": "Ne rien clore ni rien rouvrir : tenir le rite sur le seuil, dans la brume de Niamh, à la lisière du souffle.",
+        "card_ids": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6_liminal_b1",
+          "c7_liminal_b1",
+          "c8_liminal_b1",
+          "c9_liminal_b1",
+          "c10_liminal_b1",
+          "c11_twist",
+          "c12_liminal_b2",
+          "c13_liminal_b2",
+          "c14_liminal_b2",
+          "c15_liminal_b2",
+          "c16_liminal_b2",
+          "c17_liminal_b2",
+          "c18_liminal_b2",
+          "c19_liminal_b2",
+          "c20_liminal_b2",
+          "c21",
+          "c22",
+          "c23",
+          "c24",
+          "c25"
+        ]
+      }
+    ]
+  }
+]

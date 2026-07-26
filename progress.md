@@ -2502,3 +2502,28 @@ Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement p
 - Validator : enveloppe DANGER_BUDGET scalée par danger_modifier (27 faux positifs éliminés, score corpus 90.8/100)
 - Bible : §6.2 note caps par route + §6.3bis schéma carte skeleton étendu (rarity/emotion/verb/primary_faction/check)
 - Exception « options voilées » documentée (mist_wanderer + interference hide) ; finding « corpus trop doux » ajouté
+
+### Phase: Scénario type de référence + harnais de conformité (2026-07-26)
+- **Status:** complete
+- **Branche:** claude/godot-merlin-scenario-templates-ylgdwr
+
+#### Le scénario type — « Le Rite des Neuf Souffles »
+`forgotten_ritual` / pôle Ordre / twist `ritual_completion` / Brocéliande. Rite druidique interrompu ; le twist (c11) révèle qu'il fut arrêté volontairement car le neuvième souffle se prend sur l'officiant. 3 voies : accomplir (Ordre) / réécrire (Chaos) / tenir en suspens (Liminal). **25 cartes par route, pool de 53.**
+
+**Méthode (le vrai livrable)** : deux couches séparées.
+- Mécanique — `tools/build_golden_scenario.py`, dérivée du contrat : graphe, routes, types, raretés, arc, factions, checks, effets. Déterministe et reproductible.
+- Prose — `data/ai/scenario_golden_prose.json` (9 agents : 1 colonne vertébrale + 6 branches + 2 relecteurs, 28 corrections appliquées), injectée via `--merge-prose`.
+→ L'équilibrage n'est jamais négocié en écrivant du texte.
+
+**Mesures** : stats 39.6/25.2/20.1/15.1 % (cible 40/25/20/15) · checks par carte 72/16/8/4 (cible 75/15/8/2) · factions 14.5–23.9 % (druides ≤ 30 %) · écart EV max 1.08 PV-éq (cap 2.0) · **validateur `--strict` : 100/100, 0 erreur**.
+
+#### Vérification : le jeu génère-t-il ce contrat ?
+Harnais sans Ollama (`_balance_skeleton` est statique) : `tools/godot/conformance_pipeline.gd` + `tools/check_pipeline_output.py` → `docs/30_jdr/PIPELINE_OUTPUT_AUDIT.md`.
+
+**Non — 5 écarts structurels (CAPACITÉ, 0/12)** : squelette plafonné à 10 beats (contrat 11-25), séquence linéaire sans branchement 3 voies, ni options, ni checks de stats, ni actes matérialisés.
+**Réglage plutôt bon** : adjacence 12/12, placement LEGENDAIRE 12/12, climax 12/12.
+**Fix appliqué** : `CARD_TYPE_CAPS` déclarait `NARRATIVE min_share/max_share` jamais appliqué (l'étape 2 renvoyait à « l'étape 4 » qui traite les légendaires) → 0/12 conformes avant, 3/12 après ; les 8 restants sont des squelettes à 5 beats où la borne est arithmétiquement inatteignable.
+
+#### Validations
+- `--strict` sur le corpus : 90.8 → 80.8, soit exactement `NO_CHECK_LAYER` (le corpus ne porte pas la couche mécanique — mesure de ce qu'il reste à générer)
+- Smoke `ScenarioLoading` : exit 0, 0 script error, strict mode se déclenche correctement sans Ollama

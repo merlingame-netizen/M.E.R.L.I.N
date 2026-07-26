@@ -1,0 +1,915 @@
+{
+ "title": "Le Rite des Neuf Souffles",
+ "intro": "Tu marches en Brocéliande depuis trois jours et la forêt ne t'a rien demandé. Ce matin ton pied glisse sur une bosse de mousse qui sonne creux, et sous la mousse il y a de la pierre taillée. Les entailles sont des oghams, plus vieux que les chemins, plus vieux que les noms qu'on donne ici aux clairières. Un peu plus loin, une autre bosse. Puis une autre, alignée. Neuf pierres dorment sous le tapis vert, neuf stations d'une cérémonie que personne n'a portée jusqu'au bout. Depuis ce jour-là la forêt n'expire plus : pas un souffle d'air entre les fûts, pas une feuille qui tourne. Quelqu'un a commencé le Rite des Neuf Souffles et l'a laissé ouvert au milieu — et te voilà, la paume sur la première pierre, à comprendre qu'il attendait quelqu'un.",
+ "premise": "D'abord ce n'est qu'une pierre sous la mousse, froide comme une bête endormie. Tu grattes, tu lis, tu comprends que ce n'est pas une tombe : c'est une bouche, et elle est restée ouverte.\n\nLe rite se marche. Une pierre, un souffle, une station. Entre chaque, la brume tient debout et ne bouge pas, et tu finis par entendre ce qui manque à la forêt : le bruit de l'air qui repart.\n\nÀ la quatrième station, la mousse se fend. Il y a la voie qui obéit à la lettre, celle qui triche avec les mots, celle qui refuse de trancher. Aucune n'est plus courte. Aucune ne rend le même homme à la fin.\n\nPuis Merlin parle, et ce qu'il dit ne se défait pas. Il n'en tire aucune joie. Il te laisse simplement porter la chose jusqu'à la dernière pierre, comme on porte un seau plein sans en renverser.\n\nÀ la fin il n'y a qu'un souffle et plusieurs poitrines. Brocéliande attend depuis des siècles de pouvoir expirer. Ce que tu décides là ne se raconte pas : ça se respire, une fois, et la mousse referme le reste.",
+ "essence": "Une cérémonie druidique laissée ouverte en plein milieu dort sous la mousse de Brocéliande, et attend qu'on lui rende son dernier souffle.",
+ "hook": "Dans cette forêt pas une feuille ne tourne : depuis des siècles, Brocéliande n'a pas expiré.",
+ "routes": {
+  "ordre": "Accomplir le rite mot pour mot, dans la patience des Anciens, sans discuter une seule entaille de l'ogham.",
+  "chaos": "Réécrire le rite, chercher avec les korrigans la faille du texte, et faire dire à la formule autre chose que ce qu'elle exige.",
+  "liminal": "Ne rien clore ni rien rouvrir : tenir le rite sur le seuil, dans la brume de Niamh, à la lisière du souffle."
+ },
+ "cards": {
+  "c1": {
+   "summary": "Sous la mousse d'un talus, une pierre dressée porte des entailles que la forêt n'a pas faites.",
+   "options": [
+    {
+     "label": "Lire les entailles sans y toucher",
+     "verb": "lire"
+    },
+    {
+     "label": "Rester devant la pierre jusqu'au soir",
+     "verb": "rester"
+    },
+    {
+     "label": "Fouiller la fente à l'aveugle",
+     "verb": "fouiller"
+    }
+   ]
+  },
+  "c2": {
+   "summary": "L'air ne bouge plus entre les fûts : la brume tient debout comme si elle attendait un signe.",
+   "options": [
+    {
+     "label": "Retenir ton souffle avec la forêt",
+     "verb": "retenir"
+    },
+    {
+     "label": "Poser la paume contre l'écorce froide",
+     "verb": "poser"
+    },
+    {
+     "label": "Nommer à voix haute ce silence",
+     "verb": "nommer"
+    }
+   ]
+  },
+  "c3": {
+   "summary": "Les fougères s'ouvrent d'un coup sur ton passage et quelque chose file vers la pierre suivante.",
+   "options": [
+    {
+     "label": "Reculer sous le couvert des fougères",
+     "verb": "reculer"
+    },
+    {
+     "label": "Déchiffrer la trace dans la mousse",
+     "verb": "déchiffrer"
+    },
+    {
+     "label": "Barrer le chemin à la chose",
+     "verb": "barrer"
+    }
+   ]
+  },
+  "c4": {
+   "summary": "Sur la troisième pierre, une main plus tardive a griffé les traits de l'ogham pour en changer le sens.",
+   "options": [
+    {
+     "label": "Comparer les traits anciens aux nouveaux",
+     "verb": "comparer"
+    },
+    {
+     "label": "Deviner la peur de cette main",
+     "verb": "deviner"
+    },
+    {
+     "label": "Regraver le trait tel qu'il fut",
+     "verb": "regraver"
+    }
+   ]
+  },
+  "c5": {
+   "summary": "La pierre attend un souffle, et la mousse se fend en trois sentes qui ne se rejoignent plus.",
+   "options": [
+    {
+     "label": "Souffler exactement comme le rite l'ordonne",
+     "verb": "souffler"
+    },
+    {
+     "label": "Fausser le souffle d'une syllabe",
+     "verb": "fausser"
+    },
+    {
+     "label": "Mêler ton souffle à la brume",
+     "verb": "mêler"
+    }
+   ]
+  },
+  "c11_twist": {
+   "summary": "Merlin te dit enfin pourquoi le rite dort : le neuvième souffle se prend sur celui qui le clôt.",
+   "options": [
+    {
+     "label": "Demander la formule mot à mot",
+     "verb": "demander"
+    },
+    {
+     "label": "Porter seul cette révélation",
+     "verb": "porter"
+    },
+    {
+     "label": "Dire que tu clôras le rite",
+     "verb": "dire"
+    }
+   ]
+  },
+  "c21": {
+   "summary": "La huitième pierre s'éteint derrière toi et la dernière se lève, seule, au fond du nemeton.",
+   "options": [
+    {
+     "label": "Vérifier l'ordre des stations franchies",
+     "verb": "vérifier"
+    },
+    {
+     "label": "Écouter ce que la forêt retient",
+     "verb": "écouter"
+    },
+    {
+     "label": "Chercher la faille dans le rite",
+     "verb": "chercher"
+    }
+   ]
+  },
+  "c22": {
+   "summary": "Entre les deux dernières pierres se tient un homme de brume, la bouche ouverte sur un souffle jamais rendu.",
+   "options": [
+    {
+     "label": "Épeler ce que sa bouche tait",
+     "verb": "épeler"
+    },
+    {
+     "label": "Compter les souffles qui lui manquent",
+     "verb": "compter"
+    },
+    {
+     "label": "Reprendre la formule où elle cesse",
+     "verb": "reprendre"
+    }
+   ]
+  },
+  "c23": {
+   "summary": "Merlin ouvre la main et tu entends d'un seul coup les huit souffles rendus avant toi.",
+   "options": [
+    {
+     "label": "Reconnaître la voix absente",
+     "verb": "reconnaître"
+    },
+    {
+     "label": "Ranger les souffles dans leur ordre",
+     "verb": "ranger"
+    },
+    {
+     "label": "Ajouter ton souffle à leur suite",
+     "verb": "ajouter"
+    }
+   ]
+  },
+  "c24": {
+   "summary": "Les korrigans s'assoient en cercle autour de la dernière pierre et parient tout bas sur qui paiera le souffle.",
+   "options": [
+    {
+     "label": "Apaiser le cercle avant qu'il rie",
+     "verb": "apaiser"
+    },
+    {
+     "label": "Trancher qui doit ce souffle",
+     "verb": "trancher"
+    },
+    {
+     "label": "Retourner leur propre règle contre eux",
+     "verb": "retourner"
+    }
+   ]
+  },
+  "c25": {
+   "summary": "La neuvième pierre attend, et il n'y a plus qu'un souffle à donner : reste à savoir de qui.",
+   "options": [
+    {
+     "label": "Graver le nom d'un autre",
+     "verb": "graver"
+    },
+    {
+     "label": "Prêter ton souffle à l'homme arrêté",
+     "verb": "prêter"
+    },
+    {
+     "label": "Achever la formule avec ton souffle",
+     "verb": "achever"
+    }
+   ]
+  },
+  "c6_chaos_b1": {
+   "summary": "Sous le dolmen, un korrigan étale des syllabes volées au rite et attend que tu marchandes.",
+   "options": [
+    {
+     "label": "Lire les syllabes avant de payer",
+     "verb": "lire"
+    },
+    {
+     "label": "Flairer le prix vrai, puis marchander",
+     "verb": "flairer"
+    },
+    {
+     "label": "Payer par un serment tenu",
+     "verb": "payer"
+    }
+   ]
+  },
+  "c7_chaos_b1": {
+   "summary": "La station suivante recrache ton souffle faussé, et la mousse noircit en cercle autour de ta main.",
+   "options": [
+    {
+     "label": "Apaiser la pierre à mains nues",
+     "verb": "apaiser"
+    },
+    {
+     "label": "Tenir la fausse formule sans ciller",
+     "verb": "tenir"
+    },
+    {
+     "label": "Braver la mousse morte, paume ouverte",
+     "verb": "braver"
+    }
+   ]
+  },
+  "c8_chaos_b1": {
+   "summary": "Une entaille de l'ogham se lit de deux façons, et la seconde arrange trop bien qui la lit.",
+   "options": [
+    {
+     "label": "Vérifier la seconde lecture ailleurs",
+     "verb": "vérifier"
+    },
+    {
+     "label": "Taire la faille et poursuivre",
+     "verb": "taire"
+    },
+    {
+     "label": "Retourner l'entaille contre le rite",
+     "verb": "retourner"
+    }
+   ]
+  },
+  "c9_chaos_b1": {
+   "summary": "Les korrigans prêtent un souffle d'emprunt, à rendre avant que la dernière pierre ne se referme.",
+   "options": [
+    {
+     "label": "Jurer un serment court et tenable",
+     "verb": "jurer"
+    },
+    {
+     "label": "Fixer chaque terme dans un ogham",
+     "verb": "fixer"
+    },
+    {
+     "label": "Gager un souvenir que tu aimes",
+     "verb": "gager"
+    }
+   ]
+  },
+  "c10_chaos_b1": {
+   "summary": "La pierre répond à un mot qui n'est pas le sien, et la forêt expire enfin, de travers.",
+   "options": [
+    {
+     "label": "Écouter où retombe le faux souffle",
+     "verb": "écouter"
+    },
+    {
+     "label": "Sentir si la forêt respire mieux",
+     "verb": "sentir"
+    },
+    {
+     "label": "Inscrire ton mot dans la pierre",
+     "verb": "inscrire"
+    }
+   ]
+  },
+  "c6_ordre_b1": {
+   "summary": "Sous le dolmen, le gui et la corde du rite dorment intacts, et la gardienne des Anciens attend.",
+   "options": [
+    {
+     "label": "Vérifier chaque offrande contre le texte",
+     "verb": "vérifier"
+    },
+    {
+     "label": "Marchander au flair le gui coupé",
+     "verb": "marchander"
+    },
+    {
+     "label": "Jeûner jusqu'à ce qu'elle cède",
+     "verb": "jeûner"
+    }
+   ]
+  },
+  "c7_ordre_b1": {
+   "summary": "La deuxième pierre exige une veille immobile jusqu'à la brume, et tes genoux saignent déjà sur la mousse.",
+   "options": [
+    {
+     "label": "Apaiser ton souffle contre la pierre",
+     "verb": "apaiser"
+    },
+    {
+     "label": "Tenir la veille des Anciens",
+     "verb": "tenir"
+    },
+    {
+     "label": "Coucher ton corps sur la dalle",
+     "verb": "coucher"
+    }
+   ]
+  },
+  "c8_ordre_b1": {
+   "summary": "À la troisième station, une entaille manque au texte, et le rite tait le mot qu'il faudrait dire.",
+   "options": [
+    {
+     "label": "Compter les entailles des pierres voisines",
+     "verb": "compter"
+    },
+    {
+     "label": "Garder le vide sans le combler",
+     "verb": "garder"
+    },
+    {
+     "label": "Deviner le mot à l'oreille",
+     "verb": "deviner"
+    }
+   ]
+  },
+  "c9_ordre_b1": {
+   "summary": "Devant la pierre des serments, la mousse s'écarte seule : ici, une parole donnée tient jusqu'à la neuvième station.",
+   "options": [
+    {
+     "label": "Jurer la formule brève des Anciens",
+     "verb": "jurer"
+    },
+    {
+     "label": "Peser chaque mot avant de jurer",
+     "verb": "peser"
+    },
+    {
+     "label": "Promettre de rendre chaque souffle",
+     "verb": "promettre"
+    }
+   ]
+  },
+  "c10_ordre_b1": {
+   "summary": "Tu as tenu la lettre du rite, et pour la première fois une feuille tourne : la forêt expire un peu.",
+   "options": [
+    {
+     "label": "Flairer la trace du vent revenu",
+     "verb": "flairer"
+    },
+    {
+     "label": "Répondre au souffle de la forêt",
+     "verb": "répondre"
+    },
+    {
+     "label": "Déduire le rythme des souffles restants",
+     "verb": "déduire"
+    }
+   ]
+  },
+  "c6_liminal_b1": {
+   "summary": "À la deuxième station, une passeuse de brume troque des souffles retenus contre des choses jamais tout à fait données.",
+   "options": [
+    {
+     "label": "Déchiffrer les oghams de son étal",
+     "verb": "déchiffrer"
+    },
+    {
+     "label": "Soupeser le gage qu'elle te tend",
+     "verb": "soupeser"
+    },
+    {
+     "label": "Offrir une veille entière en gage",
+     "verb": "offrir"
+    }
+   ]
+  },
+  "c7_liminal_b1": {
+   "summary": "La troisième pierre exige qu'on referme la station, et ta bouche reste ouverte sur un mot inachevé.",
+   "options": [
+    {
+     "label": "Apaiser la pierre sans la refermer",
+     "verb": "apaiser"
+    },
+    {
+     "label": "Tenir le mot en suspens longtemps",
+     "verb": "tenir"
+    },
+    {
+     "label": "Laisser l'Ankou écouter ton silence",
+     "verb": "laisser"
+    }
+   ]
+  },
+  "c8_liminal_b1": {
+   "summary": "Entre deux ifs, la quatrième station montre la forêt deux fois : celle qui respire, celle qui retient.",
+   "options": [
+    {
+     "label": "Comparer les oghams de chaque battant",
+     "verb": "comparer"
+    },
+    {
+     "label": "Demeurer un pied de chaque côté",
+     "verb": "demeurer"
+    },
+    {
+     "label": "Franchir le seuil à l'aveugle",
+     "verb": "franchir"
+    }
+   ]
+  },
+  "c9_liminal_b1": {
+   "summary": "La cinquième pierre ne s'ouvre qu'à un serment, et Niamh demande jusqu'à quand tu tiendras le seuil.",
+   "options": [
+    {
+     "label": "Jurer jusqu'à la prochaine lune",
+     "verb": "jurer"
+    },
+    {
+     "label": "Fixer le terme dans les oghams",
+     "verb": "fixer"
+    },
+    {
+     "label": "Promettre de tenir tant qu'elle chantera",
+     "verb": "promettre"
+    }
+   ]
+  },
+  "c10_liminal_b1": {
+   "summary": "Entre deux stations la brume s'écarte, et le sidhe se montre le temps d'un souffle non rendu.",
+   "options": [
+    {
+     "label": "Flairer d'où vient la trouée",
+     "verb": "flairer"
+    },
+    {
+     "label": "Saluer ceux qui passent la brume",
+     "verb": "saluer"
+    },
+    {
+     "label": "Nommer tout haut ce qui passe",
+     "verb": "nommer"
+    }
+   ]
+  },
+  "c12_ordre_b2": {
+   "summary": "La quatrième pierre attend la suite exacte de la formule, et ta main tremble sur la mousse froide.",
+   "options": [
+    {
+     "label": "Écouter le silence entre deux syllabes",
+     "verb": "écouter"
+    },
+    {
+     "label": "Guetter le rythme juste du rite",
+     "verb": "guetter"
+    },
+    {
+     "label": "Reprendre la formule à la syllabe",
+     "verb": "reprendre"
+    }
+   ]
+  },
+  "c13_ordre_b2": {
+   "summary": "À la cinquième pierre, un souffle tiède monte de la mousse et dessine la place des officiants disparus.",
+   "options": [
+    {
+     "label": "Tenir ton rang comme les Anciens",
+     "verb": "tenir"
+    },
+    {
+     "label": "Endurer la tiedeur des places vides",
+     "verb": "endurer"
+    },
+    {
+     "label": "Déchiffrer l'ogham tracé par leur souffle",
+     "verb": "déchiffrer"
+    }
+   ]
+  },
+  "c14_ordre_b2": {
+   "summary": "L'if tombé couvre la sixième pierre, et le rite interdit autant de la découvrir que de l'abandonner.",
+   "options": [
+    {
+     "label": "Relire l'entaille qui règle ce cas",
+     "verb": "relire"
+    },
+    {
+     "label": "Apaiser l'if avant de le déranger",
+     "verb": "apaiser"
+    },
+    {
+     "label": "Écarter les racines d'un geste sec",
+     "verb": "écarter"
+    }
+   ]
+  },
+  "c15_ordre_b2": {
+   "summary": "À la septième station, les noms des officiants montent le long des fûts et le dernier reste inachevé.",
+   "options": [
+    {
+     "label": "Flairer la sève sous l'entaille inachevée",
+     "verb": "flairer"
+    },
+    {
+     "label": "Réciter les noms jusqu'au dernier",
+     "verb": "réciter"
+    },
+    {
+     "label": "Terminer le nom laissé ouvert",
+     "verb": "terminer"
+    }
+   ]
+  },
+  "c16_ordre_b2": {
+   "summary": "Le vent revenu ne passe plus entre les futs : il entre dans ta poitrine et s'y arrêté.",
+   "options": [
+    {
+     "label": "Accueillir le courant sans lui répondre",
+     "verb": "accueillir"
+    },
+    {
+     "label": "Mesurer combien de temps il dure",
+     "verb": "mesurer"
+    },
+    {
+     "label": "Offrir ta poitrine au vent",
+     "verb": "offrir"
+    }
+   ]
+  },
+  "c17_ordre_b2": {
+   "summary": "Au pied de l'if creux, une gardienne des Anciens pese ce qui manque a ta formule contre ce que tu portes.",
+   "options": [
+    {
+     "label": "Céder ta besace sans marchander",
+     "verb": "céder"
+    },
+    {
+     "label": "Jauger l'offrande qu'elle attend vraiment",
+     "verb": "jauger"
+    },
+    {
+     "label": "Échanger ton ogham contre la formule",
+     "verb": "échanger"
+    }
+   ]
+  },
+  "c18_ordre_b2": {
+   "summary": "Sur la huitième pierre, une seconde main a retaillé la dernière ligne d'une entaille plus douce.",
+   "options": [
+    {
+     "label": "Comparer les entailles trait à trait",
+     "verb": "comparer"
+    },
+    {
+     "label": "Reconnaître la main qui allait mourir",
+     "verb": "reconnaître"
+    },
+    {
+     "label": "Suivre la main la plus douce",
+     "verb": "suivre"
+    }
+   ]
+  },
+  "c19_ordre_b2": {
+   "summary": "La brume s'ouvre d'un coup : l'officiant arrêté est encore agenouillé devant la neuvième pierre.",
+   "options": [
+    {
+     "label": "Repérer où sa formule s'est brisée",
+     "verb": "repérer"
+    },
+    {
+     "label": "Reconstituer la station qu'il a laissée",
+     "verb": "reconstituer"
+    },
+    {
+     "label": "Prendre sa place devant la pierre",
+     "verb": "prendre"
+    }
+   ]
+  },
+  "c20_ordre_b2": {
+   "summary": "L'ogham de l'if s'allume sous ta paume, chaud comme une braise que personne n'a soufflée.",
+   "options": [
+    {
+     "label": "Remercier avant de refermer ta main",
+     "verb": "remercier"
+    },
+    {
+     "label": "Nommer l'ogham selon l'ordre ancien",
+     "verb": "nommer"
+    },
+    {
+     "label": "Inscrire l'ogham dans la formule finale",
+     "verb": "inscrire"
+    }
+   ]
+  },
+  "c12_chaos_b2": {
+   "summary": "Le rite ne nomme jamais l'officiant, et cette absence te paraît soudain plus large qu'une porte.",
+   "options": [
+    {
+     "label": "Apaiser la pierre avant de parler",
+     "verb": "apaiser"
+    },
+    {
+     "label": "Flairer la faille dans la formule",
+     "verb": "flairer"
+    },
+    {
+     "label": "Prêter serment sous un nom volé",
+     "verb": "prêter"
+    }
+   ]
+  },
+  "c13_chaos_b2": {
+   "summary": "Des rires montent de sous les racines : les korrigans ont senti quelqu'un tordre une règle très ancienne.",
+   "options": [
+    {
+     "label": "Rester immobile jusqu'au dernier rire",
+     "verb": "rester"
+    },
+    {
+     "label": "Nommer le prix devant les rieurs",
+     "verb": "nommer"
+    },
+    {
+     "label": "Lire la formule entière aux korrigans",
+     "verb": "lire"
+    }
+   ]
+  },
+  "c14_chaos_b2": {
+   "summary": "La mousse repousse sur l'entaille que tu viens de fausser, plus vite que l'herbe ne pousse.",
+   "options": [
+    {
+     "label": "Relire la pierre sous la mousse",
+     "verb": "relire"
+    },
+    {
+     "label": "Sentir ce que la forêt refuse",
+     "verb": "sentir"
+    },
+    {
+     "label": "Rouvrir la fausse entaille au couteau",
+     "verb": "rouvrir"
+    }
+   ]
+  },
+  "c15_chaos_b2": {
+   "summary": "L'entaille surchargée porte la même main qu'a la troisième pierre, et cette fois le trait a tremble.",
+   "options": [
+    {
+     "label": "Suivre la trace du faussaire",
+     "verb": "suivre"
+    },
+    {
+     "label": "Effacer la fraude et graver droit",
+     "verb": "effacer"
+    },
+    {
+     "label": "Ressentir la peur de cette main",
+     "verb": "ressentir"
+    }
+   ]
+  },
+  "c16_chaos_b2": {
+   "summary": "La station avale ton faux souffle sans le recracher, et l'air qui repart entre les futs a le gout de l'if.",
+   "options": [
+    {
+     "label": "Remercier la pierre de son silence",
+     "verb": "remercier"
+    },
+    {
+     "label": "Retenir le mot qui a menti",
+     "verb": "retenir"
+    },
+    {
+     "label": "Offrir un souffle emprunté au mort",
+     "verb": "offrir"
+    }
+   ]
+  },
+  "c17_chaos_b2": {
+   "summary": "Un korrigan tient le mot qui manque a ta formule et ne fixera son prix qu'une fois que tu l'auras dit.",
+   "options": [
+    {
+     "label": "Refuser le troc et tenir bon",
+     "verb": "refuser"
+    },
+    {
+     "label": "Marchander le mot contre un secret",
+     "verb": "marchander"
+    },
+    {
+     "label": "Déchiffrer le mot sans le payer",
+     "verb": "déchiffrer"
+    }
+   ]
+  },
+  "c18_chaos_b2": {
+   "summary": "Merlin regarde ta formule truquée sans un mot, et ce silence pèse plus lourd qu'un reproche.",
+   "options": [
+    {
+     "label": "Justifier chaque entaille devant lui",
+     "verb": "justifier"
+    },
+    {
+     "label": "Compter ce que ta ruse coûtera",
+     "verb": "compter"
+    },
+    {
+     "label": "Avouer à Merlin que tu jubiles",
+     "verb": "avouer"
+    }
+   ]
+  },
+  "c19_chaos_b2": {
+   "summary": "La huitième pierre reclame le nom que le rite n'ecrit nulle part, et ta bouche dit le tien avant toi.",
+   "options": [
+    {
+     "label": "Relire la ligne qui te nomme",
+     "verb": "relire"
+    },
+    {
+     "label": "Donner le nom du premier officiant",
+     "verb": "donner"
+    },
+    {
+     "label": "Répondre par le nom d'un vivant",
+     "verb": "répondre"
+    }
+   ]
+  },
+  "c20_chaos_b2": {
+   "summary": "Sous la mousse arrachée dort un ogham que personne n'a gravé droit : le trait qui détourne.",
+   "options": [
+    {
+     "label": "Poser la paume sur le trait",
+     "verb": "poser"
+    },
+    {
+     "label": "Lire l'ogham qui ment",
+     "verb": "lire"
+    },
+    {
+     "label": "Recopier le trait sur ta paume",
+     "verb": "recopier"
+    }
+   ]
+  },
+  "c12_liminal_b2": {
+   "summary": "La station suivante réclame son souffle, et tu le gardes en toi sans le rendre ni le refuser.",
+   "options": [
+    {
+     "label": "Apaiser la pierre sans lui répondre",
+     "verb": "apaiser"
+    },
+    {
+     "label": "Flairer où le rite hésite encore",
+     "verb": "flairer"
+    },
+    {
+     "label": "Tenir la station ouverte jusqu'à l'aube",
+     "verb": "tenir"
+    }
+   ]
+  },
+  "c13_liminal_b2": {
+   "summary": "Entre deux ifs la brume s'ouvre comme une porte, et l'autre forêt respire de l'autre côté.",
+   "options": [
+    {
+     "label": "Rester du côté des vivants",
+     "verb": "rester"
+    },
+    {
+     "label": "Soutenir le regard du passeur pâle",
+     "verb": "soutenir"
+    },
+    {
+     "label": "Lire les oghams de l'autre forêt",
+     "verb": "lire"
+    }
+   ]
+  },
+  "c14_liminal_b2": {
+   "summary": "Ton haleine ne fait plus de buée, et tu ne sais plus depuis quelle station cela dure.",
+   "options": [
+    {
+     "label": "Compter les stations laissées ouvertes",
+     "verb": "compter"
+    },
+    {
+     "label": "Confier ton trouble à la brume",
+     "verb": "confier"
+    },
+    {
+     "label": "Suivre l'odeur du souffle manquant",
+     "verb": "suivre"
+    }
+   ]
+  },
+  "c15_liminal_b2": {
+   "summary": "Un homme se tient à la station, immobile depuis des siècles, ni mort ni tout à fait là.",
+   "options": [
+    {
+     "label": "Humer l'air autour de l'homme arrêté",
+     "verb": "humer"
+    },
+    {
+     "label": "Veiller près de lui sans parler",
+     "verb": "veiller"
+    },
+    {
+     "label": "Poser ta paume sur sa poitrine",
+     "verb": "poser"
+    }
+   ]
+  },
+  "c16_liminal_b2": {
+   "summary": "La clairière tenue en suspens ne fane plus : tout y fleurit sans jamais s'ouvrir tout à fait.",
+   "options": [
+    {
+     "label": "Respirer avec la clairière endormie",
+     "verb": "respirer"
+    },
+    {
+     "label": "Déchiffrer les bourgeons hors saison",
+     "verb": "déchiffrer"
+    },
+    {
+     "label": "Refuser ce printemps sans fin",
+     "verb": "refuser"
+    }
+   ]
+  },
+  "c17_liminal_b2": {
+   "summary": "Sur la pierre du gué, des offrandes attendent preneur : ici rien ne se donne, tout se prête.",
+   "options": [
+    {
+     "label": "Déposer ton offrande sans rien prendre",
+     "verb": "déposer"
+    },
+    {
+     "label": "Emprunter ce que nul ne réclame",
+     "verb": "emprunter"
+    },
+    {
+     "label": "Marchander au gué ce qui manque",
+     "verb": "marchander"
+    }
+   ]
+  },
+  "c18_liminal_b2": {
+   "summary": "Dans l'eau dormante, les neuf pierres sont closes, et un visage te regarde depuis un rite déjà achevé.",
+   "options": [
+    {
+     "label": "Comparer le reflet aux entailles réelles",
+     "verb": "comparer"
+    },
+    {
+     "label": "Reconnaître le visage sous l'eau",
+     "verb": "reconnaître"
+    },
+    {
+     "label": "Plonger la main dans le rite",
+     "verb": "plonger"
+    }
+   ]
+  },
+  "c19_liminal_b2": {
+   "summary": "Un vent se lève dans une forêt qui n'expire pas, et les stations derrière toi commencent à se refermer.",
+   "options": [
+    {
+     "label": "Deviner quelle station cède d'abord",
+     "verb": "deviner"
+    },
+    {
+     "label": "Retarder la clôture d'une station",
+     "verb": "retarder"
+    },
+    {
+     "label": "Rouvrir ce que le vent ferme",
+     "verb": "rouvrir"
+    }
+   ]
+  },
+  "c20_liminal_b2": {
+   "summary": "Entre deux entailles de la pierre, une troisième apparaît quand tu ne la regardes pas en face.",
+   "options": [
+    {
+     "label": "Laisser l'entaille venir à toi",
+     "verb": "laisser"
+    },
+    {
+     "label": "Nommer l'ogham qui n'est pas gravé",
+     "verb": "nommer"
+    },
+    {
+     "label": "Tailler le seuil dans ta paume",
+     "verb": "tailler"
+    }
+   ]
+  }
+ }
+}
