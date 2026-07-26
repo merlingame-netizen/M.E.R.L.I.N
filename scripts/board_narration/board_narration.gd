@@ -2556,6 +2556,9 @@ func _phase_outro_then_done() -> void:
 func _finish() -> void:
 	_skip_button.disabled = true
 	_skip_button.visible = false
+	_tr_record({"evenement": "fin_run", "issue": _outcome,
+		"anam_gagne": _run_anam_earned, "hud": _tr_hud_snapshot()})
+	_tr_flush()
 	var entry: Dictionary = BoardRunJournal.build_entry(_run_data, _narrations, _outcome)
 	if _save_system:
 		BoardRunJournal.save_to_profile(_save_system, entry)
@@ -2746,6 +2749,11 @@ func _run_live_loop() -> void:
 	_run_anam_earned = 0
 	_active_modifier = ""
 
+	# Transcript opt-in (MERLIN_TRANSCRIPT=<chemin.json>) — QA / revue de design.
+	_transcript_path = OS.get_environment("MERLIN_TRANSCRIPT")
+	_transcript.clear()
+	_tr_record({"evenement": "debut_run", "biome": _biome_id, "hud": _tr_hud_snapshot()})
+
 	var total_acts: int = ACT_SEQUENCE.size()
 	for act_idx in range(total_acts):
 		if _skip_requested:
@@ -2774,6 +2782,28 @@ func _run_live_loop() -> void:
 			await get_tree().create_timer(3.0).timeout
 			break
 		_live_current_card = card
+
+		# Transcript : ce que le joueur a sous les yeux avant de choisir.
+		if not _transcript_path.is_empty():
+			var opts_vues: Array = []
+			for o in (card.get("options", []) as Array):
+				var od: Dictionary = o as Dictionary
+				opts_vues.append({
+					"label": str(od.get("label", "")),
+					"verbe": str(od.get("verb", "")),
+					"effets_caches": (od.get("effects", []) as Array).duplicate(true),
+				})
+			_tr_record({
+				"evenement": "carte_affichee",
+				"acte_index": act_idx + 1,
+				"acte_type_demande": act_type,
+				"acte_type_servi": str(card.get("act_type", "standard")),
+				"carte_id": str(card.get("id", "")),
+				"texte": str(card.get("text", card.get("prompt", ""))),
+				"dialogue_merlin": str(card.get("dialogue", "")),
+				"options_visibles": opts_vues,
+				"hud": _tr_hud_snapshot(),
+			})
 
 		# v5.2 — Visual "pioche" : the top card of the 3D deck lifts, rotates,
 		# flies toward the camera, fades — THEN the parchemin overlay appears.
@@ -2827,6 +2857,8 @@ func _run_live_loop() -> void:
 		var res = await _store.dispatch(resolve_action)
 		_live_cards_played += 1
 
+		var hud_apres_choix: Dictionary = _tr_hud_snapshot()
+
 		# Capture shop modifier for the next 2 acts.
 		if act_type == "shop":
 			_capture_shop_modifier(card, _live_pending_choice)
@@ -2837,6 +2869,25 @@ func _run_live_loop() -> void:
 		# Per user feedback (2026-05-14 part 8) : "Dé du destin à chaque carte".
 		if act_type != "boss":
 			await _roll_fate_dice()
+
+		# Transcript : le choix retenu et ce que le moteur en a fait.
+		if not _transcript_path.is_empty():
+			var opt_idx: int = _live_pending_choice
+			var opts_arr: Array = card.get("options", [])
+			var chosen: Dictionary = {}
+			if opt_idx >= 0 and opt_idx < opts_arr.size():
+				chosen = opts_arr[opt_idx] as Dictionary
+			_tr_record({
+				"evenement": "resolution",
+				"acte_index": act_idx + 1,
+				"option_choisie": opt_idx,
+				"label_choisi": str(chosen.get("label", "")),
+				"effets_declares": (chosen.get("effects", []) as Array).duplicate(true),
+				"reponse_store": (res if res is Dictionary else {}),
+				"hud_apres_choix": hud_apres_choix,
+				"hud_apres_des_du_destin": _tr_hud_snapshot(),
+				"modificateur_marchand_actif": _active_modifier,
+			})
 
 		# Spawn a SigleToken on the plateau for the resolved card.
 		_spawn_live_token(card, _live_pending_choice, act_idx)
@@ -2936,6 +2987,62 @@ var _hud_prev_rep: Dictionary = {}
 var _active_modifier: String = ""
 # Anam earned this run (boss reward).
 var _run_anam_earned: int = 0
+
+# ── Transcript de run (opt-in, QA / revue de design) ─────────────────────────
+# Active par la variable d'environnement MERLIN_TRANSCRIPT=<chemin.json>.
+# Enregistre, carte par carte, TOUT ce que le joueur voit et ce que le moteur
+# resout derriere : etat du HUD, texte et options de la carte, choix retenu,
+# effets appliques, des du destin, modificateur de marchand, recompenses.
+# Zero cout quand la variable n'est pas definie.
+var _transcript_path: String = ""
+var _transcript: Array = []
+
+
+## Instantane de tout ce que le joueur peut lire a l'ecran a l'instant t.
+func _tr_hud_snapshot() -> Dictionary:
+	if _store == null or not (_store.get("state") is Dictionary):
+		return {}
+	var state: Dictionary = _store.state
+	var run: Dictionary = state.get("run", {})
+	var meta: Dictionary = state.get("meta", {})
+	var total_acts: int = ACT_SEQUENCE.size()
+	return {
+		"vie": int(run.get("life_essence", 100)),
+		"anam_affiche": int(meta.get("anam", 0)) + _run_anam_earned,
+		"compteur_cartes": "Carte %d / %d" % [
+			clampi(_live_acts_played + 1, 1, total_acts), total_acts],
+		"factions_backend": (meta.get("faction_rep", {}) as Dictionary).duplicate(true),
+		"tags_actifs": (run.get("active_tags", []) as Array).duplicate(),
+		"promesses_actives": (run.get("active_promises", []) as Array).size(),
+		"scenario_actif": str(run.get("active_scenario", "")),
+		"modificateur_marchand": _active_modifier,
+	}
+
+
+func _tr_record(entry: Dictionary) -> void:
+	if _transcript_path.is_empty():
+		return
+	_transcript.append(entry)
+
+
+func _tr_flush() -> void:
+	if _transcript_path.is_empty():
+		return
+	var f := FileAccess.open(_transcript_path, FileAccess.WRITE)
+	if f == null:
+		push_warning("[BoardNarration] transcript : ecriture impossible dans %s" % _transcript_path)
+		return
+	f.store_string(JSON.stringify({
+		"biome": _biome_id,
+		"sequence_actes": ACT_SEQUENCE,
+		"issue": _outcome,
+		"anam_gagne": _run_anam_earned,
+		"cartes_jouees": _live_cards_played,
+		"entrees": _transcript,
+	}, "  "))
+	f.close()
+	push_warning("[BoardNarration] transcript ecrit : %s (%d entrees)" % [
+		_transcript_path, _transcript.size()])
 
 
 ## Display a fetched card in the overlay : text typewriter-revealed + 3 option
