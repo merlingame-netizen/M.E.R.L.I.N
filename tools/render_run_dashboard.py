@@ -404,12 +404,106 @@ h1{margin:0;font-size:30px;line-height:1.15;font-weight:600;text-wrap:balance;
 .flag p{margin:0;font-size:12.5px;color:var(--ink-dim);max-width:80ch}
 code{background:var(--ground);padding:1px 5px;border-radius:2px;font-size:11.5px;
   color:var(--cyan)}
+.tablewrap{overflow-x:auto}
+table.series{width:100%;border-collapse:collapse;font-size:12px}
+table.series th{text-align:left;font-weight:600;color:var(--ink-faint);font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;padding:6px 10px 6px 0;
+  border-bottom:1px solid var(--stone)}
+table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-align:middle}
+.narr-cell{font-family:var(--serif);font-size:14px;color:#efe6d2}
+.seq{display:inline-flex;gap:4px}
+.seq-chip{font-size:10px;padding:2px 6px;border-radius:2px;border:1px solid var(--sc);
+  color:var(--sc);font-variant-numeric:tabular-nums}
+.vchecks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.vcheck{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12.5px;
+  padding:7px 10px;border-radius:var(--r);background:var(--ground-3)}
+.vtag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;min-width:64px}
+.vcheck.ok .vtag{color:var(--terminal)} .vcheck.ko .vtag{color:var(--rune)}
+.vdetail{color:var(--ink-faint);font-size:11.5px}
 .foot{border-top:1px solid var(--stone);padding-top:18px;font-size:11px;
   color:var(--ink-faint);display:flex;flex-direction:column;gap:5px}
 """
 
 
-def render(data: dict) -> str:
+def build_series(series_dir: Path, pool_size: int = 12) -> str:
+    """Panneau de série : ce que le moteur produit sur plusieurs exécutions.
+
+    C'est la réponse à « aucun scénario ne doit se ressembler », mesurée sur
+    des runs réels et non sur un fichier.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "crd", Path(__file__).with_name("check_run_diversity.py"))
+    crd = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(crd)
+
+    runs = crd.load_runs(series_dir)
+    if len(runs) < 2:
+        return ""
+    res = crd.analyse(runs, pool_size)
+
+    # Une couleur par parcours distinct : deux runs de meme couleur ont tire
+    # exactement les memes cartes dans le meme ordre.
+    palette = ["#00D4FF", "#FFB347", "#9B59FF", "#00FF88", "#FF3366", "#C98A3C"]
+    seqs, seq_color = {}, {}
+    for r in runs:
+        key = tuple(r["cartes"])
+        if key not in seqs:
+            seqs[key] = len(seqs)
+        seq_color[r["nom"]] = palette[seqs[key] % len(palette)]
+
+    rows = []
+    for r in runs:
+        chips = "".join(
+            f'<span class="seq-chip">{esc(c.replace("fr_broceliande_", ""))}</span>'
+            for c in r["cartes"])
+        rows.append(
+            f'<tr><td class="engine">{esc(r["nom"])}</td>'
+            f'<td class="narr-cell">{esc(r["titre"] or "—")}</td>'
+            f'<td><span class="seq" style="--sc:{seq_color[r["nom"]]}">{chips}</span></td>'
+            f'<td class="tab">{esc(r["vie_finale"])}</td>'
+            f'<td class="tab">{esc(r["anam"])}</td></tr>')
+
+    checks = []
+    for ok, label, detail in crd.verdict_lines(res):
+        cls = "ok" if ok else "ko"
+        tag = "conforme" if ok else "échec"
+        extra = "" if ok else f'<span class="vdetail">{esc(detail)}</span>'
+        checks.append(
+            f'<li class="vcheck {cls}"><span class="vtag">{tag}</span>'
+            f'<span class="vlabel">{esc(label)}</span>{extra}</li>')
+
+    n_ko = sum(1 for ok, _, _ in crd.verdict_lines(res) if not ok)
+    headline = (f"{res['parcours_distincts']} parcours distincts sur {res['n']} runs"
+                if res["parcours_distincts"] < res["n"]
+                else f"{res['n']} runs, {res['n']} parcours distincts")
+
+    return f"""
+  <section class="panel">
+    <h2>Série de runs — ce que le moteur produit vraiment</h2>
+    <p class="sub" style="font-size:12.5px;margin:0">
+      {esc(headline)} · recouvrement lexical moyen entre runs
+      <strong>{res['jaccard_moyen']:.0%}</strong> (max {res['jaccard_max']:.0%}) ·
+      {res['cartes_vues']}/{res['pool']} cartes du pool vues ·
+      {res['labels_distincts']} libellés d'action distincts sur {res['labels_total']} proposés.
+      Deux runs de même couleur ont tiré exactement les mêmes cartes, dans le même ordre.
+    </p>
+    <div class="tablewrap">
+      <table class="series">
+        <thead><tr><th>Run</th><th>Titre proposé</th><th>Cartes tirées</th><th>Vie</th><th>Anam</th></tr></thead>
+        <tbody>{''.join(rows)}</tbody>
+      </table>
+    </div>
+    <ul class="vchecks">{''.join(checks)}</ul>
+    <p class="sub" style="font-size:12px;margin:0">
+      {'Aucun critère de diversité ne passe.' if n_ko == len(checks) else
+       f'{len(checks) - n_ko}/{len(checks)} critères de diversité conformes.'}
+      Mesuré par <code>tools/check_run_diversity.py</code> sur les transcripts des runs ci-dessus.
+    </p>
+  </section>"""
+
+
+def render(data: dict, series_dir=None) -> str:
     entries = data.get("entrees", [])
     cards = [e for e in entries if e.get("evenement") == "carte_affichee"]
     resols = {e.get("acte_index"): e for e in entries if e.get("evenement") == "resolution"}
@@ -429,6 +523,8 @@ def render(data: dict) -> str:
     scen = h0.get("scenario_actif") or "aucun"
     n_eff = sum(len(o.get("effets_caches", []))
                 for c in cards for o in c.get("options_visibles", []))
+
+    series_html = build_series(Path(series_dir)) if series_dir else ""
 
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
@@ -479,6 +575,8 @@ def render(data: dict) -> str:
     </section>
   </div>
 
+  {series_html}
+
   <section class="panel">
     <h2>Ce qu'il faut regarder</h2>
     <ul class="flags">{build_flags(data, cards, resols)}</ul>
@@ -502,9 +600,11 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--series", default=None,
+                    help="repertoire de transcripts pour le panneau de serie")
     args = ap.parse_args()
     data = json.load(open(args.input, encoding="utf-8"))
-    Path(args.out).write_text(render(data), encoding="utf-8")
+    Path(args.out).write_text(render(data, args.series), encoding="utf-8")
     print(f"Tableau de controle ecrit : {args.out}")
     return 0
 
