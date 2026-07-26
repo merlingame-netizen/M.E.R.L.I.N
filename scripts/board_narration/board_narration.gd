@@ -1880,7 +1880,21 @@ func _load_fallback_pool() -> void:
 	for card in narratives:
 		if card is Dictionary and str(card.get("biome", "")) == _biome_id:
 			_fallback_pool.append(card)
-	push_warning("[BoardNarration] fallback pool loaded: %d %s cards" % [_fallback_pool.size(), _biome_id])
+
+	# v7.7.27 — le pool etait consomme dans son ordre de fichier, et
+	# `_fallback_index` repart de 0 a chaque scene : six runs d'affilee tiraient
+	# exactement les cartes 1 a 5, dans le meme ordre. Mesure sur serie reelle :
+	# 1 parcours distinct sur 6 runs, 42 % du pool jamais vu. On melange le pool
+	# a chaque chargement — meme sans LLM, deux runs ne se ressemblent plus.
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(_fallback_pool.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var swap = _fallback_pool[i]
+		_fallback_pool[i] = _fallback_pool[j]
+		_fallback_pool[j] = swap
+
+	push_warning("[BoardNarration] fallback pool loaded: %d %s cards (melange)" % [_fallback_pool.size(), _biome_id])
 
 
 func _disable_global_overlays() -> void:

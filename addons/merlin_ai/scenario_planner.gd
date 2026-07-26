@@ -472,7 +472,19 @@ func _fallback_titles(biome_id: String) -> Array:
 		"collines_dolmens": ["Sous le Dolmen", "L'Écho des Ancêtres", "La Colline qui Respire"],
 		"iles_mystiques": ["L'Île de Niamh", "La Brume Éternelle", "Le Chant des Fées"],
 	}
-	var titles: Array = bank.get(biome_id, bank["foret_broceliande"])
+	# v7.7.27 — les titres etaient rendus dans un ordre fixe, et l'autoplay (comme
+	# un joueur pressé) prend le premier : six runs d'affilee proposaient donc six
+	# fois « La Voix de Broceliande ». Mesure sur serie reelle : 1 titre distinct
+	# sur 6 runs. On melange, ce qui n'enleve rien mais fait au moins tourner les
+	# trois titres du banc.
+	var titles: Array = (bank.get(biome_id, bank["foret_broceliande"]) as Array).duplicate()
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(titles.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var swap = titles[i]
+		titles[i] = titles[j]
+		titles[j] = swap
 	var ogham_pool: Array = OGHAM_GLYPHS.duplicate()
 	ogham_pool.shuffle()
 	var out: Array = []
