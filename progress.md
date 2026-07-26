@@ -2581,3 +2581,34 @@ Les « 100 références » sont 10 gabarits clonés 10×. **Mon validateur d'éq
 - **Alertes détectées automatiquement** : 3 actes sans contenu propre · 0 Anam accordé · 19 effets appliqués sans être montrés · cartes 3 et 5 quasi identiques · carte 5 vie annoncée −3 / appliquée +2.
 - Publié : https://claude.ai/code/artifact/03b49e7f-d42a-470e-95d7-7b7b558c9741
 - **Bloqué** : jalon « générer 20 scénarios + mesurer la diversité » — Ollama injoignable dans ce conteneur.
+
+### Phase: Diversité mesurée sur l'exécution du jeu (2026-07-26)
+- **Status:** complete
+- **Correction de cadrage utilisateur** : le rendu doit venir de l'exécution du jeu, pas d'Ollama. Mesurer la diversité = faire tourner le jeu N fois et comparer.
+
+#### Protocole
+6 runs autoplay headless → 6 transcripts → `tools/check_run_diversity.py`. Puis correctif, puis 6 runs identiques pour comparer.
+
+#### Résultat
+| Critère | Avant | Après |
+|---|---|---|
+| Titres distincts | 1/6 | 3/6 (plafond du banc) |
+| Parcours de cartes distincts | 1/6 | **6/6** |
+| Recouvrement lexical max | 100 % | 74 % (plancher combinatoire d'un pool de 12) |
+| Couverture du pool | 5/12 (42 %) | **12/12 (100 %)** |
+| Graines de variation distinctes | 6/6 | 6/6 |
+
+#### Cause racine
+Le mécanisme de variation fonctionnait (6 graines distinctes tirées et journalisées) mais n'agit que sur les prompts LLM, jamais atteints. La ressemblance venait **entièrement du repli déterministe** :
+- `_fallback_titles` : ordre fixe → l'autoplay (comme un joueur pressé) prend toujours le premier
+- `_load_fallback_pool` + `_fallback_index` reparti de 0 → toujours les cartes 1 à 5
+
+Les deux sont mélangés avec un RNG randomisé localement (RNG du store intact).
+
+#### Effet de bord notable
+Les cartes d'arc `arc_broceliande_01/02/03` n'apparaissaient dans **aucun** des 6 runs d'avant ; elles sortent dans 4 des 6 runs d'après. Contenu existant mais inatteignable.
+
+#### Ce qui reste
+Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 titres au banc, 12 cartes au pool. Seule la génération LLM native les lève — la mesure est en place pour le vérifier.
+
+- Tableau de contrôle réalimenté : https://claude.ai/code/artifact/03b49e7f-d42a-470e-95d7-7b7b558c9741
