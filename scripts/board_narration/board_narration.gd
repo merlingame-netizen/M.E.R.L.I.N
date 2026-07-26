@@ -1848,6 +1848,38 @@ func _prewarm_llm() -> void:
 ## Etapes d'arc deja servies dans ce run : nom d'arc -> etape la plus haute vue.
 var _arc_stage_served: Dictionary = {}
 
+## Texte de la derniere carte servie — sert au garde-fou de repetition.
+var _last_card_text: String = ""
+
+## Au-dela de cette proximite lexicale, deux cartes racontent la meme chose.
+const CARD_ECHO_THRESHOLD := 0.40
+
+
+## Mots de plus de 4 lettres d'un texte, en minuscules — base de comparaison.
+static func _content_words(text: String) -> Dictionary:
+	var out: Dictionary = {}
+	var cleaned: String = text.to_lower()
+	for ch in [",", ".", ";", ":", "!", "?", "'", "«", "»", "\"", "(", ")", "—"]:
+		cleaned = cleaned.replace(ch, " ")
+	for w in cleaned.split(" ", false):
+		if w.length() > 4:
+			out[w] = true
+	return out
+
+
+## Proximite lexicale de deux textes (indice de Jaccard).
+static func _text_similarity(a: String, b: String) -> float:
+	var wa: Dictionary = _content_words(a)
+	var wb: Dictionary = _content_words(b)
+	if wa.is_empty() or wb.is_empty():
+		return 0.0
+	var inter: int = 0
+	for w in wa.keys():
+		if wb.has(w):
+			inter += 1
+	var union: int = wa.size() + wb.size() - inter
+	return float(inter) / float(union) if union > 0 else 0.0
+
 
 ## Une carte d'arc n'est jouable que si l'etape precedente a ete jouee.
 ## v7.7.28 — sans ce garde-fou, le melange du pool servait l'arc a l'envers :
@@ -1876,19 +1908,36 @@ func _pick_fallback_card() -> Dictionary:
 		_load_fallback_pool()
 	if _fallback_pool.is_empty():
 		return {}
-	# Cherche la prochaine carte jouable en sautant les etapes d'arc hors sequence.
+	# Cherche la prochaine carte jouable : on saute les etapes d'arc hors
+	# sequence, et — v7.7.28 — les cartes trop proches de celle qu'on vient de
+	# servir. Le pool contient des quasi-jumelles (deux cercles de champignons
+	# luminescents au pied de deux arbres differents) : les enchainer donne au
+	# joueur l'impression de rejouer la meme scene.
 	var idx: int = _fallback_index % _fallback_pool.size()
-	var probes: int = 0
-	while probes < _fallback_pool.size():
-		var cand: Dictionary = _fallback_pool[(_fallback_index + probes) % _fallback_pool.size()]
-		if _arc_card_is_playable(cand):
-			idx = (_fallback_index + probes) % _fallback_pool.size()
+	var found: bool = false
+	for pass_idx in range(2):
+		# 1re passe : sequence d'arc ET anti-repetition. 2e passe : sequence
+		# seule, pour ne jamais rester sans carte a servir.
+		var probes: int = 0
+		while probes < _fallback_pool.size():
+			var probe: int = (_fallback_index + probes) % _fallback_pool.size()
+			var cand: Dictionary = _fallback_pool[probe]
+			if _arc_card_is_playable(cand):
+				var echo: float = 0.0
+				if pass_idx == 0 and _last_card_text != "":
+					echo = _text_similarity(str(cand.get("text", "")), _last_card_text)
+				if echo <= CARD_ECHO_THRESHOLD:
+					idx = probe
+					found = true
+					break
+			probes += 1
+		if found:
 			break
-		probes += 1
 	_fallback_index = idx + 1
 	# Normalize the pool format so it matches what _show_live_card expects.
 	var raw: Dictionary = _fallback_pool[idx]
 	_note_arc_stage(raw)
+	_last_card_text = str(raw.get("text", ""))
 	var normalized: Dictionary = {
 		"id": str(raw.get("id", "fallback_%d" % idx)),
 		"text": str(raw.get("text", "")),
