@@ -279,13 +279,17 @@ func _reduce(action: Dictionary) -> Dictionary:
 		"START_RUN":
 			var seed_val: int = int(action.get("seed", int(Time.get_unix_time_from_system())))
 			rng.set_seed(seed_val)
-			StoreRun.init_run(state, rng, scenarios)
-			_reset_ai_for_new_run()
-			state["run"]["map_seed"] = seed_val
+			# v7.7.26 : le biome doit etre resolu AVANT init_run — la selection de
+			# scenario s'appuie dessus (filtre biome_affinity). Auparavant init_run
+			# etait appele en premier et lisait un current_biome encore vide :
+			# aucun scenario du catalogue n'etait jamais selectionne.
 			var biome_key: String = str(action.get("biome", MerlinConstants.BIOME_DEFAULT))
 			if biome_key not in MerlinConstants.BIOMES:
 				push_warning("[MerlinStore] START_RUN rejected unknown biome: %s" % biome_key)
 				biome_key = MerlinConstants.BIOME_DEFAULT
+			StoreRun.init_run(state, rng, scenarios, biome_key)
+			_reset_ai_for_new_run()
+			state["run"]["map_seed"] = seed_val
 			state["run"]["current_biome"] = biome_key
 			state["phase"] = "card"
 			state["mode"] = "run"

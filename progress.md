@@ -2527,3 +2527,16 @@ Harnais sans Ollama (`_balance_skeleton` est statique) : `tools/godot/conformanc
 #### Validations
 - `--strict` sur le corpus : 90.8 → 80.8, soit exactement `NO_CHECK_LAYER` (le corpus ne porte pas la couche mécanique — mesure de ce qu'il reste à générer)
 - Smoke `ScenarioLoading` : exit 0, 0 script error, strict mode se déclenche correctement sans Ollama
+
+#### Rapport de conformité multi-agents (21 agents, 664 outils)
+`docs/30_jdr/PIPELINE_CONFORMANCE_REPORT.md` — 4 zones cartographiées (planner / cartes / runtime / état), écarts vérifiés de manière adversariale, roadmap ordonnée par dépendance (phases 0 à 3).
+
+**Verdict : non.** 4 écarts CRITICAL, 13 HIGH, 4 MEDIUM. Les trois plus lourds, revérifiés à la main :
+- **C1** — longueur de run figée à 5 cartes (`board_narration.gd:2914`, `ACT_SEQUENCE`) ; `MIN_CARDS_FOR_VICTORY = 25` est donc injouable.
+- **C2** — `generate_card_for_beat` n'a **aucun appelant** : le squelette équilibré est produit puis jeté, la boucle joue un pool statique.
+- **C3b** — `init_run` posait `current_biome = ""` puis le relisait pour filtrer `biome_affinity` → **aucun scénario du catalogue n'était jamais sélectionné**.
+
+**Corrigé cette session** : C3b (paramètre `biome` sur `init_run` + résolution avant l'appel dans `START_RUN`) et la part NARRATIVE non appliquée dans `_balance_skeleton`.
+**Non corrigé** : C1, C2, C3, H1-H13 — chantiers d'architecture engageant le design, voir roadmap §6.
+
+**Non-régression** : `tools/godot/test_scenario_selection.gd` PASS · smoke MenuTest + BoardNarration exit 0, 0 script error · corpus 90.8 · golden 100/100 strict.

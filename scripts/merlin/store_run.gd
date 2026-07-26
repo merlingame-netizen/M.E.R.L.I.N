@@ -9,7 +9,12 @@ class_name StoreRun
 
 
 ## Initialize a new run state.
-static func init_run(state: Dictionary, rng: MerlinRng, scenarios: MerlinScenarioManager) -> void:
+## `biome` doit etre fourni : la selection de scenario filtre sur `biome_affinity`.
+## v7.7.26 — avant ce parametre, `current_biome` etait initialise a "" puis relu
+## quelques lignes plus bas pour choisir le scenario : aucun scenario du catalogue
+## ne passait jamais le filtre (tous ont une biome_affinity non vide).
+static func init_run(state: Dictionary, rng: MerlinRng, scenarios: MerlinScenarioManager,
+		biome: String = "") -> void:
 	var run: Dictionary = state.get("run", {})
 	run["active"] = true
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
@@ -21,7 +26,7 @@ static func init_run(state: Dictionary, rng: MerlinRng, scenarios: MerlinScenari
 	run["story_log"] = []
 	run["active_tags"] = []
 	run["active_promises"] = []
-	run["current_biome"] = ""
+	run["current_biome"] = biome
 	run["biome_passive_counter"] = 0
 	run["hidden"] = {
 		"karma": 0,
