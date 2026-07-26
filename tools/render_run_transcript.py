@@ -147,6 +147,13 @@ def render(data: dict) -> str:
             L.append(f"{i + 1}. **{o.get('label', '')}**")
         L.append("")
 
+        r_pre = resols.get(idx, {})
+        outcome = str(r_pre.get("texte_resolution", "") or "").strip()
+        L.append("Ce qui se produit ensuite :")
+        L.append("")
+        L.append(f"> {outcome}" if outcome
+                 else "> *(rien — le choix du joueur n'appelle aucune conséquence narrée)*")
+        L.append("")
         L.append("### En coulisses")
         L.append("")
         if demande != servi:

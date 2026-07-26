@@ -1006,5 +1006,62 @@
       "motifs": "« merlin » dans 100% des scenarios, « voix » dans 95%",
       "consequence": "ce corpus ne peut pas servir de few-shot de contenu : il enseigne la ressemblance. Il reste valable comme source de bornage et comme jeu de test structurel."
     }
+  },
+  "card_grammar": {
+    "_principe": "Une carte n'est pas une question a choix multiple : c'est un battement narratif complet. Le manquement constate en jeu (2026-07-26) : le joueur choisissait « creuser avec precaution », il ne se passait RIEN, et la carte suivante — un marchand, puis un feu de camp — n'avait aucun rapport. Le geste du joueur n'existait pas.",
+    "sequence_obligatoire": [
+      {
+        "beat": "1. SITUATION",
+        "champ": "text / summary",
+        "role": "decrire la scene : ou l'on est, ce qui se presente, ce qui est en jeu",
+        "etat": "existait deja"
+      },
+      {
+        "beat": "2. CHOIX",
+        "champ": "options[].label",
+        "role": "trois gestes distincts, lisibles, aux intentions differentes",
+        "etat": "existait deja"
+      },
+      {
+        "beat": "3. RESOLUTION",
+        "champ": "options[].outcome",
+        "role": "raconter CE QUI SE PRODUIT et CE QUE CELA APPORTE. Une a trois phrases. L'effet mecanique doit se lire dans la scene, jamais en chiffres : « un fil de seve te brule le poignet » et non « -3 PV ».",
+        "etat": "AJOUTE v7.7.28 — n'existait dans aucun schema"
+      },
+      {
+        "beat": "4. SUITE",
+        "champ": "continuite (voir ci-dessous)",
+        "role": "la carte suivante doit decouler de ce qui vient de se produire",
+        "etat": "AJOUTE v7.7.28 — a cabler cote generation"
+      }
+    ],
+    "regles_de_resolution": {
+      "longueur": "1 a 3 phrases",
+      "personne": "deuxieme du singulier, present",
+      "chiffres_interdits": true,
+      "doit_rendre_lisible": "le gain ou la perte : un soin se sent dans le corps, des degats laissent une marque, une reputation se gagne sous le regard d'un temoin",
+      "doit_differer_par_option": "les trois resolutions d'une meme carte racontent trois issues nettement differentes — sinon le choix n'en etait pas un",
+      "interdits": [
+        "repeter la situation",
+        "annoncer la carte suivante explicitement",
+        "resumer par un jugement (« bon choix », « tu as bien fait »)"
+      ]
+    },
+    "continuite": {
+      "_comment": "« Une suite logique » : deux cartes consecutives ne peuvent pas etre independantes. Trois mecanismes, du plus fort au plus faible.",
+      "sequences_ordonnees": "les cartes portant un `arc` + `arc_stage` racontent une histoire en plusieurs temps : leur ordre EST le sens. Une etape n'est jouable que si la precedente a ete jouee dans ce run. Enforce v7.7.28 dans _pick_fallback_card.",
+      "report_d_etat": "la resolution de la carte N est injectee dans le contexte de generation de la carte N+1 : le LLM ecrit en sachant ce qui vient de se produire.",
+      "echo_minimal": "a defaut, la carte suivante doit au moins partager un element concret avec la precedente — lieu, temoin, objet, trace."
+    },
+    "anti_pattern_constate": {
+      "run_du_2026_07_26": [
+        "carte 1 : Gwenn dit qu'il faut creuser -> tu creuses -> aucune resolution",
+        "carte 2 : un feu de camp abandonne, sans lien",
+        "carte 3 : un corbeau, sans lien",
+        "carte 4 : un sentier qui se divise, sans lien",
+        "carte 5 : Gwenn te demande d'examiner le Chene — l'etape 1 de l'arc, servie APRES l'etape 2"
+      ],
+      "diagnostic": "trois manquements imbriques : pas de resolution narree, pas de lien causal entre cartes, et sequence d'arc servie dans le desordre."
+    }
   }
 }

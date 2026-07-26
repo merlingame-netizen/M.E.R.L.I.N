@@ -1845,15 +1845,50 @@ func _prewarm_llm() -> void:
 
 
 ## Load FastRoute pool on first call, then cycle through Brocéliande cards.
+## Etapes d'arc deja servies dans ce run : nom d'arc -> etape la plus haute vue.
+var _arc_stage_served: Dictionary = {}
+
+
+## Une carte d'arc n'est jouable que si l'etape precedente a ete jouee.
+## v7.7.28 — sans ce garde-fou, le melange du pool servait l'arc a l'envers :
+## Gwenn demandait au climax d'examiner le Chene alors qu'a la premiere carte
+## elle avait deja trouve la racine corrompue. Le sens d'une sequence est dans
+## son ordre ; la varier revient a la detruire.
+func _arc_card_is_playable(card: Dictionary) -> bool:
+	var arc_name: String = str(card.get("arc", ""))
+	if arc_name == "":
+		return true
+	var stage: int = int(card.get("arc_stage", 1))
+	return stage == int(_arc_stage_served.get(arc_name, 0)) + 1
+
+
+func _note_arc_stage(card: Dictionary) -> void:
+	var arc_name: String = str(card.get("arc", ""))
+	if arc_name == "":
+		return
+	var stage: int = int(card.get("arc_stage", 1))
+	if stage > int(_arc_stage_served.get(arc_name, 0)):
+		_arc_stage_served[arc_name] = stage
+
+
 func _pick_fallback_card() -> Dictionary:
 	if _fallback_pool.is_empty():
 		_load_fallback_pool()
 	if _fallback_pool.is_empty():
 		return {}
-	var idx := _fallback_index % _fallback_pool.size()
-	_fallback_index += 1
+	# Cherche la prochaine carte jouable en sautant les etapes d'arc hors sequence.
+	var idx: int = _fallback_index % _fallback_pool.size()
+	var probes: int = 0
+	while probes < _fallback_pool.size():
+		var cand: Dictionary = _fallback_pool[(_fallback_index + probes) % _fallback_pool.size()]
+		if _arc_card_is_playable(cand):
+			idx = (_fallback_index + probes) % _fallback_pool.size()
+			break
+		probes += 1
+	_fallback_index = idx + 1
 	# Normalize the pool format so it matches what _show_live_card expects.
 	var raw: Dictionary = _fallback_pool[idx]
+	_note_arc_stage(raw)
 	var normalized: Dictionary = {
 		"id": str(raw.get("id", "fallback_%d" % idx)),
 		"text": str(raw.get("text", "")),
@@ -2873,6 +2908,23 @@ func _run_live_loop() -> void:
 
 		var hud_apres_choix: Dictionary = _tr_hud_snapshot()
 
+		# ── LA RESOLUTION ──────────────────────────────────────────────────
+		# v7.7.28 — le beat qui manquait. Le joueur choisissait, et il ne se
+		# passait rien : la carte suivante arrivait sans rapport, comme si son
+		# geste n'avait pas eu lieu. On raconte desormais ce qui se produit et
+		# ce que cela apporte, avant de passer a la suite. Les chiffres restent
+		# hors du texte : l'effet doit se lire dans la scene.
+		var chosen_opt: Dictionary = {}
+		var opts_for_outcome: Array = card.get("options", [])
+		if _live_pending_choice >= 0 and _live_pending_choice < opts_for_outcome.size():
+			chosen_opt = opts_for_outcome[_live_pending_choice] as Dictionary
+		var outcome_text: String = str(chosen_opt.get("outcome", ""))
+		if outcome_text != "" and not _skip_requested:
+			if _narration_label:
+				_narration_label.visible = true
+			await _typewriter_narration(outcome_text)
+			await get_tree().create_timer(1.4).timeout
+
 		# Capture shop modifier for the next 2 acts.
 		if act_type == "shop":
 			_capture_shop_modifier(card, _live_pending_choice)
@@ -2896,6 +2948,7 @@ func _run_live_loop() -> void:
 				"acte_index": act_idx + 1,
 				"option_choisie": opt_idx,
 				"label_choisi": str(chosen.get("label", "")),
+				"texte_resolution": str(chosen.get("outcome", "")),
 				"effets_declares": (chosen.get("effects", []) as Array).duplicate(true),
 				"reponse_store": (res if res is Dictionary else {}),
 				"hud_apres_choix": hud_apres_choix,

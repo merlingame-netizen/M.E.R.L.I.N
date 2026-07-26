@@ -187,6 +187,17 @@ def build_cards(cards: list, resols: dict) -> str:
             if d:
                 dice.append(f'<span class="chip {"pos" if d > 0 else "neg"}">{f} {d:+d}</span>')
 
+        # La resolution : ce qui se produit apres le choix. C'est le beat qui
+        # manquait — le joueur agissait et rien ne lui repondait.
+        outcome = str(r.get("texte_resolution", "") or "").strip()
+        resolution_html = (
+            f'<div class="resolution"><span class="res-tag">ce qui se produit</span>'
+            f'<p class="narrative res-text">{esc(outcome)}</p></div>'
+            if outcome else
+            '<div class="resolution missing"><span class="res-tag">ce qui se produit</span>'
+            '<p class="res-text missing-text">Rien. Le joueur agit, le moteur applique ses '
+            'effets en silence, et la carte suivante arrive sans rapport.</p></div>')
+
         badge = (f'<span class="act-badge" style="--ac:{ACT_COLOR.get(demande, "#7b8194")}">'
                  f'{ACT_LABEL.get(demande, demande)}</span>')
         warn = (f'<p class="warn">Acte « {esc(demande)} » demandé, carte de type '
@@ -207,6 +218,7 @@ def build_cards(cards: list, resols: dict) -> str:
       <p class="narrative">{esc(c.get('texte'))}</p>
       {f'<p class="merlin">« {esc(c.get("dialogue_merlin"))} »</p>' if (c.get('dialogue_merlin') or '').strip() else ''}
       <ol class="opts">{opts_html}</ol>
+      {resolution_html}
     </section>
     <section class="engine-col">
       <h4 class="col-label engine">Moteur</h4>
@@ -389,6 +401,13 @@ h1{margin:0;font-size:30px;line-height:1.15;font-weight:600;text-wrap:balance;
 .delta{margin-left:6px}
 .warn{margin:0 0 12px;font-size:12px;color:var(--amber);
   border-left:2px solid var(--amber);padding-left:10px}
+.resolution{margin-top:14px;padding:12px 14px;border-left:2px solid var(--amber);
+  background:rgba(255,179,71,.05);border-radius:0 var(--r) var(--r) 0}
+.resolution.missing{border-left-color:var(--rune);background:rgba(255,51,102,.05)}
+.res-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+.resolution.missing .res-tag{color:var(--rune)}
+.res-text{margin:6px 0 0;font-size:15px;line-height:1.55}
+.missing-text{font-family:var(--mono);font-size:12px;color:var(--ink-dim);font-style:italic}
 .hidden-note{margin:14px 0 0;font-size:11px;color:var(--ink-faint);font-style:italic}
 
 /* Alertes */

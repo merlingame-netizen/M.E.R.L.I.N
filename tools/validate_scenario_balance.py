@@ -381,6 +381,19 @@ def check_strict(s: dict, tpl: dict, findings: list):
                 findings.append(Finding("warn", "CHECK_NOT_TELEGRAPHED",
                                         f"{cid} opt{i}: check {ctype} non telegraphe"))
 
+            # Beat 3 de la grammaire de carte : la resolution. Sans elle, le
+            # joueur agit et rien ne lui repond — c'est le manquement constate
+            # en jeu le 2026-07-26 (« on creuse avec precaution » suivi de rien).
+            outcome = str(o.get("outcome", "")).strip()
+            if not outcome:
+                findings.append(Finding("error", "NO_OUTCOME",
+                                        f"{cid} opt{i}: aucune resolution narree "
+                                        "(card_grammar, beat 3)"))
+            elif any(ch.isdigit() for ch in outcome):
+                findings.append(Finding("warn", "OUTCOME_CHIFFRE",
+                                        f"{cid} opt{i}: la resolution contient un chiffre — "
+                                        "l'effet doit se lire dans la scene"))
+
             # Effets : whitelist, caps, nombre
             eff = o.get("effects", [])
             if len(eff) > tpl["writing_constraints"]["options"]["max_effects_per_option"]:
