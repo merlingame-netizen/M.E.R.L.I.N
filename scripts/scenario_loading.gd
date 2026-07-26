@@ -195,6 +195,16 @@ func _run_flow() -> void:
 	# Wait for click — _on_scenario_card_picked sets _pending_pick to chosen index.
 	# v7.7.1 C4 — also break on _aborted (back button) to prevent infinite poll.
 	_pending_pick = -1
+	# Autoplay (MERLIN_AUTOPLAY=1) : en headless personne ne clique, et cette
+	# boucle d'attente ne se termine jamais — le flow restait bloque ici, avant
+	# meme d'atteindre la boucle de run. On choisit le premier titre apres un
+	# court delai, comme le fait deja `_run_live_loop` pour les options de carte.
+	if OS.get_environment("MERLIN_AUTOPLAY") == "1" and not _titles.is_empty():
+		await get_tree().create_timer(1.0).timeout
+		if _pending_pick < 0:
+			_pending_pick = 0
+			push_warning("[ScenarioLoading] AUTOPLAY — titre auto-choisi : %s"
+				% str((_titles[0] as Dictionary).get("title", "")))
 	while _pending_pick < 0 and not _aborted:
 		await get_tree().process_frame
 	if _aborted:
