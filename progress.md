@@ -2540,3 +2540,34 @@ Harnais sans Ollama (`_balance_skeleton` est statique) : `tools/godot/conformanc
 **Non corrigé** : C1, C2, C3, H1-H13 — chantiers d'architecture engageant le design, voir roadmap §6.
 
 **Non-régression** : `tools/godot/test_scenario_selection.gd` PASS · smoke MenuTest + BoardNarration exit 0, 0 script error · corpus 90.8 · golden 100/100 strict.
+
+### Phase: Génération 100 % LLM native + non-ressemblance (2026-07-26)
+- **Status:** complete
+- **Directive utilisateur** : le système de cartes est le substrat ; les scénarios doivent être 100 % LLM natifs, respecter les règles de scénario, et **aucun ne doit ressembler à un autre**, dans les limites du bornage bible.
+
+#### Diagnostic — le few-shot de contenu CAUSE la ressemblance
+Mesure du corpus de 100 références qui sert de few-shot :
+| Mesure | Valeur |
+|---|---|
+| Intros distinctes | 40/100 |
+| `essence` / `hook` distincts | 10/100 (une par archétype, recopiée) |
+| Résumés de cartes distincts | **90 / 2 994** |
+| Libellés d'options distincts | **18 / 8 982** (Affronter/Fuir/Apaiser ×803) |
+| Paires > 0.95 cosinus | 80, dont plusieurs à 1.000 |
+
+Les « 100 références » sont 10 gabarits clonés 10×. **Mon validateur d'équilibrage n'avait pas vu ce problème : il mesurait la forme, pas la variété.**
+
+#### Livrables
+1. **`tools/check_scenario_diversity.py`** (NEW) — 6 axes mesurés : sémantique (cosinus), lexical (Jaccard), situationnel, verbal, structurel, motifs. Corpus : **0/6**. Golden : **6/6**.
+2. **`scenario_templates.json` → `generation_contract`** (NEW) — sépare invariants de bornage / surface créative / axes de variation / porte de nouveauté / rôle borné des références (few-shot de contenu INTERDIT sur les champs créatifs).
+3. **`scenario_templates.json` → `diversity_contract`** (NEW) — seuils mesurables + état du corpus daté.
+4. **`addons/merlin_ai/scenario_variation.gd`** (NEW) — graine de variation (5 axes, **25 920 combinaisons**, cooldown 3 scénarios) + porte de nouveauté (Jaccard, seuil 0.35).
+5. **`scenario_planner.gd`** — graine branchée sur les 2 appels créatifs (titres + squelette), tirée une fois par scénario et partagée ; références recadrées « calage de registre uniquement ».
+6. **`docs/30_jdr/SCENARIO_TYPES_SPEC.md` §10** — décision d'architecture documentée.
+7. **`tools/godot/test_scenario_variation.gd`** (NEW) — non-régression.
+
+#### Validations
+- Test moteur : 12 graines distinctes sur 12 tirages, 0 violation de cooldown ; porte de nouveauté discriminante (0.80 rejeté / 0.00 accepté)
+- Simulation 60 tirages : 60 graines distinctes, 8 lieux différents sur 10 scénarios consécutifs
+- Smoke ScenarioLoading : exit 0, 0 script error
+- Non-régression : golden 100/100 strict, corpus 90.8

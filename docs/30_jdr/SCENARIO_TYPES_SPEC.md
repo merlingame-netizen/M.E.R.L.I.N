@@ -400,6 +400,92 @@ L'audit distingue deux familles de verdicts :
 
 Résultats et roadmap : `docs/30_jdr/PIPELINE_OUTPUT_AUDIT.md` (chiffres) et
 `docs/30_jdr/PIPELINE_CONFORMANCE_REPORT.md` (analyse par fichier:ligne).
+
+## 10. Génération 100 % LLM et non-ressemblance
+
+> **Décision d'architecture 2026-07-26.** Les scénarios sont générés intégralement
+> par le LLM, pour un maximum de créativité, et **aucun scénario ne doit ressembler
+> à un autre** — dans les limites du bornage posé par la bible. Le système de cartes
+> reste le substrat mécanique ; les scénarios, eux, ne sont jamais pré-écrits.
+
+### 10.1 Le few-shot de contenu est la cause du problème, pas la solution
+
+L'architecture v7.7.23 injectait des scénarios de référence complets comme exemples,
+pour caler la qualité d'écriture. La mesure du corpus qui sert de source montre où
+cela mène :
+
+| Mesure | Corpus de 100 références |
+|---|---|
+| Intros distinctes | 40 / 100 |
+| `essence` et `hook` distincts | 10 / 100 (un par archétype, recopié) |
+| Résumés de cartes distincts | **90 / 2 994** |
+| Libellés d'options distincts | **18 / 8 982** — « Affronter », « Fuir », « Apaiser » ×803 chacun |
+| Paires au-dessus de 0,95 de cosinus | 80, dont plusieurs à 1,000 |
+
+Les « 100 scénarios de référence » sont dix gabarits clonés dix fois. Un modèle à qui
+l'on montre ce corpus apprend la copie. **Le few-shot de contenu est donc interdit sur
+les champs créatifs** ; les références ne fournissent plus que le bornage.
+
+### 10.2 Ce que les références ont le droit de fournir
+
+| Autorisé | Interdit |
+|---|---|
+| La voix (registre, rythme, longueur de phrase) via 1-2 extraits **courts** | Injecter un scénario de référence complet |
+| Les bornes chiffrées (longueurs, caps, quotas) | Injecter des résumés de cartes comme modèles |
+| La liste des motifs déjà utilisés, **en négatif** (à éviter) | Injecter des trios d'options comme modèles |
+
+### 10.3 Deux mécanismes complémentaires
+
+**La graine de variation** (`addons/merlin_ai/scenario_variation.gd`) — avant la
+génération, on tire une valeur par axe et on l'**impose** au LLM :
+
+| Axe | Valeurs | Rôle |
+|---|:---:|---|
+| `lieu` | 9 | le décor central, imposé |
+| `entite_centrale` | 9 | ce autour de quoi tourne le scénario |
+| `pression` | 8 | ce qui presse le voyageur |
+| `registre_sensoriel` | 5 | le sens dominant de l'écriture |
+| `mecanisme_du_twist` | 8 | ce sur quoi porte le retournement |
+
+Soit **25 920 combinaisons**, toutes à l'intérieur du bornage celtique de la bible.
+Une valeur ne peut pas ressortir avant 3 scénarios (cooldown). Vérifié par simulation :
+60 graines distinctes sur 60 tirages, aucune violation de cooldown, 8 lieux différents
+sur 10 scénarios consécutifs. La graine est tirée **une fois par scénario** et partagée
+par les appels titres / intro / squelette, pour qu'ils décrivent bien le même scénario.
+
+**La porte de nouveauté** — après la génération, le scénario est comparé aux 20 derniers
+joués. Au-delà de 0,90 de cosinus (ou 0,35 de Jaccard sur l'intro), une régénération est
+lancée avec une graine différente et la mention explicite de ce qu'il faut éviter. Si le
+second essai échoue encore, on accepte et on journalise : **on ne bloque jamais le joueur
+pour un motif de style**. C'est l'infrastructure d'embeddings existante, utilisée à
+l'envers — au lieu de chercher le plus proche pour l'imiter, on rejette ce qui est trop
+proche.
+
+### 10.4 La diversité devient une contrainte mesurée
+
+`tools/check_scenario_diversity.py` mesure six axes et répond à une seule question :
+deux scénarios se ressemblent-ils ? Les seuils vivent dans
+`scenario_templates.json → diversity_contract`.
+
+| Axe | Cible |
+|---|---|
+| sémantique | cosinus moyen ≤ 0,75 ; aucune paire > 0,90 |
+| lexical | aucune paire au-dessus de 0,35 de Jaccard |
+| situationnel | ≥ 95 % de résumés de cartes distincts |
+| verbal | ≥ 90 % de libellés distincts, ≥ 12 verbes par scénario |
+| structurel | ≥ 80 % de signatures distinctes |
+| motifs | aucun motif présent dans plus de 50 % des scénarios |
+
+État du corpus de référence à l'introduction de la mesure : **0 / 6 axes conformes**.
+C'est le point de départ, pas un échec du contrat — il chiffre exactement ce que la
+génération LLM doit désormais produire à la place.
+
+### 10.5 Conséquence sur le rôle du scénario type de référence
+
+Le golden (`Le Rite des Neuf Souffles`, §8) ne devient donc **pas** un modèle à imiter.
+Son rôle est double et strictement borné : servir de fixture de non-régression au
+validateur (100/100 en `--strict`), et démontrer qu'un scénario pleinement conforme au
+contrat est atteignable. Il n'est jamais injecté comme exemple de contenu.
 ---
 
 *Scénarios types v1.0 — s'inspire de Slay the Spire (courbes acte/rareté),

@@ -228,6 +228,13 @@ var _fastroute_pool: Array = []
 var _bi_brain: BiBrainPipeline = null
 var _gbnf_skeleton: String = ""
 
+# v7.7.27 — Graine de variation : impose ce qui doit differer entre deux
+# scenarios (lieu, entite, pression, sens dominant, mecanisme du twist). Tiree
+# une fois par scenario et partagee par tous les appels creatifs, pour que
+# titres / intro / squelette parlent bien du MEME scenario.
+var _variation: ScenarioVariation = null
+var _variation_seed: Dictionary = {}
+
 
 func _init(merlin_ai_ref: Node, rag_ref: Node = null, fastroute: Array = []) -> void:
 	_merlin_ai = merlin_ai_ref
@@ -254,13 +261,20 @@ func generate_titles(biome_id: String) -> Array:
 		return _fallback_titles(biome_id)
 	# v7.7.23 — RAG few-shot : retrieve 5 reference titles matching the biome so
 	# the LLM produces titles in the same druidic idiom as the 100 reference set.
+	# v7.7.27 — les references calibrent la VOIX, elles ne fournissent pas le
+	# contenu : la graine de variation impose ce qui doit differer d'un scenario
+	# a l'autre. Sans elle, le few-shot fait converger toutes les generations
+	# (mesure sur le corpus : 18 libelles d'options distincts pour 8982 options).
 	var few_shot_titles: String = await _rag_titles_few_shot(biome_id)
+	var variation_block: String = _variation_prompt_block()
 	var system_prompt: String = (
 		"Tu produis EXACTEMENT 3 titres mystérieux pour une aventure dans le biome %s.\n" +
 		"Format STRICT : 1 ligne par titre, 3-7 mots chacun, francais, ton druidique.\n" +
 		"Pas de numérotation, pas de synopsis, pas de tirets. Une ligne = un titre.\n" +
-		"%s"
-	) % [biome_id, few_shot_titles]
+		"Les exemples ci-dessous ne servent qu'a caler le REGISTRE : n'en reprends " +
+		"ni les mots ni les tournures.\n" +
+		"%s\n%s"
+	) % [biome_id, few_shot_titles, variation_block]
 	var user_input: String = "Génère 3 titres pour ce biome."
 	var params: Dictionary = {
 		"max_tokens": 80,
@@ -273,6 +287,34 @@ func generate_titles(biome_id: String) -> Array:
 		return _fallback_titles(biome_id)
 	var raw: String = str(result.get("text", result.get("output", ""))).strip_edges()
 	return _parse_titles_with_oghams(raw, biome_id)
+
+
+## Graine de variation du scenario en cours. Tiree paresseusement au premier
+## appel creatif, puis reutilisee : titres, intro et squelette doivent decrire
+## le meme scenario, donc partager la meme graine.
+func _ensure_variation_seed() -> Dictionary:
+	if _variation == null:
+		_variation = ScenarioVariation.new()
+	if _variation_seed.is_empty():
+		_variation_seed = _variation.draw_seed()
+		if not _variation_seed.is_empty():
+			push_warning("[ScenarioPlanner] graine de variation : %s" % str(_variation_seed))
+	return _variation_seed
+
+
+func _variation_prompt_block() -> String:
+	var seed_dict: Dictionary = _ensure_variation_seed()
+	if _variation == null or seed_dict.is_empty():
+		return ""
+	return _variation.format_seed_for_prompt(seed_dict)
+
+
+## Valide la graine une fois le scenario retenu : elle entre alors en cooldown
+## et ne pourra pas ressortir avant COOLDOWN_SCENARIOS generations.
+func commit_variation_seed() -> void:
+	if _variation != null and not _variation_seed.is_empty():
+		_variation.commit_seed(_variation_seed)
+		_variation_seed = {}
 
 
 ## v7.7.23 — Retrieve 5 reference titles via ScenariosRAG autoload (kNN cosine).
@@ -500,8 +542,10 @@ func _skeleton_system_prompt(biome_id: String, chosen_title: String, references_
 		"ÉQUILIBRAGE (v7.7.22) — biome '%s' dominant Pole = %s :\n" +
 		"  - Privilégie faction_tilt aligné avec le Pole dominant (~50%% des beats).\n" +
 		"  - Varie les emotions : pas 2 emotions identiques consécutives.\n" +
-		"  - Le dernier beat doit être climactique (faction_tilt fort, emotion=sagesse/peur/emerveillement)."
-	) % [chosen_title, biome_id, references_block, biome_id, dominant_pole]
+		"  - Le dernier beat doit être climactique (faction_tilt fort, emotion=sagesse/peur/emerveillement).\n" +
+		"%s"
+	) % [chosen_title, biome_id, references_block, biome_id, dominant_pole,
+		_variation_prompt_block()]
 
 
 ## v7.7 Phase 2.7c — Parse skeleton + clamp beats to [5..10] :

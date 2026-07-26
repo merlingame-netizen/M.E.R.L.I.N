@@ -876,5 +876,135 @@
         "climax_mutates_persistent_element": true
       }
     }
+  },
+  "generation_contract": {
+    "_principe": "Les scenarios sont generes a 100% par le LLM. Le corpus de references ne fournit PAS de contenu a imiter — il fournit le BORNAGE (regles, structure, economie, voix). Injecter un scenario de reference complet comme modele produit mecaniquement de la ressemblance : mesure sur le corpus actuel, 18 libelles d'options distincts sur 8982 et 90 resumes distincts sur 2994. Le few-shot de contenu est donc INTERDIT sur les champs creatifs.",
+    "invariants_bornage": {
+      "_comment": "Ce que le LLM DOIT respecter — non negociable, verifie par validate_scenario_balance.py.",
+      "structure": "structure_constraints (longueurs canon, 5 actes, 3 routes, caps de types, raretes)",
+      "economie": "balance_model (caps d'effets, act gates des checks, budget de danger, ecart d'EV)",
+      "forme_ecriture": "writing_constraints (longueurs de titre/intro/resume, 3 options, verbe infinitif)",
+      "univers": "bible §7 (biomes), §3 (9 Rune-Circuits), §25.1 (5 factions), §9.4.2 (mots interdits)",
+      "voix": "bible §9.7 (contrat Narrator) — 2e personne, present, registre celtique breton"
+    },
+    "surface_creative": {
+      "_comment": "Ce que le LLM DOIT inventer a neuf a CHAQUE generation. Aucun de ces champs ne doit etre repris d'une reference, meme reformule.",
+      "champs": [
+        "title",
+        "intro",
+        "premise",
+        "essence",
+        "hook",
+        "summary de chaque carte",
+        "label et verb de chaque option",
+        "noms de lieux",
+        "noms et nature des PNJ",
+        "objet ou enjeu central",
+        "mecanisme precis du twist"
+      ],
+      "interdits": [
+        "reprendre un titre existant",
+        "reprendre une structure de phrase d'intro",
+        "reutiliser un trio d'options (ex. Affronter / Fuir / Apaiser)",
+        "reutiliser le meme objet-pivot (chene, brume, cercle de champignons) sans en changer la fonction narrative"
+      ]
+    },
+    "axes_de_variation": {
+      "_comment": "Graine combinatoire : a chaque generation, on tire UNE valeur par axe et on l'impose au LLM. C'est ce qui garantit la divergence sans sortir du bornage de la bible. Espace couvert : 9 x 9 x 8 x 5 x 8 = 25 920 combinaisons, avant meme la liberte de prose.",
+      "lieu": [
+        "nemeton",
+        "gue",
+        "tourbiere",
+        "carriere abandonnee",
+        "hetraie",
+        "clairiere brulee",
+        "pont de pierres seches",
+        "source captive",
+        "lisiere qui recule"
+      ],
+      "entite_centrale": [
+        "un mort qui parle",
+        "un enfant sans ombre",
+        "une bete blessee",
+        "un objet qui refuse d'etre pris",
+        "une absence (quelqu'un manque)",
+        "un vivant qu'on croit mort",
+        "une foule silencieuse",
+        "un double du voyageur",
+        "une voix sans corps"
+      ],
+      "pression": [
+        "un delai qui court",
+        "une dette a honorer",
+        "un serment deja prononce",
+        "une faim",
+        "une traque",
+        "un secret qui va s'eventer",
+        "une reparation impossible",
+        "un heritage a accepter ou refuser"
+      ],
+      "registre_sensoriel": [
+        "odeur",
+        "son",
+        "texture",
+        "lumiere",
+        "froid"
+      ],
+      "mecanisme_du_twist": [
+        "identite (qui est vraiment la)",
+        "temporalite (quand cela se passe)",
+        "intention (ce qui etait voulu)",
+        "echelle (c'est plus grand ou plus petit)",
+        "causalite (l'effet precede la cause)",
+        "point de vue (le voyageur est l'objet)",
+        "prix (ce qu'il en coute vraiment)",
+        "reciprocite (l'autre fait la meme chose)"
+      ],
+      "regle_de_tirage": "tirage sans remise sur les 5 axes tant que le joueur n'a pas epuise l'espace ; aucune valeur d'axe ne peut se repeter avant 3 scenarios."
+    },
+    "porte_de_nouveaute": {
+      "_comment": "Garde-fou de sortie, applique APRES generation, avant de servir le scenario. Reutilise l'infrastructure d'embeddings existante (ScenariosRAG) en l'INVERSANT : au lieu de chercher le plus proche pour l'imiter, on rejette ce qui est trop proche.",
+      "compare_a": "les N derniers scenarios joues par ce joueur (cross-run, user://scenarios_rag_learned.json)",
+      "n_derniers": 20,
+      "seuil_rejet_cosinus": 0.9,
+      "seuil_rejet_jaccard_intro": 0.35,
+      "action_si_rejet": "1 regeneration avec les axes de variation re-tires + mention explicite de ce qu'il faut eviter",
+      "action_si_second_rejet": "accepter mais journaliser — ne jamais bloquer le joueur pour un motif de style"
+    },
+    "role_des_references": {
+      "_comment": "Ce que le corpus de references a le droit de fournir au prompt, et rien d'autre.",
+      "autorise": [
+        "la voix (registre, rythme, longueur de phrase) via 1-2 extraits COURTS",
+        "les bornes chiffrees (longueurs, caps, quotas)",
+        "la liste des motifs deja utilises, en NEGATIF (a eviter)"
+      ],
+      "interdit": [
+        "injecter un scenario de reference complet",
+        "injecter des resumes de cartes comme modeles",
+        "injecter des trios d'options comme modeles"
+      ]
+    }
+  },
+  "diversity_contract": {
+    "_comment": "Seuils mesures par tools/check_scenario_diversity.py. La diversite est une contrainte de premiere classe, au meme titre que l'equilibrage.",
+    "thresholds": {
+      "max_pair_cosine": 0.9,
+      "max_mean_cosine": 0.75,
+      "max_pair_jaccard": 0.35,
+      "min_unique_summaries": 0.95,
+      "min_unique_labels": 0.9,
+      "min_distinct_verbs_per_scenario": 12,
+      "min_unique_signatures": 0.8,
+      "max_motif_share": 0.5
+    },
+    "etat_corpus_2026_07_26": {
+      "verdict": "0/6 axes conformes",
+      "semantique": "80 paires > 0.95, plusieurs a 1.000 (embeddings identiques)",
+      "situationnel": "90 resumes distincts sur 2994",
+      "verbal": "18 libelles distincts sur 8982 — Affronter/Fuir/Apaiser x803 chacun",
+      "structurel": "35 signatures distinctes sur 100",
+      "motifs": "« merlin » dans 100% des scenarios, « voix » dans 95%",
+      "consequence": "ce corpus ne peut pas servir de few-shot de contenu : il enseigne la ressemblance. Il reste valable comme source de bornage et comme jeu de test structurel."
+    }
   }
 }
