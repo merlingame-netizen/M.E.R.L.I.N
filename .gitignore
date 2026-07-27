@@ -438,3 +438,23 @@ secrets.json
 # asset-ledger transient artifacts (regenerated each run; bible graph.json + BIBLE.md ARE tracked)
 docs/asset-ledger/ALERTS.md
 docs/asset-ledger/CLEANUP-PROPOSAL-*.md
+
+# -------------------------------------------
+# Purge assets morts (plan "pipeline assets visuels", 2026-07-27)
+# Retires de l'index via `git rm --cached` : les fichiers RESTENT sur le disque.
+# Verifies sans aucune reference depuis .gd / .tscn / .tres / project.godot.
+# -------------------------------------------
+# Chaine 3D abandonnee (le jeu 2D ne charge aucune image ni aucun modele)
+Assets/Tiles/
+Assets/blender/kaykit_mage.glb
+# Assets du projet BACKROOMS, etrangers a MERLIN
+Assets/bk_assets/
+# Experiences pixel-art de mars, jamais cablees au jeu
+sprites/pixel_art/
+# Polices non chargees (le theme utilise VT323, merlin_visual.gd utilise MorrisRoman)
+Assets/fonts/PressStart2P-Regular.ttf
+Assets/fonts/UncialAntiqua-Regular.ttf
+resources/fonts/celtic_bit/
+# Divers orphelins confirmes (le theme du menu est music/theme/merlin_main_theme.wav)
+Assets/Music/
+Assets/backgrounds/
