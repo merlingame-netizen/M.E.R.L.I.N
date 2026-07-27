@@ -1,537 +1,545 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Unit Tests — BrainSwarmConfig (static methods + PROFILES data integrity)
+## Tests unitaires — BrainSwarmConfig (methodes statiques + integrite de PROFILES)
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Coverage:
-##   detect_profile()      — RAM/thread thresholds, fallback to NANO
-##   get_profile()         — valid IDs, invalid ID fallback
-##   get_prefetch_depth()  — per-profile values, invalid ID fallback
-##   get_profile_name()    — string result, invalid ID fallback
-##   is_time_sharing()     — SINGLE_PLUS vs parallel modes
-##   get_model_for_role()  — exact role match, fallback to first brain, missing role
-##   get_brain_config()    — exact match, missing role returns {}
-##   get_required_models() — deduplication (QUAD has two 0.8b brains)
-##   get_peak_ram_mb()     — per-profile values, invalid ID fallback
-##   PROFILES integrity    — all profiles have required keys, brain arrays valid
+## Couverture :
+##   detect_profile()      — seuils RAM/threads, repli sur LEGER
+##   profile_from_name()   — libelles du menu options -> identifiants
+##   get_profile()         — identifiants valides, repli sur identifiant inconnu
+##   get_prefetch_depth()  — valeurs par palier, repli
+##   get_profile_name()    — chaine non vide, repli
+##   is_time_sharing()     — modes resident / parallel
+##   get_model_for_role()  — role exact, repli sur le premier cerveau
+##   get_brain_config()    — role exact, role absent -> {}
+##   get_required_models() — deduplication des tags
+##   get_peak_ram_mb()     — valeurs par palier, repli
+##   PROFILES              — cles obligatoires, tableaux de cerveaux valides
 ##
-## Pattern: extends RefCounted, no class_name, test_xxx() -> bool
+## La regle du joueur (« au-dessus de 32 Go le plus gros modele, en dessous le
+## moyen, machine limitee le plus petit ») est verifiee explicitement par
+## test_detect_profile_regle_du_joueur_*.
+##
+## Pattern : extends RefCounted, pas de class_name, test_xxx() -> bool
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
 
 
-# ─── Convenience aliases ───────────────────────────────────────────────────────
+# ─── Alias ─────────────────────────────────────────────────────────────────────
 
-const NANO: int = BrainSwarmConfig.Profile.NANO
-const SINGLE: int = BrainSwarmConfig.Profile.SINGLE
-const SINGLE_PLUS: int = BrainSwarmConfig.Profile.SINGLE_PLUS
-const DUAL: int = BrainSwarmConfig.Profile.DUAL
-const TRIPLE: int = BrainSwarmConfig.Profile.TRIPLE
-const QUAD: int = BrainSwarmConfig.Profile.QUAD
+const LEGER: int = BrainSwarmConfig.Profile.LEGER
+const MOYEN: int = BrainSwarmConfig.Profile.MOYEN
+const ELEVE: int = BrainSwarmConfig.Profile.ELEVE
 const MOBILE_LOW: int = BrainSwarmConfig.Profile.MOBILE_LOW
 const MOBILE_MID: int = BrainSwarmConfig.Profile.MOBILE_MID
 const MOBILE_HIGH: int = BrainSwarmConfig.Profile.MOBILE_HIGH
 
+const DESKTOP: Array[int] = [LEGER, MOYEN, ELEVE]
+const TOUS: Array[int] = [LEGER, MOYEN, ELEVE, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# detect_profile() — RAM + thread gate logic
+# detect_profile() — la regle du joueur, seuils RAM + threads
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_detect_profile_quad_on_high_resources() -> bool:
-	# QUAD: min_ram_mb=16000, min_threads=8
-	var result: int = BrainSwarmConfig.detect_profile(20000, 12)
-	if result != QUAD:
-		push_error("detect_profile quad: expected QUAD (%d), got %d" % [QUAD, result])
+func test_detect_profile_regle_du_joueur_32go_donne_eleve() -> bool:
+	# « si RAM au dessus de 32Go alors le plus haut »
+	var result: int = BrainSwarmConfig.detect_profile(32768, 6)
+	if result != ELEVE:
+		push_error("detect_profile 32 Go: attendu ELEVE (%d), obtenu %d" % [ELEVE, result])
 		return false
 	return true
 
 
-func test_detect_profile_triple_below_quad_ram() -> bool:
-	# TRIPLE: min_ram_mb=14000, min_threads=8 — just below QUAD threshold
+func test_detect_profile_regle_du_joueur_16go_donne_moyen() -> bool:
+	# « si en dessous alors moyen »
+	var result: int = BrainSwarmConfig.detect_profile(16384, 6)
+	if result != MOYEN:
+		push_error("detect_profile 16 Go: attendu MOYEN (%d), obtenu %d" % [MOYEN, result])
+		return false
+	return true
+
+
+func test_detect_profile_regle_du_joueur_8go_donne_leger() -> bool:
+	# « si machine limitee alors plus petit modele »
+	var result: int = BrainSwarmConfig.detect_profile(8192, 4)
+	if result != LEGER:
+		push_error("detect_profile 8 Go: attendu LEGER (%d), obtenu %d" % [LEGER, result])
+		return false
+	return true
+
+
+func test_detect_profile_juste_sous_32go_reste_moyen() -> bool:
+	# 31 Go : le seuil ELEVE (32000) n'est pas atteint.
+	var result: int = BrainSwarmConfig.detect_profile(31000, 16)
+	if result != MOYEN:
+		push_error("detect_profile 31 Go: attendu MOYEN (%d), obtenu %d" % [MOYEN, result])
+		return false
+	return true
+
+
+func test_detect_profile_juste_sous_16go_reste_leger() -> bool:
 	var result: int = BrainSwarmConfig.detect_profile(15000, 8)
-	if result != TRIPLE:
-		push_error("detect_profile triple: expected TRIPLE (%d), got %d" % [TRIPLE, result])
+	if result != LEGER:
+		push_error("detect_profile 15 Go: attendu LEGER (%d), obtenu %d" % [LEGER, result])
 		return false
 	return true
 
 
-func test_detect_profile_dual_on_12gb_6threads() -> bool:
-	# DUAL: min_ram_mb=12000, min_threads=6
-	var result: int = BrainSwarmConfig.detect_profile(12000, 6)
-	if result != DUAL:
-		push_error("detect_profile dual: expected DUAL (%d), got %d" % [DUAL, result])
-		return false
-	return true
-
-
-func test_detect_profile_single_plus_on_7gb_4threads() -> bool:
-	# SINGLE_PLUS: min_ram_mb=7000, min_threads=4
-	var result: int = BrainSwarmConfig.detect_profile(7000, 4)
-	if result != SINGLE_PLUS:
-		push_error("detect_profile single_plus: expected SINGLE_PLUS (%d), got %d" % [SINGLE_PLUS, result])
-		return false
-	return true
-
-
-func test_detect_profile_single_on_6gb_4threads() -> bool:
-	# SINGLE: min_ram_mb=6000, min_threads=4 — just below SINGLE_PLUS
-	var result: int = BrainSwarmConfig.detect_profile(6000, 4)
-	if result != SINGLE:
-		push_error("detect_profile single: expected SINGLE (%d), got %d" % [SINGLE, result])
-		return false
-	return true
-
-
-func test_detect_profile_nano_on_low_ram() -> bool:
-	# Below every threshold
+func test_detect_profile_ram_insuffisante_replie_sur_leger() -> bool:
 	var result: int = BrainSwarmConfig.detect_profile(2000, 2)
-	if result != NANO:
-		push_error("detect_profile nano low ram: expected NANO (%d), got %d" % [NANO, result])
+	if result != LEGER:
+		push_error("detect_profile 2 Go: attendu LEGER (%d), obtenu %d" % [LEGER, result])
 		return false
 	return true
 
 
-func test_detect_profile_nano_on_zero_resources() -> bool:
+func test_detect_profile_ressources_nulles_replie_sur_leger() -> bool:
 	var result: int = BrainSwarmConfig.detect_profile(0, 0)
-	if result != NANO:
-		push_error("detect_profile nano zero: expected NANO (%d), got %d" % [NANO, result])
+	if result != LEGER:
+		push_error("detect_profile 0/0: attendu LEGER (%d), obtenu %d" % [LEGER, result])
 		return false
 	return true
 
 
-func test_detect_profile_thread_bottleneck_prevents_upgrade() -> bool:
-	# Enough RAM for QUAD but only 2 threads → should fall back to NANO (no profile passes threads=2)
-	var result: int = BrainSwarmConfig.detect_profile(32000, 2)
-	if result != NANO:
-		push_error("detect_profile thread bottleneck: expected NANO (%d), got %d" % [NANO, result])
+func test_detect_profile_threads_insuffisants_degradent_le_palier() -> bool:
+	# 32 Go mais un seul coeur : ELEVE demande 4 threads, MOYEN aussi,
+	# LEGER en demande 2 — aucun ne passe, donc repli sur LEGER.
+	var result: int = BrainSwarmConfig.detect_profile(32768, 1)
+	if result != LEGER:
+		push_error("detect_profile 1 thread: attendu LEGER (%d), obtenu %d" % [LEGER, result])
 		return false
 	return true
 
 
-func test_detect_profile_ram_bottleneck_prevents_upgrade() -> bool:
-	# Enough threads for QUAD but only 3000 MB RAM → NANO
-	var result: int = BrainSwarmConfig.detect_profile(3000, 16)
-	if result != NANO:
-		push_error("detect_profile ram bottleneck: expected NANO (%d), got %d" % [NANO, result])
+func test_detect_profile_i5_8500_32go_donne_eleve() -> bool:
+	# Machine de reference du projet : 6 coeurs, 32 Go, sans GPU.
+	# ELEVE ne doit PAS exiger 8 threads, sinon la regle « 32 Go = plus haut »
+	# serait contredite par le nombre de coeurs.
+	var result: int = BrainSwarmConfig.detect_profile(32768, 6)
+	if result != ELEVE:
+		push_error("detect_profile i5-8500/32 Go: attendu ELEVE (%d), obtenu %d" % [ELEVE, result])
 		return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# get_profile() — valid IDs and invalid ID fallback
+# profile_from_name() — libelles du menu options
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_get_profile_returns_dict_for_every_valid_id() -> bool:
-	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]
-	for pid in valid_ids:
-		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
-		if profile.is_empty():
-			push_error("get_profile: profile %d returned empty dict" % pid)
+func test_profile_from_name_reconnait_les_trois_paliers() -> bool:
+	var attendu: Dictionary = {"leger": LEGER, "moyen": MOYEN, "eleve": ELEVE}
+	for nom in attendu.keys():
+		var result: int = BrainSwarmConfig.profile_from_name(str(nom))
+		if result != int(attendu[nom]):
+			push_error("profile_from_name('%s'): attendu %d, obtenu %d" % [str(nom), int(attendu[nom]), result])
 			return false
 	return true
 
 
-func test_get_profile_invalid_id_returns_nano_fallback() -> bool:
+func test_profile_from_name_accepte_les_accents_et_la_casse() -> bool:
+	if BrainSwarmConfig.profile_from_name("Élevé") != ELEVE:
+		push_error("profile_from_name('Élevé'): les accents doivent etre acceptes")
+		return false
+	if BrainSwarmConfig.profile_from_name("  LÉGER  ") != LEGER:
+		push_error("profile_from_name('  LÉGER  '): casse et espaces doivent etre tolerés")
+		return false
+	return true
+
+
+func test_profile_from_name_inconnu_retourne_moins_un() -> bool:
+	for nom in ["", "auto", "automatique", "quad", "n'importe quoi"]:
+		if BrainSwarmConfig.profile_from_name(str(nom)) != -1:
+			push_error("profile_from_name('%s'): devrait retourner -1 (detection auto)" % str(nom))
+			return false
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# get_profile() — identifiants valides et repli
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_get_profile_returns_dict_for_every_valid_id() -> bool:
+	for pid in TOUS:
+		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
+		if profile.is_empty():
+			push_error("get_profile: le palier %d renvoie un dictionnaire vide" % pid)
+			return false
+	return true
+
+
+func test_get_profile_invalid_id_returns_leger_fallback() -> bool:
 	var profile: Dictionary = BrainSwarmConfig.get_profile(9999)
-	var nano_profile: Dictionary = BrainSwarmConfig.get_profile(NANO)
-	if str(profile.get("name", "")) != str(nano_profile.get("name", "_")):
-		push_error("get_profile invalid: should fall back to NANO profile, got name '%s'" % str(profile.get("name", "")))
+	var leger: Dictionary = BrainSwarmConfig.get_profile(LEGER)
+	if str(profile.get("name", "")) != str(leger.get("name", "_")):
+		push_error("get_profile identifiant inconnu: repli attendu sur LEGER, obtenu '%s'" % str(profile.get("name", "")))
 		return false
 	return true
 
 
 func test_get_profile_has_required_keys() -> bool:
 	var required: Array[String] = ["name", "mode", "brains", "total_ram_mb", "min_threads", "min_ram_mb", "prefetch_depth"]
-	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]
-	for pid in valid_ids:
+	for pid in TOUS:
 		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
 		for key in required:
 			if not profile.has(key):
-				push_error("get_profile required keys: profile %d missing key '%s'" % [pid, key])
+				push_error("get_profile cles: le palier %d n'a pas '%s'" % [pid, key])
 				return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# get_prefetch_depth() — per-profile values
+# get_prefetch_depth()
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_get_prefetch_depth_nano_is_zero() -> bool:
-	var depth: int = BrainSwarmConfig.get_prefetch_depth(NANO)
+func test_get_prefetch_depth_leger_is_zero() -> bool:
+	var depth: int = BrainSwarmConfig.get_prefetch_depth(LEGER)
 	if depth != 0:
-		push_error("get_prefetch_depth NANO: expected 0, got %d" % depth)
+		push_error("get_prefetch_depth LEGER: attendu 0, obtenu %d" % depth)
 		return false
 	return true
 
 
-func test_get_prefetch_depth_single_is_one() -> bool:
-	var depth: int = BrainSwarmConfig.get_prefetch_depth(SINGLE)
-	if depth != 1:
-		push_error("get_prefetch_depth SINGLE: expected 1, got %d" % depth)
-		return false
-	return true
-
-
-func test_get_prefetch_depth_triple_is_two() -> bool:
-	var depth: int = BrainSwarmConfig.get_prefetch_depth(TRIPLE)
-	if depth != 2:
-		push_error("get_prefetch_depth TRIPLE: expected 2, got %d" % depth)
-		return false
-	return true
-
-
-func test_get_prefetch_depth_quad_is_three() -> bool:
-	var depth: int = BrainSwarmConfig.get_prefetch_depth(QUAD)
-	if depth != 3:
-		push_error("get_prefetch_depth QUAD: expected 3, got %d" % depth)
-		return false
+func test_get_prefetch_depth_croit_avec_le_palier() -> bool:
+	var prev: int = -1
+	for pid in DESKTOP:
+		var depth: int = BrainSwarmConfig.get_prefetch_depth(pid)
+		if depth < prev:
+			push_error("get_prefetch_depth: palier %d a %d < precedent %d" % [pid, depth, prev])
+			return false
+		prev = depth
 	return true
 
 
 func test_get_prefetch_depth_invalid_id_returns_zero() -> bool:
-	# Falls back to NANO which has prefetch_depth = 0
 	var depth: int = BrainSwarmConfig.get_prefetch_depth(9999)
 	if depth != 0:
-		push_error("get_prefetch_depth invalid: expected 0, got %d" % depth)
+		push_error("get_prefetch_depth identifiant inconnu: attendu 0, obtenu %d" % depth)
 		return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# get_profile_name() — string result per profile
+# get_profile_name()
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_get_profile_name_returns_non_empty_string_for_all() -> bool:
-	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
-	for pid in valid_ids:
-		var name: String = BrainSwarmConfig.get_profile_name(pid)
-		if name.is_empty():
-			push_error("get_profile_name: profile %d returned empty name" % pid)
+	for pid in TOUS:
+		var nom: String = BrainSwarmConfig.get_profile_name(pid)
+		if nom.is_empty():
+			push_error("get_profile_name: le palier %d renvoie un nom vide" % pid)
 			return false
 	return true
 
 
-func test_get_profile_name_nano_contains_nano() -> bool:
-	var name: String = BrainSwarmConfig.get_profile_name(NANO)
-	if not name.to_lower().contains("nano"):
-		push_error("get_profile_name NANO: name should contain 'nano', got '%s'" % name)
-		return false
+func test_get_profile_name_porte_le_libelle_du_palier() -> bool:
+	var attendu: Dictionary = {LEGER: "leger", MOYEN: "moyen", ELEVE: "eleve"}
+	for pid in attendu.keys():
+		var nom: String = BrainSwarmConfig.get_profile_name(int(pid))
+		if not nom.to_lower().contains(str(attendu[pid])):
+			push_error("get_profile_name %d: le nom devrait contenir '%s', obtenu '%s'" % [int(pid), str(attendu[pid]), nom])
+			return false
 	return true
 
 
-func test_get_profile_name_quad_contains_quad() -> bool:
-	var name: String = BrainSwarmConfig.get_profile_name(QUAD)
-	if not name.to_lower().contains("quad"):
-		push_error("get_profile_name QUAD: name should contain 'quad', got '%s'" % name)
-		return false
-	return true
-
-
-func test_get_profile_name_invalid_falls_back_to_nano_name() -> bool:
-	var invalid_name: String = BrainSwarmConfig.get_profile_name(9999)
-	var nano_name: String = BrainSwarmConfig.get_profile_name(NANO)
-	if invalid_name != nano_name:
-		push_error("get_profile_name invalid: expected NANO name '%s', got '%s'" % [nano_name, invalid_name])
+func test_get_profile_name_invalid_falls_back_to_leger_name() -> bool:
+	if BrainSwarmConfig.get_profile_name(9999) != BrainSwarmConfig.get_profile_name(LEGER):
+		push_error("get_profile_name identifiant inconnu: repli attendu sur le nom de LEGER")
 		return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# is_time_sharing() — mode detection
+# is_time_sharing()
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_is_time_sharing_true_only_for_single_plus() -> bool:
-	if not BrainSwarmConfig.is_time_sharing(SINGLE_PLUS):
-		push_error("is_time_sharing SINGLE_PLUS: should be true")
-		return false
-	return true
-
-
-func test_is_time_sharing_false_for_nano() -> bool:
-	if BrainSwarmConfig.is_time_sharing(NANO):
-		push_error("is_time_sharing NANO: should be false")
-		return false
-	return true
-
-
-func test_is_time_sharing_false_for_parallel_profiles() -> bool:
-	var parallel_ids: Array[int] = [DUAL, TRIPLE, QUAD]
-	for pid in parallel_ids:
+func test_is_time_sharing_false_pour_les_paliers_a_un_modele() -> bool:
+	# LEGER et MOYEN n'ont qu'un modele resident : rien a echanger.
+	for pid in [LEGER, MOYEN]:
 		if BrainSwarmConfig.is_time_sharing(pid):
-			push_error("is_time_sharing: profile %d should NOT be time_sharing" % pid)
+			push_error("is_time_sharing: le palier %d ne devrait pas etre en time-sharing" % pid)
 			return false
 	return true
 
 
+func test_is_time_sharing_false_pour_eleve_qui_est_parallele() -> bool:
+	# ELEVE charge les deux modeles en meme temps (22,1 Go sur 32) : pas
+	# d'echange, generation parallele.
+	if BrainSwarmConfig.is_time_sharing(ELEVE):
+		push_error("is_time_sharing ELEVE: attendu false (mode parallel)")
+		return false
+	return true
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# get_model_for_role() — exact match, fallback to first brain
+# get_model_for_role()
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_get_model_for_role_narrator_in_dual() -> bool:
-	var tag: String = BrainSwarmConfig.get_model_for_role(DUAL, "narrator")
-	if tag != BrainSwarmConfig.MODEL_QWEN35_4B:
-		push_error("get_model_for_role DUAL narrator: expected '%s', got '%s'" % [BrainSwarmConfig.MODEL_QWEN35_4B, tag])
+func test_get_model_for_role_narrator_in_eleve_is_26b() -> bool:
+	var tag: String = BrainSwarmConfig.get_model_for_role(ELEVE, "narrator")
+	if tag != BrainSwarmConfig.MODEL_GEMMA4_26B:
+		push_error("get_model_for_role ELEVE narrator: attendu '%s', obtenu '%s'" % [BrainSwarmConfig.MODEL_GEMMA4_26B, tag])
 		return false
 	return true
 
 
-func test_get_model_for_role_gamemaster_in_dual() -> bool:
-	var tag: String = BrainSwarmConfig.get_model_for_role(DUAL, "gamemaster")
-	if tag != BrainSwarmConfig.MODEL_QWEN35_2B:
-		push_error("get_model_for_role DUAL gamemaster: expected '%s', got '%s'" % [BrainSwarmConfig.MODEL_QWEN35_2B, tag])
+func test_get_model_for_role_gamemaster_in_eleve_is_e4b() -> bool:
+	# Le game master ne produit que du JSON : l'E4B suffit, et payer deux fois
+	# le gros modele doublerait l'empreinte sans ameliorer la prose.
+	var tag: String = BrainSwarmConfig.get_model_for_role(ELEVE, "gamemaster")
+	if tag != BrainSwarmConfig.MODEL_GEMMA4_E4B:
+		push_error("get_model_for_role ELEVE gamemaster: attendu '%s', obtenu '%s'" % [BrainSwarmConfig.MODEL_GEMMA4_E4B, tag])
 		return false
 	return true
 
 
-func test_get_model_for_role_worker_in_triple() -> bool:
-	var tag: String = BrainSwarmConfig.get_model_for_role(TRIPLE, "worker")
-	if tag != BrainSwarmConfig.MODEL_QWEN35_08B:
-		push_error("get_model_for_role TRIPLE worker: expected '%s', got '%s'" % [BrainSwarmConfig.MODEL_QWEN35_08B, tag])
+func test_get_model_for_role_narrator_in_moyen_is_12b() -> bool:
+	var tag: String = BrainSwarmConfig.get_model_for_role(MOYEN, "narrator")
+	if tag != BrainSwarmConfig.MODEL_GEMMA4_12B:
+		push_error("get_model_for_role MOYEN narrator: attendu '%s', obtenu '%s'" % [BrainSwarmConfig.MODEL_GEMMA4_12B, tag])
 		return false
 	return true
 
 
-func test_get_model_for_role_judge_in_quad() -> bool:
-	var tag: String = BrainSwarmConfig.get_model_for_role(QUAD, "judge")
-	if tag != BrainSwarmConfig.MODEL_QWEN35_08B:
-		push_error("get_model_for_role QUAD judge: expected '%s', got '%s'" % [BrainSwarmConfig.MODEL_QWEN35_08B, tag])
+func test_get_model_for_role_narrator_in_leger_is_e4b() -> bool:
+	var tag: String = BrainSwarmConfig.get_model_for_role(LEGER, "narrator")
+	if tag != BrainSwarmConfig.MODEL_GEMMA4_E4B:
+		push_error("get_model_for_role LEGER narrator: attendu '%s', obtenu '%s'" % [BrainSwarmConfig.MODEL_GEMMA4_E4B, tag])
 		return false
 	return true
 
 
 func test_get_model_for_role_missing_role_falls_back_to_first_brain() -> bool:
-	# NANO has only one brain (narrator); asking for "gamemaster" → first brain's model
-	var tag: String = BrainSwarmConfig.get_model_for_role(NANO, "gamemaster")
-	if tag != BrainSwarmConfig.MODEL_QWEN35_08B:
-		push_error("get_model_for_role NANO missing role: expected first brain '%s', got '%s'" % [BrainSwarmConfig.MODEL_QWEN35_08B, tag])
+	# LEGER n'a qu'un cerveau (narrator) ; demander "gamemaster" doit rendre
+	# le modele du premier cerveau, pas une chaine vide.
+	var tag: String = BrainSwarmConfig.get_model_for_role(LEGER, "gamemaster")
+	if tag != BrainSwarmConfig.MODEL_GEMMA4_E4B:
+		push_error("get_model_for_role LEGER role absent: attendu '%s', obtenu '%s'" % [BrainSwarmConfig.MODEL_GEMMA4_E4B, tag])
 		return false
 	return true
 
 
-func test_get_model_for_role_narrator_in_nano_is_08b() -> bool:
-	var tag: String = BrainSwarmConfig.get_model_for_role(NANO, "narrator")
-	if tag != BrainSwarmConfig.MODEL_QWEN35_08B:
-		push_error("get_model_for_role NANO narrator: expected '%s', got '%s'" % [BrainSwarmConfig.MODEL_QWEN35_08B, tag])
-		return false
+func test_tous_les_tags_desktop_sont_de_la_famille_gemma4() -> bool:
+	# Garde-fou : un tag d'une autre famille reintroduirait le probleme de
+	# gabarit de chat que la bascule vers /api/chat vient de supprimer.
+	for pid in DESKTOP:
+		for tag in BrainSwarmConfig.get_required_models(pid):
+			if not str(tag).begins_with("gemma4:"):
+				push_error("palier %d: tag '%s' hors famille Gemma 4" % [pid, str(tag)])
+				return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# get_brain_config() — exact match and missing role
+# get_brain_config()
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_get_brain_config_narrator_in_quad() -> bool:
-	var cfg: Dictionary = BrainSwarmConfig.get_brain_config(QUAD, "narrator")
+func test_get_brain_config_narrator_in_eleve() -> bool:
+	var cfg: Dictionary = BrainSwarmConfig.get_brain_config(ELEVE, "narrator")
 	if cfg.is_empty():
-		push_error("get_brain_config QUAD narrator: should not be empty")
+		push_error("get_brain_config ELEVE narrator: ne devrait pas etre vide")
 		return false
 	if str(cfg.get("role", "")) != "narrator":
-		push_error("get_brain_config QUAD narrator: role mismatch '%s'" % str(cfg.get("role", "")))
+		push_error("get_brain_config ELEVE narrator: role incorrect '%s'" % str(cfg.get("role", "")))
 		return false
 	if int(cfg.get("n_ctx", 0)) != 8192:
-		push_error("get_brain_config QUAD narrator: n_ctx should be 8192, got %d" % int(cfg.get("n_ctx", 0)))
+		push_error("get_brain_config ELEVE narrator: n_ctx attendu 8192, obtenu %d" % int(cfg.get("n_ctx", 0)))
 		return false
 	return true
 
 
 func test_get_brain_config_missing_role_returns_empty_dict() -> bool:
-	var cfg: Dictionary = BrainSwarmConfig.get_brain_config(NANO, "judge")
+	var cfg: Dictionary = BrainSwarmConfig.get_brain_config(LEGER, "judge")
 	if not cfg.is_empty():
-		push_error("get_brain_config NANO judge: should return empty dict, got %s" % str(cfg))
+		push_error("get_brain_config LEGER judge: devrait renvoyer {}, obtenu %s" % str(cfg))
 		return false
 	return true
 
 
 func test_get_brain_config_all_brains_have_required_keys() -> bool:
 	var required: Array[String] = ["role", "model_key", "ollama_tag", "n_ctx", "ram_mb", "thinking"]
-	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
-	for pid in valid_ids:
+	for pid in DESKTOP:
 		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
-		var brain_list: Array = profile.get("brains", [])
-		for brain in brain_list:
+		for brain in profile.get("brains", []):
 			for key in required:
 				if not brain.has(key):
-					push_error("get_brain_config keys: profile %d brain '%s' missing '%s'" % [pid, str(brain.get("role", "?")), key])
+					push_error("cles de cerveau: palier %d, cerveau '%s', cle '%s' manquante" % [pid, str(brain.get("role", "?")), key])
 					return false
 	return true
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# get_required_models() — unique model tags, QUAD deduplication
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_get_required_models_nano_returns_one_model() -> bool:
-	var models: Array = BrainSwarmConfig.get_required_models(NANO)
-	if models.size() != 1:
-		push_error("get_required_models NANO: expected 1 model, got %d" % models.size())
-		return false
-	if str(models[0]) != BrainSwarmConfig.MODEL_QWEN35_08B:
-		push_error("get_required_models NANO: expected '%s', got '%s'" % [BrainSwarmConfig.MODEL_QWEN35_08B, str(models[0])])
-		return false
-	return true
-
-
-func test_get_required_models_dual_returns_two_models() -> bool:
-	var models: Array = BrainSwarmConfig.get_required_models(DUAL)
-	if models.size() != 2:
-		push_error("get_required_models DUAL: expected 2 unique models, got %d" % models.size())
-		return false
-	if str(models[0]) != BrainSwarmConfig.MODEL_QWEN35_4B:
-		push_error("get_required_models DUAL: first model should be 4B, got '%s'" % str(models[0]))
-		return false
-	if str(models[1]) != BrainSwarmConfig.MODEL_QWEN35_2B:
-		push_error("get_required_models DUAL: second model should be 2B, got '%s'" % str(models[1]))
-		return false
-	return true
-
-
-func test_get_required_models_quad_deduplicates_08b() -> bool:
-	# QUAD has 4 brains but judge+worker both use 0.8b → only 3 unique tags
-	var models: Array = BrainSwarmConfig.get_required_models(QUAD)
-	if models.size() != 3:
-		push_error("get_required_models QUAD: expected 3 unique models (4B, 2B, 0.8B), got %d" % models.size())
-		return false
-	# Verify 0.8b appears exactly once
-	var tracker: Dictionary = {"count": 0}
-	for m in models:
-		if str(m) == BrainSwarmConfig.MODEL_QWEN35_08B:
-			tracker["count"] = int(tracker["count"]) + 1
-	if int(tracker["count"]) != 1:
-		push_error("get_required_models QUAD: 0.8b should appear exactly once, got %d" % int(tracker["count"]))
-		return false
-	return true
-
-
-func test_get_required_models_no_empty_strings() -> bool:
-	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
-	for pid in valid_ids:
-		var models: Array = BrainSwarmConfig.get_required_models(pid)
-		for m in models:
-			if str(m).is_empty():
-				push_error("get_required_models: profile %d contains empty model tag" % pid)
+func test_chaque_model_key_existe_dans_ram_by_model() -> bool:
+	# Un model_key absent de RAM_BY_MODEL rendrait l'empreinte memoire
+	# incalculable — donc le garde-fou « ce modele tient-il ? » inoperant.
+	for pid in TOUS:
+		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
+		for brain in profile.get("brains", []):
+			var key: String = str(brain.get("model_key", ""))
+			if not BrainSwarmConfig.RAM_BY_MODEL.has(key):
+				push_error("RAM_BY_MODEL: cle '%s' absente (palier %d)" % [key, pid])
 				return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# get_peak_ram_mb() — per-profile values
+# get_required_models()
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_get_peak_ram_mb_nano_is_800() -> bool:
-	var ram: int = BrainSwarmConfig.get_peak_ram_mb(NANO)
-	if ram != 800:
-		push_error("get_peak_ram_mb NANO: expected 800, got %d" % ram)
+func test_get_required_models_leger_returns_one_model() -> bool:
+	var models: Array = BrainSwarmConfig.get_required_models(LEGER)
+	if models.size() != 1:
+		push_error("get_required_models LEGER: attendu 1 modele, obtenu %d" % models.size())
+		return false
+	if str(models[0]) != BrainSwarmConfig.MODEL_GEMMA4_E4B:
+		push_error("get_required_models LEGER: attendu '%s', obtenu '%s'" % [BrainSwarmConfig.MODEL_GEMMA4_E4B, str(models[0])])
 		return false
 	return true
 
 
-func test_get_peak_ram_mb_single_plus_reflects_time_sharing() -> bool:
-	# SINGLE_PLUS total_ram_mb = 3200 (peak = largest model only, time-sharing)
-	var ram: int = BrainSwarmConfig.get_peak_ram_mb(SINGLE_PLUS)
-	if ram != 3200:
-		push_error("get_peak_ram_mb SINGLE_PLUS: expected 3200 (time-sharing peak), got %d" % ram)
+func test_get_required_models_eleve_returns_two_models() -> bool:
+	var models: Array = BrainSwarmConfig.get_required_models(ELEVE)
+	if models.size() != 2:
+		push_error("get_required_models ELEVE: attendu 2 modeles, obtenu %d" % models.size())
+		return false
+	if str(models[0]) != BrainSwarmConfig.MODEL_GEMMA4_26B:
+		push_error("get_required_models ELEVE: premier modele attendu 26B, obtenu '%s'" % str(models[0]))
+		return false
+	if str(models[1]) != BrainSwarmConfig.MODEL_GEMMA4_E4B:
+		push_error("get_required_models ELEVE: second modele attendu E4B, obtenu '%s'" % str(models[1]))
 		return false
 	return true
 
 
-func test_get_peak_ram_mb_dual_is_5000() -> bool:
-	# DUAL: both models loaded simultaneously → 3200 + 1800 = 5000
-	var ram: int = BrainSwarmConfig.get_peak_ram_mb(DUAL)
-	if ram != 5000:
-		push_error("get_peak_ram_mb DUAL: expected 5000, got %d" % ram)
+func test_get_required_models_no_empty_strings() -> bool:
+	for pid in DESKTOP:
+		for m in BrainSwarmConfig.get_required_models(pid):
+			if str(m).is_empty():
+				push_error("get_required_models: le palier %d contient un tag vide" % pid)
+				return false
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# get_peak_ram_mb()
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_get_peak_ram_mb_leger_is_6100() -> bool:
+	var ram: int = BrainSwarmConfig.get_peak_ram_mb(LEGER)
+	if ram != 6100:
+		push_error("get_peak_ram_mb LEGER: attendu 6100, obtenu %d" % ram)
 		return false
 	return true
 
 
-func test_get_peak_ram_mb_quad_is_6600() -> bool:
-	var ram: int = BrainSwarmConfig.get_peak_ram_mb(QUAD)
-	if ram != 6600:
-		push_error("get_peak_ram_mb QUAD: expected 6600, got %d" % ram)
+func test_get_peak_ram_mb_eleve_somme_les_deux_modeles() -> bool:
+	# ELEVE est en mode parallel : les deux modeles resident en meme temps,
+	# 16000 + 6100. Declarer seulement le plus gros masquerait 6 Go.
+	var ram: int = BrainSwarmConfig.get_peak_ram_mb(ELEVE)
+	if ram != 22100:
+		push_error("get_peak_ram_mb ELEVE: attendu 22100 (16000 + 6100), obtenu %d" % ram)
 		return false
 	return true
 
 
-func test_get_peak_ram_mb_invalid_id_returns_800_fallback() -> bool:
-	# Falls back to NANO (800 MB)
+func test_get_peak_ram_mb_invalid_id_returns_leger_fallback() -> bool:
 	var ram: int = BrainSwarmConfig.get_peak_ram_mb(9999)
-	if ram != 800:
-		push_error("get_peak_ram_mb invalid: expected 800 (NANO fallback), got %d" % ram)
+	if ram != BrainSwarmConfig.get_peak_ram_mb(LEGER):
+		push_error("get_peak_ram_mb identifiant inconnu: repli attendu sur LEGER, obtenu %d" % ram)
 		return false
 	return true
 
 
+func test_le_pic_ram_tient_dans_le_seuil_du_palier() -> bool:
+	# Un palier qui exige moins de RAM que son propre modele ne demande est un
+	# piege : la detection le choisirait sur une machine ou il ne tient pas.
+	for pid in DESKTOP:
+		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
+		var pic: int = int(profile.get("total_ram_mb", 0))
+		var seuil: int = int(profile.get("min_ram_mb", 0))
+		if pic > seuil:
+			push_error("palier %d: pic RAM %d MB > seuil d'activation %d MB" % [pid, pic, seuil])
+			return false
+	return true
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# PROFILES data integrity
+# Integrite de PROFILES
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_profiles_min_ram_increases_with_tier() -> bool:
-	# Larger profiles must require at least as much RAM as smaller ones (within group).
-	# Desktop and mobile groups are tested separately because they target different
-	# hardware classes (mobile RAM 3000-7000 overlaps with desktop NANO 4000).
-	var desktop: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
-	var prev_min_ram: int = -1
-	for pid in desktop:
-		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
-		var min_ram: int = int(profile.get("min_ram_mb", 0))
-		if min_ram < prev_min_ram:
-			push_error("PROFILES desktop min_ram_mb: profile %d min_ram %d < previous %d (not ascending)" % [pid, min_ram, prev_min_ram])
+	# Bureau et mobile sont testes separement : ils visent des classes de
+	# materiel differentes et leurs seuils se chevauchent.
+	var prev: int = -1
+	for pid in DESKTOP:
+		var min_ram: int = int(BrainSwarmConfig.get_profile(pid).get("min_ram_mb", 0))
+		if min_ram < prev:
+			push_error("PROFILES bureau: palier %d min_ram %d < precedent %d" % [pid, min_ram, prev])
 			return false
-		prev_min_ram = min_ram
-	# Mobile tier ascending check (independent group)
-	var mobile: Array[int] = [MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]
-	prev_min_ram = -1
-	for pid in mobile:
-		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
-		var min_ram: int = int(profile.get("min_ram_mb", 0))
-		if min_ram < prev_min_ram:
-			push_error("PROFILES mobile min_ram_mb: profile %d min_ram %d < previous %d (not ascending)" % [pid, min_ram, prev_min_ram])
+		prev = min_ram
+	prev = -1
+	for pid in [MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]:
+		var min_ram: int = int(BrainSwarmConfig.get_profile(pid).get("min_ram_mb", 0))
+		if min_ram < prev:
+			push_error("PROFILES mobile: palier %d min_ram %d < precedent %d" % [pid, min_ram, prev])
 			return false
-		prev_min_ram = min_ram
+		prev = min_ram
+	return true
+
+
+func test_profiles_seuils_correspondent_a_la_demande() -> bool:
+	# Les trois seuils sont la traduction litterale de la demande du joueur.
+	var attendu: Dictionary = {LEGER: 8000, MOYEN: 16000, ELEVE: 32000}
+	for pid in attendu.keys():
+		var min_ram: int = int(BrainSwarmConfig.get_profile(int(pid)).get("min_ram_mb", 0))
+		if min_ram != int(attendu[pid]):
+			push_error("seuil du palier %d: attendu %d MB, obtenu %d MB" % [int(pid), int(attendu[pid]), min_ram])
+			return false
 	return true
 
 
 func test_profiles_brain_count_matches_tier_expectations() -> bool:
-	# NANO=1, SINGLE=1, SINGLE_PLUS=2, DUAL=2, TRIPLE=3, QUAD=4
-	var expected_brain_counts: Dictionary = {
-		NANO: 1,
-		SINGLE: 1,
-		SINGLE_PLUS: 2,
-		DUAL: 2,
-		TRIPLE: 3,
-		QUAD: 4,
-	}
-	for pid in expected_brain_counts.keys():
-		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
-		var brain_list: Array = profile.get("brains", [])
-		var expected: int = int(expected_brain_counts[pid])
-		if brain_list.size() != expected:
-			push_error("PROFILES brain count: profile %d expected %d brains, got %d" % [pid, expected, brain_list.size()])
+	var attendu: Dictionary = {LEGER: 1, MOYEN: 1, ELEVE: 2}
+	for pid in attendu.keys():
+		var brains: Array = BrainSwarmConfig.get_profile(int(pid)).get("brains", [])
+		if brains.size() != int(attendu[pid]):
+			push_error("nombre de cerveaux: palier %d attendu %d, obtenu %d" % [int(pid), int(attendu[pid]), brains.size()])
 			return false
 	return true
 
 
 func test_model_constants_are_non_empty_strings() -> bool:
 	var tags: Array[String] = [
-		BrainSwarmConfig.MODEL_QWEN35_4B,
-		BrainSwarmConfig.MODEL_QWEN35_2B,
-		BrainSwarmConfig.MODEL_QWEN35_08B,
-		BrainSwarmConfig.MODEL_QWEN25_1_5B,
+		BrainSwarmConfig.MODEL_GEMMA4_26B,
+		BrainSwarmConfig.MODEL_GEMMA4_12B,
+		BrainSwarmConfig.MODEL_GEMMA4_E4B,
+		BrainSwarmConfig.MODEL_GEMMA4_E2B,
+		BrainSwarmConfig.MODEL_GEMMA4_31B,
 	]
 	for tag in tags:
 		if tag.is_empty():
-			push_error("MODEL constant: empty string found")
+			push_error("constante MODEL_: chaine vide")
 			return false
+	return true
+
+
+func test_le_31b_dense_n_est_choisi_par_aucun_palier() -> bool:
+	# Il tombe sous 1 token/seconde sans GPU (bible §9.9 : aucune attente
+	# visible). Il reste selectionnable a la main, jamais automatiquement.
+	for pid in DESKTOP:
+		for tag in BrainSwarmConfig.get_required_models(pid):
+			if str(tag) == BrainSwarmConfig.MODEL_GEMMA4_31B:
+				push_error("palier %d: le 31B dense ne doit jamais etre choisi automatiquement" % pid)
+				return false
 	return true
 
 
 func test_ram_by_model_keys_are_non_empty() -> bool:
 	var ram_map: Dictionary = BrainSwarmConfig.RAM_BY_MODEL
 	if ram_map.is_empty():
-		push_error("RAM_BY_MODEL: should not be empty")
+		push_error("RAM_BY_MODEL: ne devrait pas etre vide")
 		return false
 	for key in ram_map.keys():
-		var value: int = int(ram_map[key])
-		if value <= 0:
-			push_error("RAM_BY_MODEL['%s']: value must be > 0, got %d" % [str(key), value])
+		if int(ram_map[key]) <= 0:
+			push_error("RAM_BY_MODEL['%s']: doit etre > 0, obtenu %d" % [str(key), int(ram_map[key])])
 			return false
 	return true
 
@@ -543,62 +551,64 @@ func test_ram_by_model_keys_are_non_empty() -> bool:
 func run_all() -> Dictionary:
 	var tests: Array[String] = [
 		# detect_profile (9)
-		"test_detect_profile_quad_on_high_resources",
-		"test_detect_profile_triple_below_quad_ram",
-		"test_detect_profile_dual_on_12gb_6threads",
-		"test_detect_profile_single_plus_on_7gb_4threads",
-		"test_detect_profile_single_on_6gb_4threads",
-		"test_detect_profile_nano_on_low_ram",
-		"test_detect_profile_nano_on_zero_resources",
-		"test_detect_profile_thread_bottleneck_prevents_upgrade",
-		"test_detect_profile_ram_bottleneck_prevents_upgrade",
+		"test_detect_profile_regle_du_joueur_32go_donne_eleve",
+		"test_detect_profile_regle_du_joueur_16go_donne_moyen",
+		"test_detect_profile_regle_du_joueur_8go_donne_leger",
+		"test_detect_profile_juste_sous_32go_reste_moyen",
+		"test_detect_profile_juste_sous_16go_reste_leger",
+		"test_detect_profile_ram_insuffisante_replie_sur_leger",
+		"test_detect_profile_ressources_nulles_replie_sur_leger",
+		"test_detect_profile_threads_insuffisants_degradent_le_palier",
+		"test_detect_profile_i5_8500_32go_donne_eleve",
+		# profile_from_name (3)
+		"test_profile_from_name_reconnait_les_trois_paliers",
+		"test_profile_from_name_accepte_les_accents_et_la_casse",
+		"test_profile_from_name_inconnu_retourne_moins_un",
 		# get_profile (3)
 		"test_get_profile_returns_dict_for_every_valid_id",
-		"test_get_profile_invalid_id_returns_nano_fallback",
+		"test_get_profile_invalid_id_returns_leger_fallback",
 		"test_get_profile_has_required_keys",
-		# get_prefetch_depth (5)
-		"test_get_prefetch_depth_nano_is_zero",
-		"test_get_prefetch_depth_single_is_one",
-		"test_get_prefetch_depth_triple_is_two",
-		"test_get_prefetch_depth_quad_is_three",
+		# get_prefetch_depth (3)
+		"test_get_prefetch_depth_leger_is_zero",
+		"test_get_prefetch_depth_croit_avec_le_palier",
 		"test_get_prefetch_depth_invalid_id_returns_zero",
-		# get_profile_name (4)
+		# get_profile_name (3)
 		"test_get_profile_name_returns_non_empty_string_for_all",
-		"test_get_profile_name_nano_contains_nano",
-		"test_get_profile_name_quad_contains_quad",
-		"test_get_profile_name_invalid_falls_back_to_nano_name",
-		# is_time_sharing (3)
-		"test_is_time_sharing_true_only_for_single_plus",
-		"test_is_time_sharing_false_for_nano",
-		"test_is_time_sharing_false_for_parallel_profiles",
+		"test_get_profile_name_porte_le_libelle_du_palier",
+		"test_get_profile_name_invalid_falls_back_to_leger_name",
+		# is_time_sharing (2)
+		"test_is_time_sharing_false_pour_les_paliers_a_un_modele",
+		"test_is_time_sharing_false_pour_eleve_qui_est_parallele",
 		# get_model_for_role (6)
-		"test_get_model_for_role_narrator_in_dual",
-		"test_get_model_for_role_gamemaster_in_dual",
-		"test_get_model_for_role_worker_in_triple",
-		"test_get_model_for_role_judge_in_quad",
+		"test_get_model_for_role_narrator_in_eleve_is_26b",
+		"test_get_model_for_role_gamemaster_in_eleve_is_e4b",
+		"test_get_model_for_role_narrator_in_moyen_is_12b",
+		"test_get_model_for_role_narrator_in_leger_is_e4b",
 		"test_get_model_for_role_missing_role_falls_back_to_first_brain",
-		"test_get_model_for_role_narrator_in_nano_is_08b",
-		# get_brain_config (3)
-		"test_get_brain_config_narrator_in_quad",
+		"test_tous_les_tags_desktop_sont_de_la_famille_gemma4",
+		# get_brain_config (4)
+		"test_get_brain_config_narrator_in_eleve",
 		"test_get_brain_config_missing_role_returns_empty_dict",
 		"test_get_brain_config_all_brains_have_required_keys",
-		# get_required_models (4)
-		"test_get_required_models_nano_returns_one_model",
-		"test_get_required_models_dual_returns_two_models",
-		"test_get_required_models_quad_deduplicates_08b",
+		"test_chaque_model_key_existe_dans_ram_by_model",
+		# get_required_models (3)
+		"test_get_required_models_leger_returns_one_model",
+		"test_get_required_models_eleve_returns_two_models",
 		"test_get_required_models_no_empty_strings",
-		# get_peak_ram_mb (5)
-		"test_get_peak_ram_mb_nano_is_800",
-		"test_get_peak_ram_mb_single_plus_reflects_time_sharing",
-		"test_get_peak_ram_mb_dual_is_5000",
-		"test_get_peak_ram_mb_quad_is_6600",
-		"test_get_peak_ram_mb_invalid_id_returns_800_fallback",
-		# PROFILES data integrity (4)
+		# get_peak_ram_mb (4)
+		"test_get_peak_ram_mb_leger_is_6100",
+		"test_get_peak_ram_mb_eleve_somme_les_deux_modeles",
+		"test_get_peak_ram_mb_invalid_id_returns_leger_fallback",
+		"test_le_pic_ram_tient_dans_le_seuil_du_palier",
+		# integrite de PROFILES (6)
 		"test_profiles_min_ram_increases_with_tier",
+		"test_profiles_seuils_correspondent_a_la_demande",
 		"test_profiles_brain_count_matches_tier_expectations",
 		"test_model_constants_are_non_empty_strings",
+		"test_le_31b_dense_n_est_choisi_par_aucun_palier",
 		"test_ram_by_model_keys_are_non_empty",
 	]
+
 	var passed: int = 0
 	var failed: int = 0
 	var failures: Array[String] = []

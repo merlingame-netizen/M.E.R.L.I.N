@@ -15,20 +15,45 @@
   },
 
   "modele": {
-    "_a_trancher": "L'utilisateur a demande « Gemma 4 (la version dont on dispose ici) » le 2026-07-27. Aucun Gemma n'existe dans ce depot — il n'apparait que comme option dans docs/root/doc.md. L'identifiant exact reste a confirmer (sortie de `ollama list` sur la machine de dev).",
-    "fichier": null,
-    "famille": "gemma",
-    "quantization": "q4_k_m",
+    "_tranche": "Gemma 4 (avril 2026, Apache 2.0). Decide le 2026-07-27 : le joueur demandait « Gemma 4 » et trois paliers pilotes par la RAM. Le code Godot est passe aux tags Gemma 4 le meme jour (BrainSwarmConfig).",
+    "famille": "gemma4",
+    "quantization": "QAT (quantification publiee par Google — qualite Q8 pour la moitie du poids)",
     "chemin_dans_le_jeu": "addons/merlin_llm/models/",
-    "_note_git": "*.gguf est gitignore (ligne 76) et le restera : un modele pese 1 a 3 Go. Il entre dans l'installeur, jamais dans le depot.",
+    "_note_git": "*.gguf est gitignore (ligne 76) et le restera : un modele pese 6 a 16 Go. Il entre dans l'installeur, jamais dans le depot.",
 
-    "_repli_actuel_du_code": {
-      "_comment": "Ce que merlin_ai.gd cherche aujourd'hui, tant que le modele bundle n'est pas fixe.",
-      "candidats": [
-        "addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf",
-        "addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"
-      ]
-    }
+    "_pourquoi_gemma4": [
+      "Francais : 88,4 % sur MMMLU contre 85,9 % pour Qwen 3.5.",
+      "Controle : JSON structure et function calling NATIFS a toutes les tailles (tau2-bench : 86,4 % pour le 31B contre 6,6 % pour Gemma 3 27B). C'est ce qui permet de contraindre le game master au lieu de reparer son JSON apres coup."
+    ],
+
+    "paliers": {
+      "_regle": "Choisi sur la RAM PHYSIQUE de la machine, lue via OS.get_memory_info(). Modifiable a la main dans le menu options (palier, puis modele precis). Preseance : modele explicite > palier > detection.",
+      "leger": {
+        "seuil_ram_mb": 8000,
+        "tag_ollama": "gemma4:e4b-it-qat",
+        "poids_go": 6.1,
+        "gguf_attendu": "gemma-4-e4b-it-qat-q4_0.gguf",
+        "roles": "narrateur et game master partages"
+      },
+      "moyen": {
+        "seuil_ram_mb": 16000,
+        "tag_ollama": "gemma4:12b-it-qat",
+        "poids_go": 7.2,
+        "gguf_attendu": "gemma-4-12b-it-qat-q4_0.gguf",
+        "roles": "narrateur et game master partages",
+        "_pourquoi_pas_deux_modeles": "12B (7,2 Go) + E4B (6,1 Go) resident cote a cote font 13,3 Go : il ne resterait rien au systeme ni au jeu sur une machine de 16 Go."
+      },
+      "eleve": {
+        "seuil_ram_mb": 32000,
+        "tag_ollama": "gemma4:26b-a4b-it-qat",
+        "poids_go": 16,
+        "gguf_attendu": "gemma-4-26b-a4b-it-qat-q4_0.gguf",
+        "roles": "26B narrateur + E4B game master, en parallele (22,1 Go sur 32)",
+        "_pourquoi_26b_et_pas_31b": "Le 26B-a4b est un Mixture-of-Experts : ~3,8 milliards de parametres actifs par token, donc plus rapide que le 12B dense tout en ecrivant mieux. Le 31B dense tombe sous 1 token/seconde sans GPU, ce que la bible §9.9 interdit. Il reste selectionnable a la main."
+      }
+    },
+
+    "_installeur_minimal": "Le palier Leger seul (6,1 Go) suffit a faire tourner le jeu sur un poste vierge. Les deux autres paliers peuvent etre proposes en telechargement optionnel plutot qu'embarques, pour ne pas livrer un installeur de 30 Go."
   },
 
   "comportement_si_indisponible": {
@@ -44,10 +69,18 @@
     ]
   },
 
+  "fait_le_2026_07_27": [
+    "Paliers Gemma 4 cables dans BrainSwarmConfig (Leger / Moyen / Eleve).",
+    "RAM lue pour de vrai via OS.get_memory_info() — la detection devinait auparavant d'apres le nombre de coeurs CPU.",
+    "Gabarit de chat retire du code : le jeu envoie des messages neutres a /api/chat, Ollama applique le gabarit du modele charge. Le probleme « code ecrit pour du ChatML » ne se pose donc plus pour la voie Ollama.",
+    "Sortie du game master contrainte via le parametre `format` d'Ollama (schema JSON), au lieu d'etre reparee apres coup.",
+    "Selecteur de palier dans le menu options, a cote du selecteur de modele."
+  ],
+
   "reste_a_faire": [
-    "Confirmer l'identifiant exact du modele Gemma (`ollama list` cote dev).",
     "Compiler merlin_llm.windows.release.x86_64.dll sous Windows via native/rebuild_merlin_llm.bat, ou via un runner Windows en CI.",
-    "Verifier que la GDExtension charge bien un GGUF Gemma — le code a ete ecrit pour du ChatML (Qwen) ; Gemma utilise un autre gabarit de chat (<start_of_turn>/<end_of_turn>). A adapter dans l'adaptateur de prompt.",
+    "La GDExtension MerlinLLM (voie sans Ollama) applique encore un gabarit en dur cote C++ : lui faire appliquer celui de Gemma (<start_of_turn>/<end_of_turn>), ou mieux, lui passer les messages neutres comme au backend Ollama.",
+    "Choisir ce que l'installeur embarque : le palier Leger seul (6,1 Go) ou les trois (30 Go).",
     "Ecrire l'installeur (Inno Setup ou NSIS) : export Godot + DLL + GGUF + branding MERLIN.",
     "Mesurer le poids final de l'installeur et le verifier sur une machine sans Ollama."
   ]

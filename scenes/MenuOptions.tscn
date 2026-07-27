@@ -234,6 +234,17 @@ layout_mode = 2
 text = ""
 autowrap_mode = 2
 
+[node name="TierRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
+layout_mode = 2
+
+[node name="TierLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/TierRow"]
+layout_mode = 2
+text = "Palier de generation"
+
+[node name="TierOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/TierRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="ModelRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
 layout_mode = 2
 

@@ -40,7 +40,7 @@ func _init(merlin_ai_ref: Node, rag_ref: Node = null) -> void:
 	# v7.7 (audit 2026-05-15) : warn if running on single-brain config — pipeline
 	# code stays correct but parallel/LoRA-specialized benefit is gone.
 	if _merlin_ai != null and _merlin_ai.get("brain_count") is int and int(_merlin_ai.brain_count) < 2:
-		push_warning("[BiBrain] running on brain_count=%d (SINGLE/NANO profile). Set BrainSwarmConfig.Profile.DUAL+ for true bi-brain." % int(_merlin_ai.brain_count))
+		push_warning("[BiBrain] un seul cerveau (brain_count=%d) : palier Leger ou Moyen. Le pipeline reste correct, mais la generation parallele demande le palier Eleve." % int(_merlin_ai.brain_count))
 
 
 func _load_gbnf() -> void:

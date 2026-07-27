@@ -42,9 +42,14 @@ var default_config = {
 	"calendar_month": 1,
 	"calendar_year": 2026,
 	"brain_count": 0,  # 0=Auto, 2=Dual, 3=Triple
-	# "" = laisser MerlinAI decider. Sinon, le tag exact d'un modele installe
-	# (ex. "gemma3:4b"). Ce choix pilote TOUTE la generation : titres, intro,
-	# squelette de scenario et cartes passent par le meme modele.
+	# Palier de generation. "" = detection selon la RAM physique de la machine.
+	# Sinon "leger" / "moyen" / "eleve" (cf. BrainSwarmConfig.Profile).
+	"llm_tier": "",
+	# "" = laisser le palier decider. Sinon, le tag exact d'un modele installe
+	# (ex. "gemma4:12b-it-qat"). Ce choix pilote TOUTE la generation : titres,
+	# intro, squelette de scenario et cartes passent par le meme modele.
+	#
+	# Preseance : llm_model (s'il est renseigne) > llm_tier > detection RAM.
 	"llm_model": "",
 }
 
@@ -64,6 +69,7 @@ var default_config = {
 
 # IA controls (scene nodes)
 @onready var brain_count_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainRow/BrainCountOption
+@onready var tier_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/TierRow/TierOption
 @onready var model_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/ModelRow/ModelOption
 @onready var model_info_label: Label = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/ModelInfoLabel
 @onready var brain_info_label: Label = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainInfoLabel
@@ -227,6 +233,7 @@ func _configure_ia_options() -> void:
 			brain_count_option.selected = i
 			break
 	brain_count_option.item_selected.connect(_on_brain_count_changed)
+	_configure_tier_options()
 	_configure_model_options()
 
 	# Configure info label styling — separate guard since BrainInfoLabel sits
@@ -236,6 +243,50 @@ func _configure_ia_options() -> void:
 		brain_info_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 		brain_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_update_brain_info_label()
+
+
+## Les trois paliers de generation, plus la detection automatique.
+##
+## Le palier fixe la TAILLE du modele selon la machine. Le selecteur en dessous
+## fixe un modele PRECIS. Preseance : un modele choisi explicitement l'emporte
+## sur le palier, et le palier l'emporte sur la detection.
+const TIER_OPTIONS := [
+	{"value": "", "label": "Automatique (selon la machine)"},
+	{"value": "leger", "label": "Leger — machine limitee"},
+	{"value": "moyen", "label": "Moyen — 16 Go de memoire"},
+	{"value": "eleve", "label": "Eleve — 32 Go et plus"},
+]
+
+
+func _configure_tier_options() -> void:
+	if tier_option == null:
+		return
+	tier_option.clear()
+	for opt in TIER_OPTIONS:
+		tier_option.add_item(tr(str(opt["label"])))
+		tier_option.set_item_metadata(tier_option.item_count - 1, str(opt["value"]))
+
+	var choisi: String = str(current_config.get("llm_tier", ""))
+	tier_option.selected = 0
+	for i in range(tier_option.item_count):
+		if str(tier_option.get_item_metadata(i)) == choisi:
+			tier_option.selected = i
+			break
+	tier_option.item_selected.connect(_on_tier_changed)
+
+
+func _on_tier_changed(index: int) -> void:
+	current_config["llm_tier"] = str(tier_option.get_item_metadata(index))
+	_update_model_info_label(maxi(model_option.item_count - 1, 0) if model_option else 0)
+
+
+## Modele du palier, et commande a taper s'il manque.
+## Retourne "" quand le palier est en detection automatique.
+func _modele_du_palier(tier: String) -> String:
+	var pid: int = BrainSwarmConfig.profile_from_name(tier)
+	if pid < 0:
+		return ""
+	return BrainSwarmConfig.get_model_for_role(pid, "narrator")
 
 
 ## Selecteur du modele qui ecrit le jeu. On propose ce qui est REELLEMENT
@@ -284,13 +335,36 @@ func _update_model_info_label(nb_installes: int) -> void:
 		model_info_label.text = tr(
 			"Aucun modele detecte. Merlin utilisera les scenarios ecrits d'avance.")
 		return
+
+	# Un modele designe explicitement l'emporte sur le palier : le dire, sinon
+	# le joueur croit changer de palier alors que son choix de modele decide.
 	var choisi: String = str(current_config.get("llm_model", ""))
-	if choisi == "":
+	if choisi != "":
 		model_info_label.text = tr(
-			"Merlin choisit selon la memoire disponible. %d modeles detectes.") % nb_installes
+			"Titres, intro, scenario et cartes seront ecrits par %s. Ce choix l'emporte sur le palier.") % choisi
+		return
+
+	var tier: String = str(current_config.get("llm_tier", ""))
+	if tier == "":
+		model_info_label.text = tr(
+			"Merlin choisit le palier selon la memoire de la machine. %d modeles detectes.") % nb_installes
+		return
+
+	var attendu: String = _modele_du_palier(tier)
+	if attendu != "" and not _modele_est_installe(attendu):
+		model_info_label.text = tr(
+			"Palier %s : le modele %s n'est pas installe. Lance :  ollama pull %s") % [tier, attendu, attendu]
 	else:
-		model_info_label.text = tr(
-			"Titres, intro, scenario et cartes seront ecrits par %s.") % choisi
+		model_info_label.text = tr("Palier %s : Merlin ecrira avec %s.") % [tier, attendu]
+
+
+func _modele_est_installe(tag: String) -> bool:
+	if model_option == null:
+		return false
+	for i in range(model_option.item_count):
+		if str(model_option.get_item_metadata(i)) == tag:
+			return true
+	return false
 
 
 func _on_brain_count_changed(index: int) -> void:
@@ -424,6 +498,9 @@ func load_settings():
 			"calendar_month": config.get_value("calendar", "month", default_config.calendar_month),
 			"calendar_year": config.get_value("calendar", "year", default_config.calendar_year),
 			"brain_count": config.get_value("ai", "brain_count", default_config.brain_count),
+			# Section [options] : lue aussi par MerlinAI au demarrage.
+			"llm_tier": config.get_value("options", "llm_tier", default_config.llm_tier),
+			"llm_model": config.get_value("options", "llm_model", default_config.llm_model),
 		}
 	else:
 		# Utiliser les valeurs par défaut
@@ -456,6 +533,11 @@ func save_settings():
 
 	# Sauvegarder la configuration IA
 	config.set_value("ai", "brain_count", current_config.get("brain_count", 0))
+
+	# Palier et modele — section [options], celle que MerlinAI relit au
+	# demarrage (cf. _palier_choisi_par_le_joueur / _modele_choisi_par_le_joueur).
+	config.set_value("options", "llm_tier", current_config.get("llm_tier", ""))
+	config.set_value("options", "llm_model", current_config.get("llm_model", ""))
 
 	config.save(CONFIG_PATH)
 
@@ -500,6 +582,23 @@ func apply_to_ui():
 				brain_count_option.selected = i
 				break
 	_update_brain_info_label()
+
+	# Palier et modele — sans ca, une remise a zero laisserait les deux menus
+	# afficher l'ancien choix alors que la configuration est revenue au defaut.
+	if tier_option:
+		var cur_tier: String = str(current_config.get("llm_tier", ""))
+		for i in range(tier_option.item_count):
+			if str(tier_option.get_item_metadata(i)) == cur_tier:
+				tier_option.selected = i
+				break
+	if model_option:
+		var cur_model: String = str(current_config.get("llm_model", ""))
+		model_option.selected = 0
+		for i in range(model_option.item_count):
+			if str(model_option.get_item_metadata(i)) == cur_model:
+				model_option.selected = i
+				break
+		_update_model_info_label(maxi(model_option.item_count - 1, 0))
 
 	# Appliquer les valeurs du calendrier
 	if calendar_override_check:

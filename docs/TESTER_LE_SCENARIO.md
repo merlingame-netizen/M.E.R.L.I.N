@@ -101,7 +101,45 @@ réputation absorbés par le plafond, cartes sans résolution.
 
 ---
 
-## 5. Rejouer la même partie
+## 5. Choisir le modèle qui écrit (menu options)
+
+« Deux Assiettes » est écrit d'avance — il se joue **sans LLM**. C'est voulu :
+ça sépare les régressions de gameplay des régressions de génération. Mais pour
+les scénarios générés, le menu options porte maintenant deux réglages, dans cet
+ordre :
+
+**Palier de génération** — la taille du modèle, selon ta machine.
+
+| Palier | Machine | Modèle |
+|---|---|---|
+| Automatique | — | choisi sur la RAM physique lue au démarrage |
+| Léger | moins de 16 Go | `gemma4:e4b-it-qat` (6,1 Go) |
+| Moyen | 16 à 32 Go | `gemma4:12b-it-qat` (7,2 Go) |
+| Élevé | 32 Go et plus | `gemma4:26b-a4b-it-qat` (16 Go) |
+
+**Modèle narrateur** — un modèle précis parmi ceux réellement installés
+(la liste vient d'Ollama, elle ne peut pas mentir).
+
+**Préséance : un modèle choisi explicitement l'emporte sur le palier, et le
+palier l'emporte sur la détection.** Le libellé sous le sélecteur te dit
+laquelle des trois règles s'applique en ce moment, et si le modèle du palier
+n'est pas installé il t'affiche la commande exacte —
+`ollama pull gemma4:12b-it-qat`.
+
+Ta machine a 32 Go : en Automatique tu dois voir le palier **Élevé**. Le
+journal au démarrage le confirme :
+
+```
+[MerlinAI] Ollama: palier 'Eleve (Gemma 4 26B narrateur + E4B game master)'
+           (RAM physique: 32768 MB [OS.get_memory_info], libre: 24512 MB, CPU: 6 threads)
+```
+
+Si la ligne dit `[heuristique_coeurs]` au lieu de `[OS.get_memory_info]`, la
+mesure a échoué et le palier est une devinette — signale-le.
+
+---
+
+## 6. Rejouer la même partie
 
 Les épreuves sont tirées au sort. Pour rejouer exactement la même suite de
 réussites et d'échecs — utile pour vérifier une correction :
@@ -112,7 +150,7 @@ $env:MERLIN_SEED = "11" ; .\jouer_scenario.bat
 
 ---
 
-## 6. Ce qui n'est pas encore là
+## 7. Ce qui n'est pas encore là
 
 Par honnêteté, ce que tu ne verras pas :
 

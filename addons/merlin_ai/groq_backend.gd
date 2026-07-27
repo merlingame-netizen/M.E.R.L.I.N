@@ -23,6 +23,9 @@ var api_key: String = ""
 var model: String = "llama-3.3-70b-versatile"
 var role: String = "narrator"  # narrator | gm | worker
 
+# ── Messages neutres, poses avant l'appel (cf. set_messages) ─────────────────
+var _messages: Array = []
+
 # ── Sampling ──────────────────────────────────────────────────────────────────
 var _temperature: float = 0.7
 var _top_p: float = 0.9
@@ -78,8 +81,8 @@ func check_model_available() -> bool:
 
 
 ## Async generation — runs HTTP request in background thread.
-## Prompt format: ChatML-style string (system + user already formatted).
-## The prompt is split on <|im_start|> tags into messages array.
+## Les messages viennent de set_messages() ; a defaut, `prompt` devient un
+## unique message user.
 func generate_async(prompt: String, callback: Callable) -> void:
 	if _is_generating:
 		if callback.is_valid():
@@ -107,7 +110,7 @@ func generate_async(prompt: String, callback: Callable) -> void:
 	_mutex.unlock()
 
 	_thread = Thread.new()
-	_thread.start(_blocking_generate.bind(prompt))
+	_thread.start(_blocking_generate.bind(_consommer_messages(prompt)))
 
 
 ## Check if generation is complete. If so, calls callback and returns true.
@@ -166,14 +169,9 @@ func set_advanced_sampling(params: Dictionary) -> void:
 # PRIVATE — Background thread HTTP request
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _blocking_generate(prompt: String) -> void:
+func _blocking_generate(messages: Array) -> void:
 	var start_ms := Time.get_ticks_msec()
 	var result := {}
-
-	# Parse ChatML prompt into messages array
-	var messages: Array = _parse_chatml_to_messages(prompt)
-	if messages.is_empty():
-		messages = [{"role": "user", "content": prompt}]
 
 	var payload := {
 		"model": model,
@@ -308,23 +306,34 @@ func _store_result(result: Dictionary, start_ms: int) -> void:
 	_mutex.unlock()
 
 
-## Parse ChatML-formatted prompt into Groq messages array.
-## Format: <|im_start|>system\n...<|im_end|>\n<|im_start|>user\n...<|im_end|>
-func _parse_chatml_to_messages(prompt: String) -> Array:
-	var messages: Array = []
-	var parts := prompt.split("<|im_start|>")
-	for part in parts:
-		var trimmed := part.strip_edges()
-		if trimmed.is_empty():
+## Pose les messages du prochain appel, sous forme neutre.
+##
+## Ce backend reconstruisait auparavant un tableau `messages` en DECOUPANT une
+## chaine ChatML que le jeu venait d'assembler — un aller-retour qui n'existait
+## que parce que le format d'un vendeur servait de representation commune. Le
+## jeu envoie desormais les messages directement.
+func set_messages(messages: Array) -> void:
+	_messages.clear()
+	for m in messages:
+		if not (m is Dictionary):
 			continue
-		# Remove trailing <|im_end|>
-		trimmed = trimmed.replace("<|im_end|>", "").strip_edges()
-		# First line is the role
-		var newline_idx := trimmed.find("\n")
-		if newline_idx < 0:
+		var msg_role: String = str(m.get("role", "user"))
+		var content: String = str(m.get("content", ""))
+		if content.strip_edges().is_empty():
 			continue
-		var msg_role := trimmed.substr(0, newline_idx).strip_edges()
-		var msg_content := trimmed.substr(newline_idx + 1).strip_edges()
-		if msg_role in ["system", "user", "assistant"] and not msg_content.is_empty():
-			messages.append({"role": msg_role, "content": msg_content})
-	return messages
+		if msg_role not in ["system", "user", "assistant"]:
+			msg_role = "user"
+		_messages.append({"role": msg_role, "content": content})
+
+
+func clear_messages() -> void:
+	_messages.clear()
+
+
+## Messages effectifs pour un appel, et remise a zero de l'etat pose.
+func _consommer_messages(prompt: String) -> Array:
+	if _messages.is_empty():
+		return [{"role": "user", "content": prompt}]
+	var out: Array = _messages.duplicate(true)
+	_messages.clear()
+	return out

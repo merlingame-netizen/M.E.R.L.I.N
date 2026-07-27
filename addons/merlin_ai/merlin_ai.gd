@@ -48,9 +48,9 @@ const BRAIN_TRIPLE := 3
 const BRAIN_QUAD := 4
 const BRAIN_MAX := BRAIN_QUAD
 
-# Profile auto-detected from BrainSwarmConfig
-var _active_profile_id: int = BrainSwarmConfig.Profile.SINGLE
-var _is_time_sharing: bool = false  # True for SINGLE+ (one model at a time)
+# Palier detecte automatiquement (cf. BrainSwarmConfig)
+var _active_profile_id: int = BrainSwarmConfig.Profile.LEGER
+var _is_time_sharing: bool = false  # un seul modele a la fois, echange par role
 
 var brain_count: int = 0  # Actual loaded count (set by _init_local_models)
 var _target_brain_count: int = 0  # Requested count (0 = auto-detect)
@@ -134,6 +134,17 @@ func _modele_choisi_par_le_joueur() -> String:
 	if cfg.load("user://settings.cfg") != OK:
 		return ""
 	return str(cfg.get_value("options", "llm_model", ""))
+
+
+## Palier force depuis le menu options, ou -1 si « Automatique ».
+##
+## Preseance globale : un modele choisi explicitement (llm_model) l'emporte sur
+## le palier, et le palier l'emporte sur la detection materielle.
+func _palier_choisi_par_le_joueur() -> int:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://settings.cfg") != OK:
+		return -1
+	return BrainSwarmConfig.profile_from_name(str(cfg.get_value("options", "llm_tier", "")))
 
 
 ## Modeles reellement installes, pour le selecteur du menu options.
@@ -276,11 +287,19 @@ func _swap_model_for_role(llm: Object, role: String) -> void:
 		llm.thinking_mode = target_thinking
 
 
-func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
+## Lance une generation et attend le resultat.
+##
+## `messages` (facultatif) est la forme neutre [{role, content}] du dialogue.
+## Quand elle est fournie et que le backend sait la recevoir, c'est elle qui
+## part — le backend applique alors le gabarit de chat du modele charge.
+## `prompt` reste le repli a plat pour les backends qui n'ont que du texte.
+func _run_llm(llm: Object, prompt: String, params: Dictionary, messages: Array = []) -> Dictionary:
 	if llm == null:
 		return {"error": "LLM manquant"}
 	if not llm.has_method("generate_async") or not llm.has_method("poll_result"):
 		return {"error": "LLM interface incomplete (missing generate_async/poll_result)"}
+	if not messages.is_empty() and llm.has_method("set_messages"):
+		llm.set_messages(messages)
 
 	# Time-sharing: swap model based on role hint in params
 	var role_hint: String = str(params.get("_brain_role", ""))
@@ -401,23 +420,27 @@ func _load_persona_config() -> void:
 		_log("Persona config loaded: %d few-shots, %d forbidden words" % [_persona_few_shots.size(), _persona_forbidden_words.size()])
 
 
-## Build ChatML few-shot block from persona config (2-3 random examples)
-func _build_few_shot_chatml() -> String:
+## Exemples de persona sous forme de messages neutres (2-3 tires au hasard).
+##
+## Retourne un Array de {role, content} — jamais de ChatML. C'est le backend qui
+## applique le gabarit du modele charge : ecrire <|im_start|> ici imposerait le
+## format de Qwen a n'importe quel modele.
+func _build_few_shot_messages() -> Array:
 	if _persona_few_shots.is_empty():
-		return ""
+		return []
 	var count: int = mini(3, _persona_few_shots.size())
 	var indices: Array = range(_persona_few_shots.size())
 	indices.shuffle()
 	var selected: Array = indices.slice(0, count)
-	var parts: PackedStringArray = []
+	var messages: Array = []
 	for idx in selected:
 		var fs: Dictionary = _persona_few_shots[idx]
 		var user_text: String = str(fs.get("user", ""))
 		var assistant_text: String = str(fs.get("assistant", ""))
 		if user_text != "" and assistant_text != "":
-			parts.append("<|im_start|>user\n%s<|im_end|>" % user_text)
-			parts.append("<|im_start|>assistant\n%s<|im_end|>" % assistant_text)
-	return "\n".join(parts)
+			messages.append({"role": "user", "content": user_text})
+			messages.append({"role": "assistant", "content": assistant_text})
+	return messages
 
 
 ## Check persona compliance of a response (forbidden words, English, length)
@@ -603,23 +626,39 @@ func _try_init_ollama(target: int) -> bool:
 		_note_unavailable("Ollama", "service non joignable sur localhost:11434")
 		return false
 
-	# ── Profile selection: respect target if user-set, else auto-detect HW ─
-	var available_ram := _estimate_available_ram_mb()
+	# ── Choix du palier ───────────────────────────────────────────────────
+	# Preseance : palier force par le joueur > detection materielle.
+	var ram: Dictionary = _lire_ram_mb()
+	var available_ram: int = int(ram.get("physical", 4000))
+	var ram_libre: int = int(ram.get("available", available_ram))
 	var cpu_threads := OS.get_processor_count()
-	if target > 0:
-		# User-driven via settings.cfg [ai] brain_count — overrides HW autodetect
+	var palier_force: int = _palier_choisi_par_le_joueur()
+	if palier_force >= 0:
+		_active_profile_id = palier_force
+	elif target > 0:
+		# Legacy : settings.cfg [ai] brain_count — 1 cerveau = leger, 4 = eleve.
 		match target:
-			1: _active_profile_id = BrainSwarmConfig.Profile.SINGLE
-			2: _active_profile_id = BrainSwarmConfig.Profile.DUAL
-			3: _active_profile_id = BrainSwarmConfig.Profile.TRIPLE
-			4: _active_profile_id = BrainSwarmConfig.Profile.QUAD
-			_: _active_profile_id = BrainSwarmConfig.Profile.SINGLE
+			1: _active_profile_id = BrainSwarmConfig.Profile.LEGER
+			2: _active_profile_id = BrainSwarmConfig.Profile.MOYEN
+			3, 4: _active_profile_id = BrainSwarmConfig.Profile.ELEVE
+			_: _active_profile_id = BrainSwarmConfig.Profile.LEGER
 	else:
 		_active_profile_id = BrainSwarmConfig.detect_profile(available_ram, cpu_threads)
 	_is_time_sharing = BrainSwarmConfig.is_time_sharing(_active_profile_id)
 	var profile: Dictionary = BrainSwarmConfig.get_profile(_active_profile_id)
 	var profile_name: String = str(profile.get("name", "Unknown"))
-	_log("Ollama: detected profile '%s' (RAM: %d MB, CPU: %d threads)" % [profile_name, available_ram, cpu_threads])
+	_log("Ollama: palier '%s' (RAM physique: %d MB [%s], libre: %d MB, CPU: %d threads)"
+		% [profile_name, available_ram, str(ram.get("source", "?")), ram_libre, cpu_threads])
+
+	# La RAM libre ne decide pas du palier, mais elle decide si le modele
+	# tiendra maintenant. Le dire ici evite un echec de chargement muet.
+	var pic_ram: int = BrainSwarmConfig.get_peak_ram_mb(_active_profile_id)
+	if ram_libre < pic_ram:
+		_log("Ollama: ATTENTION — le palier '%s' demande ~%d MB, il en reste %d MB de libres. Le chargement peut echouer ou ramer."
+			% [profile_name, pic_ram, ram_libre])
+		_note_unavailable("Memoire",
+			"le palier '%s' demande ~%d MB, seuls %d MB sont libres — ferme des applications ou choisis un palier plus leger dans les options"
+			% [profile_name, pic_ram, ram_libre])
 
 	# ── Choix explicite du joueur (menu options) ──────────────────────────
 	# Il prime sur la detection par profil : si le joueur a designe un modele,
@@ -644,11 +683,14 @@ func _try_init_ollama(target: int) -> bool:
 		ollama_test.model = model_tag
 		if not ollama_test.check_model_available():
 			_log("Ollama: modele '%s' non trouve — run: ollama pull %s" % [model_tag, model_tag])
-			# Fallback: try smaller profile
-			if _active_profile_id > BrainSwarmConfig.Profile.NANO:
-				_active_profile_id = BrainSwarmConfig.Profile.SINGLE
+			# Le modele du palier manque : dire quoi taper, puis retomber au
+			# palier leger, dont le modele est le plus probable a etre installe.
+			_note_unavailable("Modele manquant",
+				"'%s' n'est pas installe — lance :  ollama pull %s" % [model_tag, model_tag])
+			if _active_profile_id != BrainSwarmConfig.Profile.LEGER:
+				_active_profile_id = BrainSwarmConfig.Profile.LEGER
 				_is_time_sharing = false
-				_log("Ollama: fallback to SINGLE profile")
+				_log("Ollama: repli sur le palier Leger")
 				required_models = BrainSwarmConfig.get_required_models(_active_profile_id)
 				var fallback_ok := true
 				for ft in required_models:
@@ -1065,23 +1107,58 @@ func _detect_optimal_brains() -> int:
 	return maxi(brain_list.size(), 1)
 
 
-## Estimate available RAM in MB (total system RAM minus OS/Godot overhead).
+## RAM de la machine, en Mo — mesuree, pas devinee.
+##
+## Retourne {"physical": int, "available": int, "source": String}.
+##
+## Le palier se decide sur `physical` : la regle du jeu porte sur la RAM
+## installee (« au-dessus de 32 Go, le gros modele »), pas sur la RAM libre a
+## l'instant du lancement — sinon un navigateur ouvert ferait basculer le
+## joueur d'un palier a l'autre entre deux parties. `available` sert
+## d'avertissement : c'est lui qui dit si le modele du palier tiendra
+## reellement en memoire maintenant.
+func _lire_ram_mb() -> Dictionary:
+	var info: Dictionary = OS.get_memory_info()
+	var physical_octets: int = int(info.get("physical", -1))
+	var available_octets: int = int(info.get("available", -1))
+	if physical_octets > 0:
+		var physical_mb: int = int(physical_octets / 1048576)
+		var available_mb: int = physical_mb
+		if available_octets > 0:
+			available_mb = int(available_octets / 1048576)
+		return {
+			"physical": physical_mb,
+			"available": available_mb,
+			"source": "OS.get_memory_info",
+		}
+
+	# ── Dernier recours ───────────────────────────────────────────────────
+	# L'API n'a rien renvoyé (elle rend -1 sur certaines plateformes). On
+	# retombe sur le nombre de coeurs, qui n'est qu'une correlation : un
+	# portable 8 coeurs / 32 Go serait classe « 16 Go ». D'ou l'avertissement :
+	# un palier choisi sur une devinette doit se voir dans les journaux.
+	var devine: int = _ram_devinee_par_coeurs()
+	push_warning("[MerlinAI] OS.get_memory_info() indisponible — RAM DEVINEE a %d MB d'apres %d coeurs. Le palier LLM peut etre faux." % [devine, OS.get_processor_count()])
+	return {"physical": devine, "available": devine, "source": "heuristique_coeurs"}
+
+
+## RAM physique en Mo — l'entree de BrainSwarmConfig.detect_profile().
 func _estimate_available_ram_mb() -> int:
-	# OS.get_static_memory_usage() gives Godot process memory
-	# For total system RAM, use a conservative estimate
-	# Godot 4 doesn't expose total system RAM directly
-	# Use a heuristic: check processor count as proxy for machine class
+	return int(_lire_ram_mb().get("physical", 4000))
+
+
+## Correlation coeurs -> RAM. Uniquement quand la mesure echoue (cf. _lire_ram_mb).
+func _ram_devinee_par_coeurs() -> int:
 	var cpu_count: int = OS.get_processor_count()
-	# Conservative estimates based on typical hardware
 	if cpu_count >= 16:
-		return 32000  # Likely 32+ GB machine
+		return 32000
 	elif cpu_count >= 8:
-		return 16000  # Likely 16 GB machine
+		return 16000
 	elif cpu_count >= 6:
-		return 12000  # Likely 12-16 GB machine
+		return 12000
 	elif cpu_count >= 4:
-		return 8000   # Likely 8 GB machine
-	return 4000       # Ultra-low-end
+		return 8000
+	return 4000
 
 
 func _warmup_generate() -> void:
@@ -1089,7 +1166,12 @@ func _warmup_generate() -> void:
 	## Generates ~10 tokens with a minimal prompt, then discards the result.
 	if narrator_llm == null or not narrator_llm.has_method("generate_async"):
 		return
-	var warmup_prompt := "<|im_start|>system\nTu es Merlin.\n<|im_end|>\n<|im_start|>user\nBonjour.\n<|im_end|>\n<|im_start|>assistant\n"
+	var warmup_prompt := "Tu es Merlin.\n\nBonjour."
+	if narrator_llm.has_method("set_messages"):
+		narrator_llm.set_messages([
+			{"role": "system", "content": "Tu es Merlin."},
+			{"role": "user", "content": "Bonjour."},
+		])
 	if narrator_llm.has_method("set_sampling_params"):
 		narrator_llm.set_sampling_params(0.1, 0.9, 10)  # Very few tokens
 	var warmup_done := {"done": false}
@@ -1266,15 +1348,19 @@ func generate_with_system(system_prompt: String, user_input: String, params_over
 		return {"error": "LLM non pret"}
 	system_prompt = _inject_language_directive(system_prompt)
 	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "general", params_override)
-	# Inject few-shots for narrator (non-grammar) calls to reinforce persona
+	# Exemples de persona pour les appels narrateur (hors grammaire contrainte).
 	var has_grammar: bool = params_override.has("grammar") and str(params_override.get("grammar", "")) != ""
-	var few_shot_block := "" if has_grammar else _build_few_shot_chatml()
-	var prompt: String
-	if few_shot_block != "":
-		prompt = "<|im_start|>system\n%s<|im_end|>\n%s\n<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n" % [scoped_system_prompt, few_shot_block, user_input]
-	else:
-		var template = prompts.get("executor_template", "{system}\n{input}")
-		prompt = template.format({"system": scoped_system_prompt, "input": user_input})
+	var few_shots: Array = [] if has_grammar else _build_few_shot_messages()
+
+	# Forme neutre : c'est le backend qui appliquera le gabarit du modele.
+	var messages: Array = [{"role": "system", "content": scoped_system_prompt}]
+	messages.append_array(few_shots)
+	messages.append({"role": "user", "content": user_input})
+
+	# Le prompt a plat sert de repli pour les backends sans messages, et de
+	# base a la cle de cache.
+	var template = prompts.get("executor_template", "{system}\n{input}")
+	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
 	# Use gamemaster for grammar-constrained, narrator otherwise
 	var target_llm: Object = gamemaster_llm if has_grammar else narrator_llm
 	var params: Dictionary = (gamemaster_params if has_grammar else narrator_params).duplicate(true)
@@ -1292,7 +1378,7 @@ func generate_with_system(system_prompt: String, user_input: String, params_over
 	if grammar_str != "" and target_llm != null and target_llm.has_method("set_grammar"):
 		target_llm.set_grammar(grammar_str, grammar_root)
 		_log("Grammar constrained decoding active (Game Master)")
-	var result = await _run_llm(target_llm, prompt, params)
+	var result = await _run_llm(target_llm, prompt, params, messages)
 	# Clear grammar after generation to avoid affecting subsequent calls
 	if grammar_str != "" and target_llm != null and target_llm.has_method("clear_grammar"):
 		target_llm.clear_grammar()
@@ -1654,13 +1740,17 @@ func generate_narrative(system_prompt: String, user_input: String, params_overri
 	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "narrative", params_override)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
 	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
+	var messages: Array = [
+		{"role": "system", "content": scoped_system_prompt},
+		{"role": "user", "content": user_input},
+	]
 	var params: Dictionary = narrator_params.duplicate(true)
 	for key in params_override.keys():
 		params[key] = params_override[key]
 	params.erase("grammar")
 	params.erase("skip_scene_contract")
 	params["_brain_role"] = "narrator"
-	var result: Dictionary = await _run_llm(narrator_llm, prompt, params)
+	var result: Dictionary = await _run_llm(narrator_llm, prompt, params, messages)
 	if result.has("text"):
 		result["text"] = clean_response(str(result.text))
 	_primary_narrator_busy = false
@@ -1677,17 +1767,22 @@ func generate_structured(system_prompt: String, user_input: String, grammar: Str
 	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "structured", params_override)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
 	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
+	var messages: Array = [
+		{"role": "system", "content": scoped_system_prompt},
+		{"role": "user", "content": user_input},
+	]
 	var params: Dictionary = gamemaster_params.duplicate(true)
 	for key in params_override.keys():
 		params[key] = params_override[key]
 	params.erase("skip_scene_contract")
 	params["_brain_role"] = "gamemaster"
-	# Grammar constraint: OllamaBackend.set_grammar() is a no-op (Ollama has no GBNF support).
-	# JSON structure is enforced via few-shot schema examples in the system prompt instead.
+	# Contrainte de format : OllamaBackend.set_grammar() envoie desormais le
+	# parametre `format` d'Ollama (schema JSON si la grammaire en est un, sinon
+	# "json"). Ce n'est plus un no-op, la sortie est contrainte a la source.
 	if grammar != "" and gamemaster_llm.has_method("set_grammar"):
 		gamemaster_llm.set_grammar(grammar, "root")
-		_log("Game Master: grammar param received — Ollama backend uses example-driven JSON constraint (no GBNF)")
-	var result: Dictionary = await _run_llm(gamemaster_llm, prompt, params)
+		_log("Game Master: sortie contrainte au JSON via le parametre format d'Ollama")
+	var result: Dictionary = await _run_llm(gamemaster_llm, prompt, params, messages)
 	if grammar != "" and gamemaster_llm.has_method("clear_grammar"):
 		gamemaster_llm.clear_grammar()
 	if result.has("text"):
@@ -1732,9 +1827,23 @@ func generate_parallel(narrator_system: String, narrator_input: String,
 		gm_params[key] = gm_overrides[key]
 	gm_params.erase("skip_scene_contract")
 
-	# Apply GBNF grammar to Game Master
+	# Contrainte de format sur le Game Master (parametre `format` d'Ollama)
 	if grammar != "" and gamemaster_llm.has_method("set_grammar"):
 		gamemaster_llm.set_grammar(grammar, "root")
+
+	# Forme neutre : ce chemin appelle generate_async directement, sans passer
+	# par _run_llm. Sans ces messages, la consigne systeme serait noyee dans un
+	# unique message user au lieu d'occuper le role `system` du gabarit.
+	if narrator_llm.has_method("set_messages"):
+		narrator_llm.set_messages([
+			{"role": "system", "content": scoped_narrator_system},
+			{"role": "user", "content": narrator_input},
+		])
+	if gamemaster_llm.has_method("set_messages"):
+		gamemaster_llm.set_messages([
+			{"role": "system", "content": scoped_gm_system},
+			{"role": "user", "content": gm_input},
+		])
 
 	# Set sampling params on both instances
 	_apply_sampling(narrator_llm, n_params)
@@ -2110,11 +2219,16 @@ func get_prompt_template(role: String, task: String) -> Dictionary:
 
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Strip ChatML template tokens from raw LLM output
+## Retire les marqueurs de gabarit qui fuiraient dans la sortie du modele.
+##
+## Le jeu n'ecrit plus aucun gabarit lui-meme (cf. OllamaBackend), mais un
+## modele peut encore recracher ses propres marqueurs. On couvre les deux
+## familles : ChatML (Qwen et derives) et <start_of_turn> (Gemma).
 func clean_response(raw: String) -> String:
 	var text := raw.strip_edges()
 	# Truncate at first template token
-	for tok in ["<|im_end|>", "<|im_start|>", "<|endoftext|>", "<|im_end>", "<|im_start>"]:
+	for tok in ["<|im_end|>", "<|im_start|>", "<|endoftext|>", "<|im_end>", "<|im_start>",
+			"<end_of_turn>", "<start_of_turn>", "<eos>"]:
 		var idx := text.find(tok)
 		if idx >= 0:
 			text = text.substr(0, idx)
@@ -2267,6 +2381,12 @@ func _fire_bg_task(task: Dictionary, llm: Object) -> void:
 	var grammar_str: String = str(params.get("grammar", ""))
 	if grammar_str != "" and llm.has_method("set_grammar"):
 		llm.set_grammar(grammar_str, "root")
+	# Forme neutre (ce chemin appelle generate_async sans passer par _run_llm)
+	if llm.has_method("set_messages"):
+		llm.set_messages([
+			{"role": "system", "content": scoped_system},
+			{"role": "user", "content": str(task.input)},
+		])
 	var state := {"done": false, "result": {}}
 	llm.generate_async(prompt, func(res: Dictionary) -> void:
 		state.result = res

@@ -56,7 +56,7 @@
 
 ## 1. VUE D'ENSEMBLE
 
-**M.E.R.L.I.N.** (Memoire Eternelle des Recits et Legendes d'Incarnations Narratives) est un roguelite narratif a cartes dans l'univers celtique breton. Chaque run est unique, pilotee par un LLM local (Qwen 3.5 via Ollama).
+**M.E.R.L.I.N.** (Memoire Eternelle des Recits et Legendes d'Incarnations Narratives) est un roguelite narratif a cartes dans l'univers celtique breton. Chaque run est unique, pilotee par un LLM local (Gemma 4 via Ollama).
 
 - **Genre**: Roguelite narratif a cartes
 - **Moteur**: Godot 4.5 (GL Compatibility)
@@ -1143,7 +1143,7 @@ La difficulte depend du **contexte narratif**, PAS de la performance du joueur.
 
 ### Backend
 - Ollama HTTP API (local)
-- Modele: Qwen 3.5 (via LoRA fine-tune)
+- Modele: Gemma 4, taille selon le palier (voir bible §9.2 — source de verite)
 - Timeout: 300s (genereux pour inference CPU)
 - Max retries: 2
 
@@ -1166,7 +1166,7 @@ La difficulte depend du **contexte narratif**, PAS de la performance du joueur.
 - Narrator: 2000 tokens
 - GM: 1500 tokens
 - Judge: 1000 tokens
-- Fenetre totale: ~8000 tokens (Qwen 3.5-4B)
+- Fenetre totale: ~8000 tokens (n_ctx du narrateur, tous paliers)
 
 ### Validation carte (post-generation)
 - Champ `text` present + 30-800 chars

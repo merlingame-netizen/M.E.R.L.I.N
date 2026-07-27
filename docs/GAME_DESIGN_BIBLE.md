@@ -1,8 +1,10 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.2
+# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.3
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
 > Date de creation : 2026-03-12 | v3.0 : 2026-05-09 | v3.1 : 2026-05-16
+> v4.3 : 2026-07-27 — §9.2 réécrit (trois paliers Gemma 4 pilotés par la RAM
+> physique), §9.2bis ajouté (aucun gabarit de chat écrit par le jeu).
 > References : Inscryption (MJ adversarial, 4e mur) + AI Dungeon (liberte narrative IA) + **Hand of Fate 2** (no drain, equilibre via cartes)
 
 ## v3.5 Changelog (2026-05-16)
@@ -606,20 +608,67 @@ flowchart TD
 
 | LLM | Quand | Modèle | RAG injecté | Guardrails | Latence cible |
 |---|---|---|---|---|:---:|
-| **1. Titres** | Au démarrage de ScenarioLoading | Narrator (Qwen 3.5 4B) | 5 titres de référence (ScenariosRAG kNN cosine) | Forbidden words + longueur ≤ 60 char | <8s |
+| **1. Titres** | Au démarrage de ScenarioLoading | Narrator | 5 titres de référence (ScenariosRAG kNN cosine) | Forbidden words + longueur ≤ 60 char | <8s |
 | **2. Intro** | Après pick du titre | Narrator | 3 intros de référence (ScenariosRAG) + 5 registries | Forbidden words + ≥ 5 phrases + Jaccard < 0.5 vs references | <10s |
-| **3. Skeleton** | Pendant parchemin | Game Master (Qwen 3.5 2B) | 2 beat-sequences de référence + biome bias | GBNF + `_balance_skeleton` + Jaccard | <15s |
-| **4. Cartes (per-beat)** | À chaque beat in run | GM + Narrator (pipeline bi-brain) | 2 cartes de référence filtrées par CardType + RAGManager context | GBNF + forbidden words + 4e mur check | <2s prefetch |
+| **3. Skeleton** | Pendant parchemin | Game Master | 2 beat-sequences de référence + biome bias | `format` JSON + `_balance_skeleton` + Jaccard | <15s |
+| **4. Cartes (per-beat)** | À chaque beat in run | GM + Narrator (pipeline bi-brain) | 2 cartes de référence filtrées par CardType + RAGManager context | `format` JSON + forbidden words + 4e mur check | <2s prefetch |
 
-### 9.2 Multi-Brain hardware (modèles + RAM)
+### 9.2 Multi-Brain hardware — trois paliers Gemma 4 (2026-07-27)
 
-| Cerveau | Modèle | RAM | Rôle | Temperature |
-|---|---|:---:|---|:---:|
-| **Narrator** | Qwen 3.5 4B + LoRA `merlin-narrator` | ~3.2 GB | Prose riche, voix de Merlin, intros, titres | 0.70 |
-| **Game Master** | Qwen 3.5 2B | ~1.8 GB | JSON skeleton, JSON cartes, effets, jugements | 0.15 |
-| **Embedder** | nomic-embed-text | 137 MB | 768-dim vectors pour ScenariosRAG kNN | — |
+**Famille : Gemma 4** (avril 2026, Apache 2.0). Deux raisons mesurées :
+français (88,4 % sur MMMLU contre 85,9 % pour Qwen 3.5) et **contrôle**
+(JSON structuré et function calling natifs à *toutes* les tailles — τ2-bench :
+86,4 % pour le 31B contre 6,6 % pour Gemma 3 27B).
 
-Profils hardware : NANO (4 GB, 1 brain time-sharing) / SINGLE (6 GB, 4B narrator + 2B GM tour à tour) / DUAL (8+ GB, simultané) / QUAD (16+ GB).
+Le palier se choisit sur la **RAM physique** de la machine, lue via
+`OS.get_memory_info()`. Il est modifiable à la main dans le menu options.
+
+| Palier | Déclencheur | Narrateur | Game Master | Pic RAM | Mode |
+|---|---|---|---|---:|---|
+| **Léger** | RAM < 16 Go | `gemma4:e4b-it-qat` | partagé | 6,1 Go | résident |
+| **Moyen** | 16 ≤ RAM < 32 Go | `gemma4:12b-it-qat` | partagé | 7,2 Go | résident |
+| **Élevé** | RAM ≥ 32 Go | `gemma4:26b-a4b-it-qat` | `gemma4:e4b-it-qat` | 22,1 Go | parallèle |
+
+**Pourquoi le 26B et pas le 31B au palier haut.** Le 26B-a4b est un
+*Mixture-of-Experts* : 26 milliards de paramètres au total mais ~3,8 actifs par
+token, donc **plus rapide que le 12B dense tout en écrivant mieux**. Le 31B
+dense tombe **sous 1 token/seconde** sans GPU — §9.9 l'interdit. Il reste
+sélectionnable à la main pour qui a un gros GPU, jamais choisi automatiquement.
+
+**Pourquoi un seul modèle aux paliers Léger et Moyen.** Sur 16 Go, le 12B
+(7,2 Go) et l'E4B (6,1 Go) résidant côte à côte font 13,3 Go : il ne resterait
+rien au système ni au jeu, et Ollama évincerait un modèle à chaque bascule —
+7 Go rechargés entre deux cartes. Un seul modèle, jamais évincé.
+
+**Pourquoi l'E4B en game master au palier Élevé.** Ce cerveau ne produit que du
+JSON ; la taille n'y ajoute rien. Payer deux fois le gros modèle doublerait
+l'empreinte sans améliorer la prose.
+
+| Autre cerveau | Modèle | RAM | Rôle |
+|---|---|:---:|---|
+| **Embedder** | nomic-embed-text | 137 MB | 768-dim vectors pour ScenariosRAG kNN |
+
+**Préséance des réglages** : un modèle choisi explicitement dans les options
+l'emporte sur le palier, et le palier l'emporte sur la détection matérielle.
+
+### 9.2bis Aucun gabarit de chat écrit par le jeu
+
+Le jeu envoie des **messages neutres** `[{role, content}]` à `/api/chat`
+d'Ollama, qui applique le gabarit propre au modèle chargé. Le code n'écrit
+plus de ChatML (`<|im_start|>`, format de Qwen), et n'écrira jamais celui de
+Gemma (`<start_of_turn>`) non plus.
+
+C'est une règle, pas un détail d'implémentation : le backend écrivait
+auparavant du ChatML à la main et envoyait `raw: true`, ce qui disait
+explicitement à Ollama de **ne pas** appliquer le gabarit du modèle. Changer de
+famille de modèle dégradait alors la prose **sans qu'aucune erreur ne le
+signale**. Toute contribution qui réintroduit un marqueur de gabarit dans le
+code est un bug.
+
+Corollaire pour le JSON : `OllamaBackend.set_grammar()` n'est plus un no-op —
+il envoie le paramètre `format` d'Ollama (schéma JSON complet quand la
+contrainte en est un, `"json"` sinon). Le game master produit donc du JSON
+valide **par construction**, au lieu d'être réparé après coup.
 
 ### 9.3 RAG — DEUX indices coordonnés
 
@@ -1980,4 +2029,4 @@ de carte à quatre beats, les résolutions d'échec, la graine de variation.
 
 ---
 
-*Fin de bible v4.2*
+*Fin de bible v4.3*
