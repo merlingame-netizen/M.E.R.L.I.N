@@ -21,10 +21,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import math
 import random
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -205,6 +207,62 @@ def _res_path(p: Path) -> str:
     return "res://" + p.resolve().relative_to(_REPO_ROOT).as_posix()
 
 
+def _rel_path(p: Path) -> str:
+    """Repo-relative POSIX path, for storage in the manifest.
+
+    The manifest must never hold machine-absolute paths (``C:/Users/...``):
+    it is committed alongside the repo and read on other checkouts.
+    """
+    return p.resolve().relative_to(_REPO_ROOT).as_posix()
+
+
+def _from_manifest(stored: str) -> Path:
+    """Resolve a manifest path entry. Tolerates legacy absolute entries."""
+    p = Path(stored)
+    return p if p.is_absolute() else (_REPO_ROOT / p)
+
+
+def _git_sha() -> str:
+    """Short SHA of HEAD, so an asset can be traced back to the code that made it."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(_REPO_ROOT), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=10, check=False,
+        )
+        return out.stdout.strip() or "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
+def _measure(sheet_path: Path) -> dict:
+    """Run the canonical QC checks and return their MEASURED values.
+
+    Mirrors the audio ledger (``audio/sfx/manifest.json``), which stores the
+    achieved LUFS/true-peak next to the generation params. Here the measured
+    quantities are palette conformity (delta-E vs the canon palette),
+    dimensions, file size and alpha. Never raises: QC must not break a build.
+    """
+    tools_dir = str(Path(__file__).resolve().parent)
+    if tools_dir not in sys.path:
+        sys.path.insert(0, tools_dir)
+    try:
+        import asset_validator as av
+    except ImportError:
+        return {"error": "asset_validator unavailable"}
+    try:
+        report = av.validate_file(sheet_path, "sprite_sheet")
+    except Exception as exc:  # noqa: BLE001 - QC is advisory, never fatal
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    measured: dict = {"passed": report.get("passed"), "critical": report.get("critical")}
+    for chk in report.get("checks", []):
+        measured[chk["check"]] = chk.get("value")
+    try:
+        measured["file_size_kb"] = round(sheet_path.stat().st_size / 1024, 1)
+    except OSError:
+        pass
+    return measured
+
+
 def _cache_key(template: str, frames: int, w: int, h: int, fps: int, loop: bool, seed: int) -> str:
     raw = "%s|%d|%dx%d|%d|%d|%d" % (template, frames, w, h, fps, int(loop), seed)
     return hashlib.sha1(raw.encode()).hexdigest()[:12]
@@ -286,8 +344,8 @@ def generate(template: str, seed: int = 42, frames: int | None = None,
     manifest = _load_manifest()
     entry = manifest.get("entries", {}).get(key)
     if entry:
-        sheet_p = Path(entry["sheet"]).resolve()
-        tres_p = Path(entry["tres"]).resolve()
+        sheet_p = _from_manifest(entry["sheet"]).resolve()
+        tres_p = _from_manifest(entry["tres"]).resolve()
         if (sheet_p.is_relative_to(CACHE_DIR.resolve()) and sheet_p.exists() and tres_p.exists()):
             return {"output_sheet": str(sheet_p), "output_tres": str(tres_p),
                     "frame_count": n, "fps": f, "loop": lp, "cached": True,
@@ -303,10 +361,21 @@ def generate(template: str, seed: int = 42, frames: int | None = None,
     sheet.save(str(sheet_path), optimize=True)
     write_sprite_frames_tres(tres_path, _res_path(sheet_path), regions, template, f, lp)
 
+    # Ledger entry: repo-relative paths + provenance + MEASURED QC, mirroring
+    # audio/sfx/manifest.json. Params alone are not traceability: the measured
+    # block is what makes the entry a gate rather than a claim.
     manifest.setdefault("entries", {})[key] = {
-        "sheet": str(sheet_path), "tres": str(tres_path), "template": template,
+        "sheet": _rel_path(sheet_path), "tres": _rel_path(tres_path), "template": template,
         "frames": n, "size": f"{w}x{h}", "fps": f, "loop": lp, "seed": seed,
         "regions": regions,
+        "provenance": {
+            "tool": "sprite_anim_forge.py",
+            "renderer": tpl.renderer,
+            "git_sha": _git_sha(),
+            "generated_utc": datetime.datetime.now(datetime.timezone.utc)
+                             .replace(microsecond=0).isoformat(),
+        },
+        "measured": _measure(sheet_path),
     }
     _save_manifest(manifest)
 
@@ -317,6 +386,38 @@ def generate(template: str, seed: int = 42, frames: int | None = None,
 
 def cache_list() -> dict:
     return _load_manifest()
+
+
+def remeasure() -> dict:
+    """Normalise every manifest entry: repo-relative paths + fresh measurements.
+
+    Needed because the cache short-circuits before measuring, so entries written
+    by an older forge (absolute paths, no QC block) would otherwise never be
+    upgraded. Also the way to refresh the ledger after asset_validator changes.
+    Entries whose sheet has vanished are reported, never silently dropped.
+    """
+    manifest = _load_manifest()
+    entries = manifest.get("entries", {})
+    updated, missing = [], []
+    for key, entry in entries.items():
+        sheet_p = _from_manifest(entry.get("sheet", ""))
+        tres_p = _from_manifest(entry.get("tres", ""))
+        if not sheet_p.exists():
+            missing.append(key)
+            continue
+        entry["sheet"] = _rel_path(sheet_p)
+        if tres_p.exists():
+            entry["tres"] = _rel_path(tres_p)
+        entry.setdefault("provenance", {}).update({
+            "tool": "sprite_anim_forge.py",
+            "renderer": TEMPLATES[entry["template"]].renderer
+                        if entry.get("template") in TEMPLATES else "unknown",
+        })
+        entry["provenance"].setdefault("git_sha", "pre-ledger")
+        entry["measured"] = _measure(sheet_p)
+        updated.append(key)
+    _save_manifest(manifest)
+    return {"updated": updated, "missing": missing, "total": len(entries)}
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────────────
@@ -333,8 +434,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--list-templates", action="store_true")
     parser.add_argument("--status", action="store_true")
     parser.add_argument("--cache-list", action="store_true")
+    parser.add_argument("--remeasure", action="store_true",
+                        help="Normalise manifest paths + refresh measured QC on every entry")
 
     args = parser.parse_args(argv)
+
+    if args.remeasure:
+        print(json.dumps(remeasure(), indent=2))
+        return 0
 
     if args.status:
         print(json.dumps(status(), indent=2))
