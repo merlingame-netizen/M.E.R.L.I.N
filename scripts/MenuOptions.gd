@@ -42,6 +42,10 @@ var default_config = {
 	"calendar_month": 1,
 	"calendar_year": 2026,
 	"brain_count": 0,  # 0=Auto, 2=Dual, 3=Triple
+	# "" = laisser MerlinAI decider. Sinon, le tag exact d'un modele installe
+	# (ex. "gemma3:4b"). Ce choix pilote TOUTE la generation : titres, intro,
+	# squelette de scenario et cartes passent par le meme modele.
+	"llm_model": "",
 }
 
 # Calendar controls (scene nodes)
@@ -60,6 +64,8 @@ var default_config = {
 
 # IA controls (scene nodes)
 @onready var brain_count_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainRow/BrainCountOption
+@onready var model_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/ModelRow/ModelOption
+@onready var model_info_label: Label = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/ModelInfoLabel
 @onready var brain_info_label: Label = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainInfoLabel
 
 # Configuration actuelle
@@ -221,6 +227,7 @@ func _configure_ia_options() -> void:
 			brain_count_option.selected = i
 			break
 	brain_count_option.item_selected.connect(_on_brain_count_changed)
+	_configure_model_options()
 
 	# Configure info label styling — separate guard since BrainInfoLabel sits
 	# in IASection but is independent of BrainCountOption resolution.
@@ -229,6 +236,61 @@ func _configure_ia_options() -> void:
 		brain_info_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 		brain_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_update_brain_info_label()
+
+
+## Selecteur du modele qui ecrit le jeu. On propose ce qui est REELLEMENT
+## installe (Ollama /api/tags) plutot qu'une liste ecrite en dur : elle
+## mentirait des que l'utilisateur installe ou retire un modele.
+func _configure_model_options() -> void:
+	if model_option == null:
+		return
+	model_option.clear()
+	model_option.add_item(tr("Automatique (recommande)"))
+	model_option.set_item_metadata(0, "")
+
+	var installes: Array = []
+	var ai: Node = get_node_or_null("/root/MerlinAI")
+	if ai and ai.has_method("list_installed_models"):
+		installes = ai.call("list_installed_models")
+
+	for nom in installes:
+		model_option.add_item(str(nom))
+		model_option.set_item_metadata(model_option.item_count - 1, str(nom))
+
+	var choisi: String = str(current_config.get("llm_model", ""))
+	model_option.selected = 0
+	for i in range(model_option.item_count):
+		if str(model_option.get_item_metadata(i)) == choisi:
+			model_option.selected = i
+			break
+
+	if model_info_label:
+		model_info_label.add_theme_font_size_override("font_size", 14)
+		model_info_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+		model_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_update_model_info_label(installes.size())
+	model_option.item_selected.connect(_on_model_changed)
+
+
+func _on_model_changed(index: int) -> void:
+	current_config["llm_model"] = str(model_option.get_item_metadata(index))
+	_update_model_info_label(maxi(model_option.item_count - 1, 0))
+
+
+func _update_model_info_label(nb_installes: int) -> void:
+	if model_info_label == null:
+		return
+	if nb_installes <= 0:
+		model_info_label.text = tr(
+			"Aucun modele detecte. Merlin utilisera les scenarios ecrits d'avance.")
+		return
+	var choisi: String = str(current_config.get("llm_model", ""))
+	if choisi == "":
+		model_info_label.text = tr(
+			"Merlin choisit selon la memoire disponible. %d modeles detectes.") % nb_installes
+	else:
+		model_info_label.text = tr(
+			"Titres, intro, scenario et cartes seront ecrits par %s.") % choisi
 
 
 func _on_brain_count_changed(index: int) -> void:

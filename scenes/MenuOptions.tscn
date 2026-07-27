@@ -234,6 +234,22 @@ layout_mode = 2
 text = ""
 autowrap_mode = 2
 
+[node name="ModelRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
+layout_mode = 2
+
+[node name="ModelLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/ModelRow"]
+layout_mode = 2
+text = "Modele narrateur"
+
+[node name="ModelOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/ModelRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ModelInfoLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
+layout_mode = 2
+text = ""
+autowrap_mode = 2
+
 [node name="ButtonsContainer" type="HBoxContainer" parent="MainLayout/VBox"]
 layout_mode = 2
 alignment = 1

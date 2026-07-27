@@ -123,6 +123,27 @@ var status_text := "Connexion: OFF"
 var unavailable_reasons: Array[String] = []
 
 
+## Tag impose par le joueur pour ce demarrage ("" = detection automatique).
+var _forced_model: String = ""
+
+
+## Modele designe par le joueur dans le menu options ("" = detection auto).
+## Lu a chaud : changer de modele dans les options n'exige pas de relancer.
+func _modele_choisi_par_le_joueur() -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://settings.cfg") != OK:
+		return ""
+	return str(cfg.get_value("options", "llm_model", ""))
+
+
+## Modeles reellement installes, pour le selecteur du menu options.
+func list_installed_models() -> Array:
+	var backend = OllamaBackendScript.new()
+	if backend and backend.has_method("list_installed_models"):
+		return backend.list_installed_models()
+	return []
+
+
 func _note_unavailable(backend: String, raison: String) -> void:
 	var ligne: String = "%s : %s" % [backend, raison]
 	if not unavailable_reasons.has(ligne):
@@ -600,6 +621,23 @@ func _try_init_ollama(target: int) -> bool:
 	var profile_name: String = str(profile.get("name", "Unknown"))
 	_log("Ollama: detected profile '%s' (RAM: %d MB, CPU: %d threads)" % [profile_name, available_ram, cpu_threads])
 
+	# ── Choix explicite du joueur (menu options) ──────────────────────────
+	# Il prime sur la detection par profil : si le joueur a designe un modele,
+	# c'est celui-la qui ecrit le jeu, quoi que la RAM suggere.
+	_forced_model = ""
+	var choix_joueur: String = _modele_choisi_par_le_joueur()
+	if choix_joueur != "":
+		ollama_test.model = choix_joueur
+		if ollama_test.check_model_available():
+			_forced_model = choix_joueur
+			_log("Ollama: modele impose par le joueur — '%s'" % choix_joueur)
+		else:
+			_log("Ollama: modele choisi '%s' introuvable — retour a la detection auto"
+				% choix_joueur)
+			_note_unavailable("Modele choisi",
+				"'%s' n'est pas installe — Merlin repasse en detection automatique"
+				% choix_joueur)
+
 	# ── Verify required models are available ──────────────────────────────
 	var required_models: Array = BrainSwarmConfig.get_required_models(_active_profile_id)
 	for model_tag in required_models:
@@ -629,7 +667,8 @@ func _try_init_ollama(target: int) -> bool:
 
 	# ── Brain 1: Narrator via Ollama ──────────────────────────────────────
 	var narrator_cfg: Dictionary = BrainSwarmConfig.get_brain_config(_active_profile_id, "narrator")
-	var narrator_tag: String = str(narrator_cfg.get("ollama_tag", OllamaBackendScript.DEFAULT_MODEL))
+	var narrator_tag: String = _forced_model if _forced_model != "" \
+		else str(narrator_cfg.get("ollama_tag", OllamaBackendScript.DEFAULT_MODEL))
 	var narrator_ctx: int = int(narrator_cfg.get("n_ctx", 4096))
 	_set_status("Connexion: ...", "Ollama Brain 1/Narrator (%s)" % narrator_tag, 30.0)
 	narrator_llm = OllamaBackendScript.new()
@@ -642,7 +681,8 @@ func _try_init_ollama(target: int) -> bool:
 	# ── Brain 2: Game Master via Ollama (separate model if SINGLE+/DUAL+) ─
 	var gm_cfg: Dictionary = BrainSwarmConfig.get_brain_config(_active_profile_id, "gamemaster")
 	if not gm_cfg.is_empty():
-		var gm_tag: String = str(gm_cfg.get("ollama_tag", narrator_tag))
+		var gm_tag: String = _forced_model if _forced_model != "" \
+			else str(gm_cfg.get("ollama_tag", narrator_tag))
 		var gm_ctx: int = int(gm_cfg.get("n_ctx", 4096))
 		var gm_thinking: bool = bool(gm_cfg.get("thinking", false))
 		_set_status("Connexion: ...", "Ollama Brain 2/GM (%s)" % gm_tag, 50.0)

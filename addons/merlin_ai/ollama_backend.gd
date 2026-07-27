@@ -137,6 +137,50 @@ func check_model_available() -> bool:
 	return false
 
 
+## Liste les modeles reellement installes sur la machine (GET /api/tags).
+## Sert au selecteur du menu options : on propose ce qui EXISTE, pas une liste
+## ecrite en dur qui mentirait des que l'utilisateur installe autre chose.
+## Retourne [] si Ollama ne repond pas.
+func list_installed_models() -> Array[String]:
+	var out: Array[String] = []
+	var client := HTTPClient.new()
+	if client.connect_to_host(host, port) != OK:
+		return out
+	var start := Time.get_ticks_msec()
+	while client.get_status() == HTTPClient.STATUS_CONNECTING \
+			or client.get_status() == HTTPClient.STATUS_RESOLVING:
+		client.poll()
+		OS.delay_msec(10)
+		if Time.get_ticks_msec() - start > CONNECT_TIMEOUT_MS:
+			return out
+	if client.get_status() != HTTPClient.STATUS_CONNECTED:
+		return out
+	if client.request(HTTPClient.METHOD_GET, "/api/tags", []) != OK:
+		return out
+	while client.get_status() == HTTPClient.STATUS_REQUESTING:
+		client.poll()
+		OS.delay_msec(10)
+	if not client.has_response() or client.get_response_code() != 200:
+		return out
+	var body := PackedByteArray()
+	while client.get_status() == HTTPClient.STATUS_BODY:
+		client.poll()
+		var chunk := client.read_response_body_chunk()
+		if chunk.size() > 0:
+			body.append_array(chunk)
+		OS.delay_msec(1)
+	var json := JSON.new()
+	if json.parse(body.get_string_from_utf8()) != OK:
+		return out
+	var data: Dictionary = json.data if json.data is Dictionary else {}
+	for m in (data.get("models", []) as Array):
+		var n: String = str((m as Dictionary).get("name", ""))
+		if n != "":
+			out.append(n)
+	out.sort()
+	return out
+
+
 ## Lance la generation asynchrone (non-bloquant). Le callback recoit {"text": ...} ou {"error": ...}.
 func generate_async(prompt: String, callback: Callable) -> void:
 	if _is_generating:
