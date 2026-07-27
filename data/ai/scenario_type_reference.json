@@ -306,7 +306,7 @@
               },
               {
                 "type": "HEAL_LIFE",
-                "amount": 2
+                "amount": 3
               }
             ],
             "outcome": "Tu restes immobile, les mains visibles. Au bout d'un long moment le pas revient vers la porte, plus lentement, mais il revient. Tu respires mieux d'avoir su ne rien forcer.",
@@ -557,6 +557,10 @@
                 "type": "ADD_REPUTATION",
                 "faction": "niamh",
                 "amount": 8
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 3
               }
             ],
             "outcome": "Tu restes debout jusqu'a ce qu'elle s'assoie. Elle ne s'assoit pas. Elle finit par te pousser le banc du pied, presque en riant, et quelque chose se detend entre vous.",
@@ -696,6 +700,10 @@
                 "type": "ADD_REPUTATION",
                 "faction": "anciens",
                 "amount": 6
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 5
               }
             ],
             "outcome": "Tu manges sans rien demander. Au bout d'un moment elle parle d'elle-meme, du marais, des planches qu'il faut refaire chaque annee — et jamais de qui les refait.",
@@ -716,7 +724,7 @@
               {
                 "type": "ADD_REPUTATION",
                 "faction": "niamh",
-                "amount": 8
+                "amount": 14
               }
             ],
             "outcome": "Tu demandes qui doit venir. Elle repose sa cuiller. « Personne. » Puis, plus bas, comme pour elle-meme : « Plus personne. »",
@@ -737,7 +745,7 @@
               {
                 "type": "ADD_REPUTATION",
                 "faction": "druides",
-                "amount": 10
+                "amount": 16
               }
             ],
             "outcome": "Tu dis que les planches neuves ne menent pas au bourg mais s'enfoncent dans le marais. Elle te laisse finir. « On rallonge le chemin quand la tourbe monte », dit-elle, et ce n'est pas une reponse.",
@@ -852,6 +860,10 @@
                 "type": "ADD_REPUTATION",
                 "faction": "anciens",
                 "amount": 6
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 2
               }
             ],
             "outcome": "Tu restes couche, les yeux ouverts. Les oiseaux se reposent plus loin. Entre les deux, quelque chose a traverse la bruyere sans faire un bruit.",
@@ -1119,6 +1131,10 @@
                 "type": "ADD_REPUTATION",
                 "faction": "niamh",
                 "amount": 10
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 3
               }
             ],
             "outcome": "Tu dis que tu peux rester un jour de plus, si ca aide. Elle refuse de la tete — mais elle met une buche dans le feu eteint, la premiere depuis que tu es entre.",
@@ -1194,6 +1210,10 @@
                 "type": "ADD_REPUTATION",
                 "faction": "ankou",
                 "amount": 10
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 3
               }
             ],
             "outcome": "Tu emportes l'assiette froide, couverte d'un linge. Tu ne saurais pas dire pourquoi, sinon qu'on ne laisse pas un repas servi a personne.",
@@ -1498,6 +1518,10 @@
                 "type": "ADD_REPUTATION",
                 "faction": "korrigans",
                 "amount": 10
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 3
               }
             ],
             "outcome": "Tu te glisses sous la berge. Il fait chaud, ca sent l'homme et la fumee, et il y a quelqu'un assis contre la paroi qui ne bouge pas plus qu'une pierre.",
@@ -1817,6 +1841,10 @@
                 "type": "ADD_REPUTATION",
                 "faction": "niamh",
                 "amount": 10
+              },
+              {
+                "type": "HEAL_LIFE",
+                "amount": 3
               }
             ],
             "outcome": "Tu le dis avant qu'elle demande : la branche neuve, la fosse, la berge. Elle ne t'interrompt pas. A la fin elle s'assied, pour la premiere fois depuis que tu es entre dans cette maison.",

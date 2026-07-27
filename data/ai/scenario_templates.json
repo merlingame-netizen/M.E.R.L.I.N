@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "version": "2.4.0",
+  "version": "2.5.0",
   "date": "2026-07-25",
   "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
   "bible_ref": "GAME_DESIGN_BIBLE.md v4.0 (section 31 : decisions du 2026-07-26)",
@@ -312,7 +312,9 @@
      0.15
     ],
     "any_build_max": 0.4
-   }
+   },
+   "_passifs_de_biome": "MANQUANT DANS CE MODELE. Chaque biome porte un passif applique toutes les N cartes (merlin_biome_system.gd::get_passive_effect). marais_korrigans : direction 'down' tous les 5 -> -25 PV sur un run de 25 cartes, soit un tiers du budget de degats brut, hors de toute epreuve et sans que rien ne l'annonce au joueur. A integrer au budget, et a rendre visible (bible §31.2 : tout afficher). Mesure : run du 2026-07-27.",
+   "_soins_observes": "heal_policy suppose que ~30% des options CHOISIES soignent 2-4 PV. Le scenario de reference en porte 8 sur 75 (11%) : soins realises ~5 PV contre 20-35 attendus. Deux issues possibles, non tranchees : rendre le soin routinier (~22 options) ou abaisser success_heal_share. Mesure : run du 2026-07-27, vie finale 39/100 pour une cible p50 de 55-70."
   },
   "option_gradient_ev": {
    "_comment": "Principe deck-builder : les 3 options ont un EV proche (ecart max 2 PV-eq) mais une variance croissante. L'audacieuse paie via le critique (x1.5 + bonus), pas via l'EV brut.",

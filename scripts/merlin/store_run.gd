@@ -182,13 +182,18 @@ static func resolve_choice(state: Dictionary, card: Dictionary, option: int, mod
 	var active_ogham: String = str(state.get("oghams", {}).get("active_this_card", ""))
 	StoreOghams.tick_cooldowns(state, active_ogham)
 
-	# Biome passive only in legacy path
-	if modulated_effects.is_empty():
-		var biome_key: String = str(run.get("current_biome", ""))
-		if not biome_key.is_empty():
-			var passive: Dictionary = biomes.get_passive_effect(biome_key, int(run.get("cards_played", 0)))
-			if not passive.is_empty():
-				apply_effect_func.call(passive)
+	# Passif de biome : toutes les N cartes, quoi qu'il arrive.
+	# v7.7.29 — il etait conditionne a `modulated_effects.is_empty()`, ce qui
+	# n'avait de sens que quand ce champ ne servait qu'au modificateur de
+	# marchand. Depuis que l'echec d'une epreuve passe par la meme voie, le
+	# passif sautait une carte sur deux : mesure sur un run de 25 cartes en
+	# marais_korrigans, il s'est applique 3 fois sur 5. Le passif est un fait du
+	# lieu, pas une consequence du choix.
+	var biome_key: String = str(run.get("current_biome", ""))
+	if not biome_key.is_empty():
+		var passive: Dictionary = biomes.get_passive_effect(biome_key, int(run.get("cards_played", 0)))
+		if not passive.is_empty():
+			apply_effect_func.call(passive)
 
 	# Check promise deadlines
 	check_promise_deadlines(state, apply_effect_func)

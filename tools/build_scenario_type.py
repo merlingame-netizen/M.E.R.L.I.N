@@ -204,7 +204,7 @@ CARTES = [
    "Rien ne repond. Un pas, un seul, de l'autre cote du bois — puis plus rien. Le vent "
    "tombe d'un coup et le froid s'installe sur le seuil avec toi.", [
    O("Attendre sans bouger", "attendre", "anciens", "prudente", "volonte", "white", 3,
-     R("anciens", 6, HEAL(2)),
+     R("anciens", 6, HEAL(3)),
      "Tu restes immobile, les mains visibles. Au bout d'un long moment le pas revient vers "
      "la porte, plus lentement, mais il revient. Tu respires mieux d'avoir su ne rien "
      "forcer.",
@@ -283,7 +283,7 @@ CARTES = [
      "Tu t'assieds sans regarder ou et tu te retrouves devant l'assiette pleine. Elle ne "
      "dit rien. Elle ne s'assied pas non plus."),
    O("Rester debout", "patienter", "niamh", "equilibree", "empathie", "white", 4,
-     R("niamh", 8),
+     R("niamh", 8, HEAL(3)),
      "Tu restes debout jusqu'a ce qu'elle s'assoie. Elle ne s'assoit pas. Elle finit par "
      "te pousser le banc du pied, presque en riant, et quelque chose se detend entre vous.",
      "Tu restes debout trop longtemps et la piece devient genante. Elle te sert sans te "
@@ -323,19 +323,19 @@ CARTES = [
    "Elle ne mange pas. Elle s'est assise de biais, face a la porte, et chaque fois que la "
    "tourbe soupire dehors sa cuiller s'arrete a mi-chemin.", [
    O("Manger en silence", "manger", "anciens", "prudente", "volonte", "white", 3,
-     R("anciens", 6),
+     R("anciens", 6, HEAL(5)),
      "Tu manges sans rien demander. Au bout d'un moment elle parle d'elle-meme, du marais, "
      "des planches qu'il faut refaire chaque annee — et jamais de qui les refait.",
      "Tu manges en silence et le silence s'installe pour de bon. Vous finissez le repas "
      "comme deux inconnus dans une salle d'attente."),
    O("Demander qui est attendu", "demander", "niamh", "equilibree", "empathie", "white", 4,
-     R("niamh", 8),
+     R("niamh", 14),
      "Tu demandes qui doit venir. Elle repose sa cuiller. « Personne. » Puis, plus bas, "
      "comme pour elle-meme : « Plus personne. »",
      "Tu demandes qui est attendu et la question tombe mal. Elle se leve, va tisonner un "
      "feu eteint depuis longtemps, et te tourne le dos."),
    O("Parler des planches neuves", "questionner", "druides", "audacieuse", "logic",
-     "white", 5, R("druides", 10),
+     "white", 5, R("druides", 16),
      "Tu dis que les planches neuves ne menent pas au bourg mais s'enfoncent dans le "
      "marais. Elle te laisse finir. « On rallonge le chemin quand la tourbe monte », "
      "dit-elle, et ce n'est pas une reponse.",
@@ -380,7 +380,7 @@ CARTES = [
     "nuit, trois oiseaux se levent de la meme touffe de bruyere, sans qu'aucun bruit ne "
     "les ait leves.", [
     O("Ne pas bouger", "attendre", "anciens", "prudente", "volonte", "white", 3,
-      R("anciens", 6),
+      R("anciens", 6, HEAL(2)),
       "Tu restes couche, les yeux ouverts. Les oiseaux se reposent plus loin. Entre les "
       "deux, quelque chose a traverse la bruyere sans faire un bruit.",
       "Tu restes couche et le sommeil te reprend malgre toi. Quand tu rouvres les yeux, la "
@@ -462,7 +462,7 @@ CARTES = [
       "Tu la contredis trop vite et trop bien. Elle se ferme d'un coup : « Vous etes "
       "savant, pour un homme qui dort sur mon banc. »"),
     O("Proposer de rester un jour", "offrir", "niamh", "audacieuse", "empathie", "white", 5,
-      R("niamh", 10),
+      R("niamh", 10, HEAL(3)),
       "Tu dis que tu peux rester un jour de plus, si ca aide. Elle refuse de la tete — mais "
       "elle met une buche dans le feu eteint, la premiere depuis que tu es entre.",
       "Tu proposes de rester et l'offre tombe comme une pitie. Elle repond qu'elle n'a "
@@ -485,7 +485,7 @@ CARTES = [
       "Tu sors et la porte grince sur toute sa longueur. Tu t'engages quand meme sur les "
       "planches, en sachant qu'elle t'a entendu partir."),
     O("Emporter l'assiette pleine", "emporter", "ankou", "audacieuse", "instinct", "white", 5,
-      R("ankou", 10),
+      R("ankou", 10, HEAL(3)),
       "Tu emportes l'assiette froide, couverte d'un linge. Tu ne saurais pas dire pourquoi, "
       "sinon qu'on ne laisse pas un repas servi a personne.",
       "Tu prends l'assiette et le linge accroche la table ; le plat se renverse sur le banc "
@@ -582,7 +582,7 @@ CARTES = [
       "Tu fouilles trop vite et renverses le quart. L'eau se repand sur la paille seche, et "
       "tout ce qui restait de sec ne l'est plus."),
     O("Entrer dans l'abri", "entrer", "korrigans", "audacieuse", "instinct", "white", 5,
-      R("korrigans", 10),
+      R("korrigans", 10, HEAL(3)),
       "Tu te glisses sous la berge. Il fait chaud, ca sent l'homme et la fumee, et il y a "
       "quelqu'un assis contre la paroi qui ne bouge pas plus qu'une pierre.",
       "Tu te glisses sous la berge et l'entree se referme sur tes epaules. Tu recules a "
@@ -682,7 +682,7 @@ CARTES = [
       "Tu regardes la table trop ouvertement et elle te devance. Le temps que tu te "
       "retournes, l'assiette est dans le seau et la table est mise pour un."),
     O("Dire tout de suite ou tu es alle", "avouer", "niamh", "audacieuse", "empathie",
-      "white", 5, R("niamh", 10),
+      "white", 5, R("niamh", 10, HEAL(3)),
       "Tu le dis avant qu'elle demande : la branche neuve, la fosse, la berge. Elle ne "
       "t'interrompt pas. A la fin elle s'assied, pour la premiere fois depuis que tu es "
       "entre dans cette maison.",

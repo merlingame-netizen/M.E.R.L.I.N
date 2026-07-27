@@ -45,26 +45,26 @@ Chaque effet est converti en **PV-équivalent** (vie 1.0 · essence 0.8 · répu
 | 1. NARRATIVE | 1 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
 | 2. NARRATIVE | 1 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
 | 3. NARRATIVE | 1 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
-| 4. EVENT | 1 | blanche | +1.44 | +0.32 | +0.40 | 1.12 |
+| 4. EVENT | 1 | blanche | +2.04 | +0.32 | +0.40 | 1.72 |
 | 5. NARRATIVE | 1 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
 | 6. NARRATIVE | 2 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
-| 7. NARRATIVE | 2 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
+| 7. NARRATIVE | 2 | blanche | +0.24 | +2.12 | +0.40 | 1.88 |
 | 8. SHOP | 2 | blanche | +1.68 | +2.24 | +0.88 | 1.36 |
-| 9. NARRATIVE | 2 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
+| 9. NARRATIVE | 2 | blanche | +3.24 | +1.76 | +1.84 | 1.48 |
 | 10. MERLIN_DIRECT | 2 | **contextuelle** | +0.56 | -0.56 | -0.48 | 1.12 |
-| 11. EVENT | 3 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
+| 11. EVENT | 3 | blanche | +1.44 | +0.32 | +0.40 | 1.12 |
 | 12. NARRATIVE | 3 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
 | 13. NARRATIVE | 3 | **contextuelle** | +0.32 | -0.56 | -0.48 | 0.88 |
-| 14. NARRATIVE | 3 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
-| 15. NARRATIVE | 3 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
+| 14. NARRATIVE | 3 | blanche | +0.24 | +0.32 | +2.20 | 1.96 |
+| 15. NARRATIVE | 3 | blanche | +0.24 | +0.32 | +2.20 | 1.96 |
 | 16. NARRATIVE | 4 | **contextuelle** | +0.32 | +0.64 | +0.48 | 0.32 |
 | 17. NARRATIVE | 4 | **contextuelle** | +0.56 | -0.32 | -0.48 | 1.04 |
 | 18. EVENT | 4 | **ROUGE** (télégraphiée) | +0.80 | -0.32 | +0.56 | 1.12 |
-| 19. NARRATIVE | 4 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
+| 19. NARRATIVE | 4 | blanche | +0.24 | +0.32 | +2.20 | 1.96 |
 | 20. PROMISE | 4 | blanche | +0.32 | +0.80 | +0.88 | 0.56 |
 | 21. SHOP | 5 | blanche | +0.72 | +0.80 | +0.88 | 0.16 |
 | 22. NARRATIVE | 5 | **ROUGE** (télégraphiée) | +0.80 | -0.32 | +0.56 | 1.12 |
-| 23. NARRATIVE | 5 | blanche | +0.24 | +0.32 | +0.40 | 0.16 |
+| 23. NARRATIVE | 5 | blanche | +0.24 | +0.32 | +2.20 | 1.96 |
 | 24. NARRATIVE | 5 | **contextuelle** | +0.56 | -0.32 | -0.24 | 0.88 |
 | 25. MERLIN_DIRECT | 5 | blanche | +6.08 | +7.12 | +7.60 | 1.52 |
 
@@ -165,13 +165,13 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 **Situation.** Rien ne repond. Un pas, un seul, de l'autre cote du bois — puis plus rien. Le vent tombe d'un coup et le froid s'installe sur le seuil avec toi.
 
-**Attendre sans bouger** — *prudente* · anciens · épreuve volonte/white · échec −3 PV · EV +1.44
+**Attendre sans bouger** — *prudente* · anciens · épreuve volonte/white · échec −3 PV · EV +2.04
 
 > **Réussite.** Tu restes immobile, les mains visibles. Au bout d'un long moment le pas revient vers la porte, plus lentement, mais il revient. Tu respires mieux d'avoir su ne rien forcer.
 
 > **Échec.** Tu attends, et le froid gagne avant la porte. Quand tu bouges enfin, tes doigts ne se referment plus tout a fait.
 
-*Effets — désormais visibles au HUD :* anciens +6 · vie +2
+*Effets — désormais visibles au HUD :* anciens +6 · vie +3
 
 **Annoncer que tu es un voyageur** — *equilibree* · niamh · épreuve empathie/white · échec −4 PV · EV +0.32
 
@@ -260,13 +260,13 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 *Effets — désormais visibles au HUD :* anciens +6
 
-**Rester debout** — *equilibree* · niamh · épreuve empathie/white · échec −4 PV · EV +0.32
+**Rester debout** — *equilibree* · niamh · épreuve empathie/white · échec −4 PV · EV +2.12
 
 > **Réussite.** Tu restes debout jusqu'a ce qu'elle s'assoie. Elle ne s'assoit pas. Elle finit par te pousser le banc du pied, presque en riant, et quelque chose se detend entre vous.
 
 > **Échec.** Tu restes debout trop longtemps et la piece devient genante. Elle te sert sans te regarder, comme on sert quelqu'un qui n'entrera jamais vraiment.
 
-*Effets — désormais visibles au HUD :* niamh +8
+*Effets — désormais visibles au HUD :* niamh +8 · vie +3
 
 **Regarder l'assiette intacte** — *audacieuse* · druides · épreuve logic/white · échec −5 PV · EV +0.40
 
@@ -310,29 +310,29 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 **Situation.** Elle ne mange pas. Elle s'est assise de biais, face a la porte, et chaque fois que la tourbe soupire dehors sa cuiller s'arrete a mi-chemin.
 
-**Manger en silence** — *prudente* · anciens · épreuve volonte/white · échec −3 PV · EV +0.24
+**Manger en silence** — *prudente* · anciens · épreuve volonte/white · échec −3 PV · EV +3.24
 
 > **Réussite.** Tu manges sans rien demander. Au bout d'un moment elle parle d'elle-meme, du marais, des planches qu'il faut refaire chaque annee — et jamais de qui les refait.
 
 > **Échec.** Tu manges en silence et le silence s'installe pour de bon. Vous finissez le repas comme deux inconnus dans une salle d'attente.
 
-*Effets — désormais visibles au HUD :* anciens +6
+*Effets — désormais visibles au HUD :* anciens +6 · vie +5
 
-**Demander qui est attendu** — *equilibree* · niamh · épreuve empathie/white · échec −4 PV · EV +0.32
+**Demander qui est attendu** — *equilibree* · niamh · épreuve empathie/white · échec −4 PV · EV +1.76
 
 > **Réussite.** Tu demandes qui doit venir. Elle repose sa cuiller. « Personne. » Puis, plus bas, comme pour elle-meme : « Plus personne. »
 
 > **Échec.** Tu demandes qui est attendu et la question tombe mal. Elle se leve, va tisonner un feu eteint depuis longtemps, et te tourne le dos.
 
-*Effets — désormais visibles au HUD :* niamh +8
+*Effets — désormais visibles au HUD :* niamh +14
 
-**Parler des planches neuves** — *audacieuse* · druides · épreuve logic/white · échec −5 PV · EV +0.40
+**Parler des planches neuves** — *audacieuse* · druides · épreuve logic/white · échec −5 PV · EV +1.84
 
 > **Réussite.** Tu dis que les planches neuves ne menent pas au bourg mais s'enfoncent dans le marais. Elle te laisse finir. « On rallonge le chemin quand la tourbe monte », dit-elle, et ce n'est pas une reponse.
 
 > **Échec.** Tu parles des planches et tu vas trop loin, jusqu'a dire que quelqu'un les entretient. Elle souffle la moitie des chandelles avant de repondre, et ne repond pas.
 
-*Effets — désormais visibles au HUD :* druides +10
+*Effets — désormais visibles au HUD :* druides +16
 
 
 ### Carte 10 — acte 2 · MERLIN_DIRECT · EPIQUE · *peur*
@@ -370,13 +370,13 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 **Situation.** La voix s'est tue avec les cendres. Tu dors mal sur le banc. Vers le milieu de la nuit, trois oiseaux se levent de la meme touffe de bruyere, sans qu'aucun bruit ne les ait leves.
 
-**Ne pas bouger** — *prudente* · anciens · épreuve volonte/white · échec −3 PV · EV +0.24
+**Ne pas bouger** — *prudente* · anciens · épreuve volonte/white · échec −3 PV · EV +1.44
 
 > **Réussite.** Tu restes couche, les yeux ouverts. Les oiseaux se reposent plus loin. Entre les deux, quelque chose a traverse la bruyere sans faire un bruit.
 
 > **Échec.** Tu restes couche et le sommeil te reprend malgre toi. Quand tu rouvres les yeux, la barre de la porte est retiree et posee contre le mur.
 
-*Effets — désormais visibles au HUD :* anciens +6
+*Effets — désormais visibles au HUD :* anciens +6 · vie +2
 
 **Ecouter a la porte** — *equilibree* · korrigans · épreuve instinct/white · échec −4 PV · EV +0.32
 
@@ -473,13 +473,13 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 *Effets — désormais visibles au HUD :* druides +8
 
-**Proposer de rester un jour** — *audacieuse* · niamh · épreuve empathie/white · échec −5 PV · EV +0.40
+**Proposer de rester un jour** — *audacieuse* · niamh · épreuve empathie/white · échec −5 PV · EV +2.20
 
 > **Réussite.** Tu dis que tu peux rester un jour de plus, si ca aide. Elle refuse de la tete — mais elle met une buche dans le feu eteint, la premiere depuis que tu es entre.
 
 > **Échec.** Tu proposes de rester et l'offre tombe comme une pitie. Elle repond qu'elle n'a besoin de personne, et cette fois assez fort pour que ca s'entende dehors.
 
-*Effets — désormais visibles au HUD :* niamh +10
+*Effets — désormais visibles au HUD :* niamh +10 · vie +3
 
 
 ### Carte 15 — acte 3 · NARRATIVE · RARE · *fascination*
@@ -502,13 +502,13 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 *Effets — désormais visibles au HUD :* druides +8
 
-**Emporter l'assiette pleine** — *audacieuse* · ankou · épreuve instinct/white · échec −5 PV · EV +0.40
+**Emporter l'assiette pleine** — *audacieuse* · ankou · épreuve instinct/white · échec −5 PV · EV +2.20
 
 > **Réussite.** Tu emportes l'assiette froide, couverte d'un linge. Tu ne saurais pas dire pourquoi, sinon qu'on ne laisse pas un repas servi a personne.
 
 > **Échec.** Tu prends l'assiette et le linge accroche la table ; le plat se renverse sur le banc ou tu as dormi. Tu pars en laissant ca derriere toi.
 
-*Effets — désormais visibles au HUD :* ankou +10
+*Effets — désormais visibles au HUD :* ankou +10 · vie +3
 
 
 ### Carte 16 — acte 4 · NARRATIVE · COMMUNE · *curiosite*
@@ -618,13 +618,13 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 *Effets — désormais visibles au HUD :* druides +8
 
-**Entrer dans l'abri** — *audacieuse* · korrigans · épreuve instinct/white · échec −5 PV · EV +0.40
+**Entrer dans l'abri** — *audacieuse* · korrigans · épreuve instinct/white · échec −5 PV · EV +2.20
 
 > **Réussite.** Tu te glisses sous la berge. Il fait chaud, ca sent l'homme et la fumee, et il y a quelqu'un assis contre la paroi qui ne bouge pas plus qu'une pierre.
 
 > **Échec.** Tu te glisses sous la berge et l'entree se referme sur tes epaules. Tu recules a plat ventre, la tourbe dans la bouche, sans avoir rien vu.
 
-*Effets — désormais visibles au HUD :* korrigans +10
+*Effets — désormais visibles au HUD :* korrigans +10 · vie +3
 
 
 ### Carte 20 — acte 4 · PROMISE · EPIQUE · *tension*
@@ -734,13 +734,13 @@ Les `effects` listés sous chaque option sont le **gain en cas de réussite**. L
 
 *Effets — désormais visibles au HUD :* druides +8
 
-**Dire tout de suite ou tu es alle** — *audacieuse* · niamh · épreuve empathie/white · échec −5 PV · EV +0.40
+**Dire tout de suite ou tu es alle** — *audacieuse* · niamh · épreuve empathie/white · échec −5 PV · EV +2.20
 
 > **Réussite.** Tu le dis avant qu'elle demande : la branche neuve, la fosse, la berge. Elle ne t'interrompt pas. A la fin elle s'assied, pour la premiere fois depuis que tu es entre dans cette maison.
 
 > **Échec.** Tu commences a raconter et tu prends le probleme par le mauvais bout. A « la berge creusee », elle leve la main et te dit de ne pas continuer sur le seuil.
 
-*Effets — désormais visibles au HUD :* niamh +10
+*Effets — désormais visibles au HUD :* niamh +10 · vie +3
 
 
 ### Carte 24 — acte 5 · NARRATIVE · COMMUNE · *tension*
