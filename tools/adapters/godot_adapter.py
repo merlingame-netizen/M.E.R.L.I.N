@@ -16,7 +16,15 @@ from tools.adapters.base_adapter import BaseAdapter
 
 # ── Constants ───────────────────────────────────────────────────────────────
 
-PROJECT_ROOT = Path(r"C:\Users\PGNK2128\Godot-MCP")
+# Racine du projet Godot. Etait un chemin Windows en dur
+# (C:\Users\PGNK2128\Godot-MCP) : la CLI ne fonctionnait que sur une seule
+# machine, et echouait partout ailleurs — y compris en CI et dans les
+# conteneurs. On la derive du fichier lui-meme (tools/adapters/x.py -> racine),
+# avec MERLIN_PROJECT_ROOT comme surcharge explicite.
+PROJECT_ROOT = Path(
+    os.environ.get("MERLIN_PROJECT_ROOT")
+    or Path(__file__).resolve().parent.parent.parent
+)
 
 _GODOT_CANDIDATES = [
     Path(r"C:\Users\PGNK2128\Godot\Godot_v4.5.1-stable_win64_console.exe"),
