@@ -2871,8 +2871,6 @@ func _run_live_loop() -> void:
 		# v5.2 — track current act for the "Carte X / 5" HUD label.
 		_live_acts_played = act_idx
 		_refresh_hud()
-		# Animate the act indicator (top-center, color-coded by type).
-		JuiceHelpers.update_act_indicator(self, _hud_act_label, act_idx, total_acts, act_type)
 		_live_pending_choice = -1
 		# v6.1 — Hide the legacy parchemin overlay 2D throughout the live loop.
 		# All card text/options now display on the LiveCard3D (Hand of Fate style).
@@ -2885,8 +2883,14 @@ func _run_live_loop() -> void:
 
 		# Fetch a card filtered to this act type (LLM first, fallback pool filtered).
 		var card: Dictionary = await _fetch_card_for_act(act_type)
-		push_warning("[BoardNarration] carte %d/%d (%s) : %s" % [
-			act_idx + 1, total_acts, act_type, str(card.get("id", "?"))])
+		# Indicateur d'acte : le RYTHME (5 actes canoniques), pas la progression.
+		# Le compteur « Carte X / N » porte deja la progression ; confondre les
+		# deux effacait les cinq actes du plateau (bible §6.1 + §19.1).
+		JuiceHelpers.update_act_indicator(self, _hud_act_label,
+			_scenario_act_of(card, act_idx) - 1, ACTES_CANONIQUES, act_type)
+		push_warning("[BoardNarration] carte %d/%d — acte %d/%d (%s) : %s" % [
+			act_idx + 1, total_acts, _scenario_act_of(card, act_idx),
+			ACTES_CANONIQUES, act_type, str(card.get("id", "?"))])
 		if card.is_empty() or not card.has("options"):
 			if _card_text_label and is_instance_valid(_card_text_label):
 				_card_text_label.text = "[i]Le silence répond à l'appel. Aucune carte ne vient.[/i]"
@@ -3143,6 +3147,21 @@ var _scripted_scenario: Dictionary = {}
 var _scripted_cards: Array = []
 var _scripted_act_seq: Array = []
 var _scripted_rng := RandomNumberGenerator.new()
+
+## Les cinq actes canoniques — ouverture, pacte, epreuve, bascule, climax
+## (bible §30.1). Ils ne dependent PAS de la longueur du run : un scenario de
+## 25 cartes reste un scenario en cinq actes, a cinq cartes par acte.
+const ACTES_CANONIQUES := 5
+
+
+## Acte (1-5) de la carte courante. Le scenario scripte le porte ; sinon on le
+## projette sur la position dans le run.
+func _scenario_act_of(card: Dictionary, idx: int) -> int:
+	var a: int = int(card.get("scenario_act", 0))
+	if a >= 1 and a <= ACTES_CANONIQUES:
+		return a
+	var total: int = maxi(_act_sequence().size(), 1)
+	return clampi(idx * ACTES_CANONIQUES / total + 1, 1, ACTES_CANONIQUES)
 var _card_badge_label: RichTextLabel = null
 var _hud_life_bar: ProgressBar = null
 var _hud_life_value_label: Label = null
@@ -3191,6 +3210,8 @@ func _tr_hud_snapshot() -> Dictionary:
 		"anam_affiche": int(meta.get("anam", 0)) + _run_anam_earned,
 		"compteur_cartes": "Carte %d / %d" % [
 			clampi(_live_acts_played + 1, 1, total_acts), total_acts],
+		"indicateur_acte": "Acte %d / %d" % [
+			_scenario_act_of(_live_current_card, _live_acts_played), ACTES_CANONIQUES],
 		"factions_backend": (meta.get("faction_rep", {}) as Dictionary).duplicate(true),
 		"tags_actifs": (run.get("active_tags", []) as Array).duplicate(),
 		"promesses_actives": (run.get("active_promises", []) as Array).size(),
