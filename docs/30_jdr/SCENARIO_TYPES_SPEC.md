@@ -1,6 +1,6 @@
 # ᚛ SCÉNARIOS TYPES — SPÉCIFICATION CANON ᚜
 
-**Version** : 1.1 — 2026-07-26
+**Version** : 1.2 — 2026-07-27
 **Statut** : Source de vérité pour le contrôle d'écriture + l'équilibrage des scénarios
 
 > ⚠ **Écrasements du 2026-07-26** — trois points de ce document ne sont plus canon.
@@ -10,7 +10,14 @@
 > |---|---|
 > | §2.2 Routes (branchement 3 pôles) | **ABANDONNÉ** — branchement narratif, séquence unique (bible §31.3) |
 > | §3 summaries 8-22 mots appliqués aux cartes | **CORRIGÉ** — `text` 18-38 mots à l'écran, `summary` 8-22 mots pour le skeleton (bible §32.1c) |
-> | §8 golden « Le Rite des Neuf Souffles » | **REMPLACÉ** par « La Dette de Tourbe », 11 cartes, linéaire (bible §32) |
+> | §8 golden « Le Rite des Neuf Souffles » | **REMPLACÉ** par « Deux Assiettes », 25 cartes, linéaire (bible §32) |
+>
+> **Écrasements du 2026-07-27 (bible §33)** — deux règles s'ajoutent, non négociables :
+>
+> | Règle | Effet sur ce document |
+> |---|---|
+> | §33.1 **Le voyageur ne sait rien** | aucun passé partagé, aucune dette antérieure, aucun nom su d'avance. Tout s'apprend dans le scénario. `writing_constraints.voyageur.interdit` liste les formules bannies ; le validateur les refuse (`MEMOIRE_INTERDITE`). |
+> | §33.2 **Aucune ellipse** | deux cartes consécutives sont contiguës ; un geste se décompose en ses temps (approcher, frapper, attendre, qu'on ouvre, entrer, s'asseoir). Vérifié par `CONTINUITE_ROMPUE`. Conséquence : à cette granularité une histoire tient en 21-25 cartes, pas en 11. |
 >
 > Deux règles s'ajoutent : les `effects` d'une option sont le **gain de réussite**, le
 > risque vit dans `fail_damage` (§32.1a) ; le mix d'épreuves de §5.2 se mesure **par

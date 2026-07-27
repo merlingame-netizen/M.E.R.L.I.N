@@ -1,4 +1,4 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.1
+# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.2
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
@@ -1819,24 +1819,32 @@ graine de variation, la porte de nouveauté, et tout l'outillage de mesure.
 
 ---
 
-## 32. Scénario type de référence — « La Dette de Tourbe » (v4.1)
+## 32. Scénario type de référence — « Deux Assiettes » (v4.2)
 
-> **Ajout 2026-07-26.** Remplace le golden « Le Rite des Neuf Souffles », bâti sur les
-> 3 routes abandonnées (§31.3). Écrit à la main dans `tools/build_scenario_type.py`,
-> rendu lisible dans `docs/30_jdr/SCENARIO_TYPE_REFERENCE.md`, sérialisé dans
+> **Ajout 2026-07-26, refait le 2026-07-27.** Remplace le golden « Le Rite des Neuf
+> Souffles » (3 routes abandonnées, §31.3) puis « La Dette de Tourbe » (passé partagé
+> et ellipses, §33). Écrit à la main dans `tools/build_scenario_type.py`, rendu lisible
+> dans `docs/30_jdr/SCENARIO_TYPE_REFERENCE.md`, sérialisé dans
 > `data/ai/scenario_type_reference.json`. **Score validateur strict : 100/100.**
 
 C'est la **cible de forme** que la génération LLM doit atteindre — jamais un modèle de
 contenu à recopier (`generation_contract` interdit le few-shot de contenu). Sa fonction :
-rendre chaque règle de §30 et §31 vérifiable sur un objet complet.
+rendre chaque règle de §30, §31 et §33 vérifiable sur un objet complet.
 
 | Attribut | Valeur |
 |---|---|
 | Archétype | `mist_wanderer` — pôle Liminal, twist `lost_then_found` |
-| Longueur | **11 cartes** (borne basse de `canonical_lengths`, §31.1) |
-| Branchement | narratif : séquence unique, 2 résolutions variables selon l'état |
+| Longueur | **25 cartes** — la granularité de §33.2 ne tient pas en moins |
+| Prémisse | un voyageur cherche un toit pour la nuit ; il ne connaît personne (§33.1) |
+| Branchement | narratif : séquence unique, 3 résolutions variables selon l'état |
 | Graine de variation | tourbière / un vivant qu'on croit mort / une dette à honorer / odeur / identité |
-| Grammaire | 33 options, **33 résolutions narrées**, 0 chiffre dans les résolutions |
+| Grammaire | 75 options, **75 résolutions de réussite + 75 d'échec**, 0 chiffre dedans |
+
+**L'ouverture, carte par carte** — c'est elle qui montre ce que « aucune ellipse » veut
+dire : `1` le chemin de planches · `2` la maison, fenêtre allumée, cheminée froide ·
+`3` le seuil et les bottes sèches · `4` on frappe, rien ne répond · `5` la porte s'ouvre
+d'une main, une lampe, une femme · `6` elle s'efface pour te laisser passer · `7` la
+table mise pour deux. Sept cartes pour franchir une porte.
 
 ### 32.1 Trois règles que ce scénario a fixées
 
@@ -1864,11 +1872,13 @@ confondre faisait échouer 11 cartes sur 11 sur une contrainte qui ne les visait
 
 ### 32.2 Profil d'équilibrage obtenu
 
-Écart d'EV entre options : **0.16 à 1.52 PV-eq** sur les 11 cartes, tolérance 2.0.
-L'option prudente n'est optimale que sur 5 cartes, ≤ 2 par acte : pas de safe-spam.
-Répartition des factions sur 33 options — anciens 8, druides 8 (24 %, sous le plafond de
-30 %), korrigans 6, ankou 6, niamh 5 (15 %, au-dessus du plancher de 8 %) : les quatre
-builds de stat sont nourris.
+Écart d'EV entre options : **0.16 à 1.52 PV-eq** sur les 25 cartes, tolérance 2.0.
+L'option prudente n'est optimale que sur 7 cartes, ≤ 2 par acte : pas de safe-spam.
+Mix d'épreuves par carte : 18 blanches (72 %), 5 contextuelles (20 %), 2 rouges
+télégraphiées (8 %, actes IV et V, quatre cartes d'écart).
+Répartition des factions sur 75 options — druides 22 (29 %, sous le plafond de 30 %),
+anciens 20, niamh 15, korrigans 11, ankou 7 (9 %, au-dessus du plancher de 8 %) : les
+quatre builds de stat sont nourris.
 
 ### 32.3 Ce qui reste à câbler côté moteur
 
@@ -1880,8 +1890,94 @@ Le scénario est conforme au contrat ; le moteur ne sait pas encore tout en serv
 | `outcome_variants` conditionnés par marqueur / promesse rompue | ❌ à implémenter |
 | Longueur de run variable (11-25) | ❌ `ACT_SEQUENCE` en dur à 5 cartes |
 | Affichage numérique des 5 réputations (§31.2) | ❌ à implémenter |
-| Épreuves de stats (`check`) résolues en jeu | ❌ le moteur ne lit pas encore `check` |
+| Épreuves de stats (`check`) résolues en jeu | ✅ câblé v7.7.29 (`_resolve_scripted_check`) |
+| `outcome_variants` conditionnés par l'état | ✅ câblé v7.7.29, vérifié sur un run réel |
+| Longueur de run variable (11-25) | ✅ câblé v7.7.29 (`_act_sequence()`) |
+| Affichage numérique des 5 réputations (§31.2) | ❌ à implémenter |
 
 ---
 
-*Fin de bible v4.1*
+## 33. Décisions du 2026-07-27 — Le voyageur et la continuité (ÉCRASE §30, §32)
+
+> Deux règles posées par l'utilisateur en regardant le run de « La Dette de Tourbe »
+> se dérouler. Elles invalident le scénario de référence v4.1 et la façon dont
+> tous les scénarios étaient écrits jusqu'ici.
+
+### 33.1 Le voyageur ne sait rien — AUCUN PASSÉ PARTAGÉ
+
+**Le joueur est un voyageur.** Il traverse un monde géré par Merlin. Il connaît
+peu les lieux et **ne connaît personne**. Il n'a pas d'histoire commune avec les
+personnages qu'il croise : ni dette antérieure, ni ami, ni promesse d'avant le
+run, ni nom su d'avance.
+
+**Interdit dans tout texte de carte, d'intro ou de résolution :**
+
+| Formule | Pourquoi c'est faux |
+|---|---|
+| « Il y a un an, Maël Kerlan… » | invente un passé que le joueur n'a pas vécu |
+| « Tu lui devais trois pièces » | invente une dette antérieure au run |
+| « Tu le reconnais » / « ton vieil ami » | invente une relation préexistante |
+| « Tu te souviens de ce village » | invente une mémoire du lieu |
+| « Comme la dernière fois » | invente une visite antérieure |
+
+**Ce qui remplace :** tout ce que le joueur sait, il l'**apprend dans le
+scénario** — par ce qu'il voit, ce qu'on lui dit, ce qu'il déduit. Sa motivation
+vient de la **situation présente** : il cherche un gîte, il suit une lumière, on
+lui demande un service, il est pris dedans. Jamais d'un passé raconté.
+
+Les noms propres se **découvrent** : un personnage est « une femme à la lampe »
+tant que personne ne l'a nommé. La dette, s'il y en a une, appartient aux gens
+qu'il rencontre — le voyageur ne fait qu'entrer dedans.
+
+**Levier canon disponible** : l'hospitalité est sacrée en Brocéliande (on ne
+refuse pas un voyageur). C'est une raison suffisante pour qu'une porte s'ouvre,
+et elle ne suppose aucun passé.
+
+### 33.2 Continuité de scène — AUCUNE ELLIPSE
+
+**Deux cartes consécutives sont contiguës.** La carte N+1 reprend exactement où
+la résolution de la carte N s'est arrêtée : même lieu, même minute, mêmes
+personnes présentes — sauf si une carte montre explicitement le déplacement ou
+le temps qui passe.
+
+Le défaut constaté le 2026-07-27 : carte 1 on examine des bottes sur un seuil,
+carte 2 une veuve pose trois pièces sur une table. **On n'a jamais frappé, on
+n'a jamais vu la porte s'ouvrir, personne ne nous a fait entrer, on ne s'est pas
+assis.** Le scénario saute des moments et le joueur perd le fil de sa propre
+histoire.
+
+**Un geste se décompose en ses temps.** Arriver devant une porte, ce n'est pas
+une carte : c'est
+`approcher` → `frapper` → `attendre` → `on ouvre` → `les premiers mots` →
+`entrer` → `s'installer`. Chacun de ces temps peut porter ses trois options.
+
+**Règle opératoire pour l'écriture et la génération :**
+
+1. La situation d'une carte **cite un élément concret** de la résolution
+   précédente — le lieu, l'objet, le témoin, la trace. Sans ce fil, il y a
+   ellipse.
+2. Tout changement de lieu ou de temps a **sa propre carte** : le trajet,
+   l'attente, la nuit qui tombe. On ne se téléporte pas entre deux cartes.
+3. Une carte = **un battement continu**, pas un résumé de plusieurs moments.
+4. Ce qui vient d'être obtenu reste acquis à la carte suivante : une porte
+   ouverte ne se referme pas sans qu'on le montre.
+
+**Conséquence sur la longueur.** À cette granularité, une histoire tient en
+**21-25 cartes**, pas en 11. Une histoire courte s'écrit en montrant *moins
+d'événements plus finement*, jamais en sautant des moments. Les longueurs
+canoniques ne changent pas ; c'est l'ampleur de l'intrigue qui s'ajuste.
+
+### 33.3 Ce que ces décisions invalident
+
+| Livrable | État |
+|---|---|
+| Scénario de référence « La Dette de Tourbe » v4.1 (11 cartes) | **à refaire** — passé partagé + ellipses |
+| Son intro (« Il y a un an… Tu lui devais trois pièces ») | **interdite** par §33.1 |
+| Longueur 11 comme cible du scénario de référence | remplacée par 25 |
+
+Restent valides : la couche mécanique (épreuves, gradient, EV, mix), la grammaire
+de carte à quatre beats, les résolutions d'échec, la graine de variation.
+
+---
+
+*Fin de bible v4.2*

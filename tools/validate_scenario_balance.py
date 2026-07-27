@@ -272,6 +272,77 @@ def check_writing(s: dict, tpl: dict, findings: list):
                                 f"{bad_factions}/{total} cartes sans 3 factions distinctes"))
 
 
+# ------------------------------------------------- voyageur & continuite --
+
+def _sans_accents(txt: str) -> str:
+    table = str.maketrans("aaaaeeeeiiiooouuuc", "aaaaeeeeiiiooouuuc")
+    out = []
+    for ch in txt.lower():
+        out.append({"à": "a", "â": "a", "ä": "a", "é": "e", "è": "e", "ê": "e",
+                    "ë": "e", "î": "i", "ï": "i", "ô": "o", "ö": "o", "û": "u",
+                    "ù": "u", "ü": "u", "ç": "c"}.get(ch, ch))
+    return "".join(out).translate(table)
+
+
+MOTS_VIDES = {
+    "le", "la", "les", "un", "une", "des", "du", "de", "au", "aux", "et", "ou",
+    "que", "qui", "quoi", "dont", "ce", "cet", "cette", "ces", "son", "sa", "ses",
+    "ton", "ta", "tes", "mon", "ma", "mes", "il", "elle", "on", "tu", "je", "nous",
+    "vous", "ils", "elles", "pas", "ne", "plus", "est", "sont", "etre", "avoir",
+    "dans", "sur", "sous", "pour", "par", "avec", "sans", "vers", "chez", "comme",
+    "mais", "donc", "car", "si", "quand", "tout", "toute", "tous", "toutes", "en",
+    "y", "a", "d", "l", "s", "n", "c", "j", "t", "m", "qu", "se", "sa", "leur",
+    "leurs", "plus", "moins", "tres", "bien", "encore", "deja", "rien", "fait",
+}
+
+
+def mots_concrets(txt: str) -> set:
+    """Mots porteurs de reference : lieu, objet, temoin, trace."""
+    import re as _re
+    return {w for w in _re.findall(r"[a-zA-Z\u00c0-\u017f]+", _sans_accents(txt))
+            if len(w) > 3 and w not in MOTS_VIDES}
+
+
+def check_voyageur_et_continuite(s: dict, tpl: dict, findings: list):
+    """Bible §33 — le voyageur n'a pas de passe, et les cartes ne sautent rien."""
+    w = tpl["writing_constraints"].get("voyageur", {})
+    interdits = [_sans_accents(x) for x in w.get("interdit", [])]
+    cards = s.get("cards", [])
+
+    # 33.1 — aucun passe partage. On scanne intro, hook, essence et tous les textes.
+    zones = [("intro", s.get("intro", "")), ("hook", s.get("hook", "")),
+             ("essence", s.get("essence", ""))]
+    for c in cards:
+        cid = c.get("card_id", "?")
+        zones.append((f"{cid}.text", c.get("text", c.get("summary", ""))))
+        for i, o in enumerate(c.get("options", [])):
+            zones.append((f"{cid}.opt{i}.outcome", o.get("outcome", "")))
+            zones.append((f"{cid}.opt{i}.outcome_fail", o.get("outcome_fail", "")))
+            for v in o.get("outcome_variants", []):
+                zones.append((f"{cid}.opt{i}.variante", v.get("texte", "")))
+    for nom, txt in zones:
+        plat = _sans_accents(str(txt))
+        for motif in interdits:
+            if motif and motif in plat:
+                findings.append(Finding("error", "MEMOIRE_INTERDITE",
+                                        f"{nom}: « {motif} » — le voyageur ne connait "
+                                        "personne et n'a pas de passe ici (bible §33.1)"))
+
+    # 33.2 — continuite : chaque carte partage un element concret avec la precedente.
+    for a, b in zip(cards, cards[1:]):
+        ta = str(a.get("text", a.get("summary", "")))
+        tb = str(b.get("text", b.get("summary", "")))
+        # Les resolutions de la carte A font partie du fil : c'est d'elles que
+        # part la carte B — la reussite comme l'echec, puisque le joueur a lu
+        # l'une des deux.
+        for o in a.get("options", []):
+            ta += " " + str(o.get("outcome", "")) + " " + str(o.get("outcome_fail", ""))
+        if not (mots_concrets(ta) & mots_concrets(tb)):
+            findings.append(Finding("error", "CONTINUITE_ROMPUE",
+                                    f"{b.get('card_id')}: aucun element concret partage "
+                                    f"avec {a.get('card_id')} — ellipse (bible §33.2)"))
+
+
 # ------------------------------------------------------------------ balance --
 
 def act_of(idx: int, n: int) -> int:
@@ -547,6 +618,7 @@ def validate(scenarios: list, tpl: dict, strict: bool = False):
         findings: list = []
         check_structure(s, tpl, findings)
         check_writing(s, tpl, findings)
+        check_voyageur_et_continuite(s, tpl, findings)
         check_balance(s, tpl, findings, agg)
         if strict:
             check_strict(s, tpl, findings)

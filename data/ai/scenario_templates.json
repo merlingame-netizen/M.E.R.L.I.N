@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "version": "2.3.0",
+  "version": "2.4.0",
   "date": "2026-07-25",
   "description": "Scenarios types canon — contrat d'ecriture + equilibrage mathematique des scenarios generes par le pipeline 4-LLM (titres -> intro -> skeleton -> cartes). Source de verite machine-readable, jumele avec docs/30_jdr/SCENARIO_TYPES_SPEC.md. Consomme par tools/validate_scenario_balance.py et (a terme) scenario_planner.gd::_balance_skeleton.",
   "bible_ref": "GAME_DESIGN_BIBLE.md v4.0 (section 31 : decisions du 2026-07-26)",
@@ -11,7 +11,7 @@
    "gloomhaven": "deblocages de cartes par reputation de faction (deck unlocks)",
    "disco_elysium": "checks de stats white/red, echec = branche narrative, build par accumulation de choix"
   },
-  "updated": "2026-07-26"
+  "updated": "2026-07-27"
  },
  "writing_constraints": {
   "title": {
@@ -71,7 +71,31 @@
    "curiosite"
   ],
   "jaccard_max_vs_references": 0.5,
-  "forbidden_words_ref": "data/ai/config/merlin_persona.json + docs/50_lore/NARRATIVE_GUARDRAILS.md (bible 9.4.2)"
+  "forbidden_words_ref": "data/ai/config/merlin_persona.json + docs/50_lore/NARRATIVE_GUARDRAILS.md (bible 9.4.2)",
+  "voyageur": {
+   "_regle": "Le joueur est un VOYAGEUR : il traverse un monde gere par Merlin, connait peu les lieux et NE CONNAIT PERSONNE. Aucun passe partage avec un personnage : ni dette anterieure, ni ami, ni promesse d'avant le run, ni nom su d'avance. Bible §33.1.",
+   "interdit": [
+    "il y a un an",
+    "il y a des annees",
+    "tu lui devais",
+    "tu leur devais",
+    "tu te souviens",
+    "tu reconnais",
+    "tu le reconnais",
+    "tu la reconnais",
+    "ton ami",
+    "ton vieil ami",
+    "ton frere",
+    "ta soeur",
+    "comme autrefois",
+    "comme la derniere fois",
+    "depuis toujours tu",
+    "tu avais promis"
+   ],
+   "remplace_par": "Tout ce que le joueur sait, il l'apprend DANS le scenario : ce qu'il voit, ce qu'on lui dit, ce qu'il deduit. Sa motivation vient de la situation presente (chercher un gite, suivre une lumiere, rendre un service demande), jamais d'un passe raconte.",
+   "noms_propres": "Un personnage reste designe par ce qu'on en voit (« une femme a la lampe ») tant que personne ne l'a nomme dans la scene.",
+   "levier_canon": "L'hospitalite est sacree en Broceliande : on ne refuse pas un voyageur. C'est une raison suffisante pour qu'une porte s'ouvre, et elle ne suppose aucun passe."
+  }
  },
  "structure_constraints": {
   "canonical_lengths": [
@@ -149,7 +173,8 @@
   "beat_act_sequence_mapping": {
    "_comment": "Pour un skeleton de N beats (5-10) : prendre les N-1 premieres entrees puis 'boss' en derniere position (clamp scenario_planner.gd). Vocab acte -> CardType : standard=NARRATIVE, shop=SHOP, event=EVENT, boss=MERLIN_DIRECT (const ACT_TYPE_TO_CARDTYPE). Pour les longueurs jouees 11-25, la projection se fait par actes (5 actes egaux, roles §2.1 de la spec)."
   },
-  "length_rule": "variable selon l'archetype (length_bias), parmi canonical_lengths. Toutes les regles chiffrees se projettent sur N, jamais sur 25 en dur."
+  "length_rule": "variable selon l'archetype (length_bias), parmi canonical_lengths. Toutes les regles chiffrees se projettent sur N, jamais sur 25 en dur.",
+  "longueur_et_granularite": "A la granularite exigee par bible §33.2, une histoire tient en 21-25 cartes, pas en 11. Une histoire courte s'ecrit en montrant MOINS D'EVENEMENTS PLUS FINEMENT, jamais en sautant des moments. Les longueurs canoniques ne changent pas ; c'est l'ampleur de l'intrigue qui s'ajuste."
  },
  "balance_model": {
   "exchange_rates_pv_equivalent": {
@@ -636,9 +661,9 @@
    "difficulty": "medium",
    "danger_modifier": 1.0,
    "length_bias": [
-    11,
     15,
-    21
+    21,
+    25
    ],
    "emotional_palette": [
     "curiosite",
@@ -664,7 +689,8 @@
    "params": {
     "veiled_card_share": 0.3,
     "veiled_counter_rune": "beith"
-   }
+   },
+   "_length_bias_note": "11 retire le 2026-07-27 : a la granularite de bible §33.2 (aucune ellipse, un geste se decompose en ses temps), l'arc egarement -> retrouvailles ne tient pas en 11 cartes."
   },
   "forest_trial": {
    "name": "L'Épreuve de la Forêt",
@@ -1073,7 +1099,12 @@
    "_comment": "« Une suite logique » : deux cartes consecutives ne peuvent pas etre independantes. Trois mecanismes, du plus fort au plus faible.",
    "sequences_ordonnees": "les cartes portant un `arc` + `arc_stage` racontent une histoire en plusieurs temps : leur ordre EST le sens. Une etape n'est jouable que si la precedente a ete jouee dans ce run. Enforce v7.7.28 dans _pick_fallback_card.",
    "report_d_etat": "la resolution de la carte N est injectee dans le contexte de generation de la carte N+1 : le LLM ecrit en sachant ce qui vient de se produire.",
-   "echo_minimal": "a defaut, la carte suivante doit au moins partager un element concret avec la precedente — lieu, temoin, objet, trace."
+   "echo_minimal": "a defaut, la carte suivante doit au moins partager un element concret avec la precedente — lieu, temoin, objet, trace.",
+   "aucune_ellipse": "Deux cartes consecutives sont CONTIGUES : la carte N+1 reprend exactement ou la resolution de la carte N s'est arretee — meme lieu, meme minute, memes personnes. Defaut constate le 2026-07-27 : carte 1 on examine des bottes sur un seuil, carte 2 une veuve pose trois pieces sur une table — on n'a jamais frappe, la porte ne s'est jamais ouverte, personne ne nous a fait entrer. Bible §33.2.",
+   "decoupage_des_gestes": "Un geste se decompose en ses temps. Arriver devant une porte n'est pas une carte, c'est : approcher -> frapper -> attendre -> on ouvre -> les premiers mots -> entrer -> s'installer. Chacun de ces temps peut porter ses trois options.",
+   "changement_de_lieu": "Tout changement de lieu ou de temps a SA PROPRE carte : le trajet, l'attente, la nuit qui tombe. On ne se teleporte pas entre deux cartes.",
+   "acquis_persistant": "Ce qui vient d'etre obtenu reste acquis a la carte suivante : une porte ouverte ne se referme pas sans qu'on le montre.",
+   "fil_concret": "La situation d'une carte CITE un element concret de la precedente — le lieu, l'objet, le temoin, la trace. Sans ce fil, il y a ellipse. C'est verifiable : validate_scenario_balance.py::CONTINUITE_ROMPUE."
   },
   "anti_pattern_constate": {
    "run_du_2026_07_26": [
