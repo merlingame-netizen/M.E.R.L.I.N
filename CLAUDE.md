@@ -272,7 +272,7 @@ python tools/cli.py godot validate              # validate.bat (toutes etapes)
 python tools/cli.py godot validate_step0        # Parse check headless uniquement
 python tools/cli.py godot test                  # GDScript test runner headless
 python tools/cli.py godot smoke --scene res://scenes/MerlinGame.tscn
-python tools/cli.py godot export web            # Export preset "web"
+python tools/cli.py godot export --preset Web   # Presets : Windows / Linux / Web
 python tools/cli.py godot list_presets          # Lister les presets disponibles
 python tools/cli.py godot telemetry             # Aggreger les stats gameplay JSON
 
