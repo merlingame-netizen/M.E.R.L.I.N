@@ -3587,3 +3587,19 @@ climax plein 2,4 OUT · greffes 3,88 (offerts 5,02). Hors-pool = 0 (DUR, chemin 
 - Gates : validate 0/0, smoke Game+Menu OK, soak 200/200, autoplay 3/3, bootcheck 5/5
 - Revue merlin-gameplay-programmer : 0 CRITICAL / 0 HIGH ; 1 MEDIUM applique (invariant sig+running poses ensemble apres le drain) ; 2 LOW notes
 - Post-review : validate 0/0, smoke Game OK, probes froid 2,2 s / warm 2,6 s re-verts ; re-gate soak+autoplay final lance
+
+## Session: 2026-07-27 : bible visuelle vivante + forêt Brocéliande (procédural enrichi)
+
+### Fait
+- [x] Bible visuelle régénérée : docs/MERLIN_BIBLE_SITE.html 133 Ko -> 171 Ko (datait du 14/06).
+      Correction d'analyse : generate_bible_site.py extrayait DÉJÀ la palette depuis merlin_visual.gd
+      (extract_palette / extract_font_sizes / extract_anim_vocab + .swatch CSS). Le "tokens extractor"
+      prévu au plan était redondant ; le vrai défaut était la FRAÎCHEUR, pas la capacité.
+- [x] sway_trees() : TRANS_ELASTIC -> TRANS_CUBIC. L'élastique dépassait ET oscillait ; un arbre ne rebondit pas.
+
+### Diagnostic forêt (3 causes, code lu, pas supposé)
+1. sway_trees() en TRANS_ELASTIC -> rebond parasite. CORRIGÉ.
+2. merlin_scene_art.gd:694 — les appelants font `base.x + _tree_sway * 0.8` : l'arbre entier GLISSE
+   latéralement, pied compris, au lieu de plier en cime.
+3. `_tree()` produit toujours le MÊME archétype (2 branches, 5 blobs de canopée) ; `tseed` dérivé de
+   base.x ne fait varier que la PHASE, pas la SILHOUETTE. 6 appels -> lecture "4 arbres identiques".

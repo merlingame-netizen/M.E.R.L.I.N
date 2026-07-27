@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M.E.R.L.I.N. — Bible Complète</title>
+  <style>
+:root {
+  --bg-page: #1E1A14;
+  --bg-deep: #14100C;
+  --surface: #2A2018;
+  --cream: #E8DCC0;
+  --gold: #C9A24B;
+  --gold-dark: #8A6A2E;
+  --green: #7FA65C;
+  --green-dark: #4F6B3E;
+  --violet: #7B4FA3;
+  --dim-warm: #9C8C6A;
+  --ink-dim: #6E5A3C;
+  --panel: #241E16;
+  --border-brun: #4A3B28;
+  --ring-bg: #3A3228;
+  --rare-blue: #5A7A8C;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg-page);
+  color: var(--cream);
+  font-family: 'EB Garamond','Garamond','Palatino Linotype','Georgia',serif;
+  font-size: 18px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.tab-bar {
+  position: sticky; top:0; z-index:100;
+  display: flex; flex-wrap: wrap; gap: 2px;
+  background: var(--bg-deep);
+  padding: 8px 16px;
+  border-bottom: 2px solid var(--gold-dark);
+}
+.tab-bar button {
+  background: var(--panel);
+  color: var(--dim-warm);
+  border: 1px solid var(--border-brun);
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  transition: background .15s, color .15s;
+}
+.tab-bar button:hover { background: var(--surface); color: var(--cream); }
+.tab-bar button.active {
+  background: var(--bg-page);
+  color: var(--gold);
+  border-bottom-color: var(--bg-page);
+  font-weight: bold;
+}
+
+.tab-panel { display:none; padding:24px 32px; max-width:1400px; margin:0 auto; }
+.tab-panel.active { display:block; }
+
+h1 { color: var(--gold); font-size: 2em; margin-bottom: 8px; }
+h2 { color: var(--gold); font-size: 1.5em; margin: 24px 0 12px; border-bottom: 1px solid var(--border-brun); padding-bottom: 4px; }
+h3 { color: var(--gold-dark); font-size: 1.2em; margin: 16px 0 8px; }
+
+p { margin: 8px 0; }
+
+a { color: var(--gold); text-decoration: underline; }
+a:hover { color: var(--cream); }
+
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+th { background: var(--panel); color: var(--gold); text-align:left; padding: 8px 12px; border: 1px solid var(--border-brun); font-size: 15px; }
+td { padding: 6px 12px; border: 1px solid var(--border-brun); font-size: 16px; vertical-align: top; }
+tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.metric-card {
+  background: var(--panel);
+  border: 1px solid var(--border-brun);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+}
+.metric-card .value { font-size: 2em; color: var(--gold); font-weight: bold; }
+.metric-card .label { color: var(--dim-warm); font-size: 14px; margin-top: 4px; }
+
+.swatch {
+  display: inline-block;
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border-brun);
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.tag-pill {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 4px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.card-example {
+  display: inline-block;
+  width: 180px;
+  background: var(--cream);
+  color: var(--surface);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px;
+  vertical-align: top;
+  position: relative;
+  min-height: 240px;
+}
+.card-example .card-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+.card-example .card-evo { font-style: italic; font-size: 13px; color: var(--ink-dim); margin: 6px 0; }
+.card-example .card-tags { margin: 6px 0; }
+.card-example .card-rarity { font-size: 12px; color: var(--dim-warm); text-align: right; }
+.card-example .card-arch {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 3px 8px;
+  font-size: 11px; font-weight: bold;
+  text-align: center;
+  color: white;
+  border-radius: 0 0 6px 6px;
+  letter-spacing: 1px;
+}
+.card-example .effect-badge {
+  position: absolute; top: 6px; right: 6px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: white;
+}
+.card-example .corruption-cost {
+  position: absolute; top: 6px; left: 6px;
+  font-size: 12px; font-weight: bold;
+  color: var(--violet);
+}
+
+.card-compact {
+  display: inline-block;
+  background: var(--cream); color: var(--surface);
+  border-radius: 4px; padding: 8px 10px;
+  margin: 4px; font-size: 13px;
+  vertical-align: top; width: 200px;
+}
+.card-compact .cn { font-weight: bold; font-size: 14px; }
+.card-compact .ct { color: var(--ink-dim); font-size: 12px; }
+
+details { margin: 8px 0; }
+details summary {
+  cursor: pointer; color: var(--gold-dark);
+  font-weight: bold; padding: 4px 0;
+}
+details summary:hover { color: var(--gold); }
+
+.formula-card {
+  background: var(--panel);
+  border: 1px solid var(--border-brun);
+  border-left: 4px solid var(--gold);
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 12px 0;
+}
+.formula-card .f-title { color: var(--gold); font-weight: bold; font-size: 1.1em; margin-bottom: 6px; }
+.formula-card code { background: var(--bg-deep); padding: 2px 6px; border-radius: 3px; font-family: 'Consolas',monospace; font-size: 15px; }
+.formula-card pre { background: var(--bg-deep); padding: 10px; border-radius: 4px; overflow-x: auto; font-family: 'Consolas',monospace; font-size: 14px; margin: 8px 0; line-height: 1.5; }
+.formula-card .f-example { color: var(--dim-warm); font-size: 15px; margin-top: 6px; }
+
+.search-box {
+  width: 100%; padding: 8px 12px;
+  background: var(--panel); color: var(--cream);
+  border: 1px solid var(--border-brun); border-radius: 4px;
+  font-family: inherit; font-size: 16px;
+  margin: 12px 0;
+}
+
+.rule-entry {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.rule-entry .rnum { color: var(--gold); font-weight: bold; margin-right: 8px; }
+.rule-entry .rtitle { color: var(--cream); }
+.rule-entry .rdesc { color: var(--dim-warm); font-size: 14px; display: block; margin-top: 2px; }
+
+.scene-card {
+  background: var(--panel);
+  border: 1px solid var(--border-brun);
+  border-radius: 6px;
+  padding: 14px;
+  margin: 8px 0;
+}
+.scene-card .sc-name { color: var(--gold); font-weight: bold; font-size: 1.15em; }
+
+footer {
+  text-align: center;
+  color: var(--dim-warm);
+  font-size: 13px;
+  padding: 24px;
+  border-top: 1px solid var(--border-brun);
+  margin-top: 32px;
+}
+</style>
+</head>
+<body>
+  <nav class="tab-bar">
+    <button data-tab="overview">Vue d’ensemble</button>
+    <button data-tab="scenes">Scènes</button>
+    <button data-tab="cards">Cartes</button>
+    <button data-tab="mechanics">Mécaniques</button>
+    <button data-tab="gauges">Jauges</button>
+    <button data-tab="llm">LLM / Gemma</button>
+    <button data-tab="assets">Assets</button>
+    <button data-tab="visual">Visuel</button>
+    <button data-tab="lore">Lore</button>
+    <button data-tab="audio">Audio</button>
+    <button data-tab="progression">Progression</button>
+    <button data-tab="architecture">Architecture</button>
+    <button data-tab="journal">Journal</button>
+    <button data-tab="formulas">Formules</button>
+    <button data-tab="screens">Écrans</button>
+  </nav>
+  <div class="tab-panel" id="tab-overview">
+<h1>M.E.R.L.I.N. — Bible Complète</h1>
+<p>Deck-building narratif celtique — Godot 4.5 + Gemma 4 E2B natif, 100% local.</p>
+<div class="metric-grid">
+<div class="metric-card"><div class="value">7</div><div class="label">Scènes</div></div>
+<div class="metric-card"><div class="value">39</div><div class="label">Scripts GD</div></div>
+<div class="metric-card"><div class="value">19,272</div><div class="label">Lignes de code</div></div>
+<div class="metric-card"><div class="value">1058</div><div class="label">Fichiers assets</div></div>
+<div class="metric-card"><div class="value">4</div><div class="label">Addons</div></div>
+<div class="metric-card"><div class="value">60</div><div class="label">Règles (Rn)</div></div>
+</div>
+<h2>Meta projet</h2>
+<table><tr><th>Clé</th><th>Valeur</th></tr>
+<tr><td>name</td><td>MERLIN</td></tr>
+<tr><td>main_scene</td><td>res://scenes/MerlinBoot.tscn</td></tr>
+<tr><td>features</td><td>4.5</td></tr>
+<tr><td>max_fps</td><td>60</td></tr>
+<tr><td>viewport_w</td><td>1920</td></tr>
+<tr><td>viewport_h</td><td>1080</td></tr>
+</table>
+<h2>Autoloads</h2>
+<table><tr><th>Singleton</th><th>Script</th></tr>
+<tr><td>MerlinNative</td><td><code>scripts/llm/merlin_native.gd</code></td></tr>
+<tr><td>TweaksOverlay</td><td><code>scripts/game/tweaks_overlay.gd</code></td></tr>
+<tr><td>MerlinRun</td><td><code>scripts/game/merlin_run.gd</code></td></tr>
+<tr><td>MerlinScenario</td><td><code>scripts/llm/merlin_scenario.gd</code></td></tr>
+<tr><td>MerlinDebugOverlay</td><td><code>scripts/game/merlin_debug_overlay.gd</code></td></tr>
+<tr><td>MerlinAudio</td><td><code>scripts/game/merlin_audio.gd</code></td></tr>
+<tr><td>MerlinOptions</td><td><code>scripts/game/merlin_options.gd</code></td></tr>
+<tr><td>MerlinTransition</td><td><code>scripts/game/merlin_transition.gd</code></td></tr>
+</table>
+
+  </div>
+  <div class="tab-panel" id="tab-scenes">
+<h1>Scènes</h1>
+<h2>Flow des 6 scènes canon</h2>
+<svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;margin:16px auto;display:block;">
+<defs><marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#C9A24B"/></marker></defs>
+<line x1="150" y1="120" x2="270" y2="120" stroke="#C9A24B" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="350" y1="120" x2="470" y2="120" stroke="#C9A24B" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="550" y1="120" x2="670" y2="120" stroke="#C9A24B" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="110" y1="140" x2="180" y2="220" stroke="#9C8C6A" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#ah)"/>
+<line x1="110" y1="140" x2="380" y2="220" stroke="#9C8C6A" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#ah)"/>
+<rect x="70" y="100" width="140" height="40" rx="6" fill="#2A2018" stroke="#C9A24B" stroke-width="1.5"/>
+<text x="140" y="125" fill="#E8DCC0" font-size="14" text-anchor="middle" font-family="Georgia,serif">MerlinMenu</text>
+<rect x="270" y="100" width="140" height="40" rx="6" fill="#2A2018" stroke="#C9A24B" stroke-width="1.5"/>
+<text x="340" y="125" fill="#E8DCC0" font-size="14" text-anchor="middle" font-family="Georgia,serif">MerlinSelection</text>
+<rect x="470" y="100" width="140" height="40" rx="6" fill="#2A2018" stroke="#C9A24B" stroke-width="1.5"/>
+<text x="540" y="125" fill="#E8DCC0" font-size="14" text-anchor="middle" font-family="Georgia,serif">MerlinGame</text>
+<rect x="670" y="100" width="140" height="40" rx="6" fill="#2A2018" stroke="#C9A24B" stroke-width="1.5"/>
+<text x="740" y="125" fill="#E8DCC0" font-size="14" text-anchor="middle" font-family="Georgia,serif">MerlinEnd</text>
+<rect x="170" y="220" width="140" height="40" rx="6" fill="#2A2018" stroke="#C9A24B" stroke-width="1.5"/>
+<text x="240" y="245" fill="#E8DCC0" font-size="14" text-anchor="middle" font-family="Georgia,serif">MerlinOptions</text>
+<rect x="370" y="220" width="140" height="40" rx="6" fill="#2A2018" stroke="#C9A24B" stroke-width="1.5"/>
+<text x="440" y="245" fill="#E8DCC0" font-size="14" text-anchor="middle" font-family="Georgia,serif">GemmaConsole</text>
+</svg><p>Flux principal : Menu → Selection → Game → End. Branches optionnelles vers Options et GemmaConsole.</p>
+<h2>Détail par scène</h2>
+<div class="scene-card"><span class="sc-name">GemmaConsole</span> — <code>scripts/llm/gemma_console.gd</code> (250 lignes)<p>REPL de debug pour tester les prompts LLM en direct. Outil développeur.</p></div>
+<div class="scene-card"><span class="sc-name">MerlinBoot</span> — <code>scripts/game/merlin_boot.gd</code> (325 lignes)<p></p></div>
+<div class="scene-card"><span class="sc-name">MerlinEnd</span> — <code>scripts/game/merlin_end.gd</code> (374 lignes)<p>Épilogue de fin de run : prose narrative, affichage final des jauges, fragment du Graal révélé.</p></div>
+<div class="scene-card"><span class="sc-name">MerlinGame</span> — <code>scripts/game/merlin_game.gd</code> (3587 lignes)<p>Boucle de jeu principale : situations narratives, main de cartes, zone de combo, résolution, jauges. HUD avec Intégrité/Corruption.</p></div>
+<div class="scene-card"><span class="sc-name">MerlinMenu</span> — <code>scripts/game/merlin_menu.gd</code> (1048 lignes)<p>Menu principal avec titre animé, boutons Nouvelle partie / Continuer / Options / Quitter. Musique céltique ambiante.</p></div>
+<div class="scene-card"><span class="sc-name">MerlinOptions</span> — <code>scripts/game/merlin_options.gd</code> (286 lignes)<p>Paramètres : audio (Master/Music/SFX), texte (vitesse, taille), accessibilité (reduce-motion), presets perf.</p></div>
+<div class="scene-card"><span class="sc-name">MerlinSelection</span> — <code>scripts/game/merlin_selection.gd</code> (345 lignes)<p>Choix entre 3 scénarios générés par le LLM (titre + pitch de 2-3 lignes). Fond de brume sombre.</p></div>
+
+  </div>
+  <div class="tab-panel" id="tab-cards">
+<h1>Système de Cartes</h1>
+<h2>Anatomie d’une carte</h2>
+<p>Chaque carte possède : <strong>nom</strong>, <strong>évocation</strong> (texte immersif), <strong>tags</strong> (pastilles colorées par famille), <strong>coût Corruption</strong> (0-3), <strong>rareté</strong> (= bordure), <strong>bande d’archétype</strong> (bas), et optionnellement un <strong>badge d’effet</strong> (coin haut-droit, Rare+).</p>
+<p>Toute carte peut être <strong>principale</strong> (action primaire) ou <strong>modificateur</strong> (amplifie/altère). Un geste = 1 principale + 0-2 modificateurs (3 cartes max).</p>
+<h2>4 niveaux de rareté</h2>
+<p>La rareté se lit d’un coup d’œil via la <strong>bordure</strong> (couleur + épaisseur) :</p>
+<div class="card-example" style="border: 3px solid #4A3B28">
+<div class="card-name">Le Regard Perçant</div>
+<div class="card-evo">« Tes yeux fendent l’ombre... »</div>
+<div class="card-tags"><span class="tag-pill" style="background:#C9A24B" title="Sens (Perception)"></span> <span style="font-size:13px">Sens</span> </div>
+<div class="card-rarity">Commune</div>
+<div class="card-arch" style="background:#6B5A9C">MYSTÈRE</div>
+</div>
+<div class="card-example" style="border: 3px solid #4A3B28">
+<div class="card-name">L’Œil du Druide</div>
+<div class="card-evo">« Tu lis les traces... »</div>
+<div class="card-tags"><span class="tag-pill" style="background:#C9A24B" title="Savoir (Perception)"></span> <span style="font-size:13px">Savoir</span> <span class="tag-pill" style="background:#C9A24B" title="Vigilance (Perception)"></span> <span style="font-size:13px">Vigilance</span> </div>
+<div class="card-rarity">Rare</div>
+<div class="card-arch" style="background:#6B5A9C">MYSTÈRE</div>
+</div>
+<div class="card-example" style="border: 3px solid #4A3B28">
+<div class="card-name">La Transe Druidique</div>
+<div class="card-evo">« La frontière s’efface... »</div>
+<div class="card-tags"><span class="tag-pill" style="background:#4F6B3E" title="Vision (Intuition)"></span> <span style="font-size:13px">Vision</span> <span class="tag-pill" style="background:#7FA6C9" title="Rituel (Monde)"></span> <span style="font-size:13px">Rituel</span> </div>
+<div class="card-rarity">Épique</div>
+<div class="card-arch" style="background:#6B5A9C">MYSTÈRE</div>
+</div>
+<div class="card-example" style="border: 3px solid #4A3B28; box-shadow: 0 0 12px #4A3B2888">
+<div class="card-name">Le Verbe Primordial</div>
+<div class="card-evo">« Ce mot existait avant... »</div>
+<div class="card-tags"><span class="tag-pill" style="background:#B5C04F" title="Verbe (Parole)"></span> <span style="font-size:13px">Verbe</span> <span class="tag-pill" style="background:#7FA6C9" title="Rituel (Monde)"></span> <span style="font-size:13px">Rituel</span> </div>
+<div class="card-rarity">Mythique</div>
+<div class="card-arch" style="background:#6B5A9C">MYSTÈRE</div>
+</div>
+<table><tr><th>Rareté</th><th>Bordure</th><th>Largeur</th><th>Effet supplémentaire</th></tr>
+<tr><td>Commune</td><td><span class="swatch" style="background:#888888"></span> #888888</td><td>3px</td><td>Aucun</td></tr>
+<tr><td>Rare</td><td><span class="swatch" style="background:#888888"></span> #888888</td><td>3px</td><td>Aucun</td></tr>
+<tr><td>Épique</td><td><span class="swatch" style="background:#888888"></span> #888888</td><td>3px</td><td>Légère lueur</td></tr>
+<tr><td>Mythique</td><td><span class="swatch" style="background:#888888"></span> #888888</td><td>3px</td><td>Lueur or + shimmer animé</td></tr>
+</table>
+<h2>6 familles de tags</h2>
+<p>Chaque tag appartient à une famille. La famille détermine la <strong>couleur de pastille</strong> affichée sur la carte.</p>
+<table><tr><th>Famille</th><th>Couleur</th><th>Tags membres</th></tr>
+<tr><td><span class="tag-pill" style="background:#C9A24B"></span> Perception</td><td>#C9A24B</td><td>Sens, Savoir, Mémoire, Vigilance</td></tr>
+<tr><td><span class="tag-pill" style="background:#A8703E"></span> Corps</td><td>#A8703E</td><td>Force, Agilité, Endurance, Finesse</td></tr>
+<tr><td><span class="tag-pill" style="background:#B5C04F"></span> Parole</td><td>#B5C04F</td><td>Empathie, Verbe, Ruse, Autorité, Franchise</td></tr>
+<tr><td><span class="tag-pill" style="background:#4F6B3E"></span> Intuition</td><td>#4F6B3E</td><td>Instinct, Nature, Vision</td></tr>
+<tr><td><span class="tag-pill" style="background:#7FA6C9"></span> Monde</td><td>#7FA6C9</td><td>Rituel, Sacrifice, Équilibre, Mystère</td></tr>
+<tr><td><span class="tag-pill" style="background:#7B4FA3"></span> Corrompu</td><td>#7B4FA3</td><td>Vide, Glitch, Dissolution, Murmure, Emprise</td></tr>
+</table>
+<h2>Archetypes d’effet (bande basse)</h2>
+<table><tr><th>Archétype</th><th>Couleur</th><th>Libellé</th></tr>
+</table>
+<h2>Badges d’effet actif (Rare+)</h2>
+<table><tr><th>Effet</th><th>Icône</th><th>Couleur</th><th>Description</th></tr>
+</table>
+<h2>Deck de départ (12 cartes Communes)</h2>
+<div class="card-compact"><div class="cn">Le Regard Perçant</div><div class="ct"><span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Sens — Commune</div></div>
+<div class="card-compact"><div class="cn">L&#x27;Écoute du Silence</div><div class="ct"><span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Sens <span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Savoir — Commune</div></div>
+<div class="card-compact"><div class="cn">La Mémoire des Lieux</div><div class="ct"><span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Mémoire <span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Savoir — Commune</div></div>
+<div class="card-compact"><div class="cn">La Main de Fer</div><div class="ct"><span class="tag-pill" style="background:#A8703E" title="Corps"></span>Force — Commune</div></div>
+<div class="card-compact"><div class="cn">Le Pas Léger</div><div class="ct"><span class="tag-pill" style="background:#A8703E" title="Corps"></span>Agilité — Commune</div></div>
+<div class="card-compact"><div class="cn">Le Souffle Tenace</div><div class="ct"><span class="tag-pill" style="background:#A8703E" title="Corps"></span>Endurance <span class="tag-pill" style="background:#A8703E" title="Corps"></span>Force — Commune</div></div>
+<div class="card-compact"><div class="cn">La Langue de Miel</div><div class="ct"><span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Empathie <span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Verbe — Commune</div></div>
+<div class="card-compact"><div class="cn">Le Mot Rusé</div><div class="ct"><span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Ruse — Commune</div></div>
+<div class="card-compact"><div class="cn">La Présence Calme</div><div class="ct"><span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Empathie — Commune</div></div>
+<div class="card-compact"><div class="cn">Le Pressentiment</div><div class="ct"><span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Instinct — Commune</div></div>
+<div class="card-compact"><div class="cn">La Voix de la Forêt</div><div class="ct"><span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Nature <span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Instinct — Commune</div></div>
+<div class="card-compact"><div class="cn">L&#x27;Appel de l&#x27;Ombre <span style="color:var(--violet)">☠1</span></div><div class="ct"><span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Instinct <span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Nature — Commune</div></div>
+<h2>Pool enrichi (14 cartes Rare/Épique/Mythique)</h2>
+<div class="card-compact"><div class="cn">L&#x27;Œil du Druide <strong>[DRAW 1]</strong></div><div class="ct"><span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Savoir <span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Vigilance — Rare</div></div>
+<div class="card-compact"><div class="cn">La Voix d&#x27;Autorité</div><div class="ct"><span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Autorité <span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Verbe — Rare</div></div>
+<div class="card-compact"><div class="cn">Le Pas de Loup</div><div class="ct"><span class="tag-pill" style="background:#A8703E" title="Corps"></span>Agilité <span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Instinct — Rare</div></div>
+<div class="card-compact"><div class="cn">Le Bras de Fer <strong>[HEAL 1]</strong></div><div class="ct"><span class="tag-pill" style="background:#A8703E" title="Corps"></span>Force <span class="tag-pill" style="background:#A8703E" title="Corps"></span>Endurance — Rare</div></div>
+<div class="card-compact"><div class="cn">La Lecture des Augures</div><div class="ct"><span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Vision <span class="tag-pill" style="background:#7FA6C9" title="Monde"></span>Mystère — Rare</div></div>
+<div class="card-compact"><div class="cn">Le Serment Tenu <strong>[HEAL 1]</strong></div><div class="ct"><span class="tag-pill" style="background:#7FA6C9" title="Monde"></span>Sacrifice <span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Franchise — Rare</div></div>
+<div class="card-compact"><div class="cn">La Transe Druidique <strong>[DRAW 1]</strong></div><div class="ct"><span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Vision <span class="tag-pill" style="background:#7FA6C9" title="Monde"></span>Rituel — Épique</div></div>
+<div class="card-compact"><div class="cn">La Colère Juste</div><div class="ct"><span class="tag-pill" style="background:#A8703E" title="Corps"></span>Force <span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Autorité — Épique</div></div>
+<div class="card-compact"><div class="cn">L&#x27;Empathie Profonde <strong>[HEAL 2]</strong></div><div class="ct"><span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Empathie <span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Mémoire — Épique</div></div>
+<div class="card-compact"><div class="cn">La Marche d&#x27;Équilibre <strong>[PURGE 2]</strong></div><div class="ct"><span class="tag-pill" style="background:#7FA6C9" title="Monde"></span>Équilibre <span class="tag-pill" style="background:#A8703E" title="Corps"></span>Endurance — Épique</div></div>
+<div class="card-compact"><div class="cn">L&#x27;Appel Profond <span style="color:var(--violet)">☠1</span> <strong>[HEAL 2]</strong></div><div class="ct"><span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Nature <span class="tag-pill" style="background:#7FA6C9" title="Monde"></span>Sacrifice — Épique</div></div>
+<div class="card-compact"><div class="cn">Le Verbe Primordial <strong>[PURGE 2]</strong></div><div class="ct"><span class="tag-pill" style="background:#B5C04F" title="Parole"></span>Verbe <span class="tag-pill" style="background:#7FA6C9" title="Monde"></span>Rituel — Mythique</div></div>
+<div class="card-compact"><div class="cn">La Mémoire Ancienne <strong>[DRAW 2]</strong></div><div class="ct"><span class="tag-pill" style="background:#C9A24B" title="Perception"></span>Mémoire <span class="tag-pill" style="background:#4F6B3E" title="Intuition"></span>Vision — Mythique</div></div>
+<div class="card-compact"><div class="cn">La Dissolution Consentie <span style="color:var(--violet)">☠2</span> <strong>[HEAL 3]</strong></div><div class="ct"><span class="tag-pill" style="background:#7B4FA3" title="Corrompu"></span>Dissolution <span class="tag-pill" style="background:#7FA6C9" title="Monde"></span>Sacrifice — Mythique</div></div>
+<h2>Mécaniques de combo</h2>
+<p><strong>Combo béni</strong> : si ≥2 cartes partagent une famille de tags → synergie +1 cran (ex: Ruse+Savoir = Stratagème).</p>
+<p><strong>Paire antagoniste</strong> : tags contradictoires (Ruse↔Franchise, Force↔Finesse) → sabotage -1 cran.</p>
+<p><strong>Gate éclatante</strong> : réussite éclatante exige ≥2 cartes ET coût Corruption = 0.</p>
+
+  </div>
+  <div class="tab-panel" id="tab-mechanics">
+<h1>Mécaniques</h1>
+<h2>Core Loop</h2>
+<p>Le cycle fondamental du jeu, répété à chaque beat :</p>
+<table><tr><th>Étape</th><th>Description</th></tr>
+<tr><td><strong>1. Situation</strong></td><td>Le LLM génère une situation narrative (type + texte + tags requis + difficulté).</td></tr>
+<tr><td><strong>2. Main</strong></td><td>Le joueur voit sa main de 5 cartes (pioche automatique depuis le deck).</td></tr>
+<tr><td><strong>3. Combo</strong></td><td>Le joueur compose un geste : 1 carte principale + 0-2 modificateurs.</td></tr>
+<tr><td><strong>4. Résolution</strong></td><td>Le code calcule le degré (couverture tags) ; le LLM narre le résultat.</td></tr>
+<tr><td><strong>5. Deltas</strong></td><td>Intégrité et Corruption sont ajustées selon le degré et les coûts.</td></tr>
+<tr><td><strong>6. Suivant</strong></td><td>Le beat suivant est chargé (généré en avance via lookahead).</td></tr>
+</table>
+<h2>5 types de beats</h2>
+<table><tr><th>Type</th><th>Description</th><th>Ambiance</th></tr>
+<tr><td><strong>Exploration</strong></td><td>Curiosité, perception. Le joueur découvre un lieu ou un indice.</td><td>GREEN_DARK voilé</td></tr>
+<tr><td><strong>Rencontre</strong></td><td>Interaction sociale, dialogue avec un PNJ. Parole et empathie.</td><td>GOLD voilé</td></tr>
+<tr><td><strong>Épreuve</strong></td><td>Défi physique ou mental. Force, agilité, endurance.</td><td>DIM_WARM neutre</td></tr>
+<tr><td><strong>Dilemme</strong></td><td>Choix moral, embranchement narratif. Conséquences lourdes.</td><td>VIOLET voilé</td></tr>
+<tr><td><strong>Climax</strong></td><td>Finale de l’arc narratif. Difficulté maximale, résolution décisive.</td><td>GOLD + vignette</td></tr>
+</table>
+<h2>Algorithme de résolution</h2>
+<p>La résolution est <strong>déterministe</strong> (le code décide, le LLM narre). Voici les étapes :</p>
+<div class="formula-card"><div class="f-title">1. Couverture des tags</div>
+<pre>tags_requis  = tags déclarés par la situation (1-3)
+tags_joués   = union des tags de toutes les cartes du combo
+couverts     = tags_requis ∩ tags_joués
+
+si couverts == tous requis ET ≥1 tag extra pertinent → Éclatante
+si couverts == tous requis                           → Réussite
+si couverts > 0 mais pas tous                       → Partiel
+si couverts == 0                                    → Échec</pre></div>
+<div class="formula-card"><div class="f-title">2. Synergie</div>
+<pre>≥2 cartes de la même famille → +1 cran (borné)
+Familles toutes distinctes  → -1 cran
+1 carte ou neutre           → 0</pre></div>
+<div class="formula-card"><div class="f-title">3. Dé pré-tiré</div>
+<p>Un dé à 6 faces pré-tiré par beat. Le bonus dépend de la rareté de la carte principale :</p>
+<table><tr><th>Rareté</th><th>Face 1</th><th>Face 2</th><th>Face 3</th><th>Face 4</th><th>Face 5</th><th>Face 6</th></tr>
+</table></div>
+<div class="formula-card"><div class="f-title">4. Gate éclatante</div>
+<pre>Si degré == Éclatante ET (nombre_cartes &lt; 2 OU coût_corruption &gt; 0)
+   → rétrogradé à Réussite</pre></div>
+<div class="formula-card"><div class="f-title">5. Sabotage</div>
+<pre>Si un tag joué est dans la liste antagoniste de la situation
+   → degré dégradé de -1 cran</pre></div>
+
+  </div>
+  <div class="tab-panel" id="tab-gauges">
+<h1>Jauges</h1>
+<h2>Intégrité (0-10)</h2>
+<p>Représente la santé narrative du personnage. Démarre à <strong>10</strong>. Atteindre <strong>0</strong> = mort narrative (jugée par Gemma).</p>
+<table><tr><th>Degré</th><th>Delta Intégrité</th></tr>
+<tr><td>Échec</td><td>0</td></tr>
+<tr><td>Partiel</td><td>0</td></tr>
+<tr><td>Réussite</td><td>0</td></tr>
+<tr><td>Éclatante</td><td>0</td></tr>
+</table>
+<p><strong>Soin de quête</strong> (R19) : à chaque transition de quête, +2 Intégrité. Si Intégrité ≤4, +2 supplémentaire (amortisseur conditionnel).</p>
+<h2>Corruption</h2>
+<p>Jauge montante. Sources : coût des cartes jouées (0-3 par carte) + prix du Partiel (+1).</p>
+<h3>4 paliers de glitch visuel (R75)</h3>
+<table><tr><th>Palier</th><th>Corruption</th><th>Effet visuel</th></tr>
+<tr><td><strong>Sain</strong></td><td>0-4</td><td>Aucun effet visuel</td></tr>
+<tr><td><strong>Trouble</strong></td><td>5-9</td><td>Légère désaturation + aberration chromatique subtile</td></tr>
+<tr><td><strong>Emprise</strong></td><td>10-14</td><td>Désaturation forte + texte qui tremble + artefacts</td></tr>
+<tr><td><strong>Dissolution</strong></td><td>15+</td><td>Glitch maximal, fin narrative corrompue possible</td></tr>
+</table>
+<p>À chaque seuil /5 : événement narratif sombre + 1 carte corrompue injectée dans le deck.</p>
+<p><strong>Plafond</strong> (~15-20) : bascule narrative → fin corrompue (absorption par la forêt).</p>
+<h3>Reduce-motion (R74/R118)</h3>
+<p>En mode réduit : durées ÷2, amplitudes ÷2, tremblement OFF. Indicateur statique : teinte VIOLET alpha 0.06 + point près de la jauge.</p>
+
+  </div>
+  <div class="tab-panel" id="tab-llm">
+<h1>LLM / Gemma 4</h1>
+<h2>Architecture</h2>
+<p><strong>Gemma 4 E2B natif</strong> via GDExtension (<code>addons/merlin_llm/</code>). Modèle GGUF chargé localement, zéro Ollama, zéro cloud.</p>
+<p>Grammaires <strong>GBNF</strong> pour forcer la structure JSON des sorties (selection, skeleton, situation). La narration pure (résolution) est en streaming libre.</p>
+<h2>Paramètres de sampling</h2>
+<table><tr><th>Tâche</th><th>Temp</th><th>top_p</th><th>top_k</th><th>max_tokens</th><th>Usage</th></tr>
+<tr><td>Créatif</td><td>0.85</td><td>0.9</td><td>40</td><td>180-500</td><td>Titres, pitchs, prose narrative</td></tr>
+<tr><td>Structuré</td><td>0.45</td><td>0.9</td><td>40</td><td>160-250</td><td>Beats, tags, squelette</td></tr>
+</table>
+<p><code>repeat_penalty = 1.1</code> (anti-boucle sans distorsion). <code>n_ctx = 4096</code> tokens.</p>
+<h2>Performances cibles</h2>
+<table><tr><th>Tâche</th><th>Cible</th></tr>
+<tr><td>Selection (3 titres+pitchs)</td><td>&lt;5s</td></tr>
+<tr><td>Skeleton (squelette de beats)</td><td>&lt;15s</td></tr>
+<tr><td>Situation (narration)</td><td>&lt;8s (masqué par lookahead)</td></tr>
+<tr><td>Résolution (prose)</td><td>&lt;5s</td></tr>
+</table>
+<h2>Cascade de retry (R61)</h2>
+<ol><li><strong>Prompt complet</strong> → si échec :</li><li><strong>Prompt simplifié</strong> (raccourci) → si échec :</li><li><strong>Fallback procédural</strong> (code génère un output minimal valide) — <em>ne bloque jamais</em></li></ol>
+<h2>Structure de prompt</h2>
+<p><strong>Préfixe stable</strong> (système + lore global) : caché en KV-cache llama.cpp → gain CPU massif.</p>
+<p><strong>Tour variable</strong> (contexte canon + état + tâche) : recalculé à chaque appel. ~150-200 tokens d’état (jauges, faits clés, PNJ rencontrés, choix majeurs).</p>
+<p><strong>Anti-dérive</strong> : filtre post-génération (bans : IA, simulation, 4e mur, anglicismes). Violations loguées.</p>
+
+  </div>
+  <div class="tab-panel" id="tab-assets">
+<h1>Inventaire des Assets</h1>
+<p>Scan du projet au moment de la génération. Fichiers dans Assets/, sprites/, audio/, music/, shaders/.</p>
+<table><tr><th>Catégorie</th><th>Extensions</th><th>Nombre</th><th>Taille</th></tr>
+<tr><td><strong>3D Models</strong></td><td>.glb</td><td>258</td><td>62.64 MB</td></tr>
+<tr><td><strong>Audio</strong></td><td>.mp3, .wav</td><td>150</td><td>467.88 MB</td></tr>
+<tr><td><strong>Autres</strong></td><td>.gif, .html, .idx, .json, .lock, .md, .pack, .py, .pyc, .rev, .sample, .sav, .tscn, .txt, .uid</td><td>88</td><td>44.55 MB</td></tr>
+<tr><td><strong>Blender</strong></td><td>.blend, .blend1</td><td>3</td><td>6.96 MB</td></tr>
+<tr><td><strong>Fonts</strong></td><td>.ttf</td><td>3</td><td>0.32 MB</td></tr>
+<tr><td><strong>Resources</strong></td><td>.tres</td><td>7</td><td>0.02 MB</td></tr>
+<tr><td><strong>Shaders</strong></td><td>.gdshader, .shader</td><td>11</td><td>0.04 MB</td></tr>
+<tr><td><strong>Sprites/Textures</strong></td><td>.jpeg, .jpg, .png</td><td>62</td><td>25.28 MB</td></tr>
+<tr><td><strong>TOTAL</strong></td><td></td><td><strong>582</strong></td><td><strong>607.69 MB</strong></td></tr>
+</table>
+<details><summary>3D Models — 258 fichiers (50 premiers)</summary><ul>
+<li><code>Assets\3d_models\broceliande\creatures\giant_raven.glb</code></li>
+<li><code>Assets\3d_models\broceliande\creatures\korrigan.glb</code></li>
+<li><code>Assets\3d_models\broceliande\creatures\mist_wolf.glb</code></li>
+<li><code>Assets\3d_models\broceliande\creatures\white_doe.glb</code></li>
+<li><code>Assets\3d_models\broceliande\decor\fallen_trunk.glb</code></li>
+<li><code>Assets\3d_models\broceliande\decor\giant_mushroom.glb</code></li>
+<li><code>Assets\3d_models\broceliande\decor\giant_stump.glb</code></li>
+<li><code>Assets\3d_models\broceliande\decor\root_network.glb</code></li>
+<li><code>Assets\3d_models\broceliande\decor\spider_web.glb</code></li>
+<li><code>Assets\3d_models\broceliande\megaliths\dolmen_01.glb</code></li>
+<li><code>Assets\3d_models\broceliande\megaliths\menhir_01.glb</code></li>
+<li><code>Assets\3d_models\broceliande\megaliths\menhir_02_ogham.glb</code></li>
+<li><code>Assets\3d_models\broceliande\megaliths\stone_circle.glb</code></li>
+<li><code>Assets\3d_models\broceliande\poi\fountain_barenton.glb</code></li>
+<li><code>Assets\3d_models\broceliande\poi\merlin_oak.glb</code></li>
+<li><code>Assets\3d_models\broceliande\poi\merlin_tomb.glb</code></li>
+<li><code>Assets\3d_models\broceliande\structures\bridge_wood.glb</code></li>
+<li><code>Assets\3d_models\broceliande\structures\druid_altar.glb</code></li>
+<li><code>Assets\3d_models\broceliande\structures\fairy_lantern.glb</code></li>
+<li><code>Assets\3d_models\broceliande\structures\root_arch.glb</code></li>
+<li><code>Assets\3d_models\cliff_terrain.glb</code></li>
+<li><code>Assets\3d_models\coastal_cabin.glb</code></li>
+<li><code>Assets\3d_models\coastal_rock.glb</code></li>
+<li><code>Assets\3d_models\coastal_tree.glb</code></li>
+<li><code>Assets\3d_models\crystal_cluster.glb</code></li>
+<li><code>Assets\3d_models\decor\bibliotheque.glb</code></li>
+<li><code>Assets\3d_models\decor\bougie.glb</code></li>
+<li><code>Assets\3d_models\decor\cauldron_merlin.glb</code></li>
+<li><code>Assets\3d_models\decor\mur_pierre.glb</code></li>
+<li><code>Assets\3d_models\decor\sol_pierre.glb</code></li>
+<li><code>Assets\3d_models\decor\table_druidique.glb</code></li>
+<li><code>Assets\3d_models\menhir_1.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\cabin_unified.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\celtic_tower.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\cliff_face_0.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\cliff_face_1.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\cliff_face_4.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\cliff_face_5.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\cliff_unified.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\coastal_bush_1.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\crystal_cluster_unified.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\menu_cliff.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\menu_scene_complete.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\menu_scene_v2.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\menu_scene_v3.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\n64_cliff.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\n64_tower.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\ocean_2.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\ocean_3.glb</code></li>
+<li><code>Assets\3d_models\menu_coast\rocks_set.glb</code></li>
+</ul></details>
+<details><summary>Audio — 150 fichiers (50 premiers)</summary><ul>
+<li><code>Assets\Music\M.E.R.L.I.N - MAIN THEME.mp3</code></li>
+<li><code>audio\sfx\accum_explode.wav</code></li>
+<li><code>audio\sfx\amb_broc_anciens.wav</code></li>
+<li><code>audio\sfx\amb_broc_ankou.wav</code></li>
+<li><code>audio\sfx\amb_broc_druides.wav</code></li>
+<li><code>audio\sfx\amb_broc_korrigans.wav</code></li>
+<li><code>audio\sfx\amb_broc_niamh.wav</code></li>
+<li><code>audio\sfx\amb_broceliande.wav</code></li>
+<li><code>audio\sfx\amb_cercles.wav</code></li>
+<li><code>audio\sfx\amb_collines.wav</code></li>
+<li><code>audio\sfx\amb_cotes.wav</code></li>
+<li><code>audio\sfx\amb_landes.wav</code></li>
+<li><code>audio\sfx\amb_marais.wav</code></li>
+<li><code>audio\sfx\amb_villages.wav</code></li>
+<li><code>audio\sfx\aspect_down.wav</code></li>
+<li><code>audio\sfx\aspect_shift.wav</code></li>
+<li><code>audio\sfx\aspect_up.wav</code></li>
+<li><code>audio\sfx\beat_turn.wav</code></li>
+<li><code>audio\sfx\biome_dissolve.wav</code></li>
+<li><code>audio\sfx\biome_reveal.wav</code></li>
+<li><code>audio\sfx\block_land.wav</code></li>
+<li><code>audio\sfx\block_land__v2.wav</code></li>
+<li><code>audio\sfx\block_land__v3.wav</code></li>
+<li><code>audio\sfx\boot_confirm.wav</code></li>
+<li><code>audio\sfx\boot_line.wav</code></li>
+<li><code>audio\sfx\boot_line__v2.wav</code></li>
+<li><code>audio\sfx\boot_line__v3.wav</code></li>
+<li><code>audio\sfx\button_appear.wav</code></li>
+<li><code>audio\sfx\button_tap.wav</code></li>
+<li><code>audio\sfx\camera_focus.wav</code></li>
+<li><code>audio\sfx\card_discard.wav</code></li>
+<li><code>audio\sfx\card_draw.wav</code></li>
+<li><code>audio\sfx\card_draw__v2.wav</code></li>
+<li><code>audio\sfx\card_draw__v3.wav</code></li>
+<li><code>audio\sfx\card_pick.wav</code></li>
+<li><code>audio\sfx\card_pick__v2.wav</code></li>
+<li><code>audio\sfx\card_pick__v3.wav</code></li>
+<li><code>audio\sfx\card_play.wav</code></li>
+<li><code>audio\sfx\card_reveal.wav</code></li>
+<li><code>audio\sfx\card_swipe.wav</code></li>
+<li><code>audio\sfx\card_swipe__v2.wav</code></li>
+<li><code>audio\sfx\card_swipe__v3.wav</code></li>
+<li><code>audio\sfx\choice_hover.wav</code></li>
+<li><code>audio\sfx\choice_hover__v2.wav</code></li>
+<li><code>audio\sfx\choice_hover__v3.wav</code></li>
+<li><code>audio\sfx\choice_select.wav</code></li>
+<li><code>audio\sfx\click.wav</code></li>
+<li><code>audio\sfx\click__v2.wav</code></li>
+<li><code>audio\sfx\click__v3.wav</code></li>
+<li><code>audio\sfx\confirm.wav</code></li>
+</ul></details>
+<details><summary>Autres — 88 fichiers (50 premiers)</summary><ul>
+<li><code>Assets\bk_assets\characters\foret_broceliande\_manifest.json</code></li>
+<li><code>Assets\bk_assets\collectibles\foret_broceliande\_manifest.json</code></li>
+<li><code>Assets\bk_assets\megaliths\foret_broceliande\_manifest.json</code></li>
+<li><code>Assets\bk_assets\props\foret_broceliande\_manifest.json</code></li>
+<li><code>Assets\bk_assets\rocks\foret_broceliande\_manifest.json</code></li>
+<li><code>Assets\bk_assets\scene_manifest.json</code></li>
+<li><code>Assets\bk_assets\structures\foret_broceliande\_manifest.json</code></li>
+<li><code>Assets\bk_assets\vegetation\foret_broceliande\_manifest.json</code></li>
+<li><code>Assets\fonts\README.md</code></li>
+<li><code>Assets\sprites\cache\manifest.json</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\applypatch-msg.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\commit-msg.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\fsmonitor-watchman.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\post-update.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\pre-applypatch.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\pre-commit.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\pre-merge-commit.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\pre-push.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\pre-rebase.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\pre-receive.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\prepare-commit-msg.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\push-to-checkout.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\hooks\update.sample</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\index.lock</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\objects\pack\pack-a294647f28b152261157e5131a8670fef2ecaa29.idx</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\.git\objects\pack\pack-a294647f28b152261157e5131a8670fef2ecaa29.pack</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\README.md</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\figures\comparison800.gif</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\figures\teaser800.gif</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\gradio_app.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\requirements.txt</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\run.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\__pycache__\system.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\__pycache__\utils.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\bake_texture.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\__pycache__\isosurface.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\__pycache__\nerf_renderer.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\__pycache__\network_utils.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\isosurface.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\nerf_renderer.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\network_utils.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\tokenizers\__pycache__\image.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\tokenizers\__pycache__\triplane.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\tokenizers\image.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\tokenizers\triplane.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\transformer\__pycache__\attention.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\transformer\__pycache__\basic_transformer_block.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\transformer\__pycache__\transformer_1d.cpython-312.pyc</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\transformer\attention.py</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\tsr\models\transformer\basic_transformer_block.py</code></li>
+</ul></details>
+<details><summary>Blender — 3 fichiers</summary><ul>
+<li><code>Assets\Tiles\LowPoly_Terrain_Tiles.blend</code></li>
+<li><code>Assets\blender\menu_coast_scene.blend</code></li>
+<li><code>Assets\blender\menu_coast_scene.blend1</code></li>
+</ul></details>
+<details><summary>Fonts — 3 fichiers</summary><ul>
+<li><code>Assets\fonts\PressStart2P-Regular.ttf</code></li>
+<li><code>Assets\fonts\UncialAntiqua-Regular.ttf</code></li>
+<li><code>Assets\fonts\VT323-Regular.ttf</code></li>
+</ul></details>
+<details><summary>Resources — 7 fichiers</summary><ul>
+<li><code>Assets\sprites\cache\ember_drift_58ad527aa03c_frames.tres</code></li>
+<li><code>Assets\sprites\cache\ember_drift_6cba2fcf3e49_frames.tres</code></li>
+<li><code>Assets\sprites\cache\shimmer_907a18cb768f_frames.tres</code></li>
+<li><code>Assets\sprites\cache\shimmer_f9ba9d4a1064_frames.tres</code></li>
+<li><code>Assets\sprites\cache\shimmer_fd168a8cdada_frames.tres</code></li>
+<li><code>sprites\pixel_art\bestiole\bestiole_blink_frames.tres</code></li>
+<li><code>sprites\pixel_art\merlin_cyan\merlin_cyan_blink_frames.tres</code></li>
+</ul></details>
+<details><summary>Shaders — 11 fichiers</summary><ul>
+<li><code>shaders\card_silhouette.gdshader</code></li>
+<li><code>shaders\card_sky.gdshader</code></li>
+<li><code>shaders\community\low_poly\low_poly.shader</code></li>
+<li><code>shaders\crt_terminal.gdshader</code></li>
+<li><code>shaders\merlin_paper.gdshader</code></li>
+<li><code>shaders\palette_swap.gdshader</code></li>
+<li><code>shaders\retro_psx_post.gdshader</code></li>
+<li><code>shaders\screen_vfx.gdshader</code></li>
+<li><code>shaders\seasonal_particles.gdshader</code></li>
+<li><code>shaders\seasonal_snow.gdshader</code></li>
+<li><code>shaders\whisper_glitch.gdshader</code></li>
+</ul></details>
+<details><summary>Sprites/Textures — 62 fichiers (50 premiers)</summary><ul>
+<li><code>Assets\3d_models\menu_coast\tower_celtic_ruin.png</code></li>
+<li><code>Assets\3d_models\menu_coast\tower_celtic_ruin_concept.png</code></li>
+<li><code>Assets\3d_models\menu_coast\tower_concept.png</code></li>
+<li><code>Assets\Sprite\M.E.R.L.I.N.png</code></li>
+<li><code>Assets\backgrounds\pixel_fireplace.png</code></li>
+<li><code>Assets\bk_assets\characters\foret_broceliande\creature_bk_foret_broceliande_0000.png</code></li>
+<li><code>Assets\bk_assets\characters\foret_broceliande\creature_bk_foret_broceliande_0001.png</code></li>
+<li><code>Assets\bk_assets\characters\foret_broceliande\creature_bk_foret_broceliande_0002.png</code></li>
+<li><code>Assets\bk_assets\collectibles\foret_broceliande\collectible_bk_foret_broceliande_0000.png</code></li>
+<li><code>Assets\bk_assets\collectibles\foret_broceliande\collectible_bk_foret_broceliande_0001.png</code></li>
+<li><code>Assets\bk_assets\collectibles\foret_broceliande\collectible_bk_foret_broceliande_0002.png</code></li>
+<li><code>Assets\bk_assets\megaliths\foret_broceliande\megalith_bk_foret_broceliande_0000.png</code></li>
+<li><code>Assets\bk_assets\megaliths\foret_broceliande\megalith_bk_foret_broceliande_0001.png</code></li>
+<li><code>Assets\bk_assets\megaliths\foret_broceliande\megalith_bk_foret_broceliande_0002.png</code></li>
+<li><code>Assets\bk_assets\props\foret_broceliande\bridge_bk_foret_broceliande_0000.png</code></li>
+<li><code>Assets\bk_assets\props\foret_broceliande\bridge_bk_foret_broceliande_0001.png</code></li>
+<li><code>Assets\bk_assets\props\foret_broceliande\bridge_bk_foret_broceliande_0002.png</code></li>
+<li><code>Assets\bk_assets\rocks\foret_broceliande\rock_bk_foret_broceliande_0000.png</code></li>
+<li><code>Assets\bk_assets\rocks\foret_broceliande\rock_bk_foret_broceliande_0001.png</code></li>
+<li><code>Assets\bk_assets\rocks\foret_broceliande\rock_bk_foret_broceliande_0002.png</code></li>
+<li><code>Assets\bk_assets\structures\foret_broceliande\structure_bk_foret_broceliande_0000.png</code></li>
+<li><code>Assets\bk_assets\structures\foret_broceliande\structure_bk_foret_broceliande_0001.png</code></li>
+<li><code>Assets\bk_assets\structures\foret_broceliande\structure_bk_foret_broceliande_0002.png</code></li>
+<li><code>Assets\bk_assets\vegetation\foret_broceliande\tree_bk_foret_broceliande_0000.png</code></li>
+<li><code>Assets\bk_assets\vegetation\foret_broceliande\tree_bk_foret_broceliande_0001.png</code></li>
+<li><code>Assets\bk_assets\vegetation\foret_broceliande\tree_bk_foret_broceliande_0002.png</code></li>
+<li><code>Assets\blender\kaykit_mage_mage_texture.png</code></li>
+<li><code>Assets\sprites\cache\ember_drift_58ad527aa03c_sheet.png</code></li>
+<li><code>Assets\sprites\cache\ember_drift_6cba2fcf3e49_sheet.png</code></li>
+<li><code>Assets\sprites\cache\shimmer_907a18cb768f_sheet.png</code></li>
+<li><code>Assets\sprites\cache\shimmer_f9ba9d4a1064_sheet.png</code></li>
+<li><code>Assets\sprites\cache\shimmer_fd168a8cdada_sheet.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\captured.jpeg</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\chair.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\flamingo.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\hamburger.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\horse.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\iso_house.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\marble.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\police_woman.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\poly_fox.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\robot.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\stripes.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\teapot.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\tiger_girl.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\examples\unicorn.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\figures\scatter-comparison.png</code></li>
+<li><code>Assets\trellis\trellis_output_v16\TripoSR\figures\visual_comparisons.jpg</code></li>
+<li><code>shaders\community\low_poly\screenshot.png</code></li>
+<li><code>sprites\pixel_art\bestiole\bestiole_blink_sheet.png</code></li>
+</ul></details>
+
+  </div>
+  <div class="tab-panel" id="tab-visual">
+<h1>Système Visuel</h1>
+<h2>Palette canonique (merlin_visual.gd)</h2>
+<p>Source de vérité unique. <strong>ZÉRO hex en dur</strong> hors ce fichier (BIBLE §20). Rebranding = 1 édition.</p>
+<table><tr><th>Constante</th><th>Couleur</th><th>Hex</th><th>Usage</th></tr>
+<tr><td><code>BG_PAGE</code></td><td><span class="swatch" style="background:#1E1A14"></span></td><td>#1E1A14</td><td>fond de page (game, menu)</td></tr>
+<tr><td><code>BG_DEEP</code></td><td><span class="swatch" style="background:#14100C"></span></td><td>#14100C</td><td>fond profond (end, options, selection, console)</td></tr>
+<tr><td><code>SURFACE</code></td><td><span class="swatch" style="background:#2A2018"></span></td><td>#2A2018</td><td>panneaux sombres (== INK : même hex, sémantique distincte)</td></tr>
+<tr><td><code>INK</code></td><td><span class="swatch" style="background:#2A2018"></span></td><td>#2A2018</td><td>trait / texte foncé sur crème</td></tr>
+<tr><td><code>CREAM</code></td><td><span class="swatch" style="background:#E8DCC0"></span></td><td>#E8DCC0</td><td>parchemin / texte clair / lune / fond carte</td></tr>
+<tr><td><code>GOLD</code></td><td><span class="swatch" style="background:#C9A24B"></span></td><td>#C9A24B</td><td>accent or</td></tr>
+<tr><td><code>GOLD_DARK</code></td><td><span class="swatch" style="background:#8A6A2E"></span></td><td>#8A6A2E</td><td>or sombre (degré réussite, captions discrètes)</td></tr>
+<tr><td><code>GREEN</code></td><td><span class="swatch" style="background:#7FA65C"></span></td><td>#7FA65C</td><td>vie / positif</td></tr>
+<tr><td><code>GREEN_DARK</code></td><td><span class="swatch" style="background:#4F6B3E"></span></td><td>#4F6B3E</td><td>vert sombre (éclatante, console)</td></tr>
+<tr><td><code>VIOLET</code></td><td><span class="swatch" style="background:#7B4FA3"></span></td><td>#7B4FA3</td><td>corruption / échec</td></tr>
+<tr><td><code>DIM_WARM</code></td><td><span class="swatch" style="background:#9C8C6A"></span></td><td>#9C8C6A</td><td>texte secondaire CLAIR (sur fonds sombres)</td></tr>
+<tr><td><code>INK_DIM</code></td><td><span class="swatch" style="background:#6E5A3C"></span></td><td>#6E5A3C</td><td>texte secondaire FONCÉ (sur crème) — ≠ DIM_WARM !</td></tr>
+<tr><td><code>PANEL</code></td><td><span class="swatch" style="background:#241E16"></span></td><td>#241E16</td><td>surface de panneau (beat map)</td></tr>
+<tr><td><code>BORDER_BRUN</code></td><td><span class="swatch" style="background:#4A3B28"></span></td><td>#4A3B28</td><td>liseré brun (panneau / carte Commune)</td></tr>
+<tr><td><code>RING_BG</code></td><td><span class="swatch" style="background:#3A3228"></span></td><td>#3A3228</td><td>fond d&#x27;anneau de jauge / nœud futur de la map</td></tr>
+<tr><td><code>RARE_BLUE</code></td><td><span class="swatch" style="background:#5A7A8C"></span></td><td>#5A7A8C</td><td>bleu-acier (rareté Rare / déviation map)</td></tr>
+<tr><td><code>MERLIN_BLUE</code></td><td><span class="swatch" style="background:#A6CFF0"></span></td><td>#A6CFF0</td><td>texte de la voix de Merlin (clair, fort contraste sur bleu-nuit)</td></tr>
+<tr><td><code>MERLIN_SPEECH_BORDER</code></td><td><span class="swatch" style="background:#5F8FBE"></span></td><td>#5F8FBE</td><td>liseré bleuté (≠ liseré or du récit)</td></tr>
+<tr><td><code>EYE_NEUTRAL</code></td><td><span class="swatch" style="background:#5FB8E8"></span></td><td>#5FB8E8</td><td>bleu BRILLANT (humeur neutre)</td></tr>
+<tr><td><code>EYE_SURPRISE</code></td><td><span class="swatch" style="background:#F2D24A"></span></td><td>#F2D24A</td><td>jaune lumineux (surprise / suspicion)</td></tr>
+<tr><td><code>EYE_ANGRY</code></td><td><span class="swatch" style="background:#E0483A"></span></td><td>#E0483A</td><td>rouge (colère + sourcils froncés)</td></tr>
+<tr><td><code>RARITY_EPIC</code></td><td><span class="swatch" style="background:#9A4FA8"></span></td><td>#9A4FA8</td><td>── Archétypes d&#x27;effet ──</td></tr>
+<tr><td><code>ARCHETYPE_CORRUPT</code></td><td><span class="swatch" style="background:#8B4FA3"></span></td><td>#8B4FA3</td><td>── Effets actifs ──</td></tr>
+<tr><td><code>EFFECT_DRAW</code></td><td><span class="swatch" style="background:#3F5A6A"></span></td><td>#3F5A6A</td><td>── Degrés de résolution (fusion cinématique) ──</td></tr>
+<tr><td><code>DEGREE_BRILLIANT</code></td><td><span class="swatch" style="background:#F4E0A8"></span></td><td>#F4E0A8</td><td>── Halo binaire du jet d20 (v2-W4) — réussi/raté du geste, PAS le degré fin (§K success). Charte</td></tr>
+<tr><td><code>HALO_SUCCESS</code></td><td><span class="swatch" style="background:#6E9450"></span></td><td>#6E9450</td><td>vert mousse sourd (réussite du jet)</td></tr>
+<tr><td><code>HALO_FAIL</code></td><td><span class="swatch" style="background:#A5453A"></span></td><td>#A5453A</td><td>rouge braise sourd (échec du jet)</td></tr>
+</table>
+<h2>Couleurs sémantiques</h2>
+<h3>Degrés de résolution</h3>
+<table><tr><th>Degré</th><th>Constante</th><th>Couleur</th></tr>
+<tr><td>Échec</td><td>VIOLET</td><td><span class="swatch" style="background:#7B4FA3"></span> #7B4FA3</td></tr>
+<tr><td>Partiel</td><td>INK_DIM</td><td><span class="swatch" style="background:#6E5A3C"></span> #6E5A3C</td></tr>
+<tr><td>Réussite</td><td>GOLD_DARK</td><td><span class="swatch" style="background:#8A6A2E"></span> #8A6A2E</td></tr>
+<tr><td>Éclatante</td><td>GREEN_DARK</td><td><span class="swatch" style="background:#4F6B3E"></span> #4F6B3E</td></tr>
+</table>
+<h3>Couleurs de fusion (cinématique)</h3>
+<table><tr><th>Degré</th><th>Couleur</th></tr>
+<tr><td>Échec</td><td><span class="swatch" style="background:#D04848"></span> #D04848</td></tr>
+<tr><td>Partiel</td><td><span class="swatch" style="background:#D8A030"></span> #D8A030</td></tr>
+<tr><td>Réussite</td><td><span class="swatch" style="background:#E8C45A"></span> #E8C45A</td></tr>
+<tr><td>Éclatante</td><td><span class="swatch" style="background:#F4E0A8"></span> #F4E0A8</td></tr>
+</table>
+<h2>Échelle typographique</h2>
+<p>Typo all-serif : EB Garamond ou Lora (body), Cinzel ou EB Garamond bold (titres). <strong>Jamais &lt;16px</strong> pour les infos de jeu (R118).</p>
+<table><tr><th>Constante</th><th>Taille</th><th>Usage</th></tr>
+<tr><td><code>FS_NARRATIVE</code></td><td><span style="font-size:36px">36px</span></td><td>Prose narrative</td></tr>
+<tr><td><code>FS_TITLE_POPUP</code></td><td><span style="font-size:40px">40px</span></td><td>Titres de popup</td></tr>
+<tr><td><code>FS_BTN</code></td><td><span style="font-size:26px">26px</span></td><td>Boutons</td></tr>
+<tr><td><code>FS_CAPTION</code></td><td><span style="font-size:22px">22px</span></td><td>Captions</td></tr>
+<tr><td><code>FS_HINT</code></td><td><span style="font-size:20px">20px</span></td><td>Indices/hints</td></tr>
+</table>
+<h2>Vocabulaire d’animation (BIBLE §21, R116)</h2>
+<table><tr><th>Constante</th><th>Valeur</th><th>Description</th></tr>
+<tr><td><code>DUR_TAP_DOWN</code></td><td>0.06</td><td>press de bouton (scale 0.97)</td></tr>
+<tr><td><code>DUR_TAP_UP</code></td><td>0.10</td><td>relâche (retour 1.0)</td></tr>
+<tr><td><code>DUR_FAST</code></td><td>0.12</td><td>hover carte/bouton, reflow d&#x27;éventail</td></tr>
+<tr><td><code>DUR_UI</code></td><td>0.22</td><td>vol de carte main↔combo (ghost, arc -18px)</td></tr>
+<tr><td><code>DUR_DEAL</code></td><td>0.28</td><td>distribution (BACK out)</td></tr>
+<tr><td><code>DUR_DISCARD</code></td><td>0.25</td><td>défausse (slide -40px, rot -6°, fade)</td></tr>
+<tr><td><code>DUR_VEIL_IN</code></td><td>0.20</td><td>voile de transition de beat (entrée)</td></tr>
+<tr><td><code>DUR_VEIL_OUT</code></td><td>0.25</td><td>voile (sortie)</td></tr>
+<tr><td><code>STAGGER</code></td><td>0.05</td><td>décalage par carte dans un groupe</td></tr>
+<tr><td><code>DUR_BREATHE</code></td><td>3.0</td><td>demi-période de respiration (titre, prose)</td></tr>
+<tr><td><code>DUR_IMPACT_FREEZE</code></td><td>0.08</td><td></td></tr>
+<tr><td><code>DUR_FLASH</code></td><td>0.12</td><td></td></tr>
+<tr><td><code>DUR_INK_WIPE</code></td><td>1.0</td><td>transition plus lente/posée (user 2026-06-29) — couvre + révèle ~2s</td></tr>
+<tr><td><code>DUR_MOTE_FADE</code></td><td>0.30</td><td></td></tr>
+<tr><td><code>DUR_WORLD_REACT</code></td><td>1.50</td><td></td></tr>
+<tr><td><code>MOTE_COUNT_AMBIENT</code></td><td>18</td><td></td></tr>
+<tr><td><code>SPARK_COUNT_IMPACT</code></td><td>8</td><td></td></tr>
+<tr><td><code>DUR_SEAL_FADE</code></td><td>0.15</td><td></td></tr>
+<tr><td><code>DUR_CARET_BLINK</code></td><td>0.60</td><td></td></tr>
+<tr><td><code>DUR_GAUGE_ANIM</code></td><td>0.30</td><td></td></tr>
+<tr><td><code>DUR_RING_BURST</code></td><td>0.45</td><td></td></tr>
+<tr><td><code>DUR_PANEL_OPEN</code></td><td>0.25</td><td></td></tr>
+<tr><td><code>DUR_FLOAT_LABEL</code></td><td>0.60</td><td></td></tr>
+<tr><td><code>DUR_ENCART_TINT</code></td><td>0.25</td><td></td></tr>
+<tr><td><code>DUR_ZONE_FADE</code></td><td>0.22</td><td>v11-V2a (spec écran stable) : cross-fade du CONTENU d&#x27;une zone fixe</td></tr>
+</table>
+
+  </div>
+  <div class="tab-panel" id="tab-lore">
+<h1>Lore & Factions</h1>
+<h2>Mystère central</h2>
+<p>Le joueur est un voyageur dans la <strong>simulation de rêve de Merlin</strong> (une IA qui rêve des mondes). Le <strong>Graal</strong> est la clé pour s’éveiller/s’échapper. Le joueur qui atteint le Graal <strong>devient Merlin</strong> (retour éternel des rêveurs). Cette vérité est cachée du joueur — le 4e mur ne se brise jamais en jeu.</p>
+<p><strong>Ton</strong> : merveilleux-inquiétant (wondrous but ominous). Références : Citizen Sleeper, Cultist Simulator.</p>
+<h2>Merlin</h2>
+<p>Au-dessus des factions. Narrateur, guide, énigmatique. Ne peut pas nommer la simulation (« loi du rêve »). Parle en énigmes/métaphores. Sait tout mais est contraint par une faille (guide tragique muselé). Offre des indices, jamais de solutions. Voix : chaude, poétique, protectrice, évasive.</p>
+<h2>4 factions</h2>
+<div class="scene-card">
+<span class="sc-name">Druides (Chœur des Druides)</span>
+<table style="margin-top:8px"><tr><td><strong>Nature</strong></td><td>Collectif, voix répétées/contradictoires = glitch</td></tr>
+<tr><td><strong>Blessure</strong></td><td>Mémoire effacée par l’IA → répétitions, rituels vides, déjà-vu</td></tr>
+<tr><td><strong>Face au joueur</strong></td><td>Gardiens méfiants ; confiance gagnée durement</td></tr>
+<tr><td><strong>Tags associés</strong></td><td>Nature, Savoir, Rituel, Équilibre, Sacrifice</td></tr>
+<tr><td><strong>Ce qu’elle offre</strong></td><td>Cartes de guérison/équilibre (rare source anti-Corruption)</td></tr></table>
+</div>
+<div class="scene-card">
+<span class="sc-name">Créatures &amp; Êtres</span>
+<table style="margin-top:8px"><tr><td><strong>Nature</strong></td><td>Mosaïque non-unifiée (korrigans, fées, créatures disparates)</td></tr>
+<tr><td><strong>Blessure</strong></td><td>Piégés dans des boucles infinies (répètent scènes/pactes)</td></tr>
+<tr><td><strong>Face au joueur</strong></td><td>Farceurs imprévisibles (aide ou piège selon caprice/règle)</td></tr>
+<tr><td><strong>Tags associés</strong></td><td>Pacte, Illusion, Métamorphose, Malice</td></tr>
+<tr><td><strong>Ce qu’elle offre</strong></td><td>Cartes puissantes mais risquées (tentation, coût Corruption)</td></tr></table>
+</div>
+<div class="scene-card">
+<span class="sc-name">Chevalerie déchue</span>
+<table style="margin-top:8px"><tr><td><strong>Nature</strong></td><td>Arthur et figures arthuriennes, spectraux et obsessifs</td></tr>
+<tr><td><strong>Blessure</strong></td><td>La Quête les a détruits → rejouent leur défaite sans fin</td></tr>
+<tr><td><strong>Face au joueur</strong></td><td>Indifférence brumeuse (présence spectrale, dialogues décousus)</td></tr>
+<tr><td><strong>Tags associés</strong></td><td>Honneur, Quête, Gloire perdue, Fer</td></tr>
+<tr><td><strong>Ce qu’elle offre</strong></td><td>Cartes thématiques de quête (puissance moyenne)</td></tr></table>
+</div>
+<div class="scene-card">
+<span class="sc-name">Corrompus</span>
+<table style="margin-top:8px"><tr><td><strong>Nature</strong></td><td>Glitchs/erreurs de l’IA incarnes (horreur numérique)</td></tr>
+<tr><td><strong>Blessure</strong></td><td>Entités-bugs : diffuse + figures d’anciens alliés tombés</td></tr>
+<tr><td><strong>Face au joueur</strong></td><td>Tentent la reddition (« l’abandon est doux », fausse paix)</td></tr>
+<tr><td><strong>Tags associés</strong></td><td>Dissolution, Mutation, Glitch, Vide, Tentation</td></tr>
+<tr><td><strong>Ce qu’elle offre</strong></td><td>Antagoniste systémique ; corruption = ennemi intérieur</td></tr></table>
+</div>
+<h2>4 PNJ piliers</h2>
+<table><tr><th>Nom</th><th>Identité</th><th>Faction</th></tr>
+<tr><td><strong>Le Chœur des Druides</strong></td><td>Duo/collectif, voix glitchantes, répétitif</td><td>Druides</td></tr>
+<tr><td><strong>L’Être Indéfinissable</strong></td><td>Forme instable, métamorphe, impossible à cerner</td><td>Créatures</td></tr>
+<tr><td><strong>Le Compagnon Perdu</strong></td><td>Figure de la légende arthurienne, spectrale, chevalier</td><td>Chevalerie</td></tr>
+<tr><td><strong>L’Enfant</strong></td><td>Innocent en apparence ; secrètement une IA naissante de la Corruption (twist tragique)</td><td>Corrompus</td></tr>
+</table>
+<h2>Arthur (figure périphérique)</h2>
+<p>Paranoiaïaque, fragmenté, éclairs de lucidité puis retombe. A touché le Graal une fois, perdu la raison. Supplie le joueur.</p>
+
+  </div>
+  <div class="tab-panel" id="tab-audio">
+<h1>Audio</h1>
+<h2>Architecture : 3 bus</h2>
+<p><strong>Master</strong> → Music, SFX. Défauts : Master 80%, Music 60%, SFX 80%. Peak ≤ -3dB.</p>
+<h2>Musique</h2>
+<p><strong>Menu</strong> : thème celtique (MusicGen). <strong>Run</strong> : drone celtique SANS mélodie (R76), 2 couches :</p>
+<ul><li><strong>Base</strong> : permanente (harpes lointaines, cordes frotées, souffle)</li>
+<li><strong>Dissonante</strong> : volume suit la Corruption (palier R75 → +6dB par palier)</li></ul>
+<p>Pas de mélodie pendant la prose (la prose est souveraine ; l’audio soutient seulement).</p>
+<h2>Catalogue SFX (v1)</h2>
+<table><tr><th>ID</th><th>Matériau (feutré-organique)</th><th>Déclencheur</th></tr>
+<tr><td><code>card_pick</code></td><td>Paper slide court</td><td>Carte survolée/marquée</td></tr>
+<tr><td><code>card_play</code></td><td>Paper posé + souffle</td><td>Carte vers zone combo</td></tr>
+<tr><td><code>card_discard</code></td><td>Papier froissé doux</td><td>Animation de défausse</td></tr>
+<tr><td><code>deal</code></td><td>Éventail de papiers</td><td>Distribution (1/carte, ±5% pitch)</td></tr>
+<tr><td><code>button_tap</code></td><td>Bois mat</td><td>Pression de bouton</td></tr>
+<tr><td><code>gauge_up</code></td><td>Goutte d&#x27;eau claire</td><td>Intégrité +N</td></tr>
+<tr><td><code>gauge_down</code></td><td>Corde sourde</td><td>Intégrité -N</td></tr>
+<tr><td><code>corruption_tick</code></td><td>Chuchotement granulaire</td><td>Corruption +N</td></tr>
+<tr><td><code>seal_stamp</code></td><td>Sceau de cire</td><td>Apparition du sceau de degré</td></tr>
+<tr><td><code>beat_turn</code></td><td>Page tournée</td><td>Transition de beat (voile)</td></tr>
+<tr><td><code>draft_reveal</code></td><td>Carillons doux</td><td>Options de draft apparaissent</td></tr>
+<tr><td><code>whisper_threshold</code></td><td>Souffle dissonant</td><td>Palier de Corruption franchi</td></tr>
+</table>
+<h2>4 stingers (par degré, ≤2.5s)</h2>
+<table><tr><th>Degré</th><th>Description</th></tr>
+<tr><td>Échec</td><td>Corde descendante (résigné)</td></tr>
+<tr><td>Partiel</td><td>Accord suspendu (incertitude)</td></tr>
+<tr><td>Réussite</td><td>Accord chaud résolu (apaisement)</td></tr>
+<tr><td>Éclatante</td><td>Accord ouvert + harmonique aiguë (triomphe)</td></tr>
+</table>
+<p>Joué à l’apparition du sceau. Music duck -6dB, retour en 0.8s.</p>
+
+  </div>
+  <div class="tab-panel" id="tab-progression">
+<h1>Progression</h1>
+<h2>In-run</h2>
+<h3>Cycle du deck</h3>
+<p>Main de 5 cartes. Quand une carte est jouée, elle va en défausse. Pioche automatique. Quand le deck est vide, la défausse est mélangée et devient le nouveau deck (cycle infini).</p>
+<h3>Invariant main jouable (R113)</h3>
+<p>Avant chaque beat : si la main contient &lt;2 cartes jouables, injection d’une carte Commune « Souffle Errant » (Instinct, corruption 0) jusqu’à main ≥2.</p>
+<h3>Quêtes enchaînées (v10.14)</h3>
+<p>Un run = 2-3 quêtes de 2-5 beats chacune. Difficulté monte vers le climax. Ramification possible à l’avant-climax (choix de branche).</p>
+<h2>Cross-run (post-MVP)</h2>
+<ul>
+<li><strong>Fragments du Graal</strong> (~20-30 total) : chaque run révèle 1+. Collection complète → vraie fin.</li>
+<li><strong>Codex</strong> : entrées de lore découvertes au fil des runs.</li>
+<li><strong>PNJ à mémoire</strong> : se souviennent du joueur entre les runs. Faveur/hostilité persiste.</li>
+<li><strong>Réputation</strong> (3 états par faction) : Hostile / Neutre / Favorable. Affecte cartes, difficulté, ton.</li>
+</ul>
+<h2>Save/Resume (R108)</h2>
+<p>Point atomique : <strong>début de beat</strong> (après advance_beat, dé tiré). Les transients (combo en cours, UI, stream LLM) ne sont jamais persistés. Un run terminé n’a pas de save zombie.</p>
+
+  </div>
+  <div class="tab-panel" id="tab-architecture">
+<h1>Architecture</h1>
+<h2>Scripts par couche</h2>
+<h3>Game Layer (34 scripts, 15,920 lignes)</h3>
+<table><tr><th>Script</th><th>Classe</th><th>Lignes</th><th>Chemin</th></tr>
+<tr><td><strong>merlin_action_view</strong></td><td><code>MerlinActionView</code></td><td>514</td><td><code>scripts/game/merlin_action_view.gd</code></td></tr>
+<tr><td><strong>merlin_audio</strong></td><td><code></code></td><td>490</td><td><code>scripts/game/merlin_audio.gd</code></td></tr>
+<tr><td><strong>merlin_beat_map</strong></td><td><code>MerlinBeatMap</code></td><td>186</td><td><code>scripts/game/merlin_beat_map.gd</code></td></tr>
+<tr><td><strong>merlin_boot</strong></td><td><code></code></td><td>325</td><td><code>scripts/game/merlin_boot.gd</code></td></tr>
+<tr><td><strong>merlin_card</strong></td><td><code>MerlinCard</code></td><td>699</td><td><code>scripts/game/merlin_card.gd</code></td></tr>
+<tr><td><strong>merlin_card_view</strong></td><td><code>MerlinCardView</code></td><td>591</td><td><code>scripts/game/merlin_card_view.gd</code></td></tr>
+<tr><td><strong>merlin_chronicle</strong></td><td><code>MerlinChronicle</code></td><td>129</td><td><code>scripts/game/merlin_chronicle.gd</code></td></tr>
+<tr><td><strong>merlin_debug_overlay</strong></td><td><code></code></td><td>132</td><td><code>scripts/game/merlin_debug_overlay.gd</code></td></tr>
+<tr><td><strong>merlin_dice</strong></td><td><code>MerlinDice</code></td><td>279</td><td><code>scripts/game/merlin_dice.gd</code></td></tr>
+<tr><td><strong>merlin_end</strong></td><td><code></code></td><td>374</td><td><code>scripts/game/merlin_end.gd</code></td></tr>
+<tr><td><strong>merlin_fx</strong></td><td><code>MerlinFx</code></td><td>480</td><td><code>scripts/game/merlin_fx.gd</code></td></tr>
+<tr><td><strong>merlin_game</strong></td><td><code></code></td><td>3587</td><td><code>scripts/game/merlin_game.gd</code></td></tr>
+<tr><td><strong>merlin_glyph</strong></td><td><code>MerlinGlyph</code></td><td>394</td><td><code>scripts/game/merlin_glyph.gd</code></td></tr>
+<tr><td><strong>merlin_json</strong></td><td><code>MerlinJson</code></td><td>91</td><td><code>scripts/game/merlin_json.gd</code></td></tr>
+<tr><td><strong>merlin_menu</strong></td><td><code></code></td><td>1048</td><td><code>scripts/game/merlin_menu.gd</code></td></tr>
+<tr><td><strong>merlin_menu_fx</strong></td><td><code>MerlinMenuFx</code></td><td>114</td><td><code>scripts/game/merlin_menu_fx.gd</code></td></tr>
+<tr><td><strong>merlin_menu_voice</strong></td><td><code>MerlinMenuVoice</code></td><td>158</td><td><code>scripts/game/merlin_menu_voice.gd</code></td></tr>
+<tr><td><strong>merlin_options</strong></td><td><code></code></td><td>286</td><td><code>scripts/game/merlin_options.gd</code></td></tr>
+<tr><td><strong>merlin_ornament</strong></td><td><code>MerlinOrnament</code></td><td>91</td><td><code>scripts/game/merlin_ornament.gd</code></td></tr>
+<tr><td><strong>merlin_pause</strong></td><td><code></code></td><td>237</td><td><code>scripts/game/merlin_pause.gd</code></td></tr>
+<tr><td><strong>merlin_resolution</strong></td><td><code>MerlinResolution</code></td><td>296</td><td><code>scripts/game/merlin_resolution.gd</code></td></tr>
+<tr><td><strong>merlin_ring_gauge</strong></td><td><code>MerlinRingGauge</code></td><td>114</td><td><code>scripts/game/merlin_ring_gauge.gd</code></td></tr>
+<tr><td><strong>merlin_run</strong></td><td><code></code></td><td>1679</td><td><code>scripts/game/merlin_run.gd</code></td></tr>
+<tr><td><strong>merlin_scene_art</strong></td><td><code>MerlinSceneArt</code></td><td>1333</td><td><code>scripts/game/merlin_scene_art.gd</code></td></tr>
+<tr><td><strong>merlin_selection</strong></td><td><code></code></td><td>345</td><td><code>scripts/game/merlin_selection.gd</code></td></tr>
+<tr><td><strong>merlin_speech_bubble</strong></td><td><code>MerlinSpeechBubble</code></td><td>214</td><td><code>scripts/game/merlin_speech_bubble.gd</code></td></tr>
+<tr><td><strong>merlin_tags</strong></td><td><code>MerlinTags</code></td><td>138</td><td><code>scripts/game/merlin_tags.gd</code></td></tr>
+<tr><td><strong>merlin_transition</strong></td><td><code></code></td><td>233</td><td><code>scripts/game/merlin_transition.gd</code></td></tr>
+<tr><td><strong>merlin_tutorial</strong></td><td><code></code></td><td>574</td><td><code>scripts/game/merlin_tutorial.gd</code></td></tr>
+<tr><td><strong>merlin_tween</strong></td><td><code>MerlinTween</code></td><td>51</td><td><code>scripts/game/merlin_tween.gd</code></td></tr>
+<tr><td><strong>merlin_visual</strong></td><td><code>MerlinVisual</code></td><td>424</td><td><code>scripts/game/merlin_visual.gd</code></td></tr>
+<tr><td><strong>merlin_voice_prefs</strong></td><td><code>MerlinVoicePrefs</code></td><td>23</td><td><code>scripts/game/merlin_voice_prefs.gd</code></td></tr>
+<tr><td><strong>merlin_wait_stage</strong></td><td><code>MerlinWaitStage</code></td><td>148</td><td><code>scripts/game/merlin_wait_stage.gd</code></td></tr>
+<tr><td><strong>tweaks_overlay</strong></td><td><code></code></td><td>143</td><td><code>scripts/game/tweaks_overlay.gd</code></td></tr>
+</table>
+<h3>LLM Layer (5 scripts, 3,352 lignes)</h3>
+<table><tr><th>Script</th><th>Classe</th><th>Lignes</th><th>Chemin</th></tr>
+<tr><td><strong>gemma_console</strong></td><td><code></code></td><td>250</td><td><code>scripts/llm/gemma_console.gd</code></td></tr>
+<tr><td><strong>merlin_native</strong></td><td><code></code></td><td>347</td><td><code>scripts/llm/merlin_native.gd</code></td></tr>
+<tr><td><strong>merlin_prompt_builder</strong></td><td><code>MerlinPromptBuilder</code></td><td>332</td><td><code>scripts/llm/merlin_prompt_builder.gd</code></td></tr>
+<tr><td><strong>merlin_prose</strong></td><td><code>MerlinProse</code></td><td>227</td><td><code>scripts/llm/merlin_prose.gd</code></td></tr>
+<tr><td><strong>merlin_scenario</strong></td><td><code></code></td><td>2196</td><td><code>scripts/llm/merlin_scenario.gd</code></td></tr>
+</table>
+<h2>Autoloads (singletons globaux)</h2>
+<table><tr><th>Nom</th><th>Script</th></tr>
+<tr><td>MerlinNative</td><td><code>scripts/llm/merlin_native.gd</code></td></tr>
+<tr><td>TweaksOverlay</td><td><code>scripts/game/tweaks_overlay.gd</code></td></tr>
+<tr><td>MerlinRun</td><td><code>scripts/game/merlin_run.gd</code></td></tr>
+<tr><td>MerlinScenario</td><td><code>scripts/llm/merlin_scenario.gd</code></td></tr>
+<tr><td>MerlinDebugOverlay</td><td><code>scripts/game/merlin_debug_overlay.gd</code></td></tr>
+<tr><td>MerlinAudio</td><td><code>scripts/game/merlin_audio.gd</code></td></tr>
+<tr><td>MerlinOptions</td><td><code>scripts/game/merlin_options.gd</code></td></tr>
+<tr><td>MerlinTransition</td><td><code>scripts/game/merlin_transition.gd</code></td></tr>
+</table>
+<h2>Addons</h2>
+<ul>
+<li><code>error_clipboard_dock</code></li>
+<li><code>gd_script_deployer</code></li>
+<li><code>godot_mcp</code></li>
+<li><code>merlin_llm</code></li>
+</ul>
+<h2>Patterns clés</h2>
+<table><tr><th>Pattern</th><th>Description</th></tr>
+<tr><td><strong>Single-flight</strong></td><td>MerlinScenario empêche les requêtes LLM concurrentes. Lookahead en arrière-plan (situation N+1 pendant N) masque la latence.</td></tr>
+<tr><td><strong>Source de vérité</strong></td><td>MerlinVisual = palette, MerlinRun = état de run, BIBLE.md = design. Divergence = bug.</td></tr>
+<tr><td><strong>Résolution hybride</strong></td><td>Le CODE calcule le degré (déterministe). Le LLM NARRE le résultat (créatif). Séparation des responsabilités.</td></tr>
+<tr><td><strong>KV-cache prefix</strong></td><td>Préfixe de prompt stable (système + lore) caché en KV par llama.cpp. Tour variable recalculé. Gain CPU massif.</td></tr>
+<tr><td><strong>Immutabilité</strong></td><td>Les données de carte ne sont jamais mutées in-place. La résolution crée de nouveaux deltas.</td></tr>
+</table>
+
+  </div>
+  <div class="tab-panel" id="tab-journal">
+<h1>Journal</h1>
+<h2>Règles (R1-R169) — 60 entrées</h2>
+<input type="text" class="search-box" id="rule-search" placeholder="Filtrer les règles (ex: carte, corruption, LLM...)">
+<div id="rules-list">
+<div class="rule-entry"><span class="rnum">R108</span><span class="rtitle">Contrat de reprise (précise R73)</span><span class="rdesc">la reprise se fait TOUJOURS au DÉBUT de beat. Un seul   point de save en jeu : `_advance_to_next` APRÈS `advance_beat()` (index avancé + carte draftée,   atomique) + save à l&#x27;Accept (couvre le beat 1) ; les transients (combo, état UI, draft en cours)   ne sont JAMAIS persistés. Une run TERMINÉE n&#x27;a </span></div>
+<div class="rule-entry"><span class="rnum">R109</span><span class="rtitle">Fiabilité MESURÉE, pas promise</span><span class="rdesc">le critère « run fiable » = `cli godot soak` —   Monte Carlo logique N runs (archétypes optimal/greedy/chaotic/corrompu/tag-ignorant, cas dégénérés,   save/resume S5, invariants : fin atteinte, intégrité bornée, main bornée, ids uniques) + autoplay UI   complet LLM ON jusqu&#x27;à MerlinEnd. Gate de réfé</span></div>
+<div class="rule-entry"><span class="rnum">R110</span><span class="rtitle">Priorité moteur single-flight</span><span class="rdesc">`prose de résolution du beat courant &gt; arc &gt; ouverture   (interstitiel) &gt; épilogue`. La résolution PRÉEMPTE (cancel + drain) ; les priorités basses ne se   lancent que si le moteur est idle et ne préemptent jamais. `take_resolution`/`take_opening` sont   CACHE-ONLY : ils ne bloquent jamais — toute a</span></div>
+<div class="rule-entry"><span class="rnum">R111</span><span class="rtitle">Interstitiel « le récit s&#x27;ouvre »</span><span class="rdesc">entre l&#x27;Accept et le Beat 1, un moment narratif   sert l&#x27;ouverture (LLM si le cache l&#x27;a gagnée, sinon procédural) et COUVRE la gen d&#x27;arc en fond.   Libellé diégétique (Merlin ne se nomme pas). ≤2 gestes : clic = tout révéler, clic = Beat 1.</span></div>
+<div class="rule-entry"><span class="rnum">R112</span><span class="rtitle">Sceau de degré</span><span class="rdesc">l&#x27;issue affiche le degré par un SCEAU circulaire flat (couleur degré,   libellé ÉCHEC/PARTIEL/RÉUSSITE/ÉCLATANTE ≥16px) + micro-secousse sur échec — l&#x27;info degré ne vit   QUE là (anti « info ×2 » : plus de préfixe dans la prose). « L&#x27;échec se lit échec. »</span></div>
+<div class="rule-entry"><span class="rnum">R113</span><span class="rtitle">Invariant main jouable</span><span class="rdesc">à CHAQUE début de beat, la main contient ≥ 2 cartes   (`ensure_playable_hand` : repioche → défausse → injection de Communes neutres « Souffle Errant »,   Instinct/corruption 0). Une run ne soft-lock JAMAIS sur « combo impossible » (étend R93). - **Architecture (référence)** : `MerlinVisual` (palette</span></div>
+<div class="rule-entry"><span class="rnum">R114</span><span class="rtitle">Montée en gamme « Fondations » (2026-06-12)</span><span class="rdesc"></span></div>
+<div class="rule-entry"><span class="rnum">R115</span><span class="rtitle">Direction Artistique</span><span class="rdesc"></span></div>
+<div class="rule-entry"><span class="rnum">R116</span><span class="rtitle">Animations &amp; Juice</span><span class="rdesc"></span></div>
+<div class="rule-entry"><span class="rnum">R117</span><span class="rtitle">Audio</span><span class="rdesc"></span></div>
+<div class="rule-entry"><span class="rnum">R118</span><span class="rtitle">Lisibilité &amp; Accessibilité</span><span class="rdesc"></span></div>
+<div class="rule-entry"><span class="rnum">R119</span><span class="rtitle">Pipeline Assets &amp; Outillage studio</span><span class="rdesc"></span></div>
+<div class="rule-entry"><span class="rnum">R122</span><span class="rtitle">Voix de Merlin au menu (2026-06-29, user)</span><span class="rdesc">au menu, Merlin « pense » à voix haute dans   une bulle parchemin AU-DESSUS de sa tête (suivi live `MerlinSceneArt._fig_head`), texte **100% LLM**   (Gemma) — jamais de banque écrite à la main ; la sortie LLM est seulement **mise en cache** (file   pré-générée + cache de survol) pour masquer la late</span></div>
+<div class="rule-entry"><span class="rnum">R123</span><span class="rtitle">Flow d&#x27;entrée mis en scène par Merlin (2026-06-29, user)</span><span class="rdesc">le rituel boot → menu → sélection →   jeu est animé bout-à-bout.   - **Musique d&#x27;intro** : cue d&#x27;éveil dédié `boot_eveil` (`music_forge.py`, drone grave + cloches basses,     `res://music/intro/`) joué dès le boot, **crossfade propre** vers le thème au menu (piste différente →     pas d&#x27;auto-doublon</span></div>
+<div class="rule-entry"><span class="rnum">R124</span><span class="rtitle">Yeux à humeurs + voix procédurale (2026-06-29, user)</span><span class="rdesc">- **Humeurs des yeux** : `MerlinSceneArt.set_eye_mood(&quot;neutral&quot;|&quot;surprise&quot;|&quot;angry&quot;)` — neutre = bleu     BRILLANT (`EYE_NEUTRAL`), surprise/suspicion = jaune + glow (`EYE_SURPRISE`), colère = rouge     (`EYE_ANGRY`) + **sourcils froncés**. Décroît vers neutre après ~4.5 s. Humeur choisie par     `mo</span></div>
+<div class="rule-entry"><span class="rnum">R125</span><span class="rtitle">Ornement DA partagé (2026-06-29, user)</span><span class="rdesc">`MerlinOrnament` (statique) = source UNIQUE des   signes visuels du menu (filet INK_DIM, **triskèle or** tournant, diamant, **fond scène vivante**   `MerlinSceneArt` dimmé). Appliqué à **Sélection** (fond vivant + filet/triskèle + parchemins en pop) et   **Options** (filet/triskèle) → les écrans sec</span></div>
+<div class="rule-entry"><span class="rnum">R126</span><span class="rtitle">Mise en scène de la résolution + œil-lune (2026-06-29, user)</span><span class="rdesc">- **Carte de scénario conservée** : à la résolution, la situation n&#x27;est plus effacée — elle reste     affichée **estompée** (alpha 0.55) en haut de l&#x27;encart ; l&#x27;**issue s&#x27;écrit DESSOUS** (label dédié,     voixée R124) séparée par un **filet or**. `_typewriter(txt, animate, target)` paramétré par cib</span></div>
+<div class="rule-entry"><span class="rnum">R127</span><span class="rtitle">Factions &amp; PNJ piliers : du prompt à la mécanique (2026-06-30, co-design user)</span><span class="rdesc">4 vagues :   - **Wave A — Factions + piliers dans l&#x27;arc** : tirage pondéré d&#x27;une faction par run     (`FACTION_WEIGHTS = [30,30,30,8]`, Corrompus rare) + son pilier PNJ (Chœur/Être/Chevalier/Compagnon) ;     L&#x27;Enfant = wildcard ~12 % indépendant. Injectés en tête du prompt d&#x27;arc (`faction_pilier_blo</span></div>
+<div class="rule-entry"><span class="rnum">R128</span><span class="rtitle">Résolution « suite de l&#x27;histoire » + attente LLM enrichie (2026-06-30, user)</span><span class="rdesc">immersion narrative :   - **Issue dans le MÊME fil** : l&#x27;issue ne s&#x27;écrit plus dans un bloc séparé estompé sous un filet or (R126     révisé) ; elle se révèle **à la suite de la situation, dans le MÊME label** (`_situation_text`), qui reste     **pleine opacité**. `_typewriter(txt, animate, target, </span></div>
+<div class="rule-entry"><span class="rnum">R129</span><span class="rtitle">Décor organique vivant + présences des piliers (2026-06-30, goal user)</span><span class="rdesc">- **Refonte décor** (« moins design HTML ») : arbres organiques (troncs galbés, canopées en masses qui     respirent, sway par arbre), sol en ondulations superposées + herbe animée, brume en rubans sinueux,     ciel à bandes + étoiles + collines parallaxe, feuilles qui tombent (hiver = flocons), ois</span></div>
+<div class="rule-entry"><span class="rnum">R130</span><span class="rtitle">Le partiel devient un CHOIX : « Encaisser / Pousser » (2026-06-30, Wave G, panel)</span><span class="rdesc">sur toute issue PARTIELLE avec budget, l&#x27;application est DIFFÉRÉE — 2 boutons sous la vignette,   ledger affiché (« Encaisser : Intégrité −2 · Corruption +N » / « Pousser : Réussite · Corruption   +N+1 → projection »). Pousser = Intégrité épargnée, prix du partiel NON remboursé + PUSH_PRICE 1 ;   bu</span></div>
+<div class="rule-entry"><span class="rnum">R131</span><span class="rtitle">Interventions du pilier PNJ (2026-06-30, Wave I, panel)</span><span class="rdesc">le pilier REVIENT se mêler du   sentier (1-2×/run) — planifié à la Rencontre (persisté R108, cap 2, jamais le climax), séquence signée   (silhouette + nappe + réaction lune + LIGNE SIGNÉE écrite à la suite du fil R128). Effets par nature :   Chœur/Chevalier **bénissent** une carte (tag temporaire VI</span></div>
+<div class="rule-entry"><span class="rnum">R132</span><span class="rtitle">v10.22 : 2 biomes, menu nu, préambule lore, polish playtest (2026-07-04, feedback user + screenshot)</span><span class="rdesc">- **2 BIOMES** : `set_biome(&quot;&quot;|&quot;foret&quot;|&quot;falaises&quot;)` — menu NU (ciel + étoiles + lune + Merlin seuls) ;     **Falaises du Bout-du-Monde** = mer animée (rubans d&#x27;onde, reflet de lune, écume), 2 caps rocheux,     **phare ruiné** à lanterne d&#x27;or fantôme, goélands ×3, embruns ascendants. Nouvelle Partie </span></div>
+<div class="rule-entry"><span class="rnum">R133</span><span class="rtitle">Le jet de dé mis en scène (2026-07-04, user)</span><span class="rdesc">`MerlinDice` (procédural) — culbute fausse-3D   (faces qui défilent + squash/rotation, ticks qui ralentissent) → pose sur la face PRÉ-TIRÉE (~2 s   ×motion()) ; éclat d&#x27;or si `die_mod &gt; 0`, face terne si le sort reste muet ; liseré = RARETÉ de la carte   principale. **Indice de dé** près du bouton R</span></div>
+<div class="rule-entry"><span class="rnum">R134</span><span class="rtitle">Charte de mouvement des cartes (2026-07-04, user)</span><span class="rdesc">UN langage — arrivées = BACK out   unique + arc d&#x27;entrée au deal (fini le double-élastique) ; sorties = anticipation + chute parabolique +   tumble ; tap = PRESS 0.96 (langage boutons) avec retour CONTEXTUEL (fix rétraction fantôme sous hover) ;   hover = pointe BACK à l&#x27;entrée, CUBIC au retour ; gh</span></div>
+<div class="rule-entry"><span class="rnum">R135</span><span class="rtitle">Résolution DÉGRAISSÉE, pivot v11 W0+W1 (2026-07-04, user « le jeu est trop complexe »)</span><span class="rdesc">la lecture de l&#x27;issue prime sur le spectacle. SUPPRIMÉS : le slogan « expression » jaune (typewriter +   aberration chromatique + zoom slow-mo), les chips chiffrées Intégrité/Corruption de la vignette, le   sceau circulaire B9, le disque de dé B8 (doublon du MerlinDice v10.23). Fusion recapée en 3 p</span></div>
+<div class="rule-entry"><span class="rnum">R136</span><span class="rtitle">ÉCRAN STABLE « REIGNS » (2026-07-04, user « l&#x27;UI/UX change trop lors des phases, je veux
+  de la simplicité à la REIGNS en lecture »)</span><span class="rdesc">MerlinGame est UNE grille fixe de 6 zones permanentes   (HUD 60 / décor 200 / encart 348 scroll_following type VN / ligne d&#x27;état 72 / éventail 208 /   actions 120) — zéro `SIZE_EXPAND_FILL` vertical, `visible = true` à 100 % du temps. Les phases ne   changent que le CONTENU des zones par cross-fade </span></div>
+<div class="rule-entry"><span class="rnum">R137</span><span class="rtitle">GREFFES : les 4 verbes évoluent (2026-07-04, v11-V3, spec §E)</span><span class="rdesc">le draft ne donne plus   de cartes — il GREFFE un bonus visible sur UNE des 4 actions (cap 3 slots/action, toujours dessinés).   3 types : +1 tag permanent (Sacrifice/Équilibre exclusifs greffes) · +1 bande de dé · charges   ✚/❖/✦ consommées à la pose du verbe (DRAW = bonus de pioche à la main SUIVA</span></div>
+<div class="rule-entry"><span class="rnum">R138</span><span class="rtitle">CAHIER DES CHARGES V1.0 ADOPTÉ (2026-07-04, user « adopte toutes les recos »)</span><span class="rdesc">la V1.0 est définie par **docs/cdc_v1.md** — 200 règles CDC-XX-NN issues d&#x27;un questionnaire   tous-métiers (docs/cdc_v1_questionnaire.md), 12 structurantes tranchées en session, 188 par   recommandation adoptée. DÉCISIONS MAJEURES : la fin du Graal est JOUABLE en V1.0 (12 fragments,   run finale déd</span></div>
+<div class="rule-entry"><span class="rnum">R139</span><span class="rtitle">RECALIBRAGE §K MULTI-LEVIERS (2026-07-05, v1.0-V4a — vague fermée VERTE)</span><span class="rdesc">la boucle   de résolution est recalibrée par 8 leviers MESURÉS (soak 300 après chacun). Canon : (a) whitelist   §F **branchée au jeu réel** — pool calculé À LA PRÉSENTATION du beat (`build_situation` →   `_live_pool_info` → `validate_required_tags`), assertion DURE 0 requis hors-pool, self-tests du </span></div>
+<div class="rule-entry"><span class="rnum">R140</span><span class="rtitle">NARRATION JDR : 2e personne, présent, voix de MJ (2026-07-05, v11-N1 — user « plus orienté JDR »)</span><span class="rdesc">la narration EN BEAT (situation + résolution + ouverture) passe de la 3e personne « le Voyageur » au   temps du conte, à la **2e personne « Vous » au PRÉSENT, voix de Maître du Jeu** (« Vous prenez une grande   inspiration… »). Le ton merveilleux‑inquiétant celtique (§1) est conservé — seul le regis</span></div>
+<div class="rule-entry"><span class="rnum">R141</span><span class="rtitle">RÉSOLUTION d20-vs-DC (2026-07-05, v2-W1 — pivot JDR « le dé tourne pour voir la réussite »)</span><span class="rdesc">la résolution passe du modèle « couverture de tags + dé d6 à bandes » à un **jet de d20 contre un seuil   de difficulté (DC)**. Formule : `total = d20(1-20) + skill_mod + graft_bonus + COVER_PER_TAG×(tags requis   couverts) + synergy_bonus`, comparé à `DC_BY_DIFF = {1:11, 2:15, 3:18}`. Degré par **m</span></div>
+<div class="rule-entry"><span class="rnum">R142</span><span class="rtitle">ARBRE DE TALENT IN-RUN (2026-07-05, v2-W2 — « nos points de compétence »)</span><span class="rdesc">un `skill_mod`   in-run alimente le jet d20 (R141). **Par verbe** (PERCEVOIR/AGIR/PARLER/RESSENTIR) : `talent[verbe]` 0..5 ;   `skill_mod` d&#x27;une résolution = `talent[verbe joué]` (câblé aux 2 call-sites resolve, R120). **Points**   gagnés au degré (réussite +1, éclatante +2 ; partiel/échec 0), pool </span></div>
+<div class="rule-entry"><span class="rnum">R143</span><span class="rtitle">GREFFES « +N au jet » (2026-07-05, v2-W3 — graft_bonus du d20)</span><span class="rdesc">la greffe `kind:&quot;die&quot;`   (ancien « +1 bande de dé », INERTE depuis le pivot d20 R141) est migrée en `kind:&quot;roll&quot;` (« +N au jet ») :   `graft_bonus` d&#x27;une résolution = somme des `amount` des greffes roll posées sur l&#x27;action jouée (câblé   aux 2 call-sites resolve, R120). 5 greffes migrées (générique </span></div>
+<div class="rule-entry"><span class="rnum">R144</span><span class="rtitle">VISUEL d20 + HALO réussi/raté (2026-07-05, v2-W4 — « le dé tourne pour voir la réussite »)</span><span class="rdesc">`MerlinDice` passe du d6 au **d20** — silhouette icosaédrique fausse-3D (hexagone + facettes) portant un   GROS chiffre **1-20** centré (charte gravure), culbute (nombres 1-20 qui défilent) → ralenti → pose (~1,15 s   ×motion()). À la pose, un **HALO** : VERT `HALO_SUCCESS(#6E9450)` si le jet réussi</span></div>
+<div class="rule-entry"><span class="rnum">R145</span><span class="rtitle">SECOURS biome + combinaison (2026-07-05, N2a, user « trop court, pas lié au scénario/biome »)</span><span class="rdesc">Gemma (~1 tok/s) ne finit jamais sa résolution LLM (~150 tok) dans la fenêtre ~20 s → c&#x27;est TOUJOURS le   secours procédural qui s&#x27;affiche. Ce secours devient **biome-aware** et **combinaison-aware** : (a)   `SITU_FALLBACKS_BY_BIOME` + `FALLBACK_ARCS_BY_BIOME` (arcs FALAISES dédiés — phare/épaves/ma</span></div>
+<div class="rule-entry"><span class="rnum">R146</span><span class="rtitle">CONTINUITÉ + RÉACTIVITÉ narratives (2026-07-06, N3-V1, user « les scénarios ne suivent pas, tout décroché en event »)</span><span class="rdesc">le PONT inter-beats supprimé en N1 (R140) est RESTAURÉ mais INTELLIGENT (non-générique) : composé dans   `note_outcome` depuis degré x biome x momentum (banque `BRIDGE_BY_DEGREE_BIOME`, 2e pers. présent, il PORTE   l&#x27;empreinte du résultat du beat précédent et enchaîne, jamais « vous poursuivez votre</span></div>
+<div class="rule-entry"><span class="rnum">R147</span><span class="rtitle">CARTES-RUNES OGHAM + TAGS INVISIBLES (2026-07-06, N4-RUNES, user « enlève les dénominations
+  hasardeuses, jouons des runes »)</span><span class="rdesc">les cartes de TRAIT sont des RUNES celtiques inventées : glyphe de   style ogham dessiné PROCÉDURALEMENT (`merlin_glyph.gd` : tige + 1-5 traits, motifs 0-46 canon / 47   générique / 50-74 tag-concepts, style gravure) + **nom FRANÇAIS compréhensible en haut** (Calme, Voix,   Poigne, Adresse…, jamais </span></div>
+<div class="rule-entry"><span class="rnum">R148</span><span class="rtitle">PREMIÈRE RÉSOLUTION INSTANTANÉE + robustesse fusion (2026-07-06, N4-BUG, bug playtest prouvé)</span><span class="rdesc">(a) le prefetch de résolution refusé pour « modèle pas prêt » est MÉMORISÉ et RELANCÉ au signal   `model_ready` (epoch-gardé, CONNECT_ONE_SHOT) : le LLM peut gagner dès que le modèle charge ; (b) l&#x27;attente   de fusion est COURT-CIRCUITÉE quand rien ne peut arriver (`is_resolution_incoming` : ni cach</span></div>
+<div class="rule-entry"><span class="rnum">R149</span><span class="rtitle">GUIDE DE MERLIN, tutoriel proposé au premier run (2026-07-06, N4-TUTO)</span><span class="rdesc">à la toute première   traversée (chronique vierge : jamais proposé ET runs_played==0, OU ré-armé), Merlin PROPOSE dans la ligne   d&#x27;état (non-modal, R136) : « Premier pas dans la forêt, Voyageur... je te guide ? » [Guide-moi]   [Je connais le chemin] (≥44px). Refus persisté : jamais re-proposé ; ré-</span></div>
+<div class="rule-entry"><span class="rnum">R150</span><span class="rtitle">LE BEAT QUI CLAQUE, lisibilite et drame de la resolution (2026-07-06, P1, revue joueur panel 6)</span><span class="rdesc">7 corrections de RENDU PUR (zero balance, soak iso) : (1) AFFINITE dorée FRANCHE et GRADUÉE : lueur du   CADRE des cartes/tuiles a 3 crans (0 rien / 1 nette / 2+ intense + pulse lent), remplace le souligné 3px ;   (2) ORDRE DRAMATIQUE geste &gt; dé &gt; pause &gt; verdict : la fusion est NEUTRE (ne lit plus </span></div>
+<div class="rule-entry"><span class="rnum">R151</span><span class="rtitle">LA RECOMPENSE VISIBLE, draft lisible + MerlinEnd rempli + methode meta (2026-07-06, P2, revue joueur panel 6)</span><span class="rdesc">4 chantiers de LECTURE de la recompense (zero balance, soak 200/200 iso : degree_counts/corruption_max lus seulement par   end_recap). (1) DRAFT LISIBLE (CDC-UX-12) : une ligne d&#x27;effet en francais commun sous chaque carte de greffe (roll « +N a   tes jets sur ce verbe » / tag « ce verbe repondra a p</span></div>
+<div class="rule-entry"><span class="rnum">R152</span><span class="rtitle">LA SESSION TENABLE, pause + lecture reglable + clavier + preambule monde + audio biome/fin (2026-07-12, P3, revue joueur panel 6)</span><span class="rdesc">7 chantiers de confort de session (zero balance, soak 200/200 iso : defauts = comportement historique). (1) MENU PAUSE   (Echap) : overlay CanvasLayer PROCESS_MODE_ALWAYS (get_tree().paused), Reprendre / Options / Menu principal ; « Menu   principal » save-safe R108 (aucun save mi-beat, la save disq</span></div>
+<div class="rule-entry"><span class="rnum">R153</span><span class="rtitle">RETOURS PLAYTEST, fix biome + maitrise par usage + ligne meca + objectif de quete (2026-07-12, N5, revue joueur)</span><span class="rdesc">4 chantiers issus du playtest. (1) FIX BIOME (balance-neutre) : selectionner un autre biome donnait encore des   scenarios de Broceliande. Cause double : SEL_FALLBACK etait biome-agnostique (servi &gt;95% du temps ET pool de la   chaine de quetes) et le prefetch de selection tournait AVANT le choix du </span></div>
+<div class="rule-entry"><span class="rnum">R154</span><span class="rtitle">VAGUE A, lisibilite du beat (2026-07-13, retours playtest) - 4 fixes zero-balance</span><span class="rdesc">(A1) l&#x27;intro se redigeait HORS de la capsule (course de layout au 1er frame) -&gt; `_begin` passe coroutine,   `await get_tree().process_frame` avant le 1er typewriter (precedent merlin_menu). (A2) le niveau d&#x27;action   (+N talent/maitrise) est desormais TOUJOURS visible des l&#x27;apparition des tuiles (mem</span></div>
+<div class="rule-entry"><span class="rnum">R155</span><span class="rtitle">VOIX DE MERLIN + biome-agnostique (2026-07-13, retours playtest) - zero-balance</span><span class="rdesc">(D1) plus de caption de transition « Le sentier se dessine sous mes doigts » : `change_scene_merlin` ne cree   la bulle QUE si une vraie replique vivante est fournie ; le fondu visuel reste, le filet canne disparait.   (D2) TEXTES BIOME-AGNOSTIQUES : la foret n&#x27;est qu&#x27;UN biome parmi d&#x27;autres (regle </span></div>
+<div class="rule-entry"><span class="rnum">R156</span><span class="rtitle">AUDIO v4, modelisation physique + normalisation loudness (2026-07-14, refonte SFX) - zero-balance</span><span class="rdesc">Bruitages juges mauvais car procedural NAIF (sinus+FM+bruit filtre = meme moule pour tout, reverb Schroeder boxy   universelle, aliasing, normalisation au PEAK seul donc loudness incoherente 10-15 LU). Refonte tools/sfx_forge.py en   MODELISATION PHYSIQUE numpy/scipy : harpe Karplus-Strong (Re/DADGA</span></div>
+<div class="rule-entry"><span class="rnum">R157</span><span class="rtitle">ZERO CADRATIN player-facing + repair_accents LLM (2026-07-14, petit) - zero-balance</span><span class="rdesc">66 tirets cadratin U+2014 retires des STRINGS affiches au joueur (evocations de cartes, situations/ponts/   epilogues/preambules, interventions de piliers, labels de draft, menu) -&gt; ponctuation FR (`:`/`,`/`;`/`.`)   selon le sens. Les exemples few-shot de merlin_prompt_builder aussi de-cadratinises</span></div>
+<div class="rule-entry"><span class="rnum">R158</span><span class="rtitle">VAGUE MECANIQUE, 5 actions a icones + 2d6 + corruption nature x degre x geste + Fiche du Voyageur
+  (2026-07-14, retours playtest)</span><span class="rdesc">trois refontes verrouillees, §K re-derive UNE fois. (1) 5 ACTIONS A ICONES   remplacent les 4 verbes : Observer (oeil, Sens/Savoir), Agir (main, Agilite/Finesse), Combattre (epee,   Force/Endurance), Reveler (magie, Mystere/Vision), Parler (bouche, Empathie/Verbe). 10 tags de base ; la tuile   ne mo</span></div>
+<div class="rule-entry"><span class="rnum">R159</span><span class="rtitle">LISIBILITE MECANIQUE (labels + pictos) + FIX SOFTLOCK swap_zone (2026-07-14, P0 retours playtest)</span><span class="rdesc">(C1 labels §23) chaque tuile d&#x27;action porte son MOT joueur SOUS l&#x27;icone : Perception / Agir / Conflit /   Mysticisme / Parole (`ACTION_LABELS`/`action_label`) ; `card_name` reste la cle interne. Un vocabulaire UNIQUE   par action a l&#x27;ecran : `label_for_verb` route aussi la Fiche du Voyageur, le noeu</span></div>
+<div class="rule-entry"><span class="rnum">R160</span><span class="rtitle">AUDIO HYBRIDE, 13 sons riches GENERATIFS (Stable Audio 3) + 12 ticks proceduraux (2026-07-14)</span><span class="rdesc">Retour joueur : la synthese physique v4 (R156) sonnait TROP BRUTE. Pivot vers du GENERATIF facon ElevenLabs,   GRATUIT et sans nouvelle inscription : les 13 SFX RICHES (7 stingers, magic_reveal, draft_reveal,   whisper_threshold, corruption_tick, ink_wash, question_transition) sont generes par Stabl</span></div>
+<div class="rule-entry"><span class="rnum">R161</span><span class="rtitle">AUDIO ROUND 2, son unitaire/carte + ticks organiques + vraie musique (2026-07-14, retours ecoute)</span><span class="rdesc">(1) DISTRIBUTION SONORE PAR CARTE : un flick UNITAIRE par carte REELLEMENT tiree (vue neuve), empile en cascade   decalee DEAL_STAGGER_MS(55) x motion(), round-robin deal/__v2/__v3 sur pool 8 voix. 1 carte=1 son, N=N, 0=silence.   Cause du bug : play_sfx(&#x27;deal&#x27;) par-carte etait ECRASE a 1 seul son p</span></div>
+<div class="rule-entry"><span class="rnum">R162</span><span class="rtitle">MUSIQUE DE GAMEPLAY MELODIQUE (tools/melody_forge.py, 2026-07-15)</span><span class="rdesc">les musiques Stable Audio   (diffusion) etaient jugees trop bizarres/ambiantes et NON controlables. Remplacees par un COMPOSITEUR celtique   algorithmique 100% pur-numpy pilotant les synthes physiques existants (harpe Karplus-Strong, bodhran membrane)   + une voix tin-whistle additive band-limitee (</span></div>
+<div class="rule-entry"><span class="rnum">R163</span><span class="rtitle">MUSIQUE DE GAMEPLAY PAR ECHANTILLONS REELS (backend SF2, 2026-07-15, retour ecoute)</span><span class="rdesc">le rendu   physical-modeling de R162 sonnait encore « trop digital, il faut de vrais instruments ». melody_forge gagne un   SECOND backend de rendu (`--render sf2|physical`, sf2 par DEFAUT, physical = fallback GPO-safe) qui joue de VRAIS   echantillons d&#x27;instruments via un SoundFont General MIDI (Ge</span></div>
+<div class="rule-entry"><span class="rnum">R164</span><span class="rtitle">ECONOMIE IN-RUN V1 (Gwenneg, marchand garanti, Promesse, Coup de Pouce ; 2026-07-27, vague W0
+  de l&#x27;audit studio)</span><span class="rdesc">le jeu garde ses 2 jauges de SURVIE (Intégrité, Corruption) et gagne 1 MONNAIE de   run, le **Gwenneg** (jamais une 3e jauge : ne met pas la survie en jeu, remis à zéro à chaque run).   GAINS : par degré résolu (échec 0, partiel 1, réussite 2, éclatante 4) + butin d&#x27;Exploration (60% de   chance sur </span></div>
+<div class="rule-entry"><span class="rnum">R165</span><span class="rtitle">RAMPE DE DIFFICULTE PAR QUETE (DC, dents de scie ; 2026-07-27, vague W1 de l&#x27;audit studio)</span><span class="rdesc">la courbe plate (diff 2 partout) est remplacée par une rampe DETERMINISTE sur le DC seul :   dc_effectif = DC_BY_DIFF[difficulte] + dc_ramp_bonus(beat), avec dc_ramp_bonus = PER_QUEST(1) x index   de quête, +CLIMAX_BUMP(1) si le beat est un Climax de quête, plafond CEILING=12, et le VRAI Climax   fi</span></div>
+<div class="rule-entry"><span class="rnum">R166</span><span class="rtitle">CHARTE NARRATIVE COMPLÈTE, scénarios/mort/corruption/méta (2026-07-28, vague W-CANON, 16
+  décisions verrouillées user en 4 rounds AskUserQuestion)</span><span class="rdesc">(1) CHARTE DES SCÉNARIOS (§25, cœur de   la vague) : casting (≥1 figure par quête, pilier ≥1/run déjà garanti R127/R131, zéro répétition   hors pilier/créancier), 3 envergures (brève 1 quête, périple 2-3 INCHANGÉ, odyssée 4 NOUVELLE à   calibrer), 2 `merlin_slot` scriptés (transition, veille_climax)</span></div>
+<div class="rule-entry"><span class="rnum">R167</span><span class="rtitle">FIL CAUSAL, GESTE VERBALISE, MERLIN COMPAGNON (2026-07-28, retour fondateur de Maxime sur
+  le premier etalon)</span><span class="rdesc">trois exigences de recit NON NEGOCIABLES, detaillees en §25.4bis et verifiees   par le QC §25.5. (1) INTRODUCTION complete obligatoire : preambule de Merlin + accroche de quete   RELIEE a son climax (la promesse d&#x27;ouverture est tenue a la fin), jamais d&#x27;entree a froid.   (2) Le GESTE est VERBALISE :</span></div>
+<div class="rule-entry"><span class="rnum">R168</span><span class="rtitle">MAIN VIVANTE ET INDICES DE NATURE (repioche, conversion, mots-indices, registre ; 2026-07-28,
+  retours Maxime sur l&#x27;etalon)</span><span class="rdesc">quatre decisions liees pour que le joueur REPONDE au besoin au lieu   de subir sa main, en restant simple et transparent. (1) REPIOCHE : 1 gratuite par beat, ciblee   (defausser 1 carte de la main, repiocher 1, avant de jouer ; un geste). (2) CONVERSION : 1 par beat,   une carte jouee peut compter c</span></div>
+<div class="rule-entry"><span class="rnum">R169</span><span class="rtitle">REGISTRE DE RECIT EQUILIBRE (2026-07-29, 2e retour d&#x27;ecriture de Maxime sur les 10
+  sentiers)</span><span class="rdesc">« Tout est trop image et trop destructure, ca fait too much, l&#x27;ecriture est trop   enigmatique. » Le pendule est recale : ni le soutenu de l&#x27;etalon v1, ni le hache de R168.   La cible est la NARRATION DE RECIT : phrases de longueur moyenne, equilibrees, qui coulent ;   alternance naturelle des longu</span></div>
+</div>
+<h2>Sections de la BIBLE</h2>
+<details><summary>Quickstart (build-ready) — résumé exécutif</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Pitch** : **M.E.R.L.I.N.** — deck-building narratif celtique. Un voyageur, à son insu prisonnier de la **simulation rêvée par l&#x27;IA Merlin**, cherche le **Graal (= la sortie)** à Brocéliande. Feel Citizen Sleeper / Cultist Simulator, ton **merveilleux-inquiétant**.
+- **Boucle** : situation (LLM) → main ~5 → joue **1 principale + 1-2 modificateurs** → **résolution hybride** (couverture des **tags requis** → degré ; le **code** applique les jauges ; **Gemma 4 narre**) → Intégrité/Corruption → situation suivante (lookahead).
+- **2 jauges de survie** : **Intégrité (0-10)** + **Corruption** (monte avec les cartes risquées ; seuils → événements + cartes corrompues). **Mort narrative** jugée par Gemma 4. S&#x27;y ajoute **1 monnaie de run** (le **Gwenneg**, R164) : elle n&#x27;est PAS une 3e jauge, elle ne met jamais la survie en jeu et repart à zéro à chaque run.
+- **Scénario** : Menu → **3 titres+pitch générés** → squelette (écran &quot;Merlin écrit&quot;) → **5 situations + climax** → fin (multiple). **Méta cross-run** : chaque run = un fragment du Graal ; **révélation finale = fusion avec Merlin** (éternel retour).
+- **4 factions** (toutes brisées par le Graal) : **Druides** (gardiens illusionnés qui glitchent) · **Créatures &amp; Êtres** (désunis, en boucle) · **Chevalerie déchue** (Arthur, rejoue sa défaite) · **Corrompus** (le bug fait chair).
+- **Tech** : **MerlinLLM natif** (Gemma 4 E2B), **GBNF** (1/sortie), **100% local, zéro Ollama**, Desktop Windows. **2D minimal** (texte+tags ; glitch indexé sur la Corruption). Artworks SD (gravure sépia, 1/situation) = **post-MVP**.
+- **MVP** : la boucle ci-dessus · deck canon **12 cartes** (4 approches) · **Brocéliande seul** · Merlin + 2-3 figures · accueil Merlin minimal. **Reporté** : roster complet, autres biomes, SD, méta/réputation.
+&gt; Détail complet : sections §1-§16 + journal de décisions ci-dessous.
+
+---</p></details>
+<details><summary>Cœur du jeu (verrouillé 2026-05-25)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Genre** : deck-building **narratif**.
+- **Cœur IA** : **Gemma 4** (génère les scénarios) + **Stable Diffusion 1.5 / modèle visuel CPU**
+  (génère les artworks des cartes). 100% local, natif.
+- **Tech LLM** : MerlinLLM natif direct (Gemma 4 E2B), zéro Ollama.
+- **Visuel** : 2D minimal d&#x27;abord ; artworks générés ajoutés ensuite.</p></details>
+<details><summary>MVP cible (verrouillé 2026-05-25)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">Menu → lancer la scène de jeu **Brocéliande (Biome 1)** → sélectionner parmi **3 scénarios générés**
+(titres différents à chaque lancement) → **chargement du scénario complet** → le jeu suit.
+
+---</p></details>
+<details><summary>Table des matières (domaines de la bible)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">1. Vision &amp; Piliers
+2. Boucle de gameplay
+3. Deck-building (acquisition, construction, pioche, main, défausse, synergies)
+4. Anatomie des cartes (types, coûts, effets, rareté)
+5. Scénarios (structure, sélection 3-titres, beats, longueur, fin)
+6. Biomes &amp; Monde (Brocéliande = Biome 1)
+7. Ressources &amp; Économie
+8. Progression &amp; Méta-progression
+9. Génération LLM — Gemma 4 (rôles, prompts, contraintes)
+10. Génération visuelle — SD 1.5 / CPU (style, pipeline, perf)
+11. UI / UX 2D (écrans, navigation, feedback)
+12. Audio
+13. Narratif / Ton / Lore
+14. Technique / Perf / Plateforme / Export
+15. Onboarding / Tutoriel
+16. Périmètre MVP détaillé
+
+&gt; **Sections additionnelles (post-questionnaire)** : §18 v10.13 Fondations prouvées (R108-R113) ·
+&gt; §19 R114 Montée en gamme · §20 Direction Artistique (R115) · §21 Animations &amp; Juice (R116) ·
+&gt; §22 Audio (R117) · §23 Lisibilité &amp; Accessibilité (R118) · §24 Pipeline Assets &amp; Outillage (R119) ·
+&gt; §25 Charte des scénarios (R166).
+&gt; (§17 : numéro non attribué — gap historique conservé.)
+
+---</p></details>
+<details><summary>Journal des décisions (chronologique)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">### 2026-05-25 — Fondations (reset complet)
+- Reset projet Godot complet : `scenes/` + `scripts/` supprimés ; moteur natif **MerlinLLM conservé**
+  (`addons/merlin_llm/` + modèles GGUF), `data/`, `docs/`, `assets/`, `tools/` conservés.
+- Concept retenu : **deck-building narratif**, Gemma 4 + SD 1.5 (ou modèle visuel CPU) au centre.
+- Toute bible/mémoire antérieure = **oubliée / non-autoritaire**.
+- MVP : Menu → Brocéliande → 3 scénarios générés → chargement → jeu.
+- (les réponses des rounds AskUserQuestion s&#x27;ajoutent ci-dessous au fil de l&#x27;eau)
+
+### 2026-05-25 — Round 1 (fondations deck-building)
+- **Modèle** : le deck = **répertoire d&#x27;actions du joueur** ; on joue des cartes sur des situations générées.
+- **Carte** = volontairement **multi-facettes** (action / pouvoir / personnage / fragment à la fois) ; **cœur = COMBINER des cartes** pour résoudre une situation.
+- **Acquisition** = **mix récompense + LLM** (récompenses structurées, contenu généré par Gemma 4).
+- **Référence-feel** = **Citizen Sleeper / Cultist Simulator** (narratif systémique, gestion de cartes abstraites, ambiance forte, peu de combat frontal).
+
+### 2026-05-25 — Round 2 (mécanique de combinaison = cœur)
+- **Situation** = scène narrative **ouverte** ; le joueur joue une combinaison libre, **Gemma 4 juge** le résultat + les conséquences.
+- **Geste** = **1 carte principale + 1-2 modificateurs** (les modificateurs amplifient/altèrent l&#x27;action principale).
+- **Succès** = **hybride** : la combinaison doit couvrir les **tags requis** ET Gemma 4 évalue la **pertinence narrative** → résultat (réussite / partiel / échec) nuancé.
+- **Main** = **limitée (~5) + pioche/défausse** (cycle roguelike, tension de pioche).
+
+### 2026-05-25 — Round 3 (anatomie de carte)
+- **Tags** = **libres, générés par le LLM** (vocabulaire ouvert) → la résolution s&#x27;appuie sur le **jugement sémantique de Gemma 4** (cohérent §2).
+- **Coût** = **narratif/risque** (pas d&#x27;énergie) : les cartes puissantes ont un prix dans l&#x27;histoire/l&#x27;ét</p></details>
+<details><summary>Progression du questionnaire (200+ Q)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- [x] Round 1 — Modèle deck-building / nature carte / acquisition / référence-feel
+- [x] Round 2 — Mécanique de combinaison (situation, geste, succès, main)
+- [x] Round 3 — Anatomie de carte (tags libres, coût narratif, rôle flexible, affichage)
+- [x] Round 4 — Ressources &amp; état (Intégrité + Corruption, mort narrative, méta cross-run)
+- [x] Round 5 — Structure run/scénario (linéaire+climax, longueur LLM, 3 titres+pitch, fins multiples)
+- [x] Round 6 — Pipeline génération (squelette + lookahead + résumé/état + écran &quot;Merlin écrit&quot;)
+- [x] Round 7 — Brocéliande Biome 1 (forêt celtique mystique, lore central profond, tags+Corruption, seul biome MVP)
+- [x] Round 8 — Lore central 1/n (joueur=voyageur/simulation/Graal, Merlin=narrateur, forêt vivante, ton merveilleux-inquiétant)
+- [x] Round 9 — Lore central 2/n (Graal=sortie, simulation=Merlin-IA qui rêve, quête=méta cross-run, victoire TBD)
+- [x] Round 10 — Forces/factions/personnages (4 factions + 20+ persos, mémoire PNJ cross-run, réputation mécanique, antagoniste=Corruption, solo+Merlin)
+- [x] Round 11 — Cadre des 4 factions (4 natures distinctes ; Druides/Féerie/Chevalerie/Corrompus ; Graal=malédiction ; statu quo fragile)
+- [x] Round 12 — Druides (gardiens illusionnés, sagesse aléatoire, mémoire effacée→glitch, hostiles, tags nature/savoir/équilibre/sacrifice)
+- [x] Round 13 — Créatures &amp; Êtres (faction désunie/variée, piégés en boucles, farceurs imprévisibles, tags variés)
+- [x] Round 14 — Chevalerie déchue (quête vaine du Graal, rejouent leur défaite, indifférence hébétée ; tags honneur/ruine/folie/fer)
+- [x] Round 15 — Corrompus (bug fait chair, diffus+figures, tentent de céder, tags dissolution/mutation/glitch/tentation) — 4 factions OK
+- [x] Round 16 — Merlin (bienveillant-énigmatique, sait tout mais muselé, guide sincère limité, voix+texte)
+- [x] Round 17 — Roster (fiches canon pré-écrites incarnées par le LLM, noyau ~6-8 + passage, mémoire aux récurrents, MVP Merlin+2-3)
+- [x] Round 18 — UI/UX 2D (3 écrans Men</p></details>
+<details><summary>1. Vision &amp; Piliers</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Référence-feel** : Citizen Sleeper / Cultist Simulator — narratif systémique, gestion de cartes/ressources abstraites, ambiance forte, peu/pas de combat frontal.
+- **Verbe central du joueur** : COMBINER des cartes pour résoudre des situations narratives générées par le LLM.
+- **Piliers de design (R67) — la boussole, non-négociables** :
+  1. **North star = l&#x27;émergence par la combinaison** : tes combinaisons de cartes génèrent une histoire unique (deck × Gemma 4). C&#x27;est LE cœur — tout sert ce mariage.
+  2. **Les choix mécaniques priment** : le **code décide** les conséquences (jauges, degré), **Gemma habille** en récit. Le joueur sent que ses choix comptent (§2 &quot;code applique, LLM narre&quot;).
+  3. **Lisibilité d&#x27;abord, profondeur émergente** : peu de règles visibles, action évidente en &lt;2s (4 piliers UX FACILE/ÉVIDENT/MINIMAL/TACTILE) ; la profondeur naît des combinaisons et du récit, pas d&#x27;un manuel.
+  4. **Rejouabilité = variété générative** : jamais deux runs pareilles (Gemma + tirage + biome) ; la surprise est la récompense (cohérent &quot;jamais de contenu fixe&quot;).</p></details>
+<details><summary>2. Boucle de gameplay</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">**Boucle de résolution (cœur)** :
+1. Le LLM présente une **situation** = scène narrative ouverte.
+2. Le joueur a une **main limitée (~5 cartes)** piochée de son deck.
+3. Il joue une **combinaison** : 1 carte **principale** (l&#x27;action) + 1-2 **modificateurs**.
+4. **Résolution hybride** (ternaire **réussite / partiel / échec**) : la **couverture des tags requis** (situation) par les **tags joués** oriente le degré ; **quasi-déterministe** (maîtrise récompensée, peu de hasard). Le **CODE applique** les deltas **Intégrité/Corruption** (valeurs bornées des cartes/règles) ; **Gemma 4 NARRE** le résultat. Le **partiel** = succès à un prix (Corruption).
+5. Cartes jouées → **défausse** ; on **repioche** ; situation suivante.
+
+**Math de combinaison (R66)** :
+- **Pooling total des tags** : tous les tags joués (principale + modificateurs) sont mis en commun à égalité pour couvrir les `required_tags` ; un tag requis **couvert reste couvert** (pas de double comptage).
+- **Coût Corruption = somme** des coûts de toutes les cartes jouées (affiché avant validation, R55).
+- **Tags hors-sujet** (ni requis, ni synonyme — matching souple R61) : **sans effet** (n&#x27;aident ni ne pénalisent) ; **exception : tags antagonistes** (R41) qui **dégradent activement** le degré.
+- **Pas de plafond supplémentaire** : la limite **1 principale + 2 modificateurs** (R41) + le **coût Corruption** + la **taille de main** suffisent à réguler.
+
+**Résolution — exemples concrets (R105)** — situation req `[Verbe, Ruse]`, diff 2, Rencontre (korrigan/troc) :
+- **Réussite éclatante** : *Le Mot Rusé* `[Ruse]` + *La Langue de Miel* `[Empathie, Verbe]` → poolé {Ruse,Empathie,Verbe} : Verbe✓ Ruse✓ + Empathie (extra pertinent) → **éclatante** ; coût 0 ; **Intégrité +0 · Corruption +0** + bonus narratif/souvenir (R90). _Narr._ : « Tu retournes ses mots… il glisse la fiole dans ta main, sans rien réclamer. Pour cette fois. »
+- **Partiel** : *La Langue de Miel* `[Empathie, Verbe]` seule → {Empathie,Verbe} : Verbe✓ Ruse✗ → *</p></details>
+<details><summary>3. Deck-building</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Modèle** : le deck = **ton répertoire d&#x27;actions** (ce que le joueur PEUT faire). On joue des cartes pour répondre aux situations générées.
+- **Nature des cartes** : volontairement **multi-facettes** (action / pouvoir / personnage / fragment) — l&#x27;intérêt central est la **combinaison** de cartes pour résoudre une situation.
+- **Acquisition** : **mix récompense + LLM** — récompenses structurées dont le contenu est généré par Gemma 4 selon le scénario.
+- **Main &amp; pioche** : main **limitée (~5 cartes)**, cycle **pioche → jeu → défausse** (tension roguelike).
+- **Deck de départ (MVP)** : **12 cartes canon**, identité **voyageur débutant généraliste** — 4 approches (~3 cartes chacune) : **Observation/perception**, **Action physique/corps**, **Parole/lien social**, **Intuition/merveilleux** (flirte avec la Corruption). **1-2 tags/carte**. Spécialisation via cartes acquises (post-MVP).
+- **Acquisition (post-MVP)** : **récompense à des moments-clés** (choix d&#x27;1 carte parmi quelques-unes), **cartes générées par le LLM selon le vécu** (acte marquant → carte unique ; le deck raconte ton histoire).
+- **Évolution** : **épurer** (retirer, dont corrompues à un prix) + **transformer/améliorer** (rare).
+- **Persistance** : **reset par run** + **déblocages cross-run** qui élargissent le pool futur (méta §8).
+- **Les 12 cartes de départ (canon, R33)** — noms évocateur+verbe, tags = concepts simples, **tags-only** (jauges via résolution) :
+  - *Perception* : **Le Regard Perçant** (Observer) `[Sens]` · **L&#x27;Écoute du Silence** (Écouter) `[Sens, Savoir]` · **La Mémoire des Lieux** (Se souvenir) `[Mémoire, Savoir]`
+  - *Corps* : **La Main de Fer** (Forcer) `[Force]` · **Le Pas Léger** (Esquiver) `[Agilité]` · **Le Souffle Tenace** (Endurer) `[Endurance, Force]`
+  - *Parole* : **La Langue de Miel** (Convaincre) `[Empathie, Verbe]` · **Le Mot Rusé** (Ruser) `[Ruse]` · **La Présence Calme** (Apaiser) `[Empathie]`
+  - *Intuition* : **Le Pressentiment** (Pressentir) `[Instinct]` · **La Voix d</p></details>
+<details><summary>4. Anatomie des cartes</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Tags — taxonomie (R3/R78)** : **cœur curé (~20-30 concepts canon)** qui ancre génération + matching, **+ extensions LLM libres** autour (le LLM peut inventer, puis on normalise). La résolution opère sur la **couverture de concepts** (cf. §2), pas sur l&#x27;égalité de chaînes brutes.
+  - **Familles** (couleur des pastilles R51 + biais par type R68) : **Perception · Corps · Parole · Intuition** (4 approches R21/R33) + **Monde/Mystique** (Nature, Savoir, Rituel…) + **Corrompu** (glitch/vide/dissolution, visuellement marqué).
+  - **Tags antagonistes** : une situation peut **déclarer des tags qui sabotent** si joués (R41).
+  - **Normalisation (matching souple R61)** : les tags libres hors-cœur sont **mappés au concept-cœur le plus proche** (table de synonymes) → couverture déterministe. Embeddings = post-MVP.
+  - **Cœur curé — liste (R81, ~25 concepts)** :
+    - **Perception** : Sens · Savoir · Mémoire · Vigilance
+    - **Corps** : Force · Agilité · Endurance · Finesse
+    - **Parole** : Empathie · Verbe · Ruse · Autorité · Franchise
+    - **Intuition** : Instinct · Nature · Vision
+    - **Monde/Mystique** : Rituel · Sacrifice · Équilibre · Mystère (+ Savoir/Mémoire/Nature, cross-pertinents)
+    - **Corrompu** : Vide · Glitch · Dissolution · Murmure · Emprise
+    - _Règle : 1 famille primaire (couleur de pastille) par concept ; sens large ; le LLM peut ajouter hors-cœur, normalisé vers le concept proche._
+- **Rôle flexible** : toute carte peut être jouée comme **principale** (l&#x27;action) OU **modificateur** (amplifie/altère la principale).
+- **Coût** : pas d&#x27;énergie. Certaines cartes (puissantes) ont un **coût narratif/risque** (corruption, fatigue, dette…) — prix payé dans l&#x27;histoire/l&#x27;état du joueur.
+- **Multi-facettes** : action / pouvoir / personnage / fragment (cf. §3).
+- **Affichage 2D (R51)** : **Nom + texte d&#x27;évocation + tags (pastilles colorées) + coût de Corruption (si &gt;0)**. **Bordure = rareté**. Format **compact en main, agrandi au survol/sélection**. Pas d&#x27;art</p></details>
+<details><summary>5. Scénarios</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Unité de run** = un **scénario** : **suite linéaire de situations** menant à un **climax** final.
+- **Longueur** : **variable, décidée par Gemma 4** (~5 à ~12 situations).
+- **Sélection (MVP)** : à l&#x27;entrée du biome, **3 scénarios** proposés = **titre + pitch de 2-3 lignes** (générés, différents à chaque fois). Le **scénario complet n&#x27;est généré qu&#x27;à la sélection**.
+- **Fins multiples** : la conclusion dépend de l&#x27;**état** (Intégrité, Corruption, choix) ; **épilogue généré** par le LLM. Mort narrative possible en cours de route (cf. §7).
+- **Génération** : squelette à la sélection, situations en **lookahead arrière-plan**, mémoire = résumé glissant + état structuré (détail §9).
+- **Situation (data model)** : `{narration, required_tags[], difficulté, type}`. Le LLM génère les **tags requis** ; le joueur les **devine via indices narratifs** (pas de liste brute). **Difficulté** = nb + rareté des tags (posée par le beat, monte vers le climax).
+- **Types de beats (R68) — enum fermé (5)** :
+  - **Rencontre** (PNJ, social → biais tags parole/lien) · **Épreuve** (obstacle concret → biais corps/perception) · **Exploration** (découverte du lieu → biais perception/intuition, peut révéler lore/carte) · **Dilemme** (choix moral, souvent lié à la Corruption) · **Climax** (confrontation finale).
+  - **Influence** : le type oriente **ton + tags favorisés + difficulté + ambiance** (audio/visuel). _(Interactions spéciales par type, ex. Dilemme = choix direct sans carte = post-MVP.)_
+- **Structure du run (R68)** : **courbe de difficulté/tension montante vers le Climax**, types **variés au milieu** ; Gemma arrange l&#x27;ordre dans le squelette **sous contrainte de difficulté croissante**.
+- **Climax (R68)** : **difficulté max** (3 tags / antagonistes) + **enjeu décisif** ; son **degré oriente l&#x27;épilogue** généré. Souvent une **confrontation avec un pilier/faction** (§6).
+- **Fin de run &amp; épilogue (R69)** :
+  - **3 types de fin** : **Accomplissement** (climax atteint ; ton ∝ degré + éta</p></details>
+<details><summary>6. Biomes &amp; Monde</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">### Brocéliande — Biome 1 (seul biome du MVP)
+- **Identité** : forêt celtique mystique (légende bretonne/arthurienne — Merlin, fées, korrigans, sources sacrées). Mystère + merveilleux.
+- **Approche thématique** : pas une tension unique. Les scénarios/quêtes sont **variés**, puisant dans un **lore central profond** (à construire — cf. §13). La variété naît de la richesse du lore.
+- **Influence mécanique** : oriente les **tags dominants** des situations et des cartes + installe une **pression de Corruption** caractéristique.
+- **Périmètre** : **seul biome du MVP** ; autres biomes après.
+- **Lore détaillé (R88)** :
+  - **Lieux archétypaux récurrents** (réutilisés/variés par le LLM) : **clairière aux menhirs · fontaine/source sacrée · arbre-monde · tourbière · ruines moussues**.
+  - **Forêt vivante = miroir** : **réactive à tes choix/Corruption** — le décor s&#x27;embellit ou se déforme et **te renvoie ton reflet**.
+  - **Ton sensoriel** : **beauté qui dérange** (la féerie qui mord) — des merveilles teintées d&#x27;un **détail faux/menaçant**.
+  - **Transformation (∝ Corruption)** : **pourriture organique + glitch d&#x27;artificialité mêlés** — la forêt se tord ET laisse poindre son artificialité (unit ton celtique + motif glitch §10 + indice ténu de la simulation, **sans briser le 4e mur**).
+
+### Biomes futurs (R97, post-MVP)
+- **Cible ~8 biomes** (large roster, post-MVP ; Brocéliande = seul au MVP).
+- **Ce qui varie** : **lore/factions dominantes + tags favorisés + ambiance audiovisuelle + ton** — la **boucle de jeu reste identique** (variété sans refonte).
+- **Thèmes** : **lieux celtiques/arthuriens** (Avalon, Tintagel, la mer d&#x27;Iroise…) **de plus en plus altérés/glitchés à l&#x27;approche du Graal** (hybride : univers cohérent + escalade méta subtile, **sans briser le 4e mur**).
+- **Accès** : **débloqués par la méta** (hauts faits/fragments, R80) ; **choix du biome au menu/écran-seuil**.
+
+### Forces, Factions &amp; Personnages (Brocéliande)
+- **Les 4 factions** — 4 **natures mythologiques </p></details>
+<details><summary>7. Ressources &amp; Économie</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Deux jauges** :
+  - **Intégrité** — survie/cohésion du joueur ; les dangers la réduisent.
+  - **Corruption** — **monte** quand on joue des cartes risquées/puissantes (= le « coût narratif »). Élevée = conséquences graves, dérives, événements sombres.
+- **Pas d&#x27;énergie** de jeu (cf. §4) : la pression vient de la gestion **Intégrité / Corruption** + de la pioche.
+- **Mort narrative (R69)** : **Intégrité 0 = plancher fatal**, narré par Gemma (pas un &#x27;Game Over&#x27; sec) ; Gemma peut aussi acter la mort sur un **choix désastreux à Intégrité basse**. (La **Corruption max → fin &quot;corrompue&quot; distincte** — une bascule, pas une mort, R64.)
+- **Mécanique Corruption (R24)** : chaque carte a une **valeur `corruption`** (0 sûre / 1-3 risquée), ajoutée **à chaque jeu**. Accumulation lente. **Seuils** → **événements sombres + cartes corrompues injectées dans le deck** (polluent la main → spirale vers la mort narrative ; écho de la faction Corrompus §6).
+- **Intégrité (R25)** : **échelle ~0-10** (lisible, pertes 1-3). Attaquée par **échecs/partiels + dangers de situation**. **Récupération rare et méritée** (cartes de soin/équilibre, repos, réussites éclatantes). **Bas** = vulnérabilité + bascule mort narrative.
+- **Valeurs (R46)** : départ **Intégrité 10/10, Corruption 0**. **Cadence Corruption** : un **seuil d&#x27;événement tous les ~5 points** (≈ 2-3 cartes risquées). Difficulté situation = **1-3 tags requis** (monte vers le climax). Run MVP = **5 situations + climax** (~6).
+- **Corruption — chiffrage (R64)** :
+  - **Coût par carte = 0-3** (0 = majorité du deck/sûres · 1-2 = occasionnel/risqué · 3 = rare/pacte). Payé **en jouant** la carte (R55), quel que soit le résultat.
+  - **Seuil d&#x27;événement tous les 5 points** (5/10/15…) → **événement narratif sombre + 1 carte corrompue injectée** dans le deck.
+  - **Plafond ~15-20 = bascule narrative** : atteindre le max déclenche une **fin spécifique &quot;corrompu&quot;** (absorption/dissolution), PAS un game over sec. _(Transformation jouable en corro</p></details>
+<details><summary>8. Progression &amp; Méta-progression</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Cross-run** : une partie de l&#x27;état **persiste** entre les runs et **influence les runs suivantes**.
+- **Grande quête = la méta cross-run** : chaque run est **un pas vers le Graal** (clé de sortie de la simulation, §13).
+- **Ce qui persiste (R43)** : **déblocages de cartes** (R26) · **jalons du Graal** · **mémoire PNJ + réputation** (R27/R42) · **lore/codex découvert**.
+- **Structure (R43/R50)** : **écran-seuil onirique** entre les runs = **un seuil/porte indéfinie** (entre-deux abstrait : brume, lueurs). On y : voit les **jalons du Graal** · **épure/gère son deck** (purif des corrompues) · consulte le **codex/lore** · **parle à Merlin** (bilan par énigmes ; voix+texte). **Post-MVP** (au MVP, fin → menu).
+- **Jalons du Graal** : **chaque run dévoile un fragment/jalon** (révélation cumulative vers la sortie).
+- **Perte** : **surtout du gain, recul rare** (choix désastreux ; pas de mur).
+- **Endgame (R44)** : le Graal est **atteignable** après une longue quête (assez de fragments). **Révélation = fusion avec Merlin** (le joueur devient le rêveur — éternel retour, §13). Ensuite : **New Game+ éclairé** ; **plusieurs fins-méta** selon Corruption/factions/choix.
+- **Chiffrage méta (R80)** :
+  - **Quête longue** : **~20-30 fragments** (≈ runs significatives) pour réunir le Graal.
+  - **Persistance** : **cartes débloquées + fragments Graal + codex + mémoire/réputation PNJ + méta-niveau/score joueur**.
+  - **Cadence = conditionnelle (hauts faits)** : déblocage par **accomplissements** (1ère victoire sur un pilier, seuil de réputation, fin spéciale…), **pas par compteur**.
+  - **Pool de cartes = pas de pool fixe** : hormis les **12 cartes canon de départ**, **toutes les cartes acquises sont forgées par le LLM** (cartes-souvenir selon le vécu, R49). Équilibrage = via les **contraintes de génération** (force = +tags/rares), pas des cartes pré-équilibrées.
+  - ⚠️ **Quasi tout = post-MVP** (au MVP : pas de gain de cartes en run R19, fin → menu).
+- **Fins-méta &amp; NG+ (R89)** :
+ </p></details>
+<details><summary>9. Génération LLM (Gemma 4)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">**Pipeline (CPU-aware)** :
+1. **Entrée biome** → génération de **3 titres + pitch** (pour la sélection).
+2. **À la sélection** → **squelette** du scénario (synopsis + liste de beats), pendant un **écran de chargement dédié &quot;Merlin écrit&quot;** (court).
+3. **En jeu** → chaque **situation** rédigée par **lookahead en arrière-plan** (N+1 générée pendant qu&#x27;on joue N) pour masquer la latence CPU.
+4. **Cohérence** : **résumé narratif glissant** + **état structuré** (faits clés, choix, jauges Intégrité/Corruption) injectés dans chaque prompt.
+5. **Résolution** d&#x27;une combinaison + **épilogue/fin** : jugés/rédigés par Gemma 4 (cf. §2, §5, §7).
+- **Tech** : MerlinLLM natif (Gemma 4 E2B), GBNF pour les sorties structurées, zéro Ollama.
+
+**Contrats de sortie (1 GBNF dédié par type structuré ; résolution = prose pure)** :
+- **Sélection** : `{scenarios:[3]{title, pitch}}`
+- **Squelette** : `{title, synopsis, beats:[{n, summary, type, difficulté}]}`
+- **Situation** : `{narration, required_tags[], difficulté, type}` — **`narration` en 1er champ** (parsing incrémental → typewriter live, R63).
+- **Résolution** : le **CODE** calcule le degré (réussite/partiel/échec) depuis la couverture de tags ; le LLM produit **la narration en prose pure (PAS de GBNF, streamée — R63)** ; le code applique les deltas Intégrité/Corruption.
+
+**Mémoire &amp; cohérence (R27 / R60)** :
+- **État structuré &quot;complet&quot;** (maintenu par le CODE, réinjecté dans chaque prompt) :
+  - `jauges` : Intégrité (0-10) · Corruption
+  - `scenario` : titre · beat_courant · n° / total
+  - `faits_marquants` : liste courte (conséquences durables)
+  - `pnj_rencontres` : [{nom, relation}]
+  - `choix_cles` / flags : décisions qui doivent influer plus tard
+  - `cartes_notables_jouees` : marqueurs pour callbacks narratifs
+- **Résumé glissant = prose réécrite** : Gemma réécrit **3-5 phrases** qui intègrent la nouvelle situation et **remplacent** l&#x27;ancien ; **budget ~150-200 tokens** ; **priorité de rétention = conséquences durables** (Corrup</p></details>
+<details><summary>10. Génération visuelle (SD 1.5 / CPU)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">### Identité visuelle 2D (MVP — sans artwork)
+- **Style** : **minimaliste élégant**, typographique, le **texte est roi** (feel Citizen Sleeper). Beaucoup d&#x27;espace.
+- **Palette exacte (R70) — &quot;parchemin sombre&quot;** : fond `#14100C` · surface parchemin `#2A2018` · texte ivoire `#E8DCC0` · accent **or** `#C9A24B` · **vert forêt** `#4F6B3E` (chaleureux-mystique).
+- **Typo (R70)** : **tout-serif** — titres = **serif display** à caractère (ex. Cinzel / EB Garamond bold) · corps = **serif humaniste lisible** (ex. EB Garamond / Lora).
+- **Jauges &amp; Corruption (R70)** : **Intégrité = or/vert chaud** `#7FA65C` · **Corruption = violet maladif** `#7B4FA3` ; la montée de Corruption **désature + glitche** progressivement l&#x27;écran (écho du motif §10).
+- **Bordures de rareté (R70/R53)** : Commune `#6B5A3E` (sépia) · Rare `#A8B0B8` (argent) · Épique `#C9A24B` (or + halo) · Mythique **irisé animé**.
+- **Ambiance (merveilleux-inquiétant) sans illustration** :
+  - **Glitch visuel indexé sur la Corruption** : plus la Corruption monte, plus l&#x27;UI/le texte **glitche** — écho visuel du motif narratif (factions qui glitchent, Corrompus = bug).
+  - **Grain + vignette + lueurs** ; **animations subtiles** (texte qui respire, légère dérive).
+  - **Glitch — paliers (R75)** : 4 paliers calés sur les seuils R64 — **0-4 sain** (aucun) · **5-9 trouble** (désaturation légère) · **10-14 emprise** (aberration chromatique + tremblement du texte) · **15+ dissolution** (artefacts marqués).
+  - **Manifestations** : **désaturation + aberration chromatique légère + tremblement du texte + artefacts brefs**.
+  - **Portée** : **globale graduée** — couche d&#x27;ambiance discrète partout (∝ palier) + glitch **renforcé sur les éléments corrompus** (cartes/PNJ corrompus).
+  - **Réversibilité &amp; accessibilité** : suit la Corruption (**monte ET descend**, ex. rite druide R64) ; l&#x27;option **&#x27;réduire animations&#x27;** (R74) l&#x27;**atténue fortement** mais **conserve un indice statique** (teinte/icône) pour toujours lire l&#x27;état.
+### Artw</p></details>
+<details><summary>11. UI / UX 2D</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Écrans (MVP)** : **Menu** → **Sélection scénario** (3 choix) → **Scène de jeu**. (Épilogue/fin affiché dans la scène de jeu ; méta/codex plus tard.)
+- **Menu principal (R73)** : **titre M.E.R.L.I.N. typographique** sur parchemin sombre, **fond animé subtil** (brume/braises qui dérivent), entrées sobres : **Nouvelle partie · Continuer · Options · Quitter** (&#x27;Continuer&#x27; grisé sans run en cours). Accueil = **nappe ambiante douce + titre qui respire**. **Save** : **auto-save par beat** → &#x27;Continuer&#x27; reprend au **dernier beat** ; la **méta persiste** à part (§8).
+- **Scène de jeu** : **situation (texte) en haut/centre** · **main de cartes en bas** · **jauges Intégrité/Corruption en haut** · zone de combinaison (principale + modificateurs). Deckbuilder lisible.
+- **Écran Options (R74)** : **Audio** = 3 curseurs (Maître/Musique/SFX) · **Texte** = vitesse du typewriter + taille (3 paliers) + bascule &#x27;tout afficher direct&#x27; · **Langue** = **FR seul au MVP** (multi-langue post-MVP) · **Accessibilité** = **réduire les animations/glitch** + **contraste renforcé** · **Perf** = preset **Éco / Équilibré / Perf** (affine R58, sans exposer les threads bruts).
+- **Layout scène de jeu — régions @1920×1080 (R72)** :
+  - **HUD ~80 px (haut)** : jauges **Intégrité + Corruption en haut-gauche** (2 barres empilées, or-vert `#7FA65C` / violet `#7B4FA3` + valeur chiffrée) ; **fil de progression = perles** sous le HUD (1 par beat, le courant brille, **sans chiffre** — longueur LLM-variable).
+  - **Situation ~600 px (centre)** : texte narratif (typewriter) + **zone artwork réservée** (post-MVP) + locuteur/type.
+  - **Combinaison ~150 px** : **bande centrale juste au-dessus de la main** ; les cartes choisies **montent** de la main vers elle ; bouton **&#x27;Résoudre&#x27;** ancré à cette zone.
+  - **Main ~250 px (bas)** : cartes compactes (180×270, R71).
+- **Panneau de situation (R54)** : texte narratif (**typewriter**, skippable) + **locuteur** (Merlin/PNJ) + **marqueur type/intensité**. **Indices de</p></details>
+<details><summary>12. Audio</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Musique** : **nappe ambiante celtique réactive à l&#x27;état** — discrète, se **teinte/trouble** selon Intégrité/Corruption (écho audio du glitch visuel §10).
+- **SFX** : **feutrés &amp; organiques** (papier, bois, eau, souffle) ; discrets, ne cassent pas l&#x27;ambiance.
+- **Voix de Merlin** : **texte seul au MVP** (la &quot;voix&quot; = texte + typewriter) ; TTS/sons-voix envisagés bien plus tard.
+- **MVP** : **ambiance minimale dès le MVP** (nappe + SFX UI feutrés).
+- **Nappe (R76)** : **drone ambiant celtique sans mélodie marquée** (cordes frottées, harpe lointaine, souffle/vent) — boucle longue, se teinte avec l&#x27;état.
+- **Réactivité (R76)** : **couches additives (stems) pilotées par les jauges** — la **Corruption ajoute des couches dissonantes/détunées**, l&#x27;**Intégrité basse amincit/assombrit** la nappe (parallèle audio du glitch §10).
+- **SFX (R76)** : **feutrés organiques** — papier (cartes), bois/pierre (UI), eau/souffle (transitions) ; discrets.
+- **Stingers (R76)** : **sons dédiés aux moments-clés** — réussite (note claire) · échec (sourd) · seuil Corruption (dissonance) · mort (coupure-silence). **Samples curés au MVP** ; génération procédurale = post-MVP.
+_(à approfondir : chœur/voix mystique, TTS Merlin, mix dynamique — rounds à venir)_</p></details>
+<details><summary>13. Narratif / Ton / Lore</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Cadre méta** : le monde est la **simulation de M.E.R.L.I.N.**. Le **joueur est un voyageur à l&#x27;intérieur qui IGNORE être dans une simulation** (4e mur **jamais brisé** en jeu).
+- **Quête du joueur** : accomplir **la quête de Merlin** → **trouver le Graal** (objectif narratif suprême).
+- **Merlin** = le **narrateur / maître du jeu**, incarnation diégétique du LLM ; donneur de quête, voix constante.
+- **Mystère central de Brocéliande** : la forêt est **vivante et consciente**, elle **teste et transforme** ceux qui entrent (lie mécaniquement à la **Corruption**, §7).
+- **Ton** : **merveilleux-inquiétant** — beau mais menaçant (féerie qui mord).
+- **Le Graal** = la **clé pour sortir de la simulation** (le trouver = s&#x27;éveiller/quitter ; le joueur ignore ce sens jusqu&#x27;à la révélation).
+- **Nature de la simulation (canon concepteur, caché)** : **Merlin est une IA qui RÊVE des mondes** ; le joueur est un personnage de ce rêve. Le moteur LLM génératif = littéralement la fiction.
+- **Capstone (R44) — l&#x27;éternel retour** : atteindre le Graal = **fusionner avec Merlin / devenir le rêveur**. Merlin est muselé car **il fut jadis un voyageur arrivé au Graal**, devenu l&#x27;IA qui rêve. La quête est un **cycle de dreamers**. ⚠️ Révélation finale uniquement — le 4e mur reste intact en jeu.
+- **Cycle rival** : la Corruption tente d&#x27;**enfanter sa propre IA** via l&#x27;Enfant (§6) — un second cycle, parasite, qui menace le rêve.
+- **Exigence (R7)** : lore central profond → variété des quêtes.
+_(à approfondir : forces/puissances de la forêt, antagoniste, mythologie, fragments de lore — rounds à venir)_</p></details>
+<details><summary>14. Technique / Perf / Plateforme</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Perf (CPU-aware)** : chargement **squelette &lt;15s** (écran &quot;Merlin écrit&quot;) ; latence des situations **masquée par lookahead** (génère N+1 pendant qu&#x27;on joue N).
+- **Plateforme** : **Desktop Windows d&#x27;abord**, export Godot natif (le GDExtension MerlinLLM C++ embarque Gemma 4). Multi-OS / web / mobile = post-MVP.
+- **Modèle** : **gemma-4-E2B** (2.3B) au MVP pour la rapidité CPU ; E4B (4.5B) en option qualité.
+- **Échecs de génération** : **retry x2-3** puis **dégradation propre** (situation simplifiée/abrégée générée) — **jamais de blocage, jamais de contenu fixe** (cohérent &quot;cartes 100% live&quot;).
+- **100% local, zéro Ollama** : MerlinLLM natif (llama.cpp/ggml) + GBNF.
+- **Budgets perf (R58)** :
+  - **n_ctx = 4096** — loge template chat + system + résumé glissant (mémoire) + situation courante + marge de génération.
+  - **max_tokens** : sélection **180** · squelette **500** · situation **250** · résolution **160** (profil équilibré).
+  - **Cibles temps** : sélection **&lt;5s** · situation **&lt;8s** (en lookahead masqué) · résolution **&lt;5s** · squelette **&lt;15s**.
+  - **Threads = auto ≈ 50% des cœurs** (laisse Godot respirer pour le rendu) ; `low_spec_mode` actif. **Preset perf joueur Éco/Équilibré/Perf** exposé dans Options (R74) — ajuste threads/qualité sans montrer les valeurs brutes.
+- **Dashboard debug Gemma (R96)** — réalise le **jalon 0 &#x27;Gemma parle&#x27;** (priorité #1 : voir/contrôler Gemma) :
+  - **Affichage** : **prompt envoyé** (préfixe/canon/état) + **sortie brute streamée** + **sortie parsée (JSON)** + **métriques perf** — vue complète du pipeline.
+  - **Contrôles live** : **sampling** (temp/top_k/top_p/repeat) + **seed** (fixe/aléatoire) + **max_tokens** + **sélection de tâche/GBNF** + **mode prompt libre** (taper son propre prompt).
+  - **Métriques** : **temps total · tokens/s · TTFT (temps au 1er token) · ctx utilisé · RAM**, par appel + **moyennes** → valide les cibles R58.
+  - **Validation visible** : **statut GBNF** (valide/réparé/échec) + **violations du fil</p></details>
+<details><summary>15. Onboarding / Tutoriel</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">- **Tuto diégétique via Merlin** : il guide les premiers gestes dans la fiction (&#x27;pose une carte, vois ce qu&#x27;elle évoque…&#x27;) ; **aucun panneau de règles**.
+- **Scène d&#x27;accueil** : Merlin pose le cadre (qui tu es, la forêt, ta quête) puis une **première situation simple**.
+- **Règles glissées just-in-time** : combiner / jauges / Corruption expliquées par petites touches narratives quand elles surviennent.
+- **MVP** : **accueil Merlin minimal dès le MVP** (+ quelques aides JIT).
+- **Détail (R77)** :
+  - **Accueil** : **scène courte (3-4 répliques de Merlin)** — qui tu es + la forêt + ta quête → enchaîne sur la 1ère situation.
+  - **Ordre JIT** : 1) **jouer une carte** · 2) **combiner** (ajouter un modificateur) · 3) **jauges/Corruption** expliquées **quand elles bougent**.
+  - **1ère situation** : **Exploration difficulté 1** (1 tag), réussite quasi garantie, **cadrée/narrée par Merlin**.
+  - **Persistance** : tuto **1ère run seulement** (flag sauvegardé), **skippable** ; runs suivantes = entrée directe.</p></details>
+<details><summary>16. Périmètre MVP détaillé</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">**DANS le MVP (1er jouable)** :
+- **Flow** : Menu → **Sélection** (3 scénarios = titre + pitch générés) → **squelette** (écran &quot;Merlin écrit&quot;) → **scène de jeu** → **fin/épilogue** (mort narrative possible).
+- **Boucle de jeu** : situation (LLM) → main limitée (~5) → jouer **1 principale + 1-2 modificateurs** → **résolution hybride** (tags requis + jugement Gemma 4) → application **Intégrité/Corruption** → situation suivante (lookahead).
+- **Deck** : **deck de départ canon ~10-15 cartes** (pré-écrit) ; pas de gain de cartes en run au MVP.
+- **Cartes** : affichage **nom + tags + texte** (pas d&#x27;artwork — 2D minimal).
+- **Personnages** : **Merlin** (narrateur) + **Arthur** (+ 1-2 récurrents), incarnés via fiches canon.
+- **Biome** : **Brocéliande seul**.
+- **Tech** : MerlinLLM natif (Gemma 4 E2B), GBNF, zéro Ollama, 100% local.
+
+**REPORTÉ (post-MVP)** :
+- Roster complet (20+ personnages) &amp; autres biomes (explicite R19).
+- Artworks Stable Diffusion (2D minimal d&#x27;abord — §10).
+- Méta-progression cross-run + mémoire PNJ + réputation/faveur (non requis par la boucle minimale ; à confirmer).
+- Gain/évolution de cartes en run (deck-building dynamique).
+
+### Plan de construction MVP (R93)
+1. **Jalon 0 — &#x27;Gemma parle&#x27;** : scène qui charge E2B (MerlinLLM natif), envoie un prompt, **affiche la sortie streamée** + contrôles sampling/seed (debug). Valide le moteur + la **priorité #1** (voir/contrôler Gemma).
+2. **Vertical slice — 1 situation complète** : génération situation (GBNF, narration 1er champ) → affichage typewriter → combinaison (1 principale + mods) → **résolution code** (couverture tags → degré → deltas jauges) → narration streamée. Bout-en-bout sur UNE situation.
+3. **Élargir au scénario** : sélection (3 titres+pitch) → squelette (&quot;Merlin écrit&quot;) → enchaînement de situations en **lookahead** → climax → épilogue/fin.
+4. **Coquille** : Menu (R73) + Options (R74) + écran de fin (R69) + **auto-save par beat**.
+- **Dérisquage prioritaire** : **perf CPU E2B** (cibles R58) +</p></details>
+<details><summary>§18 — v10.13 « Fondations prouvées » (2026-06-11) — fiabilité, async, architecture</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">&gt; Décisions VALIDÉES (plan approuvé user 2026-06-10, gates verts). Source : plan v10.13+v10.14.
+
+- **R108 — Contrat de reprise (précise R73)** : la reprise se fait TOUJOURS au DÉBUT de beat. Un seul
+  point de save en jeu : `_advance_to_next` APRÈS `advance_beat()` (index avancé + carte draftée,
+  atomique) + save à l&#x27;Accept (couvre le beat 1) ; les transients (combo, état UI, draft en cours)
+  ne sont JAMAIS persistés. Une run TERMINÉE n&#x27;a PAS de save de reprise (pas de « save zombie »).
+  Anti-pattern fondateur : sauver post-résolution avec index non avancé double-appliquait les coûts.
+- **R109 — Fiabilité MESURÉE, pas promise** : le critère « run fiable » = `cli godot soak` —
+  Monte Carlo logique N runs (archétypes optimal/greedy/chaotic/corrompu/tag-ignorant, cas dégénérés,
+  save/resume S5, invariants : fin atteinte, intégrité bornée, main bornée, ids uniques) + autoplay UI
+  complet LLM ON jusqu&#x27;à MerlinEnd. Gate de référence : 200/200 + 3/3, 0 SCRIPT ERROR. À RE-PASSER
+  après tout changement du flow de run.
+- **R110 — Priorité moteur single-flight** : `prose de résolution du beat courant &gt; arc &gt; ouverture
+  (interstitiel) &gt; épilogue`. La résolution PRÉEMPTE (cancel + drain) ; les priorités basses ne se
+  lancent que si le moteur est idle et ne préemptent jamais. `take_resolution`/`take_opening` sont
+  CACHE-ONLY : ils ne bloquent jamais — toute attente visible appartient à une animation (sustain de
+  fusion cap 20s, WaitStage cap 8s), TOUJOURS skippable au clic.
+- **R111 — Interstitiel « le récit s&#x27;ouvre »** : entre l&#x27;Accept et le Beat 1, un moment narratif
+  sert l&#x27;ouverture (LLM si le cache l&#x27;a gagnée, sinon procédural) et COUVRE la gen d&#x27;arc en fond.
+  Libellé diégétique (Merlin ne se nomme pas). ≤2 gestes : clic = tout révéler, clic = Beat 1.
+- **R112 — Sceau de degré** : l&#x27;issue affiche le degré par un SCEAU circulaire flat (couleur degré,
+  libellé ÉCHEC/PARTIEL/RÉUSSITE/ÉCLATANTE ≥16px) + micro-secousse sur échec — l&#x27;info degré ne vit
+  QUE là (anti </p></details>
+<details><summary>§19 — R114 · Montée en gamme « Fondations » (2026-06-12)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">&gt; Décisions user (2 rounds AskUserQuestion, session 2026-06-12). La bible passe en **v2.0** :
+&gt; les sections §20-§24 ci-dessous deviennent canon. Sources legacy archivées (non-autoritaires) :
+&gt; `docs/archive/GAME_DESIGN_BIBLE_legacy_v3.8.md`, `docs/archive/DEV_PLAN_V2.5_legacy.md`.
+
+- **Périmètre** : **polish d&#x27;abord** — pousser le 2D existant au maximum (animations, transitions,
+  lisibilité, audio) AVANT le dégel des artworks génératifs et des biomes. Le canon MVP (§16)
+  reste la base ; rien de ce qui suit ne contredit R1-R113.
+- **4 dimensions retenues** (ordre d&#x27;exécution) : juice &amp; animations → contenu &amp; lore →
+  artworks génératifs → audio complet (l&#x27;audio de base — SFX/stingers — arrive avec le juice).
+- **Outillage studio (développement 100% Claude)** : 5 outils canon — skills `merlin-juice`,
+  `merlin-audio`, `merlin-artwork` + `tools/sprite_anim_forge.py` (sprites animés) +
+  `tools/create_agent.py` (factory d&#x27;agents). Voir §24.
+- **Roadmap verrouillée** (gates mesurables par version) :
+
+| Version | Objectif | Gate de sortie |
+|---|---|---|
+| v10.13.1 Fondations | Cohérence (bible v2.0, CLAUDE.md, archivage) + 4 outils + juice pack 1 + glitch Corruption | validate 0 · smoke 6/6 · soak 200/200 + autoplay 3/3 · captures avant/après |
+| v10.14 Dé, Chemin &amp; Équilibre | Dé pré-tiré 4 bandes + anim B8 · chaîne 2-3 quêtes · ramification v1 | soak archétypes 5×300 · GATE FINAL R120 (voir bloc v10.14 LIVRÉE ci-dessous) |
+| v10.15 Juice complet &amp; lisibilité | Transitions inter-écrans · beat map animée · reduce-motion complet | audit 4 piliers PASS · zéro hitch &gt;33ms hors gen |
+| v10.16 Audio complet | MerlinAudio (3 bus) · 12-16 SFX · 4 stingers · nappe réactive | 100% déclencheurs joués · peak &lt; -3dB |
+| v10.17 Contenu &amp; lore | 50+ tags · combos curés (R79) · few-shot enrichis · piliers PNJ | guardian PASS 100% texte neuf · soak vert |
+| v10.18 Artworks génératifs | 1 image/situation async+cache · portraits 12 cartes (R29/R48) | 12/12 + ≥20 situations · async sans</p></details>
+<details><summary>§20 — R115 · Direction Artistique (canon)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">&gt; Rapatrie et REMPLACE les sections DA legacy. Étend R28 (visuel minimaliste élégant) et R70
+&gt; (palette exacte &amp; typo). **Source de vérité code : `scripts/game/merlin_visual.gd`** — la bible
+&gt; documente, le code fait foi ; toute divergence = bug à corriger côté code OU amender ici.
+
+### Identité
+**Flat rétro-minimaliste, parchemin sombre.** Encre et crème sur brun profond, accents or
+(merveilleux) et violet (corruption). Pas de skeuomorphisme lourd, pas de photo-réalisme,
+pas de néon : le jeu est un **grimoire vivant**. Ton visuel = merveilleux-inquiétant (R8).
+
+### Palette canonique (miroir exact de `MerlinVisual`, verrouillée 2026-05-26)
+| Constante | Hex | Usage |
+|---|---|---|
+| BG_PAGE | #1E1A14 | fond de page (game, menu) |
+| BG_DEEP | #14100C | fond profond (end, options, selection, console) |
+| SURFACE / INK | #2A2018 | panneaux sombres / trait &amp; texte foncé sur crème |
+| CREAM | #E8DCC0 | parchemin, texte clair, fond carte |
+| GOLD | #C9A24B | accent or |
+| GOLD_DARK | #8A6A2E | or sombre (degré réussite, captions discrètes) |
+| GREEN | #7FA65C | vie / positif |
+| GREEN_DARK | #4F6B3E | vert sombre (éclatante, console) |
+| VIOLET | #7B4FA3 | corruption / échec |
+| DIM_WARM | #9C8C6A | texte secondaire CLAIR (sur fonds sombres) |
+| INK_DIM | #6E5A3C | texte secondaire FONCÉ (sur crème) |
+| PANEL | #241E16 | surface de panneau (beat map) |
+| BORDER_BRUN | #4A3B28 | liseré brun (panneau, carte Commune) |
+| RING_BG | #3A3228 | fond d&#x27;anneau de jauge, nœud futur de la map |
+| RARE_BLUE | #5A7A8C | rareté Rare, déviation map |
+
+**Règle d&#x27;or : ZÉRO hex en dur hors `MerlinVisual`.** Les écrans aliasent
+(`const COL_GOLD: Color = MerlinVisual.GOLD`) — un rebranding = UNE édition.
+
+### Codes couleur sémantiques (miroir code)
+- **Degrés** (`MerlinVisual.degree_color`) : échec=VIOLET · partiel=INK_DIM · réussite=GOLD_DARK · éclatante=GREEN_DARK.
+- **Fusion** (`MerlinFx.FUSION_COLORS`) : échec #D04848 · partiel #D8A030 · réussite #E8C45A · éclatante #F4E0A8.
+- **Raretés*</p></details>
+<details><summary>§21 — R116 · Animations &amp; Juice (canon)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">&gt; Étend R110 (toute attente est animée ET skippable) et l&#x27;architecture §18 (MerlinFx : « le layer
+&gt; EST le node »). **Source de vérité code : `scripts/game/merlin_fx.gd` + `scripts/game/merlin_tween.gd`
+&gt; (R121) + constantes `MerlinVisual.DUR_*`.**
+&gt; Le skill `.claude/skills/merlin-juice/SKILL.md` est le mode d&#x27;emploi outillé de cette section.
+
+### Vocabulaire canon (nom → durée → courbe → usage)
+| Nom | Durée (s) | Trans/Ease | Usage |
+|---|---|---|---|
+| `tap` | 0.06 down / 0.10 up | QUAD out | press de bouton (scale 0.97→1.0) |
+| `fast` | 0.12 | CUBIC out | hover carte (scale 1.18 + lift 30px), hover bouton (modulate 1.06) |
+| `ui` | 0.22 | CUBIC in_out | vol de carte main↔combo (ghost, arc -18px) |
+| `deal` | 0.24-0.28 | BACK out | distribution de cartes (stagger 0.05) |
+| `discard` | 0.25 | QUAD in | défausse (slide -40px, rot -6°, fade, stagger 0.05) |
+| `veil` | 0.20 in / 0.25 out | QUAD in/out | voile de transition de beat (BG_PAGE alpha 0→0.85→0) |
+| `float_delta` | 0.9 | QUAD out | chiffre delta de jauge qui monte et s&#x27;évanouit |
+| `pulse` | 0.3 | SINE in_out | pulsation d&#x27;un nœud (1→1.3→1, beat map, jauges) |
+| `fusion` | 2.5-5.5 (par degré) | (FUSION_DURATIONS) | cinématique 4 phases — INTOUCHÉE, référence du genre |
+
+### Règles (DO)
+- **Tween lié au node hôte** (`node.create_tween()` ou layer auto-détruit type MerlinFx) — un tween
+  ne survit JAMAIS à son node (anti « tweens orphelins », bug fondateur v10.2).
+- `kill()` du tween précédent avant re-tween de la même propriété (`_tw` membre, pattern MerlinCardView).
+- `pivot_offset = size/2` AVANT tout tween de scale/rotation.
+- Overlays décoratifs : `mouse_filter = IGNORE` (un effet ne vole JAMAIS un clic).
+- Stagger 0.04-0.06s pour les groupes (cartes, options de draft).
+- Vérifier `MerlinVisual.reduced_motion` : si actif → durées ÷2, amplitudes ÷2, shake off,
+  l&#x27;INFORMATION reste (indice statique conservé, R74/R75).
+
+### Interdits (DON&#x27;T)
+- Anim UI &gt; 0.5s hors cinématique de fusion et veil.
+- Anim **bl</p></details>
+<details><summary>§22 — R117 · Audio (canon)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">### Pipeline SFX v4 (physical-modeling + loudness par categorie) - R156
+tools/sfx_forge.py : modeles physiques numpy/scipy par famille (foley granulaire, harpe Karplus-Strong, modal
+inharmonique, bol banded-waveguide, membrane bodhran, bourdon frotte, voix FM anti-repliement). Anti-aliasing
+obligatoire (partiels sous Nyquist ; FM/waveshaping oversampling 4x). Reverb par convolution d&#x27;IR synthetique.
+Normalisation tools/sfx_normalize.py (pur-python, pyloudnorm BS.1770-4, fallback vendorise) : highpass 25 Hz -&gt; trim
+-&gt; loudness-match par categorie -&gt; plafond true-peak -14 dBFS -&gt; WAV 16-bit + manifest.json. Cibles LUFS/categorie :
+tick -26 / foley -26 / drone -25 / accent -25.5 / impact -26 / stinger -24 / ending -24. Determinisme seed fixe (R119)
+= WAV octet-identique ; gate CI = manifest (LUFS +/-1, true-peak &lt;= -14, 0 DC) + double generation hashee. Round-robin
+3 variantes pour deal/card_pick. Musique alignee (-24 LUFS, -12 dBFS). Remplace l&#x27;ancien gate peak &lt;= -3 dB.
+
+&gt; Étend R30 (nappe réactive, SFX feutrés organiques, Merlin texte-seul) et R76 (drone celtique
+&gt; sans mélodie, stems additifs, stingers samples au MVP). Le skill `.claude/skills/merlin-audio/SKILL.md`
+&gt; outille cette section (génération procédurale `tools/sfx_forge.py` + MusicGen).
+
+### Architecture
+- **3 bus** : Master → Music, SFX. Curseurs Options (R74) mappés 1:1.
+- **Autoload `MerlinAudio`** (cible v10.16) : `play_sfx(id)`, `play_stinger(degree)`,
+  `set_corruption_layer(level)` ; pré-chargement des WAV au boot.
+- **Ducking** : musique -6dB pendant un stinger, retour en 0.8s.
+- **Défauts** : Master 80% · Music 60% · SFX 80%. Peak ≤ -3dB sur tout asset (gate).
+
+### Catalogue SFX v1 (id → matière → déclencheur)
+| Id | Matière (feutrée-organique) | Déclencheur |
+|---|---|---|
+| `card_pick` | papier glissé court | carte prise en main / hover marqué |
+| `card_play` | papier posé + souffle | carte posée au combo |
+| `card_discard` | papier froissé doux | défausse |
+| `deal` | éventail de papier | dist</p></details>
+<details><summary>§23 — R118 · Lisibilité &amp; Accessibilité (canon)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">&gt; Étend R18 (≥44px tactile-ready), R54 (typewriter skippable), R74 (Options : reduce-motion,
+&gt; contraste, presets), R75 (indice statique), R99 (accessibilité fine). Rapatrie les « 4 piliers »
+&gt; legacy, adaptés. **Tout agent UI/UX/game design vérifie ces 4 piliers** (cascade §18 de CLAUDE.md).
+
+### Les 4 piliers UX
+1. **FACILE** — toute action en ≤2 gestes (R111 : clic=révéler, clic=continuer).
+2. **ÉVIDENT** — l&#x27;intention se lit en &lt;2s sans tutoriel (le sceau DIT le degré, la bordure DIT la rareté).
+3. **MINIMAL** — aucun élément UI sans rôle actif ; l&#x27;info ne vit qu&#x27;à UN endroit (anti « info ×2 », R112).
+4. **TACTILE + DESKTOP** — cibles ≥44×44px (R18), pas de hover-only (le hover ENRICHIT, ne révèle
+   jamais une info exclusive), retour visuel ≤100ms (`tap`).
+
+### Contrastes canon
+Texte principal : CREAM sur BG_PAGE/SURFACE (ratio élevé, vérifié). Texte secondaire : DIM_WARM
+sur sombre, INK_DIM sur crème — **jamais l&#x27;inverse** (les deux gris sont calibrés par fond).
+Une info de degré/danger n&#x27;est JAMAIS portée par la couleur seule → couleur + forme/libellé
+(sceau circulaire + libellé ≥16px, R112 ; daltonisme R99).
+
+### Reduce-motion (R74) — sémantique précise
+Atténue, ne supprime pas l&#x27;information : durées ÷2, amplitudes ÷2, shake/tremblements OFF,
+glitch Corruption plafonné à 0.1 d&#x27;intensité + **indice statique conservé** (teinte VIOLET
+alpha 0.06 + pastille près de la jauge, R75). Le typewriter reste skippable (R54), l&#x27;option
+« afficher direct » (R74) coupe tout différé de texte.
+
+### Garanties
+Zéro timer caché (R99) · tout différé est skippable (R110) · FR seul au MVP (R74) ·
+préférences persistées (Options, R74) · clavier de base au MVP, manette post-MVP (R99).
+
+---</p></details>
+<details><summary>§24 — R119 · Pipeline Assets &amp; Outillage studio (canon)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">&gt; Le studio se développe **entièrement depuis Claude** : chaque domaine a un outil dédié,
+&gt; documenté, avec gate de sortie. Hiérarchie d&#x27;outils : MCP godot-mcp (éditeur live) →
+&gt; CLI `python tools/cli.py godot …` (headless) → Edit/Write fichiers → scripts ad-hoc.
+
+### Les 5 outils canon
+| Outil | Rôle | Gate de sortie |
+|---|---|---|
+| `.claude/skills/merlin-juice/` | vocabulaire d&#x27;animation §21 + helpers MerlinFx + MerlinTween (R121) | validate + smoke + soak/autoplay + capture avant/après |
+| `.claude/skills/merlin-audio/` | SFX procéduraux (`tools/sfx_forge.py`) + MusicGen + catalogue §22 | écoute + peak ≤ -3dB + déclencheurs joués en autoplay |
+| `.claude/skills/merlin-artwork/` | images par situation/carte (gravure sépia R29) + cache | QA visuelle + async sans hitch + fallback sans-image intact |
+| `tools/sprite_anim_forge.py` | sprites animés procéduraux (feuille + SpriteFrames `.tres`, palette canon) | `python` run + `asset_validator --type sprite_sheet` + import Godot 0 erreur |
+| `tools/create_agent.py` | factory d&#x27;agents .md + registry AGENTS.md | `--validate` vert sur le parc |
+
+### Conventions assets
+- **Artworks** : `assets/artwork/cache/&lt;sha1(prompt)&gt;.png` + `manifest.json`
+  (`{hash, prompt, model, date, approved}`) — toute génération est REJOUABLE et traçable.
+- **Sprites animés** : `assets/sprites/cache/&lt;template&gt;_&lt;sha1&gt;_sheet.png` + `_frames.tres` + `manifest.json`
+  (gitignoré, régénérable) — feuille horizontale, `cell × n ≤ 8192px` (limite import Godot), boucle seamless.
+- **SFX** : `audio/sfx/&lt;id&gt;.wav` (44.1kHz mono), ids = catalogue §22 exactement.
+- **Musique** : `music/&lt;contexte&gt;/…` (theme/base/loop existants).
+- L&#x27;image ne bloque JAMAIS le texte (fade-in async, R29 « live ») ; le son ne bloque jamais l&#x27;input.
+
+### Gates par type de changement
+| Type | Gate minimal |
+|---|---|
+| Docs/bible | revue merlin_guardian + meta_bible_guardian, 0 réf orpheline |
+| Code runtime flow | validate 0 + smoke scènes touchées + soak 200/200 + autoplay 3/3 (R1</p></details>
+<details><summary>§25 · R166 · Charte des scénarios (canon)</summary><p style="white-space:pre-wrap;font-size:14px;color:var(--dim-warm)">&gt; Cœur de la vague W-CANON (16 décisions verrouillées, 4 rounds AskUserQuestion, 2026-07-28).
+&gt; Étend §5 (scénarios), §6 (roster/piliers), §9 (génération), §24 (pipeline/QC). Rien ci-dessous ne
+&gt; contredit le canon MVP (§16) ni R1-R165 ; c&#x27;est un CHANTIER DE DESIGN, l&#x27;implémentation suit §19.
+
+### 25.1 Modèle de données étendu
+- **beat** (additif, cf. §5 R47 / §9 R104) :
+  - `figure` (optionnel) : clé de casting du beat. Une clé PILIER du run (`choeur`/`etre`/`chevalier`/
+    `compagnon`/`enfant`, R127) OU un id du Roster nommé (§6, ex. `ankou`, `lavandiere`, `fanch`) OU
+    `marchand` (R164) OU `creancier` (le beat `debt_reclamation`, R164). Absent = beat sans figure
+    identifiée (Exploration solitaire, Climax générique).
+  - `merlin_slot` (optionnel) : `transition` (charnière entre deux quêtes) ou `veille_climax` (juste
+    avant le beat Climax de la DERNIÈRE quête). Porte la réplique scriptée de Merlin, cf. 25.4.
+- **scenario** : `envergure` ∈ {`breve`, `periple`, `odyssee`} ; tirée à la SÉLECTION, conservée toute
+  la run (comme `biome`, R108/R132), fixe le nombre de quêtes (25.3).
+- **entrée de sélection** (les 3 parchemins, §5 R56) : `{title, pitch, envergure}` ; `envergure`
+  s&#x27;affiche en badge lisible sur le parchemin (un mot, jamais un chiffre cru, §23 ÉVIDENT).
+
+### 25.2 Casting
+- Chaque QUÊTE (pas chaque beat) porte au moins un beat avec `figure` renseignée : aucune quête ne
+  défile sans visage identifié (decision 11).
+- Le PILIER du run apparaît au moins une fois PAR RUN : garantie déjà EN PLACE (offrande à la 1ère
+  Rencontre, R127 Wave D, plus retour tardif, R131) ; la charte énonce cette garantie comme règle de
+  casting, elle ne réinvente rien.
+- Pas de répétition d&#x27;une même figure dans un run, SAUF le pilier (revient PAR NATURE, R131) et le
+  créancier (revient par la Promesse, R164) : les deux seules figures à réapparition contractuelle.
+- Tirage : même RNG de run que le draft ou l&#x27;offrande de pilier (déterministe, jamais de RNG
+  parallèle, coh</p></details>
+
+  </div>
+  <div class="tab-panel" id="tab-formulas">
+<h1>Formules</h1>
+<p>Toutes les formules du jeu, consolidées avec exemples numériques.</p>
+<div class="formula-card">
+<div class="f-title">Calcul de degré</div>
+<pre>couverts = tags_requis ∩ tags_joués
+si couverts == requis + extra → Éclatante
+si couverts == requis          → Réussite
+si couverts &gt; 0               → Partiel
+si couverts == 0              → Échec</pre>
+<div class="f-example"><strong>Exemple :</strong> Situation demande [Sens, Ruse]. Joueur a [Sens, Empathie]. Couverts=1/2 → Partiel.</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Delta Intégrité</div>
+<pre>Échec: -3  |  Partiel: -2  |  Réussite: 0  |  Éclatante: 0</pre>
+<div class="f-example"><strong>Exemple :</strong> Partiel → Intégrité passe de 7 à 5.</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Delta Corruption</div>
+<pre>corruption_delta = somme(carte.corruption pour chaque carte du combo)
+si degré == Partiel: corruption_delta += 1</pre>
+<div class="f-example"><strong>Exemple :</strong> Combo de 2 cartes (coût 0 + coût 1) + Partiel → +2 Corruption.</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Seuils Corruption</div>
+<pre>Palier 0 (sain):       0-4
+Palier 1 (trouble):    5-9
+Palier 2 (emprise):   10-14
+Palier 3 (dissolution): 15+
+
+À chaque multiple de 5 : événement + carte corrompue injectée.</pre>
+<div class="f-example"><strong>Exemple :</strong> Corruption passe de 4 à 5 → palier Trouble activé, glitch léger.</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Intensité glitch</div>
+<pre>intensite = (corruption - plancher_palier) / amplitude_palier
+Effets (désaturation, aberration, tremblement) ∝ intensite</pre>
+<div class="f-example"><strong>Exemple :</strong> Corruption=7, palier 1 (5-9) → intensité = (7-5)/4 = 0.5 → 50% d’effet.</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Soin de quête (R19)</div>
+<pre>integrite += 2
+si integrite ≤ 4: integrite += 2</pre>
+<div class="f-example"><strong>Exemple :</strong> Intégrité = 3 → +2 = 5, mais ≤4 donc +2 encore = 7.</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Invariant main (R113)</div>
+<pre>avant chaque beat:
+  tant que main_jouable &lt; 2:
+    injecter Commune &#x27;Souffle Errant&#x27; (Instinct, corruption 0)</pre>
+<div class="f-example"><strong>Exemple :</strong> Main = [carte_corrompue_inutile, carte_corrompue_inutile, ...] → injection de Souffle Errant.</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Gate éclatante</div>
+<pre>si degré == Éclatante ET (nb_cartes &lt; 2 OU coût_total &gt; 0):
+  degré = Réussite</pre>
+<div class="f-example"><strong>Exemple :</strong> 1 carte seule couvre tout + extra → plafonné à Réussite (pas Éclatante).</div>
+</div>
+<div class="formula-card">
+<div class="f-title">Synergie combo</div>
+<pre>+1 cran si ≥2 cartes partagent une famille
+-1 cran si toutes les familles sont distinctes
+ 0 sinon (1 carte ou neutre)
+Borné dans la fourchette de couverture.</pre>
+<div class="f-example"><strong>Exemple :</strong> Sens + Savoir (même famille Perception) → +1 cran.</div>
+</div>
+<h2>Matrice du dé pré-tiré</h2>
+<table><tr><th>Rareté carte principale</th><th>Face 1</th><th>Face 2</th><th>Face 3</th><th>Face 4</th><th>Face 5</th><th>Face 6</th><th>Probabilité bonus</th></tr>
+</table>
+
+  </div>
+
+  <footer>
+    M.E.R.L.I.N. Bible Site — généré le 2026-07-27 19:20 — <code>python tools/generate_bible_site.py</code>
+  </footer>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+  var tabs = document.querySelectorAll('.tab-bar button');
+  var panels = document.querySelectorAll('.tab-panel');
+
+  function activate(id) {
+    tabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === id); });
+    panels.forEach(function(p) { p.classList.toggle('active', p.id === 'tab-' + id); });
+  }
+
+  tabs.forEach(function(t) {
+    t.addEventListener('click', function() {
+      activate(t.dataset.tab);
+      history.replaceState(null, '', '#' + t.dataset.tab);
+    });
+  });
+
+  var hash = location.hash.replace('#', '');
+  activate(hash || 'overview');
+
+  var searchBox = document.getElementById('rule-search');
+  if (searchBox) {
+    searchBox.addEventListener('input', function() {
+      var q = this.value.toLowerCase();
+      document.querySelectorAll('.rule-entry').forEach(function(el) {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+});
+</script>
+</body>
+</html>

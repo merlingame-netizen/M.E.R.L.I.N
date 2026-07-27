@@ -25,6 +25,7 @@ var _moon_dim: float = 0.0
 var _mist_factor: float = 1.0
 var _tree_sway: float = 0.0
 var _react_tw: Tween = null
+var _redraw_acc: float = 0.0  # accumulateur du throttle de redessin (R121 : decor 15 fps)
 
 # v10.18 (menu Phase 2) — densité de motes + parallaxe + aura de curseur, pilotés par merlin_menu.gd.
 var _mote_density: float = 1.0
@@ -183,9 +184,20 @@ func thicken_mist() -> void:
 
 
 func sway_trees() -> void:
-	_tree_sway = 4.0
-	var tw: Tween = create_tween()
-	tw.tween_property(self, "_tree_sway", 0.0, MerlinVisual.DUR_WORLD_REACT * MerlinVisual.motion() * 0.8).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	# v10.23 (QA user « reagissent erratiquement ») : trois causes corrigees ici.
+	# 1. TRANS_ELASTIC depassait ET oscillait. Un arbre ne rebondit pas.
+	# 2. `_tree_sway = 4.0` etait une affectation INSTANTANEE : l'arbre se teleportait a la frame 0
+	#    puis refluait. Un pas suivi d'une detente lit « pop », pas « bourrasque », quelle que soit la
+	#    courbe de sortie. D'ou la rampe d'ATTAQUE explicite.
+	# 3. Aucune garde : deux bourrasques qui se chevauchent (merlin_menu.gd periodique + depart de
+	#    scene) faisaient lutter deux tweens sur la meme propriete, donc mouvement non deterministe.
+	#    MerlinTween.retween() est l'idiome canon R121.
+	# Pas de contre-oscillation volontairement : la plainte porte sur l'erratique, on ne reintroduit
+	# pas un depassement. La vie vient du souffle idle propre a chaque arbre.
+	var m: float = MerlinVisual.motion()
+	var tw: Tween = MerlinTween.retween(self, "tree_sway")
+	tw.tween_property(self, "_tree_sway", 4.0, 0.20 * m).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "_tree_sway", 0.0, MerlinVisual.DUR_WORLD_REACT * m * 0.7).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 # v10.18 (menu Phase 2) — réactions composées + contrôles continus pilotés par merlin_menu.gd.
@@ -475,7 +487,17 @@ func _process(delta: float) -> void:
 		# sans câblage par scène. Le menu/le jeu re-set la même valeur ensuite : inoffensif.
 		if _menu_decor:
 			set_cursor(get_local_mouse_position(), get_global_rect().has_point(get_global_mouse_position()))
-	queue_redraw()
+	# v10.23 : throttle R121 (« decor 15 fps »), qui n'existait PAS dans ce fichier alors que le canon
+	# l'impose. Prealable OBLIGATOIRE a la montee en densite : R58 reserve explicitement le CPU a la
+	# generation Gemma, donc un decor plus lourd pendant le sustain LLM serait une regression de flow.
+	# Les PHASES (_t, _halo_phase, gaze, feuilles) continuent d'avancer au delta reel : seul le
+	# REDESSIN est throttle. Fenetre de boost a 30 fps pendant une bourrasque, le seul moment qui
+	# demande de la resolution temporelle (une attaque de 0.20 s ne fait que 3 frames a 15 fps).
+	_redraw_acc += delta
+	var step: float = (1.0 / 30.0) if _tree_sway > 0.01 else (1.0 / 15.0)
+	if _redraw_acc >= step:
+		_redraw_acc = 0.0
+		queue_redraw()
 
 
 # v10.21 — Feuilles qui tombent (couleur saisonnière ; hiver = flocons lents). Particules recyclées,
@@ -688,13 +710,38 @@ func _draw() -> void:
 		draw_line(sh_tail, sh_head, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, sh_a), 2.0, true)
 		draw_circle(sh_head, 2.6, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, sh_a))
 
-	# Background trees (with reactive sway) — alpha = decor_reveal (boot : décor caché en gros plan yeux)
+	# v10.23 : PLAN LOINTAIN (lisiere), pose sur la crete des collines et revele AVANT le median
+	# (avant, les 4 arbres partageaient un seul _stage : la foret poussait en un bloc, ce qui accentuait
+	# la lecture « tampon »). Enveloppe pleine et zero blob : a cet alpha, des cercles superposes lisent
+	# comme du bruit. Densite derivee du RATIO et jamais d'un nombre litteral, sinon la bande 200 px du
+	# jeu et le panneau plein-hauteur du menu ne peuvent pas partager ce code.
+	if _biome == "foret" and _stage(0.20, 0.45) > 0.01:
+		var fdr: float = _stage(0.20, 0.45)
+		var n_far: int = clampi(roundi(w / maxf(h * 0.55, 1.0)) + 2, 4, 8)
+		for fi in n_far:
+			var fx: float = (float(fi) + 0.5) / float(n_far)
+			if fx > 0.38 and fx < 0.62:
+				continue  # corridor central protege (lune, yeux, god rays)
+			var ff: float = float(fi)
+			var fh: float = h * (0.10 + 0.045 * fmod(ff * 0.6180339887, 1.0))
+			var fa: float = (0.30 + 0.08 * fmod(ff * 0.3819660113, 1.0)) * fdr
+			_tree(Vector2(w * fx, h * 0.78) + _parallax * 0.25, fh, w, fa, 40 + fi, 0)
+
+	# Background trees (with reactive sway) : alpha = decor_reveal (boot : decor cache en gros plan yeux)
 	if _biome == "foret" and _stage(0.25, 0.60) > 0.01:
 		var tdr: float = _stage(0.25, 0.60)  # les arbres se dressent au 2e étage de la construction
-		_tree(Vector2(w * 0.12 + _tree_sway * 0.8, h), h * 0.74, w, tdr)
-		_tree(Vector2(w * 0.27 + _tree_sway * 0.5, h), h * 0.60, w, tdr)
-		_tree(Vector2(w * 0.80 - _tree_sway * 0.5, h), h * 0.66, w, tdr)
-		_tree(Vector2(w * 0.91 - _tree_sway * 0.8, h), h * 0.78, w, tdr)
+		# v10.23 (QA user) — le PIED reste planté. Auparavant `base.x + _tree_sway` faisait GLISSER
+		# l'arbre entier latéralement : un arbre plie en cime, il ne se déplace pas. Le sway est déjà
+		# appliqué DANS _tree(), progressivement du pied (0) vers la cime.
+		# PLAN MEDIAN : 6 arbres (avant 4), seeds EXPLICITES et distincts. Le corridor x [0.38, 0.62]
+		# reste vide : lune, yeux de Merlin (set_watch_eyes) et eventail des god rays y vivent, et c'est
+		# de l'information lisible au sens du pilier EVIDENT.
+		_tree(Vector2(w * 0.12, h), h * 0.74, w, tdr, 1, 1)
+		_tree(Vector2(w * 0.27, h), h * 0.60, w, tdr, 2, 1)
+		_tree(Vector2(w * 0.34, h), h * 0.46, w, tdr * 0.82, 3, 1)
+		_tree(Vector2(w * 0.70, h), h * 0.50, w, tdr * 0.82, 4, 1)
+		_tree(Vector2(w * 0.80, h), h * 0.66, w, tdr, 5, 1)
+		_tree(Vector2(w * 0.91, h), h * 0.78, w, tdr, 6, 1)
 		# Menhir — point d'intérêt : avant-dernier étage
 		if _stage(0.50, 0.80) > 0.01:
 			_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40), _stage(0.50, 0.80))
@@ -926,8 +973,10 @@ func _draw() -> void:
 		var fg_drift: float = 0.0
 		if not rm:
 			fg_drift = sin(_t * 0.06) * w * 0.008
-		_tree(Vector2(w * 0.02 - fg_drift, h), h * 0.90, w, fg_a * dr)
-		_tree(Vector2(w * 0.97 + fg_drift, h), h * 0.85, w, fg_a * dr)
+		# PLAN PROCHE (cadre) : plane 2, sway le plus ample. Ce n'est pas un arbre, c'est une vignette,
+		# il ne doit jamais se resoudre en objet lisible (couronne coupee par le bord haut).
+		_tree(Vector2(w * 0.02 - fg_drift, h), h * 0.90, w, fg_a * dr, 20, 2)
+		_tree(Vector2(w * 0.97 + fg_drift, h), h * 0.85, w, fg_a * dr, 21, 2)
 
 	# v10.18 (menu) — aura douce qui suit le curseur : 3 cercles GOLD très discrets (off en reduced_motion).
 	if _animated and _cursor_inside and not rm:
@@ -988,40 +1037,105 @@ func _hover_f(p: Vector2, radius: float) -> float:
 # v10.21 — Arbre ORGANIQUE (user : « moins design HTML ») : tronc GALBÉ en polygone effilé avec courbe
 # en S, 2 branches maîtresses effilées, CANOPÉE en masses sombres qui respirent + sway idle propre à
 # chaque arbre (déterministe : seedé par base.x — zéro randf en _draw). Signature INCHANGÉE (6 appelants).
-func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0) -> void:
+func _bend(u: float) -> float:
+	# Profil de flexion en porte-a-faux : f(0)=0 au pied (l'arbre est ENRACINE), f(1)=1 en cime.
+	# Superlineaire. Ancien bug : mid portait 2.10x swy pour 2.2x en cime, donc plat entre mi-hauteur
+	# et sommet, ce qui se lisait « l'arbre patine ».
+	return u * u * (3.0 - u) * 0.5
+
+
+# v10.23 : arbre seede par INDEX (plus par base.x, qui contenait le sway, donc la graine DERIVAIT
+# pendant chaque bourrasque et la couronne se re-melangeait : cause racine du « erratique »).
+# `plane` : 0 = lointain (enveloppe pleine, zero blob, zero branche), 1 = median, 2 = proche.
+# Defauts conserves, donc les 6 appelants historiques restent valides.
+func _tree(base: Vector2, height: float, w_ref: float, alpha: float = 1.0,
+		seed: int = -1, plane: int = 1) -> void:
 	var col: Color = COL_SIL if alpha >= 1.0 else Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, alpha)
-	var tseed: float = fmod(absf(base.x) * 0.137, TAU)  # variation par arbre, stable d'une frame à l'autre
 	var rm2: bool = MerlinVisual.reduced_motion
+	# Graine STABLE : index explicite si fourni, sinon repli sur la position AU REPOS.
+	var sf: float = float(seed) if seed >= 0 else absf(base.x) * 0.137
+	var s1: float = fmod(sf * 0.6180339887, 1.0)
+	var s2: float = fmod(sf * 0.3819660113, 1.0)
+	var s3: float = fmod(sf * 0.2714069263, 1.0)
+	var s4: float = fmod(sf * 0.7548776662, 1.0)
+	var tseed: float = s1 * TAU
 	# v10.22 (QA user : « trop crue, erratique ») — hover SUBTIL : la fréquence reste FIXE (une fréquence
 	# modulée par la souris SAUTE de phase → jitter) ; seule l'AMPLITUDE respire, +30 % max, courbe hov²
 	# (l'effet ne se sent qu'au cœur de l'arbre).
-	var hov: float = _hover_f(base + Vector2(0.0, -height * 0.55), height * 0.85)
+	# v10.23 : rayon de survol 0.85 -> 0.40 x height. A 0.85 et 14 arbres, une position de souris
+	# allumait 4 a 6 arbres d'un coup (le bosquet entier respirait).
+	var hov: float = _hover_f(base + Vector2(0.0, -height * 0.55), height * 0.40)
 	hov = hov * hov
-	var idle: float = 0.0 if rm2 else sin(_t * (0.22 + fmod(tseed, 0.13)) + tseed) * height * 0.012 * (1.0 + hov * 0.30)
-	var swy: float = idle + _tree_sway * 0.35
-	var top: Vector2 = base + Vector2(swy * 2.2, -height)
-	var t_w: float = maxf(w_ref * 0.010, 3.0)
-	var mid: Vector2 = base.lerp(top, 0.5) + Vector2(sin(tseed * 3.7) * height * 0.04 + swy, 0.0)
+	# Idle = souffle COMMUN de la foret (60 %, phase partagee) + detail propre (40 %, phase seedee).
+	# Avant : 100 % desynchronise, soit 4 oscillateurs lents independants, donc du bruit et pas une foret.
+	var breath: float = sin(_t * 0.18) * 0.60 + sin(_t * (0.55 + s2 * 0.30) + tseed) * 0.40
+	var idle: float = 0.0 if rm2 else breath * height * 0.012 * (1.0 + hov * 0.30)
+	# Bourrasque normalisee a la HAUTEUR (avant : 4 px bruts, invisibles a cote d'un idle height-scale)
+	# et au PLAN : le lointain bouge MOINS, sinon la parallaxe s'inverse et la profondeur meurt.
+	var k_plane: float = 0.013
+	if plane == 0:
+		k_plane = 0.008
+	elif plane == 2:
+		k_plane = 0.018
+	# R74 : en reduce-motion les amplitudes sont divisees par 2. Avant, seule la DUREE l'etait, donc la
+	# bourrasque restait pleine amplitude ET deux fois plus rapide, strictement pire que le defaut.
+	var amp: float = idle + height * k_plane * (_tree_sway * 0.25) * (0.5 if rm2 else 1.0)
+	var top: Vector2 = base + Vector2(amp, -height)
+	var t_w: float = maxf(height * 0.022, 2.0)  # tronc PROPORTIONNEL (avant : meme tronc pour tous)
+	# Plan LOINTAIN : une seule masse d'enveloppe. A alpha ~0.33 et 24 px de rayon, des cercles
+	# superposes lisent comme du bruit ; la gravure demande une silhouette pleine. Et ca paie la densite.
+	if plane == 0:
+		# Tronc et couronne sont dessines SEPAREMENT. Accrocher les points de pied sous l'ellipse
+		# fermee produisait un noeud papillon : « Invalid polygon data, triangulation failed » x66 au
+		# smoke. polygon_drawable() garde les degenerescences, PAS l'auto-intersection.
+		var ecy: float = top.y + height * 0.05
+		draw_colored_polygon(PackedVector2Array([
+			base + Vector2(-t_w * 0.7, 0.0), base + Vector2(t_w * 0.7, 0.0),
+			Vector2(top.x + t_w * 0.35, ecy), Vector2(top.x - t_w * 0.35, ecy),
+		]), col)
+		# Enveloppe en etoile autour d'un centre : rayons positifs et angle monotone, donc toujours
+		# un polygone SIMPLE, jamais auto-intersectant.
+		var env: PackedVector2Array = PackedVector2Array()
+		var ecr: float = height * 0.16 * (0.75 + s3 * 0.55)
+		for ei in 10:
+			var ef: float = float(ei) / 10.0 * TAU
+			var er: float = ecr * (0.80 + 0.30 * fmod(s4 + float(ei) * 0.317, 1.0))
+			env.append(Vector2(top.x + cos(ef) * er, ecy + sin(ef) * er * 0.62))
+		if MerlinVisual.polygon_drawable(env):  # #52 : garde triangulation sur tout polygone genere
+			draw_colored_polygon(env, col)
+		return
+	var mid: Vector2 = Vector2(
+		base.x + amp * _bend(0.5) + sin(tseed * 3.7) * height * (0.02 + s2 * 0.07),
+		base.y - height * 0.5)
 	draw_colored_polygon(PackedVector2Array([
 		base + Vector2(-t_w * 2.4, 0.0), base + Vector2(t_w * 2.4, 0.0),
 		mid + Vector2(t_w * 1.2, 0.0), top + Vector2(t_w * 0.55, 0.0),
 		top + Vector2(-t_w * 0.55, 0.0), mid + Vector2(-t_w * 1.2, 0.0),
 	]), col)
-	for bi in 2:
-		var b_side: float = 1.0 if bi == 0 else -1.0
-		var bp: Vector2 = base.lerp(top, 0.58 + 0.16 * float(bi)) + Vector2(swy, 0.0)
-		var tip: Vector2 = bp + Vector2(b_side * height * (0.20 - 0.05 * float(bi)), -height * 0.16)
+	# Branches : 1 a 3 selon le plan (avant : toujours 2), insertion seedee, flexion via _bend().
+	var n_branch: int = 1 + int(s3 * (2.0 if plane == 1 else 3.0))
+	for bi in n_branch:
+		var b_side: float = 1.0 if bi % 2 == 0 else -1.0
+		var bu: float = 0.45 + 0.35 * fmod(s4 + float(bi) * 0.41, 1.0)
+		var bp: Vector2 = Vector2(base.x + amp * _bend(bu), base.y - height * bu)
+		var tip: Vector2 = bp + Vector2(b_side * height * (0.20 - 0.04 * float(bi)), -height * 0.16)
 		draw_colored_polygon(PackedVector2Array([
 			bp + Vector2(0.0, -t_w * 0.9), tip, bp + Vector2(0.0, t_w * 0.9)]), col)
-	# Canopée : 5 masses sombres agglomérées, respiration douce (phase par blob).
-	var crown: Vector2 = top + Vector2(swy * 1.5, height * 0.06)
+	# Canopee : 3 a 8 masses (avant : toujours 5) dont les RAYONS et OFFSETS derivent du seed et pas du
+	# seul index k. Faire tourner 5 rayons identiques ne change pas la masse percue (cause « identiques »).
+	# La cime porte 1.25 x amp : inertie du feuillage, la couronne depasse le sommet du tronc.
+	var crown: Vector2 = top + Vector2(amp * 0.25 + (s1 - 0.5) * height * 0.11, height * 0.06)
 	var cr: float = height * 0.16
-	for k in 5:
+	var cw: float = 0.60 + s3 * 0.90   # envergure : 0.60 a 1.50 x cr
+	var csq: float = 0.35 + s4 * 0.50  # ecrasement : haute et etroite <-> large et plate
+	var n_blob: int = 3 + int(s2 * 6.0)
+	for k in n_blob:
 		var kf: float = float(k)
-		var ang: float = tseed + kf * 1.256
+		var ang: float = tseed + kf * (TAU / float(n_blob))
 		var breathe: float = 0.0 if rm2 else sin(_t * 0.5 + tseed + kf) * cr * 0.06
-		var bc: Vector2 = crown + Vector2(cos(ang) * cr * (0.9 + fmod(kf * 0.31, 0.5)), sin(ang) * cr * 0.55 - cr * 0.25 + breathe)
-		draw_circle(bc, cr * (0.55 + fmod(kf * 0.27, 0.35)), col)
+		var rr: float = cr * cw * (0.70 + 0.55 * fmod(s1 + kf * 0.311, 1.0))
+		var bc: Vector2 = crown + Vector2(cos(ang) * rr, sin(ang) * rr * csq - cr * 0.25 + breathe)
+		draw_circle(bc, cr * (0.45 + 0.45 * fmod(s4 + kf * 0.271, 1.0)), col)
 	# Feuillage saisonnier : petits accents colorés DANS les masses de la canopée (QA v10.21 : les gros
 	# pois flottaient hors couronne → rayon réduit, nombre doublé, positions calées sur les blobs sombres).
 	if _season_leaf_a > 0.001 and alpha > 0.01:
