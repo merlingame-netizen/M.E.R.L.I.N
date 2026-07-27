@@ -2940,9 +2940,15 @@ func _run_live_loop() -> void:
 
 		# Wait for user click on a 3D card option (autoplay : auto-pick 0 after 4s).
 		var autoplay := OS.get_environment("MERLIN_AUTOPLAY") == "1"
-		var click_deadline_ms := 4_000 if autoplay else 60_000
+		# En autoplay on avance vite. En jeu reel, AUCUNE limite : le joueur lit
+		# une situation de 18-38 mots, pese trois options et leurs epreuves. Une
+		# echeance de 60 s choisissait l'option 1 a sa place des qu'il prenait le
+		# temps de lire — sur un scenario de 25 cartes, la partie se jouait
+		# toute seule.
+		var click_deadline_ms := 4_000 if autoplay else 0
 		var click_deadline := Time.get_ticks_msec() + click_deadline_ms
-		while _live_pending_choice < 0 and not _skip_requested and Time.get_ticks_msec() < click_deadline:
+		while _live_pending_choice < 0 and not _skip_requested \
+				and (click_deadline_ms == 0 or Time.get_ticks_msec() < click_deadline):
 			await get_tree().create_timer(0.1).timeout
 			_sync_floating_buttons_to_card_3d()
 		if _skip_requested:
