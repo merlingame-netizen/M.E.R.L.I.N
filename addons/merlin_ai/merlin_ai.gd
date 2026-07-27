@@ -116,6 +116,18 @@ var prompts: Dictionary = {}
 var is_ready := false
 var status_text := "Connexion: OFF"
 
+## Pourquoi la generation n'est pas disponible, backend par backend.
+## Decision du 2026-07-27 : quand tout echoue, le jeu le DIT au lieu de basculer
+## en silence sur le contenu ecrit. Un joueur qui installe le jeu chez lui doit
+## savoir si Merlin ecrit vraiment, ou s'il recite.
+var unavailable_reasons: Array[String] = []
+
+
+func _note_unavailable(backend: String, raison: String) -> void:
+	var ligne: String = "%s : %s" % [backend, raison]
+	if not unavailable_reasons.has(ligne):
+		unavailable_reasons.append(ligne)
+
 ## v7.7.24 — Public brain-availability accessor (strict mode).
 ## Returns true only when the LLM brain is fully operational :
 ##   - is_ready flag set by warmup completion
@@ -567,6 +579,7 @@ func _try_init_ollama(target: int) -> bool:
 	var ollama_test := OllamaBackendScript.new()
 	if not ollama_test.check_available():
 		_log("Ollama: non disponible (ollama serve non lance?)")
+		_note_unavailable("Ollama", "service non joignable sur localhost:11434")
 		return false
 
 	# ── Profile selection: respect target if user-set, else auto-detect HW ─
@@ -706,6 +719,7 @@ func _try_init_groq() -> bool:
 	var groq_narrator := GroqBackendScript.new("narrator")
 	if not groq_narrator.check_available():
 		_log("Groq: pas de cle API (GROQ_API_KEY ou ProjectSettings merlin/groq_api_key)")
+		_note_unavailable("Groq (cloud)", "aucune cle API configuree")
 		return false
 
 	_log("Groq: API key trouvee, initialisation cloud LLM...")
@@ -795,6 +809,7 @@ func _init_bitnet_auto_spawn(target: int) -> bool:
 	var server_path := _find_bitnet_server()
 	if server_path == "":
 		_log("BitNet: llama-server.exe introuvable")
+		_note_unavailable("llama-server", "executable introuvable sur le disque")
 		return false
 
 	# Build brain definitions
@@ -949,11 +964,15 @@ func _try_init_merlin_llm(target: int) -> void:
 	if not ClassDB.class_exists("MerlinLLM"):
 		_set_status("Connexion: OFF", "Ni Ollama ni MerlinLLM disponibles", 0.0)
 		_log("MerlinLLM: classe absente (GDExtension non chargee)")
+		_note_unavailable("MerlinLLM embarque",
+			"GDExtension absente — la DLL n'est pas livree avec le jeu")
 		ready_changed.emit(false)
 		return
 	model_file_used = _resolve_model_file(MODEL_CANDIDATES)
 	if model_file_used == "":
 		_set_status("Connexion: OFF", "Modele GGUF manquant", 0.0)
+		_note_unavailable("MerlinLLM embarque",
+			"modele GGUF absent de addons/merlin_llm/models/")
 		ready_changed.emit(false)
 		return
 

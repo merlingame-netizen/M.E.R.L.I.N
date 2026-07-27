@@ -1,0 +1,54 @@
+{
+  "_but": "Ce que l'installeur MERLIN embarque pour que le jeu ecrive SANS qu'on installe quoi que ce soit. Decision du 2026-07-27 : le joueur installe une chose, il joue. Pas d'Ollama a part, pas de service a lancer, pas de port a liberer.",
+  "_pourquoi_pas_ollama": "Emballer Ollama demanderait un second processus a lancer, surveiller et tuer, un port 11434 qui peut etre pris, et un magasin de modeles separe. La GDExtension MerlinLLM embarque llama.cpp DANS le moteur : une DLL, un fichier de modele, rien de visible a brander parce qu'il n'y a rien a voir.",
+  "version": "1.0.0",
+  "updated": "2026-07-27",
+
+  "moteur": {
+    "type": "gdextension",
+    "nom": "MerlinLLM",
+    "declaration": "addons/merlin_llm/merlin_llm.gdextension",
+    "binaire_attendu": "addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll",
+    "source": "native/",
+    "compilation": "native/rebuild_merlin_llm.bat — DOIT tourner sous Windows",
+    "_statut": "declaration presente, binaire JAMAIS livre (addons/merlin_llm/bin/ est vide et gitignore)"
+  },
+
+  "modele": {
+    "_a_trancher": "L'utilisateur a demande « Gemma 4 (la version dont on dispose ici) » le 2026-07-27. Aucun Gemma n'existe dans ce depot — il n'apparait que comme option dans docs/root/doc.md. L'identifiant exact reste a confirmer (sortie de `ollama list` sur la machine de dev).",
+    "fichier": null,
+    "famille": "gemma",
+    "quantization": "q4_k_m",
+    "chemin_dans_le_jeu": "addons/merlin_llm/models/",
+    "_note_git": "*.gguf est gitignore (ligne 76) et le restera : un modele pese 1 a 3 Go. Il entre dans l'installeur, jamais dans le depot.",
+
+    "_repli_actuel_du_code": {
+      "_comment": "Ce que merlin_ai.gd cherche aujourd'hui, tant que le modele bundle n'est pas fixe.",
+      "candidats": [
+        "addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+        "addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"
+      ]
+    }
+  },
+
+  "comportement_si_indisponible": {
+    "_decision": "Message d'erreur explicite (choix utilisateur du 2026-07-27).",
+    "_avant": "L'echec etait MUET : llm_warmup_overlay.gd::_on_ready_changed ne traitait que le cas ready == true. Quand tous les backends echouaient, l'overlay tournait dans le vide et le jeu basculait en silence sur le contenu ecrit — le joueur croyait que Merlin ecrivait alors qu'il recitait.",
+    "_maintenant": "MerlinAI accumule `unavailable_reasons` backend par backend ; l'overlay les affiche, laisse lire six secondes, puis rend la main. La partie reste jouable sur les scenarios ecrits d'avance et le pool de cartes.",
+    "raisons_possibles": [
+      "Ollama : service non joignable sur localhost:11434",
+      "Groq (cloud) : aucune cle API configuree",
+      "llama-server : executable introuvable sur le disque",
+      "MerlinLLM embarque : GDExtension absente — la DLL n'est pas livree avec le jeu",
+      "MerlinLLM embarque : modele GGUF absent de addons/merlin_llm/models/"
+    ]
+  },
+
+  "reste_a_faire": [
+    "Confirmer l'identifiant exact du modele Gemma (`ollama list` cote dev).",
+    "Compiler merlin_llm.windows.release.x86_64.dll sous Windows via native/rebuild_merlin_llm.bat, ou via un runner Windows en CI.",
+    "Verifier que la GDExtension charge bien un GGUF Gemma — le code a ete ecrit pour du ChatML (Qwen) ; Gemma utilise un autre gabarit de chat (<start_of_turn>/<end_of_turn>). A adapter dans l'adaptateur de prompt.",
+    "Ecrire l'installeur (Inno Setup ou NSIS) : export Godot + DLL + GGUF + branding MERLIN.",
+    "Mesurer le poids final de l'installeur et le verifier sur une machine sans Ollama."
+  ]
+}
