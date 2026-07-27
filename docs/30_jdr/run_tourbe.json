@@ -10,12 +10,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 1 / 25",
         "factions_backend": {
-          "anciens": 94.0,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100.0,
-          "korrigans": 35.0,
-          "niamh": 85.0
+          "korrigans": 51.0,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -34,12 +35,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 1 / 25",
         "factions_backend": {
-          "anciens": 94.0,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100.0,
-          "korrigans": 35.0,
-          "niamh": 85.0
+          "korrigans": 51.0,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -138,12 +140,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 1 / 25",
         "factions_backend": {
-          "anciens": 94.0,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100.0,
-          "korrigans": 35.0,
-          "niamh": 85.0
+          "korrigans": 51.0,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -154,12 +157,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 1 / 25",
         "factions_backend": {
-          "anciens": 93,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100.0,
-          "korrigans": 35.0,
-          "niamh": 85.0
+          "korrigans": 50,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -188,12 +192,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 2 / 25",
         "factions_backend": {
-          "anciens": 93,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100.0,
-          "korrigans": 35.0,
-          "niamh": 85.0
+          "korrigans": 50,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -293,12 +298,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 2 / 25",
         "factions_backend": {
-          "anciens": 93,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100.0,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -309,12 +315,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 2 / 25",
         "factions_backend": {
-          "anciens": 93,
-          "ankou": 96.0,
-          "druides": 99,
-          "korrigans": 45,
-          "niamh": 85.0
+          "anciens": 96.0,
+          "ankou": 92.0,
+          "druides": 100.0,
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -343,12 +350,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 3 / 25",
         "factions_backend": {
-          "anciens": 93,
-          "ankou": 96.0,
-          "druides": 99,
-          "korrigans": 45,
-          "niamh": 85.0
+          "anciens": 96.0,
+          "ankou": 92.0,
+          "druides": 100.0,
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -460,12 +468,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 3 / 25",
         "factions_backend": {
-          "anciens": 93,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -478,12 +487,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 3 / 25",
         "factions_backend": {
-          "anciens": 92,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -514,12 +524,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 4 / 25",
         "factions_backend": {
-          "anciens": 92,
-          "ankou": 96.0,
+          "anciens": 96.0,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -633,12 +644,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 4 / 25",
         "factions_backend": {
-          "anciens": 98,
-          "ankou": 96.0,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -651,12 +663,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 4 / 25",
         "factions_backend": {
-          "anciens": 97,
-          "ankou": 96.0,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -687,12 +700,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 5 / 25",
         "factions_backend": {
-          "anciens": 97,
-          "ankou": 96.0,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -794,12 +808,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 5 / 25",
         "factions_backend": {
-          "anciens": 97,
-          "ankou": 96.0,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -812,12 +827,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 5 / 25",
         "factions_backend": {
-          "anciens": 96,
-          "ankou": 96.0,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 1 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -848,12 +864,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 6 / 25",
         "factions_backend": {
-          "anciens": 96,
-          "ankou": 96.0,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -960,11 +977,12 @@
         "compteur_cartes": "Carte 6 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 96.0,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 45,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -978,11 +996,12 @@
         "compteur_cartes": "Carte 6 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 96.0,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1014,11 +1033,12 @@
         "compteur_cartes": "Carte 7 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 96.0,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1132,11 +1152,12 @@
         "compteur_cartes": "Carte 7 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 96.0,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1150,11 +1171,12 @@
         "compteur_cartes": "Carte 7 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 95,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1186,11 +1208,12 @@
         "compteur_cartes": "Carte 8 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 95,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1301,11 +1324,12 @@
         "compteur_cartes": "Carte 8 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 95,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1318,12 +1342,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 8 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1354,12 +1379,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 9 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1464,12 +1490,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 9 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1482,12 +1509,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 9 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 44,
-          "niamh": 85.0
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1518,12 +1546,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 10 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 44,
-          "niamh": 85.0
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1625,12 +1654,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 10 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1643,12 +1673,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 10 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 2 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1679,12 +1710,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 11 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1790,12 +1822,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 11 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 44,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1808,12 +1841,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 11 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 43,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1844,12 +1878,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 12 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 43,
-          "niamh": 85.0
+          "korrigans": 60,
+          "niamh": 91.0
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1951,12 +1986,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 12 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 43,
-          "niamh": 93
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -1969,12 +2005,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 12 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 43,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2005,12 +2042,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 13 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 43,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2111,12 +2149,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 13 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 43,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2129,12 +2168,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 13 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2165,12 +2205,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 14 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2275,12 +2316,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 14 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 95,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2293,12 +2335,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 14 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2329,12 +2372,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 15 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2439,12 +2483,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 15 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 93
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2457,12 +2502,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 15 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 92
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 3 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2493,12 +2539,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 16 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 92
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2600,12 +2647,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 16 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 42,
-          "niamh": 92
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2618,12 +2666,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 16 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 92
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2654,12 +2703,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 17 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 92
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2762,11 +2812,12 @@
         "compteur_cartes": "Carte 17 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 92
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2780,11 +2831,12 @@
         "compteur_cartes": "Carte 17 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 91
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2816,11 +2868,12 @@
         "compteur_cartes": "Carte 18 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 91
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2927,11 +2980,12 @@
         "compteur_cartes": "Carte 18 / 25",
         "factions_backend": {
           "anciens": 100,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 91
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2944,12 +2998,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 18 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 91
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -2980,12 +3035,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 19 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
-          "druides": 99,
-          "korrigans": 42,
-          "niamh": 91
+          "anciens": 100,
+          "ankou": 92.0,
+          "druides": 100,
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3091,12 +3147,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 19 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 94,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 42,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3109,12 +3166,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 19 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 42,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3145,12 +3203,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 20 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 42,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3269,12 +3328,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 20 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 42,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3287,12 +3347,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 20 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 41,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 4 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3323,12 +3384,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 21 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 41,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3432,12 +3494,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 21 / 25",
         "factions_backend": {
-          "anciens": 99,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 41,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3450,12 +3513,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 21 / 25",
         "factions_backend": {
-          "anciens": 98,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 41,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3486,12 +3550,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 22 / 25",
         "factions_backend": {
-          "anciens": 98,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 41,
-          "niamh": 91
+          "korrigans": 60,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3597,12 +3662,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 22 / 25",
         "factions_backend": {
-          "anciens": 98,
-          "ankou": 93,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3615,12 +3681,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 22 / 25",
         "factions_backend": {
-          "anciens": 98,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3651,12 +3718,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 23 / 25",
         "factions_backend": {
-          "anciens": 98,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3761,12 +3829,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 23 / 25",
         "factions_backend": {
-          "anciens": 98,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3779,12 +3848,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 23 / 25",
         "factions_backend": {
-          "anciens": 97,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3815,12 +3885,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 24 / 25",
         "factions_backend": {
-          "anciens": 97,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3921,12 +3992,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 24 / 25",
         "factions_backend": {
-          "anciens": 97,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3939,12 +4011,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 24 / 25",
         "factions_backend": {
-          "anciens": 96,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -3975,12 +4048,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 25 / 25",
         "factions_backend": {
-          "anciens": 96,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -4102,12 +4176,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 25 / 25",
         "factions_backend": {
-          "anciens": 96,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -4120,12 +4195,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 25 / 25",
         "factions_backend": {
-          "anciens": 96,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",
@@ -4152,12 +4228,13 @@
         "anam_affiche": 0,
         "compteur_cartes": "Carte 25 / 25",
         "factions_backend": {
-          "anciens": 96,
-          "ankou": 92,
+          "anciens": 100,
+          "ankou": 92.0,
           "druides": 100,
-          "korrigans": 51,
-          "niamh": 91
+          "korrigans": 70,
+          "niamh": 99
         },
+        "indicateur_acte": "Acte 5 / 5",
         "modificateur_marchand": "",
         "promesses_actives": 0,
         "scenario_actif": "la_forge_du_korrigan",

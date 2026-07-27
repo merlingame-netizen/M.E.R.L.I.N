@@ -18,7 +18,7 @@ Chaque carte est présentée en deux plans : **à l'écran** (ce que le joueur l
 
 - Vie **100/100** · Anam affiché **0**
 - Scénario sélectionné dans le catalogue : **la_forge_du_korrigan**
-- Réputations de départ (jamais affichées) : {'anciens': 94.0, 'ankou': 96.0, 'druides': 100.0, 'korrigans': 35.0, 'niamh': 85.0}
+- Réputations de départ (jamais affichées) : {'anciens': 96.0, 'ankou': 92.0, 'druides': 100.0, 'korrigans': 51.0, 'niamh': 91.0}
 
 ## Carte 1 — acte « Standard »
 
@@ -56,7 +56,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 2 — « Lire les traces »
 - Vie après résolution : 96/100 (avant : 100)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 93)
+- Dé du destin (lancé après chaque carte hors climax) : korrigans -1 (→ 50)
 
 ## Carte 2 — acte « Standard »
 
@@ -93,8 +93,8 @@ Ce qui se produit ensuite :
   3. réputation korrigans +10
 - Choix retenu par l'autoplay : option 3 — « Faire le tour »
 - Vie après résolution : 96/100 (avant : 96)
-- Réputations après le choix : korrigans +10 (→ 45)
-- Dé du destin (lancé après chaque carte hors climax) : druides -1 (→ 99)
+- Réputations après le choix : korrigans +10 (→ 60)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 
 ## Carte 3 — acte « Standard »
 
@@ -131,8 +131,8 @@ Ce qui se produit ensuite :
   3. réputation niamh +10
 - Choix retenu par l'autoplay : option 2 — « Examiner les bottes »
 - Vie après résolution : 96/100 (avant : 96)
-- Réputations après le choix : druides +1 (→ 100)
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 92)
+- Réputations après le choix : aucun changement
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 4 — acte « Événement »
@@ -170,8 +170,8 @@ Ce qui se produit ensuite :
   3. réputation korrigans +10
 - Choix retenu par l'autoplay : option 1 — « Attendre sans bouger »
 - Vie après résolution : 99/100 (avant : 96)
-- Réputations après le choix : anciens +6 (→ 98)
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 97)
+- Réputations après le choix : anciens +4 (→ 100)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 5 — acte « Standard »
@@ -210,7 +210,7 @@ Ce qui se produit ensuite :
 - Choix retenu par l'autoplay : option 2 — « Dire d'ou tu viens »
 - Vie après résolution : 94/100 (avant : 99)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 96)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 6 — acte « Standard »
@@ -248,8 +248,8 @@ Ce qui se produit ensuite :
   3. réputation druides +10 · ajoute le marqueur « la_lueur »
 - Choix retenu par l'autoplay : option 2 — « Entrer »
 - Vie après résolution : 94/100 (avant : 94)
-- Réputations après le choix : anciens +4 (→ 100)
-- Dé du destin (lancé après chaque carte hors climax) : korrigans -1 (→ 44)
+- Réputations après le choix : aucun changement
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 7 — acte « Standard »
@@ -288,7 +288,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 3 — « Regarder l'assiette intacte »
 - Vie après résolution : 89/100 (avant : 94)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : ankou -1 (→ 95)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 8 — acte « Marchand »
@@ -327,7 +327,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 1 — « Prendre la corde »
 - Vie après résolution : 86/100 (avant : 89)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 99)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 9 — acte « Standard »
@@ -366,7 +366,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 2 — « Demander qui est attendu »
 - Vie après résolution : 82/100 (avant : 86)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : druides -1 (→ 99)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 10 — acte « Climax »
@@ -404,7 +404,7 @@ Ce qui se produit ensuite :
   3. réputation ankou +13
 - Choix retenu par l'autoplay : option 1 — « Lui demander ce qu'il sait »
 - Vie après résolution : 77/100 (avant : 82)
-- Réputations après le choix : druides +1 (→ 100)
+- Réputations après le choix : aucun changement
 - Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
@@ -444,7 +444,7 @@ Ce qui se produit ensuite :
 - Choix retenu par l'autoplay : option 3 — « Regarder par la fenetre »
 - Vie après résolution : 77/100 (avant : 77)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : korrigans -1 (→ 43)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 12 — acte « Standard »
@@ -482,8 +482,8 @@ Ce qui se produit ensuite :
   3. réputation korrigans +10
 - Choix retenu par l'autoplay : option 2 — « Reveiller la femme »
 - Vie après résolution : 77/100 (avant : 77)
-- Réputations après le choix : niamh +8 (→ 93)
-- Dé du destin (lancé après chaque carte hors climax) : druides -1 (→ 99)
+- Réputations après le choix : niamh +8 (→ 99)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 13 — acte « Standard »
@@ -522,7 +522,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 1 — « Obeir »
 - Vie après résolution : 73/100 (avant : 77)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : korrigans -1 (→ 42)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 14 — acte « Standard »
@@ -561,7 +561,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 2 — « Dire qu'un feu follet ne sonde pas »
 - Vie après résolution : 69/100 (avant : 73)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : ankou -1 (→ 94)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 15 — acte « Standard »
@@ -600,7 +600,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 2 — « Suivre les planches neuves »
 - Vie après résolution : 60/100 (avant : 69)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : niamh -1 (→ 92)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 16 — acte « Standard »
@@ -638,8 +638,8 @@ Ce qui se produit ensuite :
   3. réputation korrigans +17
 - Choix retenu par l'autoplay : option 2 — « Sonder la branche neuve »
 - Vie après résolution : 60/100 (avant : 60)
-- Réputations après le choix : druides +1 (→ 100)
-- Dé du destin (lancé après chaque carte hors climax) : druides -1 (→ 99)
+- Réputations après le choix : aucun changement
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 17 — acte « Standard »
@@ -677,8 +677,8 @@ Ce qui se produit ensuite :
   3. réputation ankou +13
 - Choix retenu par l'autoplay : option 2 — « Traverser sur la planche »
 - Vie après résolution : 60/100 (avant : 60)
-- Réputations après le choix : anciens +1 (→ 100)
-- Dé du destin (lancé après chaque carte hors climax) : niamh -1 (→ 91)
+- Réputations après le choix : aucun changement
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 18 — acte « Événement »
@@ -717,7 +717,7 @@ Ce qui se produit ensuite :
 - Choix retenu par l'autoplay : option 1 — « Reculer et regarder »
 - Vie après résolution : 60/100 (avant : 60)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 99)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 19 — acte « Standard »
@@ -755,8 +755,8 @@ Ce qui se produit ensuite :
   3. réputation korrigans +10 · vie +3
 - Choix retenu par l'autoplay : option 2 — « Regarder ce qu'il y a »
 - Vie après résolution : 60/100 (avant : 60)
-- Réputations après le choix : druides +1 (→ 100)
-- Dé du destin (lancé après chaque carte hors climax) : ankou -1 (→ 93)
+- Réputations après le choix : aucun changement
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 20 — acte « Standard »
@@ -795,7 +795,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 1 — « Jurer les trois jours »
 - Vie après résolution : 51/100 (avant : 60)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : korrigans -1 (→ 41)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 21 — acte « Marchand »
@@ -834,7 +834,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 2 — « Refuser les pieces »
 - Vie après résolution : 47/100 (avant : 51)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 98)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 22 — acte « Standard »
@@ -872,8 +872,8 @@ Ce qui se produit ensuite :
   3. réputation ankou +16 · essence +4
 - Choix retenu par l'autoplay : option 1 — « Mentir simplement »
 - Vie après résolution : 47/100 (avant : 47)
-- Réputations après le choix : korrigans +10 (→ 51)
-- Dé du destin (lancé après chaque carte hors climax) : ankou -1 (→ 92)
+- Réputations après le choix : korrigans +10 (→ 70)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 23 — acte « Standard »
@@ -912,7 +912,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 2 — « Regarder la table avant de parler »
 - Vie après résolution : 43/100 (avant : 47)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 97)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 24 — acte « Standard »
@@ -951,7 +951,7 @@ Ce qui se produit ensuite (**l'épreuve a échoué**) :
 - Choix retenu par l'autoplay : option 2 — « Parler de l'homme du bourg »
 - Vie après résolution : 35/100 (avant : 43)
 - Réputations après le choix : aucun changement
-- Dé du destin (lancé après chaque carte hors climax) : anciens -1 (→ 96)
+- Dé du destin (lancé après chaque carte hors climax) : aucun changement
 - Marqueurs actifs : ['bottes_seches']
 
 ## Carte 25 — acte « Climax »
@@ -998,7 +998,7 @@ Ce qui se produit ensuite :
 - Issue : **live**
 - Vie finale : **30/100**
 - Anam gagné sur ce run : **0**
-- Réputations finales (jamais montrées au joueur) : {'anciens': 96, 'ankou': 92, 'druides': 100, 'korrigans': 51, 'niamh': 91}
+- Réputations finales (jamais montrées au joueur) : {'anciens': 100, 'ankou': 92.0, 'druides': 100, 'korrigans': 70, 'niamh': 99}
 
 ## Ce que le joueur ne voit jamais
 

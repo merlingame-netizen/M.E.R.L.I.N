@@ -235,7 +235,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
     </section>
     <section class="panel">
       <h2>Réputations — invisibles en jeu</h2>
-      <div class="fac-row"><span class="fac-name">druides</span><span class="fac-track"><span class="fac-base" style="width:100%"></span><span class="fac-fill" style="width:100%;background:#FFB347"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">100 → <strong>100</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">anciens</span><span class="fac-track"><span class="fac-base" style="width:94%"></span><span class="fac-fill" style="width:96%;background:#C98A3C"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">94 → <strong>96</strong></span><span class="fac-delta tab pos">+2</span></div><div class="fac-row"><span class="fac-name">korrigans</span><span class="fac-track"><span class="fac-base" style="width:35%"></span><span class="fac-fill" style="width:51%;background:#9B59FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">35 → <strong>51</strong></span><span class="fac-delta tab pos">+16</span></div><div class="fac-row"><span class="fac-name">niamh</span><span class="fac-track"><span class="fac-base" style="width:85%"></span><span class="fac-fill" style="width:91%;background:#00D4FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">85 → <strong>91</strong></span><span class="fac-delta tab pos">+6</span></div><div class="fac-row"><span class="fac-name">ankou</span><span class="fac-track"><span class="fac-base" style="width:96%"></span><span class="fac-fill" style="width:92%;background:#FF3366"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">96 → <strong>92</strong></span><span class="fac-delta tab neg">-4</span></div>
+      <div class="fac-row"><span class="fac-name">druides</span><span class="fac-track"><span class="fac-base" style="width:100%"></span><span class="fac-fill" style="width:100%;background:#FFB347"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">100 → <strong>100</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">anciens</span><span class="fac-track"><span class="fac-base" style="width:96%"></span><span class="fac-fill" style="width:100%;background:#C98A3C"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">96 → <strong>100</strong></span><span class="fac-delta tab pos">+4</span></div><div class="fac-row"><span class="fac-name">korrigans</span><span class="fac-track"><span class="fac-base" style="width:51%"></span><span class="fac-fill" style="width:70%;background:#9B59FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">51 → <strong>70</strong></span><span class="fac-delta tab pos">+19</span></div><div class="fac-row"><span class="fac-name">niamh</span><span class="fac-track"><span class="fac-base" style="width:91%"></span><span class="fac-fill" style="width:99%;background:#00D4FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">91 → <strong>99</strong></span><span class="fac-delta tab pos">+8</span></div><div class="fac-row"><span class="fac-name">ankou</span><span class="fac-track"><span class="fac-base" style="width:92%"></span><span class="fac-fill" style="width:92%;background:#FF3366"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">92 → <strong>92</strong></span><span class="fac-delta tab flat">+0</span></div>
       <p class="sub" style="font-size:12px">Le trait central marque le seuil 50,
         qui débloque une section du Grimoire. Aucun de ces chiffres n'apparaît à l'écran.</p>
     </section>
@@ -245,7 +245,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
 
   <section class="panel">
     <h2>Ce qu'il faut regarder</h2>
-    <ul class="flags"><li class="flag critique"><span class="flag-tag">critique</span><h4>Aucune récompense accordée</h4><p><code>calculate_run_rewards</code> n'est appelé que sur victoire ou mort. La victoire exige 25 cartes pour un scénario qui en compte 25 : aucun calcul n'a lieu, le joueur repart avec 0 Anam.</p></li><li class="flag critique"><span class="flag-tag">critique</span><h4>10 gains de réputation absorbés par le plafond</h4><p>carte 3 druides +8 → +1, carte 5 druides +8 → +0, carte 6 anciens +8 → +4, carte 10 druides +9 → +1. Le modèle d'équilibrage compte chaque point 0,4 PV-équivalent : au plafond de 100 il n'en vaut plus rien, et l'EV calculée de l'option s'effondre sans que rien ne le signale au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Aucune variante d&#x27;état déclenchée</h4><p>Le scénario en porte, mais aucune condition n'a été remplie sur ce run. Attendu quand l'autoplay choisit toujours la première option.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>96 effets appliqués sans être montrés</h4><p>Le HUD n'affiche que le compteur de cartes, la vie et l'Anam. Les cinq réputations bougent à chaque carte sans jamais apparaître — la décision du 2026-07-26 (tout afficher) n'est pas encore câblée.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 5 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 10 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 15 : vie appliquée -9, attendue -4</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 20 : vie appliquée -9, attendue -4</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 25 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag info"><span class="flag-tag">info</span><h4>11 épreuves ratées sur 25</h4><p>Coût total 48 PV. À stat 1 la chance de réussite est de 60 % : on attend environ 10 échecs sur ce run. Un écart durable signale un tirage biaisé, pas un défaut d'écriture.</p></li></ul>
+    <ul class="flags"><li class="flag critique"><span class="flag-tag">critique</span><h4>Aucune récompense accordée</h4><p><code>calculate_run_rewards</code> n'est appelé que sur victoire ou mort. La victoire exige 25 cartes pour un scénario qui en compte 25 : aucun calcul n'a lieu, le joueur repart avec 0 Anam.</p></li><li class="flag critique"><span class="flag-tag">critique</span><h4>11 gains de réputation absorbés par le plafond</h4><p>carte 3 druides +8 → +0, carte 4 anciens +6 → +4, carte 5 druides +8 → +0, carte 6 anciens +8 → +0. Le modèle d'équilibrage compte chaque point 0,4 PV-équivalent : au plafond de 100 il n'en vaut plus rien, et l'EV calculée de l'option s'effondre sans que rien ne le signale au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Aucune variante d&#x27;état déclenchée</h4><p>Le scénario en porte, mais aucune condition n'a été remplie sur ce run. Attendu quand l'autoplay choisit toujours la première option.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>96 effets appliqués sans être montrés</h4><p>Le HUD n'affiche que le compteur de cartes, la vie et l'Anam. Les cinq réputations bougent à chaque carte sans jamais apparaître — la décision du 2026-07-26 (tout afficher) n'est pas encore câblée.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 5 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 10 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 15 : vie appliquée -9, attendue -4</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 20 : vie appliquée -9, attendue -4</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 25 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag info"><span class="flag-tag">info</span><h4>11 épreuves ratées sur 25</h4><p>Coût total 48 PV. À stat 1 la chance de réussite est de 60 % : on attend environ 10 échecs sur ce run. Un écart durable signale un tirage biaisé, pas un défaut d'écriture.</p></li></ul>
   </section>
 
   <section class="timeline">
@@ -274,7 +274,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">100 → <strong>96</strong>
             <span class="delta neg">-4</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">korrigans -1</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -305,7 +305,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">96 → <strong>96</strong>
             <span class="delta flat">+0</span></dd>
         <dt>Réputations</dt><dd><span class="chip pos" style="--c:#9B59FF">korrigans +10</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">druides -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -335,8 +335,8 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.30 → <strong class="pos">réussite</strong></dd>
         <dt>Vie</dt><dd class="tab">96 → <strong>96</strong>
             <span class="delta flat">+0</span></dd>
-        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FFB347">druides +1</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -366,8 +366,8 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.02 → <strong class="pos">réussite</strong></dd>
         <dt>Vie</dt><dd class="tab">96 → <strong>99</strong>
             <span class="delta pos">+3</span></dd>
-        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#C98A3C">anciens +6</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#C98A3C">anciens +4</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -398,7 +398,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">99 → <strong>94</strong>
             <span class="delta neg">-5</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -428,8 +428,8 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.48 → <strong class="pos">réussite</strong></dd>
         <dt>Vie</dt><dd class="tab">94 → <strong>94</strong>
             <span class="delta flat">+0</span></dd>
-        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#C98A3C">anciens +4</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">korrigans -1</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -460,7 +460,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">94 → <strong>89</strong>
             <span class="delta neg">-5</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">ankou -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -491,7 +491,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">89 → <strong>86</strong>
             <span class="delta neg">-3</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -522,7 +522,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">86 → <strong>82</strong>
             <span class="delta neg">-4</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">druides -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -552,7 +552,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.55 → <strong class="pos">réussite</strong></dd>
         <dt>Vie</dt><dd class="tab">82 → <strong>77</strong>
             <span class="delta neg">-5</span></dd>
-        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FFB347">druides +1</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
         <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
@@ -584,7 +584,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">77 → <strong>77</strong>
             <span class="delta flat">+0</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">korrigans -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -615,7 +615,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">77 → <strong>77</strong>
             <span class="delta flat">+0</span></dd>
         <dt>Réputations</dt><dd><span class="chip pos" style="--c:#00D4FF">niamh +8</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">druides -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -646,7 +646,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">77 → <strong>73</strong>
             <span class="delta neg">-4</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">korrigans -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -677,7 +677,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">73 → <strong>69</strong>
             <span class="delta neg">-4</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">ankou -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -708,7 +708,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">69 → <strong>60</strong>
             <span class="delta neg">-9</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">niamh -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -738,8 +738,8 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.18 → <strong class="pos">réussite</strong></dd>
         <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
             <span class="delta flat">+0</span></dd>
-        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FFB347">druides +1</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">druides -1</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -769,8 +769,8 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.53 → <strong class="pos">réussite</strong></dd>
         <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
             <span class="delta flat">+0</span></dd>
-        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#C98A3C">anciens +1</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">niamh -1</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -801,7 +801,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
             <span class="delta flat">+0</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -831,8 +831,8 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.13 → <strong class="pos">réussite</strong></dd>
         <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
             <span class="delta flat">+0</span></dd>
-        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FFB347">druides +1</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">ankou -1</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -863,7 +863,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">60 → <strong>51</strong>
             <span class="delta neg">-9</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">korrigans -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -894,7 +894,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">51 → <strong>47</strong>
             <span class="delta neg">-4</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -925,7 +925,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">47 → <strong>47</strong>
             <span class="delta flat">+0</span></dd>
         <dt>Réputations</dt><dd><span class="chip pos" style="--c:#9B59FF">korrigans +10</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">ankou -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -956,7 +956,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">47 → <strong>43</strong>
             <span class="delta neg">-4</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
@@ -987,7 +987,7 @@ table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-
         <dt>Vie</dt><dd class="tab">43 → <strong>35</strong>
             <span class="delta neg">-8</span></dd>
         <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
-        <dt>Dé du destin</dt><dd><span class="chip neg">anciens -1</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
       </dl>
       <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
     </section>
