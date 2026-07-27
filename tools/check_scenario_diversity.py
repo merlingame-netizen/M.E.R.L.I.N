@@ -22,7 +22,7 @@ Six axes, du plus grossier au plus fin :
 
 Usage :
   python tools/check_scenario_diversity.py
-  python tools/check_scenario_diversity.py --file data/ai/scenario_golden_broceliande.json
+  python tools/check_scenario_diversity.py --file data/ai/scenario_type_reference.json
   python tools/check_scenario_diversity.py --report docs/30_jdr/SCENARIO_DIVERSITY_REPORT.md
 """
 

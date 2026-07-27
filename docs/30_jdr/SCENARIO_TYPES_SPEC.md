@@ -365,7 +365,7 @@ simultanément de trois choses :
 
 | Couche | Produite par | Propriété |
 |---|---|---|
-| **Mécanique** — graphe de cartes, routes, types, raretés, arc, pôles, factions, checks, effets | `tools/build_golden_scenario.py`, dérivée du contrat | déterministe, reproductible, garantie conforme |
+| **Mécanique** — séquence de cartes, types, raretés, arc, pôles, factions, épreuves, effets | `tools/build_scenario_type.py`, dérivée du contrat | déterministe, reproductible, garantie conforme |
 | **Prose** — titre, intro, hook, summaries, labels, verbes | LLM (ou humain), injectée via `--merge-prose` | créative, remplaçable sans toucher à l'équilibrage |
 
 Cette séparation est le cœur de la méthode : **on ne négocie jamais l'équilibrage
@@ -373,13 +373,16 @@ en écrivant de la prose**. Le générateur mint un squelette parfait, la prose
 vient s'y couler.
 
 ```bash
-python tools/build_golden_scenario.py --prose-slots /tmp/slots.json   # gabarits à remplir
-python tools/build_golden_scenario.py --merge-prose /tmp/prose.json \
-    --out data/ai/scenario_golden_broceliande.json \
-    --markdown docs/30_jdr/SCENARIO_TYPE_GOLDEN.md
+python tools/build_scenario_type.py --out data/ai/scenario_type_reference.json \
+    --markdown docs/30_jdr/SCENARIO_TYPE_REFERENCE.md
 python tools/validate_scenario_balance.py \
-    --file data/ai/scenario_golden_broceliande.json --strict
+    --file data/ai/scenario_type_reference.json --strict --min-score 100
 ```
+
+> La chaine en deux temps (squelette mecanique genere, puis prose fusionnee via
+> `--merge-prose`) appartenait a `build_golden_scenario.py`, supprime le
+> 2026-07-27 avec le modele a 3 routes. `build_scenario_type.py` ecrit
+> mecanique et prose d'un seul tenant.
 
 ### 8.2 Le validateur en mode strict
 
