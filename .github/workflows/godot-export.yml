@@ -33,49 +33,46 @@ jobs:
 
       - name: Prepare project for headless CI
         run: |
-          # Move export templates to expected location (required by barichello/godot-ci)
+          set -euo pipefail
+
+          # Les templates d'export sont la ou barichello/godot-ci ne les cherche pas.
           mkdir -v -p ~/.local/share/godot/export_templates/
-          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable || true
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable \
+             ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable || true
 
-          # Remove GDExtension (Windows-only DLL)
-          rm -f addons/merlin_llm/merlin_llm.gdextension addons/merlin_llm/merlin_llm.gdextension.uid
+          # La GDExtension merlin_llm ne declare qu'une DLL Windows : elle n'a
+          # aucun sens en web, et Godot echoue a la charger.
+          rm -f addons/merlin_llm/merlin_llm.gdextension \
+                addons/merlin_llm/merlin_llm.gdextension.uid
 
-          # Remove ALL editor plugins (MCP server hangs on port 9080)
+          # Les plugins EDITEUR ne servent pas a l'export et le serveur MCP
+          # bloque sur le port 9080 en CI. L'export n'en a pas besoin.
           sed -i '/\[editor_plugins\]/,/^$/d' project.godot
 
-          # Remove custom theme reference (VT323 font causes hang — theme loads at runtime anyway)
-          sed -i '/theme\/custom=/d' project.godot
+          # --- Ce que ce script ne fait PLUS, et pourquoi -------------------
+          # Il retirait AUSSI tous les autoloads de project.godot, le theme
+          # custom, et patchait les shaders. Le commentaire d'origine affirmait
+          # que « le .pck contiendra quand meme les scripts d'autoload, ils se
+          # chargent au runtime » : c'est faux. Les autoloads sont declares
+          # dans project.godot, que l'export embarque tel quel. Les retirer
+          # produisait un build qui demarre SANS GameManager, MerlinVisual,
+          # SFXManager ni GameFlow — un jeu qui plante a la premiere ligne.
+          # Un build qui ne tourne pas est pire qu'un build qui ne sort pas.
 
-          # Remove ALL autoloads for CI export (they cause hangs in headless)
-          # The exported .pck will still contain the autoload scripts — they load at runtime
-          sed -i '/^\[autoload\]/,/^\[/{/^\[autoload\]/d;/^\[/!d}' project.godot
+          echo "=== autoloads conserves ==="
+          grep -c '="\*res://' project.godot
 
-          # Patch shaders: remove hint_screen_texture (unsupported in headless)
-          for shader in shaders/*.gdshader; do
-            [ -f "$shader" ] && sed -i 's/hint_screen_texture, //g; s/hint_screen_texture//g' "$shader"
-          done
-
-          echo "=== project.godot after cleanup ==="
-          cat project.godot | head -60
-          # PlatformManager, MerlinResponsive, PixelTransition, PixelContentAnimator
-          sed -i '/GameDebugServer=/d' project.godot
-          sed -i '/MerlinAI=/d' project.godot
-          sed -i '/SFXManager=/d' project.godot
-          sed -i '/MusicManager=/d' project.godot
-          sed -i '/ScreenDither=/d' project.godot
-          sed -i '/ScreenFrame=/d' project.godot
-          sed -i '/ScreenEffects=/d' project.godot
-          sed -i '/MerlinBackdrop=/d' project.godot
-          sed -i '/DayNightManager=/d' project.godot
-          sed -i '/GameFlow=/d' project.godot
-
-          # Patch shaders: remove hint_screen_texture (unsupported in headless)
-          for shader in shaders/*.gdshader; do
-            [ -f "$shader" ] && sed -i 's/hint_screen_texture, //g; s/hint_screen_texture//g' "$shader"
-          done
-
-          echo "=== Autoloads after cleanup ==="
-          grep -A30 "^\[autoload\]" project.godot | head -20
+      - name: Verifier que le projet n'a pas ete ampute
+        run: |
+          set -euo pipefail
+          n=$(grep -c '="\*res://' project.godot || echo 0)
+          if [ "$n" -lt 25 ]; then
+            echo "::error::$n autoloads seulement — le projet a ete ampute, le build serait mort-ne"
+            exit 1
+          fi
+          grep -q 'theme/custom=' project.godot \
+            || echo "::warning::pas de theme custom declare"
+          echo "OK : $n autoloads, projet intact"
 
       - name: Import resources
         continue-on-error: true
@@ -86,12 +83,19 @@ jobs:
         timeout-minutes: 60
         run: |
           mkdir -v -p web-export
-          timeout 3300 godot --headless --verbose --export-release "Web" web-export/index.html || true
+          timeout 3300 godot --headless --export-release "Web" web-export/index.html || true
           echo "=== Result ==="
           ls -la web-export/
           if [ ! -f web-export/index.html ]; then
             echo "::error::Export failed"
             exit 1
+          fi
+          # Poids du build : c'est ce que telechargera un mobile.
+          total=$(du -sk web-export | cut -f1)
+          echo "### Build web : $((total / 1024)) Mo" >> "$GITHUB_STEP_SUMMARY"
+          du -h web-export/* | sort -rh | head -10 >> "$GITHUB_STEP_SUMMARY"
+          if [ "$total" -gt 102400 ]; then
+            echo "::warning::build de $((total / 1024)) Mo — lourd pour du mobile"
           fi
 
       - uses: actions/upload-artifact@v4
