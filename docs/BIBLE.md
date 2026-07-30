@@ -2123,6 +2123,24 @@ Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de c
   supprimee dans un script-outil SceneTree (parse-only) ; tout patch structurel d'un outil exige une
   invocation runtime minimale (--runs=2) avant campagne.
 
+- **R171 : DOCTRINE MODELE, GEMMA MOBILE-COMPATIBLE UNIQUEMENT (2026-07-30, decision Maxime)** :
+  « Enleve les Qwen, je ne veux que du Gemma qui serait a minima compatible high-end mobile
+  d'aujourd'hui. » REGLE : la famille Gemma est la SEULE autorisee dans toute la chaine M.E.R.L.I.N.
+  (jeu, forge hors-jeu, batch nocturne, outillage LLM), et uniquement des tailles qui tournent sur
+  un flagship mobile actuel (classe E2B/E4B, conception mobile-first ; JAMAIS de 12B/27B meme hors
+  ligne). Consequences : (1) le modele embarque reste gemma4-e2b (GGUF natif, R170) ; (2) la SEULE
+  voie d'upgrade autorisee pour combler les pieces hors de portee (gestes, R170) est le palier
+  superieur mobile-compatible de la famille (classe E4B), a MESURER avec le meme harnais forge+QC
+  avant toute adoption ; (3) purge des restes Qwen du pipeline de contenu : bulk_generate_fastroute.py
+  et data/ai/fastroute_cards.json supprimes (orphelins legacy generes par qwen, jamais charges par le
+  jeu), l'adaptateur Ollama generique (infra multi-projets, pipeline CR) passe en defaut gemma4:e2b ;
+  les etiquettes qwen residuelles du moniteur autodev legacy relevent du backlog agents perimes.
+  (4) Le contenu de bibliotheque reste ecrit hors-jeu par l'outillage studio (auteur au niveau
+  etalon) OU genere par le Gemma mobile-compatible sous QC : aucun modele tiers, nulle part.
+  Portage : cette doctrine garantit que le jeu mobile (LLM sous-dimensionne, roadmap) utilise la
+  MEME famille que le jeu PC, sans re-vérification de licence ni de comportement d'une famille
+  etrangere.
+
 - **R170 : FORGE, QC ET STRATEGIE HYBRIDE MESUREES (2026-07-30, vague W4)** : le gate
   `tools/scenario_qc.py` (decision 16, §25.5) est livre et CALIBRE : les 10 sentiers etalon R169
   passent a 100% et 9 mutations de controle echouent toutes ; chaque seuil est documente dans le

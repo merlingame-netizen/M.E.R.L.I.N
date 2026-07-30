@@ -1,4 +1,4 @@
-"""Ollama adapter — local LLM HTTP API for M.E.R.L.I.N. (Qwen 3.5 via Ollama)."""
+"""Ollama adapter — local LLM HTTP API for M.E.R.L.I.N. (famille Gemma uniquement, R171)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from adapters.base_adapter import BaseAdapter  # noqa: E402
 # ── Constants ───────────────────────────────────────────────────────────────
 
 BASE_URL = "http://localhost:11434"
-DEFAULT_MODEL = "qwen2.5:7b"
+DEFAULT_MODEL = "gemma4:e2b"
 
 # ── Adapter ─────────────────────────────────────────────────────────────────
 
