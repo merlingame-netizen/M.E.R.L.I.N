@@ -2123,6 +2123,29 @@ Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de c
   supprimee dans un script-outil SceneTree (parse-only) ; tout patch structurel d'un outil exige une
   invocation runtime minimale (--runs=2) avant campagne.
 
+- **R170 : FORGE, QC ET STRATEGIE HYBRIDE MESUREES (2026-07-30, vague W4)** : le gate
+  `tools/scenario_qc.py` (decision 16, §25.5) est livre et CALIBRE : les 10 sentiers etalon R169
+  passent a 100% et 9 mutations de controle echouent toutes ; chaque seuil est documente dans le
+  fichier (phrases 9-22 mots, staccato <= 15%, periodes <= 10%, fil causal >= 2 reprises lexicales,
+  geste = ancres action+trait, mots-indices dans les familles du bandeau, intensite = difficulte).
+  Limites assumees : heuristiques lexicales (ni grammaire ni justesse de role : la relecture reste
+  la passe finale). La forge `tools/scenario_forge.py` + `tools/forge_gen.gd` genere PAR PIECES
+  (squelette 100% code ; few-shot etalon ; contraintes INJECTEES : indices, figure, reprise causale ;
+  auto-QC, 3 essais a reprise guidee, fallback marque, reprise disque). Deux lecons moteur :
+  MerlinNative est inutilisable en headless (attend frame_post_draw), le runner pilote la GDExtension
+  avec les constantes exactes du jeu ; le sampler natif est DETERMINISTE a prompt egal, tout re-essai
+  doit VARIER le prompt (et en jeu, meme contexte = meme prose). MESURE REELLE (gemma4-e2b q4_k_m,
+  1,1-4,2 tok/s effectifs) : reactions de Merlin 5/6 PASS (~15 s piece), preambules 2/2 (<= 2 essais),
+  charnieres/epilogues 3/3, scenes 4/6 (relecture OBLIGATOIRE : le QC lexical ne voit ni la grammaire
+  cassee ni la conflation heros/figure), GESTES 0/4 en 12 essais (HORS DE PORTEE : le modele decrit
+  l'ambiance au lieu de l'acte), scenario complet 100% Gemma REFUSE par le gate. STRATEGIE ACTEE :
+  (1) bibliotheque pre-validee niveau etalon = SEULE source des gestes et scenarios complets
+  (data/ai/quest_library_foret.json 6 entrees + falaises 4, les 10 etalons convertis, QC gate dur de
+  commit) ; (2) batch nocturne Gemma+QC pour reactions (~150-180 validees/heure), preambules,
+  charnieres, epilogues ; (3) LIVE opportuniste limite aux reactions de Merlin (banque R167 en filet),
+  jamais de scene ni de geste en live. Le niveau vu par le joueur est garanti par le GATE, pas par
+  la confiance dans le modele.
+
 - **R169 : REGISTRE DE RECIT EQUILIBRE (2026-07-29, 2e retour d'ecriture de Maxime sur les 10
   sentiers)** : « Tout est trop image et trop destructure, ca fait too much, l'ecriture est trop
   enigmatique. » Le pendule est recale : ni le soutenu de l'etalon v1, ni le hache de R168.

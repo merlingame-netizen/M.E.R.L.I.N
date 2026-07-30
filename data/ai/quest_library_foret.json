@@ -1,0 +1,845 @@
+{
+ "version": 1,
+ "biome": "foret",
+ "entries": [
+  {
+   "id": "etalon_03",
+   "author": "etalon",
+   "title": "Le Rire en Gage",
+   "envergure": "Une veillée : forêt",
+   "tier": "veillee",
+   "biome": "foret",
+   "figures": "Fañch le Trotteur (Roster §6) ; pilier du run : l'Enfant (wildcard, intervention brève au climax)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Ruse",
+         "Vigilance"
+        ],
+        "reaction": true,
+        "deltas": "+3 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "intuition"
+        ],
+        "difficulte": 2,
+        "action": "Monde",
+        "traits": [
+         "Rituel",
+         "Sacrifice"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1 · Corruption +1"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "intuition"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Ruse",
+         "Instinct"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2 · -3 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 3,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Sacrifice"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1"
+       }
+      ],
+      "figures": [
+       "fanch",
+       "enfant",
+       "marchand",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc5\">\n  <header><h2>LE RIRE EN GAGE</h2><p class=\"pitch\">Fañch le Trotteur a troqué ce qu'il n'aurait jamais dû prendre : le rire d'un enfant. Il paie bien pour qu'on le rende à sa place, mais le prix a changé en route.</p><p class=\"envergure\">Une veillée : forêt</p></header>\n\n  <div class=\"merlin\">MERLIN : « Tu es mon Voyageur, et cette nuit Brocéliande ressemble à un marché après la fermeture. Entre les menhirs, tout se troque, même ce qui ne devrait pas avoir de prix. Fañch le Trotteur a pris le rire d'un enfant, et il voudrait maintenant le rendre. Seulement un troc ne s'annule pas : il se rétrocède, et le prix a changé en chemin. Avant l'aube, tu porteras ce rire jusqu'à l'enfant. Je te préviens tout de suite : rendre coûte toujours plus cher que prendre. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Fañch le Trotteur t'attend entre deux menhirs, un bocal de verre serré sous le bras. Quelque chose y remue sans faire de bruit. « Une course simple, bien payée, pas de questions », annonce-t-il d'entrée. Ses <span class=\"kw kw-parole\"><b>mots</b></span> tournent autour du bocal sans jamais le nommer, et ton <span class=\"kw kw-perception\"><b>regard</b></span>, lui, n'en décroche pas.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Ruse · Vigilance</div>\n    <div class=\"geste\">Tu le laisses parler jusqu'à ce qu'il s'essouffle, puis tu poses tes conditions : le prix d'abord, l'histoire ensuite. Il grimace, marchande, finit par céder. L'histoire sort par morceaux : le rire d'un enfant, troqué un soir de foire, et cette règle qu'il n'a pas inventée, un troc ne s'annule pas, il se rétrocède. Il te verse trois gwenneg d'avance, te fourre le bocal dans les bras et te fait promettre d'aller jusqu'au bout, quoi qu'il en coûte. Tu promets. Il sourit un peu trop vite.</div>\n    <div class=\"reaction\">MERLIN : « Une promesse à un korrigan, mon Voyageur. À ce comptoir-là, c'est toi qui viens d'acheter le plus cher. »</div>\n    <div class=\"deltas\">+3 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">En chemin, tu comprends ce qui remuait dans le bocal : un simple écho. Le vrai rire, Fañch l'a revendu à la forêt contre un hiver de chance, et il t'a confié un bocal vide qui pèse quand même dans la sacoche. Au pied du grand menhir, la <span class=\"kw kw-intuition\"><b>forêt</b></span> a creusé une pierre en forme de coupe, et cette pierre attend un <span class=\"kw kw-monde\"><b>rite</b></span> : on n'y reprend rien sans offrir quelque chose en échange.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Monde · Rituel · Sacrifice</div>\n    <div class=\"geste\">Tu n'as pas d'hiver de chance à offrir, alors tu marchandes avec le rite lui-même : tu proposes un gage, ton propre rire d'enfant, déposé dans la pierre le temps de conclure l'affaire. La pierre accepte, mais à sa manière : elle rend le rire de l'enfant et garde le tien. Tu repars avec le bocal plein et la bouche sèche. En route, tu te répètes une vieille plaisanterie de foire, et rien ne vient.</div>\n    <div class=\"reaction\">MERLIN : « Tu paies avec ce que tu es, maintenant. C'est une monnaie qui ne se rembourse pas toute seule, celle-là. »</div>\n    <div class=\"deltas\">Intégrité -1 · Corruption +1</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Fañch t'attend au croisement, la main déjà ouverte. « Petit changement, rien de grave », dit-il : la rétrocession vaut trois fois le troc, c'est la règle, et il ne l'a pas inventée non plus. Tu cherches la faille dans ses <span class=\"kw kw-parole\"><b>mots</b></span>, et ton <span class=\"kw kw-intuition\"><b>flair</b></span> jure qu'elle existe quelque part.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Ruse · Instinct</div>\n    <div class=\"geste\">Tu tentes de ruser avec un korrigan qui connaît le prix de tout, et il te laisse dérouler ton boniment jusqu'au bout sans t'interrompre. « Joli, apprécie-t-il. Mais tu as promis, souviens-toi : jusqu'au bout, quoi qu'il en coûte. » La promesse de la veillée se referme sur toi, et il n'y a rien à répondre. Tu rends les trois gwenneg de l'avance, et l'écart du nouveau prix reste à ta charge.</div>\n    <div class=\"reaction\">MERLIN : « Ruser avec Fañch... Il collectionne les malins dans ton genre, mon Voyageur, et sa collection se porte très bien. »</div>\n    <div class=\"deltas\">Intégrité -2 · -3 Gwenneg</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « L'enfant est là, derrière les fougères. Écoute-moi avant d'y aller. Fañch sait tout prendre et tout revendre, mais il y a une chose qu'il n'a jamais su faire, et c'est justement celle qu'on va te demander. On ne rend pas un rire comme on rend une pièce, mon Voyageur. Souviens-toi de ça. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">L'enfant est assis au milieu de la clairière, très calme pour son âge. Il te regarde poser le bocal et ne réclame rien. C'est là que le nouveau prix se montre enfin en entier : ceci ne peut plus être un troc, seulement un <span class=\"kw kw-monde\"><b><i>don</i></b></span>, et un don exige une <span class=\"kw kw-parole\"><b><i>vérité</i></b></span> dite en face.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Sacrifice</div>\n    <div class=\"geste\">Tu t'agenouilles à sa hauteur et tu dis la vérité avec franchise, sans rien arranger : ce rire a été volé, on t'a payé pour le rapporter, et tu renonces à tout salaire pour qu'il redevienne un don. Puis tu ouvres le bocal en offrande, sans rien garder pour toi. Le rire traverse la clairière, l'enfant rit longtemps, et quelque chose se dénoue dans ta poitrine.</div>\n    <div class=\"reaction\">MERLIN : « Un don vrai, au beau milieu d'un monde de trocs. Tu viens de faire une chose que la forêt n'oubliera pas. Moi non plus. »</div>\n    <div class=\"deltas\">Intégrité +1</div>\n  </section>\n\n  <div class=\"epilogue\">Au matin, la pierre du menhir solde ton gage : le rire de l'enfant a réveillé le tien, et elle te le rend sans rien exiger de plus. Fañch repart entre deux menhirs, délesté d'un remords et chargé d'une leçon qu'il oubliera vite. Tu avais promis d'aller jusqu'au bout, et tu y es allé. Rendre coûte plus cher que prendre, et ce prix-là, tu l'as payé en entier.</div>\n\n  <div class=\"merlin\">MERLIN : « L'enfant riait encore quand la brume est tombée. J'espère seulement, mon Voyageur, que c'était bien son rire à lui. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_04",
+   "author": "etalon",
+   "title": "La Pierre Qui Oublie",
+   "envergure": "Une veillée : forêt",
+   "tier": "veillee",
+   "biome": "foret",
+   "figures": "Ordalc'h (Druides) ; pilier : Chœur des Druides",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "monde"
+        ],
+        "difficulte": 1,
+        "action": "Perception",
+        "traits": [
+         "Mémoire des Pierres",
+         "Œil du Guetteur"
+        ],
+        "reaction": true,
+        "deltas": ""
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Vieux Signes",
+         "Main Tendue"
+        ],
+        "reaction": true,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "corps",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Force Nue"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "intuition",
+         "monde"
+        ],
+        "difficulte": 3,
+        "action": "Intuition",
+        "traits": [
+         "Sève des Racines",
+         "Vieux Signes"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1 · +3 Gwenneg"
+       }
+      ],
+      "figures": [
+       "ordalch",
+       "choeur"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc1\">\n  <header>\n    <h2>LA PIERRE QUI OUBLIE</h2>\n    <p class=\"pitch\">Le plus vieux menhir de Brocéliande perd ses rites un à un, gravure après gravure, et la sentinelle muette qui le garde oubliera bientôt jusqu'à son propre nom.</p>\n    <p class=\"envergure\">Une veillée : forêt</p>\n  </header>\n\n  <div class=\"merlin\">MERLIN : « Approche, mon Voyageur, et écoute-moi bien, car cette histoire commence au cœur de Brocéliande, dans une clairière où la brume ne se lève jamais tout à fait. Le menhir d'Ordalc'h est en train d'oublier. Les rites gravés dans sa pierre s'effacent un à un, et quand le dernier aura disparu, la sentinelle qui le garde ne saura plus son propre nom. Trouve ce qui boit la pierre, et rends-lui sa mémoire avant la fin de la nuit. Si tu y parviens, tu entendras une chose que personne n'a entendue depuis les premiers gardiens : Ordalc'h dira son nom. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le menhir se dresse au milieu d'une clairière où aucun oiseau ne chante. Les <span class=\"kw kw-perception\"><b>gravures</b></span> couvrent encore la pierre, mais certaines lignes sont devenues lisses, comme si personne ne les avait jamais creusées. Au pied du menhir, une <span class=\"kw kw-monde\"><b>brume</b></span> basse s'attarde et ne bouge pas, même quand le vent passe.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté I</div>\n    <div class=\"choix\">Geste : Perception · Mémoire des Pierres · Œil du Guetteur</div>\n    <div class=\"geste\">Tu poses les doigts sur la pierre et tu suis les lignes une à une, sans te presser, pour comprendre ce qui s'efface et dans quel ordre. Là où elles s'interrompent, la roche est froide et humide sous ta main. Avant qu'il ne disparaisse à son tour, tu retiens un signe entier : un cercle barré de trois traits, le salut des premiers gardiens.</div>\n    <div class=\"reaction\">MERLIN : « Tu lis la pierre plus vite qu'elle n'oublie, et c'est une bonne nouvelle. Garde ce signe en mémoire, il te servira plus tôt que tu ne le crois. »</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Ordalc'h se tient adossé au menhir, si immobile que tu as failli ne pas le voir. Il te regarde approcher sans dire un mot, et son silence n'a rien d'hostile : il attend quelque chose. Tu te souviens alors de ce que la clairière exige. Ici, le bruit est une offense, et le <span class=\"kw kw-parole\"><b>salut muet</b></span> que tu as lu sur la pierre est un <span class=\"kw kw-monde\"><b>rite</b></span> qu'il faut rendre.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Vieux Signes · Main Tendue</div>\n    <div class=\"geste\">Tu ne dis rien. Tu traces dans l'air le cercle barré de trois traits, le signe sauvé de la pierre, puis tu tends la main ouverte et tu attends. Ordalc'h cligne des yeux une seule fois. Puis il parle, lentement, comme quelqu'un qui n'a plus l'habitude : « La brume grise. Elle boit. À la fontaine. » Il glisse deux pièces usées dans ta paume, la paie que recevaient les anciens gardiens.</div>\n    <div class=\"reaction\">MERLIN : « Tu viens de faire parler la pierre qui marche. Trois mots de la bouche d'Ordalc'h, crois-moi, c'est déjà un long discours. »</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La <span class=\"kw kw-monde\"><b>fontaine sacrée</b></span> est couverte d'une mousse grise qui palpite doucement, comme une gorge en train d'avaler. Elle a déjà mangé les noms gravés sur la margelle, et elle continue de boire sans se presser. Il faudrait l'<span class=\"kw kw-corps\"><b>arracher</b></span> avant qu'elle ne remonte jusqu'au menhir.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-corps\">Corps</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Force Nue</div>\n    <div class=\"geste\">Tu empoignes la mousse à pleines mains et tu tires de toutes tes forces. Les trois mots d'Ordalc'h t'ont dit ce qu'il fallait faire, mais pas comment s'y prendre. La mousse cède en surface et continue de boire par en dessous. Un froid remonte le long de ton bras droit, et quelque chose s'en va avec lui : tu ne te souviens plus du chemin par lequel tu es venu. Ta main reste grise jusqu'au poignet, engourdie.</div>\n    <div class=\"reaction\">MERLIN : « La force seule ne suffit pas contre ce qui boit la mémoire, te voilà prévenu. Elle t'a pris un morceau, mon Voyageur. Ne la laisse pas revenir se servir. »</div>\n    <div class=\"deltas\">Intégrité -2</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Nous voici à la dernière marche de cette nuit. La mousse remonte vers le menhir, et ta main grise te le rappellera à chaque geste. Mais tu portes toujours le signe des premiers gardiens, et celui-là, la brume ne l'a pas bu. Grave-le dans la pierre. Rends-lui ce qu'on lui a pris, et elle saura faire le reste. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Au pied du menhir, la mousse grise s'enroule déjà sur les dernières gravures. C'est alors que des voix montent d'entre les arbres : le Chœur des Druides est venu, il forme un cercle autour de la clairière, et son chant retient la <span class=\"kw kw-monde\"><b><i>brume</i></b></span> au sol. Une voix se détache et te traverse : « Grave, voyageur. Nous tenons la nuit. » Il ne reste plus que la pierre, sa <span class=\"kw kw-intuition\"><b><i>sève</i></b></span> ancienne qui court sous la surface, et ta main valide qui tremble un peu.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-intuition\">Intuition</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté III</div>\n    <div class=\"choix\">Geste : Intuition · Sève des Racines · Vieux Signes</div>\n    <div class=\"geste\">Ta main droite ne répond plus, alors tu graves de la gauche, guidé par ce que la forêt te souffle plutôt que par ce que tes doigts savent faire. Tu sens la sève courir sous la pierre, tu la suis, et tu y couches le cercle barré de trois traits, le signe que tu avais sauvé au premier soir. La pierre boit le signe. La mousse grise se rétracte, se fend, puis rend tout ce qu'elle avait pris : le chemin te revient d'un coup, et le sang revient aussi dans ta main.</div>\n    <div class=\"reaction\">MERLIN : « De la main gauche, avec un signe repris à l'oubli... Je crois bien que c'est le plus beau geste de ta nuit, mon Voyageur. »</div>\n    <div class=\"deltas\">Intégrité +1 · +3 Gwenneg</div>\n  </section>\n\n  <div class=\"epilogue\">Le menhir se souvient. Les gravures reviennent une à une sous la surface, d'abord pâles, puis nettes, jusqu'à ce que la pierre soit à nouveau pleine de son histoire. Ordalc'h pose sa main à côté de la tienne sur la pierre tiède, et il tient la promesse de la nuit : il dit son nom, une seule fois, si bas que seuls toi et la pierre pouvez l'entendre.</div>\n\n  <div class=\"merlin\">MERLIN : « Tu as entendu ce que personne n'avait entendu depuis les premiers gardiens. Garde-le comme il garde la pierre : en silence. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_05",
+   "author": "etalon",
+   "title": "Les Comptes de la Brume",
+   "envergure": "Un périple (2 quêtes, 7 beats)",
+   "tier": "periple",
+   "biome": "foret",
+   "figures": "Le Passeur de Brumes (quête 1) · Fañch le Trotteur, marchand (quête 2) · pilier : le Compagnon Perdu (une apparition)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "perception"
+        ],
+        "difficulte": 1,
+        "action": "Perception",
+        "traits": [
+         "Regard d'Aube",
+         "Guet"
+        ],
+        "reaction": false,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "intuition"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Langue Déliée",
+         "Flair"
+        ],
+        "reaction": true,
+        "deltas": "+1 Gwenneg · Promesse au Passeur contractée"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "corps"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Bras Ferme",
+         "Endurance"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2 · Corruption +1 · Promesse alourdie"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Mémoire des Traces"
+        ],
+        "reaction": true,
+        "deltas": "+4 Gwenneg"
+       }
+      ],
+      "figures": [
+       "passeur",
+       "marchand",
+       "creancier"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 1,
+        "action": "Parole",
+        "traits": [
+         "Marchandage",
+         "Œil Vif"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +2 · +2 Gwenneg · Baume de fontaine : -6 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "intuition",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Intuition",
+        "traits": [
+         "Instinct",
+         "Pas de Nuit"
+        ],
+        "reaction": true,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 3,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Don"
+        ],
+        "reaction": true,
+        "deltas": "Promesse soldée · -3 Gwenneg"
+       }
+      ],
+      "figures": [
+       "fanch",
+       "passeur",
+       "marchand",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "transition",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc3\">\n  <header><h2>LES COMPTES DE LA BRUME</h2><p class=\"pitch\">Dans la tourbière du bas, les chemins ont bougé, mais le Passeur de Brumes continue de vendre des passages qui ne mènent plus nulle part. Ceux qui l'ont payé attendent dans le brouillard sans pouvoir rentrer chez eux. Il faut descendre là-bas et régler ces comptes, tous les comptes.</p><p class=\"envergure\">Un périple : forêt</p></header>\n\n  <div class=\"merlin\">MERLIN : « Te voilà, mon Voyageur. Ici, Brocéliande a le pied dans l'eau : c'est la tourbière du bas, avec ses brumes épaisses et ses chemins qui changent de place pendant la nuit. Le Passeur de Brumes y vend des passages qui ne mènent plus nulle part, et les gens qui les ont payés attendent dans le brouillard, endettés jusqu'au cou. Descends régler ces comptes un par un. Et fais attention à ce que tu signes en route : dans ce genre d'affaire, on finit toujours par avoir son propre compte à solder. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La <span class=\"kw kw-monde\"><b>brume</b></span> monte à hauteur de genou. Un homme se tient immobile dans la boue, les yeux fixés sur un chemin qui n'existe pas, et autour de lui des <span class=\"kw kw-perception\"><b>traces</b></span> de pas tournent en rond sans jamais sortir du cercle.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Perception · Regard d'Aube · Guet</div>\n    <div class=\"geste\">Plutôt que de fuir la brume, tu t'installes à sa lisière et tu poses sur elle ton regard d'aube, en guettant les traces une à une. Elles reviennent toutes au même point de départ : ce chemin n'a jamais mené nulle part. L'homme s'appelle Iouen, et il te raconte l'affaire d'une voix lasse : il a payé trois fois un passage qui ne part jamais.</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le Passeur t'attend sur le seul îlot sec de la tourbière, sa barque à demi tirée sur la berge. Il annonce son prix, puis le change avant d'avoir fini de le dire. Pour traiter avec un homme pareil, il te faudra du <span class=\"kw kw-parole\"><b>verbe</b></span> et du <span class=\"kw kw-intuition\"><b>flair</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Langue Déliée · Flair</div>\n    <div class=\"geste\">Tu délies ta langue et tu poses les faits devant lui : Iouen, ses trois paiements, le chemin qui n'existe pas. Ton flair repère l'instant précis où le prix se met à tricher, et tu le lui dis aussi. Le Passeur cède un peu de terrain : il t'ouvrira son comptoir des dettes. Mais rien n'est gratuit chez lui, et ton propre passage, tu le lui devras plus tard : une Promesse, dit-il, qu'il viendra réclamer lui-même.</div>\n    <div class=\"reaction\">MERLIN : « Une Promesse à un Passeur, mon Voyageur... J'aimerais pouvoir te dire ce que tu viens de signer, mais lui seul le sait. Avance, et garde l'affaire en tête. »</div>\n    <div class=\"deltas\">+1 Gwenneg · Promesse au Passeur contractée</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Sur la route du comptoir, une femme est enlisée jusqu'à la taille, une corde de dette nouée au cou. La <span class=\"kw kw-monde\"><b>boue</b></span> la tire lentement vers le bas, et pour l'en sortir il faudra du <span class=\"kw kw-corps\"><b>souffle</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-corps\">Corps</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Bras Ferme · Endurance</div>\n    <div class=\"geste\">Tu plantes tes bras fermes sous les siens et tu tires de toute ton endurance. Ce n'est pas assez : la boue vous tient tous les deux, ta cheville tourne sous toi, et là-dessous quelque chose se met à répéter ton nom. C'est la gaffe du Passeur qui vous sort de là, l'un après l'autre. Il ne dit pas un mot, mais tu comprends très bien qu'il vient d'ajouter ce service à ta Promesse.</div>\n    <div class=\"reaction\">MERLIN : « Elle respire, c'est l'essentiel. Toi, tu boites, c'est moins grave. Mais cette boue qui connaît ton nom, je ne l'aime pas du tout : presse le pas. »</div>\n    <div class=\"deltas\">Intégrité -2 · Corruption +1 · Promesse alourdie</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le comptoir des dettes est une vieille souche creuse, couverte d'<span class=\"kw kw-perception\"><b>encoches</b></span>, une par dette. Les débiteurs attendent en cercle autour d'elle, Iouen parmi eux, et ta cheville te lance à chaque pas. Devant le Passeur, il va falloir <span class=\"kw kw-parole\"><b>parler</b></span> juste.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Mémoire des Traces</div>\n    <div class=\"geste\">Tu parles franc, sans rien enjoliver : tu récites de mémoire les traces qui tournaient en rond, les trois paiements d'Iouen, la gaffe qu'il a fallu pour tirer la femme de la boue. Le cercle des débiteurs reprend tes mots après toi, encoche après encoche. Le Passeur écoute jusqu'au bout, puis efface leurs comptes d'un geste las. Les tiens, il les garde.</div>\n    <div class=\"reaction\">MERLIN : « Beau travail, mon Voyageur. Tu as vidé son livre de comptes... à une page près : celle où il y a ton nom. »</div>\n    <div class=\"deltas\">+4 Gwenneg</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Les débiteurs rentrent chez eux, et toi tu repars vers le nord, là où la tourbière touche les menhirs. Première chose à faire : soigner cette cheville avant le dernier gué, sinon tu n'iras pas loin. Ça tombe bien, quand un voyageur a des Gwenneg en poche, il se trouve toujours un korrigan pour installer son étal sur le sentier. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Entre deux menhirs, un étal minuscule : c'est Fañch le Trotteur, un korrigan marchand qui <span class=\"kw kw-parole\"><b>parle</b></span> plus vite qu'il ne pèse. Il a justement un baume de fontaine pour les chevilles tordues, et des mains si agiles qu'il vaut mieux garder l'<span class=\"kw kw-perception\"><b>œil</b></span> dessus pendant tout le marché.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Parole · Marchandage · Œil Vif</div>\n    <div class=\"geste\">Tu marchandes à sa manière, vite et de bonne humeur, l'œil vif sur ses mains qui gonflent le prix en douce. Fañch éclate de rire, te coupe la parole et rend de lui-même les deux Gwenneg de trop. Le baume sent la fontaine froide, et le soir même ta cheville désenfle.</div>\n    <div class=\"reaction\">MERLIN : « Un korrigan qui rend la monnaie, voilà qui ne court pas les bois. Ménage quand même cette cheville : la nuit n'en a pas fini avec toi. »</div>\n    <div class=\"deltas\">Intégrité +2 · +2 Gwenneg · Baume de fontaine : -6 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La vieille chaussée descend droit vers le dernier gué, une pierre sur deux sous l'eau et la <span class=\"kw kw-monde\"><b>brume</b></span> par-dessus. Une voix douce t'appelle alors par ton nom d'avant et te propose de porter ta fatigue. Tu la reconnais, cette voix, et c'est bien le problème : ton <span class=\"kw kw-intuition\"><b>instinct</b></span> te tire dans l'autre sens.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-intuition\">Intuition</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Intuition · Instinct · Pas de Nuit</div>\n    <div class=\"geste\">Tu écoutes ton instinct plutôt que la voix : tu poses tes pas de nuit sur les pierres marquées de mousse, une à une, sans lever les yeux. La voix te suit un moment, répète que tu pourrais enfin te reposer, puis s'éteint dans la brume derrière toi. Ta cheville a tenu d'un bout à l'autre : le baume de Fañch valait son prix.</div>\n    <div class=\"reaction\">MERLIN : « Cette voix, je la connaissais aussi, dans le temps. Ne te retourne pas, mon Voyageur. Pas ici, pas cette nuit. »</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Le gué est là, et le Passeur aussi. Il vient réclamer ta Promesse, celle du premier îlot, alourdie du coup de gaffe dans la boue. Règle-la franchement et en entier : c'est le dernier compte du périple, et c'est le tien, comme je te l'avais annoncé. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le Passeur attend au milieu du gué, sa gaffe posée en travers du passage. Il ne marchande plus : il réclame la <span class=\"kw kw-monde\"><b><i>Promesse</i></b></span>, c'est-à-dire le passage, le service, et quelque chose en plus qu'il ne nomme pas. Pour en finir, il faudra parler <span class=\"kw kw-parole\"><b><i>franc</i></b></span> et <span class=\"kw kw-monde\"><b><i>donner</i></b></span> sans trembler.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Don</div>\n    <div class=\"geste\">Tu parles franc et tu donnes avant même qu'il ait à demander : trois Gwenneg pour le passage, et pour le service, le récit exact de la voix douce entendue sur la chaussée, sans rien cacher. Le Passeur écoute, referme la main sur les pièces, et pour une fois va au bout de sa phrase : compte soldé. Aussitôt la brume s'ouvre, et tous les chemins de la tourbière reparaissent.</div>\n    <div class=\"reaction\">MERLIN : « Tu viens de payer un créancier de brume avec de la vérité. Peu de gens y pensent, et encore moins s'en tirent aussi bien. »</div>\n    <div class=\"deltas\">Promesse soldée · -3 Gwenneg</div>\n  </section>\n\n  <div class=\"epilogue\">De l'autre côté du gué, la tourbière a remis ses chemins en place. Iouen et les autres marchent devant toi, chacun vers sa porte, délivrés de leurs dettes. Tu étais venu solder les comptes du Passeur : tu les as tous réglés, jusqu'au tien.</div>\n\n  <div class=\"merlin\">MERLIN : « Les comptes sont bons, mon Voyageur. Garde tes deux Gwenneg au chaud : dans cette forêt, on ne sait jamais ce qu'on devra payer demain. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_06",
+   "author": "etalon",
+   "title": "Le Partage des Eaux",
+   "envergure": "Un périple : forêt (3 quêtes, 9 beats)",
+   "tier": "periple",
+   "biome": "foret",
+   "figures": "La Lavandière de Nuit (quête 1), le Passeur de Brumes (quête 2), les deux au climax (quête 3) · Fañch le Trotteur en marchand · pilier : l'Être Indéfinissable (une apparition)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "corps"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Pas du Gué",
+         "Souffle Long"
+        ],
+        "reaction": false,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "parole"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Salut des Anciens"
+        ],
+        "reaction": false,
+        "deltas": ""
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "corps",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Prise Ferme"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2"
+       }
+      ],
+      "figures": [
+       "lavandiere",
+       "passeur",
+       "creancier"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "intuition"
+        ],
+        "difficulte": 2,
+        "action": "Intuition",
+        "traits": [
+         "Flair du Troc",
+         "Parole",
+         "Mot Juste"
+        ],
+        "reaction": true,
+        "deltas": "-3 Gwenneg · une Promesse au Passeur"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Perception",
+        "traits": [
+         "Œil de l'Affût",
+         "le linge noué de la Lavandière"
+        ],
+        "reaction": false,
+        "deltas": "+3 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "intuition",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Monde",
+        "traits": [
+         "Salut des Anciens (tordu vers la brèche)"
+        ],
+        "reaction": true,
+        "deltas": "Corruption +1"
+       }
+      ],
+      "figures": [
+       "lavandiere",
+       "passeur",
+       "creancier"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "corps",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Main d'Œuvre",
+         "corde de Fañch"
+        ],
+        "reaction": false,
+        "deltas": "-4 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "les péages repêchés"
+        ],
+        "reaction": true,
+        "deltas": "-3 Gwenneg · Promesse soldée"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "intuition"
+        ],
+        "difficulte": 3,
+        "action": "Monde",
+        "traits": [
+         "Salut des Anciens (entier)",
+         "Intuition",
+         "Flair du Courant"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1"
+       }
+      ],
+      "figures": [
+       "lavandiere",
+       "fanch",
+       "passeur",
+       "marchand",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "transition",
+     "transition",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc10\">\n  <header><h2>LE PARTAGE DES EAUX</h2><p class=\"pitch\">Les pluies ont fait déborder la fontaine de la Lavandière dans la tourbière du Passeur, et les deux eaux mêlées emportent avec elles ce qui ne leur appartient pas : des linceuls dérivent sur des chemins payants, des dettes se lavent sans avoir été payées. Il faut remonter les deux cours d'eau et rendre à chacun son compte.</p><p class=\"envergure\">Un périple : forêt</p></header>\n\n  <div class=\"merlin\">MERLIN : « Tu es mon Voyageur, et te voilà en Brocéliande, où deux eaux se sont mélangées qui n'auraient jamais dû se rencontrer. Les pluies ont fait monter la fontaine de la Lavandière, et son trop-plein s'est déversé dans la tourbière du Passeur. Depuis, les affaires de l'une voyagent chez l'autre : des linceuls dérivent sur des chemins où l'on paie le passage, et des dettes se lavent dans une eau qui ne demande rien. J'ai promis en ton nom que tout serait démêlé. À l'aube du troisième jour, à la confluence, la Lavandière reprendra ses linceuls et le Passeur retrouvera son registre en ordre. Marche le long de l'eau, elle te mènera à tout ce qu'il faut réparer. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La sente qui menait à la fontaine a disparu sous la crue, et le courant qui la recouvre descend fort, chargé de terre. Traverser demandera de la <span class=\"kw kw-corps\"><b>ténacité</b></span>, mais ce gué est ancien, et les anciens gués ont leur <span class=\"kw kw-monde\"><b>rite</b></span> : on ne les franchit pas sans le respecter.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-corps\">Corps</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Pas du Gué · Souffle Long</div>\n    <div class=\"geste\">Tu commences par saluer le gué, comme il se doit pour ce qui est plus vieux que toi, puis tu entres dans le courant au Pas du Gué, le souffle long, un pied assuré avant de lever l'autre. L'eau pousse, mais elle te laisse passer. Au milieu de la traversée, tes orteils butent sur du métal : deux pièces de péage, que la crue a portées depuis la tourbière jusqu'ici. Elles n'ont rien à faire dans l'eau d'une fontaine, et tu les ramasses.</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La Lavandière est à son poste, sur la pierre plate que la crue recouvre à moitié, et elle tord son linge en répétant toujours le même vers. Son compte ne tombe plus juste : trois linceuls manquent, partis avec le débordement. La <span class=\"kw kw-monde\"><b>cérémonie</b></span> commande de l'aborder avec les formes, et chacun sait qu'elle entend la <span class=\"kw kw-parole\"><b>vérité</b></span> dans les voix, ou son absence.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-parole\">Parole</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Salut des Anciens</div>\n    <div class=\"geste\">Tu la salues selon les anciens usages, sans précipiter les formules, puis tu lui parles en Franchise. Tu lui montres les deux pièces trouvées au gué et tu lui expliques ce qu'elles racontent : si les péages du Passeur remontent jusqu'à sa fontaine, alors ses linceuls ont dû descendre le chemin inverse, vers la tourbière. Elle cesse de chanter, le temps d'y réfléchir, puis hoche la tête et te confie un linge marqué de son nœud. Là-bas, dit-elle, ce nœud parlera pour toi.</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le premier linceul n'est pas allé loin : il pend aux branches basses qui surplombent le courant, gonflé d'eau, lourd comme un noyé. Il faudra du <span class=\"kw kw-perception\"><b>guet</b></span> pour choisir la bonne branche, et de la <span class=\"kw kw-corps\"><b>vigueur</b></span> pour le tirer sans basculer dans l'eau.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-corps\">Corps</span> x <span class=\"fam fam-perception\">Perception</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Prise Ferme</div>\n    <div class=\"geste\">Tu joues le Corps seul et tu tires à la vigueur, sans prendre le temps d'observer où le tissu s'est accroché. La branche cède d'un coup sec, le linceul se déchire dans ta main, et une épine t'ouvre la paume presque jusqu'au poignet. Tu restes debout, le tissu déchiré serré contre toi. Il en manque encore deux, et celui-là devra être recousu.</div>\n    <div class=\"reaction\">MERLIN : « Tu as tiré trop vite, mon Voyageur, et la branche t'a répondu à sa manière. Soigne cette main comme tu peux : il reste deux linceuls à porter, et une couturière à ne pas décevoir. »</div>\n    <div class=\"deltas\">Intégrité -2</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Un linceul déchiré, une main ouverte, et les deux comptes toujours mêlés. Les deux autres linceuls ont suivi le courant jusqu'à la tourbière. C'est le pays du Passeur qui commence là, et chez lui, rien ne se traverse gratuitement, pas même la brume. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La tourbière s'étend sous la brume, coupée de chemins flottants, et le Passeur attend au premier gué, appuyé sur sa perche. Il annonce un prix de passage qu'il dit modeste, presque rien. Mais son <span class=\"kw kw-parole\"><b>discours</b></span> est trop huilé pour être honnête, et il faudrait un <span class=\"kw kw-intuition\"><b>flair</b></span> de créancier pour entendre ce que chaque mot ne dit pas.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-intuition\">Intuition</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Intuition · Flair du Troc · Parole · Mot Juste</div>\n    <div class=\"geste\">Tu l'écoutes en Intuition, au flair, et tu comprends vite que le prix chuchoté n'est pas le vrai : le vrai prix viendrait plus tard, gonflé d'intérêts. Alors tu le nommes toi-même, à voix haute, le mot juste posé contre le sous-entendu. Le Passeur sourit, beau joueur, et ajuste son tarif : trois pièces maintenant, le reste inscrit en Promesse. Vous topez, et ta main blessée serre mal la sienne.</div>\n    <div class=\"reaction\">MERLIN : « Trois pièces, passe encore. Mais une Promesse inscrite chez un Passeur, c'est une dette qui te suivra sur tous ses chemins tant qu'elle ne sera pas soldée. Ne l'oublie pas, lui ne l'oubliera pas. »</div>\n    <div class=\"deltas\">-3 Gwenneg · une Promesse au Passeur</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Sur les chemins flottants, des formes pâles dérivent entre les mottes : les linceuls de la Lavandière, passagers sans billet dans le domaine du Passeur. Il faut du <span class=\"kw kw-perception\"><b>regard</b></span> pour suivre leur trajet dans l'eau brune, car le <span class=\"kw kw-monde\"><b>secret</b></span> de leur venue se cache quelque part en amont, là où les deux eaux se rejoignent.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Perception · Œil de l'Affût · le linge noué de la Lavandière</div>\n    <div class=\"geste\">Tu joues la Perception, au regard, et tu lèves le linge noué que la Lavandière t'a confié. Les linceuls réagissent aussitôt : ils dérivent vers le nœud comme s'ils reconnaissaient une main familière. En suivant leur trajet à rebours, tu remontes jusqu'à la brèche par où la fontaine se déverse dans la tourbe. Tu en retires les deux linceuls manquants, ainsi qu'une poignée de péages égarés, que l'eau de la fontaine avait déjà lavés de leur dette.</div>\n    <div class=\"deltas\">+3 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Quelque chose se tient devant la brèche. Ce n'est pas une bête, ce n'est pas un homme : c'est une forme que l'œil commence à décrire et renonce à finir. Un <span class=\"kw kw-intuition\"><b>pressentiment</b></span> te dit qu'elle garde ce passage, et qu'elle attend une <span class=\"kw kw-monde\"><b>offrande</b></span>, ou du moins un mot assez ancien pour compter comme telle.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-intuition\">Intuition</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Monde · Salut des Anciens (tordu vers la brèche)</div>\n    <div class=\"geste\">Ton pressentiment te souffle le moment exact où la forme écoute. Alors tu reprends le salut appris auprès de la Lavandière, mais tu le modifies en le prononçant, pour qu'il s'adresse à quelque chose qui n'a pas de nom. La forme s'écarte à moitié, juste assez pour te laisser passer. Elle ne prononce qu'une phrase, d'une voix qui semble venir de l'eau elle-même : rends ce qui pèse. Tu passes, mais tu sens que le salut tordu a laissé une marque en toi.</div>\n    <div class=\"reaction\">MERLIN : « Tu as ouvert le passage avec un salut emprunté, et un peu déformé au passage. La chose t'a laissé passer, mais elle t'a confié une consigne en échange : rendre ce qui pèse. Je te conseille de chercher ce que ça veut dire avant l'aube. »</div>\n    <div class=\"deltas\">Corruption +1</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Rends ce qui pèse. Elle parlait peut-être des linceuls, peut-être de tes pièces, peut-être de ta Promesse. Peut-être des trois. Demain à l'aube, la confluence : les deux comptes s'y retrouveront face à face, et toi au milieu, avec tout ce que tu portes. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">À la confluence, l'eau claire de la fontaine et l'eau brune de la tourbe coulent tressées l'une dans l'autre, sans plus vouloir se lâcher. Entre deux menhirs, Fañch le Trotteur a déjà posé son comptoir, et il te coupe la parole avant ton premier mot : corde goudronnée, cire, tout ce qu'il faut pour monter un barrage, à qui sait payer. Poser les pierres demandera de l'<span class=\"kw kw-corps\"><b>adresse</b></span>, et il faudra trouver le point d'<span class=\"kw kw-monde\"><b>équilibre</b></span> où l'eau accepte d'être séparée.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-corps\">Corps</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Main d'Œuvre · corde de Fañch</div>\n    <div class=\"geste\">Tu paies Fañch quatre pièces, qu'il mord une par une avant de te tendre la corde. Puis tu joues le Corps, à l'adresse : tu choisis chaque pierre, tu la cales, tu tends la corde goudronnée entre les appuis, et le petit barrage monte, prêt à rendre à chaque eau son lit. Ta paume ouverte proteste à chaque nœud, mais tu serres quand même, et l'ouvrage tient.</div>\n    <div class=\"deltas\">-4 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le Passeur sort de la brume au moment où tu poses la dernière pierre, et il vient réclamer sa Promesse, ici et maintenant. Ce qu'il veut en paiement, ce sont les linceuls. Sur l'autre rive, la Lavandière chante déjà, et elle écoute. Il faudra parler avec une <span class=\"kw kw-parole\"><b>sincérité</b></span> entière, et tenir la <span class=\"kw kw-monde\"><b>balance</b></span> juste entre les deux comptes qui se font face.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Franchise · les péages repêchés</div>\n    <div class=\"geste\">Tu parles en Franchise, assez fort pour que les deux entendent. Les linceuls appartiennent à la fontaine, ils n'ont jamais été à vendre, et une Promesse se paie en monnaie, pas en biens volés par l'eau. Puis tu poses dans la main du Passeur les péages repêchés dans la tourbe, complétés de tes dernières pièces. Le compte y est. Devant témoin, il ne peut ni gonfler la dette ni la reporter : il l'inscrit comme soldée, sans plaisir, mais il l'inscrit.</div>\n    <div class=\"reaction\">MERLIN : « Tu as payé devant les deux rives à la fois, et du coup le registre n'a rien pu ajouter. C'était la façon la plus simple de tuer cette Promesse, mon Voyageur, et tu l'as trouvée tout seul. J'apprécie. »</div>\n    <div class=\"deltas\">-3 Gwenneg · Promesse soldée</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Le barrage est monté, la dette est morte. Il reste le plus délicat : les eaux elles-mêmes. Elles coulent mêlées depuis trois jours, et au premier rayon elles chercheront à garder leur pli. Pour les séparer, il faudra le salut de la Lavandière tel qu'elle te l'a appris, entier, sans le tordre cette fois. Je t'avoue que j'aimerais être plus tranquille que je ne le suis. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">L'aube monte sur la confluence. La Lavandière et le Passeur se font face pour la première fois, chacun sur sa rive, et l'eau tressée attend entre eux. Il faudra prononcer l'<span class=\"kw kw-monde\"><b><i>incantation</i></b></span> entière, sans en changer un mot, garder l'<span class=\"kw kw-intuition\"><b><i>instinct</i></b></span> en éveil pour sentir l'instant juste, et laisser la <span class=\"kw kw-intuition\"><b><i>sève</i></b></span> des deux eaux choisir elle-même son lit.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-intuition\">Intuition</span>, difficulté III</div>\n    <div class=\"choix\">Geste : Monde · Salut des Anciens (entier) · Intuition · Flair du Courant</div>\n    <div class=\"geste\">Tu récites le salut de la Lavandière tel qu'elle te l'a donné, sans rien plier cette fois, et pendant que les mots se déroulent, ton instinct suit le courant comme on suit une respiration. Au mot juste, l'eau se déprend : la part claire remonte vers la fontaine avec ses linceuls, la part brune redescend vers la tourbière et ses chemins, et le barrage tient la séparation. Alors la Lavandière traverse, prend ta paume ouverte et la lave dans son eau redevenue claire. La plaie se ferme pendant qu'elle chante, et son chant, dans le même souffle, recoud le linceul déchiré.</div>\n    <div class=\"reaction\">MERLIN : « Tu as rendu son eau à chaque rive et ses mots à celle qui te les avait prêtés. Pour une fois, mon Voyageur, je n'ai rien à corriger, et ça me fait tout drôle. »</div>\n    <div class=\"deltas\">Intégrité +1</div>\n  </section>\n\n  <div class=\"epilogue\">Les deux eaux coulent désormais séparées, chacune dans son lit, et la confluence n'est plus qu'un endroit où elles se saluent sans se mêler. Les linceuls sèchent à la fontaine, les dettes dorment en ordre dans le registre du Passeur, et ta main refermée ne garde que la trace du travail. La promesse faite en ton nom est tenue : au matin du troisième jour, chacun a repris son compte.</div>\n  <div class=\"merlin\">MERLIN : « Deux comptes démêlés, une Promesse soldée au grand jour, une main rendue en état de servir. Tu as fini par comprendre ce que la chose de la brèche te demandait : tu as rendu ce qui pesait, les linceuls, les pièces, la dette. Garde cette habitude, mon Voyageur. Elle t'évitera bien des confluences. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_08",
+   "author": "etalon",
+   "title": "Les Corbeaux ne mentent pas",
+   "envergure": "Un périple (2 quêtes, 7 beats)",
+   "tier": "periple",
+   "biome": "foret",
+   "figures": "Dame Aveline aux Corbeaux (quête 1, corbeaux en fil), le bosquet gangrené (quête 2), Fañch le Trotteur (marchand, Promesse), pilier : l'Être Indéfinissable (une apparition)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "intuition"
+        ],
+        "difficulte": 1,
+        "action": "Perception",
+        "traits": [
+         "Regard Sûr",
+         "Flair"
+        ],
+        "reaction": false,
+        "deltas": "+4 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Parole Franche",
+         "Regard Sûr"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1 · +1 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 1,
+        "action": "Parole",
+        "traits": [
+         "Malice",
+         "Regard Sûr"
+        ],
+        "reaction": true,
+        "deltas": "+2 Gwenneg · -5 Gwenneg (baume) · Promesse : un service dû à Fañch"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Intuition",
+        "traits": [
+         "Vieux Signes",
+         "Mémoire des Pierres"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2 · Corruption +1"
+       }
+      ],
+      "figures": [
+       "fanch",
+       "aveline",
+       "marchand",
+       "creancier"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "intuition"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Parole Franche",
+         "Flair (refuser le pacte)"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +2 (baume) · +2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Vieux Signes",
+         "Main Tendue (payer autrement)"
+        ],
+        "reaction": true,
+        "deltas": "+1 Gwenneg · -2 Gwenneg · Promesse payée"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "intuition"
+        ],
+        "difficulte": 3,
+        "action": "Intuition",
+        "traits": [
+         "Vieux Signes",
+         "Mémoire des Pierres (couper la racine, sauver Aveline)"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1 · +2 Gwenneg"
+       }
+      ],
+      "figures": [
+       "fanch",
+       "aveline",
+       "etre",
+       "marchand",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "transition",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc2\">\n  <header>\n    <h2>LES CORBEAUX NE MENTENT PAS</h2>\n    <p class=\"pitch\">Le bosquet que garde Dame Aveline pourrit par la racine, et le mal qui ronge les arbres gagne la druidesse elle-même. Ses corbeaux battent la forêt pour trouver quelqu'un qui saura choisir.</p>\n    <p class=\"envergure\">Un périple : forêt</p>\n  </header>\n\n  <div class=\"merlin\">MERLIN : « Te voilà, mon Voyageur. Nous sommes à Brocéliande, sur le versant des menhirs : ici la forêt écoute qui la traverse, et elle répond mieux à qui prend la peine de la saluer. Dame Aveline aux Corbeaux garde un bosquet malade, qui pourrit par le dedans, et le mal la gagne, elle aussi. Va l'aider. Mais retiens bien ceci avant d'entrer : au bout de ce chemin, il faudra choisir entre l'arbre et la druidesse. Rarement les deux. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La brume du matin tient encore le sentier. Trois <span class=\"kw kw-intuition\"><b>corbeaux</b></span> se posent devant toi, s'envolent quand tu approches, se reposent dix pas plus loin. Ton <span class=\"kw kw-perception\"><b>regard</b></span> ne les quitte pas : trois oiseaux qui gardent toujours la même distance ne se promènent pas, ils conduisent quelque part.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-intuition\">Intuition</span>, difficulté I</div>\n    <div class=\"choix\">Geste : Perception · Regard Sûr · Flair</div>\n    <div class=\"geste\">Tu suis les corbeaux au pas, sans jamais les perdre de vue. Ton regard sûr démêle la brume, ton flair confirme la direction à chaque fourche. Le sentier débouche sur une clairière où se dresse une hutte cousue de plumes, et dans la mousse du seuil tu ramasses deux pièces frappées d'un cerf, oubliées là depuis longtemps.</div>\n    <div class=\"deltas\">+4 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Dame Aveline t'attend au seuil, un corbeau sur chaque épaule, ceux-là mêmes qui t'ont conduit. Elle te demande ton <span class=\"kw kw-parole\"><b>nom</b></span>, l'écoute, puis le redemande un instant plus tard : sa <span class=\"kw kw-perception\"><b>mémoire</b></span> a des trous qu'elle comble sans paraître les voir. Derrière la hutte flotte une odeur de sève trop sucrée, celle des arbres qui fermentent au lieu de guérir.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Parole Franche · Regard Sûr</div>\n    <div class=\"geste\">Tu donnes ton nom deux fois, du même ton, sans relever l'oubli. Cette franchise lui convient. Mais ton regard s'attarde un peu trop longtemps sur ses mains, où des veines noires courent sous la peau, et elle s'en aperçoit. Elle se referme à demi, et l'un de ses corbeaux te pince l'avant-bras assez fort pour tirer le sang.</div>\n    <div class=\"reaction\">MERLIN : « Elle t'a vu regarder. Surveille cette entaille, mon Voyageur : dans un bois malade, la moindre plaie demande des soins. »</div>\n    <div class=\"deltas\">Intégrité -1 · +1 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">L'entaille tire encore quand Fañch le Trotteur surgit d'entre deux menhirs, son balluchon ouvert avant même le salut. Ton <span class=\"kw kw-perception\"><b>œil</b></span> va droit au baume de consoude, la plante qui referme les chairs, exactement ce qu'il faut à ton bras. Le korrigan a tout ce qu'on cherche, et il connaît déjà ton <span class=\"kw kw-parole\"><b>prix</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span>, difficulté I</div>\n    <div class=\"choix\">Geste : Parole · Malice · Regard Sûr</div>\n    <div class=\"geste\">Tu marchandes posément, l'œil sur sa balance. Le baume vaut six pièces et tu n'en as que cinq. Fañch sourit de toutes ses dents et propose l'arrangement : cinq pièces, plus un service à rendre avant ta sortie du bois. Tu craches dans ta main pour sceller l'accord. La dette est nouée.</div>\n    <div class=\"reaction\">MERLIN : « Une promesse faite à un korrigan pèse plus lourd que des pièces, crois-moi. Enfin, au moins ton bras sera soigné. »</div>\n    <div class=\"deltas\">+2 Gwenneg · -5 Gwenneg (baume) · Promesse : un service dû à Fañch</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">À la nuit tombée, Aveline te mène à la fontaine, au bord du bosquet. Les troncs y suintent une pourriture claire, signe que le mal circule dans la sève et non dans l'écorce. Elle commence à tracer le <span class=\"kw kw-monde\"><b>rite</b></span> d'équilibre, mais sa <span class=\"kw kw-perception\"><b>mémoire</b></span> lâche au milieu du tracé : c'est à toi d'en tenir la fin.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-perception\">Perception</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Intuition · Vieux Signes · Mémoire des Pierres</div>\n    <div class=\"geste\">Tu reprends le rite où elle l'a laissé, en appuyant les vieux signes sur la mémoire des pierres. Mais ton bras entaillé, que le baume n'a pas fini de refermer, tremble au dernier signe et le tracé dévie. La fontaine noircit d'un coup, et quelque chose te frôle en remontant des profondeurs. L'échec t'apprend pourtant une chose certaine : la gangrène part d'une seule racine, sous le plus vieux chêne du bosquet.</div>\n    <div class=\"reaction\">MERLIN : « Le bras, je te l'avais dit. Retiens au moins ce que la fontaine t'a montré : une seule racine. Cet échec t'a payé en savoir. »</div>\n    <div class=\"deltas\">Intégrité -2 · Corruption +1</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Première nuit passée, et te voilà entaillé, endetté et frôlé par la gangrène. Mais tu sais désormais où porter l'effort : la racine-mère, sous le vieux chêne. Soigne ce bras avant d'y descendre. Et n'oublie pas ce que je t'ai annoncé à l'orée : au fond de ce bosquet, un choix t'attend. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le baume de consoude a refermé l'entaille pendant ton sommeil : la main est redevenue sûre. Tu entres dans le bosquet en suivant la racine noire qui court sous la mousse. À mi-chemin, ton <span class=\"kw kw-intuition\"><b>instinct</b></span> se hérisse sans raison visible. Une silhouette se tient devant toi et change à mesure qu'on la regarde : un visage, une biche, un arbre, jamais rien d'achevé. Elle te tend une graine sombre et affirme qu'elle peut sauver l'arbre et la druidesse à la fois, pour <span class=\"kw kw-parole\"><b>presque rien</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-intuition\">Intuition</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Parole Franche · Flair (refuser le pacte)</div>\n    <div class=\"geste\">Ton flair devine le prix caché sous ce presque rien. Tu refuses, aussi franchement que tu as parlé à Aveline. L'être rit de trois bouches à la fois : « Presque rien, c'est déjà trop pour toi ? Nous nous reverrons, petit entier. » Puis la silhouette se défait dans la brume.</div>\n    <div class=\"reaction\">MERLIN : « Tu as bien fait. Ce qu'il vend tient toujours ses promesses, et c'est justement là le piège. »</div>\n    <div class=\"deltas\">Intégrité +2 (baume) · +2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Au pied du vieux chêne, Fañch t'attend, assis sur sa créance. Le <span class=\"kw kw-parole\"><b>service</b></span>, c'est maintenant : il veut une poignée de sève saine du bosquet, la dernière, pour son commerce. Or la prélever affaiblirait l'arbre que tu viens précisément sauver. Le korrigan tapote le <span class=\"kw kw-monde\"><b>menhir</b></span> voisin et attend, sans se presser.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Vieux Signes · Main Tendue (payer autrement)</div>\n    <div class=\"geste\">Tu tends la main et proposes un autre paiement : un rite de protection sur son balluchon, tracé avec les vieux signes appris à la fontaine, cette fois d'une main qui ne tremble plus. Fañch soupèse l'offre et l'accepte à moitié : le rite, plus deux pièces. La Promesse se dénoue, mais elle t'aura coûté jusqu'au bout.</div>\n    <div class=\"reaction\">MERLIN : « Quand un korrigan accepte un arrangement, c'est que ton rite vaut cher. Tu apprends, mon Voyageur. »</div>\n    <div class=\"deltas\">+1 Gwenneg · -2 Gwenneg · Promesse payée</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Nous y sommes. Ce que je t'ai annoncé à l'orée t'attend derrière ces branches : l'arbre, ou la druidesse. Tu portes le rite qu'elle t'a montré et la fin qu'elle a oubliée. Quoi que tu décides, décide-le en entier. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Aveline t'a rejoint sous le plus vieux chêne. La racine-mère bat sous la terre comme un pouls lent. Les veines noires montent maintenant de ses mains jusqu'à sa gorge : l'arbre et la druidesse tiennent au même <span class=\"kw kw-intuition\"><b><i>fil</i></b></span>. Couper la racine tue le bosquet ; la laisser prendra la gardienne. Un <span class=\"kw kw-monde\"><b><i>rite</i></b></span> reste à finir, et cette fois personne ne le finira à ta place.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-intuition\">Intuition</span>, difficulté III</div>\n    <div class=\"choix\">Geste : Intuition · Vieux Signes · Mémoire des Pierres (couper la racine, sauver Aveline)</div>\n    <div class=\"geste\">Tu choisis la druidesse. Tu poses la fin du rite que sa mémoire avait perdue : les vieux signes, exacts cette fois, appuyés sur la mémoire des pierres comme à la fontaine. Ta main tient bon, la consoude a fait son œuvre. Tu tranches la racine-mère à l'intérieur même du tracé. Le bosquet s'éteint doucement, arbre après arbre, tandis que les veines noires refluent des mains d'Aveline. Ses corbeaux viennent se poser sur les branches mortes, un par arbre, et se taisent.</div>\n    <div class=\"reaction\">MERLIN : « Tu as sauvé la gardienne et perdu le jardin. Ce choix-là n'épargne personne, mais elle vivra, et ce qui vit replante. »</div>\n    <div class=\"deltas\">Intégrité -1 · +2 Gwenneg</div>\n  </section>\n\n  <div class=\"epilogue\">Au matin, le bosquet est gris et silencieux. Aveline creuse la cendre à l'endroit exact où passait la racine et y plante un gland, avec le soin qu'on met aux gestes qui engagent l'avenir. Puis elle te nomme sans hésiter, du premier coup. Trois corbeaux t'escortent jusqu'à l'orée, comme à l'aller. Ils ne mentaient pas.</div>\n\n  <div class=\"merlin\">MERLIN : « Je te l'avais dit à l'orée : l'arbre ou elle, rarement les deux. Tu as choisi ce qui pouvait replanter. Viens, mon Voyageur, la forêt n'a pas fini de te compter. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_10",
+   "author": "etalon",
+   "title": "Le Nom sous la Rouille",
+   "envergure": "Une odyssée : forêt",
+   "tier": "odyssee",
+   "biome": "foret",
+   "figures": "Le Chevalier Sans Nom (fil rouge), Ordalc'h (quête 2), Fañch le Trotteur (marchand, quête 3), pilier chevalier (apparition brève)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 1,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Main Tendue"
+        ],
+        "reaction": true,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "intuition",
+         "corps"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Endurance",
+         "Pas du Pèlerin"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1 · +1 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "intuition"
+        ],
+        "difficulte": 2,
+        "action": "Intuition",
+        "traits": [
+         "Voix de la Forêt",
+         "Rameau Vert"
+        ],
+        "reaction": true,
+        "deltas": "+2 Gwenneg"
+       }
+      ],
+      "figures": [
+       "erwan",
+       "chevalier_sans_nom",
+       "ordalch",
+       "chevalier",
+       "marchand"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Monde",
+        "traits": [
+         "Salut des Pierres",
+         "Patience"
+        ],
+        "reaction": true,
+        "deltas": "+4 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "monde"
+        ],
+        "difficulte": 3,
+        "action": "Perception",
+        "traits": [
+         "Lecture des Veines",
+         "Œil Fixe"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "corps"
+        ],
+        "difficulte": 2,
+        "action": "Monde",
+        "traits": [
+         "Offrande",
+         "Sang Donné"
+        ],
+        "reaction": true,
+        "deltas": "Corruption +1 · +2 Gwenneg"
+       }
+      ],
+      "figures": [
+       "erwan",
+       "ordalch",
+       "chevalier",
+       "marchand"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 1,
+        "action": "Parole",
+        "traits": [
+         "Marchandage",
+         "Langue Vive"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +2 · -11 Gwenneg · une Promesse à Fañch"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "intuition",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Intuition",
+        "traits": [
+         "Flair",
+         "Chemin de Fañch"
+        ],
+        "reaction": true,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 3,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Main Tendue (la même qu'au premier soir)"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1 · +4 Gwenneg"
+       }
+      ],
+      "figures": [
+       "fanch",
+       "erwan",
+       "ordalch",
+       "chevalier",
+       "marchand",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "transition",
+     "transition",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc4\">\n  <header><h2>LE NOM SOUS LA ROUILLE</h2><p class=\"pitch\">Un chevalier sans blason a retrouvé une syllabe de son serment. Mène-le de souvenir en souvenir jusqu'au lieu de sa faute, et décide s'il mérite le reste.</p><p class=\"envergure\">Une odyssée : forêt</p></header>\n\n  <div class=\"merlin\">MERLIN : « Te voilà, mon Voyageur. Cette nuit, Brocéliande te confie une escorte plutôt qu'une énigme. Un chevalier sans blason attend au bord du chemin ; il a retrouvé une seule syllabe de son serment, Kaou, et il ne sait plus rien d'autre de lui-même. Mène-le de souvenir en souvenir jusqu'au lieu de sa faute. Là-bas, c'est toi qui décideras s'il mérite de se rappeler le reste. Un conseil avant de partir : ne lui promets que ce que tu comptes tenir, car dans cette forêt on tient les gens à leur parole. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">L'homme attend sous un chêne, dans une armure cabossée qu'il porte encore avec soin. Quand tu approches, il se lève et récite un <span class=\"kw kw-parole\"><b>serment</b></span> auquel il manque tous les mots sauf un. « Kaou », dit-il, puis il <span class=\"kw kw-perception\"><b>guette</b></span> ton visage. Il cherche à savoir si tu vas lui mentir : seuls des <span class=\"kw kw-parole\"><b>mots francs</b></span> gagneront sa confiance.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Main Tendue</div>\n    <div class=\"geste\">Tu ne lui promets pas son nom. Tu lui tends la main et tu lui dis exactement ce que tu feras : tu marcheras avec lui jusqu'au lieu de sa faute, et là-bas tu jugeras. Il s'incline sans un mot. On devine que personne ne lui a parlé aussi simplement depuis longtemps.</div>\n    <div class=\"reaction\">MERLIN : « Tu promets de juger, pas de sauver. C'est honnête, et il l'a compris. Retiens bien ta propre phrase, mon Voyageur : elle te servira au bout du chemin. »</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le chevalier marche derrière toi en répétant sa syllabe à mi-voix. Le sentier qui mène à la fontaine se perd dans un taillis d'<span class=\"kw kw-intuition\"><b>épines</b></span> serré à hauteur d'homme. Il n'y a pas de détour : il faudra de l'<span class=\"kw kw-corps\"><b>endurance</b></span> pour passer.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-intuition\">Intuition</span> x <span class=\"fam fam-corps\">Corps</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Endurance · Pas du Pèlerin</div>\n    <div class=\"geste\">Tu ouvres la voie un pas après l'autre, les bras levés devant le visage, et le chevalier suit dans la trouée que tu laisses. Les épines finissent par céder, mais elles prennent leur part au passage : tes avant-bras saignent quand vous débouchez de l'autre côté.</div>\n    <div class=\"reaction\">MERLIN : « Tu saignes déjà pour un homme qui n'a plus de nom. J'espère pour vous deux qu'il le vaut. »</div>\n    <div class=\"deltas\">Intégrité -1 · +1 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La fontaine dort entre deux pierres couvertes de mousse. Tu te penches : l'eau ne reflète rien, ni ton visage ni le sien. Elle attend le bon <span class=\"kw kw-monde\"><b>rite</b></span>, ou quelqu'un qui sache écouter la <span class=\"kw kw-intuition\"><b>forêt</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Intuition · Voix de la Forêt · Rameau Vert</div>\n    <div class=\"geste\">Tu t'agenouilles malgré tes bras entaillés, tu trempes le rameau vert dans l'eau et tu laisses la forêt parler à travers toi. La surface s'éclaire lentement. On y voit un jeune homme prêter serment, un hameau paisible derrière lui. À tes côtés, le chevalier murmure une deuxième syllabe : « Kaou... ran ».</div>\n    <div class=\"reaction\">MERLIN : « Un hameau, donc. Note bien ce détail, mon Voyageur : un serment est toujours prêté quelque part, devant quelqu'un. »</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Deux syllabes, et il se tient déjà plus droit. La suite est gravée là où l'eau ne va pas : sur la vieille pierre d'Ordalc'h. Je te préviens, on n'y est pas bien reçu. Parle peu, salue comme il faut, et laisse la pierre venir à toi. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le plus vieux menhir de la forêt se dresse au centre d'une clairière où aucun oiseau ne chante. Ordalc'h se tient contre la pierre, immobile, et vous regarde approcher sans un geste. Tu comprends vite la règle du lieu : ici, le <span class=\"kw kw-perception\"><b>silence</b></span> tient lieu de <span class=\"kw kw-monde\"><b>salut</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Monde · Salut des Pierres · Patience</div>\n    <div class=\"geste\">D'un geste, tu fais taire le chevalier, qui fredonnait encore ses deux syllabes. Puis tu t'avances, mains ouvertes, et tu offres à la pierre le salut des pierres, sans prononcer un mot. L'attente dure. Enfin Ordalc'h incline la tête, à peine, et s'écarte du menhir pour te laisser passer.</div>\n    <div class=\"reaction\">MERLIN : « Éclatant. Ordalc'h vient de te céder le passage, et certains attendent cela toute une vie. Ne gâche pas cette faveur. »</div>\n    <div class=\"deltas\">+4 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La pierre garde son <span class=\"kw kw-monde\"><b><i>secret</i></b></span> sous ta paume : la nuit de la faute y est inscrite, veine après veine. Il faut la lire comme on lit une <span class=\"kw kw-perception\"><b><i>mémoire</i></b></span>, sans <span class=\"kw kw-perception\"><b><i>ciller</i></b></span>, alors que tes bras brûlent encore des épines.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Perception · Lecture des Veines · Œil Fixe</div>\n    <div class=\"geste\">Tu poses les deux mains sur le menhir et tu suis les veines du regard, sans ciller. La nuit ancienne monte vers toi : des cris, un feu, une porte laissée sans garde. Puis tes bras blessés lâchent, ta paume glisse, et la vision se referme brutalement. Tu recules d'un pas, le nez en sang. Le chevalier n'a rien vu ; toi, tu en as vu trop, et pas assez.</div>\n    <div class=\"reaction\">MERLIN : « Doucement, mon Voyageur. La pierre ne t'a pas rejeté, elle t'a mesuré. Pour la suite, elle voudra un paiement. »</div>\n    <div class=\"deltas\">Intégrité -2</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Ordalc'h désigne un creux au pied du menhir, poli par des siècles d'<span class=\"kw kw-monde\"><b>offrandes</b></span>. La pierre veut un don avant de rendre ce qu'elle garde. Ton <span class=\"kw kw-corps\"><b>sang</b></span> bat encore de la chute, et tu comprends ce qu'elle attend.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-corps\">Corps</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Monde · Offrande · Sang Donné</div>\n    <div class=\"geste\">Tu rouvres l'entaille laissée par les épines et tu laisses couler quelques gouttes dans le creux : un don, pas un vol. La pierre accepte. La vision revient, nette cette fois : le jeune chevalier quitte son poste en pleine nuit, et derrière lui le hameau brûle. Une troisième syllabe tombe : « Kaou... ran... tin ». Son nom est presque entier ; le droit de le porter, pas encore.</div>\n    <div class=\"reaction\">MERLIN : « Un serment brisé, un hameau en cendres. Tu voulais savoir ce qu'il a fait : te voilà servi. Reste à comprendre pourquoi, et pour cela il faudra aller sur place. »</div>\n    <div class=\"deltas\">Corruption +1 · +2 Gwenneg</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Kaourantin. Un nom de veilleur, un nom de garde. Le lieu de sa faute est au sud, dans un hameau que les cartes n'écrivent plus. Vous êtes blessés tous les deux, lui au-dedans, toi au-dehors. Sur le sentier, tu croiseras un korrigan qui vend de tout ; regarde bien ses prix, ils ont souvent deux étages. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Entre deux menhirs couchés, Fañch le Trotteur a dressé son comptoir de colporteur. Avant même de te saluer, il <span class=\"kw kw-perception\"><b>détaille</b></span> tes bras entaillés et ton nez cassé, en marchand qui évalue son client. Puis il propose un <span class=\"kw kw-parole\"><b>troc</b></span> : « Onguent, nouvelles, secrets. Tout a un prix, rien n'a de valeur. »</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Parole · Marchandage · Langue Vive</div>\n    <div class=\"geste\">Tu marchandes pied à pied, et le korrigan y prend un plaisir visible. Vous tombez d'accord : l'onguent qui referme les plaies, plus le chemin exact du hameau effacé, contre douze gwenneg. Tu n'en as que onze. Fañch tend la main en souriant : « Le reste en promesse. Ce que ton chevalier laissera là-bas sera pour moi. » Tu serres la main tendue. L'onguent agit vite, et la marque des épines s'efface enfin.</div>\n    <div class=\"reaction\">MERLIN : « Une promesse à un korrigan. J'aurais préféré te voir payer comptant, c'est moins cher à la longue. Enfin, te voilà entier, c'est déjà cela. »</div>\n    <div class=\"deltas\">Intégrité +2 · -11 Gwenneg · une Promesse à Fañch</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le sentier du sud s'enfonce dans une <span class=\"kw kw-monde\"><b>brume</b></span> épaisse où des voix appellent des noms qui ne sont pas les tiens. Il faudra du <span class=\"kw kw-intuition\"><b>flair</b></span> pour suivre le bon chemin sans leur répondre. À la lisière, un cavalier en armure noire vous regarde passer sans lever sa lance. « S'il se souvient, nous nous souviendrons tous », dit-il, puis la brume le cache.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-intuition\">Intuition</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Intuition · Flair · Chemin de Fañch</div>\n    <div class=\"geste\">Tu suis au flair le chemin acheté à Fañch, un repère après l'autre, sans répondre aux voix. Le chevalier marche contre ton épaule et se répète ses trois syllabes pour ne pas les perdre. Au bout d'une heure de marche, la brume s'éclaircit et s'ouvre sur des ruines.</div>\n    <div class=\"reaction\">MERLIN : « Tu as entendu le cavalier noir ? Les siens attendent ce souvenir autant que lui, et cela devrait t'inquiéter. Moi, cela m'inquiète. »</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Voilà Kervran, ou ce qu'il en reste. Tu as promis de juger au bout du chemin, et le bout du chemin, c'est ici. Quoi que tu décides, dis-le-lui en face. Je ne peux pas juger à ta place, et pour être franc, je ne le voudrais pas. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Des seuils sans portes, des murs bas, un puits comblé. Le chevalier s'arrête au centre du hameau et se met à trembler : sa faute est là, sous l'herbe, et elle attend <span class=\"kw kw-monde\"><b><i>réparation</i></b></span>. C'est à toi de parler maintenant, et il faudra une <span class=\"kw kw-parole\"><b><i>vérité</i></b></span> entière, dite <span class=\"kw kw-parole\"><b><i>en face</i></b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Main Tendue (la même qu'au premier soir)</div>\n    <div class=\"geste\">Tu tiens la promesse du premier soir : la main tendue, la vérité en face. Tu lui rends tout ce que tu as appris, le poste quitté, le feu, les noms des morts que la brume t'a soufflés. Puis tu lui dis qu'il mérite de porter son nom, à une condition : rester ici et reprendre la garde qu'il a fuie. Il tombe à genoux. « Kaourantin », dit-il, entier pour la première fois, et autour de vous le hameau semble respirer.</div>\n    <div class=\"reaction\">MERLIN : « Tu ne lui as pas rendu son nom, tu le lui as confié. Ce n'est pas la même chose, et c'est bien mieux. »</div>\n    <div class=\"deltas\">Intégrité +1 · +4 Gwenneg</div>\n  </section>\n\n  <div class=\"epilogue\">Kaourantin plante son épée au centre de Kervran et reprend la garde qu'il avait abandonnée : il restera, veilleur d'un hameau vide, jusqu'à ce que quelqu'un revienne y vivre. Sur le seuil, Fañch attend déjà, la main ouverte. Le chevalier a laissé derrière lui son heaume sans blason ; tu le déposes dans la paume du korrigan, et la promesse est payée. Tu reprends le sentier du nord, quitte d'une dette et chargé d'un jugement que tu ne regrettes pas.</div>\n\n  <div class=\"merlin\">MERLIN : « Tu as mené un homme jusqu'à son nom, payé tes dettes en route et tenu ta parole du premier soir. Si un jour tu oublies le tien, mon Voyageur, j'espère que quelqu'un en fera autant pour toi. »</div>\n</article>"
+  }
+ ]
+}

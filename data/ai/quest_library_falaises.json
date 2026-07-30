@@ -1,0 +1,550 @@
+{
+ "version": 1,
+ "biome": "falaises",
+ "entries": [
+  {
+   "id": "etalon_01",
+   "author": "etalon",
+   "title": "Le Phare et la Noyée",
+   "envergure": "Une odyssée : falaises",
+   "tier": "odyssee",
+   "biome": "falaises",
+   "figures": "Marc'harit la Noyée (fil rouge), Kado le Cordier, Erwan Veilleur, l'Ankou, colporteur (marchand), pilier compagnon (une apparition)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "monde"
+        ],
+        "difficulte": 1,
+        "action": "Perception",
+        "traits": [
+         "Vigilance",
+         "Sens"
+        ],
+        "reaction": false,
+        "deltas": ""
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "corps"
+        ],
+        "difficulte": 1,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Endurance"
+        ],
+        "reaction": false,
+        "deltas": "+3 Gwenneg · Promesse : rapporter à Kado ce que la mer décide"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "intuition"
+        ],
+        "difficulte": 2,
+        "action": "Intuition",
+        "traits": [
+         "Instinct",
+         "Vigilance"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1 · Corruption +1"
+       }
+      ],
+      "figures": [
+       "ankou",
+       "erwan",
+       "marcharit",
+       "kado",
+       "compagnon"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "corps",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Endurance",
+         "Agilité"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2"
+       },
+       {
+        "epreuve": false,
+        "familles": [],
+        "difficulte": 0,
+        "action": "",
+        "traits": [],
+        "reaction": false,
+        "deltas": "-3 Gwenneg · Dette : 3 Gwenneg au colporteur"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Franchise",
+         "Mémoire"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1 · +3 Gwenneg"
+       }
+      ],
+      "figures": [
+       "ankou",
+       "erwan",
+       "marcharit",
+       "marchand"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "corps",
+         "parole"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Force",
+         "la cire du colporteur"
+        ],
+        "reaction": true,
+        "deltas": ""
+       },
+       {
+        "epreuve": false,
+        "familles": [],
+        "difficulte": 0,
+        "action": "",
+        "traits": [],
+        "reaction": false,
+        "deltas": "-3 Gwenneg · Dette réglée"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "parole"
+        ],
+        "difficulte": 3,
+        "action": "Parole",
+        "traits": [
+         "Verbe",
+         "les vers appris dans l'écume"
+        ],
+        "reaction": true,
+        "deltas": "Corruption +1"
+       }
+      ],
+      "figures": [
+       "ankou",
+       "erwan",
+       "marcharit",
+       "marchand",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "transition",
+     "transition",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc8\">\n  <header>\n    <h2>Le Phare et la Noyée</h2>\n    <p class=\"pitch\">Depuis trois nuits, un chant monte du ressac et couvre les vagues. Il appelle quelqu'un par son nom, et ce nom n'est pas le tien.</p>\n    <p class=\"envergure\">Une odyssée : falaises</p>\n  </header>\n\n  <div class=\"merlin\">MERLIN : « Te voilà sur les falaises, mon Voyageur, là où le granit tient tête à la mer et perd un peu de terrain chaque année. Le phare, là-haut, n'éclaire plus personne depuis longtemps. Écoute ce chant dans le ressac : il ne chante pas pour la beauté de la nuit. Il appelle quelqu'un de précis, et il l'appelle vers l'eau. Trouve qui. Suis la voix sans te laisser prendre. Et quand viendra la dernière marée, deux âmes se tiendront dans les vagues ; tu n'auras que deux mains, et il t'en faudra une pour toi. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le sentier longe le vide dans la nuit. Le vent jette le <span class=\"kw kw-monde\"><b>ressac</b></span> contre la falaise, et au milieu de ce vacarme une <span class=\"kw kw-perception\"><b>voix</b></span> tient une note trop longue pour une gorge vivante. Il faut savoir d'où elle vient avant qu'elle ne se taise.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Perception · Vigilance · Sens</div>\n    <div class=\"geste\">Tu t'arrêtes au bord du sentier et tu écoutes, l'oreille tendue vers la mer. Ta vigilance sépare les bruits un à un : le vent d'abord, puis les vagues, puis la voix. Le chant vient du nord, au pied du phare éteint.</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Tu suis la note vers le nord et tu trouves une lanterne posée entre les galets. Un homme y répare des <span class=\"kw kw-corps\"><b>filets</b></span> que la mer ne remplit plus ; il t'a entendu venir bien avant de te voir. Il s'appelle Kado le Cordier, et ce <span class=\"kw kw-parole\"><b>chant</b></span>, il le connaît.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-corps\">Corps</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Endurance</div>\n    <div class=\"geste\">Tu prends un pan du filet sans qu'on te le demande et tu poses ta question sans détour. Kado hoche la tête : « Elle chante pour Erwan, le gardien du phare. Trois nuits qu'elle l'appelle par son nom. » Il te paie ta peine de trois pièces, puis retient ta main : « Promets-moi une chose. Quoi que la mer décide là-haut, tu redescendras me le dire. » Tu promets.</div>\n    <div class=\"deltas\">+3 Gwenneg · Promesse : rapporter à Kado ce que la mer décide</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Tu descends jusqu'à l'eau pour saisir les paroles, le nom d'Erwan en tête. De près, le chant est doux, trop doux, et sous la voix de la noyée s'en glisse une seconde <span class=\"kw kw-intuition\"><b>voix</b></span> que tu connais. L'<span class=\"kw kw-monde\"><b>écume</b></span> monte jusqu'à tes chevilles pendant que tu écoutes.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Intuition · Instinct · Vigilance</div>\n    <div class=\"geste\">Tu écoutes en suivant ton instinct : prendre les mots, ne rien donner de toi. Tu retiens les vers du chant et un nom, Marc'harit. Mais la voix du Compagnon Perdu murmure à travers la sienne : « Reste encore. On était bien, avant. » Tu recules à temps, presque indemne ; une écharde de chant reste pourtant plantée dans ton oreille.</div>\n    <div class=\"reaction\">MERLIN : « Tu as pris ses mots, mon Voyageur, et elle a pris un peu de ton silence. Espérons que l'échange était à ton avantage. »</div>\n    <div class=\"deltas\">Intégrité -1 · Corruption +1</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Marc'harit. Un nom de fille du pays, et il pèse lourd depuis qu'il a pris l'eau. Elle appelle Erwan, et Erwan compte ses marées tout en haut de sa tour. Monte le voir, mon Voyageur, et fais vite : un chant qui connaît ton oreille connaît aussi le chemin. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">L'escalier du phare grimpe à flanc de <span class=\"kw kw-monde\"><b>granit</b></span>, luisant d'embruns du bas jusqu'en haut. À chaque vague, l'écharde de chant résonne dans ton oreille comme une cloche fêlée. La montée demandera du <span class=\"kw kw-corps\"><b>souffle</b></span> et des mains sûres.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-corps\">Corps</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Endurance · Agilité</div>\n    <div class=\"geste\">Tu montes à l'endurance, une marche après l'autre, sans regarder le vide. Au tiers de la tour, la note éclate en plein dans ton oreille ; ta main glisse sur la pierre mouillée et tu tombes lourdement sur les marches. Tu te relèves, le genou en sang, la rampe serrée dans le poing.</div>\n    <div class=\"reaction\">MERLIN : « Ce n'est pas la pierre qui t'a fait tomber, c'est ce que tu as rapporté de la plage. Une chanson aussi a son prix, mon Voyageur, et celle-là se fait payer d'avance. »</div>\n    <div class=\"deltas\">Intégrité -2</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Dans la salle basse du phare, un colporteur s'abrite du vent, sa balle ouverte sur les dalles. Il te regarde boiter, puis pousse vers toi un pain de cire d'abeille : « Contre les voix de l'eau. On la fond, on s'en bouche les oreilles. Six pièces. »</div>\n    <div class=\"choix\">Geste : troc, la cire contre trois pièces et une promesse</div>\n    <div class=\"geste\">Tu n'as que trois Gwenneg dans ta bourse. Le colporteur pèse du regard ta mine, ton genou, puis la bourse : « Trois maintenant, trois avant que tu quittes les falaises. Par ici, les dettes savent nager. » Tu prends la cire.</div>\n    <div class=\"deltas\">-3 Gwenneg · Dette : 3 Gwenneg au colporteur</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Tout en haut, Erwan Veilleur tient son <span class=\"kw kw-perception\"><b>registre</b></span> à la lueur d'une chandelle et récite ses comptes de marées sans lever les yeux sur toi. Sur la page, un même <span class=\"kw kw-parole\"><b>nom</b></span> revient, barré puis réécrit : celui du convoi qu'il croit garder encore.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Franchise · Mémoire</div>\n    <div class=\"geste\">Tu ne mens pas au vieux gardien, tu lui rends sa mémoire. Tu récites son compte de navires tel qu'il te l'a marmonné, puis tu poses le nom appris dans l'écume : Marc'harit. Le compte s'arrête net. « La fille du quai. Elle chantait quand le convoi est parti. » Il pleure sans bruit, bande ton genou avec des gestes de marin, et te glisse trois pièces frappées d'un navire, la paie d'un mort que personne n'est venu chercher. Puis il se lève et regarde l'escalier.</div>\n    <div class=\"reaction\">MERLIN : « Tu lui as rendu son vrai naufrage, et c'était bien fait. C'est justement ce qui m'inquiète : maintenant, il sait qui l'appelle. »</div>\n    <div class=\"deltas\">Intégrité +1 · +3 Gwenneg</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Le voilà qui descend vers elle, et toi derrière, avec ta cire, ton genou bandé et une chanson logée dans l'oreille. La nuit s'achève, mon Voyageur. Ce qui attend en bas ne chante pas ; il tient des comptes, lui aussi, mais d'une autre sorte. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Sur le sentier de la grève, une charrette attend, brancards vides, et près d'elle se tient une silhouette au grand chapeau. L'Ankou te salue d'un <span class=\"kw kw-parole\"><b>mot</b></span> posé : « J'emporte quelqu'un avant l'aube. Je ne choisis pas qui. » Erwan passe devant lui sans le voir, et sa <span class=\"kw kw-corps\"><b>course</b></span> l'emporte droit vers l'appel.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-corps\">Corps</span> x <span class=\"fam fam-parole\">Parole</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Force · la cire du colporteur</div>\n    <div class=\"geste\">Tu rattrapes Erwan à pleine force avant les galets, et ton genou bandé tient le choc. Tu fonds la cire entre tes paumes et tu la presses dans ses oreilles, comme le colporteur l'a expliqué. Le vieux gardien cligne des yeux, à moitié réveillé de son rêve, et s'accroche à ton bras.</div>\n    <div class=\"reaction\">MERLIN : « De la cire, trois pièces et une dette : voilà ce qui retient un homme hors de l'eau cette nuit. Je n'aurais pas parié si peu. »</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Au bas de la dune, le colporteur t'attend déjà, la main ouverte, comme s'il avait su où ta nuit finirait. « Tu vas quitter les falaises, d'une manière ou d'une autre. Mes trois pièces. »</div>\n    <div class=\"choix\">Geste : régler la dette, trois Gwenneg dans la paume</div>\n    <div class=\"geste\">Tu paies ce que tu dois. Les pièces d'Erwan passent de la paie oubliée à la dette tenue, et le colporteur les fait sonner dans sa paume, satisfait. Il t'offre un dernier conseil pour la route : « Elle chante plus doux quand on la nomme. »</div>\n    <div class=\"deltas\">-3 Gwenneg · Dette réglée</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « C'est l'heure, mon Voyageur. Elle va se montrer avec la marée, et l'Ankou ne repartira pas les brancards vides. Tu as ses vers dans l'oreille et son nom dans la bouche. Rappelle-toi ce que je t'ai dit au premier pas : deux âmes dans les vagues, deux mains, dont une pour toi. Choisis avec celle qui reste. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La marée de l'aube monte et Marc'harit se lève dans le <span class=\"kw kw-monde\"><b><i>ressac</i></b></span>, silhouette d'eau où tremble encore un reste de la fille du quai. Son <span class=\"kw kw-parole\"><b><i>chant</i></b></span> emplit la grève d'un bord à l'autre, et même à travers la cire, Erwan avance d'un pas. L'Ankou attend à la limite de l'<span class=\"kw kw-monde\"><b><i>écume</i></b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-parole\">Parole</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Parole · Verbe · les vers appris dans l'écume</div>\n    <div class=\"geste\">Tu fais ce que le colporteur a soufflé et ce que la plage t'a appris : tu lui rends son chant. Tu chantes ses propres vers, ceux que tu as pris l'autre nuit, et tu les refermes sur son nom, Marc'harit. La voix retombe comme une vague à bout de course, et l'écharde quitte enfin ton oreille. Dans le silence, ce qui reste d'elle te regarde, et l'Ankou tend la main : « Un des deux vient avec moi. » Tu serres la main d'Erwan. Marc'harit sourit avec ce qui lui reste de visage et se laisse recueillir.</div>\n    <div class=\"reaction\">MERLIN : « Tu as chanté à une noyée sa propre chanson pour l'endormir. C'était doux, mon Voyageur, et un peu de cette douceur ne t'appartenait pas. »</div>\n    <div class=\"deltas\">Corruption +1</div>\n  </section>\n\n  <div class=\"epilogue\">Au soleil levant, tu redescends chez Kado et tu tiens ta promesse. Tu lui dis le nom du convoi, celui de Marc'harit, et que la mer a rendu l'un des deux en gardant l'autre en paix. Le cordier t'écoute jusqu'au bout, puis reprend ses filets et les noue plus lentement qu'avant. Là-haut, pour la première fois depuis des années, le phare d'Erwan éclaire quelqu'un : toi, sur le sentier du retour. Cette nuit, le ressac ne chante plus.</div>\n\n  <div class=\"merlin\">MERLIN : « Deux mains, deux âmes, et tu n'y as laissé que trois pièces et un peu de silence. On a vu de pires marchés, mon Voyageur. Dors une heure. Les falaises comptent déjà la prochaine marée. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_02",
+   "author": "etalon",
+   "title": "Les Nœuds du Large",
+   "envergure": "Une veillée : falaises",
+   "tier": "veillee",
+   "biome": "falaises",
+   "figures": "Kado le Cordier (pilier : Chœur des Druides, une apparition)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "intuition"
+        ],
+        "difficulte": 1,
+        "action": "Perception",
+        "traits": [
+         "Œil du Guetteur",
+         "Flair Ancien"
+        ],
+        "reaction": true,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "corps"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Pas Sûr",
+         "Souffle Long"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "parole"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Parole Franche",
+         "Vieux Signes"
+        ],
+        "reaction": false,
+        "deltas": ""
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "monde"
+        ],
+        "difficulte": 3,
+        "action": "Perception",
+        "traits": [
+         "Fil de Mémoire",
+         "Vieux Signes"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1 · +3 Gwenneg"
+       }
+      ],
+      "figures": [
+       "kado",
+       "choeur",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc7\">\n  <header><h2>LES NŒUDS DU LARGE</h2><p class=\"pitch\">Les filets de Kado remontent des mailles nouées de l'intérieur. Personne à bord, personne au fond : quelqu'un fait ces nœuds depuis le large.</p><p class=\"envergure\">Une veillée : falaises</p></header>\n  <div class=\"merlin\">MERLIN : « Tu es mon Voyageur, et ce soir tu marches sur le granit, sous un phare qui n'éclaire plus grand monde. Retiens une chose du pays : ici, on salue la mer avant de la toucher, c'est la coutume et elle a ses raisons. Kado le Cordier t'attend en bas. Ses filets remontent pleins de nœuds que personne à bord n'a faits, et il veut savoir ce que le large cherche à lui dire. Avant l'aube, tu le sauras. Je te préviens tout de suite : la réponse le concerne plus qu'elle ne te concerne. »</div>\n  <section class=\"beat\">\n    <div class=\"scene\">Kado t'attend au pied du phare, un filet sur les genoux, la voix rauque de sel. Les mailles sont nouées de l'intérieur, serrées, régulières comme une écriture. Pour y voir clair, il faut un <span class=\"kw kw-perception\"><b>regard</b></span> patient, ou un bon <span class=\"kw kw-intuition\"><b>pressentiment</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-intuition\">Intuition</span>, difficulté I</div>\n    <div class=\"choix\">Geste : Perception · Œil du Guetteur · Flair Ancien</div>\n    <div class=\"geste\">Tu prends le filet sur tes genoux et tu examines les nœuds un par un, sans te presser. Ton flair confirme ce que tes yeux devinent : sept nœuds, puis trois, puis sept encore, et la série se répète d'un bord à l'autre du filet. Ce n'est pas le hasard des courants. C'est un compte, tenu par quelqu'un, et il vient de l'eau.</div>\n    <div class=\"reaction\">MERLIN : « Sept, trois, sept. Quelqu'un tient un compte depuis le fond, mon Voyageur, et il se donne du mal pour qu'on le lise. Garde ces chiffres en tête : on va en avoir besoin avant la fin de la nuit. »</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n  <section class=\"beat\">\n    <div class=\"scene\">Kado veut vérifier son filet de nuit, celui qui reste mouillé sous la falaise, pour voir si le compte s'y poursuit. La marée descend et le granit est glissant. La coutume voudrait une <span class=\"kw kw-monde\"><b>offrande</b></span> à la mer avant d'y toucher ; sinon, il faudra du <span class=\"kw kw-corps\"><b>souffle</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-corps\">Corps</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Pas Sûr · Souffle Long</div>\n    <div class=\"geste\">Tu choisis de descendre à la force des jambes, sans rien offrir à l'eau. Le pas tient, le souffle aussi, et tu ramènes le filet de nuit : le compte s'y poursuit bien, sept, trois, sept, jusqu'au fond des mailles. Mais en le dégageant, une maille se referme sur ta main, le granit racle le reste, et tu remontes la paume ouverte.</div>\n    <div class=\"reaction\">MERLIN : « Tu es descendu sans saluer, et la mer t'a fait payer le passage sur ta main. Rien de mystérieux là-dedans : c'est le prix de la coutume qu'on saute. La prochaine fois, salue d'abord. Ça coûte trois mots, c'est moins cher qu'une paume. »</div>\n    <div class=\"deltas\">Intégrité -1</div>\n  </section>\n  <section class=\"beat\">\n    <div class=\"scene\">Kado a bandé ta paume avec du fil goudronné, mais la coupure te brûle encore. Sur la lande, le Chœur des Druides arrive en file et s'arrête face à la mer. Le plus vieux sait lire les nœuds : on écrivait ainsi avant les mots, dit-il, et on peut encore répondre. Il existe un <span class=\"kw kw-monde\"><b>rite</b></span> pour cela, à condition que ta demande soit <span class=\"kw kw-parole\"><b>vérité</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-parole\">Parole</span>, difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Parole Franche · Vieux Signes</div>\n    <div class=\"geste\">Tu parles franc, la main bandée serrée contre toi, et tu traces les vieux signes que tu connais, gauches mais sincères : Kado veut des nouvelles du large, rien de plus, rien de caché. Le vieux druide t'écoute jusqu'au bout, hoche la tête, puis t'apprend le salut aux eaux : trois mots et un geste de la paume. Tu le répètes jusqu'à le savoir, et chaque geste tire sur l'entaille, ce qui t'aide à le retenir.</div>\n  </section>\n  <div class=\"merlin\">MERLIN : « La nuit tombe, mon Voyageur. Le filet de nuit est retendu sous le phare : si le large a quelque chose à dire à Kado, c'est maintenant qu'il le dira. Descends, salue l'eau comme le Chœur te l'a appris, et lis le filet jusqu'au bout. J'ai promis que tu saurais qui fait ces nœuds. Je tiens mes promesses, même quand je préférerais me tromper. »</div>\n  <section class=\"beat\">\n    <div class=\"scene\">Le filet se tend d'un coup, lourd alors qu'il n'y a pas un poisson dedans, et ta main bandée proteste à chaque brasse. Dans la dernière maille attend un nœud plus gros que les autres, fait d'un cordage qui n'appartient pas au filet. Pour le comprendre, il faudra de la <span class=\"kw kw-perception\"><b><i>mémoire</i></b></span>, et le goût du <span class=\"kw kw-monde\"><b><i>mystère</i></b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-monde\">Monde</span>, difficulté III</div>\n    <div class=\"choix\">Geste : Perception · Fil de Mémoire · Vieux Signes</div>\n    <div class=\"geste\">Cette fois tu salues l'eau d'abord, trois mots et le geste de la paume, puis tu tires le filet malgré la main qui lance. Tu examines le gros nœud de près, et la mémoire fait le travail avant la réflexion : tu as vu ce nœud toute la soirée dans les mains de Kado. C'est son nœud de cordier, celui qu'il fait depuis toujours, refait par autre chose que ses mains. Le large lui renvoie son propre travail, avec le compte au complet : sept navires, trois hommes, sept marées.</div>\n    <div class=\"reaction\">MERLIN : « Voilà tes nouvelles du large, mon Voyageur. Ce n'est pas à toi qu'on écrit, c'est à Kado : quelqu'un, là-dessous, connaît sa main de cordier et lui rappelle un vieux compte. Sept navires, trois hommes, sept marées. À lui de dire ce que ces chiffres lui rappellent. Pas à nous. »</div>\n    <div class=\"deltas\">Intégrité +1 · +3 Gwenneg</div>\n  </section>\n  <div class=\"epilogue\">Kado tourne le gros nœud dans ses mains, longtemps, sans rien dire. Puis il lâche seulement : c'est le mien, et je ne l'ai pas fait. Tu lui répètes le compte, sept, trois, sept, et tu vois bien qu'il sait à quoi ces chiffres correspondent, même s'il ne te le dira pas ce soir. Avant que tu remontes, il renoue proprement le fil goudronné sur ta blessure, sans te regarder. Merlin avait promis que tu saurais qui fait les nœuds : tu le sais, et cette histoire est celle de Kado, pas la tienne.</div>\n  <div class=\"merlin\">MERLIN : « Laisse Kado avec son compte, mon Voyageur, il a de quoi réfléchir jusqu'à l'aube. Toi, tu as appris le salut aux eaux et tu as payé la leçon d'une entaille : c'est un prix honnête. Dors. Demain, une autre corde. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_07",
+   "author": "etalon",
+   "title": "La Troisième Nuit",
+   "envergure": "Un périple : 2 quêtes, 7 beats",
+   "tier": "periple",
+   "biome": "falaises",
+   "figures": "Erwan Veilleur (fil rouge), Kado le Cordier (marchand, Promesse), pilier Chevalier (une apparition)",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "corps"
+        ],
+        "difficulte": 1,
+        "action": "Corps",
+        "traits": [
+         "Souffle Long"
+        ],
+        "reaction": false,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Franc-Parler",
+         "Main Tendue"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "intuition"
+        ],
+        "difficulte": 1,
+        "action": "Parole",
+        "traits": [
+         "Parole Donnée"
+        ],
+        "reaction": false,
+        "deltas": "-2 Gwenneg · Promesse : une nouvelle du large pour Kado"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "monde"
+        ],
+        "difficulte": 2,
+        "action": "Perception",
+        "traits": [
+         "Œil du Guet"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2"
+       }
+      ],
+      "figures": [
+       "erwan",
+       "kado",
+       "creancier"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "corps",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Souffle Long",
+         "Corde de Kado"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 1,
+        "action": "Parole",
+        "traits": [
+         "Franc-Parler"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1 · Promesse honorée"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "corps",
+         "intuition"
+        ],
+        "difficulte": 3,
+        "action": "Corps",
+        "traits": [
+         "Lame Sans Blason",
+         "Flair des Bêtes"
+        ],
+        "reaction": true,
+        "deltas": "Corruption +1"
+       }
+      ],
+      "figures": [
+       "erwan",
+       "chevalier_sans_nom",
+       "kado",
+       "chevalier",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "transition",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc6\">\n  <header>\n    <h2>LA TROISIÈME NUIT</h2>\n    <p class=\"pitch\">Le phare mort d'Erwan se rallume seul, une nuit sur trois. Des feux lui répondent au large, et le vieux gardien veut savoir si son convoi rentre enfin au port.</p>\n    <p class=\"envergure\">Un périple : falaises</p>\n  </header>\n\n  <div class=\"merlin\">MERLIN : « Te voilà sur les falaises, mon Voyageur. Ici le granit tombe droit dans la mer, et le vent ne se calme jamais tout à fait. Là-haut vit Erwan, gardien d'un phare éteint depuis des années. Une nuit sur trois pourtant, la lanterne se rallume toute seule, et des feux lui répondent au large. Erwan croit que c'est son ancien convoi qui cherche le port, et il veut en avoir le cœur net. Cette nuit est la troisième : monte le voir, ouvre l'œil, et note tout ce que tu verras. Nous ferons les comptes ensemble. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le sentier de la falaise monte face au vent. Un pan s'est éboulé cet hiver : il n'en reste qu'une corniche large comme un pied, où il faut de l'<span class=\"kw kw-monde\"><b>équilibre</b></span> et du <span class=\"kw kw-corps\"><b>souffle</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-corps\">Corps</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Corps · Souffle Long</div>\n    <div class=\"geste\">Tu franchis la corniche au souffle long, un pas entre chaque rafale, sans regarder la mer en contrebas. Le granit tient, tes jambes aussi. Dans une fissure, tu trouves un casier brisé et, coincée dedans, une petite bourse que personne n'est jamais venu réclamer.</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Au sommet, le phare se dresse, éteint, et Erwan attend devant la porte. Il compte à voix basse des navires, des marées, des jours. Il ne t'a pas encore regardé, mais on devine qu'il attend depuis longtemps qu'on lui dise la <span class=\"kw kw-parole\"><b>vérité</b></span> sur sa <span class=\"kw kw-perception\"><b>mémoire</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Franc-Parler · Main Tendue</div>\n    <div class=\"geste\">Tu reprends ton souffle, tu tends la main et tu parles franchement : tu ne sais pas si son convoi rentre, mais tu es venu veiller avec lui. Alors Erwan s'anime. Il te récite ses chiffres un à un, debout dans le vent, et exige que tu écoutes tout jusqu'au bout. Quand il te laisse enfin partir, le froid t'a gagné les os, et tu sais ce qui manque à son phare : le verre de la lanterne, que garde Kado le cordier, en bas au village.</div>\n    <div class=\"reaction\">MERLIN : « Des années qu'il recompte les mêmes navires, mon Voyageur. Écoute-le sans l'interrompre : c'est tout ce qu'il demande, et c'est déjà beaucoup. »</div>\n    <div class=\"deltas\">Intégrité -1</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La cabane de Kado sent le sel et le chanvre. Il répare des filets qui ne prennent plus grand-chose, et il jauge ses visiteurs au <span class=\"kw kw-intuition\"><b>flair</b></span> et à la <span class=\"kw kw-parole\"><b>franchise</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Parole · Parole Donnée</div>\n    <div class=\"geste\">Tu expliques simplement ce qui t'amène : le verre de la lanterne, pour le phare d'Erwan. Kado le sort d'un coffre, y ajoute une bonne longueur de corde, mais refuse tes deux pièces seules. Tu lui donnes donc ta parole : à ton retour, tu lui rapporteras une nouvelle du large, une vraie. Il crache dans sa main et serre la tienne. Marché conclu.</div>\n    <div class=\"deltas\">-2 Gwenneg · Promesse : une nouvelle du large pour Kado</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La nuit tombe quand tu remontes poser le verre dans la lanterne. Erwan compte plus vite que tout à l'heure. Puis le phare s'allume, seul, sans mèche ni main pour l'allumer. Il faut maintenant tenir le <span class=\"kw kw-perception\"><b>guet</b></span> face au large sans se laisser prendre à son <span class=\"kw kw-monde\"><b>secret</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Perception · Œil du Guet</div>\n    <div class=\"geste\">Tu tiens le guet comme Erwan te l'a appris : balayer l'horizon, compter les feux, ne jamais fixer. Au large, des lumières s'allument une à une, au rythme exact de son compte, et tu les notes à mesure. Puis la lanterne enfle d'un coup, tu fixes malgré toi, et la lumière te brûle les yeux. Quand ta vue revient à moitié, tu n'es sûr que d'une chose : il y avait un feu de trop.</div>\n    <div class=\"reaction\">MERLIN : « Un feu de trop, donc. Le compte d'Erwan est bon, mais quelque chose compte avec lui, et ce feu-là ne guide personne au port. Repose tes yeux, mon Voyageur, tu vas en avoir besoin. »</div>\n    <div class=\"deltas\">Intégrité -2</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Erwan avait raison sur l'essentiel : son chiffre est juste, ses navires reviennent. Mais son compte ne prévoyait pas de voile en plus. Dans trois nuits, le phare se rallumera. D'ici là, descends sur la grève : ce qui répond de trop répondra encore, et je préfère que tu le voies de près avant qu'il ne te voie. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La descente vers la grève se fait de nuit, sur un granit rendu glissant par les embruns. Tes yeux brûlés par la lanterne voient encore double : il faudra de la <span class=\"kw kw-perception\"><b>prudence</b></span> et de la <span class=\"kw kw-corps\"><b>ténacité</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-corps\">Corps</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Souffle Long · Corde de Kado</div>\n    <div class=\"geste\">Tu frappes la corde de Kado autour d'un bloc et tu descends au souffle long, en vérifiant chaque prise à la main plutôt qu'à l'œil. Un appui cède à mi-hauteur ; la corde te retient, mais ton épaule heurte la paroi. En bas, tu plonges le visage dans une flaque de marée. Le sel mord d'abord, puis il lave : ta vue revient, nette.</div>\n    <div class=\"reaction\">MERLIN : « Une épaule meurtrie contre deux yeux rendus, l'échange est correct. La corde de Kado valait bien ta promesse, tu ne trouves pas ? »</div>\n    <div class=\"deltas\">Intégrité -1</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Kado t'attend sur la grève, sa barque tirée au sec : il a vu les feux lui aussi, et il réclame son dû, ta nouvelle du large. Avant que tu répondes, une silhouette sort du ressac : un chevalier sans blason, l'armure ruisselante, qui attend une <span class=\"kw kw-parole\"><b>vérité</b></span> comme on attend une <span class=\"kw kw-monde\"><b>offrande</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Parole · Franc-Parler</div>\n    <div class=\"geste\">Tu parles franchement, au chevalier comme au cordier : le compte d'Erwan est juste, ses navires répondent au phare, mais un feu de trop répond avec eux. Le chevalier incline la tête. Il nomme le convoi, la Route du Sel, confirme que la voile en plus n'est pas des leurs, puis te tend sa lame nue : à toi de trancher ce qui compte faux. Il retourne à la mer sans un mot de plus. Kado, lui, tient sa nouvelle, une vraie : ta parole est tenue.</div>\n    <div class=\"reaction\">MERLIN : « Une dette payée et une lame gagnée le même soir. Tu tiens tes comptes mieux qu'Erwan, mon Voyageur, et c'est presque inquiétant. »</div>\n    <div class=\"deltas\">Intégrité +1 · Promesse honorée</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « La troisième nuit est revenue. Le phare va s'allumer, Erwan va compter, et la Route du Sel rentrera si rien ne l'égare en chemin. Ce feu de trop ne guide pas les navires : il les attire. Tu as la lame du chevalier, tes yeux lavés et le compte du vieux. Va au bout de la jetée, et finis la veille. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le phare s'allume et la mer répond : des feux en ligne, qui entrent au port un à un pendant qu'Erwan crie son compte depuis la galerie. Au bout de la ligne, la voile de trop porte une lanterne blafarde, et quelque chose chuchote dessous des mots de bienvenue. Il faudra de la <span class=\"kw kw-corps\"><b><i>vitesse</i></b></span> et de l'<span class=\"kw kw-intuition\"><b><i>instinct</i></b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-corps\">Corps</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Corps · Lame Sans Blason · Flair des Bêtes</div>\n    <div class=\"geste\">Tu cours la jetée en te fiant à ton instinct, là où tes yeux lavés te disent que la pierre tiendra, et tu abats la lame du chevalier sur l'amarre de la fausse lanterne. Le chanvre cède au premier coup. La lueur blafarde glisse sous l'eau sans soulever une vague, et le murmure te frôle l'oreille avant de s'éteindre : il connaissait ton nom. Derrière toi, le dernier navire de la Route du Sel passe le phare. Le compte d'Erwan tombe juste.</div>\n    <div class=\"reaction\">MERLIN : « Le compte est bon et la chose est partie. Mais elle a dit ton nom, mon Voyageur, et cela ne me plaît qu'à moitié. Nous en reparlerons. »</div>\n    <div class=\"deltas\">Corruption +1</div>\n  </section>\n\n  <div class=\"epilogue\">À l'aube, le phare s'éteint de lui-même, et cette fois il reste éteint. Tu sais désormais ce qui répondait : le convoi d'Erwan, rentré au port après toutes ces années, et la chose qui comptait avec lui pour l'égarer. Sur la galerie, le vieux gardien ne compte plus. Il regarde la mer, simplement, puis il te fait un signe de la main. C'est le premier geste de lui qui ne soit pas un chiffre.</div>\n\n  <div class=\"merlin\">MERLIN : « Promesse tenue : la troisième nuit est revenue, et tu sais ce qui répondait. Le convoi est au port, le compte d'Erwan est fini. Le tien continue, mon Voyageur. Viens, la route nous attend. »</div>\n</article>"
+  },
+  {
+   "id": "etalon_09",
+   "author": "etalon",
+   "title": "La Charrette arrêtée",
+   "envergure": "Un périple : falaises",
+   "tier": "periple",
+   "biome": "falaises",
+   "figures": "L'Ankou (fil rouge), Erwan Veilleur (témoin quête 2), pilier : L'Être Indéfinissable",
+   "skeleton": {
+    "quests": [
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "perception"
+        ],
+        "difficulte": 1,
+        "action": "Perception",
+        "traits": [
+         "Sens"
+        ],
+        "reaction": false,
+        "deltas": "+2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "parole"
+        ],
+        "difficulte": 2,
+        "action": "Monde",
+        "traits": [
+         "Sacrifice"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -1 · Corruption +1"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "perception"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Empathie"
+        ],
+        "reaction": false,
+        "deltas": "-2 Gwenneg"
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "intuition"
+        ],
+        "difficulte": 3,
+        "action": "Parole",
+        "traits": [
+         "Autorité"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité -2"
+       }
+      ],
+      "figures": [
+       "ankou",
+       "erwan",
+       "passeur",
+       "marchand"
+      ]
+     },
+     {
+      "beats": [
+       {
+        "epreuve": true,
+        "familles": [
+         "monde",
+         "corps"
+        ],
+        "difficulte": 2,
+        "action": "Corps",
+        "traits": [
+         "Endurance"
+        ],
+        "reaction": false,
+        "deltas": ""
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "perception",
+         "parole"
+        ],
+        "difficulte": 2,
+        "action": "Parole",
+        "traits": [
+         "Franchise"
+        ],
+        "reaction": true,
+        "deltas": ""
+       },
+       {
+        "epreuve": true,
+        "familles": [
+         "parole",
+         "monde"
+        ],
+        "difficulte": 3,
+        "action": "Parole",
+        "traits": [
+         "Empathie",
+         "Rituel"
+        ],
+        "reaction": true,
+        "deltas": "Intégrité +1"
+       }
+      ],
+      "figures": [
+       "ankou",
+       "erwan",
+       "etre",
+       "marchand",
+       "creancier"
+      ]
+     }
+    ],
+    "merlin_slots": [
+     "preambule",
+     "transition",
+     "veille_climax",
+     "cloture"
+    ]
+   },
+   "html": "<article id=\"sc9\">\n  <header>\n    <h2>LA CHARRETTE ARRÊTÉE</h2>\n    <p class=\"pitch\">L'Ankou s'est arrêté au village du bout des falaises et il n'en repart pas. Tant qu'il attend, plus rien n'y meurt, pas même ce qui le devrait.</p>\n    <p class=\"envergure\">Un périple : falaises</p>\n  </header>\n\n  <div class=\"merlin\">MERLIN : « Tu es mon Voyageur, et te voici arrivé au bout des terres. Le village se tient sur son granit, la mer travaille en dessous, et les gens y vivent comme partout ailleurs, en attendant leur tour. Or une charrette s'est arrêtée sur la place, et son conducteur ne repart pas. Il attend son dû : quelqu'un, dans ce village, refuse de finir de vivre. Trouve qui. Et quand tu le sauras, tu ne te déroberas pas, tu marcheras à côté de la charrette jusqu'au bout du chemin. Voilà ta quête. Elle est grave, je te l'accorde, mais elle est simple. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Au premier abord, le village paraît ordinaire. Puis tu remarques le goéland du quai : son aile est brisée depuis des jours, il se traîne entre les casiers, et il ne meurt pas. Un pêcheur te montre ensuite sa main, ouverte par un hameçon. La plaie ne se referme pas, ne s'infecte pas, ne change pas. Pour comprendre ce qui retient ainsi toutes choses, il faudra un vrai <span class=\"kw kw-perception\"><b>regard</b></span>, un <span class=\"kw kw-perception\"><b>guet</b></span> patient.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> · difficulté I</div>\n    <div class=\"choix\">Geste : Perception · Sens</div>\n    <div class=\"geste\">Tu prends le temps d'observer, posément, comme on te l'a appris. L'aile du goéland ne s'aggrave pas, la plaie du pêcheur ne s'améliore pas : dans ce village, rien ne guérit, mais rien non plus ne s'achève. Faute de mieux, tu bandes la main du pêcheur avec soin. Il te glisse deux pièces, un peu gêné, parce que personne d'autre n'avait osé le toucher.</div>\n    <div class=\"deltas\">+2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Tout ce qui refuse de finir semble tourné vers la place du village, alors tu t'y rends. La charrette est là, immobile. Le cheval maigre ne bronche pas et l'essieu ne grince plus. L'Ankou se tient près de la roue, sa faux posée contre elle, et il attend avec la patience de celui qui n'a jamais rien fait d'autre. Pour qu'il consente à parler, il faudra une <span class=\"kw kw-monde\"><b>offrande</b></span>, et des <span class=\"kw kw-parole\"><b>mots</b></span> qui pèsent.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-parole\">Parole</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Monde · Sacrifice</div>\n    <div class=\"geste\">Les deux pièces du pêcheur ne suffiraient pas à payer un tel passeur. Alors tu poses la main sur la roue et tu offres, en gage, une heure de ta propre vie. L'Ankou accepte d'un signe de tête, sans pitié ni malice, et il t'explique posément la situation : quelqu'un, ici, n'a pas fini de vivre, et il ne partira pas sans son dû ; tant qu'il attend, personne dans le village ne peut finir quoi que ce soit. Il ne te donne pas de nom. Il te donne un délai : avant la prochaine marée haute. Tu as promis, et l'heure offerte te manque déjà.</div>\n    <div class=\"reaction\">MERLIN : « Promettre une heure à celui qui les compte toutes, il fallait oser, mon Voyageur. Tâche maintenant de ne pas la lui laisser. »</div>\n    <div class=\"deltas\">Intégrité -1 · Corruption +1</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Tu fais le tour du village, porte après porte. Près du lavoir, un colporteur vend des cierges de veillée que personne ne lui achète plus : depuis que les morts ne viennent plus, on ne veille plus rien. Pour apprendre quelque chose ici, il faudra de l'<span class=\"kw kw-perception\"><b>écoute</b></span>, et parler avec le <span class=\"kw kw-parole\"><b>cœur</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-perception\">Perception</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Empathie</div>\n    <div class=\"geste\">Tu retournes d'abord voir le pêcheur à la main bandée. Tu l'écoutes sans le presser, et parce que tu l'as soigné, il finit par parler à voix basse. La vieille Nolwenn, qui habite la dernière maison avant la falaise, garde une lampe allumée à sa fenêtre depuis trente ans. Son fils Yann est parti autrefois avec le convoi du Corbeau, et le convoi n'est jamais revenu. Elle répète qu'elle ne s'en ira pas avant lui. Avant de monter chez elle, tu achètes un cierge au colporteur : on ne se présente pas chez les vieilles gens les mains vides.</div>\n    <div class=\"deltas\">-2 Gwenneg</div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">La dernière maison sent la cire froide. Nolwenn t'ouvre, petite et droite, la lampe allumée derrière elle. Ses <span class=\"kw kw-parole\"><b><i>mots</i></b></span> à elle sont prêts depuis trente ans, et un <span class=\"kw kw-intuition\"><b><i>pressentiment</i></b></span> t'avertit que les tiens risquent de ne pas suffire.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-intuition\">Intuition</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Parole · Autorité</div>\n    <div class=\"geste\">Tu choisis de parler avec autorité : la charrette attend, le village entier est suspendu, il faut qu'elle accepte de partir. C'est une erreur. Elle se redresse de toute sa petite taille, te répond que Yann revient, que la lampe en est la preuve, et te ferme la porte au visage. En reculant, tu glisses sur les marches de granit mouillé et ton poignet plie sous ton poids. Depuis le sentier, tu vois encore sa lampe à la fenêtre. De sa chaise, elle doit voir la charrette.</div>\n    <div class=\"reaction\">MERLIN : « On ne donne pas d'ordre à trente ans d'attente, mon Voyageur. Relève-toi. Ce n'est pas ta parole qu'il lui faut, c'est une preuve. »</div>\n    <div class=\"deltas\">Intégrité -2</div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « Le convoi du Corbeau... Quelqu'un en tient encore le compte. Le gardien du vieux phare, celui qui n'éclaire plus personne : on l'appelle Erwan Veilleur. Va lui demander ce que la mer a rendu, il le sait mieux que quiconque. Et ménage ce poignet, tu en auras besoin pour monter. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Le phare se dresse sur son éperon de roche, battu par les embruns. L'échelle de fer qui y mène est glacée et le vent pousse par rafales. Pour arriver en haut, il faudra de la <span class=\"kw kw-corps\"><b>résistance</b></span>, et garder l'<span class=\"kw kw-monde\"><b>équilibre</b></span> à chaque barreau.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-monde\">Monde</span> x <span class=\"fam fam-corps\">Corps</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Corps · Endurance</div>\n    <div class=\"geste\">Tu montes barreau après barreau, sans te presser. À mi-hauteur, le poignet tordu chez Nolwenn cède ; tu serres alors l'échelle au creux du coude et tu poursuis la montée sur trois appuis, le souffle court. Tout en haut, derrière la vitre morte de la lanterne, un homme en armure rouillée compte à voix haute des navires que la mer a pris depuis longtemps.</div>\n    <div class=\"deltas\"></div>\n  </section>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Erwan Veilleur ne te regarde pas. Il récite ses marées, ses jours et ses navires, toujours dans le même ordre, comme une prière apprise. Pour l'atteindre, il faudra toucher son <span class=\"kw kw-perception\"><b>souvenir</b></span>, et ne lui offrir que la <span class=\"kw kw-parole\"><b>vérité</b></span>.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-perception\">Perception</span> x <span class=\"fam fam-parole\">Parole</span> · difficulté II</div>\n    <div class=\"choix\">Geste : Parole · Franchise</div>\n    <div class=\"geste\">Tu prononces le nom du convoi du Corbeau, sans détour, et tu lui demandes le compte. Erwan s'interrompt, puis se tourne vers toi pour la première fois. Trente-deux hommes embarqués, dit-il, et trente-deux rendus par la mer ; il a vérifié le compte à chaque marée. Il ouvre un coffre et te tend une médaille de baptême, repêchée autrefois dans un filet. Le nom gravé dessus est celui de Yann. Tu la serres dans ta main valide. Dehors, la marée commence à monter, et ta promesse à l'Ankou avec elle.</div>\n    <div class=\"reaction\">MERLIN : « Il a passé sa vie à recompter son propre naufrage, et c'est pourtant lui qui te donne la preuve. Remercie-le comme il faut avant de redescendre. »</div>\n    <div class=\"deltas\"></div>\n  </section>\n\n  <div class=\"merlin\">MERLIN : « La marée monte, mon Voyageur, et ta parole avec elle. Tu portes une médaille, un cierge et un poignet qui te rappelle ta maladresse de tout à l'heure. C'est assez. Ce qui reste à faire, personne ne peut le faire à ta place : rendre son fils à une mère, et sa fin à une vieille femme. Va, et fais les choses dans l'ordre. »</div>\n\n  <section class=\"beat\">\n    <div class=\"scene\">Sur le sentier du retour, à l'endroit où la falaise se resserre, quelque chose se tient debout qui ne garde pas de forme fixe. L'Être te considère sans yeux et te dit simplement : « Elle attend quelqu'un qui n'existe plus. Toi, tu portes ce qui reste de lui. Passe. » Puis il n'est plus là. Devant la porte de Nolwenn, il te faudra cette fois de la <span class=\"kw kw-parole\"><b><i>douceur</i></b></span>, et le <span class=\"kw kw-monde\"><b><i>rituel</i></b></span> que l'on doit aux morts.</div>\n    <div class=\"bandeau\">Épreuve : <span class=\"fam fam-parole\">Parole</span> x <span class=\"fam fam-monde\">Monde</span> · difficulté III</div>\n    <div class=\"choix\">Geste : Parole · Empathie · Rituel</div>\n    <div class=\"geste\">Cette fois, tu ne commandes rien. Tu allumes le cierge du colporteur sur le seuil, comme on le fait pour une veillée, puis tu parles avec douceur : le compte tenu par Erwan, la mer qui a rendu tous les siens, et enfin la médaille de Yann, que tu déposes dans sa paume. Elle la reconnaît au toucher, avant même d'en lire le nom. Alors elle souffle sa lampe elle-même, prend ton bras du côté du poignet tordu, et son pas ne pèse presque rien. Sur la place, l'Ankou l'aide à monter dans la charrette sans un mot de trop. « Le compte est bon », dit-il seulement. L'essieu grince de nouveau, la charrette repart avant la marée haute, et tu marches à son côté jusqu'au tournant du sentier, comme tu l'avais promis. Ta parole est tenue, et l'heure que tu avais offerte t'est rendue. Le soir, à la veillée, une voisine bande ton poignet avec des gestes sûrs.</div>\n    <div class=\"reaction\">MERLIN : « Tu n'as rien vaincu aujourd'hui, tu as accompagné quelqu'un jusqu'au bout. C'est plus rare que les victoires, et ça me serre le cœur tout pareil. »</div>\n    <div class=\"deltas\">Intégrité +1</div>\n  </section>\n\n  <div class=\"epilogue\">Au matin, on trouve le goéland du quai mort dans son coin d'ombre, enfin, et la plaie du pêcheur commence à se refermer sous le bandage. Le village du bout des falaises a retrouvé le droit de finir ses affaires, ses saisons et ses vies. On raconte que sur la Chronique, l'épitaphe de Nolwenn est de la main de l'Ankou lui-même : « Elle a attendu juste. »</div>\n\n  <div class=\"merlin\">MERLIN : « Voilà ce qu'il fallait comprendre de la charrette, mon Voyageur : quand une chose doit finir, on l'accompagne, on ne la retient pas. Allez. La route continue, et moi je veille. »</div>\n</article>"
+  }
+ ]
+}
