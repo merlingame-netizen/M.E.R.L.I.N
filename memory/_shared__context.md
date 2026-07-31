@@ -49,3 +49,23 @@
   `fleet.local.yaml` + `gcp/terraform.tfvars` (gitignorés).
 - **Redéploiement backend** : `bash infra/fleet/atelier/deploy/deploy-vm.sh <rtdb-export.json>`
   (idempotent : Node 22 + deps + import DB + systemd). Tunnel : `deploy/tunnel.sh quick|named`.
+
+## Comptes cloud : frontière pro / perso (2026-07-31)
+
+**Règle posée par l'utilisateur** : **GCP = projet PRO Orange** — ne rien y déployer de personnel.
+**Oracle = projet PERSO** (la VM MERLIN, le Studio de dev). En cas de doute, demander.
+> À traiter : le cockpit MERLIN tourne encore sur la VM GCP (déployé avant cette règle) —
+> migration vers Oracle à planifier.
+
+**Identités (piège vécu)** : l'utilisateur a trois adresses et elles ne sont PAS interchangeables.
+- Compte **Oracle Cloud** = son **adresse Orange nominative** (prenom.nom@orange.com), *pas* le
+  Gmail perso. Les mails Oracle arrivent donc dans **Outlook**, pas dans Gmail — c'est ce qui a
+  fait échouer la récupération de compte pendant une session entière.
+- Identité git historique : identifiant technique Orange (PGNK2128@orange.com, 37 commits).
+- Compte GitHub/Claude : Gmail perso.
+
+**À noter dès le prochain accès à la console Oracle** (jamais capturé jusqu'ici, d'où un blocage
+total quand la session navigateur a expiré) :
+- Cloud Account Name (tenancy), OCID de la tenancy, OCID de l'instance, IP publique de la VM.
+- Ces valeurs vivent dans `infra/oracle/terraform/terraform.tfvars` (gitignoré) ou
+  `infra/fleet/fleet.local.yaml` — **jamais** dans un fichier suivi (dépôt public).
