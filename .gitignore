@@ -461,4 +461,3 @@ tools/autodev/status/studio_runs.json
 .tmp_pipeline_output.json
 
 # VS Code extension build artifact
-tools/vscode-merlin-studio/*.vsix

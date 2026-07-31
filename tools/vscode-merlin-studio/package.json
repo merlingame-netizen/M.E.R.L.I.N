@@ -5,50 +5,144 @@
   "version": "1.0.0",
   "publisher": "merlin-local",
   "license": "MIT",
-  "engines": { "vscode": "^1.80.0" },
-  "categories": ["Other", "Testing"],
-  "keywords": ["merlin", "godot", "ollama", "gemma", "vm"],
-  "activationEvents": ["onStartupFinished"],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other",
+    "Testing"
+  ],
+  "keywords": [
+    "merlin",
+    "godot",
+    "ollama",
+    "gemma",
+    "vm"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
-        { "id": "merlin-studio", "title": "MERLIN Studio", "icon": "media/merlin.svg" }
+        {
+          "id": "merlin-studio",
+          "title": "MERLIN Studio",
+          "icon": "media/merlin.svg"
+        }
       ]
     },
     "views": {
       "merlin-studio": [
-        { "id": "merlinStudio.scenes", "name": "Scènes du jeu" },
-        { "id": "merlinStudio.jobs", "name": "Jobs" },
-        { "id": "merlinStudio.vm", "name": "VM & modèles" }
+        {
+          "id": "merlinStudio.scenes",
+          "name": "Scènes du jeu"
+        },
+        {
+          "id": "merlinStudio.jobs",
+          "name": "Jobs"
+        },
+        {
+          "id": "merlinStudio.vm",
+          "name": "VM & modèles"
+        }
       ]
     },
     "commands": [
-      { "command": "merlinStudio.configure", "title": "MERLIN: Configurer la connexion (URL + token)", "icon": "$(gear)" },
-      { "command": "merlinStudio.openDashboard", "title": "MERLIN: Ouvrir le tableau de bord", "icon": "$(dashboard)" },
-      { "command": "merlinStudio.refresh", "title": "MERLIN: Rafraîchir", "icon": "$(refresh)" },
-      { "command": "merlinStudio.smokeScene", "title": "MERLIN: Tester une scène (smoke)" },
-      { "command": "merlinStudio.smokeAll", "title": "MERLIN: Tester TOUTES les scènes" },
-      { "command": "merlinStudio.runTests", "title": "MERLIN: Lancer la suite de tests (headless)" },
-      { "command": "merlinStudio.bootCheck", "title": "MERLIN: Boot check (rapide)" },
-      { "command": "merlinStudio.generateContent", "title": "MERLIN: Générer des cartes" },
-      { "command": "merlinStudio.validateContent", "title": "MERLIN: Valider le contenu" },
-      { "command": "merlinStudio.askModel", "title": "MERLIN: Demander au modèle du jeu (Gemma 4)" },
-      { "command": "merlinStudio.pullModel", "title": "MERLIN: Télécharger un modèle Ollama" },
-      { "command": "merlinStudio.startVoice", "title": "MERLIN: Démarrer les services voix (TTS/ASR)" },
-      { "command": "merlinStudio.gitPull", "title": "MERLIN: Mettre à jour le dépôt (pull ff-only)" },
-      { "command": "merlinStudio.showLog", "title": "MERLIN: Voir le log d'un job", "icon": "$(output)" },
-      { "command": "merlinStudio.stopJob", "title": "MERLIN: Arrêter un job en cours" },
-      { "command": "merlinStudio.runAny", "title": "MERLIN: Lancer une action (liste complète)" }
+      {
+        "command": "merlinStudio.configure",
+        "title": "MERLIN: Configurer la connexion (URL + token)",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "merlinStudio.openDashboard",
+        "title": "MERLIN: Ouvrir le tableau de bord",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "merlinStudio.refresh",
+        "title": "MERLIN: Rafraîchir",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "merlinStudio.smokeScene",
+        "title": "MERLIN: Tester une scène (smoke)"
+      },
+      {
+        "command": "merlinStudio.smokeAll",
+        "title": "MERLIN: Tester TOUTES les scènes"
+      },
+      {
+        "command": "merlinStudio.runTests",
+        "title": "MERLIN: Lancer la suite de tests (headless)"
+      },
+      {
+        "command": "merlinStudio.bootCheck",
+        "title": "MERLIN: Boot check (rapide)"
+      },
+      {
+        "command": "merlinStudio.generateContent",
+        "title": "MERLIN: Générer des cartes"
+      },
+      {
+        "command": "merlinStudio.validateContent",
+        "title": "MERLIN: Valider le contenu"
+      },
+      {
+        "command": "merlinStudio.askModel",
+        "title": "MERLIN: Demander au modèle du jeu (Gemma 4)"
+      },
+      {
+        "command": "merlinStudio.pullModel",
+        "title": "MERLIN: Télécharger un modèle Ollama"
+      },
+      {
+        "command": "merlinStudio.startVoice",
+        "title": "MERLIN: Démarrer les services voix (TTS/ASR)"
+      },
+      {
+        "command": "merlinStudio.gitPull",
+        "title": "MERLIN: Mettre à jour le dépôt (pull ff-only)"
+      },
+      {
+        "command": "merlinStudio.showLog",
+        "title": "MERLIN: Voir le log d'un job",
+        "icon": "$(output)"
+      },
+      {
+        "command": "merlinStudio.stopJob",
+        "title": "MERLIN: Arrêter un job en cours"
+      },
+      {
+        "command": "merlinStudio.runAny",
+        "title": "MERLIN: Lancer une action (liste complète)"
+      }
     ],
     "menus": {
       "view/title": [
-        { "command": "merlinStudio.refresh", "when": "view =~ /merlinStudio/", "group": "navigation@1" },
-        { "command": "merlinStudio.openDashboard", "when": "view =~ /merlinStudio/", "group": "navigation@2" },
-        { "command": "merlinStudio.configure", "when": "view =~ /merlinStudio/", "group": "navigation@3" }
+        {
+          "command": "merlinStudio.refresh",
+          "when": "view =~ /merlinStudio/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "merlinStudio.openDashboard",
+          "when": "view =~ /merlinStudio/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "merlinStudio.configure",
+          "when": "view =~ /merlinStudio/",
+          "group": "navigation@3"
+        }
       ],
       "view/item/context": [
-        { "command": "merlinStudio.showLog", "when": "viewItem == merlinJob", "group": "inline" }
+        {
+          "command": "merlinStudio.showLog",
+          "when": "viewItem == merlinJob",
+          "group": "inline"
+        }
       ]
     },
     "configuration": {
