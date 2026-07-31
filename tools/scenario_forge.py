@@ -904,7 +904,10 @@ def cmd_generate(args) -> int:
     promesse = args.promesse or "ce que le lieu a perdu, et qui le reclame"
     defs = build_generate_defs(skel, examples, rng, title, promesse)
 
-    pieces = forge_pieces(defs, state_path)
+    # R172 : --model e4b = auteur de batch nocturne (gestes atteignables), defaut e2b inchange.
+    model = E4B_MODEL if getattr(args, "model", "e2b") == "e4b" else ""
+    timeout = 220 if model else 110
+    pieces = forge_pieces(defs, state_path, model=model, per_job_timeout=timeout)
     html = assemble_html(skel, title, args.pitch or promesse.capitalize() + ".", pieces)
     doc = {"title": title, "envergure": "", "biome": biome, "figures": "", "html": html}
     report = qc.qc_scenario(doc)
@@ -938,6 +941,8 @@ def main(argv: list[str]) -> int:
     p3.add_argument("--title", default="")
     p3.add_argument("--pitch", default="")
     p3.add_argument("--promesse", default="")
+    p3.add_argument("--model", choices=["e2b", "e4b"], default="e2b",
+                    help="e4b = auteur de batch nocturne (R172), defaut e2b inchange")
     args = ap.parse_args(argv)
     if args.cmd == "seed-etalons":
         return cmd_seed_etalons(args)
