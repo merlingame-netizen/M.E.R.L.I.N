@@ -1,96 +1,129 @@
-# Installe l'extension "MERLIN Studio" dans VS Code, sans npm, sans .vsix a manipuler.
+# Installe l'extension "MERLIN Studio" dans VS Code — sans npm, sans .vsix.
 #
-#   PS> cd C:\Users\PGNK2128\Godot-MCP        # ton depot MERLIN
-#   PS> git pull
 #   PS> powershell -ExecutionPolicy Bypass -File tools\vscode-merlin-studio\install.ps1
 #
-# Ce que ca fait :
-#   1. copie l'extension dans %USERPROFILE%\.vscode\extensions\  (VS Code la charge au demarrage)
-#   2. (optionnel) ecrit l'URL du studio dans tes reglages utilisateur
-#   3. verifie l'installation
-# Le TOKEN n'est pas ecrit ici : il va dans le coffre chiffre de VS Code, via
-# "MERLIN: Configurer la connexion" au premier lancement.
+# Robuste par construction :
+#   * se localise tout seul (peu importe le dossier courant)
+#   * detecte VS Code / Insiders / VSCodium, cree le dossier d'extensions au besoin
+#   * DIT ce qu'il fait a chaque etape (impossible qu'il "ne fasse rien" en silence)
+#   * n'ecrase JAMAIS settings.json s'il n'est pas relisible de facon sure
+# Le TOKEN n'est jamais ecrit sur disque : il va dans le coffre chiffre de VS Code via
+# la commande "MERLIN: Configurer la connexion".
 param(
-  [string]$Url = "",              # ex. https://xxxx.trycloudflare.com
+  [string]$Url = "",
   [switch]$SkipSettings,
   [switch]$Uninstall
 )
 $ErrorActionPreference = "Stop"
-$ext = "merlin-local.merlin-studio-1.0.0"
-$src = Split-Path -Parent $MyInvocation.MyCommand.Path
-$dstRoot = Join-Path $env:USERPROFILE ".vscode\extensions"
-$dst = Join-Path $dstRoot $ext
 
+function Say($m, $c = "Gray") { Write-Host $m -ForegroundColor $c }
+Say ""
+Say "=========================================" Cyan
+Say " MERLIN Studio — installation VS Code" Cyan
+Say "=========================================" Cyan
+
+# ── 0. Se localiser (marche meme si lance depuis n'importe ou) ───────────────
+$src = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+Say "Source de l'extension : $src"
+if (-not (Test-Path (Join-Path $src "extension.js"))) {
+  Say "[ECHEC] extension.js introuvable dans $src" Red
+  Say "        Tu n'es pas dans le depot MERLIN, ou 'git pull' n'a pas ramene le fichier." Yellow
+  Say "        Trouve le depot :" Yellow
+  Say '        Get-ChildItem $env:USERPROFILE -Recurse -Depth 3 -Filter project.godot -ErrorAction SilentlyContinue | Select -First 5 FullName' Yellow
+  exit 1
+}
+
+# ── 1. Trouver l'installation VS Code (Code / Insiders / VSCodium) ──────────
+$candidates = @(
+  @{ Name = "VS Code";          Ext = (Join-Path $env:USERPROFILE ".vscode\extensions");          Set = (Join-Path $env:APPDATA "Code\User\settings.json") },
+  @{ Name = "VS Code Insiders"; Ext = (Join-Path $env:USERPROFILE ".vscode-insiders\extensions"); Set = (Join-Path $env:APPDATA "Code - Insiders\User\settings.json") },
+  @{ Name = "VSCodium";         Ext = (Join-Path $env:USERPROFILE ".vscode-oss\extensions");      Set = (Join-Path $env:APPDATA "VSCodium\User\settings.json") }
+)
+$target = $candidates | Where-Object { Test-Path $_.Ext } | Select-Object -First 1
+if (-not $target) {
+  # Rien de detecte : VS Code est peut-etre installe mais n'a jamais cree le dossier.
+  $target = $candidates[0]
+  Say "Aucun dossier d'extensions existant — creation de : $($target.Ext)" Yellow
+  New-Item -ItemType Directory -Force -Path $target.Ext | Out-Null
+} else {
+  Say "VS Code detecte : $($target.Name)"
+}
+$dst = Join-Path $target.Ext "merlin-local.merlin-studio-1.0.0"
+Say "Cible : $dst"
+
+# ── Desinstallation ─────────────────────────────────────────────────────────
 if ($Uninstall) {
-  if (Test-Path $dst) { Remove-Item -Recurse -Force $dst; Write-Host "Desinstalle : $dst" -ForegroundColor Yellow }
-  else { Write-Host "Rien a desinstaller." }
-  Write-Host "Redemarre VS Code pour finaliser."
+  if (Test-Path $dst) { Remove-Item -Recurse -Force $dst; Say "[ok] Desinstalle." Green }
+  else { Say "Rien a desinstaller." }
+  Say "Redemarre VS Code pour finaliser."
   exit 0
 }
 
-Write-Host "==> Installation de MERLIN Studio" -ForegroundColor Cyan
-Write-Host "    source : $src"
-Write-Host "    cible  : $dst"
-
-if (-not (Test-Path (Join-Path $src "extension.js"))) {
-  throw "extension.js introuvable — lance ce script depuis le depot MERLIN (tools\vscode-merlin-studio\install.ps1)."
+# ── 2. Copier l'extension ───────────────────────────────────────────────────
+try {
+  if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
+  New-Item -ItemType Directory -Force -Path $dst | Out-Null
+  Copy-Item (Join-Path $src "extension.js") $dst -Force
+  Copy-Item (Join-Path $src "package.json") $dst -Force
+  Copy-Item (Join-Path $src "README.md")    $dst -Force -ErrorAction SilentlyContinue
+  $media = Join-Path $src "media"
+  if (Test-Path $media) { Copy-Item $media $dst -Recurse -Force }
+  Say "[ok] Fichiers copies" Green
+} catch {
+  Say "[ECHEC] copie impossible : $($_.Exception.Message)" Red
+  Say "        VS Code est peut-etre ouvert et verrouille le dossier — ferme-le et relance." Yellow
+  exit 1
 }
-if (-not (Test-Path $dstRoot)) {
-  throw "Dossier d'extensions VS Code introuvable ($dstRoot). VS Code est-il installe pour cet utilisateur ?"
-}
 
-# 1. copie (remplace proprement une version precedente)
-if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
-New-Item -ItemType Directory -Force -Path $dst | Out-Null
-Copy-Item (Join-Path $src "extension.js")  $dst
-Copy-Item (Join-Path $src "package.json")  $dst
-Copy-Item (Join-Path $src "README.md")     $dst -ErrorAction SilentlyContinue
-$media = Join-Path $src "media"
-if (Test-Path $media) { Copy-Item $media $dst -Recurse }
-Write-Host "    [ok] fichiers copies" -ForegroundColor Green
-
-# 2. URL dans les reglages utilisateur (le token reste dans le coffre VS Code)
+# ── 3. URL dans les reglages (optionnel, jamais destructif) ─────────────────
 if (-not $SkipSettings) {
   if (-not $Url) {
-    $Url = Read-Host "URL du studio sur la VM (Entree pour passer, ex. https://xxxx.trycloudflare.com)"
+    Say ""
+    $Url = Read-Host "URL du studio sur la VM (Entree = passer, ex. https://xxxx.trycloudflare.com)"
   }
   if ($Url) {
-    $settings = Join-Path $env:APPDATA "Code\User\settings.json"
-    # Prudence : settings.json est du JSONC (commentaires autorises). Si on n'arrive pas a
-    # le relire de facon SURE, on ne le reecrit PAS — hors de question d'ecraser tes reglages.
+    $settings = $target.Set
     $obj = $null
     if (Test-Path $settings) {
       $raw = Get-Content $settings -Raw
-      if ($raw.Trim()) {
-        try { $obj = $raw | ConvertFrom-Json } catch { $obj = $null }
-      } else { $obj = New-Object PSObject }
+      if ($raw.Trim()) { try { $obj = $raw | ConvertFrom-Json } catch { $obj = $null } }
+      else { $obj = New-Object PSObject }
     } else {
+      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $settings) | Out-Null
       $obj = New-Object PSObject
     }
     if ($null -eq $obj) {
-      Write-Host "    [!] settings.json contient des commentaires ou n'est pas lisible :" -ForegroundColor Yellow
-      Write-Host "        reglages LAISSES INTACTS. Saisis l'URL via 'MERLIN: Configurer la connexion'." -ForegroundColor Yellow
+      Say "[!] settings.json contient des commentaires : LAISSE INTACT (rien n'a ete ecrase)." Yellow
+      Say "    Tu saisiras l'URL via 'MERLIN: Configurer la connexion'." Yellow
     } else {
       try {
         $obj | Add-Member -NotePropertyName "merlinStudio.url" -NotePropertyValue $Url.TrimEnd('/') -Force
         if (Test-Path $settings) { Copy-Item $settings "$settings.bak-merlin" -Force }
         $obj | ConvertTo-Json -Depth 32 | Set-Content $settings -Encoding UTF8
-        Write-Host "    [ok] merlinStudio.url ecrit (sauvegarde : settings.json.bak-merlin)" -ForegroundColor Green
+        Say "[ok] merlinStudio.url = $($Url.TrimEnd('/'))" Green
       } catch {
-        Write-Host "    [!] reglages non modifies ($($_.Exception.Message))." -ForegroundColor Yellow
+        Say "[!] Reglages non modifies : $($_.Exception.Message)" Yellow
       }
     }
+  } else {
+    Say "URL non renseignee — tu la saisiras dans VS Code." Yellow
   }
 }
 
-# 3. verification
-$okFiles = (Test-Path (Join-Path $dst "extension.js")) -and (Test-Path (Join-Path $dst "package.json"))
-Write-Host ""
-if ($okFiles) {
-  Write-Host "Installation terminee." -ForegroundColor Green
-  Write-Host "  1) REDEMARRE VS Code (Ctrl+Shift+P > 'Developer: Reload Window' suffit)"
-  Write-Host "  2) Ctrl+Shift+P > 'MERLIN: Configurer la connexion'  (colle le token du studio)"
-  Write-Host "  3) L'icone MERLIN apparait dans la barre laterale gauche."
+# ── 4. Verification finale ──────────────────────────────────────────────────
+Say ""
+$okJs  = Test-Path (Join-Path $dst "extension.js")
+$okPkg = Test-Path (Join-Path $dst "package.json")
+if ($okJs -and $okPkg) {
+  Say "INSTALLATION REUSSIE" Green
+  Say "  Fichiers en place : $dst"
+  Say ""
+  Say "  Etapes suivantes :" Cyan
+  Say "   1) Dans VS Code : Ctrl+Shift+P > 'Developer: Reload Window'"
+  Say "   2) Ctrl+Shift+P > 'MERLIN: Configurer la connexion'  (colle le token du studio)"
+  Say "   3) L'icone MERLIN apparait dans la barre laterale gauche"
 } else {
-  throw "La copie a echoue — verifie les droits sur $dstRoot"
+  Say "[ECHEC] Les fichiers ne sont pas en place dans $dst" Red
+  exit 1
 }
+Say ""
