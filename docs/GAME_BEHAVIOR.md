@@ -1694,7 +1694,7 @@ LLM_POLL_TIMEOUT_FIRST_MS: 90000    # Cold start: 30-60s
 
 ### 25.7 Sampling Parameters
 
-**Narrateur (Qwen 3.5):**
+**Narrateur (Gemma 4 — taille selon le palier, bible §9.2):**
 ```gdscript
 temperature: 0.70
 top_p: 0.90
@@ -1723,7 +1723,7 @@ signal ready_changed(is_ready: bool)
 ### 25.9 Model & Prompts Paths
 
 ```gdscript
-MODEL_FILE: "res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"
+MODEL_FILE: "res://addons/merlin_llm/models/<gguf Gemma 4 du palier>"  # voir data/ai/llm_bundle.json
 PROMPTS_PATH: "res://data/ai/config/prompts.json"
 PROMPT_TEMPLATES_PATH: "res://data/ai/config/prompt_templates.json"
 SCENE_PROFILES_PATH: "res://data/ai/config/scene_profiles.json"

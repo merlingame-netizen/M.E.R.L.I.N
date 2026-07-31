@@ -109,6 +109,39 @@ func _on_status_changed(status_text: String, detail_text: String, progress: floa
 func _on_ready_changed(ready: bool) -> void:
 	if ready:
 		_dismiss()
+		return
+	# v7.7.30 — l'echec etait MUET : cette branche n'existait pas, l'overlay
+	# tournait dans le vide et le jeu basculait en silence sur le contenu ecrit.
+	# Le joueur croyait que Merlin ecrivait, alors qu'il recitait.
+	_afficher_indisponibilite()
+
+
+## Dit franchement que la generation est indisponible, et pourquoi.
+func _afficher_indisponibilite() -> void:
+	if _dismissed:
+		return
+	set_process(false)
+	if _spinner_label:
+		_spinner_label.text = "!"
+	if _progress_fill:
+		_progress_fill.size.x = 0.0
+	var raisons: Array = []
+	if _merlin_ai and "unavailable_reasons" in _merlin_ai:
+		raisons = _merlin_ai.unavailable_reasons
+	if _detail_label:
+		var corps: String = "Merlin ne peut pas ecrire sur cette machine.\n"
+		if raisons.is_empty():
+			corps += "Aucun moteur de generation n'a repondu."
+		else:
+			for r in raisons:
+				corps += "\n  - %s" % str(r)
+		corps += "\n\nLa partie reste jouable : les scenarios ecrits d'avance\n"
+		corps += "et le pool de cartes prennent le relais."
+		_detail_label.text = corps
+	# On laisse le message a l'ecran quelques secondes, puis on rend la main :
+	# un ecran d'erreur qui bloque n'aide personne a jouer.
+	await get_tree().create_timer(6.0).timeout
+	_dismiss()
 
 
 func _process(delta: float) -> void:

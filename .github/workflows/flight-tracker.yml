@@ -1,0 +1,100 @@
+name: Flight Tracker — La Reunion
+
+# Watch quotidien des prix de billets Marseille/Paris -> La Reunion (RUN).
+# Source par defaut : KEYLESS (Google Flights via fast-flights) -> AUCUNE cle requise.
+# Met a jour l'historique + le rapport et commit le resultat sur la branche.
+#
+# Envoie aussi une ALERTE EMAIL quotidienne (via Gmail SMTP) a la liste MAIL_TO.
+#
+# IMPORTANT :
+#  - Zero config necessaire pour les PRIX : sans secret, le traceur scrape Google Flights.
+#  - Pour l'EMAIL (Gmail) : ajouter les secrets MAIL_USERNAME (adresse Gmail) et
+#    MAIL_PASSWORD (App Password Google, 2FA requise). Envoie vers n'importe quelle
+#    adresse, sans domaine. Sans ces secrets, l'envoi est skip (le run continue).
+#    Destinataires par defaut : maxime.babonneau@orange.com + eliserobert05@gmail.com
+#    (surchargeable via la variable MAIL_TO).
+#  - Optionnel : si tu renseignes les secrets AMADEUS_CLIENT_ID /
+#    AMADEUS_CLIENT_SECRET (Settings > Secrets and variables > Actions), le
+#    traceur bascule automatiquement sur l'API Amadeus (plus fiable).
+#  - Le cron ne se declenche QUE depuis la branche par defaut du repo.
+#    Sur une branche feature, lancer manuellement via "Run workflow".
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # tous les jours a 06:00 UTC (~08:00 Paris hiver)
+  workflow_dispatch:
+    inputs:
+      mock:
+        description: "Mode mock (prix simules, sans cle API)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: flight-tracker-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r tools/flight_tracker/requirements.txt
+
+      - name: Run flight tracker
+        env:
+          # Amadeus (optionnel) : si renseigne, bascule auto sur l'API fiable.
+          AMADEUS_CLIENT_ID: ${{ secrets.AMADEUS_CLIENT_ID }}
+          AMADEUS_CLIENT_SECRET: ${{ secrets.AMADEUS_CLIENT_SECRET }}
+          AMADEUS_ENV: ${{ vars.AMADEUS_ENV || 'production' }}
+          # Source keyless Google Flights : mode de fetch (common|fallback|local).
+          FT_FETCH_MODE: ${{ vars.FT_FETCH_MODE || 'fallback' }}
+          # Alerte email quotidienne — Gmail SMTP (App Password).
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}      # adresse Gmail
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}      # App Password Gmail
+          SMTP_HOST: ${{ vars.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ vars.SMTP_PORT || '465' }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}                  # vide -> = MAIL_USERNAME
+          MAIL_TO: ${{ vars.MAIL_TO || 'maxime.babonneau@orange.com,eliserobert05@gmail.com' }}
+          FT_EMAIL_TOP: ${{ vars.FT_EMAIL_TOP || '0' }}     # 0 = classe TOUTES les offres
+          # Fenetre de recherche (surchargeable via Variables du repo) :
+          FT_ORIGINS: ${{ vars.FT_ORIGINS || 'MRS,CDG,ORY' }}
+          FT_DESTINATION: ${{ vars.FT_DESTINATION || 'RUN' }}
+          FT_DEPART_START: ${{ vars.FT_DEPART_START || '2026-12-20' }}
+          FT_DEPART_END: ${{ vars.FT_DEPART_END || '2027-01-15' }}
+          FT_TRIP_DAYS: ${{ vars.FT_TRIP_DAYS || '21' }}
+          FT_RETURN_FLEX: ${{ vars.FT_RETURN_FLEX || '0' }}
+          # Pas en jours dans la fenetre de depart (1 = chaque jour, ~81 itineraires).
+          FT_DEPART_STEP: ${{ vars.FT_DEPART_STEP || '1' }}
+        run: |
+          if [ "${{ inputs.mock }}" = "true" ]; then
+            python -m tools.flight_tracker --mock --sleep 0 --email
+          else
+            # Pacing plus lent : le scraping enchaine moins bien que l'API.
+            python -m tools.flight_tracker --sleep 1.5 --email
+          fi
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tools/flight_tracker/data/
+          if git diff --cached --quiet; then
+            echo "Aucun changement de prix a committer."
+          else
+            STAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+            git commit -m "chore(flight-tracker): releve prix La Reunion ${STAMP}"
+            git push origin HEAD:${{ github.ref_name }}
+          fi

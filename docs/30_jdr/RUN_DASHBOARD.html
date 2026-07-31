@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Run foret_broceliande — tableau de contrôle</title>
+<style>
+:root{
+  --ground:#0A0A12; --ground-2:#11111c; --ground-3:#171724;
+  --ink:#d9dce6; --ink-dim:#7b8194; --ink-faint:#565c6e;
+  --terminal:#00FF88; --amber:#FFB347; --cyan:#00D4FF;
+  --rune:#FF3366; --chaos:#9B59FF; --stone:#2a2a3a;
+  --mono:ui-monospace,"JetBrains Mono","Fira Code",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --r:3px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--mono);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.tab{font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px;
+  display:flex;flex-direction:column;gap:34px}
+
+/* En-tête */
+.masthead{border-bottom:1px solid var(--stone);padding-bottom:22px;
+  display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--terminal)}
+h1{margin:0;font-size:30px;line-height:1.15;font-weight:600;text-wrap:balance;
+  letter-spacing:-.01em}
+.sub{color:var(--ink-dim);max-width:68ch;font-size:13px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pill{border:1px solid var(--stone);border-radius:99px;padding:3px 11px;
+  font-size:11px;color:var(--ink-dim)}
+.pill strong{color:var(--ink);font-weight:600}
+
+/* Vitals */
+.vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.tile{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  padding:14px 16px;display:flex;flex-direction:column;gap:5px}
+.tile .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.tile .v{font-size:25px;font-weight:600;line-height:1}
+.tile .n{font-size:11px;color:var(--ink-dim)}
+.tile.bad .v{color:var(--rune)} .tile.good .v{color:var(--terminal)}
+.tile.warn .v{color:var(--amber)}
+
+/* Panneaux */
+.panel{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.panel h2{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:600}
+.duo{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+@media(max-width:860px){.duo{grid-template-columns:1fr}}
+
+/* Graphiques */
+.chart{width:100%;height:auto;overflow:visible}
+.grid{stroke:var(--stone);stroke-width:1}
+.axis{fill:var(--ink-faint);font-size:10px;font-family:var(--mono);text-anchor:end}
+.axis.mid{text-anchor:middle}
+.life-line{fill:none;stroke:var(--terminal);stroke-width:2;
+  stroke-linejoin:round;stroke-linecap:round}
+.dot{fill:var(--ground);stroke:var(--terminal);stroke-width:1.5}
+.dot-end{fill:var(--terminal);stroke:var(--ground);stroke-width:2}
+
+/* Factions */
+.fac-row{display:grid;grid-template-columns:74px 1fr 92px 44px;gap:10px;align-items:center;
+  font-size:12px}
+.fac-name{color:var(--ink-dim)}
+.fac-track{position:relative;height:8px;background:var(--ground-3);border-radius:99px;
+  overflow:hidden;display:block}
+.fac-base{position:absolute;inset-block:0;left:0;background:var(--stone);border-radius:99px}
+.fac-fill{position:absolute;inset-block:0;left:0;border-radius:99px;opacity:.9}
+.fac-mark{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--ink-faint)}
+.fac-val{color:var(--ink-dim)} .fac-val strong{color:var(--ink)}
+.fac-delta{text-align:right}
+.pos{color:var(--terminal)} .neg{color:var(--rune)} .flat{color:var(--ink-faint)}
+
+/* Cartes */
+.timeline{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  overflow:hidden}
+.card.is-degraded{border-left:2px solid var(--amber)}
+.card-head{display:flex;align-items:center;gap:12px;padding:11px 16px;
+  background:var(--ground-3);border-bottom:1px solid var(--stone);flex-wrap:wrap}
+.card-n{font-size:12px;color:var(--ink-faint)}
+.act-badge{font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:2px 9px}
+.card-id{font-size:11px;color:var(--ink-faint)}
+.card-hud{margin-left:auto;font-size:11px;color:var(--ink-dim)}
+.split{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+.screen{padding:18px 20px;border-right:1px solid var(--stone)}
+@media(max-width:860px){.screen{border-right:0;border-bottom:1px solid var(--stone)}}
+.engine-col{padding:18px 20px;background:#0d0d16}
+.col-label{margin:0 0 12px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:600}
+.col-label.engine{color:var(--cyan)}
+.narrative{font-family:var(--serif);font-size:17px;line-height:1.6;color:#efe6d2;
+  margin:0 0 12px;max-width:52ch}
+.merlin{font-family:var(--serif);font-style:italic;color:var(--amber);margin:0 0 12px}
+.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.opt{display:grid;grid-template-columns:20px 1fr;gap:9px;align-items:baseline;
+  padding:7px 9px;border:1px solid var(--stone);border-radius:var(--r);
+  background:var(--ground)}
+.opt.picked{border-color:var(--terminal);background:rgba(0,255,136,.05)}
+.opt-n{color:var(--ink-faint);font-size:11px}
+.opt-label{font-family:var(--serif);font-size:15px;color:#efe6d2}
+.opt-eff{grid-column:2;display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.chip{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--stone);
+  color:var(--ink-dim);white-space:nowrap}
+.chip.pos{color:var(--terminal);border-color:rgba(0,255,136,.3)}
+.chip.neg{color:var(--rune);border-color:rgba(255,51,102,.3)}
+.chip.neutre{color:var(--ink-faint)}
+.kv{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:12px}
+.kv dt{color:var(--ink-faint)}
+.kv dd{margin:0;display:flex;flex-wrap:wrap;gap:5px;align-items:baseline}
+.delta{margin-left:6px}
+.warn{margin:0 0 12px;font-size:12px;color:var(--amber);
+  border-left:2px solid var(--amber);padding-left:10px}
+.hidden-note{margin:14px 0 0;font-size:11px;color:var(--ink-faint);font-style:italic}
+
+/* Alertes */
+.flags{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.flag{background:var(--ground-3);border-radius:var(--r);padding:13px 16px;
+  border-left:2px solid var(--ink-faint)}
+.flag.critique{border-left-color:var(--rune)}
+.flag.alerte{border-left-color:var(--amber)}
+.flag-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+.flag.critique .flag-tag{color:var(--rune)}
+.flag.alerte .flag-tag{color:var(--amber)}
+.flag h4{margin:3px 0 5px;font-size:14px;font-weight:600}
+.flag p{margin:0;font-size:12.5px;color:var(--ink-dim);max-width:80ch}
+code{background:var(--ground);padding:1px 5px;border-radius:2px;font-size:11.5px;
+  color:var(--cyan)}
+.tablewrap{overflow-x:auto}
+table.series{width:100%;border-collapse:collapse;font-size:12px}
+table.series th{text-align:left;font-weight:600;color:var(--ink-faint);font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;padding:6px 10px 6px 0;
+  border-bottom:1px solid var(--stone)}
+table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-align:middle}
+.narr-cell{font-family:var(--serif);font-size:14px;color:#efe6d2}
+.seq{display:inline-flex;gap:4px}
+.seq-chip{font-size:10px;padding:2px 6px;border-radius:2px;border:1px solid var(--sc);
+  color:var(--sc);font-variant-numeric:tabular-nums}
+.vchecks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.vcheck{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12.5px;
+  padding:7px 10px;border-radius:var(--r);background:var(--ground-3)}
+.vtag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;min-width:64px}
+.vcheck.ok .vtag{color:var(--terminal)} .vcheck.ko .vtag{color:var(--rune)}
+.vdetail{color:var(--ink-faint);font-size:11.5px}
+.foot{border-top:1px solid var(--stone);padding-top:18px;font-size:11px;
+  color:var(--ink-faint);display:flex;flex-direction:column;gap:5px}
+</style></head><body>
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">M.E.R.L.I.N. · contrôle de run</span>
+    <h1>Un run entier, de la première carte au butin</h1>
+    <p class="sub">Capturé pendant une partie réelle du moteur, pas reconstitué.
+      Chaque carte est présentée en deux colonnes : ce que le joueur a sous les
+      yeux, et ce que le moteur applique sans le dire. C'est cet écart qui se contrôle.</p>
+    <div class="meta">
+      <span class="pill">biome <strong>foret_broceliande</strong></span>
+      <span class="pill">scénario <strong>la_fille_perdue</strong></span>
+      <span class="pill">issue <strong>live</strong></span>
+      <span class="pill">actes <strong>Standard · Marchand · Standard · Événement · Climax</strong></span>
+    </div>
+  </header>
+
+  <section class="vitals">
+    <div class="tile"><span class="k">Cartes jouées</span>
+      <span class="v tab">5</span><span class="n">sur 25 requises pour une victoire</span></div>
+    <div class="tile good"><span class="k">Vie finale</span>
+      <span class="v tab">100</span><span class="n">départ 100 · creux 95</span></div>
+    <div class="tile bad"><span class="k">Anam gagné</span>
+      <span class="v tab">0</span><span class="n">premier déblocage du Grimoire : 10</span></div>
+    <div class="tile warn"><span class="k">Actes dégradés</span>
+      <span class="v tab">3</span><span class="n">sur 5 cartes</span></div>
+    <div class="tile warn"><span class="k">Effets cachés</span>
+      <span class="v tab">23</span><span class="n">appliqués sans être montrés</span></div>
+  </section>
+
+  <div class="duo">
+    <section class="panel">
+      <h2>Vie du voyageur</h2>
+      <svg viewBox="0 0 640 120" class="chart" role="img" aria-label="Vie du voyageur carte par carte"><defs><linearGradient id="lifeFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00FF88" stop-opacity=".28"/><stop offset="1" stop-color="#00FF88" stop-opacity="0"/></linearGradient></defs><line x1="34" y1="98.0" x2="628" y2="98.0" class="grid"/><text x="26" y="102.0" class="axis">0</text><line x1="34" y1="55.0" x2="628" y2="55.0" class="grid"/><text x="26" y="59.0" class="axis">50</text><line x1="34" y1="12.0" x2="628" y2="12.0" class="grid"/><text x="26" y="16.0" class="axis">100</text><path d="M34.0,12.0 L152.8,14.6 L271.6,16.3 L390.4,16.3 L509.2,16.3 L628.0,12.0 L628.0,98.0 L34.0,98.0 Z" fill="url(#lifeFill)"/><path d="M34.0,12.0 L152.8,14.6 L271.6,16.3 L390.4,16.3 L509.2,16.3 L628.0,12.0" class="life-line"/><circle cx="34.0" cy="12.0" r="2.5" class="dot"/><circle cx="152.8" cy="14.6" r="2.5" class="dot"/><circle cx="271.6" cy="16.3" r="2.5" class="dot"/><circle cx="390.4" cy="16.3" r="2.5" class="dot"/><circle cx="509.2" cy="16.3" r="2.5" class="dot"/><circle cx="628.0" cy="12.0" r="4" class="dot-end"/><text x="34.0" y="114" class="axis mid">départ</text><text x="152.8" y="114" class="axis mid">1</text><text x="271.6" y="114" class="axis mid">2</text><text x="390.4" y="114" class="axis mid">3</text><text x="509.2" y="114" class="axis mid">4</text><text x="628.0" y="114" class="axis mid">5</text></svg>
+      <p class="sub" style="font-size:12px">La barre de vie n'a jamais approché
+        le seuil d'alerte. Rien n'a été mis en jeu sur ce run.</p>
+    </section>
+    <section class="panel">
+      <h2>Réputations — invisibles en jeu</h2>
+      <div class="fac-row"><span class="fac-name">druides</span><span class="fac-track"><span class="fac-base" style="width:100%"></span><span class="fac-fill" style="width:100%;background:#FFB347"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">100 → <strong>100</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">anciens</span><span class="fac-track"><span class="fac-base" style="width:17%"></span><span class="fac-fill" style="width:17%;background:#C98A3C"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">17 → <strong>17</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">korrigans</span><span class="fac-track"><span class="fac-base" style="width:18%"></span><span class="fac-fill" style="width:18%;background:#9B59FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">18 → <strong>18</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">niamh</span><span class="fac-track"><span class="fac-base" style="width:21%"></span><span class="fac-fill" style="width:21%;background:#00D4FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">21 → <strong>21</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">ankou</span><span class="fac-track"><span class="fac-base" style="width:73%"></span><span class="fac-fill" style="width:86%;background:#FF3366"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">73 → <strong>86</strong></span><span class="fac-delta tab pos">+13</span></div>
+      <p class="sub" style="font-size:12px">Le trait central marque le seuil 50,
+        qui débloque une section du Grimoire. Aucun de ces chiffres n'apparaît à l'écran.</p>
+    </section>
+  </div>
+
+  
+  <section class="panel">
+    <h2>Série de runs — ce que le moteur produit vraiment</h2>
+    <p class="sub" style="font-size:12.5px;margin:0">
+      6 runs, 6 parcours distincts · recouvrement lexical moyen entre runs
+      <strong>31%</strong> (max 74%) ·
+      12/12 cartes du pool vues ·
+      34 libellés d'action distincts sur 90 proposés.
+      Deux runs de même couleur ont tiré exactement les mêmes cartes, dans le même ordre.
+    </p>
+    <div class="tablewrap">
+      <table class="series">
+        <thead><tr><th>Run</th><th>Titre proposé</th><th>Cartes tirées</th><th>Vie</th><th>Anam</th></tr></thead>
+        <tbody><tr><td class="engine">run_1</td><td class="narr-cell">Le Chêne Brisé</td><td><span class="seq" style="--sc:#00D4FF"><span class="seq-chip">arc_broceliande_02</span><span class="seq-chip">009</span><span class="seq-chip">007</span><span class="seq-chip">001</span><span class="seq-chip">arc_broceliande_01</span></span></td><td class="tab">100</td><td class="tab">0</td></tr><tr><td class="engine">run_2</td><td class="narr-cell">L&#x27;Ombre des Korrigans</td><td><span class="seq" style="--sc:#FFB347"><span class="seq-chip">005</span><span class="seq-chip">006</span><span class="seq-chip">001</span><span class="seq-chip">arc_broceliande_03</span><span class="seq-chip">003</span></span></td><td class="tab">100</td><td class="tab">0</td></tr><tr><td class="engine">run_3</td><td class="narr-cell">L&#x27;Ombre des Korrigans</td><td><span class="seq" style="--sc:#9B59FF"><span class="seq-chip">arc_broceliande_02</span><span class="seq-chip">arc_broceliande_03</span><span class="seq-chip">arc_broceliande_01</span><span class="seq-chip">007</span><span class="seq-chip">008</span></span></td><td class="tab">100</td><td class="tab">0</td></tr><tr><td class="engine">run_4</td><td class="narr-cell">Le Chêne Brisé</td><td><span class="seq" style="--sc:#00FF88"><span class="seq-chip">003</span><span class="seq-chip">arc_broceliande_02</span><span class="seq-chip">002</span><span class="seq-chip">004</span><span class="seq-chip">arc_broceliande_01</span></span></td><td class="tab">94</td><td class="tab">0</td></tr><tr><td class="engine">run_5</td><td class="narr-cell">La Voix de Brocéliande</td><td><span class="seq" style="--sc:#FF3366"><span class="seq-chip">arc_broceliande_03</span><span class="seq-chip">006</span><span class="seq-chip">003</span><span class="seq-chip">arc_broceliande_01</span><span class="seq-chip">001</span></span></td><td class="tab">100</td><td class="tab">0</td></tr><tr><td class="engine">run_6</td><td class="narr-cell">L&#x27;Ombre des Korrigans</td><td><span class="seq" style="--sc:#C98A3C"><span class="seq-chip">007</span><span class="seq-chip">005</span><span class="seq-chip">002</span><span class="seq-chip">001</span><span class="seq-chip">008</span></span></td><td class="tab">97</td><td class="tab">0</td></tr></tbody>
+      </table>
+    </div>
+    <ul class="vchecks"><li class="vcheck ko"><span class="vtag">échec</span><span class="vlabel">Titres distincts : 3/6</span><span class="vdetail">chaque run devrait proposer un titre inédit</span></li><li class="vcheck ok"><span class="vtag">conforme</span><span class="vlabel">Parcours de cartes distincts : 6/6</span></li><li class="vcheck ko"><span class="vtag">échec</span><span class="vlabel">Recouvrement lexical max entre runs : 74%</span><span class="vdetail">au-delà de 35 %, deux runs racontent la même chose</span></li><li class="vcheck ok"><span class="vtag">conforme</span><span class="vlabel">Couverture du pool : 12/12 cartes vues (100%)</span></li><li class="vcheck ok"><span class="vtag">conforme</span><span class="vlabel">Graines de variation distinctes : 6/6 lues</span></li></ul>
+    <p class="sub" style="font-size:12px;margin:0">
+      3/5 critères de diversité conformes.
+      Mesuré par <code>tools/check_run_diversity.py</code> sur les transcripts des runs ci-dessus.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Ce qu'il faut regarder</h2>
+    <ul class="flags"><li class="flag critique"><span class="flag-tag">critique</span><h4>3 actes sans contenu propre</h4><p>Les actes Marchand, Événement, Climax servent une carte narrative ordinaire : aucune carte du pool ne porte de champ <code>act_type</code>.</p></li><li class="flag critique"><span class="flag-tag">critique</span><h4>Aucune récompense accordée</h4><p><code>calculate_run_rewards</code> n'est appelé que sur victoire ou mort. La victoire exige 25 cartes pour une boucle qui en joue 5 : à 5 cartes sans mort, aucun calcul n'a lieu. Le joueur repart avec 0 Anam.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>23 effets appliqués sans être montrés</h4><p>Le HUD n'affiche que le compteur de cartes, la vie et l'Anam. Les cinq réputations bougent à chaque carte sans jamais apparaître.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 5 : vie annoncée +0, appliquée +5</h4><p>Le passif de biome de Brocéliande ajoute <code>HEAL_LIFE 5</code> toutes les 5 cartes sans que rien ne l'annonce.</p></li></ul>
+  </section>
+
+  <section class="timeline">
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">01</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">arc_broceliande_02</span>
+    <span class="card-hud tab">Carte 1 / 5 · vie 100 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Gwenn t&#x27;attend pres du Chene. &#x27;J&#x27;ai trouve la source du mal — une racine corrompue sous la terre. Il faut creuser, mais le sol est piege.&#x27;</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Creuser avec precaution</span><span class="opt-eff engine"><span class="chip pos">druides +12</span><span class="chip neg">vie −3</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Utiliser une rune de protection</span><span class="opt-eff engine"><span class="chip pos">druides +8</span><span class="chip pos">vie +3</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Envoyer un animal creuser</span><span class="opt-eff engine"><span class="chip pos">korrigans +5</span><span class="chip pos">druides +5</span></span></li></ol>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Creuser avec precaution</dd>
+        <dt>Vie</dt><dd class="tab">100 → <strong>97</strong>
+            <span class="delta neg">-3</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card is-degraded">
+  <header class="card-head">
+    <span class="card-n tab">02</span>
+    <span class="act-badge" style="--ac:#FFB347">Marchand</span>
+    <span class="card-id engine tab">fr_broceliande_009</span>
+    <span class="card-hud tab">Carte 2 / 5 · vie 97 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Un feu de camp abandonne fume encore. Autour, des empreintes de pas nus menent vers le coeur de la foret.</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Suivre les empreintes</span><span class="opt-eff engine"><span class="chip pos">ankou +5</span><span class="chip neg">vie −2</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Fouiller les cendres</span><span class="opt-eff engine"><span class="chip pos">anciens +5</span><span class="chip pos">vie +3</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Ranimer le feu</span><span class="opt-eff engine"><span class="chip pos">vie +8</span></span></li></ol>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      <p class="warn">Acte « shop » demandé, carte de type « standard » servie — le pool ne contient aucune carte pour cet acte.</p>
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Suivre les empreintes</dd>
+        <dt>Vie</dt><dd class="tab">97 → <strong>95</strong>
+            <span class="delta neg">-2</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FF3366">ankou +5</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">03</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">fr_broceliande_007</span>
+    <span class="card-hud tab">Carte 3 / 5 · vie 95 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Un corbeau geant se pose sur ta route. Il croasse trois fois, puis depose une pierre noire polie a tes pieds.</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Ramasser la pierre</span><span class="opt-eff engine"><span class="chip pos">ankou +8</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Parler au corbeau</span><span class="opt-eff engine"><span class="chip pos">korrigans +5</span><span class="chip pos">anciens +3</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Laisser la pierre et reculer</span><span class="opt-eff engine"><span class="chip pos">vie +5</span></span></li></ol>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Ramasser la pierre</dd>
+        <dt>Vie</dt><dd class="tab">95 → <strong>95</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#FF3366">ankou +8</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card is-degraded">
+  <header class="card-head">
+    <span class="card-n tab">04</span>
+    <span class="act-badge" style="--ac:#00D4FF">Événement</span>
+    <span class="card-id engine tab">fr_broceliande_001</span>
+    <span class="card-hud tab">Carte 4 / 5 · vie 95 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Un sentier se divise en trois devant un chene noueux. Des murmures viennent de chaque direction.</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Observer les traces au sol</span><span class="opt-eff engine"><span class="chip pos">druides +5</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Ecouter les murmures</span><span class="opt-eff engine"><span class="chip pos">anciens +5</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Avancer au hasard</span><span class="opt-eff engine"><span class="chip pos">vie +3</span></span></li></ol>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      <p class="warn">Acte « event » demandé, carte de type « standard » servie — le pool ne contient aucune carte pour cet acte.</p>
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Observer les traces au sol</dd>
+        <dt>Vie</dt><dd class="tab">95 → <strong>95</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card is-degraded">
+  <header class="card-head">
+    <span class="card-n tab">05</span>
+    <span class="act-badge" style="--ac:#FF3366">Climax</span>
+    <span class="card-id engine tab">arc_broceliande_01</span>
+    <span class="card-hud tab">Carte 5 / 5 · vie 95 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Gwenn l&#x27;herboriste te barre le chemin. &#x27;Le Chene Chantant est malade, voyageur. Ses feuilles jaunissent hors saison. Aide-moi a trouver la cause.&#x27;</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Examiner les racines du chene</span><span class="opt-eff engine"><span class="chip pos">druides +10</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Chercher des parasites</span><span class="opt-eff engine"><span class="chip pos">druides +5</span><span class="chip pos">anciens +5</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Ignorer la demande</span><span class="opt-eff engine"><span class="chip pos">vie +3</span><span class="chip neg">druides -5</span></span></li></ol>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      <p class="warn">Acte « boss » demandé, carte de type « standard » servie — le pool ne contient aucune carte pour cet acte.</p>
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Examiner les racines du chene</dd>
+        <dt>Vie</dt><dd class="tab">95 → <strong>100</strong>
+            <span class="delta pos">+5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article></section>
+
+  <footer class="foot">
+    <span>Généré par <code>tools/render_run_dashboard.py</code> depuis le transcript
+      d'un run réel — instrumentation <code>MERLIN_TRANSCRIPT</code> de
+      <code>board_narration.gd</code>.</span>
+    <span>Rejouer un run et régénérer :
+      <code>MERLIN_AUTOPLAY=1 MERLIN_TRANSCRIPT=run.json godot --headless --path . scenes/BoardNarration.tscn --quit-after 30000</code></span>
+  </footer>
+</div>
+</body></html>

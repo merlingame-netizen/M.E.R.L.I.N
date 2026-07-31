@@ -1,8 +1,10 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. v3.8
+# GAME DESIGN BIBLE — M.E.R.L.I.N. v4.3
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
 > Date de creation : 2026-03-12 | v3.0 : 2026-05-09 | v3.1 : 2026-05-16
+> v4.3 : 2026-07-27 — §9.2 réécrit (trois paliers Gemma 4 pilotés par la RAM
+> physique), §9.2bis ajouté (aucun gabarit de chat écrit par le jeu).
 > References : Inscryption (MJ adversarial, 4e mur) + AI Dungeon (liberte narrative IA) + **Hand of Fate 2** (no drain, equilibre via cartes)
 
 ## v3.5 Changelog (2026-05-16)
@@ -285,7 +287,7 @@ Score attribue par Merlin : 20-80 (jamais extremes sauf T3).
 | 0-20 | Echec critique | Negatifs x1.5 |
 | 21-50 | Echec | Negatifs x1.0 |
 | 51-79 | Reussite partielle | Positifs x0.5 |
-| 80-100 | Reussite | Positifs x1.0 |
+| 80-94 | Reussite | Positifs x1.0 |
 | 95-100 | Reussite critique | Positifs x1.5 + bonus |
 
 ---
@@ -412,6 +414,12 @@ Les cartes Promesse creent des engagements avec countdown :
 
 **Merlin Direct** est a 10% (vs 5% en v2.4) car ces moments sont les plus IA-driven et les plus memorables.
 
+> **v3.9** : ces poids restent la cible GLOBALE du flux de cartes. En mode
+> scenario type (§30), les parts sont bornees PAR ROUTE jouee : NARRATIVE
+> 50-70%, EVENT 1-4, SHOP 1-2, MERLIN_DIRECT 0-3, PROMISE 0-2, RUNE_UNLOCK 0-1
+> (source : `data/ai/scenario_templates.json::card_type_caps`). Les types SHOP
+> et RUNE_UNLOCK, absents du tableau v3.0, sont canon depuis v7.7.22.
+
 ### 6.3 Carte — structure JSON
 
 ```json
@@ -430,6 +438,31 @@ Les cartes Promesse creent des engagements avec countdown :
   "tags": []
 }
 ```
+
+### 6.3bis Carte de skeleton scenario — schema etendu (v3.9)
+
+Les cartes issues du pipeline scenario (§30 + corpus de references) portent en
+plus les champs du contrat des scenarios types :
+
+```json
+{
+  "n": 1, "card_id": "c1",
+  "type": "NARRATIVE | EVENT | SHOP | PROMISE | MERLIN_DIRECT | RUNE_UNLOCK",
+  "rarity": "COMMUNE | RARE | EPIQUE | LEGENDAIRE",
+  "pole": "Ordre | Chaos | Liminal | Neutre",
+  "emotion": "curiosite | tension | peur | espoir | sagesse | fascination | colere | melancolie | emerveillement",
+  "summary": "1 phrase 8-22 mots (few-shot GM)",
+  "options": [
+    {"label": "...", "verb": "infinitif 1 mot", "primary_faction": "druides | anciens | korrigans | niamh | ankou | neutre",
+     "check": {"stat": "logic | empathie | volonte | instinct", "type": "white | contextuel | red | fatal"},
+     "leads_to_card_id": "c3"}
+  ],
+  "route_mask": [true, true, true], "branch_label": "trunk | ordre_b1 | ..."
+}
+```
+
+Le champ `check` est optionnel dans le corpus actuel (a generer lors de la
+passe de regeneration — spec §5.7). Reference : SCENARIO_TYPES_SPEC.md §2-§3.
 
 ### 6.4 MOS — Merlin Omniscient System
 
@@ -575,20 +608,67 @@ flowchart TD
 
 | LLM | Quand | Modèle | RAG injecté | Guardrails | Latence cible |
 |---|---|---|---|---|:---:|
-| **1. Titres** | Au démarrage de ScenarioLoading | Narrator (Qwen 3.5 4B) | 5 titres de référence (ScenariosRAG kNN cosine) | Forbidden words + longueur ≤ 60 char | <8s |
+| **1. Titres** | Au démarrage de ScenarioLoading | Narrator | 5 titres de référence (ScenariosRAG kNN cosine) | Forbidden words + longueur ≤ 60 char | <8s |
 | **2. Intro** | Après pick du titre | Narrator | 3 intros de référence (ScenariosRAG) + 5 registries | Forbidden words + ≥ 5 phrases + Jaccard < 0.5 vs references | <10s |
-| **3. Skeleton** | Pendant parchemin | Game Master (Qwen 3.5 2B) | 2 beat-sequences de référence + biome bias | GBNF + `_balance_skeleton` + Jaccard | <15s |
-| **4. Cartes (per-beat)** | À chaque beat in run | GM + Narrator (pipeline bi-brain) | 2 cartes de référence filtrées par CardType + RAGManager context | GBNF + forbidden words + 4e mur check | <2s prefetch |
+| **3. Skeleton** | Pendant parchemin | Game Master | 2 beat-sequences de référence + biome bias | `format` JSON + `_balance_skeleton` + Jaccard | <15s |
+| **4. Cartes (per-beat)** | À chaque beat in run | GM + Narrator (pipeline bi-brain) | 2 cartes de référence filtrées par CardType + RAGManager context | `format` JSON + forbidden words + 4e mur check | <2s prefetch |
 
-### 9.2 Multi-Brain hardware (modèles + RAM)
+### 9.2 Multi-Brain hardware — trois paliers Gemma 4 (2026-07-27)
 
-| Cerveau | Modèle | RAM | Rôle | Temperature |
-|---|---|:---:|---|:---:|
-| **Narrator** | Qwen 3.5 4B + LoRA `merlin-narrator` | ~3.2 GB | Prose riche, voix de Merlin, intros, titres | 0.70 |
-| **Game Master** | Qwen 3.5 2B | ~1.8 GB | JSON skeleton, JSON cartes, effets, jugements | 0.15 |
-| **Embedder** | nomic-embed-text | 137 MB | 768-dim vectors pour ScenariosRAG kNN | — |
+**Famille : Gemma 4** (avril 2026, Apache 2.0). Deux raisons mesurées :
+français (88,4 % sur MMMLU contre 85,9 % pour Qwen 3.5) et **contrôle**
+(JSON structuré et function calling natifs à *toutes* les tailles — τ2-bench :
+86,4 % pour le 31B contre 6,6 % pour Gemma 3 27B).
 
-Profils hardware : NANO (4 GB, 1 brain time-sharing) / SINGLE (6 GB, 4B narrator + 2B GM tour à tour) / DUAL (8+ GB, simultané) / QUAD (16+ GB).
+Le palier se choisit sur la **RAM physique** de la machine, lue via
+`OS.get_memory_info()`. Il est modifiable à la main dans le menu options.
+
+| Palier | Déclencheur | Narrateur | Game Master | Pic RAM | Mode |
+|---|---|---|---|---:|---|
+| **Léger** | RAM < 16 Go | `gemma4:e4b-it-qat` | partagé | 6,1 Go | résident |
+| **Moyen** | 16 ≤ RAM < 32 Go | `gemma4:12b-it-qat` | partagé | 7,2 Go | résident |
+| **Élevé** | RAM ≥ 32 Go | `gemma4:26b-a4b-it-qat` | `gemma4:e4b-it-qat` | 22,1 Go | parallèle |
+
+**Pourquoi le 26B et pas le 31B au palier haut.** Le 26B-a4b est un
+*Mixture-of-Experts* : 26 milliards de paramètres au total mais ~3,8 actifs par
+token, donc **plus rapide que le 12B dense tout en écrivant mieux**. Le 31B
+dense tombe **sous 1 token/seconde** sans GPU — §9.9 l'interdit. Il reste
+sélectionnable à la main pour qui a un gros GPU, jamais choisi automatiquement.
+
+**Pourquoi un seul modèle aux paliers Léger et Moyen.** Sur 16 Go, le 12B
+(7,2 Go) et l'E4B (6,1 Go) résidant côte à côte font 13,3 Go : il ne resterait
+rien au système ni au jeu, et Ollama évincerait un modèle à chaque bascule —
+7 Go rechargés entre deux cartes. Un seul modèle, jamais évincé.
+
+**Pourquoi l'E4B en game master au palier Élevé.** Ce cerveau ne produit que du
+JSON ; la taille n'y ajoute rien. Payer deux fois le gros modèle doublerait
+l'empreinte sans améliorer la prose.
+
+| Autre cerveau | Modèle | RAM | Rôle |
+|---|---|:---:|---|
+| **Embedder** | nomic-embed-text | 137 MB | 768-dim vectors pour ScenariosRAG kNN |
+
+**Préséance des réglages** : un modèle choisi explicitement dans les options
+l'emporte sur le palier, et le palier l'emporte sur la détection matérielle.
+
+### 9.2bis Aucun gabarit de chat écrit par le jeu
+
+Le jeu envoie des **messages neutres** `[{role, content}]` à `/api/chat`
+d'Ollama, qui applique le gabarit propre au modèle chargé. Le code n'écrit
+plus de ChatML (`<|im_start|>`, format de Qwen), et n'écrira jamais celui de
+Gemma (`<start_of_turn>`) non plus.
+
+C'est une règle, pas un détail d'implémentation : le backend écrivait
+auparavant du ChatML à la main et envoyait `raw: true`, ce qui disait
+explicitement à Ollama de **ne pas** appliquer le gabarit du modèle. Changer de
+famille de modèle dégradait alors la prose **sans qu'aucune erreur ne le
+signale**. Toute contribution qui réintroduit un marqueur de gabarit dans le
+code est un bug.
+
+Corollaire pour le JSON : `OllamaBackend.set_grammar()` n'est plus un no-op —
+il envoie le paramètre `format` d'Ollama (schéma JSON complet quand la
+contrainte en est un, `"json"` sinon). Le game master produit donc du JSON
+valide **par construction**, au lieu d'être réparé après coup.
 
 ### 9.3 RAG — DEUX indices coordonnés
 
@@ -1416,8 +1496,10 @@ Les palettes sont exposées dans `scripts/board_narration/biome_palettes.gd` (à
 
 ---
 
-*GAME_DESIGN_BIBLE v3.8 — M.E.R.L.I.N.*
+*GAME_DESIGN_BIBLE v4.0 — M.E.R.L.I.N.*
+*v4.0 (2026-07-26) — §31 Décisions AskUserQuestion : longueur variable, réputations affichées, branchement narratif, pool supprimé*
 *v3.8 (2026-05-16) — §20.6 reframed : KayKit = RÉFÉRENCE technique pour assets custom + §20.7 Persona digital UI accents (menu_test v7.7.11) + subtitle definitively removed*
+*v3.9 (2026-07-25) — §30 Scénarios Types & Équilibrage Deck-Building + dédoublonnage §25-§29 + fix bandes score §4.6 (80-94/95-100) + fix math §28.2*
 *Refonte majeure 2026-05-09 — Inscryption x AI Dungeon x Cyber-Druidique*
 *v3.1 (2026-05-14) — §19 UI/UX Coherence Rules added*
 *v3.2 (2026-05-14) — §20 Cel-Shading + Outline Noir : marque de fabrique du jeu*
@@ -1544,8 +1626,8 @@ Sur 810 cards FastRoute pool actuel :
 
 ### 28.2 Run équilibrage (target 25 cartes)
 
-- Avg check pass rate first-run (stats=1) : 60% → ~15 success / 25 cartes
-- Life damage potentiel sans heal : ~10 × 4 PV = 40 PV (mort improbable first-run)
+- Avg check pass rate first-run (stats=1) : 60% → ~15 succès / ~10 échecs sur 25 cartes
+- Dégâts bruts attendus (mix white/contextuel/red 75/15/8, multiplicateurs d'acte 0.6→1.6) : ~55-75 PV ; soins ~20-35 → attrition nette 30-45 PV, mort possible actes IV-V, jamais garantie (détail : §30 + SCENARIO_TYPES_SPEC.md §5.3)
 - Anam gain estimé : 10 base + 8 boss + 4 critiques = ~22 Anam
 - Lv up estimé first-run : 25 choix × 1 XP = ~25 XP répartis = +2-3 stats moyens
 
@@ -1590,175 +1672,6 @@ Sur 810 cards FastRoute pool actuel :
 - Faction route endings (5 routes)
 - Polish + balance pass
 *v3.6 (2026-05-16) — Disco-style maitrise : 4 stats + skill checks + Grimoire meta + équilibrage formula (§25-§27)*
-
----
-
-## 25. Système 4 Stats — Maitrise Disco-style (NON-NÉGOCIABLE)
-
-> **Source** : 16 réponses AskUserQuestion 2026-05-16 R5-R8. Inspiration : **Disco Elysium** (skill checks RPG), **Hand of Fate 2** (failure consequences), **Pentiment** (hidden background gates).
-
-### 25.1 Les 4 stats
-
-| Stat | Domaine | Faction affine | Exemples cards |
-|---|---|---|---|
-| **Logic** | Raison, déduction, observation | Druides | "Examiner les runes gravées" / "Décrypter le rêve" |
-| **Empathie** | Coeur, intuition relationnelle | Niamh | "Apaiser le korrigan" / "Lire l'âme du voyageur" |
-| **Volonté** | Discipline, résistance, courage | Anciens | "Résister à l'illusion" / "Trancher l'attache" |
-| **Instinct** | Survie animale, intuition brute | Korrigans | "Sentir la trace" / "Fuir l'ombre" |
-
-**Ankou** (5e faction) : pas de stat dédiée — agit comme **trait modifier global** (penalty/bonus selon mood).
-
-### 25.2 Stats baseline + croissance
-
-- **First-run** : tous les 4 stats = **1/10** (low baseline organique).
-- **XP par choix cohérent** (Disco-style) : chaque choix d'option = +1 XP à la stat associée.
-- **Lv up** : tous les 10 XP. Maxi 10.
-- **Persistence** : stats XP **persistent cross-run** (death penalty : faction rep reset + life reset, stats KEEP).
-- **Estimation** : ~25 runs pour atteindre Lv 5 sur une stat focused (~250 XP).
-
-### 25.3 Visibilité
-
-**HUD top-right permanent** : 4 icônes + chiffres (Logic 3 / Emp 1 / Vol 2 / Ins 4). Le joueur sait son build, construit consciemment. Bible §19.4 align.
-
----
-
-## 26. Système de Checks — White & Red (Disco-style)
-
-> **Source** : 16 réponses AskUserQuestion R5-R8.
-
-### 26.1 Formula
-
-```
-pass_chance = stat_value × 10% + base 50%
-```
-
-| Stat level | Pass chance |
-|---|---|
-| 1 (baseline) | 60% |
-| 3 | 80% |
-| 5 | 100% (auto-pass standard) |
-| 7 | 120% (auto-pass + bonus) |
-| 10 | 150% (criticité++) |
-
-**Modifiers** : cards peuvent ajouter `+modifier` temporaire (e.g. "Logic +20% pour cette carte").
-
-### 26.2 Check types
-
-| Type | Comportement | % cards |
-|---|---|---|
-| **Standard (white)** | Retry-able après level up stat. Échec = branche narrative + 3-5 PV damage. | ~75% |
-| **Contextuel** | Stat unique, pas de retry mais pas one-shot. Échec = -8 PV + bad outcome. | ~15% |
-| **Red (one-shot)** | Non-retryable JAMAIS. Échec critique = -15 PV ou branche permanente. | ~8% |
-| **Critique (red fatal)** | Échec = run terminate ou faction lock-out. | ~2% |
-
-### 26.3 Failure handling
-
-- Échec standard → carte génère **branche narrative alternative** + 3-5 PV damage.
-- Échec red → -15 PV + Merlin commentary acerbe.
-- Échec critique → run terminate (rare, ~2% cards).
-
-Compatible bible §5.1 HoF2-style (équilibre via card effects, pas drain auto).
-
----
-
-## 27. Grimoire — Meta-Progression visible
-
-> **Source** : 16 réponses AskUserQuestion R5-R8. Remplace l'arbre de talents v2.4.
-
-### 27.1 Structure : 5 sections + 1 lore (110 pages total)
-
-| Section | Pages | Trigger d'unlock | Contenu |
-|---|:---:|---|---|
-| **Druides** | 20 | Faction rep ≥ 50 | Rune-Circuits Druidiques + cards logiques + lore |
-| **Anciens** | 20 | Faction rep ≥ 50 | Volonté unlocks + cards résistance |
-| **Korrigans** | 20 | Faction rep ≥ 50 | Instinct unlocks + cards trickster |
-| **Niamh** | 20 | Faction rep ≥ 50 | Empathie unlocks + cards émotionnelles |
-| **Ankou** | 20 | Total runs ≥ 10 | Death-related cards + endgame faction route |
-| **Lore Brocéliande** | 10 | Triggers narratifs spéciaux | Histoire monde + legendes |
-
-### 27.2 Anam economy (linear)
-
-- **Premier unlock** : 10 Anam
-- **Subsequent unlocks** : +10 Anam chaque (20, 30, 40, ...)
-- **Anam gain par run** : ~10-25 (base 10 + bonus victoire +15)
-- **Estimation** : 5-10 unlocks par run cycle complet
-- **Total Anam pour 100% Grimoire** : ~5500 Anam (~220 runs)
-
-### 27.3 Cross-run persistence
-
-| State | Persistance |
-|---|---|
-| Anam | ✅ Persistent |
-| Grimoire unlocks | ✅ Persistent |
-| Faction rep | ✅ Persistent (reset à 0 sauf si ≥ 80 → faction route locked-in) |
-| Stats XP | ✅ Persistent (stats keep cross-run) |
-| Life | ❌ Reset à 100 each run |
-| Equipped Rune-Circuits | ✅ Persistent |
-| Active modifiers per-run | ❌ Reset |
-
----
-
-## 28. Équilibrage Proposals v3.6
-
-### 28.1 Card pool target distribution
-
-Sur 810 cards FastRoute pool (état actuel) :
-
-| Type | % | Count cible |
-|---|:---:|:---:|
-| Standard (white check) | 75% | 608 |
-| Contextuel | 15% | 121 |
-| Red one-shot | 8% | 65 |
-| Critique fatal | 2% | 16 |
-
-### 28.2 Run équilibrage (target 25 cartes)
-
-- Avg check pass rate first-run (stats=1) : 60% → ~10 success / 25 cartes
-- Avg success score : ~70% → effects modérés
-- Life damage potentiel max sans heal : 25 × 5 PV = 125 PV → mort possible mais pas garantie (HoF2 tension via choix)
-- Anam gain estimé : 10 base + 8 boss + 4 critiques = ~22 Anam
-
-### 28.3 Skill expression validation
-
-| Build archétype | Stats focus | Run signature |
-|---|---|---|
-| **Druide pur** | Logic 5+, Vol 3+ | Solve puzzles, peace via réflexion |
-| **Berserker** | Vol 5+, Ins 3+ | Force confronte, low Empathie |
-| **Diplomate** | Emp 5+, Logic 3+ | Tisse alliances factions |
-| **Survivant** | Ins 5+, Vol 3+ | Évite combats, lit signs |
-| **Polyvalent** | 3/3/3/3 | Adaptable mais médiocre |
-
-5 archétypes viables = système expression confirmée.
-
----
-
-## 29. Implementation Phasing v3.6 → v8.0.0
-
-### Phase 1 (v7.7.4) — 4 stats + check formula (~6h)
-- Add `MerlinStatsSystem` autoload + persistence in profile.json
-- HUD top-right 4 icons + values
-- Check formula in `merlin_effect_engine.gd` : `stat × 10% + 50%`
-- White/red check types in card schema
-- XP per choice in `RESOLVE_CHOICE` reducer
-
-### Phase 2 (v7.7.5) — Grimoire UI + meta-progression (~8h)
-- New scene `GrimoireScreen.tscn` (callable from Hub)
-- 5 sections + 1 lore navigation
-- Anam linear cost UI
-- Faction-rep gate visual
-- 30 page unlock content (seed initial)
-
-### Phase 3 (v7.7.6) — 9 Rune-Circuits refacto (~6h)
-- Refactor `OGHAM_FULL_SPECS` 18 → 9 entries per bible §3
-- Update card schema `ogham_used` field
-- Migrate FastRoute 810 cards old→new ogham_id mapping
-
-### Phase 4 (v7.8.0) — Full release
-- All 110 Grimoire pages populated
-- Tutorial v2 (free choice, 4 stats demo cards)
-- Faction route endings (5 routes)
-- Polish + balance pass
-
 ---
 
 ## 24. Politique Systematique MERLIN (NON-NEGOCIABLE)
@@ -1824,4 +1737,296 @@ Detail : voir `task_plan.md` Active Feature v7.7.3.
 
 ---
 
-*Fin de bible v3.5*
+## 30. Scénarios Types & Équilibrage Deck-Building (v3.9)
+
+> **Ajout 2026-07-25.** Source de vérité déléguée : `docs/30_jdr/SCENARIO_TYPES_SPEC.md` v1.0
+> + jumeau machine-readable `data/ai/scenario_templates.json`.
+> Outils : `tools/validate_scenario_balance.py` (audit statique par route, score 0-100)
+> et `tools/patch_reference_scenarios.py` (mise en conformité métadonnées du corpus).
+
+### 30.1 Contrat des scénarios types (résumé)
+
+- **10 archétypes canon**, mapping 1:1 archétype ↔ pôle ↔ twist_pattern, chacun avec
+  danger_modifier / heal_modifier / palette émotionnelle / stats dominantes / règle spéciale.
+- **5 actes aux rôles fixes** (Ouverture / Pacte / Épreuve / Bascule / Climax), multiplicateurs
+  de danger [0.6, 0.8, 1.0, 1.3, 1.6]. SHOP garanti acte II (+ acte IV si ≥ 21 cartes),
+  twist EPIQUE ~50%, climax final **LEGENDAIRE + MERLIN_DIRECT** sur chaque route.
+- **3 routes isométriques** (ordre/chaos/liminal) : caps de types, raretés 68/20/8/4,
+  LEGENDAIRE dans le dernier 30% uniquement.
+- **Écriture contrôlée** : titre 2-7 mots, intro 5-8 phrases 2e personne, summaries 8-22 mots,
+  3 options verbes infinitifs à factions distinctes, arc émotionnel sans répétition consécutive,
+  finale ∈ {sagesse, peur, émerveillement}.
+
+### 30.2 Équilibrage (résumé)
+
+- **PV-équivalent** (méthode Dominion) : vie 1.0 / essence 0.8 / rep 0.4 / anam 2.0 / XP 1.5.
+- **Checks par acte** : red à partir de l'acte III (jamais 2 dans 3 cartes), fatal actes IV-V
+  télégraphié, **ember rule** (vie ≤ 15 : fatal → red), requirement croissant actes IV-V.
+- **Budget de danger first-run** : dégâts bruts ~55-75 PV, soins ~20-35, ratio ~0.33 (HoF2).
+  Cibles mortalité : first-run 15-30%, build spécialisé 5-15%, aucun profil 0% ou > 40%.
+  **Validé Monte-Carlo** (10k runs × 6 profils) : les dégâts pilotent la tension, le placement
+  des fatales pilote la mortalité — fatales concentrées actes IV-V (5% du tirage) → 100% des
+  morts en actes IV-V, first-run 17.9%, builds 10-13%.
+- **Garde-fous anti-dégénérescence** : anti-safe-spam (3 choix zéro-risque → carte forcée),
+  rep ±60/faction/run et gains ÷2 au-dessus de 80, soins +24/acte max, 0 XP après 3 choix
+  même stat, cap multiplicateur ×2.0 appliqué après tout cumul, équité factions ≥ 8% des options.
+- **Économie Rune-Circuits** : cible 35-45 PV-éq de valeur totale/run.
+  ⚠ Décision pendante : retuning quert (CD 6, soin 8) / luis (CD 5) / straif (CD 7) / nuin (CD 5)
+  — voir SCENARIO_TYPES_SPEC.md §7 (divergences flaggées).
+
+### 30.3 État du corpus de référence
+
+Patch métadonnées 2026-07-25 (types/raretés uniquement, prose et embeddings intacts) :
+score validator 24.2 → **90.3/100, 0 erreur**. Findings ouverts (passe de régénération LLM) :
+druides 32.5% des options (> 30%), ankou 7.8% (< 8%), 20 arcs ouvrant sur `tension`.
+
+---
+
+## 31. Décisions du 2026-07-26 — AskUserQuestion round 1 (ÉCRASE le canon antérieur)
+
+> Quatre décisions prises par l'utilisateur en réponse directe aux divergences mesurées
+> sur des runs réels. Elles **écrasent** les sections indiquées. Deux d'entre elles
+> ouvrent un conflit avec un autre point de la bible : ces conflits sont signalés ici et
+> restent à trancher.
+
+### 31.1 Longueur de run — VARIABLE selon l'archétype
+
+**Écrase** : CLAUDE.md §10.4 (« 5 actes × 5 = 25 cartes ») et bible §6.4 (« target 15-20,
+soft max 30, hard max 40 »).
+
+Un run dure désormais **11, 15, 17, 21 ou 25 cartes** selon l'archétype du scénario tiré
+(`canonical_lengths` du contrat). Conséquences directes :
+
+- `MIN_CARDS_FOR_VICTORY = 25` (`merlin_constants.gd:103`) devient **caduc** : la victoire
+  ne peut plus être un nombre fixe. Question ouverte (round 2, sans réponse) : victoire =
+  atteindre la fin du scénario tiré, accomplir la mission narrative, seuil relatif, ou
+  issues graduées.
+- Tout l'équilibrage chiffré doit devenir **paramétrique** en N : budget de danger,
+  `check_act_distribution`, économie des Rune-Circuits (`1 + floor((N-1)/CD)`), projection
+  des 5 actes (`acte = 1 + floor(i × 5 / N)`).
+- `ACT_SEQUENCE` en dur à 5 entrées dans `board_narration.gd:2914` doit disparaître.
+
+### 31.2 Conséquences — TOUT AFFICHER
+
+**Écrase** : la position implicite actuelle (`_refresh_hud` : « Réputations sont META […]
+aucun affichage HUD »).
+
+Les **5 réputations de faction sont affichées chiffrées** au HUD. Le joueur doit pouvoir
+arbitrer en connaissance de cause ; un JdR ne se joue pas à l'aveugle.
+
+> ⚠ **Conflit ouvert avec §21.2** — le pilier MINIMAL interdit plus de 7 affordances
+> simultanées (loi de Miller). Avec vie, Anam, compteur, acte, rune active et 5 réputations,
+> on atteint 10. Le round 2 proposait une barre unique à 5 segments (1 affordance au lieu
+> de 5) ou l'écrasement assumé du pilier. **Non tranché.** En attendant, l'implémentation
+> doit viser la forme la plus compacte possible.
+
+### 31.3 Branchement — NARRATIF, PAS TOPOLOGIQUE
+
+**Écrase** : `SCENARIO_TYPES_SPEC.md` §2.2 (3 routes isométriques, aiguillage, convergence)
+et le modèle des 100 scénarios de référence.
+
+Il n'y a **pas de branchement de topologie**. Tous les joueurs voient la même séquence de
+cartes ; ce sont la **résolution et le texte qui varient** selon l'état accumulé
+(réputations, marqueurs, arc en cours, promesses). Le sentiment d'une histoire qui tient
+compte de vous, sans tripler le volume de contenu à générer.
+
+Conséquences : `route_mask`, `leads_to_card_id` et le pattern
+`tronc → branche → twist → branche → convergence` sortent du contrat. Le scénario golden
+(53 cartes, 3 voies) et le corpus de références sont bâtis dessus et deviennent caducs
+dans leur forme actuelle.
+
+### 31.4 Pool statique — SUPPRIMÉ
+
+**Écrase** : le rôle actuel du pool `fastroute_cards.json` dans `board_narration.gd`, et
+partiellement §9.6 (le blocage devient la seule issue en l'absence de LLM).
+
+Le jeu ne sert **plus aucune carte pré-écrite** : tout est généré par le LLM, sans filet.
+C'est la lecture stricte de la directive « 100 % LLM natif, aucun scénario qui se
+ressemble ».
+
+> ⚠ **Conflit ouvert avec la testabilité** — le harnais de transcript, les smoke tests, la
+> mesure de diversité entre runs et les douze runs joués cette session fonctionnent tous
+> **sans Ollama**, grâce à ce pool. Le supprimer sans remplacement supprime la boucle
+> mesure → correction → mesure qui a mis au jour tous les défauts de cette session. Le
+> round 2 proposait un pool réservé aux tests (invisible en jeu) ou un faux LLM
+> déterministe. **Non tranché.**
+
+### 31.5 Ce que ces décisions invalident dans le travail de cette session
+
+Par honnêteté de suivi, les livrables devenus caducs ou à refaire :
+
+| Livrable | État |
+|---|---|
+| Scénario golden « Le Rite des Neuf Souffles » (53 cartes, 3 routes) | à refaire en linéaire à résolutions variables |
+| Corpus de 100 références (bâti sur 3 routes, 0/6 en diversité) | ne sert plus de modèle de contenu |
+| 36 résolutions écrites pour les 12 cartes du pool | perdues avec le pool, sauf si le pool survit en test |
+| Mélange du pool + garde-fou anti-répétition + ordre des arcs | portent sur le pool ; deviennent sans objet |
+| Équilibrage calibré sur 25 cartes | à rendre paramétrique en N |
+
+Restent valides : la grammaire de carte (§30 + `card_grammar`), le beat de résolution, la
+graine de variation, la porte de nouveauté, et tout l'outillage de mesure.
+
+---
+
+## 32. Scénario type de référence — « Deux Assiettes » (v4.2)
+
+> **Ajout 2026-07-26, refait le 2026-07-27.** Remplace le golden « Le Rite des Neuf
+> Souffles » (3 routes abandonnées, §31.3) puis « La Dette de Tourbe » (passé partagé
+> et ellipses, §33). Écrit à la main dans `tools/build_scenario_type.py`, rendu lisible
+> dans `docs/30_jdr/SCENARIO_TYPE_REFERENCE.md`, sérialisé dans
+> `data/ai/scenario_type_reference.json`. **Score validateur strict : 100/100.**
+
+C'est la **cible de forme** que la génération LLM doit atteindre — jamais un modèle de
+contenu à recopier (`generation_contract` interdit le few-shot de contenu). Sa fonction :
+rendre chaque règle de §30, §31 et §33 vérifiable sur un objet complet.
+
+| Attribut | Valeur |
+|---|---|
+| Archétype | `mist_wanderer` — pôle Liminal, twist `lost_then_found` |
+| Longueur | **25 cartes** — la granularité de §33.2 ne tient pas en moins |
+| Prémisse | un voyageur cherche un toit pour la nuit ; il ne connaît personne (§33.1) |
+| Branchement | narratif : séquence unique, 3 résolutions variables selon l'état |
+| Graine de variation | tourbière / un vivant qu'on croit mort / une dette à honorer / odeur / identité |
+| Grammaire | 75 options, **75 résolutions de réussite + 75 d'échec**, 0 chiffre dedans |
+
+**L'ouverture, carte par carte** — c'est elle qui montre ce que « aucune ellipse » veut
+dire : `1` le chemin de planches · `2` la maison, fenêtre allumée, cheminée froide ·
+`3` le seuil et les bottes sèches · `4` on frappe, rien ne répond · `5` la porte s'ouvre
+d'une main, une lampe, une femme · `6` elle s'efface pour te laisser passer · `7` la
+table mise pour deux. Sept cartes pour franchir une porte.
+
+### 32.1 Trois règles que ce scénario a fixées
+
+Les trois ont été établies en corrigeant des défauts du premier jet, mesurés par le
+validateur — elles sont donc canon, pas des préférences d'écriture.
+
+**a. Les `effects` sont le gain de réussite ; le risque vit dans `fail_damage`.**
+Porter un `DAMAGE_LIFE` dans les effets d'une option audacieuse facture l'audace deux
+fois : l'écart d'EV entre les trois options passait à 8.40 PV-eq sur la carte 7, contre
+une tolérance de 2.0. Aucune option ne porte de dégâts garantis. → `option_gradient_ev._regle_effets`.
+
+**b. Le mix d'épreuves de §26.2 se mesure PAR CARTE, sur l'option la plus dure.**
+La colonne « % cards » de §26.2 compte des cartes, pas des options. Conséquence de
+design, non triviale : **la majorité des cartes sont entièrement blanches**, et le
+gradient s'y exprime par la marche 3/4/5 des dégâts d'échec plus un gain croissant — pas
+par un type d'épreuve plus dur. Sur 11 cartes : 8 blanches (73 %), 2 contextuelles (18 %),
+1 rouge télégraphiée (9 %), 0 fatale. → `check_mix_global._comment`.
+
+**c. `text` et `summary` sont deux champs distincts.**
+`text` est la situation lue à l'écran (beat 1 de `card_grammar`, 18-38 mots — la mesure
+sur le pool FastRoute donne une médiane de 19 mots, max 32). `summary` est l'identité
+courte du beat (8-22 mots) que manipulent le skeleton, le RAG et le validateur. Les
+confondre faisait échouer 11 cartes sur 11 sur une contrainte qui ne les visait pas.
+→ `writing_constraints.card_text`.
+
+### 32.2 Profil d'équilibrage obtenu
+
+Écart d'EV entre options : **0.16 à 1.52 PV-eq** sur les 25 cartes, tolérance 2.0.
+L'option prudente n'est optimale que sur 7 cartes, ≤ 2 par acte : pas de safe-spam.
+Mix d'épreuves par carte : 18 blanches (72 %), 5 contextuelles (20 %), 2 rouges
+télégraphiées (8 %, actes IV et V, quatre cartes d'écart).
+Répartition des factions sur 75 options — druides 22 (29 %, sous le plafond de 30 %),
+anciens 20, niamh 15, korrigans 11, ankou 7 (9 %, au-dessus du plancher de 8 %) : les
+quatre builds de stat sont nourris.
+
+### 32.3 Ce qui reste à câbler côté moteur
+
+Le scénario est conforme au contrat ; le moteur ne sait pas encore tout en servir.
+
+| Élément | État |
+|---|---|
+| `outcome` affiché après le choix | ✅ câblé (`board_narration.gd`, beat de résolution) |
+| `outcome_variants` conditionnés par marqueur / promesse rompue | ❌ à implémenter |
+| Longueur de run variable (11-25) | ❌ `ACT_SEQUENCE` en dur à 5 cartes |
+| Affichage numérique des 5 réputations (§31.2) | ❌ à implémenter |
+| Épreuves de stats (`check`) résolues en jeu | ✅ câblé v7.7.29 (`_resolve_scripted_check`) |
+| `outcome_variants` conditionnés par l'état | ✅ câblé v7.7.29, vérifié sur un run réel |
+| Longueur de run variable (11-25) | ✅ câblé v7.7.29 (`_act_sequence()`) |
+| Affichage numérique des 5 réputations (§31.2) | ❌ à implémenter |
+
+---
+
+## 33. Décisions du 2026-07-27 — Le voyageur et la continuité (ÉCRASE §30, §32)
+
+> Deux règles posées par l'utilisateur en regardant le run de « La Dette de Tourbe »
+> se dérouler. Elles invalident le scénario de référence v4.1 et la façon dont
+> tous les scénarios étaient écrits jusqu'ici.
+
+### 33.1 Le voyageur ne sait rien — AUCUN PASSÉ PARTAGÉ
+
+**Le joueur est un voyageur.** Il traverse un monde géré par Merlin. Il connaît
+peu les lieux et **ne connaît personne**. Il n'a pas d'histoire commune avec les
+personnages qu'il croise : ni dette antérieure, ni ami, ni promesse d'avant le
+run, ni nom su d'avance.
+
+**Interdit dans tout texte de carte, d'intro ou de résolution :**
+
+| Formule | Pourquoi c'est faux |
+|---|---|
+| « Il y a un an, Maël Kerlan… » | invente un passé que le joueur n'a pas vécu |
+| « Tu lui devais trois pièces » | invente une dette antérieure au run |
+| « Tu le reconnais » / « ton vieil ami » | invente une relation préexistante |
+| « Tu te souviens de ce village » | invente une mémoire du lieu |
+| « Comme la dernière fois » | invente une visite antérieure |
+
+**Ce qui remplace :** tout ce que le joueur sait, il l'**apprend dans le
+scénario** — par ce qu'il voit, ce qu'on lui dit, ce qu'il déduit. Sa motivation
+vient de la **situation présente** : il cherche un gîte, il suit une lumière, on
+lui demande un service, il est pris dedans. Jamais d'un passé raconté.
+
+Les noms propres se **découvrent** : un personnage est « une femme à la lampe »
+tant que personne ne l'a nommé. La dette, s'il y en a une, appartient aux gens
+qu'il rencontre — le voyageur ne fait qu'entrer dedans.
+
+**Levier canon disponible** : l'hospitalité est sacrée en Brocéliande (on ne
+refuse pas un voyageur). C'est une raison suffisante pour qu'une porte s'ouvre,
+et elle ne suppose aucun passé.
+
+### 33.2 Continuité de scène — AUCUNE ELLIPSE
+
+**Deux cartes consécutives sont contiguës.** La carte N+1 reprend exactement où
+la résolution de la carte N s'est arrêtée : même lieu, même minute, mêmes
+personnes présentes — sauf si une carte montre explicitement le déplacement ou
+le temps qui passe.
+
+Le défaut constaté le 2026-07-27 : carte 1 on examine des bottes sur un seuil,
+carte 2 une veuve pose trois pièces sur une table. **On n'a jamais frappé, on
+n'a jamais vu la porte s'ouvrir, personne ne nous a fait entrer, on ne s'est pas
+assis.** Le scénario saute des moments et le joueur perd le fil de sa propre
+histoire.
+
+**Un geste se décompose en ses temps.** Arriver devant une porte, ce n'est pas
+une carte : c'est
+`approcher` → `frapper` → `attendre` → `on ouvre` → `les premiers mots` →
+`entrer` → `s'installer`. Chacun de ces temps peut porter ses trois options.
+
+**Règle opératoire pour l'écriture et la génération :**
+
+1. La situation d'une carte **cite un élément concret** de la résolution
+   précédente — le lieu, l'objet, le témoin, la trace. Sans ce fil, il y a
+   ellipse.
+2. Tout changement de lieu ou de temps a **sa propre carte** : le trajet,
+   l'attente, la nuit qui tombe. On ne se téléporte pas entre deux cartes.
+3. Une carte = **un battement continu**, pas un résumé de plusieurs moments.
+4. Ce qui vient d'être obtenu reste acquis à la carte suivante : une porte
+   ouverte ne se referme pas sans qu'on le montre.
+
+**Conséquence sur la longueur.** À cette granularité, une histoire tient en
+**21-25 cartes**, pas en 11. Une histoire courte s'écrit en montrant *moins
+d'événements plus finement*, jamais en sautant des moments. Les longueurs
+canoniques ne changent pas ; c'est l'ampleur de l'intrigue qui s'ajuste.
+
+### 33.3 Ce que ces décisions invalident
+
+| Livrable | État |
+|---|---|
+| Scénario de référence « La Dette de Tourbe » v4.1 (11 cartes) | **à refaire** — passé partagé + ellipses |
+| Son intro (« Il y a un an… Tu lui devais trois pièces ») | **interdite** par §33.1 |
+| Longueur 11 comme cible du scénario de référence | remplacée par 25 |
+
+Restent valides : la couche mécanique (épreuves, gradient, EV, mix), la grammaire
+de carte à quatre beats, les résolutions d'échec, la graine de variation.
+
+---
+
+*Fin de bible v4.3*

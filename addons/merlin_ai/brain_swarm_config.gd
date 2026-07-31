@@ -1,38 +1,45 @@
-## BrainSwarmConfig — Hardware profiles for Qwen 3.5 multi-brain architecture
+## BrainSwarmConfig — Paliers materiels pour l'architecture multi-cerveaux Gemma 4
 ##
-## Defines brain configurations for different hardware tiers.
-## Supports heterogeneous models: each brain can use a different Qwen 3.5 size.
-## Used by merlin_ai.gd to auto-detect or manually select the best profile.
+## Trois paliers de bureau, choisis sur la RAM PHYSIQUE de la machine :
 ##
-## Tiers:
-##   NANO     — 0.8B all roles (ultra-low RAM)
-##   SINGLE   — 2B all roles (one model resident)
-##   SINGLE_PLUS — 4B Narrator + 2B GM via time-sharing (one model at a time, swap)
-##   DUAL     — 4B + 2B simultaneous (parallel generation)
-##   TRIPLE   — 4B + 2B + 0.8B Worker
-##   QUAD     — 4B + 2B + 0.8B Judge + 0.8B Worker
+##   LEGER  — RAM < 16 Go   — gemma4:e4b-it-qat   (6,1 Go)  — narrateur + GM partages
+##   MOYEN  — 16 a 32 Go    — gemma4:12b-it-qat   (7,2 Go)  — 12B narrateur, E4B GM
+##   ELEVE  — RAM >= 32 Go  — gemma4:26b-a4b-it-qat (16 Go) — 26B narrateur, E4B GM
+##
+## Pourquoi Gemma 4 (avril 2026, Apache 2.0) :
+##   - francais : 88,4 % sur MMMLU contre 85,9 % pour Qwen 3.5 ;
+##   - controle : JSON structure et function calling NATIFS a toutes les tailles
+##     (tau2-bench : 86,4 % pour le 31B contre 6,6 % pour Gemma 3 27B).
+##
+## Pourquoi le 26B et pas le 31B au palier haut : le 26B-a4b est un
+## Mixture-of-Experts — 26 milliards de parametres au total mais ~3,8 actifs par
+## token, donc PLUS RAPIDE que le 12B dense tout en ecrivant mieux. Le 31B dense
+## tombe sous 1 token/seconde sans GPU, ce que la bible §9.9 interdit (aucune
+## attente visible pour le joueur). Il reste choisissable a la main dans le menu
+## options pour qui a un gros GPU, jamais choisi automatiquement.
+##
+## Pourquoi l'E4B en game master a tous les paliers : ce cerveau ne produit que
+## du JSON. La taille n'y ajoute rien, et payer deux fois le gros modele
+## doublerait l'empreinte memoire sans ameliorer la prose.
+##
+## Paliers mobiles (MOBILE_*) inchanges : ils passent par la GDExtension
+## merlin_llm et relevent du chantier installeur, pas de celui-ci.
 extends RefCounted
 class_name BrainSwarmConfig
 
 # ── Profile Names ─────────────────────────────────────────────────────────────
-enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH, ULTRA, MOBILE_ULTRA, SINGLE_GEMMA, VM_GEMMA3, VM_GEMMA3_MAX }
+enum Profile { LEGER, MOYEN, ELEVE, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH }
 
-# ── Ollama Model Tags (Qwen 3.5 family) ──────────────────────────────────────
-const MODEL_QWEN35_4B := "qwen3.5:4b"
-const MODEL_QWEN35_2B := "qwen3.5:2b"
-const MODEL_QWEN35_08B := "qwen3.5:0.8b"
-
-# Legacy (backward compat, fallback)
-const MODEL_QWEN25_1_5B := "qwen2.5:1.5b"
-# Quality 2B alt for the "qualité" narration mode (plan Add-on 7 — two LLM modes).
-const MODEL_GEMMA2_2B := "gemma2:2b"
-
-# Gemma 3 — the models actually pulled on the personal Oracle ARM A1 VM by cloud-init
-# (infra/oracle/terraform variables.tf: ollama_models = ["gemma3:4b", "gemma3:12b"]).
-# Without these profiles the VM's models would never be used: the game only ever asked
-# for qwen3.5:* tags, so check_model_available() failed and it fell back.
-const MODEL_GEMMA3_4B := "gemma3:4b"
-const MODEL_GEMMA3_12B := "gemma3:12b"
+# ── Ollama Model Tags (famille Gemma 4) ──────────────────────────────────────
+# Les tags `-qat` sont les quantifications Quantization-Aware Training publiees
+# par Google : meme qualite qu'en Q8 pour la moitie du poids.
+const MODEL_GEMMA4_26B := "gemma4:26b-a4b-it-qat"  # MoE, ~3,8 B actifs — 16 Go
+const MODEL_GEMMA4_12B := "gemma4:12b-it-qat"      # dense — 7,2 Go
+const MODEL_GEMMA4_E4B := "gemma4:e4b-it-qat"      # dense compact — 6,1 Go
+const MODEL_GEMMA4_E2B := "gemma4:e2b-it-qat"      # secours machine tres limitee
+# Dense 31B : jamais choisi automatiquement (< 1 tok/s sans GPU), mais
+# selectionnable a la main dans le menu options.
+const MODEL_GEMMA4_31B := "gemma4:31b-it-qat"
 
 # ── Mobile model file paths (ARM64 via merlin_llm GDExtension recompiled, NOT Ollama) ─
 # These are .gguf filenames in addons/merlin_llm/models/ — NOT Ollama tags.
@@ -40,102 +47,70 @@ const MODEL_GEMMA3_12B := "gemma3:12b"
 const MODEL_FILE_LLAMA32_1B := "llama3.2-1b-q4_k_s.gguf"        # ~700 MB — entry mobile
 const MODEL_FILE_QWEN25_15B := "qwen2.5-1.5b-q4_k_m.gguf"       # ~1.4 GB — mid mobile
 const MODEL_FILE_LLAMA32_3B := "llama3.2-3b-q4_k_m.gguf"        # ~2.5 GB — high mobile
-# 0.6B ultra tier (plan Add-on 7) — desktop/VM via Ollama tag, mobile via on-device gguf.
-const MODEL_QWEN3_06B := "qwen3:0.6b"                           # Ollama tag (PC/VM test)
-const MODEL_FILE_QWEN3_06B := "qwen3-0.6b-q4_k_m.gguf"          # ~500 MB — ultra mobile (on-device)
 
-# ── RAM estimates per model_key (Q4 quantization, includes KV cache) ─────────
-# Keyed by `model_key` (NOT by `ollama_tag` / `model_file`).
+# ── Empreinte memoire par model_key (quantification QAT, cache KV compris) ───
+# Indexe par `model_key` (PAS par `ollama_tag` / `model_file`).
 const RAM_BY_MODEL := {
-	"qwen35_4b": 3200,
-	"qwen35_2b": 1800,
-	"qwen35_0.8b": 800,
-	"qwen25_1.5b": 1200,
+	"gemma4_26b": 16000,
+	"gemma4_12b": 7200,
+	"gemma4_e4b": 6100,
+	"gemma4_e2b": 3000,
+	"gemma4_31b": 19000,
 	"llama32_1b_mobile": 700,
 	"qwen25_1.5b_mobile": 1400,
 	"llama32_3b_mobile": 2500,
-	"qwen3_0.6b": 600,
-	"qwen3_0.6b_mobile": 600,
-	"gemma2_2b": 1800,
-	"gemma3_4b": 3400,
-	"gemma3_12b": 9000,
 }
 
 # ── Profile Definitions ──────────────────────────────────────────────────────
 # Each brain: {role, model_key, ollama_tag, n_ctx, ram_mb, thinking}
 const PROFILES := {
-	Profile.NANO: {
-		"name": "Nano (0.8B all roles)",
+	# ── LEGER — machine limitee (moins de 16 Go) ─────────────────────────────
+	# Un seul modele resident, partage narrateur/game master. L'E4B tient dans
+	# 6,1 Go et sait deja produire du JSON structure : c'est le plancher
+	# utilisable, pas un modele au rabais.
+	Profile.LEGER: {
+		"name": "Leger (Gemma 4 E4B, tous roles)",
 		"mode": "resident",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": false},
+			{"role": "narrator", "model_key": "gemma4_e4b", "ollama_tag": MODEL_GEMMA4_E4B, "n_ctx": 8192, "ram_mb": 6100, "thinking": false},
 		],
-		"total_ram_mb": 800,
+		"total_ram_mb": 6100,
 		"min_threads": 2,
-		"min_ram_mb": 4000,
+		"min_ram_mb": 8000,
 		"prefetch_depth": 0,
 	},
-	Profile.SINGLE: {
-		"name": "Single (2B all roles)",
+	# ── MOYEN — 16 a 32 Go ───────────────────────────────────────────────────
+	# Le 12B seul, partage lui aussi. Deliberement PAS de second cerveau ici :
+	# 12B (7,2 Go) + E4B (6,1 Go) resident cote a cote font 13,3 Go, ce qui ne
+	# laisse rien au systeme ni au jeu sur une machine de 16 Go. Ollama
+	# evincerait un modele a chaque bascule et rechargerait 7 Go entre deux
+	# cartes. Un seul modele, jamais evince.
+	Profile.MOYEN: {
+		"name": "Moyen (Gemma 4 12B, tous roles)",
 		"mode": "resident",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": false},
+			{"role": "narrator", "model_key": "gemma4_12b", "ollama_tag": MODEL_GEMMA4_12B, "n_ctx": 8192, "ram_mb": 7200, "thinking": false},
 		],
-		"total_ram_mb": 1800,
+		"total_ram_mb": 7200,
 		"min_threads": 4,
-		"min_ram_mb": 6000,
-		"prefetch_depth": 1,
-	},
-	Profile.SINGLE_PLUS: {
-		"name": "Single+ (4B Narrator / 2B GM, time-sharing)",
-		"mode": "time_sharing",
-		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
-		],
-		"total_ram_mb": 3200,  # Peak RAM = largest model only (time-sharing)
-		"min_threads": 4,
-		"min_ram_mb": 7000,
-		"prefetch_depth": 1,
-	},
-	Profile.DUAL: {
-		"name": "Dual (4B Narrator + 2B GM parallel)",
-		"mode": "parallel",
-		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
-		],
-		"total_ram_mb": 5000,  # Both loaded simultaneously
-		"min_threads": 6,
-		"min_ram_mb": 12000,
-		"prefetch_depth": 1,
-	},
-	Profile.TRIPLE: {
-		"name": "Triple (4B + 2B + 0.8B Worker)",
-		"mode": "parallel",
-		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
-			{"role": "worker", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": false},
-		],
-		"total_ram_mb": 5800,
-		"min_threads": 8,
-		"min_ram_mb": 14000,
-		"prefetch_depth": 2,
-	},
-	Profile.QUAD: {
-		"name": "Quad (4B + 2B + 0.8B Judge + 0.8B Worker)",
-		"mode": "parallel",
-		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
-			{"role": "judge", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": true},
-			{"role": "worker", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": false},
-		],
-		"total_ram_mb": 6600,
-		"min_threads": 8,
 		"min_ram_mb": 16000,
-		"prefetch_depth": 3,
+		"prefetch_depth": 1,
+	},
+	# ── ELEVE — 32 Go et plus ────────────────────────────────────────────────
+	# Le 26B-a4b ecrit, l'E4B arbitre. Les deux tiennent en memoire en meme
+	# temps (22,1 Go sur 32), donc generation en parallele : Merlin peut narrer
+	# la carte suivante pendant que le game master resout la courante.
+	Profile.ELEVE: {
+		"name": "Eleve (Gemma 4 26B narrateur + E4B game master)",
+		"mode": "parallel",
+		"brains": [
+			{"role": "narrator", "model_key": "gemma4_26b", "ollama_tag": MODEL_GEMMA4_26B, "n_ctx": 8192, "ram_mb": 16000, "thinking": false},
+			{"role": "gamemaster", "model_key": "gemma4_e4b", "ollama_tag": MODEL_GEMMA4_E4B, "n_ctx": 4096, "ram_mb": 6100, "thinking": true},
+		],
+		"total_ram_mb": 22100,  # les deux resident simultanement
+		"min_threads": 4,
+		"min_ram_mb": 32000,
+		"prefetch_depth": 2,
 	},
 	# ── MOBILE TIERS — single brain strict, ARM64 via merlin_llm GDExtension ──
 	# Backend = "merlin_llm_native" (NOT Ollama HTTP). Cross-compile required.
@@ -181,91 +156,7 @@ const PROFILES := {
 		"min_ram_mb": 7000,
 		"prefetch_depth": 0,
 	},
-	# ── 0.6B ULTRA tiers (plan Add-on 7) — opt-in, NOT auto-selected (detect funcs
-	# unchanged). Desktop/VM = Ollama qwen3:0.6b ; mobile = on-device gguf. n_ctx 1024,
-	# so reduce the narrator RAG budget (~256) when using these (see rag_manager.gd).
-	Profile.ULTRA: {
-		"name": "Ultra (0.6B narrateur, CPU/Ollama)",
-		"mode": "resident",
-		"brains": [
-			{"role": "narrator", "model_key": "qwen3_0.6b", "ollama_tag": MODEL_QWEN3_06B, "n_ctx": 1024, "ram_mb": 600, "thinking": false},
-		],
-		"total_ram_mb": 600,
-		"min_threads": 2,
-		"min_ram_mb": 2000,
-		"prefetch_depth": 0,
-	},
-	Profile.MOBILE_ULTRA: {
-		"name": "Mobile Ultra (Qwen3 0.6B)",
-		"mode": "resident",
-		"platform": "mobile",
-		"backend": "merlin_llm_native",
-		"brains": [
-			{"role": "narrator", "model_key": "qwen3_0.6b_mobile", "model_file": MODEL_FILE_QWEN3_06B, "ollama_tag": "", "n_ctx": 1024, "ram_mb": 600, "thinking": false},
-		],
-		"total_ram_mb": 600,
-		"min_threads": 4,
-		"min_ram_mb": 2000,
-		"prefetch_depth": 0,
-	},
-	# "Qualité" narration mode — single 2B Gemma narrator (richer prose than 0.6B).
-	# ── Personal Oracle ARM A1 VM (4 OCPU / 24 GB) — the models cloud-init actually pulls ──
-	Profile.VM_GEMMA3: {
-		"name": "VM Oracle (Gemma3 4B)",
-		"mode": "resident",
-		"brains": [
-			{"role": "narrator", "model_key": "gemma3_4b", "ollama_tag": MODEL_GEMMA3_4B, "n_ctx": 8192, "ram_mb": 3400, "thinking": false},
-		],
-		"total_ram_mb": 3400,
-		"min_threads": 2,
-		"min_ram_mb": 6000,
-		"prefetch_depth": 1,
-	},
-	Profile.VM_GEMMA3_MAX: {
-		"name": "VM Oracle (Gemma3 12B — qualité max)",
-		"mode": "resident",
-		"brains": [
-			{"role": "narrator", "model_key": "gemma3_12b", "ollama_tag": MODEL_GEMMA3_12B, "n_ctx": 8192, "ram_mb": 9000, "thinking": false},
-			{"role": "gamemaster", "model_key": "gemma3_4b", "ollama_tag": MODEL_GEMMA3_4B, "n_ctx": 4096, "ram_mb": 3400, "thinking": false},
-		],
-		"total_ram_mb": 12400,
-		"min_threads": 4,
-		"min_ram_mb": 16000,
-		"prefetch_depth": 2,
-	},
-	Profile.SINGLE_GEMMA: {
-		"name": "Qualité (Gemma 2B)",
-		"mode": "resident",
-		"brains": [
-			{"role": "narrator", "model_key": "gemma2_2b", "ollama_tag": MODEL_GEMMA2_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": false},
-		],
-		"total_ram_mb": 1800,
-		"min_threads": 4,
-		"min_ram_mb": 5000,
-		"prefetch_depth": 0,
-	},
 }
-
-
-## Two-mode narration selector (plan Add-on 7): map a performance mode to a profile.
-##   "fluide"        -> ULTRA        (Qwen3 0.6B — fast, mobile/low-power, stays fluid)
-##   "qualite"       -> SINGLE       (Qwen 3.5 2B — richer, needs a capable PC)
-##   "qualite_gemma" -> SINGLE_GEMMA (Gemma 2B alternative)
-##   "auto"/""/other -> detect_profile() by hardware (unchanged default behavior)
-static func profile_for_mode(mode: String, available_ram_mb: int, cpu_threads: int) -> int:
-	match mode:
-		"fluide":
-			return Profile.ULTRA
-		"qualite":
-			return Profile.SINGLE
-		"qualite_gemma":
-			return Profile.SINGLE_GEMMA
-		"vm", "gemma3":
-			return Profile.VM_GEMMA3
-		"vm_max", "gemma3_max":
-			return Profile.VM_GEMMA3_MAX
-		_:
-			return detect_profile(available_ram_mb, cpu_threads)
 
 
 ## Get the mobile model file path for a brain role in a profile.
@@ -304,19 +195,32 @@ static func get_backend_hint(profile_id: int) -> String:
 	return str(profile.get("backend", "ollama_http"))
 
 
-## Auto-detect the best profile based on available hardware.
-## Checks from largest to smallest, picks the biggest that fits.
+## Choisit le palier d'apres le materiel : du plus grand au plus petit qui rentre.
+##
+## `available_ram_mb` est la RAM PHYSIQUE de la machine (cf.
+## merlin_ai.gd::_lire_ram_mb) — la regle du jeu porte sur la RAM installee,
+## pas sur la RAM libre a l'instant du lancement.
 static func detect_profile(available_ram_mb: int, cpu_threads: int) -> int:
-	for profile_id in [Profile.QUAD, Profile.TRIPLE, Profile.DUAL, Profile.SINGLE_PLUS, Profile.SINGLE, Profile.NANO]:
+	for profile_id in [Profile.ELEVE, Profile.MOYEN, Profile.LEGER]:
 		var profile: Dictionary = PROFILES[profile_id]
 		if available_ram_mb >= int(profile.min_ram_mb) and cpu_threads >= int(profile.min_threads):
 			return profile_id
-	return Profile.NANO
+	return Profile.LEGER
+
+
+## Palier nomme -> identifiant, pour le selecteur du menu options.
+## Retourne -1 si la chaine ne designe aucun palier (« auto », vide, inconnu).
+static func profile_from_name(nom: String) -> int:
+	match nom.strip_edges().to_lower():
+		"leger", "léger": return Profile.LEGER
+		"moyen": return Profile.MOYEN
+		"eleve", "élevé": return Profile.ELEVE
+		_: return -1
 
 
 ## Get profile definition by ID.
 static func get_profile(profile_id: int) -> Dictionary:
-	return PROFILES.get(profile_id, PROFILES[Profile.NANO])
+	return PROFILES.get(profile_id, PROFILES[Profile.LEGER])
 
 
 ## Get the prefetch depth for a profile.

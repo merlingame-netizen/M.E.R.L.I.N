@@ -14,8 +14,8 @@ extends Node
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const INTRO_MUSIC_PATH := "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-loop.wav"
-const INTRO_MUSIC_INTRO_PATH := "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-intro.wav"
+const INTRO_MUSIC_PATH := "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-loop.ogg"
+const INTRO_MUSIC_INTRO_PATH := "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-intro.ogg"
 const DEFAULT_VOLUME_DB := -6.0
 const FADE_IN_DURATION := 1.5
 const CROSSFADE_DURATION := 2.0
@@ -23,8 +23,8 @@ const CROSSFADE_DURATION := 2.0
 ## Biome → music mapping. Each entry has "intro" (optional) and "loop" (required).
 const BIOME_MUSIC: Dictionary = {
 	"foret_broceliande": {
-		"intro": "res://music/loop/CHAS DONZ PART1 (Cover).mp3-intro.wav",
-		"loop": "res://music/loop/CHAS DONZ PART1 (Cover).mp3-loop.wav",
+		"intro": "res://music/loop/CHAS DONZ PART1 (Cover).mp3-intro.ogg",
+		"loop": "res://music/loop/CHAS DONZ PART1 (Cover).mp3-loop.ogg",
 	},
 }
 

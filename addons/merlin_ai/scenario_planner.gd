@@ -228,6 +228,13 @@ var _fastroute_pool: Array = []
 var _bi_brain: BiBrainPipeline = null
 var _gbnf_skeleton: String = ""
 
+# v7.7.27 — Graine de variation : impose ce qui doit differer entre deux
+# scenarios (lieu, entite, pression, sens dominant, mecanisme du twist). Tiree
+# une fois par scenario et partagee par tous les appels creatifs, pour que
+# titres / intro / squelette parlent bien du MEME scenario.
+var _variation: ScenarioVariation = null
+var _variation_seed: Dictionary = {}
+
 
 func _init(merlin_ai_ref: Node, rag_ref: Node = null, fastroute: Array = []) -> void:
 	_merlin_ai = merlin_ai_ref
@@ -254,13 +261,20 @@ func generate_titles(biome_id: String) -> Array:
 		return _fallback_titles(biome_id)
 	# v7.7.23 — RAG few-shot : retrieve 5 reference titles matching the biome so
 	# the LLM produces titles in the same druidic idiom as the 100 reference set.
+	# v7.7.27 — les references calibrent la VOIX, elles ne fournissent pas le
+	# contenu : la graine de variation impose ce qui doit differer d'un scenario
+	# a l'autre. Sans elle, le few-shot fait converger toutes les generations
+	# (mesure sur le corpus : 18 libelles d'options distincts pour 8982 options).
 	var few_shot_titles: String = await _rag_titles_few_shot(biome_id)
+	var variation_block: String = _variation_prompt_block()
 	var system_prompt: String = (
 		"Tu produis EXACTEMENT 3 titres mystérieux pour une aventure dans le biome %s.\n" +
 		"Format STRICT : 1 ligne par titre, 3-7 mots chacun, francais, ton druidique.\n" +
 		"Pas de numérotation, pas de synopsis, pas de tirets. Une ligne = un titre.\n" +
-		"%s"
-	) % [biome_id, few_shot_titles]
+		"Les exemples ci-dessous ne servent qu'a caler le REGISTRE : n'en reprends " +
+		"ni les mots ni les tournures.\n" +
+		"%s\n%s"
+	) % [biome_id, few_shot_titles, variation_block]
 	var user_input: String = "Génère 3 titres pour ce biome."
 	var params: Dictionary = {
 		"max_tokens": 80,
@@ -273,6 +287,34 @@ func generate_titles(biome_id: String) -> Array:
 		return _fallback_titles(biome_id)
 	var raw: String = str(result.get("text", result.get("output", ""))).strip_edges()
 	return _parse_titles_with_oghams(raw, biome_id)
+
+
+## Graine de variation du scenario en cours. Tiree paresseusement au premier
+## appel creatif, puis reutilisee : titres, intro et squelette doivent decrire
+## le meme scenario, donc partager la meme graine.
+func _ensure_variation_seed() -> Dictionary:
+	if _variation == null:
+		_variation = ScenarioVariation.new()
+	if _variation_seed.is_empty():
+		_variation_seed = _variation.draw_seed()
+		if not _variation_seed.is_empty():
+			push_warning("[ScenarioPlanner] graine de variation : %s" % str(_variation_seed))
+	return _variation_seed
+
+
+func _variation_prompt_block() -> String:
+	var seed_dict: Dictionary = _ensure_variation_seed()
+	if _variation == null or seed_dict.is_empty():
+		return ""
+	return _variation.format_seed_for_prompt(seed_dict)
+
+
+## Valide la graine une fois le scenario retenu : elle entre alors en cooldown
+## et ne pourra pas ressortir avant COOLDOWN_SCENARIOS generations.
+func commit_variation_seed() -> void:
+	if _variation != null and not _variation_seed.is_empty():
+		_variation.commit_seed(_variation_seed)
+		_variation_seed = {}
 
 
 ## v7.7.23 — Retrieve 5 reference titles via ScenariosRAG autoload (kNN cosine).
@@ -430,7 +472,19 @@ func _fallback_titles(biome_id: String) -> Array:
 		"collines_dolmens": ["Sous le Dolmen", "L'Écho des Ancêtres", "La Colline qui Respire"],
 		"iles_mystiques": ["L'Île de Niamh", "La Brume Éternelle", "Le Chant des Fées"],
 	}
-	var titles: Array = bank.get(biome_id, bank["foret_broceliande"])
+	# v7.7.27 — les titres etaient rendus dans un ordre fixe, et l'autoplay (comme
+	# un joueur pressé) prend le premier : six runs d'affilee proposaient donc six
+	# fois « La Voix de Broceliande ». Mesure sur serie reelle : 1 titre distinct
+	# sur 6 runs. On melange, ce qui n'enleve rien mais fait au moins tourner les
+	# trois titres du banc.
+	var titles: Array = (bank.get(biome_id, bank["foret_broceliande"]) as Array).duplicate()
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	for i in range(titles.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var swap = titles[i]
+		titles[i] = titles[j]
+		titles[j] = swap
 	var ogham_pool: Array = OGHAM_GLYPHS.duplicate()
 	ogham_pool.shuffle()
 	var out: Array = []
@@ -500,8 +554,10 @@ func _skeleton_system_prompt(biome_id: String, chosen_title: String, references_
 		"ÉQUILIBRAGE (v7.7.22) — biome '%s' dominant Pole = %s :\n" +
 		"  - Privilégie faction_tilt aligné avec le Pole dominant (~50%% des beats).\n" +
 		"  - Varie les emotions : pas 2 emotions identiques consécutives.\n" +
-		"  - Le dernier beat doit être climactique (faction_tilt fort, emotion=sagesse/peur/emerveillement)."
-	) % [chosen_title, biome_id, references_block, biome_id, dominant_pole]
+		"  - Le dernier beat doit être climactique (faction_tilt fort, emotion=sagesse/peur/emerveillement).\n" +
+		"%s"
+	) % [chosen_title, biome_id, references_block, biome_id, dominant_pole,
+		_variation_prompt_block()]
 
 
 ## v7.7 Phase 2.7c — Parse skeleton + clamp beats to [5..10] :
@@ -655,6 +711,20 @@ static func _balance_skeleton(skeleton: Dictionary, biome_id: String) -> Diction
 			bi["rarity"] = "COMMUNE"
 			beats[i] = bi
 
+	# 3bis. Enforce the NARRATIVE share bounds (min_share / max_share).
+	# v7.7.26 : ces bornes etaient declarees dans CARD_TYPE_CAPS mais JAMAIS
+	# appliquees — l'etape 2 ci-dessus les renvoyait a « l'etape 4 », qui traite
+	# en realite le placement des LEGENDAIRE. Consequence mesuree avant fix :
+	# 0/12 squelettes conformes (cf. tools/check_pipeline_output.py).
+	# Note : pour total < 11, la borne min_share est mathematiquement
+	# inatteignable (1 SHOP + 1 EVENT + 1 climax laissent trop peu de place) —
+	# on fait au mieux sans jamais casser les min_count ni le climax.
+	var narr_rules: Dictionary = CARD_TYPE_CAPS.get("NARRATIVE", {})
+	beats = _enforce_narrative_share(
+		beats, total,
+		float(narr_rules.get("min_share", 0.0)),
+		float(narr_rules.get("max_share", 1.0)))
+
 	# 4. Enforce LEGENDARY placement (only in last 30% of skeleton).
 	var legendary_threshold: int = int(ceil(float(total) * LEGENDARY_START_SHARE))
 	for i in range(total):
@@ -705,6 +775,71 @@ static func _balance_skeleton(skeleton: Dictionary, biome_id: String) -> Diction
 	var out: Dictionary = skeleton.duplicate(true)
 	out["beats"] = beats
 	return out
+
+
+## Ramene la part de beats NARRATIVE dans [min_share, max_share].
+## Trop de NARRATIVE -> promotion vers les types ayant encore de la marge sous
+## leur max_count. Pas assez -> retrogradation des types au-dessus de leur
+## min_count. Le premier beat (intro) et le dernier (climax) ne sont jamais
+## touches, et l'adjacence des types uniques est preservee.
+static func _enforce_narrative_share(beats: Array, total: int,
+		min_share: float, max_share: float) -> Array:
+	if total <= 2:
+		return beats
+	var counts: Dictionary = _count_card_types(beats)
+	var narr: int = int(counts.get("NARRATIVE", 0))
+	var max_allowed: int = int(floor(float(total) * max_share))
+	var min_allowed: int = int(ceil(float(total) * min_share))
+
+	if narr > max_allowed:
+		var excess: int = narr - max_allowed
+		for ct in ["EVENT", "SHOP", "PROMISE", "MERLIN_DIRECT"]:
+			if excess <= 0:
+				break
+			var rules: Dictionary = CARD_TYPE_CAPS.get(ct, {})
+			var headroom: int = int(rules.get("max_count", 0)) - int(counts.get(ct, 0))
+			var j: int = 1
+			while headroom > 0 and excess > 0 and j < total - 1:
+				var bj: Dictionary = beats[j]
+				if str(bj.get("card_type", "")) == "NARRATIVE" and not _breaks_adjacency(beats, j, ct):
+					bj["card_type"] = ct
+					if ct == "EVENT" or ct == "SHOP":
+						bj["rarity"] = "RARE"
+					beats[j] = bj
+					counts = _count_card_types(beats)
+					headroom -= 1
+					excess -= 1
+				j += 1
+	elif narr < min_allowed:
+		var need: int = min_allowed - narr
+		for k in range(1, total - 1):
+			if need <= 0:
+				break
+			var bk: Dictionary = beats[k]
+			var ct2: String = str(bk.get("card_type", ""))
+			if ct2 == "NARRATIVE":
+				continue
+			var rules2: Dictionary = CARD_TYPE_CAPS.get(ct2, {})
+			# Ne jamais descendre sous le min_count d'un type requis.
+			if int(counts.get(ct2, 0)) <= int(rules2.get("min_count", 0)):
+				continue
+			bk["card_type"] = "NARRATIVE"
+			bk["rarity"] = "COMMUNE"
+			beats[k] = bk
+			counts = _count_card_types(beats)
+			need -= 1
+	return beats
+
+
+## True si affecter `ct` au beat d'index `j` creerait deux types uniques adjacents.
+static func _breaks_adjacency(beats: Array, j: int, ct: String) -> bool:
+	if not NO_REPEAT_CARDTYPES.has(ct):
+		return false
+	for neighbour in [j - 1, j + 1]:
+		if neighbour >= 0 and neighbour < beats.size():
+			if str((beats[neighbour] as Dictionary).get("card_type", "")) == ct:
+				return true
+	return false
 
 
 ## Returns a Dict<card_type_name: String, count: int> for the beats array.

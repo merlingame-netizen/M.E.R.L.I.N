@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Run marais_korrigans — tableau de contrôle</title>
+<style>
+:root{
+  --ground:#0A0A12; --ground-2:#11111c; --ground-3:#171724;
+  --ink:#d9dce6; --ink-dim:#7b8194; --ink-faint:#565c6e;
+  --terminal:#00FF88; --amber:#FFB347; --cyan:#00D4FF;
+  --rune:#FF3366; --chaos:#9B59FF; --stone:#2a2a3a;
+  --mono:ui-monospace,"JetBrains Mono","Fira Code",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --r:3px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--mono);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.tab{font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px;
+  display:flex;flex-direction:column;gap:34px}
+
+/* En-tête */
+.masthead{border-bottom:1px solid var(--stone);padding-bottom:22px;
+  display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--terminal)}
+h1{margin:0;font-size:30px;line-height:1.15;font-weight:600;text-wrap:balance;
+  letter-spacing:-.01em}
+.sub{color:var(--ink-dim);max-width:68ch;font-size:13px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pill{border:1px solid var(--stone);border-radius:99px;padding:3px 11px;
+  font-size:11px;color:var(--ink-dim)}
+.pill strong{color:var(--ink);font-weight:600}
+
+/* Vitals */
+.vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.tile{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  padding:14px 16px;display:flex;flex-direction:column;gap:5px}
+.tile .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.tile .v{font-size:25px;font-weight:600;line-height:1}
+.tile .n{font-size:11px;color:var(--ink-dim)}
+.tile.bad .v{color:var(--rune)} .tile.good .v{color:var(--terminal)}
+.tile.warn .v{color:var(--amber)}
+
+/* Panneaux */
+.panel{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.panel h2{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:600}
+.duo{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+@media(max-width:860px){.duo{grid-template-columns:1fr}}
+
+/* Graphiques */
+.chart{width:100%;height:auto;overflow:visible}
+.grid{stroke:var(--stone);stroke-width:1}
+.axis{fill:var(--ink-faint);font-size:10px;font-family:var(--mono);text-anchor:end}
+.axis.mid{text-anchor:middle}
+.life-line{fill:none;stroke:var(--terminal);stroke-width:2;
+  stroke-linejoin:round;stroke-linecap:round}
+.dot{fill:var(--ground);stroke:var(--terminal);stroke-width:1.5}
+.dot-end{fill:var(--terminal);stroke:var(--ground);stroke-width:2}
+
+/* Factions */
+.fac-row{display:grid;grid-template-columns:74px 1fr 92px 44px;gap:10px;align-items:center;
+  font-size:12px}
+.fac-name{color:var(--ink-dim)}
+.fac-track{position:relative;height:8px;background:var(--ground-3);border-radius:99px;
+  overflow:hidden;display:block}
+.fac-base{position:absolute;inset-block:0;left:0;background:var(--stone);border-radius:99px}
+.fac-fill{position:absolute;inset-block:0;left:0;border-radius:99px;opacity:.9}
+.fac-mark{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--ink-faint)}
+.fac-val{color:var(--ink-dim)} .fac-val strong{color:var(--ink)}
+.fac-delta{text-align:right}
+.pos{color:var(--terminal)} .neg{color:var(--rune)} .flat{color:var(--ink-faint)}
+
+/* Cartes */
+.timeline{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--ground-2);border:1px solid var(--stone);border-radius:var(--r);
+  overflow:hidden}
+.card.is-degraded{border-left:2px solid var(--amber)}
+.card-head{display:flex;align-items:center;gap:12px;padding:11px 16px;
+  background:var(--ground-3);border-bottom:1px solid var(--stone);flex-wrap:wrap}
+.card-n{font-size:12px;color:var(--ink-faint)}
+.act-badge{font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:2px 9px}
+.card-id{font-size:11px;color:var(--ink-faint)}
+.card-hud{margin-left:auto;font-size:11px;color:var(--ink-dim)}
+.split{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+.screen{padding:18px 20px;border-right:1px solid var(--stone)}
+@media(max-width:860px){.screen{border-right:0;border-bottom:1px solid var(--stone)}}
+.engine-col{padding:18px 20px;background:#0d0d16}
+.col-label{margin:0 0 12px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:600}
+.col-label.engine{color:var(--cyan)}
+.narrative{font-family:var(--serif);font-size:17px;line-height:1.6;color:#efe6d2;
+  margin:0 0 12px;max-width:52ch}
+.merlin{font-family:var(--serif);font-style:italic;color:var(--amber);margin:0 0 12px}
+.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.opt{display:grid;grid-template-columns:20px 1fr;gap:9px;align-items:baseline;
+  padding:7px 9px;border:1px solid var(--stone);border-radius:var(--r);
+  background:var(--ground)}
+.opt.picked{border-color:var(--terminal);background:rgba(0,255,136,.05)}
+.opt-n{color:var(--ink-faint);font-size:11px}
+.opt-label{font-family:var(--serif);font-size:15px;color:#efe6d2}
+.opt-eff{grid-column:2;display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.chip{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--stone);
+  color:var(--ink-dim);white-space:nowrap}
+.chip.pos{color:var(--terminal);border-color:rgba(0,255,136,.3)}
+.chip.neg{color:var(--rune);border-color:rgba(255,51,102,.3)}
+.chip.neutre{color:var(--ink-faint)}
+.kv{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:12px}
+.kv dt{color:var(--ink-faint)}
+.kv dd{margin:0;display:flex;flex-wrap:wrap;gap:5px;align-items:baseline}
+.delta{margin-left:6px}
+.warn{margin:0 0 12px;font-size:12px;color:var(--amber);
+  border-left:2px solid var(--amber);padding-left:10px}
+.resolution{margin-top:14px;padding:12px 14px;border-left:2px solid var(--amber);
+  background:rgba(255,179,71,.05);border-radius:0 var(--r) var(--r) 0}
+.resolution.missing{border-left-color:var(--rune);background:rgba(255,51,102,.05)}
+.res-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber)}
+.resolution.missing .res-tag{color:var(--rune)}
+.res-text{margin:6px 0 0;font-size:15px;line-height:1.55}
+.missing-text{font-family:var(--mono);font-size:12px;color:var(--ink-dim);font-style:italic}
+.hidden-note{margin:14px 0 0;font-size:11px;color:var(--ink-faint);font-style:italic}
+
+/* Gradient d'option + épreuve télégraphiée (v4.1) */
+.opt{grid-template-columns:20px 1fr auto}
+.grad{font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 8px;border-radius:99px;border:1px solid var(--stone);color:var(--ink-dim);
+  white-space:nowrap;align-self:center}
+.grad.prudente{color:#7fd6a4;border-color:rgba(127,214,164,.35)}
+.grad.equilibree{color:var(--cyan);border-color:rgba(0,212,255,.32)}
+.grad.audacieuse{color:var(--amber);border-color:rgba(255,179,71,.4)}
+.check{grid-column:2;justify-self:start;font-size:10px;margin-top:5px;
+  padding:2px 8px;border-radius:var(--r);border:1px solid var(--stone);
+  color:var(--ink-dim);white-space:nowrap}
+.check.ctx{color:var(--cyan);border-color:rgba(0,212,255,.3)}
+.check.red{color:var(--rune);border-color:rgba(255,51,102,.45);
+  background:rgba(255,51,102,.07);font-weight:600}
+.resolution.fail{border-left-color:var(--rune);background:rgba(255,51,102,.06)}
+.resolution.fail .res-tag{color:var(--rune)}
+.resolution.variant{border-left-color:var(--chaos);background:rgba(155,89,255,.07)}
+.resolution.variant .res-tag{color:var(--chaos)}
+.kv .pos{color:var(--terminal)} .kv .neg{color:var(--rune)}
+
+/* Graine de variation + essence + intro */
+.essence{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--amber);
+  margin:2px 0 0;max-width:60ch}
+.graine{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:8px}
+.graine-lbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chaos)}
+.seed{font-size:11px;padding:3px 10px;border-radius:99px;
+  border:1px solid rgba(155,89,255,.32);color:var(--ink);white-space:nowrap}
+.seed-k{color:var(--ink-faint);margin-right:6px;font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase}
+.intro-parchemin{font-family:var(--serif);font-size:15px;line-height:1.65;
+  color:#efe6d2;max-width:66ch;margin:12px 0 0;padding-left:14px;
+  border-left:2px solid var(--stone)}
+
+/* Alertes */
+.flags{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.flag{background:var(--ground-3);border-radius:var(--r);padding:13px 16px;
+  border-left:2px solid var(--ink-faint)}
+.flag.critique{border-left-color:var(--rune)}
+.flag.alerte{border-left-color:var(--amber)}
+.flag.info{border-left-color:var(--cyan)}
+.flag-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+.flag.critique .flag-tag{color:var(--rune)}
+.flag.alerte .flag-tag{color:var(--amber)}
+.flag.info .flag-tag{color:var(--cyan)}
+.flag h4{margin:3px 0 5px;font-size:14px;font-weight:600}
+.flag p{margin:0;font-size:12.5px;color:var(--ink-dim);max-width:80ch}
+code{background:var(--ground);padding:1px 5px;border-radius:2px;font-size:11.5px;
+  color:var(--cyan)}
+.tablewrap{overflow-x:auto}
+table.series{width:100%;border-collapse:collapse;font-size:12px}
+table.series th{text-align:left;font-weight:600;color:var(--ink-faint);font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;padding:6px 10px 6px 0;
+  border-bottom:1px solid var(--stone)}
+table.series td{padding:8px 10px 8px 0;border-bottom:1px solid #1c1c28;vertical-align:middle}
+.narr-cell{font-family:var(--serif);font-size:14px;color:#efe6d2}
+.seq{display:inline-flex;gap:4px}
+.seq-chip{font-size:10px;padding:2px 6px;border-radius:2px;border:1px solid var(--sc);
+  color:var(--sc);font-variant-numeric:tabular-nums}
+.vchecks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.vcheck{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:12.5px;
+  padding:7px 10px;border-radius:var(--r);background:var(--ground-3)}
+.vtag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;min-width:64px}
+.vcheck.ok .vtag{color:var(--terminal)} .vcheck.ko .vtag{color:var(--rune)}
+.vdetail{color:var(--ink-faint);font-size:11.5px}
+.foot{border-top:1px solid var(--stone);padding-top:18px;font-size:11px;
+  color:var(--ink-faint);display:flex;flex-direction:column;gap:5px}
+</style></head><body>
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">M.E.R.L.I.N. · contrôle de run</span>
+    <h1>Deux Assiettes</h1>
+    <p class="sub">Capturé pendant une partie réelle du moteur, pas reconstitué.
+      Chaque carte est présentée en deux colonnes : ce que le joueur a sous les
+      yeux, et ce que le moteur applique sans le dire. C'est cet écart qui se contrôle.</p>
+    <p class="essence">Tu demandes un toit pour une nuit, et l&#x27;on met deux assiettes.</p>
+    <div class="meta">
+      <span class="pill">biome <strong>marais_korrigans</strong></span>
+      <span class="pill">archétype <strong>mist_wanderer</strong></span>
+      <span class="pill">longueur <strong>25 cartes</strong></span>
+      <span class="pill">issue <strong>live</strong></span>
+      <span class="pill">actes <strong>Standard · Standard · Standard · Événement · Standard · Standard · Standard · Marchand · Standard · Climax · Événement · Standard · Standard · Standard · Standard · Standard · Standard · Événement · Standard · Standard · Marchand · Standard · Standard · Standard · Climax</strong></span>
+    </div>
+    <div class="graine"><span class="graine-lbl">graine de variation</span><span class="seed"><span class="seed-k">entite centrale</span>un vivant qu&#x27;on croit mort</span><span class="seed"><span class="seed-k">lieu</span>tourbiere</span><span class="seed"><span class="seed-k">mecanisme du twist</span>identite (qui est vraiment la)</span><span class="seed"><span class="seed-k">pression</span>une dette a honorer</span><span class="seed"><span class="seed-k">registre sensoriel</span>odeur</span></div>
+    <p class="intro-parchemin">Le jour tombe et la tourbière du Yeun ne rend pas le pied ferme. Tu marches depuis l&#x27;aube sur un chemin de planches que personne n&#x27;a l&#x27;air d&#x27;emprunter, et pourtant on l&#x27;entretient. L&#x27;odeur te prévient avant le paysage : ici la tourbe ne sent pas la vase, elle sent le pain brûlé et le fer. Il te faut un toit avant la nuit, et l&#x27;hospitalité ne se refuse pas à un voyageur, même dans le Yeun. Une fenêtre s&#x27;allume au bout des planches. Tu ne sais rien de cette maison ni de qui l&#x27;habite. Tu vas l&#x27;apprendre.</p>
+  </header>
+
+  <section class="vitals">
+    <div class="tile"><span class="k">Cartes jouées</span>
+      <span class="v tab">25</span><span class="n">sur 25 au scénario</span></div>
+    <div class="tile bad"><span class="k">Vie finale</span>
+      <span class="v tab">30</span><span class="n">départ 100 · creux 30</span></div>
+    <div class="tile bad"><span class="k">Anam gagné</span>
+      <span class="v tab">0</span><span class="n">premier déblocage du Grimoire : 10</span></div>
+    <div class="tile good"><span class="k">Actes dégradés</span>
+      <span class="v tab">0</span><span class="n">sur 25 cartes</span></div>
+    <div class="tile warn"><span class="k">Effets cachés</span>
+      <span class="v tab">96</span><span class="n">appliqués sans être montrés</span></div>
+  </section>
+
+  <div class="duo">
+    <section class="panel">
+      <h2>Vie du voyageur</h2>
+      <svg viewBox="0 0 640 120" class="chart" role="img" aria-label="Vie du voyageur carte par carte"><defs><linearGradient id="lifeFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00FF88" stop-opacity=".28"/><stop offset="1" stop-color="#00FF88" stop-opacity="0"/></linearGradient></defs><line x1="34" y1="98.0" x2="628" y2="98.0" class="grid"/><text x="26" y="102.0" class="axis">0</text><line x1="34" y1="55.0" x2="628" y2="55.0" class="grid"/><text x="26" y="59.0" class="axis">50</text><line x1="34" y1="12.0" x2="628" y2="12.0" class="grid"/><text x="26" y="16.0" class="axis">100</text><path d="M34.0,12.0 L57.8,15.4 L81.5,15.4 L105.3,15.4 L129.0,12.9 L152.8,17.2 L176.6,17.2 L200.3,21.5 L224.1,24.0 L247.8,27.5 L271.6,31.8 L295.4,31.8 L319.1,31.8 L342.9,35.2 L366.6,38.7 L390.4,46.4 L414.2,46.4 L437.9,46.4 L461.7,46.4 L485.4,46.4 L509.2,54.1 L533.0,57.6 L556.7,57.6 L580.5,61.0 L604.2,67.9 L628.0,72.2 L628.0,98.0 L34.0,98.0 Z" fill="url(#lifeFill)"/><path d="M34.0,12.0 L57.8,15.4 L81.5,15.4 L105.3,15.4 L129.0,12.9 L152.8,17.2 L176.6,17.2 L200.3,21.5 L224.1,24.0 L247.8,27.5 L271.6,31.8 L295.4,31.8 L319.1,31.8 L342.9,35.2 L366.6,38.7 L390.4,46.4 L414.2,46.4 L437.9,46.4 L461.7,46.4 L485.4,46.4 L509.2,54.1 L533.0,57.6 L556.7,57.6 L580.5,61.0 L604.2,67.9 L628.0,72.2" class="life-line"/><circle cx="34.0" cy="12.0" r="2.5" class="dot"/><circle cx="57.8" cy="15.4" r="2.5" class="dot"/><circle cx="81.5" cy="15.4" r="2.5" class="dot"/><circle cx="105.3" cy="15.4" r="2.5" class="dot"/><circle cx="129.0" cy="12.9" r="2.5" class="dot"/><circle cx="152.8" cy="17.2" r="2.5" class="dot"/><circle cx="176.6" cy="17.2" r="2.5" class="dot"/><circle cx="200.3" cy="21.5" r="2.5" class="dot"/><circle cx="224.1" cy="24.0" r="2.5" class="dot"/><circle cx="247.8" cy="27.5" r="2.5" class="dot"/><circle cx="271.6" cy="31.8" r="2.5" class="dot"/><circle cx="295.4" cy="31.8" r="2.5" class="dot"/><circle cx="319.1" cy="31.8" r="2.5" class="dot"/><circle cx="342.9" cy="35.2" r="2.5" class="dot"/><circle cx="366.6" cy="38.7" r="2.5" class="dot"/><circle cx="390.4" cy="46.4" r="2.5" class="dot"/><circle cx="414.2" cy="46.4" r="2.5" class="dot"/><circle cx="437.9" cy="46.4" r="2.5" class="dot"/><circle cx="461.7" cy="46.4" r="2.5" class="dot"/><circle cx="485.4" cy="46.4" r="2.5" class="dot"/><circle cx="509.2" cy="54.1" r="2.5" class="dot"/><circle cx="533.0" cy="57.6" r="2.5" class="dot"/><circle cx="556.7" cy="57.6" r="2.5" class="dot"/><circle cx="580.5" cy="61.0" r="2.5" class="dot"/><circle cx="604.2" cy="67.9" r="2.5" class="dot"/><circle cx="628.0" cy="72.2" r="4" class="dot-end"/><text x="34.0" y="114" class="axis mid">départ</text><text x="57.8" y="114" class="axis mid">1</text><text x="81.5" y="114" class="axis mid">2</text><text x="105.3" y="114" class="axis mid">3</text><text x="129.0" y="114" class="axis mid">4</text><text x="152.8" y="114" class="axis mid">5</text><text x="176.6" y="114" class="axis mid">6</text><text x="200.3" y="114" class="axis mid">7</text><text x="224.1" y="114" class="axis mid">8</text><text x="247.8" y="114" class="axis mid">9</text><text x="271.6" y="114" class="axis mid">10</text><text x="295.4" y="114" class="axis mid">11</text><text x="319.1" y="114" class="axis mid">12</text><text x="342.9" y="114" class="axis mid">13</text><text x="366.6" y="114" class="axis mid">14</text><text x="390.4" y="114" class="axis mid">15</text><text x="414.2" y="114" class="axis mid">16</text><text x="437.9" y="114" class="axis mid">17</text><text x="461.7" y="114" class="axis mid">18</text><text x="485.4" y="114" class="axis mid">19</text><text x="509.2" y="114" class="axis mid">20</text><text x="533.0" y="114" class="axis mid">21</text><text x="556.7" y="114" class="axis mid">22</text><text x="580.5" y="114" class="axis mid">23</text><text x="604.2" y="114" class="axis mid">24</text><text x="628.0" y="114" class="axis mid">25</text></svg>
+      <p class="sub" style="font-size:12px">La barre de vie n'a jamais approché
+        le seuil d'alerte. Rien n'a été mis en jeu sur ce run.</p>
+    </section>
+    <section class="panel">
+      <h2>Réputations — invisibles en jeu</h2>
+      <div class="fac-row"><span class="fac-name">druides</span><span class="fac-track"><span class="fac-base" style="width:100%"></span><span class="fac-fill" style="width:100%;background:#FFB347"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">100 → <strong>100</strong></span><span class="fac-delta tab flat">+0</span></div><div class="fac-row"><span class="fac-name">anciens</span><span class="fac-track"><span class="fac-base" style="width:96%"></span><span class="fac-fill" style="width:100%;background:#C98A3C"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">96 → <strong>100</strong></span><span class="fac-delta tab pos">+4</span></div><div class="fac-row"><span class="fac-name">korrigans</span><span class="fac-track"><span class="fac-base" style="width:51%"></span><span class="fac-fill" style="width:70%;background:#9B59FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">51 → <strong>70</strong></span><span class="fac-delta tab pos">+19</span></div><div class="fac-row"><span class="fac-name">niamh</span><span class="fac-track"><span class="fac-base" style="width:91%"></span><span class="fac-fill" style="width:99%;background:#00D4FF"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">91 → <strong>99</strong></span><span class="fac-delta tab pos">+8</span></div><div class="fac-row"><span class="fac-name">ankou</span><span class="fac-track"><span class="fac-base" style="width:92%"></span><span class="fac-fill" style="width:92%;background:#FF3366"></span><span class="fac-mark" style="left:50%" title="seuil 50"></span></span><span class="fac-val tab">92 → <strong>92</strong></span><span class="fac-delta tab flat">+0</span></div>
+      <p class="sub" style="font-size:12px">Le trait central marque le seuil 50,
+        qui débloque une section du Grimoire. Aucun de ces chiffres n'apparaît à l'écran.</p>
+    </section>
+  </div>
+
+  
+
+  <section class="panel">
+    <h2>Ce qu'il faut regarder</h2>
+    <ul class="flags"><li class="flag critique"><span class="flag-tag">critique</span><h4>Aucune récompense accordée</h4><p><code>calculate_run_rewards</code> n'est appelé que sur victoire ou mort. La victoire exige 25 cartes pour un scénario qui en compte 25 : aucun calcul n'a lieu, le joueur repart avec 0 Anam.</p></li><li class="flag critique"><span class="flag-tag">critique</span><h4>11 gains de réputation absorbés par le plafond</h4><p>carte 3 druides +8 → +0, carte 4 anciens +6 → +4, carte 5 druides +8 → +0, carte 6 anciens +8 → +0. Le modèle d'équilibrage compte chaque point 0,4 PV-équivalent : au plafond de 100 il n'en vaut plus rien, et l'EV calculée de l'option s'effondre sans que rien ne le signale au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Aucune variante d&#x27;état déclenchée</h4><p>Le scénario en porte, mais aucune condition n'a été remplie sur ce run. Attendu quand l'autoplay choisit toujours la première option.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>96 effets appliqués sans être montrés</h4><p>Le HUD n'affiche que le compteur de cartes, la vie et l'Anam. Les cinq réputations bougent à chaque carte sans jamais apparaître — la décision du 2026-07-26 (tout afficher) n'est pas encore câblée.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 5 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 10 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 15 : vie appliquée -9, attendue -4</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 20 : vie appliquée -9, attendue -4</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag alerte"><span class="flag-tag">alerte</span><h4>Carte 25 : vie appliquée -5, attendue +0</h4><p>Un effet non déclaré s'est ajouté — passif de biome, talent passif ou dé du destin — sans que rien ne l'annonce au joueur.</p></li><li class="flag info"><span class="flag-tag">info</span><h4>11 épreuves ratées sur 25</h4><p>Coût total 48 PV. À stat 1 la chance de réussite est de 60 % : on attend environ 10 échecs sur ce run. Un écart durable signale un tirage biaisé, pas un défaut d'écriture.</p></li></ul>
+  </section>
+
+  <section class="timeline">
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">01</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c1</span>
+    <span class="card-hud tab">Carte 1 / 25 · vie 100 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Le chemin de planches s&#x27;enfonce dans la tourbiere au crepuscule. L&#x27;odeur qui monte n&#x27;est pas celle de la vase : ca sent le pain brule et le fer.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Presser le pas</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Lire les traces</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Remonter l&#x27;odeur</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +10</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">La tourbe garde mal les traces et le jour tombe plus vite que tu ne lis. Tu releves la tete sans savoir depuis combien de temps tu es accroupi.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Lire les traces
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.83 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">100 → <strong>96</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neg">korrigans -1</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">02</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c2</span>
+    <span class="card-hud tab">Carte 2 / 25 · vie 96 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Au bout des planches, une maison basse. Une fenetre eclairee, et pas un fil de fumee a la cheminee alors que la nuit tombe et qu&#x27;il gele deja.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Observer depuis la bruyere</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">druides +6</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Approcher franchement</span><span class="grad equilibree">equilibree</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +8</span></span></li><li class="opt picked"><span class="opt-n">3</span><span class="opt-label">Faire le tour</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +10</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu contournes par l&#x27;arriere. Pas de tas de tourbe, pas de bois coupe, pas de fumier : personne ne prepare l&#x27;hiver ici. Mais le seuil de la porte de derriere est use, et recemment.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 3 — Faire le tour
+            <span class="grad audacieuse">audacieuse</span></dd>
+        <dt>Épreuve</dt><dd class="tab">instinct niveau 1 · 60 % de réussite · jet 0.41 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">96 → <strong>96</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#9B59FF">korrigans +10</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">03</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c3</span>
+    <span class="card-hud tab">Carte 3 / 25 · vie 96 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Devant la porte, sur le seuil de pierre, une paire de bottes d&#x27;homme. Tournees vers l&#x27;interieur, comme si quelqu&#x27;un venait de rentrer. Elles sont seches.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Frapper</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Examiner les bottes</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span><span class="chip neutre">ADD_TAG 0</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Appeler</span><span class="grad audacieuse">audacieuse</span><span class="check white">empathie · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +10</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Le cuir est sec jusqu&#x27;a la couture et la semelle propre. La tourbe ne pardonne pas : personne n&#x27;a marche dans le marais avec ces bottes. On les a posees la pour qu&#x27;on les voie.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Examiner les bottes
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.30 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">96 → <strong>96</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">04</span>
+    <span class="act-badge" style="--ac:#00D4FF">Événement</span>
+    <span class="card-id engine tab">c4</span>
+    <span class="card-hud tab">Carte 4 / 25 · vie 96 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Rien ne repond. Un pas, un seul, de l&#x27;autre cote du bois — puis plus rien. Le vent tombe d&#x27;un coup et le froid s&#x27;installe sur le seuil avec toi.</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Attendre sans bouger</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span><span class="chip pos">vie +3</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Annoncer que tu es un voyageur</span><span class="grad equilibree">equilibree</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Pousser la porte</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +10</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu restes immobile, les mains visibles. Au bout d&#x27;un long moment le pas revient vers la porte, plus lentement, mais il revient. Tu respires mieux d&#x27;avoir su ne rien forcer.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Attendre sans bouger
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.02 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">96 → <strong>99</strong>
+            <span class="delta pos">+3</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#C98A3C">anciens +4</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">05</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c5</span>
+    <span class="card-hud tab">Carte 5 / 25 · vie 99 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La porte s&#x27;ouvre de la largeur d&#x27;une main. Une lampe d&#x27;abord, puis une femme derriere, qui ne dit rien et te regarde des pieds a la tete.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Demander le gite</span><span class="grad prudente">prudente</span><span class="check white">empathie · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Dire d&#x27;ou tu viens</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Attendre qu&#x27;elle parle</span><span class="grad audacieuse">audacieuse</span><span class="check white">volonte · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +10</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu nommes le chemin, les planches neuves, l&#x27;odeur. A « planches neuves » son visage change une seconde, et elle ouvre la porte un peu plus.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Dire d&#x27;ou tu viens
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.09 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">99 → <strong>94</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">06</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c6</span>
+    <span class="card-hud tab">Carte 6 / 25 · vie 94 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Elle regarde par-dessus ton epaule, longuement, la tourbiere ou la nuit finit de tomber. Puis elle s&#x27;efface contre le mur pour te laisser le passage.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Demander si tu deranges</span><span class="grad prudente">prudente</span><span class="check white">empathie · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Entrer</span><span class="grad equilibree">equilibree</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Regarder ce qu&#x27;elle regarde</span><span class="grad audacieuse">audacieuse</span><span class="check white">logic · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">druides +10</span><span class="chip neutre">ADD_TAG 0</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu entres en te baissant sous le linteau. Derriere toi elle referme, met la barre, et verifie la barre une seconde fois.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Entrer
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.48 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">94 → <strong>94</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">07</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c7</span>
+    <span class="card-hud tab">Carte 7 / 25 · vie 94 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Une piece basse, un feu eteint sous la cheminee froide, et la table mise pour deux. Une des assiettes est pleine et n&#x27;a pas ete touchee.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">T&#x27;asseoir ou elle t&#x27;indique</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Rester debout</span><span class="grad equilibree">equilibree</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +8</span><span class="chip pos">vie +3</span></span></li><li class="opt picked"><span class="opt-n">3</span><span class="opt-label">Regarder l&#x27;assiette intacte</span><span class="grad audacieuse">audacieuse</span><span class="check white">logic · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">druides +10</span><span class="chip neutre">ADD_TAG 0</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu regardes l&#x27;assiette une seconde de trop. Elle la retire, la vide dans le seau, et repose l&#x27;assiette vide exactement au meme endroit.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 3 — Regarder l&#x27;assiette intacte
+            <span class="grad audacieuse">audacieuse</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.83 → <strong class="neg">échec</strong> · −5 PV</dd>
+        <dt>Vie</dt><dd class="tab">94 → <strong>89</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">08</span>
+    <span class="act-badge" style="--ac:#FFB347">Marchand</span>
+    <span class="card-id engine tab">c8</span>
+    <span class="card-hud tab">Carte 8 / 25 · vie 89 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Elle pose devant toi ce qu&#x27;elle a : du pain dur, de la tourbe seche pour le feu. Puis, d&#x27;un coffre, des affaires d&#x27;homme. « Prenez ce qu&#x27;il vous faut. »</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Prendre la corde</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">essence +6</span><span class="chip neutre">ADD_TAG 0</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Prendre la lampe</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">essence +8</span><span class="chip neutre">ADD_TAG 0</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Ne rien prendre</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +12</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu tires la corde et le coffre entier bascule. Tu ramasses tout et remets tout, et elle range derriere toi sans un mot, dans un ordre qui n&#x27;est pas le tien.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Prendre la corde
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.66 → <strong class="neg">échec</strong> · −3 PV</dd>
+        <dt>Vie</dt><dd class="tab">89 → <strong>86</strong>
+            <span class="delta neg">-3</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">09</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c9</span>
+    <span class="card-hud tab">Carte 9 / 25 · vie 86 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Elle ne mange pas. Elle s&#x27;est assise de biais, face a la porte, et chaque fois que la tourbe soupire dehors sa cuiller s&#x27;arrete a mi-chemin.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Manger en silence</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span><span class="chip pos">vie +5</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Demander qui est attendu</span><span class="grad equilibree">equilibree</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +14</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Parler des planches neuves</span><span class="grad audacieuse">audacieuse</span><span class="check white">logic · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">druides +16</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu demandes qui est attendu et la question tombe mal. Elle se leve, va tisonner un feu eteint depuis longtemps, et te tourne le dos.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Demander qui est attendu
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">empathie niveau 1 · 60 % de réussite · jet 0.78 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">86 → <strong>82</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">10</span>
+    <span class="act-badge" style="--ac:#FF3366">Climax</span>
+    <span class="card-id engine tab">c10</span>
+    <span class="card-hud tab">Carte 10 / 25 · vie 82 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Elle se leve de table sans avoir vide sa cuiller. L&#x27;assiette pleine reste ou elle est. Dans le feu eteint, une voix que tu es seul a entendre : « Deux assiettes, voyageur. Compte-les encore. »</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Lui demander ce qu&#x27;il sait</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +9</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Lui dire de se taire</span><span class="grad equilibree">equilibree</span><span class="check ctx">volonte · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +11</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Demander qui est mort ici</span><span class="grad audacieuse">audacieuse</span><span class="check ctx">instinct · contextuelle · échec −9 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +13</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">« Ce que tu sais deja », repond Merlin. « Une table mise pour deux dans une maison ou l&#x27;on vient de te dire qu&#x27;il n&#x27;y a personne d&#x27;autre. Je ne t&#x27;apprends rien. Je t&#x27;empeche de l&#x27;oublier. »</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Lui demander ce qu&#x27;il sait
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.55 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">82 → <strong>77</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">11</span>
+    <span class="act-badge" style="--ac:#00D4FF">Événement</span>
+    <span class="card-id engine tab">c11</span>
+    <span class="card-hud tab">Carte 11 / 25 · vie 77 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La voix s&#x27;est tue avec les cendres. Tu dors mal sur le banc. Vers le milieu de la nuit, trois oiseaux se levent de la meme touffe de bruyere, sans qu&#x27;aucun bruit ne les ait leves.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Ne pas bouger</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span><span class="chip pos">vie +2</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Ecouter a la porte</span><span class="grad equilibree">equilibree</span><span class="check white">instinct · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +8</span></span></li><li class="opt picked"><span class="opt-n">3</span><span class="opt-label">Regarder par la fenetre</span><span class="grad audacieuse">audacieuse</span><span class="check white">logic · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">druides +10</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Par la vitre, la tourbe est noire jusqu&#x27;a l&#x27;horizon. Sauf a un endroit, ou une lueur basse avance a hauteur d&#x27;homme, du meme pas qu&#x27;un homme.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 3 — Regarder par la fenetre
+            <span class="grad audacieuse">audacieuse</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.31 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">77 → <strong>77</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">12</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c12</span>
+    <span class="card-hud tab">Carte 12 / 25 · vie 77 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La lueur ne va pas droit. Elle suit les planches, s&#x27;arrete ou elles s&#x27;arretent, repart. Ce qui la porte connait le chemin par coeur.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Compter les arrets</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">druides +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Reveiller la femme</span><span class="grad equilibree">equilibree</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Sortir sur le seuil</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +10</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu la touches a l&#x27;epaule. Elle est deja reveillee, assise dans le noir, et elle regardait la meme chose que toi depuis un moment.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Reveiller la femme
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">empathie niveau 1 · 60 % de réussite · jet 0.30 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">77 → <strong>77</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#00D4FF">niamh +8</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">13</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c13</span>
+    <span class="card-hud tab">Carte 13 / 25 · vie 77 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Elle est derriere toi, pieds nus sur le plancher. Elle souffle la lampe sans un mot, te prend le poignet, et te fait signe de ne plus bouger tant que la lueur est dehors.</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Obeir</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +8</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Chercher son regard</span><span class="grad equilibree">equilibree</span><span class="check ctx">empathie · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +11</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Degager ton poignet</span><span class="grad audacieuse">audacieuse</span><span class="check ctx">instinct · contextuelle · échec −9 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +13</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu obeis mais ton pied glisse sur la pierre et racle. Dehors, la lueur s&#x27;arrete net et reste arretee tres longtemps.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Obeir
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.87 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">77 → <strong>73</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">14</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c14</span>
+    <span class="card-hud tab">Carte 14 / 25 · vie 73 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La lueur s&#x27;est perdue vers le marais. Elle rallume la lampe, les mains lentes. « Un feu follet », dit-elle. « Il y en a beaucoup, ici. »</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Accepter l&#x27;explication</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Dire qu&#x27;un feu follet ne sonde pas</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Proposer de rester un jour</span><span class="grad audacieuse">audacieuse</span><span class="check white">empathie · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +10</span><span class="chip pos">vie +3</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu la contredis trop vite et trop bien. Elle se ferme d&#x27;un coup : « Vous etes savant, pour un homme qui dort sur mon banc. »</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Dire qu&#x27;un feu follet ne sonde pas
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.75 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">73 → <strong>69</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">15</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c15</span>
+    <span class="card-hud tab">Carte 15 / 25 · vie 69 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Au petit jour elle dort assise, la lampe encore allumee contre elle. La barre de la porte est retiree. Dehors, les planches neuves partent vers le marais.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Remettre la barre et attendre</span><span class="grad prudente">prudente</span><span class="check white">empathie · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Suivre les planches neuves</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Emporter l&#x27;assiette pleine</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +10</span><span class="chip pos">vie +3</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu sors et la porte grince sur toute sa longueur. Tu t&#x27;engages quand meme sur les planches, en sachant qu&#x27;elle t&#x27;a entendu partir.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Suivre les planches neuves
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.76 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">69 → <strong>60</strong>
+            <span class="delta neg">-9</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">16</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c16</span>
+    <span class="card-hud tab">Carte 16 / 25 · vie 60 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">A deux cents pas de la maison, les planches se divisent. Une branche va vers le bourg, grise et usee. L&#x27;autre est neuve, et elle entre dans le marais.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Prendre la branche du bourg</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +8</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Sonder la branche neuve</span><span class="grad equilibree">equilibree</span><span class="check ctx">logic · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">druides +16</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Prendre la branche neuve</span><span class="grad audacieuse">audacieuse</span><span class="check ctx">instinct · contextuelle · échec −9 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +17</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu enfonces ton baton entre deux planches neuves. Il descend d&#x27;une brasse et butte sur du bois : on a double le fond. Ce chemin a ete construit pour porter quelqu&#x27;un tous les jours.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Sonder la branche neuve
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.18 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">17</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c17</span>
+    <span class="card-hud tab">Carte 17 / 25 · vie 60 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">La branche neuve s&#x27;arrete net sur une fosse. Une planche unique est jetee en travers, et sous elle l&#x27;eau noire ne bouge pas du tout.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Sonder la fosse</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +9</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Traverser sur la planche</span><span class="grad equilibree">equilibree</span><span class="check ctx">volonte · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +12</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Retirer la planche</span><span class="grad audacieuse">audacieuse</span><span class="check ctx">instinct · contextuelle · échec −9 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +13</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu passes en trois enjambees. La planche plie au milieu et tient. De l&#x27;autre cote, la berge a ete creusee de main d&#x27;homme, en marches.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Traverser sur la planche
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.53 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">18</span>
+    <span class="act-badge" style="--ac:#00D4FF">Événement</span>
+    <span class="card-id engine tab">c18</span>
+    <span class="card-hud tab">Carte 18 / 25 · vie 60 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">De l&#x27;autre cote, sous la berge creusee, l&#x27;odeur monte d&#x27;un coup. Ce n&#x27;est plus le pain brule de la tourbe : c&#x27;est de la fumee, et elle est recente.</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Reculer et regarder</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +10</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Chercher le trou de fumee</span><span class="grad equilibree">equilibree</span><span class="check ctx">logic · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">druides +12</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Ouvrir l&#x27;abri</span><span class="grad audacieuse">audacieuse</span><span class="check red">instinct · ROUGE · échec −13 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +16</span><span class="chip pos">essence +4</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu recules de trois pas et tu regardes au lieu d&#x27;avancer. Sous la berge, la tourbe a ete creusee en abri, et un filet de fumee sort d&#x27;un trou d&#x27;aeration bouche de mousse.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Reculer et regarder
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.15 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">19</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c19</span>
+    <span class="card-hud tab">Carte 19 / 25 · vie 60 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Une place a ete amenagee sous la berge : de la paille seche, un quart de fer, une couverture pliee. Quelqu&#x27;un vit ici depuis longtemps, et pas si mal.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Annoncer ta presence</span><span class="grad prudente">prudente</span><span class="check white">empathie · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Regarder ce qu&#x27;il y a</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Entrer dans l&#x27;abri</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +10</span><span class="chip pos">vie +3</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Un quart de fer grave d&#x27;une marque, une couverture reprisee au meme fil que celle du banc ou tu as dormi. On ne survit pas ici : on est nourri ici.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Regarder ce qu&#x27;il y a
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.13 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">60 → <strong>60</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">20</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c20</span>
+    <span class="card-hud tab">Carte 20 / 25 · vie 60 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">L&#x27;homme est vivant, maigre, et il ne te connait pas plus que tu ne le connais. « Ne dites pas que vous m&#x27;avez vu », souffle-t-il. « Trois jours. »</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Jurer les trois jours</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip neutre">CREATE_PROMISE 0</span><span class="chip pos">anciens +8</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Promettre de revenir</span><span class="grad equilibree">equilibree</span><span class="check white">empathie · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip neutre">CREATE_PROMISE 0</span><span class="chip pos">niamh +10</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Ne rien jurer</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +12</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu jures d&#x27;une voix plate, sans ses mots. Il te fait recommencer trois fois et n&#x27;y croit toujours pas : le serment tient, mais mal.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Jurer les trois jours
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.95 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">60 → <strong>51</strong>
+            <span class="delta neg">-9</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">21</span>
+    <span class="act-badge" style="--ac:#FFB347">Marchand</span>
+    <span class="card-id engine tab">c21</span>
+    <span class="card-hud tab">Carte 21 / 25 · vie 51 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Sur le chemin gris du retour, un homme du bourg vient a ta rencontre. Il sourit. Il sent le pain brule alors qu&#x27;il n&#x27;a pas mis un pied dans la tourbe.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Accepter les piecettes</span><span class="grad prudente">prudente</span><span class="check white">logic · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">essence +4</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Refuser les pieces</span><span class="grad equilibree">equilibree</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +10</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Lui demander son nom</span><span class="grad audacieuse">audacieuse</span><span class="check white">empathie · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +12</span><span class="chip neutre">ADD_TAG 0</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu refuses d&#x27;un geste trop large et l&#x27;une des pieces tombe entre les planches. Il ne se baisse pas. « Elle est a vous maintenant », dit-il.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Refuser les pieces
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">volonte niveau 1 · 60 % de réussite · jet 0.92 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">51 → <strong>47</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">22</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c22</span>
+    <span class="card-hud tab">Carte 22 / 25 · vie 47 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Il s&#x27;arrete au milieu du chemin et ne s&#x27;ecarte pas. « Vous venez du marais », dit-il, toujours poliment. « Qu&#x27;est-ce qu&#x27;on y trouve, en cette saison ? »</p>
+      
+      <ol class="opts"><li class="opt picked"><span class="opt-n">1</span><span class="opt-label">Mentir simplement</span><span class="grad prudente">prudente</span><span class="check white">instinct · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">korrigans +10</span></span></li><li class="opt"><span class="opt-n">2</span><span class="opt-label">Retourner la question</span><span class="grad equilibree">equilibree</span><span class="check ctx">logic · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">druides +12</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Lui dire que son frere respire</span><span class="grad audacieuse">audacieuse</span><span class="check red">volonte · ROUGE · échec −13 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +16</span><span class="chip pos">essence +4</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">Tu dis que tu cherchais un raccourci et que tu as trouve de la tourbe. C&#x27;est court, c&#x27;est plat, et c&#x27;est exactement ce qu&#x27;un voyageur repondrait. Il te croit a moitie, ce qui suffit.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 1 — Mentir simplement
+            <span class="grad prudente">prudente</span></dd>
+        <dt>Épreuve</dt><dd class="tab">instinct niveau 1 · 60 % de réussite · jet 0.23 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">47 → <strong>47</strong>
+            <span class="delta flat">+0</span></dd>
+        <dt>Réputations</dt><dd><span class="chip pos" style="--c:#9B59FF">korrigans +10</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">23</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c23</span>
+    <span class="card-hud tab">Carte 23 / 25 · vie 47 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Tu le laisses sur le chemin gris. La maison basse est au bout des planches, et elle t&#x27;attend debout sur le seuil, la porte ouverte derriere elle. Elle a vu d&#x27;ou tu reviens.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">La saluer et rentrer</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −3 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +6</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Regarder la table avant de parler</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">druides +8</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Dire tout de suite ou tu es alle</span><span class="grad audacieuse">audacieuse</span><span class="check white">empathie · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +10</span><span class="chip pos">vie +3</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu regardes la table trop ouvertement et elle te devance. Le temps que tu te retournes, l&#x27;assiette est dans le seau et la table est mise pour un.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Regarder la table avant de parler
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.72 → <strong class="neg">échec</strong> · −4 PV</dd>
+        <dt>Vie</dt><dd class="tab">47 → <strong>43</strong>
+            <span class="delta neg">-4</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">24</span>
+    <span class="act-badge" style="--ac:#7b8194">Standard</span>
+    <span class="card-id engine tab">c24</span>
+    <span class="card-hud tab">Carte 24 / 25 · vie 43 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Elle a pose les mains a plat sur la table, entre les deux assiettes, et elle attend. « Alors ? » demande-t-elle, et sa voix ne tremble pas.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Ne rien dire</span><span class="grad prudente">prudente</span><span class="check white">instinct · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +9</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Parler de l&#x27;homme du bourg</span><span class="grad equilibree">equilibree</span><span class="check ctx">logic · contextuelle · échec −8 PV</span><span class="opt-eff engine"><span class="chip pos">druides +12</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Tout lui dire</span><span class="grad audacieuse">audacieuse</span><span class="check ctx">empathie · contextuelle · échec −9 PV</span><span class="opt-eff engine"><span class="chip pos">niamh +14</span></span></li></ol>
+      <div class="resolution fail"><span class="res-tag">l'épreuve échoue</span><p class="narrative res-text">Tu t&#x27;embrouilles entre ce que tu as vu et ce que tu as deduit. Elle n&#x27;entend qu&#x27;une accusation sans preuve contre un homme du bourg, et se leve pour ouvrir la porte.</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Parler de l&#x27;homme du bourg
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.97 → <strong class="neg">échec</strong> · −8 PV</dd>
+        <dt>Vie</dt><dd class="tab">43 → <strong>35</strong>
+            <span class="delta neg">-8</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-n tab">25</span>
+    <span class="act-badge" style="--ac:#FF3366">Climax</span>
+    <span class="card-id engine tab">c25</span>
+    <span class="card-hud tab">Carte 25 / 25 · vie 35 · Anam 0</span>
+  </header>
+  <div class="split">
+    <section class="screen">
+      <h4 class="col-label">À l'écran</h4>
+      <p class="narrative">Au bout des planches grises, la ou le marais rend enfin le pied ferme, une borne. Merlin est assis dessus. « Tu es entre dans cette maison pour une nuit », dit-il.</p>
+      
+      <ol class="opts"><li class="opt"><span class="opt-n">1</span><span class="opt-label">Reprendre la route</span><span class="grad prudente">prudente</span><span class="check white">volonte · blanche · échec −4 PV</span><span class="opt-eff engine"><span class="chip pos">anciens +12</span><span class="chip pos">Anam +4</span></span></li><li class="opt picked"><span class="opt-n">2</span><span class="opt-label">Lui demander ce que tu dois</span><span class="grad equilibree">equilibree</span><span class="check white">logic · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">druides +13</span><span class="chip pos">Anam +5</span></span></li><li class="opt"><span class="opt-n">3</span><span class="opt-label">Faire demi-tour</span><span class="grad audacieuse">audacieuse</span><span class="check white">instinct · blanche · échec −5 PV</span><span class="opt-eff engine"><span class="chip pos">ankou +15</span><span class="chip pos">Anam +5</span></span></li></ol>
+      <div class="resolution"><span class="res-tag">ce qui se produit</span><p class="narrative res-text">« Rien qu&#x27;on puisse payer », repond Merlin. « Tu as vu une chose que deux personnes voulaient garder, et chacune pour proteger l&#x27;autre. Tu ne dois pas d&#x27;argent. Tu dois de te taire ou de parler, et les deux coutent. »</p></div>
+    </section>
+    <section class="engine-col">
+      <h4 class="col-label engine">Moteur</h4>
+      
+      <dl class="kv">
+        <dt>Choix retenu</dt><dd>option 2 — Lui demander ce que tu dois
+            <span class="grad equilibree">equilibree</span></dd>
+        <dt>Épreuve</dt><dd class="tab">logic niveau 1 · 60 % de réussite · jet 0.32 → <strong class="pos">réussite</strong></dd>
+        <dt>Vie</dt><dd class="tab">35 → <strong>30</strong>
+            <span class="delta neg">-5</span></dd>
+        <dt>Réputations</dt><dd><span class="chip neutre">inchangées</span></dd>
+        <dt>Dé du destin</dt><dd><span class="chip neutre">aucun effet</span></dd>
+      </dl>
+      <p class="hidden-note">Aucun de ces chiffres n'est montré au joueur.</p>
+    </section>
+  </div>
+</article></section>
+
+  <footer class="foot">
+    <span>Généré par <code>tools/render_run_dashboard.py</code> depuis le transcript
+      d'un run réel — instrumentation <code>MERLIN_TRANSCRIPT</code> de
+      <code>board_narration.gd</code>.</span>
+    <span>Rejouer un run et régénérer :
+      <code>MERLIN_AUTOPLAY=1 MERLIN_TRANSCRIPT=run.json godot --headless --path . scenes/BoardNarration.tscn --quit-after 30000</code></span>
+  </footer>
+</div>
+</body></html>

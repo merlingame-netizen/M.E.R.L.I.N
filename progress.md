@@ -2473,238 +2473,157 @@ Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement p
 
 ---
 
-## 2026-06-07 — Infra: Oracle Cloud ARM A1 host (Always Free)
+## Session: 2026-07-25 (Scénarios Types — contrat d'écriture + équilibrage deck-building)
 
-Ajout `infra/oracle/` : Terraform + cloud-init pour provisionner une VM Oracle
-Ampere A1 gratuite (4 OCPU / 24 Go, region eu-paris-1) destinee a heberger les
-usages Claude/dev/Godot.
+### Phase: Scénarios types v1.0 — bible §30
+- **Status:** complete
+- **Cascade §21.4:** Wave 1 (game_designer + ux_flow + game_playtester Monte-Carlo) → Wave 2 (game_design_auditor)
+- **Branche:** claude/godot-merlin-scenario-templates-ylgdwr
 
-- **terraform/** : VCN + subnet public + IGW + security list (SSH; Ollama tunnel-only)
-  + instance `VM.Standard.A1.Flex` (image Ubuntu 22.04 aarch64 via data source).
-- **cloud-init/** : install Ollama + Gemma (`gemma3:4b`, `gemma3:12b`, CPU async),
-  Godot 4.4.1 headless arm64, Node 20 + Claude Code, swap 8 Go, repo mirror optionnel.
-- **scripts/** : `generate-keys.sh` (cle API + SSH, snippet tfvars), `deploy.sh`.
-- **README.md** : runbook complet (cle API plutot que login navigateur+MFA) +
-  workaround "Out of host capacity".
-- Valide : `terraform validate` OK, rendu cloud-init = YAML valide, lock 5 plateformes.
-- **Reste a faire (utilisateur)** : Step 1-3 du runbook (generer cles, enregistrer la
-  cle publique dans la console, remplir terraform.tfvars), puis `./scripts/deploy.sh`.
+#### Livrables
+1. **`docs/30_jdr/SCENARIO_TYPES_SPEC.md`** (NEW) — spec canon : 10 archétypes (mapping 1:1 pôle/twist, danger/heal modifiers, règles spéciales), structure 5 actes × 3 routes, contraintes d'écriture mesurables, couche deck-building (5 couches : runes/stats/rep/promesses/dons), équilibrage PV-équivalent, garde-fous anti-dégénérescence, divergences flaggées.
+2. **`data/ai/scenario_templates.json`** (NEW) — jumeau machine-readable v1.0.0 (writing/structure/balance/deckbuilding/onboarding + 10 archétypes).
+3. **`tools/validate_scenario_balance.py`** (NEW) — validateur route-aware, score 0-100/scénario, rapport markdown, exit 1 sous --min-score.
+4. **`tools/patch_reference_scenarios.py`** (NEW) — patch conservateur métadonnées (types/raretés) du corpus 100 références, prose + embeddings intacts.
+5. **`tools/simulate_run_balance.py`** (NEW) — Monte-Carlo 10k runs × 6 profils (adopté du game_playtester).
+6. **`docs/30_jdr/SCENARIO_BALANCE_REPORT.md`** (NEW) — rapport validator + addendum Monte-Carlo.
+7. **`docs/GAME_DESIGN_BIBLE.md`** v3.8 → **v3.9** : +§30, dédoublonnage §25-§29 (bloc dupliqué supprimé), fix bandes §4.6 (80-94/95-100), fix math §28.2.
+8. **`data/ai/scenarios_reference_broceliande.json`** — patché : score validator 24.2 → **90.3/100, 0 erreur** (climax LEGENDAIRE+MERLIN_DIRECT sur 300 routes, 100 légendaires mi-run rétrogradés, 124 SHOP/EVENT injectés, 841 raretés rééquilibrées, caps fixpoint).
 
-### 2026-06-07 (suite) — Runner Claude Code + pont SSH
+#### Résultats clés
+- **Monte-Carlo** : les dégâts white/red pilotent la tension, le placement des fatales pilote la mortalité → fatales concentrées actes IV-V (5% du tirage) = toutes cibles PASS (first-run 17.9% mort, builds 10-13%, 100% des morts actes IV-V).
+- **Bug équilibrage n°1** : quert (+10/CD4) = 70 PV-éq/run → proposition CD 6 / soin 8 (décision utilisateur pendante, canon §3.3).
+- **Équité factions** : druides 32.5% des options (> cap 30%), ankou 7.8% (< 8%) → passe de régénération LLM à planifier.
+- **Divergences flaggées** (spec §7) : cooldowns runes, MOS target 15-20 vs 25, card flip double-tap vs §21.5, §27.3 vs §3.2, BALANCE_FORMULA.md obsolète.
 
-- `git_repos` pre-rempli avec les 2 repos (M.E.R.L.I.N + merlin-web).
-- Service systemd `merlin-runner` (var `enable_claude_runner`, defaut true) : idle
-  tant que `/etc/merlin/runner.env` non configure (pas de crash-loop), `RUNNER_CMD`
-  libre (ex: `claude -p "..."`).
-- Pont de connexion : `install-ssh-alias.sh` (alias `ssh merlin-vm` + tunnel Ollama
-  auto via LocalForward), `connect.sh`, `tunnel.sh`. Cote VM : `/etc/profile.d/merlin.sh`
-  (alias ws/gv/ol/merlin) + MOTD + `merlin-status`.
-- Revalide : cloud-init rendu = YAML valide (runner on/off), gating verifie, tf validate OK.
+#### Audit final (Wave 2) — PASS-WITH-NOTES, corrections appliquées
+- Table §5.3 spec recalculée depuis le modèle EV (cohérence spec ↔ JSON ↔ Monte-Carlo)
+- red clampé [12,15] (cap DAMAGE_LIFE §5.4) ; champs typés `params`/`anti_degenerescence_params` pour scenario_planner/MOS
+- Validator : enveloppe DANGER_BUDGET scalée par danger_modifier (27 faux positifs éliminés, score corpus 90.8/100)
+- Bible : §6.2 note caps par route + §6.3bis schéma carte skeleton étendu (rarity/emotion/verb/primary_faction/check)
+- Exception « options voilées » documentée (mist_wanderer + interference hide) ; finding « corpus trop doux » ajouté
 
-### 2026-06-07 (suite 2) — Raccourci bureau
+### Phase: Scénario type de référence + harnais de conformité (2026-07-26)
+- **Status:** complete
+- **Branche:** claude/godot-merlin-scenario-templates-ylgdwr
 
-- `infra/oracle/desktop/` : raccourci bureau 1-clic vers la VM (lance `ssh merlin-vm`).
-  - Windows : `Install Desktop Shortcut.cmd` -> cree un .lnk "M.E.R.L.I.N VM" sur le Bureau.
-  - macOS/Linux : `install-desktop-shortcut.sh` (.command / .desktop).
-  - `.gitattributes` force CRLF sur .cmd/.ps1.
+#### Le scénario type — « Le Rite des Neuf Souffles »
+`forgotten_ritual` / pôle Ordre / twist `ritual_completion` / Brocéliande. Rite druidique interrompu ; le twist (c11) révèle qu'il fut arrêté volontairement car le neuvième souffle se prend sur l'officiant. 3 voies : accomplir (Ordre) / réécrire (Chaos) / tenir en suspens (Liminal). **25 cartes par route, pool de 53.**
 
-### 2026-06-07 (suite 3) — Garde-fou free-tier + tentative de provisioning
+**Méthode (le vrai livrable)** : deux couches séparées.
+- Mécanique — `tools/build_golden_scenario.py`, dérivée du contrat : graphe, routes, types, raretés, arc, factions, checks, effets. Déterministe et reproductible.
+- Prose — `data/ai/scenario_golden_prose.json` (9 agents : 1 colonne vertébrale + 6 branches + 2 relecteurs, 28 corrections appliquées), injectée via `--merge-prose`.
+→ L'équilibrage n'est jamais négocié en écrivant du texte.
 
-- Provisioning lance reellement : reseau OCI cree (VCN/subnet/IGW/seclist), auth API OK.
-- Blocage : "Out of host capacity" sur l'instance A1 a eu-paris-1 (capacite ARM nulle en
-  Always Free), y compris en 1 OCPU/6 Go. Retry en arriere-plan en cours.
-- L'upgrade Pay As You Go ne peut PAS etre fait via API (action de facturation, console+MFA only).
-- AJOUT `scripts/freetier-guard.py` : parse le plan terraform et BLOQUE l'apply si hors quota
-  Always Free (A1 >4 OCPU/24 Go, >2 micro, shape non-free, >200 Go). Cable dans deploy.sh ET
-  dans la boucle de retry (plan -> guard -> apply a chaque iteration). Teste OK (pass 1/6, block 8/48/300).
+**Mesures** : stats 39.6/25.2/20.1/15.1 % (cible 40/25/20/15) · checks par carte 72/16/8/4 (cible 75/15/8/2) · factions 14.5–23.9 % (druides ≤ 30 %) · écart EV max 1.08 PV-éq (cap 2.0) · **validateur `--strict` : 100/100, 0 erreur**.
 
-### 2026-06-07 (suite 4) — Support shape micro x86 + capacite Paris saturee
+#### Vérification : le jeu génère-t-il ce contrat ?
+Harnais sans Ollama (`_balance_skeleton` est statique) : `tools/godot/conformance_pipeline.gd` + `tools/check_pipeline_output.py` → `docs/30_jdr/PIPELINE_OUTPUT_AUDIT.md`.
 
-- Terraform generalise : var `instance_shape` (A1.Flex ARM OU E2.1.Micro x86), `shape_config`
-  conditionnel (Flex only), image lookup selon le shape.
-- Bascule sur micro AMD x86 gratuit (E2.1.Micro, 1 Go, Linux) a la demande utilisateur.
-- Constat : meme le micro x86 retourne "Out of host capacity" a eu-paris-1 => region saturee
-  en gratuit tous shapes. Always Free etant limite a la region d'origine (Paris), pas d'option
-  gratuite ailleurs. Retry micro en arriere-plan (garde-fou actif).
-- Rappel : Windows = payant (hors free tier) ; PAYG reste le seul deblocage fiable cote capacite.
+**Non — 5 écarts structurels (CAPACITÉ, 0/12)** : squelette plafonné à 10 beats (contrat 11-25), séquence linéaire sans branchement 3 voies, ni options, ni checks de stats, ni actes matérialisés.
+**Réglage plutôt bon** : adjacence 12/12, placement LEGENDAIRE 12/12, climax 12/12.
+**Fix appliqué** : `CARD_TYPE_CAPS` déclarait `NARRATIVE min_share/max_share` jamais appliqué (l'étape 2 renvoyait à « l'étape 4 » qui traite les légendaires) → 0/12 conformes avant, 3/12 après ; les 8 restants sont des squelettes à 5 beats où la borne est arithmétiquement inatteignable.
 
-### 2026-06-07 (suite 5) — Investigation capacite officielle + watcher intelligent
+#### Validations
+- `--strict` sur le corpus : 90.8 → 80.8, soit exactement `NO_CHECK_LAYER` (le corpus ne porte pas la couche mécanique — mesure de ce qu'il reste à générer)
+- Smoke `ScenarioLoading` : exit 0, 0 script error, strict mode se déclenche correctement sans Ollama
 
-- AJOUT `scripts/capacity-report.py` : interroge l'API Compute Capacity Report d'Oracle
-  (SDK oci) -> statut AVAILABLE / OUT_OF_HOST_CAPACITY par shape et fault domain, sans
-  bruler de tentatives de creation. Mode --best pour scripting (priorite A1 4/24 > 2/12 > 1/6 > micro).
-- VERDICT OFFICIEL : tous les shapes gratuits OUT_OF_HOST_CAPACITY a eu-paris-1 (AD unique,
-  3 fault domains testes). La saturation est confirmee par Oracle lui-meme.
-- NOUVEAU watcher en arriere-plan : poll capacity report toutes les 2 min -> des qu'un slot
-  est AVAILABLE -> plan + freetier-guard + apply immediat du meilleur shape dispo.
-- FIX cloud-init : arch Godot dynamique (arm64/x86_64 selon uname -m) ; skip pull modeles
-  LLM si RAM < 4 Go (micro 1 Go inutilisable pour Gemma).
+#### Rapport de conformité multi-agents (21 agents, 664 outils)
+`docs/30_jdr/PIPELINE_CONFORMANCE_REPORT.md` — 4 zones cartographiées (planner / cartes / runtime / état), écarts vérifiés de manière adversariale, roadmap ordonnée par dépendance (phases 0 à 3).
 
-### 2026-06-07 (suite 6) — Stack serveur dev complète (docker compose)
+**Verdict : non.** 4 écarts CRITICAL, 13 HIGH, 4 MEDIUM. Les trois plus lourds, revérifiés à la main :
+- **C1** — longueur de run figée à 5 cartes (`board_narration.gd:2914`, `ACT_SEQUENCE`) ; `MIN_CARDS_FOR_VICTORY = 25` est donc injouable.
+- **C2** — `generate_card_for_beat` n'a **aucun appelant** : le squelette équilibré est produit puis jeté, la boucle joue un pool statique.
+- **C3b** — `init_run` posait `current_biome = ""` puis le relisait pour filtrer `biome_affinity` → **aucun scénario du catalogue n'était jamais sélectionné**.
 
-- VM cible = serveur de dev h24, tout en 127.0.0.1 (accès tunnel SSH uniquement).
-- AJOUT `infra/oracle/stack/docker-compose.yml` + `.env.example` : Open WebUI (UI Ollama),
-  code-server (VS Code web), Filebrowser, PostgreSQL. Images arm64 confirmees.
-- cloud-init enrichi : install Docker (apt repo arm64) + compose v2, drop-in Ollama
-  (OLLAMA_HOST=0.0.0.0 pour host.docker.internal), service systemd merlin-stack (oneshot),
-  gen-env.sh (secrets aleatoires au boot), venv Python (FreeTDS arm64), wrapper Blender
-  conteneur (enable_blender), create-narrator.sh (skip propre si LoRA gguf absent).
-- Vars Terraform : enable_dev_stack, openwebui_tag, enable_blender.
-- Pont SSH multi-ports (11434/3000/8443/8081/5432) dans install-ssh-alias.sh + tunnel.sh.
-- Valide : terraform validate OK, rendu cloud-init YAML valide (stack on/off, blender on/off),
-  echappement docker-compose vars OK, garde-fou free-tier OK (4/24/150 dans le quota).
-- Capacite Paris toujours nulle : deploiement declenche par le watcher des qu'un slot s'ouvre.
+**Corrigé cette session** : C3b (paramètre `biome` sur `init_run` + résolution avant l'appel dans `START_RUN`) et la part NARRATIVE non appliquée dans `_balance_skeleton`.
+**Non corrigé** : C1, C2, C3, H1-H13 — chantiers d'architecture engageant le design, voir roadmap §6.
 
-### 2026-06-07 (suite 7) — Cost-guard budget + PAYG
+**Non-régression** : `tools/godot/test_scenario_selection.gd` PASS · smoke MenuTest + BoardNarration exit 0, 0 script error · corpus 90.8 · golden 100/100 strict.
 
-- Utilisateur passe le compte en Pay As You Go (page Billing > Upgrade) pour debloquer
-  la capacite A1 a Paris (reste gratuit dans le quota 4/24).
-- AJOUT budget.tf : oci_budget (1 unite, MONTHLY, tenancy) + alert_rule (ACTUAL 1% =
-  ~0.01) -> alerte email au moindre cout facture. Garde-fou "rester dans le quota a
-  l'usage" en complement de freetier-guard.py (provisioning). Email via tfvars (non commite).
-- Budget APPLIQUE et actif (2 resources). Watcher 4/24 relance : deploiera la VM+stack
-  des que la capacite s'ouvre (immediat apres PAYG en principe).
+### Phase: Génération 100 % LLM native + non-ressemblance (2026-07-26)
+- **Status:** complete
+- **Directive utilisateur** : le système de cartes est le substrat ; les scénarios doivent être 100 % LLM natifs, respecter les règles de scénario, et **aucun ne doit ressembler à un autre**, dans les limites du bornage bible.
 
-### 2026-06-14 (suite 8) — Veilleur PC 24/7 (free-tier guard PowerShell)
+#### Diagnostic — le few-shot de contenu CAUSE la ressemblance
+Mesure du corpus de 100 références qui sert de few-shot :
+| Mesure | Valeur |
+|---|---|
+| Intros distinctes | 40/100 |
+| `essence` / `hook` distincts | 10/100 (une par archétype, recopiée) |
+| Résumés de cartes distincts | **90 / 2 994** |
+| Libellés d'options distincts | **18 / 8 982** (Affronter/Fuir/Apaiser ×803) |
+| Paires > 0.95 cosinus | 80, dont plusieurs à 1.000 |
 
-- Capacite Paris toujours nulle apres 1 semaine (verifie via capacity report + apply reel
-  = "Out of host capacity" physique, pas un blocage tier). PAYG = priorite, pas creation de hardware.
-- AJOUT infra/oracle/pc-watcher/ : setup.ps1 (install terraform, cles, tfvars Windows, bootstrap state)
-  + merlin-watch.ps1 (boucle 24/7, garde-fou free-tier natif PowerShell, deploie des qu'un hote A1
-  se libere, ecrit l'alias ssh merlin-vm avec tunnels) + README. Fichiers sensibles (.win/.bootstrap)
-  gitignores et envoyes a l'utilisateur.
-- Watcher conteneur arrete (le PC devient le pilote unique pour eviter divergence d'etat terraform).
+Les « 100 références » sont 10 gabarits clonés 10×. **Mon validateur d'équilibrage n'avait pas vu ce problème : il mesurait la forme, pas la variété.**
 
-### 2026-06-14 (suite 9) — Flotte multi-cloud gratuite + console d'admin locale
+#### Livrables
+1. **`tools/check_scenario_diversity.py`** (NEW) — 6 axes mesurés : sémantique (cosinus), lexical (Jaccard), situationnel, verbal, structurel, motifs. Corpus : **0/6**. Golden : **6/6**.
+2. **`scenario_templates.json` → `generation_contract`** (NEW) — sépare invariants de bornage / surface créative / axes de variation / porte de nouveauté / rôle borné des références (few-shot de contenu INTERDIT sur les champs créatifs).
+3. **`scenario_templates.json` → `diversity_contract`** (NEW) — seuils mesurables + état du corpus daté.
+4. **`addons/merlin_ai/scenario_variation.gd`** (NEW) — graine de variation (5 axes, **25 920 combinaisons**, cooldown 3 scénarios) + porte de nouveauté (Jaccard, seuil 0.35).
+5. **`scenario_planner.gd`** — graine branchée sur les 2 appels créatifs (titres + squelette), tirée une fois par scénario et partagée ; références recadrées « calage de registre uniquement ».
+6. **`docs/30_jdr/SCENARIO_TYPES_SPEC.md` §10** — décision d'architecture documentée.
+7. **`tools/godot/test_scenario_variation.gd`** (NEW) — non-régression.
 
-- Strategie multi-fournisseurs (plan approuve) : Oracle A1 (lourd) + Google e2-micro (leger)
-  + Cloudflare (Workers/D1 SQLite/Pages, sans carte) + Fly.io (scale-to-zero).
-- Console d'admin LOCALE : nouvel adapter `fleet` (tools/adapters/fleet_adapter.py, herite
-  BaseAdapter) -> actions status/list/check/serve ; health-check SSH (cpu/ram/disk) + HTTP.
-  Dashboard Flask (tools/fleet_dashboard/) tuiles up/down sur http://127.0.0.1:8765.
-  Inventaire infra/fleet/fleet.yaml. `python tools/cli.py fleet serve`.
-- Nodes : infra/fleet/cloudflare (wrangler+worker D1+pages), infra/fleet/gcp (terraform
-  e2-micro, garde-fou validations e2-micro/30GB/region free + budget optionnel),
-  infra/fleet/flyio (Dockerfile+fly.toml scale-to-zero+service sqlite stdlib).
-- Valide : terraform validate (gcp) OK, worker.js node --check OK, fly main.py OK,
-  fleet status/check OK, serve degrade proprement sans flask.
-- Reste (utilisateur) : signup par fournisseur + remplir fleet.yaml (runbooks dans chaque README).
+#### Validations
+- Test moteur : 12 graines distinctes sur 12 tirages, 0 violation de cooldown ; porte de nouveauté discriminante (0.80 rejeté / 0.00 accepté)
+- Simulation 60 tirages : 60 graines distinctes, 8 lieux différents sur 10 scénarios consécutifs
+- Smoke ScenarioLoading : exit 0, 0 script error
+- Non-régression : golden 100/100 strict, corpus 90.8
 
-### 2026-06-14 (suite 10) — Cloudflare DEPLOYE (1er noeud live de la flotte)
+### Phase: Tableau de contrôle visuel d'un run (2026-07-26)
+- **Status:** complete
+- **`tools/render_run_dashboard.py`** (NEW) — génère `docs/30_jdr/RUN_DASHBOARD.html`, page autonome (0 ressource externe, 23 Ko) depuis le transcript d'un run réel.
+- **Thèse de la page** : la scission. Chaque carte en deux colonnes — « à l'écran » (sérif parchemin, ce que le joueur lit) / « moteur » (monospace, ce qui est appliqué sans le dire).
+- **Identité visuelle** : palette canonique bible §10.2 (fond terminal, vert terminal, ambre druide, cyan liminal, rouge rune) + couple monospace/sérif du jeu. Monde sombre assumé, thème unique.
+- **Contenu** : vitals (cartes, vie, Anam, actes dégradés, effets cachés), courbe de vie SVG, barres de réputation avec seuil 50, 5 alertes calculées, timeline des 5 cartes.
+- **Alertes détectées automatiquement** : 3 actes sans contenu propre · 0 Anam accordé · 19 effets appliqués sans être montrés · cartes 3 et 5 quasi identiques · carte 5 vie annoncée −3 / appliquée +2.
+- Publié : https://claude.ai/code/artifact/03b49e7f-d42a-470e-95d7-7b7b558c9741
+- **Bloqué** : jalon « générer 20 scénarios + mesurer la diversité » — Ollama injoignable dans ce conteneur.
 
-- Deploye d'ici via token API (sans navigateur) : D1 (SQLite) 'merlin' creee + schema applique,
-  Worker 'merlin-svc' live (sous-domaine workers.dev 'maxbab38' enregistre via API), Pages 'merlin-pages'
-  en production.
-- URLs: https://merlin-svc.maxbab38.workers.dev (/health + /items API SQLite OK),
-  https://merlin-pages.pages.dev (HTTP 200).
-- fleet.yaml renseigne -> console: cf-worker UP, cf-pages UP (2/5). Reste oracle/gcp/fly.
-- Token traite comme secret (env var uniquement, jamais commite ; verifie 0 fuite).
+### Phase: Diversité mesurée sur l'exécution du jeu (2026-07-26)
+- **Status:** complete
+- **Correction de cadrage utilisateur** : le rendu doit venir de l'exécution du jeu, pas d'Ollama. Mesurer la diversité = faire tourner le jeu N fois et comparer.
 
-### 2026-06-14 (suite 11) — Google e2-micro DEPLOYE (2e noeud VM live)
+#### Protocole
+6 runs autoplay headless → 6 transcripts → `tools/check_run_diversity.py`. Puis correctif, puis 6 runs identiques pour comparer.
 
-- terraform apply d'ici (cle SA + project acoustic-agent-441423-p6) : VPC + firewall SSH +
-  instance e2-micro (us-west1-b, 1Go, 30Go pd-standard, garde-fou validations e2-micro/region/30Go).
-- IP 34.127.43.69, user merlin (cle merlin_oracle). Non joignable depuis le conteneur (egress SSH
-  bloque) mais RUNNING cote GCP ; le PC utilisateur y accede.
-- Securite repo PUBLIC : IP des VM sorties du repo -> surcouche locale gitignoree fleet.local.yaml,
-  mergee par fleet_adapter._load(). Repo ne contient que placeholders + URLs Cloudflare (publiques).
-- Console: cf-worker UP, cf-pages UP, gcp-micro (UP depuis PC). Reste oracle + fly.
+#### Résultat
+| Critère | Avant | Après |
+|---|---|---|
+| Titres distincts | 1/6 | 3/6 (plafond du banc) |
+| Parcours de cartes distincts | 1/6 | **6/6** |
+| Recouvrement lexical max | 100 % | 74 % (plancher combinatoire d'un pool de 12) |
+| Couverture du pool | 5/12 (42 %) | **12/12 (100 %)** |
+| Graines de variation distinctes | 6/6 | 6/6 |
 
-### 2026-06-14 (suite 12) — Fly.io: app creee, build bloque par proxy sandbox
+#### Cause racine
+Le mécanisme de variation fonctionnait (6 graines distinctes tirées et journalisées) mais n'agit que sur les prompts LLM, jamais atteints. La ressemblance venait **entièrement du repli déterministe** :
+- `_fallback_titles` : ordre fixe → l'autoplay (comme un joueur pressé) prend toujours le premier
+- `_load_fallback_pool` + `_fallback_index` reparti de 0 → toujours les cartes 1 à 5
 
-- App Fly 'merlin-fleet-mxb38' creee (org personal, region cdg) via token.
-- BLOCAGE: le builder Fly (depot ET classique) est injoignable depuis le sandbox (proxy
-  intercepte le TLS -> "certificate signed by unknown authority" / timeout). Impossible de
-  builder l'image d'ici.
-- SOLUTION: workflow .github/workflows/fly-deploy.yml (build+deploy depuis runners GitHub,
-  hors proxy). Necessite secret repo FLY_API_TOKEN (a ajouter par l'utilisateur), puis
-  l'agent peut declencher le workflow. Fallback: fly deploy depuis le PC.
-- fleet.yaml: fly-service url = https://merlin-fleet-mxb38.fly.dev/health (vert une fois deploye).
-- Flotte: cf-worker UP, cf-pages UP, gcp-micro UP(PC), fly-service pending(build), oracle pending(capa).
+Les deux sont mélangés avec un RNG randomisé localement (RNG du store intact).
 
-### 2026-06-14 (suite 13) — Fly abandonne ; flotte finale = 3 noeuds gratuits
+#### Effet de bord notable
+Les cartes d'arc `arc_broceliande_01/02/03` n'apparaissaient dans **aucun** des 6 runs d'avant ; elles sortent dans 4 des 6 runs d'après. Contenu existant mais inatteignable.
 
-- Fly bloque par exigence carte (org trial : "disabled for trial organizations"). Independant
-  du sandbox/token/CI. Utilisateur choisit de laisser tomber Fly (3 noeuds suffisent).
-- Retire fly-service de fleet.yaml + supprime .github/workflows/fly-deploy.yml (CI inutile).
-  Templates infra/fleet/flyio/ conserves (option future). App Fly 'merlin-fleet-mxb38' reste vide
-  (0 machine = 0 cout) ; user peut la supprimer + revoquer le token Fly.
-- FLOTTE FINALE: cf-worker (D1 SQLite) UP, cf-pages UP, gcp-micro (VPS 1Go) UP, oracle-a1 pending
-  (capacite, watcher PC). Console locale `python tools/cli.py fleet serve`.
+#### Ce qui reste
+Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 titres au banc, 12 cartes au pool. Seule la génération LLM native les lève — la mesure est en place pour le vérifier.
 
-### 2026-06-14 (suite 14) — Uptime Kuma (monitoring hebergé) sur la VM GCP
+- Tableau de contrôle réalimenté : https://claude.ai/code/artifact/03b49e7f-d42a-470e-95d7-7b7b558c9741
 
-- startup-script GCP enrichi : install Docker + conteneur louislam/uptime-kuma bind 127.0.0.1:3001
-  (PRIVE, accessible via tunnel SSH uniquement, choix user). Pas de firewall public 3001.
-- VM GCP recreee (terraform apply -replace, plan revu) -> nouvelle IP 34.83.113.0. fleet.local.yaml MAJ.
-- Acces: ssh -L 3001:localhost:3001 merlin@IP -> http://localhost:3001 (creer admin, ajouter moniteurs).
-- README flotte: section Uptime Kuma + liste moniteurs (cf-worker/cf-pages/oracle).
-- Garde-fou classifier respecte: plan preview + pas d'exposition publique.
+### Phase: Décisions AskUserQuestion round 1 — bible v4.0 (2026-07-26)
+- **Status:** décisions inscrites, implémentation à venir
+- Quatre décisions utilisateur qui **écrasent** le canon antérieur :
 
-### 2026-06-14 (suite 15) — Plan de controle unifie + dispatcher (gratuit TOUJOURS)
+| Décision | Écrase | Conséquence |
+|---|---|---|
+| Longueur **variable par archétype** (11/15/17/21/25) | CLAUDE.md §10.4 (25 fixe), bible §6.4 (15-20) | Équilibrage à rendre paramétrique en N ; `MIN_CARDS_FOR_VICTORY=25` caduc ; `ACT_SEQUENCE` en dur à supprimer |
+| **Tout afficher** — 5 réputations chiffrées au HUD | position actuelle de `_refresh_hud` | ⚠ conflit ouvert avec pilier MINIMAL §21.2 (10 affordances au lieu de 7 max) |
+| Branchement **narratif, pas topologique** | spec §2.2 (3 routes isométriques) + modèle des 100 références | `route_mask` / `leads_to_card_id` sortent du contrat ; golden et corpus caducs |
+| Pool statique **supprimé** | rôle du pool dans board_narration | ⚠ conflit ouvert : supprime toute testabilité hors ligne (harnais, smoke, mesure de diversité) |
 
-- fleet.yaml enrichi : capabilities + quota free-tier par noeud.
-- jobs.yaml : definitions de jobs (needs/cmd/http/cost). Dispatcher dans fleet_adapter :
-  actions jobs/quota/plan/run + routeur (PREFERENCE par capability) + garde-fou STRICT
-  (refuse si quota free depasse ou noeud non deploye/incapable).
-- Routage verifie : cron->gcp-micro, api/data-sqlite->cf-worker, llm->oracle (refuse si down).
-- Run end-to-end OK : `fleet run kv-write` -> POST cf-worker -> HTTP 200 -> ecrit dans D1 SQLite
-  (verifie /items), log status/jobs.json, reserve/release quota status/quota.json.
-- Dashboard Flask = hub unique : tuiles + jauges quota + panneau Jobs avec boutons Run
-  (/api/jobs /api/quota /api/run). README section "Control plane".
-- Test depuis sandbox : routage+garde via `fleet plan` (SSH reel = depuis le PC).
-
-### 2026-06-14 (suite 16) — Migration Firebase RTDB -> Cloudflare D1 (outil)
-
-- Demande : migrer la base AtelierIdracIA (Firebase Realtime Database) vers SQLite/D1, one-shot.
-- AJOUT infra/fleet/migrations/rtdb_to_sqlite.py : convertisseur RTDB JSON -> SQLite (.db) + dump
-  .sql pret pour `wrangler d1 execute --file`. Aplatissement : node->table, scalaires->colonnes
-  typees, objets/arrays imbriques->colonnes JSON, scalaires racine->table _root. Teste OK sur echantillon.
-- README migrations + procedure (export JSON Firebase -> convert -> wrangler d1 create atelier-idrac -> load).
-- Reste (utilisateur) : uploader l'export JSON RTDB + redonner le token CF -> je cree une D1 dediee et je charge.
-
-### 2026-06-14 (suite 17) — AtelierIdracIA: RTDB -> D1 migre (structure) + states a part
-
-- Fetch direct de la RTDB (region europe-west1) via service-account idrac-ai-academy (token OAuth
-  firebase.database) -> 146 Mo JSON, 15 noeuds. Convertisseur corrige (cle synthetique _key
-  anti-collision, mapping colonnes->cle originale).
-- Charge dans D1 'atelier-idrac' (id ade35601...) : 13 tables structurees (students 25, accounts 25,
-  submissions 19, activity_feed 1473, etc.). Verifie via requetes.
-- BLOQUANT D1 : table 'states' = 145 Mo (campaignData jusqu'a 16 Mo/ligne) > limite D1 2 Mo/valeur.
-  Exclue du chargement D1 -> a placer sur R2 (object storage) ou fichier SQLite sur VM (decision user).
-- Donnees + cle SA hors repo (uploads/tmp/root only ; jamais commitees).
-
-### 2026-06-14 (suite 18) — states -> SQLite sur la VM GCP (script clé en main)
-
-- Choix user : states (145 Mo, hors limite D1) en fichier SQLite sur la VM GCP (gratuit).
-- Sandbox ne peut pas SSH -> AJOUT infra/fleet/migrations/vm_migrate.sh : tourne SUR la VM,
-  fetch RTDB via SA + convertit en ~/atelier-idrac.db (base complete, states inclus).
-- User : scp la cle SA (2 Ko) sur la VM puis `curl raw vm_migrate.sh | bash -s ~/idrac-sa.json`.
-
-### 2026-06-14 (suite 19) — Convertisseur RTDB optimise memoire (VM 1Go)
-
-- Migration states sur VM: la conversion ramait (executemany construisait toute la table states
-  -145Mo- en une liste RAM -> swap thrash, user a fait ^C).
-- FIX rtdb_to_sqlite.py: inference de type incrementale (plus de buffering des valeurs),
-  insertion en streaming via generateur (plus de grosse liste), pop des noeuds depuis data
-  pour liberer au fur et a mesure. Regression OK.
-- User relance le meme one-liner sur la VM (le script curl la version a jour).
-
-### 2026-06-14 (suite 20) — Migration AtelierIdracIA TERMINEE
-
-- VM: conversion optimisee a reussi -> ~/atelier-idrac.db 147Mo, 14 tables (states 25 lignes incl).
-- Bilan: D1 atelier-idrac (13 tables structurees, serverless) + VM SQLite (base complete + states).
-- Reste user: rm cle firebase sur la VM + revoke. Source = Firebase (durabilite).
-
-### 2026-06-15 — AtelierIAIdrac off-Firebase : inventaire + backend coeur
-
-- Plan approuve: sortir l'app de Firebase en gratuit (shim compat Firebase -> backend VM WS+SQLite -> tunnel CF).
-- Phase 0 (inventaire): clone repo public, 31 modules/18.7k LOC. Surface Firebase relevee:
-  ref156/once46/on(value)19+child_added1/set44/update13/push104/remove66/transaction8/onDisconnect1
-  + storage put/getDownloadURL + auth anon. Paths arbitraires -> backend = arbre generique.
-- Phase 2 (backend coeur, infra/fleet/atelier/server/): store.js (arbre RTDB sur node:sqlite,
-  get/set/update/push(pushId firebase)/remove/CAS/query) + server.js (REST CRUD + WebSocket
-  temps reel + onDisconnect presence + storage fichiers). Teste: unit store OK + e2e WS recoit
-  les ecritures REST en live. Zero dep native (node:sqlite + ws).
-- import-rtdb.js: charge l'export RTDB JSON dans l'arbre (1 transaction).
-- Reste: shim client firebase-shim.js, tunnel cloudflared, deploiement VM, wiring index.html.
+- **Round 2 non répondu** : budget d'écran, testabilité sans pool, définition de la victoire, sort du golden. Consigné comme ouvert dans bible §31.
+- **Livrables invalidés** (§31.5) : golden 3 routes, corpus 100 références, 36 résolutions du pool, mélange + anti-répétition + ordre des arcs, équilibrage calibré sur 25.
+- **Restent valides** : grammaire de carte, beat de résolution, graine de variation, porte de nouveauté, tout l'outillage de mesure.

@@ -1,0 +1,12 @@
+{
+  "origin": "ORY",
+  "destination": "RUN",
+  "depart": "2027-01-15",
+  "return_date": "2027-02-05",
+  "price": 729.0,
+  "currency": "EUR",
+  "carriers": [],
+  "stops_out": -1,
+  "stops_in": -1,
+  "deep_link": ""
+}

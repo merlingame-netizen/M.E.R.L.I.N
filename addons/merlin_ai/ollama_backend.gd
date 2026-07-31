@@ -1,33 +1,52 @@
-## OllamaBackend — Drop-in replacement for MerlinLLM using Ollama HTTP API
+## OllamaBackend — remplacant de MerlinLLM via l'API HTTP d'Ollama
 ##
-## Utilise /api/generate avec raw=true pour envoyer les prompts ChatML pre-formates.
+## Utilise /api/chat avec un tableau de messages {role, content}. C'est Ollama
+## qui applique le gabarit de chat propre a CHAQUE modele — Gemma
+## (<start_of_turn>), Qwen (<|im_start|>) ou autre. Le jeu n'a plus a le savoir.
+##
+## Ce backend ecrivait auparavant du ChatML a la main et envoyait
+## /api/generate avec raw=true, ce qui disait explicitement a Ollama de NE PAS
+## appliquer le gabarit du modele. Changer de famille de modele produisait alors
+## une prose degradee sans qu'aucune erreur ne le signale.
+##
 ## Interface 100% compatible _run_llm (generate_async/poll_result/cancel/sampling).
 ## Multi-instance safe: chaque OllamaBackend est independant (Ollama gere le multi-slot).
 ## Supporte modeles heterogenes: chaque instance peut utiliser un modele different.
-## Supporte le thinking mode (Qwen 3.5): strip automatique des tags <think>.
+## Supporte le thinking mode: strip automatique des tags <think>.
 extends RefCounted
 class_name OllamaBackend
 
 const DEFAULT_HOST := "127.0.0.1"
 const DEFAULT_PORT := 11434
-const DEFAULT_MODEL := "qwen3.5:2b"
+const DEFAULT_MODEL := "gemma4:e4b-it-qat"
 const CONNECT_TIMEOUT_MS := 5000
 const READ_TIMEOUT_MS := 60000
 
-# ── Model Registry (Qwen 3.5 family) ─────────────────────────────────────────
+# ── Registre des modeles (famille Gemma 4) ───────────────────────────────────
 const MODEL_REGISTRY := {
-	"qwen35_4b": {"tag": "qwen3.5:4b", "ram_mb": 3200, "context_default": 8192},
-	"qwen35_2b": {"tag": "qwen3.5:2b", "ram_mb": 1800, "context_default": 4096},
-	"qwen35_0.8b": {"tag": "qwen3.5:0.8b", "ram_mb": 800, "context_default": 2048},
-	"qwen25_1.5b": {"tag": "qwen2.5:1.5b", "ram_mb": 1200, "context_default": 4096},
-	"qwen3_0.6b": {"tag": "qwen3:0.6b", "ram_mb": 600, "context_default": 1024},
+	"gemma4_26b": {"tag": "gemma4:26b-a4b-it-qat", "ram_mb": 16000, "context_default": 8192},
+	"gemma4_12b": {"tag": "gemma4:12b-it-qat", "ram_mb": 7200, "context_default": 8192},
+	"gemma4_e4b": {"tag": "gemma4:e4b-it-qat", "ram_mb": 6100, "context_default": 4096},
+	"gemma4_e2b": {"tag": "gemma4:e2b-it-qat", "ram_mb": 3000, "context_default": 4096},
+	"gemma4_31b": {"tag": "gemma4:31b-it-qat", "ram_mb": 19000, "context_default": 8192},
 }
 
 # ── Config ────────────────────────────────────────────────────────────────────
 var host: String = DEFAULT_HOST
 var port: int = DEFAULT_PORT
 var model: String = DEFAULT_MODEL
-var thinking_mode: bool = false  # Qwen 3.5: enable <think> reasoning (stripped from output)
+var thinking_mode: bool = false  # active le raisonnement <think> (retire de la sortie)
+
+# ── Messages neutres, poses avant l'appel (cf. set_messages) ─────────────────
+# Tableau de {role, content} avec role dans {system, user, assistant}.
+# Vide = le prompt passe a generate_async devient un unique message user.
+var _messages: Array = []
+
+# ── Contrainte de format JSON (cf. set_grammar / set_json_schema) ────────────
+# null           = aucune contrainte
+# "json"         = JSON syntaxiquement valide exige
+# Dictionary     = schema JSON complet, Ollama contraint le decodage dessus
+var _format_constraint: Variant = null
 
 # ── Sampling params (set via set_sampling_params / set_advanced_sampling) ─────
 var _temperature: float = 0.7
@@ -138,6 +157,50 @@ func check_model_available() -> bool:
 	return false
 
 
+## Liste les modeles reellement installes sur la machine (GET /api/tags).
+## Sert au selecteur du menu options : on propose ce qui EXISTE, pas une liste
+## ecrite en dur qui mentirait des que l'utilisateur installe autre chose.
+## Retourne [] si Ollama ne repond pas.
+func list_installed_models() -> Array[String]:
+	var out: Array[String] = []
+	var client := HTTPClient.new()
+	if client.connect_to_host(host, port) != OK:
+		return out
+	var start := Time.get_ticks_msec()
+	while client.get_status() == HTTPClient.STATUS_CONNECTING \
+			or client.get_status() == HTTPClient.STATUS_RESOLVING:
+		client.poll()
+		OS.delay_msec(10)
+		if Time.get_ticks_msec() - start > CONNECT_TIMEOUT_MS:
+			return out
+	if client.get_status() != HTTPClient.STATUS_CONNECTED:
+		return out
+	if client.request(HTTPClient.METHOD_GET, "/api/tags", []) != OK:
+		return out
+	while client.get_status() == HTTPClient.STATUS_REQUESTING:
+		client.poll()
+		OS.delay_msec(10)
+	if not client.has_response() or client.get_response_code() != 200:
+		return out
+	var body := PackedByteArray()
+	while client.get_status() == HTTPClient.STATUS_BODY:
+		client.poll()
+		var chunk := client.read_response_body_chunk()
+		if chunk.size() > 0:
+			body.append_array(chunk)
+		OS.delay_msec(1)
+	var json := JSON.new()
+	if json.parse(body.get_string_from_utf8()) != OK:
+		return out
+	var data: Dictionary = json.data if json.data is Dictionary else {}
+	for m in (data.get("models", []) as Array):
+		var n: String = str((m as Dictionary).get("name", ""))
+		if n != "":
+			out.append(n)
+	out.sort()
+	return out
+
+
 ## Lance la generation asynchrone (non-bloquant). Le callback recoit {"text": ...} ou {"error": ...}.
 func generate_async(prompt: String, callback: Callable) -> void:
 	if _is_generating:
@@ -160,7 +223,7 @@ func generate_async(prompt: String, callback: Callable) -> void:
 	_mutex.unlock()
 
 	_thread = Thread.new()
-	_thread.start(_blocking_generate.bind(prompt))
+	_thread.start(_blocking_generate.bind(_consommer_messages(prompt)))
 
 
 ## Verifie si la generation est terminee. Si oui, appelle le callback et retourne true.
@@ -233,7 +296,7 @@ func generate_stream_async(prompt: String) -> void:
 	_mutex.unlock()
 
 	_thread = Thread.new()
-	_thread.start(_blocking_stream.bind(prompt))
+	_thread.start(_blocking_stream.bind(_consommer_messages(prompt)))
 
 
 ## Recupere les tokens accumules depuis le dernier appel. Non-bloquant.
@@ -258,27 +321,9 @@ func poll_stream() -> Dictionary:
 	return out
 
 
-func _blocking_stream(prompt: String) -> void:
+func _blocking_stream(messages: Array) -> void:
 	var start_ms := Time.get_ticks_msec()
-
-	var options := {
-		"temperature": _temperature,
-		"top_p": _top_p,
-		"top_k": _top_k,
-		"repeat_penalty": _repetition_penalty,
-		"num_predict": _max_tokens,
-		"num_ctx": _num_ctx,
-	}
-	var payload := {
-		"model": model,
-		"prompt": prompt,
-		"raw": true,
-		"stream": true,
-		"options": options,
-	}
-	if thinking_mode:
-		payload["think"] = true
-	var body_str := JSON.stringify(payload)
+	var body_str := JSON.stringify(_construire_payload(messages, true))
 
 	# Connect.
 	var client := HTTPClient.new()
@@ -307,7 +352,7 @@ func _blocking_stream(prompt: String) -> void:
 		"Content-Type: application/json",
 		"Content-Length: %d" % body_str.to_utf8_buffer().size(),
 	]
-	err = client.request(HTTPClient.METHOD_POST, "/api/generate", headers, body_str)
+	err = client.request(HTTPClient.METHOD_POST, "/api/chat", headers, body_str)
 	if err != OK:
 		_store_stream_error("Ollama request failed: %s" % error_string(err))
 		return
@@ -349,7 +394,7 @@ func _blocking_stream(prompt: String) -> void:
 				if json.parse(line) != OK:
 					continue
 				var obj: Dictionary = json.data if json.data is Dictionary else {}
-				var token: String = str(obj.get("response", ""))
+				var token: String = _texte_de_reponse(obj)
 				if token != "":
 					if first_token_ms < 0:
 						first_token_ms = Time.get_ticks_msec() - start_ms
@@ -421,20 +466,104 @@ func set_advanced_sampling(p_top_k: int, p_repetition_penalty: float) -> void:
 	_repetition_penalty = clampf(p_repetition_penalty, 1.0, 2.0)
 
 
-## No-op: Ollama ne supporte pas GBNF grammar directement.
-## Le two-stage pipeline n'utilise pas la grammar (free text → programmatic wrap).
-func set_grammar(_grammar: String, _root: String = "root") -> void:
-	pass
+## Pose les messages du prochain appel, sous forme neutre.
+##
+## `messages` : Array de {role, content}, role dans {system, user, assistant}.
+## Ils sont CONSOMMES par la generation suivante — un appel qui n'en pose pas
+## repart d'un simple message user, sans heriter des precedents.
+func set_messages(messages: Array) -> void:
+	_messages.clear()
+	for m in messages:
+		if not (m is Dictionary):
+			continue
+		var role: String = str(m.get("role", "user"))
+		var content: String = str(m.get("content", ""))
+		if content.strip_edges().is_empty():
+			continue
+		if role not in ["system", "user", "assistant"]:
+			role = "user"
+		_messages.append({"role": role, "content": content})
 
 
-## No-op: voir set_grammar.
+func clear_messages() -> void:
+	_messages.clear()
+
+
+## Contraint la sortie a du JSON.
+##
+## Historiquement un no-op : « Ollama ne supporte pas GBNF ». C'est vrai, mais
+## Ollama accepte un parametre `format` — soit "json", soit un schema JSON
+## complet sur lequel il contraint le decodage. Gemma 4 sait s'y conformer
+## nativement a toutes les tailles.
+##
+## `grammar` peut donc etre :
+##   - un schema JSON (texte parsable en Dictionary) -> contrainte complete ;
+##   - une grammaire GBNF (les appelants historiques) -> on retombe sur "json",
+##     qui garantit au moins une syntaxe valide. C'est moins que le schema,
+##     mais infiniment plus que l'ancien no-op.
+func set_grammar(grammar: String, _root: String = "root") -> void:
+	if grammar.strip_edges().is_empty():
+		_format_constraint = null
+		return
+	var parsed: Variant = JSON.parse_string(grammar)
+	if parsed is Dictionary and (parsed as Dictionary).has("type"):
+		_format_constraint = parsed
+	else:
+		_format_constraint = "json"
+
+
+## Contrainte de decodage sur un schema JSON explicite (voie preferee).
+func set_json_schema(schema: Dictionary) -> void:
+	_format_constraint = schema if not schema.is_empty() else null
+
+
 func clear_grammar() -> void:
-	pass
+	_format_constraint = null
 
 
 ## Configure la taille du contexte (passee a Ollama via options.num_ctx).
 func set_context_size(p_n_ctx: int) -> void:
-	_num_ctx = clampi(p_n_ctx, 512, 131072)  # Qwen 3.5 supports up to 256K
+	_num_ctx = clampi(p_n_ctx, 512, 131072)  # Gemma 4 monte bien plus haut
+
+
+## Messages effectifs pour un appel, et remise a zero de l'etat pose.
+func _consommer_messages(prompt: String) -> Array:
+	if _messages.is_empty():
+		return [{"role": "user", "content": prompt}]
+	var out: Array = _messages.duplicate(true)
+	_messages.clear()
+	return out
+
+
+## Corps de la requete /api/chat, commun au bloquant et au streaming.
+func _construire_payload(messages: Array, streaming: bool) -> Dictionary:
+	var payload := {
+		"model": model,
+		"messages": messages,
+		"stream": streaming,
+		"options": {
+			"temperature": _temperature,
+			"top_p": _top_p,
+			"top_k": _top_k,
+			"repeat_penalty": _repetition_penalty,
+			"num_predict": _max_tokens,
+			"num_ctx": _num_ctx,
+		},
+	}
+	if thinking_mode:
+		payload["think"] = true
+	if _format_constraint != null:
+		payload["format"] = _format_constraint
+	return payload
+
+
+## Texte d'une reponse /api/chat : {"message": {"role":..., "content":...}}.
+## Tolere l'ancienne forme /api/generate ({"response": ...}) au cas ou.
+static func _texte_de_reponse(obj: Dictionary) -> String:
+	var message: Variant = obj.get("message", null)
+	if message is Dictionary:
+		return str((message as Dictionary).get("content", ""))
+	return str(obj.get("response", ""))
 
 
 ## Resolve a model registry key to an Ollama tag and configure defaults.
@@ -477,29 +606,10 @@ func get_model_info() -> Dictionary:
 # PRIVATE — Thread-based blocking HTTP request
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _blocking_generate(prompt: String) -> void:
+func _blocking_generate(messages: Array) -> void:
 	var start_ms := Time.get_ticks_msec()
 	var result := {}
-
-	var options := {
-		"temperature": _temperature,
-		"top_p": _top_p,
-		"top_k": _top_k,
-		"repeat_penalty": _repetition_penalty,
-		"num_predict": _max_tokens,
-		"num_ctx": _num_ctx,
-	}
-	var payload := {
-		"model": model,
-		"prompt": prompt,
-		"raw": true,
-		"stream": false,
-		"options": options,
-	}
-	# Qwen 3.5 thinking mode: enable chain-of-thought reasoning
-	if thinking_mode:
-		payload["think"] = true
-	var body_str := JSON.stringify(payload)
+	var body_str := JSON.stringify(_construire_payload(messages, false))
 
 	# Connect
 	var client := HTTPClient.new()
@@ -527,12 +637,12 @@ func _blocking_generate(prompt: String) -> void:
 		_store_result(result, start_ms)
 		return
 
-	# Send POST /api/generate
+	# Send POST /api/chat
 	var headers := [
 		"Content-Type: application/json",
 		"Content-Length: %d" % body_str.to_utf8_buffer().size(),
 	]
-	err = client.request(HTTPClient.METHOD_POST, "/api/generate", headers, body_str)
+	err = client.request(HTTPClient.METHOD_POST, "/api/chat", headers, body_str)
 	if err != OK:
 		result = {"error": "Ollama request failed: %s" % error_string(err)}
 		_store_result(result, start_ms)
@@ -586,9 +696,9 @@ func _blocking_generate(prompt: String) -> void:
 		return
 
 	var data: Dictionary = json.data if json.data is Dictionary else {}
-	var text: String = str(data.get("response", "")).strip_edges()
+	var text: String = _texte_de_reponse(data).strip_edges()
 
-	# Strip <think>...</think> tags — Qwen 3.5 emits them even without thinking_mode
+	# Strip <think>...</think> tags — certains modeles en emettent sans thinking_mode
 	if "<think>" in text:
 		text = _strip_thinking_tags(text)
 

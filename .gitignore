@@ -34,8 +34,14 @@ output/captures/
 # -------------------------------------------
 .godot/
 *.import
-export_presets.cfg
 /android/
+
+# export_presets.cfg est VERSIONNE (retire de l'ignore le 2026-07-27).
+# Sans lui le depot n'avait aucune configuration d'export et la CLI documentee
+# dans CLAUDE.md (`godot export web`, `list_presets`) echouait.
+# Aucun secret ne doit y entrer : keystore, mots de passe et cles passent par
+# les variables d'environnement Godot.
+builds/
 
 # -------------------------------------------
 # IDE & Editors
@@ -452,3 +458,4 @@ tools/autodev/status/cockpit_loops.json
 tools/autodev/status/studio_logs/
 tools/autodev/status/studio_jobs.json
 tools/autodev/status/studio_runs.json
+.tmp_pipeline_output.json
