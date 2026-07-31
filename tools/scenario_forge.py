@@ -502,8 +502,9 @@ def _other_godot_running() -> bool:
     return bool(re.search(r"(?i)godot", out))
 
 
-def run_jobs(jobs: list[dict], tag: str, per_job_timeout: int = 110) -> dict:
-    """Un process Godot headless pour tout le lot ; resultats incrementaux."""
+def run_jobs(jobs: list[dict], tag: str, per_job_timeout: int = 110, model: str = "") -> dict:
+    """Un process Godot headless pour tout le lot ; resultats incrementaux.
+    `model` : chemin res:// d'un GGUF alternatif (defaut runner = E2B du jeu)."""
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     jobs_path = STATE_DIR / f"jobs_{tag}.json"
     out_path = STATE_DIR / f"out_{tag}.json"
@@ -517,6 +518,8 @@ def run_jobs(jobs: list[dict], tag: str, per_job_timeout: int = 110) -> dict:
     cmd = [str(GODOT_EXE), "--headless", "--path", str(PROJECT_ROOT),
            "--script", "res://tools/forge_gen.gd", "--",
            "--jobs", str(jobs_path), "--out", str(out_path)]
+    if model:
+        cmd += ["--model", model]
     timeout = 180 + per_job_timeout * len(jobs)
     t0 = time.time()
     try:
@@ -581,7 +584,8 @@ def save_state(path: Path, state: dict) -> None:
     path.write_text(json.dumps(state, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-def forge_pieces(piece_defs: list[dict], state_path: Path) -> dict:
+def forge_pieces(piece_defs: list[dict], state_path: Path, model: str = "",
+                 per_job_timeout: int = 110) -> dict:
     """Boucle essais/QC avec reprise. piece_defs : [{id, kind, prompt{system,user,...},
     required, action, traits}]. Retourne l'etat final {id: {status, text, attempts}}."""
     state = load_state(state_path)
@@ -612,7 +616,7 @@ def forge_pieces(piece_defs: list[dict], state_path: Path) -> dict:
                                     f"refusee pour : {last_errs}. Corrige ces points et "
                                     f"reformule differemment.")
             jobs.append({"id": pd["id"], **prompt})
-        results = run_jobs(jobs, f"round{rnd}")
+        results = run_jobs(jobs, f"round{rnd}", per_job_timeout, model)
         for pd in batch:
             rid = pd["id"]
             res = results.get(rid, {})
@@ -651,11 +655,14 @@ MEASURE_REACTION_EVENTS = [
 ]
 
 
-def cmd_measure(args) -> int:
+def build_measure_defs() -> list[dict]:
+    """Reconstruit DETERMINISTIQUEMENT les pieces du banc de mesure (seeds figees) :
+    les prompts sont octet-identiques d'une invocation a l'autre, ce qui permet de
+    comparer plusieurs modeles sur le MEME banc (E2B vs E4B, R171)."""
     rng = random.Random(20260730)
     examples = harvest_examples("falaises")
     skel = build_skeleton("falaises", "breve", random.Random(7))
-    # pieces scriptees : 4 reactions + 2 scenes + 1 preambule (+ 1 quete breve si temps)
+    # pieces scriptees : 4 reactions + 2 scenes + 1 preambule + 1 geste de quete
     defs: list[dict] = []
     for i, ev in enumerate(MEASURE_REACTION_EVENTS, 1):
         defs.append({"id": f"reaction_{i}", "kind": "reaction",
@@ -678,11 +685,17 @@ def cmd_measure(args) -> int:
                  "prompt": prompt_preambule(
                      skel, "Le Compte des Marees",
                      "qui tient le compte des marees, et pourquoi il s'est arrete", examples, rng)})
-    if not args.skip_quest:
-        sc1 = ("Kado le Cordier t'attend sous le phare, un filet inconnu sur les genoux. ")
-        defs.append({"id": "quete_geste_1", "kind": "geste",
-                     "prompt": prompt_geste(skel, 0, 0, sc1, examples, "partiel", rng),
-                     "action": b0["action"], "traits": b0["traits"]})
+    sc1 = ("Kado le Cordier t'attend sous le phare, un filet inconnu sur les genoux. ")
+    defs.append({"id": "quete_geste_1", "kind": "geste",
+                 "prompt": prompt_geste(skel, 0, 0, sc1, examples, "partiel", rng),
+                 "action": b0["action"], "traits": b0["traits"]})
+    return defs
+
+
+def cmd_measure(args) -> int:
+    defs = build_measure_defs()
+    if args.skip_quest:
+        defs = [pd for pd in defs if pd["id"] != "quete_geste_1"]
 
     state_path = STATE_DIR / "measure_state.json"
     if args.fresh and state_path.exists():
@@ -700,6 +713,63 @@ def cmd_measure(args) -> int:
         st = rec.get("status", "?")
         toks = [a.get("tok_per_s", 0.0) for a in rec.get("attempts", [])]
         print(f"  {pid:16s} {st:9s} essais={n} tok/s={','.join(f'{t:.2f}' for t in toks)}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Commande measure-e4b - MEME banc que le E2B, palier E4B (R171)
+# ---------------------------------------------------------------------------
+
+E4B_MODEL = "res://addons/merlin_llm/models/gemma4-e4b-q4_k_m.gguf"
+# Parametres EXACTS du run generate E2B (2026-07-30) : ne pas changer, ce sont les
+# constantes du banc compare (prompts verifies octet-identiques via jobs_round1.json).
+BENCH_GEN_SEED = 42
+BENCH_GEN_TITLE = "Le Prix du Passage"
+BENCH_GEN_PROMESSE = "ce que le Passeur reclame vraiment a ceux qui traversent"
+
+
+def cmd_measure_e4b(args) -> int:
+    """Banc compare E2B vs E4B : 4 gestes (le test decisif, E2B = 0/4), 2 scenes a
+    figure imposee (E2B confondait heros/figure), 2 reactions (controle, E2B les
+    reussit). Prompts identiques aux runs E2B ; QC = regles finales courantes."""
+    defs_m = build_measure_defs()
+    rng = random.Random(BENCH_GEN_SEED)
+    skel = build_skeleton("foret", "breve", rng)
+    examples = harvest_examples("foret")
+    defs_g = build_generate_defs(skel, examples, rng, BENCH_GEN_TITLE, BENCH_GEN_PROMESSE)
+    by_id = {pd["id"]: pd for pd in defs_m + defs_g}
+    order = ["quete_geste_1", "geste_q0b0", "geste_q0b1", "geste_q0b2",
+             "scene_1", "scene_q0b0", "reaction_1", "reaction_2"]
+    missing = [pid for pid in order if pid not in by_id]
+    if missing:
+        print(f"pieces de banc introuvables : {missing}")
+        return 2
+    defs = [by_id[pid] for pid in order]
+
+    model_abs = PROJECT_ROOT / "addons" / "merlin_llm" / "models" / "gemma4-e4b-q4_k_m.gguf"
+    if not model_abs.exists() or model_abs.stat().st_size < 4_000_000_000:
+        print(f"GGUF E4B absent ou incomplet : {model_abs}")
+        return 2
+
+    state_path = STATE_DIR / "measure_e4b_state.json"
+    if args.fresh and state_path.exists():
+        state_path.unlink()
+    t0 = time.time()
+    # E4B ~2x plus lent que le E2B : garde-fou subprocess par piece releve en
+    # consequence (le timeout de GENERATION reste celui du jeu, 90 s, dans le runner).
+    pieces = forge_pieces(defs, state_path, model=E4B_MODEL, per_job_timeout=220)
+    wall = time.time() - t0
+
+    report = {"model": E4B_MODEL, "wall_clock_s": round(wall, 1), "pieces": pieces}
+    out = Path(args.out) if args.out else STATE_DIR / "measure_e4b_report.json"
+    out.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"\n== MESURE E4B ({wall:.0f}s) -> {out}")
+    for pid in order:
+        rec = pieces.get(pid, {})
+        n = len(rec.get("attempts", []))
+        toks = [a.get("tok_per_s", 0.0) for a in rec.get("attempts", [])]
+        print(f"  {pid:16s} {rec.get('status', '?'):9s} essais={n} "
+              f"tok/s={','.join(f'{t:.2f}' for t in toks)}")
     return 0
 
 
@@ -772,18 +842,9 @@ def assemble_html(skel: dict, title: str, pitch: str, pieces: dict) -> str:
     return "\n".join(parts)
 
 
-def cmd_generate(args) -> int:
-    rng = random.Random(args.seed)
-    biome = args.biome
-    skel = build_skeleton(biome, args.tier, rng)
-    examples = harvest_examples(biome)
-    state_path = STATE_DIR / f"gen_{biome}_{args.tier}_{args.seed}.json"
-    state = load_state(state_path)
-    state["skeleton"] = skel
-    save_state(state_path, state)
-
-    title = args.title or "Le Sentier Sans Nom"
-    promesse = args.promesse or "ce que le lieu a perdu, et qui le reclame"
+def build_generate_defs(skel: dict, examples: dict, rng: random.Random,
+                        title: str, promesse: str) -> list[dict]:
+    """Pieces d'un scenario complet. Deterministe a seed egal (comparaison inter-modeles)."""
     defs: list[dict] = [
         {"id": "preambule", "kind": "preambule",
          "prompt": prompt_preambule(skel, title, promesse, examples, rng)},
@@ -826,6 +887,22 @@ def cmd_generate(args) -> int:
                  "prompt": prompt_charniere("cloture", "fin de l'aventure", examples, rng)})
     defs.append({"id": "epilogue", "kind": "epilogue",
                  "prompt": prompt_epilogue(skel, promesse, examples, rng)})
+    return defs
+
+
+def cmd_generate(args) -> int:
+    rng = random.Random(args.seed)
+    biome = args.biome
+    skel = build_skeleton(biome, args.tier, rng)
+    examples = harvest_examples(biome)
+    state_path = STATE_DIR / f"gen_{biome}_{args.tier}_{args.seed}.json"
+    state = load_state(state_path)
+    state["skeleton"] = skel
+    save_state(state_path, state)
+
+    title = args.title or "Le Sentier Sans Nom"
+    promesse = args.promesse or "ce que le lieu a perdu, et qui le reclame"
+    defs = build_generate_defs(skel, examples, rng, title, promesse)
 
     pieces = forge_pieces(defs, state_path)
     html = assemble_html(skel, title, args.pitch or promesse.capitalize() + ".", pieces)
@@ -851,6 +928,9 @@ def main(argv: list[str]) -> int:
     p2.add_argument("--skip-quest", action="store_true")
     p2.add_argument("--fresh", action="store_true", help="ignore l'etat de reprise")
     p2.add_argument("--out", default="")
+    p4 = sub.add_parser("measure-e4b", help="banc compare E2B vs E4B (R171)")
+    p4.add_argument("--fresh", action="store_true", help="ignore l'etat de reprise")
+    p4.add_argument("--out", default="")
     p3 = sub.add_parser("generate", help="genere un scenario complet piece par piece")
     p3.add_argument("--biome", choices=["foret", "falaises"], default="foret")
     p3.add_argument("--tier", choices=["breve", "periple", "odyssee"], default="breve")
@@ -863,6 +943,8 @@ def main(argv: list[str]) -> int:
         return cmd_seed_etalons(args)
     if args.cmd == "measure":
         return cmd_measure(args)
+    if args.cmd == "measure-e4b":
+        return cmd_measure_e4b(args)
     return cmd_generate(args)
 
 

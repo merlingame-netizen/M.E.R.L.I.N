@@ -2123,6 +2123,28 @@ Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de c
   supprimee dans un script-outil SceneTree (parse-only) ; tout patch structurel d'un outil exige une
   invocation runtime minimale (--runs=2) avant campagne.
 
+- **R172 : MESURE E4B, ROLES ACTES PAR PALIER (2026-07-31, suite W4/R170/R171)** : le palier
+  mobile-compatible superieur gemma4-E4B (Q4_K_M 5,41 Go, MEME quantizer que le E2B embarque ;
+  le repo ggml-org du manifest download_gemma4.ps1 ne publie pas de Q4_K_M, manifest a corriger vers
+  la source bartowski) a ete mesure sur le MEME banc forge+QC que le E2B, prompts verifies
+  octet-identiques. RESULTAT DECISIF : les GESTES (piece 25.4bis, hors de portee du E2B : 0/4 en
+  12 essais) passent a 4/4 chez l'E4B (2 au 1er essai, 1 au 2e par reprise guidee, 1 revele un faux
+  negatif du lexique QC : periphrases legitimes de Rituel/Mystere ; lexique etendu PUIS
+  contre-verifie sans blanchiment : etalons 10/10, gestes E2B toujours en echec, verification
+  independante du coordinateur incluse). Scenes a figure imposee 2/2 (le E2B inventait une figure),
+  reactions 2/2 avec rappel des details ; UNE glissade grammaticale sur 8 pieces : la relecture
+  studio reste la passe finale. Vitesse E4B : 1,2-2,8 tok/s, 25-75 s/piece, chargement 6-8 s, marge
+  faible sous le timeout 90 s sur les gestes (batch : viser 120-130 tokens ou timeout dedie).
+  ROLES ACTES : **E2B = LIVE embarque** (reactions ~15 s, banque R167 en filet, inchange) ;
+  **E4B = auteur de BATCH nocturne** hors-jeu (forge piece par piece + QC ; estimation ~50-55
+  gestes valides/h, ~70 pieces/h, une breve ~10-13 min, ~35-45 breves/nuit, echantillon 8 pieces
+  A CONFIRMER au premier batch reel). Les deux paliers R171-conformes ; la bibliotheque niveau
+  etalon reste la reference du fil causal complet. Outillage : forge_gen.gd gagne `--model`
+  (defaut E2B, regression verifiee), scenario_forge.py gagne `measure-e4b` et des constructeurs
+  de banc deterministes (12/12 prompts reproduits a l'octet pres : comparaison inter-paliers
+  reproductible). Note d'exploitation : 13,6 Go d'espace disque liberes par purge de 2 caches HF
+  audio RE-telechargeables (stable-audio-open, audioldm2) pour loger le GGUF E4B.
+
 - **R171 : DOCTRINE MODELE, GEMMA MOBILE-COMPATIBLE UNIQUEMENT (2026-07-30, decision Maxime)** :
   « Enleve les Qwen, je ne veux que du Gemma qui serait a minima compatible high-end mobile
   d'aujourd'hui. » REGLE : la famille Gemma est la SEULE autorisee dans toute la chaine M.E.R.L.I.N.

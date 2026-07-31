@@ -3,7 +3,7 @@ extends SceneTree
 ## Execute une liste de jobs de generation sur le Gemma NATIF du jeu et ecrit les
 ## resultats de facon INCREMENTALE (un batch interrompu garde ses pieces payees).
 ##
-##   godot --headless --path . --script res://tools/forge_gen.gd -- --jobs <in.json> --out <out.json>
+##   godot --headless --path . --script res://tools/forge_gen.gd -- --jobs <in.json> --out <out.json> [--model <res://...gguf>]
 ##
 ## POURQUOI la GDExtension MerlinLLM est pilotee EN DIRECT (et pas via l'autoload
 ## MerlinNative) : MerlinNative._boot() attend `RenderingServer.frame_post_draw` avant
@@ -19,6 +19,8 @@ extends SceneTree
 ## Format de sortie : {"model": {...}, "results": {id: {text, ms, tok_per_s,
 ##                     approx_tokens, error}}}
 
+# Modele par defaut = E2B embarque du jeu ; surchargable par --model <res://...gguf>
+# (mesure des paliers Gemma mobile-compatibles, R171 : E2B/E4B uniquement).
 const MODEL_PATH: String = "res://addons/merlin_llm/models/gemma4-e2b-q4_k_m.gguf"
 const N_CTX: int = 2048
 const TEMP_CREATIVE: float = 0.85
@@ -80,7 +82,10 @@ func _run() -> void:
 		quit(3)
 		return
 	_llm.set_context_size(N_CTX)
-	var model_path: String = ProjectSettings.globalize_path(MODEL_PATH)
+	var model_res: String = _arg(uargs, "--model")
+	if model_res == "":
+		model_res = MODEL_PATH
+	var model_path: String = ProjectSettings.globalize_path(model_res)
 	var t0: int = Time.get_ticks_msec()
 	var err: int = _llm.load_model(model_path)
 	if err != OK:

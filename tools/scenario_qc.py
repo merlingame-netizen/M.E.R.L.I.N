@@ -185,10 +185,16 @@ LEXICAL_FIELD: dict[str, list[str]] = {
     "nature": ["nature", "bete", "plante", "arbre", "seve", "foret", "vivant",
                "corbeau", "oiseau"],
     "vision": ["vision", "reve", "presage", "augure"],
-    "rituel": ["rite", "rituel", "signe", "formule", "ceremonie", "incant"],
+    # "prononcer/murmurer un nom", "runes" = incantation (synonyme canon de rituel,
+    # MerlinTags.SYNONYMS) : ajoutes apres la mesure E4B (periphrases legitimes refusees).
+    "rituel": ["rite", "rituel", "signe", "formule", "ceremonie", "incant",
+               "prononc", "murmure le nom", "murmures le nom", "nom ancien", "rune"],
     "sacrifice": ["sacrif", "offrande", "offr", "don", "donn", "renonc", "sang", "prix"],
     "equilibre": ["equilibre", "harmonie", "paix", "balance", "mesure"],
-    "mystere": ["mystere", "secret", "enigme", "inconnu", "etrange"],
+    # "voile entre les mondes", "passage cache" : images canon du mystere observees
+    # dans la prose E4B (extension post-mesure ; "voile" seul serait ambigu en falaises).
+    "mystere": ["mystere", "secret", "enigme", "inconnu", "etrange",
+                "voile entre les mondes", "passage cache"],
 }
 
 # Cartes canon vues dans les etalons -> ancres specifiques (completent les mots du label).
