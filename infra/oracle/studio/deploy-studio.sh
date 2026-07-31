@@ -4,7 +4,10 @@
 #   cd ~/workspace/M.E.R.L.I.N && bash infra/oracle/studio/deploy-studio.sh
 #
 # Idempotent: venv (flask) -> 0600 auth token -> systemd unit on 127.0.0.1:8790 -> health.
-# Expose it with:  TUNNEL_PORT=8790 bash infra/oracle/scripts/tunnel.sh   (or the atelier one)
+# Expose it with (tunnel Cloudflare, aucun port ouvert) :
+#   TUNNEL_PORT=8790 bash infra/fleet/atelier/deploy/tunnel.sh quick
+# (infra/oracle/scripts/tunnel.sh est un port-forward SSH depuis le PC : il expose
+#  aussi 8790, mais exige un acces SSH sortant vers la VM.)
 set -euo pipefail
 
 REPO_DIR="$(cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || echo "$(dirname "$0")/../../..")" && pwd)"

@@ -9,8 +9,9 @@ USER="$(cd "$TF_DIR" && terraform output -raw ssh_user 2>/dev/null || echo ubunt
 [[ -n "$IP" ]] || { echo "No public_ip output — apply the VM first." >&2; exit 1; }
 
 echo "Tunneling VM services to localhost (Ctrl-C to stop):"
-echo "  :3000 Open WebUI  :8443 code-server  :8081 Filebrowser  :11434 Ollama  :5432 Postgres"
+echo "  :8790 MERLIN Studio  :3000 Open WebUI  :8443 code-server  :8081 Filebrowser  :11434 Ollama  :5432 Postgres"
 exec ssh -N -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new \
+  -L 8790:localhost:8790 \
   -L 11434:localhost:11434 \
   -L 3000:localhost:3000 \
   -L 8443:localhost:8443 \
