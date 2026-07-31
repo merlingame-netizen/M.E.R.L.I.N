@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>MERLIN Studio — VM perso</title>
+<style>
+ :root{--bg:#0d1117;--card:#161b22;--bd:#30363d;--tx:#e6edf3;--mut:#8b949e;
+       --up:#2ea043;--down:#f85149;--pend:#9e6a03;--acc:#58a6ff;--acc2:#a371f7}
+ *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+ html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+ header{padding:13px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:5}
+ h1{font-size:16px;margin:0}
+ nav{display:flex;gap:6px;padding:10px 12px;position:sticky;top:48px;background:var(--bg);z-index:4;border-bottom:1px solid var(--bd);overflow-x:auto}
+ nav button{flex:0 0 auto;background:var(--card);color:var(--mut);border:1px solid var(--bd);border-radius:20px;padding:9px 15px;font:inherit;font-weight:700;cursor:pointer;min-height:42px}
+ nav button.on{color:var(--bg);background:var(--acc2);border-color:var(--acc2)}
+ main{padding:4px 0 46px}.pane{display:none}.pane.on{display:block}
+ h2{font-size:11.5px;color:var(--mut);margin:18px 16px 8px;text-transform:uppercase;letter-spacing:1px}
+ .grid{display:grid;gap:12px;padding:6px 16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr))}
+ .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:13px;border-left:4px solid var(--mut)}
+ .card.up,.card.done{border-left-color:var(--up)}
+ .card.down,.card.failed,.card.ended{border-left-color:var(--down)}
+ .card.pending,.card.warn{border-left-color:var(--pend)}
+ .card.running{border-left-color:var(--acc)}
+ .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+ .name{font-weight:700}.mut{color:var(--mut);font-size:12px}
+ .badge{font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap}
+ .badge.up,.badge.done{background:rgba(46,160,67,.15);color:var(--up)}
+ .badge.down,.badge.failed,.badge.ended{background:rgba(248,81,73,.15);color:var(--down)}
+ .badge.pending,.badge.idle,.badge.warn{background:rgba(158,106,3,.15);color:var(--pend)}
+ .badge.running{background:rgba(88,166,255,.15);color:var(--acc)}
+ .metrics{display:flex;gap:11px;flex-wrap:wrap;color:var(--mut);font-size:12px;margin-top:6px}.metrics b{color:var(--tx)}
+ .bar{height:6px;border-radius:4px;background:#21262d;margin-top:8px;overflow:hidden}
+ .bar>i{display:block;height:100%;background:var(--up)}.bar.warn>i{background:var(--pend)}.bar.crit>i{background:var(--down)}
+ button.go{background:var(--acc);color:#0d1117;border:0;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer;min-height:44px;font:inherit}
+ button.go:disabled{opacity:.45;cursor:not-allowed}
+ button.sm{padding:7px 12px;min-height:38px;border-radius:6px;font-size:12.5px}
+ button.stop{background:var(--down)}
+ select,input{background:#0d1117;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:10px;font:inherit;min-height:44px;width:100%}
+ label{display:block;font-size:11px;color:var(--mut);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px}
+ .form{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:6px 16px}
+ .res{font-size:12px;color:var(--mut);word-break:break-word}.res.ok{color:var(--up)}.res.err{color:var(--down)}
+ pre.log{white-space:pre-wrap;background:#0d1117;border:1px solid var(--bd);border-radius:8px;padding:8px;font-size:11px;color:var(--mut);max-height:190px;overflow:auto;margin:8px 0 0}
+ ul.feed{list-style:none;margin:0 16px;padding:0}
+ ul.feed li{border-bottom:1px solid var(--bd);padding:7px 2px;font-size:12.5px;display:flex;gap:9px}
+ ul.feed li .when{color:var(--mut);flex:0 0 auto}
+ footer{color:var(--mut);font-size:11px;padding:16px}a{color:var(--acc)}code{color:var(--acc2)}
+ @media (max-width:520px){h1{font-size:14px}nav button{padding:9px 12px}}
+</style>
+</head>
+<body>
+<header><h1>🜨 MERLIN Studio <span class="mut">— VM perso</span></h1><span class="mut" id="sum">…</span></header>
+<nav>
+ <button data-tab="run" class="on">Run</button>
+ <button data-tab="content">Contenu</button>
+ <button data-tab="jobs">Jobs</button>
+ <button data-tab="llm">LLM</button>
+ <button data-tab="repo">Repo</button>
+ <button data-tab="host">Hôte</button>
+</nav>
+<main>
+ <section class="pane on" id="pane-run">
+  <h2>Godot</h2><div class="grid" id="godotcard"></div>
+  <h2>Actions rapides</h2>
+  <div class="form"><div class="row" style="flex-wrap:wrap;gap:10px">
+    <button class="go" onclick="run('godot-boot')">Boot check</button>
+    <button class="go" onclick="run('godot-test')">Tests headless</button>
+    <button class="go" onclick="runAll()">Smoke toutes scènes</button>
+    <button class="go" onclick="parseProj()">Import/parse ⏱</button>
+  </div><div class="res" id="runres" style="margin-top:10px"></div></div>
+  <h2>Scènes</h2><div class="grid" id="scenes"></div>
+ </section>
+
+ <section class="pane" id="pane-content">
+  <h2>Canon &amp; corpus</h2><div class="grid" id="contentcards"></div>
+  <h2>Générer / valider</h2>
+  <div class="form">
+   <label>Nombre</label><select id="genN"><option>6</option><option selected>12</option><option>24</option><option>48</option></select>
+   <label>Backend</label><select id="genB"><option value="template" selected>template (hors-ligne)</option><option value="ollama">ollama (local)</option></select>
+   <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:10px">
+    <button class="go" onclick="genCards()">Générer ▶</button>
+    <button class="go" onclick="run('content-validate')">Valider (selftest)</button>
+    <button class="go" onclick="run('content-eval',{backend:'template',count:20})">Éval modèles</button>
+   </div><div class="res" id="genres" style="margin-top:10px"></div>
+  </div>
+  <h2>Divergences code ↔ bible</h2><ul class="feed" id="divs"></ul>
+ </section>
+
+ <section class="pane" id="pane-jobs">
+  <h2>Lancer</h2>
+  <div class="form">
+   <label>Type</label><select id="lk" onchange="renderParams()"></select>
+   <div id="lparams"></div>
+   <button class="go" id="lbtn" style="margin-top:14px" onclick="launchGeneric()">Lancer ▶</button>
+   <div class="res" id="lres" style="margin-top:10px"></div>
+  </div>
+  <h2>Jobs récents</h2><div class="grid" id="jobs"></div>
+ </section>
+
+ <section class="pane" id="pane-llm">
+  <h2>Ollama local</h2><div class="grid" id="llmcards"></div>
+  <h2>Tester le modèle</h2>
+  <div class="form">
+   <label>Modèle</label><input id="omodel" value="gemma3:4b">
+   <label>Prompt</label><input id="oprompt" value="Décris Brocéliande en une phrase.">
+   <button class="go" style="margin-top:12px" onclick="askOllama()">Générer ▶</button>
+   <div class="res" id="ores" style="margin-top:10px"></div>
+  </div>
+  <h2>Voix</h2><div class="grid" id="voicecards"></div>
+ </section>
+
+ <section class="pane" id="pane-repo">
+  <h2>Dépôt du jeu</h2><div class="grid" id="repocards"></div>
+  <div class="form"><div class="row" style="flex-wrap:wrap;gap:10px">
+    <button class="go" onclick="run('git-fetch')">Fetch</button>
+    <button class="go" onclick="run('git-pull')">Pull (ff-only)</button>
+   </div><div class="mut" style="margin-top:8px">Lecture seule : pas de commit/push/reset depuis l'UI.</div></div>
+  <h2>Commits</h2><ul class="feed" id="commits"></ul>
+ </section>
+
+ <section class="pane" id="pane-host">
+  <h2>Machine</h2><div class="grid" id="hostcards"></div>
+  <h2>Ports</h2><div class="grid" id="ports"></div>
+ </section>
+</main>
+<footer id="foot"></footer>
+<script>
+const $=s=>document.querySelector(s), j=(u,o)=>fetch(u,o).then(r=>r.json());
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const card=(n,b,st)=>`<div class="card ${st||''}"><div class="row"><span class="name">${n}</span></div>${b}</div>`;
+const gauge=p=>{const c=p>=90?'crit':p>=70?'warn':'';return `<div class="bar ${c}"><i style="width:${Math.min(p,100)}%"></i></div>`};
+let CAT=[];
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+ document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+b.dataset.tab));});
+
+async function run(kind,params){const r=$('#runres')||$('#genres');
+ try{const x=await j('/api/launch',{method:'POST',headers:{'content-type':'application/json'},
+  body:JSON.stringify({kind,params:params||{}})});
+  const t=x.error?('✗ '+x.error):('✓ '+(x.label||kind)+' lancé #'+x.id);
+  ['#runres','#genres','#lres'].forEach(id=>{const e=$(id);if(e){e.textContent=t;e.className='res '+(x.error?'err':'ok')}});
+ }catch(e){}
+ refreshJobs();}
+const runAll=()=>run('godot-smoke-all',{duration:6});
+const parseProj=()=>{if(confirm("L'import/parse complet peut prendre 5-10 min à froid. Lancer ?"))run('godot-parse')};
+const genCards=()=>run('content-gen',{count:parseInt($('#genN').value),backend:$('#genB').value});
+
+async function refreshRun(){const d=await j('/api/godot'),g=d.godot||{},runs=d.runs||{};
+ $('#godotcard').innerHTML=[
+  card('Binaire',`<div class="metrics"><span>version <b>${esc(g.version||'—')}</b></span><span>headless <b>${g.headless_only?'oui':'non'}</b></span></div>
+   ${g.warning?`<div class="res err">⚠ ${esc(g.warning)}</div>`:''}`, g.available?(g.warning?'warn':'up'):'down'),
+  card('Projet',`<div class="metrics"><span>nom <b>${esc(g.project?.name||'—')}</b></span></div>
+   <div class="mut">scène principale : ${esc(g.project?.main_scene||'—')}</div>
+   <div class="mut">export presets : ${g.export_presets?'✓':'absent'}</div>`,'up'),
+ ].join('');
+ $('#scenes').innerHTML=(g.scenes||[]).map(s=>{const k='smoke:'+s,r=runs[k];
+  const st=r?(r.status==='done'&&!r.script_errors?'done':'failed'):'pending';
+  return `<div class="card ${st}"><div class="row"><span class="name">${esc(s.replace('.tscn',''))}</span>
+   <span class="badge ${st}">${r?r.status:'jamais'}</span></div>
+   ${r?`<div class="mut">exit ${r.exit_code} · ${r.script_errors} SCRIPT ERROR · ${esc(r.at||'')}</div>`:'<div class="mut">pas encore testée</div>'}
+   <div style="margin-top:9px"><button class="go sm" onclick="run('godot-smoke',{scene:'${esc(s)}',duration:8})">Smoke ▶</button></div></div>`;
+ }).join('');}
+
+async function refreshContent(){const d=await j('/api/content'),c=d.canon||{},co=d.corpus||{},lp=d.loops||{};
+ const cnt=c.counts||{};
+ const mos=co.mos||{cards:0,target:25};
+ $('#contentcards').innerHTML=[
+  card('Lore canon',c.available?`<div class="metrics">
+   <span>v <b>${esc(c.version)}</b></span><span>factions <b>${cnt.factions}</b></span><span>PNJ <b>${cnt.npcs}</b></span>
+   <span>biomes <b>${cnt.biomes}</b></span><span>runes <b>${cnt.rune_circuits}</b></span><span>fins <b>${cnt.endings}</b></span>
+   <span>events <b>${cnt.events}</b></span></div>
+   <div class="mut">divergences ${c.divergences} · gaps ${c.gaps}</div>`:'<div class="mut">lore_canon.json absent</div>',
+   c.available?'up':'pending'),
+  card('Corpus auto',co.available?`<div class="metrics"><span>cartes <b>${co.lines}</b></span>
+   <span>${Object.entries(co.backends||{}).map(([k,v])=>k+' '+v).join(' · ')}</span></div>
+   <div class="mut">MOS ${mos.cards}/${mos.target}</div>${gauge(Math.round(100*mos.cards/mos.target))}
+   <div class="mut">maj ${esc(co.mtime||'')}</div>`:'<div class="mut">aucun corpus généré</div>',co.available?'up':'pending'),
+  card('Boucles',Object.keys(lp).length?Object.entries(lp).map(([k,v])=>
+   `<div class="metrics"><span>${esc(k)} <b>×${v.runs||0}</b></span><span class="mut">${esc(v.last||'')}</span></div>`).join('')
+   :'<div class="mut">aucune boucle exécutée</div>','done'),
+ ].join('');
+ $('#divs').innerHTML=(c.divergence_list||[]).map(t=>`<li><span class="when">⚠</span><span>${esc(t)}</span></li>`).join('')
+  ||'<li class="mut">aucune divergence listée</li>';}
+
+async function refreshLlm(){const d=await j('/api/llm'),o=d.ollama||{},v=d.voice||{};
+ $('#llmcards').innerHTML=[
+  card('Ollama',o.available?`<div class="metrics"><span>v <b>${esc(o.version)}</b></span>
+   <span>modèles <b>${(o.models||[]).length}</b></span><span>chargés <b>${(o.loaded||[]).length}</b></span></div>
+   ${(o.models||[]).map(m=>`<div class="mut">${esc(m.name)} — ${m.gb} Go ${esc(m.param)} ${esc(m.quant)}</div>`).join('')}
+   ${o.biggest_gb&&!o.fits?'<div class="res err">⚠ RAM insuffisante pour le plus gros modèle</div>':''}`
+   :`<div class="mut">indisponible sur ${esc(o.url||'')}</div>`, o.available?'up':'down'),
+ ].join('');
+ const b=(x,n)=>card(n,x&&x.ok!==false?`<div class="metrics"><span>backend <b>${esc(x.backend||'?')}</b></span>
+   <span>prêt <b>${x.ready?'oui':'non'}</b></span>${x.profile?`<span>profil <b>${esc(x.profile)}</b></span>`:''}</div>`
+   :'<div class="mut">service arrêté</div>', x&&x.ok!==false?'up':'pending');
+ $('#voicecards').innerHTML=[b(v.tts,'TTS (conteur)'),b(v.asr,'ASR (voix joueur)'),
+  card('Démarrer',`<div class="row" style="gap:9px;flex-wrap:wrap">
+   <button class="go sm" onclick="run('tts-start')">TTS ▶</button>
+   <button class="go sm" onclick="run('asr-start')">ASR ▶</button></div>`,'')].join('');}
+const askOllama=()=>run('ollama-generate',{model:$('#omodel').value,prompt:$('#oprompt').value});
+
+async function refreshRepo(){const r=await j('/api/repo');
+ $('#repocards').innerHTML=[
+  card('Branche',`<div class="metrics"><span><b>${esc(r.branch)}</b></span>
+   <span>↑${r.ahead} ↓${r.behind}</span><span>modifiés <b>${r.dirty_count}</b></span></div>
+   ${r.diffstat?`<div class="mut">${esc(r.diffstat)}</div>`:''}`, r.behind?'pending':'up'),
+  card('Fichiers modifiés',(r.dirty||[]).length?`<pre class="log">${esc((r.dirty||[]).join('\n'))}</pre>`
+   :'<div class="mut">arbre propre</div>',(r.dirty||[]).length?'warn':'up'),
+ ].join('');
+ $('#commits').innerHTML=(r.commits||[]).map(c=>`<li><span class="when">${esc(c.when)}</span>
+  <span><code>${esc(c.hash)}</code> ${esc(c.subject)}</span></li>`).join('');}
+
+async function refreshHost(){const h=await j('/api/host'),m=h.mem||{};
+ const svc=Object.entries(h.services||{}).map(([k,v])=>{
+  const cls=v==='active'?'up':(v==='inactive'&&k==='merlin-runner')?'idle':(v==='n/a'?'idle':'down');
+  return `<span class="badge ${cls}">${esc(k)} ${esc(v)}</span>`}).join(' ');
+ $('#hostcards').innerHTML=[
+  card('Ressources',`<div class="metrics"><span>arch <b>${esc(h.arch)}</b></span><span>cœurs <b>${esc(h.cpus)}</b></span>
+   <span>load <b>${esc(h.load)}</b></span></div>
+   <div class="mut">RAM ${m.available_gb} / ${m.total_gb} Go libres</div>${gauge(m.used_pct||0)}
+   <div class="mut">disque ${esc(h.disk?.used||'?')} / ${esc(h.disk?.size||'?')} (${esc(h.disk?.pct||'')}) · ${esc(h.uptime||'')}</div>`,
+   (m.used_pct||0)>90?'down':'up'),
+  card('Services',`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${svc}</div>
+   <div class="mut" style="margin-top:6px">merlin-runner inactif = normal (idle sans clé API)</div>`,''),
+  card('Provisioning',`<div class="mut">PROVISION_DONE : ${h.provision?.provision_done?'✓':'—'}</div>
+   <div class="mut">${esc(h.provision?.models_done||'MODELS_DONE : —')}</div>
+   ${h.containers?`<div class="mut">${h.containers.map(c=>esc(c.name)+': '+esc(c.status)).join('<br>')}</div>`:'<div class="mut">docker n/a</div>'}`,''),
+ ].join('');
+ $('#ports').innerHTML=(h.ports||[]).map(p=>`<div class="card ${p.open?'up':'pending'}">
+  <div class="row"><span class="name">${p.port}</span><span class="badge ${p.open?'up':'pending'}">${p.open?'ouvert':'fermé'}</span></div>
+  <div class="mut">${esc(p.name)}</div></div>`).join('');}
+
+async function loadCat(){CAT=(await j('/api/launchers')).launchers||[];
+ $('#lk').innerHTML=CAT.map(l=>`<option value="${l.kind}"${l.available?'':' disabled'}>${esc(l.label)}${l.available?'':' — '+esc(l.reason||'indispo')}</option>`).join('');
+ renderParams();}
+function renderParams(){const l=CAT.find(x=>x.kind===$('#lk').value)||{params:[]};
+ $('#lparams').innerHTML=(l.params||[]).map(p=>p.options
+  ?`<label>${p.name}</label><select data-p="${p.name}">${p.options.map(o=>`<option>${esc(o)}</option>`).join('')}</select>`
+  :`<label>${p.name}</label><input data-p="${p.name}" value="${esc(p.default??'')}">`).join('')
+  ||'<div class="mut" style="margin-top:8px">aucun paramètre</div>';}
+function launchGeneric(){const params={};
+ document.querySelectorAll('#lparams [data-p]').forEach(e=>{if(e.value)params[e.dataset.p]=e.value});
+ run($('#lk').value,params);}
+
+async function refreshJobs(){const d=await j('/api/jobs');
+ const busy=Object.entries(d.running||{}).filter(([,v])=>v>0).map(([k,v])=>k+' ×'+v).join(' · ');
+ $('#jobs').innerHTML=(d.jobs||[]).map(job=>`<div class="card ${job.status}">
+  <div class="row"><span class="name">${esc(job.label||job.kind)} <span class="mut">#${job.id}</span></span>
+   <span class="badge ${job.status}">${job.status}</span></div>
+  <div class="mut">${esc(job.started_at)}${job.exit_code!=null?' · exit '+job.exit_code:''} · groupe ${esc(job.group)}</div>
+  ${job.log_tail?`<pre class="log">${esc(job.log_tail)}</pre>`:''}
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+   <a class="mut" href="/api/job/${job.id}" target="_blank">log complet ↗</a>
+   ${job.status==='running'?`<button class="go sm stop" onclick="stopJob('${job.id}')">Stop ■</button>`:''}</div></div>`).join('')
+  ||'<div class="mut" style="padding:0 16px">aucun job</div>';
+ $('#foot').textContent='MERLIN Studio · VM perso Oracle · '+(busy?('occupé: '+busy):'libre')+' · refresh 10s';}
+const stopJob=async id=>{await j('/api/job/'+id+'/stop',{method:'POST'});refreshJobs()};
+
+async function refreshSum(){const o=await j('/api/overview');const m=o.mem||{};
+ $('#sum').textContent=`${o.cpus} cœurs · ${m.available_gb}/${m.total_gb} Go · ${o.models} modèles · ${o.branch}`;}
+
+function tick(){refreshSum();refreshRun();refreshContent();refreshLlm();refreshRepo();refreshHost();refreshJobs();}
+loadCat();tick();
+setInterval(refreshJobs,10000);
+setInterval(()=>{refreshSum();refreshRun();refreshHost()},30000);
+setInterval(()=>{refreshContent();refreshLlm();refreshRepo()},60000);
+</script>
+</body>
+</html>

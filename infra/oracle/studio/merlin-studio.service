@@ -1,0 +1,29 @@
+[Unit]
+# MERLIN Studio — VM-local dev dashboard on the personal Oracle ARM A1 host.
+# TEMPLATE: deploy-studio.sh fills __REPO_DIR__ / __USER__ / __VENV__ and installs the
+# result to /etc/systemd/system/merlin-studio.service. Do not edit in place on the VM.
+Description=M.E.R.L.I.N. Studio (VM-local dev dashboard)
+Documentation=https://github.com/merlingame-netizen/M.E.R.L.I.N/tree/master/infra/oracle/studio
+After=network-online.target ollama.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__REPO_DIR__
+# STUDIO_TOKEN (Basic-auth) + optional OLLAMA_URL/GODOT_BIN live in this 0600 env file.
+EnvironmentFile=/etc/merlin-studio.env
+Environment=STUDIO_HOST=127.0.0.1
+Environment=STUDIO_PORT=8790
+ExecStart=__VENV__/bin/python tools/merlin_studio/app.py
+Restart=always
+RestartSec=3
+# Studio shells godot/git/ollama inside the repo, so the repo must stay writable;
+# everything else is read-only.
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+ReadWritePaths=__REPO_DIR__
+
+[Install]
+WantedBy=multi-user.target

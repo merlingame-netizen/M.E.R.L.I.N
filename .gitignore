@@ -447,3 +447,8 @@ tools/autodev/status/cockpit_launches.json
 data/ai/colab_queue.json
 data/ai/training/auto_corpus.jsonl
 tools/autodev/status/cockpit_loops.json
+
+# MERLIN Studio runtime (job logs/registry)
+tools/autodev/status/studio_logs/
+tools/autodev/status/studio_jobs.json
+tools/autodev/status/studio_runs.json
