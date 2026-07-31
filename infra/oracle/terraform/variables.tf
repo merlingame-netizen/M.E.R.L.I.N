@@ -145,8 +145,8 @@ variable "ollama_models" {
 
 variable "godot_version" {
   type        = string
-  description = "Godot headless version to install (matches project: 4.4.1)."
-  default     = "4.4.1"
+  description = "Godot headless version to install. 4.6 = latest stable; verified to run this project headless (MenuTest smoke: exit 0, 0 SCRIPT ERROR). project.godot declares features 4.5, which 4.6 opens fine."
+  default     = "4.6"
 }
 
 variable "git_repos" {

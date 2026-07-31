@@ -15,7 +15,7 @@ extends RefCounted
 class_name BrainSwarmConfig
 
 # ── Profile Names ─────────────────────────────────────────────────────────────
-enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH, ULTRA, MOBILE_ULTRA, SINGLE_GEMMA }
+enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH, ULTRA, MOBILE_ULTRA, SINGLE_GEMMA, VM_GEMMA3, VM_GEMMA3_MAX }
 
 # ── Ollama Model Tags (Qwen 3.5 family) ──────────────────────────────────────
 const MODEL_QWEN35_4B := "qwen3.5:4b"
@@ -26,6 +26,13 @@ const MODEL_QWEN35_08B := "qwen3.5:0.8b"
 const MODEL_QWEN25_1_5B := "qwen2.5:1.5b"
 # Quality 2B alt for the "qualité" narration mode (plan Add-on 7 — two LLM modes).
 const MODEL_GEMMA2_2B := "gemma2:2b"
+
+# Gemma 3 — the models actually pulled on the personal Oracle ARM A1 VM by cloud-init
+# (infra/oracle/terraform variables.tf: ollama_models = ["gemma3:4b", "gemma3:12b"]).
+# Without these profiles the VM's models would never be used: the game only ever asked
+# for qwen3.5:* tags, so check_model_available() failed and it fell back.
+const MODEL_GEMMA3_4B := "gemma3:4b"
+const MODEL_GEMMA3_12B := "gemma3:12b"
 
 # ── Mobile model file paths (ARM64 via merlin_llm GDExtension recompiled, NOT Ollama) ─
 # These are .gguf filenames in addons/merlin_llm/models/ — NOT Ollama tags.
@@ -50,6 +57,8 @@ const RAM_BY_MODEL := {
 	"qwen3_0.6b": 600,
 	"qwen3_0.6b_mobile": 600,
 	"gemma2_2b": 1800,
+	"gemma3_4b": 3400,
+	"gemma3_12b": 9000,
 }
 
 # ── Profile Definitions ──────────────────────────────────────────────────────
@@ -200,6 +209,30 @@ const PROFILES := {
 		"prefetch_depth": 0,
 	},
 	# "Qualité" narration mode — single 2B Gemma narrator (richer prose than 0.6B).
+	# ── Personal Oracle ARM A1 VM (4 OCPU / 24 GB) — the models cloud-init actually pulls ──
+	Profile.VM_GEMMA3: {
+		"name": "VM Oracle (Gemma3 4B)",
+		"mode": "resident",
+		"brains": [
+			{"role": "narrator", "model_key": "gemma3_4b", "ollama_tag": MODEL_GEMMA3_4B, "n_ctx": 8192, "ram_mb": 3400, "thinking": false},
+		],
+		"total_ram_mb": 3400,
+		"min_threads": 2,
+		"min_ram_mb": 6000,
+		"prefetch_depth": 1,
+	},
+	Profile.VM_GEMMA3_MAX: {
+		"name": "VM Oracle (Gemma3 12B — qualité max)",
+		"mode": "resident",
+		"brains": [
+			{"role": "narrator", "model_key": "gemma3_12b", "ollama_tag": MODEL_GEMMA3_12B, "n_ctx": 8192, "ram_mb": 9000, "thinking": false},
+			{"role": "gamemaster", "model_key": "gemma3_4b", "ollama_tag": MODEL_GEMMA3_4B, "n_ctx": 4096, "ram_mb": 3400, "thinking": false},
+		],
+		"total_ram_mb": 12400,
+		"min_threads": 4,
+		"min_ram_mb": 16000,
+		"prefetch_depth": 2,
+	},
 	Profile.SINGLE_GEMMA: {
 		"name": "Qualité (Gemma 2B)",
 		"mode": "resident",
@@ -227,6 +260,10 @@ static func profile_for_mode(mode: String, available_ram_mb: int, cpu_threads: i
 			return Profile.SINGLE
 		"qualite_gemma":
 			return Profile.SINGLE_GEMMA
+		"vm", "gemma3":
+			return Profile.VM_GEMMA3
+		"vm_max", "gemma3_max":
+			return Profile.VM_GEMMA3_MAX
 		_:
 			return detect_profile(available_ram_mb, cpu_threads)
 
