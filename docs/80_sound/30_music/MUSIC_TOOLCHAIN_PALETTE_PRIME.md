@@ -194,7 +194,48 @@ métalliques, basses sub lentes. Ça se **remonte** avec des instruments libres.
 
 ---
 
-## 6. Recommandation concrète pour MERLIN
+## 6. Implémentation en place — thème de menu
+
+La chaîne décrite plus haut est **déjà appliquée** pour le menu principal, par la voie
+« reconstruction légale » du §5 : palette entièrement synthétisée, zéro sample emprunté.
+
+| Élément | Emplacement |
+|---|---|
+| Synthétiseur de palette (6 fonts) | `tools/audio/synth_palette.py` |
+| Thème de menu + 4 stems | `audio/music/menu/{menu_theme,base,rhythm,melody,climax}.ogg` |
+| Page de présentation jouable | `tools/audio/build_web_page.py` + `page_template.html` |
+
+```bash
+python3 tools/audio/synth_palette.py --out audio/music/menu     # rend le morceau
+python3 tools/audio/build_web_page.py --out /tmp/palette.html   # page autonome
+```
+
+**Le morceau** : ré dorien, 66 BPM, 16 mesures, boucle de 58,182 s.
+Progression `Dm · C · Dm · G · Dm · C · Bb · Am` — le sol majeur porte un si naturel
+(signature dorienne), le si bémol de la mesure 13 est un emprunt éolien qui ouvre juste
+avant la retombée.
+
+**Contrôles qualité mesurés** (à re-vérifier après toute modification) :
+
+| Contrôle | Valeur | Seuil |
+|---|---|---|
+| Crête après encodage Vorbis | 0,472 | < 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB |
+| Niveau moyen | −19,0 dB RMS | −18 à −20 dB pour un menu |
+| Corrélation L/R | +0,79 | > 0,5 (compatibilité mono) |
+| Somme des 4 stems vs mix | −18,9 / −19,0 dB | écart nul |
+| Discontinuité au point de boucle | 0,0037 | ≈ 0 |
+
+> **Piège rencontré** : un master calé à 0,89 crête ressortait à **1,44** après encodage
+> Vorbis — le décodeur reconstruit des pics inter-échantillons. Il faut viser le RMS et
+> garder une vraie marge de crête, pas normaliser au plafond.
+
+> **Second piège** : deux réponses impulsionnelles de bruit indépendantes donnent une
+> réverbe très large mais qui **s'annule en mono** (corrélation ≈ 0). D'où `stereo_ir()`,
+> qui garde un tronc commun majoritaire.
+
+---
+
+## 7. Recommandation concrète pour MERLIN
 
 **Setup minimal (3 outils), dans cet ordre :**
 

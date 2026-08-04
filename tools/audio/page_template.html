@@ -1,0 +1,536 @@
+<title>Palette Brocéliande — chaîne musicale M.E.R.L.I.N.</title>
+<style>
+:root{
+  --ink:#08131A; --stone:#DCE4E3; --slate:#4A5D63;
+  --frost:#3E8FA3; --bronze:#9A6A22;
+  --bg:#E4EAE9; --bg-2:#D6DFDE; --panel:#EFF3F2; --line:#B9C6C5;
+  --fg:#0D1B22; --fg-2:#43585F; --fg-3:#6E8288;
+  --accent:var(--frost); --warm:var(--bronze);
+  --shadow:0 1px 2px rgba(8,19,26,.06),0 8px 24px -12px rgba(8,19,26,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#08131A; --bg-2:#0C1B23; --panel:#101F27; --line:#1E323C;
+    --fg:#DCE4E3; --fg-2:#9DB0B4; --fg-3:#6B8189;
+    --accent:#6FB6C4; --warm:#C89A4E;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#08131A; --bg-2:#0C1B23; --panel:#101F27; --line:#1E323C;
+  --fg:#DCE4E3; --fg-2:#9DB0B4; --fg-3:#6B8189;
+  --accent:#6FB6C4; --warm:#C89A4E;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+:root[data-theme="light"]{
+  --bg:#E4EAE9; --bg-2:#D6DFDE; --panel:#EFF3F2; --line:#B9C6C5;
+  --fg:#0D1B22; --fg-2:#43585F; --fg-3:#6E8288;
+  --accent:#3E8FA3; --warm:#9A6A22;
+  --shadow:0 1px 2px rgba(8,19,26,.06),0 8px 24px -12px rgba(8,19,26,.18);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:0 24px 96px}
+.prose{max-width:66ch}
+
+h1,h2,h3{
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,ui-serif,serif;
+  font-weight:600; text-wrap:balance; margin:0;
+}
+h1{font-size:clamp(2.1rem,5vw,3.1rem);line-height:1.08;letter-spacing:-.015em}
+h2{font-size:clamp(1.4rem,3vw,1.85rem);line-height:1.2;letter-spacing:-.01em}
+h3{font-size:1.06rem;line-height:1.35}
+p{margin:0}
+a{color:var(--accent);text-underline-offset:3px;text-decoration-thickness:1px}
+a:focus-visible,button:focus-visible,input:focus-visible{
+  outline:2px solid var(--accent);outline-offset:3px;border-radius:2px;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,"Liberation Mono",monospace}
+code{
+  font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  font-size:.86em;background:var(--bg-2);border:1px solid var(--line);
+  padding:.08em .34em;border-radius:3px;
+  overflow-wrap:anywhere;          /* les chemins de fichiers ne doivent pas pousser la page */
+}
+
+/* ── en-tête ─────────────────────────────────────────────── */
+header{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+.eyebrow{
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--fg-3);
+  display:flex;gap:10px;align-items:center;margin-bottom:22px;flex-wrap:wrap;
+}
+.eyebrow .rule{flex:1;height:1px;background:var(--line);min-width:20px}
+.lede{margin-top:22px;font-size:1.12rem;color:var(--fg-2);max-width:62ch}
+.thesis{
+  margin-top:26px;padding:16px 20px;border-left:2px solid var(--warm);
+  background:var(--bg-2);max-width:62ch;font-size:.97rem;color:var(--fg-2);
+}
+.thesis strong{color:var(--fg);font-weight:600}
+
+section{padding-top:56px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px}
+.sec-num{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;
+  letter-spacing:.14em;color:var(--accent);padding-top:.35em;
+}
+.sec-sub{color:var(--fg-2);margin-top:10px;max-width:62ch}
+
+/* ── console ─────────────────────────────────────────────── */
+.console{
+  margin-top:28px;background:var(--panel);border:1px solid var(--line);
+  border-radius:4px;box-shadow:var(--shadow);overflow:hidden;
+}
+.transport{
+  display:flex;align-items:center;gap:18px;padding:16px 20px;
+  border-bottom:1px solid var(--line);background:var(--bg-2);flex-wrap:wrap;
+}
+.play{
+  display:inline-flex;align-items:center;gap:10px;cursor:pointer;
+  background:var(--accent);color:var(--bg);border:none;border-radius:3px;
+  padding:10px 20px;font-size:.9rem;font-weight:600;letter-spacing:.01em;
+  font-family:inherit;transition:opacity .15s;
+}
+.play:hover{opacity:.88}
+.play[disabled]{opacity:.5;cursor:progress}
+.play svg{display:block}
+.clock{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.86rem;
+  font-variant-numeric:tabular-nums;color:var(--fg-2);
+}
+.clock b{color:var(--fg);font-weight:600}
+.loop-tag{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--fg-3);
+  border:1px solid var(--line);border-radius:2px;padding:4px 8px;
+}
+.loop-tag.on{color:var(--warm);border-color:var(--warm)}
+
+#scope{display:block;width:100%;height:88px;background:var(--bg)}
+
+.strip{
+  display:grid;grid-template-columns:132px 1fr 92px 116px;
+  gap:16px;align-items:center;padding:14px 20px;border-top:1px solid var(--line);
+}
+.strip:first-of-type{border-top:none}
+.strip.off .s-name,.strip.off .s-fonts{opacity:.38}
+.s-name{display:flex;flex-direction:column;gap:2px;min-width:0}
+.s-name b{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;
+  font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+}
+.s-name span{font-size:.72rem;color:var(--fg-3)}
+.s-fonts{font-size:.84rem;color:var(--fg-2);min-width:0}
+.s-thr{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;
+  color:var(--fg-3);font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.s-ctrl{display:flex;align-items:center;gap:8px}
+.meter{
+  position:relative;height:4px;background:var(--line);border-radius:2px;
+  overflow:hidden;margin-top:7px;
+}
+.meter i{
+  position:absolute;inset:0 100% 0 0;background:var(--accent);
+  border-radius:2px;transition:right .07s linear;
+}
+.strip[data-stem="melody"] .meter i,.strip[data-stem="climax"] .meter i{background:var(--warm)}
+.tog{
+  cursor:pointer;font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;color:var(--fg-3);border:1px solid var(--line);
+  border-radius:2px;padding:5px 9px;transition:.15s;
+}
+.tog:hover{color:var(--fg-2);border-color:var(--fg-3)}
+.tog[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.tog.solo[aria-pressed="true"]{background:var(--warm);border-color:var(--warm)}
+.hint{
+  padding:12px 20px;border-top:1px solid var(--line);background:var(--bg-2);
+  font-size:.8rem;color:var(--fg-3);
+}
+
+/* ── faits / tableaux ────────────────────────────────────── */
+.facts{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);margin-top:24px;
+}
+.facts div{background:var(--bg);padding:14px 16px}
+.facts dt{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.66rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);margin-bottom:5px;
+}
+.facts dd{
+  margin:0;font-size:.98rem;font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,Menlo,Consolas,monospace;
+}
+
+.scroller{overflow-x:auto;margin-top:24px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:560px;background:var(--bg)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.66rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);
+  background:var(--bg-2);font-weight:500;white-space:nowrap;
+}
+tr:last-child td{border-bottom:none}
+td.k{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;white-space:nowrap}
+td.k b{color:var(--accent);font-weight:600}
+
+.steps{display:flex;flex-direction:column;gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-top:26px}
+.step{background:var(--bg);padding:20px 22px;display:grid;
+  grid-template-columns:auto 1fr;gap:18px;align-items:start}
+.step .n{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;
+  letter-spacing:.1em;color:var(--bg);background:var(--accent);
+  width:26px;height:26px;display:grid;place-items:center;border-radius:2px;
+}
+.step h3{margin-bottom:6px}
+.step p{font-size:.92rem;color:var(--fg-2);max-width:58ch}
+.step ul{margin:12px 0 0;padding-left:0;list-style:none;display:flex;
+  flex-direction:column;gap:7px;font-size:.88rem}
+.step li{display:grid;grid-template-columns:190px 1fr;gap:14px}
+.step li b{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;
+  font-weight:600;color:var(--fg);
+}
+.step li span{color:var(--fg-2)}
+
+.callout{
+  margin-top:26px;border:1px solid var(--warm);border-radius:3px;
+  padding:20px 22px;background:var(--bg-2);max-width:66ch;
+}
+.callout h3{color:var(--warm);margin-bottom:8px}
+.callout p{font-size:.92rem;color:var(--fg-2)}
+.callout p + p{margin-top:10px}
+
+footer{
+  margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+  font-size:.8rem;color:var(--fg-3);display:flex;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+}
+footer span{min-width:0;overflow-wrap:anywhere}
+
+@media (max-width:720px){
+  .strip{grid-template-columns:1fr 1fr;gap:10px 14px}
+  .s-fonts{grid-column:1/-1;order:3}
+  .s-thr{text-align:right}
+  .s-ctrl{grid-column:1/-1;order:4}
+  .step{grid-template-columns:1fr}
+  .step li{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow"><span>M.E.R.L.I.N.</span><span class="rule"></span><span>chaîne musicale</span><span class="rule"></span><span>2026-08-04</span></div>
+  <h1>Palette Brocéliande</h1>
+  <p class="lede">Extraire les instruments d'un jeu, en faire une banque fermée, puis recomposer des morceaux entiers qui n'utilisent que ces sons. Étude d'outillage, appliquée au thème de menu.</p>
+  <div class="thesis">
+    <strong>Le point qui change tout :</strong> Metroid Prime 1 et 2 ne sont pas de la musique streamée. Ils tournent sur le moteur <span class="mono">MusyX</span> — séquence d'un côté, banque de samples de l'autre. Les instruments y sont <strong>déjà isolés</strong>. Aucune séparation de sources à faire.
+  </div>
+</header>
+
+<section>
+  <div class="sec-head"><span class="sec-num">ÉCOUTE</span><h2>Thème de menu principal</h2></div>
+  <p class="sec-sub">Voici le résultat, joué par la palette. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne exactement le mix.</p>
+
+  <div class="console">
+    <div class="transport">
+      <button class="play" id="play" disabled>
+        <svg id="icon" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0v14l12-7z" fill="currentColor"/></svg>
+        <span id="playlabel">Chargement…</span>
+      </button>
+      <div class="clock"><b id="t">0:00</b> / 0:58</div>
+      <div class="loop-tag" id="looptag">boucle sans couture</div>
+    </div>
+    <canvas id="scope" aria-label="Analyseur de spectre du mix en cours de lecture"></canvas>
+    <div id="strips"></div>
+    <div class="hint">Chaque couche s'enclenche dans le jeu au-delà d'un seuil de tension — c'est la colonne de droite. Ici vous les pilotez à la main.</div>
+  </div>
+
+  <dl class="facts">
+    <div><dt>Tonalité</dt><dd>Ré dorien</dd></div>
+    <div><dt>Tempo</dt><dd>66 BPM</dd></div>
+    <div><dt>Forme</dt><dd>16 mesures</dd></div>
+    <div><dt>Boucle</dt><dd>58,182 s</dd></div>
+    <div><dt>Niveau</dt><dd>−19,0 dB RMS</dd></div>
+    <div><dt>Corrél. L/R</dt><dd>+0,79</dd></div>
+  </dl>
+
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Font</th><th>Synthèse</th><th>Rôle musical</th></tr></thead>
+      <tbody>
+        <tr><td class="k"><b>pad_fm</b></td><td>FM, ratio 2,005 — inharmonique léger</td><td>Nappe froide. Le désaccord produit des battements lents : c'est le socle Prime.</td></tr>
+        <tr><td class="k"><b>sub</b></td><td>Sinus + saturation <span class="mono">tanh</span> douce</td><td>Fondamentale. Saturée pour survivre aux petits haut-parleurs.</td></tr>
+        <tr><td class="k"><b>bell</b></td><td>FM, ratio √2 — franchement inharmonique</td><td>Cloche métallique. L'index s'effondre en 300 ms : métal froid, pas carillon.</td></tr>
+        <tr><td class="k"><b>harp</b></td><td>Karplus-Strong (corde pincée)</td><td>La couleur celtique. Roulements à chaque changement d'accord.</td></tr>
+        <tr><td class="k"><b>taiko</b></td><td>Sinus descendant + transitoire bruité</td><td>Percussion sèche, presque sans réverbe — le contrepoint aux nappes noyées.</td></tr>
+        <tr><td class="k"><b>choir</b> / <b>whistle</b></td><td>Voix désaccordées / sinus + souffle + vibrato</td><td>L'ouverture de la seconde moitié, et la mélodie.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sec-sub" style="margin-top:18px">Harmonie : <span class="mono">Dm · C · Dm · G · Dm · C · Bb · Am</span>. Le sol majeur porte un si naturel — la signature dorienne. Le si bémol de la mesure 13 est un emprunt éolien : c'est le seul moment où le morceau respire vers le haut, juste avant de retomber.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">MÉTHODE</span><h2>La chaîne, en trois maillons</h2></div>
+  <p class="sec-sub">Rien d'obligatoire dans l'ordre des outils, mais l'ordre des <em>maillons</em>, lui, ne bouge pas : récupérer la matière, la figer en banque, ne composer qu'avec elle.</p>
+
+  <div class="steps">
+    <div class="step">
+      <span class="n">A</span>
+      <div>
+        <h3>Récupérer les éléments</h3>
+        <p>Sur GameCube, les instruments sortent séparés et configurés — enveloppes, plages de touches, accordage compris. Sur Switch, tout est déjà mixé : il faut passer par la séparation de sources, avec des résultats nettement moins propres.</p>
+        <ul>
+          <li><b>AxioDL/amuse</b><span>Séquenceur MusyX complet. Ouvre le <span class="mono">.proj</span>, montre la structure, convertit SNG ↔ MIDI.</span></li>
+          <li><b>Nisto/musyx-extract</b><span>Sort les samples de <span class="mono">.sdir</span>+<span class="mono">.samp</span>, et sait les remballer.</span></li>
+          <li><b>Prime World Editor</b><span>Ouvre les <span class="mono">.pak</span> de Prime 1, 2 et 3.</span></li>
+          <li><b>Switch-Toolbox · bars-to-bwav</b><span>Pour Remastered et Prime 4 : conteneurs <span class="mono">BARS</span> → <span class="mono">BWAV</span>/<span class="mono">BFSTM</span>.</span></li>
+          <li><b>Demucs v4 · UVR5</b><span>Quand il ne reste que le mix. Modèles MDX23C et Mel-RoFormer en tête en 2026.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="step">
+      <span class="n">B</span>
+      <div>
+        <h3>Figer la banque</h3>
+        <p>C'est le maillon qui transforme un tas de fichiers en instrument jouable. Huit à douze sons, pas plus : la contrainte n'est pas un pis-aller, c'est ce qui fabrique l'identité sonore.</p>
+        <ul>
+          <li><b>Polyphone</b><span>Éditeur SF2 de référence : mapping, points de boucle, enveloppes.</span></li>
+          <li><b>SFZ + sfizz</b><span>Format texte, donc générable par script. C'est la voie prise ici.</span></li>
+          <li><b>FluidSynth</b><span>Rendu <span class="mono">MIDI + banque → WAV</span> en ligne de commande.</span></li>
+          <li><b>PyMusicLooper</b><span>Détection des points de boucle sans couture. Déjà en service sur le projet.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="step">
+      <span class="n">C</span>
+      <div>
+        <h3>Recomposer</h3>
+        <p>Une seule de ces voies garantit que <em>seuls</em> vos instruments sonnent : celle qui génère des notes plutôt que de l'audio. Les deux autres valent pour maquetter, pas pour livrer.</p>
+        <ul>
+          <li><b>MIDI-GPT · MMM</b><span>Génération multipiste avec remplissage à la mesure. Une piste = un instrument de la banque.</span></li>
+          <li><b>FluidSynth</b><span>Un rendu par groupe de pistes depuis le même MIDI = les 4 stems, calés en phase d'office.</span></li>
+          <li><b>RAVE · DDSP</b><span>Transfert de timbre : vous jouez, ça ressort avec la texture apprise. Demande un GPU et 2-3 h de matière.</span></li>
+          <li><b>MusicGen-Stem</b><span>Édition stem par stem sur un morceau existant. Puissant, mais c'est de l'audio : aucune garantie de palette fermée.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">CADRE</span><h2>Pourquoi ce morceau ne contient aucun sample Nintendo</h2></div>
+  <div class="callout">
+    <h3>Les samples de Prime appartiennent à Nintendo</h3>
+    <p>Les réutiliser dans un jeu distribué, même gratuit et même très recomposés, reste de la contrefaçon. Les outils du maillon A sont légitimes pour l'étude et le mod personnel — pas pour livrer.</p>
+    <p>Le chemin pris ici est l'autre : l'extraction sert à <strong>comprendre</strong> la palette, puis on la <strong>reconstruit</strong>. Tout ce que vous entendez sur cette page est synthétisé par <code>tools/audio/synth_palette.py</code> — FM, Karplus-Strong, bruit filtré, réverbe à convolution sur réponses impulsionnelles générées. Pas un octet emprunté.</p>
+    <p>Parce que la signature Prime est d'abord une <em>méthode</em> : FM froide, cloches inharmoniques, percussion sèche en contrepoint de nappes très réverbérées. Ça se remonte de zéro.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">SUITE</span><h2>Ce qui branche sur le jeu</h2></div>
+  <p class="sec-sub">Les fichiers sont déjà au bon format et au bon endroit — <code>audio/music/menu/{base,rhythm,melody,climax}.ogg</code>. Le gestionnaire de stems les prend tels quels, sans changement de code Godot. Pour les biomes, la même commande change juste de progression harmonique et de motif.</p>
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Vérification</th><th>Mesure</th><th>Attendu</th></tr></thead>
+      <tbody>
+        <tr><td>Crête après encodage Vorbis</td><td class="k">0,472</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
+        <tr><td>Niveau moyen</td><td class="k">−19,0 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
+        <tr><td>Compatibilité mono</td><td class="k">+0,79</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
+        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,9 / −19,0 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
+        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0037</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <span>M.E.R.L.I.N. — <span class="mono">docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md</span></span>
+  <span class="mono">synth_palette.py · 16 mes. · 66 BPM</span>
+</footer>
+</div>
+
+<script>
+const STEMS = [
+  {id:"base",   label:"base",   fonts:"pad_fm · sub",         thr:"toujours",   sub:"le socle"},
+  {id:"rhythm", label:"rhythm", fonts:"taiko",                thr:"tension > 0.2", sub:"la pulsation"},
+  {id:"melody", label:"melody", fonts:"bell · harp",          thr:"tension > 0.4", sub:"le motif"},
+  {id:"climax", label:"climax", fonts:"choir · whistle",      thr:"tension > 0.6", sub:"l'ouverture"}
+];
+const AUDIO = __AUDIO_JSON__;
+
+const stripsEl = document.getElementById("strips");
+const state = {};
+STEMS.forEach(s=>{
+  state[s.id] = {mute:false, solo:false};
+  const row = document.createElement("div");
+  row.className = "strip"; row.dataset.stem = s.id;
+  row.innerHTML =
+    '<div class="s-name"><b>'+s.label+'</b><span>'+s.sub+'</span>'+
+      '<div class="meter"><i></i></div></div>'+
+    '<div class="s-fonts">'+s.fonts+'</div>'+
+    '<div class="s-thr">'+s.thr+'</div>'+
+    '<div class="s-ctrl">'+
+      '<button class="tog mute" aria-pressed="false">couper</button>'+
+      '<button class="tog solo" aria-pressed="false">isoler</button>'+
+    '</div>';
+  stripsEl.appendChild(row);
+  row.querySelector(".mute").addEventListener("click", e=>{
+    state[s.id].mute = !state[s.id].mute;
+    e.currentTarget.setAttribute("aria-pressed", state[s.id].mute);
+    applyGains();
+  });
+  row.querySelector(".solo").addEventListener("click", e=>{
+    state[s.id].solo = !state[s.id].solo;
+    e.currentTarget.setAttribute("aria-pressed", state[s.id].solo);
+    applyGains();
+  });
+});
+
+let ctx=null, buffers={}, sources={}, gains={}, analysers={}, master=null, masterAn=null;
+let playing=false, startedAt=0, duration=58.182, ready=false;
+const playBtn=document.getElementById("play"), playLabel=document.getElementById("playlabel");
+const icon=document.getElementById("icon"), clock=document.getElementById("t");
+const loopTag=document.getElementById("looptag");
+
+function b64ToBytes(b64){
+  const bin = atob(b64); const len = bin.length; const out = new Uint8Array(len);
+  for(let i=0;i<len;i++) out[i]=bin.charCodeAt(i);
+  return out.buffer;
+}
+
+async function init(){
+  ctx = new (window.AudioContext||window.webkitAudioContext)();
+  master = ctx.createGain(); master.gain.value = 1;
+  masterAn = ctx.createAnalyser(); masterAn.fftSize = 2048; masterAn.smoothingTimeConstant = .78;
+  master.connect(masterAn); masterAn.connect(ctx.destination);
+  for(const s of STEMS){
+    buffers[s.id] = await ctx.decodeAudioData(b64ToBytes(AUDIO[s.id]));
+    const g = ctx.createGain(); g.gain.value = 1;
+    const a = ctx.createAnalyser(); a.fftSize = 512; a.smoothingTimeConstant = .6;
+    g.connect(a); a.connect(master);
+    gains[s.id]=g; analysers[s.id]=a;
+  }
+  duration = buffers.base.duration;
+  ready = true;
+  playBtn.disabled = false; playLabel.textContent = "Écouter";
+}
+
+function applyGains(){
+  const anySolo = STEMS.some(s=>state[s.id].solo);
+  STEMS.forEach(s=>{
+    const on = anySolo ? (state[s.id].solo && !state[s.id].mute) : !state[s.id].mute;
+    if(gains[s.id]) gains[s.id].gain.setTargetAtTime(on?1:0, ctx.currentTime, .04);
+    document.querySelector('.strip[data-stem="'+s.id+'"]').classList.toggle("off", !on);
+  });
+}
+
+function start(){
+  const t0 = ctx.currentTime + .08;
+  STEMS.forEach(s=>{
+    const src = ctx.createBufferSource();
+    src.buffer = buffers[s.id]; src.loop = true;
+    src.connect(gains[s.id]); src.start(t0);
+    sources[s.id]=src;
+  });
+  startedAt = t0; playing = true;
+  icon.innerHTML = '<rect x="0" y="0" width="4" height="14" fill="currentColor"/><rect x="8" y="0" width="4" height="14" fill="currentColor"/>';
+  playLabel.textContent = "Arrêter"; loopTag.classList.add("on");
+}
+
+function stop(){
+  STEMS.forEach(s=>{ try{sources[s.id].stop();}catch(e){} });
+  playing = false;
+  icon.innerHTML = '<path d="M0 0v14l12-7z" fill="currentColor"/>';
+  playLabel.textContent = "Écouter"; loopTag.classList.remove("on");
+  clock.textContent = "0:00";
+  document.querySelectorAll(".meter i").forEach(m=>m.style.right="100%");
+}
+
+playBtn.addEventListener("click", async ()=>{
+  if(!ready) return;
+  if(ctx.state === "suspended") await ctx.resume();
+  playing ? stop() : (applyGains(), start());
+});
+
+/* analyseur */
+const cv = document.getElementById("scope"), g2d = cv.getContext("2d");
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function fit(){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio||1;
+  cv.width = r.width*dpr; cv.height = r.height*dpr; g2d.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener("resize", fit); fit();
+
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function draw(){
+  requestAnimationFrame(draw);
+  const w = cv.clientWidth, h = cv.clientHeight;
+  g2d.clearRect(0,0,w,h);
+  const cold = css("--accent"), warm = css("--warm"), line = css("--line");
+
+  if(!playing || !masterAn){
+    g2d.strokeStyle = line; g2d.lineWidth = 1;
+    g2d.beginPath(); g2d.moveTo(0,h/2+.5); g2d.lineTo(w,h/2+.5); g2d.stroke();
+    return;
+  }
+  const bins = new Uint8Array(masterAn.frequencyBinCount);
+  masterAn.getByteFrequencyData(bins);
+  const N = 68, gap = 2, bw = (w - gap*(N-1))/N;
+  for(let i=0;i<N;i++){
+    const lo = Math.floor(Math.pow(i/N, 2.1) * bins.length);
+    const hi = Math.max(lo+1, Math.floor(Math.pow((i+1)/N, 2.1) * bins.length));
+    let v=0; for(let k=lo;k<hi;k++) v=Math.max(v,bins[k]);
+    const mag = Math.pow(v/255, 1.35), bh = Math.max(1, mag*(h-14));
+    g2d.fillStyle = i/N < .42 ? cold : warm;
+    g2d.globalAlpha = .28 + .72*mag;
+    g2d.fillRect(i*(bw+gap), h-bh-6, bw, bh);
+  }
+  g2d.globalAlpha = 1;
+
+  STEMS.forEach(s=>{
+    const a = analysers[s.id]; if(!a) return;
+    const buf = new Uint8Array(a.fftSize); a.getByteTimeDomainData(buf);
+    let sum=0; for(let i=0;i<buf.length;i++){const d=(buf[i]-128)/128; sum+=d*d;}
+    const rms = Math.sqrt(sum/buf.length);
+    const norm = Math.min(1, Math.pow(rms*7.5, .55));
+    const el = document.querySelector('.strip[data-stem="'+s.id+'"] .meter i');
+    if(el) el.style.right = (100 - norm*100).toFixed(1) + "%";
+  });
+
+  const el = (ctx.currentTime - startedAt) % duration;
+  const t = Math.max(0, el);
+  clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
+}
+function tick(){
+  if(!playing) return;
+  const t = Math.max(0, (ctx.currentTime - startedAt) % duration);
+  clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
+}
+if(!reduce){
+  draw();
+}else{
+  // sans animation : trait au repos, et l'horloge avance quand meme
+  g2d.strokeStyle = css("--line"); g2d.lineWidth = 1; g2d.beginPath();
+  g2d.moveTo(0, cv.clientHeight/2 + .5); g2d.lineTo(cv.clientWidth, cv.clientHeight/2 + .5);
+  g2d.stroke();
+  setInterval(tick, 500);
+}
+
+init().catch(err=>{ playLabel.textContent = "Lecture indisponible"; console.error(err); });
+</script>
