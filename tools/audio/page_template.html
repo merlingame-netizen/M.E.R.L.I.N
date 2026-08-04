@@ -201,6 +201,22 @@ td.k b{color:var(--accent);font-weight:600}
 }
 .step li span{color:var(--fg-2)}
 
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-top:26px}
+.mode{background:var(--bg);padding:22px}
+.mode-tag{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.64rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;
+}
+.mode-tag.warm{color:var(--warm)}
+.mode h3{margin-bottom:8px}
+.mode p{font-size:.9rem;color:var(--fg-2)}
+.mode p + p{margin-top:10px}
+.mode .cmd{
+  font-size:.76rem;color:var(--fg-3);background:var(--bg-2);
+  border:1px solid var(--line);padding:9px 11px;overflow-wrap:anywhere;line-height:1.7;
+}
+@media (max-width:720px){.modes{grid-template-columns:1fr}}
 .callout{
   margin-top:26px;border:1px solid var(--warm);border-radius:3px;
   padding:20px 22px;background:var(--bg-2);max-width:66ch;
@@ -332,12 +348,44 @@ footer span{min-width:0;overflow-wrap:anywhere}
 </section>
 
 <section>
-  <div class="sec-head"><span class="sec-num">CADRE</span><h2>Pourquoi ce morceau ne contient aucun sample Nintendo</h2></div>
+  <div class="sec-head"><span class="sec-num">MATIÈRE</span><h2>Deux modes, un seul compositeur</h2></div>
+  <p class="sec-sub">Le compositeur ne sait rien de la matière sonore : la progression, les stems, le timing et le mastering sont identiques dans les deux cas. Seuls les sons changent — c'est tout l'intérêt d'une palette fermée.</p>
+
+  <div class="modes">
+    <div class="mode">
+      <div class="mode-tag">rendu de cette page</div>
+      <h3>Synthétisé</h3>
+      <p>Palette reconstruite de zéro : FM, Karplus-Strong, bruit filtré, réverbe à convolution sur réponses impulsionnelles générées. Aucun octet emprunté, donc distribuable.</p>
+      <p class="cmd mono">synth_palette.py --out audio/music/menu</p>
+    </div>
+    <div class="mode">
+      <div class="mode-tag warm">test local</div>
+      <h3>Échantillonné</h3>
+      <p>Les samples originaux du jeu, extraits de <em>votre</em> copie. Le lecteur transpose, boucle et applique les mêmes enveloppes que les fonts synthétisées.</p>
+      <p class="cmd mono">musyx_extract.py iso --input &lt;votre.iso&gt;<br>synth_palette.py --bank extract/</p>
+    </div>
+  </div>
+
+  <p class="sec-sub" style="margin-top:26px">Entre les deux, un fichier décide de tout : <code>palette_map.json</code> associe chaque sample extrait à un rôle. C'est là qu'on ne garde que les fonts voulus — le reste de la banque est ignoré.</p>
+
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Couche</th><th>Ce qui est lu</th></tr></thead>
+      <tbody>
+        <tr><td class="k"><b>GCM / ISO</b></td><td>FST à <span class="mono">0x424</span>, entrées de 12 octets, table de chaînes</td></tr>
+        <tr><td class="k"><b>PAK</b></td><td>Table de ressources (20 o/entrée), payload zlib préfixé de sa taille décompressée</td></tr>
+        <tr><td class="k"><b>AGSC</b></td><td>4 chunks — ordre <span class="mono">pool/proj/samp/sdir</span> en Prime 1, <span class="mono">pool/proj/sdir/samp</span> en Prime 2</td></tr>
+        <tr><td class="k"><b>SDIR</b></td><td>Table A (0x20 o) : note de base, fréquence, format, boucle. Table B (0x28 o) : contexte + 16 coefficients ADPCM</td></tr>
+        <tr><td class="k"><b>SAMP</b></td><td>DSP-ADPCM GameCube : trames de 8 octets → 14 échantillons</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <div class="callout">
-    <h3>Les samples de Prime appartiennent à Nintendo</h3>
-    <p>Les réutiliser dans un jeu distribué, même gratuit et même très recomposés, reste de la contrefaçon. Les outils du maillon A sont légitimes pour l'étude et le mod personnel — pas pour livrer.</p>
-    <p>Le chemin pris ici est l'autre : l'extraction sert à <strong>comprendre</strong> la palette, puis on la <strong>reconstruit</strong>. Tout ce que vous entendez sur cette page est synthétisé par <code>tools/audio/synth_palette.py</code> — FM, Karplus-Strong, bruit filtré, réverbe à convolution sur réponses impulsionnelles générées. Pas un octet emprunté.</p>
-    <p>Parce que la signature Prime est d'abord une <em>méthode</em> : FM froide, cloches inharmoniques, percussion sèche en contrepoint de nappes très réverbérées. Ça se remonte de zéro.</p>
+    <h3>Ce que vous entendez ici est synthétisé</h3>
+    <p>Non par prudence : simplement parce qu'aucune donnée de jeu n'était disponible là où ce morceau a été rendu. L'extracteur ne télécharge rien et n'embarque rien — il travaille sur la copie que vous lui donnez.</p>
+    <p>Ne pouvant tester le parseur sans données réelles, chaque module fabrique ses propres fixtures <strong>au format documenté</strong> et les relit : aller-retour ADPCM à 52,8 dB de SNR, PCM16 bit-exact, transposition d'octave à un rapport de 2,00.</p>
+    <p>Ces autotests valident l'implémentation contre la spec, pas contre les fichiers de Nintendo. Au premier passage sur vos données, relisez le <code>manifest.json</code> — fréquences plausibles, notes de base entre 20 et 100, durées non nulles — avant de composer.</p>
   </div>
 </section>
 
@@ -360,7 +408,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <footer>
   <span>M.E.R.L.I.N. — <span class="mono">docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md</span></span>
-  <span class="mono">synth_palette.py · 16 mes. · 66 BPM</span>
+  <span class="mono">synth_palette.py · musyx_extract.py · 16 mes. · 66 BPM</span>
 </footer>
 </div>
 

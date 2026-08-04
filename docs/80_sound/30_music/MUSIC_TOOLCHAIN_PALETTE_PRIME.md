@@ -201,14 +201,65 @@ La chaîne décrite plus haut est **déjà appliquée** pour le menu principal, 
 
 | Élément | Emplacement |
 |---|---|
-| Synthétiseur de palette (6 fonts) | `tools/audio/synth_palette.py` |
+| Extracteur MusyX (ISO → PAK → AGSC → WAV) | `tools/audio/musyx_extract.py` |
+| Lecteur d'échantillons (transposition, boucle, enveloppes) | `tools/audio/sample_bank.py` |
+| Compositeur / palette (6 fonts) | `tools/audio/synth_palette.py` |
 | Thème de menu + 4 stems | `audio/music/menu/{menu_theme,base,rhythm,melody,climax}.ogg` |
 | Page de présentation jouable | `tools/audio/build_web_page.py` + `page_template.html` |
 
+### 6.1 — Deux modes de rendu
+
+Le compositeur est **indépendant de la matière sonore**. La composition, les stems, le
+timing et le mastering sont identiques dans les deux cas ; seuls les sons changent.
+
 ```bash
-python3 tools/audio/synth_palette.py --out audio/music/menu     # rend le morceau
+# mode SYNTHÉTISÉ (défaut) — palette reconstruite, aucun sample externe
+python3 tools/audio/synth_palette.py --out audio/music/menu
+
+# mode ÉCHANTILLONNÉ — samples originaux, pour test local
+python3 tools/audio/musyx_extract.py iso --input <VOTRE_COPIE.iso> --out extract/
+$EDITOR extract/palette_map.json          # choisir quel sample sert à quel rôle
+python3 tools/audio/synth_palette.py --bank extract/ --out audio/music/menu
+
 python3 tools/audio/build_web_page.py --out /tmp/palette.html   # page autonome
 ```
+
+`palette_map.json` est **le fichier de sélection** : il décide quel sample extrait joue
+quel rôle. C'est là qu'on ne garde que les fonts voulus. S'il n'existe pas, une
+proposition est générée par heuristique (grave + court → taiko, bouclé + long → nappe,
+etc.) et écrite sur disque comme point de départ.
+
+### 6.2 — L'extracteur
+
+Trois couches, implémentées d'après la spec du Retro Modding Wiki :
+
+| Couche | Ce qui est lu |
+|---|---|
+| **GCM / ISO** | FST à `0x424`, entrées de 12 octets, table de chaînes |
+| **PAK** | Table de ressources (20 o/entrée), payload zlib préfixé de la taille décompressée |
+| **AGSC** | 4 chunks. Ordre `pool/proj/samp/sdir` en MP1, `pool/proj/sdir/samp` en MP2 |
+| **SDIR** | Table A (0x20 o) : note de base, fréquence, format, nombre d'échantillons, boucle. Table B (0x28 o) : contexte + 16 coefficients ADPCM |
+| **SAMP** | DSP-ADPCM GameCube : trames de 8 octets → 14 échantillons |
+
+**L'outil ne fournit et ne télécharge aucune donnée de jeu.** Il travaille sur la copie
+que vous lui donnez.
+
+Comme il n'existe aucun moyen de tester le parseur sans données de jeu, chaque module
+porte un autotest qui fabrique des fixtures **au format documenté** et les relit :
+
+```bash
+python3 tools/audio/musyx_extract.py selftest   # conteneur AGSC + codec ADPCM
+python3 tools/audio/sample_bank.py              # boucle, one-shot, transposition
+```
+
+Résultats attendus : aller-retour ADPCM > 20 dB de SNR (obtenu : 52,8), PCM16 bit-exact,
+transposition d'octave à un rapport de 2,00, one-shot silencieux après extinction,
+nappe bouclée encore sonore à 9 s.
+
+> Ces autotests valident l'implémentation **contre la spec**, pas contre les fichiers de
+> Nintendo. Une particularité non documentée d'un groupe audio réel peut encore surprendre :
+> au premier passage sur vos données, vérifiez les valeurs du `manifest.json` (fréquences
+> plausibles, notes de base entre 20 et 100, durées non nulles) avant de composer.
 
 **Le morceau** : ré dorien, 66 BPM, 16 mesures, boucle de 58,182 s.
 Progression `Dm · C · Dm · G · Dm · C · Bb · Am` — le sol majeur porte un si naturel

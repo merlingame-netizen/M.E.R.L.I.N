@@ -35,6 +35,11 @@ import wave
 
 import numpy as np
 
+# Banque d'echantillons optionnelle (--bank). Quand elle est chargee, chaque font
+# joue le sample reel correspondant au lieu de sa version synthetisee : la
+# composition, les stems et le timing restent rigoureusement identiques.
+BANK = None
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONSTANTES MUSICALES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -172,6 +177,8 @@ def convolve(x: np.ndarray, ir: np.ndarray) -> np.ndarray:
 
 def font_pad_fm(freq: float, dur: float, detune: float = 0.0) -> np.ndarray:
     """1. Nappe FM froide. Modulateur legerement inharmonique -> battements lents."""
+    if BANK is not None:
+        return BANK.render("pad_fm", freq * (1.0 + detune), dur)
     n = int(dur * SR)
     t = np.arange(n) / SR
     f = freq * (1.0 + detune)
@@ -185,6 +192,8 @@ def font_pad_fm(freq: float, dur: float, detune: float = 0.0) -> np.ndarray:
 
 def font_sub(freq: float, dur: float) -> np.ndarray:
     """2. Basse sinus + saturation douce (tanh) pour qu'elle survive aux petits HP."""
+    if BANK is not None:
+        return BANK.render("sub", freq, dur)
     n = int(dur * SR)
     t = np.arange(n) / SR
     sig = np.sin(2 * np.pi * freq * t) + 0.18 * np.sin(2 * np.pi * freq * 2 * t)
@@ -195,6 +204,8 @@ def font_sub(freq: float, dur: float) -> np.ndarray:
 
 def font_bell(freq: float, dur: float) -> np.ndarray:
     """3. Cloche FM inharmonique — ratio sqrt(2), index qui s'effondre : metal froid."""
+    if BANK is not None:
+        return BANK.render("bell", freq, dur)
     n = int(dur * SR)
     t = np.arange(n) / SR
     idx = 5.5 * np.exp(-t * 3.4)
@@ -208,6 +219,8 @@ def font_bell(freq: float, dur: float) -> np.ndarray:
 
 def font_harp(freq: float, dur: float, bright: float = 0.5) -> np.ndarray:
     """4. Corde pincee Karplus-Strong, traitee par blocs (vectorise)."""
+    if BANK is not None:
+        return BANK.render("harp", freq, dur)
     n = int(dur * SR)
     d = max(2, int(SR / freq))
     rng = np.random.default_rng(int(freq * 100) % 99991)
@@ -232,6 +245,8 @@ def font_harp(freq: float, dur: float, bright: float = 0.5) -> np.ndarray:
 
 def font_taiko(dur: float, pitch: float = 82.0, power: float = 1.0) -> np.ndarray:
     """5. Percussion tribale seche : sinus descendant + transitoire bruite."""
+    if BANK is not None:
+        return BANK.render("taiko", pitch, dur) * power
     n = int(dur * SR)
     t = np.arange(n) / SR
     f = pitch * np.exp(-t * 5.5) + pitch * 0.55
@@ -247,6 +262,8 @@ def font_taiko(dur: float, pitch: float = 82.0, power: float = 1.0) -> np.ndarra
 
 def font_choir(freq: float, dur: float, voices: int = 5) -> np.ndarray:
     """6a. Nappe chorale : voix desaccordees + creux formantiques, tres large."""
+    if BANK is not None:
+        return BANK.render("choir", freq, dur)
     n = int(dur * SR)
     t = np.arange(n) / SR
     sig = np.zeros(n)
@@ -266,6 +283,8 @@ def font_choir(freq: float, dur: float, voices: int = 5) -> np.ndarray:
 
 def font_whistle(freq: float, dur: float) -> np.ndarray:
     """6b. Flute / tin whistle : sinus + harmoniques + vibrato retarde + souffle."""
+    if BANK is not None:
+        return BANK.render("whistle", freq, dur)
     n = int(dur * SR)
     t = np.arange(n) / SR
     vib_depth = 0.006 * np.clip((t - 0.35) / 0.5, 0.0, 1.0)
@@ -455,7 +474,19 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="audio/music/menu", help="dossier de sortie")
     ap.add_argument("--keep-wav", action="store_true")
+    ap.add_argument("--bank", default=None,
+                    help="dossier de banque (sortie de musyx_extract.py). Les samples "
+                         "reels remplacent alors les fonts synthetisees.")
     args = ap.parse_args()
+
+    global BANK
+    if args.bank:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from sample_bank import SampleBank
+        BANK = SampleBank(args.bank)
+        print(f"[synth] mode ECHANTILLONNE — banque : {args.bank}")
+    else:
+        print("[synth] mode SYNTHETISE — aucun sample externe")
 
     print(f"[synth] {N_BARS} mesures @ {BPM:.0f} BPM = {LOOP_LEN:.2f}s (loop seamless)")
     stems = build_stems()
