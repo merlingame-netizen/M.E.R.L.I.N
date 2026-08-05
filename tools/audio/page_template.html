@@ -110,7 +110,13 @@ section{padding-top:56px}
   border:1px solid var(--line);border-radius:2px;padding:4px 8px;
 }
 .loop-tag.on{color:var(--warm);border-color:var(--warm)}
-.status{font-size:.78rem;color:var(--fg-3);flex-basis:100%}
+.dl{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3);
+  border:1px solid var(--line);border-radius:2px;padding:5px 9px;text-decoration:none;
+}
+.dl:hover{color:var(--fg-2);border-color:var(--fg-3)}
+.status{font-size:.78rem;color:var(--fg-3);flex-basis:100%;line-height:1.5}
 .status.warn{color:var(--warm)}
 .status:empty{display:none}
 .strip.locked .s-ctrl{opacity:.35;pointer-events:none}
@@ -305,9 +311,12 @@ footer span{min-width:0;overflow-wrap:anywhere}
       </button>
       <div class="clock"><b id="t">0:00</b> / 0:58</div>
       <div class="loop-tag" id="looptag">boucle sans couture</div>
+      <button class="tog" id="simple" aria-pressed="false" title="Lit le mix complet via un lecteur audio classique">mix simple</button>
+      <a class="dl" id="dl" download="merlin-menu-theme.mp3">télécharger le MP3</a>
       <div class="status" id="status" role="status"></div>
     </div>
-    <audio id="fallback" loop preload="none"></audio>
+    <audio id="fallback" loop preload="none" playsinline></audio>
+    <audio id="primer" loop preload="auto" playsinline></audio>
     <canvas id="scope" aria-label="Analyseur de spectre du mix en cours de lecture"></canvas>
     <div id="strips"></div>
     <div class="hint">Chaque couche s'enclenche dans le jeu au-delà d'un seuil de tension — c'est la colonne de droite. Ici vous les pilotez à la main.</div>
@@ -496,12 +505,32 @@ const playBtn=document.getElementById("play"), playLabel=document.getElementById
 const icon=document.getElementById("icon"), clock=document.getElementById("t");
 const loopTag=document.getElementById("looptag"), statusEl=document.getElementById("status");
 const fallbackEl=document.getElementById("fallback");
+const primerEl=document.getElementById("primer");
+const simpleBtn=document.getElementById("simple");
+const dlLink=document.getElementById("dl");
+
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+               (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent));
 
 const ICON_PLAY='<path d="M0 0v14l12-7z" fill="currentColor"/>';
 const ICON_STOP='<rect x="0" y="0" width="4" height="14" fill="currentColor"/>'+
                 '<rect x="8" y="0" width="4" height="14" fill="currentColor"/>';
 
 function say(msg, warn){ statusEl.textContent = msg||""; statusEl.classList.toggle("warn", !!warn); }
+
+/* iOS : le Web Audio passe par une session audio "ambient", que le commutateur
+   silencieux de l'iPhone coupe — le graphe tourne, l'analyseur bouge, et on
+   n'entend rien. Un element <audio> en cours de lecture bascule la session en
+   "playback", qui ignore ce commutateur. On lance donc une boucle silencieuse
+   sur le meme geste utilisateur, avant de demarrer le Web Audio. */
+function primeAudioSession(){
+  try{
+    if(!primerEl.src) primerEl.src = "data:audio/mpeg;base64," + AUDIO.__silence;
+    primerEl.volume = 0.001;
+    const p = primerEl.play();
+    if(p && p.catch) p.catch(()=>{});
+  }catch(e){}
+}
 
 function b64ToBytes(b64){
   const bin = atob(b64), len = bin.length, out = new Uint8Array(len);
@@ -511,12 +540,14 @@ function b64ToBytes(b64){
 
 /* Repli : un seul <audio> qui joue le mix complet. Les elements <audio> passent
    la ou le Web Audio est refuse (iframe sans permission autoplay, codec absent). */
-function goFallback(reason){
+function goFallback(reason, chosen){
   if(fallbackMode) return;
   fallbackMode = true;
   if(!fallbackEl.src) fallbackEl.src = "data:audio/mpeg;base64," + AUDIO.menu_theme;
   document.querySelectorAll(".strip").forEach(el=>el.classList.add("locked"));
-  say("Mixage par couche indisponible ici ("+reason+") — lecture du mix complet.", true);
+  say(chosen ? "Lecture du mix complet. Les commandes par couche sont désactivées."
+             : "Mixage par couche indisponible ici (" + reason + ") — lecture du mix complet.",
+      !chosen);
   fallbackEl.play().then(()=>{
     playing = true; icon.innerHTML = ICON_STOP;
     playLabel.textContent = "Arrêter"; loopTag.classList.add("on");
@@ -583,6 +614,7 @@ function stop(){
   }else{
     STEMS.forEach(s=>{ try{ sources[s.id].stop(); }catch(e){} });
   }
+  try{ primerEl.pause(); }catch(e){}
   playing = false;
   icon.innerHTML = ICON_PLAY; playLabel.textContent = "Écouter";
   loopTag.classList.remove("on"); clock.textContent = "0:00";
@@ -591,7 +623,8 @@ function stop(){
 
 playBtn.addEventListener("click", async ()=>{
   if(playing){ stop(); return; }
-  if(fallbackMode){ goFallback("repli actif"); return; }
+  primeAudioSession();          // doit rester dans le geste utilisateur
+  if(fallbackMode){ goFallback("repli actif", true); return; }
 
   if(!decoded){
     playBtn.disabled = true; playLabel.textContent = "Décodage…";
@@ -611,6 +644,20 @@ playBtn.addEventListener("click", async ()=>{
   applyGains();
   start();
 });
+
+simpleBtn.addEventListener("click", ()=>{
+  if(fallbackMode) return;
+  if(playing) stop();
+  goFallback("choix manuel", true);
+  simpleBtn.setAttribute("aria-pressed", "true");
+});
+
+dlLink.href = "data:audio/mpeg;base64," + AUDIO.menu_theme;
+
+if(IS_IOS){
+  say("Sur iPhone, le commutateur silencieux coupe le mixeur par couche. "
+      + "S'il n'y a pas de son : basculez-le, ou utilisez « mix simple ».");
+}
 
 /* analyseur */
 const cv = document.getElementById("scope"), g2d = cv.getContext("2d");

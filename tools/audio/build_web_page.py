@@ -7,10 +7,34 @@ preview jouable de la palette (console 4 stems + analyseur temps reel).
 Usage :
     python3 tools/audio/build_web_page.py --stems audio/music/menu --out /tmp/page.html
 """
-import argparse, base64, html, json, os, subprocess, sys
+import argparse, base64, html, json, os, re, subprocess, sys
 
 # menu_theme sert de repli <audio> quand le Web Audio est refuse
 STEMS = {"base": "6", "rhythm": "7", "melody": "6", "climax": "6", "menu_theme": "5"}
+
+# Enveloppe de document complete. Indispensable pour un fichier autonome : sans
+# <meta charset>, le navigateur devine l'encodage et casse tous les accents. Les
+# plateformes d'hebergement fournissent leur propre <head>, d'ou l'option --embedded.
+DOC_HEAD = """<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{title}</title>
+</head>
+<body>
+"""
+DOC_TAIL = "\n</body>\n</html>\n"
+
+
+def make_standalone(body: str) -> str:
+    """Extrait le <title> du corps et batit un document HTML complet."""
+    m = re.search(r"<title>(.*?)</title>\s*", body, re.S)
+    title = m.group(1).strip() if m else "Palette Broceliande"
+    if m:
+        body = body[:m.start()] + body[m.end():]
+    return DOC_HEAD.format(title=title) + body + DOC_TAIL
 TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page_template.html")
 
 
@@ -78,6 +102,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stems", default="audio/music/menu")
     ap.add_argument("--out", default="palette_broceliande.html")
+    ap.add_argument("--embedded", action="store_true",
+                    help="omet <!doctype>/<head> : pour les hebergeurs qui fournissent "
+                         "leur propre enveloppe. Par defaut la page est autonome.")
     ap.add_argument("--quality", default=None,
                     help="force la qualite VBR LAME pour toutes les pistes (0=meilleur, 9=pire)")
     args = ap.parse_args()
@@ -98,6 +125,16 @@ def main() -> int:
         with open(dst, "rb") as fh:
             audio[name] = base64.b64encode(fh.read()).decode()
         os.remove(dst)
+
+    # boucle silencieuse : sert a basculer la session audio iOS en "playback",
+    # sans quoi le commutateur silencieux de l'iPhone coupe tout le Web Audio
+    sil = os.path.join(tmp, "silence.mp3")
+    subprocess.run([ff, "-y", "-loglevel", "error", "-f", "lavfi",
+                    "-i", "anullsrc=r=44100:cl=mono", "-t", "1.0",
+                    "-c:a", "libmp3lame", "-b:a", "32k", sil], check=True)
+    with open(sil, "rb") as fh:
+        audio["__silence"] = base64.b64encode(fh.read()).decode()
+    os.remove(sil)
     os.rmdir(tmp)
 
     with open(TEMPLATE, encoding="utf-8") as fh:
@@ -107,6 +144,8 @@ def main() -> int:
         return 1
     page = tpl.replace("__AUDIO_JSON__", json.dumps(audio))
     page = page.replace("__PROVENANCE__", render_provenance(args.stems))
+    if not args.embedded:
+        page = make_standalone(page)
     with open(args.out, "w", encoding="utf-8") as fh:
         fh.write(page)
     print(f"[page] {args.out}  ({os.path.getsize(args.out)/1024/1024:.2f} MB)")
