@@ -1,39 +1,42 @@
 {
-  "tool": "synth_palette.py 1.1.0",
-  "rendered_at": "2026-08-05T21:12:58Z",
+  "tool": "synth_palette.py 2.0.0",
+  "rendered_at": "2026-08-05T22:27:44Z",
   "composition": {
     "key": "D dorian",
     "bpm": 66.0,
-    "bars": 16,
-    "loop_seconds": 58.182,
-    "sample_rate": 44100
+    "bars": 32,
+    "loop_seconds": 116.364,
+    "sample_rate": 44100,
+    "form": "A A' B A''",
+    "instruments": 19,
+    "note_events": 657
   },
   "mode": "synthesized",
   "sound_source": {
     "kind": "synthesis",
     "external_samples": false,
-    "statement": "Aucun echantillon externe. Toute la matiere sonore est generee par synthese (FM, Karplus-Strong, bruit filtre, reverbe a convolution sur IR generees)."
+    "statement": "Aucun echantillon externe. Chaque pupitre est un modele synthetise (ensemble desaccorde, formants fixes, velocite timbrale) et la salle est une reverbe a convolution sur reponses impulsionnelles generees."
   },
   "outputs": {
     "menu_theme.ogg": {
-      "sha256": "87d074c611285a19fff8f478aa750d757dddfb3d966e5926e967a4fdac7dfef4",
-      "bytes": 810031
+      "sha256": "18afa96213a4930bc3f0920cb6611646813eac8c8562e875320713763ac61bdc",
+      "bytes": 1545754
     },
     "base.ogg": {
-      "sha256": "79c5850067f3d4d465f4dbdab5ebabc41513c16b2eea39817d7a42311981ac0c",
-      "bytes": 646720
-    },
-    "melody.ogg": {
-      "sha256": "2d2cfb085d47ddde7e60e2cd33b839c6f6d9f36011d5a0a3cfd6c62ee970211a",
-      "bytes": 784324
+      "sha256": "c1622cca9916b6adde8465152589606b13fc3b85bfe7d4554794bfad5de106c7",
+      "bytes": 1069411
     },
     "rhythm.ogg": {
-      "sha256": "9b0c2a7251978d0c6c33e8d9b9a389f883f52135c7e1c2f3ea6de9814c96661f",
-      "bytes": 564005
+      "sha256": "fe86802c7def6139832f6efa7e026b4a00d1435033715da478f0641bc4230f09",
+      "bytes": 1293668
+    },
+    "melody.ogg": {
+      "sha256": "b0b67e89aa2f27ca83887701af3db11510f3c3511d3c0249f9288d3c6984cefd",
+      "bytes": 1560213
     },
     "climax.ogg": {
-      "sha256": "698245d8c332421ab399705886b9f62337776b24a868ca7adc270b9d308c5f37",
-      "bytes": 683560
+      "sha256": "02f82a593ae8304e14733b8698634a278f8a210b2f1e4b08132acc95134dfb60",
+      "bytes": 1077131
     }
   }
 }

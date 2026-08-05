@@ -10,7 +10,9 @@ Usage :
 import argparse, base64, html, json, os, re, subprocess, sys
 
 # menu_theme sert de repli <audio> quand le Web Audio est refuse
-STEMS = {"base": "6", "rhythm": "7", "melody": "6", "climax": "6", "menu_theme": "5"}
+# La piece fait 1'56 : a debit constant la page doublerait. Debits ajustes pour
+# rester sous ~9 Mo tout en gardant le mix de repli au meilleur des cinq.
+STEMS = {"base": "8", "rhythm": "8", "melody": "7", "climax": "7", "menu_theme": "6"}
 
 # Enveloppe de document complete. Indispensable pour un fichier autonome : sans
 # <meta charset>, le navigateur devine l'encodage et casse tous les accents. Les

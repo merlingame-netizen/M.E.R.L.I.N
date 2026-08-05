@@ -203,7 +203,11 @@ La chaîne décrite plus haut est **déjà appliquée** pour le menu principal, 
 |---|---|
 | Extracteur MusyX (ISO → PAK → AGSC → WAV) | `tools/audio/musyx_extract.py` |
 | Lecteur d'échantillons (transposition, boucle, enveloppes) | `tools/audio/sample_bank.py` |
-| Compositeur / palette (6 fonts) | `tools/audio/synth_palette.py` |
+| **Lutherie** — 19 modèles d'instruments | `tools/audio/orchestra.py` |
+| **Partition** — 32 mesures, conduite des voix, arc dynamique | `tools/audio/score_menu.py` |
+| **Orchestration** — répartition pupitres/stems | `tools/audio/arrange_menu.py` |
+| Rendu, salle, mastering, attestation | `tools/audio/synth_palette.py` |
+| Contrôle d'équilibre du pupitre | `tools/audio/balance_check.py` |
 | Thème de menu + 4 stems | `audio/music/menu/{menu_theme,base,rhythm,melody,climax}.ogg` |
 | Page de présentation jouable | `tools/audio/build_web_page.py` + `page_template.html` |
 
@@ -285,20 +289,45 @@ elle ne peut pas afficher une provenance qu'elle n'a pas.
 > Une attestation **absente** est signalée comme telle, jamais rendue comme une
 > attestation vide.
 
-**Le morceau** : ré dorien, 66 BPM, 16 mesures, boucle de 58,182 s.
-Progression `Dm · C · Dm · G · Dm · C · Bb · Am` — le sol majeur porte un si naturel
-(signature dorienne), le si bémol de la mesure 13 est un emprunt éolien qui ouvre juste
-avant la retombée.
+**Le morceau** : ré dorien, 66 BPM, **32 mesures**, forme A A' B A'', boucle de 116,364 s.
+19 instruments, 657 événements de note.
+
+Quatre choses le distinguent d'un empilement de nappes :
+
+1. **Conduite des voix** — chaque voix rejoint la note la plus proche de l'accord suivant
+   (4 à 5 demi-tons de mouvement par changement). Une recherche gloutonne naïve sortait un
+   sol majeur *sans tierce* : elle prenait le plus proche et abandonnait le si naturel, qui
+   est précisément la signature dorienne. L'algorithme énumère donc les affectations
+   complètes, avec pénalité forte si la tierce manque.
+2. **Vélocité timbrale** — jouer fort n'augmente pas que le volume, ça ouvre le spectre.
+   Sans ce lien, les nuances sonnent comme un bouton de volume.
+3. **Ensemble** — un pupitre de cordes, c'est 6 à 8 instrumentistes désaccordés, chacun
+   avec son vibrato et son attaque décalée. C'est cette décorrélation qui épaissit.
+4. **Placement sur scène** — panoramique *et* distance : plus de réverbe, aigus mangés,
+   léger pré-délai. C'est la profondeur.
+
+**L'événement dramatique** : mesure 24, un **la majeur**. Son do dièse est la seule note
+étrangère au mode de toute la pièce, et il sert de dominante pour ramener le thème.
 
 **Contrôles qualité mesurés** (à re-vérifier après toute modification) :
 
 | Contrôle | Valeur | Seuil |
 |---|---|---|
-| Crête après encodage Vorbis | 0,472 | < 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB |
-| Niveau moyen | −19,0 dB RMS | −18 à −20 dB pour un menu |
-| Corrélation L/R | +0,79 | > 0,5 (compatibilité mono) |
-| Somme des 4 stems vs mix | −18,9 / −19,0 dB | écart nul |
-| Discontinuité au point de boucle | 0,0037 | ≈ 0 |
+| Crête après encodage Vorbis | 0,571 | < 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB |
+| Niveau moyen | −19,2 dB RMS | −18 à −20 dB pour un menu |
+| Corrélation L/R | +0,90 | > 0,5 (compatibilité mono) |
+| Somme des 4 stems vs mix | −18,9 / −19,2 dB | écart nul |
+| Discontinuité au point de boucle | 0,0017 | ≈ 0 |
+| Amplitude de l'arc dynamique | 14,3 dB | > 8 dB, sinon la pièce est plate |
+| Part du chant dans le médium | 32 % | le thème doit dominer ses accompagnements |
+
+> **Troisième piège, propre à l'orchestration** : au premier rendu orchestral, le stem
+> `base` fournissait **87 % du grave et 56 % du médium**, la mélodie 10 %. Le thème était
+> enterré sous ses propres accompagnements, et le mix sonnait sourd. Le diagnostic n'a pas
+> été fait à l'oreille mais en mesurant la contribution de chaque stem par bande de
+> fréquence — c'est la seule façon de trancher sans écouter. Correction : allègement du
+> socle (l'octave de basse confiée aux altos plutôt qu'aux violoncelles, coupe de 3,5 dB
+> vers 260 Hz) et rééquilibrage des gains de stems.
 
 > **Piège rencontré** : un master calé à 0,89 crête ressortait à **1,44** après encodage
 > Vorbis — le décodeur reconstruit des pics inter-échantillons. Il faut viser le RMS et

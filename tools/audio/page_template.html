@@ -301,7 +301,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <section>
   <div class="sec-head"><span class="sec-num">ÉCOUTE</span><h2>Thème de menu principal</h2></div>
-  <p class="sec-sub">Voici le résultat, joué par la palette. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne exactement le mix.</p>
+  <p class="sec-sub">32 mesures, 19 instruments, forme A A&rsquo; B A&rsquo;&rsquo;. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix. Le sommet est à 1'27, mesure 25.</p>
 
   <div class="console">
     <div class="transport">
@@ -309,7 +309,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
         <svg id="icon" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0v14l12-7z" fill="currentColor"/></svg>
         <span id="playlabel">Écouter</span>
       </button>
-      <div class="clock"><b id="t">0:00</b> / 0:58</div>
+      <div class="clock"><b id="t">0:00</b> / 1:56</div>
       <div class="loop-tag" id="looptag">boucle sans couture</div>
       <button class="tog" id="simple" aria-pressed="false" title="Lit le mix complet via un lecteur audio classique">mix simple</button>
       <a class="dl" id="dl" download="merlin-menu-theme.mp3">télécharger le MP3</a>
@@ -325,26 +325,39 @@ footer span{min-width:0;overflow-wrap:anywhere}
   <dl class="facts">
     <div><dt>Tonalité</dt><dd>Ré dorien</dd></div>
     <div><dt>Tempo</dt><dd>66 BPM</dd></div>
-    <div><dt>Forme</dt><dd>16 mesures</dd></div>
-    <div><dt>Boucle</dt><dd>58,182 s</dd></div>
-    <div><dt>Niveau</dt><dd>−19,0 dB RMS</dd></div>
-    <div><dt>Corrél. L/R</dt><dd>+0,79</dd></div>
+    <div><dt>Forme</dt><dd>A&rsquo; B A&rsquo;&rsquo;</dd></div>
+    <div><dt>Boucle</dt><dd>116,364 s</dd></div>
+    <div><dt>Effectif</dt><dd>19 · 657</dd></div>
+    <div><dt>Amplitude</dt><dd>14,3 dB</dd></div>
   </dl>
 
   <div class="scroller">
     <table>
-      <thead><tr><th>Font</th><th>Synthèse</th><th>Rôle musical</th></tr></thead>
+      <thead><tr><th>Pupitre</th><th>Modèle</th><th>Rôle</th></tr></thead>
       <tbody>
-        <tr><td class="k"><b>pad_fm</b></td><td>FM, ratio 2,005 — inharmonique léger</td><td>Nappe froide. Le désaccord produit des battements lents : c'est le socle Prime.</td></tr>
-        <tr><td class="k"><b>sub</b></td><td>Sinus + saturation <span class="mono">tanh</span> douce</td><td>Fondamentale. Saturée pour survivre aux petits haut-parleurs.</td></tr>
-        <tr><td class="k"><b>bell</b></td><td>FM, ratio √2 — franchement inharmonique</td><td>Cloche métallique. L'index s'effondre en 300 ms : métal froid, pas carillon.</td></tr>
-        <tr><td class="k"><b>harp</b></td><td>Karplus-Strong (corde pincée)</td><td>La couleur celtique. Roulements à chaque changement d'accord.</td></tr>
-        <tr><td class="k"><b>taiko</b></td><td>Sinus descendant + transitoire bruité</td><td>Percussion sèche, presque sans réverbe — le contrepoint aux nappes noyées.</td></tr>
-        <tr><td class="k"><b>choir</b> / <b>whistle</b></td><td>Voix désaccordées / sinus + souffle + vibrato</td><td>L'ouverture de la seconde moitié, et la mélodie.</td></tr>
+        <tr><td class="k"><b>cordes graves</b></td><td>6 voix désaccordées, formants de caisse 240/480 Hz</td><td>La basse chantée : violoncelles et contrebasses.</td></tr>
+        <tr><td class="k"><b>cordes médium</b></td><td>7 voix, formants 430/1100 Hz</td><td>Altos et seconds violons — le remplissage harmonique.</td></tr>
+        <tr><td class="k"><b>cordes aiguës</b></td><td>8 voix, vibrato marqué</td><td>Premiers violons. Doublent le thème une octave sous la flûte au tutti.</td></tr>
+        <tr><td class="k"><b>tremolo</b></td><td>Même matière, hachée à ~11 Hz irrégulier</td><td>Les quatre mesures qui montent vers le la majeur.</td></tr>
+        <tr><td class="k"><b>pizzicato</b></td><td>Karplus-Strong très amorti + coup de corps</td><td>La pulsation de la seconde exposition.</td></tr>
+        <tr><td class="k"><b>cor</b></td><td>FM, index croissant à l'attaque</td><td>Voix intérieure. Sourd par nature, il tient l'harmonie sans encombrer.</td></tr>
+        <tr><td class="k"><b>cuivres</b></td><td>FM à deux modulateurs, formants 1,7 et 3,3 kHz</td><td>Uniquement le sommet, mesures 25 à 28.</td></tr>
+        <tr><td class="k"><b>flûte</b></td><td>Peu d'harmoniques, beaucoup de souffle</td><td>Le thème, à partir de la reprise.</td></tr>
+        <tr><td class="k"><b>hautbois</b></td><td>Anche double : harmoniques 2 à 5 dominantes, formant nasal 1,4 kHz</td><td>L'énoncé du thème, seul, au début.</td></tr>
+        <tr><td class="k"><b>clarinette</b></td><td>Tuyau fermé, donc harmoniques impaires</td><td>Le contrechant, en mouvement contraire.</td></tr>
+        <tr><td class="k"><b>harpe</b></td><td>Corde pincée, amortissement long</td><td>La couleur celtique. Roulement à chaque changement d'accord.</td></tr>
+        <tr><td class="k"><b>timbales</b></td><td>Fondamentale + 4 modes de membrane inharmoniques</td><td>Les appuis de structure, et le roulement d'approche.</td></tr>
+        <tr><td class="k"><b>taiko</b></td><td>Sinus descendant + transitoire filtré</td><td>La pulsation tribale — l'héritage Prime dans l'orchestre.</td></tr>
+        <tr><td class="k"><b>cymbale</b></td><td>Bruit large en crescendo, coupé net</td><td>Elle annonce chaque section.</td></tr>
+        <tr><td class="k"><b>glockenspiel</b></td><td>FM très inharmonique, extinction rapide</td><td>Le scintillement du tutti.</td></tr>
+        <tr><td class="k"><b>cloches</b></td><td>FM ratio √2</td><td>Le métal froid de la palette Prime, aux deux extrémités.</td></tr>
+        <tr><td class="k"><b>chœur</b></td><td>6 voix + formants de voyelle « ah »</td><td>Entre au développement et ne repart plus.</td></tr>
+        <tr><td class="k"><b>nappe FM · sub</b></td><td>Ratio 2,005 inharmonique / sinus saturé</td><td>Sous l'orchestre, ce qui reste de la texture d'origine.</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="sec-sub" style="margin-top:18px">Harmonie : <span class="mono">Dm · C · Dm · G · Dm · C · Bb · Am</span>. Le sol majeur porte un si naturel — la signature dorienne. Le si bémol de la mesure 13 est un emprunt éolien : c'est le seul moment où le morceau respire vers le haut, juste avant de retomber.</p>
+  <p class="sec-sub" style="margin-top:18px">Les accords ne sont pas plaqués : chaque voix rejoint la note la plus proche de l'accord suivant, quatre à cinq demi-tons de mouvement par changement. C'est ce qui sépare un orchestre d'un clavier.</p>
+  <p class="sec-sub" style="margin-top:14px">Le sol majeur porte un si naturel — la signature dorienne. Et mesure 24, un <strong>la majeur</strong> : son do dièse est la seule note étrangère au mode de toute la pièce. Elle sert de dominante pour ramener le thème. Tout le développement converge là.</p>
 </section>
 
 <section>
@@ -403,7 +416,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <div class="mode">
       <div class="mode-tag">rendu de cette page</div>
       <h3>Synthétisé</h3>
-      <p>Palette reconstruite de zéro : FM, Karplus-Strong, bruit filtré, réverbe à convolution sur réponses impulsionnelles générées. Aucun octet emprunté, donc distribuable.</p>
+      <p>Dix-neuf pupitres reconstruits de zéro : ensembles désaccordés, formants fixes, vélocité timbrale, réverbe à convolution. Aucun octet emprunté, donc distribuable.</p>
       <p class="cmd mono">synth_palette.py --out audio/music/menu</p>
     </div>
     <div class="mode">
@@ -446,11 +459,13 @@ __PROVENANCE__
     <table>
       <thead><tr><th>Vérification</th><th>Mesure</th><th>Attendu</th></tr></thead>
       <tbody>
-        <tr><td>Crête après encodage Vorbis</td><td class="k">0,472</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
-        <tr><td>Niveau moyen</td><td class="k">−19,0 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
-        <tr><td>Compatibilité mono</td><td class="k">+0,79</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
-        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,9 / −19,0 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
-        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0037</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
+        <tr><td>Crête après encodage Vorbis</td><td class="k">0,571</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
+        <tr><td>Niveau moyen</td><td class="k">−19,2 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
+        <tr><td>Compatibilité mono</td><td class="k">+0,90</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
+        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,9 / −19,2 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
+        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0017</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
+        <tr><td>Amplitude de l'arc dynamique</td><td class="k">14,3 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
+        <tr><td>Part du chant dans le médium</td><td class="k">32 %</td><td>le thème doit dominer ses accompagnements</td></tr>
       </tbody>
     </table>
   </div>
@@ -458,16 +473,16 @@ __PROVENANCE__
 
 <footer>
   <span>M.E.R.L.I.N. — <span class="mono">docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md</span></span>
-  <span class="mono">synth_palette.py · musyx_extract.py · 16 mes. · 66 BPM</span>
+  <span class="mono">synth_palette.py · orchestra.py · 32 mes. · 66 BPM</span>
 </footer>
 </div>
 
 <script>
 const STEMS = [
-  {id:"base",   label:"base",   fonts:"pad_fm · sub",         thr:"toujours",   sub:"le socle"},
-  {id:"rhythm", label:"rhythm", fonts:"taiko",                thr:"tension > 0.2", sub:"la pulsation"},
-  {id:"melody", label:"melody", fonts:"bell · harp",          thr:"tension > 0.4", sub:"le motif"},
-  {id:"climax", label:"climax", fonts:"choir · whistle",      thr:"tension > 0.6", sub:"l'ouverture"}
+  {id:"base",   label:"base",   fonts:"violoncelles · altos · cor · nappe FM · sub", thr:"toujours",      sub:"le socle"},
+  {id:"rhythm", label:"rhythm", fonts:"timbales · taiko · pizzicati · cymbales",      thr:"tension > 0.2", sub:"la pulsation"},
+  {id:"melody", label:"melody", fonts:"hautbois · flûte · harpe · glockenspiel",      thr:"tension > 0.4", sub:"le chant"},
+  {id:"climax", label:"climax", fonts:"chœur · cuivres · violons · clarinette",       thr:"tension > 0.6", sub:"l&rsquo;ouverture"}
 ];
 const AUDIO = __AUDIO_JSON__;
 
