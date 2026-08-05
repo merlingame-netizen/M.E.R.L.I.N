@@ -1,4 +1,4 @@
-<title>Palette Brocéliande — chaîne musicale M.E.R.L.I.N.</title>
+<title>Tri Martolod revisité — thème de menu M.E.R.L.I.N.</title>
 <style>
 :root{
   --ink:#08131A; --stone:#DCE4E3; --slate:#4A5D63;
@@ -292,16 +292,16 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <header>
   <div class="eyebrow"><span>M.E.R.L.I.N.</span><span class="rule"></span><span>chaîne musicale</span><span class="rule"></span><span>2026-08-04</span></div>
-  <h1>Palette Brocéliande</h1>
-  <p class="lede">Extraire les instruments d'un jeu, en faire une banque fermée, puis recomposer des morceaux entiers qui n'utilisent que ces sons. Étude d'outillage, appliquée au thème de menu.</p>
+  <h1>Tri Martolod, revisité</h1>
+  <p class="lede">Un air breton du XVIII<sup>e</sup> siècle, arrangé pour dix-neuf pupitres sur une palette d'instruments reconstruite. Plus la chaîne d'outillage qui permet d'y substituer d'autres sons.</p>
   <div class="thesis">
-    <strong>Le point qui change tout :</strong> Metroid Prime 1 et 2 ne sont pas de la musique streamée. Ils tournent sur le moteur <span class="mono">MusyX</span> — séquence d'un côté, banque de samples de l'autre. Les instruments y sont <strong>déjà isolés</strong>. Aucune séparation de sources à faire.
+    <strong>Ce qui rendait la greffe possible :</strong> transposé en ré, Tri Martolod porte un <strong>si naturel</strong> — la descente <span class="mono">ré do si la</span> de sa deuxième mesure. En ré mineur la sixte serait si bémol. Ce si signe le <strong>mode dorien</strong>, celui dans lequel la pièce était déjà écrite. L'air traditionnel et l'harmonisation froide parlent la même langue.
   </div>
 </header>
 
 <section>
   <div class="sec-head"><span class="sec-num">ÉCOUTE</span><h2>Thème de menu principal</h2></div>
-  <p class="sec-sub">32 mesures, 19 instruments, forme A A&rsquo; B A&rsquo;&rsquo;. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix. Le sommet est à 1'27, mesure 25.</p>
+  <p class="sec-sub">40 mesures, 19 instruments. L'air est énoncé nu au hautbois (0'12), doublé, harmonisé, éloigné dans le développement, puis ramené en tutti à 1'28. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
 
   <div class="console">
     <div class="transport">
@@ -309,7 +309,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
         <svg id="icon" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0v14l12-7z" fill="currentColor"/></svg>
         <span id="playlabel">Écouter</span>
       </button>
-      <div class="clock"><b id="t">0:00</b> / 1:56</div>
+      <div class="clock"><b id="t">0:00</b> / 2:06</div>
       <div class="loop-tag" id="looptag">boucle sans couture</div>
       <button class="tog" id="simple" aria-pressed="false" title="Lit le mix complet via un lecteur audio classique">mix simple</button>
       <a class="dl" id="dl" download="merlin-menu-theme.mp3">télécharger le MP3</a>
@@ -324,12 +324,18 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
   <dl class="facts">
     <div><dt>Tonalité</dt><dd>Ré dorien</dd></div>
-    <div><dt>Tempo</dt><dd>66 BPM</dd></div>
-    <div><dt>Forme</dt><dd>A&rsquo; B A&rsquo;&rsquo;</dd></div>
-    <div><dt>Boucle</dt><dd>116,364 s</dd></div>
-    <div><dt>Effectif</dt><dd>19 · 657</dd></div>
-    <div><dt>Amplitude</dt><dd>14,3 dB</dd></div>
+    <div><dt>Tempo</dt><dd>76 BPM</dd></div>
+    <div><dt>Boucle</dt><dd>126,316 s</dd></div>
+    <div><dt>Effectif</dt><dd>19 · 1263</dd></div>
+    <div><dt>Amplitude</dt><dd>17,2 dB</dd></div>
   </dl>
+
+  <div class="callout" style="border-color:var(--accent)">
+    <h3 style="color:var(--accent)">L'air</h3>
+    <p><em>Tri Martolod</em> — « trois marins » — est une chanson traditionnelle de Basse-Bretagne qui remonte au XVIII<sup>e</sup> siècle. Alan Stivell l'a rendue célèbre en 1971, mais c'est <strong>son arrangement</strong> qui lui appartient : l'air, lui, est traditionnel. C'est celui-là qui est repris ici, dans un arrangement original.</p>
+    <p>La mélodie a été recoupée entre deux relevés — celui de thesession.org, où les paroles bretonnes sont alignées note à note (« tri / mar-to-lod / yao-uank »), et le <em>Nine-Note Tunebook</em> de Jack Campin. Les deux concordent : la phrase chantée descend par degrés depuis la quinte.</p>
+    <p>La revisite tient en trois gestes : l'air est joué <strong>lent</strong> (76 BPM là où on le danse vers 120), harmonisé <strong>modalement</strong> plutôt qu'en mineur classique, et posé sur la <strong>nappe FM froide</strong> et les cloches métalliques héritées de la palette d'origine.</p>
+  </div>
 
   <div class="scroller">
     <table>
@@ -357,7 +363,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
     </table>
   </div>
   <p class="sec-sub" style="margin-top:18px">Les accords ne sont pas plaqués : chaque voix rejoint la note la plus proche de l'accord suivant, quatre à cinq demi-tons de mouvement par changement. C'est ce qui sépare un orchestre d'un clavier.</p>
-  <p class="sec-sub" style="margin-top:14px">Le sol majeur porte un si naturel — la signature dorienne. Et mesure 24, un <strong>la majeur</strong> : son do dièse est la seule note étrangère au mode de toute la pièce. Elle sert de dominante pour ramener le thème. Tout le développement converge là.</p>
+  <p class="sec-sub" style="margin-top:14px">Mesure 28, un <strong>la majeur</strong> : son do dièse est la seule note étrangère au mode de toute la pièce. Il sert de dominante pour ramener l'air en tutti. Tout le développement converge là.</p>
 </section>
 
 <section>
@@ -459,13 +465,15 @@ __PROVENANCE__
     <table>
       <thead><tr><th>Vérification</th><th>Mesure</th><th>Attendu</th></tr></thead>
       <tbody>
-        <tr><td>Crête après encodage Vorbis</td><td class="k">0,571</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
+        <tr><td>Crête après encodage Vorbis</td><td class="k">0,555</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
         <tr><td>Niveau moyen</td><td class="k">−19,2 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
         <tr><td>Compatibilité mono</td><td class="k">+0,90</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
-        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,9 / −19,2 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
-        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0017</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
-        <tr><td>Amplitude de l'arc dynamique</td><td class="k">14,3 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
-        <tr><td>Part du chant dans le médium</td><td class="k">32 %</td><td>le thème doit dominer ses accompagnements</td></tr>
+        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,8 / −19,2 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
+        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0028</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
+        <tr><td>Amplitude de l'arc dynamique</td><td class="k">17,2 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
+        <tr><td>Part du chant dans le médium</td><td class="k">38 %</td><td>le thème doit dominer ses accompagnements</td></tr>
+        <tr><td>… au tutti seul</td><td class="k">27 %</td><td>l'air doit rester audible sous les cuivres</td></tr>
+        <tr><td>… pendant l'énoncé nu</td><td class="k">88 %</td><td>le hautbois est seul, il doit l'être vraiment</td></tr>
       </tbody>
     </table>
   </div>
@@ -473,7 +481,7 @@ __PROVENANCE__
 
 <footer>
   <span>M.E.R.L.I.N. — <span class="mono">docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md</span></span>
-  <span class="mono">synth_palette.py · orchestra.py · 32 mes. · 66 BPM</span>
+  <span class="mono">Tri Martolod (trad.) · arr. original · 40 mes. · 76 BPM</span>
 </footer>
 </div>
 

@@ -289,6 +289,100 @@ elle ne peut pas afficher une provenance qu'elle n'a pas.
 > Une attestation **absente** est signalée comme telle, jamais rendue comme une
 > attestation vide.
 
+**Le morceau** : **Tri Martolod**, air traditionnel breton, arrangement original.
+Ré dorien, 76 BPM, 40 mesures, boucle de 126,316 s. 19 instruments, 1263 événements.
+
+### 6.1 bis — L'air et sa provenance
+
+*Tri Martolod* (« trois marins ») est une chanson de Basse-Bretagne remontant au
+XVIII<sup>e</sup> siècle. Alan Stivell l'a popularisée en 1971 — **son arrangement** lui
+appartient, l'air est traditionnel. C'est l'air qui est repris, dans un arrangement écrit
+pour ce projet.
+
+Mélodie recoupée entre deux relevés : thesession.org (paroles bretonnes alignées note à
+note — « tri / mar-to-lod / yao-uank ») et le *Nine-Note Tunebook* de Jack Campin. Les
+deux concordent : la phrase chantée descend par degrés depuis la quinte.
+
+> **Le fait qui a rendu la greffe naturelle** : transposé en ré, Tri Martolod porte un
+> **si naturel** (la descente `ré do si la` de sa deuxième mesure). En ré mineur la sixte
+> serait si bémol. Ce si signe le **mode dorien** — celui dans lequel la pièce était déjà
+> écrite. L'air traditionnel et l'harmonisation froide partagent le même mode.
+
+**La revisite**, en trois gestes : l'air est joué **lent** (76 BPM là où on le danse vers
+120), harmonisé **modalement** plutôt qu'en mineur classique, et posé sur la **nappe FM
+froide** et les cloches métalliques de la palette d'origine.
+
+**Plan** : intro (1-4) · air nu au hautbois (5-8) · air doublé (9-12) · refrain
+instrumental (13-16) · air harmonisé (17-20) · développement et crescendo (21-28, vers le
+**la majeur**, seule note hors mode) · tutti (29-36) · coda (37-40).
+
+Quatre choses le distinguent d'un empilement de nappes :
+
+1. **Conduite des voix** — chaque voix rejoint la note la plus proche de l'accord suivant
+   (4 à 5 demi-tons par changement). Une recherche gloutonne naïve sortait un sol majeur
+   *sans tierce* : elle abandonnait le si naturel, qui est à la fois la signature dorienne
+   et une note de la mélodie traditionnelle.
+2. **Vélocité timbrale** — jouer fort n'augmente pas que le volume, ça ouvre le spectre.
+3. **Ensemble** — 6 à 8 instrumentistes désaccordés par pupitre, chacun son vibrato et son
+   attaque décalée.
+4. **Placement sur scène** — panoramique *et* distance : réverbe, aigus mangés, pré-délai.
+
+### 6.2 — L'extracteur
+
+Trois couches, implémentées d'après la spec du Retro Modding Wiki :
+
+| Couche | Ce qui est lu |
+|---|---|
+| **GCM / ISO** | FST à `0x424`, entrées de 12 octets, table de chaînes |
+| **PAK** | Table de ressources (20 o/entrée), payload zlib préfixé de la taille décompressée |
+| **AGSC** | 4 chunks. Ordre `pool/proj/samp/sdir` en MP1, `pool/proj/sdir/samp` en MP2 |
+| **SDIR** | Table A (0x20 o) : note de base, fréquence, format, nombre d'échantillons, boucle. Table B (0x28 o) : contexte + 16 coefficients ADPCM |
+| **SAMP** | DSP-ADPCM GameCube : trames de 8 octets → 14 échantillons |
+
+**L'outil ne fournit et ne télécharge aucune donnée de jeu.** Il travaille sur la copie
+que vous lui donnez.
+
+Comme il n'existe aucun moyen de tester le parseur sans données de jeu, chaque module
+porte un autotest qui fabrique des fixtures **au format documenté** et les relit :
+
+```bash
+python3 tools/audio/musyx_extract.py selftest   # conteneur AGSC + codec ADPCM
+python3 tools/audio/sample_bank.py              # boucle, one-shot, transposition
+```
+
+Résultats attendus : aller-retour ADPCM > 20 dB de SNR (obtenu : 52,8), PCM16 bit-exact,
+transposition d'octave à un rapport de 2,00, one-shot silencieux après extinction,
+nappe bouclée encore sonore à 9 s.
+
+> Ces autotests valident l'implémentation **contre la spec**, pas contre les fichiers de
+> Nintendo. Une particularité non documentée d'un groupe audio réel peut encore surprendre :
+> au premier passage sur vos données, vérifiez les valeurs du `manifest.json` (fréquences
+> plausibles, notes de base entre 20 et 100, durées non nulles) avant de composer.
+
+### 6.3 — Attestation de provenance
+
+Chaque rendu écrit `provenance.json` + `PROVENANCE.md` à côté des fichiers audio. C'est
+la pièce qui permet de **certifier** ce qui est réellement entré dans un morceau.
+
+| Champ | Mode synthétisé | Mode échantillonné |
+|---|---|---|
+| `mode` | `synthesized` | `sampled` |
+| `external_samples` | `false` | `true` |
+| Fichier source | — | nom, taille, **SHA-256** |
+| Par font | — | ID du sample, groupe AGSC, offset SAMP, note de base, fréquence |
+| Fichiers produits | SHA-256 de chaque `.ogg` | idem |
+
+Le SHA-256 de la source est ce qui rend l'attestation vérifiable : il identifie
+**exactement** la copie du jeu qui a fourni les échantillons. Deux rendus depuis la même
+copie portent le même hash ; un rendu depuis une autre copie ne peut pas le falsifier.
+
+`build_web_page.py` lit ce rapport et l'affiche en tête de la page. Une page bâtie sur un
+rendu synthétisé porte donc, en toutes lettres, « synthèse — aucune source externe » ;
+elle ne peut pas afficher une provenance qu'elle n'a pas.
+
+> Une attestation **absente** est signalée comme telle, jamais rendue comme une
+> attestation vide.
+
 **Le morceau** : ré dorien, 66 BPM, **32 mesures**, forme A A' B A'', boucle de 116,364 s.
 19 instruments, 657 événements de note.
 
@@ -313,13 +407,22 @@ Quatre choses le distinguent d'un empilement de nappes :
 
 | Contrôle | Valeur | Seuil |
 |---|---|---|
-| Crête après encodage Vorbis | 0,571 | < 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB |
+| Crête après encodage Vorbis | 0,555 | < 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB |
 | Niveau moyen | −19,2 dB RMS | −18 à −20 dB pour un menu |
 | Corrélation L/R | +0,90 | > 0,5 (compatibilité mono) |
-| Somme des 4 stems vs mix | −18,9 / −19,2 dB | écart nul |
-| Discontinuité au point de boucle | 0,0017 | ≈ 0 |
-| Amplitude de l'arc dynamique | 14,3 dB | > 8 dB, sinon la pièce est plate |
-| Part du chant dans le médium | 32 % | le thème doit dominer ses accompagnements |
+| Somme des 4 stems vs mix | −18,8 / −19,2 dB | écart nul |
+| Discontinuité au point de boucle | 0,0028 | ≈ 0 |
+| Amplitude de l'arc dynamique | 17,2 dB | > 8 dB, sinon la pièce est plate |
+| Part du chant dans le médium | 38 % | le thème doit dominer ses accompagnements |
+| … au tutti seul | 27 % | l'air doit rester audible sous les cuivres |
+| … pendant l'énoncé nu | 88 % | le hautbois est seul, il doit l'être vraiment |
+
+> **Quatrième piège, propre à l'orchestration d'un air** : au premier rendu de Tri Martolod,
+> la flûte ne pesait plus que **1 %** du médium pendant le tutti, contre 95 % pour les
+> cuivres et le chœur. Le thème disparaissait exactement là où il devait triompher.
+> Correction : deux bois à l'unisson au lieu d'une flûte seule, doublage aux violons
+> reclassé dans le stem `melody` (doubler la mélodie, c'est de la mélodie), cuivres et
+> chœur atténués. La part du chant au tutti est passée de 1 % à 27 %.
 
 > **Troisième piège, propre à l'orchestration** : au premier rendu orchestral, le stem
 > `base` fournissait **87 % du grave et 56 % du médium**, la mélodie 10 %. Le thème était
