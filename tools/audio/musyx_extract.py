@@ -25,12 +25,24 @@ Exemples :
 from __future__ import annotations
 
 import argparse
+import datetime
+import hashlib
 import json
 import os
 import struct
 import sys
 import wave
 import zlib
+
+TOOL_VERSION = "1.1.0"
+
+
+def sha256_file(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for blk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(blk)
+    return h.hexdigest()
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DSP-ADPCM (codec GameCube)
@@ -213,7 +225,9 @@ def extract_agsc(buf: bytes, out_dir: str, tag: str = "") -> list[dict]:
         rel = os.path.join(group, f"{e['id']:#06x}.wav")
         write_wav(os.path.join(out_dir, rel), pcm, e["sample_rate"])
         manifest.append({
-            "file": rel.replace(os.sep, "/"), "group": group, "id": e["id"],
+            "file": rel.replace(os.sep, "/"), "group": group,
+            "agsc_version": head["version"], "samp_offset": e["offset"],
+            "id": e["id"],
             "base_note": e["base_note"], "sample_rate": e["sample_rate"],
             "num_samples": e["num_samples"], "format": e["format"],
             "loop_start": e["loop_start"], "loop_length": e["loop_length"],
@@ -432,14 +446,29 @@ def main() -> int:
 
     with open(args.input, "rb") as fh:
         buf = fh.read()
-    manifest = {"iso": extract_iso, "pak": extract_pak,
-                "agsc": extract_agsc}[args.mode](buf, args.out)
+    samples = {"iso": extract_iso, "pak": extract_pak,
+               "agsc": extract_agsc}[args.mode](buf, args.out)
 
     os.makedirs(args.out, exist_ok=True)
+    manifest = {
+        "source": {
+            "path": os.path.abspath(args.input),
+            "filename": os.path.basename(args.input),
+            "sha256": sha256_file(args.input),
+            "size_bytes": os.path.getsize(args.input),
+            "mode": args.mode,
+        },
+        "extracted_at": datetime.datetime.now(datetime.timezone.utc)
+                                 .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "tool": f"musyx_extract.py {TOOL_VERSION}",
+        "sample_count": len(samples),
+        "samples": samples,
+    }
     mpath = os.path.join(args.out, "manifest.json")
     with open(mpath, "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=2, ensure_ascii=False)
-    print(f"[ok] {len(manifest)} samples -> {args.out}/  (manifest : {mpath})")
+    print(f"[ok] {len(samples)} samples -> {args.out}/  (manifest : {mpath})")
+    print(f"     source SHA-256 : {manifest['source']['sha256']}")
     print("     Choisissez vos fonts, puis :")
     print(f"       python3 tools/audio/synth_palette.py --bank {args.out} "
           "--out audio/music/menu")

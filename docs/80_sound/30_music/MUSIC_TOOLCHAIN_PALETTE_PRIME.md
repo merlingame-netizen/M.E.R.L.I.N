@@ -261,6 +261,30 @@ nappe bouclée encore sonore à 9 s.
 > au premier passage sur vos données, vérifiez les valeurs du `manifest.json` (fréquences
 > plausibles, notes de base entre 20 et 100, durées non nulles) avant de composer.
 
+### 6.3 — Attestation de provenance
+
+Chaque rendu écrit `provenance.json` + `PROVENANCE.md` à côté des fichiers audio. C'est
+la pièce qui permet de **certifier** ce qui est réellement entré dans un morceau.
+
+| Champ | Mode synthétisé | Mode échantillonné |
+|---|---|---|
+| `mode` | `synthesized` | `sampled` |
+| `external_samples` | `false` | `true` |
+| Fichier source | — | nom, taille, **SHA-256** |
+| Par font | — | ID du sample, groupe AGSC, offset SAMP, note de base, fréquence |
+| Fichiers produits | SHA-256 de chaque `.ogg` | idem |
+
+Le SHA-256 de la source est ce qui rend l'attestation vérifiable : il identifie
+**exactement** la copie du jeu qui a fourni les échantillons. Deux rendus depuis la même
+copie portent le même hash ; un rendu depuis une autre copie ne peut pas le falsifier.
+
+`build_web_page.py` lit ce rapport et l'affiche en tête de la page. Une page bâtie sur un
+rendu synthétisé porte donc, en toutes lettres, « synthèse — aucune source externe » ;
+elle ne peut pas afficher une provenance qu'elle n'a pas.
+
+> Une attestation **absente** est signalée comme telle, jamais rendue comme une
+> attestation vide.
+
 **Le morceau** : ré dorien, 66 BPM, 16 mesures, boucle de 58,182 s.
 Progression `Dm · C · Dm · G · Dm · C · Bb · Am` — le sol majeur porte un si naturel
 (signature dorienne), le si bémol de la mesure 13 est un emprunt éolien qui ouvre juste

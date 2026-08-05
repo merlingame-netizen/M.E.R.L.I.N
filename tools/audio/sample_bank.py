@@ -121,7 +121,16 @@ class SampleBank:
                 f"{man_file} introuvable. Lancez d'abord :\n"
                 f"  python3 tools/audio/musyx_extract.py iso --input <votre.iso> --out {path}")
         with open(man_file, encoding="utf-8") as fh:
-            self.manifest = json.load(fh)
+            raw = json.load(fh)
+        # manifest v1.1 : dict avec bloc source ; v1.0 : simple liste
+        if isinstance(raw, dict):
+            self.manifest = raw.get("samples", [])
+            self.source = raw.get("source")
+            self.extracted_at = raw.get("extracted_at")
+        else:
+            self.manifest = raw
+            self.source = None
+            self.extracted_at = None
 
         map_file = os.path.join(path, "palette_map.json")
         if os.path.exists(map_file):

@@ -110,6 +110,10 @@ section{padding-top:56px}
   border:1px solid var(--line);border-radius:2px;padding:4px 8px;
 }
 .loop-tag.on{color:var(--warm);border-color:var(--warm)}
+.status{font-size:.78rem;color:var(--fg-3);flex-basis:100%}
+.status.warn{color:var(--warm)}
+.status:empty{display:none}
+.strip.locked .s-ctrl{opacity:.35;pointer-events:none}
 
 #scope{display:block;width:100%;height:88px;background:var(--bg)}
 
@@ -217,6 +221,39 @@ td.k b{color:var(--accent);font-weight:600}
   border:1px solid var(--line);padding:9px 11px;overflow-wrap:anywhere;line-height:1.7;
 }
 @media (max-width:720px){.modes{grid-template-columns:1fr}}
+.prov{
+  margin-top:26px;border:1px solid var(--line);border-radius:3px;
+  background:var(--panel);overflow:hidden;
+}
+.prov-head{
+  display:flex;align-items:center;gap:12px;padding:14px 20px;
+  background:var(--bg-2);border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.prov-head h3{font-size:.98rem}
+.pill{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.64rem;
+  letter-spacing:.13em;text-transform:uppercase;padding:4px 9px;border-radius:2px;
+  border:1px solid currentColor;
+}
+.pill.synth{color:var(--accent)}
+.pill.sampled{color:var(--warm)}
+.prov-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.prov-body p{font-size:.88rem;color:var(--fg-2);max-width:62ch}
+.prov-rows{display:flex;flex-direction:column;gap:7px}
+.prov-rows div{display:grid;grid-template-columns:150px 1fr;gap:14px;font-size:.82rem}
+.prov-rows dt{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.66rem;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--fg-3);padding-top:.2em;
+}
+.prov-rows dd{
+  margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:.78rem;overflow-wrap:anywhere;
+}
+.prov details{font-size:.82rem}
+.prov summary{cursor:pointer;color:var(--fg-3);font-size:.78rem}
+.prov summary:hover{color:var(--fg-2)}
+.prov details table{margin-top:12px;min-width:0}
+@media (max-width:720px){.prov-rows div{grid-template-columns:1fr;gap:2px}}
 .callout{
   margin-top:26px;border:1px solid var(--warm);border-radius:3px;
   padding:20px 22px;background:var(--bg-2);max-width:66ch;
@@ -262,13 +299,15 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
   <div class="console">
     <div class="transport">
-      <button class="play" id="play" disabled>
+      <button class="play" id="play">
         <svg id="icon" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0v14l12-7z" fill="currentColor"/></svg>
-        <span id="playlabel">Chargement…</span>
+        <span id="playlabel">Écouter</span>
       </button>
       <div class="clock"><b id="t">0:00</b> / 0:58</div>
       <div class="loop-tag" id="looptag">boucle sans couture</div>
+      <div class="status" id="status" role="status"></div>
     </div>
+    <audio id="fallback" loop preload="none"></audio>
     <canvas id="scope" aria-label="Analyseur de spectre du mix en cours de lecture"></canvas>
     <div id="strips"></div>
     <div class="hint">Chaque couche s'enclenche dans le jeu au-delà d'un seuil de tension — c'est la colonne de droite. Ici vous les pilotez à la main.</div>
@@ -366,6 +405,8 @@ footer span{min-width:0;overflow-wrap:anywhere}
     </div>
   </div>
 
+__PROVENANCE__
+
   <p class="sec-sub" style="margin-top:26px">Entre les deux, un fichier décide de tout : <code>palette_map.json</code> associe chaque sample extrait à un rôle. C'est là qu'on ne garde que les fonts voulus — le reste de la banque est ignoré.</p>
 
   <div class="scroller">
@@ -450,39 +491,68 @@ STEMS.forEach(s=>{
 });
 
 let ctx=null, buffers={}, sources={}, gains={}, analysers={}, master=null, masterAn=null;
-let playing=false, startedAt=0, duration=58.182, ready=false;
+let playing=false, startedAt=0, duration=58.182, decoded=false, fallbackMode=false;
 const playBtn=document.getElementById("play"), playLabel=document.getElementById("playlabel");
 const icon=document.getElementById("icon"), clock=document.getElementById("t");
-const loopTag=document.getElementById("looptag");
+const loopTag=document.getElementById("looptag"), statusEl=document.getElementById("status");
+const fallbackEl=document.getElementById("fallback");
+
+const ICON_PLAY='<path d="M0 0v14l12-7z" fill="currentColor"/>';
+const ICON_STOP='<rect x="0" y="0" width="4" height="14" fill="currentColor"/>'+
+                '<rect x="8" y="0" width="4" height="14" fill="currentColor"/>';
+
+function say(msg, warn){ statusEl.textContent = msg||""; statusEl.classList.toggle("warn", !!warn); }
 
 function b64ToBytes(b64){
-  const bin = atob(b64); const len = bin.length; const out = new Uint8Array(len);
+  const bin = atob(b64), len = bin.length, out = new Uint8Array(len);
   for(let i=0;i<len;i++) out[i]=bin.charCodeAt(i);
   return out.buffer;
 }
 
-async function init(){
+/* Repli : un seul <audio> qui joue le mix complet. Les elements <audio> passent
+   la ou le Web Audio est refuse (iframe sans permission autoplay, codec absent). */
+function goFallback(reason){
+  if(fallbackMode) return;
+  fallbackMode = true;
+  if(!fallbackEl.src) fallbackEl.src = "data:audio/mpeg;base64," + AUDIO.menu_theme;
+  document.querySelectorAll(".strip").forEach(el=>el.classList.add("locked"));
+  say("Mixage par couche indisponible ici ("+reason+") — lecture du mix complet.", true);
+  fallbackEl.play().then(()=>{
+    playing = true; icon.innerHTML = ICON_STOP;
+    playLabel.textContent = "Arrêter"; loopTag.classList.add("on");
+  }).catch(err=>{
+    say("Lecture refusée par le navigateur : "+(err && err.name ? err.name : err), true);
+    playLabel.textContent = "Écouter"; icon.innerHTML = ICON_PLAY;
+  });
+}
+
+async function decodeAll(){
   ctx = new (window.AudioContext||window.webkitAudioContext)();
-  master = ctx.createGain(); master.gain.value = 1;
+  master = ctx.createGain();
   masterAn = ctx.createAnalyser(); masterAn.fftSize = 2048; masterAn.smoothingTimeConstant = .78;
   master.connect(masterAn); masterAn.connect(ctx.destination);
   for(const s of STEMS){
-    buffers[s.id] = await ctx.decodeAudioData(b64ToBytes(AUDIO[s.id]));
-    const g = ctx.createGain(); g.gain.value = 1;
+    // decodeAudioData renvoie une promesse sur les navigateurs modernes et prend
+    // des callbacks sur les plus anciens : on couvre les deux.
+    buffers[s.id] = await new Promise((res, rej)=>{
+      const p = ctx.decodeAudioData(b64ToBytes(AUDIO[s.id]), res, rej);
+      if(p && p.then) p.then(res, rej);
+    });
+    const g = ctx.createGain();
     const a = ctx.createAnalyser(); a.fftSize = 512; a.smoothingTimeConstant = .6;
     g.connect(a); a.connect(master);
     gains[s.id]=g; analysers[s.id]=a;
   }
   duration = buffers.base.duration;
-  ready = true;
-  playBtn.disabled = false; playLabel.textContent = "Écouter";
+  decoded = true;
 }
 
 function applyGains(){
+  if(!decoded) return;
   const anySolo = STEMS.some(s=>state[s.id].solo);
   STEMS.forEach(s=>{
     const on = anySolo ? (state[s.id].solo && !state[s.id].mute) : !state[s.id].mute;
-    if(gains[s.id]) gains[s.id].gain.setTargetAtTime(on?1:0, ctx.currentTime, .04);
+    gains[s.id].gain.setTargetAtTime(on?1:0, ctx.currentTime, .04);
     document.querySelector('.strip[data-stem="'+s.id+'"]').classList.toggle("off", !on);
   });
 }
@@ -496,23 +566,50 @@ function start(){
     sources[s.id]=src;
   });
   startedAt = t0; playing = true;
-  icon.innerHTML = '<rect x="0" y="0" width="4" height="14" fill="currentColor"/><rect x="8" y="0" width="4" height="14" fill="currentColor"/>';
-  playLabel.textContent = "Arrêter"; loopTag.classList.add("on");
+  icon.innerHTML = ICON_STOP; playLabel.textContent = "Arrêter";
+  loopTag.classList.add("on");
+
+  // Si le contexte reste suspendu, rien ne sortira : on bascule sur le repli.
+  setTimeout(()=>{
+    if(playing && !fallbackMode && ctx.state !== "running"){
+      stop(); goFallback("contexte audio suspendu");
+    }
+  }, 600);
 }
 
 function stop(){
-  STEMS.forEach(s=>{ try{sources[s.id].stop();}catch(e){} });
+  if(fallbackMode){
+    fallbackEl.pause(); fallbackEl.currentTime = 0;
+  }else{
+    STEMS.forEach(s=>{ try{ sources[s.id].stop(); }catch(e){} });
+  }
   playing = false;
-  icon.innerHTML = '<path d="M0 0v14l12-7z" fill="currentColor"/>';
-  playLabel.textContent = "Écouter"; loopTag.classList.remove("on");
-  clock.textContent = "0:00";
+  icon.innerHTML = ICON_PLAY; playLabel.textContent = "Écouter";
+  loopTag.classList.remove("on"); clock.textContent = "0:00";
   document.querySelectorAll(".meter i").forEach(m=>m.style.right="100%");
 }
 
 playBtn.addEventListener("click", async ()=>{
-  if(!ready) return;
-  if(ctx.state === "suspended") await ctx.resume();
-  playing ? stop() : (applyGains(), start());
+  if(playing){ stop(); return; }
+  if(fallbackMode){ goFallback("repli actif"); return; }
+
+  if(!decoded){
+    playBtn.disabled = true; playLabel.textContent = "Décodage…";
+    try{
+      await decodeAll();
+    }catch(err){
+      playBtn.disabled = false;
+      goFallback("format non décodé par ce navigateur");
+      return;
+    }
+    playBtn.disabled = false;
+  }
+
+  // NE PAS attendre resume() : dans une iframe sans permission autoplay, cette
+  // promesse peut ne jamais se resoudre, et start() ne serait jamais appele.
+  if(ctx.state === "suspended") ctx.resume().catch(()=>{});
+  applyGains();
+  start();
 });
 
 /* analyseur */
@@ -532,7 +629,7 @@ function draw(){
   g2d.clearRect(0,0,w,h);
   const cold = css("--accent"), warm = css("--warm"), line = css("--line");
 
-  if(!playing || !masterAn){
+  if(!playing || !masterAn || fallbackMode){
     g2d.strokeStyle = line; g2d.lineWidth = 1;
     g2d.beginPath(); g2d.moveTo(0,h/2+.5); g2d.lineTo(w,h/2+.5); g2d.stroke();
     return;
@@ -561,12 +658,11 @@ function draw(){
     if(el) el.style.right = (100 - norm*100).toFixed(1) + "%";
   });
 
-  const el = (ctx.currentTime - startedAt) % duration;
-  const t = Math.max(0, el);
+  const t = Math.max(0, (ctx.currentTime - startedAt) % duration);
   clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
 }
 function tick(){
-  if(!playing) return;
+  if(!playing || fallbackMode || !ctx) return;
   const t = Math.max(0, (ctx.currentTime - startedAt) % duration);
   clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
 }
@@ -580,5 +676,12 @@ if(!reduce){
   setInterval(tick, 500);
 }
 
-init().catch(err=>{ playLabel.textContent = "Lecture indisponible"; console.error(err); });
+fallbackEl.addEventListener("timeupdate", ()=>{
+  if(!fallbackMode) return;
+  const t = fallbackEl.currentTime;
+  clock.textContent = Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0");
+});
+if(!(window.AudioContext||window.webkitAudioContext)){
+  say("Web Audio absent — lecture du mix complet uniquement.", true);
+}
 </script>

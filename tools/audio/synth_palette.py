@@ -26,12 +26,17 @@ Usage :
 from __future__ import annotations
 
 import argparse
+import datetime
+import hashlib
+import json
 import math
 import os
 import struct
 import subprocess
 import sys
 import wave
+
+TOOL_VERSION = "1.1.0"
 
 import numpy as np
 
@@ -433,6 +438,98 @@ def air(x: np.ndarray, gain_db: float = 5.0, fc: float = 4500.0) -> np.ndarray:
     return np.fft.irfft(spec * shelf, n, axis=-1)
 
 
+
+def sha256_file(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for blk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(blk)
+    return h.hexdigest()
+
+
+def write_provenance(out_dir: str, outputs: dict, bank) -> dict:
+    """Atteste de CE QUI est reellement entre dans le rendu.
+
+    En mode synthetise, il n'y a aucune source externe et le rapport le dit.
+    En mode echantillonne, il porte le SHA-256 du fichier de jeu fourni et,
+    pour chaque font, l'identifiant du sample, son groupe AGSC et son offset."""
+    rep = {
+        "tool": f"synth_palette.py {TOOL_VERSION}",
+        "rendered_at": datetime.datetime.now(datetime.timezone.utc)
+                                .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "composition": {"key": "D dorian", "bpm": BPM, "bars": N_BARS,
+                        "loop_seconds": round(LOOP_LEN, 3), "sample_rate": SR},
+        "mode": "sampled" if bank is not None else "synthesized",
+    }
+    if bank is None:
+        rep["sound_source"] = {
+            "kind": "synthesis",
+            "external_samples": False,
+            "statement": "Aucun echantillon externe. Toute la matiere sonore est "
+                         "generee par synthese (FM, Karplus-Strong, bruit filtre, "
+                         "reverbe a convolution sur IR generees).",
+        }
+    else:
+        roles = {}
+        for role, e in sorted(bank.map.items()):
+            roles[role] = {k: e.get(k) for k in
+                           ("file", "id", "group", "agsc_version", "samp_offset",
+                            "base_note", "sample_rate", "format", "looped")}
+        rep["sound_source"] = {
+            "kind": "extracted_samples",
+            "external_samples": True,
+            "bank_path": os.path.abspath(bank.path),
+            "extracted_at": bank.extracted_at,
+            "source_file": bank.source,
+            "fonts": roles,
+            "statement": "Chaque font rejoue un echantillon extrait du fichier source "
+                         "ci-dessus. Le SHA-256 permet de verifier de quelle copie "
+                         "il provient.",
+        }
+    rep["outputs"] = {}
+    for name in outputs:
+        f = os.path.join(out_dir, f"{name}.ogg")
+        if os.path.exists(f):
+            rep["outputs"][f"{name}.ogg"] = {
+                "sha256": sha256_file(f), "bytes": os.path.getsize(f)}
+
+    with open(os.path.join(out_dir, "provenance.json"), "w", encoding="utf-8") as fh:
+        json.dump(rep, fh, indent=2, ensure_ascii=False)
+
+    src = rep["sound_source"]
+    lines = [
+        "# Provenance du rendu audio", "",
+        f"- **Mode** : {'ECHANTILLONNE (samples extraits)' if src['external_samples'] else 'SYNTHETISE (aucune source externe)'}",
+        f"- **Outil** : {rep['tool']}",
+        f"- **Rendu le** : {rep['rendered_at']}",
+        f"- **Composition** : {rep['composition']['key']}, {rep['composition']['bpm']:.0f} BPM, "
+        f"{rep['composition']['bars']} mesures, boucle {rep['composition']['loop_seconds']} s", "",
+        f"> {src['statement']}", "",
+    ]
+    if src["external_samples"]:
+        sf = src.get("source_file") or {}
+        lines += ["## Fichier source", "",
+                  f"- Nom : `{sf.get('filename', '?')}`",
+                  f"- SHA-256 : `{sf.get('sha256', '?')}`",
+                  f"- Taille : {sf.get('size_bytes', 0)} octets",
+                  f"- Extrait le : {src.get('extracted_at', '?')}", "",
+                  "## Échantillon utilise par font", "",
+                  "| Font | Sample | ID | Groupe AGSC | Offset SAMP | Note | Fréq. |",
+                  "|---|---|---|---|---|---|---|"]
+        for role, e in src["fonts"].items():
+            lines.append(
+                f"| `{role}` | `{e.get('file')}` | {e.get('id')} | {e.get('group')} "
+                f"| {e.get('samp_offset')} | {e.get('base_note')} | {e.get('sample_rate')} |")
+        lines.append("")
+    lines += ["## Fichiers produits", "", "| Fichier | SHA-256 | Octets |", "|---|---|---|"]
+    for f, meta in rep["outputs"].items():
+        lines.append(f"| `{f}` | `{meta['sha256']}` | {meta['bytes']} |")
+    lines.append("")
+    with open(os.path.join(out_dir, "PROVENANCE.md"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines))
+    return rep
+
+
 def limit(x: np.ndarray, ceiling: float = 0.72, target_rms_db: float = -18.0) -> np.ndarray:
     """Cale le RMS sur une cible, PUIS protege le peak.
 
@@ -514,7 +611,15 @@ def main() -> int:
             os.remove(wav)
         print(f"[synth] {ogg}  ({size:.0f} KB)")
 
+    rep = write_provenance(args.out, outputs, BANK)
+    src = rep["sound_source"]
     print(f"[synth] OK — loop point : 0.000s -> {LOOP_LEN:.3f}s")
+    print(f"[prov ] mode = {rep['mode'].upper()} — echantillons externes : "
+          f"{'OUI' if src['external_samples'] else 'NON'}")
+    if src["external_samples"]:
+        sf = src.get("source_file") or {}
+        print(f"[prov ] source : {sf.get('filename')}  sha256={sf.get('sha256')}")
+    print(f"[prov ] rapport : {os.path.join(args.out, 'PROVENANCE.md')}")
     return 0
 
 
