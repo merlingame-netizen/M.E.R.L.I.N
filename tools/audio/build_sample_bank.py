@@ -24,8 +24,11 @@ CE QUI COMPTE ICI
 2. BOUCLE PREPAREE — un sample tenu dure 3 a 6 s ; certaines nappes de la piece
    durent 14 s. La zone stable est reperee et son extremite fondue dans son
    debut, pour boucler sans clic.
-3. VELOCITE — on garde une couche mediane. Les couches extremes sont conservees
-   dans le manifeste pour un usage ulterieur.
+3. VELOCITE — TOUTES les couches sont conservees, et le moteur choisit celle qui
+   correspond a la nuance demandee. Un instrumentiste ne monte pas le volume
+   quand il joue fort : il change de TIMBRE. Garder une seule couche revenait a
+   rejouer litteralement le meme enregistrement pour toutes les nuances — c'est
+   ce qui faisait « synthetique » malgre des sources reelles.
 
     python3 tools/audio/build_sample_bank.py --vsco <dir> --vcsl <dir> --out samples/
 """
@@ -244,19 +247,28 @@ def build(vsco: str | None, vcsl: str | None, out_dir: str, verbose: bool = True
                 if verbose:
                     print(f"  ! {inst}: rien trouve dans {sub}", file=sys.stderr)
                 continue
-            # une seule couche de velocite par note : la mediane disponible
-            best: dict[int, tuple[int, str]] = {}
+            # TOUTES LES COUCHES DE VELOCITE, pas seulement la mediane.
+            #
+            # La version precedente n'en gardait qu'une par note — celle la plus
+            # proche de v2 — et jetait les autres. Consequence : toutes les notes
+            # d'une meme hauteur etaient LITTERALEMENT le meme enregistrement
+            # rejoue, quelle que soit la nuance. C'est le principal aveu de
+            # synthese du rendu, et il ne venait pas de la bibliotheque : VSCO-2 CE
+            # fournit 2 a 4 couches (violons v1-v2, hautbois v1/v3, cor v1-v4).
+            #
+            # Un instrumentiste ne monte pas le volume quand il joue fort : il
+            # change de TIMBRE. Aucun filtre ne simule ca de facon convaincante,
+            # alors que les couches sont deja sur le disque.
+            best: dict[tuple[int, int], str] = {}
             for p in files:
                 note = parse_note(os.path.basename(p))
                 if note is None:
                     continue
                 vel = parse_velocity(os.path.basename(p))
-                cur = best.get(note)
-                if cur is None or abs(vel - 2) < abs(cur[0] - 2):
-                    best[note] = (vel, p)
+                best.setdefault((note, vel), p)
             if not best:
                 continue
-            for note, (_vel, src) in sorted(best.items()):
+            for (note, vel), src in sorted(best.items()):
                 try:
                     x, rate = read_wav(src)
                 except Exception as exc:
@@ -271,11 +283,12 @@ def build(vsco: str | None, vcsl: str | None, out_dir: str, verbose: bool = True
                 ls, ll = find_loop(x, rate) if looped else (0, 0)
                 if ll:
                     x = crossfade_loop(x, ls, ll, rate=rate)
-                rel = f"{inst}/{inst}_{note:03d}.wav"
+                rel = f"{inst}/{inst}_{note:03d}_v{vel}.wav"
                 write_wav(os.path.join(out_dir, rel), x, rate)
                 samples.append({
                     "file": rel, "instrument": inst, "group": lib,
-                    "base_note": note, "sample_rate": rate, "num_samples": len(x),
+                    "base_note": note, "velocity": vel,
+                    "sample_rate": rate, "num_samples": len(x),
                     "looped": bool(ll), "loop_start": int(ls), "loop_length": int(ll),
                     "duration_s": round(len(x) / rate, 4), "format": 1,
                     "source_file": os.path.relpath(src, root),
@@ -340,7 +353,12 @@ def build(vsco: str | None, vcsl: str | None, out_dir: str, verbose: bool = True
     gains: dict[str, float] = {}
     for inst in per_inst:
         cand = [s for s in samples if s["instrument"] == inst]
-        mid = cand[len(cand) // 2]
+        # calibrer sur une couche MEDIANE, pas sur la plus forte : sinon tout
+        # l'instrument est baisse pour compenser son fortissimo
+        vs = sorted({c.get("velocity", 2) for c in cand})
+        mid_v = vs[len(vs) // 2]
+        same = [c for c in cand if c.get("velocity", 2) == mid_v] or cand
+        mid = same[len(same) // 2]
         x, rate = read_wav(os.path.join(out_dir, mid["file"]))
         w = int(0.2 * rate)
         if len(x) > w:
@@ -371,8 +389,11 @@ def build(vsco: str | None, vcsl: str | None, out_dir: str, verbose: bool = True
     if verbose:
         print(f"[bank] {len(per_inst)} instruments, {len(samples)} echantillons -> {out_dir}")
         for k, v in sorted(per_inst.items()):
-            notes = [s["base_note"] for s in samples if s["instrument"] == k]
-            print(f"  {k:16s} {v:3d} notes ({min(notes)}-{max(notes)})  gain {gains.get(k, 1.0):.2f}")
+            ss = [s for s in samples if s["instrument"] == k]
+            notes = [s["base_note"] for s in ss]
+            nv = len({s.get("velocity", 2) for s in ss})
+            print(f"  {k:16s} {len(set(notes)):3d} notes x {nv} couche(s) = {v:3d} "
+                  f"({min(notes)}-{max(notes)})  gain {gains.get(k, 1.0):.2f}")
     return manifest
 
 

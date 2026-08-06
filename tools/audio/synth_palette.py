@@ -128,10 +128,13 @@ def render_note(ev: dict) -> np.ndarray:
     # bombarde ni de biniou), la nappe FM froide et le sub — qui sont
     # electroniques par choix, pas par defaut.
     if SAMPLES is not None and SAMPLES.has(inst):
-        key = ("S", inst, round(ev["midi"], 1), round(dur, 2), round(vel / 0.04) * 0.04)
+        # le seed entre dans la cle : sans lui, deux notes identiques
+        # partageraient le meme rendu et la variation par note serait annulee
+        key = ("S", inst, round(ev["midi"], 1), round(dur, 2),
+               round(vel / 0.04) * 0.04, ev["seed"] % 24)
         if key in _note_cache:
             return _note_cache[key]
-        sig = SAMPLES.render(inst, ev["midi"], dur, vel)
+        sig = SAMPLES.render(inst, ev["midi"], dur, vel, seed=ev["seed"])
         if len(_note_cache) < 4000:
             _note_cache[key] = sig
         return sig

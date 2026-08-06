@@ -324,7 +324,12 @@ class MultiSampleBank:
         for e in man.get("samples", []):
             self.by_inst.setdefault(e["instrument"], []).append(e)
         for lst in self.by_inst.values():
-            lst.sort(key=lambda e: e["base_note"])
+            lst.sort(key=lambda e: (e["base_note"], e.get("velocity", 2)))
+            counts: dict = {}
+            for e in lst:
+                counts[e["base_note"]] = counts.get(e["base_note"], 0) + 1
+            for e in lst:
+                e["_multi"] = counts[e["base_note"]] > 1
         self._cache: dict[str, tuple[np.ndarray, int]] = {}
         if verbose:
             print(f"[samples] {len(self.by_inst)} instruments reels, "
@@ -334,9 +339,23 @@ class MultiSampleBank:
     def has(self, inst: str) -> bool:
         return inst in self.by_inst
 
-    def _pick(self, inst: str, midi: float) -> dict:
+    def _pick(self, inst: str, midi: float, vel: float = 0.7) -> dict:
+        """La note la plus proche, PUIS la couche de velocite la plus proche.
+
+        L'ordre compte : transposer de plus de quelques demi-tons deplace les
+        formants et change la taille apparente de l'instrument, alors que se
+        tromper d'une couche de nuance ne fait qu'une erreur de timbre. On cale
+        donc d'abord la hauteur, puis la nuance parmi les couches disponibles a
+        cette hauteur."""
         lst = self.by_inst[inst]
-        return min(lst, key=lambda e: abs(e["base_note"] - midi))
+        note = min(lst, key=lambda e: abs(e["base_note"] - midi))["base_note"]
+        same = [e for e in lst if e["base_note"] == note]
+        if len(same) == 1:
+            return same[0]
+        vels = sorted({e.get("velocity", 2) for e in same})
+        k = int(round(max(0.0, min(1.0, vel)) * (len(vels) - 1)))
+        want = vels[k]
+        return next(e for e in same if e.get("velocity", 2) == want)
 
     def _load(self, entry: dict) -> tuple[np.ndarray, int]:
         key = entry["file"]
@@ -344,18 +363,26 @@ class MultiSampleBank:
             self._cache[key] = read_wav_mono(os.path.join(self.path, key))
         return self._cache[key]
 
-    def render(self, inst: str, midi: float, dur: float, vel: float = 0.7) -> np.ndarray:
+    def render(self, inst: str, midi: float, dur: float, vel: float = 0.7,
+               seed: int = 0) -> np.ndarray:
         n = int(dur * SR)
         if n <= 0 or inst not in self.by_inst:
             return np.zeros(max(0, n))
-        entry = self._pick(inst, midi)
+        entry = self._pick(inst, midi, vel)
         data, file_rate = self._load(entry)
         if len(data) < 2:
             return np.zeros(n)
 
         rate = entry.get("sample_rate") or file_rate
         semis = midi - entry["base_note"]
-        step = (rate / SR) * (2.0 ** (semis / 12.0))
+        # VARIATION PAR NOTE — sinon deux notes identiques sont bit-a-bit
+        # identiques, ce qu'aucun instrumentiste ne produit. Quatre cents de
+        # justesse et un demi-decibel : imperceptibles isolement, mais c'est
+        # leur absence qui s'entend sur une repetition.
+        rng = np.random.default_rng(90210 + int(seed))
+        cents = float(rng.normal(0.0, 4.0))
+        amp = float(10 ** (rng.normal(0.0, 0.35) / 20.0))
+        step = (rate / SR) * (2.0 ** ((semis + cents / 100.0) / 12.0))
 
         kind = self.KIND.get(inst, "sustained")
         cfg = self.ENV[kind]
@@ -375,11 +402,14 @@ class MultiSampleBank:
             played = np.arange(n, dtype=np.float64) * step
             sig = np.where(played >= len(data) - 1, 0.0, sig)
 
-        # la velocite ouvre legerement le spectre, comme sur un vrai instrument
-        if kind == "sustained" and vel < 0.75:
+        # Le filtre ne sert plus que lorsqu'une seule couche existe pour cette
+        # note : sinon c'est la vraie couche enregistree qui porte le timbre, et
+        # filtrer par-dessus reviendrait a corriger deux fois.
+        if kind == "sustained" and vel < 0.75 and not entry.get("_multi"):
             sig = _soft_lowpass(sig, 2200.0 + 9000.0 * vel)
         g = self.gains.get(inst, 1.0)
-        return sig * _adsr(n, cfg["a"], cfg["d"], cfg["s"], cfg["r"]) * (0.35 + 0.65 * vel) * g
+        return (sig * _adsr(n, cfg["a"], cfg["d"], cfg["s"], cfg["r"])
+                * (0.35 + 0.65 * vel) * g * amp)
 
 
 def _soft_lowpass(x: np.ndarray, fc: float) -> np.ndarray:

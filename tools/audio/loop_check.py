@@ -70,7 +70,24 @@ def check(path: str, verbose: bool = True) -> dict:
     # -68 dBFS : aucun haut-parleur n'en fait un clic. En dessous de 0,002
     # (-54 dBFS) on ne compare plus rien, on declare propre.
     FLOOR = 0.002
-    slope_ok = join <= p90 or join < FLOOR
+    # MARGE x2 SUR LA PENTE. Comparer UN pas d'echantillon au 90e centile des pas
+    # est biaise par construction : par definition 10 % des pas depassent le 90e
+    # centile, donc un signal parfaitement continu a environ une chance sur dix
+    # d'etre signale. Sur 14 stems, un faux positif est le resultat ATTENDU — et
+    # c'est exactement ce qui s'est produit sur halo__celesta (1,38x), dont la
+    # continuite a ete prouvee arithmetiquement : le repli de queue donne
+    # head[0] = out[0] + out[L] avec out[0] = 3e-16, donc head[0] et head[-1]
+    # sont les echantillons ADJACENTS out[L] et out[L-1] d'un signal continu.
+    # Aucun clic n'est possible ; le pas valait 0,38 simplement parce que la
+    # queue de reverbe y est brillante et se deplace vite.
+    #
+    # Seuil recale sur mesure, 14 stems sains contre 39 raccords faussement
+    # colles (deux moities prelevees a des endroits sans rapport) :
+    #     sains   : maximum 1,38x
+    #     clics   : mediane 8,60x
+    # A 2,0x les 14 sains passent et la majorite des clics restent pris.
+    SLOPE_MARGIN = 2.0
+    slope_ok = join <= SLOPE_MARGIN * p90 or join < FLOOR
 
     # 2. signature spectrale du clic
     W = 2048
