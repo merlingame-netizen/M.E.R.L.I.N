@@ -1,19 +1,34 @@
 # Provenance du rendu audio
 
-- **Mode** : SYNTHETISE (aucune source externe)
+- **Mode** : HYBRIDE (instruments enregistres CC0 + synthese)
 - **Outil** : synth_palette.py 2.0.0
-- **Rendu le** : 2026-08-06T08:49:08Z
+- **Rendu le** : 2026-08-06T09:50:56Z
 - **Composition** : D dorian, 76 BPM, 40 mesures, forme A A' B A'', boucle 126.316 s
 - **Effectif** : 37 instruments, 1669 evenements
 
-> Aucun echantillon externe. Chaque pupitre est un modele synthetise (ensemble desaccorde, formants fixes, velocite timbrale) et la salle est une reverbe a convolution sur reponses impulsionnelles generees.
+> 30 pupitres rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les autres restent synthetises faute de source libre : le couple breton (bombarde, biniou, bourdon), et la nappe FM froide avec le sub, electroniques par choix. AUCUN echantillon issu de Metroid Prime n'est utilise.
+
+## Bibliothèques utilisées
+
+| Bibliothèque | Auteur | Licence | Source |
+|---|---|---|---|
+| VSCO-2 Community Edition | Versilian Studios LLC | `CC0-1.0` | https://github.com/sgossner/VSCO-2-CE |
+| Versilian Community Sample Library (VCSL) | Versilian Studios LLC | `CC0-1.0` | https://github.com/sgossner/VCSL |
+
+## Pupitres enregistrés (30)
+
+`bassoon`, `bodhran`, `brass_ff`, `celesta`, `celesta_bell`, `celtic_guitar`, `clarinet`, `contrabass`, `cor_anglais`, `cymbal`, `flute`, `glockenspiel`, `harp`, `horn`, `oboe`, `piccolo`, `pizzicato`, `snare_roll`, `strings_high`, `strings_low`, `strings_mid`, `strings_tremolo`, `taiko`, `tam_tam`, `timpani`, `trombone`, `trumpet`, `tuba`, `viola`, `violin_solo`
+
+## Pupitres synthétisés (7)
+
+`biniou`, `biniou_drone`, `bombarde`, `choir`, `pad_fm`, `sub`, `tin_whistle`
 
 ## Fichiers produits
 
 | Fichier | SHA-256 | Octets |
 |---|---|---|
-| `menu_theme.ogg` | `11c8d0e49e63072137340b5b29ff31d87b27f24c2b8d411c8917b7dab005319d` | 1771084 |
-| `base.ogg` | `075e32fbf040c86cb8f6d8b9d24b264d9840c2f05bd3f0657dc8793f2ddd2ee6` | 1282351 |
-| `rhythm.ogg` | `e50a33b9a8fadeb0fc32deb95cb1a50d976d7c2435f42129a5aebaa231c6585e` | 1249921 |
-| `melody.ogg` | `57aad407125c56774f65f5beeab862ea3f7221d04f8961c62f59aa2c32726b5a` | 1822951 |
-| `climax.ogg` | `1ca5a09b3826385c11f0d75ec0ce2be652d9e4593f906510c5e2e3b183caaf05` | 1079402 |
+| `menu_theme.ogg` | `83592d9dbcd0e6287ac49c39e519f28feb2a5b214b71c998ce7925562a0dcfac` | 1759222 |
+| `base.ogg` | `d45c290f6e9e8fed6b7969fa781de4677ed9aaa9d8104fd89379bc202c8bc44f` | 1681031 |
+| `rhythm.ogg` | `d15f8e95ee10b4f0201582a0f16a13b303fb687a031b605f40894271762ee9cd` | 1112050 |
+| `melody.ogg` | `3365c516285577fa0d198ebf07249855632eef7be7292b86a411efea5e06c04f` | 1817289 |
+| `climax.ogg` | `b14cc69e0aa7460dc2bb9dc0197179cc547a62fe9e4e5411b87e80d7acc0f557` | 1162430 |
