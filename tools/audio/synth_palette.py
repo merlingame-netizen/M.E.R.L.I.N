@@ -40,7 +40,11 @@ from score_menu import BPM, LOOP_LEN, N_BARS
 
 TOOL_VERSION = "2.0.0"
 SR = orc.SR
-TAIL = 11.0                     # queue de reverbe ambiante, repliee sur le debut
+# Marge de queue. Elle doit couvrir le pire cumul : une note qui finit apres le
+# point de boucle (+1 s), sa reverbe ambiante (9 s) et ses reprises de delai
+# (4,7 s). A 11 s la couture restait a 0,0115, localisee dans le stem climax
+# — celui dont les notes debordent le plus.
+TAIL = 17.0
 STEMS = ["base", "rhythm", "melody", "climax"]
 
 BANK = None
