@@ -17,12 +17,21 @@ import orchestra as orc
 
 SR = orc.SR
 TESTS = [("strings_low", 50, 4.0), ("strings_mid", 62, 4.0), ("strings_high", 69, 4.0),
-         ("strings_tremolo", 69, 4.0), ("pizzicato", 50, 1.1), ("horn", 57, 4.0),
-         ("brass_ff", 57, 3.0), ("flute", 74, 1.5), ("oboe", 74, 1.5),
-         ("clarinet", 60, 1.5), ("harp", 67, 2.5), ("glockenspiel", 88, 1.8),
-         ("celesta_bell", 76, 3.0), ("timpani", 26, 3.0), ("taiko", 40, 1.7),
+         ("strings_tremolo", 69, 4.0), ("pizzicato", 50, 1.1), ("contrabass", 38, 4.0),
+         ("viola", 57, 4.0), ("violin_solo", 74, 3.0),
+         ("horn", 57, 4.0), ("brass_ff", 57, 3.0), ("trumpet", 69, 2.0),
+         ("trombone", 50, 2.5), ("tuba", 38, 3.0),
+         ("flute", 74, 1.5), ("oboe", 74, 1.5), ("clarinet", 60, 1.5),
+         ("bassoon", 45, 2.0), ("cor_anglais", 62, 2.0), ("piccolo", 86, 1.2),
+         ("bombarde", 69, 2.0), ("biniou", 74, 2.0), ("biniou_drone", 50, 4.0),
+         ("tin_whistle", 76, 1.5),
+         ("harp", 67, 2.5), ("glockenspiel", 88, 1.8), ("celesta_bell", 76, 3.0),
+         ("celesta", 79, 2.5),
+         ("timpani", 26, 3.0), ("taiko", 40, 1.7), ("bodhran", 45, 1.2),
          ("choir", 67, 4.0), ("pad_fm", 74, 4.0), ("sub", 38, 4.0)]
 F = {n: getattr(orc, n) for n, _, _ in TESTS}
+NO_PITCH = {"cymbal": (orc.cymbal_swell, 3.0), "tam_tam": (orc.tam_tam, 4.0),
+            "snare_roll": (orc.snare_roll, 2.0)}
 
 
 def peak_rms_db(x, win=0.2):
@@ -45,9 +54,10 @@ def main():
         hi = float(S[f > 2000].sum() / max(S.sum(), 1e-9))
         lv[name] = peak_rms_db(x)
         print(f"{name:16s} {lv[name]:8.1f}dB {np.abs(x).max():7.3f} {cen:9.0f}Hz {hi*100:6.1f}%")
-    x = orc.cymbal_swell(3.0, vel=0.7, seed=1) * orc.GAIN.get("cymbal", 1.0)
-    lv["cymbal"] = peak_rms_db(x)
-    print(f"{'cymbal':16s} {lv['cymbal']:8.1f}dB {np.abs(x).max():7.3f}")
+    for name, (fn, dur) in NO_PITCH.items():
+        x = fn(dur, vel=0.7, seed=1) * orc.GAIN.get(name, 1.0)
+        lv[name] = peak_rms_db(x)
+        print(f"{name:16s} {lv[name]:8.1f}dB {np.abs(x).max():7.3f}")
     print(f"\nEcart entre pupitres : {max(lv.values())-min(lv.values()):.1f} dB "
           f"(le plus fort : {max(lv, key=lv.get)}, le plus faible : {min(lv, key=lv.get)})")
     return 0

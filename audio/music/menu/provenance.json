@@ -1,6 +1,6 @@
 {
   "tool": "synth_palette.py 2.0.0",
-  "rendered_at": "2026-08-05T22:54:26Z",
+  "rendered_at": "2026-08-06T06:54:53Z",
   "composition": {
     "key": "D dorian",
     "bpm": 76.0,
@@ -8,8 +8,8 @@
     "loop_seconds": 126.316,
     "sample_rate": 44100,
     "form": "A A' B A''",
-    "instruments": 19,
-    "note_events": 1323
+    "instruments": 36,
+    "note_events": 1549
   },
   "mode": "synthesized",
   "sound_source": {
@@ -19,24 +19,24 @@
   },
   "outputs": {
     "menu_theme.ogg": {
-      "sha256": "191a27fe5746a10bbbb46aba84c15e7c0630a80e1c21e36f0b0614358105a3d8",
-      "bytes": 1718191
+      "sha256": "e36d261a034b42e7cd394dd101388fe81efd9e3f264cb210b7dd6c0b1341952e",
+      "bytes": 1754705
     },
     "base.ogg": {
-      "sha256": "bf2da90f25cd0531577819a4392a123bb5a7f6ae42f50b011bc3c026107d6922",
-      "bytes": 1210481
+      "sha256": "89dfc34b3bcd8acd9c9523c8aba44321dc8e5fa897213d0a311236ee255de4d3",
+      "bytes": 1216841
     },
     "rhythm.ogg": {
-      "sha256": "2ca51f49ac7576bcba1db39c3de71d6a4151c987b95748a835c5d9c9ee16073f",
-      "bytes": 1218426
+      "sha256": "f0b107dec89d90985f7a9245db1afe5d6816688c1f2ca12c068fca97ee80e15a",
+      "bytes": 1193583
     },
     "melody.ogg": {
-      "sha256": "51b8ad286dbff693f8e962da9a7e09ba0b7f5d5aece0e705c54b611c91e9c72f",
-      "bytes": 1773930
+      "sha256": "ee6db71115f7e7ad69764b2966c0cf913fd7d67fc015cd159db975767a353983",
+      "bytes": 1807816
     },
     "climax.ogg": {
-      "sha256": "c43464fe356352f98c19296e49f1d4faf13e3429c91deb31b91bf5fbf00c72d0",
-      "bytes": 988474
+      "sha256": "8fc9d213ca2a780f46d8cf6d1cf26928c763b5a9ef9984806104aace3f7138ed",
+      "bytes": 1015339
     }
   }
 }

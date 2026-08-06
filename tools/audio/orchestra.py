@@ -37,12 +37,24 @@ _cache: dict = {}
 # de 200 ms la plus forte — et non sur la note entiere, sinon un son a
 # decroissance rapide comme la harpe se retrouve sur-amplifie. Voir balance_check.py.
 GAIN = {
-    "strings_low": 0.62, "strings_mid": 0.50, "strings_high": 0.88,
-    "strings_tremolo": 0.80, "pizzicato": 1.15, "horn": 0.52, "brass_ff": 0.40,
-    "flute": 1.45, "oboe": 1.55, "clarinet": 1.05,
-    "harp": 1.35, "glockenspiel": 1.30, "celesta_bell": 1.10,
-    "timpani": 0.95, "taiko": 0.85, "cymbal": 1.20,
-    "choir": 1.70, "pad_fm": 0.42, "sub": 1.15,
+    # cordes
+    "strings_low": 0.53, "strings_mid": 0.42, "strings_high": 0.64,
+    "strings_tremolo": 0.67, "pizzicato": 2.00, "contrabass": 0.37,
+    "viola": 0.31, "violin_solo": 1.26,
+    # cuivres
+    "horn": 0.37, "brass_ff": 0.31, "trumpet": 0.57, "trombone": 0.44, "tuba": 0.32,
+    # bois
+    "flute": 1.22, "oboe": 1.30, "clarinet": 1.03, "bassoon": 0.81,
+    "cor_anglais": 1.10, "piccolo": 1.23,
+    # couple breton
+    "bombarde": 3.05, "biniou": 1.23, "biniou_drone": 1.73, "tin_whistle": 1.32,
+    # claviers et cloches
+    "harp": 1.45, "glockenspiel": 1.58, "celesta_bell": 0.82, "celesta": 1.28,
+    # percussions
+    "timpani": 0.89, "taiko": 0.69, "bodhran": 1.05, "cymbal": 1.97,
+    "tam_tam": 4.57, "snare_roll": 5.31,
+    # nappes
+    "choir": 1.95, "pad_fm": 0.26, "sub": 1.01,
 }
 
 
@@ -443,6 +455,273 @@ def sub(freq, dur, vel=0.7, seed=0):
     return lowpass(sig, 320.0) * adsr(n, 0.7, 0.5, 0.82, min(1.6, dur * .5)) * vel
 
 
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LE COUPLE BRETON — bombarde et biniou
+# ═══════════════════════════════════════════════════════════════════════════════
+# Jouer Tri Martolod sans eux, c'est jouer une gwerz sans son instrument. La
+# bombarde mene, le biniou repond une octave au-dessus avec son bourdon continu.
+# C'est le son de la Bretagne, et c'est ce qui manquait a l'orchestration.
+
+def bombarde(freq, dur, vel=0.85, seed=0):
+    """Bombarde : hautbois breton. Anche double tres dure, percante, nasale.
+
+    Spectre dense jusqu'au 12e harmonique, trois formants marques, et une
+    saturation douce — l'instrument est concu pour couvrir un orchestre en
+    plein air. Ici il est bride, sinon il mange tout."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 211)
+    ph = _phase(freq, n, 0.0, 0.0035, 5.4, 0.12, rng)
+    sig = np.zeros(n)
+    for h, a in ((1, .5), (2, .9), (3, 1.0), (4, .92), (5, .8), (6, .62),
+                 (7, .48), (8, .34), (9, .24), (10, .16), (11, .1), (12, .06)):
+        sig += a * np.sin(h * ph)
+    sig = np.tanh(sig * (0.28 + 0.26 * vel)) * 1.5        # l'anche sature
+    sig = formants(sig, [(1150.0, 320.0, 6.5), (2200.0, 560.0, 4.0), (3400.0, 900.0, 1.0)])
+    sig = lowpass(sig, 3300.0)              # sans ca le centroide monte a 5,5 kHz : sonne kazoo
+    t = np.arange(n) / SR
+    # Le bruit d'attaque etait large bande et ajoute APRES le passe-bas : a lui seul
+    # il tirait le centroide a 5 kHz. Borne, et repasse dans le filtre.
+    chiff = bandpass(rng.standard_normal(n), 1800.0, 5000.0) * 0.05 * np.exp(-t * 26.0)
+    out = lowpass(sig * 0.13 + chiff, 3600.0)
+    return out * adsr(n, 0.028, 0.09, 0.93, 0.14) * (0.5 + 0.5 * vel)
+
+
+def biniou(freq, dur, vel=0.8, seed=0):
+    """Biniou kozh : cornemuse bretonne, une octave au-dessus de la bombarde.
+
+    Une cornemuse a une pression constante : pas de nuance dans le son, seule
+    l'ornementation articule. L'enveloppe est donc plate, avec juste une attaque
+    nette — mettre un ADSR expressif ici sonnerait faux."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 223)
+    ph = _phase(freq, n, 0.0, 0.0022, 4.8, 0.5, rng)
+    sig = np.zeros(n)
+    for h, a in ((1, 1.0), (2, .62), (3, .5), (4, .36), (5, .27), (6, .19),
+                 (7, .13), (8, .09), (9, .06)):
+        sig += a * np.sin(h * ph)
+    sig = formants(sig, [(950.0, 260.0, 5.0), (2150.0, 520.0, 4.0)])
+    t = np.arange(n) / SR
+    env = (1.0 - np.exp(-t * 130.0)) * np.minimum(1.0, np.exp(-(t - dur + 0.06) * 40.0))
+    return sig * 0.18 * env * (0.6 + 0.4 * vel)           # pression constante
+
+
+def biniou_drone(freq, dur, vel=0.55, seed=0):
+    """Le bourdon. Il ne bouge jamais : c'est le socle de toute musique bretonne."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 227)
+    sig = np.zeros(n)
+    for k in range(2):                                     # deux tuyaux, a l'octave
+        ph = _phase(freq * (1 + k), n, rng.normal(0, 0.0012), 0.0009, 3.1, 1.0, rng)
+        for h, a in ((1, 1.0), (2, .45), (3, .3), (4, .18), (5, .1)):
+            sig += a * np.sin(h * ph) / (1 + k)
+    sig = formants(sig, [(800.0, 240.0, 3.5)])
+    return lowpass(sig, 3200.0) * 0.09 * adsr(n, 0.5, 0.4, 0.92, 0.7) * vel
+
+
+def tin_whistle(freq, dur, vel=0.7, seed=0):
+    """Tin whistle : plus brillante et plus soufflee que la flute traversiere."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 229)
+    t = np.arange(n) / SR
+    ph = _phase(freq, n, 0.0, 0.0048, 5.5, 0.22, rng)
+    sig = np.sin(ph) + 0.3 * vel * np.sin(2 * ph) + 0.14 * vel * np.sin(3 * ph) \
+        + 0.06 * np.sin(4 * ph)
+    air_ = lowpass(rng.standard_normal(n), 6500.0) * 0.13 * (0.4 + 0.6 * vel) \
+        * (0.4 + 0.6 * np.exp(-t * 8.0))
+    return (sig * 0.4 + air_) * adsr(n, 0.045, 0.1, 0.9, 0.18) * (0.45 + 0.55 * vel)
+
+
+def bodhran(freq, dur, vel=0.75, seed=0):
+    """Bodhran : tambour sur cadre celtique. Peau tendue, baguette double."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 233)
+    t = np.arange(n) / SR
+    f = freq * np.exp(-t * 9.0) + freq * 0.7
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 11.0)
+    stick = bandpass(rng.standard_normal(n), 900.0, 5200.0) * np.exp(-t * 55.0) * 0.30
+    skin = lowpass(rng.standard_normal(n), 1800.0) * np.exp(-t * 17.0) * 0.20
+    return (body * 0.8 + stick + skin) * vel
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CORDES — pupitres separes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def contrabass(freq, dur, vel=0.65, seed=0):
+    """Contrebasses seules. Beaucoup de fondamentale, presque pas d'aigu."""
+    n = int(dur * SR)
+    sig = _string_core(freq, dur, voices=4, harmonics=8, bright=0.26, vel=vel, seed=seed + 241)
+    sig = formants(sig, [(120.0, 60.0, 5.0), (260.0, 110.0, 3.0)])
+    return lowpass(sig, 1100.0) * adsr(n, 0.22, 0.4, 0.8, min(1.6, dur * .5)) * (0.45 + 0.55 * vel)
+
+
+def viola(freq, dur, vel=0.7, seed=0):
+    """Altos. Le timbre le plus sombre du quatuor : formant bas marque."""
+    n = int(dur * SR)
+    sig = _string_core(freq, dur, voices=5, harmonics=10, bright=0.48, vel=vel, seed=seed + 251)
+    sig = formants(sig, [(350.0, 130.0, 4.5), (620.0, 200.0, 3.0), (1600.0, 450.0, 1.5)])
+    return sig * adsr(n, 0.14, 0.32, 0.83, min(1.2, dur * .5)) * (0.45 + 0.55 * vel)
+
+
+def violin_solo(freq, dur, vel=0.7, seed=0):
+    """Violon solo : une seule voix, donc un vibrato bien plus expose."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 257)
+    ph = _phase(freq, n, 0.0, 0.0072, 5.8, 0.18, rng)
+    sig = np.zeros(n)
+    p = 1.4 - 0.45 * vel
+    for h in range(1, 12):
+        sig += (1.0 / h ** p) * np.sin(h * ph)
+    sig = formants(sig, [(560.0, 180.0, 4.0), (1250.0, 350.0, 3.0), (2900.0, 800.0, 2.5)])
+    return lowpass(sig, 2200.0 + 5200.0 * vel) * 0.22 * adsr(n, 0.09, 0.22, 0.87, 0.5) * (0.45 + 0.55 * vel)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CUIVRES — pupitres separes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _brass_core(freq, dur, vel, seed, idx_base, idx_vel, peaks, voices=2, decay=0.4):
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    for v in range(voices):
+        ph = _phase(freq, n, rng.normal(0, 0.0018), 0.0028, 5.0 + rng.random(), 0.42, rng)
+        idx = (idx_base + idx_vel * vel) * (1.0 - np.exp(-t * 14.0)) * np.exp(-t * decay)
+        out += np.sin(ph + idx * np.sin(ph)) + 0.34 * np.sin(2 * ph + idx * 0.7 * np.sin(ph))
+    return formants(out / voices, peaks)
+
+
+def trumpet(freq, dur, vel=0.8, seed=0):
+    """Trompette : la plus brillante du pupitre, attaque tres nette."""
+    n = int(dur * SR)
+    sig = _brass_core(freq, dur, vel, seed + 263, 2.2, 6.0,
+                      [(1200.0, 350.0, 5.0), (2600.0, 700.0, 5.0), (4000.0, 1100.0, 3.0)])
+    return sig * adsr(n, 0.035, 0.18, 0.85, 0.3) * (0.4 + 0.6 * vel) * 0.55
+
+
+def trombone(freq, dur, vel=0.75, seed=0):
+    """Trombone : le medium des cuivres, corps large."""
+    n = int(dur * SR)
+    sig = _brass_core(freq, dur, vel, seed + 269, 1.8, 5.0,
+                      [(600.0, 200.0, 4.5), (1500.0, 480.0, 4.0), (2600.0, 750.0, 2.0)])
+    return sig * adsr(n, 0.06, 0.24, 0.84, 0.4) * (0.4 + 0.6 * vel) * 0.5
+
+
+def tuba(freq, dur, vel=0.7, seed=0):
+    """Tuba : la fondation. Attaque lente, spectre concentre en bas."""
+    n = int(dur * SR)
+    sig = _brass_core(freq, dur, vel, seed + 271, 1.2, 3.2,
+                      [(230.0, 90.0, 5.0), (620.0, 220.0, 3.5)], voices=1, decay=0.3)
+    return lowpass(sig, 1800.0) * adsr(n, 0.1, 0.3, 0.82, 0.5) * (0.4 + 0.6 * vel) * 0.5
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BOIS — pupitres separes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def bassoon(freq, dur, vel=0.7, seed=0):
+    """Basson : anche double grave. Formant bas tres caracteristique."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 277)
+    ph = _phase(freq, n, 0.0, 0.004, 5.0, 0.3, rng)
+    sig = np.zeros(n)
+    for h, a in ((1, .8), (2, 1.0), (3, .72), (4, .45), (5, .3), (6, .18), (7, .1)):
+        sig += a * np.sin(h * ph)
+    sig = formants(sig, [(440.0, 150.0, 5.0), (1180.0, 320.0, 3.0)])
+    return lowpass(sig, 2600.0) * 0.2 * adsr(n, 0.07, 0.14, 0.88, 0.28) * (0.45 + 0.55 * vel)
+
+
+def cor_anglais(freq, dur, vel=0.7, seed=0):
+    """Cor anglais : le hautbois grave. Plus rond, plus melancolique."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 281)
+    ph = _phase(freq, n, 0.0, 0.005, 5.3, 0.25, rng)
+    sig = np.zeros(n)
+    for h, a in ((1, .7), (2, 1.0), (3, .85), (4, .6), (5, .38), (6, .22), (7, .12)):
+        sig += a * np.sin(h * ph)
+    sig = formants(sig, [(920.0, 260.0, 5.0), (2000.0, 520.0, 2.5)])
+    return sig * 0.19 * adsr(n, 0.07, 0.13, 0.89, 0.26) * (0.45 + 0.55 * vel)
+
+
+def piccolo(freq, dur, vel=0.7, seed=0):
+    """Piccolo : la flute a l'octave. Percant, tres souffle."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 283)
+    t = np.arange(n) / SR
+    ph = _phase(freq, n, 0.0, 0.006, 5.6, 0.2, rng)
+    sig = np.sin(ph) + 0.2 * vel * np.sin(2 * ph) + 0.07 * np.sin(3 * ph)
+    air_ = lowpass(rng.standard_normal(n), 9000.0) * 0.11 * (0.4 + 0.6 * vel) * np.exp(-t * 3.0)
+    return (sig * 0.42 + air_) * adsr(n, 0.05, 0.1, 0.88, 0.2) * (0.45 + 0.55 * vel)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLAVIERS ET PERCUSSIONS — ajouts
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def celesta(freq, dur, vel=0.6, seed=0):
+    """Celesta : la cloche douce. Plus de fondamentale que le glockenspiel."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    t = np.arange(n) / SR
+    idx = (1.4 + 1.2 * vel) * np.exp(-t * 8.0)
+    sig = np.sin(2 * np.pi * freq * t + idx * np.sin(2 * np.pi * freq * 4.02 * t))
+    sig += 0.4 * np.sin(2 * np.pi * freq * t) * np.exp(-t * 1.6)
+    return sig * np.exp(-t * 2.4) * (1 - np.exp(-t * 500.0)) * vel * 0.32
+
+
+def tam_tam(dur, vel=0.7, seed=0):
+    """Tam-tam : gong sans hauteur definie. Il gonfle, puis n'en finit pas."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 293)
+    t = np.arange(n) / SR
+    noise = rng.standard_normal(n)
+    low = bandpass(noise, 40.0, 320.0) * 0.9
+    mid = bandpass(noise, 320.0, 2400.0) * 0.6
+    high = bandpass(noise, 2400.0, 11000.0) * 0.35
+    swell = (1.0 - np.exp(-t * 5.0)) * np.exp(-t * 0.55)
+    shimmer = 1.0 + 0.3 * np.sin(2 * np.pi * 7.3 * t)
+    return (low + mid * shimmer + high * shimmer) * swell * vel * 0.22
+
+
+def snare_roll(dur, vel=0.5, seed=0):
+    """Roulement de caisse claire : bruit module, timbre en dessous."""
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 307)
+    t = np.arange(n) / SR
+    grain = bandpass(rng.standard_normal(n), 1400.0, 9000.0)
+    roll = 0.6 + 0.4 * np.sin(2 * np.pi * 28.0 * t + 2.0 * np.sin(2 * np.pi * 3.1 * t))
+    tone = np.sin(2 * np.pi * 190.0 * t) * 0.18 * np.exp(-t * 3.0)
+    return (grain * roll * 0.5 + tone) * vel * 0.2
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SALLE — reverbe et placement sur scene
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -489,6 +768,13 @@ STAGE = {
     "timpani": (0.16, 0.78), "cymbal": (-0.34, 0.74), "taiko": (0.0, 0.55),
     "glockenspiel": (0.50, 0.60), "celesta_bell": (-0.60, 0.44),
     "choir": (0.0, 0.80), "pad_fm": (0.0, 0.62), "sub": (0.0, 0.30),
+    # le couple breton est place devant, comme sur une aire de danse
+    "bombarde": (-0.22, 0.22), "biniou": (0.24, 0.26), "biniou_drone": (0.0, 0.34),
+    "tin_whistle": (-0.30, 0.40), "bodhran": (0.36, 0.42),
+    "contrabass": (0.52, 0.44), "viola": (0.06, 0.36), "violin_solo": (-0.36, 0.26),
+    "trumpet": (0.34, 0.66), "trombone": (0.40, 0.70), "tuba": (0.30, 0.76),
+    "bassoon": (0.20, 0.56), "cor_anglais": (-0.08, 0.54), "piccolo": (-0.20, 0.50),
+    "celesta": (-0.56, 0.40), "tam_tam": (0.10, 0.86), "snare_roll": (-0.40, 0.72),
 }
 
 

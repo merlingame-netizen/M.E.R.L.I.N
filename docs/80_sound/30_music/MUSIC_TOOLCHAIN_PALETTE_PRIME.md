@@ -203,7 +203,7 @@ La chaîne décrite plus haut est **déjà appliquée** pour le menu principal, 
 |---|---|
 | Extracteur MusyX (ISO → PAK → AGSC → WAV) | `tools/audio/musyx_extract.py` |
 | Lecteur d'échantillons (transposition, boucle, enveloppes) | `tools/audio/sample_bank.py` |
-| **Lutherie** — 19 modèles d'instruments | `tools/audio/orchestra.py` |
+| **Lutherie** — 36 modèles d'instruments | `tools/audio/orchestra.py` |
 | **Partition** — 32 mesures, conduite des voix, arc dynamique | `tools/audio/score_menu.py` |
 | **Orchestration** — répartition pupitres/stems | `tools/audio/arrange_menu.py` |
 | Rendu, salle, mastering, attestation | `tools/audio/synth_palette.py` |
@@ -290,7 +290,7 @@ elle ne peut pas afficher une provenance qu'elle n'a pas.
 > attestation vide.
 
 **Le morceau** : **Tri Martolod**, air traditionnel breton, arrangement original.
-Ré dorien, 76 BPM, 40 mesures, boucle de 126,316 s. 19 instruments, 1263 événements.
+Ré dorien, 76 BPM, 40 mesures, boucle de 126,316 s. **36 pupitres**, 1549 événements.
 
 ### 6.1 bis — L'air et sa provenance
 
@@ -307,6 +307,12 @@ deux concordent : la phrase chantée descend par degrés depuis la quinte.
 > **si naturel** (la descente `ré do si la` de sa deuxième mesure). En ré mineur la sixte
 > serait si bémol. Ce si signe le **mode dorien** — celui dans lequel la pièce était déjà
 > écrite. L'air traditionnel et l'harmonisation froide partagent le même mode.
+
+**Le couple biniou-bombarde** a été ajouté parce qu'il manquait : jouer Tri Martolod sans
+lui, c'est jouer une gwerz sans son instrument. La bombarde mène, le biniou répond une
+octave au-dessus, le bourdon ne bouge jamais — une cornemuse est à pression constante,
+d'où une enveloppe plate là où tous les autres pupitres respirent. Mesures 13 à 16,
+l'orchestre se tait entièrement : ils occupent alors 94 % du médium.
 
 **La revisite**, en trois gestes : l'air est joué **lent** (76 BPM là où on le danse vers
 120), harmonisé **modalement** plutôt qu'en mineur classique, et posé sur la **nappe FM
@@ -407,15 +413,26 @@ Quatre choses le distinguent d'un empilement de nappes :
 
 | Contrôle | Valeur | Seuil |
 |---|---|---|
-| Crête après encodage Vorbis | 0,555 | < 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB |
+| Crête après encodage Vorbis | 0,563 | < 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB |
 | Niveau moyen | −19,2 dB RMS | −18 à −20 dB pour un menu |
-| Corrélation L/R | +0,90 | > 0,5 (compatibilité mono) |
-| Somme des 4 stems vs mix | −18,8 / −19,2 dB | écart nul |
-| Discontinuité au point de boucle | 0,0028 | ≈ 0 |
-| Amplitude de l'arc dynamique | 17,2 dB | > 8 dB, sinon la pièce est plate |
-| Part du chant dans le médium | 38 % | le thème doit dominer ses accompagnements |
-| … au tutti seul | 27 % | l'air doit rester audible sous les cuivres |
-| … pendant l'énoncé nu | 88 % | le hautbois est seul, il doit l'être vraiment |
+| Corrélation L/R | +0,89 | > 0,5 (compatibilité mono) |
+| Somme des 4 stems vs mix | −18,6 / −19,0 dB | écart nul |
+| Discontinuité au point de boucle | 0,0001 | ≈ 0 |
+| Amplitude de l'arc dynamique | 15,1 dB | > 8 dB, sinon la pièce est plate |
+| Part du chant dans le médium | 36 % | le thème doit dominer ses accompagnements |
+| … au tutti | 41 % | l'air doit rester audible sous 36 pupitres |
+| … pendant l'énoncé nu | 84 % | le cor anglais est seul, il doit l'être vraiment |
+| … pendant le couple breton | 94 % | l'orchestre se tait pour eux |
+| Énergie sous 300 Hz | 34,8 % | 20 à 35 % — au-delà, le médium disparaît |
+
+> **Cinquième piège, et le plus embarrassant** : la table d'équilibre des pupitres
+> (`orchestra.GAIN`), mesurée par `balance_check.py`, **n'était jamais appliquée au
+> rendu**. Elle existait, elle était juste, et le moteur l'ignorait — tout l'équilibrage
+> passait par les vélocités d'arrangement et les gains de stems, qui compensaient à
+> l'aveugle. Une fois branchée, le mix a entièrement changé : le spectre s'est ouvert
+> (haut-médium de −20 à −15 dB) mais le socle est tombé à 3 % du médium. Il a fallu
+> recalculer les gains de stems dans la foulée. Leçon : un outil de mesure qui n'est pas
+> câblé sur ce qu'il mesure donne des chiffres justes et un résultat faux.
 
 > **Quatrième piège, propre à l'orchestration d'un air** : au premier rendu de Tri Martolod,
 > la flûte ne pesait plus que **1 %** du médium pendant le tutti, contre 95 % pour les

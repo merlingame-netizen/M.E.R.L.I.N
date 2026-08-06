@@ -46,24 +46,34 @@ STEMS = ["base", "rhythm", "melody", "climax"]
 BANK = None
 
 # Quand une banque d'echantillons est fournie, elle expose 7 roles. Voici comment
-# les 19 pupitres s'y rabattent.
+# les 34 pupitres s'y rabattent.
 BANK_ROLE = {
-    "strings_low": "pad_fm", "strings_mid": "pad_fm", "horn": "pad_fm", "pad_fm": "pad_fm",
-    "strings_high": "choir", "strings_tremolo": "choir", "brass_ff": "choir", "choir": "choir",
-    "sub": "sub", "flute": "whistle", "oboe": "whistle", "clarinet": "whistle",
-    "harp": "harp", "pizzicato": "harp", "celesta_bell": "bell", "glockenspiel": "bell",
-    "timpani": "taiko", "taiko": "taiko", "cymbal": "taiko",
+    "strings_low": "pad_fm", "strings_mid": "pad_fm", "viola": "pad_fm",
+    "contrabass": "sub", "horn": "pad_fm", "trombone": "pad_fm", "tuba": "sub",
+    "bassoon": "pad_fm", "pad_fm": "pad_fm", "biniou_drone": "pad_fm",
+    "strings_high": "choir", "strings_tremolo": "choir", "brass_ff": "choir",
+    "trumpet": "choir", "choir": "choir", "violin_solo": "choir",
+    "sub": "sub",
+    "flute": "whistle", "oboe": "whistle", "clarinet": "whistle",
+    "cor_anglais": "whistle", "piccolo": "whistle", "tin_whistle": "whistle",
+    "bombarde": "whistle", "biniou": "whistle",
+    "harp": "harp", "pizzicato": "harp",
+    "celesta_bell": "bell", "glockenspiel": "bell", "celesta": "bell",
+    "timpani": "taiko", "taiko": "taiko", "bodhran": "taiko", "cymbal": "taiko",
+    "tam_tam": "taiko", "snare_roll": "taiko",
 }
 
-INSTRUMENTS = {
-    "strings_low": orc.strings_low, "strings_mid": orc.strings_mid,
-    "strings_high": orc.strings_high, "strings_tremolo": orc.strings_tremolo,
-    "pizzicato": orc.pizzicato, "horn": orc.horn, "brass_ff": orc.brass_ff,
-    "flute": orc.flute, "oboe": orc.oboe, "clarinet": orc.clarinet,
-    "harp": orc.harp, "glockenspiel": orc.glockenspiel, "celesta_bell": orc.celesta_bell,
-    "timpani": orc.timpani, "taiko": orc.taiko, "choir": orc.choir,
-    "pad_fm": orc.pad_fm, "sub": orc.sub,
-}
+INSTRUMENTS = {n: getattr(orc, n) for n in (
+    "strings_low", "strings_mid", "strings_high", "strings_tremolo", "pizzicato",
+    "contrabass", "viola", "violin_solo",
+    "horn", "brass_ff", "trumpet", "trombone", "tuba",
+    "flute", "oboe", "clarinet", "bassoon", "cor_anglais", "piccolo",
+    "bombarde", "biniou", "biniou_drone", "tin_whistle",
+    "harp", "glockenspiel", "celesta_bell", "celesta",
+    "timpani", "taiko", "bodhran", "choir", "pad_fm", "sub",
+)}
+# instruments sans hauteur definie : signature (duree, vel, seed)
+UNPITCHED = {"cymbal": orc.cymbal_swell, "tam_tam": orc.tam_tam, "snare_roll": orc.snare_roll}
 
 _note_cache: dict = {}
 
@@ -85,11 +95,11 @@ def render_note(ev: dict) -> np.ndarray:
     if key in _note_cache:
         return _note_cache[key]
 
-    if inst == "cymbal":
-        sig = orc.cymbal_swell(dur, vel=vel, seed=ev["seed"])
+    if inst in UNPITCHED:
+        sig = UNPITCHED[inst](dur, vel=vel, seed=ev["seed"])
     else:
-        fn = INSTRUMENTS[inst]
-        sig = fn(midi_hz(ev["midi"]), dur, vel=vel, seed=ev["seed"])
+        sig = INSTRUMENTS[inst](midi_hz(ev["midi"]), dur, vel=vel, seed=ev["seed"])
+    sig = sig * orc.GAIN.get(inst, 1.0)
     if len(_note_cache) < 4000:
         _note_cache[key] = sig
     return sig
@@ -134,12 +144,23 @@ def finish(dry: np.ndarray, wet: np.ndarray, ir_l: np.ndarray, ir_r: np.ndarray,
 # MASTERING
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def air(x: np.ndarray, gain_db: float = 4.5, fc: float = 4000.0) -> np.ndarray:
+def air(x: np.ndarray, gain_db: float = 4.5, fc: float = 4000.0,
+        low_cut_db: float = -4.0, low_fc: float = 230.0) -> np.ndarray:
+    """Basculement de master : shelf haut pour la brillance, shelf bas pour degager.
+
+    Avec 36 pupitres dont un tiers dans le grave, la mesure donnait 45 % de
+    l'energie sous 300 Hz — un mix orchestral equilibre tourne entre 20 et 35 %.
+    Le shelf bas rend le medium audible sans toucher a l'arrangement.
+
+    Applique identiquement au mix et a chaque stem, pour que la somme reste egale."""
     n = x.shape[-1]
     spec = np.fft.rfft(x, axis=-1)
     f = np.fft.rfftfreq(n, 1.0 / SR)
     r2 = (f / fc) ** 2
-    return np.fft.irfft(spec * (1.0 + (10 ** (gain_db / 20.0) - 1.0) * r2 / (1.0 + r2)), n, axis=-1)
+    hi = 1.0 + (10 ** (gain_db / 20.0) - 1.0) * r2 / (1.0 + r2)
+    l2 = (f / low_fc) ** 2
+    lo = 1.0 + (10 ** (low_cut_db / 20.0) - 1.0) / (1.0 + l2)
+    return np.fft.irfft(spec * hi * lo, n, axis=-1)
 
 
 def limit(x: np.ndarray, ceiling: float = 0.72, target_rms_db: float = -18.0) -> np.ndarray:
@@ -304,9 +325,11 @@ def main() -> int:
 
     # Mesure a l'appui : le socle fournissait 87 % du grave ET 56 % du medium, la
     # melodie 10 %. Le theme etait enterre sous ses propres accompagnements.
-    # A 0.58 le socle tombait a -28 dB : dans le jeu, la couche de basse tension
-    # joue SEULE et devenait inaudible. 0.78 la garde presente sans reenterrer le theme.
-    gains = {"base": 0.78, "rhythm": 1.10, "melody": 1.70, "climax": 1.20}
+    # Ces gains ont ete recalcules apres l'application effective de la table
+    # d'equilibre des pupitres : celle-ci coupe fortement cordes et nappes, ce qui
+    # avait fait tomber le socle a 3 % du medium contre 72 % pour la melodie —
+    # un orchestre sans fondation. Cible : socle 25 %, chant 40 %, climax 30 %.
+    gains = {"base": 2.25, "rhythm": 2.45, "melody": 1.25, "climax": 1.35}
     mix = np.zeros_like(rendered["base"], dtype=np.float64)
     for name, sig in rendered.items():
         mix += sig.astype(np.float64) * gains[name]

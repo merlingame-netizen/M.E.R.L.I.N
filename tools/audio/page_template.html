@@ -301,7 +301,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <section>
   <div class="sec-head"><span class="sec-num">ÉCOUTE</span><h2>Thème de menu principal</h2></div>
-  <p class="sec-sub">40 mesures, 19 instruments. L'air est énoncé nu au hautbois (0'12), doublé, harmonisé, éloigné dans le développement, puis ramené en tutti à 1'28. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
+  <p class="sec-sub">40 mesures, <strong>36 pupitres</strong>. L'air est énoncé nu au cor anglais (0'12), doublé, puis confié au <strong>couple bombarde-biniou</strong> (0'38) — l'orchestre se tait pour les laisser passer. Il revient harmonisé, s'éloigne dans le développement, et rentre en tutti à 1'28. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
 
   <div class="console">
     <div class="transport">
@@ -326,39 +326,29 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <div><dt>Tonalité</dt><dd>Ré dorien</dd></div>
     <div><dt>Tempo</dt><dd>76 BPM</dd></div>
     <div><dt>Boucle</dt><dd>126,316 s</dd></div>
-    <div><dt>Effectif</dt><dd>19 · 1263</dd></div>
-    <div><dt>Amplitude</dt><dd>17,2 dB</dd></div>
+    <div><dt>Effectif</dt><dd>36 · 1549</dd></div>
+    <div><dt>Amplitude</dt><dd>15,1 dB</dd></div>
   </dl>
 
   <div class="callout" style="border-color:var(--accent)">
     <h3 style="color:var(--accent)">L'air</h3>
     <p><em>Tri Martolod</em> — « trois marins » — est une chanson traditionnelle de Basse-Bretagne qui remonte au XVIII<sup>e</sup> siècle. Alan Stivell l'a rendue célèbre en 1971, mais c'est <strong>son arrangement</strong> qui lui appartient : l'air, lui, est traditionnel. C'est celui-là qui est repris ici, dans un arrangement original.</p>
     <p>La mélodie a été recoupée entre deux relevés — celui de thesession.org, où les paroles bretonnes sont alignées note à note (« tri / mar-to-lod / yao-uank »), et le <em>Nine-Note Tunebook</em> de Jack Campin. Les deux concordent : la phrase chantée descend par degrés depuis la quinte.</p>
+    <p><strong>Le couple biniou-bombarde</strong> a été ajouté parce qu'il manquait : jouer Tri Martolod sans lui, c'est jouer une gwerz sans son instrument. La bombarde mène, le biniou répond une octave au-dessus, le bourdon ne bouge jamais. Aux mesures 13 à 16, l'orchestre se tait entièrement pour eux — la mesure le confirme, ils occupent alors 94 % du médium.</p>
     <p>La revisite tient en trois gestes : l'air est joué <strong>lent</strong> (76 BPM là où on le danse vers 120), harmonisé <strong>modalement</strong> plutôt qu'en mineur classique, et posé sur la <strong>nappe FM froide</strong> et les cloches métalliques héritées de la palette d'origine.</p>
   </div>
 
   <div class="scroller">
     <table>
-      <thead><tr><th>Pupitre</th><th>Modèle</th><th>Rôle</th></tr></thead>
+      <thead><tr><th>Famille</th><th>Pupitres</th><th>Ce qui les distingue</th></tr></thead>
       <tbody>
-        <tr><td class="k"><b>cordes graves</b></td><td>6 voix désaccordées, formants de caisse 240/480 Hz</td><td>La basse chantée : violoncelles et contrebasses.</td></tr>
-        <tr><td class="k"><b>cordes médium</b></td><td>7 voix, formants 430/1100 Hz</td><td>Altos et seconds violons — le remplissage harmonique.</td></tr>
-        <tr><td class="k"><b>cordes aiguës</b></td><td>8 voix, vibrato marqué</td><td>Premiers violons. Doublent le thème une octave sous la flûte au tutti.</td></tr>
-        <tr><td class="k"><b>tremolo</b></td><td>Même matière, hachée à ~11 Hz irrégulier</td><td>Les quatre mesures qui montent vers le la majeur.</td></tr>
-        <tr><td class="k"><b>pizzicato</b></td><td>Karplus-Strong très amorti + coup de corps</td><td>La pulsation de la seconde exposition.</td></tr>
-        <tr><td class="k"><b>cor</b></td><td>FM, index croissant à l'attaque</td><td>Voix intérieure. Sourd par nature, il tient l'harmonie sans encombrer.</td></tr>
-        <tr><td class="k"><b>cuivres</b></td><td>FM à deux modulateurs, formants 1,7 et 3,3 kHz</td><td>Uniquement le sommet, mesures 25 à 28.</td></tr>
-        <tr><td class="k"><b>flûte</b></td><td>Peu d'harmoniques, beaucoup de souffle</td><td>Le thème, à partir de la reprise.</td></tr>
-        <tr><td class="k"><b>hautbois</b></td><td>Anche double : harmoniques 2 à 5 dominantes, formant nasal 1,4 kHz</td><td>L'énoncé du thème, seul, au début.</td></tr>
-        <tr><td class="k"><b>clarinette</b></td><td>Tuyau fermé, donc harmoniques impaires</td><td>Le contrechant, en mouvement contraire.</td></tr>
-        <tr><td class="k"><b>harpe</b></td><td>Corde pincée, amortissement long</td><td>La couleur celtique. Roulement à chaque changement d'accord.</td></tr>
-        <tr><td class="k"><b>timbales</b></td><td>Fondamentale + 4 modes de membrane inharmoniques</td><td>Les appuis de structure, et le roulement d'approche.</td></tr>
-        <tr><td class="k"><b>taiko</b></td><td>Sinus descendant + transitoire filtré</td><td>La pulsation tribale — l'héritage Prime dans l'orchestre.</td></tr>
-        <tr><td class="k"><b>cymbale</b></td><td>Bruit large en crescendo, coupé net</td><td>Elle annonce chaque section.</td></tr>
-        <tr><td class="k"><b>glockenspiel</b></td><td>FM très inharmonique, extinction rapide</td><td>Le scintillement du tutti.</td></tr>
-        <tr><td class="k"><b>cloches</b></td><td>FM ratio √2</td><td>Le métal froid de la palette Prime, aux deux extrémités.</td></tr>
-        <tr><td class="k"><b>chœur</b></td><td>6 voix + formants de voyelle « ah »</td><td>Entre au développement et ne repart plus.</td></tr>
-        <tr><td class="k"><b>nappe FM · sub</b></td><td>Ratio 2,005 inharmonique / sinus saturé</td><td>Sous l'orchestre, ce qui reste de la texture d'origine.</td></tr>
+        <tr><td class="k"><b>Bretagne</b></td><td>bombarde · biniou · bourdon · tin whistle · bodhrán</td><td>La bombarde sature son anche et porte trois formants marqués. Le biniou n'a <em>aucune</em> nuance : une cornemuse est à pression constante, mettre une enveloppe expressive sonnerait faux.</td></tr>
+        <tr><td class="k"><b>Cordes</b></td><td>contrebasses · violoncelles · altos · violons · violon solo · trémolo · pizzicato</td><td>6 à 8 instrumentistes désaccordés par pupitre, chacun son vibrato et son attaque décalée. Le violon solo n'a qu'une voix : son vibrato est bien plus exposé.</td></tr>
+        <tr><td class="k"><b>Bois</b></td><td>flûte · piccolo · hautbois · cor anglais · clarinette · basson</td><td>Formants fixes en fréquence, indépendants de la note — c'est ce qui fait qu'un hautbois reste un hautbois sur toute sa tessiture. La clarinette n'a que des harmoniques impaires : tuyau fermé.</td></tr>
+        <tr><td class="k"><b>Cuivres</b></td><td>cors · trompettes · trombone · tuba · tutti</td><td>L'index de modulation monte pendant l'attaque : c'est le cuivre qui s'ouvre. Un cor piano est sourd, un cor forte est cuivré.</td></tr>
+        <tr><td class="k"><b>Percussions</b></td><td>timbales · taiko · bodhrán · cymbale · tam-tam · caisse claire</td><td>Les timbales portent quatre modes de membrane inharmoniques. Le tam-tam gonfle et n'en finit pas. Le taiko reste l'héritage Prime dans l'orchestre.</td></tr>
+        <tr><td class="k"><b>Claviers</b></td><td>harpe · célesta · glockenspiel · cloches froides</td><td>Harpe en corde pincée, cloches en FM ratio √2 — le métal froid de la palette d'origine, gardé aux deux extrémités de la pièce.</td></tr>
+        <tr><td class="k"><b>Nappes</b></td><td>chœur · nappe FM · sub</td><td>Le chœur porte des formants de voyelle « ah ». Sous tout l'orchestre, la nappe FM inharmonique : ce qui reste de la texture d'origine.</td></tr>
       </tbody>
     </table>
   </div>
@@ -422,7 +412,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <div class="mode">
       <div class="mode-tag">rendu de cette page</div>
       <h3>Synthétisé</h3>
-      <p>Dix-neuf pupitres reconstruits de zéro : ensembles désaccordés, formants fixes, vélocité timbrale, réverbe à convolution. Aucun octet emprunté, donc distribuable.</p>
+      <p>Trente-six pupitres reconstruits de zéro : ensembles désaccordés, formants fixes, vélocité timbrale, réverbe à convolution. Aucun octet emprunté, donc distribuable.</p>
       <p class="cmd mono">synth_palette.py --out audio/music/menu</p>
     </div>
     <div class="mode">
@@ -465,15 +455,17 @@ __PROVENANCE__
     <table>
       <thead><tr><th>Vérification</th><th>Mesure</th><th>Attendu</th></tr></thead>
       <tbody>
-        <tr><td>Crête après encodage Vorbis</td><td class="k">0,555</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
+        <tr><td>Crête après encodage Vorbis</td><td class="k">0,563</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
         <tr><td>Niveau moyen</td><td class="k">−19,2 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
-        <tr><td>Compatibilité mono</td><td class="k">+0,90</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
-        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,8 / −19,2 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
-        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0028</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
-        <tr><td>Amplitude de l'arc dynamique</td><td class="k">17,2 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
-        <tr><td>Part du chant dans le médium</td><td class="k">38 %</td><td>le thème doit dominer ses accompagnements</td></tr>
-        <tr><td>… au tutti seul</td><td class="k">27 %</td><td>l'air doit rester audible sous les cuivres</td></tr>
-        <tr><td>… pendant l'énoncé nu</td><td class="k">88 %</td><td>le hautbois est seul, il doit l'être vraiment</td></tr>
+        <tr><td>Compatibilité mono</td><td class="k">+0,89</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
+        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,6 / −19,0 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
+        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0001</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
+        <tr><td>Amplitude de l'arc dynamique</td><td class="k">15,1 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
+        <tr><td>Part du chant dans le médium</td><td class="k">36 %</td><td>le thème doit dominer ses accompagnements</td></tr>
+        <tr><td>… au tutti</td><td class="k">41 %</td><td>l'air doit rester audible sous 36 pupitres</td></tr>
+        <tr><td>… pendant l'énoncé nu</td><td class="k">84 %</td><td>le cor anglais est seul, il doit l'être vraiment</td></tr>
+        <tr><td>… pendant le couple breton</td><td class="k">94 %</td><td>l'orchestre se tait pour eux</td></tr>
+        <tr><td>Énergie sous 300 Hz</td><td class="k">34,8 %</td><td>20 à 35 % — au-delà, le médium disparaît</td></tr>
       </tbody>
     </table>
   </div>
@@ -481,16 +473,16 @@ __PROVENANCE__
 
 <footer>
   <span>M.E.R.L.I.N. — <span class="mono">docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md</span></span>
-  <span class="mono">Tri Martolod (trad.) · arr. original · 40 mes. · 76 BPM</span>
+  <span class="mono">Tri Martolod (trad.) · arr. original · 36 pupitres · 40 mes. · 76 BPM</span>
 </footer>
 </div>
 
 <script>
 const STEMS = [
-  {id:"base",   label:"base",   fonts:"violoncelles · altos · cor · nappe FM · sub", thr:"toujours",      sub:"le socle"},
-  {id:"rhythm", label:"rhythm", fonts:"timbales · taiko · pizzicati · cymbales",      thr:"tension > 0.2", sub:"la pulsation"},
-  {id:"melody", label:"melody", fonts:"hautbois · flûte · harpe · glockenspiel",      thr:"tension > 0.4", sub:"le chant"},
-  {id:"climax", label:"climax", fonts:"chœur · cuivres · violons · clarinette",       thr:"tension > 0.6", sub:"l&rsquo;ouverture"}
+  {id:"base",   label:"base",   fonts:"contrebasses · violoncelles · altos · cors · trombone · tuba · basson · bourdon", thr:"toujours",      sub:"le socle"},
+  {id:"rhythm", label:"rhythm", fonts:"timbales · taiko · bodhrán · pizzicati · cymbales · tam-tam · caisse claire",      thr:"tension > 0.2", sub:"la pulsation"},
+  {id:"melody", label:"melody", fonts:"bombarde · biniou · cor anglais · hautbois · flûte · piccolo · harpe · célesta",   thr:"tension > 0.4", sub:"le chant"},
+  {id:"climax", label:"climax", fonts:"chœur · cuivres · trompettes · violons · trémolos · clarinette",                   thr:"tension > 0.6", sub:"l&rsquo;ouverture"}
 ];
 const AUDIO = __AUDIO_JSON__;
 
