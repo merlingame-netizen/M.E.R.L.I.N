@@ -176,13 +176,13 @@ def finish(dry, wet, halls, hall=0.95, amb=0.0, delay=0.0):
 # MASTERING
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def air(x: np.ndarray, gain_db: float = 4.5, fc: float = 4000.0,
-        low_cut_db: float = -4.0, low_fc: float = 230.0) -> np.ndarray:
+def air(x: np.ndarray, gain_db: float = 3.0, fc: float = 4200.0,
+        low_cut_db: float = -1.0, low_fc: float = 200.0) -> np.ndarray:
     """Basculement de master : shelf haut pour la brillance, shelf bas pour degager.
 
-    Avec 36 pupitres dont un tiers dans le grave, la mesure donnait 45 % de
-    l'energie sous 300 Hz — un mix orchestral equilibre tourne entre 20 et 35 %.
-    Le shelf bas rend le medium audible sans toucher a l'arrangement.
+    Le shelf bas avait ete cale a -4 dB sur les modeles synthetises, qui empilaient
+    45 % de l'energie sous 300 Hz. Les enregistrements reels sont equilibres
+    autrement : la meme correction faisait tomber le mix a 11,3 %, maigre. -1 dB.
 
     Applique identiquement au mix et a chaque stem, pour que la somme reste egale."""
     n = x.shape[-1]
@@ -246,9 +246,27 @@ def write_provenance(out_dir: str, names: list[str], bank, stats: dict) -> dict:
                         "loop_seconds": round(LOOP_LEN, 3), "sample_rate": SR,
                         "form": "A A' B A''", "instruments": stats["instruments"],
                         "note_events": stats["events"]},
-        "mode": "sampled" if bank is not None else "synthesized",
+        "mode": ("sampled" if bank is not None
+                 else "hybrid" if SAMPLES is not None else "synthesized"),
     }
-    if bank is None:
+    if bank is None and SAMPLES is not None:
+        recorded = sorted(i for i in list(INSTRUMENTS) + list(UNPITCHED) if SAMPLES.has(i))
+        synth_only = sorted(i for i in list(INSTRUMENTS) + list(UNPITCHED)
+                            if not SAMPLES.has(i))
+        rep["sound_source"] = {
+            "kind": "recorded_libraries", "external_samples": True,
+            "libraries": SAMPLES.libraries,
+            "recorded_instruments": recorded,
+            "synthesized_instruments": synth_only,
+            "statement": f"{len(recorded)} pupitres rejouent des instruments reellement "
+                         "enregistres, issus de bibliotheques sous CC0 (domaine public, "
+                         "usage commercial compris, sans attribution requise). Les autres "
+                         "restent synthetises faute de source libre : le couple breton "
+                         "(bombarde, biniou, bourdon), et la nappe FM froide avec le sub, "
+                         "electroniques par choix. AUCUN echantillon issu de Metroid Prime "
+                         "n'est utilise.",
+        }
+    elif bank is None:
         rep["sound_source"] = {
             "kind": "synthesis", "external_samples": False,
             "statement": "Aucun echantillon externe. Chaque pupitre est un modele "
@@ -282,14 +300,29 @@ def write_provenance(out_dir: str, names: list[str], bank, stats: dict) -> dict:
 
     src = rep["sound_source"]
     c = rep["composition"]
+    MODE_LABEL = {"synthesis": "SYNTHETISE (aucune source externe)",
+                  "recorded_libraries": "HYBRIDE (instruments enregistres CC0 + synthese)",
+                  "extracted_samples": "ECHANTILLONNE (samples extraits d'un jeu)"}
     lines = ["# Provenance du rendu audio", "",
-             f"- **Mode** : {'ECHANTILLONNE (samples extraits)' if src['external_samples'] else 'SYNTHETISE (aucune source externe)'}",
+             f"- **Mode** : {MODE_LABEL.get(src.get('kind'), 'SYNTHETISE')}",
              f"- **Outil** : {rep['tool']}", f"- **Rendu le** : {rep['rendered_at']}",
              f"- **Composition** : {c['key']}, {c['bpm']:.0f} BPM, {c['bars']} mesures, "
              f"forme {c['form']}, boucle {c['loop_seconds']} s",
              f"- **Effectif** : {c['instruments']} instruments, {c['note_events']} evenements", "",
              f"> {src['statement']}", ""]
-    if src["external_samples"]:
+    if src.get("kind") == "recorded_libraries":
+        lines += ["## Bibliothèques utilisées", "",
+                  "| Bibliothèque | Auteur | Licence | Source |", "|---|---|---|---|"]
+        for lib in src.get("libraries", []):
+            lines.append(f"| {lib.get('name')} | {lib.get('author')} | "
+                         f"`{lib.get('license')}` | {lib.get('url')} |")
+        rec = src.get("recorded_instruments", [])
+        syn = src.get("synthesized_instruments", [])
+        lines += ["", f"## Pupitres enregistrés ({len(rec)})", "",
+                  ", ".join(f"`{i}`" for i in rec), "",
+                  f"## Pupitres synthétisés ({len(syn)})", "",
+                  ", ".join(f"`{i}`" for i in syn), ""]
+    elif src["external_samples"]:
         sf = src.get("source_file") or {}
         lines += ["## Fichier source", "", f"- Nom : `{sf.get('filename', '?')}`",
                   f"- SHA-256 : `{sf.get('sha256', '?')}`",
