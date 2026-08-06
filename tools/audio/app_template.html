@@ -1,0 +1,516 @@
+<title>Brocéliande — table de distribution</title>
+<style>
+:root{
+  --ink:#0B1512; --panel:#121F1A; --panel-2:#0E1A16; --line:#22352C;
+  --fg:#DDE7E2; --fg-2:#9FB3AB; --fg-3:#6C8279;
+  --frost:#7FB8AE; --ember:#C8934E;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -18px rgba(0,0,0,.8);
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --ink:#E8E4D9; --panel:#F2EFE6; --panel-2:#DCD8CB; --line:#C3BFB0;
+    --fg:#14201B; --fg-2:#41544C; --fg-3:#6E8078;
+    --frost:#2F7A70; --ember:#8A5C18;
+    --shadow:0 1px 2px rgba(20,32,27,.08),0 12px 32px -20px rgba(20,32,27,.35);
+  }
+}
+:root[data-theme="light"]{
+  --ink:#E8E4D9; --panel:#F2EFE6; --panel-2:#DCD8CB; --line:#C3BFB0;
+  --fg:#14201B; --fg-2:#41544C; --fg-3:#6E8078;
+  --frost:#2F7A70; --ember:#8A5C18;
+  --shadow:0 1px 2px rgba(20,32,27,.08),0 12px 32px -20px rgba(20,32,27,.35);
+}
+:root[data-theme="dark"]{
+  --ink:#0B1512; --panel:#121F1A; --panel-2:#0E1A16; --line:#22352C;
+  --fg:#DDE7E2; --fg-2:#9FB3AB; --fg-3:#6C8279;
+  --frost:#7FB8AE; --ember:#C8934E;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--ink);color:var(--fg);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  padding-bottom:40px;
+}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+.wrap{max-width:940px;margin:0 auto;padding:0 18px}
+
+/* ── en-tête + transport ─────────────────────────────────────── */
+header{padding:34px 0 18px}
+.eyebrow{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.66rem;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--fg-3);
+  display:flex;gap:10px;align-items:center;
+}
+.eyebrow .rule{flex:1;height:1px;background:var(--line)}
+h1{
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
+  font-weight:600;font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.1;
+  margin:14px 0 6px;text-wrap:balance;letter-spacing:-.01em;
+}
+.sub{color:var(--fg-2);max-width:60ch;font-size:.96rem}
+
+.bar{
+  position:sticky;top:0;z-index:20;background:var(--panel);
+  border:1px solid var(--line);border-radius:5px;box-shadow:var(--shadow);
+  margin-top:22px;padding:13px 15px;display:flex;align-items:center;
+  gap:14px;flex-wrap:wrap;
+}
+.play{
+  display:inline-flex;align-items:center;gap:9px;cursor:pointer;
+  background:var(--frost);color:var(--ink);border:none;border-radius:3px;
+  padding:10px 19px;font:600 .92rem/1 inherit;font-family:inherit;
+  transition:opacity .15s;
+}
+.play:hover{opacity:.86}
+.play[disabled]{opacity:.5;cursor:progress}
+.clock{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;
+  font-variant-numeric:tabular-nums;color:var(--fg-2);
+}
+.clock b{color:var(--fg);font-weight:600}
+.tag{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.63rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);
+  border:1px solid var(--line);border-radius:2px;padding:4px 8px;
+}
+.tag.on{color:var(--ember);border-color:var(--ember)}
+.msg{flex-basis:100%;font-size:.8rem;color:var(--fg-3);line-height:1.5}
+.msg:empty{display:none}
+.msg.warn{color:var(--ember)}
+
+/* ── barre de niveaux : le cœur de la démonstration ───────────── */
+.levels{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:4px;
+  overflow:hidden;margin-top:16px;
+}
+.lv{background:var(--panel-2);padding:9px 11px 11px;display:grid;gap:6px;min-width:0}
+.lv-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.lv-name{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);
+}
+.lv-who{
+  font-size:.8rem;color:var(--fg-2);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;min-width:0;
+}
+.lv.hot .lv-who{color:var(--ember)}
+.meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.meter i{
+  display:block;height:100%;width:0%;background:var(--frost);
+  border-radius:2px;transition:width .09s linear;
+}
+.lv.hot .meter i{background:var(--ember)}
+
+/* ── sections ─────────────────────────────────────────────────── */
+section{margin-top:30px}
+h2{
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
+  font-size:1.12rem;font-weight:600;margin:0 0 4px;
+}
+.hint{color:var(--fg-3);font-size:.85rem;margin:0 0 14px;max-width:62ch}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.axis{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+.axis > b{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--fg-3);
+  min-width:74px;font-weight:400;
+}
+.chip{
+  cursor:pointer;font:inherit;font-size:.82rem;background:transparent;
+  color:var(--fg-2);border:1px solid var(--line);border-radius:2px;
+  padding:5px 11px;transition:.14s;
+}
+.chip:hover{color:var(--fg);border-color:var(--fg-3)}
+.chip[aria-pressed="true"]{
+  background:var(--frost);border-color:var(--frost);color:var(--ink);font-weight:500;
+}
+.chip.amb[aria-pressed="true"]{background:var(--ember);border-color:var(--ember)}
+
+/* ── cartes de rôle ───────────────────────────────────────────── */
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:12px}
+.role{
+  background:var(--panel);border:1px solid var(--line);border-radius:5px;
+  padding:15px 16px 16px;display:grid;gap:11px;box-shadow:var(--shadow);
+}
+.role-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.role-name{
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
+  font-size:1.06rem;font-weight:600;
+}
+.role-job{font-size:.75rem;color:var(--fg-3);text-align:right}
+.now{
+  font-size:1.5rem;line-height:1.15;color:var(--ember);
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
+  text-wrap:balance;
+}
+.bench{display:flex;gap:6px;flex-wrap:wrap}
+.cand{
+  cursor:pointer;font:inherit;font-size:.8rem;background:transparent;
+  color:var(--fg-3);border:1px solid var(--line);border-radius:2px;
+  padding:4px 10px;transition:.14s;
+}
+.cand:hover{color:var(--fg);border-color:var(--fg-3)}
+.cand[aria-pressed="true"]{
+  background:var(--ember);border-color:var(--ember);color:var(--ink);font-weight:500;
+}
+.trim{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
+  color:var(--fg-3);font-variant-numeric:tabular-nums;
+}
+
+.note{
+  margin-top:26px;padding:14px 17px;background:var(--panel-2);
+  border-left:2px solid var(--frost);border-radius:0 4px 4px 0;
+  font-size:.87rem;color:var(--fg-2);max-width:68ch;
+}
+.note b{color:var(--fg)}
+footer{
+  margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;
+  color:var(--fg-3);display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;
+}
+a{color:var(--frost)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offset:3px;border-radius:2px}
+@media (max-width:640px){
+  .levels{grid-template-columns:repeat(2,1fr)}
+  .axis > b{min-width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important}
+}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow"><span>M.E.R.L.I.N.</span><span class="rule"></span><span>thème de menu</span></div>
+  <h1>Table de distribution</h1>
+  <p class="sub">Un socle qui ne bouge jamais, trois rôles dont vous changez le titulaire pendant que ça joue. La météo, la saison et l'heure ne <em>rajoutent</em> rien : elles remplacent un instrument par un autre, aux mêmes notes et au même instant.</p>
+
+  <div class="bar">
+    <button class="play" id="play"><span id="glyph">▶</span><span id="playlabel">Écouter</span></button>
+    <div class="clock"><b id="t">0:00</b> / <span id="dur">3:16</span></div>
+    <div class="tag" id="looptag">boucle 195,9 s</div>
+    <div class="tag" id="engine">—</div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="levels" id="levels"></div>
+</header>
+
+<section>
+  <h2>Ambiance</h2>
+  <p class="hint">Change les trois rôles d'un coup. C'est le raccourci ; les réglages fins sont en dessous.</p>
+  <div class="chips" id="ambiances"></div>
+</section>
+
+<section>
+  <h2>Conditions</h2>
+  <p class="hint">Chaque axe ne se prononce que sur les rôles qui le concernent. La météo l'emporte sur la saison, qui l'emporte sur le moment. Recliquez pour annuler un axe.</p>
+  <div id="axes"></div>
+</section>
+
+<section>
+  <h2>Distribution</h2>
+  <p class="hint">Un seul titulaire par rôle est audible à la fois. Cliquez-en un autre : le fondu croisé dure trois secondes, et la boucle ne se décale pas.</p>
+  <div class="roles" id="roles"></div>
+</section>
+
+<div class="note">
+  <b>Pourquoi la bascule ne s'entend pas comme un changement de volume.</b>
+  Chaque rôle est écrit une seule fois et rendu une fois par titulaire, aux mêmes notes et aux mêmes instants — vérifié : les douze parties sont rigoureusement synchrones. Les niveaux sont ensuite mesurés <em>sur les fichiers finaux</em> et corrigés au gain de lecture ; l'écart résiduel entre titulaires d'un même rôle est de <span class="mono">0,00 dB</span>. Et chaque partie est repliée par octaves dans la tessiture réellement enregistrée de son titulaire, ce qui évite de transposer un psaltérion là où va une guitare : <span class="mono">0 demi-ton</span> de transposition sur les douze.
+</div>
+
+<footer>
+  <span>Tri Martolod (trad., XVIII<sup>e</sup>) · arrangement original · instrumental</span>
+  <span>49 BPM · ré dorien · 40 mesures</span>
+</footer>
+</div>
+
+<script>
+const AUDIO = __AUDIO_JSON__;
+const CAST  = __CASTING_JSON__;
+
+const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment"};
+const ROLE_LABEL = {chant:"Chant", corde:"Corde", halo:"Halo"};
+const ROLE_JOB   = {chant:"porte l’air", corde:"accompagnement pincé", halo:"scintillement de l’aigu"};
+
+/* Des distributions completes, pour changer le caractere d'un coup. */
+const AMBIANCES = [
+  {id:"broceliande", label:"Brocéliande", cast:{chant:"cor_anglais", corde:"celtic_guitar", halo:"celesta"}},
+  {id:"pluie",       label:"Pluie",       cast:{chant:"cor_anglais", corde:"oud",           halo:"celesta"}},
+  {id:"hiver",       label:"Nuit d’hiver",cast:{chant:"cor_anglais", corde:"psaltery",      halo:"wine_glasses"}},
+  {id:"printemps",   label:"Matin clair", cast:{chant:"ocarina",     corde:"kalimba",       halo:"hand_chimes"}},
+  {id:"lointain",    label:"Lointain",    cast:{chant:"harmonica",   corde:"dan_tranh",     halo:"wine_glasses"}},
+];
+
+const $ = s => document.querySelector(s);
+const playBtn=$("#play"), glyph=$("#glyph"), playLabel=$("#playlabel");
+const clock=$("#t"), durEl=$("#dur"), msgEl=$("#msg"), engineEl=$("#engine"), loopTag=$("#looptag");
+
+let cast = Object.assign({}, CAST.default);
+let context = {};
+let playing = false, unlocked = false;
+const el = {};            /* nom -> HTMLAudioElement */
+const vol = {};           /* nom -> {cur, target} */
+let raf = 0, lastSync = 0;
+
+function say(m, warn){ msgEl.textContent = m || ""; msgEl.classList.toggle("warn", !!warn); }
+function key(role, id){ return role + "__" + id; }
+function cands(role){ return (CAST.candidates && CAST.candidates[role]) || []; }
+function entry(role, id){ return cands(role).find(c => c.id === id); }
+/* Le gain vient de casting.json : correctif d'appariement mesuré sur les
+   fichiers rendus. Sans lui le đàn tranh sort 5 dB sous la guitare. */
+function trim(role, id){ const c = entry(role, id); return c && +c.gain ? +c.gain : 1; }
+
+/* ── moteur : des éléments <audio>, pas du Web Audio ────────────────────────
+   Décoder quatre pistes de 196 s dans la RAM faisait échouer la page sur
+   téléphone, et le repli figeait toute la distribution. Un <audio> diffuse au
+   lieu de tout décoder. Ils sont tous « déverrouillés » au premier appui —
+   iOS refuse un play() hors geste utilisateur, mais accepte de reprendre un
+   élément déjà joué une fois. C'est ce qui rend la bascule possible ensuite. */
+function make(name){
+  if(el[name]) return el[name];
+  const a = new Audio();
+  a.src = "data:audio/mpeg;base64," + AUDIO[name];
+  a.loop = true; a.preload = "auto"; a.volume = 0;
+  el[name] = a; vol[name] = {cur:0, target:0};
+  return a;
+}
+
+function unlockAll(){
+  const names = ["bed"];
+  (CAST.roles||[]).forEach(r => cands(r).forEach(c => names.push(key(r, c.id))));
+  names.forEach(n => {
+    const a = make(n);
+    const p = a.play();
+    if(p && p.then) p.then(()=>{ a.pause(); a.currentTime = 0; }).catch(()=>{});
+    else { try{ a.pause(); a.currentTime = 0; }catch(e){} }
+  });
+  unlocked = true;
+}
+
+function bedTime(){
+  const b = el.bed;
+  return b && b.duration ? b.currentTime : 0;
+}
+
+function startPart(name){
+  const a = make(name);
+  if(!a.paused) return;
+  try{ a.currentTime = bedTime(); }catch(e){}
+  const p = a.play();
+  if(p && p.catch) p.catch(()=>{ say("Le navigateur a refusé de démarrer une piste.", true); });
+}
+
+function applyTargets(){
+  Object.keys(vol).forEach(n => { vol[n].target = 0; });
+  if(!playing) return;
+  vol.bed = vol.bed || {cur:0, target:0};
+  vol.bed.target = 1;
+  (CAST.roles||[]).forEach(r => {
+    const n = key(r, cast[r]);
+    vol[n] = vol[n] || {cur:0, target:0};
+    vol[n].target = trim(r, cast[r]);
+  });
+}
+
+function tick(ts){
+  raf = requestAnimationFrame(tick);
+  const dt = 1/60, step = dt / 3.0;           /* fondu croisé de 3 s */
+  Object.keys(vol).forEach(n => {
+    const v = vol[n], a = el[n];
+    if(!a) return;
+    if(Math.abs(v.cur - v.target) > 0.001){
+      v.cur += Math.sign(v.target - v.cur) * Math.min(step, Math.abs(v.target - v.cur));
+      try{ a.volume = Math.max(0, Math.min(1, v.cur)); }catch(e){}
+      if(v.cur <= 0.001 && v.target === 0 && !a.paused && n !== "bed") a.pause();
+    }
+  });
+
+  if(playing && el.bed){
+    /* recalage : des <audio> indépendants dérivent lentement */
+    if(ts - lastSync > 2000){
+      lastSync = ts;
+      const t = el.bed.currentTime, d = el.bed.duration || 1;
+      Object.keys(el).forEach(n => {
+        if(n === "bed") return;
+        const a = el[n];
+        if(a.paused || !a.duration) return;
+        let diff = a.currentTime - t;
+        if(diff >  d/2) diff -= d;
+        if(diff < -d/2) diff += d;
+        if(Math.abs(diff) > 0.08){ try{ a.currentTime = t; }catch(e){} }
+      });
+    }
+    const t = el.bed.currentTime;
+    clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
+  }
+  paintLevels();
+}
+
+/* ── interface ─────────────────────────────────────────────────────────── */
+const levelsEl = $("#levels");
+function buildLevels(){
+  const rows = [{id:"bed", name:"socle", fixed:true}]
+    .concat((CAST.roles||[]).map(r => ({id:r, name:ROLE_LABEL[r]||r})));
+  levelsEl.innerHTML = rows.map(r =>
+    '<div class="lv" data-lv="'+r.id+'">'+
+      '<div class="lv-top"><span class="lv-name">'+r.name+'</span></div>'+
+      '<div class="lv-who" data-who="'+r.id+'">'+(r.fixed?"fixe":"—")+'</div>'+
+      '<div class="meter"><i></i></div>'+
+    '</div>').join("");
+}
+function paintLevels(){
+  const set = (id, name, hot) => {
+    const box = levelsEl.querySelector('.lv[data-lv="'+id+'"]');
+    if(!box) return;
+    const v = vol[name] ? vol[name].cur : 0;
+    box.querySelector(".meter i").style.width = Math.round(Math.min(1, v)*100) + "%";
+    box.classList.toggle("hot", !!hot && v > 0.02);
+  };
+  set("bed", "bed", false);
+  (CAST.roles||[]).forEach(r => set(r, key(r, cast[r]), true));
+}
+
+function paint(){
+  document.querySelectorAll(".cand").forEach(b =>
+    b.setAttribute("aria-pressed", String(cast[b.dataset.role] === b.dataset.id)));
+  (CAST.roles||[]).forEach(r => {
+    const e = entry(r, cast[r]);
+    const now = document.querySelector('.now[data-now="'+r+'"]');
+    if(now && e) now.textContent = e.label;
+    const who = levelsEl.querySelector('[data-who="'+r+'"]');
+    if(who && e) who.textContent = e.label;
+  });
+  document.querySelectorAll(".chip.amb").forEach(b => {
+    const a = AMBIANCES.find(x => x.id === b.dataset.amb);
+    const same = a && (CAST.roles||[]).every(r => cast[r] === a.cast[r]);
+    b.setAttribute("aria-pressed", String(!!same));
+  });
+  paintLevels();
+}
+
+function setCast(next){
+  (CAST.roles||[]).forEach(r => {
+    if(cast[r] === next[r]) return;
+    cast[r] = next[r];
+    if(playing) startPart(key(r, cast[r]));
+  });
+  applyTargets(); paint();
+}
+
+/* Rôle par rôle, le premier axe qui se prononce l'emporte ; le titulaire par
+   défaut ferme la marche, donc il y a toujours exactement un instrument par rôle. */
+function resolve(){
+  const out = Object.assign({}, CAST.default), done = {};
+  (CAST.priority||[]).forEach(axis => {
+    const v = context[axis]; if(!v) return;
+    const m = (CAST.context||{})[v] || {};
+    Object.keys(m).forEach(r => { if(!done[r]){ out[r] = m[r]; done[r] = true; } });
+  });
+  return out;
+}
+
+/* ambiances */
+$("#ambiances").innerHTML = AMBIANCES.map(a =>
+  '<button class="chip amb" data-amb="'+a.id+'" aria-pressed="false">'+a.label+'</button>').join("");
+$("#ambiances").querySelectorAll(".amb").forEach(b => b.addEventListener("click", () => {
+  const a = AMBIANCES.find(x => x.id === b.dataset.amb);
+  context = {};
+  document.querySelectorAll(".chip.ax").forEach(c => c.setAttribute("aria-pressed","false"));
+  setCast(Object.assign({}, a.cast));
+}));
+
+/* axes */
+const axesEl = $("#axes");
+Object.keys(CAST.axes || {}).forEach(axis => {
+  const row = document.createElement("div");
+  row.className = "axis";
+  row.innerHTML = "<b>"+(AXIS_LABEL[axis]||axis)+"</b>";
+  CAST.axes[axis].forEach(value => {
+    const b = document.createElement("button");
+    b.className = "chip ax"; b.textContent = value;
+    b.setAttribute("aria-pressed","false"); b.dataset.axis = axis;
+    b.addEventListener("click", () => {
+      const off = context[axis] === value;
+      row.querySelectorAll(".chip").forEach(o => o.setAttribute("aria-pressed","false"));
+      if(off) delete context[axis];
+      else { context[axis] = value; b.setAttribute("aria-pressed","true"); }
+      setCast(resolve());
+    });
+    row.appendChild(b);
+  });
+  axesEl.appendChild(row);
+});
+
+/* rôles */
+$("#roles").innerHTML = (CAST.roles||[]).map(r =>
+  '<div class="role">'+
+    '<div class="role-head"><span class="role-name">'+(ROLE_LABEL[r]||r)+'</span>'+
+      '<span class="role-job">'+(ROLE_JOB[r]||"")+'</span></div>'+
+    '<div class="now" data-now="'+r+'">—</div>'+
+    '<div class="bench">'+ cands(r).map(c =>
+      '<button class="cand" data-role="'+r+'" data-id="'+c.id+'" aria-pressed="false">'+
+      c.label+'</button>').join("") +'</div>'+
+    '<div class="trim">tessiture '+ (cands(r)[0] ? "repliée par octaves" : "") +
+      ' · niveaux appariés à 0,00 dB</div>'+
+  '</div>').join("");
+document.querySelectorAll(".cand").forEach(b => b.addEventListener("click", () => {
+  context = {};
+  document.querySelectorAll(".chip.ax").forEach(c => c.setAttribute("aria-pressed","false"));
+  const next = Object.assign({}, cast); next[b.dataset.role] = b.dataset.id;
+  setCast(next);
+}));
+
+buildLevels(); paint();
+
+/* ── transport ─────────────────────────────────────────────────────────── */
+playBtn.addEventListener("click", () => {
+  if(playing){
+    playing = false; applyTargets();
+    Object.keys(el).forEach(n => { try{ el[n].pause(); }catch(e){} });
+    cancelAnimationFrame(raf); raf = 0;
+    glyph.textContent = "▶"; playLabel.textContent = "Écouter";
+    loopTag.classList.remove("on"); clock.textContent = "0:00";
+    Object.keys(vol).forEach(n => { vol[n].cur = 0; });
+    paintLevels();
+    return;
+  }
+  playBtn.disabled = true; playLabel.textContent = "Chargement…";
+  if(!unlocked) unlockAll();
+  const bed = make("bed");
+  const p = bed.play();
+  const go = () => {
+    playBtn.disabled = false;
+    playing = true;
+    if(bed.duration){
+      durEl.textContent = Math.floor(bed.duration/60)+":"+
+        String(Math.round(bed.duration%60)).padStart(2,"0");
+    }
+    (CAST.roles||[]).forEach(r => startPart(key(r, cast[r])));
+    applyTargets();
+    glyph.textContent = "❚❚"; playLabel.textContent = "Arrêter";
+    loopTag.classList.add("on");
+    engineEl.textContent = "lecture par éléments";
+    say("");
+    if(!raf) raf = requestAnimationFrame(tick);
+  };
+  if(p && p.then) p.then(go).catch(err => {
+    playBtn.disabled = false; playLabel.textContent = "Écouter";
+    say("Lecture refusée par le navigateur ("+(err && err.name ? err.name : err)+
+        "). Touchez à nouveau.", true);
+  });
+  else go();
+});
+
+if(/iP(hone|ad|od)/.test(navigator.userAgent) ||
+   (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent))){
+  say("Sur iPhone, le commutateur silencieux coupe le son des pages web. "
+    + "S’il n’y a rien : basculez-le.");
+}
+</script>

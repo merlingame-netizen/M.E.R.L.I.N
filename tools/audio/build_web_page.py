@@ -137,6 +137,9 @@ def main() -> int:
     ap.add_argument("--embedded", action="store_true",
                     help="omet <!doctype>/<head> : pour les hebergeurs qui fournissent "
                          "leur propre enveloppe. Par defaut la page est autonome.")
+    ap.add_argument("--template", default=None,
+                    help="gabarit a utiliser (defaut : page_template.html). "
+                         "app_template.html donne le lecteur pilotable.")
     ap.add_argument("--quality", default=None,
                     help="force la qualite VBR LAME pour toutes les pistes (0=meilleur, 9=pire)")
     args = ap.parse_args()
@@ -186,14 +189,19 @@ def main() -> int:
     os.remove(sil)
     os.rmdir(tmp)
 
-    with open(TEMPLATE, encoding="utf-8") as fh:
+    tpl_path = args.template or TEMPLATE
+    if not os.path.isabs(tpl_path):
+        here = os.path.dirname(os.path.abspath(__file__))
+        tpl_path = tpl_path if os.path.exists(tpl_path) else os.path.join(here, tpl_path)
+    with open(tpl_path, encoding="utf-8") as fh:
         tpl = fh.read()
     if "__AUDIO_JSON__" not in tpl:
         print("template sans marqueur __AUDIO_JSON__", file=sys.stderr)
         return 1
     page = tpl.replace("__AUDIO_JSON__", json.dumps(audio))
     page = page.replace("__CASTING_JSON__", json.dumps(cast, ensure_ascii=False))
-    page = page.replace("__PROVENANCE__", render_provenance(args.stems))
+    if "__PROVENANCE__" in page:
+        page = page.replace("__PROVENANCE__", render_provenance(args.stems))
     if not args.embedded:
         page = make_standalone(page)
     with open(args.out, "w", encoding="utf-8") as fh:
