@@ -36,6 +36,7 @@ var _wired_flow: GameFlowController = null
 var _sfx: SFXEngine = null
 var _music: MusicManagerV2 = null
 var _stems: StemsMusicManager = null
+var _layers: ContextualLayers = null
 
 
 # =============================================================================
@@ -178,6 +179,7 @@ func unwire_all() -> void:
 	unwire_end_screen()
 	unwire_flow()
 	unwire_stems()
+	unwire_layers()
 	_sfx = null
 	_music = null
 
@@ -340,6 +342,35 @@ func update_tension(tension_value: int) -> void:
 		return
 	var normalized: float = clampf(float(tension_value) / 100.0 * 0.8, 0.0, 0.8)
 	_stems.set_tension(normalized)
+
+
+# =============================================================================
+# CONTEXTUAL LAYERS — surcouches par météo / saison / moment / situation
+# =============================================================================
+## Découpage orthogonal aux stems : les stems empilent par INTENSITÉ, les
+## surcouches par SITUATION. Voir scripts/audio/contextual_layers.gd.
+
+## Wire a ContextualLayers node. `clock` est le lecteur qui donne la position
+## de boucle — sans lui, une couche activée en cours de route jouerait
+## l'harmonie de la mesure 1 par-dessus celle en cours.
+func wire_layers(layers: ContextualLayers, clock: AudioStreamPlayer = null) -> void:
+	_layers = layers
+	if _layers != null and clock != null:
+		_layers.attach_clock(clock)
+
+
+func unwire_layers() -> void:
+	if _layers:
+		_layers.stop()
+	_layers = null
+
+
+## `context` : {"meteo": "pluie", "saison": "hiver", "moment": "nuit",
+##              "situation": "sacre"}. Les axes absents gardent leur valeur.
+func set_music_context(context: Dictionary) -> void:
+	if _layers == null:
+		return
+	_layers.set_context(context)
 
 
 # =============================================================================

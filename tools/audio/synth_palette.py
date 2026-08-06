@@ -2,20 +2,27 @@
 """
 Rendu du theme de menu M.E.R.L.I.N. — « Broceliande », version orchestrale.
 
-    partition  score_menu.py      32 mesures, conduite des voix, arc dynamique
-    pupitres   arrange_menu.py    repartition sur 19 instruments et 4 stems
+    partition  score_menu.py      40 mesures a 58 BPM, conduite des voix, arc dynamique
+    pupitres   arrange_menu.py    repartition sur 37 pupitres et 4 stems
+    surcouches layers_menu.py     12 couches contextuelles, 16 instruments dedies
     lutherie   orchestra.py       modeles d'instruments synthetises
     ce fichier                    rendu, salle, mastering, boucle, attestation
 
 Aucun echantillon externe par defaut : toute la matiere est synthetisee (chemin
 "reconstruction" de docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md §5).
-L'option --bank rejoue la meme partition avec des echantillons extraits.
+--samples rejoue la meme partition avec des instruments enregistres sous CC0,
+--bank avec des echantillons extraits d'une copie de jeu fournie par vous.
 
-Sortie : mix complet + 4 stems alignes en phase, pour stems_music_manager.gd.
+Sortie, tous cales sur la meme boucle :
+  - le mix complet
+  - 4 stems alignes en phase, par INTENSITE, pour stems_music_manager.gd
+  - 12 surcouches contextuelles, par SITUATION (meteo / saison / moment), pour
+    contextual_layers.gd — plus `layers.json` qui dit laquelle allumer quand
 
 Usage :
     python3 tools/audio/synth_palette.py --out audio/music/menu
-    python3 tools/audio/synth_palette.py --bank extract/ --out audio/music/menu
+    python3 tools/audio/synth_palette.py --samples samples/ --out audio/music/menu
+    python3 tools/audio/synth_palette.py --no-layers --out /tmp/essai
 """
 
 from __future__ import annotations
@@ -36,22 +43,33 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import orchestra as orc
 from arrange_menu import build_events, summary
-from score_menu import BPM, LOOP_LEN, N_BARS
+from layers_menu import AXES, LAYER_SEND, build_layers, layer_instruments, manifest
+from score_menu import BPM, LOOP_LEN, LOOP_SAMPLES, N_BARS
 
-TOOL_VERSION = "2.0.0"
+TOOL_VERSION = "3.0.0"
 SR = orc.SR
-# Marge de queue. Elle doit couvrir le pire cumul : une note qui finit apres le
-# point de boucle (+1 s), sa reverbe ambiante (9 s) et ses reprises de delai
-# (4,7 s). A 11 s la couture restait a 0,0115, localisee dans le stem climax
-# — celui dont les notes debordent le plus.
-TAIL = 17.0
+# LONGUEUR TOTALE DU RENDU, EN ECHANTILLONS — et la marge de queue en decoule.
+#
+# Meme raison que LOOP_SAMPLES dans score_menu.py : la longueur de travail passe
+# dans des dizaines de FFT, et il ne faut donc que des petits facteurs premiers.
+# 8 100 000 = 2^5 x 3^4 x 5^5.
+#
+# La marge de queue qui en resulte, 18,37 s, doit couvrir le pire cumul : une
+# note qui finit apres le point de boucle (+1 s), sa reverbe ambiante (9 s) et
+# ses reprises de delai (4,7 s). A 11 s la couture restait a 0,0115, localisee
+# dans le stem climax — celui dont les notes debordent le plus.
+TOTAL_SAMPLES = 8_100_000
+TAIL = (TOTAL_SAMPLES - LOOP_SAMPLES) / SR              # 18,37 s
 STEMS = ["base", "rhythm", "melody", "climax"]
+# Niveau des surcouches, en dB sous le mix. Voir peak_rms() pour la raison pour
+# laquelle ce n'est PAS une RMS globale.
+LAYER_REL_DB = -13.0
 
 BANK = None
 SAMPLES = None      # banque multi-echantillons (instruments reellement enregistres)
 
 # Quand une banque d'echantillons est fournie, elle expose 7 roles. Voici comment
-# les 34 pupitres s'y rabattent.
+# les pupitres s'y rabattent.
 BANK_ROLE = {
     "strings_low": "pad_fm", "strings_mid": "pad_fm", "viola": "pad_fm",
     "contrabass": "sub", "horn": "pad_fm", "trombone": "pad_fm", "tuba": "sub",
@@ -76,9 +94,21 @@ INSTRUMENTS = {n: getattr(orc, n) for n in (
     "bombarde", "biniou", "biniou_drone", "tin_whistle",
     "harp", "celtic_guitar", "glockenspiel", "celesta_bell", "celesta",
     "timpani", "taiko", "bodhran", "choir", "pad_fm", "sub",
+    "oud",
 )}
 # instruments sans hauteur definie : signature (duree, vel, seed)
 UNPITCHED = {"cymbal": orc.cymbal_swell, "tam_tam": orc.tam_tam, "snare_roll": orc.snare_roll}
+
+# Les quinze instruments de surcouche n'ont pas de modele synthetise : ils
+# n'existent que sous forme d'enregistrement. Sans banque, ils se rabattent sur
+# le pupitre le plus proche pour que l'ecriture reste verifiable.
+for _li in layer_instruments():
+    if _li not in INSTRUMENTS and _li not in UNPITCHED:
+        _fb = orc.LAYER_FALLBACK.get(_li)
+        if _fb in UNPITCHED:
+            UNPITCHED[_li] = UNPITCHED[_fb]
+        elif _fb:
+            INSTRUMENTS[_li] = INSTRUMENTS[_fb]
 
 _note_cache: dict = {}
 
@@ -165,8 +195,8 @@ def finish(dry, wet, halls, hall=0.95, amb=0.0, delay=0.0):
     if delay > 0:
         for c in (0, 1):
             out[c] += orc.feedback_delay(wet[c], 0.789 + 0.041 * c, 0.44, 2600.0) * delay
-    loop_n = int(LOOP_LEN * SR)
-    tail_n = out.shape[1] - loop_n
+    loop_n = LOOP_SAMPLES               # jamais int(LOOP_LEN * SR) : un arrondi
+    tail_n = out.shape[1] - loop_n      # a l'echantillon pres decale la boucle
     head = out[:, :loop_n].copy()
     head[:, :tail_n] += out[:, loop_n:]
     return head
@@ -177,14 +207,20 @@ def finish(dry, wet, halls, hall=0.95, amb=0.0, delay=0.0):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def air(x: np.ndarray, gain_db: float = 3.0, fc: float = 4200.0,
-        low_cut_db: float = 2.5, low_fc: float = 170.0) -> np.ndarray:
-    """Basculement de master : shelf haut pour la brillance, shelf bas pour degager.
+        low_cut_db: float = 7.5, low_fc: float = 200.0) -> np.ndarray:
+    """Basculement de master : shelf haut pour la brillance, shelf bas pour porter.
 
     Le shelf bas avait ete cale a -4 dB sur les modeles synthetises, qui empilaient
     45 % de l'energie sous 300 Hz. Avec les enregistrements reels le probleme
     s'inverse : VSCO-2 CE n'a AUCUN echantillon de contrebasse (le dossier existe
     mais il est vide), donc les contrebasses sont des violoncelles transposes vers
-    le bas — sans le fondamental. Le shelf devient un leger RELEVEMENT.
+    le bas — sans le fondamental. Le shelf est devenu un RELEVEMENT de +2,5 dB.
+
+    Puis le ralentissement a 58 BPM l'a rendu insuffisant : allonger toutes les
+    figures d'accompagnement (guitare 3,4 -> 5,0 s, harpe 2,6 -> 3,6 s) ajoute du
+    medium tenu sans rien ajouter dans le grave, et la part sous 300 Hz est
+    retombee de 28,7 % a 15,3 %. Mesure a l'appui sur le mix rendu : +5 dB de
+    plus a 200 Hz la ramenent a 21,4 %, dans la fourchette 20-35 % visee.
 
     Applique identiquement au mix et a chaque stem, pour que la somme reste egale."""
     n = x.shape[-1]
@@ -210,6 +246,217 @@ def limit(x: np.ndarray, ceiling: float = 0.72, target_rms_db: float = -18.0) ->
     if peak > ceiling:
         y = y * (ceiling / peak)
     return y
+
+
+def peak_rms(x: np.ndarray, win: float = 0.5) -> float:
+    """RMS de la fenetre la plus forte, et non RMS globale.
+
+    Une surcouche est SPARSE par construction : `sacre` joue trois cloches en
+    165 s. Sa RMS globale est dominee par le silence, si bien que la caler sur
+    une cible ferait exploser les trois frappes pour compenser tout le vide
+    autour. On mesure donc le niveau quand la couche SONNE.
+
+    Fenetre de 500 ms : verifie sur trois bouffees de 400 ms noyees dans 20 s de
+    silence contre un bruit continu de meme amplitude — la RMS globale les
+    separait d'un facteur 4, cette mesure d'un facteur 1,1. Une fenetre d'une
+    seconde diluait encore les evenements courts d'un facteur 0,63."""
+    m = x.mean(axis=0) if x.ndim > 1 else x
+    n = int(win * SR)
+    if len(m) <= n:
+        return float(np.sqrt((m ** 2).mean()))
+    # moyenne glissante de l'energie, sous-echantillonnee : inutile de la
+    # calculer a chaque echantillon pour trouver un maximum
+    e = np.cumsum(np.concatenate([[0.0], m.astype(np.float64) ** 2]))
+    starts = np.arange(0, len(m) - n, max(1, n // 8))
+    best = float(np.max((e[starts + n] - e[starts]) / n))
+    return float(np.sqrt(best))
+
+
+def layer_gain(lid: str) -> float:
+    from layers_menu import LAYERS
+    for (i, _lab, _ax, _vals, _ins, g, _gen) in LAYERS:
+        if i == lid:
+            return g
+    return 1.0
+
+
+def write_layer_manifest(out_dir: str, stats: dict, mix_ref: dict) -> dict:
+    """Ce que le jeu lit pour choisir ses couches — scripts/audio/contextual_layers.gd.
+
+    Y sont aussi consignes les deux niveaux de reference du mix. Ce ne sont pas
+    des metadonnees decoratives : c'est ce qui permet a --only-layers de recaler
+    une couche au meme niveau sans avoir a refaire les quatre stems."""
+    path = os.path.join(out_dir, "layers.json")
+    old = {}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            old = {e["id"]: e for e in json.load(fh).get("layers", [])}
+    man = manifest()
+    man["loop_seconds"] = round(LOOP_LEN, 3)
+    man["bpm"] = BPM
+    man["mix_reference"] = mix_ref
+    for entry in man["layers"]:
+        # une couche non rendue cette fois-ci garde les mesures de la precedente
+        entry.update({k: v for k, v in old.get(entry["id"], {}).items()
+                      if k in ("events", "peak_rel_db", "rms_rel_db")})
+        entry.update(stats.get(entry["id"], {}))
+        entry["present"] = os.path.exists(os.path.join(out_dir, entry["file"]))
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(man, fh, indent=2, ensure_ascii=False)
+    return man
+
+
+def read_mix_reference(out_dir: str) -> dict:
+    path = os.path.join(out_dir, "layers.json")
+    if not os.path.exists(path):
+        raise SystemExit("--only-layers exige un layers.json existant : lancez d'abord "
+                         "un rendu complet, il y consigne les niveaux du mix.")
+    with open(path, encoding="utf-8") as fh:
+        ref = json.load(fh).get("mix_reference")
+    if ref:
+        return ref
+
+    # Repli : layers.json d'avant --only-layers. On mesure le mix rendu.
+    #
+    # Seul le RAPPORT peak_rms/rms compte ici — la couche est ensuite recalee en
+    # RMS absolue par limit(), donc une echelle commune s'annule. Le mix rendu
+    # est passe par un ecreteur a tanh, qui rabote les cretes un peu plus que la
+    # RMS : le rapport mesure est donc legerement sous-estime, et la couche
+    # ressortira une fraction de dB sous ce qu'un rendu complet aurait donne.
+    mix = os.path.join(out_dir, "menu_theme.ogg")
+    if not os.path.exists(mix):
+        raise SystemExit("ni mix_reference dans layers.json, ni menu_theme.ogg : "
+                         "lancez un rendu complet d'abord.")
+    import subprocess as _sp
+    import imageio_ffmpeg
+    raw = _sp.run([imageio_ffmpeg.get_ffmpeg_exe(), "-loglevel", "error", "-i", mix,
+                   "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"],
+                  capture_output=True, check=True).stdout
+    x = np.frombuffer(raw, dtype="<f4").reshape(-1, 2).T.astype(np.float64)
+    ref = {"peak_rms": peak_rms(x), "rms": float(np.sqrt((x ** 2).mean())),
+           "measured_from": "menu_theme.ogg (approximatif, voir read_mix_reference)"}
+    print(f"[synth] mix_reference absent — mesure sur menu_theme.ogg : "
+          f"rapport crete/RMS = {20*np.log10(ref['peak_rms']/ref['rms']):+.2f} dB")
+    return ref
+
+
+def render_layers(layer_ev: dict, outputs: dict, n: int, halls, mix_ref: dict) -> dict:
+    """Rend les surcouches et les ajoute a `outputs`. Retourne leurs mesures.
+
+    Le niveau est cale RELATIVEMENT au mix, sur la fenetre ou la couche SONNE.
+    Une couche normalisee comme un mix arriverait au niveau de l'orchestre
+    entier — c'est exactement ce qui fait entendre "un instrument colle
+    par-dessus" au lieu d'une couleur.
+    """
+    mix_peak, mix_rms = mix_ref["peak_rms"], mix_ref["rms"]
+    stats = {}
+    for lid, evs in layer_ev.items():
+        if not evs:
+            continue
+        hall_send, dly = LAYER_SEND.get(lid, (0.5, 0.2))
+        dry, wet = render_stem(evs, n, verbose=False)
+        out = finish(dry, wet, halls, hall=0.88, amb=hall_send, delay=dly)
+        del dry, wet
+        out = orc.tape_wobble(out, seed=3)
+        # Cible en dB sous le mix, plutot qu'un gain de bus fixe applique en
+        # esperant. Les couches vont de 3 a 54 notes : un gain unique ferait
+        # sortir les denses et disparaitre les rares.
+        want_db = LAYER_REL_DB + 20.0 * np.log10(max(layer_gain(lid), 1e-3))
+        cur = peak_rms(out)
+        out = out * ((mix_peak * 10 ** (want_db / 20.0)) / max(cur, 1e-9))
+        rms = float(np.sqrt((out ** 2).mean()))
+        off = 20.0 * np.log10(max(rms, 1e-9) / max(mix_rms, 1e-9))
+        stats[lid] = {"events": len(evs), "peak_rel_db": round(want_db, 1),
+                      "rms_rel_db": round(off, 1)}
+        # limit() recale la RMS sur `-18 + off`, c'est-a-dire exactement celle
+        # qu'on vient de fixer : la normalisation vaut 1 et seul l'ecreteur agit.
+        outputs[f"layer_{lid}"] = limit(air(out), ceiling=0.72, target_rms_db=-18.0 + off)
+        del out
+        print(f"[synth]   couche {lid:10s} {len(evs):3d} notes  "
+              f"crete {want_db:+5.1f} dB, RMS {off:+6.1f} dB / mix", flush=True)
+    return stats
+
+
+def refresh_provenance_hashes(out_dir: str, names: list[str]) -> int:
+    """Reactualise les empreintes des fichiers qu'un rendu partiel vient de reecrire.
+
+    Sans ca, PROVENANCE.md continuerait d'annoncer le SHA-256 de la version
+    precedente d'une couche refaite. Une attestation fausse est pire qu'une
+    attestation absente : c'est precisement ce qu'elle est censee empecher."""
+    pj = os.path.join(out_dir, "provenance.json")
+    if not os.path.exists(pj):
+        return 0
+    with open(pj, encoding="utf-8") as fh:
+        rep = json.load(fh)
+    outs = rep.setdefault("outputs", {})
+    changed = 0
+    for name in names:
+        f = os.path.join(out_dir, f"{name}.ogg")
+        if not os.path.exists(f):
+            continue
+        entry = {"sha256": sha256_file(f), "bytes": os.path.getsize(f)}
+        if outs.get(f"{name}.ogg") != entry:
+            outs[f"{name}.ogg"] = entry
+            changed += 1
+    rep["partial_rerender"] = {
+        "at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "layers": sorted(names),
+        "note": "Rendu partiel : seules ces couches ont ete refaites. Les stems et "
+                "le mix datent du rendu complet indique par `rendered_at`.",
+    }
+    with open(pj, "w", encoding="utf-8") as fh:
+        json.dump(rep, fh, indent=2, ensure_ascii=False)
+
+    # et le Markdown, qui est ce qu'un humain lit reellement
+    md = os.path.join(out_dir, "PROVENANCE.md")
+    if os.path.exists(md):
+        with open(md, encoding="utf-8") as fh:
+            lines = fh.read().split("\n")
+        for i, line in enumerate(lines):
+            for name in names:
+                if line.startswith(f"| `{name}.ogg` |"):
+                    e = outs[f"{name}.ogg"]
+                    lines[i] = f"| `{name}.ogg` | `{e['sha256']}` | {e['bytes']} |"
+        pr = rep["partial_rerender"]
+        lines += ["", "## Rendu partiel", "",
+                  f"- **Le** : {pr['at']}",
+                  f"- **Couches refaites** : {', '.join('`' + n + '`' for n in pr['layers'])}",
+                  "", f"> {pr['note']}", ""]
+        with open(md, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines))
+    return changed
+
+
+def render_layers_only(args, only: list[str], n: int, halls) -> int:
+    """Refait quelques couches sans retoucher aux stems.
+
+    Corriger une couche coutait un rendu complet — trois heures pour dix minutes
+    de travail utile. Les deux niveaux de reference du mix etant consignes dans
+    layers.json, la couche refaite ressort exactement au niveau qu'elle aurait
+    eu dans un rendu complet."""
+    mix_ref = read_mix_reference(args.out)
+    every = build_layers()
+    unknown = [lid for lid in only if lid not in every]
+    if unknown:
+        raise SystemExit(f"couche(s) inconnue(s) : {', '.join(unknown)}\n"
+                         f"disponibles : {', '.join(every)}")
+    print(f"[synth] mode COUCHES SEULES — {', '.join(only)}")
+    outputs: dict = {}
+    stats = render_layers({lid: every[lid] for lid in only}, outputs, n, halls, mix_ref)
+    _note_cache.clear()
+    for name, sig in outputs.items():
+        wav = os.path.join(args.out, f"{name}.wav")
+        ogg = os.path.join(args.out, f"{name}.ogg")
+        write_wav(wav, sig)
+        to_ogg(wav, ogg)
+        print(f"[synth] {ogg}  ({os.path.getsize(ogg)/1024:.0f} KB)")
+        if not args.keep_wav:
+            os.remove(wav)
+    write_layer_manifest(args.out, stats, mix_ref)
+    n_up = refresh_provenance_hashes(args.out, list(outputs))
+    print(f"[synth] OK — layers.json mis a jour, stems inchanges")
+    print(f"[prov ] {n_up} empreinte(s) reactualisee(s) dans l'attestation")
+    return 0
 
 
 def write_wav(path: str, stereo: np.ndarray) -> None:
@@ -241,13 +488,16 @@ def sha256_file(path: str) -> str:
 
 
 def write_provenance(out_dir: str, names: list[str], bank, stats: dict) -> dict:
+    layer_files = sorted(n for n in names if n.startswith("layer_"))
     rep = {
         "tool": f"synth_palette.py {TOOL_VERSION}",
         "rendered_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "composition": {"key": "D dorian", "bpm": BPM, "bars": N_BARS,
                         "loop_seconds": round(LOOP_LEN, 3), "sample_rate": SR,
                         "form": "A A' B A''", "instruments": stats["instruments"],
-                        "note_events": stats["events"]},
+                        "note_events": stats["events"],
+                        "contextual_layers": len(layer_files),
+                        "context_axes": AXES},
         "mode": ("sampled" if bank is not None
                  else "hybrid" if SAMPLES is not None else "synthesized"),
     }
@@ -359,7 +609,17 @@ def main() -> int:
     ap.add_argument("--bank", default=None,
                     help="dossier de banque (sortie de musyx_extract.py) : les samples "
                          "reels remplacent les pupitres synthetises")
+    ap.add_argument("--no-layers", action="store_true",
+                    help="ne rend que le mix et les 4 stems, sans les surcouches "
+                         "contextuelles (rendu deux fois plus rapide pour les essais)")
+    ap.add_argument("--only-layers", default=None,
+                    help="ne rend QUE les surcouches nommees (separees par des virgules), "
+                         "sans refaire les stems. Les niveaux de reference du mix sont "
+                         "relus dans layers.json, donc la couche ressort au meme niveau "
+                         "qu'un rendu complet. Dix minutes au lieu de trois heures pour "
+                         "corriger une seule couche.")
     args = ap.parse_args()
+    only = [s.strip() for s in args.only_layers.split(",")] if args.only_layers else None
 
     global SAMPLES
     if args.samples:
@@ -381,12 +641,15 @@ def main() -> int:
     print(f"[synth] {N_BARS} mesures @ {BPM:.0f} BPM = {LOOP_LEN:.2f}s — forme A A' B A''")
     print(f"[synth] {stats['instruments']} instruments, {stats['events']} evenements")
 
-    n = int((LOOP_LEN + TAIL) * SR)
+    n = TOTAL_SAMPLES
     halls = (orc.stereo_hall(seconds=4.2, decay=5.2, damp=3100.0, seed=7, width=0.24),
              orc.stereo_hall(seconds=9.0, decay=3.1, damp=1300.0, seed=23, width=0.28))
     # dosage ambiant par stem : les nappes et le chant s'etalent, la percussion non
     AMB = {"base": 0.55, "rhythm": 0.16, "melody": 0.48, "climax": 0.52}
     DLY = {"base": 0.16, "rhythm": 0.04, "melody": 0.26, "climax": 0.20}
+
+    if only:
+        return render_layers_only(args, only, n, halls)
 
     rendered = {}
     for stem in STEMS:
@@ -442,6 +705,20 @@ def main() -> int:
         off = 20.0 * np.log10(max(rms, 1e-9) / max(mix_rms, 1e-9))
         outputs[name] = limit(air(s), ceiling=0.72, target_rms_db=-18.0 + off)
 
+    # ── SURCOUCHES CONTEXTUELLES ─────────────────────────────────────────────
+    # Chaque couche est un fichier a part, cale sur la meme boucle. Le jeu les
+    # allume selon la meteo, la saison, le moment, la situation — voir
+    # layers_menu.py et scripts/audio/contextual_layers.gd.
+    #
+    # Le niveau est cale RELATIVEMENT au mix, sur la fenetre ou la couche sonne.
+    # Une couche normalisee comme un mix arriverait au niveau de l'orchestre
+    # entier — c'est exactement ce qui fait entendre "un instrument colle
+    # par-dessus" au lieu d'une couleur.
+    layer_ev = build_layers() if not args.no_layers else {}
+    mix_ref = {"peak_rms": peak_rms(mix), "rms": mix_rms}
+    layer_stats = render_layers(layer_ev, outputs, n, halls, mix_ref)
+    _note_cache.clear()
+
     for name, sig in outputs.items():
         wav = os.path.join(args.out, f"{name}.wav")
         ogg = os.path.join(args.out, f"{name}.ogg")
@@ -451,6 +728,8 @@ def main() -> int:
         if not args.keep_wav:
             os.remove(wav)
 
+    if layer_ev:
+        write_layer_manifest(args.out, layer_stats, mix_ref)
     rep = write_provenance(args.out, list(outputs), BANK, stats)
     src = rep["sound_source"]
     print(f"[synth] OK — boucle 0.000s -> {LOOP_LEN:.3f}s  ({time.time()-t_start:.0f}s de rendu)")

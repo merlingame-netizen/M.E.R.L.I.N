@@ -164,6 +164,38 @@ section{padding-top:56px}
   font-size:.8rem;color:var(--fg-3);
 }
 
+/* ── surcouches contextuelles ────────────────────────────── */
+.ctx-axes{padding:16px 20px;display:grid;gap:12px;background:var(--bg-2)}
+.ctx-axis{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ctx-axis > b{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.66rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--fg-3);
+  min-width:76px;
+}
+.ctx-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));
+  gap:1px;background:var(--line);border-top:1px solid var(--line);
+}
+.lay{
+  background:var(--bg);padding:12px 14px;display:grid;gap:5px;
+  cursor:pointer;transition:.18s;border:none;text-align:left;color:inherit;
+  border-left:2px solid transparent;
+}
+.lay:hover{background:var(--bg-2)}
+.lay-top{display:flex;align-items:center;gap:8px}
+.lay-top b{font-size:.94rem;font-weight:500}
+.lay-axis{
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.6rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3);
+  border:1px solid var(--line);border-radius:2px;padding:1px 5px;margin-left:auto;
+}
+.lay-ins{font-size:.79rem;color:var(--fg-2)}
+.lay-when{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;color:var(--fg-3)}
+.lay[aria-pressed="true"]{border-left-color:var(--accent);background:var(--bg-2)}
+.lay[aria-pressed="true"] .lay-axis{border-color:var(--accent);color:var(--accent)}
+.lay[aria-pressed="true"] b::before{content:"● ";color:var(--accent);font-size:.7em;vertical-align:.15em}
+.lay.busy{opacity:.5;pointer-events:none}
+
 /* ── faits / tableaux ────────────────────────────────────── */
 .facts{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
@@ -293,7 +325,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 <header>
   <div class="eyebrow"><span>M.E.R.L.I.N.</span><span class="rule"></span><span>chaîne musicale</span><span class="rule"></span><span>2026-08-04</span></div>
   <h1>Tri Martolod, revisité</h1>
-  <p class="lede">Un air breton du XVIII<sup>e</sup> siècle, arrangé pour dix-neuf pupitres sur une palette d'instruments reconstruite. Plus la chaîne d'outillage qui permet d'y substituer d'autres sons.</p>
+  <p class="lede">Un air breton du XVIII<sup>e</sup> siècle, arrangé très lentement pour trente-sept pupitres — dont trente jouent des instruments réellement enregistrés. Plus <strong>douze surcouches contextuelles</strong> qui s'allument selon la météo, la saison ou le moment : s'il pleut, un oud entre. Et la chaîne d'outillage qui permet d'y substituer d'autres sons.</p>
   <div class="thesis">
     <strong>Ce qui rendait la greffe possible :</strong> transposé en ré, Tri Martolod porte un <strong>si naturel</strong> — la descente <span class="mono">ré do si la</span> de sa deuxième mesure. En ré mineur la sixte serait si bémol. Ce si signe le <strong>mode dorien</strong>, celui dans lequel la pièce était déjà écrite. L'air traditionnel et l'harmonisation froide parlent la même langue.
   </div>
@@ -301,7 +333,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <section>
   <div class="sec-head"><span class="sec-num">ÉCOUTE</span><h2>Thème de menu principal</h2></div>
-  <p class="sec-sub">40 mesures, <strong>37 pupitres</strong>. L'air est énoncé nu au cor anglais (0'12), doublé, puis confié au <strong>couple bombarde-biniou</strong> (0'38) — l'orchestre se tait pour les laisser passer. Il revient harmonisé, s'éloigne dans le développement, et rentre en tutti à 1'28. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
+  <p class="sec-sub">40 mesures, <strong>37 pupitres</strong>. L'air est énoncé nu au cor anglais (0'17), doublé, puis confié au <strong>couple bombarde-biniou</strong> (0'50) — l'orchestre se tait pour les laisser passer. Il revient harmonisé, s'éloigne dans le développement, et rentre en tutti à 1'56. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
 
   <div class="console">
     <div class="transport">
@@ -309,7 +341,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
         <svg id="icon" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0v14l12-7z" fill="currentColor"/></svg>
         <span id="playlabel">Écouter</span>
       </button>
-      <div class="clock"><b id="t">0:00</b> / 2:06</div>
+      <div class="clock"><b id="t">0:00</b> / 2:46</div>
       <div class="loop-tag" id="looptag">boucle sans couture</div>
       <button class="tog" id="simple" aria-pressed="false" title="Lit le mix complet via un lecteur audio classique">mix simple</button>
       <a class="dl" id="dl" download="merlin-menu-theme.mp3">télécharger le MP3</a>
@@ -324,9 +356,9 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
   <dl class="facts">
     <div><dt>Tonalité</dt><dd>Ré dorien</dd></div>
-    <div><dt>Tempo</dt><dd>76 BPM</dd></div>
-    <div><dt>Boucle</dt><dd>126,316 s</dd></div>
-    <div><dt>Effectif</dt><dd>37 · 1669</dd></div>
+    <div><dt>Tempo</dt><dd>58,07 BPM</dd></div>
+    <div><dt>Boucle</dt><dd>165,306 s</dd></div>
+    <div><dt>Effectif</dt><dd>37 + 16 · 1367</dd></div>
     <div><dt>Amplitude</dt><dd>11,7 dB</dd></div>
   </dl>
 
@@ -335,7 +367,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <p>Synthétiser un hautbois ou un pupitre de cordes a un plafond. On peut affiner les formants, l'ensemble, la vélocité timbrale — ça reste une imitation, et l'oreille l'entend. Les bibliothèques orchestrales utilisent des enregistrements pour cette raison exacte.</p>
     <p>Le point technique qui compte : <strong>un enregistrement par note</strong>, et non un sample transposé partout. Transposer un violon d'une octave déplace ses formants avec la hauteur — la caisse semble changer de taille, et c'est ce qui trahit l'artifice. Chaque note va chercher l'enregistrement le plus proche et ne se transpose que de quelques demi-tons.</p>
     <p>Le reste de la couleur ambiante ne venait pas des modèles mais de ce qu'il y a <em>autour</em>. Quatre choses ont été ajoutées : une nappe de réverbe longue et sombre (9 s) par-dessus la salle proche, un <strong>délai à réinjection amortie</strong> qui étale les notes jusqu'à ce qu'elles se fondent, un <strong>bruit de salle</strong> — un enregistrement acoustique n'a jamais un silence numérique, le plancher est passé de −∞ à −59,6 dB — et un <strong>pleurage de bande</strong>, parce qu'une justesse absolument constante sur deux minutes n'existe nulle part.</p>
-    <p>La harpe est passée de quatre à deux notes par mesure en contrepartie. Le genre ambient se joue dans l'espace entre les notes, pas dans leur nombre.</p>
+    <p>Ralentir sans dégarnir ne donne pas de l'ambient, ça donne le même morceau en plus lourd : les mêmes notes, plus longues, se recouvrent davantage et la texture s'épaissit au lieu de s'aérer. Chaque figure d'accompagnement a donc été réduite en même temps que le tempo — arpège de harpe 7 notes → 5, motif de guitare 5 → 3, bodhrán 4 frappes par mesure → 2, glockenspiel et célesta 3 → 2. La nappe FM, elle, ne joue plus que dans l'intro et la coda : c'est l'élément le plus ouvertement synthétique de la palette, et il n'avait rien à faire sous des pupitres enregistrés.</p>
   </div>
 
   <div class="callout" style="border-color:var(--accent)">
@@ -344,7 +376,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <p>La mélodie a été recoupée entre deux relevés — celui de thesession.org, où les paroles bretonnes sont alignées note à note (« tri / mar-to-lod / yao-uank »), et le <em>Nine-Note Tunebook</em> de Jack Campin. Les deux concordent : la phrase chantée descend par degrés depuis la quinte.</p>
     <p><strong>Le couple biniou-bombarde</strong> a été ajouté parce qu'il manquait : jouer Tri Martolod sans lui, c'est jouer une gwerz sans son instrument. La bombarde mène, le biniou répond une octave au-dessus, le bourdon ne bouge jamais. Aux mesures 13 à 16, l'orchestre se tait entièrement pour eux — la mesure le confirme, ils occupent alors 94 % du médium.</p>
     <p><strong>Trente des trente-sept pupitres jouent des instruments réellement enregistrés</strong> — cordes, bois, cuivres, harpe, percussions, cloches — issus de VSCO-2 Community Edition et VCSL, deux bibliothèques sous CC0. Les sept autres restent synthétisés faute de source libre : le couple breton, et la nappe FM froide avec le sub, électroniques par choix.</p>
-    <p>La revisite tient en trois gestes : l'air est joué <strong>lent</strong> (76 BPM là où on le danse vers 120), harmonisé <strong>modalement</strong> plutôt qu'en mineur classique, et posé sur la <strong>nappe FM froide</strong> et les cloches métalliques héritées de la palette d'origine.</p>
+    <p>La revisite tient en trois gestes : l'air est joué <strong>très lent</strong> — 58 BPM là où on le danse vers 120 —, harmonisé <strong>modalement</strong> plutôt qu'en mineur classique, et posé sur les cloches métalliques héritées de la palette d'origine. À 76 BPM la pièce restait une marche : les notes se succèdent assez vite pour qu'on entende une suite, pas un état. L'ambient vit dans l'espace <em>entre</em> les notes, et cet espace n'existe qu'à partir du moment où une noire dure plus d'une seconde. À 58 BPM la noire fait 1,033 s et la boucle passe de 126 à 165 s. Le tempo exact est 58,073, et ce n'est pas de la coquetterie : la longueur de boucle passe dans des dizaines de FFT, et à 58,000 BPM elle tombait sur 7 299 299 échantillons — <span class="mono">7 × 239 × 4363</span>, la factorisation qui envoie NumPy sur son chemin lent. Une seule FFT y coûtait 3,8 s au lieu de 0,35. La boucle est donc fixée en <em>échantillons</em> — 7 290 000, soit <span class="mono">2⁴ × 3⁶ × 5⁴</span> — et le tempo en découle.</p>
   </div>
 
   <div class="scroller">
@@ -363,6 +395,30 @@ footer span{min-width:0;overflow-wrap:anywhere}
   </div>
   <p class="sec-sub" style="margin-top:18px">Les accords ne sont pas plaqués : chaque voix rejoint la note la plus proche de l'accord suivant, quatre à cinq demi-tons de mouvement par changement. C'est ce qui sépare un orchestre d'un clavier.</p>
   <p class="sec-sub" style="margin-top:14px">Mesure 28, un <strong>la majeur</strong> : son do dièse est la seule note étrangère au mode de toute la pièce. Il sert de dominante pour ramener l'air en tutti. Tout le développement converge là.</p>
+</section>
+
+<section id="ctx-section" hidden>
+  <div class="sec-head"><span class="sec-num">CONTEXTE</span><h2>Douze surcouches identifiées</h2></div>
+  <p class="sec-sub">Les quatre stems découpent la musique par <strong>intensité</strong>. Ce second découpage est orthogonal : il la découpe par <strong>situation</strong>. Chaque couche est un fichier à part, calé sur la même boucle et la même harmonie, qu'on allume ou éteint sans toucher au reste. S'il pleut, un <strong>oud</strong> entre.</p>
+
+  <div class="console">
+    <div class="ctx-axes" id="ctx-axes"></div>
+    <div class="ctx-grid" id="ctx-grid"></div>
+    <div class="hint" id="ctx-hint">Lancez la lecture ci-dessus, puis changez le contexte : les couches entrent et sortent en fondu, sans jamais désynchroniser la boucle.</div>
+  </div>
+
+  <div class="callout" style="border-color:var(--accent)">
+    <h3 style="color:var(--accent)">Les trois règles qui font que ça marche</h3>
+    <p><strong>1. Tout sort de la grille.</strong> Aucune couche n'a de notes écrites en dur : chacune lit l'accord de la mesure en cours et n'y prend que ses notes. N'importe quelle combinaison des douze reste donc consonante avec le mix et avec les autres — il n'y a pas de paire interdite à tester.</p>
+    <p><strong>2. Un instrument par couche, et un seul.</strong> Aucun instrument n'apparaît dans deux couches, ni dans le mix de base. C'est ce qui rend une couche <em>identifiable</em> : quand la pluie tombe, on entend arriver un oud, pas « un peu plus de cordes ».</p>
+    <p><strong>3. Très peu de notes.</strong> De 3 événements (les cloches népalaises) à 54 (la pluie) pour 165 s. La médiane est à 16 : une note toutes les dix secondes. Une couche est une couleur ajoutée, pas une voix de plus — et c'est ce qui permet d'en empiler trois sans que le mix s'épaississe.</p>
+  </div>
+
+  <div class="callout">
+    <h3>L'oud est le seul instrument synthétisé du lot</h3>
+    <p>Les quatorze autres sont des enregistrements CC0. Aucune des deux bibliothèques n'a d'oud : côté luths, VCSL n'a que le strumstick et le đàn tranh, et un đàn tranh transposé ne fait pas un oud — il fait un đàn tranh transposé. Il a donc fallu en écrire le modèle.</p>
+    <p>Quatre traits le séparent de la guitare celtique voisine, qui utilise pourtant le même principe de corde pincée : les <strong>chœurs doubles</strong> (chaque note sur deux cordes accordées à 4-9 cents près, d'où un chorus qui n'a rien d'un effet), l'<strong>absence de frettes</strong> (la note arrive par en dessous et rejoint sa hauteur en 40 ms — ce petit portamento se lit comme « oriental » avant même la moindre échelle), la <strong>caisse piriforme</strong> (résonance d'air vers 105 Hz, table vers 240 et 500), et le <strong>risha</strong>, ce plectre de corne à l'attaque nette et bornée à 4,2 kHz.</p>
+  </div>
 </section>
 
 <section>
@@ -414,15 +470,15 @@ footer span{min-width:0;overflow-wrap:anywhere}
 </section>
 
 <section>
-  <div class="sec-head"><span class="sec-num">MATIÈRE</span><h2>Deux modes, un seul compositeur</h2></div>
-  <p class="sec-sub">Le compositeur ne sait rien de la matière sonore : la progression, les stems, le timing et le mastering sont identiques dans les deux cas. Seuls les sons changent — c'est tout l'intérêt d'une palette fermée.</p>
+  <div class="sec-head"><span class="sec-num">MATIÈRE</span><h2>Trois modes, un seul compositeur</h2></div>
+  <p class="sec-sub">Le compositeur ne sait rien de la matière sonore : la progression, les stems, les surcouches, le timing et le mastering sont identiques dans les trois cas. Seuls les sons changent — c'est tout l'intérêt d'une palette fermée. L'attestation ci-dessous dit lequel des trois a produit <em>ce</em> rendu, et nomme les pupitres enregistrés un par un.</p>
 
   <div class="modes">
     <div class="mode">
       <div class="mode-tag">rendu de cette page</div>
-      <h3>Synthétisé</h3>
-      <p>Trente pupitres réellement enregistrés (CC0) plus sept synthétisés, avec traitement ambiant : réverbe longue, délai à réinjection, bruit de salle, pleurage de bande. Aucun octet emprunté, donc distribuable.</p>
-      <p class="cmd mono">synth_palette.py --out audio/music/menu</p>
+      <h3>Hybride</h3>
+      <p>Quarante-et-un pupitres réellement enregistrés (CC0, VSCO-2 CE et VCSL), le reste synthétisé — le couple breton, l'oud, la nappe FM et le sub. Traitement ambiant : réverbe longue, délai à réinjection, bruit de salle, pleurage de bande. Aucun octet emprunté, donc distribuable.</p>
+      <p class="cmd mono">build_sample_bank.py --vsco … --vcsl …<br>synth_palette.py --samples samples/</p>
     </div>
     <div class="mode">
       <div class="mode-tag warm">test local</div>
@@ -459,7 +515,8 @@ __PROVENANCE__
 
 <section>
   <div class="sec-head"><span class="sec-num">SUITE</span><h2>Ce qui branche sur le jeu</h2></div>
-  <p class="sec-sub">Les fichiers sont déjà au bon format et au bon endroit — <code>audio/music/menu/{base,rhythm,melody,climax}.ogg</code>. Le gestionnaire de stems les prend tels quels, sans changement de code Godot. Pour les biomes, la même commande change juste de progression harmonique et de motif.</p>
+  <p class="sec-sub">Les fichiers sont déjà au bon format et au bon endroit — <code>audio/music/menu/{base,rhythm,melody,climax}.ogg</code> pour les stems, <code>layer_*.ogg</code> plus <code>layers.json</code> pour les surcouches. <code>stems_music_manager.gd</code> prend les premiers tels quels ; <code>contextual_layers.gd</code> lit le manifeste et choisit les secondes. Pour les biomes, la même commande change juste de progression harmonique et de motif.</p>
+  <p class="sec-sub" style="margin-top:14px">Les deux découpages sont indépendants et se combinent : la tension pilote les stems, le contexte pilote les surcouches. Rien à synchroniser à la main — tous les fichiers partagent la même boucle, et une couche allumée en cours de route démarre à la position de lecture courante plutôt qu'à zéro.</p>
   <div class="scroller">
     <table>
       <thead><tr><th>Vérification</th><th>Mesure</th><th>Attendu</th></tr></thead>
@@ -495,6 +552,7 @@ const STEMS = [
   {id:"climax", label:"climax", fonts:"chœur · cuivres · trompettes · violons · trémolos · clarinette",                   thr:"tension > 0.6", sub:"l&rsquo;ouverture"}
 ];
 const AUDIO = __AUDIO_JSON__;
+const CTX_DATA = __LAYERS_JSON__;
 
 const stripsEl = document.getElementById("strips");
 const state = {};
@@ -622,6 +680,7 @@ function start(){
     sources[s.id]=src;
   });
   startedAt = t0; playing = true;
+  startActiveLayers();
   icon.innerHTML = ICON_STOP; playLabel.textContent = "Arrêter";
   loopTag.classList.add("on");
 
@@ -638,6 +697,7 @@ function stop(){
     fallbackEl.pause(); fallbackEl.currentTime = 0;
   }else{
     STEMS.forEach(s=>{ try{ sources[s.id].stop(); }catch(e){} });
+    stopLayerSources();
   }
   try{ primerEl.pause(); }catch(e){}
   playing = false;
@@ -755,5 +815,136 @@ fallbackEl.addEventListener("timeupdate", ()=>{
 });
 if(!(window.AudioContext||window.webkitAudioContext)){
   say("Web Audio absent — lecture du mix complet uniquement.", true);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SURCOUCHES CONTEXTUELLES
+   Elles sont décodées PARESSEUSEMENT, à la première activation. Décoder les
+   douze d'avance représenterait 350 Mo de PCM en mémoire, ce qu'un téléphone
+   ne tient pas — alors que la page n'en joue jamais plus de trois à la fois.
+   Le calage se fait au démarrage de la source : on lui donne l'offset dans la
+   boucle plutôt que de la lancer à zéro, sinon la couche jouerait l'harmonie
+   de la mesure 1 par-dessus celle en cours.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const LAYERS = (CTX_DATA && CTX_DATA.layers) ? CTX_DATA.layers : [];
+const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment", situation:"Situation"};
+const layerState = {};      /* id -> {on, buffer, src, gain, pan} */
+
+if(LAYERS.length){
+  document.getElementById("ctx-section").hidden = false;
+  const axesEl = document.getElementById("ctx-axes");
+  const axes = (CTX_DATA.axes)||{};
+  Object.keys(axes).forEach(axis=>{
+    const row = document.createElement("div");
+    row.className = "ctx-axis";
+    row.innerHTML = "<b>"+(AXIS_LABEL[axis]||axis)+"</b>";
+    axes[axis].forEach(value=>{
+      const b = document.createElement("button");
+      b.className = "tog"; b.textContent = value;
+      b.setAttribute("aria-pressed","false");
+      b.addEventListener("click", ()=>{
+        row.querySelectorAll(".tog").forEach(o=>o.setAttribute("aria-pressed","false"));
+        b.setAttribute("aria-pressed","true");
+        resolveContext(axis, value);
+      });
+      row.appendChild(b);
+    });
+    axesEl.appendChild(row);
+  });
+
+  const gridEl = document.getElementById("ctx-grid");
+  LAYERS.forEach(L=>{
+    layerState[L.id] = {on:false, buffer:null, src:null, gain:null, pan:L.pan||0};
+    const b = document.createElement("button");
+    b.className = "lay"; b.dataset.layer = L.id;
+    b.setAttribute("aria-pressed","false");
+    b.innerHTML =
+      '<div class="lay-top"><b>'+L.label+'</b>'+
+        '<span class="lay-axis">'+(AXIS_LABEL[L.axis]||L.axis)+'</span></div>'+
+      '<div class="lay-ins">'+L.instruments.join(" · ")+'</div>'+
+      '<div class="lay-when">si '+L.when.join(" / ")+' &middot; '+L.events+' notes</div>';
+    b.addEventListener("click", ()=>toggleLayer(L.id, !layerState[L.id].on));
+    gridEl.appendChild(b);
+  });
+}
+
+/* Le contexte : une valeur par axe. Toutes les couches de cet axe s'éteignent,
+   celles dont la condition est remplie s'allument. */
+function resolveContext(axis, value){
+  LAYERS.forEach(L=>{
+    if(L.axis !== axis) return;
+    toggleLayer(L.id, L.when.indexOf(value) >= 0);
+  });
+}
+
+async function toggleLayer(id, on){
+  const st = layerState[id];
+  if(!st || st.on === on) return;
+  const btn = document.querySelector('.lay[data-layer="'+id+'"]');
+  st.on = on;
+  if(btn) btn.setAttribute("aria-pressed", String(on));
+
+  if(!on){
+    if(st.gain && ctx) st.gain.gain.setTargetAtTime(0, ctx.currentTime, 1.1);
+    return;
+  }
+  if(fallbackMode || !ctx){
+    say("Les surcouches demandent le mixeur par couche — indisponible en mix simple.", true);
+    st.on = false;
+    if(btn) btn.setAttribute("aria-pressed","false");
+    return;
+  }
+  if(!st.buffer){
+    if(btn) btn.classList.add("busy");
+    try{
+      st.buffer = await new Promise((res,rej)=>{
+        const p = ctx.decodeAudioData(b64ToBytes(AUDIO["L_"+id]), res, rej);
+        if(p && p.then) p.then(res, rej);
+      });
+    }catch(err){
+      say("Couche « "+id+" » non décodée par ce navigateur.", true);
+      st.on = false;
+      if(btn){ btn.classList.remove("busy"); btn.setAttribute("aria-pressed","false"); }
+      return;
+    }
+    if(btn) btn.classList.remove("busy");
+    if(!st.on) return;                       /* éteinte pendant le décodage */
+  }
+  if(!st.gain){
+    st.gain = ctx.createGain(); st.gain.gain.value = 0;
+    if(ctx.createStereoPanner){
+      const p = ctx.createStereoPanner(); p.pan.value = st.pan;
+      st.gain.connect(p); p.connect(master);
+    }else{
+      st.gain.connect(master);               /* Safari ancien : mono au centre */
+    }
+  }
+  if(playing && !st.src) startLayerSource(id);
+  st.gain.gain.setTargetAtTime(1, ctx.currentTime, 1.1);
+}
+
+function startLayerSource(id){
+  const st = layerState[id];
+  if(!st || !st.buffer || !ctx) return;
+  const src = ctx.createBufferSource();
+  src.buffer = st.buffer; src.loop = true;
+  src.connect(st.gain);
+  /* offset dans la boucle : c'est tout le calage */
+  const off = Math.max(0, (ctx.currentTime - startedAt)) % st.buffer.duration;
+  src.start(ctx.currentTime + .05, off);
+  st.src = src;
+}
+
+function stopLayerSources(){
+  Object.keys(layerState).forEach(id=>{
+    const st = layerState[id];
+    if(st.src){ try{ st.src.stop(); }catch(e){} st.src = null; }
+  });
+}
+
+function startActiveLayers(){
+  Object.keys(layerState).forEach(id=>{
+    if(layerState[id].on && layerState[id].buffer) startLayerSource(id);
+  });
 }
 </script>

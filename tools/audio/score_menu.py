@@ -2,7 +2,7 @@
 """
 Partition — « Tri Martolod / Broceliande », theme de menu M.E.R.L.I.N.
 
-40 mesures a 76 BPM (126,3 s), RE DORIEN, forme Intro / A A / Refrain A / Dev / Tutti / Coda.
+40 mesures a 58,07 BPM (165,3 s), RE DORIEN, forme Intro / A A / Refrain A / Dev / Tutti / Coda.
 
 LA MELODIE
 ----------
@@ -22,10 +22,21 @@ deja ecrite. Le theme traditionnel et l'harmonisation froide parlent la meme lan
 
 LA REVISITE
 -----------
-L'air est traite lentement (76 BPM la ou on le danse vers 120), harmonise modalement,
-et pose sur la nappe FM froide et les cloches metalliques de la palette Prime. Le
-developpement l'eloigne vers le majeur avant qu'un LA MAJEUR — seule note etrangere
-au mode de toute la piece — ne ramene le theme en tutti.
+L'air est traite tres lentement (58 BPM la ou on le danse vers 120 — voir plus bas
+pourquoi le chiffre exact est 58,073), harmonise
+modalement, et pose sur les cloches metalliques de la palette Prime. Le developpement
+l'eloigne vers le majeur avant qu'un LA MAJEUR — seule note etrangere au mode de
+toute la piece — ne ramene le theme en tutti.
+
+LE TEMPO
+--------
+La version precedente etait a 76 BPM. A cette allure la piece reste une marche : les
+notes se succedent assez vite pour qu'on entende une suite, pas un etat. Le genre
+ambiant vit dans l'espace ENTRE les notes, et cet espace n'existe qu'a partir du
+moment ou une noire dure plus d'une seconde. A 58 BPM la noire fait 1,034 s, la mesure
+4,14 s, et la boucle passe de 126 a 165 s. L'arc dynamique a ete rabote dans le meme
+mouvement : le sommet du tutti descend de 1,00 a 0,84, parce qu'un fortissimo
+d'orchestre au complet n'est plus un climax quand on a ralenti pour ecouter.
 """
 
 from __future__ import annotations
@@ -34,11 +45,26 @@ from itertools import combinations, permutations
 
 # ═══════════════════════════════════════════════════════════════════════════════
 
-BPM = 76.0
+N_BARS = 40
+
+# LA BOUCLE EST DEFINIE EN ECHANTILLONS, PAS EN SECONDES — et le tempo en decoule.
+#
+# C'est contre-intuitif pour une partition, et c'est pourtant ce qui fait la
+# difference entre un rendu de dix minutes et un rendu de deux heures. Tout le
+# moteur filtre par FFT sur des tableaux de la longueur de la boucle. A 58,000 BPM
+# exactement, cette longueur valait 7 299 299 echantillons, dont la factorisation
+# est 7 x 239 x 4363 : numpy tombe alors sur son chemin lent et une seule FFT
+# coute 3,8 s au lieu de 0,35. Avec une quinzaine de filtrages par stem et
+# seize rendus, la difference se compte en heures.
+#
+# 7 290 000 = 2^4 x 3^6 x 5^4. Tous les facteurs sont petits, la FFT est rapide.
+# Le tempo qui en decoule, 58,073 BPM, est a un quart de pour cent du tempo vise.
+SR = 44100
+LOOP_SAMPLES = 7_290_000
+LOOP_LEN = LOOP_SAMPLES / SR                # 165,306 s
+BPM = N_BARS * 4 * 60.0 / LOOP_LEN          # 58,073
 BEAT = 60.0 / BPM
 BAR = 4 * BEAT
-N_BARS = 40
-LOOP_LEN = N_BARS * BAR                     # 126,32 s
 
 CHORDS = {
     "Dm":  ([2, 5, 9], 50),
@@ -64,16 +90,19 @@ PROGRESSION = [
     "Dm", "C", "Am", "Am",                          # 37-40  coda, retour a la boucle
 ]
 
-DYNAMICS = [.28, .30, .32, .34,                     # intro : presque rien
-            .40, .42, .44, .42,                     # l'air, nu
-            .48, .50, .52, .50,                     # l'air, double
-            .56, .58, .60, .58,                     # refrain
-            .62, .64, .66, .62,                     # l'air harmonise
-            .68, .72, .78, .84,                     # developpement
-            .88, .92, .96, 1.00,                    # ... jusqu'a la dominante
-            1.00, .98, .96, .94,                    # tutti
-            .90, .86, .74, .60,                     # tutti, retrait
-            .48, .40, .33, .28]                     # coda
+# Arc rabote pour la version lente. L'ancien culminait a 1,00 sur six mesures :
+# a 58 BPM ce plateau devenait un mur. Le sommet descend a 0,84 et ne tient que
+# deux mesures, et le bas de l'arc descend aussi — l'intro doit etre presque rien.
+DYNAMICS = [.20, .22, .24, .26,                     # intro : presque rien
+            .32, .34, .36, .34,                     # l'air, nu
+            .40, .42, .44, .42,                     # l'air, double
+            .48, .50, .52, .50,                     # refrain
+            .54, .56, .58, .55,                     # l'air harmonise
+            .58, .62, .66, .70,                     # developpement
+            .74, .78, .81, .84,                     # ... jusqu'a la dominante
+            .84, .82, .79, .76,                     # tutti
+            .72, .68, .58, .48,                     # tutti, retrait
+            .38, .31, .25, .20]                     # coda
 
 assert len(PROGRESSION) == N_BARS and len(DYNAMICS) == N_BARS
 

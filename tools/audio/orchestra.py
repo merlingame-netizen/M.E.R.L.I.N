@@ -56,6 +56,9 @@ GAIN = {
     # nappes
     # le sub porte seul le bas du spectre : VSCO-2 CE n'a pas de contrebasse
     "choir": 1.95, "pad_fm": 0.26, "sub": 1.70,
+    # surcouches contextuelles — seul l'oud est synthetise, les quatorze autres
+    # sont des enregistrements et passent par les gains de la banque
+    "oud": 1.15,
 }
 
 
@@ -777,6 +780,62 @@ def celtic_guitar(freq, dur, vel=0.65, seed=0):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# OUD — la seule piece de lutherie ecrite pour les surcouches
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def oud(freq, dur, vel=0.7, seed=0):
+    """Luth arabe a manche court, SANS FRETTES, cordes doubles jouees au risha.
+
+    Il est synthetise parce qu'aucune des deux bibliotheques libres du projet n'en
+    contient : VCSL n'a, cote luths, que le strumstick et le dan tranh — un
+    dan tranh transpose ne fait pas un oud, il fait un dan tranh transpose. Les
+    quatre traits qui le distinguent de la guitare celtique voisine :
+
+      - CHOEURS DOUBLES : chaque note est jouee sur deux cordes accordees a
+        l'unisson, en pratique a 4-9 cents pres. C'est de la ce chorus naturel
+        qui n'a rien d'un effet.
+      - PAS DE FRETTES : la note se pose et glisse. On amorce donc legerement
+        au-dessous et on rejoint la hauteur en 40 ms — c'est ce petit portamento
+        que l'oreille lit comme "oriental" avant meme la moindre echelle.
+      - CAISSE PIRIFORME : un tres grand volume pour la tessiture. Resonance
+        d'air basse (~105 Hz) et table vers 240 et 500 Hz, d'ou ce grave rond.
+      - RISHA : plectre en corne, attaque nette et courte, franchement plus
+        brillante que le jeu au doigt — mais le corps s'assombrit vite.
+    """
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 907)
+    t = np.arange(n) / SR
+
+    # portamento d'attaque : on arrive par en dessous, comme un doigt qui se pose
+    glide = 1.0 - 0.017 * np.exp(-t / 0.040)
+    out = np.zeros(n)
+    for cents in (-4.5, +4.0):                            # les deux cordes du choeur
+        f = freq * (2.0 ** (cents / 1200.0))
+        ph = 2 * np.pi * np.cumsum(f * glide) / SR + rng.random() * 6.28
+        # partiels : decroissance d'autant plus rapide que le rang est eleve, et
+        # tres peu d'inharmonicite (boyau/nylon, pas acier)
+        for h in range(1, 13):
+            amp = (0.9 / h ** 1.45) * (1.0 + 0.22 * rng.standard_normal())
+            dec = 3.0 + 1.35 * h + 0.010 * freq
+            out += amp * np.sin(ph * h * (1.0 + 6e-5 * h * h)) * np.exp(-t * dec)
+    out *= 0.5
+
+    # risha : le plectre de corne. Bref, brillant, borne — un bruit large bande
+    # non filtre remonterait le centroide a 8 kHz et ferait un claquement de bec.
+    pick_n = min(n, int(0.014 * SR))
+    pick = rng.standard_normal(pick_n) * np.exp(-np.arange(pick_n) / (pick_n * 0.28))
+    pick = bandpass(pick, 900.0, 4200.0)
+    out[:pick_n] += pick * 0.16 * (0.45 + 0.55 * vel)
+
+    out = formants(out, [(105.0, 40.0, 6.5), (240.0, 90.0, 4.0), (500.0, 190.0, 3.0),
+                         (1150.0, 400.0, 1.5)])
+    out = lowpass(out, 2600.0 + 2200.0 * vel)             # le corps s'assombrit vite
+    return out * adsr(n, 0.0015, 0.05, 0.88, min(0.9, dur * 0.4)) * vel * 0.85
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # AMBIANT — ce qui separe une maquette d'un disque
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -930,6 +989,28 @@ STAGE = {
     "trumpet": (0.34, 0.66), "trombone": (0.40, 0.70), "tuba": (0.30, 0.76),
     "bassoon": (0.20, 0.56), "cor_anglais": (-0.08, 0.54), "piccolo": (-0.20, 0.50),
     "celtic_guitar": (-0.44, 0.28), "celesta": (-0.56, 0.40), "tam_tam": (0.10, 0.86), "snare_roll": (-0.40, 0.72),
+    # ── SURCOUCHES ───────────────────────────────────────────────────────────
+    # Elles se placent aux endroits que l'orchestre laisse libres : bien a gauche
+    # ou bien a droite, et plutot loin. Une couche qui arrive au centre et devant
+    # se dispute la place avec le chant, et on l'entend comme une piece rapportee.
+    "oud": (0.46, 0.30), "ocean_drum": (0.0, 0.90),
+    "didgeridoo": (-0.12, 0.72), "slit_drum": (0.58, 0.50),
+    "wine_glasses": (-0.66, 0.66), "psaltery": (0.62, 0.58),
+    "hand_chimes": (0.70, 0.62), "bell_tree": (-0.74, 0.68), "mark_tree": (0.76, 0.70),
+    "ocarina": (-0.30, 0.46), "kalimba": (0.54, 0.42), "mbira": (-0.58, 0.44),
+    "strumstick": (0.50, 0.36), "harmonica": (-0.40, 0.50),
+    "dan_tranh": (0.66, 0.48), "hand_bells": (-0.68, 0.74),
+}
+
+# Repli quand la banque d'echantillons est absente : la couche doit rester
+# audible, meme approximativement, pour qu'on puisse verifier l'ecriture sans
+# avoir telecharge 1,3 Go de bibliotheques.
+LAYER_FALLBACK = {
+    "ocean_drum": "snare_roll", "didgeridoo": "biniou_drone", "slit_drum": "bodhran",
+    "wine_glasses": "choir", "psaltery": "strings_high", "hand_chimes": "celesta_bell",
+    "bell_tree": "glockenspiel", "mark_tree": "glockenspiel", "ocarina": "tin_whistle",
+    "kalimba": "celesta", "mbira": "celesta", "strumstick": "celtic_guitar",
+    "harmonica": "cor_anglais", "dan_tranh": "harp", "hand_bells": "celesta_bell",
 }
 
 

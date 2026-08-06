@@ -43,7 +43,11 @@ import wave
 import numpy as np
 
 SR = 44100
-NOTE_RE = re.compile(r"[_\-]([A-Ga-g])([#b]?)(-?\d)(?=[_\-.])")
+# La note peut etre precedee d'un separateur (`sus_A#3_r01.wav`) ou ouvrir carrement
+# le nom de fichier — c'est le cas du dan tranh, dont les fichiers s'appellent
+# `B1_mf_1.wav`. Sans l'ancre de debut, 48 echantillons etaient silencieusement
+# ignores et l'instrument n'apparaissait pas dans la banque.
+NOTE_RE = re.compile(r"(?:^|[_\-])([A-Ga-g])([#b]?)(-?\d)(?=[_\-.])")
 PITCH = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 
 # instrument du moteur -> (sous-chemin de la source, filtre de nom, tenu ?)
@@ -80,18 +84,47 @@ SOURCES = {
         "timpani":         ("Membranophones/Struck Membranophones/Timpani 1/Hit", None, False),
         "taiko":           ("Membranophones/Struck Membranophones/Frame Drum", "Hit_", False),
         "bodhran":         ("Membranophones/Struck Membranophones/Frame Drum", "Muted", False),
+        # ── SURCOUCHES CONTEXTUELLES ─────────────────────────────────────────
+        # Ces pupitres ne jouent jamais dans le mix de base. Ils n'existent que
+        # dans les couches activees par la meteo, la saison ou le moment. Voir
+        # layers_menu.py.
+        "dan_tranh":       ("Chordophones/Zithers/Dan Tranh/Normal", "_mf_", False),
+        "psaltery":        ("Chordophones/Zithers/Psaltery, Bowed and Plucked/LongBow", None, True),
+        # les trois cordes du strumstick, sinon on n'obtient que re2-sol2
+        "strumstick":      ("Chordophones/Composite Chordophones/Strumstick/Finger", None, False),
+        "kalimba":         ("Idiophones/Plucked Idiophones/Kalimba, Tanzania", None, False),
+        "mbira":           ("Idiophones/Plucked Idiophones/"
+                            "Mbira dzaVadzimu Nyamaropa, Zimbabwe, Low B", None, False),
+        "hand_chimes":     ("Idiophones/Struck Idiophones/Hand Chimes", None, False),
+        "bell_tree":       ("Idiophones/Struck Idiophones/Bell Tree/Individual", None, False),
+        "wine_glasses":    ("Idiophones/Friction Idiophones/Wine Glasses/Sustains", "Slow", True),
+        "ocarina":         ("Aerophones/Edge-blown Aerophones/Ocarina, Typical/Sustains", None, True),
+        "harmonica":       ("Aerophones/Free Aerophones/Harmonica-Hohner-Super64/Sustains/Normal",
+                            None, True),
     },
 }
 # instruments sans hauteur : un seul echantillon suffit
 # Ces enregistrements ne portent pas de note dans leur nom : ils sont montes sur
 # une hauteur de reference et transposes par le moteur.
+# (bibliotheque, sous-chemin, filtre, note de reference, tenu ?)
 UNPITCHED_SRC = {
-    "cymbal":     ("vcsl", "Idiophones/Struck Idiophones/Suspended Cymbal 1", "cresc", 60),
-    "tam_tam":    ("vcsl", "Idiophones/Struck Idiophones/Gong 1", None, 60),
-    "timpani":    ("vcsl", "Membranophones/Struck Membranophones/Timpani 1/Hit", "v2", 41),
-    "taiko":      ("vcsl", "Membranophones/Struck Membranophones/Frame Drum", "HDrumL_Hit_", 45),
-    "bodhran":    ("vcsl", "Membranophones/Struck Membranophones/Frame Drum", "HDrumS_Hit_", 50),
-    "snare_roll": ("vcsl", "Idiophones/Struck Idiophones/Suspended Cymbal 1", "bow", 60),
+    "cymbal":     ("vcsl", "Idiophones/Struck Idiophones/Suspended Cymbal 1", "cresc", 60, False),
+    "tam_tam":    ("vcsl", "Idiophones/Struck Idiophones/Gong 1", None, 60, False),
+    "timpani":    ("vcsl", "Membranophones/Struck Membranophones/Timpani 1/Hit", "v2", 41, False),
+    "taiko":      ("vcsl", "Membranophones/Struck Membranophones/Frame Drum",
+                   "HDrumL_Hit_", 45, False),
+    "bodhran":    ("vcsl", "Membranophones/Struck Membranophones/Frame Drum",
+                   "HDrumS_Hit_", 50, False),
+    "snare_roll": ("vcsl", "Idiophones/Struck Idiophones/Suspended Cymbal 1", "bow", 60, False),
+    # ── SURCOUCHES ───────────────────────────────────────────────────────────
+    # Le tambour ocean est un cercle de billes sur une peau : c'est litteralement
+    # un instrument a bruit de pluie. Il est TENU, sinon il s'arrete au bout de
+    # trois secondes au milieu de l'averse.
+    "ocean_drum": ("vcsl", "Membranophones/Other Membranophones/Ocean Drum", "Sus", 60, True),
+    "didgeridoo": ("vcsl", "Aerophones/Lip Aerophones/Didgeridoo", "Sus", 38, True),
+    "slit_drum":  ("vcsl", "Idiophones/Struck Idiophones/Slit Drum", "LogDrumHi", 55, False),
+    "hand_bells": ("vcsl", "Idiophones/Struck Idiophones/Hand Bells, Nepalese", None, 67, False),
+    "mark_tree":  ("vcsl", "Idiophones/Struck Idiophones/Mark Trees", "asc", 84, False),
 }
 
 
@@ -105,7 +138,8 @@ def parse_note(name: str) -> int | None:
 
 
 def parse_velocity(name: str) -> int:
-    m = re.search(r"[_\-]v(\d)", name, re.I)
+    # `_v2_` chez VSCO-2, `_vl2_` chez VCSL (strumstick)
+    m = re.search(r"[_\-]vl?(\d)", name, re.I)
     return int(m.group(1)) if m else 2
 
 
@@ -248,12 +282,14 @@ def build(vsco: str | None, vcsl: str | None, out_dir: str, verbose: bool = True
                 })
                 per_inst[inst] = per_inst.get(inst, 0) + 1
 
-    for inst, (lib, sub, filt, ref_note) in UNPITCHED_SRC.items():
+    for inst, (lib, sub, filt, ref_note, looped) in UNPITCHED_SRC.items():
         root = roots.get(lib)
         if not root:
             continue
         files = collect(root, sub, filt)
         if not files:
+            if verbose:
+                print(f"  ! {inst}: rien trouve dans {sub}", file=sys.stderr)
             continue
         src = max(files, key=os.path.getsize)
         try:
@@ -264,11 +300,14 @@ def build(vsco: str | None, vcsl: str | None, out_dir: str, verbose: bool = True
         peak = float(np.abs(x).max())
         if peak > 0:
             x = x / peak * 0.85
+        ls, ll = find_loop(x, rate) if looped else (0, 0)
+        if ll:
+            x = crossfade_loop(x, ls, ll, rate=rate)
         rel = f"{inst}/{inst}_{ref_note:03d}.wav"
         write_wav(os.path.join(out_dir, rel), x, rate)
         samples.append({"file": rel, "instrument": inst, "group": lib, "base_note": ref_note,
-                        "sample_rate": rate, "num_samples": len(x), "looped": False,
-                        "loop_start": 0, "loop_length": 0,
+                        "sample_rate": rate, "num_samples": len(x), "looped": bool(ll),
+                        "loop_start": int(ls), "loop_length": int(ll),
                         "duration_s": round(len(x) / rate, 4), "format": 1,
                         "source_file": os.path.relpath(src, root)})
         per_inst[inst] = per_inst.get(inst, 0) + 1
@@ -289,6 +328,14 @@ def build(vsco: str | None, vcsl: str | None, out_dir: str, verbose: bool = True
         "glockenspiel": -14.0, "celesta": -14.0, "celesta_bell": -15.0,
         "timpani": -13.5, "taiko": -14.0, "bodhran": -14.0,
         "cymbal": -16.0, "tam_tam": -15.0, "snare_roll": -17.0,
+        # Surcouches : 3 a 5 dB sous les pupitres du mix de base. Une couche est
+        # une COULEUR ajoutee, pas une voix supplementaire — si on l'entend comme
+        # un instrument de plus, elle est trop forte.
+        "dan_tranh": -18.0, "psaltery": -18.5, "strumstick": -18.0,
+        "kalimba": -18.0, "mbira": -18.5, "hand_chimes": -18.5, "bell_tree": -19.0,
+        "wine_glasses": -19.0, "ocarina": -15.0, "harmonica": -17.0,
+        "ocean_drum": -21.0, "didgeridoo": -17.0, "slit_drum": -18.0,
+        "hand_bells": -18.5, "mark_tree": -20.0,
     }
     gains: dict[str, float] = {}
     for inst in per_inst:

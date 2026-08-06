@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Orchestration — repartit Tri Martolod sur 34 pupitres et 4 stems.
+Orchestration — repartit Tri Martolod sur 37 pupitres et 4 stems.
 
 PLAN DE L'ARRANGEMENT
 
@@ -19,6 +19,17 @@ PLAN DE L'ARRANGEMENT
   29-36  Tutti          tout : bois a l'unisson (flute, piccolo, hautbois,
                         bombarde), cuivres au complet, glockenspiel, percussions.
   37-40  Coda           tout se retire. Celesta, cloches, bourdon. On boucle.
+
+DEGARNIR — pourquoi il y a moins de notes qu'avant
+--------------------------------------------------
+Ralentir sans degarnir ne donne pas de l'ambiant, ca donne le meme morceau en
+plus lourd : les memes notes, plus longues, se recouvrent davantage et la texture
+s'epaissit au lieu de s'aerer. Chaque figure d'accompagnement a donc ete reduite
+en meme temps que le tempo — arpege de harpe 7 notes -> 5, motif de guitare
+5 notes -> 3, bodhran 4 frappes/mesure -> 2, glockenspiel et celesta 3 -> 2.
+La nappe FM, elle, ne joue plus que dans l'intro et la coda : c'est l'element le
+plus ouvertement synthetique de la palette, et il n'a rien a faire sous des
+pupitres enregistres.
 
 Stems, conformes a stems_music_manager.gd :
   base    cordes graves, altos, cors, trombone, tuba, basson, nappes, bourdon
@@ -87,8 +98,12 @@ def build_events() -> list[dict]:
 
         ev.append(_ev("sub", "base", bass - 12, t0, span + 1.0, 0.26 + 0.20 * d, b0))
         ev.append(_ev("contrabass", "base", bass - 12, t0, span + 0.8, 0.28 + 0.44 * d, b0 * 3))
+        # La nappe FM : intro et coda seulement. Ailleurs, ce sont des pupitres
+        # enregistres qui tiennent l'harmonie — y superposer une nappe de synthese
+        # etait exactement ce qui rendait le tout synthetique.
+        if b0 <= 4 or b0 >= 37:
+            ev.append(_ev("pad_fm", "base", upper[0] + 12, t0, span + 1.4, 0.20 + 0.16 * d, b0))
         if not breton:
-            ev.append(_ev("pad_fm", "base", upper[0] + 12, t0, span + 1.4, 0.22 + 0.18 * d, b0))
             ev.append(_ev("strings_low", "base", bass, t0, span + 0.7, 0.24 + 0.44 * d, b0))
         if b0 >= 9 and not breton:
             ev.append(_ev("viola", "base", upper[0], t0, span + 0.7, 0.24 + 0.44 * d, b0 * 5))
@@ -143,19 +158,21 @@ def build_events() -> list[dict]:
     for (b0, _b1, name) in groups:
         pcs, _ = CHORDS[name]
         d = dyn(b0)
+        # cinq notes, egrenees deux fois plus lentement : a 58 BPM un arpege
+        # roule de sept notes serrees redevient un accord plaque
         for k, m in enumerate(sorted({o * 12 + pc for pc in pcs for o in (4, 5, 6)
-                                      if 55 <= o * 12 + pc <= 86})[:7]):
-            ev.append(_ev("harp", "melody", m, t_of(b0, 1.0) + k * 0.062, 2.6,
+                                      if 55 <= o * 12 + pc <= 86})[:5]):
+            ev.append(_ev("harp", "melody", m, t_of(b0, 1.0) + k * 0.135, 3.6,
                           0.26 + 0.42 * d, b0 * 67 + k))
     for bar in list(range(1, 5)) + list(range(9, 13)) + list(range(17, 29)) + list(range(37, 41)):
         pcs, _ = CHORDS[PROGRESSION[bar - 1]]
         d = dyn(bar)
         tones = sorted({o * 12 + pc for pc in pcs for o in (4, 5) if 60 <= o * 12 + pc <= 79})
-        # deux notes par mesure au lieu de quatre : le genre ambiant se joue dans
-        # l'espace entre les notes, pas dans leur nombre
-        for j, beat in enumerate((2.5, 4.5)):
-            ev.append(_ev("harp", "melody", tones[(j * 3) % len(tones)], t_of(bar, beat),
-                          2.4, 0.12 + 0.20 * d, bar * 71 + j))
+        # une seule note par mesure, sur le contretemps : le genre ambiant se joue
+        # dans l'espace entre les notes, pas dans leur nombre
+        beat = 2.5 if bar % 2 else 4.5
+        ev.append(_ev("harp", "melody", tones[(bar * 3) % len(tones)], t_of(bar, beat),
+                      3.2, 0.12 + 0.20 * d, bar * 71))
 
     # ── GUITARE CELTIQUE — arpeges au doigt, accordage DADGAD ────────────────
     # Elle joue peu de notes mais elles sonnent longtemps : c'est le liant du
@@ -164,13 +181,15 @@ def build_events() -> list[dict]:
         pcs, _ = CHORDS[PROGRESSION[bar - 1]]
         d = dyn(bar)
         tones = sorted({o * 12 + pc for pc in pcs for o in (3, 4, 5) if 50 <= o * 12 + pc <= 76})
-        pattern = ((1.0, 0), (2.0, 2), (2.75, 4), (3.5, 1), (4.25, 3))
+        # trois notes au lieu de cinq, tenues 5 s : elles se recouvrent d'une
+        # mesure sur l'autre et forment une nappe de cordes pincees
+        pattern = ((1.0, 0), (2.5, 2), (4.0, 4))
         for j, (beat, idx) in enumerate(pattern):
             ev.append(_ev("celtic_guitar", "melody", tones[idx % len(tones)],
-                          t_of(bar, beat), 3.4, 0.24 + 0.34 * d, bar * 131 + j))
+                          t_of(bar, beat), 5.0, 0.24 + 0.34 * d, bar * 131 + j))
         if bar % 4 == 1:                                   # basse a vide sur l'appui
             ev.append(_ev("celtic_guitar", "melody", tones[0] - 12, t_of(bar, 1.0),
-                          4.2, 0.28 + 0.32 * d, bar * 137))
+                          6.0, 0.28 + 0.32 * d, bar * 137))
 
     # ── CLOCHES ET CELESTA — les extremites froides ──────────────────────────
     for bar in list(range(1, 9)) + list(range(37, 41)):
@@ -182,14 +201,14 @@ def build_events() -> list[dict]:
     for bar in list(range(1, 5)) + list(range(37, 41)):
         pcs, _ = CHORDS[PROGRESSION[bar - 1]]
         d = dyn(bar)
-        for j, beat in enumerate((2.0, 3.5, 4.5)):
+        for j, beat in enumerate((2.0, 4.0)):
             ev.append(_ev("celesta", "melody", 79 + pcs[(j + bar) % len(pcs)] % 12,
-                          t_of(bar, beat), 2.2, 0.20 + 0.30 * d, bar * 79 + j))
+                          t_of(bar, beat), 3.0, 0.20 + 0.30 * d, bar * 79 + j))
     for bar in range(29, 37):
         pcs, _ = CHORDS[PROGRESSION[bar - 1]]
-        for j, beat in enumerate((1.0, 2.5, 4.0)):
+        for j, beat in enumerate((1.0, 3.5)):
             ev.append(_ev("glockenspiel", "melody", 84 + pcs[(j + bar) % len(pcs)] % 12,
-                          t_of(bar, beat), 1.8, 0.26 + 0.38 * dyn(bar), bar * 83 + j))
+                          t_of(bar, beat), 2.6, 0.26 + 0.38 * dyn(bar), bar * 83 + j))
 
     # ── PERCUSSIONS ──────────────────────────────────────────────────────────
     for bar in range(1, N_BARS + 1):
@@ -199,27 +218,28 @@ def build_events() -> list[dict]:
         if (bar % 4 == 1 and bar >= 17) or bar in (28, 29):
             ev.append(_ev("timpani", "rhythm", root - 24, t_of(bar, 1.0), 3.0,
                           0.28 + 0.56 * d, bar * 89))
-        if bar in (27, 28):
-            for j in range(8):
-                ev.append(_ev("timpani", "rhythm", root - 24, t_of(bar, 1.0) + j * BEAT / 2,
-                              0.7, 0.12 + 0.30 * d * (j + 3) / 10, bar * 97 + j))
+        if bar == 28:
+            for j in range(4):
+                ev.append(_ev("timpani", "rhythm", root - 24, t_of(bar, 1.0) + j * BEAT,
+                              1.2, 0.12 + 0.30 * d * (j + 4) / 8, bar * 97 + j))
         # bodhran : la pulsation celtique. Seul avec le couple breton, puis partout.
+        # Deux frappes par mesure : a 58 BPM la mesure dure 4,1 s, quatre frappes
+        # y installent un tempo de marche dont on cherche precisement a sortir.
         if breton or bar >= 21:
-            for beat, g in ((1.0, 1.0), (2.5, 0.5), (3.0, 0.7), (4.5, 0.45)):
-                ev.append(_ev("bodhran", "rhythm", 45, t_of(bar, beat), 1.1,
+            for beat, g in ((1.0, 1.0), (3.0, 0.6)):
+                ev.append(_ev("bodhran", "rhythm", 45, t_of(bar, beat), 1.5,
                               g * (0.26 + 0.44 * d), bar * 101 + int(beat * 2)))
-        if bar >= 17 and not breton:
-            ev.append(_ev("taiko", "rhythm", 40, t_of(bar, 1.0), 1.7, 0.26 + 0.48 * d, bar * 103))
-            ev.append(_ev("taiko", "rhythm", 47, t_of(bar, 3.5), 1.0, 0.16 + 0.34 * d, bar * 107))
+        if bar >= 17 and not breton and bar % 2 == 1:
+            ev.append(_ev("taiko", "rhythm", 40, t_of(bar, 1.0), 2.2, 0.26 + 0.48 * d, bar * 103))
         if 17 <= bar <= 20:                                # pizzicati
             pcs2, _ = CHORDS[PROGRESSION[bar - 1]]
             tones = sorted({o * 12 + pc for pc in pcs2 for o in (3, 4) if 45 <= o * 12 + pc <= 64})
-            for j, beat in enumerate((1.0, 2.0, 3.0, 4.0)):
+            for j, beat in enumerate((1.0, 3.0)):
                 ev.append(_ev("pizzicato", "rhythm", tones[j % len(tones)], t_of(bar, beat),
-                              1.1, 0.22 + 0.36 * d, bar * 109 + j))
-        if bar in (26, 27, 28):                            # caisse claire : la montee
+                              1.5, 0.22 + 0.36 * d, bar * 109 + j))
+        if bar in (27, 28):                                # caisse claire : la montee
             ev.append(_ev("snare_roll", "rhythm", 0, t_of(bar, 1.0), BAR * 0.98,
-                          0.18 + 0.42 * ((bar - 25) / 3.0), bar * 113, humanize=False))
+                          0.16 + 0.34 * ((bar - 26) / 2.0), bar * 113, humanize=False))
     for bar, gain in ((12, 0.4), (20, 0.55), (28, 1.0), (36, 0.5)):
         ev.append(_ev("cymbal", "rhythm", 0, t_of(bar, 1.0), BAR * 0.98,
                       0.28 + 0.50 * gain, bar * 127, humanize=False))

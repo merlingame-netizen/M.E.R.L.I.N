@@ -28,7 +28,10 @@ TESTS = [("strings_low", 50, 4.0), ("strings_mid", 62, 4.0), ("strings_high", 69
          ("harp", 67, 2.5), ("glockenspiel", 88, 1.8), ("celesta_bell", 76, 3.0),
          ("celesta", 79, 2.5),
          ("timpani", 26, 3.0), ("taiko", 40, 1.7), ("bodhran", 45, 1.2),
-         ("choir", 67, 4.0), ("pad_fm", 74, 4.0), ("sub", 38, 4.0)]
+         ("choir", 67, 4.0), ("pad_fm", 74, 4.0), ("sub", 38, 4.0),
+         # surcouches : seul l'oud est synthetise, les autres sont enregistres
+         # et leur equilibre se regle dans build_sample_bank.TARGET
+         ("oud", 57, 2.5)]
 F = {n: getattr(orc, n) for n, _, _ in TESTS}
 NO_PITCH = {"cymbal": (orc.cymbal_swell, 3.0), "tam_tam": (orc.tam_tam, 4.0),
             "snare_roll": (orc.snare_roll, 2.0)}

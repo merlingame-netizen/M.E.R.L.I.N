@@ -203,13 +203,17 @@ La chaîne décrite plus haut est **déjà appliquée** pour le menu principal, 
 |---|---|
 | Extracteur MusyX (ISO → PAK → AGSC → WAV) | `tools/audio/musyx_extract.py` |
 | Lecteur d'échantillons (transposition, boucle, enveloppes) | `tools/audio/sample_bank.py` |
-| **Lutherie** — 37 modèles d'instruments | `tools/audio/orchestra.py` |
+| **Lutherie** — 38 modèles d'instruments (dont l'oud) | `tools/audio/orchestra.py` |
 | **Vérification du point de boucle** | `tools/audio/loop_check.py` |
-| **Partition** — 32 mesures, conduite des voix, arc dynamique | `tools/audio/score_menu.py` |
+| **Partition** — 40 mesures, conduite des voix, arc dynamique | `tools/audio/score_menu.py` |
 | **Orchestration** — répartition pupitres/stems | `tools/audio/arrange_menu.py` |
+| **Surcouches contextuelles** — 12 couches météo/saison/moment | `tools/audio/layers_menu.py` |
+| Construction de la banque multi-échantillons (CC0) | `tools/audio/build_sample_bank.py` |
 | Rendu, salle, mastering, attestation | `tools/audio/synth_palette.py` |
 | Contrôle d'équilibre du pupitre | `tools/audio/balance_check.py` |
 | Thème de menu + 4 stems | `audio/music/menu/{menu_theme,base,rhythm,melody,climax}.ogg` |
+| 12 surcouches + leur manifeste | `audio/music/menu/layer_*.ogg` + `layers.json` |
+| Sélection des couches côté jeu | `scripts/audio/contextual_layers.gd` |
 | Page de présentation jouable | `tools/audio/build_web_page.py` + `page_template.html` |
 
 ### 6.1 — Deux modes de rendu
@@ -291,7 +295,8 @@ elle ne peut pas afficher une provenance qu'elle n'a pas.
 > attestation vide.
 
 **Le morceau** : **Tri Martolod**, air traditionnel breton, arrangement original.
-Ré dorien, 76 BPM, 40 mesures, boucle de 126,316 s. **37 pupitres**, 1669 événements.
+Ré dorien, **58,07 BPM**, 40 mesures, boucle de 165,306 s. **37 pupitres**, 1367 événements,
+plus **12 surcouches contextuelles** sur 16 instruments dédiés (§6.5).
 
 ### 6.1 bis — L'air et sa provenance
 
@@ -479,6 +484,142 @@ Quatre choses le distinguent d'un empilement de nappes :
 > **Second piège** : deux réponses impulsionnelles de bruit indépendantes donnent une
 > réverbe très large mais qui **s'annule en mono** (corrélation ≈ 0). D'où `stereo_ir()`,
 > qui garde un tronc commun majoritaire.
+
+---
+
+## 6.5 — Surcouches contextuelles
+
+Deuxième découpage de la musique, **orthogonal aux stems**.
+
+| | Découpe par | Empilement | Fichier moteur | Script Godot |
+|---|---|---|---|---|
+| **Stems** | intensité | seuil de tension 0,2 / 0,4 / 0,6 | `arrange_menu.py` | `stems_music_manager.gd` |
+| **Surcouches** | situation | condition sur un axe de contexte | `layers_menu.py` | `contextual_layers.gd` |
+
+Quatre axes, douze couches. Chaque couche est un `.ogg` calé sur la même boucle et la
+même harmonie que le mix, allumé ou éteint sans toucher au reste.
+
+| Couche | Axe | Condition | Instruments |
+|---|---|---|---|
+| `pluie` | météo | pluie, orage | **oud** + tambour océan |
+| `orage` | météo | orage | didgeridoo + tambour à fente |
+| `brume` | météo | brume, couvert | verres frottés |
+| `neige` | météo | neige | clochettes à main + arbre à cloches |
+| `clair` | météo | clair | arbre à clochettes |
+| `printemps` | saison | printemps | kalimba |
+| `ete` | saison | été | mbira + strumstick |
+| `automne` | saison | automne | harmonica |
+| `hiver` | saison | hiver | psaltérion à l'archet |
+| `aube` | moment | aube | ocarina |
+| `nuit` | moment | nuit | đàn tranh |
+| `sacre` | situation | sacré | cloches népalaises |
+
+### Les trois règles
+
+1. **Tout sort de la grille.** Aucune couche n'a de notes écrites en dur : chacune lit
+   `CHORDS[PROGRESSION[mesure]]` et n'y prend que des notes de l'accord en cours.
+   N'importe quelle combinaison des douze reste consonante — il n'y a pas de paire
+   interdite à tester.
+2. **Un instrument par couche, et un seul.** Aucun instrument n'apparaît dans deux
+   couches ni dans le mix de base. C'est ce qui rend une couche *identifiable* : quand la
+   pluie tombe, on entend arriver un oud, pas « un peu plus de cordes ».
+   `layers_menu.py` signale toute collision au lancement.
+3. **Très peu de notes.** De 3 événements (`sacre`) à 54 (`pluie`) pour 165 s, médiane 16.
+   Une couche est une couleur ajoutée, pas une voix de plus.
+
+### L'oud
+
+Le seul instrument **synthétisé** du lot ; les quatorze autres sont des enregistrements
+CC0. Aucune des deux bibliothèques n'a d'oud — côté luths, VCSL n'a que le strumstick et
+le đàn tranh, et un đàn tranh transposé ne fait pas un oud. Modèle : `orchestra.oud()`.
+Chœurs doubles (2 cordes à 4-9 cents), portamento d'attaque de 40 ms (il n'a pas de
+frettes), caisse piriforme (formants 105 / 240 / 500 / 1150 Hz), attaque au risha bornée
+à 4,2 kHz.
+
+### Synchronisation
+
+Une couche activée en cours de lecture ne doit **pas** démarrer à zéro : elle jouerait
+l'harmonie de la mesure 1 par-dessus celle en cours. Elle démarre à la position de
+lecture de l'horloge de référence — `player.play(clock.get_playback_position())` côté
+Godot, `src.start(now, offset)` côté page web.
+
+### Niveau
+
+Chaque couche conserve sa RMS **relative au mix**, comme les stems. Une couche normalisée
+comme un mix arriverait au niveau de l'orchestre entier : c'est exactement ce qui fait
+entendre « un instrument collé par-dessus » au lieu d'une couleur. Un gain de bus commun
+(`LAYER_BUS`) les remonte, sans quoi elles ressortaient 30 dB sous le mix — audibles au
+casque, inexistantes sur un haut-parleur de téléphone.
+
+```bash
+python3 tools/audio/layers_menu.py     # inventaire + contrôle de collision
+python3 tools/audio/synth_palette.py --samples samples/ --out audio/music/menu
+python3 tools/audio/synth_palette.py --no-layers --out /tmp/essai        # sans couches
+python3 tools/audio/synth_palette.py --samples samples/ --only-layers orage,nuit
+```
+
+### Refaire une seule couche
+
+Un rendu complet coûte ~3 h (4 stems + 12 couches). Corriger une seule couche ne
+justifie pas ce prix, d'où `--only-layers` : ~7 min pour une couche, stems intacts.
+
+Deux choses le rendent sûr plutôt que pratique :
+
+1. **Le niveau reste celui d'un rendu complet.** `layers.json` consigne les deux
+   niveaux de référence du mix (`mix_reference`), et le recalage n'en dépend que par
+   leur *rapport* — la couche refaite ressort donc exactement où elle serait sortie.
+   Sur un `layers.json` antérieur à cette option, le rapport est remesuré sur
+   `menu_theme.ogg` ; l'écrêteur ayant raboté les crêtes un peu plus que la RMS, la
+   couche sort alors une fraction de dB en dessous. C'est dit à l'écran.
+2. **L'attestation suit.** Les SHA-256 des fichiers réécrits sont réactualisés dans
+   `provenance.json` **et** dans `PROVENANCE.md`, et un bloc « rendu partiel » est
+   ajouté. Sans ça l'attestation continuerait d'annoncer l'empreinte de la version
+   précédente — une attestation fausse, c'est-à-dire exactement ce qu'elle existe
+   pour empêcher.
+
+C'est ce chemin qui a servi à corriger `orage` : ses cinq bourdons de didgeridoo
+duraient 38 s chacun, si bien que celui de la mesure 33 débordait de 5 s et que le
+repli de queue posait sa fin par-dessus l'attaque du premier. Sur un bourdon à 38 Hz
+les écarts entre échantillons voisins sont minuscules, donc ce ressaut de niveau
+sortait du lot (0,0041 contre 0,0037 de pente locale) — seule des dix-sept pistes à
+échouer au test de boucle. Le dernier bourdon s'arrête maintenant au point de boucle :
+0,0020 contre 0,0040.
+
+```gdscript
+var layers := ContextualLayers.new()
+add_child(layers)
+layers.setup()
+layers.attach_clock(theme_player)
+layers.set_context({"meteo": "pluie", "saison": "automne", "moment": "nuit"})
+```
+
+`MAX_ACTIVE = 3` : au-delà de trois couches simultanées, on n'entend plus une couleur de
+contexte mais un second orchestre. Les axes sont résolus dans l'ordre
+`situation > météo > moment > saison` et le surplus est ignoré.
+
+---
+
+### 6.6 — La boucle est définie en échantillons, pas en secondes
+
+Contre-intuitif pour une partition, et pourtant décisif. Tout le moteur filtre par FFT
+sur des tableaux de la longueur de la boucle. À 58,000 BPM exactement, cette longueur
+valait **7 299 299** échantillons — factorisation `7 × 239 × 4363`. NumPy tombe alors sur
+son chemin lent : une seule FFT coûte **3,8 s** au lieu de 0,35. Avec une quinzaine de
+filtrages par stem et seize rendus (4 stems + 12 surcouches), la différence se compte en
+heures — le premier rendu à ce tempo n'avait pas fini le premier stem au bout de vingt
+minutes.
+
+| | Échantillons | Facteurs | Une FFT |
+|---|---|---|---|
+| Boucle à 58,000 BPM | 7 299 299 | `7 × 239 × 4363` | **3,8 s** |
+| Boucle retenue | 7 290 000 | `2⁴ × 3⁶ × 5⁴` | 0,35 s |
+| Rendu + queue | 8 100 000 | `2⁵ × 3⁴ × 5⁵` | 0,41 s |
+
+`score_menu.py` fixe donc `LOOP_SAMPLES` et **en déduit le tempo** (58,073 BPM, à un quart
+de pour cent du tempo visé), et `synth_palette.py` fixe `TOTAL_SAMPLES` et en déduit la
+marge de queue (18,37 s). Corollaire à ne pas perdre : `finish()` doit replier la queue à
+`LOOP_SAMPLES` exactement, jamais à `int(LOOP_LEN * SR)` — un arrondi d'un échantillon
+décale la boucle.
 
 ---
 

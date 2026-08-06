@@ -303,6 +303,15 @@ class MultiSampleBank:
         "glockenspiel": "struck", "celesta": "struck", "celesta_bell": "struck",
         "timpani": "struck", "taiko": "struck", "bodhran": "struck",
         "cymbal": "struck", "tam_tam": "struck", "snare_roll": "struck",
+        # Surcouches. Sans ces entrees tout tombait sur "sustained", dont l'attaque
+        # de 60 ms et le filtrage a la velocite emoussaient des instruments dont
+        # l'attaque EST le son : une kalimba avec 60 ms de fondu n'est plus une
+        # kalimba, c'est une boite a musique.
+        "kalimba": "plucked", "mbira": "plucked", "dan_tranh": "plucked",
+        "strumstick": "plucked", "hand_chimes": "struck", "bell_tree": "struck",
+        "mark_tree": "struck", "hand_bells": "struck", "slit_drum": "struck",
+        # ocean_drum, didgeridoo, wine_glasses, psaltery, ocarina, harmonica
+        # restent "sustained" : ils le sont vraiment.
     }
 
     def __init__(self, path: str, verbose: bool = True):
