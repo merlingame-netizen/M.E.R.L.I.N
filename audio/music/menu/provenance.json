@@ -1,42 +1,21 @@
 {
-  "tool": "synth_palette.py 3.0.0",
-  "rendered_at": "2026-08-06T11:11:54Z",
+  "tool": "synth_palette.py 4.0.0",
+  "rendered_at": "2026-08-06T12:32:13Z",
   "composition": {
     "key": "D dorian",
-    "bpm": 58.074074074074076,
+    "bpm": 49.0,
     "bars": 40,
-    "loop_seconds": 165.306,
+    "loop_seconds": 195.918,
     "sample_rate": 44100,
-    "form": "A A' B A''",
-    "instruments": 37,
-    "note_events": 1367,
-    "contextual_layers": 12,
-    "context_axes": {
-      "meteo": [
-        "clair",
-        "couvert",
-        "pluie",
-        "orage",
-        "brume",
-        "neige"
-      ],
-      "saison": [
-        "printemps",
-        "ete",
-        "automne",
-        "hiver"
-      ],
-      "moment": [
-        "aube",
-        "jour",
-        "crepuscule",
-        "nuit"
-      ],
-      "situation": [
-        "neutre",
-        "sacre"
-      ]
-    }
+    "form": "ouverture / air nu / air orne / refrain / harmonise / developpement / plein / coda",
+    "instruments": 21,
+    "note_events": 1045,
+    "roles": [
+      "chant",
+      "corde",
+      "halo"
+    ],
+    "casting_parts": 12
   },
   "mode": "hybrid",
   "sound_source": {
@@ -58,131 +37,107 @@
     ],
     "recorded_instruments": [
       "bassoon",
-      "bell_tree",
       "bodhran",
-      "brass_ff",
       "celesta",
       "celesta_bell",
       "celtic_guitar",
       "clarinet",
       "contrabass",
       "cor_anglais",
-      "cymbal",
       "dan_tranh",
-      "didgeridoo",
       "flute",
       "glockenspiel",
-      "hand_bells",
       "hand_chimes",
       "harmonica",
       "harp",
       "horn",
       "kalimba",
-      "mark_tree",
-      "mbira",
       "oboe",
       "ocarina",
-      "ocean_drum",
       "piccolo",
       "pizzicato",
       "psaltery",
-      "slit_drum",
-      "snare_roll",
       "strings_high",
       "strings_low",
       "strings_mid",
       "strings_tremolo",
-      "strumstick",
-      "taiko",
-      "tam_tam",
       "timpani",
-      "trombone",
-      "trumpet",
-      "tuba",
       "viola",
       "violin_solo",
       "wine_glasses"
     ],
     "synthesized_instruments": [
-      "biniou",
-      "biniou_drone",
-      "bombarde",
-      "choir",
-      "oud",
-      "pad_fm",
-      "sub",
-      "tin_whistle"
+      "oud"
     ],
-    "statement": "45 pupitres rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les autres restent synthetises faute de source libre : le couple breton (bombarde, biniou, bourdon), et la nappe FM froide avec le sub, electroniques par choix. AUCUN echantillon issu de Metroid Prime n'est utilise."
+    "statement": "29 pupitres sur 30 rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les 1 autres sont des modeles synthetises, faute de source libre. AUCUN echantillon issu de Metroid Prime n'est utilise."
   },
   "outputs": {
     "menu_theme.ogg": {
-      "sha256": "afffbf26ad03b536ba6004a44b8bac14c1ca3be049e31ecce2f17d299a7d267c",
-      "bytes": 2248656
+      "sha256": "9c84fce7900f4eb6d8f12b53b45656681da3f53b1396be961ced0ef473285e50",
+      "bytes": 2750033
     },
-    "base.ogg": {
-      "sha256": "883676c682fd51bb92d0da10231c04b99c709576c1eb6c666e9cd28cf3834967",
-      "bytes": 2112079
+    "bed.ogg": {
+      "sha256": "66408cdd1211261c984f10e5926c995bd05eddfdfeaa69fb8860b8bcb89e78a2",
+      "bytes": 2722073
     },
-    "rhythm.ogg": {
-      "sha256": "b79cdb689c84cbbf867afdd5062c3cc1e8e7bc858b20a915559e0f57cabd4fab",
-      "bytes": 1374658
+    "chant__cor_anglais.ogg": {
+      "sha256": "04bdd3e1f04d6b596bfdebee4d9365116fa9ef3e47b8a2ff754488cffd41f646",
+      "bytes": 2086688
     },
-    "melody.ogg": {
-      "sha256": "b123d3dd0d487a26b3ef0834941235161b0510804157360f6e718ee7ea6b68a8",
-      "bytes": 2332044
+    "chant__flute.ogg": {
+      "sha256": "b658eeb8b74e9e93c079f6c34fc6c95df8f76936786fb237bc10336249f0b4da",
+      "bytes": 2019990
     },
-    "climax.ogg": {
-      "sha256": "2c82541641d2654e344fc33d7e273c375f8c3d7d6cd39a77c8fb8d39dc212132",
-      "bytes": 1473838
+    "chant__ocarina.ogg": {
+      "sha256": "b308331f7f4f32016d4a45f15149cf281605df343e79bc319f54b24a164d05f1",
+      "bytes": 1636342
     },
-    "layer_pluie.ogg": {
-      "sha256": "4488e0ebb7633dfc99d578ed038fe066794ca81473df8b53c2dc2f45a0b12f9d",
-      "bytes": 1915920
+    "chant__harmonica.ogg": {
+      "sha256": "c914ff645ae5162bf2f88118e0beb35239516c7006d42a91f513724de31116c2",
+      "bytes": 2346040
     },
-    "layer_orage.ogg": {
-      "sha256": "decd8519bbaa68d55bdae214eeeb6e41be81b8c9aa8d9d62bbcf489210d0a5a2",
-      "bytes": 1686792
+    "corde__celtic_guitar.ogg": {
+      "sha256": "69c500507ca73e3a910ddb07251f050288145ec6fb46bb77f853dc5091bcd755",
+      "bytes": 2591525
     },
-    "layer_brume.ogg": {
-      "sha256": "29dc7b5c29af45303466b8560ee55d72f3f0f88ea5c1bfcaeea70505210366ff",
-      "bytes": 1754629
+    "corde__oud.ogg": {
+      "sha256": "1f2581a60beb2ada14c928acaaeb98a2811dd276e5185365f2f43e2695d62629",
+      "bytes": 2144368
     },
-    "layer_neige.ogg": {
-      "sha256": "234e5ff354d03f061244343da7617bf6d70f6a533cbe5dd228ebe3ae4ec2a0ef",
-      "bytes": 1319402
+    "corde__dan_tranh.ogg": {
+      "sha256": "9f4db21e95638f431b62b2e84db4a5d7cabdb0fdd5ac71843261e3e64800c2d4",
+      "bytes": 2648678
     },
-    "layer_clair.ogg": {
-      "sha256": "16c909c1f9ea20e936ba74632287c8cd8e83e520939e047fffd962876b146a6b",
-      "bytes": 813496
+    "corde__kalimba.ogg": {
+      "sha256": "19619acaa3759c6180bb388ddd15612ed5eb8151e39c18cf041ef02fc984ce73",
+      "bytes": 2517410
     },
-    "layer_printemps.ogg": {
-      "sha256": "2c59d84571825850b62e5dda7a9c2fd370972bdf8837cf688298ec9e9e95d0c5",
-      "bytes": 2128128
+    "corde__psaltery.ogg": {
+      "sha256": "43adee94c81e521484f66933dd3e03209196e506db3374684822e51e8c9ee2f0",
+      "bytes": 3137847
     },
-    "layer_ete.ogg": {
-      "sha256": "2488a4eca4e6ad48a895f8d6d13c1f931fd2aa4603c47b7ff9e77b9055bb2758",
-      "bytes": 2031410
+    "halo__celesta.ogg": {
+      "sha256": "3d0d6cc70eef7d22f652458efaf46b6775d8a3732acdd58e9d655b44b35da4ca",
+      "bytes": 1786297
     },
-    "layer_automne.ogg": {
-      "sha256": "f1eb57415a6de501e7e059a63daf3c39304495eaaf063d909cd8e702a1fe3125",
-      "bytes": 1410890
+    "halo__wine_glasses.ogg": {
+      "sha256": "508301c07bc6c0bc5794e98964b2ce8ce8e9302e93f5e602925bea2f0218b069",
+      "bytes": 1442394
     },
-    "layer_hiver.ogg": {
-      "sha256": "120966645f529155083ec8378e278ebe59e4f80c3713f9ffc0ffbf2d081a39f3",
-      "bytes": 1607474
-    },
-    "layer_aube.ogg": {
-      "sha256": "3d6f517974ce40a85ad7556ccc46f434887d39d0f7c572b93e90581935d3d9f2",
-      "bytes": 791485
-    },
-    "layer_nuit.ogg": {
-      "sha256": "73bd6e917d1197fb333f464469c4e01cb881e5133d7ca25cd417c32882169dc7",
-      "bytes": 1041500
-    },
-    "layer_sacre.ogg": {
-      "sha256": "e24919ced2716014c4ba941276872ad017c81070b7b2e4a9c61249a668d676ad",
-      "bytes": 438473
+    "halo__hand_chimes.ogg": {
+      "sha256": "62d474116f642d888e02b4eebe98173b2ad5d2f0d1876182585ac0de28bcde6a",
+      "bytes": 1688847
     }
+  },
+  "partial_rerender": {
+    "at": "2026-08-06T12:49:42Z",
+    "parts": [
+      "corde__celtic_guitar",
+      "corde__dan_tranh",
+      "corde__kalimba",
+      "corde__oud",
+      "corde__psaltery"
+    ],
+    "note": "Rendu partiel : seules ces parties ont ete refaites."
   }
 }

@@ -2,7 +2,7 @@
 """
 Partition — « Tri Martolod / Broceliande », theme de menu M.E.R.L.I.N.
 
-40 mesures a 58,07 BPM (165,3 s), RE DORIEN, forme Intro / A A / Refrain A / Dev / Tutti / Coda.
+40 mesures a 49 BPM (195,9 s), RE DORIEN, forme Intro / A A / Refrain A / Dev / Plein / Coda.
 
 LA MELODIE
 ----------
@@ -10,10 +10,10 @@ Tri Martolod est une chanson traditionnelle bretonne du XVIIIe siecle (Basse-Bre
 popularisee par l'arrangement d'Alan Stivell en 1971. L'air lui-meme est traditionnel :
 c'est cet air-la qui est repris ici, dans un arrangement original — pas celui de Stivell.
 
-Transcription croisee entre deux sources : le releve de thesession.org (ou les paroles
-bretonnes sont alignees note a note : « tri / mar-to-lod / yao-uank ») et le Nine-Note
+Transcription croisee entre deux relevés publics — thesession.org et le Nine-Note
 Tunebook de Jack Campin. Les deux concordent sur l'essentiel : la phrase chantee descend
-par degres depuis la quinte.
+par degres depuis la quinte. Seul l'air est repris ; l'arrangement est entierement
+original et la piece est purement instrumentale.
 
 CE QUI TOMBE BIEN : transposee en re, la melodie porte un SI NATUREL (la ligne
 « D C B A » de la deuxieme mesure). En re mineur la sixte serait si bemol — ce si
@@ -22,26 +22,37 @@ deja ecrite. Le theme traditionnel et l'harmonisation froide parlent la meme lan
 
 LA REVISITE
 -----------
-L'air est traite tres lentement (58 BPM la ou on le danse vers 120 — voir plus bas
-pourquoi le chiffre exact est 58,073), harmonise
+L'air est traite tres lentement (49 BPM la ou on le danse vers 120), harmonise
 modalement, et pose sur les cloches metalliques de la palette Prime. Le developpement
 l'eloigne vers le majeur avant qu'un LA MAJEUR — seule note etrangere au mode de
 toute la piece — ne ramene le theme en tutti.
 
-LE TEMPO
---------
-La version precedente etait a 76 BPM. A cette allure la piece reste une marche : les
-notes se succedent assez vite pour qu'on entende une suite, pas un etat. Le genre
-ambiant vit dans l'espace ENTRE les notes, et cet espace n'existe qu'a partir du
-moment ou une noire dure plus d'une seconde. A 58 BPM la noire fait 1,034 s, la mesure
-4,14 s, et la boucle passe de 126 a 165 s. L'arc dynamique a ete rabote dans le meme
-mouvement : le sommet du tutti descend de 1,00 a 0,84, parce qu'un fortissimo
-d'orchestre au complet n'est plus un climax quand on a ralenti pour ecouter.
+LE TEMPO ET LA COULEUR
+----------------------
+76 BPM au depart, puis 58, maintenant 49. A 76 la piece restait une marche : les notes
+se succedent assez vite pour qu'on entende une suite, pas un etat. A 49 la noire dure
+1,22 s et la mesure 4,90 s — il y a enfin de la place ENTRE les notes, qui est le seul
+endroit ou le feerique puisse se loger.
+
+Ce qui a ete RETIRE compte autant que le tempo. Trois familles sont sorties :
+  - les anches synthetisees (bombarde, biniou, bourdon, tin whistle) : une anche
+    double se reconnait a sa crudite, et synthetisee elle n'est que crue ;
+  - les cuivres au complet (tutti, trompettes, trombone, tuba) : c'est ce qui
+    rendait le sommet claquant plutot que lumineux ;
+  - les percussions franches (taiko, cymbale, tam-tam, caisse claire) et les
+    nappes electroniques (nappe FM, sub, choeur).
+Restent des instruments reellement enregistres, plus les timbres cristallins —
+celesta, cloches, verres, psalterion — qui portent le registre feerique.
+
+L'AIR EST ORNE. Voir ornament() : appoggiatures, notes de passage, cadences brodees.
+Le premier enonce reste nu — un ornement n'orne que ce qu'on a deja entendu simple.
 """
 
 from __future__ import annotations
 
 from itertools import combinations, permutations
+
+import numpy as np
 
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -57,12 +68,12 @@ N_BARS = 40
 # coute 3,8 s au lieu de 0,35. Avec une quinzaine de filtrages par stem et
 # seize rendus, la difference se compte en heures.
 #
-# 7 290 000 = 2^4 x 3^6 x 5^4. Tous les facteurs sont petits, la FFT est rapide.
-# Le tempo qui en decoule, 58,073 BPM, est a un quart de pour cent du tempo vise.
+# 8 640 000 = 2^7 x 3^3 x 5^4. Tous les facteurs sont petits, la FFT est rapide —
+# et le tempo qui en decoule tombe sur 49,000 BPM tout rond.
 SR = 44100
-LOOP_SAMPLES = 7_290_000
-LOOP_LEN = LOOP_SAMPLES / SR                # 165,306 s
-BPM = N_BARS * 4 * 60.0 / LOOP_LEN          # 58,073
+LOOP_SAMPLES = 8_640_000                    # 2^7 x 3^3 x 5^4
+LOOP_LEN = LOOP_SAMPLES / SR                # 195,918 s
+BPM = N_BARS * 4 * 60.0 / LOOP_LEN          # 49,000 tout rond
 BEAT = 60.0 / BPM
 BAR = 4 * BEAT
 
@@ -90,19 +101,20 @@ PROGRESSION = [
     "Dm", "C", "Am", "Am",                          # 37-40  coda, retour a la boucle
 ]
 
-# Arc rabote pour la version lente. L'ancien culminait a 1,00 sur six mesures :
-# a 58 BPM ce plateau devenait un mur. Le sommet descend a 0,84 et ne tient que
-# deux mesures, et le bas de l'arc descend aussi — l'intro doit etre presque rien.
-DYNAMICS = [.20, .22, .24, .26,                     # intro : presque rien
-            .32, .34, .36, .34,                     # l'air, nu
-            .40, .42, .44, .42,                     # l'air, double
-            .48, .50, .52, .50,                     # refrain
-            .54, .56, .58, .55,                     # l'air harmonise
-            .58, .62, .66, .70,                     # developpement
-            .74, .78, .81, .84,                     # ... jusqu'a la dominante
-            .84, .82, .79, .76,                     # tutti
-            .72, .68, .58, .48,                     # tutti, retrait
-            .38, .31, .25, .20]                     # coda
+# Arc encore rabote. Il culminait a 1,00 sur six mesures, puis a 0,84 ; il monte
+# maintenant a 0,70 et redescend aussitot. Un sommet, dans une piece feerique, ne
+# se fabrique pas en montant le volume mais en ouvrant le registre — c'est le
+# glockenspiel et les verres qui marquent la mesure 29, pas la force.
+DYNAMICS = [.16, .18, .20, .22,                     # intro : presque rien
+            .28, .30, .32, .30,                     # l'air, nu
+            .36, .38, .40, .38,                     # l'air, double et orne
+            .42, .44, .46, .44,                     # refrain
+            .48, .50, .52, .49,                     # l'air harmonise
+            .52, .55, .58, .61,                     # developpement
+            .64, .66, .68, .70,                     # ... jusqu'a la dominante
+            .70, .68, .66, .64,                     # plein — cristallin, pas fort
+            .60, .56, .48, .40,                     # retrait
+            .32, .26, .21, .16]                     # coda
 
 assert len(PROGRESSION) == N_BARS and len(DYNAMICS) == N_BARS
 
@@ -115,13 +127,12 @@ _T = 1.0 / 3.0                                       # triolet dans un temps
 _S = 1.0 / 6.0                                       # triolet de doubles
 
 # La phrase chantee, 4 mesures. (mesure relative, temps, midi, duree en temps)
-# « tri mar-to-lod / yao-uank / tra la la la la / tri mar-to-lod o vo-ned de ve-ajiñ »
 TRI_MARTOLOD = [
-    # « tri mar-to-lod / yao-uank »
+    # premiere phrase
     (0, 1.0, 74, 1.0),
     (0, 2.0, 74, _T), (0, 2.0 + _T, 76, _T), (0, 2.0 + 2 * _T, 74, _T),
     (0, 3.0, 72, 1.0), (0, 4.0, 77, 0.5), (0, 4.5, 76, 0.5),
-    # « tra la la la la » — la descente D C B A, avec le SI NATUREL
+    # la descente RE DO SI LA, avec le SI NATUREL qui signe le mode
     (1, 1.0, 74, 1.0),
     (1, 2.0, 74, 0.5), (1, 2.5, 72, 0.25), (1, 2.75, 71, 0.25),
     (1, 3.0, 69, 0.5), (1, 3.5, 71, 0.5), (1, 4.0, 72, 0.5), (1, 4.5, 69, 0.5),
@@ -133,6 +144,77 @@ TRI_MARTOLOD = [
     (3, 1.0, 74, 0.5), (3, 1.5, 74, 0.5), (3, 2.0, 72, 0.5), (3, 2.5, 74, 1.0),
     (3, 3.5, 69, 0.5), (3, 4.0, 69, 0.5), (3, 4.5, 69, 0.5),
 ]
+
+def ornament(phrase: list, seed: int = 0) -> list:
+    """Version ornee de l'air — c'est ce qui separe une melodie d'une suite de notes.
+
+    Trois ornements, tous pris au repertoire celtique et places la ou un joueur
+    les placerait :
+
+      - APPOGGIATURE : sur une note longue precedee d'un saut ascendant, on
+        attaque un degre au-dessus et on retombe. Coute un tiers de la note.
+      - NOTE DE PASSAGE : entre deux notes distantes d'une tierce, on remplit
+        le trou. C'est ce qui rend la ligne conjointe donc chantante.
+      - CADENCE BRODEE : la derniere note d'une phrase est precedee de sa
+        voisine superieure, tres bref.
+
+    On n'orne PAS le premier enonce : l'air doit d'abord etre entendu nu, sinon
+    l'ornement n'orne rien. Les reprises seules sont brodees.
+    """
+    rng = np.random.default_rng(seed + 5150)
+    # degres du mode de re dorien, pour que tout ornement reste dans le mode :
+    # une broderie chromatique sonnerait comme une fausse note, pas comme un ornement
+    SCALE = (2, 4, 5, 7, 9, 11, 0)                   # re mi fa sol la si do
+
+    def up(m: int) -> int:
+        k = 1
+        while (m + k) % 12 not in SCALE:
+            k += 1
+        return m + k
+
+    def down(m: int) -> int:
+        k = 1
+        while (m - k) % 12 not in SCALE:
+            k += 1
+        return m - k
+
+    out: list = []
+    for i, (bar, beat, midi, dur) in enumerate(phrase):
+        nxt = phrase[i + 1] if i + 1 < len(phrase) else None
+        prev = phrase[i - 1] if i else None
+        gap = (nxt[2] - midi) if nxt else 0
+
+        # 1. NOTE DE PASSAGE — comble un saut de tierce, dans le mode.
+        #    C'est l'ornement qui rend la ligne conjointe, donc chantante.
+        if nxt and abs(gap) in (3, 4) and dur >= 0.5:
+            mid = up(midi) if gap > 0 else down(midi)
+            out.append((bar, beat, midi, dur * 0.6))
+            out.append((bar, beat + dur * 0.6, mid, dur * 0.4))
+            continue
+
+        # 2. APPOGGIATURE — sur une longue abordee par saut : on attaque au-dessus.
+        if dur >= 1.0 and prev and abs(midi - prev[2]) >= 3:
+            out.append((bar, beat, up(midi), dur * 0.28))
+            out.append((bar, beat + dur * 0.28, midi, dur * 0.72))
+            continue
+
+        # 3. GRUPETTO — sur une longue tenue sans saut : note, voisine, note.
+        #    Trois notes la ou il y en avait une : c'est le coeur du « plus melodique ».
+        if dur >= 1.0 and rng.random() < 0.75:
+            out.append((bar, beat, midi, dur * 0.45))
+            out.append((bar, beat + dur * 0.45, up(midi), dur * 0.2))
+            out.append((bar, beat + dur * 0.65, midi, dur * 0.35))
+            continue
+
+        # 4. CADENCE BRODEE — la voisine superieure, tres brievement, avant la fin.
+        if nxt is None and dur >= 0.5:
+            out.append((bar, beat, up(midi), dur * 0.22))
+            out.append((bar, beat + dur * 0.22, midi, dur * 0.78))
+            continue
+
+        out.append((bar, beat, midi, dur))
+    return out
+
 
 # La phrase instrumentale (le « refrain » de la ronde), 4 mesures
 REFRAIN = [

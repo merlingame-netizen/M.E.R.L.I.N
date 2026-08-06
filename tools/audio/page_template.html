@@ -164,7 +164,7 @@ section{padding-top:56px}
   font-size:.8rem;color:var(--fg-3);
 }
 
-/* ── surcouches contextuelles ────────────────────────────── */
+/* ── distribution contextuelle ───────────────────────────── */
 .ctx-axes{padding:16px 20px;display:grid;gap:12px;background:var(--bg-2)}
 .ctx-axis{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .ctx-axis > b{
@@ -173,15 +173,13 @@ section{padding-top:56px}
   min-width:76px;
 }
 .ctx-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
   gap:1px;background:var(--line);border-top:1px solid var(--line);
 }
 .lay{
-  background:var(--bg);padding:12px 14px;display:grid;gap:5px;
-  cursor:pointer;transition:.18s;border:none;text-align:left;color:inherit;
-  border-left:2px solid transparent;
+  background:var(--bg);padding:14px 16px;display:grid;gap:6px;
+  text-align:left;color:inherit;border-left:2px solid var(--accent);
 }
-.lay:hover{background:var(--bg-2)}
 .lay-top{display:flex;align-items:center;gap:8px}
 .lay-top b{font-size:.94rem;font-weight:500}
 .lay-axis{
@@ -189,12 +187,17 @@ section{padding-top:56px}
   letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3);
   border:1px solid var(--line);border-radius:2px;padding:1px 5px;margin-left:auto;
 }
-.lay-ins{font-size:.79rem;color:var(--fg-2)}
-.lay-when{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;color:var(--fg-3)}
-.lay[aria-pressed="true"]{border-left-color:var(--accent);background:var(--bg-2)}
-.lay[aria-pressed="true"] .lay-axis{border-color:var(--accent);color:var(--accent)}
-.lay[aria-pressed="true"] b::before{content:"● ";color:var(--accent);font-size:.7em;vertical-align:.15em}
-.lay.busy{opacity:.5;pointer-events:none}
+.cands{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.cand{
+  cursor:pointer;font-family:inherit;font-size:.8rem;
+  background:transparent;color:var(--fg-3);border:1px solid var(--line);
+  border-radius:2px;padding:4px 9px;transition:.15s;
+}
+.cand:hover{color:var(--fg-2);border-color:var(--fg-3)}
+.cand[aria-pressed="true"]{
+  background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:500;
+}
+.cand[disabled]{opacity:.4;cursor:default}
 
 /* ── faits / tableaux ────────────────────────────────────── */
 .facts{
@@ -325,7 +328,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 <header>
   <div class="eyebrow"><span>M.E.R.L.I.N.</span><span class="rule"></span><span>chaîne musicale</span><span class="rule"></span><span>2026-08-04</span></div>
   <h1>Tri Martolod, revisité</h1>
-  <p class="lede">Un air breton du XVIII<sup>e</sup> siècle, arrangé très lentement pour trente-sept pupitres — dont trente jouent des instruments réellement enregistrés. Plus <strong>douze surcouches contextuelles</strong> qui s'allument selon la météo, la saison ou le moment : s'il pleut, un oud entre. Et la chaîne d'outillage qui permet d'y substituer d'autres sons.</p>
+  <p class="lede">Un air breton du XVIII<sup>e</sup> siècle, arrangé très lentement — 49 BPM — et orné. Un socle fixe, trois <strong>rôles</strong> dont la météo, la saison et l'heure changent le titulaire : s'il pleut, la guitare celtique cède sa place à un oud. L'effectif ne bouge jamais ; c'est un remplacement, pas un empilement.</p>
   <div class="thesis">
     <strong>Ce qui rendait la greffe possible :</strong> transposé en ré, Tri Martolod porte un <strong>si naturel</strong> — la descente <span class="mono">ré do si la</span> de sa deuxième mesure. En ré mineur la sixte serait si bémol. Ce si signe le <strong>mode dorien</strong>, celui dans lequel la pièce était déjà écrite. L'air traditionnel et l'harmonisation froide parlent la même langue.
   </div>
@@ -333,7 +336,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <section>
   <div class="sec-head"><span class="sec-num">ÉCOUTE</span><h2>Thème de menu principal</h2></div>
-  <p class="sec-sub">40 mesures, <strong>37 pupitres</strong>. L'air est énoncé nu au cor anglais (0'17), doublé, puis confié au <strong>couple bombarde-biniou</strong> (0'50) — l'orchestre se tait pour les laisser passer. Il revient harmonisé, s'éloigne dans le développement, et rentre en tutti à 1'56. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
+  <p class="sec-sub">40 mesures à 49 BPM. L'air est d'abord énoncé <strong>nu</strong> (0'20) — il faut l'entendre simple avant de l'entendre brodé — puis <strong>orné</strong> à chaque reprise : appoggiatures, notes de passage, cadences brodées, toutes prises dans le mode. Le chant se tait pendant le développement (1'38), et c'est ce silence qui fait qu'on l'attend. Le sommet (2'17) s'ouvre en <em>registre</em> — piccolo, glockenspiel, cordes hautes — et non en force : il n'y a plus un seul cuivre dans la pièce.</p>
 
   <div class="console">
     <div class="transport">
@@ -341,23 +344,25 @@ footer span{min-width:0;overflow-wrap:anywhere}
         <svg id="icon" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0v14l12-7z" fill="currentColor"/></svg>
         <span id="playlabel">Écouter</span>
       </button>
-      <div class="clock"><b id="t">0:00</b> / 2:46</div>
+      <div class="clock"><b id="t">0:00</b> / 3:16</div>
       <div class="loop-tag" id="looptag">boucle sans couture</div>
-      <button class="tog" id="simple" aria-pressed="false" title="Lit le mix complet via un lecteur audio classique">mix simple</button>
+      <button class="tog" id="simple" aria-pressed="false" title="Lit le mix par défaut via un lecteur audio classique">mix simple</button>
       <a class="dl" id="dl" download="merlin-menu-theme.mp3">télécharger le MP3</a>
       <div class="status" id="status" role="status"></div>
     </div>
     <audio id="fallback" loop preload="none" playsinline></audio>
     <audio id="primer" loop preload="auto" playsinline></audio>
     <canvas id="scope" aria-label="Analyseur de spectre du mix en cours de lecture"></canvas>
-    <div id="strips"></div>
-    <div class="hint">Chaque couche s'enclenche dans le jeu au-delà d'un seuil de tension — c'est la colonne de droite. Ici vous les pilotez à la main.</div>
+
+    <div class="ctx-axes" id="ctx-axes"></div>
+    <div class="ctx-grid" id="ctx-grid"></div>
+    <div class="hint">Chaque rôle n'a qu'un titulaire à la fois. Changer de contexte ne rajoute rien : ça remplace. Vous pouvez aussi cliquer un titulaire directement — le contexte reprend la main au changement suivant.</div>
   </div>
 
   <dl class="facts">
     <div><dt>Tonalité</dt><dd>Ré dorien</dd></div>
-    <div><dt>Tempo</dt><dd>58,07 BPM</dd></div>
-    <div><dt>Boucle</dt><dd>165,306 s</dd></div>
+    <div><dt>Tempo</dt><dd>49 BPM</dd></div>
+    <div><dt>Boucle</dt><dd>195,918 s</dd></div>
     <div><dt>Effectif</dt><dd>37 + 16 · 1367</dd></div>
     <div><dt>Amplitude</dt><dd>11,7 dB</dd></div>
   </dl>
@@ -374,22 +379,23 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <h3 style="color:var(--accent)">L'air</h3>
     <p><em>Tri Martolod</em> — « trois marins » — est une chanson traditionnelle de Basse-Bretagne qui remonte au XVIII<sup>e</sup> siècle. Alan Stivell l'a rendue célèbre en 1971, mais c'est <strong>son arrangement</strong> qui lui appartient : l'air, lui, est traditionnel. C'est celui-là qui est repris ici, dans un arrangement original.</p>
     <p>La mélodie a été recoupée entre deux relevés — celui de thesession.org, où les paroles bretonnes sont alignées note à note (« tri / mar-to-lod / yao-uank »), et le <em>Nine-Note Tunebook</em> de Jack Campin. Les deux concordent : la phrase chantée descend par degrés depuis la quinte.</p>
-    <p><strong>Le couple biniou-bombarde</strong> a été ajouté parce qu'il manquait : jouer Tri Martolod sans lui, c'est jouer une gwerz sans son instrument. La bombarde mène, le biniou répond une octave au-dessus, le bourdon ne bouge jamais. Aux mesures 13 à 16, l'orchestre se tait entièrement pour eux — la mesure le confirme, ils occupent alors 94 % du médium.</p>
+    <p><strong>Le couple biniou-bombarde a été retiré.</strong> Il avait été ajouté parce qu'il manquait — jouer cet air sans lui, c'est jouer une gwerz sans son instrument. Mais aucune bibliothèque libre n'en contient, et une anche double se reconnaît précisément à sa crudité : synthétisée, elle n'est que crue. C'était l'élément le plus ouvertement artificiel de la pièce, et il portait quatre mesures entières. Mieux vaut ne pas l'avoir que l'avoir faux.</p>
     <p><strong>Trente des trente-sept pupitres jouent des instruments réellement enregistrés</strong> — cordes, bois, cuivres, harpe, percussions, cloches — issus de VSCO-2 Community Edition et VCSL, deux bibliothèques sous CC0. Les sept autres restent synthétisés faute de source libre : le couple breton, et la nappe FM froide avec le sub, électroniques par choix.</p>
-    <p>La revisite tient en trois gestes : l'air est joué <strong>très lent</strong> — 58 BPM là où on le danse vers 120 —, harmonisé <strong>modalement</strong> plutôt qu'en mineur classique, et posé sur les cloches métalliques héritées de la palette d'origine. À 76 BPM la pièce restait une marche : les notes se succèdent assez vite pour qu'on entende une suite, pas un état. L'ambient vit dans l'espace <em>entre</em> les notes, et cet espace n'existe qu'à partir du moment où une noire dure plus d'une seconde. À 58 BPM la noire fait 1,033 s et la boucle passe de 126 à 165 s. Le tempo exact est 58,073, et ce n'est pas de la coquetterie : la longueur de boucle passe dans des dizaines de FFT, et à 58,000 BPM elle tombait sur 7 299 299 échantillons — <span class="mono">7 × 239 × 4363</span>, la factorisation qui envoie NumPy sur son chemin lent. Une seule FFT y coûtait 3,8 s au lieu de 0,35. La boucle est donc fixée en <em>échantillons</em> — 7 290 000, soit <span class="mono">2⁴ × 3⁶ × 5⁴</span> — et le tempo en découle.</p>
+    <p>La revisite tient en trois gestes : l'air est joué <strong>très lent</strong> — 49 BPM là où on le danse vers 120 —, <strong>orné</strong> à chaque reprise, et harmonisé <strong>modalement</strong> plutôt qu'en mineur classique. 76 BPM au départ, puis 58, maintenant 49 : à 76 la pièce restait une marche, les notes se succédant assez vite pour qu'on entende une suite et pas un état. À 49 la noire dure 1,22 s et la mesure 4,90 s — il y a enfin de la place <em>entre</em> les notes, qui est le seul endroit où le féerique puisse se loger.</p>
+      <p>Le chiffre exact n'est pas de la coquetterie : la longueur de boucle passe dans des dizaines de FFT, et une factorisation à grand facteur premier envoie NumPy sur son chemin lent — une seule FFT y coûtait 3,8 s au lieu de 0,35, ce qui met des heures sur un rendu complet. La boucle est donc fixée en <em>échantillons</em> — 8 640 000, soit <span class="mono">2⁷ × 3³ × 5⁴</span> — et le tempo en découle. Il tombe sur 49,000 tout rond.</p>
   </div>
 
   <div class="scroller">
     <table>
       <thead><tr><th>Famille</th><th>Pupitres</th><th>Ce qui les distingue</th></tr></thead>
       <tbody>
-        <tr><td class="k"><b>Bretagne</b></td><td>bombarde · biniou · bourdon · <b>guitare celtique</b> · tin whistle · bodhrán</td><td><strong>Synthétisés</strong> — aucune bibliothèque libre ne contient de bombarde ni de biniou. La bombarde sature son anche ; le biniou n'a <em>aucune</em> nuance, une cornemuse étant à pression constante. La guitare, elle, est enregistrée (harpe celtique VCSL).</td></tr>
+        <tr><td class="k"><b>Retirés</b></td><td><s>bombarde · biniou · bourdon · tin whistle</s> · <s>cuivres</s> · <s>taiko · cymbale · tam-tam · caisse claire</s> · <s>nappe FM · sub · chœur</s></td><td>Une anche double se reconnaît à sa crudité, et synthétisée elle n'est que crue. Les cuivres rendaient le sommet claquant plutôt que lumineux, les percussions franches trop directes, les nappes électroniques trop évidemment synthétiques. <strong>Tout est sorti.</strong></td></tr>
         <tr><td class="k"><b>Cordes</b></td><td>contrebasses · violoncelles · altos · violons · violon solo · trémolo · pizzicato</td><td>Enregistrées (VSCO-2 CE). Les contrebasses sont des violoncelles transposés : la bibliothèque n'a aucun échantillon de contrebasse, le dossier existe mais il est vide.</td></tr>
         <tr><td class="k"><b>Bois</b></td><td>flûte · piccolo · hautbois · cor anglais · clarinette · basson</td><td>Enregistrés (VSCO-2 CE), articulation tenue, une couche de vélocité médiane par note.</td></tr>
         <tr><td class="k"><b>Cuivres</b></td><td>cors · trompettes · trombone · tuba · tutti</td><td>Enregistrés (VSCO-2 CE), à partir du cor d'harmonie.</td></tr>
-        <tr><td class="k"><b>Percussions</b></td><td>timbales · taiko · bodhrán · cymbale · tam-tam · caisse claire</td><td>Enregistrées (VCSL) : timbales, tambour sur cadre, cymbale suspendue, gong.</td></tr>
-        <tr><td class="k"><b>Claviers</b></td><td>harpe · célesta · glockenspiel · cloches froides</td><td>Enregistrés — harpe de concert et harpe celtique (VCSL), glockenspiel et cloches tubulaires.</td></tr>
-        <tr><td class="k"><b>Nappes</b></td><td>chœur · nappe FM · sub</td><td><strong>Synthétisés.</strong> Le chœur porte des formants de voyelle « ah ». Sous tout l'orchestre, la nappe FM inharmonique : électronique par choix, c'est ce qui reste de la texture d'origine.</td></tr>
+        <tr><td class="k"><b>Percussions</b></td><td>timbales · bodhrán · pizzicati</td><td>Enregistrées (VCSL). Douces uniquement — deux frappes de bodhrán par mesure, une timbale toutes les quatre mesures.</td></tr>
+        <tr><td class="k"><b>Claviers</b></td><td>harpe · glockenspiel · cloches froides</td><td>Enregistrés (VCSL) : harpe de concert, glockenspiel, cloches tubulaires. Ils font partie du socle et ne se remplacent pas.</td></tr>
+        <tr><td class="k"><b>Rôles</b></td><td>cor anglais · flûte · ocarina · harmonica — guitare celtique · <b>oud</b> · đàn tranh · kalimba · psaltérion — célesta · verres frottés · clochettes à main</td><td>Les douze titulaires possibles des trois rôles. Un seul par rôle est audible à la fois. Tous enregistrés (VCSL, VSCO-2 CE) sauf l'oud, modèle écrit faute de source libre.</td></tr>
       </tbody>
     </table>
   </div>
@@ -397,27 +403,33 @@ footer span{min-width:0;overflow-wrap:anywhere}
   <p class="sec-sub" style="margin-top:14px">Mesure 28, un <strong>la majeur</strong> : son do dièse est la seule note étrangère au mode de toute la pièce. Il sert de dominante pour ramener l'air en tutti. Tout le développement converge là.</p>
 </section>
 
-<section id="ctx-section" hidden>
-  <div class="sec-head"><span class="sec-num">CONTEXTE</span><h2>Douze surcouches identifiées</h2></div>
-  <p class="sec-sub">Les quatre stems découpent la musique par <strong>intensité</strong>. Ce second découpage est orthogonal : il la découpe par <strong>situation</strong>. Chaque couche est un fichier à part, calé sur la même boucle et la même harmonie, qu'on allume ou éteint sans toucher au reste. S'il pleut, un <strong>oud</strong> entre.</p>
+<section>
+  <div class="sec-head"><span class="sec-num">DISTRIBUTION</span><h2>Remplacer, pas empiler</h2></div>
+  <p class="sec-sub">Une version précédente <em>ajoutait</em> douze pistes par-dessus le mix : s'il pleuvait, un oud arrivait en plus. C'était un empilement, et ça s'entendait comme tel — un instrument collé sur un morceau déjà complet.</p>
+  <p class="sec-sub" style="margin-top:14px">Ici l'effectif ne change jamais. Trois <strong>rôles</strong> sont tenus en permanence, et le contexte décide seulement <em>qui</em> les tient. S'il pleut, la guitare celtique s'en va et l'oud prend sa place — aux mêmes notes, au même moment, au même niveau. La densité du morceau est rigoureusement constante.</p>
 
-  <div class="console">
-    <div class="ctx-axes" id="ctx-axes"></div>
-    <div class="ctx-grid" id="ctx-grid"></div>
-    <div class="hint" id="ctx-hint">Lancez la lecture ci-dessus, puis changez le contexte : les couches entrent et sortent en fondu, sans jamais désynchroniser la boucle.</div>
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Rôle</th><th>Ce qu'il fait</th><th>Titulaires</th></tr></thead>
+      <tbody>
+        <tr><td class="k"><b>socle</b></td><td>cordes, bois d'harmonie, contrechant, dessus, harpe, cloches, percussion douce</td><td>fixe — il ne se remplace jamais</td></tr>
+        <tr><td class="k"><b>chant</b></td><td>porte <em>Tri Martolod</em></td><td>cor anglais · flûte · ocarina · harmonica</td></tr>
+        <tr><td class="k"><b>corde</b></td><td>l'accompagnement pincé, ce qui remplit l'espace entre les phrases</td><td>guitare celtique · <b>oud</b> · đàn tranh · kalimba · psaltérion</td></tr>
+        <tr><td class="k"><b>halo</b></td><td>le scintillement de l'aigu</td><td>célesta · verres frottés · clochettes à main</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <div class="callout" style="border-color:var(--accent)">
-    <h3 style="color:var(--accent)">Les trois règles qui font que ça marche</h3>
-    <p><strong>1. Tout sort de la grille.</strong> Aucune couche n'a de notes écrites en dur : chacune lit l'accord de la mesure en cours et n'y prend que ses notes. N'importe quelle combinaison des douze reste donc consonante avec le mix et avec les autres — il n'y a pas de paire interdite à tester.</p>
-    <p><strong>2. Un instrument par couche, et un seul.</strong> Aucun instrument n'apparaît dans deux couches, ni dans le mix de base. C'est ce qui rend une couche <em>identifiable</em> : quand la pluie tombe, on entend arriver un oud, pas « un peu plus de cordes ».</p>
-    <p><strong>3. Très peu de notes.</strong> De 3 événements (les cloches népalaises) à 54 (la pluie) pour 165 s. La médiane est à 16 : une note toutes les dix secondes. Une couche est une couleur ajoutée, pas une voix de plus — et c'est ce qui permet d'en empiler trois sans que le mix s'épaississe.</p>
+    <h3 style="color:var(--accent)">Pourquoi la bascule est inaudible</h3>
+    <p>Un rôle est écrit <strong>une seule fois</strong> et rendu une fois par titulaire, aux mêmes notes et aux mêmes instants. Passer de la guitare à l'oud est donc un simple fondu croisé entre deux fichiers calés sur la même boucle : rien ne se décale, rien ne se dédouble.</p>
+    <p>Deux précautions rendent ça vrai plutôt que théorique. <strong>Le niveau</strong> : le titulaire par défaut est rendu en premier et son niveau perçu — mesuré sur la fenêtre où la partie sonne, pas sur sa RMS globale que le silence domine — devient la cible de tous les autres. Un changement de distribution ne s'entend donc pas comme un changement de volume. <strong>La tessiture</strong> : chaque titulaire déclare son étendue réellement enregistrée, et la partie y est repliée <em>par octaves</em>. Sans ce repli le psaltérion, enregistré de la♯3 à fa♯5, devait descendre à la2 — treize demi-tons de transposition, qui déplacent les formants et font entendre un instrument miniature. Replier par octaves conserve la classe de hauteur, donc la consonance avec le socle. Après repli : <strong>zéro demi-ton</strong> de transposition sur les douze parties.</p>
   </div>
 
   <div class="callout">
     <h3>L'oud est le seul instrument synthétisé du lot</h3>
-    <p>Les quatorze autres sont des enregistrements CC0. Aucune des deux bibliothèques n'a d'oud : côté luths, VCSL n'a que le strumstick et le đàn tranh, et un đàn tranh transposé ne fait pas un oud — il fait un đàn tranh transposé. Il a donc fallu en écrire le modèle.</p>
-    <p>Quatre traits le séparent de la guitare celtique voisine, qui utilise pourtant le même principe de corde pincée : les <strong>chœurs doubles</strong> (chaque note sur deux cordes accordées à 4-9 cents près, d'où un chorus qui n'a rien d'un effet), l'<strong>absence de frettes</strong> (la note arrive par en dessous et rejoint sa hauteur en 40 ms — ce petit portamento se lit comme « oriental » avant même la moindre échelle), la <strong>caisse piriforme</strong> (résonance d'air vers 105 Hz, table vers 240 et 500), et le <strong>risha</strong>, ce plectre de corne à l'attaque nette et bornée à 4,2 kHz.</p>
+    <p>Tous les autres titulaires sont des enregistrements CC0. Aucune des deux bibliothèques n'a d'oud : côté luths, VCSL n'a que le strumstick et le đàn tranh, et un đàn tranh transposé ne fait pas un oud — il fait un đàn tranh transposé. Il a donc fallu en écrire le modèle.</p>
+    <p>Quatre traits le séparent de la guitare celtique, qui utilise pourtant le même principe de corde pincée : les <strong>chœurs doubles</strong> (chaque note sur deux cordes accordées à 4-9 cents près, d'où un chorus qui n'a rien d'un effet), l'<strong>absence de frettes</strong> (la note arrive par en dessous et rejoint sa hauteur en 40 ms — ce portamento se lit comme « oriental » avant même la moindre échelle), la <strong>caisse piriforme</strong> (résonances à 105, 240 et 500 Hz) et le <strong>risha</strong>, ce plectre de corne à l'attaque nette, bornée à 4,2 kHz.</p>
   </div>
 </section>
 
@@ -460,7 +472,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
         <p>Une seule de ces voies garantit que <em>seuls</em> vos instruments sonnent : celle qui génère des notes plutôt que de l'audio. Les deux autres valent pour maquetter, pas pour livrer.</p>
         <ul>
           <li><b>MIDI-GPT · MMM</b><span>Génération multipiste avec remplissage à la mesure. Une piste = un instrument de la banque.</span></li>
-          <li><b>FluidSynth</b><span>Un rendu par groupe de pistes depuis le même MIDI = les 4 stems, calés en phase d'office.</span></li>
+          <li><b>FluidSynth</b><span>Un rendu par groupe de pistes depuis le même MIDI = des parties calées en phase d'office.</span></li>
           <li><b>RAVE · DDSP</b><span>Transfert de timbre : vous jouez, ça ressort avec la texture apprise. Demande un GPU et 2-3 h de matière.</span></li>
           <li><b>MusicGen-Stem</b><span>Édition stem par stem sur un morceau existant. Puissant, mais c'est de l'audio : aucune garantie de palette fermée.</span></li>
         </ul>
@@ -471,7 +483,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <section>
   <div class="sec-head"><span class="sec-num">MATIÈRE</span><h2>Trois modes, un seul compositeur</h2></div>
-  <p class="sec-sub">Le compositeur ne sait rien de la matière sonore : la progression, les stems, les surcouches, le timing et le mastering sont identiques dans les trois cas. Seuls les sons changent — c'est tout l'intérêt d'une palette fermée. L'attestation ci-dessous dit lequel des trois a produit <em>ce</em> rendu, et nomme les pupitres enregistrés un par un.</p>
+  <p class="sec-sub">Le compositeur ne sait rien de la matière sonore : la progression, le socle, les rôles, le timing et le mastering sont identiques dans les trois cas. Seuls les sons changent — c'est tout l'intérêt d'une palette fermée. L'attestation ci-dessous dit lequel des trois a produit <em>ce</em> rendu, et nomme les pupitres enregistrés un par un.</p>
 
   <div class="modes">
     <div class="mode">
@@ -515,24 +527,25 @@ __PROVENANCE__
 
 <section>
   <div class="sec-head"><span class="sec-num">SUITE</span><h2>Ce qui branche sur le jeu</h2></div>
-  <p class="sec-sub">Les fichiers sont déjà au bon format et au bon endroit — <code>audio/music/menu/{base,rhythm,melody,climax}.ogg</code> pour les stems, <code>layer_*.ogg</code> plus <code>layers.json</code> pour les surcouches. <code>stems_music_manager.gd</code> prend les premiers tels quels ; <code>contextual_layers.gd</code> lit le manifeste et choisit les secondes. Pour les biomes, la même commande change juste de progression harmonique et de motif.</p>
-  <p class="sec-sub" style="margin-top:14px">Les deux découpages sont indépendants et se combinent : la tension pilote les stems, le contexte pilote les surcouches. Rien à synchroniser à la main — tous les fichiers partagent la même boucle, et une couche allumée en cours de route démarre à la position de lecture courante plutôt qu'à zéro.</p>
+  <p class="sec-sub">Les fichiers sont déjà au bon format et au bon endroit — <code>audio/music/menu/bed.ogg</code>, une piste par titulaire (<code>corde__oud.ogg</code>…), et <code>casting.json</code> qui dit qui joue quand. <code>menu_casting.gd</code> lit le manifeste et gère les fondus. Rien à synchroniser à la main : tous les fichiers partagent la même boucle, et un titulaire qui entre en cours de route démarre à la position de lecture courante plutôt qu'à zéro.</p>
   <div class="scroller">
     <table>
       <thead><tr><th>Vérification</th><th>Mesure</th><th>Attendu</th></tr></thead>
       <tbody>
-        <tr><td>Crête après encodage Vorbis</td><td class="k">0,516</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
-        <tr><td>Niveau moyen</td><td class="k">−18,7 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
-        <tr><td>Compatibilité mono</td><td class="k">+0,88</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
-        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,3 / −18,7 dB</td><td>0,4 dB : la console reproduit le mix</td></tr>
-        <tr><td>Boucle (2 tests : pente + spectre)</td><td class="k">17/17</td><td>mix, 4 stems et 12 surcouches</td></tr>
+        <tr><td>Crête après encodage Vorbis</td><td class="k">0,521</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
+        <tr><td>Niveau moyen</td><td class="k">−18,6 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
+        <tr><td>Compatibilité mono</td><td class="k">+0,86</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
+        <tr><td>Transposition des 12 parties</td><td class="k">0 demi-ton</td><td>chaque partie repliée dans la tessiture enregistrée de son titulaire</td></tr>
+        <tr><td>Synchronisme des titulaires</td><td class="k">exact</td><td>mêmes notes aux mêmes instants — condition du fondu croisé</td></tr>
+        <tr><td>Écart de niveau entre titulaires</td><td class="k">0,00 dB</td><td>mesuré sur les fichiers rendus, corrigé au gain de lecture</td></tr>
+        <tr><td>Boucle (2 tests : pente + spectre)</td><td class="k">14/14</td><td>mix, socle et 12 parties de rôle</td></tr>
         
-        <tr><td>Amplitude de l'arc dynamique</td><td class="k">10,3 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
+        <tr><td>Amplitude de l'arc dynamique</td><td class="k">9,4 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
         <tr><td>Part du chant dans le médium</td><td class="k">36 %</td><td>le thème doit dominer ses accompagnements</td></tr>
         <tr><td>… au tutti</td><td class="k">47 %</td><td>l'air doit rester audible sous 36 pupitres</td></tr>
         <tr><td>… pendant l'énoncé nu</td><td class="k">77 %</td><td>le cor anglais est seul, il doit l'être vraiment</td></tr>
         <tr><td>… pendant le couple breton</td><td class="k">90 %</td><td>l'orchestre se tait pour eux</td></tr>
-        <tr><td>Énergie sous 300 Hz</td><td class="k">21,5 %</td><td>20 à 35 % — au-delà, le médium disparaît</td></tr>
+        <tr><td>Énergie sous 300 Hz</td><td class="k">19,1 %</td><td>un point sous la fourchette 20-35 % visée</td></tr>
       </tbody>
     </table>
   </div>
@@ -540,96 +553,135 @@ __PROVENANCE__
 
 <footer>
   <span>M.E.R.L.I.N. — <span class="mono">docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md</span></span>
-  <span class="mono">Tri Martolod (trad.) · arr. original · 37 pupitres · 40 mes. · 76 BPM</span>
+  <span class="mono">Tri Martolod (trad.) · arr. original · instrumental · 40 mes. · 49 BPM</span>
 </footer>
 </div>
 
 <script>
-const STEMS = [
-  {id:"base",   label:"base",   fonts:"contrebasses · violoncelles · altos · cors · trombone · tuba · basson · bourdon", thr:"toujours",      sub:"le socle"},
-  {id:"rhythm", label:"rhythm", fonts:"timbales · taiko · bodhrán · pizzicati · cymbales · tam-tam · caisse claire",      thr:"tension > 0.2", sub:"la pulsation"},
-  {id:"melody", label:"melody", fonts:"bombarde · biniou · cor anglais · hautbois · flûte · piccolo · harpe · célesta",   thr:"tension > 0.4", sub:"le chant"},
-  {id:"climax", label:"climax", fonts:"chœur · cuivres · trompettes · violons · trémolos · clarinette",                   thr:"tension > 0.6", sub:"l&rsquo;ouverture"}
-];
 const AUDIO = __AUDIO_JSON__;
-const CTX_DATA = __LAYERS_JSON__;
+const CAST  = __CASTING_JSON__;
 
-const stripsEl = document.getElementById("strips");
-const state = {};
-STEMS.forEach(s=>{
-  state[s.id] = {mute:false, solo:false};
-  const row = document.createElement("div");
-  row.className = "strip"; row.dataset.stem = s.id;
-  row.innerHTML =
-    '<div class="s-name"><b>'+s.label+'</b><span>'+s.sub+'</span>'+
-      '<div class="meter"><i></i></div></div>'+
-    '<div class="s-fonts">'+s.fonts+'</div>'+
-    '<div class="s-thr">'+s.thr+'</div>'+
-    '<div class="s-ctrl">'+
-      '<button class="tog mute" aria-pressed="false">couper</button>'+
-      '<button class="tog solo" aria-pressed="false">isoler</button>'+
-    '</div>';
-  stripsEl.appendChild(row);
-  row.querySelector(".mute").addEventListener("click", e=>{
-    state[s.id].mute = !state[s.id].mute;
-    e.currentTarget.setAttribute("aria-pressed", state[s.id].mute);
-    applyGains();
-  });
-  row.querySelector(".solo").addEventListener("click", e=>{
-    state[s.id].solo = !state[s.id].solo;
-    e.currentTarget.setAttribute("aria-pressed", state[s.id].solo);
-    applyGains();
-  });
-});
+const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment"};
+const ROLE_LABEL = {chant:"Chant", corde:"Corde", halo:"Halo"};
+const ROLE_SUB   = {chant:"porte l’air", corde:"accompagnement pincé", halo:"scintillement"};
 
-let ctx=null, buffers={}, sources={}, gains={}, analysers={}, master=null, masterAn=null;
-let playing=false, startedAt=0, duration=58.182, decoded=false, fallbackMode=false;
+let ctx=null, master=null, masterAn=null;
+let bedBuf=null, bedSrc=null, bedGain=null;
+const part = {};              /* "role__id" -> {buf, src, gain, on} */
+let cast = Object.assign({}, CAST.default);
+let context = {};
+let playing=false, startedAt=0, duration=195.918, decoded=false, fallbackMode=false;
+
 const playBtn=document.getElementById("play"), playLabel=document.getElementById("playlabel");
 const icon=document.getElementById("icon"), clock=document.getElementById("t");
 const loopTag=document.getElementById("looptag"), statusEl=document.getElementById("status");
-const fallbackEl=document.getElementById("fallback");
-const primerEl=document.getElementById("primer");
-const simpleBtn=document.getElementById("simple");
-const dlLink=document.getElementById("dl");
+const fallbackEl=document.getElementById("fallback"), primerEl=document.getElementById("primer");
+const simpleBtn=document.getElementById("simple"), dlLink=document.getElementById("dl");
 
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
                (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent));
-
 const ICON_PLAY='<path d="M0 0v14l12-7z" fill="currentColor"/>';
 const ICON_STOP='<rect x="0" y="0" width="4" height="14" fill="currentColor"/>'+
                 '<rect x="8" y="0" width="4" height="14" fill="currentColor"/>';
 
 function say(msg, warn){ statusEl.textContent = msg||""; statusEl.classList.toggle("warn", !!warn); }
+function key(role, id){ return role + "__" + id; }
+function candidates(role){ return (CAST.candidates && CAST.candidates[role]) || []; }
 
-/* iOS : le Web Audio passe par une session audio "ambient", que le commutateur
-   silencieux de l'iPhone coupe — le graphe tourne, l'analyseur bouge, et on
-   n'entend rien. Un element <audio> en cours de lecture bascule la session en
-   "playback", qui ignore ce commutateur. On lance donc une boucle silencieuse
-   sur le meme geste utilisateur, avant de demarrer le Web Audio. */
-function primeAudioSession(){
-  try{
-    if(!primerEl.src) primerEl.src = "data:audio/mpeg;base64," + AUDIO.__silence;
-    primerEl.volume = 0.001;
-    const p = primerEl.play();
-    if(p && p.catch) p.catch(()=>{});
-  }catch(e){}
+/* ── interface ────────────────────────────────────────────────────────────── */
+const axesEl = document.getElementById("ctx-axes");
+Object.keys(CAST.axes || {}).forEach(axis=>{
+  const row = document.createElement("div");
+  row.className = "ctx-axis";
+  row.innerHTML = "<b>"+(AXIS_LABEL[axis]||axis)+"</b>";
+  CAST.axes[axis].forEach(value=>{
+    const b = document.createElement("button");
+    b.className = "tog"; b.textContent = value; b.setAttribute("aria-pressed","false");
+    b.addEventListener("click", ()=>{
+      const off = context[axis] === value;          /* recliquer annule l’axe */
+      row.querySelectorAll(".tog").forEach(o=>o.setAttribute("aria-pressed","false"));
+      if(off){ delete context[axis]; }
+      else { context[axis] = value; b.setAttribute("aria-pressed","true"); }
+      applyCasting(resolve());
+    });
+    row.appendChild(b);
+  });
+  axesEl.appendChild(row);
+});
+
+const gridEl = document.getElementById("ctx-grid");
+(CAST.roles||[]).forEach(role=>{
+  const box = document.createElement("div");
+  box.className = "lay"; box.dataset.role = role;
+  let html = '<div class="lay-top"><b>'+(ROLE_LABEL[role]||role)+'</b>'+
+             '<span class="lay-axis">'+(ROLE_SUB[role]||"")+'</span></div>'+
+             '<div class="cands">';
+  candidates(role).forEach(c=>{
+    html += '<button class="cand" data-role="'+role+'" data-id="'+c.id+'" '+
+            'aria-pressed="'+(c.id===cast[role])+'">'+c.label+'</button>';
+  });
+  box.innerHTML = html + '</div>';
+  gridEl.appendChild(box);
+  box.querySelectorAll(".cand").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const next = Object.assign({}, cast);
+      next[btn.dataset.role] = btn.dataset.id;
+      applyCasting(next);
+    });
+  });
+});
+
+function paint(){
+  document.querySelectorAll(".cand").forEach(btn=>{
+    btn.setAttribute("aria-pressed", String(cast[btn.dataset.role] === btn.dataset.id));
+  });
+}
+paint();
+
+/* ── résolution du contexte ───────────────────────────────────────────────── */
+/* Rôle par rôle, le premier axe de CAST.priority qui se prononce l’emporte.
+   Un axe muet laisse passer le suivant ; le titulaire par défaut ferme la marche. */
+function resolve(){
+  const out = Object.assign({}, CAST.default), decided = {};
+  (CAST.priority||[]).forEach(axis=>{
+    const value = context[axis];
+    if(!value) return;
+    const entry = (CAST.context||{})[value] || {};
+    Object.keys(entry).forEach(role=>{
+      if(!decided[role]){ out[role] = entry[role]; decided[role] = true; }
+    });
+  });
+  return out;
 }
 
+/* ── audio ────────────────────────────────────────────────────────────────── */
 function b64ToBytes(b64){
   const bin = atob(b64), len = bin.length, out = new Uint8Array(len);
   for(let i=0;i<len;i++) out[i]=bin.charCodeAt(i);
   return out.buffer;
 }
+function decode(b64){
+  return new Promise((res,rej)=>{
+    const p = ctx.decodeAudioData(b64ToBytes(b64), res, rej);
+    if(p && p.then) p.then(res, rej);
+  });
+}
 
-/* Repli : un seul <audio> qui joue le mix complet. Les elements <audio> passent
-   la ou le Web Audio est refuse (iframe sans permission autoplay, codec absent). */
+function primeAudioSession(){
+  try{
+    if(!primerEl.src) primerEl.src = "data:audio/mpeg;base64," + AUDIO.__silence;
+    primerEl.volume = 0.001;
+    const p = primerEl.play(); if(p && p.catch) p.catch(()=>{});
+  }catch(e){}
+}
+
 function goFallback(reason, chosen){
   if(fallbackMode) return;
   fallbackMode = true;
   if(!fallbackEl.src) fallbackEl.src = "data:audio/mpeg;base64," + AUDIO.menu_theme;
-  document.querySelectorAll(".strip").forEach(el=>el.classList.add("locked"));
-  say(chosen ? "Lecture du mix complet. Les commandes par couche sont désactivées."
-             : "Mixage par couche indisponible ici (" + reason + ") — lecture du mix complet.",
+  document.querySelectorAll(".cand, .ctx-axis .tog").forEach(el=>{ el.disabled = true; });
+  say(chosen ? "Lecture du mix par défaut. La distribution est figée."
+             : "Distribution indisponible ici (" + reason + ") — lecture du mix par défaut.",
       !chosen);
   fallbackEl.play().then(()=>{
     playing = true; icon.innerHTML = ICON_STOP;
@@ -640,93 +692,109 @@ function goFallback(reason, chosen){
   });
 }
 
-async function decodeAll(){
+/* On ne décode d’avance que le socle et les trois titulaires. Les neuf autres
+   sont décodés à leur première prise de rôle : décoder les treize d’emblée
+   représenterait plus de 400 Mo de PCM, ce qu’un téléphone ne tient pas. */
+async function decodeCore(){
   ctx = new (window.AudioContext||window.webkitAudioContext)();
   master = ctx.createGain();
   masterAn = ctx.createAnalyser(); masterAn.fftSize = 2048; masterAn.smoothingTimeConstant = .78;
   master.connect(masterAn); masterAn.connect(ctx.destination);
-  for(const s of STEMS){
-    // decodeAudioData renvoie une promesse sur les navigateurs modernes et prend
-    // des callbacks sur les plus anciens : on couvre les deux.
-    buffers[s.id] = await new Promise((res, rej)=>{
-      const p = ctx.decodeAudioData(b64ToBytes(AUDIO[s.id]), res, rej);
-      if(p && p.then) p.then(res, rej);
-    });
-    const g = ctx.createGain();
-    const a = ctx.createAnalyser(); a.fftSize = 512; a.smoothingTimeConstant = .6;
-    g.connect(a); a.connect(master);
-    gains[s.id]=g; analysers[s.id]=a;
-  }
-  duration = buffers.base.duration;
+
+  bedBuf = await decode(AUDIO.bed);
+  bedGain = ctx.createGain(); bedGain.connect(master);
+  duration = bedBuf.duration;
+  for(const role of (CAST.roles||[])) await ensure(role, cast[role]);
   decoded = true;
 }
 
-function applyGains(){
-  if(!decoded) return;
-  const anySolo = STEMS.some(s=>state[s.id].solo);
-  STEMS.forEach(s=>{
-    const on = anySolo ? (state[s.id].solo && !state[s.id].mute) : !state[s.id].mute;
-    gains[s.id].gain.setTargetAtTime(on?1:0, ctx.currentTime, .04);
-    document.querySelector('.strip[data-stem="'+s.id+'"]').classList.toggle("off", !on);
-  });
+async function ensure(role, id){
+  const k = key(role, id);
+  if(part[k]) return part[k];
+  const b64 = AUDIO["P_" + k];
+  if(!b64) return null;
+  const buf = await decode(b64);
+  const gain = ctx.createGain(); gain.gain.value = 0; gain.connect(master);
+  part[k] = {buf: buf, src: null, gain: gain, on: false};
+  return part[k];
+}
+
+function startPart(role, id){
+  const p = part[key(role, id)];
+  if(!p || !p.buf || p.src) return;
+  const src = ctx.createBufferSource();
+  src.buffer = p.buf; src.loop = true; src.connect(p.gain);
+  /* offset dans la boucle : c’est tout le calage */
+  const off = Math.max(0, ctx.currentTime - startedAt) % p.buf.duration;
+  src.start(ctx.currentTime + .05, off);
+  p.src = src;
+}
+
+/* Le gain vient de casting.json : c'est le correctif d'appariement, mesuré sur
+   les fichiers rendus. Sans lui, le đàn tranh et le psaltérion sortent 5 dB
+   sous la guitare et la bascule s'entend comme une baisse de volume. */
+function trim(role, id){
+  const c = candidates(role).find(x=>x.id===id);
+  return c && typeof c.gain === "number" ? c.gain : 1;
+}
+function fade(role, id, to){
+  const p = part[key(role, id)];
+  if(!p || !ctx) return;
+  p.on = to > 0;
+  p.gain.gain.setTargetAtTime(to ? trim(role, id) : 0, ctx.currentTime, 1.0);
+}
+
+async function applyCasting(next){
+  const before = cast;
+  cast = next; paint();
+  if(!decoded || fallbackMode || !ctx) return;
+  for(const role of (CAST.roles||[])){
+    if(before[role] === cast[role]) continue;
+    const p = await ensure(role, cast[role]);
+    if(!p){ say("Titulaire « "+cast[role]+" » indisponible.", true); continue; }
+    if(playing) startPart(role, cast[role]);
+    fade(role, cast[role], 1);
+    fade(role, before[role], 0);      /* exactement un titulaire audible par rôle */
+  }
 }
 
 function start(){
   const t0 = ctx.currentTime + .08;
-  STEMS.forEach(s=>{
-    const src = ctx.createBufferSource();
-    src.buffer = buffers[s.id]; src.loop = true;
-    src.connect(gains[s.id]); src.start(t0);
-    sources[s.id]=src;
-  });
+  bedSrc = ctx.createBufferSource();
+  bedSrc.buffer = bedBuf; bedSrc.loop = true; bedSrc.connect(bedGain); bedSrc.start(t0);
+  bedGain.gain.value = 1;
   startedAt = t0; playing = true;
-  startActiveLayers();
-  icon.innerHTML = ICON_STOP; playLabel.textContent = "Arrêter";
-  loopTag.classList.add("on");
-
-  // Si le contexte reste suspendu, rien ne sortira : on bascule sur le repli.
+  (CAST.roles||[]).forEach(role=>{ startPart(role, cast[role]); fade(role, cast[role], 1); });
+  icon.innerHTML = ICON_STOP; playLabel.textContent = "Arrêter"; loopTag.classList.add("on");
   setTimeout(()=>{
-    if(playing && !fallbackMode && ctx.state !== "running"){
-      stop(); goFallback("contexte audio suspendu");
-    }
+    if(playing && !fallbackMode && ctx.state !== "running"){ stop(); goFallback("contexte audio suspendu"); }
   }, 600);
 }
 
 function stop(){
-  if(fallbackMode){
-    fallbackEl.pause(); fallbackEl.currentTime = 0;
-  }else{
-    STEMS.forEach(s=>{ try{ sources[s.id].stop(); }catch(e){} });
-    stopLayerSources();
+  if(fallbackMode){ fallbackEl.pause(); fallbackEl.currentTime = 0; }
+  else{
+    try{ if(bedSrc) bedSrc.stop(); }catch(e){}
+    bedSrc = null;
+    Object.keys(part).forEach(k=>{ const p=part[k]; if(p.src){ try{p.src.stop();}catch(e){} p.src=null; } });
   }
   try{ primerEl.pause(); }catch(e){}
   playing = false;
   icon.innerHTML = ICON_PLAY; playLabel.textContent = "Écouter";
   loopTag.classList.remove("on"); clock.textContent = "0:00";
-  document.querySelectorAll(".meter i").forEach(m=>m.style.right="100%");
 }
 
 playBtn.addEventListener("click", async ()=>{
   if(playing){ stop(); return; }
-  primeAudioSession();          // doit rester dans le geste utilisateur
+  primeAudioSession();
   if(fallbackMode){ goFallback("repli actif", true); return; }
-
   if(!decoded){
     playBtn.disabled = true; playLabel.textContent = "Décodage…";
-    try{
-      await decodeAll();
-    }catch(err){
-      playBtn.disabled = false;
-      goFallback("format non décodé par ce navigateur");
-      return;
-    }
+    try{ await decodeCore(); }
+    catch(err){ playBtn.disabled = false; goFallback("format non décodé par ce navigateur"); return; }
     playBtn.disabled = false;
   }
-
-  // NE PAS attendre resume() : dans une iframe sans permission autoplay, cette
-  // promesse peut ne jamais se resoudre, et start() ne serait jamais appele.
   if(ctx.state === "suspended") ctx.resume().catch(()=>{});
-  applyGains();
   start();
 });
 
@@ -740,11 +808,14 @@ simpleBtn.addEventListener("click", ()=>{
 dlLink.href = "data:audio/mpeg;base64," + AUDIO.menu_theme;
 
 if(IS_IOS){
-  say("Sur iPhone, le commutateur silencieux coupe le mixeur par couche. "
-      + "S'il n'y a pas de son : basculez-le, ou utilisez « mix simple ».");
+  say("Sur iPhone, le commutateur silencieux coupe le Web Audio. "
+      + "S’il n’y a pas de son : basculez-le, ou utilisez « mix simple ».");
+}
+if(!(window.AudioContext||window.webkitAudioContext)){
+  say("Web Audio absent — lecture du mix par défaut uniquement.", true);
 }
 
-/* analyseur */
+/* ── analyseur ────────────────────────────────────────────────────────────── */
 const cv = document.getElementById("scope"), g2d = cv.getContext("2d");
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 function fit(){
@@ -752,7 +823,6 @@ function fit(){
   cv.width = r.width*dpr; cv.height = r.height*dpr; g2d.setTransform(dpr,0,0,dpr,0,0);
 }
 window.addEventListener("resize", fit); fit();
-
 function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 
 function draw(){
@@ -760,7 +830,6 @@ function draw(){
   const w = cv.clientWidth, h = cv.clientHeight;
   g2d.clearRect(0,0,w,h);
   const cold = css("--accent"), warm = css("--warm"), line = css("--line");
-
   if(!playing || !masterAn || fallbackMode){
     g2d.strokeStyle = line; g2d.lineWidth = 1;
     g2d.beginPath(); g2d.moveTo(0,h/2+.5); g2d.lineTo(w,h/2+.5); g2d.stroke();
@@ -779,17 +848,6 @@ function draw(){
     g2d.fillRect(i*(bw+gap), h-bh-6, bw, bh);
   }
   g2d.globalAlpha = 1;
-
-  STEMS.forEach(s=>{
-    const a = analysers[s.id]; if(!a) return;
-    const buf = new Uint8Array(a.fftSize); a.getByteTimeDomainData(buf);
-    let sum=0; for(let i=0;i<buf.length;i++){const d=(buf[i]-128)/128; sum+=d*d;}
-    const rms = Math.sqrt(sum/buf.length);
-    const norm = Math.min(1, Math.pow(rms*7.5, .55));
-    const el = document.querySelector('.strip[data-stem="'+s.id+'"] .meter i');
-    if(el) el.style.right = (100 - norm*100).toFixed(1) + "%";
-  });
-
   const t = Math.max(0, (ctx.currentTime - startedAt) % duration);
   clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
 }
@@ -798,153 +856,16 @@ function tick(){
   const t = Math.max(0, (ctx.currentTime - startedAt) % duration);
   clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
 }
-if(!reduce){
-  draw();
-}else{
-  // sans animation : trait au repos, et l'horloge avance quand meme
+if(!reduce){ draw(); }
+else{
   g2d.strokeStyle = css("--line"); g2d.lineWidth = 1; g2d.beginPath();
   g2d.moveTo(0, cv.clientHeight/2 + .5); g2d.lineTo(cv.clientWidth, cv.clientHeight/2 + .5);
   g2d.stroke();
   setInterval(tick, 500);
 }
-
 fallbackEl.addEventListener("timeupdate", ()=>{
   if(!fallbackMode) return;
   const t = fallbackEl.currentTime;
   clock.textContent = Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0");
 });
-if(!(window.AudioContext||window.webkitAudioContext)){
-  say("Web Audio absent — lecture du mix complet uniquement.", true);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   SURCOUCHES CONTEXTUELLES
-   Elles sont décodées PARESSEUSEMENT, à la première activation. Décoder les
-   douze d'avance représenterait 350 Mo de PCM en mémoire, ce qu'un téléphone
-   ne tient pas — alors que la page n'en joue jamais plus de trois à la fois.
-   Le calage se fait au démarrage de la source : on lui donne l'offset dans la
-   boucle plutôt que de la lancer à zéro, sinon la couche jouerait l'harmonie
-   de la mesure 1 par-dessus celle en cours.
-   ═══════════════════════════════════════════════════════════════════════════ */
-const LAYERS = (CTX_DATA && CTX_DATA.layers) ? CTX_DATA.layers : [];
-const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment", situation:"Situation"};
-const layerState = {};      /* id -> {on, buffer, src, gain, pan} */
-
-if(LAYERS.length){
-  document.getElementById("ctx-section").hidden = false;
-  const axesEl = document.getElementById("ctx-axes");
-  const axes = (CTX_DATA.axes)||{};
-  Object.keys(axes).forEach(axis=>{
-    const row = document.createElement("div");
-    row.className = "ctx-axis";
-    row.innerHTML = "<b>"+(AXIS_LABEL[axis]||axis)+"</b>";
-    axes[axis].forEach(value=>{
-      const b = document.createElement("button");
-      b.className = "tog"; b.textContent = value;
-      b.setAttribute("aria-pressed","false");
-      b.addEventListener("click", ()=>{
-        row.querySelectorAll(".tog").forEach(o=>o.setAttribute("aria-pressed","false"));
-        b.setAttribute("aria-pressed","true");
-        resolveContext(axis, value);
-      });
-      row.appendChild(b);
-    });
-    axesEl.appendChild(row);
-  });
-
-  const gridEl = document.getElementById("ctx-grid");
-  LAYERS.forEach(L=>{
-    layerState[L.id] = {on:false, buffer:null, src:null, gain:null, pan:L.pan||0};
-    const b = document.createElement("button");
-    b.className = "lay"; b.dataset.layer = L.id;
-    b.setAttribute("aria-pressed","false");
-    b.innerHTML =
-      '<div class="lay-top"><b>'+L.label+'</b>'+
-        '<span class="lay-axis">'+(AXIS_LABEL[L.axis]||L.axis)+'</span></div>'+
-      '<div class="lay-ins">'+L.instruments.join(" · ")+'</div>'+
-      '<div class="lay-when">si '+L.when.join(" / ")+' &middot; '+L.events+' notes</div>';
-    b.addEventListener("click", ()=>toggleLayer(L.id, !layerState[L.id].on));
-    gridEl.appendChild(b);
-  });
-}
-
-/* Le contexte : une valeur par axe. Toutes les couches de cet axe s'éteignent,
-   celles dont la condition est remplie s'allument. */
-function resolveContext(axis, value){
-  LAYERS.forEach(L=>{
-    if(L.axis !== axis) return;
-    toggleLayer(L.id, L.when.indexOf(value) >= 0);
-  });
-}
-
-async function toggleLayer(id, on){
-  const st = layerState[id];
-  if(!st || st.on === on) return;
-  const btn = document.querySelector('.lay[data-layer="'+id+'"]');
-  st.on = on;
-  if(btn) btn.setAttribute("aria-pressed", String(on));
-
-  if(!on){
-    if(st.gain && ctx) st.gain.gain.setTargetAtTime(0, ctx.currentTime, 1.1);
-    return;
-  }
-  if(fallbackMode || !ctx){
-    say("Les surcouches demandent le mixeur par couche — indisponible en mix simple.", true);
-    st.on = false;
-    if(btn) btn.setAttribute("aria-pressed","false");
-    return;
-  }
-  if(!st.buffer){
-    if(btn) btn.classList.add("busy");
-    try{
-      st.buffer = await new Promise((res,rej)=>{
-        const p = ctx.decodeAudioData(b64ToBytes(AUDIO["L_"+id]), res, rej);
-        if(p && p.then) p.then(res, rej);
-      });
-    }catch(err){
-      say("Couche « "+id+" » non décodée par ce navigateur.", true);
-      st.on = false;
-      if(btn){ btn.classList.remove("busy"); btn.setAttribute("aria-pressed","false"); }
-      return;
-    }
-    if(btn) btn.classList.remove("busy");
-    if(!st.on) return;                       /* éteinte pendant le décodage */
-  }
-  if(!st.gain){
-    st.gain = ctx.createGain(); st.gain.gain.value = 0;
-    if(ctx.createStereoPanner){
-      const p = ctx.createStereoPanner(); p.pan.value = st.pan;
-      st.gain.connect(p); p.connect(master);
-    }else{
-      st.gain.connect(master);               /* Safari ancien : mono au centre */
-    }
-  }
-  if(playing && !st.src) startLayerSource(id);
-  st.gain.gain.setTargetAtTime(1, ctx.currentTime, 1.1);
-}
-
-function startLayerSource(id){
-  const st = layerState[id];
-  if(!st || !st.buffer || !ctx) return;
-  const src = ctx.createBufferSource();
-  src.buffer = st.buffer; src.loop = true;
-  src.connect(st.gain);
-  /* offset dans la boucle : c'est tout le calage */
-  const off = Math.max(0, (ctx.currentTime - startedAt)) % st.buffer.duration;
-  src.start(ctx.currentTime + .05, off);
-  st.src = src;
-}
-
-function stopLayerSources(){
-  Object.keys(layerState).forEach(id=>{
-    const st = layerState[id];
-    if(st.src){ try{ st.src.stop(); }catch(e){} st.src = null; }
-  });
-}
-
-function startActiveLayers(){
-  Object.keys(layerState).forEach(id=>{
-    if(layerState[id].on && layerState[id].buffer) startLayerSource(id);
-  });
-}
 </script>

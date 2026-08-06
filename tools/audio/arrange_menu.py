@@ -1,75 +1,99 @@
 #!/usr/bin/env python3
 """
-Orchestration — repartit Tri Martolod sur 37 pupitres et 4 stems.
+Orchestration — un SOCLE fixe, plus trois roles dont le contexte change le titulaire.
 
-PLAN DE L'ARRANGEMENT
+    socle    ce qui ne bouge jamais : cordes, bois d'harmonie, harpe, percussion
+             douce, contrechant, dessus. Un seul fichier, toujours audible.
+    chant    qui porte Tri Martolod          -> casting_menu.CANDIDATES["chant"]
+    corde    l'accompagnement pince          -> ... ["corde"]
+    halo     le scintillement de l'aigu      -> ... ["halo"]
 
-  1-4    Intro          celesta, harpe, cloches froides, bourdon de contrebasses.
-                        Le bourdon du biniou s'installe deja, tres bas.
-  5-8    Air nu         COR ANGLAIS seul. Plus grave et plus plaintif que le
-                        hautbois : c'est la voix qui convient a une gwerz.
-  9-12   Air double     hautbois + flute, altos et violoncelles dessous.
-  13-16  COUPLE BRETON  bombarde et biniou, avec bourdon et bodhran. C'est ainsi
-                        qu'on joue cet air en Bretagne, et l'orchestre se tait
-                        pour les laisser passer.
-  17-20  Air harmonise  cordes completes, cor, basson, contrechant de clarinette.
-  21-28  Developpement  tremolos, choeur, violon solo, tin whistle. Roulements de
-                        timbales et de caisse claire. Crescendo jusqu'au LA MAJEUR
-                        de la mesure 28, marque au tam-tam.
-  29-36  Tutti          tout : bois a l'unisson (flute, piccolo, hautbois,
-                        bombarde), cuivres au complet, glockenspiel, percussions.
-  37-40  Coda           tout se retire. Celesta, cloches, bourdon. On boucle.
+Un role est ecrit UNE FOIS et rendu une fois par candidat, aux memes notes et aux
+memes instants. Basculer de la guitare celtique a l'oud est donc un fondu croise,
+pas un rearrangement — voir casting_menu.py.
 
-DEGARNIR — pourquoi il y a moins de notes qu'avant
---------------------------------------------------
-Ralentir sans degarnir ne donne pas de l'ambiant, ca donne le meme morceau en
-plus lourd : les memes notes, plus longues, se recouvrent davantage et la texture
-s'epaissit au lieu de s'aerer. Chaque figure d'accompagnement a donc ete reduite
-en meme temps que le tempo — arpege de harpe 7 notes -> 5, motif de guitare
-5 notes -> 3, bodhran 4 frappes/mesure -> 2, glockenspiel et celesta 3 -> 2.
-La nappe FM, elle, ne joue plus que dans l'intro et la coda : c'est l'element le
-plus ouvertement synthetique de la palette, et il n'a rien a faire sous des
-pupitres enregistres.
+PLAN, 40 mesures a 49 BPM (4,90 s la mesure)
 
-Stems, conformes a stems_music_manager.gd :
-  base    cordes graves, altos, cors, trombone, tuba, basson, nappes, bourdon
-  rhythm  timbales, taiko, bodhran, pizzicati, cymbales, tam-tam, caisse claire
-  melody  cor anglais, hautbois, flute, piccolo, bombarde, biniou, tin whistle,
-          harpe, glockenspiel, celesta, cloches, violon solo
-  climax  choeur, cuivres tutti, trompettes, violons, tremolos, clarinette
+  1-4    Ouverture      cloches froides, harpe, halo. Cordes a peine posees.
+  5-8    L'air nu       le chant enonce Tri Martolod SANS ornement. Il faut
+                        l'entendre simple avant de l'entendre brode.
+  9-12   L'air orne     meme air, orne. Hautbois en dessous, contrechant entre.
+  13-16  Refrain        la phrase instrumentale, ornee. Bodhran tres doux.
+  17-20  Harmonise      cordes completes, cor, basson. Le contrechant s'installe.
+  21-24  Developpement  violon solo, tremolos. Le chant se tait — c'est ce silence
+                        qui fait qu'on l'attend.
+  25-28  Refrain        le chant revient sur le refrain, monte vers le LA MAJEUR.
+  29-36  Plein          l'air orne, dessus au piccolo, glockenspiel, cordes hautes.
+                        Aucun cuivre : le sommet s'ouvre en registre, pas en force.
+  37-40  Coda           tout se retire. Cloches, harpe, halo. On boucle.
+
+CE QUI A DISPARU
+Les anches synthetisees (bombarde, biniou, bourdon, tin whistle), les cuivres au
+complet, les percussions franches (taiko, cymbale, tam-tam, caisse claire) et les
+nappes electroniques (nappe FM, sub, choeur). Il ne reste que des pupitres
+reellement enregistres — plus l'oud, seul modele synthetise reste, faute de source
+libre pour un luth arabe.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
-from score_menu import (BAR, BEAT, CHORDS, COUNTER, N_BARS, PROGRESSION, REFRAIN,
-                        TRI_MARTOLOD, build_voicings, dyn, place_phrase, t_of)
+from casting_menu import CANDIDATES, fold
+from score_menu import (BAR, BEAT, CHORDS, LOOP_LEN, N_BARS, PROGRESSION, REFRAIN,
+                        TRI_MARTOLOD, build_voicings, dyn, ornament, place_phrase, t_of)
 
-_hum = np.random.default_rng(4242)
+def _jitter(seed: int) -> tuple[float, float]:
+    """Flottement d'attaque et de velocite, FONCTION PURE DU SEED DE LA NOTE.
 
-# Qui porte l'air, ou, a quelle octave, a quel niveau relatif
-AIR_AT = [
-    (5,  "cor_anglais", 0,   1.00),                      # nu
-    (9,  "oboe",  0,   0.95), (9,  "flute", 0, 0.70),    # double
-    # Le couple breton : la bombarde mene, le biniou repond une octave au-dessus.
-    (13, "bombarde", 0, 1.00), (13, "biniou", 12, 0.62),
-    (17, "flute", 0, 1.00), (17, "cor_anglais", -12, 0.55),
-    # Au tutti, quatre bois a l'unisson : c'est ce qu'il faut pour traverser
-    # des cuivres au complet. Une flute seule ne pesait que 1 % du medium.
-    (29, "flute", 0, 1.45), (29, "oboe", 0, 0.95),
-    (29, "piccolo", 12, 0.60), (29, "bombarde", 0, 0.70),
-    (33, "flute", 0, 1.45), (33, "oboe", 0, 0.95),
-    (33, "piccolo", 12, 0.60), (33, "bombarde", 0, 0.70),
+    C'est la propriete sur laquelle repose tout le systeme de distribution. Avec
+    un generateur partage au niveau du module, `build_role("halo", "celesta")` et
+    `build_role("halo", "wine_glasses")` consommaient le flux dans des ordres
+    differents : les deux parties portaient les memes notes, mais decalees de
+    quelques millisecondes les unes des autres. Un fondu croise entre elles se
+    serait entendu comme un flanger, et deux notes censees etre la meme note
+    auraient double.
+
+    Ici le flottement ne depend que du seed de l'evenement, et aucun seed ne
+    depend de l'instrument : tous les candidats d'un role sont donc rigoureusement
+    synchrones. Verifie dans __main__."""
+    rng = np.random.default_rng(4242 + seed)
+    return (float(rng.normal(0.0, 0.013)),
+            float(np.clip(rng.normal(1.0, 0.055), 0.6, 1.3)))
+
+AIR = TRI_MARTOLOD
+AIR_ORNE = ornament(TRI_MARTOLOD, seed=1)
+REFRAIN_ORNE = ornament(REFRAIN, seed=2)
+
+# Ou le chant se pose : (mesure, phrase, transposition, niveau relatif)
+CHANT_AT = [
+    (5,  AIR,          0, 1.00),      # nu — l'air doit d'abord etre entendu simple
+    (9,  AIR_ORNE,     0, 1.00),
+    (13, REFRAIN_ORNE, 0, 0.92),
+    (17, AIR_ORNE,     0, 1.00),
+    #  21-24 : silence du chant
+    (25, REFRAIN_ORNE, 0, 0.95),
+    (29, AIR_ORNE,     0, 1.00),
+    (33, AIR_ORNE,     0, 0.96),
 ]
-REFRAIN_AT = [(21, "tin_whistle", 0, 0.85), (25, "violin_solo", 0, 0.95)]
+
+# Dessus — une ligne haute, ecrite au-dessus de l'air pendant le plein.
+# Elle ne double pas la melodie : elle plane dessus en valeurs longues.
+DESCANT = [
+    (29, 1.0, 86, 3.0), (29, 4.0, 84, 2.0),
+    (30, 2.0, 83, 3.0), (31, 1.0, 81, 2.0), (31, 3.0, 83, 2.0),
+    (32, 1.0, 86, 4.0),
+    (33, 1.0, 84, 3.0), (33, 4.0, 86, 2.0),
+    (34, 2.0, 88, 3.0), (35, 1.0, 86, 4.0), (36, 1.0, 81, 4.0),
+]
 
 
 def _ev(inst, stem, midi, at, dur, vel, seed=0, humanize=True):
     if humanize:
-        at += float(_hum.normal(0.0, 0.011))              # flottement d'attaque
-        vel *= float(np.clip(_hum.normal(1.0, 0.055), 0.6, 1.3))
-    return {"inst": inst, "stem": stem, "midi": midi, "at": max(0.0, at),
+        d_at, k_vel = _jitter(seed)
+        at += d_at
+        vel *= k_vel
+    return {"inst": inst, "stem": stem, "midi": int(round(midi)), "at": max(0.0, at),
             "dur": dur, "vel": float(np.clip(vel, 0.05, 1.0)), "seed": seed}
 
 
@@ -82,169 +106,207 @@ def _chord_groups() -> list[tuple[int, int, str]]:
     return groups
 
 
-def build_events() -> list[dict]:
+def _tones(bar: int, lo: int, hi: int) -> list[int]:
+    pcs, _root = CHORDS[PROGRESSION[bar - 1]]
+    return sorted({o * 12 + pc for pc in pcs for o in range(lo // 12, hi // 12 + 2)
+                   if lo <= o * 12 + pc <= hi})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LE SOCLE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def build_bed() -> list[dict]:
     ev: list[dict] = []
     voicings = build_voicings()
     groups = _chord_groups()
-    BRETON = range(13, 17)                                # l'orchestre se tait pour le couple
 
-    # ── SOCLE ────────────────────────────────────────────────────────────────
-    for (b0, b1, name) in groups:
+    # ── HARMONIE TENUE ───────────────────────────────────────────────────────
+    for (b0, b1, _name) in groups:
         t0 = t_of(b0, 1.0)
         span = (b1 - b0 + 1) * BAR
         d = dyn(b0)
         bass, upper = voicings[b0 - 1][0], voicings[b0 - 1][1:]
-        breton = b0 in BRETON
 
-        ev.append(_ev("sub", "base", bass - 12, t0, span + 1.0, 0.26 + 0.20 * d, b0))
-        ev.append(_ev("contrabass", "base", bass - 12, t0, span + 0.8, 0.28 + 0.44 * d, b0 * 3))
-        # La nappe FM : intro et coda seulement. Ailleurs, ce sont des pupitres
-        # enregistres qui tiennent l'harmonie — y superposer une nappe de synthese
-        # etait exactement ce qui rendait le tout synthetique.
-        if b0 <= 4 or b0 >= 37:
-            ev.append(_ev("pad_fm", "base", upper[0] + 12, t0, span + 1.4, 0.20 + 0.16 * d, b0))
-        if not breton:
-            ev.append(_ev("strings_low", "base", bass, t0, span + 0.7, 0.24 + 0.44 * d, b0))
-        if b0 >= 9 and not breton:
-            ev.append(_ev("viola", "base", upper[0], t0, span + 0.7, 0.24 + 0.44 * d, b0 * 5))
-            ev.append(_ev("strings_mid", "base", upper[1], t0, span + 0.6, 0.24 + 0.46 * d, b0 * 7))
-        if b0 >= 17 and not breton:
-            ev.append(_ev("horn", "base", upper[1], t0, span + 0.5, 0.22 + 0.42 * d, b0 * 11))
-            ev.append(_ev("bassoon", "base", bass + 12, t0, span + 0.5, 0.20 + 0.36 * d, b0 * 13))
-            ev.append(_ev("strings_high", "climax", upper[2], t0, span + 0.5,
-                          0.24 + 0.48 * d, b0 * 17))
-        if 23 <= b0 <= 28:
-            for k, m in enumerate(upper):
-                ev.append(_ev("strings_tremolo", "climax", m + 12, t0, span + 0.3,
-                              0.20 + 0.45 * d, b0 * 19 + k))
+        ev.append(_ev("contrabass", "bed", bass - 12, t0, span + 0.9, 0.26 + 0.40 * d, b0 * 3))
+        ev.append(_ev("strings_low", "bed", bass, t0, span + 0.8, 0.24 + 0.42 * d, b0 * 5))
+        if b0 >= 9:
+            ev.append(_ev("viola", "bed", upper[0], t0, span + 0.8, 0.22 + 0.40 * d, b0 * 7))
+            ev.append(_ev("strings_mid", "bed", upper[1], t0, span + 0.7, 0.22 + 0.42 * d, b0 * 11))
+        if b0 >= 17:
+            ev.append(_ev("horn", "bed", upper[1] - 12, t0, span + 0.6, 0.18 + 0.30 * d, b0 * 13))
+            ev.append(_ev("bassoon", "bed", bass + 12, t0, span + 0.6, 0.16 + 0.28 * d, b0 * 17))
         if b0 >= 21:
-            for k, m in enumerate(upper):
-                ev.append(_ev("choir", "climax", m + 12, t0, span + 1.0,
-                              0.13 + 0.25 * d, b0 * 23 + k))
-        if 29 <= b0 <= 36:                                # les cuivres : le tutti seulement
-            ev.append(_ev("tuba", "base", bass - 12, t0, span + 0.4, 0.24 + 0.42 * d, b0 * 29))
-            ev.append(_ev("trombone", "base", bass + 12, t0, span + 0.4, 0.22 + 0.40 * d, b0 * 31))
+            ev.append(_ev("strings_high", "bed", upper[2], t0, span + 0.6, 0.20 + 0.40 * d, b0 * 19))
+        if 23 <= b0 <= 28:
             for k, m in enumerate(upper[:2]):
-                ev.append(_ev("brass_ff", "climax", m, t0, span + 0.4,
-                              0.18 + 0.30 * d, b0 * 37 + k))
-            ev.append(_ev("trumpet", "climax", upper[2] + 12, t0, span + 0.35,
-                          0.20 + 0.34 * d, b0 * 41))
+                ev.append(_ev("strings_tremolo", "bed", m + 12, t0, span + 0.4,
+                              0.14 + 0.30 * d, b0 * 23 + k))
+        # Le hautbois double l'air une octave dessous pendant les enonces ornes :
+        # c'est ce qui donne du corps au chant sans lui disputer sa ligne.
+        if b0 in (9, 10, 11, 12, 17, 18, 19, 20):
+            ev.append(_ev("oboe", "bed", upper[0], t0, span + 0.4, 0.14 + 0.24 * d, b0 * 29))
 
-    # ── BOURDON DU BINIOU — il ne bouge jamais, c'est le principe ────────────
-    for (b0, b1) in ((1, 4), (13, 16), (37, 40)):
-        ev.append(_ev("biniou_drone", "base", 50, t_of(b0, 1.0),
-                      (b1 - b0 + 1) * BAR + 1.0, 0.5 + 0.4 * dyn(b0), b0 * 43))
+    # ── CONTRECHANT — en mouvement contraire, sur presque toute la piece ──────
+    # Il monte quand l'air descend. C'est ce qui evite l'effet « melodie + tapis »,
+    # et c'est la moitie de ce qu'on entend comme « melodique ».
+    counter = [
+        (9, 1.0, 57, 2.0), (9, 3.0, 60, 2.0), (10, 1.0, 62, 3.0), (10, 4.0, 60, 1.0),
+        (11, 1.0, 57, 2.0), (11, 3.0, 62, 2.0), (12, 1.0, 58, 4.0),
+        (13, 1.0, 60, 2.0), (13, 3.0, 62, 2.0), (14, 1.0, 64, 4.0),
+        (15, 1.0, 62, 2.0), (15, 3.0, 59, 2.0), (16, 1.0, 57, 4.0),
+        (17, 1.0, 62, 2.0), (17, 3.0, 65, 2.0), (18, 1.0, 59, 4.0),
+        (19, 1.0, 57, 2.0), (19, 3.0, 60, 2.0), (20, 1.0, 62, 4.0),
+        (21, 1.0, 65, 2.0), (21, 3.0, 64, 2.0), (22, 1.0, 62, 4.0),
+        (23, 1.0, 58, 4.0), (24, 1.0, 57, 4.0),
+        (25, 1.0, 60, 2.0), (25, 3.0, 62, 2.0), (26, 1.0, 64, 4.0),
+        (27, 1.0, 62, 2.0), (27, 3.0, 59, 2.0),
+        (28, 1.0, 61, 4.0),                                  # do diese : la dominante
+        (29, 1.0, 62, 2.0), (29, 3.0, 65, 2.0), (30, 1.0, 59, 4.0),
+        (31, 1.0, 57, 2.0), (31, 3.0, 60, 2.0), (32, 1.0, 62, 4.0),
+        (33, 1.0, 65, 2.0), (33, 3.0, 64, 2.0), (34, 1.0, 62, 4.0),
+        (35, 1.0, 58, 4.0), (36, 1.0, 57, 4.0),
+    ]
+    for (bar, beat, midi, nb) in counter:
+        ev.append(_ev("clarinet", "bed", midi, t_of(bar, beat), nb * BEAT * 0.94,
+                      0.20 + 0.30 * dyn(bar), bar * 31))
 
-    # ── L'AIR ────────────────────────────────────────────────────────────────
-    for (bar0, inst, tr, gain) in AIR_AT:
-        for (bar, beat, midi, nb) in place_phrase(TRI_MARTOLOD, bar0, tr):
-            ev.append(_ev(inst, "melody", midi, t_of(bar, beat), max(0.12, nb * BEAT * 0.94),
-                          gain * (0.34 + 0.52 * dyn(bar)), bar * 47 + midi))
-    for (bar0, inst, tr, gain) in REFRAIN_AT:
-        for (bar, beat, midi, nb) in place_phrase(REFRAIN, bar0, tr):
-            ev.append(_ev(inst, "melody", midi, t_of(bar, beat), max(0.12, nb * BEAT * 0.94),
-                          gain * (0.34 + 0.50 * dyn(bar)), bar * 53 + midi))
-    for bar0 in (29, 33):                                 # violons a l'octave inferieure
-        for (bar, beat, midi, nb) in place_phrase(TRI_MARTOLOD, bar0, -12):
-            ev.append(_ev("strings_high", "melody", midi, t_of(bar, beat),
-                          max(0.14, nb * BEAT * 0.96), 0.30 + 0.50 * dyn(bar), bar * 59 + midi))
+    # ── DESSUS — au piccolo, pendant le plein ────────────────────────────────
+    for (bar, beat, midi, nb) in DESCANT:
+        ev.append(_ev("piccolo", "bed", midi, t_of(bar, beat), nb * BEAT * 0.96,
+                      0.16 + 0.24 * dyn(bar), bar * 37 + midi))
 
-    # ── CONTRECHANT ──────────────────────────────────────────────────────────
-    for (bar, beat, midi, nb) in COUNTER:
-        ev.append(_ev("clarinet", "climax", midi, t_of(bar, beat), nb * BEAT * 0.92,
-                      0.26 + 0.40 * dyn(bar), bar * 61))
+    # ── VIOLON SOLO — le developpement lui appartient ────────────────────────
+    for (bar, beat, midi, nb) in place_phrase(REFRAIN_ORNE, 21, -12):
+        ev.append(_ev("violin_solo", "bed", midi, t_of(bar, beat),
+                      max(0.2, nb * BEAT * 0.94), 0.22 + 0.34 * dyn(bar), bar * 41 + midi))
 
-    # ── HARPE ────────────────────────────────────────────────────────────────
+    # ── HARPE — elle fait partie du socle, elle ne se remplace pas ───────────
     for (b0, _b1, name) in groups:
         pcs, _ = CHORDS[name]
         d = dyn(b0)
-        # cinq notes, egrenees deux fois plus lentement : a 58 BPM un arpege
-        # roule de sept notes serrees redevient un accord plaque
         for k, m in enumerate(sorted({o * 12 + pc for pc in pcs for o in (4, 5, 6)
-                                      if 55 <= o * 12 + pc <= 86})[:5]):
-            ev.append(_ev("harp", "melody", m, t_of(b0, 1.0) + k * 0.135, 3.6,
-                          0.26 + 0.42 * d, b0 * 67 + k))
-    for bar in list(range(1, 5)) + list(range(9, 13)) + list(range(17, 29)) + list(range(37, 41)):
-        pcs, _ = CHORDS[PROGRESSION[bar - 1]]
-        d = dyn(bar)
-        tones = sorted({o * 12 + pc for pc in pcs for o in (4, 5) if 60 <= o * 12 + pc <= 79})
-        # une seule note par mesure, sur le contretemps : le genre ambiant se joue
-        # dans l'espace entre les notes, pas dans leur nombre
-        beat = 2.5 if bar % 2 else 4.5
-        ev.append(_ev("harp", "melody", tones[(bar * 3) % len(tones)], t_of(bar, beat),
-                      3.2, 0.12 + 0.20 * d, bar * 71))
+                                      if 57 <= o * 12 + pc <= 86})[:5]):
+            ev.append(_ev("harp", "bed", m, t_of(b0, 1.0) + k * 0.16, 4.2,
+                          0.22 + 0.34 * d, b0 * 43 + k))
+    for bar in range(1, N_BARS + 1, 2):
+        tones = _tones(bar, 62, 81)
+        ev.append(_ev("harp", "bed", tones[(bar * 3) % len(tones)], t_of(bar, 3.5),
+                      3.6, 0.10 + 0.18 * dyn(bar), bar * 47))
 
-    # ── GUITARE CELTIQUE — arpeges au doigt, accordage DADGAD ────────────────
-    # Elle joue peu de notes mais elles sonnent longtemps : c'est le liant du
-    # morceau, ce qui remplit l'espace entre les phrases sans le saturer.
-    for bar in list(range(1, 13)) + list(range(17, 29)) + list(range(33, 41)):
-        pcs, _ = CHORDS[PROGRESSION[bar - 1]]
-        d = dyn(bar)
-        tones = sorted({o * 12 + pc for pc in pcs for o in (3, 4, 5) if 50 <= o * 12 + pc <= 76})
-        # trois notes au lieu de cinq, tenues 5 s : elles se recouvrent d'une
-        # mesure sur l'autre et forment une nappe de cordes pincees
-        pattern = ((1.0, 0), (2.5, 2), (4.0, 4))
-        for j, (beat, idx) in enumerate(pattern):
-            ev.append(_ev("celtic_guitar", "melody", tones[idx % len(tones)],
-                          t_of(bar, beat), 5.0, 0.24 + 0.34 * d, bar * 131 + j))
-        if bar % 4 == 1:                                   # basse a vide sur l'appui
-            ev.append(_ev("celtic_guitar", "melody", tones[0] - 12, t_of(bar, 1.0),
-                          6.0, 0.28 + 0.32 * d, bar * 137))
-
-    # ── CLOCHES ET CELESTA — les extremites froides ──────────────────────────
+    # ── CLOCHES FROIDES — les extremites ─────────────────────────────────────
     for bar in list(range(1, 9)) + list(range(37, 41)):
         pcs, _ = CHORDS[PROGRESSION[bar - 1]]
         d = dyn(bar)
         for j, beat in enumerate((1.0, 3.0)):
-            ev.append(_ev("celesta_bell", "melody", 72 + pcs[(bar + j) % len(pcs)] % 12,
-                          t_of(bar, beat), 3.2, 0.20 + 0.32 * d, bar * 73 + j))
-    for bar in list(range(1, 5)) + list(range(37, 41)):
-        pcs, _ = CHORDS[PROGRESSION[bar - 1]]
-        d = dyn(bar)
-        for j, beat in enumerate((2.0, 4.0)):
-            ev.append(_ev("celesta", "melody", 79 + pcs[(j + bar) % len(pcs)] % 12,
-                          t_of(bar, beat), 3.0, 0.20 + 0.30 * d, bar * 79 + j))
+            ev.append(_ev("celesta_bell", "bed", 72 + pcs[(bar + j) % len(pcs)] % 12,
+                          t_of(bar, beat), 4.4, 0.16 + 0.26 * d, bar * 53 + j))
     for bar in range(29, 37):
         pcs, _ = CHORDS[PROGRESSION[bar - 1]]
         for j, beat in enumerate((1.0, 3.5)):
-            ev.append(_ev("glockenspiel", "melody", 84 + pcs[(j + bar) % len(pcs)] % 12,
-                          t_of(bar, beat), 2.6, 0.26 + 0.38 * dyn(bar), bar * 83 + j))
+            ev.append(_ev("glockenspiel", "bed", 84 + pcs[(j + bar) % len(pcs)] % 12,
+                          t_of(bar, beat), 3.2, 0.18 + 0.28 * dyn(bar), bar * 59 + j))
 
-    # ── PERCUSSIONS ──────────────────────────────────────────────────────────
-    for bar in range(1, N_BARS + 1):
+    # ── PERCUSSION DOUCE — bodhran et timbales, rien de franc ────────────────
+    for bar in range(13, N_BARS + 1):
         d = dyn(bar)
+        if bar >= 13:
+            for beat, g in ((1.0, 1.0), (3.0, 0.55)):
+                ev.append(_ev("bodhran", "bed", 45, t_of(bar, beat), 1.8,
+                              g * (0.16 + 0.26 * d), bar * 61 + int(beat)))
+    for bar in range(17, N_BARS - 3, 4):
         _pcs, root = CHORDS[PROGRESSION[bar - 1]]
-        breton = bar in BRETON
-        if (bar % 4 == 1 and bar >= 17) or bar in (28, 29):
-            ev.append(_ev("timpani", "rhythm", root - 24, t_of(bar, 1.0), 3.0,
-                          0.28 + 0.56 * d, bar * 89))
-        if bar == 28:
-            for j in range(4):
-                ev.append(_ev("timpani", "rhythm", root - 24, t_of(bar, 1.0) + j * BEAT,
-                              1.2, 0.12 + 0.30 * d * (j + 4) / 8, bar * 97 + j))
-        # bodhran : la pulsation celtique. Seul avec le couple breton, puis partout.
-        # Deux frappes par mesure : a 58 BPM la mesure dure 4,1 s, quatre frappes
-        # y installent un tempo de marche dont on cherche precisement a sortir.
-        if breton or bar >= 21:
-            for beat, g in ((1.0, 1.0), (3.0, 0.6)):
-                ev.append(_ev("bodhran", "rhythm", 45, t_of(bar, beat), 1.5,
-                              g * (0.26 + 0.44 * d), bar * 101 + int(beat * 2)))
-        if bar >= 17 and not breton and bar % 2 == 1:
-            ev.append(_ev("taiko", "rhythm", 40, t_of(bar, 1.0), 2.2, 0.26 + 0.48 * d, bar * 103))
-        if 17 <= bar <= 20:                                # pizzicati
-            pcs2, _ = CHORDS[PROGRESSION[bar - 1]]
-            tones = sorted({o * 12 + pc for pc in pcs2 for o in (3, 4) if 45 <= o * 12 + pc <= 64})
-            for j, beat in enumerate((1.0, 3.0)):
-                ev.append(_ev("pizzicato", "rhythm", tones[j % len(tones)], t_of(bar, beat),
-                              1.5, 0.22 + 0.36 * d, bar * 109 + j))
-        if bar in (27, 28):                                # caisse claire : la montee
-            ev.append(_ev("snare_roll", "rhythm", 0, t_of(bar, 1.0), BAR * 0.98,
-                          0.16 + 0.34 * ((bar - 26) / 2.0), bar * 113, humanize=False))
-    for bar, gain in ((12, 0.4), (20, 0.55), (28, 1.0), (36, 0.5)):
-        ev.append(_ev("cymbal", "rhythm", 0, t_of(bar, 1.0), BAR * 0.98,
-                      0.28 + 0.50 * gain, bar * 127, humanize=False))
-    ev.append(_ev("tam_tam", "rhythm", 0, t_of(28, 1.0), BAR * 2.4, 0.85, 911, humanize=False))
+        ev.append(_ev("timpani", "bed", root - 24, t_of(bar, 1.0), 3.6,
+                      0.16 + 0.30 * dyn(bar), bar * 67))
+    for bar in range(17, 21):                                # pizzicati
+        tones = _tones(bar, 45, 64)
+        for j, beat in enumerate((1.0, 3.0)):
+            ev.append(_ev("pizzicato", "bed", tones[j % len(tones)], t_of(bar, beat),
+                          1.8, 0.16 + 0.26 * dyn(bar), bar * 71 + j))
 
+    ev.sort(key=lambda e: e["at"])
+    return ev
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LES ROLES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def build_role(role: str, candidate: str) -> list[dict]:
+    """Les memes notes aux memes instants, quel que soit le candidat.
+
+    Seuls changent l'instrument, le gain, et le repli dans sa tessiture.
+    C'est cette identite rythmique et melodique qui rend le fondu croise
+    transparent : on entend un instrument en remplacer un autre, pas la piece
+    changer."""
+    inst, gain, span, _label = CANDIDATES[role][candidate]
+    ev: list[dict] = []
+
+    if role == "chant":
+        for (bar0, phrase, tr, lvl) in CHANT_AT:
+            for (bar, beat, midi, nb) in place_phrase(phrase, bar0, tr):
+                ev.append(_ev(inst, "chant", fold(midi, span), t_of(bar, beat),
+                              max(0.18, nb * BEAT * 0.92),
+                              gain * lvl * (0.30 + 0.46 * dyn(bar)), bar * 73 + midi))
+
+    elif role == "corde":
+        # Trois notes par mesure, tenues cinq secondes : elles se recouvrent d'une
+        # mesure sur l'autre et forment une nappe de cordes pincees.
+        for bar in range(1, N_BARS + 1):
+            tones = _tones(bar, 55, 74)
+            d = dyn(bar)
+            # Rien ne deborde le point de boucle — meme raison que pour le halo.
+            # Une guitare ou un oud sont quasi eteints au bout de 5 s, donc le
+            # repli de queue passait inapercu ; un psalterion FROTTE, lui, sonne
+            # encore a plein niveau, et sa fin se repliait sur l'attaque de la
+            # mesure 1. Seul des quatorze fichiers a produire un vrai clic :
+            # +2,82 points d'exces haute frequence au raccord, pour un seuil de 2.
+            for j, (beat, idx) in enumerate(((1.0, 0), (2.5, 2), (4.0, 4))):
+                at = t_of(bar, beat)
+                dur = min(5.6, LOOP_LEN - at - 0.06)
+                if dur < 0.4:
+                    continue
+                ev.append(_ev(inst, "corde", fold(tones[idx % len(tones)], span),
+                              at, dur, gain * (0.22 + 0.30 * d), bar * 79 + j))
+            if bar % 4 == 1:                                  # basse a vide sur l'appui
+                at = t_of(bar, 1.0)
+                dur = min(6.4, LOOP_LEN - at - 0.06)
+                if dur >= 0.4:
+                    ev.append(_ev(inst, "corde", fold(tones[0] - 12, span), at,
+                                  dur, gain * (0.24 + 0.28 * d), bar * 83))
+
+    elif role == "halo":
+        # Tres peu de notes, tres haut, tres longues. C'est le registre qui fait
+        # le feerique, pas la quantite.
+        for bar in list(range(1, 9)) + list(range(13, 17)) + list(range(29, 41)):
+            tones = _tones(bar, 76, 88)
+            if not tones:
+                continue
+            d = dyn(bar)
+            for j, beat in enumerate((2.0, 4.0)):
+                at = t_of(bar, beat)
+                # Rien ne doit deborder le point de boucle. Une tenue de verre
+                # frotte qui depassait de 2,8 s voyait sa fin repliee par-dessus
+                # l'attaque de la mesure 1 : un ressaut que le test de pente
+                # attrapait (0,0035 contre 0,0034), sur un signal quasi sinusoidal
+                # ou les ecarts entre echantillons voisins sont minuscules.
+                # marge : le flottement d'attaque peut encore decaler de ~13 ms
+                dur = min(4.0, LOOP_LEN - at - 0.06)
+                if dur < 0.4:
+                    continue
+                ev.append(_ev(inst, "halo", fold(tones[(bar + j) % len(tones)], span),
+                              at, dur, gain * (0.18 + 0.26 * d), bar * 89 + j))
+
+    ev.sort(key=lambda e: e["at"])
+    return ev
+
+
+def build_events() -> list[dict]:
+    """Le mix par defaut : socle + les trois titulaires."""
+    from casting_menu import DEFAULT
+    ev = build_bed()
+    for role, cand in DEFAULT.items():
+        ev += build_role(role, cand)
     ev.sort(key=lambda e: e["at"])
     return ev
 
@@ -262,4 +324,29 @@ def summary(events: list[dict]) -> dict:
 
 if __name__ == "__main__":
     import json
+    from casting_menu import all_parts
     print(json.dumps(summary(build_events()), indent=2, ensure_ascii=False))
+    print()
+    for role, cand in all_parts():
+        e = build_role(role, cand)
+        lo = min(x["midi"] for x in e)
+        hi = max(x["midi"] for x in e)
+        over = sum(1 for x in e if x["at"] + x["dur"] > LOOP_LEN + 1e-6)
+        print(f"  {role:6s} {cand:14s} {len(e):3d} notes  ambitus {lo}-{hi}"
+              f"  debordements {over}")
+
+    # LA propriete du systeme : tous les candidats d'un role doivent porter les
+    # memes notes aux memes instants. Sans ca, un fondu croise flangerait.
+    print()
+    for role, cands in CANDIDATES.items():
+        ref = None
+        ok = True
+        for cand in cands:
+            sig = [(round(x["at"], 6), round(x["dur"], 6)) for x in build_role(role, cand)]
+            if ref is None:
+                ref = sig
+            elif sig != ref:
+                ok = False
+                print(f"  ! {role}/{cand} n'est PAS synchrone avec le titulaire")
+        print(f"  {role:6s} : {len(cands)} candidats "
+              f"{'rigoureusement synchrones' if ok else 'DESYNCHRONISES'}")

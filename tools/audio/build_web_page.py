@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Assemble la page HTML de presentation (stems audio embarques en base64).
+"""Assemble la page HTML de presentation (audio embarque en base64).
 
-La page est autonome : aucune requete reseau, l'audio est inline. Elle sert de
-preview jouable de la palette (console 4 stems + analyseur temps reel).
+La page est autonome : aucune requete reseau, l'audio est inline. C'est un
+lecteur simple — un socle, trois roles, et des boutons qui changent le titulaire
+de chaque role selon la meteo, la saison ou le moment. Un seul titulaire par
+role est audible a la fois : on entend un remplacement, pas un empilement.
 
 Usage :
     python3 tools/audio/build_web_page.py --stems audio/music/menu --out /tmp/page.html
@@ -10,37 +12,28 @@ Usage :
 import argparse, base64, html, json, os, re, subprocess, sys
 
 # DEBITS EN CONSTANT, PLUS EN VBR — parce qu'il faut tenir un budget.
+# En VBR le total partait bien au-dela de la limite de 16 Mo d'un artefact ; en
+# debit fixe on sait ce qu'on paie.
 #
-# La page embarque tout en base64 : 17 pistes de 2'45, plus l'inflation de 33 %
-# du base64. En VBR le total partait a 26 Mo, soit bien au-dela de la limite de
-# 16 Mo d'un artefact. En debit fixe on sait ce qu'on paie : 165,3 s x debit/8.
+# Budget : la page doit tenir sous 16 Mo. 195,9 s x debit / 8, le tout inflate de
+# 33 % par le base64. Le socle et le mix de repli pesent 3,1 Mo, les douze parties
+# de role 7,1 Mo, soit 13,6 Mo une fois encodes.
 #
-# menu_theme sert de repli <audio> quand le Web Audio est refuse — c'est le seul
-# qu'on entende jamais seul, donc c'est lui qui garde le meilleur debit.
-# Budget : la page doit tenir sous 16 Mo. 165,3 s x debit / 8, le tout inflate de
-# 33 % par le base64. Ces cinq-la pesent 5,3 Mo, les douze couches 6,0 Mo, soit
-# 15,0 Mo une fois encodes — il ne reste pas de marge pour etre genereux.
-STEMS = {"menu_theme": "64k", "base": "56k", "melody": "56k",
-         "rhythm": "40k", "climax": "40k"}
+# menu_theme ne sert que de repli <audio> quand le Web Audio est refuse ; le socle
+# est ce qu'on entend vraiment, donc les deux gardent le meilleur debit.
+STEMS = {"menu_theme": "64k", "bed": "64k"}
 
-# Les surcouches sont encodees en MONO et bien plus bas. Trois raisons : elles
-# sont douze, elles sont sparses (une couche qui joue trois notes en 165 s ne
-# justifie pas 1,5 Mo de base64), et chacune ne porte qu'un ou deux instruments
-# — un signal a bande etroite, exactement ce que le MP3 code le mieux a bas
-# debit. Leur placement stereo est reconstruit dans la page par un
-# StereoPannerNode, a partir de la position de scene.
+# Les parties de role sont encodees en MONO et bien plus bas. Trois raisons :
+# elles sont douze, elles sont sparses (le halo joue 48 notes en 195 s), et
+# chacune ne porte qu'UN instrument — un signal a bande etroite, exactement ce
+# que le MP3 code le mieux a bas debit.
 # 24 kHz et non 32 : en dessous de 32 kHz le MP3 bascule en MPEG-2 Layer III, dont
 # la grille de debits descend a 8 kbit/s. En MPEG-1 le plancher est a 32 kbit/s, et
 # LAME remontait silencieusement les 20 kbit/s demandes — les douze couches
 # pesaient alors 10 Mo au lieu de 6, et la page depassait la limite de 16 Mo.
 # Debits MPEG-2 valides : 8, 16, 24, 32, 40, 48... Toute autre valeur est arrondie.
-LAYER_BITRATE = "24k"
-LAYER_RATE = "24000"
-LAYER_PAN = {
-    "pluie": 0.46, "orage": -0.12, "brume": -0.66, "neige": 0.70, "clair": 0.76,
-    "printemps": 0.54, "ete": -0.58, "automne": -0.40, "hiver": 0.62,
-    "aube": -0.30, "nuit": 0.66, "sacre": -0.68,
-}
+PART_BITRATE = "24k"
+PART_RATE = "24000"
 
 # Enveloppe de document complete. Indispensable pour un fichier autonome : sans
 # <meta charset>, le navigateur devine l'encodage et casse tous les accents. Les
@@ -68,22 +61,13 @@ def make_standalone(body: str) -> str:
 TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page_template.html")
 
 
-def load_layers(stems_dir: str) -> list:
-    """Lit layers.json a cote des stems. Absent = page sans panneau de contexte."""
-    path = os.path.join(stems_dir, "layers.json")
-    if not os.path.exists(path):
-        return []
-    with open(path, encoding="utf-8") as fh:
-        man = json.load(fh)
-    return man.get("layers", [])
-
-
-def load_axes(stems_dir: str) -> dict:
-    path = os.path.join(stems_dir, "layers.json")
+def load_casting(stems_dir: str) -> dict:
+    """Lit casting.json a cote des pistes. Absent = page sans panneau de contexte."""
+    path = os.path.join(stems_dir, "casting.json")
     if not os.path.exists(path):
         return {}
     with open(path, encoding="utf-8") as fh:
-        return json.load(fh).get("axes", {})
+        return json.load(fh)
 
 
 def render_provenance(stems_dir: str) -> str:
@@ -174,22 +158,22 @@ def main() -> int:
             audio[name] = base64.b64encode(fh.read()).decode()
         os.remove(dst)
 
-    # ── SURCOUCHES ───────────────────────────────────────────────────────────
-    layers = load_layers(args.stems)
-    for entry in layers:
-        src = os.path.join(args.stems, entry["file"])
-        if not os.path.exists(src):
-            entry["present"] = False
-            continue
-        dst = os.path.join(tmp, entry["id"] + ".mp3")
-        subprocess.run([ff, "-y", "-loglevel", "error", "-i", src, "-ac", "1",
-                        "-ar", LAYER_RATE, "-c:a", "libmp3lame",
-                        "-b:a", LAYER_BITRATE, dst], check=True)
-        with open(dst, "rb") as fh:
-            audio["L_" + entry["id"]] = base64.b64encode(fh.read()).decode()
-        entry["pan"] = LAYER_PAN.get(entry["id"], 0.0)
-        entry["present"] = True
-        os.remove(dst)
+    # ── PARTIES DE ROLE ──────────────────────────────────────────────────────
+    cast = load_casting(args.stems)
+    for role, cands in (cast.get("candidates") or {}).items():
+        for entry in cands:
+            name = f"{role}__{entry['id']}"
+            src = os.path.join(args.stems, entry.get("file", name + ".ogg"))
+            if not os.path.exists(src):
+                print(f"  ! {name} absent", file=sys.stderr)
+                continue
+            dst = os.path.join(tmp, name + ".mp3")
+            subprocess.run([ff, "-y", "-loglevel", "error", "-i", src, "-ac", "1",
+                            "-ar", PART_RATE, "-c:a", "libmp3lame",
+                            "-b:a", PART_BITRATE, dst], check=True)
+            with open(dst, "rb") as fh:
+                audio["P_" + name] = base64.b64encode(fh.read()).decode()
+            os.remove(dst)
 
     # boucle silencieuse : sert a basculer la session audio iOS en "playback",
     # sans quoi le commutateur silencieux de l'iPhone coupe tout le Web Audio
@@ -208,9 +192,7 @@ def main() -> int:
         print("template sans marqueur __AUDIO_JSON__", file=sys.stderr)
         return 1
     page = tpl.replace("__AUDIO_JSON__", json.dumps(audio))
-    page = page.replace("__LAYERS_JSON__", json.dumps(
-        {"axes": load_axes(args.stems),
-         "layers": [e for e in layers if e.get("present")]}, ensure_ascii=False))
+    page = page.replace("__CASTING_JSON__", json.dumps(cast, ensure_ascii=False))
     page = page.replace("__PROVENANCE__", render_provenance(args.stems))
     if not args.embedded:
         page = make_standalone(page)

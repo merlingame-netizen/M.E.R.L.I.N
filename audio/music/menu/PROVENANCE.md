@@ -1,12 +1,13 @@
 # Provenance du rendu audio
 
 - **Mode** : HYBRIDE (instruments enregistres CC0 + synthese)
-- **Outil** : synth_palette.py 3.0.0
-- **Rendu le** : 2026-08-06T11:11:54Z
-- **Composition** : D dorian, 58 BPM, 40 mesures, forme A A' B A'', boucle 165.306 s
-- **Effectif** : 37 instruments, 1367 evenements
+- **Outil** : synth_palette.py 4.0.0
+- **Rendu le** : 2026-08-06T12:32:13Z
+- **Composition** : D dorian, 49 BPM, 40 mesures, boucle 195.918 s
+- **Effectif** : 21 instruments, 1045 evenements
+- **Distribution** : 3 roles, 12 parties
 
-> 45 pupitres rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les autres restent synthetises faute de source libre : le couple breton (bombarde, biniou, bourdon), et la nappe FM froide avec le sub, electroniques par choix. AUCUN echantillon issu de Metroid Prime n'est utilise.
+> 29 pupitres sur 30 rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les 1 autres sont des modeles synthetises, faute de source libre. AUCUN echantillon issu de Metroid Prime n'est utilise.
 
 ## Bibliothèques utilisées
 
@@ -15,32 +16,45 @@
 | VSCO-2 Community Edition | Versilian Studios LLC | `CC0-1.0` | https://github.com/sgossner/VSCO-2-CE |
 | Versilian Community Sample Library (VCSL) | Versilian Studios LLC | `CC0-1.0` | https://github.com/sgossner/VCSL |
 
-## Pupitres enregistrés (45)
+## Pupitres enregistrés (29)
 
-`bassoon`, `bell_tree`, `bodhran`, `brass_ff`, `celesta`, `celesta_bell`, `celtic_guitar`, `clarinet`, `contrabass`, `cor_anglais`, `cymbal`, `dan_tranh`, `didgeridoo`, `flute`, `glockenspiel`, `hand_bells`, `hand_chimes`, `harmonica`, `harp`, `horn`, `kalimba`, `mark_tree`, `mbira`, `oboe`, `ocarina`, `ocean_drum`, `piccolo`, `pizzicato`, `psaltery`, `slit_drum`, `snare_roll`, `strings_high`, `strings_low`, `strings_mid`, `strings_tremolo`, `strumstick`, `taiko`, `tam_tam`, `timpani`, `trombone`, `trumpet`, `tuba`, `viola`, `violin_solo`, `wine_glasses`
+`bassoon`, `bodhran`, `celesta`, `celesta_bell`, `celtic_guitar`, `clarinet`, `contrabass`, `cor_anglais`, `dan_tranh`, `flute`, `glockenspiel`, `hand_chimes`, `harmonica`, `harp`, `horn`, `kalimba`, `oboe`, `ocarina`, `piccolo`, `pizzicato`, `psaltery`, `strings_high`, `strings_low`, `strings_mid`, `strings_tremolo`, `timpani`, `viola`, `violin_solo`, `wine_glasses`
 
-## Pupitres synthétisés (8)
+## Pupitres synthétisés (1)
 
-`biniou`, `biniou_drone`, `bombarde`, `choir`, `oud`, `pad_fm`, `sub`, `tin_whistle`
+`oud`
 
 ## Fichiers produits
 
 | Fichier | SHA-256 | Octets |
 |---|---|---|
-| `menu_theme.ogg` | `afffbf26ad03b536ba6004a44b8bac14c1ca3be049e31ecce2f17d299a7d267c` | 2248656 |
-| `base.ogg` | `883676c682fd51bb92d0da10231c04b99c709576c1eb6c666e9cd28cf3834967` | 2112079 |
-| `rhythm.ogg` | `b79cdb689c84cbbf867afdd5062c3cc1e8e7bc858b20a915559e0f57cabd4fab` | 1374658 |
-| `melody.ogg` | `b123d3dd0d487a26b3ef0834941235161b0510804157360f6e718ee7ea6b68a8` | 2332044 |
-| `climax.ogg` | `2c82541641d2654e344fc33d7e273c375f8c3d7d6cd39a77c8fb8d39dc212132` | 1473838 |
-| `layer_pluie.ogg` | `4488e0ebb7633dfc99d578ed038fe066794ca81473df8b53c2dc2f45a0b12f9d` | 1915920 |
-| `layer_orage.ogg` | `decd8519bbaa68d55bdae214eeeb6e41be81b8c9aa8d9d62bbcf489210d0a5a2` | 1686792 |
-| `layer_brume.ogg` | `29dc7b5c29af45303466b8560ee55d72f3f0f88ea5c1bfcaeea70505210366ff` | 1754629 |
-| `layer_neige.ogg` | `234e5ff354d03f061244343da7617bf6d70f6a533cbe5dd228ebe3ae4ec2a0ef` | 1319402 |
-| `layer_clair.ogg` | `16c909c1f9ea20e936ba74632287c8cd8e83e520939e047fffd962876b146a6b` | 813496 |
-| `layer_printemps.ogg` | `2c59d84571825850b62e5dda7a9c2fd370972bdf8837cf688298ec9e9e95d0c5` | 2128128 |
-| `layer_ete.ogg` | `2488a4eca4e6ad48a895f8d6d13c1f931fd2aa4603c47b7ff9e77b9055bb2758` | 2031410 |
-| `layer_automne.ogg` | `f1eb57415a6de501e7e059a63daf3c39304495eaaf063d909cd8e702a1fe3125` | 1410890 |
-| `layer_hiver.ogg` | `120966645f529155083ec8378e278ebe59e4f80c3713f9ffc0ffbf2d081a39f3` | 1607474 |
-| `layer_aube.ogg` | `3d6f517974ce40a85ad7556ccc46f434887d39d0f7c572b93e90581935d3d9f2` | 791485 |
-| `layer_nuit.ogg` | `73bd6e917d1197fb333f464469c4e01cb881e5133d7ca25cd417c32882169dc7` | 1041500 |
-| `layer_sacre.ogg` | `e24919ced2716014c4ba941276872ad017c81070b7b2e4a9c61249a668d676ad` | 438473 |
+| `menu_theme.ogg` | `9c84fce7900f4eb6d8f12b53b45656681da3f53b1396be961ced0ef473285e50` | 2750033 |
+| `bed.ogg` | `66408cdd1211261c984f10e5926c995bd05eddfdfeaa69fb8860b8bcb89e78a2` | 2722073 |
+| `chant__cor_anglais.ogg` | `04bdd3e1f04d6b596bfdebee4d9365116fa9ef3e47b8a2ff754488cffd41f646` | 2086688 |
+| `chant__flute.ogg` | `b658eeb8b74e9e93c079f6c34fc6c95df8f76936786fb237bc10336249f0b4da` | 2019990 |
+| `chant__ocarina.ogg` | `b308331f7f4f32016d4a45f15149cf281605df343e79bc319f54b24a164d05f1` | 1636342 |
+| `chant__harmonica.ogg` | `c914ff645ae5162bf2f88118e0beb35239516c7006d42a91f513724de31116c2` | 2346040 |
+| `corde__celtic_guitar.ogg` | `69c500507ca73e3a910ddb07251f050288145ec6fb46bb77f853dc5091bcd755` | 2591525 |
+| `corde__oud.ogg` | `1f2581a60beb2ada14c928acaaeb98a2811dd276e5185365f2f43e2695d62629` | 2144368 |
+| `corde__dan_tranh.ogg` | `9f4db21e95638f431b62b2e84db4a5d7cabdb0fdd5ac71843261e3e64800c2d4` | 2648678 |
+| `corde__kalimba.ogg` | `19619acaa3759c6180bb388ddd15612ed5eb8151e39c18cf041ef02fc984ce73` | 2517410 |
+| `corde__psaltery.ogg` | `43adee94c81e521484f66933dd3e03209196e506db3374684822e51e8c9ee2f0` | 3137847 |
+| `halo__celesta.ogg` | `3d0d6cc70eef7d22f652458efaf46b6775d8a3732acdd58e9d655b44b35da4ca` | 1786297 |
+| `halo__wine_glasses.ogg` | `508301c07bc6c0bc5794e98964b2ce8ce8e9302e93f5e602925bea2f0218b069` | 1442394 |
+| `halo__hand_chimes.ogg` | `62d474116f642d888e02b4eebe98173b2ad5d2f0d1876182585ac0de28bcde6a` | 1688847 |
+
+
+## Rendu partiel
+
+- **Le** : 2026-08-06T12:40:40Z
+- **Parties refaites** : `chant__flute`, `chant__harmonica`, `chant__ocarina`, `corde__dan_tranh`, `corde__kalimba`, `corde__oud`, `corde__psaltery`, `halo__hand_chimes`, `halo__wine_glasses`
+
+> Rendu partiel : seules ces parties ont ete refaites.
+
+
+## Rendu partiel
+
+- **Le** : 2026-08-06T12:49:42Z
+- **Parties refaites** : `corde__celtic_guitar`, `corde__dan_tranh`, `corde__kalimba`, `corde__oud`, `corde__psaltery`
+
+> Rendu partiel : seules ces parties ont ete refaites.

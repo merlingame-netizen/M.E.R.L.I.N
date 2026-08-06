@@ -1,0 +1,318 @@
+{
+  "roles": [
+    "chant",
+    "corde",
+    "halo"
+  ],
+  "default": {
+    "chant": "cor_anglais",
+    "corde": "celtic_guitar",
+    "halo": "celesta"
+  },
+  "axes": {
+    "meteo": [
+      "clair",
+      "couvert",
+      "pluie",
+      "brume",
+      "neige"
+    ],
+    "saison": [
+      "printemps",
+      "ete",
+      "automne",
+      "hiver"
+    ],
+    "moment": [
+      "aube",
+      "jour",
+      "crepuscule",
+      "nuit"
+    ]
+  },
+  "priority": [
+    "meteo",
+    "saison",
+    "moment"
+  ],
+  "context": {
+    "pluie": {
+      "corde": "oud"
+    },
+    "brume": {
+      "halo": "wine_glasses"
+    },
+    "neige": {
+      "halo": "hand_chimes",
+      "corde": "psaltery"
+    },
+    "couvert": {},
+    "clair": {},
+    "printemps": {
+      "corde": "kalimba",
+      "chant": "flute"
+    },
+    "ete": {
+      "chant": "flute"
+    },
+    "automne": {
+      "chant": "harmonica"
+    },
+    "hiver": {
+      "corde": "psaltery",
+      "halo": "wine_glasses"
+    },
+    "aube": {
+      "chant": "ocarina"
+    },
+    "jour": {},
+    "crepuscule": {
+      "chant": "harmonica"
+    },
+    "nuit": {
+      "corde": "dan_tranh",
+      "halo": "hand_chimes"
+    }
+  },
+  "candidates": {
+    "chant": [
+      {
+        "id": "cor_anglais",
+        "label": "Cor anglais",
+        "instrument": "cor_anglais",
+        "range": [
+          46,
+          77
+        ],
+        "gain": 1.0,
+        "file": "chant__cor_anglais.ogg",
+        "measured_db": -22.51,
+        "trim_db": 0.0
+      },
+      {
+        "id": "flute",
+        "label": "Flûte",
+        "instrument": "flute",
+        "range": [
+          48,
+          84
+        ],
+        "gain": 1.0632,
+        "file": "chant__flute.ogg",
+        "measured_db": -23.04,
+        "trim_db": 0.53
+      },
+      {
+        "id": "ocarina",
+        "label": "Ocarina",
+        "instrument": "ocarina",
+        "range": [
+          57,
+          73
+        ],
+        "gain": 0.9603,
+        "file": "chant__ocarina.ogg",
+        "measured_db": -22.16,
+        "trim_db": -0.35
+      },
+      {
+        "id": "harmonica",
+        "label": "Harmonica",
+        "instrument": "harmonica",
+        "range": [
+          36,
+          84
+        ],
+        "gain": 0.7367,
+        "file": "chant__harmonica.ogg",
+        "measured_db": -19.86,
+        "trim_db": -2.65
+      }
+    ],
+    "corde": [
+      {
+        "id": "celtic_guitar",
+        "label": "Guitare celtique",
+        "instrument": "celtic_guitar",
+        "range": [
+          24,
+          80
+        ],
+        "gain": 1.0,
+        "file": "corde__celtic_guitar.ogg",
+        "measured_db": -21.93,
+        "trim_db": 0.0
+      },
+      {
+        "id": "oud",
+        "label": "Oud",
+        "instrument": "oud",
+        "range": [
+          40,
+          76
+        ],
+        "gain": 1.1332,
+        "file": "corde__oud.ogg",
+        "measured_db": -23.02,
+        "trim_db": 1.09
+      },
+      {
+        "id": "dan_tranh",
+        "label": "Đàn tranh",
+        "instrument": "dan_tranh",
+        "range": [
+          35,
+          71
+        ],
+        "gain": 1.7851,
+        "file": "corde__dan_tranh.ogg",
+        "measured_db": -26.97,
+        "trim_db": 5.03
+      },
+      {
+        "id": "kalimba",
+        "label": "Kalimba",
+        "instrument": "kalimba",
+        "range": [
+          31,
+          85
+        ],
+        "gain": 1.0642,
+        "file": "corde__kalimba.ogg",
+        "measured_db": -22.48,
+        "trim_db": 0.54
+      },
+      {
+        "id": "psaltery",
+        "label": "Psaltérion",
+        "instrument": "psaltery",
+        "range": [
+          58,
+          78
+        ],
+        "gain": 1.7917,
+        "file": "corde__psaltery.ogg",
+        "measured_db": -27.0,
+        "trim_db": 5.07
+      }
+    ],
+    "halo": [
+      {
+        "id": "celesta",
+        "label": "Célesta",
+        "instrument": "celesta",
+        "range": [
+          67,
+          96
+        ],
+        "gain": 1.0,
+        "file": "halo__celesta.ogg",
+        "measured_db": -27.35,
+        "trim_db": 0.0
+      },
+      {
+        "id": "wine_glasses",
+        "label": "Verres frottés",
+        "instrument": "wine_glasses",
+        "range": [
+          63,
+          74
+        ],
+        "gain": 1.104,
+        "file": "halo__wine_glasses.ogg",
+        "measured_db": -28.21,
+        "trim_db": 0.86
+      },
+      {
+        "id": "hand_chimes",
+        "label": "Clochettes à main",
+        "instrument": "hand_chimes",
+        "range": [
+          48,
+          84
+        ],
+        "gain": 0.7957,
+        "file": "halo__hand_chimes.ogg",
+        "measured_db": -25.37,
+        "trim_db": -1.98
+      }
+    ]
+  },
+  "levels": {
+    "bed": {
+      "peak_rms": 5.970937512788492,
+      "rms": 3.111142603035144,
+      "rel_db": -0.73
+    },
+    "chant__cor_anglais": {
+      "peak_rms": 2.120161014422457,
+      "rms": 1.142782123146823,
+      "rel_db": -9.43
+    },
+    "chant__flute": {
+      "peak_rms": 1.918931416857304,
+      "rms": 1.142782123146823,
+      "rel_db": -9.43
+    },
+    "chant__ocarina": {
+      "peak_rms": 2.2144066540012863,
+      "rms": 1.142782123146823,
+      "rel_db": -9.43
+    },
+    "chant__harmonica": {
+      "peak_rms": 2.735525201583745,
+      "rms": 1.142782123146823,
+      "rel_db": -9.43
+    },
+    "corde__celtic_guitar": {
+      "peak_rms": 1.9419359061091144,
+      "rms": 0.5721593449199407,
+      "rel_db": -15.44
+    },
+    "corde__oud": {
+      "peak_rms": 1.7406871674551632,
+      "rms": 0.5721593449199407,
+      "rel_db": -15.44
+    },
+    "corde__dan_tranh": {
+      "peak_rms": 1.1584491625607232,
+      "rms": 0.5721593449199407,
+      "rel_db": -15.44
+    },
+    "corde__kalimba": {
+      "peak_rms": 1.7749871097011487,
+      "rms": 0.5721593449199407,
+      "rel_db": -15.44
+    },
+    "corde__psaltery": {
+      "peak_rms": 1.406433498588903,
+      "rms": 0.5721593449199407,
+      "rel_db": -15.44
+    },
+    "halo__celesta": {
+      "peak_rms": 1.2009204227629116,
+      "rms": 0.391194362056175,
+      "rel_db": -18.74
+    },
+    "halo__wine_glasses": {
+      "peak_rms": 1.051930647479915,
+      "rms": 0.39119436205617514,
+      "rel_db": -18.74
+    },
+    "halo__hand_chimes": {
+      "peak_rms": 1.46093935860474,
+      "rms": 0.391194362056175,
+      "rel_db": -18.74
+    },
+    "__mix": {
+      "rms": 3.3832703002772786
+    }
+  },
+  "loop_seconds": 195.918,
+  "bpm": 49.0,
+  "level_matching": {
+    "metric": "peak_rms(500 ms) mesure sur les .ogg rendus",
+    "applied_as": "champ `gain` par candidat, applique a la lecture",
+    "max_trim_db": 9.0
+  }
+}

@@ -2,9 +2,9 @@
 """
 Rendu du theme de menu M.E.R.L.I.N. — « Broceliande », version orchestrale.
 
-    partition  score_menu.py      40 mesures a 58 BPM, conduite des voix, arc dynamique
-    pupitres   arrange_menu.py    repartition sur 37 pupitres et 4 stems
-    surcouches layers_menu.py     12 couches contextuelles, 16 instruments dedies
+    partition  score_menu.py      40 mesures a 49 BPM, conduite des voix, ornements
+    pupitres   arrange_menu.py    le socle, plus l'ecriture des trois roles
+    casting    casting_menu.py    qui tient quel role selon meteo/saison/moment
     lutherie   orchestra.py       modeles d'instruments synthetises
     ce fichier                    rendu, salle, mastering, boucle, attestation
 
@@ -14,15 +14,16 @@ Aucun echantillon externe par defaut : toute la matiere est synthetisee (chemin
 --bank avec des echantillons extraits d'une copie de jeu fournie par vous.
 
 Sortie, tous cales sur la meme boucle :
-  - le mix complet
-  - 4 stems alignes en phase, par INTENSITE, pour stems_music_manager.gd
-  - 12 surcouches contextuelles, par SITUATION (meteo / saison / moment), pour
-    contextual_layers.gd — plus `layers.json` qui dit laquelle allumer quand
+  - `bed.ogg`, le socle, toujours audible
+  - une piste par (role, candidat) : `chant__ocarina.ogg`, `corde__oud.ogg`, ...
+    dont UNE SEULE par role est audible a la fois — c'est un remplacement,
+    pas un empilement
+  - `menu_theme.ogg`, le mix par defaut (socle + les trois titulaires)
+  - `casting.json`, qui dit quel candidat prend quel role selon le contexte
 
 Usage :
-    python3 tools/audio/synth_palette.py --out audio/music/menu
     python3 tools/audio/synth_palette.py --samples samples/ --out audio/music/menu
-    python3 tools/audio/synth_palette.py --no-layers --out /tmp/essai
+    python3 tools/audio/synth_palette.py --samples samples/ --only corde__oud
 """
 
 from __future__ import annotations
@@ -41,30 +42,26 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import casting_menu as casting
 import orchestra as orc
-from arrange_menu import build_events, summary
-from layers_menu import AXES, LAYER_SEND, build_layers, layer_instruments, manifest
+from arrange_menu import build_bed, build_events, build_role, summary
 from score_menu import BPM, LOOP_LEN, LOOP_SAMPLES, N_BARS
 
-TOOL_VERSION = "3.0.0"
+TOOL_VERSION = "4.0.0"
 SR = orc.SR
 # LONGUEUR TOTALE DU RENDU, EN ECHANTILLONS — et la marge de queue en decoule.
 #
 # Meme raison que LOOP_SAMPLES dans score_menu.py : la longueur de travail passe
 # dans des dizaines de FFT, et il ne faut donc que des petits facteurs premiers.
-# 8 100 000 = 2^5 x 3^4 x 5^5.
+# 9 437 184 = 2^17 x 3^2 x 2^3 ... en clair : 2^20 x 9 = 9 437 184, que des
+# facteurs 2 et 3.
 #
-# La marge de queue qui en resulte, 18,37 s, doit couvrir le pire cumul : une
+# La marge de queue qui en resulte, 18,08 s, doit couvrir le pire cumul : une
 # note qui finit apres le point de boucle (+1 s), sa reverbe ambiante (9 s) et
-# ses reprises de delai (4,7 s). A 11 s la couture restait a 0,0115, localisee
-# dans le stem climax — celui dont les notes debordent le plus.
-TOTAL_SAMPLES = 8_100_000
-TAIL = (TOTAL_SAMPLES - LOOP_SAMPLES) / SR              # 18,37 s
-STEMS = ["base", "rhythm", "melody", "climax"]
-# Niveau des surcouches, en dB sous le mix. Voir peak_rms() pour la raison pour
-# laquelle ce n'est PAS une RMS globale.
-LAYER_REL_DB = -13.0
-
+# ses reprises de delai (4,7 s). A 11 s la couture restait a 0,0115, sur la
+# partie dont les notes debordent le plus.
+TOTAL_SAMPLES = 9_437_184
+TAIL = (TOTAL_SAMPLES - LOOP_SAMPLES) / SR              # 18,08 s
 BANK = None
 SAMPLES = None      # banque multi-echantillons (instruments reellement enregistres)
 
@@ -99,10 +96,11 @@ INSTRUMENTS = {n: getattr(orc, n) for n in (
 # instruments sans hauteur definie : signature (duree, vel, seed)
 UNPITCHED = {"cymbal": orc.cymbal_swell, "tam_tam": orc.tam_tam, "snare_roll": orc.snare_roll}
 
-# Les quinze instruments de surcouche n'ont pas de modele synthetise : ils
-# n'existent que sous forme d'enregistrement. Sans banque, ils se rabattent sur
-# le pupitre le plus proche pour que l'ecriture reste verifiable.
-for _li in layer_instruments():
+# Les instruments de distribution n'ont pas tous un modele synthetise : la
+# plupart n'existent que sous forme d'enregistrement. Sans banque, ils se
+# rabattent sur le pupitre le plus proche pour que l'ecriture reste verifiable.
+for _li in {i for cands in casting.CANDIDATES.values()
+            for (i, _g, _s, _l) in cands.values()}:
     if _li not in INSTRUMENTS and _li not in UNPITCHED:
         _fb = orc.LAYER_FALLBACK.get(_li)
         if _fb in UNPITCHED:
@@ -251,212 +249,21 @@ def limit(x: np.ndarray, ceiling: float = 0.72, target_rms_db: float = -18.0) ->
 def peak_rms(x: np.ndarray, win: float = 0.5) -> float:
     """RMS de la fenetre la plus forte, et non RMS globale.
 
-    Une surcouche est SPARSE par construction : `sacre` joue trois cloches en
-    165 s. Sa RMS globale est dominee par le silence, si bien que la caler sur
-    une cible ferait exploser les trois frappes pour compenser tout le vide
-    autour. On mesure donc le niveau quand la couche SONNE.
+    Une partie de role est SPARSE : le halo joue 48 notes tres espacees en 196 s.
+    Sa RMS globale est dominee par le silence, si bien que la caler sur une cible
+    ferait exploser les notes pour compenser tout le vide autour. On mesure donc
+    le niveau QUAND LA PARTIE SONNE.
 
     Fenetre de 500 ms : verifie sur trois bouffees de 400 ms noyees dans 20 s de
     silence contre un bruit continu de meme amplitude — la RMS globale les
-    separait d'un facteur 4, cette mesure d'un facteur 1,1. Une fenetre d'une
-    seconde diluait encore les evenements courts d'un facteur 0,63."""
+    separait d'un facteur 4, cette mesure d'un facteur 1,1."""
     m = x.mean(axis=0) if x.ndim > 1 else x
     n = int(win * SR)
     if len(m) <= n:
         return float(np.sqrt((m ** 2).mean()))
-    # moyenne glissante de l'energie, sous-echantillonnee : inutile de la
-    # calculer a chaque echantillon pour trouver un maximum
     e = np.cumsum(np.concatenate([[0.0], m.astype(np.float64) ** 2]))
     starts = np.arange(0, len(m) - n, max(1, n // 8))
-    best = float(np.max((e[starts + n] - e[starts]) / n))
-    return float(np.sqrt(best))
-
-
-def layer_gain(lid: str) -> float:
-    from layers_menu import LAYERS
-    for (i, _lab, _ax, _vals, _ins, g, _gen) in LAYERS:
-        if i == lid:
-            return g
-    return 1.0
-
-
-def write_layer_manifest(out_dir: str, stats: dict, mix_ref: dict) -> dict:
-    """Ce que le jeu lit pour choisir ses couches — scripts/audio/contextual_layers.gd.
-
-    Y sont aussi consignes les deux niveaux de reference du mix. Ce ne sont pas
-    des metadonnees decoratives : c'est ce qui permet a --only-layers de recaler
-    une couche au meme niveau sans avoir a refaire les quatre stems."""
-    path = os.path.join(out_dir, "layers.json")
-    old = {}
-    if os.path.exists(path):
-        with open(path, encoding="utf-8") as fh:
-            old = {e["id"]: e for e in json.load(fh).get("layers", [])}
-    man = manifest()
-    man["loop_seconds"] = round(LOOP_LEN, 3)
-    man["bpm"] = BPM
-    man["mix_reference"] = mix_ref
-    for entry in man["layers"]:
-        # une couche non rendue cette fois-ci garde les mesures de la precedente
-        entry.update({k: v for k, v in old.get(entry["id"], {}).items()
-                      if k in ("events", "peak_rel_db", "rms_rel_db")})
-        entry.update(stats.get(entry["id"], {}))
-        entry["present"] = os.path.exists(os.path.join(out_dir, entry["file"]))
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump(man, fh, indent=2, ensure_ascii=False)
-    return man
-
-
-def read_mix_reference(out_dir: str) -> dict:
-    path = os.path.join(out_dir, "layers.json")
-    if not os.path.exists(path):
-        raise SystemExit("--only-layers exige un layers.json existant : lancez d'abord "
-                         "un rendu complet, il y consigne les niveaux du mix.")
-    with open(path, encoding="utf-8") as fh:
-        ref = json.load(fh).get("mix_reference")
-    if ref:
-        return ref
-
-    # Repli : layers.json d'avant --only-layers. On mesure le mix rendu.
-    #
-    # Seul le RAPPORT peak_rms/rms compte ici — la couche est ensuite recalee en
-    # RMS absolue par limit(), donc une echelle commune s'annule. Le mix rendu
-    # est passe par un ecreteur a tanh, qui rabote les cretes un peu plus que la
-    # RMS : le rapport mesure est donc legerement sous-estime, et la couche
-    # ressortira une fraction de dB sous ce qu'un rendu complet aurait donne.
-    mix = os.path.join(out_dir, "menu_theme.ogg")
-    if not os.path.exists(mix):
-        raise SystemExit("ni mix_reference dans layers.json, ni menu_theme.ogg : "
-                         "lancez un rendu complet d'abord.")
-    import subprocess as _sp
-    import imageio_ffmpeg
-    raw = _sp.run([imageio_ffmpeg.get_ffmpeg_exe(), "-loglevel", "error", "-i", mix,
-                   "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"],
-                  capture_output=True, check=True).stdout
-    x = np.frombuffer(raw, dtype="<f4").reshape(-1, 2).T.astype(np.float64)
-    ref = {"peak_rms": peak_rms(x), "rms": float(np.sqrt((x ** 2).mean())),
-           "measured_from": "menu_theme.ogg (approximatif, voir read_mix_reference)"}
-    print(f"[synth] mix_reference absent — mesure sur menu_theme.ogg : "
-          f"rapport crete/RMS = {20*np.log10(ref['peak_rms']/ref['rms']):+.2f} dB")
-    return ref
-
-
-def render_layers(layer_ev: dict, outputs: dict, n: int, halls, mix_ref: dict) -> dict:
-    """Rend les surcouches et les ajoute a `outputs`. Retourne leurs mesures.
-
-    Le niveau est cale RELATIVEMENT au mix, sur la fenetre ou la couche SONNE.
-    Une couche normalisee comme un mix arriverait au niveau de l'orchestre
-    entier — c'est exactement ce qui fait entendre "un instrument colle
-    par-dessus" au lieu d'une couleur.
-    """
-    mix_peak, mix_rms = mix_ref["peak_rms"], mix_ref["rms"]
-    stats = {}
-    for lid, evs in layer_ev.items():
-        if not evs:
-            continue
-        hall_send, dly = LAYER_SEND.get(lid, (0.5, 0.2))
-        dry, wet = render_stem(evs, n, verbose=False)
-        out = finish(dry, wet, halls, hall=0.88, amb=hall_send, delay=dly)
-        del dry, wet
-        out = orc.tape_wobble(out, seed=3)
-        # Cible en dB sous le mix, plutot qu'un gain de bus fixe applique en
-        # esperant. Les couches vont de 3 a 54 notes : un gain unique ferait
-        # sortir les denses et disparaitre les rares.
-        want_db = LAYER_REL_DB + 20.0 * np.log10(max(layer_gain(lid), 1e-3))
-        cur = peak_rms(out)
-        out = out * ((mix_peak * 10 ** (want_db / 20.0)) / max(cur, 1e-9))
-        rms = float(np.sqrt((out ** 2).mean()))
-        off = 20.0 * np.log10(max(rms, 1e-9) / max(mix_rms, 1e-9))
-        stats[lid] = {"events": len(evs), "peak_rel_db": round(want_db, 1),
-                      "rms_rel_db": round(off, 1)}
-        # limit() recale la RMS sur `-18 + off`, c'est-a-dire exactement celle
-        # qu'on vient de fixer : la normalisation vaut 1 et seul l'ecreteur agit.
-        outputs[f"layer_{lid}"] = limit(air(out), ceiling=0.72, target_rms_db=-18.0 + off)
-        del out
-        print(f"[synth]   couche {lid:10s} {len(evs):3d} notes  "
-              f"crete {want_db:+5.1f} dB, RMS {off:+6.1f} dB / mix", flush=True)
-    return stats
-
-
-def refresh_provenance_hashes(out_dir: str, names: list[str]) -> int:
-    """Reactualise les empreintes des fichiers qu'un rendu partiel vient de reecrire.
-
-    Sans ca, PROVENANCE.md continuerait d'annoncer le SHA-256 de la version
-    precedente d'une couche refaite. Une attestation fausse est pire qu'une
-    attestation absente : c'est precisement ce qu'elle est censee empecher."""
-    pj = os.path.join(out_dir, "provenance.json")
-    if not os.path.exists(pj):
-        return 0
-    with open(pj, encoding="utf-8") as fh:
-        rep = json.load(fh)
-    outs = rep.setdefault("outputs", {})
-    changed = 0
-    for name in names:
-        f = os.path.join(out_dir, f"{name}.ogg")
-        if not os.path.exists(f):
-            continue
-        entry = {"sha256": sha256_file(f), "bytes": os.path.getsize(f)}
-        if outs.get(f"{name}.ogg") != entry:
-            outs[f"{name}.ogg"] = entry
-            changed += 1
-    rep["partial_rerender"] = {
-        "at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "layers": sorted(names),
-        "note": "Rendu partiel : seules ces couches ont ete refaites. Les stems et "
-                "le mix datent du rendu complet indique par `rendered_at`.",
-    }
-    with open(pj, "w", encoding="utf-8") as fh:
-        json.dump(rep, fh, indent=2, ensure_ascii=False)
-
-    # et le Markdown, qui est ce qu'un humain lit reellement
-    md = os.path.join(out_dir, "PROVENANCE.md")
-    if os.path.exists(md):
-        with open(md, encoding="utf-8") as fh:
-            lines = fh.read().split("\n")
-        for i, line in enumerate(lines):
-            for name in names:
-                if line.startswith(f"| `{name}.ogg` |"):
-                    e = outs[f"{name}.ogg"]
-                    lines[i] = f"| `{name}.ogg` | `{e['sha256']}` | {e['bytes']} |"
-        pr = rep["partial_rerender"]
-        lines += ["", "## Rendu partiel", "",
-                  f"- **Le** : {pr['at']}",
-                  f"- **Couches refaites** : {', '.join('`' + n + '`' for n in pr['layers'])}",
-                  "", f"> {pr['note']}", ""]
-        with open(md, "w", encoding="utf-8") as fh:
-            fh.write("\n".join(lines))
-    return changed
-
-
-def render_layers_only(args, only: list[str], n: int, halls) -> int:
-    """Refait quelques couches sans retoucher aux stems.
-
-    Corriger une couche coutait un rendu complet — trois heures pour dix minutes
-    de travail utile. Les deux niveaux de reference du mix etant consignes dans
-    layers.json, la couche refaite ressort exactement au niveau qu'elle aurait
-    eu dans un rendu complet."""
-    mix_ref = read_mix_reference(args.out)
-    every = build_layers()
-    unknown = [lid for lid in only if lid not in every]
-    if unknown:
-        raise SystemExit(f"couche(s) inconnue(s) : {', '.join(unknown)}\n"
-                         f"disponibles : {', '.join(every)}")
-    print(f"[synth] mode COUCHES SEULES — {', '.join(only)}")
-    outputs: dict = {}
-    stats = render_layers({lid: every[lid] for lid in only}, outputs, n, halls, mix_ref)
-    _note_cache.clear()
-    for name, sig in outputs.items():
-        wav = os.path.join(args.out, f"{name}.wav")
-        ogg = os.path.join(args.out, f"{name}.ogg")
-        write_wav(wav, sig)
-        to_ogg(wav, ogg)
-        print(f"[synth] {ogg}  ({os.path.getsize(ogg)/1024:.0f} KB)")
-        if not args.keep_wav:
-            os.remove(wav)
-    write_layer_manifest(args.out, stats, mix_ref)
-    n_up = refresh_provenance_hashes(args.out, list(outputs))
-    print(f"[synth] OK — layers.json mis a jour, stems inchanges")
-    print(f"[prov ] {n_up} empreinte(s) reactualisee(s) dans l'attestation")
-    return 0
+    return float(np.sqrt(np.max((e[starts + n] - e[starts]) / n)))
 
 
 def write_wav(path: str, stereo: np.ndarray) -> None:
@@ -475,10 +282,6 @@ def to_ogg(wav_path: str, ogg_path: str, quality: str = "4") -> None:
                     "-i", wav_path, "-c:a", "libvorbis", "-q:a", quality, ogg_path], check=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# ATTESTATION
-# ═══════════════════════════════════════════════════════════════════════════════
-
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as fh:
@@ -487,58 +290,68 @@ def sha256_file(path: str) -> str:
     return h.hexdigest()
 
 
-def write_provenance(out_dir: str, names: list[str], bank, stats: dict) -> dict:
-    layer_files = sorted(n for n in names if n.startswith("layer_"))
+# ═══════════════════════════════════════════════════════════════════════════════
+# RENDU D'UNE PARTIE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SEND = {                      # (reverbe ambiante, delai) par partie
+    "bed":   (0.50, 0.20),
+    "chant": (0.44, 0.24),
+    "corde": (0.40, 0.18),
+    "halo":  (0.68, 0.32),
+}
+
+
+def render_part(events: list[dict], n: int, halls, send: tuple[float, float],
+                verbose: bool = False) -> np.ndarray:
+    dry, wet = render_stem(events, n, verbose=verbose)
+    out = finish(dry, wet, halls, hall=0.88, amb=send[0], delay=send[1])
+    del dry, wet
+    return orc.tape_wobble(out, seed=3)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ATTESTATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def write_provenance(out_dir: str, names: list[str], stats: dict, cast: dict) -> dict:
     rep = {
         "tool": f"synth_palette.py {TOOL_VERSION}",
         "rendered_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "composition": {"key": "D dorian", "bpm": BPM, "bars": N_BARS,
+        "composition": {"key": "D dorian", "bpm": round(BPM, 3), "bars": N_BARS,
                         "loop_seconds": round(LOOP_LEN, 3), "sample_rate": SR,
-                        "form": "A A' B A''", "instruments": stats["instruments"],
+                        "form": "ouverture / air nu / air orne / refrain / harmonise / "
+                                "developpement / plein / coda",
+                        "instruments": stats["instruments"],
                         "note_events": stats["events"],
-                        "contextual_layers": len(layer_files),
-                        "context_axes": AXES},
-        "mode": ("sampled" if bank is not None
-                 else "hybrid" if SAMPLES is not None else "synthesized"),
+                        "roles": list(cast["roles"]),
+                        "casting_parts": sum(len(v) for v in cast["candidates"].values())},
+        "mode": "hybrid" if SAMPLES is not None else "synthesized",
     }
-    if bank is None and SAMPLES is not None:
-        recorded = sorted(i for i in list(INSTRUMENTS) + list(UNPITCHED) if SAMPLES.has(i))
-        synth_only = sorted(i for i in list(INSTRUMENTS) + list(UNPITCHED)
-                            if not SAMPLES.has(i))
+    if SAMPLES is not None:
+        used = sorted({e["inst"] for e in build_events()} |
+                      {c["instrument"] for v in cast["candidates"].values() for c in v})
+        recorded = [i for i in used if SAMPLES.has(i)]
+        synth_only = [i for i in used if not SAMPLES.has(i)]
         rep["sound_source"] = {
             "kind": "recorded_libraries", "external_samples": True,
             "libraries": SAMPLES.libraries,
             "recorded_instruments": recorded,
             "synthesized_instruments": synth_only,
-            "statement": f"{len(recorded)} pupitres rejouent des instruments reellement "
-                         "enregistres, issus de bibliotheques sous CC0 (domaine public, "
-                         "usage commercial compris, sans attribution requise). Les autres "
-                         "restent synthetises faute de source libre : le couple breton "
-                         "(bombarde, biniou, bourdon), et la nappe FM froide avec le sub, "
-                         "electroniques par choix. AUCUN echantillon issu de Metroid Prime "
-                         "n'est utilise.",
+            "statement": f"{len(recorded)} pupitres sur {len(used)} rejouent des "
+                         "instruments reellement enregistres, issus de bibliotheques "
+                         "sous CC0 (domaine public, usage commercial compris, sans "
+                         "attribution requise). "
+                         + (f"Les {len(synth_only)} autres sont des modeles synthetises, "
+                            "faute de source libre." if synth_only else "")
+                         + " AUCUN echantillon issu de Metroid Prime n'est utilise.",
         }
-    elif bank is None:
+    else:
         rep["sound_source"] = {
             "kind": "synthesis", "external_samples": False,
             "statement": "Aucun echantillon externe. Chaque pupitre est un modele "
-                         "synthetise (ensemble desaccorde, formants fixes, velocite "
-                         "timbrale) et la salle est une reverbe a convolution sur "
+                         "synthetise et la salle est une reverbe a convolution sur "
                          "reponses impulsionnelles generees.",
-        }
-    else:
-        roles = {}
-        for role, e in sorted(bank.map.items()):
-            roles[role] = {k: e.get(k) for k in ("file", "id", "group", "agsc_version",
-                                                 "samp_offset", "base_note", "sample_rate",
-                                                 "format", "looped")}
-        rep["sound_source"] = {
-            "kind": "extracted_samples", "external_samples": True,
-            "bank_path": os.path.abspath(bank.path), "extracted_at": bank.extracted_at,
-            "source_file": bank.source, "fonts": roles,
-            "instrument_to_role": BANK_ROLE,
-            "statement": "Chaque pupitre rejoue un echantillon extrait du fichier source "
-                         "ci-dessus. Le SHA-256 permet de verifier de quelle copie il provient.",
         }
     rep["outputs"] = {}
     for name in names:
@@ -550,17 +363,16 @@ def write_provenance(out_dir: str, names: list[str], bank, stats: dict) -> dict:
     with open(os.path.join(out_dir, "provenance.json"), "w", encoding="utf-8") as fh:
         json.dump(rep, fh, indent=2, ensure_ascii=False)
 
-    src = rep["sound_source"]
-    c = rep["composition"]
-    MODE_LABEL = {"synthesis": "SYNTHETISE (aucune source externe)",
-                  "recorded_libraries": "HYBRIDE (instruments enregistres CC0 + synthese)",
-                  "extracted_samples": "ECHANTILLONNE (samples extraits d'un jeu)"}
+    src, c = rep["sound_source"], rep["composition"]
+    MODE = {"synthesis": "SYNTHETISE (aucune source externe)",
+            "recorded_libraries": "HYBRIDE (instruments enregistres CC0 + synthese)"}
     lines = ["# Provenance du rendu audio", "",
-             f"- **Mode** : {MODE_LABEL.get(src.get('kind'), 'SYNTHETISE')}",
+             f"- **Mode** : {MODE.get(src.get('kind'), '?')}",
              f"- **Outil** : {rep['tool']}", f"- **Rendu le** : {rep['rendered_at']}",
              f"- **Composition** : {c['key']}, {c['bpm']:.0f} BPM, {c['bars']} mesures, "
-             f"forme {c['form']}, boucle {c['loop_seconds']} s",
-             f"- **Effectif** : {c['instruments']} instruments, {c['note_events']} evenements", "",
+             f"boucle {c['loop_seconds']} s",
+             f"- **Effectif** : {c['instruments']} instruments, {c['note_events']} evenements",
+             f"- **Distribution** : {len(c['roles'])} roles, {c['casting_parts']} parties", "",
              f"> {src['statement']}", ""]
     if src.get("kind") == "recorded_libraries":
         lines += ["## Bibliothèques utilisées", "",
@@ -568,25 +380,11 @@ def write_provenance(out_dir: str, names: list[str], bank, stats: dict) -> dict:
         for lib in src.get("libraries", []):
             lines.append(f"| {lib.get('name')} | {lib.get('author')} | "
                          f"`{lib.get('license')}` | {lib.get('url')} |")
-        rec = src.get("recorded_instruments", [])
-        syn = src.get("synthesized_instruments", [])
+        rec, syn = src["recorded_instruments"], src["synthesized_instruments"]
         lines += ["", f"## Pupitres enregistrés ({len(rec)})", "",
                   ", ".join(f"`{i}`" for i in rec), "",
                   f"## Pupitres synthétisés ({len(syn)})", "",
-                  ", ".join(f"`{i}`" for i in syn), ""]
-    elif src["external_samples"]:
-        sf = src.get("source_file") or {}
-        lines += ["## Fichier source", "", f"- Nom : `{sf.get('filename', '?')}`",
-                  f"- SHA-256 : `{sf.get('sha256', '?')}`",
-                  f"- Taille : {sf.get('size_bytes', 0)} octets",
-                  f"- Extrait le : {src.get('extracted_at', '?')}", "",
-                  "## Échantillon utilise par role", "",
-                  "| Role | Sample | ID | Groupe AGSC | Offset SAMP | Note | Fréq. |",
-                  "|---|---|---|---|---|---|---|"]
-        for role, e in src["fonts"].items():
-            lines.append(f"| `{role}` | `{e.get('file')}` | {e.get('id')} | {e.get('group')} "
-                         f"| {e.get('samp_offset')} | {e.get('base_note')} | {e.get('sample_rate')} |")
-        lines.append("")
+                  ", ".join(f"`{i}`" for i in syn) or "_aucun_", ""]
     lines += ["## Fichiers produits", "", "| Fichier | SHA-256 | Octets |", "|---|---|---|"]
     for f, meta in rep["outputs"].items():
         lines.append(f"| `{f}` | `{meta['sha256']}` | {meta['bytes']} |")
@@ -599,125 +397,120 @@ def write_provenance(out_dir: str, names: list[str], bank, stats: dict) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def main() -> int:
-    global BANK
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="audio/music/menu")
     ap.add_argument("--keep-wav", action="store_true")
     ap.add_argument("--samples", default=None,
-                    help="banque multi-echantillons (sortie de build_sample_bank.py) : "
-                         "les instruments reellement enregistres remplacent leurs modeles")
-    ap.add_argument("--bank", default=None,
-                    help="dossier de banque (sortie de musyx_extract.py) : les samples "
-                         "reels remplacent les pupitres synthetises")
-    ap.add_argument("--no-layers", action="store_true",
-                    help="ne rend que le mix et les 4 stems, sans les surcouches "
-                         "contextuelles (rendu deux fois plus rapide pour les essais)")
-    ap.add_argument("--only-layers", default=None,
-                    help="ne rend QUE les surcouches nommees (separees par des virgules), "
-                         "sans refaire les stems. Les niveaux de reference du mix sont "
-                         "relus dans layers.json, donc la couche ressort au meme niveau "
-                         "qu'un rendu complet. Dix minutes au lieu de trois heures pour "
-                         "corriger une seule couche.")
+                    help="banque multi-echantillons (sortie de build_sample_bank.py)")
+    ap.add_argument("--only", default=None,
+                    help="ne rend que ces parties (bed, chant__ocarina, ...), separees "
+                         "par des virgules. Le niveau de reference est relu dans "
+                         "casting.json, donc la partie ressort au meme niveau.")
     args = ap.parse_args()
-    only = [s.strip() for s in args.only_layers.split(",")] if args.only_layers else None
 
     global SAMPLES
     if args.samples:
         from sample_bank import MultiSampleBank
         SAMPLES = MultiSampleBank(args.samples)
-    if args.bank:
-        from sample_bank import SampleBank
-        BANK = SampleBank(args.bank)
-        print(f"[synth] mode ECHANTILLONNE — banque : {args.bank}")
-    elif SAMPLES is not None:
-        n_real = sum(1 for i in INSTRUMENTS if SAMPLES.has(i))
-        print(f"[synth] mode HYBRIDE — {n_real} pupitres enregistres, le reste synthetise")
-    else:
-        print("[synth] mode SYNTHETISE — aucun echantillon externe")
 
     t_start = time.time()
-    events = build_events()
-    stats = summary(events)
-    print(f"[synth] {N_BARS} mesures @ {BPM:.0f} BPM = {LOOP_LEN:.2f}s — forme A A' B A''")
-    print(f"[synth] {stats['instruments']} instruments, {stats['events']} evenements")
+    cast = casting.manifest()
+    bed = build_bed()
+    stats = summary(build_events())
+    print(f"[synth] {N_BARS} mesures @ {BPM:.0f} BPM = {LOOP_LEN:.2f}s")
+    print(f"[synth] socle {len(bed)} notes, {len(casting.all_parts())} parties de role")
 
     n = TOTAL_SAMPLES
     halls = (orc.stereo_hall(seconds=4.2, decay=5.2, damp=3100.0, seed=7, width=0.24),
              orc.stereo_hall(seconds=9.0, decay=3.1, damp=1300.0, seed=23, width=0.28))
-    # dosage ambiant par stem : les nappes et le chant s'etalent, la percussion non
-    AMB = {"base": 0.55, "rhythm": 0.16, "melody": 0.48, "climax": 0.52}
-    DLY = {"base": 0.16, "rhythm": 0.04, "melody": 0.26, "climax": 0.20}
 
-    if only:
-        return render_layers_only(args, only, n, halls)
-
-    rendered = {}
-    for stem in STEMS:
-        sub_ev = [e for e in events if e["stem"] == stem]
-        print(f"[synth]   {stem} : {len(sub_ev)} notes", flush=True)
-        dry, wet = render_stem(sub_ev, n)
-        out = finish(dry, wet, halls, hall=0.88, amb=AMB[stem], delay=DLY[stem])
-        if stem == "base":
-            # coupe l'infra-grave inutile et desepaissit le bas-medium : c'est la
-            # zone ou quatre pupitres soutenus se recouvrent et deviennent une bouillie
-            out = np.stack([orc.highpass(orc.formants(c, [(260.0, 150.0, -3.5)]), 38.0)
-                            for c in out])
-        if stem == "base":
-            # bruit de salle : ajoute au seul stem toujours actif, pour que la
-            # somme des quatre continue d'egaler le mix
-            # meme champ pour les deux canaux a 82 %, le reste decorrele :
-            # large a l'ecoute, sans casser la compatibilite mono
-            loop_n = out.shape[1]
-            out[0] += orc.room_tone(loop_n, seed=5, decorrelate=0.18)
-            out[1] += orc.room_tone(loop_n, seed=5, decorrelate=0.18) * 0.0 \
-                + orc.room_tone(loop_n, seed=5, decorrelate=0.0) * 0.82 \
-                + orc.room_tone(loop_n, seed=11, decorrelate=0.0) * 0.18
-        rendered[stem] = out.astype(np.float32)
-        del out
-        del dry, wet
-    _note_cache.clear()
-
-    # Mesure a l'appui : le socle fournissait 87 % du grave ET 56 % du medium, la
-    # melodie 10 %. Le theme etait enterre sous ses propres accompagnements.
-    # Ces gains ont ete recalcules apres l'application effective de la table
-    # d'equilibre des pupitres : celle-ci coupe fortement cordes et nappes, ce qui
-    # avait fait tomber le socle a 3 % du medium contre 72 % pour la melodie —
-    # un orchestre sans fondation. Cible : socle 25 %, chant 40 %, climax 30 %.
-    gains = {"base": 2.25, "rhythm": 2.45, "melody": 1.25, "climax": 1.35}
-    mix = np.zeros_like(rendered["base"], dtype=np.float64)
-    for name, sig in rendered.items():
-        mix += sig.astype(np.float64) * gains[name]
-
-    # Pleurage de bande, applique au mix ET a chaque stem avec la meme modulation :
-    # l'operation est lineaire, donc la somme reste egale au mix.
-    mix = orc.tape_wobble(mix, seed=3)
-    for name in rendered:
-        rendered[name] = orc.tape_wobble(rendered[name].astype(np.float64), seed=3).astype(np.float32)
+    only = [s.strip() for s in args.only.split(",")] if args.only else None
+    ref_path = os.path.join(args.out, "casting.json")
+    ref = {}
+    if only and os.path.exists(ref_path):
+        with open(ref_path, encoding="utf-8") as fh:
+            ref = json.load(fh).get("levels", {})
+    if only and not ref:
+        raise SystemExit("--only exige un casting.json issu d'un rendu complet.")
 
     os.makedirs(args.out, exist_ok=True)
-    mix_rms = float(np.sqrt((mix ** 2).mean()))
-    outputs = {"menu_theme": limit(air(mix))}
-    for name, sig in rendered.items():
-        s = sig.astype(np.float64) * gains[name]
-        rms = float(np.sqrt((s ** 2).mean()))
-        # chaque stem garde son niveau RELATIF au mix : la somme des quatre doit
-        # redonner le mix, sinon la console web ne sonne pas comme le rendu
-        off = 20.0 * np.log10(max(rms, 1e-9) / max(mix_rms, 1e-9))
-        outputs[name] = limit(air(s), ceiling=0.72, target_rms_db=-18.0 + off)
+    outputs: dict = {}
+    levels: dict = dict(ref)
+    keep: dict = {}
 
-    # ── SURCOUCHES CONTEXTUELLES ─────────────────────────────────────────────
-    # Chaque couche est un fichier a part, cale sur la meme boucle. Le jeu les
-    # allume selon la meteo, la saison, le moment, la situation — voir
-    # layers_menu.py et scripts/audio/contextual_layers.gd.
-    #
-    # Le niveau est cale RELATIVEMENT au mix, sur la fenetre ou la couche sonne.
-    # Une couche normalisee comme un mix arriverait au niveau de l'orchestre
-    # entier — c'est exactement ce qui fait entendre "un instrument colle
-    # par-dessus" au lieu d'une couleur.
-    layer_ev = build_layers() if not args.no_layers else {}
-    mix_ref = {"peak_rms": peak_rms(mix), "rms": mix_rms}
-    layer_stats = render_layers(layer_ev, outputs, n, halls, mix_ref)
+    def wanted(name: str) -> bool:
+        return only is None or name in only
+
+    # ── LE SOCLE ─────────────────────────────────────────────────────────────
+    if wanted("bed"):
+        print("[synth] socle …", flush=True)
+        sig = render_part(bed, n, halls, SEND["bed"], verbose=True)
+        levels["bed"] = {"peak_rms": peak_rms(sig), "rms": float(np.sqrt((sig ** 2).mean()))}
+        keep["bed"] = sig
     _note_cache.clear()
+
+    # ── LES ROLES ────────────────────────────────────────────────────────────
+    # Le titulaire par defaut est rendu EN PREMIER : son niveau devient la cible
+    # de tous les autres candidats du role. C'est ce qui garantit qu'un changement
+    # de distribution ne s'entende pas comme un changement de volume.
+    for role in cast["roles"]:
+        default = casting.DEFAULT[role]
+        order = [default] + [c for c in casting.CANDIDATES[role] if c != default]
+        target = None
+        for cand in order:
+            name = f"{role}__{cand}"
+            if not wanted(name):
+                if levels.get(name) and cand == default:
+                    target = levels[name]["rms"]
+                continue
+            sig = render_part(build_role(role, cand), n, halls, SEND[role])
+            # ON APPARIE SUR LA RMS, PAS SUR LA FENETRE LA PLUS FORTE.
+            #
+            # peak_rms() est le bon outil pour comparer des parties de DENSITES
+            # differentes — c'est pour ca qu'il existe. Mais deux candidats d'un
+            # meme role portent exactement les memes notes aux memes instants :
+            # leurs densites sont identiques, et leurs RMS directement comparables.
+            #
+            # Surtout, la RMS est ce qui SURVIT au master : limit() recale chaque
+            # sortie sur une RMS cible. Apparier les cretes puis laisser le master
+            # renormaliser en RMS defaisait une partie de l'appariement — mesure a
+            # l'appui, les cinq candidats du role `corde` sortaient sur 2,52 dB,
+            # le psalterion (son tenu, donc RMS elevee pour ses cretes) 2,4 dB
+            # sous la guitare.
+            p = float(np.sqrt((sig ** 2).mean()))
+            if cand == default:
+                target = p
+            elif target:
+                sig = sig * (target / max(p, 1e-9))     # meme niveau percu
+            levels[name] = {"peak_rms": peak_rms(sig),
+                            "rms": float(np.sqrt((sig ** 2).mean()))}
+            keep[name] = sig
+            print(f"[synth]   {role:6s} {cand:14s} {len(build_role(role, cand)):3d} notes",
+                  flush=True)
+        _note_cache.clear()
+
+    # ── LE MIX PAR DEFAUT ────────────────────────────────────────────────────
+    # Il ne sert qu'a deux choses : le repli <audio> de la page, et le cas simple
+    # cote jeu. Il vaut EXACTEMENT socle + les trois titulaires.
+    mix = None
+    if only is None:
+        mix = keep["bed"].astype(np.float64).copy()
+        for role in cast["roles"]:
+            mix += keep[f"{role}__{casting.DEFAULT[role]}"]
+        mix_rms = float(np.sqrt((mix ** 2).mean()))
+        outputs["menu_theme"] = limit(air(mix))
+    else:
+        mix_rms = ref.get("__mix", {}).get("rms")
+        if not mix_rms:
+            raise SystemExit("casting.json sans niveau de mix : refaites un rendu complet.")
+
+    # chaque partie garde son niveau RELATIF au mix : la somme doit redonner le mix
+    for name, sig in keep.items():
+        off = 20.0 * np.log10(max(levels[name]["rms"], 1e-9) / max(mix_rms, 1e-9))
+        levels[name]["rel_db"] = round(off, 2)
+        outputs[name] = limit(air(sig), ceiling=0.72, target_rms_db=-18.0 + off)
+    keep.clear()
+    levels["__mix"] = {"rms": mix_rms}
 
     for name, sig in outputs.items():
         wav = os.path.join(args.out, f"{name}.wav")
@@ -728,18 +521,67 @@ def main() -> int:
         if not args.keep_wav:
             os.remove(wav)
 
-    if layer_ev:
-        write_layer_manifest(args.out, layer_stats, mix_ref)
-    rep = write_provenance(args.out, list(outputs), BANK, stats)
-    src = rep["sound_source"]
-    print(f"[synth] OK — boucle 0.000s -> {LOOP_LEN:.3f}s  ({time.time()-t_start:.0f}s de rendu)")
-    print(f"[prov ] mode = {rep['mode'].upper()} — echantillons externes : "
-          f"{'OUI' if src['external_samples'] else 'NON'}")
-    if src["external_samples"]:
-        sf = src.get("source_file") or {}
-        print(f"[prov ] source : {sf.get('filename')}  sha256={sf.get('sha256')}")
-    print(f"[prov ] rapport : {os.path.join(args.out, 'PROVENANCE.md')}")
+    cast["levels"] = levels
+    cast["loop_seconds"] = round(LOOP_LEN, 3)
+    cast["bpm"] = round(BPM, 3)
+    with open(ref_path, "w", encoding="utf-8") as fh:
+        json.dump(cast, fh, indent=2, ensure_ascii=False)
+
+    if only is None:
+        rep = write_provenance(args.out, list(outputs), stats, cast)
+        print(f"[prov ] mode = {rep['mode'].upper()} — "
+              f"{len(rep['sound_source'].get('recorded_instruments', []))} pupitres enregistres")
+    else:
+        n_up = refresh_provenance_hashes(args.out, list(outputs))
+        print(f"[prov ] {n_up} empreinte(s) reactualisee(s)")
+    print(f"[synth] OK — boucle {LOOP_LEN:.3f}s, {len(outputs)} fichiers "
+          f"({time.time()-t_start:.0f}s)")
     return 0
+
+
+def refresh_provenance_hashes(out_dir: str, names: list[str]) -> int:
+    """Reactualise les empreintes qu'un rendu partiel vient de reecrire.
+
+    Sans ca, PROVENANCE.md continuerait d'annoncer le SHA-256 de la version
+    precedente. Une attestation fausse est pire qu'une absente."""
+    pj = os.path.join(out_dir, "provenance.json")
+    if not os.path.exists(pj):
+        return 0
+    with open(pj, encoding="utf-8") as fh:
+        rep = json.load(fh)
+    outs = rep.setdefault("outputs", {})
+    changed = 0
+    for name in names:
+        f = os.path.join(out_dir, f"{name}.ogg")
+        if not os.path.exists(f):
+            continue
+        entry = {"sha256": sha256_file(f), "bytes": os.path.getsize(f)}
+        if outs.get(f"{name}.ogg") != entry:
+            outs[f"{name}.ogg"] = entry
+            changed += 1
+    rep["partial_rerender"] = {
+        "at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "parts": sorted(names),
+        "note": "Rendu partiel : seules ces parties ont ete refaites.",
+    }
+    with open(pj, "w", encoding="utf-8") as fh:
+        json.dump(rep, fh, indent=2, ensure_ascii=False)
+    md = os.path.join(out_dir, "PROVENANCE.md")
+    if os.path.exists(md):
+        with open(md, encoding="utf-8") as fh:
+            lines = fh.read().split("\n")
+        for i, line in enumerate(lines):
+            for name in names:
+                if line.startswith(f"| `{name}.ogg` |"):
+                    e = outs[f"{name}.ogg"]
+                    lines[i] = f"| `{name}.ogg` | `{e['sha256']}` | {e['bytes']} |"
+        pr = rep["partial_rerender"]
+        lines += ["", "## Rendu partiel", "", f"- **Le** : {pr['at']}",
+                  f"- **Parties refaites** : {', '.join('`' + n + '`' for n in pr['parts'])}",
+                  "", f"> {pr['note']}", ""]
+        with open(md, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines))
+    return changed
 
 
 if __name__ == "__main__":
