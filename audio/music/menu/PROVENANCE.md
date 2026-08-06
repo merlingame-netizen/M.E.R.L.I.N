@@ -2,7 +2,7 @@
 
 - **Mode** : SYNTHETISE (aucune source externe)
 - **Outil** : synth_palette.py 2.0.0
-- **Rendu le** : 2026-08-06T08:11:33Z
+- **Rendu le** : 2026-08-06T08:23:48Z
 - **Composition** : D dorian, 76 BPM, 40 mesures, forme A A' B A'', boucle 126.316 s
 - **Effectif** : 37 instruments, 1669 evenements
 
@@ -12,8 +12,8 @@
 
 | Fichier | SHA-256 | Octets |
 |---|---|---|
-| `menu_theme.ogg` | `751236b4441542db33195eb3b8d8abd0f5c3372e5a0a3553778e9315f02ea477` | 1771004 |
-| `base.ogg` | `969c3e2bebccfa3ac34277b83c1dd4ee7cb8e02aaa74db47eabf681d6d4be175` | 1282582 |
-| `rhythm.ogg` | `8fb12835d60b436bcac02c8fdf03b680d4f955d497519b53fa5c689639eb7acd` | 1250103 |
-| `melody.ogg` | `ce950159de35c6b97efe24d9722dc1c5c9281be5c9c7d3a72094285190f24129` | 1823590 |
-| `climax.ogg` | `f5b87115447cb0ae4379f5e7c02b4fc0278a49a661633c1c51d6a477262f03dd` | 1079424 |
+| `menu_theme.ogg` | `4a5bd4525d85d7af3aaf904eafb2e60645efc719e64b56a8c91c78f4dc254d95` | 1771108 |
+| `base.ogg` | `27802ab66b7dfc6bbe0fad7651aaf46a95021acb18955ceb72668d1618234eaa` | 1282558 |
+| `rhythm.ogg` | `d9fef732a9e36c81df2ebd6483f047c424da53cd7e35dd3cc041fbeec1ea9c22` | 1250022 |
+| `melody.ogg` | `e9b6db4ef8a59cbca29b3412d9393a4351b7246cb92ea125d89c403754362ced` | 1822971 |
+| `climax.ogg` | `9bfbb9be213c06d31c92890be5cbcee2339c473f0f5e7e1a5812909c5801c95b` | 1079387 |
