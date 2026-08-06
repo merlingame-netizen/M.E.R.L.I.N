@@ -207,6 +207,10 @@ tools/autodev/captures/tuto*/
 tools/autodev/status/orchestrator.pid
 tools/autodev/status/escalation_history.json
 tools/autodev/status/human_response.json
+# Journal de heartbeat : le hook SessionStart y ajoute une ligne a chaque
+# demarrage, ce qui salissait l'arbre a chaque session et produisait des
+# commits vides. Le fichier reste ecrit sur disque, il n'est plus suivi.
+tools/autodev/status/watchdog.txt
 tools/autodev/card_generator_raw.json
 tools/autodev/card_narrations_raw.json
 
