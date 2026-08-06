@@ -301,7 +301,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
 
 <section>
   <div class="sec-head"><span class="sec-num">ÉCOUTE</span><h2>Thème de menu principal</h2></div>
-  <p class="sec-sub">40 mesures, <strong>36 pupitres</strong>. L'air est énoncé nu au cor anglais (0'12), doublé, puis confié au <strong>couple bombarde-biniou</strong> (0'38) — l'orchestre se tait pour les laisser passer. Il revient harmonisé, s'éloigne dans le développement, et rentre en tutti à 1'28. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
+  <p class="sec-sub">40 mesures, <strong>37 pupitres</strong>. L'air est énoncé nu au cor anglais (0'12), doublé, puis confié au <strong>couple bombarde-biniou</strong> (0'38) — l'orchestre se tait pour les laisser passer. Il revient harmonisé, s'éloigne dans le développement, et rentre en tutti à 1'28. Les quatre couches sont les stems qu'attend <code>stems_music_manager.gd</code> : coupez-les, isolez-les, la somme des quatre redonne le mix.</p>
 
   <div class="console">
     <div class="transport">
@@ -326,9 +326,15 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <div><dt>Tonalité</dt><dd>Ré dorien</dd></div>
     <div><dt>Tempo</dt><dd>76 BPM</dd></div>
     <div><dt>Boucle</dt><dd>126,316 s</dd></div>
-    <div><dt>Effectif</dt><dd>36 · 1549</dd></div>
-    <div><dt>Amplitude</dt><dd>15,1 dB</dd></div>
+    <div><dt>Effectif</dt><dd>37 · 1669</dd></div>
+    <div><dt>Amplitude</dt><dd>13,8 dB</dd></div>
   </dl>
+
+  <div class="callout" style="border-color:var(--accent)">
+    <h3 style="color:var(--accent)">Ce qui n'était pas dans les instruments</h3>
+    <p>Le reproche « trop synthétique » ne venait pas des modèles mais de ce qu'il y a <em>autour</em>. Quatre choses ont été ajoutées : une nappe de réverbe longue et sombre (9 s) par-dessus la salle proche, un <strong>délai à réinjection amortie</strong> qui étale les notes jusqu'à ce qu'elles se fondent, un <strong>bruit de salle</strong> — un enregistrement acoustique n'a jamais un silence numérique, le plancher est passé de −∞ à −59,6 dB — et un <strong>pleurage de bande</strong>, parce qu'une justesse absolument constante sur deux minutes n'existe nulle part.</p>
+    <p>La harpe est passée de quatre à deux notes par mesure en contrepartie. Le genre ambient se joue dans l'espace entre les notes, pas dans leur nombre.</p>
+  </div>
 
   <div class="callout" style="border-color:var(--accent)">
     <h3 style="color:var(--accent)">L'air</h3>
@@ -342,7 +348,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <table>
       <thead><tr><th>Famille</th><th>Pupitres</th><th>Ce qui les distingue</th></tr></thead>
       <tbody>
-        <tr><td class="k"><b>Bretagne</b></td><td>bombarde · biniou · bourdon · tin whistle · bodhrán</td><td>La bombarde sature son anche et porte trois formants marqués. Le biniou n'a <em>aucune</em> nuance : une cornemuse est à pression constante, mettre une enveloppe expressive sonnerait faux.</td></tr>
+        <tr><td class="k"><b>Bretagne</b></td><td>bombarde · biniou · bourdon · <b>guitare celtique</b> · tin whistle · bodhrán</td><td>La bombarde sature son anche. Le biniou n'a <em>aucune</em> nuance : une cornemuse est à pression constante, une enveloppe expressive sonnerait faux. La guitare acier en DADGAD porte l'inharmonicité de la corde raide et les sympathiques des cordes à vide.</td></tr>
         <tr><td class="k"><b>Cordes</b></td><td>contrebasses · violoncelles · altos · violons · violon solo · trémolo · pizzicato</td><td>6 à 8 instrumentistes désaccordés par pupitre, chacun son vibrato et son attaque décalée. Le violon solo n'a qu'une voix : son vibrato est bien plus exposé.</td></tr>
         <tr><td class="k"><b>Bois</b></td><td>flûte · piccolo · hautbois · cor anglais · clarinette · basson</td><td>Formants fixes en fréquence, indépendants de la note — c'est ce qui fait qu'un hautbois reste un hautbois sur toute sa tessiture. La clarinette n'a que des harmoniques impaires : tuyau fermé.</td></tr>
         <tr><td class="k"><b>Cuivres</b></td><td>cors · trompettes · trombone · tuba · tutti</td><td>L'index de modulation monte pendant l'attaque : c'est le cuivre qui s'ouvre. Un cor piano est sourd, un cor forte est cuivré.</td></tr>
@@ -412,7 +418,7 @@ footer span{min-width:0;overflow-wrap:anywhere}
     <div class="mode">
       <div class="mode-tag">rendu de cette page</div>
       <h3>Synthétisé</h3>
-      <p>Trente-six pupitres reconstruits de zéro : ensembles désaccordés, formants fixes, vélocité timbrale, réverbe à convolution. Aucun octet emprunté, donc distribuable.</p>
+      <p>Trente-sept pupitres reconstruits de zéro, plus un traitement ambiant : nappe de réverbe longue, délai à réinjection, bruit de salle, pleurage de bande. Aucun octet emprunté, donc distribuable.</p>
       <p class="cmd mono">synth_palette.py --out audio/music/menu</p>
     </div>
     <div class="mode">
@@ -455,17 +461,19 @@ __PROVENANCE__
     <table>
       <thead><tr><th>Vérification</th><th>Mesure</th><th>Attendu</th></tr></thead>
       <tbody>
-        <tr><td>Crête après encodage Vorbis</td><td class="k">0,563</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
+        <tr><td>Crête après encodage Vorbis</td><td class="k">0,527</td><td>&lt; 0,90 — Vorbis dépasse le PCM source de 1 à 2 dB</td></tr>
         <tr><td>Niveau moyen</td><td class="k">−19,2 dB</td><td>−18 à −20 dB pour une musique de menu</td></tr>
-        <tr><td>Compatibilité mono</td><td class="k">+0,89</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
-        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,6 / −19,0 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
-        <tr><td>Discontinuité au point de boucle</td><td class="k">0,0001</td><td>≈ 0 — la queue de réverbe est repliée sur le début</td></tr>
-        <tr><td>Amplitude de l'arc dynamique</td><td class="k">15,1 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
-        <tr><td>Part du chant dans le médium</td><td class="k">36 %</td><td>le thème doit dominer ses accompagnements</td></tr>
-        <tr><td>… au tutti</td><td class="k">41 %</td><td>l'air doit rester audible sous 36 pupitres</td></tr>
-        <tr><td>… pendant l'énoncé nu</td><td class="k">84 %</td><td>le cor anglais est seul, il doit l'être vraiment</td></tr>
-        <tr><td>… pendant le couple breton</td><td class="k">94 %</td><td>l'orchestre se tait pour eux</td></tr>
-        <tr><td>Énergie sous 300 Hz</td><td class="k">34,8 %</td><td>20 à 35 % — au-delà, le médium disparaît</td></tr>
+        <tr><td>Compatibilité mono</td><td class="k">+0,86</td><td>&gt; 0,5 — deux réverbes indépendantes donneraient 0</td></tr>
+        <tr><td>Somme des 4 stems vs mix</td><td class="k">−18,7 / −19,1 dB</td><td>Écart nul : la console reproduit le mix</td></tr>
+        <tr><td>Boucle — pente au raccord</td><td class="k">0,0115</td><td>&lt; 0,0120, le 90ᵉ centile des pentes locales</td></tr>
+        <tr><td>Boucle — excès d'aigu au raccord</td><td class="k">−0,12 pt</td><td>&lt; 2 pt : aucune signature de clic</td></tr>
+        <tr><td>Plancher de bruit</td><td class="k">−59,6 dB</td><td>pas de silence numérique</td></tr>
+        <tr><td>Amplitude de l'arc dynamique</td><td class="k">13,8 dB</td><td>&gt; 8 dB, sinon la pièce est plate d'un bout à l'autre</td></tr>
+        <tr><td>Part du chant dans le médium</td><td class="k">35 %</td><td>le thème doit dominer ses accompagnements</td></tr>
+        <tr><td>… au tutti</td><td class="k">40 %</td><td>l'air doit rester audible sous 36 pupitres</td></tr>
+        <tr><td>… pendant l'énoncé nu</td><td class="k">85 %</td><td>le cor anglais est seul, il doit l'être vraiment</td></tr>
+        <tr><td>… pendant le couple breton</td><td class="k">93 %</td><td>l'orchestre se tait pour eux</td></tr>
+        <tr><td>Énergie sous 300 Hz</td><td class="k">31,8 %</td><td>20 à 35 % — au-delà, le médium disparaît</td></tr>
       </tbody>
     </table>
   </div>
@@ -473,7 +481,7 @@ __PROVENANCE__
 
 <footer>
   <span>M.E.R.L.I.N. — <span class="mono">docs/80_sound/30_music/MUSIC_TOOLCHAIN_PALETTE_PRIME.md</span></span>
-  <span class="mono">Tri Martolod (trad.) · arr. original · 36 pupitres · 40 mes. · 76 BPM</span>
+  <span class="mono">Tri Martolod (trad.) · arr. original · 37 pupitres · 40 mes. · 76 BPM</span>
 </footer>
 </div>
 

@@ -203,7 +203,8 @@ La chaîne décrite plus haut est **déjà appliquée** pour le menu principal, 
 |---|---|
 | Extracteur MusyX (ISO → PAK → AGSC → WAV) | `tools/audio/musyx_extract.py` |
 | Lecteur d'échantillons (transposition, boucle, enveloppes) | `tools/audio/sample_bank.py` |
-| **Lutherie** — 36 modèles d'instruments | `tools/audio/orchestra.py` |
+| **Lutherie** — 37 modèles d'instruments | `tools/audio/orchestra.py` |
+| **Vérification du point de boucle** | `tools/audio/loop_check.py` |
 | **Partition** — 32 mesures, conduite des voix, arc dynamique | `tools/audio/score_menu.py` |
 | **Orchestration** — répartition pupitres/stems | `tools/audio/arrange_menu.py` |
 | Rendu, salle, mastering, attestation | `tools/audio/synth_palette.py` |
@@ -290,7 +291,7 @@ elle ne peut pas afficher une provenance qu'elle n'a pas.
 > attestation vide.
 
 **Le morceau** : **Tri Martolod**, air traditionnel breton, arrangement original.
-Ré dorien, 76 BPM, 40 mesures, boucle de 126,316 s. **36 pupitres**, 1549 événements.
+Ré dorien, 76 BPM, 40 mesures, boucle de 126,316 s. **37 pupitres**, 1669 événements.
 
 ### 6.1 bis — L'air et sa provenance
 
@@ -424,6 +425,28 @@ Quatre choses le distinguent d'un empilement de nappes :
 | … pendant l'énoncé nu | 84 % | le cor anglais est seul, il doit l'être vraiment |
 | … pendant le couple breton | 94 % | l'orchestre se tait pour eux |
 | Énergie sous 300 Hz | 34,8 % | 20 à 35 % — au-delà, le médium disparaît |
+
+> **Sixième piège — une métrique fausse, et quatre correctifs pour rien.**
+> La qualité de boucle était jugée sur `|x[-1] − x[0]|`. Ce n'est pas une mesure de
+> discontinuité : c'est la **pente** du signal à cet endroit. Tant que la coda finissait
+> en quasi-silence, elle valait 0,0001 et passait pour une preuve de qualité. Dès qu'une
+> réverbe ambiante a maintenu du signal au point de boucle, la même métrique est montée à
+> 0,0115 — sans qu'aucun clic n'apparaisse. J'ai poursuivi ce fantôme à travers quatre
+> correctifs successifs (bruit de salle périodique, pleurage périodique, pleurage
+> circulaire, marge de queue de 11 à 17 s) avant de tester la métrique elle-même.
+>
+> Deux d'entre eux corrigeaient de vrais défauts au passage (l'écrêtage de l'indexation
+> du rééchantillonnage, la non-périodicité du bruit) ; les deux autres ne servaient à rien.
+>
+> `loop_check.py` remplace cette métrique par deux tests réels : la pente au raccord
+> comparée à la distribution des pentes **des deux côtés**, et la signature spectrale
+> d'un clic — large bande par nature. Ce second test a lui-même dû être corrigé : sur un
+> signal purement périodique il annonçait +54 σ avec 0,00 % d'énergie HF de part et
+> d'autre, parce que l'écart-type des voisins tend vers zéro. Il exige désormais un excès
+> **absolu** d'énergie haute fréquence, pas seulement un sigma.
+>
+> Validé sur cas connus : boucle parfaite → propre malgré +20,9 σ ; saut de 0,35 injecté
+> → clic à +43,67 pt.
 
 > **Cinquième piège, et le plus embarrassant** : la table d'équilibre des pupitres
 > (`orchestra.GAIN`), mesurée par `balance_check.py`, **n'était jamais appliquée au
