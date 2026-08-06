@@ -10,6 +10,18 @@ Chaine complete : ISO (GCM) -> PAK -> AGSC -> WAV + manifest.json
   SDIR  : table des samples (note de base, frequence, boucle, coefs ADPCM)
   SAMP  : donnees audio, DSP-ADPCM GameCube
 
+Format d'apres la specification Retro Modding :
+  https://www.metroid2002.com/retromodding/wiki/AGSC_(File_Format)
+
+Difference MP1 / MP2, verifiee contre cette page — c'est le piege du format :
+  MP1 : chaque chunk est precede de SA propre taille, taille incluse,
+        et l'ordre est pool, proj, samp, sdir.
+  MP2 : les quatre tailles sont en en-tete, et l'ordre est
+        pool, proj, sdir, samp (sdir et samp echanges).
+Lire un MP1 comme un MP2 ne leve aucune erreur : on obtient des offsets
+plausibles et du bruit. L'entete MP1 est donc choisi par validation de la
+table SDIR (entrees de 0x20, terminateur 0xFFFFFFFF), pas par pari.
+
 USAGE OBLIGATOIRE : fournissez VOTRE propre copie du jeu. Cet outil ne telecharge
 rien et ne contient aucune donnee appartenant a Nintendo. Les samples extraits sont
 destines a l'etude et au test local — voir §5 de
@@ -137,6 +149,54 @@ def _cstr(buf: bytes, pos: int) -> tuple[str, int]:
     return buf[pos:end].decode("ascii", "replace"), end + 1
 
 
+def _plausible(buf: bytes, spans: dict) -> bool:
+    """Une disposition tient-elle debout ? Bornes, tailles, et surtout la table
+    SDIR : ses entrees font 0x20 octets et se terminent par 0xFFFFFFFF. C'est ce
+    dernier point qui distingue vraiment une lecture juste d'un decalage."""
+    n = len(buf)
+    for off, sz in spans.values():
+        if off < 0 or sz <= 0 or off + sz > n:
+            return False
+    sdir_off, sdir_sz = spans["sdir"]
+    if sdir_sz < SDIR_ENTRY:
+        return False
+    sdir = buf[sdir_off:sdir_off + sdir_sz]
+    # au moins une entree lisible, et un terminateur quelque part sur la grille
+    for pos in range(0, len(sdir) - 3, SDIR_ENTRY):
+        if struct.unpack_from(">I", sdir, pos)[0] == 0xFFFFFFFF:
+            return pos > 0            # au moins un sample avant la fin
+    return False
+
+
+def _mp1_per_chunk(buf: bytes, pos: int) -> dict:
+    """MP1 : chaque chunk porte sa propre taille, TAILLE INCLUSE.
+
+    « In Metroid Prime, each chunk begins with its own size value; in Metroid
+    Prime 2, every chunk instead has its size listed at the beginning of the
+    file, at the end of the header. » — et « Chunk Size (note: includes the
+    size value itself) ». Ordre MP1 : pool, proj, samp, sdir."""
+    spans, p = {}, pos
+    for tag in ("pool", "proj", "samp", "sdir"):
+        (sz,) = struct.unpack_from(">I", buf, p)
+        spans[tag] = (p + 4, sz - 4)
+        p += sz
+    return spans
+
+
+def _mp1_header_sizes(buf: bytes, pos: int) -> dict:
+    """Repli : 4 tailles en tete puis les donnees a la suite. Ce n'est pas ce que
+    decrit la specification, mais on le garde pour ne pas casser un fichier
+    produit par un autre outil qui aurait ecrit cette disposition."""
+    pool_sz, proj_sz, samp_sz, sdir_sz = struct.unpack_from(">4I", buf, pos)
+    p = pos + 16
+    spans = {}
+    for tag, sz in (("pool", pool_sz), ("proj", proj_sz),
+                    ("samp", samp_sz), ("sdir", sdir_sz)):
+        spans[tag] = (p, sz)
+        p += sz
+    return spans
+
+
 def parse_agsc(buf: bytes) -> tuple[dict, bytes, bytes]:
     """Retourne (entete, chunk sdir, chunk samp). Gere MP1 et MP2."""
     # MP2 : u32 == 1, puis nom du groupe, puis 4 tailles de chunks
@@ -151,20 +211,36 @@ def parse_agsc(buf: bytes) -> tuple[dict, bytes, bytes]:
         sdir_off = proj_off + proj_sz          # MP2 : sdir AVANT samp
         samp_off = sdir_off + sdir_sz
         head = {"version": "MP2", "name": name, "group_id": group_id}
+        spans = {"pool": (pool_off, pool_sz), "proj": (proj_off, proj_sz),
+                 "sdir": (sdir_off, sdir_sz), "samp": (samp_off, samp_sz)}
     else:
-        # MP1 : "Audio/" puis nom du groupe, puis 4 tailles ; ordre samp AVANT sdir
+        # MP1 : "Audio/" puis le nom du groupe. La suite se lit de deux facons
+        # possibles ; on prend celle qui produit une table SDIR coherente plutot
+        # que de parier. La disposition de la specification passe en premier.
         adir, pos = _cstr(buf, 0)
         name, pos = _cstr(buf, pos)
-        pool_sz, proj_sz, samp_sz, sdir_sz = struct.unpack_from(">4I", buf, pos)
-        pos += 16
-        pool_off = pos
-        proj_off = pool_off + pool_sz
-        samp_off = proj_off + proj_sz
-        sdir_off = samp_off + samp_sz
-        head = {"version": "MP1", "name": name, "audio_dir": adir}
+        spans = layout = None
+        for tag, build in (("per_chunk", _mp1_per_chunk),
+                           ("header_sizes", _mp1_header_sizes)):
+            try:
+                cand = build(buf, pos)
+            except (struct.error, IndexError):
+                continue
+            if _plausible(buf, cand):
+                spans, layout = cand, tag
+                break
+        if spans is None:
+            raise ValueError(
+                "AGSC MP1 illisible : aucune des deux dispositions connues ne "
+                "donne une table SDIR coherente. Fichier tronque ou variante "
+                "non geree.")
+        head = {"version": "MP1", "name": name, "audio_dir": adir,
+                "layout": layout}
 
-    head.update(pool_size=pool_sz, proj_size=proj_sz,
-                sdir_size=sdir_sz, samp_size=samp_sz)
+    head.update(pool_size=spans["pool"][1], proj_size=spans["proj"][1],
+                sdir_size=spans["sdir"][1], samp_size=spans["samp"][1])
+    sdir_off, sdir_sz = spans["sdir"]
+    samp_off, samp_sz = spans["samp"]
     return head, buf[sdir_off:sdir_off + sdir_sz], buf[samp_off:samp_off + samp_sz]
 
 
@@ -411,8 +487,13 @@ def extract_dir(path: str, out_dir: str) -> list[dict]:
 # AUTOTEST — fabrique un AGSC valide au format documente et le relit
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _build_fixture() -> tuple[bytes, list[list[int]]]:
-    """Construit un AGSC MP2 synthetique : 2 samples ADPCM + 1 PCM16."""
+def _build_fixture(version: str = "MP2") -> tuple[bytes, list[list[int]]]:
+    """Construit un AGSC synthetique : 2 samples ADPCM + 1 PCM16.
+
+    version="MP1" produit la disposition decrite par la specification Retro
+    Modding : chaque chunk precede de sa propre taille, taille incluse, et
+    l'ordre pool/proj/samp/sdir. version="MP2" produit les quatre tailles en
+    en-tete et l'ordre pool/proj/sdir/samp."""
     import math
     coefs = [1820, -856, 3238, -1514, 2333, -550, 3336, -1287,
              2895, -1180, 1400, -400, 2700, -900, 3000, -1100]
@@ -454,6 +535,14 @@ def _build_fixture() -> tuple[bytes, list[list[int]]]:
         sdir += b
 
     name = b"TestGroup\x00"
+    if version == "MP1":
+        # MP1 : "Audio/" puis le nom, puis chaque chunk precede de SA taille,
+        # taille incluse ; ordre pool, proj, samp, sdir (sdir EN DERNIER).
+        def chunk(data: bytes) -> bytes:
+            return struct.pack(">I", len(data) + 4) + data
+        return (b"Audio/\x00" + name + chunk(b"POOL") + chunk(b"PROJ")
+                + chunk(bytes(samp)) + chunk(bytes(sdir))), originals
+
     head = struct.pack(">I", 1) + name + struct.pack(">H", 0xFFFF)
     head += struct.pack(">4I", 4, 4, len(sdir), len(samp))
     body = b"POOL" + b"PROJ" + bytes(sdir) + bytes(samp)
@@ -494,6 +583,25 @@ def selftest() -> int:
             ok = False
         print(f"    {flag} id={e['id']:#06x} note={e['base_note']} "
               f"rate={e['sample_rate']} n={e['num_samples']} fmt={e['format']}")
+
+    # 2bis. conteneur MP1 — disposition « une taille par chunk », taille incluse
+    blob1, orig1 = _build_fixture("MP1")
+    try:
+        h1, sdir1, samp1 = parse_agsc(blob1)
+        e1 = parse_sdir(sdir1)
+        print(f"  AGSC MP1 : disposition={h1.get('layout')} groupe={h1['name']!r} "
+              f"samples={len(e1)}")
+        if h1["version"] != "MP1" or h1.get("layout") != "per_chunk" or len(e1) != 3:
+            print("  ECHEC : en-tete MP1 mal interprete"); ok = False
+        else:
+            pcm1 = decode_entry(e1[0], samp1)
+            if len(pcm1) != len(orig1[0]):
+                print(f"  ECHEC : MP1 {len(pcm1)} echantillons au lieu de "
+                      f"{len(orig1[0])}"); ok = False
+            else:
+                print(f"    ok premier sample decode : {len(pcm1)} echantillons")
+    except Exception as exc:                                  # noqa: BLE001
+        print(f"  ECHEC : AGSC MP1 illisible — {exc}"); ok = False
 
     # 3. decodage de chaque entree
     for e, orig in zip(entries, originals):
