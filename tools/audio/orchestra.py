@@ -863,13 +863,17 @@ def tape_wobble(x: np.ndarray, depth: float = 0.00075, rate: float = 0.37,
     mod = (np.sin(2 * np.pi * cyc(rate) * t + rng.random() * 6.28)
            + 0.6 * np.sin(2 * np.pi * cyc(rate * 2.7) * t + rng.random() * 6.28)
            + 0.3 * np.sin(2 * np.pi * cyc(rate * 0.41) * t + rng.random() * 6.28))
-    pos = np.arange(n) + mod * depth * SR
-    pos = np.clip(pos, 0, n - 1.001)
+    # Lecture CIRCULAIRE, pas ecretee. Aux deux bouts, la tete de lecture doit
+    # aller chercher de l'autre cote de la boucle — sinon elle bute et la couture
+    # remonte de 0,00016 a 0,00584. Rendre la modulation periodique ne suffisait
+    # pas : c'est l'indexation elle-meme qui devait reboucler.
+    pos = np.mod(np.arange(n) + mod * depth * SR, n)
     i0 = pos.astype(np.int64)
     frac = pos - i0
+    i1 = (i0 + 1) % n
     if x.ndim == 1:
-        return x[i0] * (1 - frac) + x[np.minimum(i0 + 1, n - 1)] * frac
-    return np.stack([c[i0] * (1 - frac) + c[np.minimum(i0 + 1, n - 1)] * frac for c in x])
+        return x[i0] * (1 - frac) + x[i1] * frac
+    return np.stack([c[i0] * (1 - frac) + c[i1] * frac for c in x])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
