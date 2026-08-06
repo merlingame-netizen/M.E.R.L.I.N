@@ -151,9 +151,26 @@ def build_events() -> list[dict]:
         pcs, _ = CHORDS[PROGRESSION[bar - 1]]
         d = dyn(bar)
         tones = sorted({o * 12 + pc for pc in pcs for o in (4, 5) if 60 <= o * 12 + pc <= 79})
-        for j, beat in enumerate((1.5, 2.5, 3.5, 4.5)):
-            ev.append(_ev("harp", "melody", tones[(j * 2) % len(tones)], t_of(bar, beat),
-                          1.6, 0.14 + 0.24 * d, bar * 71 + j))
+        # deux notes par mesure au lieu de quatre : le genre ambiant se joue dans
+        # l'espace entre les notes, pas dans leur nombre
+        for j, beat in enumerate((2.5, 4.5)):
+            ev.append(_ev("harp", "melody", tones[(j * 3) % len(tones)], t_of(bar, beat),
+                          2.4, 0.12 + 0.20 * d, bar * 71 + j))
+
+    # ── GUITARE CELTIQUE — arpeges au doigt, accordage DADGAD ────────────────
+    # Elle joue peu de notes mais elles sonnent longtemps : c'est le liant du
+    # morceau, ce qui remplit l'espace entre les phrases sans le saturer.
+    for bar in list(range(1, 13)) + list(range(17, 29)) + list(range(33, 41)):
+        pcs, _ = CHORDS[PROGRESSION[bar - 1]]
+        d = dyn(bar)
+        tones = sorted({o * 12 + pc for pc in pcs for o in (3, 4, 5) if 50 <= o * 12 + pc <= 76})
+        pattern = ((1.0, 0), (2.0, 2), (2.75, 4), (3.5, 1), (4.25, 3))
+        for j, (beat, idx) in enumerate(pattern):
+            ev.append(_ev("celtic_guitar", "melody", tones[idx % len(tones)],
+                          t_of(bar, beat), 3.4, 0.24 + 0.34 * d, bar * 131 + j))
+        if bar % 4 == 1:                                   # basse a vide sur l'appui
+            ev.append(_ev("celtic_guitar", "melody", tones[0] - 12, t_of(bar, 1.0),
+                          4.2, 0.28 + 0.32 * d, bar * 137))
 
     # ── CLOCHES ET CELESTA — les extremites froides ──────────────────────────
     for bar in list(range(1, 9)) + list(range(37, 41)):

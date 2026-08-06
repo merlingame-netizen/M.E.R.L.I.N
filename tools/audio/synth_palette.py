@@ -40,7 +40,7 @@ from score_menu import BPM, LOOP_LEN, N_BARS
 
 TOOL_VERSION = "2.0.0"
 SR = orc.SR
-TAIL = 5.0                      # queue de reverbe, repliee sur le debut
+TAIL = 11.0                     # queue de reverbe ambiante, repliee sur le debut
 STEMS = ["base", "rhythm", "melody", "climax"]
 
 BANK = None
@@ -57,7 +57,7 @@ BANK_ROLE = {
     "flute": "whistle", "oboe": "whistle", "clarinet": "whistle",
     "cor_anglais": "whistle", "piccolo": "whistle", "tin_whistle": "whistle",
     "bombarde": "whistle", "biniou": "whistle",
-    "harp": "harp", "pizzicato": "harp",
+    "harp": "harp", "celtic_guitar": "harp", "pizzicato": "harp",
     "celesta_bell": "bell", "glockenspiel": "bell", "celesta": "bell",
     "timpani": "taiko", "taiko": "taiko", "bodhran": "taiko", "cymbal": "taiko",
     "tam_tam": "taiko", "snare_roll": "taiko",
@@ -69,7 +69,7 @@ INSTRUMENTS = {n: getattr(orc, n) for n in (
     "horn", "brass_ff", "trumpet", "trombone", "tuba",
     "flute", "oboe", "clarinet", "bassoon", "cor_anglais", "piccolo",
     "bombarde", "biniou", "biniou_drone", "tin_whistle",
-    "harp", "glockenspiel", "celesta_bell", "celesta",
+    "harp", "celtic_guitar", "glockenspiel", "celesta_bell", "celesta",
     "timpani", "taiko", "bodhran", "choir", "pad_fm", "sub",
 )}
 # instruments sans hauteur definie : signature (duree, vel, seed)
@@ -127,12 +127,26 @@ def render_stem(events: list[dict], n: int, verbose: bool = True) -> tuple[np.nd
     return dry, wet
 
 
-def finish(dry: np.ndarray, wet: np.ndarray, ir_l: np.ndarray, ir_r: np.ndarray,
-           hall: float) -> np.ndarray:
-    """Ajoute la salle, puis replie la queue sur le debut : boucle sans couture."""
+def finish(dry, wet, halls, hall=0.95, amb=0.0, delay=0.0):
+    """Salle proche + nappe ambiante + delai, puis repli de queue (boucle nette).
+
+    Le reproche « trop synthetique » vient rarement des instruments eux-memes :
+    il vient de ce qu'il y a AUTOUR. Une seule reverbe courte et nette laisse
+    chaque note isolee dans le vide. Ici trois couches se superposent :
+      - la salle proche (4 s), qui situe les pupitres sur une scene
+      - une nappe longue et sombre (9 s), qui fond les notes entre elles
+      - un delai a reinjection amortie, qui les etale encore
+    """
+    (ir_l, ir_r), (amb_l, amb_r) = halls
     out = dry
     out[0] += orc.convolve(wet[0], ir_l) * hall
     out[1] += orc.convolve(wet[1], ir_r) * hall
+    if amb > 0:
+        out[0] += orc.convolve(wet[0], amb_l) * amb
+        out[1] += orc.convolve(wet[1], amb_r) * amb
+    if delay > 0:
+        for c in (0, 1):
+            out[c] += orc.feedback_delay(wet[c], 0.789 + 0.041 * c, 0.44, 2600.0) * delay
     loop_n = int(LOOP_LEN * SR)
     tail_n = out.shape[1] - loop_n
     head = out[:, :loop_n].copy()
@@ -305,19 +319,33 @@ def main() -> int:
     print(f"[synth] {stats['instruments']} instruments, {stats['events']} evenements")
 
     n = int((LOOP_LEN + TAIL) * SR)
-    ir_l, ir_r = orc.stereo_hall(seconds=4.2, decay=5.2, damp=3100.0, seed=7, width=0.24)
+    halls = (orc.stereo_hall(seconds=4.2, decay=5.2, damp=3100.0, seed=7, width=0.24),
+             orc.stereo_hall(seconds=9.0, decay=3.1, damp=1300.0, seed=23, width=0.28))
+    # dosage ambiant par stem : les nappes et le chant s'etalent, la percussion non
+    AMB = {"base": 0.55, "rhythm": 0.16, "melody": 0.48, "climax": 0.52}
+    DLY = {"base": 0.16, "rhythm": 0.04, "melody": 0.26, "climax": 0.20}
 
     rendered = {}
     for stem in STEMS:
         sub_ev = [e for e in events if e["stem"] == stem]
         print(f"[synth]   {stem} : {len(sub_ev)} notes", flush=True)
         dry, wet = render_stem(sub_ev, n)
-        out = finish(dry, wet, ir_l, ir_r, hall=0.95)
+        out = finish(dry, wet, halls, hall=0.88, amb=AMB[stem], delay=DLY[stem])
         if stem == "base":
             # coupe l'infra-grave inutile et desepaissit le bas-medium : c'est la
             # zone ou quatre pupitres soutenus se recouvrent et deviennent une bouillie
             out = np.stack([orc.highpass(orc.formants(c, [(260.0, 150.0, -3.5)]), 38.0)
                             for c in out])
+        if stem == "base":
+            # bruit de salle : ajoute au seul stem toujours actif, pour que la
+            # somme des quatre continue d'egaler le mix
+            # meme champ pour les deux canaux a 82 %, le reste decorrele :
+            # large a l'ecoute, sans casser la compatibilite mono
+            loop_n = out.shape[1]
+            out[0] += orc.room_tone(loop_n, seed=5, decorrelate=0.18)
+            out[1] += orc.room_tone(loop_n, seed=5, decorrelate=0.18) * 0.0 \
+                + orc.room_tone(loop_n, seed=5, decorrelate=0.0) * 0.82 \
+                + orc.room_tone(loop_n, seed=11, decorrelate=0.0) * 0.18
         rendered[stem] = out.astype(np.float32)
         del out
         del dry, wet
@@ -333,6 +361,12 @@ def main() -> int:
     mix = np.zeros_like(rendered["base"], dtype=np.float64)
     for name, sig in rendered.items():
         mix += sig.astype(np.float64) * gains[name]
+
+    # Pleurage de bande, applique au mix ET a chaque stem avec la meme modulation :
+    # l'operation est lineaire, donc la somme reste egale au mix.
+    mix = orc.tape_wobble(mix, seed=3)
+    for name in rendered:
+        rendered[name] = orc.tape_wobble(rendered[name].astype(np.float64), seed=3).astype(np.float32)
 
     os.makedirs(args.out, exist_ok=True)
     mix_rms = float(np.sqrt((mix ** 2).mean()))

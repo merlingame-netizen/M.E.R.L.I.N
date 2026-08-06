@@ -19,7 +19,13 @@ Exemples :
     python3 tools/audio/musyx_extract.py iso   --input prime.iso  --out extract/
     python3 tools/audio/musyx_extract.py pak   --input Audio.pak  --out extract/
     python3 tools/audio/musyx_extract.py agsc  --input grp.agsc   --out extract/
+    python3 tools/audio/musyx_extract.py dir   --input dossier/   --out extract/
     python3 tools/audio/musyx_extract.py selftest
+
+Le mode `dir` accepte un dossier contenant n'importe quel melange de .iso, .pak,
+.agsc, .dsp ou .wav — y compris la sortie d'un autre outil (musyx-extract de
+Nisto, amuse, Prime World Editor, vgmstream). C'est le chemin le plus court
+quand on a deja extrait avec autre chose.
 """
 
 from __future__ import annotations
@@ -28,6 +34,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import math
 import os
 import struct
 import sys
@@ -306,6 +313,100 @@ def extract_iso(buf: bytes, out_dir: str) -> list[dict]:
     return manifest
 
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DOSSIER — accepte n'importe quel melange, y compris la sortie d'un autre outil
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _wav_info(path: str) -> dict | None:
+    """Lit un WAV deja extrait et devine ses parametres de banque."""
+    try:
+        with wave.open(path, "rb") as w:
+            rate, n, nch, width = (w.getframerate(), w.getnframes(),
+                                   w.getnchannels(), w.getsampwidth())
+            raw = w.readframes(min(n, rate * 4))
+    except Exception:
+        return None
+    if width != 2 or n < 64:
+        return None
+    # note de base estimee par autocorrelation sur le debut du sample
+    import array
+    pcm = array.array("h")
+    pcm.frombytes(raw[: (len(raw) // (2 * nch)) * 2 * nch])
+    mono = [pcm[i] for i in range(0, len(pcm), nch)]
+    seg = mono[: min(len(mono), rate // 2)]
+    base_note = 60
+    if len(seg) > 400:
+        best, best_lag = 0.0, 0
+        mean = sum(seg) / len(seg)
+        c = [v - mean for v in seg]
+        energy = sum(v * v for v in c) or 1.0
+        for lag in range(int(rate / 1200), min(int(rate / 40), len(c) // 2)):
+            acc = 0.0
+            for i in range(0, len(c) - lag, 8):        # sous-echantillonne : suffisant
+                acc += c[i] * c[i + lag]
+            acc /= energy
+            if acc > best:
+                best, best_lag = acc, lag
+        if best_lag:
+            f0 = rate / best_lag
+            if 25.0 < f0 < 5000.0:
+                base_note = int(round(69 + 12 * math.log2(f0 / 440.0)))
+    # bouclage : un sample long et soutenu se boucle, un court ne se boucle pas
+    dur = n / max(1, rate)
+    looped = dur > 0.9
+    return {"sample_rate": rate, "num_samples": n, "base_note": base_note,
+            "looped": looped, "loop_start": int(n * 0.55) if looped else 0,
+            "loop_length": int(n * 0.35) if looped else 0,
+            "duration_s": round(dur, 4), "format": 1}
+
+
+def extract_dir(path: str, out_dir: str) -> list[dict]:
+    """Parcourt un dossier et absorbe tout ce qu'il sait lire."""
+    import shutil
+    manifest: list[dict] = []
+    seen = {"iso": 0, "pak": 0, "agsc": 0, "wav": 0, "dsp": 0}
+    for root, _dirs, files in os.walk(path):
+        for name in sorted(files):
+            full = os.path.join(root, name)
+            low = name.lower()
+            try:
+                if low.endswith((".iso", ".gcm")):
+                    seen["iso"] += 1
+                    with open(full, "rb") as fh:
+                        manifest += extract_iso(fh.read(), out_dir)
+                elif low.endswith(".pak"):
+                    seen["pak"] += 1
+                    with open(full, "rb") as fh:
+                        manifest += extract_pak(fh.read(), out_dir)
+                elif low.endswith(".agsc"):
+                    seen["agsc"] += 1
+                    with open(full, "rb") as fh:
+                        manifest += extract_agsc(fh.read(), out_dir, tag=name)
+                elif low.endswith(".wav"):
+                    info = _wav_info(full)
+                    if not info:
+                        continue
+                    seen["wav"] += 1
+                    rel = os.path.join("imported", name)
+                    dst = os.path.join(out_dir, rel)
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    if os.path.abspath(full) != os.path.abspath(dst):
+                        shutil.copyfile(full, dst)
+                    info.update(file=rel.replace(os.sep, "/"), group="imported",
+                                id=len(manifest), agsc_version="wav", samp_offset=0)
+                    manifest.append(info)
+                elif low.endswith(".dsp"):
+                    seen["dsp"] += 1
+            except Exception as exc:
+                print(f"  ! {name} ignore : {exc}", file=sys.stderr)
+    print(f"[dir] parcouru : " + ", ".join(f"{v} {k}" for k, v in seen.items() if v))
+    if seen["dsp"]:
+        print(f"[dir] {seen['dsp']} fichiers .dsp trouves : convertissez-les d'abord en WAV\n"
+              f"      (vgmstream : vgmstream-cli -o sortie.wav entree.dsp)", file=sys.stderr)
+    return manifest
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # AUTOTEST — fabrique un AGSC valide au format documente et le relit
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -429,7 +530,7 @@ def selftest() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("mode", choices=["iso", "pak", "agsc", "selftest"])
+    ap.add_argument("mode", choices=["iso", "pak", "agsc", "dir", "selftest"])
     ap.add_argument("--input")
     ap.add_argument("--out", default="extract")
     args = ap.parse_args()
@@ -438,6 +539,27 @@ def main() -> int:
         return selftest()
     if not args.input:
         ap.error("--input est requis")
+    if args.mode == "dir":
+        if not os.path.isdir(args.input):
+            print(f"pas un dossier : {args.input}", file=sys.stderr)
+            return 2
+        samples = extract_dir(args.input, args.out)
+        os.makedirs(args.out, exist_ok=True)
+        manifest = {
+            "source": {"path": os.path.abspath(args.input),
+                       "filename": os.path.basename(os.path.abspath(args.input)),
+                       "sha256": "(dossier — voir les entrees individuelles)",
+                       "size_bytes": 0, "mode": "dir"},
+            "extracted_at": datetime.datetime.now(datetime.timezone.utc)
+                                     .strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "tool": f"musyx_extract.py {TOOL_VERSION}",
+            "sample_count": len(samples), "samples": samples,
+        }
+        mpath = os.path.join(args.out, "manifest.json")
+        with open(mpath, "w", encoding="utf-8") as fh:
+            json.dump(manifest, fh, indent=2, ensure_ascii=False)
+        print(f"[ok] {len(samples)} samples -> {args.out}/  (manifest : {mpath})")
+        return 0
     if not os.path.exists(args.input):
         print(f"introuvable : {args.input}\n\n"
               "Cet outil ne fournit aucune donnee de jeu. Utilisez votre propre copie.",

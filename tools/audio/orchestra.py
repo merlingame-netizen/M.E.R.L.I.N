@@ -49,7 +49,7 @@ GAIN = {
     # couple breton
     "bombarde": 3.05, "biniou": 1.23, "biniou_drone": 1.73, "tin_whistle": 1.32,
     # claviers et cloches
-    "harp": 1.45, "glockenspiel": 1.58, "celesta_bell": 0.82, "celesta": 1.28,
+    "celtic_guitar": 1.30, "harp": 1.45, "glockenspiel": 1.58, "celesta_bell": 0.82, "celesta": 1.28,
     # percussions
     "timpani": 0.89, "taiko": 0.69, "bodhran": 1.05, "cymbal": 1.97,
     "tam_tam": 4.57, "snare_roll": 5.31,
@@ -722,6 +722,148 @@ def snare_roll(dur, vel=0.5, seed=0):
     return (grain * roll * 0.5 + tone) * vel * 0.2
 
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GUITARE CELTIQUE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def celtic_guitar(freq, dur, vel=0.65, seed=0):
+    """Guitare acoustique cordes acier, accordage DADGAD, jeu aux doigts.
+
+    Trois choses la separent de la harpe, qui utilise pourtant le meme modele
+    de corde pincee :
+      - INHARMONICITE : une corde acier est raide, ses partiels sont legerement
+        au-dessus des multiples exacts. C'est ce qui donne le "metal" du son.
+      - CAISSE : resonance de Helmholtz vers 100 Hz, table vers 200 et 400 Hz.
+      - SYMPATHIQUES : en DADGAD les cordes a vide (re, la, re) vibrent seules
+        quand on joue ailleurs. C'est ce bourdonnement qui fait le son celtique.
+    """
+    n = int(dur * SR)
+    if n <= 0:
+        return np.zeros(0)
+    rng = np.random.default_rng(seed + 311)
+    d = max(2, int(SR / freq))
+    off = 1
+    buf = np.zeros(off + n + d + 2)
+    # attaque au doigt : plus douce qu'un mediator, mais avec un grain
+    exc = rng.standard_normal(d) * np.hanning(d)
+    exc = lowpass(exc, 1600.0 + 4800.0 * vel)
+    exc += rng.standard_normal(d) * 0.25 * np.exp(-np.arange(d) / (d * 0.12))
+    buf[off:off + d] = exc
+    damp = 0.9962 - 0.00028 * (freq / 220.0)              # tenue longue : cordes acier
+    i, end = off + d, off + n
+    while i < end:
+        blk = min(d, end - i)
+        buf[i:i + blk] = damp * 0.5 * (buf[i - d:i - d + blk] + buf[i - d - 1:i - d - 1 + blk])
+        i += blk
+    sig = buf[off:off + n]
+
+    t = np.arange(n) / SR
+    # raideur de la corde : un partiel legerement desaccorde vers le haut
+    stiff = np.sin(2 * np.pi * freq * 2.004 * t) * 0.12 * np.exp(-t * 2.2)
+    stiff += np.sin(2 * np.pi * freq * 3.012 * t) * 0.07 * np.exp(-t * 3.4)
+    # cordes a vide du DADGAD : re2, la2, re3
+    symp = np.zeros(n)
+    for open_f, amp in ((73.42, .06), (110.0, .05), (146.83, .05)):
+        if abs(freq / open_f - round(freq / open_f)) < 0.06:   # elles ne repondent
+            amp *= 2.4                                          # qu'en resonance
+        symp += amp * np.sin(2 * np.pi * open_f * t + rng.random() * 6.28) * np.exp(-t * 1.1)
+
+    out = sig + stiff * vel + symp * (0.4 + 0.6 * vel)
+    out = formants(out, [(100.0, 45.0, 5.0), (205.0, 80.0, 4.0), (420.0, 150.0, 2.5)])
+    out = lowpass(out, 4000.0)              # une acoustique n'a pas un centroide a 4 kHz
+    return out * adsr(n, 0.002, 0.06, 0.92, min(0.8, dur * .35)) * vel * 0.9
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AMBIANT — ce qui separe une maquette d'un disque
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def feedback_delay(x: np.ndarray, delay_s: float, feedback: float,
+                   damp: float, taps: int = 6) -> np.ndarray:
+    """Delai a reinjection amortie : chaque repetition perd ses aigus.
+
+    C'est le premier outil du genre ambiant. Il ne rajoute pas de notes, il
+    etale celles qui existent jusqu'a ce qu'elles se fondent les unes dans
+    les autres."""
+    n = len(x)
+    out = np.zeros(n)
+    d = int(delay_s * SR)
+    if d <= 0 or d >= n:
+        return out
+    cur = x
+    g = feedback
+    for k in range(1, taps + 1):
+        cur = lowpass(cur, damp)                          # chaque tour s'assombrit
+        shifted = np.zeros(n)
+        i = d * k
+        if i >= n:
+            break
+        shifted[i:] = cur[:n - i]
+        out += shifted * g
+        g *= feedback
+    return out
+
+
+def room_tone(n: int, seed: int = 0, level: float = 0.0016,
+              decorrelate: float = 0.0) -> np.ndarray:
+    """Bruit de salle, PERIODIQUE sur la longueur demandee.
+
+    Un enregistrement acoustique n'a jamais un silence numerique : il y a
+    toujours l'air de la piece, et son absence est un des marqueurs les plus
+    surs du "trop synthetique".
+
+    Mais un bruit tire au hasard ne boucle pas : sa valeur en fin de boucle ne
+    rejoint pas celle du debut, et la couture s'entend (mesure : 0,0312 contre
+    0,0001 sans lui). On le synthetise donc dans le domaine frequentiel — phases
+    aleatoires sur un spectre de longueur exacte — ce qui le rend periodique par
+    construction.
+
+    `decorrelate` melange une part independante pour ouvrir le stereo sans
+    detruire la compatibilite mono."""
+    rng = np.random.default_rng(seed + 997)
+    nf = n // 2 + 1
+    f = np.fft.rfftfreq(n, 1.0 / SR)
+    # spectre de salle : beaucoup de grave, peu d'aigu
+    mag = 1.0 / (1.0 + (f / 210.0) ** 2) + 0.25 / (1.0 + (f / 2600.0) ** 2)
+    mag[0] = 0.0                                          # pas de composante continue
+
+    def _field(rg):
+        ph = rg.random(nf) * 2 * np.pi
+        return np.fft.irfft(mag * np.exp(1j * ph), n)
+
+    base = _field(rng)
+    if decorrelate > 0:
+        side = _field(np.random.default_rng(seed + 1301))
+        base = (1.0 - decorrelate) * base + decorrelate * side
+    peak = np.abs(base).max() or 1.0
+    # la respiration doit elle aussi boucler : periodes entieres sur la longueur
+    t = np.arange(n) / n
+    breathe = 1.0 + 0.35 * np.sin(2 * np.pi * 4 * t) + 0.2 * np.sin(2 * np.pi * 2 * t)
+    return base / peak * breathe * level * 3.0
+
+
+def tape_wobble(x: np.ndarray, depth: float = 0.00075, rate: float = 0.37,
+                seed: int = 0) -> np.ndarray:
+    """Pleurage tres leger, comme une bande. Rompt la justesse parfaite.
+
+    Une justesse absolument constante sur deux minutes n'existe nulle part en
+    acoustique : c'est elle qui trahit la machine."""
+    n = x.shape[-1]
+    t = np.arange(n) / SR
+    rng = np.random.default_rng(seed + 1009)
+    mod = (np.sin(2 * np.pi * rate * t + rng.random() * 6.28)
+           + 0.6 * np.sin(2 * np.pi * rate * 2.7 * t + rng.random() * 6.28)
+           + 0.3 * np.sin(2 * np.pi * rate * 0.41 * t + rng.random() * 6.28))
+    pos = np.arange(n) + mod * depth * SR
+    pos = np.clip(pos, 0, n - 1.001)
+    i0 = pos.astype(np.int64)
+    frac = pos - i0
+    if x.ndim == 1:
+        return x[i0] * (1 - frac) + x[np.minimum(i0 + 1, n - 1)] * frac
+    return np.stack([c[i0] * (1 - frac) + c[np.minimum(i0 + 1, n - 1)] * frac for c in x])
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SALLE — reverbe et placement sur scene
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -774,7 +916,7 @@ STAGE = {
     "contrabass": (0.52, 0.44), "viola": (0.06, 0.36), "violin_solo": (-0.36, 0.26),
     "trumpet": (0.34, 0.66), "trombone": (0.40, 0.70), "tuba": (0.30, 0.76),
     "bassoon": (0.20, 0.56), "cor_anglais": (-0.08, 0.54), "piccolo": (-0.20, 0.50),
-    "celesta": (-0.56, 0.40), "tam_tam": (0.10, 0.86), "snare_roll": (-0.40, 0.72),
+    "celtic_guitar": (-0.44, 0.28), "celesta": (-0.56, 0.40), "tam_tam": (0.10, 0.86), "snare_roll": (-0.40, 0.72),
 }
 
 
