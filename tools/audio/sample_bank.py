@@ -271,3 +271,112 @@ def selftest() -> int:
 
 if __name__ == "__main__":
     sys.exit(selftest())
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BANQUE MULTI-ECHANTILLONS — instruments reellement enregistres
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class MultiSampleBank:
+    """Un enregistrement par note, et non un seul sample transpose partout.
+
+    C'est LA difference qui fait qu'un violon reste un violon. Transposer un
+    echantillon d'une octave deplace ses formants avec la hauteur : la caisse
+    de resonance semble changer de taille, et l'oreille entend immediatement
+    l'artifice. Ici chaque note demandee va chercher l'enregistrement le plus
+    proche et ne se transpose que de quelques demi-tons.
+
+    Manifeste attendu : `kind: multisample`, entrees portant `instrument`,
+    `base_note`, `sample_rate`, `loop_start`, `loop_length`.
+    """
+
+    # Enveloppes appliquees par-dessus l'echantillon. Volontairement discretes :
+    # l'attaque et le corps sont deja dans l'enregistrement, on ne fait que
+    # gerer la duree demandee et la fin de note.
+    ENV = {
+        "sustained": dict(a=0.06, d=0.10, s=0.94, r=0.45),
+        "plucked":   dict(a=0.001, d=0.02, s=0.97, r=0.25),
+        "struck":    dict(a=0.001, d=0.0, s=1.0, r=0.10),
+    }
+    KIND = {
+        "harp": "plucked", "celtic_guitar": "plucked", "pizzicato": "plucked",
+        "glockenspiel": "struck", "celesta": "struck", "celesta_bell": "struck",
+        "timpani": "struck", "taiko": "struck", "bodhran": "struck",
+        "cymbal": "struck", "tam_tam": "struck", "snare_roll": "struck",
+    }
+
+    def __init__(self, path: str, verbose: bool = True):
+        self.path = path
+        with open(os.path.join(path, "manifest.json"), encoding="utf-8") as fh:
+            man = json.load(fh)
+        self.libraries = man.get("libraries", [])
+        self.gains = man.get("gains", {})
+        self.by_inst: dict[str, list[dict]] = {}
+        for e in man.get("samples", []):
+            self.by_inst.setdefault(e["instrument"], []).append(e)
+        for lst in self.by_inst.values():
+            lst.sort(key=lambda e: e["base_note"])
+        self._cache: dict[str, tuple[np.ndarray, int]] = {}
+        if verbose:
+            print(f"[samples] {len(self.by_inst)} instruments reels, "
+                  f"{man.get('sample_count', 0)} echantillons — "
+                  + ", ".join(lib["license"] for lib in self.libraries))
+
+    def has(self, inst: str) -> bool:
+        return inst in self.by_inst
+
+    def _pick(self, inst: str, midi: float) -> dict:
+        lst = self.by_inst[inst]
+        return min(lst, key=lambda e: abs(e["base_note"] - midi))
+
+    def _load(self, entry: dict) -> tuple[np.ndarray, int]:
+        key = entry["file"]
+        if key not in self._cache:
+            self._cache[key] = read_wav_mono(os.path.join(self.path, key))
+        return self._cache[key]
+
+    def render(self, inst: str, midi: float, dur: float, vel: float = 0.7) -> np.ndarray:
+        n = int(dur * SR)
+        if n <= 0 or inst not in self.by_inst:
+            return np.zeros(max(0, n))
+        entry = self._pick(inst, midi)
+        data, file_rate = self._load(entry)
+        if len(data) < 2:
+            return np.zeros(n)
+
+        rate = entry.get("sample_rate") or file_rate
+        semis = midi - entry["base_note"]
+        step = (rate / SR) * (2.0 ** (semis / 12.0))
+
+        kind = self.KIND.get(inst, "sustained")
+        cfg = self.ENV[kind]
+        pos = np.arange(n, dtype=np.float64) * step
+        ls, ll = int(entry.get("loop_start", 0)), int(entry.get("loop_length", 0))
+        if entry.get("looped") and ll > 1 and ls + ll <= len(data):
+            over = pos >= ls + ll
+            pos = np.where(over, ls + np.mod(pos - ls, ll), pos)
+        else:
+            pos = np.clip(pos, 0, len(data) - 1.001)
+
+        i0 = pos.astype(np.int64)
+        frac = pos - i0
+        i1 = np.minimum(i0 + 1, len(data) - 1)
+        sig = data[i0] * (1.0 - frac) + data[i1] * frac
+        if not (entry.get("looped") and ll > 1):
+            played = np.arange(n, dtype=np.float64) * step
+            sig = np.where(played >= len(data) - 1, 0.0, sig)
+
+        # la velocite ouvre legerement le spectre, comme sur un vrai instrument
+        if kind == "sustained" and vel < 0.75:
+            sig = _soft_lowpass(sig, 2200.0 + 9000.0 * vel)
+        g = self.gains.get(inst, 1.0)
+        return sig * _adsr(n, cfg["a"], cfg["d"], cfg["s"], cfg["r"]) * (0.35 + 0.65 * vel) * g
+
+
+def _soft_lowpass(x: np.ndarray, fc: float) -> np.ndarray:
+    n = len(x)
+    if n < 32:
+        return x
+    spec = np.fft.rfft(x)
+    f = np.fft.rfftfreq(n, 1.0 / SR)
+    return np.fft.irfft(spec / (1.0 + (f / max(fc, 1.0)) ** 2), n)

@@ -48,6 +48,7 @@ TAIL = 17.0
 STEMS = ["base", "rhythm", "melody", "climax"]
 
 BANK = None
+SAMPLES = None      # banque multi-echantillons (instruments reellement enregistres)
 
 # Quand une banque d'echantillons est fournie, elle expose 7 roles. Voici comment
 # les 34 pupitres s'y rabattent.
@@ -93,6 +94,19 @@ def render_note(ev: dict) -> np.ndarray:
     if BANK is not None:
         role = BANK_ROLE.get(inst, "pad_fm")
         return BANK.render(role, midi_hz(ev["midi"]), dur)
+
+    # Instrument reellement enregistre quand la banque en dispose. Le reste
+    # reste synthetise : le couple breton (aucune bibliotheque libre n'a de
+    # bombarde ni de biniou), la nappe FM froide et le sub — qui sont
+    # electroniques par choix, pas par defaut.
+    if SAMPLES is not None and SAMPLES.has(inst):
+        key = ("S", inst, round(ev["midi"], 1), round(dur, 2), round(vel / 0.04) * 0.04)
+        if key in _note_cache:
+            return _note_cache[key]
+        sig = SAMPLES.render(inst, ev["midi"], dur, vel)
+        if len(_note_cache) < 4000:
+            _note_cache[key] = sig
+        return sig
 
     # quantification pour le cache : imperceptible, mais tres rentable
     key = (inst, round(ev["midi"], 1), round(dur, 2), round(vel / 0.04) * 0.04, ev["seed"] % 16)
@@ -304,15 +318,25 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="audio/music/menu")
     ap.add_argument("--keep-wav", action="store_true")
+    ap.add_argument("--samples", default=None,
+                    help="banque multi-echantillons (sortie de build_sample_bank.py) : "
+                         "les instruments reellement enregistres remplacent leurs modeles")
     ap.add_argument("--bank", default=None,
                     help="dossier de banque (sortie de musyx_extract.py) : les samples "
                          "reels remplacent les pupitres synthetises")
     args = ap.parse_args()
 
+    global SAMPLES
+    if args.samples:
+        from sample_bank import MultiSampleBank
+        SAMPLES = MultiSampleBank(args.samples)
     if args.bank:
         from sample_bank import SampleBank
         BANK = SampleBank(args.bank)
         print(f"[synth] mode ECHANTILLONNE — banque : {args.bank}")
+    elif SAMPLES is not None:
+        n_real = sum(1 for i in INSTRUMENTS if SAMPLES.has(i))
+        print(f"[synth] mode HYBRIDE — {n_real} pupitres enregistres, le reste synthetise")
     else:
         print("[synth] mode SYNTHETISE — aucun echantillon externe")
 
