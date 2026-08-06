@@ -848,13 +848,21 @@ def tape_wobble(x: np.ndarray, depth: float = 0.00075, rate: float = 0.37,
     """Pleurage tres leger, comme une bande. Rompt la justesse parfaite.
 
     Une justesse absolument constante sur deux minutes n'existe nulle part en
-    acoustique : c'est elle qui trahit la machine."""
+    acoustique : c'est elle qui trahit la machine.
+
+    PERIODIQUE SUR LA BOUCLE. A 0,37 Hz sur 126 s la modulation fait 46,7 cycles
+    — pas un nombre entier — donc elle ne revient pas a sa position de depart et
+    la couture s'entend (mesure : 0,0289). On arrondit chaque composante au
+    nombre entier de cycles le plus proche : le pleurage est alors invisible a
+    l'oreille mais boucle exactement."""
     n = x.shape[-1]
-    t = np.arange(n) / SR
+    t = np.arange(n) / n                                  # 0..1 sur la boucle
     rng = np.random.default_rng(seed + 1009)
-    mod = (np.sin(2 * np.pi * rate * t + rng.random() * 6.28)
-           + 0.6 * np.sin(2 * np.pi * rate * 2.7 * t + rng.random() * 6.28)
-           + 0.3 * np.sin(2 * np.pi * rate * 0.41 * t + rng.random() * 6.28))
+    span = n / SR
+    cyc = lambda r: max(1.0, round(r * span))             # cycles entiers
+    mod = (np.sin(2 * np.pi * cyc(rate) * t + rng.random() * 6.28)
+           + 0.6 * np.sin(2 * np.pi * cyc(rate * 2.7) * t + rng.random() * 6.28)
+           + 0.3 * np.sin(2 * np.pi * cyc(rate * 0.41) * t + rng.random() * 6.28))
     pos = np.arange(n) + mod * depth * SR
     pos = np.clip(pos, 0, n - 1.001)
     i0 = pos.astype(np.int64)

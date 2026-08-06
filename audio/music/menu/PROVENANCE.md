@@ -2,9 +2,9 @@
 
 - **Mode** : SYNTHETISE (aucune source externe)
 - **Outil** : synth_palette.py 2.0.0
-- **Rendu le** : 2026-08-06T06:54:53Z
+- **Rendu le** : 2026-08-06T08:11:33Z
 - **Composition** : D dorian, 76 BPM, 40 mesures, forme A A' B A'', boucle 126.316 s
-- **Effectif** : 36 instruments, 1549 evenements
+- **Effectif** : 37 instruments, 1669 evenements
 
 > Aucun echantillon externe. Chaque pupitre est un modele synthetise (ensemble desaccorde, formants fixes, velocite timbrale) et la salle est une reverbe a convolution sur reponses impulsionnelles generees.
 
@@ -12,8 +12,8 @@
 
 | Fichier | SHA-256 | Octets |
 |---|---|---|
-| `menu_theme.ogg` | `e36d261a034b42e7cd394dd101388fe81efd9e3f264cb210b7dd6c0b1341952e` | 1754705 |
-| `base.ogg` | `89dfc34b3bcd8acd9c9523c8aba44321dc8e5fa897213d0a311236ee255de4d3` | 1216841 |
-| `rhythm.ogg` | `f0b107dec89d90985f7a9245db1afe5d6816688c1f2ca12c068fca97ee80e15a` | 1193583 |
-| `melody.ogg` | `ee6db71115f7e7ad69764b2966c0cf913fd7d67fc015cd159db975767a353983` | 1807816 |
-| `climax.ogg` | `8fc9d213ca2a780f46d8cf6d1cf26928c763b5a9ef9984806104aace3f7138ed` | 1015339 |
+| `menu_theme.ogg` | `751236b4441542db33195eb3b8d8abd0f5c3372e5a0a3553778e9315f02ea477` | 1771004 |
+| `base.ogg` | `969c3e2bebccfa3ac34277b83c1dd4ee7cb8e02aaa74db47eabf681d6d4be175` | 1282582 |
+| `rhythm.ogg` | `8fb12835d60b436bcac02c8fdf03b680d4f955d497519b53fa5c689639eb7acd` | 1250103 |
+| `melody.ogg` | `ce950159de35c6b97efe24d9722dc1c5c9281be5c9c7d3a72094285190f24129` | 1823590 |
+| `climax.ogg` | `f5b87115447cb0ae4379f5e7c02b4fc0278a49a661633c1c51d6a477262f03dd` | 1079424 |
