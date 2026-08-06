@@ -154,8 +154,23 @@ def main() -> int:
 
     # MP3 et non OGG : Safari ne sait pas decoder Vorbis via decodeAudioData,
     # ce qui donne un silence complet sur iOS et macOS.
+    # N'EMBARQUER QUE CE QUE LE GABARIT UTILISE. menu_theme n'est qu'un repli
+    # pour les pages sans Web Audio ; le lecteur pilotable ne s'en sert pas et
+    # ne le nomme nulle part. Il pesait pourtant 2,55 Mo d'OGG, soit ~3,4 Mo une
+    # fois en base64 — de quoi faire passer la page de 12,6 a 16,0 Mo, contre une
+    # limite de 16. On lit donc le gabarit AVANT d'encoder quoi que ce soit.
+    tpl_probe = args.template or TEMPLATE
+    if not os.path.isabs(tpl_probe):
+        _here = os.path.dirname(os.path.abspath(__file__))
+        tpl_probe = tpl_probe if os.path.exists(tpl_probe) else os.path.join(_here, tpl_probe)
+    with open(tpl_probe, encoding="utf-8") as fh:
+        _tpl_src = fh.read()
+
     audio = {}
     for name, rate in STEMS.items():
+        if name != "bed" and name not in _tpl_src:
+            print(f"  · {name} non utilise par le gabarit — non embarque")
+            continue
         src = os.path.join(args.stems, f"{name}.ogg")
         dst = os.path.join(tmp, f"{name}.mp3")
         subprocess.run([ff, "-y", "-loglevel", "error", "-i", src,

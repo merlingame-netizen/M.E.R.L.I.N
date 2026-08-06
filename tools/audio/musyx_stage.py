@@ -76,7 +76,12 @@ def dsp_encode_fast(samples: np.ndarray, coefs: list[int]) -> bytes:
 
             # 2. boucle fermee a cette echelle : l'historique repart du signal
             #    RECONSTRUIT, sans quoi l'erreur derive sur les trames tenues.
-            for attempt in range(2):
+            # On remonte l'echelle JUSQU'A ce que plus rien ne sature. Une seule
+            # remontee laissait passer des trames ecretees : la boucle fermee
+            # derive par rapport a l'estimation ouverte, et le residu reel peut
+            # depasser de plus d'un facteur deux. Chaque trame ecretee est un
+            # saut audible.
+            for attempt in range(16):
                 scale = 1 << sc
                 h1, h2 = hist1, hist2
                 nibs, err, clipped = [], 0, False
@@ -122,10 +127,56 @@ def resample(x: np.ndarray, n_out: int) -> np.ndarray:
     return np.fft.irfft(out, n_out) * (n_out / n_in)
 
 
-def musyx_pass(pcm: np.ndarray, sr: int, rate: int = MUSYX_RATE) -> np.ndarray:
-    """48 kHz -> frequence d'epoque -> ADPCM -> decodage -> 48 kHz."""
+# Grille de frequences d'epoque. Une banque MusyX n'a JAMAIS eu une frequence
+# unique : le SDIR en stocke une par echantillon, precisement parce qu'elles
+# variaient d'un instrument a l'autre. Imposer 22,05 kHz partout mettait le
+# Nyquist a 11,025 kHz et decapitait les instruments cristallins — celesta et
+# glockenspiel en MIDI 96, arbres a clochettes, psalterion aigu — dont
+# l'essentiel de l'energie vit au-dessus. Mesure : 63 fichiers sous 20 dB de
+# SNR, le pire a 4,5 dB, tous aigus.
+RATE_GRID = (16000, 22050, 32000, 44100)
+
+
+def pick_rate(pcm: np.ndarray, sr: int, ceiling: int = 0) -> int:
+    """Choisit la frequence d'apres le contenu reel de l'echantillon.
+
+    Critere DIRECT : on retient la plus basse frequence de la grille qui laisse
+    moins de 1 % de l'energie au-dessus de son Nyquist. Rien d'autre ne marche.
+
+    Une premiere version cherchait la frequence sous laquelle vit 96 % de
+    l'energie, mesuree sur un extrait fenetre. Elle annoncait 4,25 kHz pour une
+    celesta en MIDI 96 — et donc 16 kHz d'echantillonnage — alors que cet
+    echantillon a 35 % de son energie au-dessus de 11 kHz. Le percentile lu sur
+    un cumul fenetre ne decrit pas ce que coupe reellement un Nyquist ; on
+    mesure donc exactement ce qu'on va perdre.
+
+    Consequence assumee : les instruments cristallins restent a 32 ou 44,1 kHz
+    et recoivent donc moins de grain. C'est le compromis qu'on faisait a
+    l'epoque — memoire contre brillance — et detruire l'instrument n'a jamais
+    ete un choix stylistique."""
+    if len(pcm) < 1024:
+        return RATE_GRID[-1]
+    x = pcm.astype(np.float64)
+    S = np.abs(np.fft.rfft(x)) ** 2
+    f = np.fft.rfftfreq(len(x), 1.0 / sr)
+    tot = float(S.sum())
+    if tot <= 0:
+        return RATE_GRID[0]
+    for r in RATE_GRID:
+        if float(S[f > r / 2.0].sum()) / tot <= 0.01:
+            return min(r, ceiling) if ceiling else r
+    return RATE_GRID[-1]
+
+
+def musyx_pass(pcm: np.ndarray, sr: int, rate: int = 0) -> np.ndarray:
+    """48 kHz -> frequence d'epoque -> ADPCM -> decodage -> 48 kHz.
+
+    rate=0 (defaut) : la frequence est choisie par echantillon (voir pick_rate).
+    Une valeur explicite force la grille entiere, ce qui ne sert qu'aux tests."""
     if len(pcm) < 32:
         return pcm
+    if not rate:
+        rate = pick_rate(pcm, sr)
     n_low = max(16, int(round(len(pcm) * rate / sr)))
     low = resample(pcm, n_low)
     low = np.clip(np.round(low), -32768, 32767).astype(np.int32)
@@ -203,7 +254,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="src")
     ap.add_argument("--out", dest="dst")
-    ap.add_argument("--rate", type=int, default=MUSYX_RATE)
+    # 0 = frequence choisie par echantillon (voir pick_rate). Le defaut etait
+    # MUSYX_RATE, ce qui court-circuitait silencieusement toute la selection :
+    # le journal annoncait « -> 22050 Hz » et la banque repartait decapitee.
+    ap.add_argument("--rate", type=int, default=0,
+                    help="0 = auto par echantillon ; une valeur force la grille")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
@@ -227,8 +282,9 @@ def main() -> int:
                 d = os.path.join(a.dst, os.path.relpath(s, a.src))
                 os.makedirs(os.path.dirname(d), exist_ok=True); shutil.copy2(s, d)
 
-    print(f"[musyx] {len(jobs)} echantillons -> {a.rate} Hz + ADPCM, "
-          f"{a.workers} processus")
+    print(f"[musyx] {len(jobs)} echantillons -> "
+          f"{'frequence auto par echantillon' if not a.rate else str(a.rate) + ' Hz'}"
+          f" + ADPCM, {a.workers} processus")
     snrs, done = [], 0
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
         for name, snr in ex.map(_job, jobs, chunksize=4):

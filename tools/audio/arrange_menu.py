@@ -207,17 +207,9 @@ def build_bed() -> list[dict]:
             ev.append(_ev("glockenspiel", "bed", 84 + pcs[(j + bar) % len(pcs)] % 12,
                           t_of(bar, beat), 3.2, 0.18 + 0.28 * dyn(bar), bar * 59 + j))
 
-    # ── PERCUSSION DOUCE — bodhran et timbales, rien de franc ────────────────
-    for bar in range(13, N_BARS + 1):
-        d = dyn(bar)
-        if bar >= 13:
-            for beat, g in ((1.0, 1.0), (3.0, 0.55)):
-                ev.append(_ev("bodhran", "bed", 45, t_of(bar, beat), 1.8,
-                              g * (0.16 + 0.26 * d), bar * 61 + int(beat)))
-    for bar in range(17, N_BARS - 3, 4):
-        _pcs, root = CHORDS[PROGRESSION[bar - 1]]
-        ev.append(_ev("timpani", "bed", root - 24, t_of(bar, 1.0), 3.6,
-                      0.16 + 0.30 * dyn(bar), bar * 67))
+    # La PERCUSSION n'est plus dans le socle : elle est devenue le role "pulse"
+    # (voir build_role). Un tambour d'orage devait pouvoir REMPLACER la frappe
+    # calme, pas s'ajouter par-dessus — sans quoi on retombe sur l'empilement.
     for bar in range(17, 21):                                # pizzicati
         tones = _tones(bar, 45, 64)
         for j, beat in enumerate((1.0, 3.0)):
@@ -296,6 +288,55 @@ def build_role(role: str, candidate: str) -> list[dict]:
                     continue
                 ev.append(_ev(inst, "halo", fold(tones[(bar + j) % len(tones)], span),
                               at, dur, gain * (0.18 + 0.26 * d), bar * 89 + j))
+
+    if role == "pulse":
+        # ── LE POULS ────────────────────────────────────────────────────────
+        # Quatre facons de battre la meme mesure. Les instants sont IDENTIQUES
+        # d'un titulaire a l'autre pour les frappes communes : c'est ce qui rend
+        # la bascule inaudible comme changement de tempo.
+        #
+        #   aucun  : rien. Le silence est un titulaire a part entiere.
+        #   calme  : la frappe douce d'origine, bodhran seul, 2 par mesure
+        #   orage  : dense et franc — bodhran double, taiko sur les temps forts
+        #   nuit   : demi-tempo, une frappe par mesure, tambour sourd
+        inst, gain, span, _lab = CANDIDATES["pulse"][candidate]
+        if candidate == "aucun":
+            return []
+        for bar in range(13, N_BARS + 1):
+            d = dyn(bar)
+            if candidate == "nuit":
+                # une seule frappe toutes les deux mesures : le rythme respire
+                if bar % 2:
+                    continue
+                ev.append(_ev(inst, "pulse", fold(38, span), t_of(bar, 1.0), 3.4,
+                              gain * (0.13 + 0.18 * d), bar * 61))
+            elif candidate == "orage":
+                for beat, g in ((1.0, 1.0), (2.5, 0.5), (3.0, 0.8), (4.5, 0.45)):
+                    at = t_of(bar, beat)
+                    # Rien ne franchit le point de boucle : une frappe qui
+                    # depassait de 0,87 s voyait sa queue repliee sur l'attaque
+                    # de la mesure 1 — le meme ressaut que sur les tenues.
+                    dur = min(1.5, LOOP_LEN - at - 0.06)
+                    if dur < 0.25:
+                        continue
+                    ev.append(_ev(inst, "pulse", fold(45, span), at, dur,
+                                  g * (0.20 + 0.30 * d), bar * 61 + int(beat * 2)))
+                if bar % 2 == 1:                       # appui grave sur deux mesures
+                    at = t_of(bar, 1.0)
+                    dur = min(2.4, LOOP_LEN - at - 0.06)
+                    if dur >= 0.4:
+                        ev.append(_ev("taiko", "pulse", 33, at, dur,
+                                      0.22 + 0.26 * d, bar * 73))
+            else:                                       # calme
+                for beat, g in ((1.0, 1.0), (3.0, 0.55)):
+                    ev.append(_ev(inst, "pulse", fold(45, span), t_of(bar, beat), 1.8,
+                                  g * (0.16 + 0.26 * d), bar * 61 + int(beat)))
+        # les timbales restent liees au pouls, sauf la nuit et par temps calme
+        if candidate in ("calme", "orage"):
+            for bar in range(17, N_BARS - 3, 4):
+                _pcs, root = CHORDS[PROGRESSION[bar - 1]]
+                ev.append(_ev("timpani", "pulse", root - 24, t_of(bar, 1.0), 3.6,
+                              0.16 + 0.30 * dyn(bar), bar * 67))
 
     ev.sort(key=lambda e: e["at"])
     return ev

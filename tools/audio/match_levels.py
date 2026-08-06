@@ -85,7 +85,17 @@ def main() -> int:
             if not os.path.exists(f):
                 print(f"  ! {c['file']} absent")
                 continue
-            level[c["id"]] = peak_rms(load(f))
+            lv = peak_rms(load(f))
+            # UN TITULAIRE SILENCIEUX N'A PAS DE NIVEAU. Le pouls a un candidat
+            # « aucun » qui est un vrai silence : l'apparier n'a pas de sens, et
+            # le faire entrer dans l'ecart divisait par zero. On le laisse a 1,0
+            # et hors du calcul.
+            if lv < 1e-9:
+                c["gain"] = 1.0
+                c["silent"] = True
+                print(f"  · {role}/{c['id']} silencieux — hors appariement")
+                continue
+            level[c["id"]] = lv
         if default not in level:
             continue
         ref = level[default]

@@ -302,6 +302,10 @@ SEND = {                      # (reverbe ambiante, delai) par partie
     "chant": (0.44, 0.24),
     "corde": (0.40, 0.18),
     "halo":  (0.68, 0.32),
+    # Le pouls part le plus SEC des quatre. Une percussion tres reverberee perd
+    # sa fonction : c'est elle qui donne le point d'appui rythmique, et une
+    # queue longue le noie. Le milieu ajoutera sa propre reverbe a la lecture.
+    "pulse": (0.22, 0.10),
 }
 
 

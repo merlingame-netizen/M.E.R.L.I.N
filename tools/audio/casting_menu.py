@@ -80,6 +80,14 @@ CANDIDATES = {
         "wine_glasses": ("wine_glasses", 1.05, (63, 74), "Verres frottés"),
         "hand_chimes":  ("hand_chimes",  0.95, (48, 84), "Clochettes à main"),
     },
+    # Le POULS — sorti du socle pour devenir remplacable. Un tambour d'orage
+    # doit REMPLACER la frappe calme, jamais s'y ajouter.
+    "pulse": {
+        "calme":  ("bodhran", 1.00, (36, 60), "Calme"),
+        "orage":  ("bodhran", 1.10, (36, 60), "Orage"),
+        "nuit":   ("slit_drum", 1.00, (33, 72), "Nuit"),
+        "aucun":  ("bodhran", 1.00, (36, 60), "Aucun"),
+    },
 }
 
 
@@ -92,7 +100,8 @@ def fold(midi: int, span: tuple[int, int]) -> int:
         midi -= 12
     return max(lo, min(hi, midi))
 
-DEFAULT = {"chant": "cor_anglais", "corde": "celtic_guitar", "halo": "celesta"}
+DEFAULT = {
+    "pulse": "calme", "chant": "cor_anglais", "corde": "celtic_guitar", "halo": "celesta"}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LES CONTEXTES
@@ -103,7 +112,7 @@ DEFAULT = {"chant": "cor_anglais", "corde": "celtic_guitar", "halo": "celesta"}
 # saison, qui prend la main sur le moment, role par role.
 
 AXES = {
-    "meteo":  ["clair", "couvert", "pluie", "brume", "neige"],
+    "meteo":  ["clair", "couvert", "pluie", "orage", "brume", "neige"],
     "saison": ["printemps", "ete", "automne", "hiver"],
     "moment": ["aube", "jour", "crepuscule", "nuit"],
 }
@@ -116,11 +125,14 @@ CONTEXT = {
     # La pluie appelle l'oud : un luth sans frettes, corps rond, attaque au risha.
     # C'est la demande d'origine, et c'est aussi le bon choix — le glissando d'un
     # manche sans frettes fait entendre quelque chose qui coule.
-    "pluie":     {"corde": "oud"},
-    "brume":     {"halo": "wine_glasses"},
-    "neige":     {"halo": "hand_chimes", "corde": "psaltery"},
+    "pluie":     {"corde": "oud", "pulse": "calme"},
+    # L'orage appelle les tambours : c'est la demande, et le pouls est le
+    # seul role capable de la porter sans empiler.
+    "orage":     {"corde": "oud", "pulse": "orage", "halo": "hand_chimes"},
+    "brume":     {"halo": "wine_glasses", "pulse": "aucun"},
+    "neige":     {"halo": "hand_chimes", "corde": "psaltery", "pulse": "nuit"},
     "couvert":   {},
-    "clair":     {},
+    "clair":     {"pulse": "aucun"},
     # ── saison ───────────────────────────────────────────────────────────────
     "printemps": {"corde": "kalimba", "chant": "flute"},
     "ete":       {"chant": "flute"},
@@ -130,7 +142,10 @@ CONTEXT = {
     "aube":      {"chant": "ocarina"},
     "jour":      {},
     "crepuscule": {"chant": "harmonica"},
-    "nuit":      {"corde": "dan_tranh", "halo": "hand_chimes"},
+    # La nuit ralentit le pouls : une frappe toutes les deux mesures,
+    # tambour a fente sourd. Le tempo ne change pas — c'est l'ecriture
+    # qui respire, sans quoi la boucle se decalerait.
+    "nuit":      {"corde": "dan_tranh", "halo": "hand_chimes", "pulse": "nuit"},
 }
 
 
@@ -184,6 +199,7 @@ MIX = {
     "neige":      {"low": -4.5, "high": +3.0, "space": 0.42, "decay": 6.4, "damp": 2600},
     "hiver":      {"low": -3.0, "high": +1.5, "space": 0.34, "decay": 5.2, "damp": 3000},
     # ── voile : la brume mange l'aigu mais garde la profondeur
+    "orage":      {"low": +3.0, "high": -1.0, "space": 0.30, "decay": 3.6, "damp": 3400},
     "brume":      {"low": -1.5, "high": -4.0, "space": 0.50, "decay": 5.8, "damp": 1900},
     # ── vegetal : proche, median, peu de queue
     "pluie":      {"low": +1.0, "high": -1.5, "space": 0.24, "decay": 3.0, "damp": 4200},
