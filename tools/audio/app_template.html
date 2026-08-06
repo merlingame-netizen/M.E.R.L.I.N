@@ -1,4 +1,4 @@
-<title>Brocéliande — table de distribution</title>
+<title>Brocéliande — lecteur</title>
 <style>
 :root{
   --ink:#0B1512; --panel:#121F1A; --panel-2:#0E1A16; --line:#22352C;
@@ -54,18 +54,6 @@ button{
 
 /* ── en-tête + transport ─────────────────────────────────────── */
 header{padding:34px 0 18px}
-.eyebrow{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.66rem;
-  letter-spacing:.2em;text-transform:uppercase;color:var(--fg-3);
-  display:flex;gap:10px;align-items:center;
-}
-.eyebrow .rule{flex:1;height:1px;background:var(--line)}
-h1{
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
-  font-weight:600;font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.1;
-  margin:14px 0 6px;text-wrap:balance;letter-spacing:-.01em;
-}
-.sub{color:var(--fg-2);max-width:60ch;font-size:.96rem}
 
 .bar{
   position:sticky;top:0;z-index:20;background:var(--panel);
@@ -122,11 +110,6 @@ h1{
 
 /* ── sections ─────────────────────────────────────────────────── */
 section{margin-top:30px}
-h2{
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
-  font-size:1.12rem;font-weight:600;margin:0 0 4px;
-}
-.hint{color:var(--fg-3);font-size:.85rem;margin:0 0 14px;max-width:62ch}
 
 .chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .axis{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
@@ -152,12 +135,10 @@ h2{
   background:var(--panel);border:1px solid var(--line);border-radius:5px;
   padding:15px 16px 16px;display:grid;gap:11px;box-shadow:var(--shadow);
 }
-.role-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .role-name{
   font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
   font-size:1.06rem;font-weight:600;
 }
-.role-job{font-size:.75rem;color:var(--fg-3);text-align:right}
 .now{
   font-size:1.5rem;line-height:1.15;color:var(--ember);
   font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
@@ -173,22 +154,7 @@ h2{
 .cand[aria-pressed="true"]{
   background:var(--ember);border-color:var(--ember);color:var(--ink);font-weight:500;
 }
-.trim{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
-  color:var(--fg-3);font-variant-numeric:tabular-nums;
-}
 
-.note{
-  margin-top:26px;padding:14px 17px;background:var(--panel-2);
-  border-left:2px solid var(--frost);border-radius:0 4px 4px 0;
-  font-size:.87rem;color:var(--fg-2);max-width:68ch;
-}
-.note b{color:var(--fg)}
-footer{
-  margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.68rem;
-  color:var(--fg-3);display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;
-}
 a{color:var(--frost)}
 button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offset:3px;border-radius:2px}
 @media (max-width:640px){
@@ -196,8 +162,6 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offs
   .axis > b{min-width:100%}
   header{padding-top:calc(20px + env(safe-area-inset-top))}
   .bar{top:env(safe-area-inset-top)}
-  .role-head{flex-wrap:wrap}
-  .role-job{text-align:left;flex-basis:100%}
 }
 /* CIBLES TACTILES. Au doigt, les puces faisaient 28 px de haut — sous le
    minimum de 44x44 px que le projet s'impose (bible §21.1, pilier TACTILE).
@@ -262,51 +226,20 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offs
 
 <div class="wrap">
 <header>
-  <div class="eyebrow"><span>M.E.R.L.I.N.</span><span class="rule"></span><span>thème de menu</span></div>
-  <h1>Table de distribution</h1>
-  <p class="sub">Un socle qui ne bouge jamais, trois rôles dont vous changez le titulaire pendant que ça joue. La météo, la saison et l'heure ne <em>rajoutent</em> rien : elles remplacent un instrument par un autre, aux mêmes notes et au même instant.</p>
-
   <div class="bar">
     <button class="play" id="play"><span id="glyph">▶</span><span id="playlabel">Écouter</span></button>
     <div class="clock"><b id="t">0:00</b> / <span id="dur">3:16</span></div>
-    <div class="tag" id="looptag">boucle 195,9 s</div>
-    <div class="tag" id="engine">—</div>
     <div class="tag" id="milieu">milieu · neutre</div>
+    <div class="tag" id="engine">—</div>
     <div class="msg" id="msg"></div>
   </div>
-
   <div class="levels" id="levels"></div>
 </header>
 
-<section>
-  <h2>Ambiance</h2>
-  <p class="hint">Change les trois rôles d'un coup. C'est le raccourci ; les réglages fins sont en dessous.</p>
-  <div class="chips" id="ambiances"></div>
-</section>
+<section><div class="chips" id="ambiances"></div></section>
+<section><div id="axes"></div></section>
+<section><div class="roles" id="roles"></div></section>
 
-<section>
-  <h2>Conditions</h2>
-  <p class="hint">Chaque axe ne se prononce que sur les rôles qui le concernent. La météo l'emporte sur la saison, qui l'emporte sur le moment. Recliquez pour annuler un axe.</p>
-  <div id="axes"></div>
-</section>
-
-<section>
-  <h2>Distribution</h2>
-  <p class="hint">Un seul titulaire par rôle est audible à la fois. Cliquez-en un autre : le fondu croisé dure trois secondes, et la boucle ne se décale pas.</p>
-  <div class="roles" id="roles"></div>
-</section>
-
-<div class="note">
-  <b>Pourquoi la bascule ne s'entend pas comme un changement de volume.</b>
-  Chaque rôle est écrit une seule fois et rendu une fois par titulaire, aux mêmes notes et aux mêmes instants — vérifié : les douze parties sont rigoureusement synchrones. Les niveaux sont ensuite mesurés <em>sur les fichiers finaux</em> et corrigés au gain de lecture ; l'écart résiduel entre titulaires d'un même rôle est de <span class="mono">0,00 dB</span>. Et chaque partie est repliée par octaves dans la tessiture réellement enregistrée de son titulaire, ce qui évite de transposer un psaltérion là où va une guitare : <span class="mono">0 demi-ton</span> de transposition sur les douze.
-</div>
-
-__PROVENANCE__
-
-<footer>
-  <span>Tri Martolod (trad., XVIII<sup>e</sup>) · arrangement original · instrumental</span>
-  <span>49 BPM · ré dorien · 40 mesures</span>
-</footer>
 </div>
 
 <script>
@@ -315,7 +248,6 @@ const CAST  = __CASTING_JSON__;
 
 const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment"};
 const ROLE_LABEL = {chant:"Chant", corde:"Corde", halo:"Halo"};
-const ROLE_JOB   = {chant:"porte l’air", corde:"accompagnement pincé", halo:"scintillement de l’aigu"};
 
 /* Des distributions completes, pour changer le caractere d'un coup. */
 const AMBIANCES = [
@@ -713,14 +645,11 @@ Object.keys(CAST.axes || {}).forEach(axis => {
 /* rôles */
 $("#roles").innerHTML = (CAST.roles||[]).map(r =>
   '<div class="role">'+
-    '<div class="role-head"><span class="role-name">'+(ROLE_LABEL[r]||r)+'</span>'+
-      '<span class="role-job">'+(ROLE_JOB[r]||"")+'</span></div>'+
+    '<div class="role-name">'+(ROLE_LABEL[r]||r)+'</div>'+
     '<div class="now" data-now="'+r+'">—</div>'+
     '<div class="bench">'+ cands(r).map(c =>
       '<button class="cand" data-role="'+r+'" data-id="'+c.id+'" aria-pressed="false">'+
       c.label+'</button>').join("") +'</div>'+
-    '<div class="trim">tessiture '+ (cands(r)[0] ? "repliée par octaves" : "") +
-      ' · niveaux appariés à 0,00 dB</div>'+
   '</div>').join("");
 document.querySelectorAll(".cand").forEach(b => b.addEventListener("click", () => {
   context = {};
@@ -752,7 +681,7 @@ playBtn.addEventListener("click", () => {
     Object.keys(el).forEach(n => { try{ el[n].pause(); }catch(e){} });
     cancelAnimationFrame(raf); raf = 0; lastTs = 0;
     glyph.textContent = "▶"; playLabel.textContent = "Écouter";
-    loopTag.classList.remove("on"); clock.textContent = "0:00";
+    if(loopTag) loopTag.classList.remove("on"); clock.textContent = "0:00";
     Object.keys(vol).forEach(n => { vol[n].cur = 0; });
     paintLevels();
     return;
@@ -773,7 +702,7 @@ playBtn.addEventListener("click", () => {
     (CAST.roles||[]).forEach(r => startPart(key(r, cast[r])));
     applyTargets();
     glyph.textContent = "❚❚"; playLabel.textContent = "Arrêter";
-    loopTag.classList.add("on");
+    if(loopTag) loopTag.classList.add("on");
     /* Affiché pour que le diagnostic soit lisible depuis le téléphone :
        sans nœud de gain, l'appariement des niveaux est écrêté. */
     engineEl.textContent = webGain ? "flux + gain" : "flux seul (gain écrêté)";
