@@ -54,7 +54,8 @@ GAIN = {
     "timpani": 0.89, "taiko": 0.69, "bodhran": 1.05, "cymbal": 1.97,
     "tam_tam": 4.57, "snare_roll": 5.31,
     # nappes
-    "choir": 1.95, "pad_fm": 0.26, "sub": 1.01,
+    # le sub porte seul le bas du spectre : VSCO-2 CE n'a pas de contrebasse
+    "choir": 1.95, "pad_fm": 0.26, "sub": 1.70,
 }
 
 

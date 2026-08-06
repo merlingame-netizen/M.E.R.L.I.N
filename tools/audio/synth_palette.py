@@ -177,12 +177,14 @@ def finish(dry, wet, halls, hall=0.95, amb=0.0, delay=0.0):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def air(x: np.ndarray, gain_db: float = 3.0, fc: float = 4200.0,
-        low_cut_db: float = -1.0, low_fc: float = 200.0) -> np.ndarray:
+        low_cut_db: float = 2.5, low_fc: float = 170.0) -> np.ndarray:
     """Basculement de master : shelf haut pour la brillance, shelf bas pour degager.
 
     Le shelf bas avait ete cale a -4 dB sur les modeles synthetises, qui empilaient
-    45 % de l'energie sous 300 Hz. Les enregistrements reels sont equilibres
-    autrement : la meme correction faisait tomber le mix a 11,3 %, maigre. -1 dB.
+    45 % de l'energie sous 300 Hz. Avec les enregistrements reels le probleme
+    s'inverse : VSCO-2 CE n'a AUCUN echantillon de contrebasse (le dossier existe
+    mais il est vide), donc les contrebasses sont des violoncelles transposes vers
+    le bas — sans le fondamental. Le shelf devient un leger RELEVEMENT.
 
     Applique identiquement au mix et a chaque stem, pour que la somme reste egale."""
     n = x.shape[-1]
