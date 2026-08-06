@@ -1,0 +1,246 @@
+{
+  "axes": {
+    "meteo": [
+      "clair",
+      "couvert",
+      "pluie",
+      "orage",
+      "brume",
+      "neige"
+    ],
+    "saison": [
+      "printemps",
+      "ete",
+      "automne",
+      "hiver"
+    ],
+    "moment": [
+      "aube",
+      "jour",
+      "crepuscule",
+      "nuit"
+    ],
+    "situation": [
+      "neutre",
+      "sacre"
+    ]
+  },
+  "layers": [
+    {
+      "id": "pluie",
+      "label": "Pluie",
+      "axis": "meteo",
+      "when": [
+        "pluie",
+        "orage"
+      ],
+      "instruments": [
+        "oud",
+        "ocean_drum"
+      ],
+      "gain": 1.0,
+      "file": "layer_pluie.ogg",
+      "events": 54,
+      "peak_rel_db": -13.0,
+      "rms_rel_db": -16.2,
+      "present": true
+    },
+    {
+      "id": "orage",
+      "label": "Orage",
+      "axis": "meteo",
+      "when": [
+        "orage"
+      ],
+      "instruments": [
+        "didgeridoo",
+        "slit_drum"
+      ],
+      "gain": 0.92,
+      "file": "layer_orage.ogg",
+      "events": 31,
+      "peak_rel_db": -13.7,
+      "rms_rel_db": -10.6,
+      "present": true
+    },
+    {
+      "id": "brume",
+      "label": "Brume",
+      "axis": "meteo",
+      "when": [
+        "brume",
+        "couvert"
+      ],
+      "instruments": [
+        "wine_glasses"
+      ],
+      "gain": 0.95,
+      "file": "layer_brume.ogg",
+      "events": 16,
+      "peak_rel_db": -13.4,
+      "rms_rel_db": -11.3,
+      "present": true
+    },
+    {
+      "id": "neige",
+      "label": "Neige",
+      "axis": "meteo",
+      "when": [
+        "neige"
+      ],
+      "instruments": [
+        "hand_chimes",
+        "bell_tree"
+      ],
+      "gain": 0.95,
+      "file": "layer_neige.ogg",
+      "events": 15,
+      "peak_rel_db": -13.4,
+      "rms_rel_db": -18.5,
+      "present": true
+    },
+    {
+      "id": "clair",
+      "label": "Beau temps",
+      "axis": "meteo",
+      "when": [
+        "clair"
+      ],
+      "instruments": [
+        "mark_tree"
+      ],
+      "gain": 0.85,
+      "file": "layer_clair.ogg",
+      "events": 4,
+      "peak_rel_db": -14.4,
+      "rms_rel_db": -21.9,
+      "present": true
+    },
+    {
+      "id": "printemps",
+      "label": "Printemps",
+      "axis": "saison",
+      "when": [
+        "printemps"
+      ],
+      "instruments": [
+        "kalimba"
+      ],
+      "gain": 0.95,
+      "file": "layer_printemps.ogg",
+      "events": 42,
+      "peak_rel_db": -13.4,
+      "rms_rel_db": -15.6,
+      "present": true
+    },
+    {
+      "id": "ete",
+      "label": "Ete",
+      "axis": "saison",
+      "when": [
+        "ete"
+      ],
+      "instruments": [
+        "mbira",
+        "strumstick"
+      ],
+      "gain": 0.9,
+      "file": "layer_ete.ogg",
+      "events": 54,
+      "peak_rel_db": -13.9,
+      "rms_rel_db": -16.2,
+      "present": true
+    },
+    {
+      "id": "automne",
+      "label": "Automne",
+      "axis": "saison",
+      "when": [
+        "automne"
+      ],
+      "instruments": [
+        "harmonica"
+      ],
+      "gain": 0.88,
+      "file": "layer_automne.ogg",
+      "events": 7,
+      "peak_rel_db": -14.1,
+      "rms_rel_db": -20.6,
+      "present": true
+    },
+    {
+      "id": "hiver",
+      "label": "Hiver",
+      "axis": "saison",
+      "when": [
+        "hiver"
+      ],
+      "instruments": [
+        "psaltery"
+      ],
+      "gain": 0.92,
+      "file": "layer_hiver.ogg",
+      "events": 10,
+      "peak_rel_db": -13.7,
+      "rms_rel_db": -17.5,
+      "present": true
+    },
+    {
+      "id": "aube",
+      "label": "Aube",
+      "axis": "moment",
+      "when": [
+        "aube"
+      ],
+      "instruments": [
+        "ocarina"
+      ],
+      "gain": 0.9,
+      "file": "layer_aube.ogg",
+      "events": 8,
+      "peak_rel_db": -13.9,
+      "rms_rel_db": -18.5,
+      "present": true
+    },
+    {
+      "id": "nuit",
+      "label": "Nuit",
+      "axis": "moment",
+      "when": [
+        "nuit"
+      ],
+      "instruments": [
+        "dan_tranh"
+      ],
+      "gain": 0.92,
+      "file": "layer_nuit.ogg",
+      "events": 18,
+      "peak_rel_db": -13.7,
+      "rms_rel_db": -20.0,
+      "present": true
+    },
+    {
+      "id": "sacre",
+      "label": "Sacre",
+      "axis": "situation",
+      "when": [
+        "sacre"
+      ],
+      "instruments": [
+        "hand_bells"
+      ],
+      "gain": 1.0,
+      "file": "layer_sacre.ogg",
+      "events": 3,
+      "peak_rel_db": -13.0,
+      "rms_rel_db": -22.8,
+      "present": true
+    }
+  ],
+  "loop_seconds": 165.306,
+  "bpm": 58.074074074074076,
+  "mix_reference": {
+    "peak_rms": 18.27522202369624,
+    "rms": 8.555473683099622
+  }
+}

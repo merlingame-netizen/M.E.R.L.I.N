@@ -63,7 +63,14 @@ def check(path: str, verbose: bool = True) -> dict:
     w = int(0.5 * SR)
     around = np.abs(np.diff(np.concatenate([m[-w:], m[:w]])))
     p90 = float(np.percentile(around, 90))
-    slope_ok = join <= p90
+    # PLANCHER ABSOLU. Le test de pente est RELATIF, et quand la matiere s'eteint
+    # a la fin sa distribution s'effondre : sur le stem rythmique, dont la coda
+    # est un quasi-silence, le raccord valait 0,0004 contre 0,0003 de pente
+    # locale. Les deux mesures sont du bruit numerique. Un saut de 0,0004, c'est
+    # -68 dBFS : aucun haut-parleur n'en fait un clic. En dessous de 0,002
+    # (-54 dBFS) on ne compare plus rien, on declare propre.
+    FLOOR = 0.002
+    slope_ok = join <= p90 or join < FLOOR
 
     # 2. signature spectrale du clic
     W = 2048
