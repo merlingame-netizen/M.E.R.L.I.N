@@ -156,6 +156,62 @@ def all_parts() -> list[tuple[str, str]]:
     return [(r, c) for r, cands in CANDIDATES.items() for c in cands]
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# LE MIX PAR CONTEXTE
+# ═══════════════════════════════════════════════════════════════════════════════
+# Changer d'instrument ne suffit pas a changer de milieu. Ce qui fait entendre un
+# monde gele, ce n'est pas seulement un carillon plutot qu'une celesta : c'est un
+# aigu clairsemme, une queue de reverbe longue et sombre, un grave retire.
+#
+# Voir docs/80_sound/30_music/MUSICOLOGIE_PRIME.md §4. Le principe emprunte a la
+# trilogie Prime est une REGLE — un milieu se traduit par un traitement — et non
+# un materiau : aucune melodie n'est reprise. L'espace y est un parametre
+# d'ecriture, pas un effet ajoute apres coup.
+#
+# Ces valeurs sont appliquees A LA LECTURE, pas au rendu : le navigateur les
+# applique en direct sur le bus principal. On entend donc le milieu changer sans
+# re-rendre quoi que ce soit.
+#
+#   low / high : shelfs en dB (grave sous 220 Hz, aigu au-dessus de 4200 Hz)
+#   space      : dosage de la reverbe, 0 = sec
+#   decay      : duree de la queue en secondes (RT60)
+#   damp       : coupure du passe-bas sur la queue, en Hz — plus bas, plus sombre
+MIX_NEUTRAL = {"low": 0.0, "high": 0.0, "space": 0.16, "decay": 2.6, "damp": 5200}
+
+MIX = {
+    # ── gele : l'archetype Phendrana. Aigu ouvert, queue longue et sombre,
+    #    grave retire — le froid s'entend a ce qui MANQUE dans le bas.
+    "neige":      {"low": -4.5, "high": +3.0, "space": 0.42, "decay": 6.4, "damp": 2600},
+    "hiver":      {"low": -3.0, "high": +1.5, "space": 0.34, "decay": 5.2, "damp": 3000},
+    # ── voile : la brume mange l'aigu mais garde la profondeur
+    "brume":      {"low": -1.5, "high": -4.0, "space": 0.50, "decay": 5.8, "damp": 1900},
+    # ── vegetal : proche, median, peu de queue
+    "pluie":      {"low": +1.0, "high": -1.5, "space": 0.24, "decay": 3.0, "damp": 4200},
+    "printemps":  {"low": 0.0,  "high": +1.0, "space": 0.18, "decay": 2.4, "damp": 6000},
+    "aube":       {"low": -1.0, "high": +2.0, "space": 0.14, "decay": 2.2, "damp": 6800},
+    "ete":        {"low": +0.5, "high": +0.5, "space": 0.16, "decay": 2.4, "damp": 6200},
+    # ── ruines : tenu, tres long, sans transitoire
+    "couvert":    {"low": +0.5, "high": -2.0, "space": 0.36, "decay": 5.0, "damp": 3200},
+    "automne":    {"low": +1.5, "high": -1.5, "space": 0.30, "decay": 4.2, "damp": 3600},
+    "nuit":       {"low": +2.0, "high": -2.5, "space": 0.46, "decay": 7.0, "damp": 2400},
+    "crepuscule": {"low": +1.0, "high": -0.5, "space": 0.30, "decay": 4.0, "damp": 3800},
+    # ── ouvert : le plus sec, spectre neutre
+    "clair":      {"low": 0.0,  "high": +1.5, "space": 0.12, "decay": 2.0, "damp": 7000},
+    "jour":       {"low": 0.0,  "high": 0.0,  "space": 0.14, "decay": 2.2, "damp": 6500},
+}
+
+
+def resolve_mix(context: dict) -> dict:
+    """Le mix suit la meme priorite que la distribution : meteo > saison >
+    moment. Le premier axe qui se prononce donne le milieu — un seul gagne,
+    car deux traitements d'espace superposes ne veulent plus rien dire."""
+    for axis in PRIORITY:
+        value = context.get(axis)
+        if value and value in MIX:
+            return dict(MIX[value], source=value)
+    return dict(MIX_NEUTRAL, source="neutre")
+
+
 def manifest() -> dict:
     return {
         "roles": list(CANDIDATES),
@@ -163,6 +219,8 @@ def manifest() -> dict:
         "axes": AXES,
         "priority": PRIORITY,
         "context": CONTEXT,
+        "mix": MIX,
+        "mix_neutral": MIX_NEUTRAL,
         "candidates": {
             role: [{"id": cid, "label": lab, "instrument": inst,
                     "range": list(span), "gain": g, "file": f"{role}__{cid}.ogg"}

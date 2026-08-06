@@ -271,6 +271,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offs
     <div class="clock"><b id="t">0:00</b> / <span id="dur">3:16</span></div>
     <div class="tag" id="looptag">boucle 195,9 s</div>
     <div class="tag" id="engine">—</div>
+    <div class="tag" id="milieu">milieu · neutre</div>
     <div class="msg" id="msg"></div>
   </div>
 
@@ -318,11 +319,11 @@ const ROLE_JOB   = {chant:"porte l’air", corde:"accompagnement pincé", halo:"
 
 /* Des distributions completes, pour changer le caractere d'un coup. */
 const AMBIANCES = [
-  {id:"broceliande", label:"Brocéliande", cast:{chant:"cor_anglais", corde:"celtic_guitar", halo:"celesta"}},
-  {id:"pluie",       label:"Pluie",       cast:{chant:"cor_anglais", corde:"oud",           halo:"celesta"}},
-  {id:"hiver",       label:"Nuit d’hiver",cast:{chant:"cor_anglais", corde:"psaltery",      halo:"wine_glasses"}},
-  {id:"printemps",   label:"Matin clair", cast:{chant:"ocarina",     corde:"kalimba",       halo:"hand_chimes"}},
-  {id:"lointain",    label:"Lointain",    cast:{chant:"harmonica",   corde:"dan_tranh",     halo:"wine_glasses"}},
+  {id:"broceliande", label:"Brocéliande", mix:"couvert", cast:{chant:"cor_anglais", corde:"celtic_guitar", halo:"celesta"}},
+  {id:"pluie",       label:"Pluie",       mix:"pluie",   cast:{chant:"cor_anglais", corde:"oud",           halo:"celesta"}},
+  {id:"hiver",       label:"Nuit d’hiver",mix:"neige",   cast:{chant:"cor_anglais", corde:"psaltery",      halo:"wine_glasses"}},
+  {id:"printemps",   label:"Matin clair", mix:"aube",    cast:{chant:"ocarina",     corde:"kalimba",       halo:"hand_chimes"}},
+  {id:"lointain",    label:"Lointain",    mix:"brume",   cast:{chant:"harmonica",   corde:"dan_tranh",     halo:"wine_glasses"}},
 ];
 
 const $ = s => document.querySelector(s);
@@ -331,6 +332,7 @@ const clock=$("#t"), durEl=$("#dur"), msgEl=$("#msg"), engineEl=$("#engine"), lo
 
 let cast = Object.assign({}, CAST.default);
 let context = {};
+let ambianceMix = null;   /* milieu choisi par une ambiance, faute d'axe explicite */
 let playing = false, unlocked = false;
 const el = {};            /* nom -> HTMLAudioElement */
 const vol = {};           /* nom -> {cur, target} */
@@ -375,7 +377,82 @@ function audioCtx(){
   const C = window.AudioContext || window.webkitAudioContext;
   if(!C){ AC = false; return AC; }
   try{ AC = new C(); }catch(e){ AC = false; }
+  if(AC) buildBus();
   return AC;
+}
+
+/* ── LE BUS DE MILIEU ───────────────────────────────────────────────────────
+   Changer d'instrument ne suffit pas à changer de monde. Ce qui fait entendre
+   un milieu gelé, ce n'est pas seulement un carillon à la place d'une célesta :
+   c'est un aigu clairsemé, une queue de réverbe longue et sombre, un grave
+   retiré. Le froid s'entend à ce qui manque dans le bas.
+
+   Deux shelfs et une réverbe à réponse impulsionnelle calculée. Tout est
+   appliqué À LA LECTURE : on entend le milieu changer sans rien re-rendre.
+   Voir docs/80_sound/30_music/MUSICOLOGIE_PRIME.md §4. */
+let BUS = null, LOW = null, HIGH = null, WET = null, CONV = null, DRY = null;
+
+function buildBus(){
+  const c = AC;
+  BUS  = c.createGain();
+  LOW  = c.createBiquadFilter(); LOW.type  = "lowshelf";  LOW.frequency.value  = 220;
+  HIGH = c.createBiquadFilter(); HIGH.type = "highshelf"; HIGH.frequency.value = 4200;
+  DRY  = c.createGain(); WET = c.createGain(); WET.gain.value = 0;
+  CONV = c.createConvolver();
+  BUS.connect(LOW); LOW.connect(HIGH);
+  HIGH.connect(DRY); DRY.connect(c.destination);
+  HIGH.connect(CONV); CONV.connect(WET); WET.connect(c.destination);
+  applyMix(resolveMix());
+}
+
+/* Bruit décroissant, assombri progressivement : une queue dont l'amortissement
+   se resserre avec le temps, comme une vraie salle. `damp` fixe la vitesse à
+   laquelle l'aigu s'éteint — c'est lui qui distingue une caverne d'un couloir. */
+function makeIR(decay, damp){
+  const c = AC, n = Math.max(1, Math.floor(c.sampleRate * decay));
+  const buf = c.createBuffer(2, n, c.sampleRate);
+  const k = Math.exp(-2 * Math.PI * Math.min(damp, c.sampleRate / 2.2) / c.sampleRate);
+  for(let ch = 0; ch < 2; ch++){
+    const d = buf.getChannelData(ch);
+    let z = 0, seed = 1337 + ch * 7919;
+    for(let i = 0; i < n; i++){
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;      /* bruit reproductible */
+      const white = (seed / 0x3fffffff) - 1;
+      z = white * (1 - k) + z * k;                          /* passe-bas 1 pôle */
+      d[i] = z * Math.pow(1 - i / n, 2.4);                  /* décroissance */
+    }
+  }
+  return buf;
+}
+
+let mixNow = null;
+function applyMix(m){
+  if(!AC || !BUS || !m) return;
+  const t = AC.currentTime, R = 0.6;          /* le milieu glisse, il ne saute pas */
+  LOW.gain.setTargetAtTime(m.low, t, R);
+  HIGH.gain.setTargetAtTime(m.high, t, R);
+  WET.gain.setTargetAtTime(m.space, t, R);
+  DRY.gain.setTargetAtTime(1 - 0.35 * m.space, t, R);
+  const sig = m.decay + "/" + m.damp;
+  if(sig !== mixNow){                          /* l'IR ne se recalcule qu'au besoin */
+    try{ CONV.buffer = makeIR(m.decay, m.damp); mixNow = sig; }catch(e){}
+  }
+  const tag = document.querySelector("#milieu");
+  if(tag) tag.textContent = "milieu · " + (m.source || "neutre");
+}
+
+/* Même priorité que la distribution : météo > saison > moment. Un seul milieu
+   l'emporte — superposer deux traitements d'espace ne veut plus rien dire. */
+function resolveMix(){
+  const table = CAST.mix || {};
+  for(const axis of (CAST.priority || [])){
+    const v = context[axis];
+    if(v && table[v]) return Object.assign({source:v}, table[v]);
+  }
+  if(ambianceMix && table[ambianceMix])
+    return Object.assign({source:ambianceMix}, table[ambianceMix]);
+  return Object.assign({source:"neutre"}, CAST.mix_neutral ||
+    {low:0, high:0, space:0.16, decay:2.6, damp:5200});
 }
 
 /* LE GÉNÉRATEUR PRÉFIXE LES PARTIES DE RÔLE PAR « P_ ». Sans cette résolution,
@@ -409,7 +486,7 @@ function make(name){
       const src = ctx.createMediaElementSource(a);
       const g = ctx.createGain();
       g.gain.value = 0;
-      src.connect(g); g.connect(ctx.destination);
+      src.connect(g); g.connect(BUS || ctx.destination);
       gain[name] = g; webGain = true;
       a.volume = 1;                    /* le gain fait le travail en aval */
     }catch(e){ /* pas de graphe : on retombe sur a.volume, écrêté à 1 */ }
@@ -585,7 +662,7 @@ function setCast(next){
     cast[r] = next[r];
     if(playing) startPart(key(r, cast[r]));
   });
-  applyTargets(); paint();
+  applyTargets(); paint(); applyMix(resolveMix());
 }
 
 /* Rôle par rôle, le premier axe qui se prononce l'emporte ; le titulaire par
@@ -606,6 +683,7 @@ $("#ambiances").innerHTML = AMBIANCES.map(a =>
 $("#ambiances").querySelectorAll(".amb").forEach(b => b.addEventListener("click", () => {
   const a = AMBIANCES.find(x => x.id === b.dataset.amb);
   context = {};
+  ambianceMix = a.mix || null;
   document.querySelectorAll(".chip.ax").forEach(c => c.setAttribute("aria-pressed","false"));
   setCast(Object.assign({}, a.cast));
 }));
@@ -625,7 +703,7 @@ Object.keys(CAST.axes || {}).forEach(axis => {
       row.querySelectorAll(".chip").forEach(o => o.setAttribute("aria-pressed","false"));
       if(off) delete context[axis];
       else { context[axis] = value; b.setAttribute("aria-pressed","true"); }
-      setCast(resolve());
+      setCast(resolve()); applyMix(resolveMix());
     });
     row.appendChild(b);
   });
