@@ -2678,4 +2678,5 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       melodie = table (meteo, heure). Pouls et extras RETIRES.
 - [x] Rugosite mediane 2,57x -> 1,79x. Lint R1/R3/R4 = 0.
 - [x] Artefact 12,64 Mo (14 pistes), tests verts, publie c2a7221f.
-- [ ] Rendu complet de coherence (menu_theme) puis commit/push
+- [x] Rendu complet de coherence — 29/29 boucles propres, menu_theme
+      reconstruit sur l'assemblage 3 instruments.
