@@ -38,3 +38,14 @@
   (guitare le jour, cloches tubulaires la nuit) + 1 melodie (table meteo/heure).
 - Consequence : pouls (bodhran/timbales) et extras (guirlande/veilleuse)
   RETIRES du fond — l'heure ne fait plus que la vitesse (+ substitution nuit).
+
+## 2026-08-07: Fond v6 — drone lourd, percussions, PAS de guitare celte
+- Le fond = DRONE grave et lourd (bourdon statique en re, cordes graves qui
+  respirent) + quelques percussions sourdes. La guitare celtique SORT du fond.
+- Le lecteur doit avoir une INTRODUCTION avant la boucle, et un mode boucle
+  controlable.
+- Tressaut permanent en vitesse modifiee : l'etireur temporel (preservesPitch)
+  est mauvais EN CONTINU. Passage en VARISPEED (preservesPitch=false, hauteur
+  liee a la vitesse comme une bande) : lecture parfaitement lisse, la piece
+  entiere se transpose avec l'heure (nuit plus grave, midi plus brillant) —
+  toutes les couches au meme taux, donc toujours accordees entre elles.

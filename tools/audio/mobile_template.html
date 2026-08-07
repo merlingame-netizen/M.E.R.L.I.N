@@ -124,6 +124,7 @@ footer{margin-top:26px;text-align:center;font-family:var(--mono);
       </svg><span id="glyph">▶</span>
     </button>
     <div class="clock"><b id="t">0:00</b> / <span id="dur">3:16</span> · <span id="ratero">×1.00</span></div>
+    <button class="chip" id="loopbtn" aria-pressed="true" title="Rejouer en boucle">∞</button>
     <div class="readout" id="readout"></div>
     <div class="msg" id="msg"></div>
   </div>
@@ -208,6 +209,7 @@ let AC = null, MASTER = null; const el = {}, gain = {};
 let W = "couvert", H = "apres_midi";
 let RATE = META.tempo[H] || 1.0;
 let playing = false, pos = 0;
+let LOOP = true, INTROING = false;
 const layers = {fond: null, chant: null, extra: null};   /* noms d'elements */
 const fadeTok = {fond: 0, chant: 0, extra: 0};
 const fxOn = {};
@@ -233,10 +235,22 @@ function ctx(){
 function make(name){
   if(el[name]) return el[name];
   const a = new Audio();
-  a.loop = !(name === "FX_tonnerre");
+  a.loop = name === "INTRO" || name === "FX_tonnerre" ? false
+         : name.startsWith("FX_") ? true : LOOP;
+  if(!name.startsWith("FX_") && name !== "INTRO")
+    a.addEventListener("ended", () => {
+      if(!LOOP && playing && name === layers.fond) stopAll(true);
+    });
   a.preload = "auto";
-  try{ a.preservesPitch = true; }catch(e){}
-  try{ a.webkitPreservesPitch = true; }catch(e){}
+  /* VARISPEED : hauteur LIEE a la vitesse, comme une bande magnetique.
+     L'etireur temporel (preservesPitch) tressautait EN CONTINU des que la
+     vitesse quittait 1,00 — le defaut est dans l'algorithme du navigateur,
+     pas dans nos fichiers. Le varispeed est un simple re-echantillonnage :
+     parfaitement lisse. Toutes les couches partagent le meme taux, donc la
+     piece entiere se transpose ensemble et reste accordee — la nuit descend
+     (plus grave, plus lourde), midi monte d'un demi-ton (plus clair). */
+  try{ a.preservesPitch = false; }catch(e){}
+  try{ a.webkitPreservesPitch = false; }catch(e){}
   if(!name.startsWith("FX_")) a.playbackRate = RATE;
   a.src = "data:audio/mpeg;base64," + (AUDIO[name] || "");
   el[name] = a;
@@ -275,7 +289,7 @@ function swapLayer(layer, name, inGesture){
      et la musique repartait du debut a chaque passage a la nuit */
   const ref = curTime();
   layers[layer] = name;
-  if(!playing){ return; }
+  if(!playing || INTROING){ return; }
   const tok = ++fadeTok[layer];
   const t0 = performance.now();
   if(name){
@@ -342,11 +356,18 @@ function paintState(){
 
 function setMeteo(w){
   W = w; paintState();
+  if(INTROING){ layers.chant = null; unlock("CHANT_" + chantId()); return; }
   swapLayer("chant", "CHANT_" + chantId(), true);
 }
 function setHeure(h){
   H = h; paintState();
   setRate(META.tempo[h] || 1.0);
+  if(INTROING){
+    if(el.INTRO) el.INTRO.playbackRate = RATE;
+    layers.fond = null; layers.chant = null;
+    unlock("FOND_" + fondId()); unlock("CHANT_" + chantId());
+    return;
+  }
   swapLayer("fond", "FOND_" + fondId(), true);
   swapLayer("chant", "CHANT_" + chantId(), true);   /* la nuit change la voix */
   const x = extraOf(h);
@@ -355,15 +376,26 @@ function setHeure(h){
 
 /* ── transport ── */
 const playBtn = $("#play"), glyph = $("#glyph");
-playBtn.addEventListener("click", () => {
-  const c = ctx(); if(c && c.state === "suspended"){ try{ c.resume(); }catch(e){} }
-  if(playing){
-    pos = curTime();
-    playing = false; glyph.textContent = "▶";
-    Object.values(el).forEach(a => { try{ a.pause(); }catch(e){} });
-    return;
-  }
-  playing = true; glyph.textContent = "❚❚";
+
+function stopAll(reset){
+  playing = false; INTROING = false; glyph.textContent = "▶";
+  pos = reset ? 0 : curTime();
+  Object.values(el).forEach(a => { try{ a.pause(); }catch(e){} });
+}
+
+/* deverrouille un element DANS le geste : un play() futur hors geste
+   (fin d'intro, fondu) sera alors accepte par iOS */
+function unlock(name){
+  const a = make(name);
+  if(!a.paused) return;
+  setG(name, 0);                 /* muet pendant le deverrouillage */
+  const p = a.play();
+  if(p && p.then) p.then(() => { if(INTROING || !playing || ![layers.fond, layers.chant, layers.extra].includes(name)) a.pause(); }).catch(()=>{});
+  else a.pause();
+}
+
+function startLayers(fromGesture){
+  INTROING = false;
   layers.fond = "FOND_" + fondId();
   layers.chant = "CHANT_" + chantId();
   const x = extraOf(H);
@@ -373,19 +405,69 @@ playBtn.addEventListener("click", () => {
     if(!layers[l]) return;
     const a = make(layers[l]);
     a.playbackRate = RATE;
+    a.loop = LOOP;
     try{ a.currentTime = pos; }catch(e){}
     setG(layers[l], 1);
     const p = a.play();
-    if(p && p.catch && !first){ first = p.catch(err => {
+    if(p && p.catch && !first && fromGesture){ first = p.catch(err => {
       playing = false; glyph.textContent = "▶";
       $("#msg").textContent = "Lecture refusée (" + err.name + "). Retouche ▶.";
       logAuto("refus de lecture initial : " + err.name);
     }); }
-    else if(p && p.catch) p.catch(()=>{});
+    else if(p && p.catch) p.catch(err => logAuto("refus " + layers[l] + " : " + err.name));
   });
+  if(!raf) raf = requestAnimationFrame(tick);
+}
+
+/* L'INTRODUCTION : le bourdon se leve, les cloches appellent, puis la piece
+   entre. Jouee quand on demarre du debut ; un fondu de 300 ms la passe aux
+   couches. Les couches sont deverrouillees PENDANT le geste. */
+function playIntro(){
+  playing = true; INTROING = true; glyph.textContent = "❚❚";
+  unlock("FOND_" + fondId()); unlock("CHANT_" + chantId());
+  const a = make("INTRO");
+  a.playbackRate = RATE;
+  try{ a.currentTime = 0; }catch(e){}
+  setG("INTRO", 1);
+  const p = a.play();
+  if(p && p.catch) p.catch(err => {
+    stopAll(true);
+    $("#msg").textContent = "Lecture refusée (" + err.name + "). Retouche ▶.";
+  });
+  const d = (META.intro && META.intro.dur) || 9.8;
+  function watch(){
+    if(!INTROING) return;
+    if((a.currentTime || 0) >= d - 0.30){
+      pos = 0;
+      startLayers(false);
+      const t0 = performance.now();
+      (function fade(){
+        const k = Math.min(1, (performance.now() - t0) / 300);
+        setG("INTRO", 1 - k);
+        if(k < 1) requestAnimationFrame(fade); else a.pause();
+      })();
+    } else requestAnimationFrame(watch);
+  }
+  requestAnimationFrame(watch);
+  if(!raf) raf = requestAnimationFrame(tick);
+}
+
+playBtn.addEventListener("click", () => {
+  const c = ctx(); if(c && c.state === "suspended"){ try{ c.resume(); }catch(e){} }
+  if(playing){ stopAll(false); return; }
+  playing = true; glyph.textContent = "❚❚";
+  if(pos < 0.5 && AUDIO.INTRO){ playIntro(); return; }
+  startLayers(true);
   Object.keys(fxOn).forEach(n => { const f = make(n);
     if(f.paused){ const q = f.play(); if(q && q.catch) q.catch(()=>{}); } });
-  if(!raf) raf = requestAnimationFrame(tick);
+});
+
+$("#loopbtn").addEventListener("click", () => {
+  LOOP = !LOOP;
+  $("#loopbtn").setAttribute("aria-pressed", String(LOOP));
+  ["fond", "chant", "extra"].forEach(l => {
+    if(layers[l] && el[layers[l]]) el[layers[l]].loop = LOOP;
+  });
 });
 
 /* ── tenue de synchronisation ──────────────────────────────────────────────
@@ -416,6 +498,10 @@ function steer(){
 let raf = 0, lastDraw = 0, lastSteer = 0;
 function tick(ts){
   raf = requestAnimationFrame(tick);
+  if(INTROING && el.INTRO){
+    $("#t").textContent = "intro " + (el.INTRO.currentTime || 0).toFixed(1) + "s";
+    return;
+  }
   const m = master(); if(!m) return;
   const t = m.currentTime || 0, d = m.duration || 196;
   $("#t").textContent = (t/60|0) + ":" + String(t%60|0).padStart(2,"0");
@@ -468,6 +554,11 @@ function drawTimeline(){
   g.beginPath(); g.moveTo(x, 0); g.lineTo(x, cvH); g.stroke();
 }
 function seekAt(clientX){
+  if(INTROING){
+    INTROING = false;
+    if(el.INTRO) el.INTRO.pause();
+    startLayers(true);
+  }
   const r = cv.getBoundingClientRect();
   const frac = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
   const m = master() || make("FOND_" + fondId());

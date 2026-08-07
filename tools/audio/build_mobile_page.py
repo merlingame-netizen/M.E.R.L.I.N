@@ -190,12 +190,24 @@ def main() -> int:
     for xid, sig in adds.items():
         emit("ADD_" + xid, sig, ADD_BITRATE)
 
+    # ── l'introduction : le bourdon se leve, les cloches appellent ──────────
+    # Deux mesures avant la boucle : le drone seul, en fondu d'entree, avec
+    # les cloches tubulaires par-dessus. Le lecteur enchaine sur la piece par
+    # un fondu de 300 ms.
+    intro_bars = 2
+    ns = int(intro_bars * BAR * 48_000)
+    fade = np.linspace(0.0, 1.0, ns, dtype=np.float32) ** 1.5
+    tubes = part("halo__tubulaires")[:, :ns] * gains[("halo", "tubulaires")]
+    intro = (bed[:, :ns] * k) * fade + tubes * (0.9 * k)
+    emit("INTRO", intro, FOND_BITRATE)
+    meta_intro = {"dur": round(intro_bars * BAR, 3)}
+
     # ── courbes par combinaison reellement jouable ──────────────────────────
     # le jour : fond jour x chaque instrument de meteo ; la nuit : fond nuit
     # x la boite a musique — pas de produit cartesien inutile
     meta: dict = {"bar": BAR, "bars": N_BARS, "progression": PROGRESSION,
                   "heures": heures, "meteos": meteos, "tempo": tempo,
-                  "combos": {}}
+                  "intro": meta_intro, "combos": {}}
     fond_mono = {fid: f.mean(0) for fid, f in fonds.items()}
     pairs = [("jour", cid) for cid in sorted(set(day_cids.values()))]
     pairs.append(("nuit", night_cid))
@@ -210,7 +222,7 @@ def main() -> int:
         "labels": {cid: labels[("chant", cid)] for cid in chants},
     }
     meta["fonds"] = {
-        fid: " + ".join(["socle"] + [labels[(r, c)]
+        fid: " + ".join(["drone"] + [labels[(r, c)]
                                      for r, c in cast[f"fond_{fid}"].items()])
         for fid in ("jour", "nuit")}
     meta["extras"] = {h: {"id": x["id"], "label": x["label"]}

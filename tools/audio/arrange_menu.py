@@ -221,24 +221,29 @@ def build_bed() -> list[dict]:
     roles — chant, corde, halo, pouls — c'est leur raison d'etre, et c'est
     la qu'on peut les remplacer.
     """
+    # LE DRONE (v6, 2026-08-07) : « le fond doit etre un drone sound plus
+    # lourd ». Bourdon STATIQUE en re — la pedale modale du morceau, comme le
+    # bourdon d'un biniou : il ne suit PAS la progression, c'est la melodie
+    # qui porte l'harmonie au-dessus de lui. Contrebasses a l'octave grave,
+    # cordes graves en re + quinte : lourd, sombre, immobile. Il RESPIRE par
+    # la dynamique (l'arc du morceau), par blocs de quatre mesures qui se
+    # recouvrent d'une mesure — jamais de trou, jamais d'attaque dure.
     ev: list[dict] = []
-    voicings = build_voicings()
-    groups = _chord_groups()
-
-    for (b0, b1, _name) in groups:
+    D2, A2, D3 = 38, 45, 50
+    for b0 in range(1, N_BARS + 1, 4):
         t0 = t_of(b0, 1.0)
-        span = (b1 - b0 + 1) * BAR
-        d = dyn(b0)
-        bass, upper = voicings[b0 - 1][0], voicings[b0 - 1][1:]
-
-        # REGLE MAX 3 INSTRUMENTS (2026-08-07) : le socle est UN SEUL pupitre.
-        # Les cordes graves tiennent basse + quinte — deux voix du meme
-        # instrument. Contrebasse, alto et seconds violons sont sortis :
-        # avec l'accompagnement et la melodie, on est a trois, jamais plus.
-        ev.append(_ev("strings_low", "bed", bass, t0, span + 0.8,
-                      0.24 + 0.40 * d, b0 * 5))
-        ev.append(_ev("strings_low", "bed", bass + 7, t0, span + 0.8,
-                      0.18 + 0.32 * d, b0 * 7))
+        span = 5 * BAR if b0 + 4 <= N_BARS else (N_BARS - b0 + 1) * BAR
+        span = min(span, LOOP_LEN - t0 - 0.06)
+        d = dyn(b0 + 1)
+        ev.append(_ev("contrabass", "bed", D2 - 12, t0, span,
+                      0.30 + 0.38 * d, b0 * 3))
+        ev.append(_ev("strings_low", "bed", D2, t0, span,
+                      0.26 + 0.36 * d, b0 * 5))
+        ev.append(_ev("strings_low", "bed", A2, t0, span,
+                      0.16 + 0.26 * d, b0 * 7))
+        if 17 <= b0 <= 32:                     # le coeur s'epaissit d'une octave
+            ev.append(_ev("strings_low", "bed", D3, t0, span,
+                          0.12 + 0.22 * d, b0 * 11))
 
     ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])

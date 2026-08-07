@@ -2693,3 +2693,22 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       (verifie : musical-artifacts #258 est « sans notice » -> refuse).
 - [x] Debits releves : chant 40k -> 48k mono, fond 56k -> 64k stereo.
       Artefact 14,88 Mo, tests verts, publie c2a7221f.
+
+## 2026-08-07 — Musique menu v6 : varispeed, drone lourd, intro, boucle
+- [x] Tressaut PERMANENT en vitesse modifiee : l'etireur temporel du navigateur
+      est mauvais en continu. Passage en VARISPEED (preservesPitch=false) :
+      re-echantillonnage pur, parfaitement lisse — la piece se transpose avec
+      l'heure (nuit -3,9 demi-tons, midi +1), toutes couches au meme taux donc
+      toujours accordees. Le creux de gain reste pour masquer le saut.
+- [x] Fond v6 : DRONE lourd statique en re (contrebasses + cordes graves qui
+      respirent par blocs de 4 mesures) + percussions sourdes (taiko/tam-tam)
+      le jour, cloches tubulaires la nuit. PAS de guitare celtique. La
+      progression harmonique vit dans la melodie seule (texture bourdon).
+- [x] INTRODUCTION : 2 mesures — le drone se leve (fondu 9,8 s) + cloches
+      tubulaires, puis fondu de 300 ms vers la boucle. Deverrouillage iOS des
+      couches pendant le geste.
+- [x] Mode BOUCLE : bouton ∞ dans le transport (defaut ON) ; OFF -> la piece
+      s'arrete a la fin et revient au debut (l'intro rejouera).
+- [x] Artefact 14,98 Mo, tests verts (intro -> couches, boucle on/off,
+      varispeed nuit x0,80), publie c2a7221f.
+- [ ] Rendu de coherence menu_theme puis commit/push

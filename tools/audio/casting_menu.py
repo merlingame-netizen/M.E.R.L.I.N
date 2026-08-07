@@ -194,13 +194,12 @@ TEMPO = {
 EXTRAS: dict = {}
 
 # ── LE FOND ──────────────────────────────────────────────────────────────────
-# REGLE ABSOLUE (2026-08-07) : MAX 3 INSTRUMENTS A LA FOIS.
-#   1. le socle — UN pupitre de cordes graves (basse + quinte, deux voix du
-#      meme pupitre = un instrument)
-#   2. l'accompagnement — guitare le jour, cloches tubulaires la nuit
+# v6 (2026-08-07) : « le fond doit etre un drone sound plus lourd, quelques
+# percussions aussi et pas de guitare celte ». Toujours MAX 3 INSTRUMENTS :
+#   1. le drone — bourdon statique en re, contrebasses + cordes graves (bed)
+#   2. quelques percussions sourdes le jour / cloches tubulaires la nuit
 #   3. la melodie — l'instrument de la table (meteo, heure)
-# Le pouls (bodhran, timbales) est SORTI du fond.
-FOND_JOUR = {"corde": "celtic_guitar"}
+FOND_JOUR = {"pulse": "sourd"}
 FOND_NUIT = {"halo": "tubulaires"}
 
 
