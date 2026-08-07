@@ -2680,3 +2680,16 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - [x] Artefact 12,64 Mo (14 pistes), tests verts, publie c2a7221f.
 - [x] Rendu complet de coherence — 29/29 boucles propres, menu_theme
       reconstruit sur l'assemblage 3 instruments.
+
+## 2026-08-07 — Musique menu v5 : tressaut de vitesse masque + qualite
+- [x] Tressaut au changement de vitesse : meme un saut unique fait recaler
+      l'etireur temporel. Fix : bus maitre Web Audio, creux a 8 % en 120 ms
+      (automation echantillon-precise), saut au fond du creux, remontee 220 ms.
+      Les FX ne passent pas par le bus.
+- [x] Qualite : l'oud (dernier instrument 100 % synthetise) devient un HYBRIDE
+      sur echantillons reels — guitare celtique + double choeur desaccorde
+      (7 cents, les courses doubles) + passe-bas 2,4 kHz. Alias declare dans
+      la provenance (aliased_instruments). Aucune banque d'oud libre n'existe
+      (verifie : musical-artifacts #258 est « sans notice » -> refuse).
+- [x] Debits releves : chant 40k -> 48k mono, fond 56k -> 64k stereo.
+      Artefact 14,88 Mo, tests verts, publie c2a7221f.

@@ -92,8 +92,8 @@
       "bytes": 2144948
     },
     "chant__oud.ogg": {
-      "sha256": "c3c44c2e665d8a6f05106f51b28911474ff9feedb8b1364e26503091a7e75183",
-      "bytes": 1791167
+      "sha256": "eb065d3702c829e6173063c1a487a92416fef14a019e9aa976c798cd6a2438e9",
+      "bytes": 1910931
     },
     "chant__flute.ogg": {
       "sha256": "cc81dafe7592e296c1e13a03a4e94009dcb8228ef11c42768039aa80a59ce6eb",
@@ -120,8 +120,8 @@
       "bytes": 2593273
     },
     "corde__oud.ogg": {
-      "sha256": "613ab5e4bd82221a9208a0eaabe8b8b8ed63c29f0c7ea1a5e33283eb410d8cd4",
-      "bytes": 2159994
+      "sha256": "c99a2c697679f0a3a8d0c644b38e413943d11bfdbb622276221aeb9d8414b20d",
+      "bytes": 2199977
     },
     "corde__dan_tranh.ogg": {
       "sha256": "fd8267ce3e411480a446150be51669ae8610f55fe9d6289b03bcf7b87de63f03",
@@ -195,5 +195,13 @@
       "sha256": "5cbd006c2f0490d71a8d0d3f6a6fe204ecf4e353a9c3035a40f379461c79e47c",
       "bytes": 26367
     }
+  },
+  "partial_rerender": {
+    "at": "2026-08-07T18:41:10Z",
+    "parts": [
+      "chant__oud",
+      "corde__oud"
+    ],
+    "note": "Rendu partiel : seules ces parties ont ete refaites."
   }
 }

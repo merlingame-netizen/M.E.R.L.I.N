@@ -33,14 +33,14 @@
 | `menu_theme.ogg` | `62eebdc88cac8358e4c8f3ffbd5e3d2bcf7cae2a67641e52ff1b6ab7f281c84e` | 2439289 |
 | `bed.ogg` | `7b76314add092ec993c3b5678136f9ee566d45ab2aecf7c681cff301bfd71af7` | 2001631 |
 | `chant__harpe.ogg` | `b76371153796ad1ad845ed0b0e81ab7a306970ad51518930455810b58aa8a2fe` | 2144948 |
-| `chant__oud.ogg` | `c3c44c2e665d8a6f05106f51b28911474ff9feedb8b1364e26503091a7e75183` | 1791167 |
+| `chant__oud.ogg` | `eb065d3702c829e6173063c1a487a92416fef14a019e9aa976c798cd6a2438e9` | 1910931 |
 | `chant__flute.ogg` | `cc81dafe7592e296c1e13a03a4e94009dcb8228ef11c42768039aa80a59ce6eb` | 1939102 |
 | `chant__basson.ogg` | `3489f6b971c4350e18660e7664774ab5f63926519751d6c62ba9e6e531c85126` | 1742298 |
 | `chant__flute_alto.ogg` | `d2de3f775d60426a7595c611159b6b0261054f3e17822738cfda3d8bf8b916f1` | 1932794 |
 | `chant__ocarina.ogg` | `d328362ff1e15d4e5e1f3d939b2fc31b2e6bf80ecf256084ba0adcb35e67ce98` | 1623547 |
 | `chant__boite.ogg` | `2cd0d55af1aeb3dc7dcd3be01db96acadd9c7f9b85f443f9a0e6e92d0ef9d2b1` | 1885866 |
 | `corde__celtic_guitar.ogg` | `5242741756d877f639c4855208bc86fe93c4ba286d54c54e012c6df5ab55f757` | 2593273 |
-| `corde__oud.ogg` | `613ab5e4bd82221a9208a0eaabe8b8b8ed63c29f0c7ea1a5e33283eb410d8cd4` | 2159994 |
+| `corde__oud.ogg` | `c99a2c697679f0a3a8d0c644b38e413943d11bfdbb622276221aeb9d8414b20d` | 2199977 |
 | `corde__dan_tranh.ogg` | `fd8267ce3e411480a446150be51669ae8610f55fe9d6289b03bcf7b87de63f03` | 2604164 |
 | `corde__kalimba.ogg` | `0232ef711bde858342568e334868b64648c046d20cb4def646eb2c676b83ddb7` | 2493550 |
 | `corde__psaltery.ogg` | `9c649d9b907afb131dcd00d208a76082de4ac6a692db7fabff4be173009a3735` | 2983985 |
@@ -59,3 +59,11 @@
 | `pulse__sourd.ogg` | `9405e9a362332364197dbb0fa51072653ee8bbe96963e8deacd9d94ddb20ffbf` | 1547468 |
 | `pulse__nuit.ogg` | `a494145d21089405ff70b04587f8cd93d2f772aeaef190a5e34b4c109c3bfb15` | 1495523 |
 | `pulse__aucun.ogg` | `5cbd006c2f0490d71a8d0d3f6a6fe204ecf4e353a9c3035a40f379461c79e47c` | 26367 |
+
+
+## Rendu partiel
+
+- **Le** : 2026-08-07T18:41:10Z
+- **Parties refaites** : `chant__oud`, `corde__oud`
+
+> Rendu partiel : seules ces parties ont ete refaites.
