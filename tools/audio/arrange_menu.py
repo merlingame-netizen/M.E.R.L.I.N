@@ -284,7 +284,20 @@ def build_role(role: str, candidate: str) -> list[dict]:
             d = dyn(bar)
             for j, (beat, idx) in enumerate(((1.0, 0), (3.0, 2))):
                 at = t_of(bar, beat)
-                dur = min(5.6, LOOP_LEN - at - 0.06)
+                # la premiere attaque ne se pose PAS sur le point de boucle :
+                # un pince a transitoire dur (mbira) exactement au raccord met
+                # ses aigus dans la fenetre d'analyse du join — le detecteur
+                # y voit une couture (+3,4 pts d'exces HF) alors que l'ecart
+                # d'echantillon est infime. 90 ms plus tard, l'attaque est
+                # entiere ET clairement apres le raccord.
+                if bar == 1 and beat == 1.0:
+                    at += 0.09
+                # marge = release du role (0,9 s pincee) + flottement : la
+                # RESONANCE aussi doit mourir avant le raccord. Avec 0,06 s
+                # seulement, la queue de la mbira (attaque riche en aigus,
+                # encore forte a 2,4 s) se repliait sur la mesure 1 —
+                # +3,52 points d'exces HF au raccord, seul stem a cliquer.
+                dur = min(5.6, LOOP_LEN - at - 0.98)
                 if dur < 0.4:
                     continue
                 ev.append(_ev(inst, "corde", tones[idx % len(tones)],

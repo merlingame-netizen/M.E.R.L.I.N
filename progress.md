@@ -2667,4 +2667,6 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       basson, tremolo sortis), corde 2 notes/mesure sans bourdon, fond nuit
       sans corde, melodie +15 % dans les mixes mobiles. Rugosite mediane
       4,33x -> 2,57x.
-- [ ] Rendu v3 en cours (render_v3.log), puis artefact + tests + publication
+- [x] Rendu v3 complet (29 fichiers) — 29/29 boucles propres apres 2 fixes
+      corde (marge de release au raccord ; 1re attaque decalee de 90 ms hors
+      de la fenetre du join). Artefact 14,63 Mo, tests verts, publie c2a7221f.
