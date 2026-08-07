@@ -1021,6 +1021,23 @@ document.getElementById("detail").addEventListener("click", () => {
   if(!on) initSpectros();          /* les canvas naissent avec leur vraie largeur */
 });
 
+/* Ecran verrouille ou onglet cache : requestAnimationFrame S'ARRETE, et un
+   fondu croise en cours gelerait a mi-chemin — deux titulaires a moitie
+   audibles jusqu'au retour. Quand la page se cache, chaque piste saute
+   IMMEDIATEMENT a son etat final : la musique continue, juste sans rampe. */
+document.addEventListener("visibilitychange", () => {
+  if(!document.hidden || !playing) return;
+  Object.keys(vol).forEach(n => {
+    const v = vol[n], a = el[n];
+    if(!v || !a) return;
+    v.cur = v.target;
+    setLevel(n, v.cur);
+    if(v.target === 0 && !a.paused && n !== "bed"){
+      try{ a.pause(); }catch(e){}
+    }
+  });
+});
+
 buildBoard(); paint();
 
 /* CONTRÔLE AU CHARGEMENT. La panne précédente était invisible : l'interface

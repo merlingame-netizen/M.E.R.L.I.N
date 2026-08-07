@@ -116,6 +116,86 @@ def _tones(bar: int, lo: int, hi: int) -> list[int]:
 # LE SOCLE
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# GARDE-FOUS HARMONIQUES — voir tools/audio/harmonic_lint.py pour les regles
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_DORIAN = (0, 2, 4, 5, 7, 9, 11)
+
+
+def _chord_pcs_at(t: float) -> set:
+    bar = int((t + 0.06) // BAR) + 1
+    pcs, _root = CHORDS[PROGRESSION[min(bar, N_BARS) - 1]]
+    return {p % 12 for p in pcs}
+
+
+def _harsh(pc: int, pcs: set) -> bool:
+    """Seconde mineure ou triton contre une note de l'accord."""
+    return any(min(abs(pc - q) % 12, 12 - abs(pc - q) % 12) in (1, 6)
+               for q in pcs)
+
+
+def purge_harsh(evs: list[dict]) -> list[dict]:
+    """Deplace d'un degre les notes breves qui FROTTENT contre l'accord.
+
+    L'ornementation est ecrite en re dorien pur, aveugle a l'accord du moment :
+    un fa brode sur un accord de sol forme un triton avec le si. La regle du
+    contrepoint tolere la dissonance breve RESOLUE ; celle qui saute est
+    deplacee vers le degre voisin consonant, dans la direction de la note
+    suivante — le dessin melodique est conserve, le frottement disparait."""
+    line = sorted(evs, key=lambda e: e["at"])
+    for i, e in enumerate(line):
+        pcs = _chord_pcs_at(e["at"])
+        pc = int(round(e["midi"])) % 12
+        if pc in pcs or not _harsh(pc, pcs):
+            continue
+        nxt = line[i + 1] if i + 1 < len(line) else None
+        brief = e["dur"] <= BEAT * 1.05
+        resolved = nxt is not None and abs(nxt["midi"] - e["midi"]) <= 2
+        if brief and resolved:
+            continue                       # dissonance d'ecole, legitime
+        step = 1 if (nxt and nxt["midi"] > e["midi"]) else -1
+        m = int(round(e["midi"]))
+        for _ in range(4):                 # au plus deux degres de deplacement
+            m += step
+            while m % 12 not in _DORIAN:
+                m += step
+            if not _harsh(m % 12, pcs):
+                break
+        e["midi"] = m
+    return line
+
+
+def damp_rings(evs: list[dict]) -> list[dict]:
+    """Etouffe les resonances qui saliraient l'accord SUIVANT.
+
+    Les releases longues (celesta 1,4 s, harpe 0,9 s...) sont justes — une
+    cloche etouffee net est un arret brutal — mais une resonance qui traverse
+    un changement d'accord avec une note en seconde mineure ou triton contre
+    le nouvel accord salit l'harmonie. Regle : cette note-la, et elle seule,
+    voit sa duree raccourcie pour que sa queue meure au changement. Les
+    resonances consonantes traversent librement — c'est le fondu naturel."""
+    from sample_bank import MultiSampleBank
+    KIND, ENV = MultiSampleBank.KIND, MultiSampleBank.ENV
+    bounds = []
+    prev = None
+    for bar in range(1, N_BARS + 1):
+        name = PROGRESSION[bar - 1]
+        if name != prev:
+            bounds.append((t_of(bar, 1.0), {p % 12 for p in CHORDS[name][0]}))
+            prev = name
+    for e in evs:
+        rel = ENV[KIND.get(e["inst"], "sustained")]["r"]
+        end = e["at"] + e["dur"] + rel
+        pc = int(round(e["midi"])) % 12
+        for b, npcs in bounds:
+            if e["at"] < b - 0.05 and end > b + 0.60:
+                if pc not in npcs and _harsh(pc, npcs):
+                    e["dur"] = max(0.12, min(e["dur"], b + 0.35 - rel - e["at"]))
+                break
+    return evs
+
+
 def build_bed() -> list[dict]:
     """Le socle recompose : l'HARMONIE, rien qu'elle.
 
@@ -165,6 +245,7 @@ def build_bed() -> list[dict]:
             ev.append(_ev("strings_tremolo", "bed", upper[1] + 12, t0, span + 0.4,
                           0.10 + 0.22 * d, b0 * 23))
 
+    ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])
     return ev
 
@@ -342,6 +423,11 @@ def build_role(role: str, candidate: str) -> list[dict]:
                 ev.append(_ev("timpani", "pulse", root - 24, t_of(bar, 1.0), 3.6,
                               0.16 + 0.30 * dyn(bar), bar * 67))
 
+    # garde-fous harmoniques : melodie purgee des frottements non resolus,
+    # resonances etouffees avant un accord qu'elles saliraient
+    if role in ("chant", "corde", "halo"):
+        ev = purge_harsh(ev)
+    ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])
     return ev
 

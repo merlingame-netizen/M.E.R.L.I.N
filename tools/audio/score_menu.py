@@ -94,10 +94,10 @@ PROGRESSION = [
     "Dm", "G", "F", "Dm",                           # 9-12   theme, 2e fois
     "Dm", "C", "Dm", "C",                           # 13-16  refrain instrumental
     "Dm", "G", "F", "Am",                           # 17-20  theme, harmonise
-    "F", "C", "Dm", "Bb",                           # 21-24  developpement
-    "F", "C", "G", "A",                             # 25-28  ... vers la dominante
+    "F", "C", "Dm", "G",                            # 21-24  developpement
+    "F", "C", "G", "Am",                            # 25-28  ... suspension modale
     "Dm", "G", "F", "Dm",                           # 29-32  tutti
-    "Dm", "G", "Bb", "Am",                          # 33-36  tutti, variante
+    "Dm", "G", "C", "Am",                           # 33-36  tutti, variante
     "Dm", "C", "Am", "Am",                          # 37-40  coda, retour a la boucle
 ]
 
