@@ -60,8 +60,31 @@ SR = orc.SR
 # note qui finit apres le point de boucle (+1 s), sa reverbe ambiante (9 s) et
 # ses reprises de delai (4,7 s). A 11 s la couture restait a 0,0115, sur la
 # partie dont les notes debordent le plus.
-TOTAL_SAMPLES = 9_437_184
-TAIL = (TOTAL_SAMPLES - LOOP_SAMPLES) / SR              # 18,08 s
+def _next_5smooth(n: int) -> int:
+    """Le plus petit entier 5-lisse (2^a 3^b 5^c) >= n — pour des FFT rapides."""
+    best = None
+    a = 1
+    while a <= n * 2:
+        b = a
+        while b <= n * 2:
+            c = b
+            while c < n:
+                c *= 5
+            if best is None or c < best:
+                best = c
+            b *= 3
+        a *= 2
+    return best
+
+
+# A l'echelle 1,0 la valeur historique est conservee (2^20 x 3^2). A une autre
+# echelle (rendu de nuit MERLIN_TEMPO_SCALE=0,8), la boucle depasse ce total :
+# on prend le premier 5-lisse au-dela de boucle + ~17,7 s de queue — a 0,8
+# cela donne 11 664 000 = 2^7 x 3^6 x 5^3, queue de 19,6 s.
+from score_menu import TEMPO_SCALE as _TS
+TOTAL_SAMPLES = (9_437_184 if _TS == 1.0
+                 else _next_5smooth(LOOP_SAMPLES + 780_000))
+TAIL = (TOTAL_SAMPLES - LOOP_SAMPLES) / SR              # 18,08 s a l'echelle 1
 BANK = None
 SAMPLES = None      # banque multi-echantillons (instruments reellement enregistres)
 

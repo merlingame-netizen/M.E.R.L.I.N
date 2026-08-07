@@ -2,9 +2,9 @@
 
 - **Mode** : HYBRIDE (instruments enregistres CC0 + synthese)
 - **Outil** : synth_palette.py 4.0.0
-- **Rendu le** : 2026-08-07T19:11:55Z
+- **Rendu le** : 2026-08-07T19:54:49Z
 - **Composition** : D dorian, 49 BPM, 40 mesures, boucle 195.918 s
-- **Effectif** : 7 instruments, 495 evenements
+- **Effectif** : 7 instruments, 546 evenements
 - **Distribution** : 4 roles, 27 parties
 
 > 25 pupitres sur 25 rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise).  AUCUN echantillon issu de Metroid Prime n'est utilise.
@@ -30,32 +30,32 @@ _aucun_
 
 | Fichier | SHA-256 | Octets |
 |---|---|---|
-| `menu_theme.ogg` | `c30d4b601f239197b21367237c71a35135f52840213ff0c7c406b409146d2c2c` | 2396757 |
-| `bed.ogg` | `850788d6dfdf5d4dcce3402f52d8d76d04e76da3ef368348c1b0cc3636bb47bd` | 1998133 |
-| `chant__harpe.ogg` | `9bd0244c8c25880a0fb7883867359fd8eb914a974c0a2e7c16391a9b719033b4` | 2121067 |
-| `chant__oud.ogg` | `eddb4be05b3d991b64c74a99b9bb4fca9e49d82e903abe4dc54a7fbe6cfc566c` | 1895580 |
-| `chant__flute.ogg` | `0c1b77d3e0c861c2b96af3264bf0fdb008ffd788ca52b5184155c737c5722943` | 1927751 |
-| `chant__basson.ogg` | `f2f8146741d27365ea261fa218f3f32983d3e087a8f20603824f83404bbc9914` | 1738498 |
-| `chant__flute_alto.ogg` | `0cab12f40d929e633dd57a8474fa4fa2543972d04f670b3ee38dd45e7e9b282c` | 1923628 |
-| `chant__ocarina.ogg` | `c4728c492d26ac186ace5c94c4368fb5a7353a4fef231f645cd21c4d4414a4a5` | 1629001 |
-| `chant__boite.ogg` | `d41c998beadd23655518abf25970352d4befa2c71037d8e1e1004f17bc1993d6` | 1872086 |
-| `corde__celtic_guitar.ogg` | `59734c4a564bd75de1a8f2fd7b1fd6260840319a5c83e55030110c70c9cad853` | 2558642 |
-| `corde__oud.ogg` | `c9e313fad4d7b3a659214ef52efbb7d68bafede37b07629e1015b7e79477db6c` | 2226290 |
-| `corde__dan_tranh.ogg` | `da51e789da171ee03f25d73ef5989ad41d7e4343b9506739f2bc6249dfc65d09` | 2578413 |
-| `corde__kalimba.ogg` | `f173a9bf28ecd192c616afd258278dc5835ac05dabae66414aa4c88c35832e2a` | 2473729 |
-| `corde__psaltery.ogg` | `4aae42755696fc569a3ae080b2c9f9f25e06bbdfba283330ed119349fcc38aaf` | 2963727 |
-| `corde__harpe.ogg` | `80ac5a421b863ff7b47e38c4f09b2ff405277751781c29ee69f0ad2e0cfe927c` | 2281779 |
-| `corde__mbira.ogg` | `d13663d2534c119e85b6e19ab607e783ebd9acc06decf3f174e213efa85124f7` | 2626092 |
-| `halo__celesta.ogg` | `5ca638eba30f0888c6bab751ba8a8b05d2cb880b7d37644dbcc2dfbde1e506de` | 1681871 |
-| `halo__wine_glasses.ogg` | `263180e1a0b3fd971bd2c7eec23b9698e700b20564bf02ae3e60d64cc11ed73d` | 1353804 |
-| `halo__hand_chimes.ogg` | `19f4f99c5fd75d2bfaea5621f766ab124b97aebe3891bddedea2c83563d1c000` | 1743275 |
-| `halo__glockenspiel.ogg` | `7ce43efa02ef5335df13a8898c33e0bd7fd6001bbabf1fb953f6080561fb161d` | 1980637 |
-| `halo__vibraphone.ogg` | `36019103363ca13308dc1239abe116e8436d0559b6118924b3cee1da26178bf7` | 1587733 |
-| `halo__tubulaires.ogg` | `09d8e0bcd25a2dc4abaa028a4d92ef51acc6f8d9624d19104797c3a8a162ef75` | 1813936 |
-| `pulse__calme.ogg` | `478e51e01ff3bd3b4d5399cd176896283132f9bace1b3e810f6ba73c06178022` | 1573668 |
-| `pulse__danse.ogg` | `d3e57e88626547128bd9bea987d34f17c68ce2703ed592236b04f665848190eb` | 1593943 |
-| `pulse__orage.ogg` | `ff0bd283dbf38b441df974906902afcee1140d5b2654d570841444de4d34125f` | 1584717 |
-| `pulse__ondee.ogg` | `6f928225bfc3adad01e807b4474bd1135bb942d291609338302ad00ec8d071ba` | 1676592 |
-| `pulse__sourd.ogg` | `9cbc2c389445761ff9b917f27741448f27a332db24759a29f0991d2597cf4f5c` | 1548946 |
-| `pulse__nuit.ogg` | `f0a0be3fad58576f93a5474d01e2bf3dd0b7f0747d8cc083339060f39954649d` | 1509828 |
-| `pulse__aucun.ogg` | `4547ba834ad5489fe5f589bf61e2dfc041a0e92c9e0648c18fdd844ef3175ff4` | 26367 |
+| `menu_theme.ogg` | `4a6f2dce9c567e60a0f19971bf9203efbbab26d701c51d247272539ed047887d` | 2347012 |
+| `bed.ogg` | `0b07ca1d6e3fba424229360176817a186628fbbdba994c32191144a6e50767ac` | 1989171 |
+| `chant__harpe.ogg` | `758c87a6d4a22d7b55d456e46aeec95ee35ca4fd673760088ce980aa4a438662` | 2108827 |
+| `chant__oud.ogg` | `1b5687e686a6b40772c1017f528158c0610544c7afef7862eafb740b05fdb80e` | 1888635 |
+| `chant__flute.ogg` | `2de6e57ec7e380e10cfa50b8f62f76b89c51b8a9533ab6a291938c3608dd945b` | 1929766 |
+| `chant__basson.ogg` | `bdd79a9bd281670d4e740bb09775e92d46384f4c03d9240cd23aef9fb674cfd6` | 1745709 |
+| `chant__flute_alto.ogg` | `ee4fa2abf52019a23800c590fcc9bc3b315898496ed0c534e33dacfdaa6e6d7b` | 1921357 |
+| `chant__ocarina.ogg` | `6be699f8d3a7612149502d3bfe49ed8233d27d9563f110d1cf48779db859a6bd` | 1625746 |
+| `chant__boite.ogg` | `164773ffc38d48ed1a035a3f438f115c5e090cdc68009649deab3e1c274e82a8` | 1849763 |
+| `corde__celtic_guitar.ogg` | `4f3e5d0cbc931a7b1b3b3ce192483b870fb9f948b00b92c035d8da9d1488da3e` | 2550754 |
+| `corde__oud.ogg` | `256dc6d6f1f1925f861005f772fda53cd8179e6a0f684bc1e2d23854cd5ee1c8` | 2233387 |
+| `corde__dan_tranh.ogg` | `57220c9b529523a4ff2c416a14a94c37e0b1434f4bad696f3b46c24bc8905289` | 2572411 |
+| `corde__kalimba.ogg` | `45d2d5c74266a3538b8451dd3f6885a3214d347674dde6179b553ba2edbd1ff5` | 2468821 |
+| `corde__psaltery.ogg` | `4ba978cb2145273a8a183428b5a74389310b6abbafdc015f7729f243d6520f44` | 2957958 |
+| `corde__harpe.ogg` | `6e8298ca88ef142b4d5d7dfece034f18ca527bbcd6070c3ea204e7611a04cf70` | 2277499 |
+| `corde__mbira.ogg` | `febcca85b2d1e9d72a367d2db4ece12beaec29ba5d9fbb11a1ec296868bc978e` | 2622804 |
+| `halo__celesta.ogg` | `d47f48244e584ebac1751d0ff7eec51308d60a3b432aa41a0e983c957229307c` | 1678692 |
+| `halo__wine_glasses.ogg` | `a04f322033d6c00c81b4ec3c3d6b13a114bf33339b7b5fd9644c62d7cdc564f9` | 1352755 |
+| `halo__hand_chimes.ogg` | `3ed0618826c12ead5ba621a110a5b7bca0bd9b7f0923d83186718d1a36e6c0d4` | 1738921 |
+| `halo__glockenspiel.ogg` | `fd01eb309eaddcfeaab507fc5bbc19e79c5393dd4dc6ccad4f3525fe3ae3d004` | 1975164 |
+| `halo__vibraphone.ogg` | `09c21fc4f651a17dba2a78a6fd4edd97141c658ec4b196938c446500928364ef` | 1585975 |
+| `halo__tubulaires.ogg` | `e2bcff1123c55fa36ca1190fa08cff402fd24c2949445fa88d8fe4ee8304cf8a` | 1810262 |
+| `pulse__calme.ogg` | `c7b7cc50f04264936b7e73799007e3cf740a15c859cd0a17e3d6a5e1952b3d60` | 1992308 |
+| `pulse__danse.ogg` | `1d778856e6f7bef6704b1788634603e73eb4056a569509c95a051c8956149842` | 2011889 |
+| `pulse__orage.ogg` | `4ea38390ca41bc02e583ef27e6afa194b186f78c2bd3899e5a646654c02a1e72` | 2001562 |
+| `pulse__ondee.ogg` | `b976eac70dbbdfba1438d264e48706fc7caceae441436922dfee3a85d5f9a3a3` | 2114683 |
+| `pulse__sourd.ogg` | `338936f0c4cbc894c696ee03f56a47bc09c0383336fa3f06404a12a8e00b6f61` | 1980217 |
+| `pulse__nuit.ogg` | `3e0bb6b0cf969f4d9d5889db9ca57ad7ae005894052ed6106985de43055126b3` | 1938806 |
+| `pulse__aucun.ogg` | `ca941860d409cbab5cf3cd233d6f5e5b0146ee6ee202ae26e56d32cfb509dbce` | 26367 |
