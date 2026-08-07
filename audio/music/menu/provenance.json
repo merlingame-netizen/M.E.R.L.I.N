@@ -141,8 +141,8 @@
       "bytes": 3123882
     },
     "corde__harpe.ogg": {
-      "sha256": "eec4543c309fb4146be48daaa1bac1032d71f6eaa43f03f09a39b77c2b0bae87",
-      "bytes": 2248735
+      "sha256": "f6d40b76da226162a2b7e3034a441c40b3547244376fe601e91dc0656d9777f6",
+      "bytes": 2437597
     },
     "corde__mbira.ogg": {
       "sha256": "9d7de23431e14995473b435d8b927dee7bb1bacb2b688721c63b1857d4103cca",
@@ -192,5 +192,12 @@
       "sha256": "68e409a67c4f042ba585bb527bc45770a3e54752f91856bd5db66184247565dc",
       "bytes": 26367
     }
+  },
+  "partial_rerender": {
+    "at": "2026-08-07T09:18:35Z",
+    "parts": [
+      "corde__harpe"
+    ],
+    "note": "Rendu partiel : seules ces parties ont ete refaites."
   }
 }

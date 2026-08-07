@@ -165,6 +165,21 @@ section{margin-top:26px}
 .track.hot .tr-now{color:var(--glow);transition:color 1.6s ease}
 .tr-now .from{color:var(--fg-3);font-size:.95rem}
 .tr-now .arr{color:var(--fg-2);padding:0 6px;font-style:normal}
+/* spectrogramme : le temps defile, l'aigu en haut, l'energie en lueur */
+.spectro{
+  width:100%;height:52px;display:block;border-radius:6px;
+  background:rgba(0,0,0,.28);border:1px solid var(--line);
+}
+.track:not(.hot):not([data-tr="mix"]) .spectro{opacity:.35}
+/* pupitres : la partition dit qui joue, la puce s'allume quand il joue */
+.insts{display:flex;gap:5px;flex-wrap:wrap}
+.inst{
+  font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--fg-3);
+  border:1px solid var(--line);border-radius:3px;padding:2px 6px;
+  transition:color .25s,border-color .25s,background .25s;
+}
+.inst.lit{color:var(--ink);background:var(--glow);border-color:var(--glow)}
 .bench{display:flex;gap:7px;flex-wrap:wrap}
 .cand{
   cursor:pointer;background:transparent;color:var(--fg-2);
@@ -262,6 +277,22 @@ footer{margin-top:30px;text-align:center;font-family:var(--mono);
 <script>
 const AUDIO = __AUDIO_JSON__;
 const CAST  = __CASTING_JSON__;
+/* qui joue quand — exporte de la partition, pas devine au spectre */
+const ACT   = __ACTIVITY_JSON__;
+
+const INST_LABEL = {
+  contrabass:"Contrebasses", strings_low:"Violoncelles", strings_mid:"Seconds violons",
+  viola:"Altos", strings_high:"Premiers violons", strings_tremolo:"Trémolo",
+  horn:"Cor", bassoon:"Basson", oboe:"Hautbois", clarinet:"Clarinette",
+  flute:"Flûte", piccolo:"Piccolo", violin_solo:"Violon solo",
+  harp:"Harpe", celesta:"Célesta", glockenspiel:"Glockenspiel",
+  timpani:"Timbales", taiko:"Taiko", tam_tam:"Tam-tam", bodhran:"Bodhrán",
+  slit_drum:"Tambour à fente", ocean_drum:"Tambour d’océan",
+  celtic_guitar:"Guitare", oud:"Oud", dan_tranh:"Đàn tranh", kalimba:"Kalimba",
+  psaltery:"Psaltérion", mbira:"Mbira", wine_glasses:"Verres",
+  hand_chimes:"Clochettes", cor_anglais:"Cor anglais", ocarina:"Ocarina",
+  harmonica:"Harmonica",
+};
 
 const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment"};
 /* les valeurs internes sont sans accent (cles de fichiers) ; l'ecran, lui,
@@ -357,6 +388,7 @@ function trim(role, id){ const c = entry(role, id); return c && +c.gain ? +c.gai
    c'est ce décodage qui faisait échouer la page sur téléphone. */
 let AC = null, webGain = false;
 const gain = {};
+const anl = {};           /* nom -> AnalyserNode */
 
 function audioCtx(){
   if(AC !== null) return AC;
@@ -376,7 +408,7 @@ function audioCtx(){
    Deux shelfs et une réverbe à réponse impulsionnelle calculée. Tout est
    appliqué À LA LECTURE : on entend le milieu changer sans rien re-rendre.
    Voir docs/80_sound/30_music/MUSICOLOGIE_PRIME.md §4. */
-let BUS = null, LOW = null, HIGH = null, WET = null, CONV = null, DRY = null;
+let BUS = null, LOW = null, HIGH = null, WET = null, CONV = null, DRY = null, MASTER = null;
 
 function buildBus(){
   const c = AC;
@@ -386,8 +418,13 @@ function buildBus(){
   DRY  = c.createGain(); WET = c.createGain(); WET.gain.value = 0;
   CONV = c.createConvolver();
   BUS.connect(LOW); LOW.connect(HIGH);
-  HIGH.connect(DRY); DRY.connect(c.destination);
-  HIGH.connect(CONV); CONV.connect(WET); WET.connect(c.destination);
+  const SUM = c.createGain();
+  HIGH.connect(DRY); DRY.connect(SUM);
+  HIGH.connect(CONV); CONV.connect(WET); WET.connect(SUM);
+  SUM.connect(c.destination);
+  MASTER = c.createAnalyser();
+  MASTER.fftSize = 2048; MASTER.smoothingTimeConstant = 0.55;
+  SUM.connect(MASTER);
   applyMix(resolveMix());
 }
 
@@ -472,8 +509,12 @@ function make(name){
       const src = ctx.createMediaElementSource(a);
       const g = ctx.createGain();
       g.gain.value = 0;
-      src.connect(g); g.connect(BUS || ctx.destination);
-      gain[name] = g; webGain = true;
+      /* un analyseur par piste : le spectrogramme lit ICI, apres le gain —
+         ce qu'on voit est ce qu'on entend, correctifs de niveau compris */
+      const an = ctx.createAnalyser();
+      an.fftSize = 2048; an.smoothingTimeConstant = 0.55;
+      src.connect(g); g.connect(an); an.connect(BUS || ctx.destination);
+      gain[name] = g; anl[name] = an; webGain = true;
       a.volume = 1;                    /* le gain fait le travail en aval */
     }catch(e){ /* pas de graphe : on retombe sur a.volume, écrêté à 1 */ }
   }
@@ -619,6 +660,8 @@ function tick(ts){
     }
     const t = el.bed.currentTime;
     clock.textContent = Math.floor(t/60) + ":" + String(Math.floor(t%60)).padStart(2,"0");
+    drawSpectros();
+    paintInsts(ts);
   }
   paintLevels();
 }
@@ -627,24 +670,138 @@ function tick(ts){
 const boardEl = $("#board");
 const switching = {};          /* role -> minuterie du fondu affiche */
 
+function instLabel(i){ return INST_LABEL[i] || i; }
+
+/* tous les pupitres qu'une piste peut employer, releves de la partition */
+function trackInsts(tr){
+  if(tr === "bed") return Object.keys(ACT.bed || {});
+  const set = {};
+  if(tr === "mix") return [];
+  cands(tr).forEach(c => Object.keys(ACT[tr + "__" + c.id] || {}).forEach(i => set[i] = 1));
+  return Object.keys(set);
+}
+
 function buildBoard(){
-  const rows = [{id:"bed", name:"Socle", fixed:true}]
+  const rows = [{id:"mix", name:"Mixage", fixed:true},
+                {id:"bed", name:"Socle", fixed:true}]
     .concat((CAST.roles||[]).map(r => ({id:r, name:ROLE_LABEL[r]||r})));
-  boardEl.innerHTML = rows.map(r =>
-    '<div class="track" data-tr="'+r.id+'">'+
+  boardEl.innerHTML = rows.map(r => {
+    const insts = trackInsts(r.id);
+    return '<div class="track" data-tr="'+r.id+'">'+
       '<div class="tr-top"><span class="tr-name">'+r.name+'</span>'+
-        '<span class="tr-now" data-now="'+r.id+'">'+(r.fixed?"— fixe —":"—")+'</span>'+
+        '<span class="tr-now" data-now="'+r.id+'">'+
+        (r.id==="mix" ? "— tout —" : r.fixed ? "— fixe —" : "—")+'</span>'+
         '<span class="meter"><i></i></span></div>'+
+      '<canvas class="spectro" data-sp="'+r.id+'"></canvas>'+
+      (insts.length ?
+      '<div class="insts">'+ insts.map(i =>
+        '<span class="inst" data-inst="'+i+'">'+instLabel(i)+'</span>').join("") +'</div>' : "")+
       (r.fixed ? "" :
       '<div class="bench">'+ cands(r.id).map(c =>
         '<button class="cand" data-role="'+r.id+'" data-id="'+c.id+'" aria-pressed="false">'+
         c.label+'</button>').join("") +'</div>')+
-    '</div>').join("");
+    '</div>';
+  }).join("");
+  initSpectros();
   document.querySelectorAll(".cand").forEach(b => b.addEventListener("click", () => {
     context = {}; syncAxisChips();
     const next = Object.assign({}, cast); next[b.dataset.role] = b.dataset.id;
     setCast(next);
   }));
+}
+
+/* ── SPECTROGRAMMES ─────────────────────────────────────────────────────
+   Un canvas par piste, temps qui defile, echelle de frequence LOGARITHMIQUE
+   (80 Hz - 8 kHz : la ou vit la musique — en lineaire, tout l'interessant
+   s'ecrase dans le cinquieme du bas). L'analyseur lit APRES le gain de la
+   piste : ce qu'on voit est ce qu'on entend. On ne dessine que les pistes
+   audibles, une colonne sur deux images — c'est un telephone. */
+const spCtx = {};                    /* id -> {cv, cx, w, h, rows} */
+const SP_FMIN = 80, SP_FMAX = 8000;
+
+function initSpectros(){
+  document.querySelectorAll(".spectro").forEach(cv => {
+    const w = Math.max(60, Math.floor(cv.clientWidth || 320));
+    const h = 52;
+    cv.width = w; cv.height = h;
+    const cx = cv.getContext("2d");
+    cx.fillStyle = "rgba(0,0,0,0)"; cx.clearRect(0, 0, w, h);
+    /* pre-calcul : pixel vertical -> bin FFT (echelle log) */
+    const rows = new Int16Array(h);
+    const nyq = (AC ? AC.sampleRate : 48000) / 2, bins = 1024;
+    for(let y = 0; y < h; y++){
+      const f = SP_FMIN * Math.pow(SP_FMAX / SP_FMIN, 1 - y / (h - 1));
+      rows[y] = Math.min(bins - 1, Math.round(f / nyq * bins));
+    }
+    spCtx[cv.dataset.sp] = {cv, cx, w, h, rows};
+  });
+}
+
+let spFlip = false;
+const spBuf = new Uint8Array(1024);
+
+function glowRGB(){
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue("--glow").trim();
+  const m = /^#?([0-9a-f]{6})$/i.exec(v);
+  if(!m) return [201, 162, 94];
+  const x = parseInt(m[1], 16);
+  return [x >> 16 & 255, x >> 8 & 255, x & 255];
+}
+let GLOW_RGB = [201, 162, 94];
+setInterval(() => { GLOW_RGB = glowRGB(); }, 900);
+
+function drawSpectros(){
+  spFlip = !spFlip;
+  if(!spFlip || !AC) return;
+  Object.keys(spCtx).forEach(id => {
+    const an = id === "mix" ? MASTER :
+      id === "bed" ? anl.bed : anl[key(id, cast[id])];
+    const s = spCtx[id];
+    if(!an || !s) return;
+    const audible = id === "mix" || id === "bed" ||
+      (vol[key(id, cast[id])] && vol[key(id, cast[id])].cur > 0.02);
+    if(!audible) return;
+    an.getByteFrequencyData(spBuf);
+    /* fait defiler d'un pixel, puis peint la colonne de droite */
+    s.cx.drawImage(s.cv, -1, 0);
+    const col = s.cx.createImageData(1, s.h);
+    const [gr, gg, gb] = GLOW_RGB;
+    for(let y = 0; y < s.h; y++){
+      const v = spBuf[s.rows[y]] / 255;
+      const a = Math.pow(v, 1.6);
+      const o = y * 4;
+      col.data[o]     = gr * a + 10;
+      col.data[o + 1] = gg * a + 16;
+      col.data[o + 2] = gb * a + 12;
+      col.data[o + 3] = 255 * Math.min(1, 0.16 + a);
+    }
+    s.cx.putImageData(col, s.w - 1, 0);
+  });
+}
+
+/* ── PUPITRES : la partition allume les puces ─────────────────────────── */
+function playingSpans(spans, t){
+  for(let i = 0; i < spans.length; i++){
+    if(t < spans[i][0]) return false;
+    if(t <= spans[i][1]) return true;
+  }
+  return false;
+}
+let lastInst = 0;
+function paintInsts(ts){
+  if(ts - lastInst < 120) return;
+  lastInst = ts;
+  const t = el.bed && el.bed.duration ? el.bed.currentTime : 0;
+  document.querySelectorAll(".track").forEach(row => {
+    const id = row.dataset.tr;
+    if(id === "mix") return;
+    const src = id === "bed" ? ACT.bed : ACT[id + "__" + cast[id]];
+    row.querySelectorAll(".inst").forEach(chip => {
+      const spans = src && src[chip.dataset.inst];
+      chip.classList.toggle("lit", !!(playing && spans && playingSpans(spans, t)));
+    });
+  });
 }
 
 function paintLevels(){
@@ -658,6 +815,7 @@ function paintLevels(){
       Math.round(Math.min(1, v / (full || 1)) * 100) + "%";
     box.classList.toggle("hot", !!hot && v > 0.02);
   };
+  set("mix", "bed", false, 1);
   set("bed", "bed", false, 1);
   (CAST.roles||[]).forEach(r => set(r, key(r, cast[r]), true, trim(r, cast[r])));
   const ring = document.getElementById("ring");

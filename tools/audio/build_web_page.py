@@ -64,6 +64,47 @@ def make_standalone(body: str) -> str:
 TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "page_template.html")
 
 
+def build_activity() -> dict:
+    """Exporte QUI JOUE QUAND, piste par piste, pupitre par pupitre.
+
+    Pas d'analyse audio : la partition est connue. Pour chaque piste (socle et
+    chaque candidat de role), on fusionne les notes de chaque instrument en
+    intervalles [debut, fin]. Le lecteur allume les pupitres en suivant
+    l'horloge du socle — exact a la milliseconde, la ou une detection au
+    spectre devinerait."""
+    import sys as _sys
+    _here = os.path.dirname(os.path.abspath(__file__))
+    if _here not in _sys.path:
+        _sys.path.insert(0, _here)
+    from arrange_menu import build_bed, build_role
+    from casting_menu import CANDIDATES
+
+    def merge(evs):
+        per: dict = {}
+        for e in evs:
+            per.setdefault(e["inst"], []).append(
+                (round(e["at"], 2), round(e["at"] + e["dur"], 2)))
+        out = {}
+        for inst, spans in per.items():
+            spans.sort()
+            m = [list(spans[0])]
+            for a, b in spans[1:]:
+                if a <= m[-1][1] + 0.35:          # fusionne les silences < 350 ms
+                    m[-1][1] = max(m[-1][1], b)
+                else:
+                    m.append([a, b])
+            out[inst] = [[round(a, 2), round(b, 2)] for a, b in m]
+        return out
+
+    act = {"bed": merge(build_bed())}
+    for role, cands in CANDIDATES.items():
+        for cid in cands:
+            evs = build_role(role, cid)
+            if evs:
+                act[f"{role}__{cid}"] = merge(evs)
+    return act
+
+
 def load_casting(stems_dir: str) -> dict:
     """Lit casting.json a cote des pistes. Absent = page sans panneau de contexte."""
     path = os.path.join(stems_dir, "casting.json")
@@ -234,6 +275,11 @@ def main() -> int:
         return 1
     page = tpl.replace("__AUDIO_JSON__", json.dumps(audio))
     page = page.replace("__CASTING_JSON__", json.dumps(cast, ensure_ascii=False))
+    if "__ACTIVITY_JSON__" in page:
+        act = build_activity()
+        n_spans = sum(len(v) for t in act.values() for v in t.values())
+        print(f"  activite : {len(act)} pistes, {n_spans} intervalles")
+        page = page.replace("__ACTIVITY_JSON__", json.dumps(act))
     if "__PROVENANCE__" in page:
         page = page.replace("__PROVENANCE__", render_provenance(args.stems))
     if not args.embedded:

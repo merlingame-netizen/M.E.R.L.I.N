@@ -531,6 +531,16 @@ def main() -> int:
     cast["levels"] = levels
     cast["loop_seconds"] = round(LOOP_LEN, 3)
     cast["bpm"] = round(BPM, 3)
+    # PRESERVER CE QUE D'AUTRES OUTILS ONT ECRIT. sfx_ambiance.py declare ses
+    # effets dans casting.json ; reecrire le fichier depuis manifest() les
+    # effacait en silence — un rendu --only faisait disparaitre la section
+    # Effets de la page. On recopie les cles etrangeres au rendu.
+    if os.path.exists(ref_path):
+        with open(ref_path, encoding="utf-8") as fh:
+            prev = json.load(fh)
+        for k, v in prev.items():
+            if k not in cast:
+                cast[k] = v
     with open(ref_path, "w", encoding="utf-8") as fh:
         json.dump(cast, fh, indent=2, ensure_ascii=False)
 

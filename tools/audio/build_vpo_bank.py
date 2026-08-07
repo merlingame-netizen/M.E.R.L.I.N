@@ -108,7 +108,7 @@ _OPCODE = re.compile(r"([A-Za-z0-9_]+)=((?:(?!\s+[A-Za-z0-9_]+=).)*)")
 
 def parse_sfz(path: str) -> list[dict]:
     """Retourne les regions, heritage <global>/<group> applique."""
-    scopes = {"global": {}, "group": {}}
+    scopes = {"global": {}, "group": {}, "control": {}}
     current = None
     regions: list[dict] = []
     with open(path, encoding="utf-8", errors="replace") as fh:
@@ -122,7 +122,9 @@ def parse_sfz(path: str) -> list[dict]:
                 seg = line[pos:header.start()]
                 _apply(seg, scopes, current, regions)
                 tag = header.group(1)
-                if tag == "global":
+                if tag == "control":
+                    current = "control"
+                elif tag == "global":
                     scopes["global"] = {}; scopes["group"] = {}; current = "global"
                 elif tag == "group":
                     scopes["group"] = {}; current = "group"
@@ -130,9 +132,11 @@ def parse_sfz(path: str) -> list[dict]:
                     regions.append(dict(scopes["global"], **scopes["group"]))
                     current = "region"
                 else:
-                    current = None           # <control>, <curve>... ignores
+                    current = None           # <curve>, <effect>... ignores
                 pos = header.end()
             _apply(line[pos:], scopes, current, regions)
+    for r in regions:
+        r.setdefault("_default_path", scopes["control"].get("default_path", ""))
     return regions
 
 
@@ -141,11 +145,11 @@ def _apply(segment: str, scopes: dict, current: str | None, regions: list) -> No
         v = v.strip()
         if current == "region" and regions:
             regions[-1][k] = v
-        elif current in ("group", "global"):
+        elif current in ("group", "global", "control"):
             scopes[current][k] = v
 
 
-def region_zones(regions: list[dict]) -> list[dict]:
+def region_zones(regions: list[dict], default_path: str = "") -> list[dict]:
     """Regions -> zones exploitables : note de base effective, bornes, couche."""
     zones = []
     for r in regions:
@@ -167,7 +171,7 @@ def region_zones(regions: list[dict]) -> list[dict]:
         # transposition vaut midi - base_note : on encaisse la correction dans
         # une note de base FRACTIONNAIRE (base' = centre - tune/100).
         zones.append({
-            "sample": r["sample"].replace("\\", "/"),
+            "sample": (default_path + r["sample"]).replace("\\", "/"),
             "lokey": lo, "hikey": hi,
             "base_note": center - tune / 100.0,
             "volume_db": float(r.get("volume", 0.0)),
@@ -248,7 +252,9 @@ def write_wav_mono16(path: str, x: np.ndarray, rate: int,
 
 def build_instrument(inst: str, sfz_path: str, vpo_root: str,
                      out_dir: str) -> list[dict]:
-    zones = region_zones(parse_sfz(sfz_path))
+    regions = parse_sfz(sfz_path)
+    dp = regions[0].get("_default_path", "") if regions else ""
+    zones = region_zones(regions, dp)
     if not zones:
         raise ValueError(f"{sfz_path} : aucune zone exploitable")
     # couche de velocite : ordre des lovel puis des round-robins dans une zone

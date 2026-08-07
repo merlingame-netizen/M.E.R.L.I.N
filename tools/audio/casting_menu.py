@@ -79,7 +79,9 @@ CANDIDATES = {
         "dan_tranh":     ("dan_tranh",     1.00, (35, 71), "Đàn tranh"),
         "kalimba":       ("kalimba",       0.95, (31, 85), "Kalimba"),
         "psaltery":      ("psaltery",      0.90, (58, 78), "Psaltérion"),
-        "harpe":         ("harp",          1.00, (38, 101), "Harpe"),
+        # Etherealwinds Harp II CE : 34 cordes reelles, 36..93 — plus de zones
+        # fantomes au-dela de l'instrument
+        "harpe":         ("harp",          1.00, (36, 93),  "Harpe"),
         "mbira":         ("mbira",         1.00, (34, 73),  "Mbira"),
     },
     "halo": {
