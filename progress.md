@@ -2651,3 +2651,20 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       publie sur l'URL d'origine c2a7221f
 - DIFFERE : lecteur desktop (app_template.html) reference encore saison/moment
   — a realigner sur les axes v2 si l'utilisateur redemande le lecteur complet.
+
+## 2026-08-07 — Musique menu v3 : coupures de vitesse + table melodie (meteo, heure)
+- [x] Coupures au changement de vitesse : cause = rampe playbackRate (50 sauts)
+      + pilotage ±0,4 % — chaque retouche reinitialise l'etireur temporel du
+      navigateur. Fix : UN SEUL saut de rate ; verif de derive toutes les 2 s,
+      recalage sec uniquement > 180 ms.
+- [x] Table melodie donnee par l'utilisateur (REMPLACE pluie=harpe) :
+      nuit = boite a musique lente (x0,80, toutes meteos, PRIORITY heure>meteo),
+      clair = oud, couvert = harpe, pluie = flute (+ orage basson, brume flute
+      alto, neige ocarina). Chant reduit a 7 instruments.
+- [x] Boite a musique = music_box (alias celesta dans la banque, enveloppe
+      pincee 0,9 s) — R4 repasse a 0, une tine ne sonne pas 1,4 s.
+- [x] Moins d'elements, motif au centre : socle 3 voix (cordes hautes, cor,
+      basson, tremolo sortis), corde 2 notes/mesure sans bourdon, fond nuit
+      sans corde, melodie +15 % dans les mixes mobiles. Rugosite mediane
+      4,33x -> 2,57x.
+- [ ] Rendu v3 en cours (render_v3.log), puis artefact + tests + publication

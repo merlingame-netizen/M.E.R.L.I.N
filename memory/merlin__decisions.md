@@ -19,3 +19,15 @@
 - L'axe saison est SUPPRIME.
 - La musique doit comporter MOINS D'ELEMENTS (fond allege : halo seulement a
   certaines heures, substitution nocturne du fond).
+
+## 2026-08-07: Table melodie v3 — REMPLACE « pluie = harpe »
+- L'instrument de la melodie depend de (meteo, heure). Exemples donnes :
+  nuit = BOITE A MUSIQUE lente (toutes meteos) ; apres-midi clair = OUD ;
+  apres-midi couvert = HARPE ; FLUTE s'il pleut.
+- La regle anterieure « pluie = harpe » est CADUQUE : la harpe appartient au
+  ciel couvert, la pluie est a la flute.
+- Moins d'instruments au global ; la musique se CENTRE SUR LE MOTIF
+  (Tri Martolod), l'accompagnement s'efface.
+- Le changement de vitesse ne doit JAMAIS s'entendre comme une coupure :
+  un seul saut de playbackRate (pas de rampe continue, pas de pilotage
+  micro-ajuste — chaque changement reinitialise l'etireur du navigateur).

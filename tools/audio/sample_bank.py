@@ -316,6 +316,11 @@ class MultiSampleBank:
         "strumstick": "plucked", "hand_chimes": "struck", "bell_tree": "struck",
         "mark_tree": "struck", "hand_bells": "struck", "slit_drum": "struck",
         "vibraphone": "struck", "tubular_bells": "struck",
+        # La boite a musique : les echantillons du celesta, mais l'enveloppe
+        # PINCEE — une tine de boite a musique meurt en une seconde, pas en
+        # 1,4 s. C'est aussi ce qui garde ses resonances en deca des
+        # changements d'accord (regle R4 du lint).
+        "music_box": "plucked",
         # ocean_drum, didgeridoo, wine_glasses, psaltery, ocarina, harmonica
         # restent "sustained" : ils le sont vraiment.
     }
@@ -336,6 +341,11 @@ class MultiSampleBank:
                 counts[e["base_note"]] = counts.get(e["base_note"], 0) + 1
             for e in lst:
                 e["_multi"] = counts[e["base_note"]] > 1
+        # music_box est un ALIAS : memes echantillons que le celesta, autre
+        # enveloppe (voir KIND). L'alias vit ici pour que has()/pick() le
+        # connaissent sans dupliquer les fichiers de la banque.
+        if "celesta" in self.by_inst and "music_box" not in self.by_inst:
+            self.by_inst["music_box"] = self.by_inst["celesta"]
         self._cache: dict[str, tuple[np.ndarray, int]] = {}
         if verbose:
             print(f"[samples] {len(self.by_inst)} instruments reels, "

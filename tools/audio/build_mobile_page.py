@@ -10,7 +10,10 @@ lecon de la webview iPhone (21 elements = boutons muets) reste appliquee :
     FOND_jour   socle + corde + pouls, SANS halo (moins d'elements)
     FOND_nuit   la substitution nocturne : dan tranh, cloches tubulaires,
                 tambour de nuit — le fond change, la melodie reste a la meteo
-    CHANT_<meteo>  la melodie seule, par l'instrument de la meteo (6 pistes)
+    CHANT_<instrument>  la melodie seule, une piste par instrument ; le choix
+                   depend du COUPLE (meteo, heure) — le jour la meteo decide
+                   (clair=oud, couvert=harpe, pluie=flute...), la nuit c'est
+                   la boite a musique lente quelle que soit la meteo
     ADD_<extra>    « parfois quelques instruments en plus » : guirlande de
                    glockenspiel a midi, veilleuse de celesta en soiree
 
@@ -136,10 +139,16 @@ def main() -> int:
 
     fonds = {"jour": fond_sum(cast["fond_jour"]),
              "nuit": fond_sum(cast["fond_nuit"])}
+    # une piste de melodie PAR INSTRUMENT — l'instrument depend du couple
+    # (meteo, heure) : le jour c'est la meteo qui choisit, la nuit c'est la
+    # boite a musique quelle que soit la meteo
+    night_cid = cast["context"]["nuit"]["chant"]
+    day_cids = {w: cast["context"][w]["chant"] for w in meteos}
+    MELODY_BOOST = 1.15          # « la musique se centre sur le motif »
     chants = {}
-    for w in meteos:
-        cid = cast["context"][w]["chant"]
-        chants[w] = (part(f"chant__{cid}")[:, :n] * gains[("chant", cid)]).mean(0)
+    for cid in sorted(set(day_cids.values()) | {night_cid}):
+        chants[cid] = (part(f"chant__{cid}")[:, :n]
+                       * gains[("chant", cid)] * MELODY_BOOST).mean(0)
     adds = {}
     for h, x in extras.items():
         role, cid = x["part"].split("__")
@@ -175,24 +184,30 @@ def main() -> int:
 
     for fid, sig in fonds.items():
         emit("FOND_" + fid, sig, FOND_BITRATE)
-    for w, sig in chants.items():
-        emit("CHANT_" + w, sig, CHANT_BITRATE)
+    for cid, sig in chants.items():
+        emit("CHANT_" + cid, sig, CHANT_BITRATE)
     for xid, sig in adds.items():
         emit("ADD_" + xid, sig, ADD_BITRATE)
 
-    # ── courbes par combinaison fond x meteo ────────────────────────────────
+    # ── courbes par combinaison reellement jouable ──────────────────────────
+    # le jour : fond jour x chaque instrument de meteo ; la nuit : fond nuit
+    # x la boite a musique — pas de produit cartesien inutile
     meta: dict = {"bar": BAR, "bars": N_BARS, "progression": PROGRESSION,
                   "heures": heures, "meteos": meteos, "tempo": tempo,
                   "combos": {}}
     fond_mono = {fid: f.mean(0) for fid, f in fonds.items()}
-    for fid, fm in fond_mono.items():
-        for w, c in chants.items():
-            curve, onsets = envelope_and_onsets(fm + c)
-            meta["combos"][f"{fid}|{w}"] = {"curve": curve, "onsets": onsets}
-    print(f"[mobile] {len(meta['combos'])} courbes fond x meteo")
+    pairs = [("jour", cid) for cid in sorted(set(day_cids.values()))]
+    pairs.append(("nuit", night_cid))
+    for fid, cid in pairs:
+        curve, onsets = envelope_and_onsets(fond_mono[fid] + chants[cid])
+        meta["combos"][f"{fid}|{cid}"] = {"curve": curve, "onsets": onsets}
+    print(f"[mobile] {len(meta['combos'])} courbes fond x melodie")
 
-    meta["chant"] = {w: labels[("chant", cast["context"][w]["chant"])]
-                     for w in meteos}
+    meta["melodie"] = {
+        "nuit": night_cid,
+        "meteo": day_cids,
+        "labels": {cid: labels[("chant", cid)] for cid in chants},
+    }
     meta["fonds"] = {
         fid: " + ".join(["socle"] + [labels[(r, c)]
                                      for r, c in cast[f"fond_{fid}"].items()])

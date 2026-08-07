@@ -231,6 +231,10 @@ def build_bed() -> list[dict]:
         d = dyn(b0)
         bass, upper = voicings[b0 - 1][0], voicings[b0 - 1][1:]
 
+        # ENCORE RABOTE (2026-08-07) : « moins d'instruments au global, la
+        # musique se centre sur le motif ». Sortis : cordes hautes, cor,
+        # basson, tremolo. Restent trois voix — la basse, son octave, un alto
+        # a partir du deuxieme enonce. Le socle PORTE, le motif PARLE.
         ev.append(_ev("contrabass", "bed", bass - 12, t0, span + 0.9,
                       0.24 + 0.36 * d, b0 * 3))
         ev.append(_ev("strings_low", "bed", bass, t0, span + 0.8,
@@ -238,19 +242,9 @@ def build_bed() -> list[dict]:
         if b0 >= 9:
             ev.append(_ev("viola", "bed", upper[0], t0, span + 0.8,
                           0.20 + 0.36 * d, b0 * 7))
-            ev.append(_ev("strings_mid", "bed", upper[1], t0, span + 0.7,
-                          0.20 + 0.38 * d, b0 * 11))
         if b0 >= 21:
-            ev.append(_ev("strings_high", "bed", upper[2], t0, span + 0.6,
-                          0.16 + 0.34 * d, b0 * 19))
-        if 25 <= b0 <= 32:
-            ev.append(_ev("horn", "bed", upper[1] - 12, t0, span + 0.6,
-                          0.14 + 0.26 * d, b0 * 13))
-            ev.append(_ev("bassoon", "bed", bass + 12, t0, span + 0.6,
-                          0.12 + 0.22 * d, b0 * 17))
-        if 25 <= b0 <= 28:
-            ev.append(_ev("strings_tremolo", "bed", upper[1] + 12, t0, span + 0.4,
-                          0.10 + 0.22 * d, b0 * 23))
+            ev.append(_ev("strings_mid", "bed", upper[1], t0, span + 0.7,
+                          0.18 + 0.34 * d, b0 * 11))
 
     ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])
@@ -279,30 +273,22 @@ def build_role(role: str, candidate: str) -> list[dict]:
                               gain * lvl * (0.30 + 0.46 * dyn(bar)), bar * 73 + midi))
 
     elif role == "corde":
-        # Trois notes par mesure, tenues cinq secondes : elles se recouvrent d'une
-        # mesure sur l'autre et forment une nappe de cordes pincees.
+        # DEUX notes par mesure, tenues cinq secondes : elles se recouvrent
+        # d'une mesure sur l'autre et forment une nappe discrete. C'etait
+        # trois notes plus un bourdon de basse toutes les quatre mesures —
+        # rabote (2026-08-07) : le motif d'abord, l'accompagnement s'efface.
+        # Rien ne deborde le point de boucle (le psalterion frotte sonne
+        # encore a plein niveau a 5 s, sa fin se repliait sur la mesure 1).
         for bar in range(1, N_BARS + 1):
             tones = _tones(bar, 55, 74)
             d = dyn(bar)
-            # Rien ne deborde le point de boucle — meme raison que pour le halo.
-            # Une guitare ou un oud sont quasi eteints au bout de 5 s, donc le
-            # repli de queue passait inapercu ; un psalterion FROTTE, lui, sonne
-            # encore a plein niveau, et sa fin se repliait sur l'attaque de la
-            # mesure 1. Seul des quatorze fichiers a produire un vrai clic :
-            # +2,82 points d'exces haute frequence au raccord, pour un seuil de 2.
-            for j, (beat, idx) in enumerate(((1.0, 0), (2.5, 2), (4.0, 4))):
+            for j, (beat, idx) in enumerate(((1.0, 0), (3.0, 2))):
                 at = t_of(bar, beat)
                 dur = min(5.6, LOOP_LEN - at - 0.06)
                 if dur < 0.4:
                     continue
                 ev.append(_ev(inst, "corde", tones[idx % len(tones)],
                               at, dur, gain * (0.22 + 0.30 * d), bar * 79 + j))
-            if bar % 4 == 1:                                  # basse a vide sur l'appui
-                at = t_of(bar, 1.0)
-                dur = min(6.4, LOOP_LEN - at - 0.06)
-                if dur >= 0.4:
-                    ev.append(_ev(inst, "corde", tones[0] - 12, at,
-                                  dur, gain * (0.24 + 0.28 * d), bar * 83))
 
     elif role == "halo":
         # Tres peu de notes, tres haut, tres longues. C'est le registre qui fait

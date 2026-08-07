@@ -214,6 +214,9 @@ const fxOn = {};
 
 const fondId  = () => H === "nuit" ? "nuit" : "jour";
 const extraOf = h => (META.extras[h] || null);
+/* l'instrument de la melodie depend du COUPLE (meteo, heure) : la nuit
+   impose la boite a musique quelle que soit la meteo */
+const chantId = () => H === "nuit" ? META.melodie.nuit : META.melodie.meteo[W];
 
 function ctx(){
   if(AC !== null) return AC;
@@ -286,21 +289,17 @@ function swapLayer(layer, name, inGesture){
   requestAnimationFrame(step);
 }
 
-/* rampe de vitesse — 0,8 s, appliquee a toutes les couches en lecture */
-let rateTok = 0;
-function rampRate(target){
-  const tok = ++rateTok, from = RATE, t0 = performance.now();
+/* changement de vitesse — UN SEUL saut de playbackRate.
+   La rampe de 0,8 s posait ~50 valeurs successives : chaque changement
+   reinitialise l'etireur temporel du navigateur (hauteur preservee), et
+   cette rafale s'entendait comme des coupures. Un saut unique ne coupe
+   qu'une fois — et l'etireur l'absorbe. */
+function setRate(target){
+  RATE = target;
   $("#ratero").textContent = "×" + target.toFixed(2);
-  function step(){
-    if(rateTok !== tok) return;
-    const k = Math.min(1, (performance.now() - t0) / 800);
-    RATE = from + (target - from) * k;
-    ["fond", "chant", "extra"].forEach(l => {
-      if(layers[l] && el[layers[l]]) el[layers[l]].playbackRate = RATE;
-    });
-    if(k < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
+  ["fond", "chant", "extra"].forEach(l => {
+    if(layers[l] && el[layers[l]]) el[layers[l]].playbackRate = RATE;
+  });
 }
 
 function paintState(){
@@ -312,7 +311,7 @@ function paintState(){
   document.querySelectorAll("#heure .chip").forEach(b =>
     b.setAttribute("aria-pressed", String(b.dataset.h === H)));
   const x = extraOf(H);
-  $("#castline").innerHTML = "mélodie <b>" + META.chant[W] + "</b>";
+  $("#castline").innerHTML = "mélodie <b>" + META.melodie.labels[chantId()] + "</b>";
   $("#heureline").innerHTML =
     "vitesse <b>×" + (META.tempo[H] || 1).toFixed(2) + "</b>" +
     " &nbsp;·&nbsp; fond <b>" + META.fonds[fondId()] + "</b>" +
@@ -322,12 +321,13 @@ function paintState(){
 
 function setMeteo(w){
   W = w; paintState();
-  swapLayer("chant", "CHANT_" + w, true);
+  swapLayer("chant", "CHANT_" + chantId(), true);
 }
 function setHeure(h){
   H = h; paintState();
-  rampRate(META.tempo[h] || 1.0);
+  setRate(META.tempo[h] || 1.0);
   swapLayer("fond", "FOND_" + fondId(), true);
+  swapLayer("chant", "CHANT_" + chantId(), true);   /* la nuit change la voix */
   const x = extraOf(h);
   swapLayer("extra", x ? "ADD_" + x.id : null, true);
 }
@@ -344,7 +344,7 @@ playBtn.addEventListener("click", () => {
   }
   playing = true; glyph.textContent = "❚❚";
   layers.fond = "FOND_" + fondId();
-  layers.chant = "CHANT_" + W;
+  layers.chant = "CHANT_" + chantId();
   const x = extraOf(H);
   layers.extra = x ? "ADD_" + x.id : null;
   let first = null;
@@ -368,11 +368,13 @@ playBtn.addEventListener("click", () => {
 });
 
 /* ── tenue de synchronisation ──────────────────────────────────────────────
-   Le fond est l'horloge. Chant et extra sont PILOTES par leur playbackRate
-   (± 0,4 %), jamais par des seeks — un seek s'entend, un pilotage non. Au
-   bouclage la derive apparente saute d'une duree : on la replie modulo la
-   boucle avant de juger. Au-dela de 300 ms on recale d'un coup (et on le
-   consigne : c'est un defaut a entendre). */
+   Le fond est l'horloge. TOUTES les couches portent exactement le meme
+   playbackRate : sur la meme horloge audio, elles ne derivent quasiment pas.
+   L'ancien pilotage (± 0,4 % reajuste chaque demi-seconde) reinitialisait
+   l'etireur temporel a chaque retouche — c'etait la source des coupures.
+   Ici : on VERIFIE toutes les 2 s, et on ne touche a rien sous 180 ms de
+   derive ; au-dela, un recalage sec (rare : bouclage MP3, retour d'onglet),
+   consigne au journal s'il depasse 400 ms. */
 function steer(){
   const m = master(); if(!m || !playing) return;
   const d = m.duration || 196;
@@ -382,14 +384,12 @@ function steer(){
     let drift = (a.currentTime || 0) - (m.currentTime || 0);
     if(drift > d / 2) drift -= d;
     if(drift < -d / 2) drift += d;
-    if(Math.abs(drift) > 0.3){
+    if(Math.abs(drift) > 0.18){
       try{ a.currentTime = m.currentTime; }catch(e){}
-      logAuto("recalage " + n + " (dérive " + (drift * 1000 | 0) + " ms)");
-    }else{
-      a.playbackRate = RATE * (1 - Math.max(-0.004, Math.min(0.004, drift / 5)));
+      if(Math.abs(drift) > 0.4)
+        logAuto("recalage " + n + " (dérive " + (drift * 1000 | 0) + " ms)");
     }
   });
-  m.playbackRate = RATE;
 }
 
 let raf = 0, lastDraw = 0, lastSteer = 0;
@@ -400,7 +400,7 @@ function tick(ts){
   $("#t").textContent = (t/60|0) + ":" + String(t%60|0).padStart(2,"0");
   const ring = $("#ring");
   if(ring) ring.style.strokeDashoffset = (151 * (1 - t/d)).toFixed(1);
-  if(ts - lastSteer > 500){ lastSteer = ts; steer(); }
+  if(ts - lastSteer > 2000){ lastSteer = ts; steer(); }
   if(ts - lastDraw > 200){ lastDraw = ts; drawTimeline(); updateReadout(t); }
 }
 
@@ -414,7 +414,7 @@ function sizeCanvas(){
 function glowColor(){
   return getComputedStyle(document.documentElement).getPropertyValue("--glow").trim() || "#c9a25e";
 }
-function combo(){ return META.combos[fondId() + "|" + W]; }
+function combo(){ return META.combos[fondId() + "|" + chantId()]; }
 function drawTimeline(){
   const m = combo(); if(!m || !cvW) return;
   const g = cv.getContext("2d");
@@ -466,7 +466,7 @@ cv.addEventListener("pointermove", e => { if(e.buttons) seekAt(e.clientX); });
 function barAt(t){ return Math.min(META.bars, Math.floor(t / META.bar) + 1); }
 function stateLine(){
   const x = extraOf(H);
-  return "mélodie:" + META.chant[W] + " · fond:" + META.fonds[fondId()] +
+  return "mélodie:" + META.melodie.labels[chantId()] + " · fond:" + META.fonds[fondId()] +
          (x ? " · +" + x.label : "");
 }
 function updateReadout(t){

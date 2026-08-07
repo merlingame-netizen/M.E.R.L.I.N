@@ -62,21 +62,20 @@ from __future__ import annotations
 # tous les candidats d'un role.
 
 CANDIDATES = {
+    # SEPT voix de melodie, pas une de plus (« moins d'instruments au global »,
+    # 2026-08-07). La table (meteo, heure) -> instrument est donnee par
+    # l'utilisateur : nuit = boite a musique lente quelle que soit la meteo ;
+    # le jour, clair = oud, couvert = harpe, pluie = flute.
     "chant": {
-        "cor_anglais": ("cor_anglais", 1.00, (46, 77), "Cor anglais"),
-        "flute":       ("flute",       0.92, (48, 84), "Flûte"),
-        "ocarina":     ("ocarina",     1.05, (57, 73), "Ocarina"),
-        "harmonica":   ("harmonica",   0.95, (36, 84), "Harmonica"),
-        # Pupitres VPO a tenues bouclees — tessitures relevees dans le manifeste
-        "violon":      ("violin_solo", 1.00, (55, 94), "Violon"),
-        "hautbois":    ("oboe",        1.00, (58, 84), "Hautbois"),
-        "clarinette":  ("clarinet",    1.00, (53, 91), "Clarinette"),
-        "basson":      ("bassoon",     1.00, (34, 70), "Basson"),
-        "flute_alto":  ("alto_flute",  1.00, (58, 90), "Flûte alto"),
-        "clar_basse":  ("bass_clarinet", 1.00, (38, 74), "Clarinette basse"),
-        # REGLE UTILISATEUR (2026-08-07) : quand il pleut, c'est LA HARPE — et
-        # depuis le pivot meteo=melodie, c'est la MELODIE elle-meme qu'elle porte.
-        "harpe":       ("harp",        1.00, (36, 93), "Harpe"),
+        "oud":        ("oud",        0.95, (40, 76), "Oud"),
+        "harpe":      ("harp",       1.00, (36, 93), "Harpe"),
+        "flute":      ("flute",      0.92, (48, 84), "Flûte"),
+        "basson":     ("bassoon",    1.00, (34, 70), "Basson"),
+        "flute_alto": ("alto_flute", 1.00, (58, 90), "Flûte alto"),
+        "ocarina":    ("ocarina",    1.05, (57, 73), "Ocarina"),
+        # la boite a musique : les echantillons du celesta avec l'enveloppe
+        # pincee (sample_bank), l'air replie dans l'aigu ou vivent les picots
+        "boite":      ("music_box",  1.00, (72, 96), "Boîte à musique"),
     },
     "corde": {
         "celtic_guitar": ("celtic_guitar", 1.00, (24, 80), "Guitare celtique"),
@@ -124,7 +123,7 @@ def fold(midi: int, span: tuple[int, int]) -> int:
     return max(lo, min(hi, midi))
 
 DEFAULT = {
-    "pulse": "calme", "chant": "cor_anglais", "corde": "celtic_guitar", "halo": "celesta"}
+    "pulse": "calme", "chant": "harpe", "corde": "celtic_guitar", "halo": "celesta"}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LES CONTEXTES — deux axes (pivot 2026-08-07, la saison est SUPPRIMEE)
@@ -146,16 +145,19 @@ AXES = {
     "heure": ["aube", "matinee", "midi", "apres_midi", "soiree", "nuit"],
 }
 
-# ordre de priorite : le premier qui se prononce sur un role l'emporte
-PRIORITY = ["meteo", "heure"]
+# ordre de priorite : le premier qui se prononce sur un role l'emporte.
+# L'HEURE D'ABORD : la nuit impose la boite a musique quelle que soit la
+# meteo (table utilisateur 2026-08-07). Les autres heures sont muettes sur la
+# distribution, donc la meteo garde la main le jour.
+PRIORITY = ["heure", "meteo"]
 
 CONTEXT = {
-    # ── meteo : L'INSTRUMENT DE LA MELODIE, et lui seul ──────────────────────
-    "clair":   {"chant": "flute"},
-    # le ciel couvert garde le titulaire : le cor anglais EST la voix voilee
-    "couvert": {"chant": "cor_anglais"},
-    # REGLE UTILISATEUR : quand il pleut, c'est LA HARPE — sur la melodie.
-    "pluie":   {"chant": "harpe"},
+    # ── meteo : L'INSTRUMENT DE LA MELODIE le jour ───────────────────────────
+    # Table utilisateur : « l'apres-midi quand le temps clair oud, l'apres-midi
+    # couvert harpe et flute s'il pleut ». (Remplace l'ancien pluie=harpe.)
+    "clair":   {"chant": "oud"},
+    "couvert": {"chant": "harpe"},
+    "pluie":   {"chant": "flute"},
     "orage":   {"chant": "basson"},
     "brume":   {"chant": "flute_alto"},
     "neige":   {"chant": "ocarina"},
@@ -165,9 +167,10 @@ CONTEXT = {
     "midi":       {},
     "apres_midi": {},
     "soiree":     {},
-    # La nuit SUBSTITUE le fond : dan tranh, cloches tubulaires au loin, une
-    # frappe toutes les deux mesures. La melodie reste a la meteo.
-    "nuit": {"corde": "dan_tranh", "halo": "tubulaires", "pulse": "nuit"},
+    # « La nuit c'est boite a musique lente » : la melodie passe au celesta
+    # replie dans l'aigu, le fond s'efface — cloches tubulaires au loin, une
+    # frappe toutes les deux mesures, PAS de corde.
+    "nuit": {"chant": "boite", "halo": "tubulaires", "pulse": "nuit"},
 }
 
 # ── LA VITESSE PAR HEURE ─────────────────────────────────────────────────────
@@ -180,7 +183,7 @@ TEMPO = {
     "midi":       1.06,        # le plus allant
     "apres_midi": 1.00,        # la reference
     "soiree":     0.93,
-    "nuit":       0.84,        # le plus lent, avec la substitution du fond
+    "nuit":       0.80,        # boite a musique LENTE — le plus lent de tous
 }
 
 # ── « PARFOIS QUELQUES INSTRUMENTS EN PLUS » ─────────────────────────────────
@@ -196,10 +199,12 @@ EXTRAS = {
 }
 
 # ── LE FOND ──────────────────────────────────────────────────────────────────
-# Ce qui joue toujours sous la melodie. Le jour : socle + corde + pouls,
-# sans halo. La nuit : la substitution de CONTEXT["nuit"], halo compris.
+# Ce qui joue sous la melodie — le motif d'abord, l'accompagnement s'efface.
+# Le jour : socle + corde + pouls, sans halo. La nuit : socle + cloches
+# tubulaires + une frappe toutes les deux mesures — pas de corde, la boite
+# a musique est seule en avant.
 FOND_JOUR = {"corde": "celtic_guitar", "pulse": "calme"}
-FOND_NUIT = dict(CONTEXT["nuit"])
+FOND_NUIT = {"halo": "tubulaires", "pulse": "nuit"}
 
 
 def resolve(context: dict) -> dict:
