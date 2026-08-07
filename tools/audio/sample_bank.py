@@ -305,7 +305,7 @@ class MultiSampleBank:
     }
     # traitement de timbre des alias, applique dans render()
     TONE = {
-        "oud": dict(double_cents=7.0, double_gain=0.50, lp=2400.0),
+        "oud": dict(double_cents=7.0, double_gain=0.42, lp=3400.0),
     }
     KIND = {
         "harp": "plucked", "celtic_guitar": "plucked", "pizzicato": "plucked",

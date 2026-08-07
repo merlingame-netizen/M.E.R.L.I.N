@@ -38,8 +38,8 @@ from score_menu import BAR, N_BARS, PROGRESSION  # noqa: E402
 SR = 48_000
 # AAC : a debit egal, l'AAC-LC rend nettement mieux que le MP3. Conteneur
 # .m4a, lu par tous les webviews reels (iOS natif, Chrome Android).
-FOND_BITRATE = "48k"         # stereo — drone + guitare + percussion
-CHANT_BITRATE = "32k"        # mono : la melodie seule
+FOND_BITRATE = "64k"         # stereo — drone + guitare + percussion
+CHANT_BITRATE = "40k"        # mono : la melodie — 32k etait OPAQUE
 FX_BITRATE = "24k"
 
 DRONE_GAIN = 0.50            # « le fond drone est toujours trop fort »

@@ -85,3 +85,12 @@
   « max 3 » est remplacee : drone + guitare + percussion + melodie.
 - Palette bretonne/medievale/fantastique : neige = PSALTERION a archet
   (medieval, glace) au lieu de l'ocarina.
+
+## 2026-08-07: Musique menu v10 — harmonie et transparence
+- Le chevauchement d'UNE MESURE du drone (l'ancien accord sonnait toute la
+  premiere mesure du nouveau) etait la source du « pas harmonieux » :
+  reduit a un joint legato de 0,6 s. Rugosite mediane 9,8x -> 2,88x.
+- Registres ETAGES = le controle musical classique : basse grave (drone),
+  arpeges 55-76 (guitare, AU-DESSUS du drone), melodie dessus.
+- « Instruments opaques » : la melodie etait encodee a 32k (regression v9)
+  -> 40k ; fond 48k -> 64k stereo ; oud passe-bas 2,4 -> 3,4 kHz.

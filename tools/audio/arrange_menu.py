@@ -231,7 +231,11 @@ def build_bed() -> list[dict]:
     groups = _chord_groups()
     for gi, (b0, b1, name) in enumerate(groups):
         t0 = t_of(b0, 1.0)
-        span = (b1 - b0 + 1) * BAR + BAR          # deborde d'une mesure
+        # v10 : le bloc deborde de 0,6 s — un JOINT legato, pas une mesure.
+        # L'ancien accord qui sonnait toute la premiere mesure du nouveau
+        # mettait de la bitonalite dans le grave : « pas tres harmonieux »
+        # etait litteral.
+        span = (b1 - b0 + 1) * BAR + 0.6
         span = min(span, LOOP_LEN - t0 - 0.06)
         d = dyn(b0)
         _pcs, root = CHORDS[name]
@@ -300,8 +304,11 @@ def build_role(role: str, candidate: str) -> list[dict]:
         # drone seul ne donnait pas. La premiere attaque reste decalee de
         # 90 ms du point de boucle (transitoires dans la fenetre du join) et
         # les tenues meurent avant le raccord (marge = release du role).
+        # v10 : registre 55-76, AU-DESSUS du drone — les registres etages
+        # (basse grave / arpeges medium / melodie dessus) sont le controle
+        # classique qui rend chaque voix lisible
         for bar in range(1, N_BARS + 1):
-            tones = _tones(bar, 48, 72)
+            tones = _tones(bar, 55, 76)
             d = dyn(bar)
             for j, (beat, idx) in enumerate(
                     ((1.0, 0), (2.0, 2), (3.0, 4), (4.0, 2))):
