@@ -303,6 +303,10 @@ class MultiSampleBank:
         "plucked":   dict(a=0.001, d=0.02, s=0.97, r=0.90),
         "struck":    dict(a=0.001, d=0.0, s=1.0, r=1.40),
     }
+    # traitement de timbre des alias, applique dans render()
+    TONE = {
+        "oud": dict(double_cents=7.0, double_gain=0.50, lp=2400.0),
+    }
     KIND = {
         "harp": "plucked", "celtic_guitar": "plucked", "pizzicato": "plucked",
         "glockenspiel": "struck", "celesta": "struck", "celesta_bell": "struck",
@@ -321,6 +325,12 @@ class MultiSampleBank:
         # 1,4 s. C'est aussi ce qui garde ses resonances en deca des
         # changements d'accord (regle R4 du lint).
         "music_box": "plucked",
+        # L'oud : HYBRIDE sur echantillons reels (voir TONE + alias). Aucune
+        # banque libre d'oud a licence claire n'existe — le modele Karplus-
+        # Strong etait le dernier instrument entierement synthetise, et ca
+        # s'entendait. Les transitoires reels de la guitare celtique, eux,
+        # sont vrais ; le caractere oud vient du traitement.
+        "oud": "plucked",
         # ocean_drum, didgeridoo, wine_glasses, psaltery, ocarina, harmonica
         # restent "sustained" : ils le sont vraiment.
     }
@@ -341,11 +351,16 @@ class MultiSampleBank:
                 counts[e["base_note"]] = counts.get(e["base_note"], 0) + 1
             for e in lst:
                 e["_multi"] = counts[e["base_note"]] > 1
-        # music_box est un ALIAS : memes echantillons que le celesta, autre
-        # enveloppe (voir KIND). L'alias vit ici pour que has()/pick() le
-        # connaissent sans dupliquer les fichiers de la banque.
-        if "celesta" in self.by_inst and "music_box" not in self.by_inst:
-            self.by_inst["music_box"] = self.by_inst["celesta"]
+        # ALIAS : un instrument peut relire les echantillons d'un autre avec
+        # une autre enveloppe (KIND) et un autre traitement (TONE), sans
+        # dupliquer les fichiers de la banque.
+        #   music_box -> celesta (enveloppe pincee)
+        #   oud -> celtic_guitar (double choeur desaccorde + passe-bas :
+        #     les cordes doublees et la rondeur sans frettes de l'oud,
+        #     portees par de VRAIS transitoires enregistres)
+        for alias, src in (("music_box", "celesta"), ("oud", "celtic_guitar")):
+            if src in self.by_inst and alias not in self.by_inst:
+                self.by_inst[alias] = self.by_inst[src]
         self._cache: dict[str, tuple[np.ndarray, int]] = {}
         if verbose:
             print(f"[samples] {len(self.by_inst)} instruments reels, "
@@ -408,21 +423,34 @@ class MultiSampleBank:
 
         kind = self.KIND.get(inst, "sustained")
         cfg = self.ENV[kind]
-        pos = np.arange(n, dtype=np.float64) * step
         ls, ll = int(entry.get("loop_start", 0)), int(entry.get("loop_length", 0))
-        if entry.get("looped") and ll > 1 and ls + ll <= len(data):
-            over = pos >= ls + ll
-            pos = np.where(over, ls + np.mod(pos - ls, ll), pos)
-        else:
-            pos = np.clip(pos, 0, len(data) - 1.001)
+        looped = entry.get("looped") and ll > 1 and ls + ll <= len(data)
 
-        i0 = pos.astype(np.int64)
-        frac = pos - i0
-        i1 = np.minimum(i0 + 1, len(data) - 1)
-        sig = data[i0] * (1.0 - frac) + data[i1] * frac
-        if not (entry.get("looped") and ll > 1):
-            played = np.arange(n, dtype=np.float64) * step
-            sig = np.where(played >= len(data) - 1, 0.0, sig)
+        def read(st: float) -> np.ndarray:
+            pos = np.arange(n, dtype=np.float64) * st
+            if looped:
+                pos = np.where(pos >= ls + ll, ls + np.mod(pos - ls, ll), pos)
+            else:
+                pos = np.clip(pos, 0, len(data) - 1.001)
+            i0 = pos.astype(np.int64)
+            frac = pos - i0
+            i1 = np.minimum(i0 + 1, len(data) - 1)
+            out = data[i0] * (1.0 - frac) + data[i1] * frac
+            if not looped:
+                played = np.arange(n, dtype=np.float64) * st
+                out = np.where(played >= len(data) - 1, 0.0, out)
+            return out
+
+        sig = read(step)
+        # TONE : traitement d'alias (voir __init__). L'oud double chaque note
+        # quelques cents plus haut — les COURSES DOUBLES de l'instrument, ce
+        # battement lent qui fait l'oud — puis arrondit l'aigu (pas de
+        # frettes, pas de brillance de bronze).
+        tone = self.TONE.get(inst)
+        if tone:
+            sig = sig + tone["double_gain"] * read(
+                step * 2.0 ** (tone["double_cents"] / 1200.0))
+            sig = _soft_lowpass(sig, tone["lp"])
 
         # Le filtre ne sert plus que lorsqu'une seule couche existe pour cette
         # note : sinon c'est la vraie couche enregistree qui porte le timbre, et

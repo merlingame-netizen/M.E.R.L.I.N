@@ -345,6 +345,13 @@ def write_provenance(out_dir: str, names: list[str], stats: dict, cast: dict) ->
             "libraries": SAMPLES.libraries,
             "recorded_instruments": recorded,
             "synthesized_instruments": synth_only,
+            # une attestation fausse est pire qu'une absente : les alias
+            # rejouent les echantillons d'un AUTRE instrument, traites
+            "aliased_instruments": {
+                "music_box": "celesta (enveloppe pincee)",
+                "oud": "celtic_guitar (double choeur desaccorde + passe-bas "
+                       "— aucune banque d'oud a licence libre n'existe)",
+            },
             "statement": f"{len(recorded)} pupitres sur {len(used)} rejouent des "
                          "instruments reellement enregistres, issus de bibliotheques "
                          "sous CC0 (domaine public, usage commercial compris, sans "

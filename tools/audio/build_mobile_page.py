@@ -44,8 +44,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from score_menu import BAR, N_BARS, PROGRESSION  # noqa: E402
 
 SR = 48_000
-FOND_BITRATE = "56k"         # stereo joint — 2 fonds seulement
-CHANT_BITRATE = "40k"        # mono : la melodie seule, 6 pistes
+FOND_BITRATE = "64k"         # stereo joint — 2 fonds seulement
+CHANT_BITRATE = "48k"        # mono : la melodie seule — la voix
+                             # principale merite le meilleur debit
 ADD_BITRATE = "32k"          # mono : halo clairseme
 FX_BITRATE = "40k"
 

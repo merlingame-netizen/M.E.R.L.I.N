@@ -204,7 +204,7 @@ const $ = s => document.querySelector(s);
    Les fondus passent par des noeuds de gain Web Audio (volume est en lecture
    seule sur iOS) ; sans Web Audio, bascule franche — moins jolie, jamais
    muette. */
-let AC = null; const el = {}, gain = {};
+let AC = null, MASTER = null; const el = {}, gain = {};
 let W = "couvert", H = "apres_midi";
 let RATE = META.tempo[H] || 1.0;
 let playing = false, pos = 0;
@@ -222,6 +222,12 @@ function ctx(){
   if(AC !== null) return AC;
   const C = window.AudioContext || window.webkitAudioContext;
   try{ AC = C ? new C() : false; }catch(e){ AC = false; }
+  if(AC){
+    /* bus MAITRE de la musique — c'est lui qui fait le creux pendant un
+       changement de vitesse. Les effets n'y passent pas. */
+    try{ MASTER = AC.createGain(); MASTER.gain.value = 1; MASTER.connect(AC.destination); }
+    catch(e){ MASTER = null; }
+  }
   return AC;
 }
 function make(name){
@@ -239,7 +245,8 @@ function make(name){
     try{
       const src = c.createMediaElementSource(a);
       const g = c.createGain(); g.gain.value = 0;
-      src.connect(g); g.connect(c.destination);
+      src.connect(g);
+      g.connect(!name.startsWith("FX_") && MASTER ? MASTER : c.destination);
       gain[name] = g;
     }catch(e){}
   }
@@ -289,17 +296,31 @@ function swapLayer(layer, name, inGesture){
   requestAnimationFrame(step);
 }
 
-/* changement de vitesse — UN SEUL saut de playbackRate.
-   La rampe de 0,8 s posait ~50 valeurs successives : chaque changement
-   reinitialise l'etireur temporel du navigateur (hauteur preservee), et
-   cette rafale s'entendait comme des coupures. Un saut unique ne coupe
-   qu'une fois — et l'etireur l'absorbe. */
-function setRate(target){
+/* changement de vitesse — UN saut de playbackRate, MASQUE par un creux.
+   Meme un saut unique fait tressauter l'etireur temporel du navigateur (il
+   se recale d'un bloc). On ne peut pas l'empecher — on peut le rendre
+   inaudible : le bus maitre descend a 8 % en 120 ms (automation Web Audio,
+   echantillon-precise), le saut a lieu au fond du creux, puis remontee en
+   220 ms. Une respiration, pas un accroc. Sans Web Audio : saut direct. */
+function applyRate(target){
   RATE = target;
-  $("#ratero").textContent = "×" + target.toFixed(2);
   ["fond", "chant", "extra"].forEach(l => {
     if(layers[l] && el[layers[l]]) el[layers[l]].playbackRate = RATE;
   });
+}
+function setRate(target){
+  $("#ratero").textContent = "×" + target.toFixed(2);
+  const playingNow = playing && master() && !master().paused;
+  if(!playingNow || !MASTER || !AC){ applyRate(target); return; }
+  const g = MASTER.gain, now = AC.currentTime;
+  try{
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(g.value, now);
+    g.linearRampToValueAtTime(0.08, now + 0.12);
+    g.setValueAtTime(0.08, now + 0.16);
+    g.linearRampToValueAtTime(1.0, now + 0.38);
+  }catch(e){ applyRate(target); return; }
+  setTimeout(() => applyRate(target), 130);   /* au fond du creux */
 }
 
 function paintState(){
