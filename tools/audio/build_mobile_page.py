@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
-"""Edition de controle mobile — mix PRE-RENDUS par meteo, courbe temporelle,
-journal de defauts.
+"""Edition de controle mobile v2 — meteo = l'instrument de la MELODIE,
+heure = la VITESSE (+ extras, + substitution nocturne du fond).
 
-POURQUOI DES MIX PRE-RENDUS. Sur Claude mobile, le lecteur a 21 elements
-<audio> simultanes avait les boutons muets et des bruits abrupts : la webview
-iPhone etrangle les decodeurs — un decodeur affame produit exactement des
-craquements, et les play() suivants meurent en silence. Ici chaque meteo est
-UN SEUL fichier (socle + son quatuor, gains d'appariement appliques) : au plus
-deux elements jouent pendant un fondu. C'est l'architecture qui tient sur un
-telephone.
+ARCHITECTURE EN COUCHES (pivot 2026-08-07). La v1 pre-mixait un fichier par
+meteo : impossible d'y croiser 6 meteos x 6 heures sans 36 mixes. Ici la page
+embarque des COUCHES, jamais plus de deux ou trois audibles a la fois — la
+lecon de la webview iPhone (21 elements = boutons muets) reste appliquee :
 
-CE QU'ON Y GAGNE EN DIAGNOSTIC :
-  - une courbe temporelle (enveloppe du mix) avec MARQUEURS d'evenements
-    detectes (flux spectral), explorable au doigt — on saute ou on veut ;
-  - un journal : « Marquer » consigne l'instant courant avec mesure, accord
-    et distribution ; les erreurs des elements audio (error, stalled) s'y
-    ajoutent TOUTES SEULES. Copier, envoyer — la boucle de diagnostic est la.
+    FOND_jour   socle + corde + pouls, SANS halo (moins d'elements)
+    FOND_nuit   la substitution nocturne : dan tranh, cloches tubulaires,
+                tambour de nuit — le fond change, la melodie reste a la meteo
+    CHANT_<meteo>  la melodie seule, par l'instrument de la meteo (6 pistes)
+    ADD_<extra>    « parfois quelques instruments en plus » : guirlande de
+                   glockenspiel a midi, veilleuse de celesta en soiree
+
+La VITESSE ne demande aucun rendu : c'est playbackRate (hauteur preservee par
+le navigateur), applique au meme facteur sur toutes les couches. La position
+musicale reste currentTime — mesures et accords ne bougent pas.
+
+Toutes les couches d'un role portent les memes notes aux memes instants
+(arrange_menu, repli d'octave en dernier) : un changement de meteo est un
+fondu croise de la seule couche CHANT, un passage a la nuit un fondu de la
+seule couche FOND.
 
     python3 tools/audio/build_mobile_page.py --stems audio/music/menu \\
         --out artefact_mobile.html
@@ -35,11 +41,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from score_menu import BAR, N_BARS, PROGRESSION  # noqa: E402
 
 SR = 48_000
-MIX_BITRATE = "56k"          # stereo joint ; 7 mixes doivent tenir sous 16 Mo
+FOND_BITRATE = "56k"         # stereo joint — 2 fonds seulement
+CHANT_BITRATE = "40k"        # mono : la melodie seule, 6 pistes
+ADD_BITRATE = "32k"          # mono : halo clairseme
 FX_BITRATE = "40k"
-
-# les six meteos + la distribution par defaut
-WEATHERS = ["clair", "couvert", "pluie", "orage", "brume", "neige"]
 
 
 def decode(ff: str, path: str) -> np.ndarray:
@@ -50,21 +55,26 @@ def decode(ff: str, path: str) -> np.ndarray:
 
 
 def encode_mp3(ff: str, sig: np.ndarray, dst: str, bitrate: str) -> None:
-    pcm = np.clip(sig.T.reshape(-1), -1, 1).astype("<f4").tobytes()
+    """sig : (2, n) stereo ou (n,) mono."""
+    if sig.ndim == 1:
+        pcm = np.clip(sig, -1, 1).astype("<f4").tobytes()
+        ac = "1"
+    else:
+        pcm = np.clip(sig.T.reshape(-1), -1, 1).astype("<f4").tobytes()
+        ac = "2"
     subprocess.run([ff, "-y", "-loglevel", "error", "-f", "f32le",
-                    "-ar", str(SR), "-ac", "2", "-i", "-",
+                    "-ar", str(SR), "-ac", ac, "-i", "-",
                     "-c:a", "libmp3lame", "-b:a", bitrate, dst],
                    input=pcm, check=True)
 
 
 def envelope_and_onsets(mono: np.ndarray, points: int = 480):
-    """Courbe d'enveloppe (0-100) + marqueurs d'evenements.
+    """Courbe d'enveloppe (0-100) + marqueurs d'evenements (pics de flux).
 
-    Les marqueurs sont les pics de FLUX (montee rapide d'energie) : c'est la
-    ou vivent les attaques — et les bruits abrupts. Espacement minimal 0,8 s
-    pour rester lisible au doigt."""
+    2,2 dB par trame de 25 ms : une vraie attaque monte de 3 a 5 dB, le
+    vibrato d'une tenue moins de 1. Espacement minimal 0,8 s."""
     n = len(mono)
-    hop = max(1, n // (points))
+    hop = max(1, n // points)
     env = np.array([np.abs(mono[i * hop:(i + 1) * hop]).max()
                     for i in range(points)])
     env_db = 20 * np.log10(np.maximum(env, 1e-5))
@@ -82,9 +92,6 @@ def envelope_and_onsets(mono: np.ndarray, points: int = 480):
     for idx in order:
         t = (idx + 1) * fine_hop / SR
         s = float(flux[idx])
-        # 2,2 dB par trame de 25 ms : une vraie attaque monte de 3 a 5 dB,
-        # le vibrato d'une tenue moins de 1 — le premier seuil (6) ne
-        # laissait rien passer du tout
         if s < 2.2 or len(picked) >= 60:
             break
         if all(abs(t - p[0]) > 0.8 for p in picked):
@@ -108,53 +115,90 @@ def main() -> int:
              for r, v in cast["candidates"].items() for c in v}
     labels = {(r, c["id"]): c["label"]
               for r, v in cast["candidates"].items() for c in v}
+    meteos = cast["axes"]["meteo"]
+    heures = cast["axes"]["heure"]
+    tempo = cast["tempo"]
+    extras = cast["extras"]
 
-    def resolve(meteo: str | None) -> dict:
-        out = dict(cast["default"])
-        if meteo:
-            for role, cid in cast["context"].get(meteo, {}).items():
-                out[role] = cid
-        return out
+    def part(key: str) -> np.ndarray:
+        return decode(ff, os.path.join(a.stems, key + ".ogg"))
 
-    # ── un mix par meteo ─────────────────────────────────────────────────────
-    print("[mobile] pre-mixage par meteo…")
+    # ── les couches ──────────────────────────────────────────────────────────
+    print("[mobile] couches…")
     bed = decode(ff, os.path.join(a.stems, "bed.ogg"))
-    part_cache: dict = {}
+    n = bed.shape[1]
 
-    def part(role: str, cid: str) -> np.ndarray:
-        key = f"{role}__{cid}"
-        if key not in part_cache:
-            p = os.path.join(a.stems, key + ".ogg")
-            part_cache[key] = decode(ff, p) if os.path.exists(p) else None
-        sig = part_cache[key]
-        return np.zeros_like(bed) if sig is None else sig[:, :bed.shape[1]]
+    def fond_sum(cast_fond: dict) -> np.ndarray:
+        sig = bed.copy()
+        for role, cid in cast_fond.items():
+            sig += part(f"{role}__{cid}")[:, :n] * gains[(role, cid)]
+        return sig
 
+    fonds = {"jour": fond_sum(cast["fond_jour"]),
+             "nuit": fond_sum(cast["fond_nuit"])}
+    chants = {}
+    for w in meteos:
+        cid = cast["context"][w]["chant"]
+        chants[w] = (part(f"chant__{cid}")[:, :n] * gains[("chant", cid)]).mean(0)
+    adds = {}
+    for h, x in extras.items():
+        role, cid = x["part"].split("__")
+        adds[x["id"]] = (part(x["part"])[:, :n]
+                         * gains[(role, cid)] * float(x["gain"])).mean(0)
+
+    # ── marge : la SOMME des couches ne doit pas ecreter cote client ────────
+    worst_add = max((np.abs(s) for s in adds.values()),
+                    key=lambda s: float(s.max())) if adds else 0.0
+    peak = 0.0
+    for f in fonds.values():
+        fm = np.abs(f).max(axis=0)
+        for c in chants.values():
+            p = float((fm + np.abs(c) + (worst_add if f is fonds["jour"] else 0.0)).max())
+            peak = max(peak, p)
+    k = min(1.0, 0.985 / peak)
+    print(f"[mobile] pic somme pire cas {peak:.3f} -> facteur {k:.3f}")
+    for d in (fonds, chants, adds):
+        for key in d:
+            d[key] = d[key] * k
+
+    # ── encodage ─────────────────────────────────────────────────────────────
     tmp = os.path.join(os.path.dirname(a.out) or ".", "_mob_tmp")
     os.makedirs(tmp, exist_ok=True)
     audio: dict = {}
-    meta: dict = {"mixes": {}, "bar": BAR, "bars": N_BARS,
-                  "progression": PROGRESSION}
 
-    for wid in ["defaut"] + WEATHERS:
-        castw = resolve(None if wid == "defaut" else wid)
-        mix = bed.copy()
-        for role, cid in castw.items():
-            mix += part(role, cid) * gains.get((role, cid), 1.0)
-        peak = float(np.abs(mix).max())
-        if peak > 0.985:                       # garde-fou, pas un mastering
-            mix *= 0.985 / peak
-        dst = os.path.join(tmp, wid + ".mp3")
-        encode_mp3(ff, mix, dst, MIX_BITRATE)
-        audio["MIX_" + wid] = base64.b64encode(open(dst, "rb").read()).decode()
+    def emit(name: str, sig: np.ndarray, bitrate: str) -> None:
+        dst = os.path.join(tmp, "t.mp3")
+        encode_mp3(ff, sig, dst, bitrate)
+        audio[name] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)
-        curve, onsets = envelope_and_onsets(mix.mean(0))
-        meta["mixes"][wid] = {
-            "cast": {r: labels.get((r, c), c) for r, c in castw.items()},
-            "curve": curve, "onsets": onsets,
-        }
-        print(f"  mix {wid:8s} {len(audio['MIX_' + wid]) / 1e6:5.2f} Mo b64, "
-              f"{len(onsets)} marqueurs — " +
-              ", ".join(f"{r}={labels.get((r, c), c)}" for r, c in castw.items()))
+        print(f"  {name:16s} {len(audio[name]) / 1e6:5.2f} Mo b64")
+
+    for fid, sig in fonds.items():
+        emit("FOND_" + fid, sig, FOND_BITRATE)
+    for w, sig in chants.items():
+        emit("CHANT_" + w, sig, CHANT_BITRATE)
+    for xid, sig in adds.items():
+        emit("ADD_" + xid, sig, ADD_BITRATE)
+
+    # ── courbes par combinaison fond x meteo ────────────────────────────────
+    meta: dict = {"bar": BAR, "bars": N_BARS, "progression": PROGRESSION,
+                  "heures": heures, "meteos": meteos, "tempo": tempo,
+                  "combos": {}}
+    fond_mono = {fid: f.mean(0) for fid, f in fonds.items()}
+    for fid, fm in fond_mono.items():
+        for w, c in chants.items():
+            curve, onsets = envelope_and_onsets(fm + c)
+            meta["combos"][f"{fid}|{w}"] = {"curve": curve, "onsets": onsets}
+    print(f"[mobile] {len(meta['combos'])} courbes fond x meteo")
+
+    meta["chant"] = {w: labels[("chant", cast["context"][w]["chant"])]
+                     for w in meteos}
+    meta["fonds"] = {
+        fid: " + ".join(["socle"] + [labels[(r, c)]
+                                     for r, c in cast[f"fond_{fid}"].items()])
+        for fid in ("jour", "nuit")}
+    meta["extras"] = {h: {"id": x["id"], "label": x["label"]}
+                      for h, x in extras.items()}
 
     # ── effets ───────────────────────────────────────────────────────────────
     for e in cast.get("sfx", []):
@@ -167,7 +211,7 @@ def main() -> int:
                         "-b:a", FX_BITRATE, dst], check=True)
         audio["FX_" + e["id"]] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)
-    meta["sfx"] = [{k: e[k] for k in ("id", "label", "loop", "gain", "ic")}
+    meta["sfx"] = [{key: e[key] for key in ("id", "label", "loop", "gain", "ic")}
                    for e in cast.get("sfx", [])]
     os.rmdir(tmp)
 

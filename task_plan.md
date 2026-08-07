@@ -1522,3 +1522,26 @@ Per user request "UI slack très limitée" — separate audit needed of `board_n
 
 ### Visual polish audit (deferred)
 Per user request "beaux effets visuels" — survey lighting / post-process / particle FX / transitions for polish opportunities. Spawn `motion_designer.md` + `vis_particle.md` agents in next session.
+
+---
+
+## MUSIQUE MENU — pivot axes v2 (2026-08-07, session mobile)
+
+Spec utilisateur (finale) : melodie principale dont l'INSTRUMENT change avec la
+METEO (valide) ; moins d'elements ; l'HEURE (aube/matinee/midi/apres_midi/
+soiree/nuit) pilote la VITESSE, parfois quelques instruments EN PLUS,
+SUBSTITUTION la nuit ; la saison DISPARAIT.
+
+### Phases
+- [ ] P1 casting_menu.py : axes {meteo, heure}, saison supprimee, meteo->chant
+      uniquement (pluie=harpe SUR LA MELODIE), TEMPO par heure, EXTRAS
+      (midi=guirlande glockenspiel, soiree=veilleuse celesta), NUIT_FOND
+      (corde dan_tranh + halo tubulaires + pulse nuit), FOND_JOUR sans halo
+- [ ] P2 arrange_menu.py : damp_rings(rel_override) au max des releases du role
+      -> tous candidats d'un role byte-synchrones, harpe comprise
+- [ ] P3 lint harmonique + re-rendu complet (banque $SP/samples_vpo)
+- [ ] P4 build_mobile_page.py v2 : pistes FOND jour/nuit + CHANT par meteo +
+      ADD par heure, courbes par combinaison, meta tempo
+- [ ] P5 mobile_template.html v2 : 2 axes (meteo/heure), playbackRate
+      preservesPitch, moteur 3 couches synchronisees, timeline + journal
+- [ ] P6 tests Playwright, artefact re-publie (meme URL), commit + push

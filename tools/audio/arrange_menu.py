@@ -166,7 +166,7 @@ def purge_harsh(evs: list[dict]) -> list[dict]:
     return line
 
 
-def damp_rings(evs: list[dict]) -> list[dict]:
+def damp_rings(evs: list[dict], rel_override: float | None = None) -> list[dict]:
     """Etouffe les resonances qui saliraient l'accord SUIVANT.
 
     Les releases longues (celesta 1,4 s, harpe 0,9 s...) sont justes — une
@@ -174,7 +174,13 @@ def damp_rings(evs: list[dict]) -> list[dict]:
     un changement d'accord avec une note en seconde mineure ou triton contre
     le nouvel accord salit l'harmonie. Regle : cette note-la, et elle seule,
     voit sa duree raccourcie pour que sa queue meure au changement. Les
-    resonances consonantes traversent librement — c'est le fondu naturel."""
+    resonances consonantes traversent librement — c'est le fondu naturel.
+
+    rel_override : pour une partie de ROLE, on damp avec la release LA PLUS
+    LONGUE du role, pas celle du candidat. Sans ca, une harpe (0,9 s) et un
+    cor anglais (0,45 s) ne clampaient pas les memes notes — et les candidats
+    d'un meme role cessaient d'etre synchrones a l'echantillon pres, ce qui
+    est LA propriete dont depend le fondu croise."""
     from sample_bank import MultiSampleBank
     KIND, ENV = MultiSampleBank.KIND, MultiSampleBank.ENV
     bounds = []
@@ -185,7 +191,8 @@ def damp_rings(evs: list[dict]) -> list[dict]:
             bounds.append((t_of(bar, 1.0), {p % 12 for p in CHORDS[name][0]}))
             prev = name
     for e in evs:
-        rel = ENV[KIND.get(e["inst"], "sustained")]["r"]
+        rel = (rel_override if rel_override is not None
+               else ENV[KIND.get(e["inst"], "sustained")]["r"])
         end = e["at"] + e["dur"] + rel
         pc = int(round(e["midi"])) % 12
         for b, npcs in bounds:
@@ -267,7 +274,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
     if role == "chant":
         for (bar0, phrase, tr, lvl) in CHANT_AT:
             for (bar, beat, midi, nb) in place_phrase(phrase, bar0, tr):
-                ev.append(_ev(inst, "chant", fold(midi, span), t_of(bar, beat),
+                ev.append(_ev(inst, "chant", midi, t_of(bar, beat),
                               max(0.18, nb * BEAT * 0.92),
                               gain * lvl * (0.30 + 0.46 * dyn(bar)), bar * 73 + midi))
 
@@ -288,13 +295,13 @@ def build_role(role: str, candidate: str) -> list[dict]:
                 dur = min(5.6, LOOP_LEN - at - 0.06)
                 if dur < 0.4:
                     continue
-                ev.append(_ev(inst, "corde", fold(tones[idx % len(tones)], span),
+                ev.append(_ev(inst, "corde", tones[idx % len(tones)],
                               at, dur, gain * (0.22 + 0.30 * d), bar * 79 + j))
             if bar % 4 == 1:                                  # basse a vide sur l'appui
                 at = t_of(bar, 1.0)
                 dur = min(6.4, LOOP_LEN - at - 0.06)
                 if dur >= 0.4:
-                    ev.append(_ev(inst, "corde", fold(tones[0] - 12, span), at,
+                    ev.append(_ev(inst, "corde", tones[0] - 12, at,
                                   dur, gain * (0.24 + 0.28 * d), bar * 83))
 
     elif role == "halo":
@@ -316,7 +323,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
                 dur = min(4.0, LOOP_LEN - at - 0.06)
                 if dur < 0.4:
                     continue
-                ev.append(_ev(inst, "halo", fold(tones[(bar + j) % len(tones)], span),
+                ev.append(_ev(inst, "halo", tones[(bar + j) % len(tones)],
                               at, dur, gain * (0.18 + 0.26 * d), bar * 89 + j))
 
     if role == "pulse":
@@ -347,7 +354,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
                     dur = min(1.6, LOOP_LEN - at - 0.06)
                     if dur < 0.25:
                         continue
-                    ev.append(_ev(inst, "pulse", fold(45, span), at, dur,
+                    ev.append(_ev(inst, "pulse", 45, at, dur,
                                   g * (0.17 + 0.27 * d), bar * 61 + int(beat * 2)))
                 if bar % 4 == 1:
                     at = t_of(bar, 1.0)
@@ -381,7 +388,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
                     at = t_of(bar, 1.0)
                     dur = min(2.8, LOOP_LEN - at - 0.06)
                     if dur >= 0.4:
-                        ev.append(_ev(inst, "pulse", fold(41, span), at, dur,
+                        ev.append(_ev(inst, "pulse", 41, at, dur,
                                       0.15 + 0.20 * d, bar * 61))
                 if bar % 8 == 5:
                     at = t_of(bar, 3.0)
@@ -393,7 +400,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
                 # une seule frappe toutes les deux mesures : le rythme respire
                 if bar % 2:
                     continue
-                ev.append(_ev(inst, "pulse", fold(38, span), t_of(bar, 1.0), 3.4,
+                ev.append(_ev(inst, "pulse", 38, t_of(bar, 1.0), 3.4,
                               gain * (0.13 + 0.18 * d), bar * 61))
             elif candidate == "orage":
                 for beat, g in ((1.0, 1.0), (2.5, 0.5), (3.0, 0.8), (4.5, 0.45)):
@@ -404,7 +411,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
                     dur = min(1.5, LOOP_LEN - at - 0.06)
                     if dur < 0.25:
                         continue
-                    ev.append(_ev(inst, "pulse", fold(45, span), at, dur,
+                    ev.append(_ev(inst, "pulse", 45, at, dur,
                                   g * (0.20 + 0.30 * d), bar * 61 + int(beat * 2)))
                 if bar % 2 == 1:                       # appui grave sur deux mesures
                     at = t_of(bar, 1.0)
@@ -414,7 +421,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
                                       0.22 + 0.26 * d, bar * 73))
             else:                                       # calme
                 for beat, g in ((1.0, 1.0), (3.0, 0.55)):
-                    ev.append(_ev(inst, "pulse", fold(45, span), t_of(bar, beat), 1.8,
+                    ev.append(_ev(inst, "pulse", 45, t_of(bar, beat), 1.8,
                                   g * (0.16 + 0.26 * d), bar * 61 + int(beat)))
         # les timbales restent liees au pouls, sauf la nuit et par temps calme
         if candidate in ("calme", "orage", "danse"):
@@ -424,10 +431,27 @@ def build_role(role: str, candidate: str) -> list[dict]:
                               0.16 + 0.30 * dyn(bar), bar * 67))
 
     # garde-fous harmoniques : melodie purgee des frottements non resolus,
-    # resonances etouffees avant un accord qu'elles saliraient
+    # resonances etouffees avant un accord qu'elles saliraient. Le damp d'un
+    # role s'evalue avec la release la plus longue parmi SES candidats : tous
+    # portent alors exactement les memes durees — condition du fondu croise.
     if role in ("chant", "corde", "halo"):
         ev = purge_harsh(ev)
-    ev = damp_rings(ev)
+    from sample_bank import MultiSampleBank
+    _K, _E = MultiSampleBank.KIND, MultiSampleBank.ENV
+    rel_max = max(_E[_K.get(spec[0], "sustained")]["r"]
+                  for spec in CANDIDATES[role].values())
+    ev = damp_rings(ev, rel_override=rel_max)
+    # LE REPLI D'OCTAVE VIENT EN DERNIER. Les garde-fous ont raisonne sur la
+    # ligne ECRITE, identique pour tous les candidats — replier avant eux
+    # changeait les intervalles (une clarinette basse pliait 76 en 64, le pas
+    # conjoint devenait un saut) et leurs decisions divergeaient d'un candidat
+    # a l'autre : la synchronie du role tombait. Le repli conserve la classe
+    # de hauteur, donc toutes les decisions restent valides apres coup.
+    # Seules les notes du candidat se replient — taiko, timbales et autres
+    # renforts du pouls gardent leur hauteur ecrite.
+    for e in ev:
+        if e["inst"] == inst:
+            e["midi"] = fold(e["midi"], span)
     ev.sort(key=lambda e: e["at"])
     return ev
 
@@ -460,6 +484,9 @@ if __name__ == "__main__":
     print()
     for role, cand in all_parts():
         e = build_role(role, cand)
+        if not e:
+            print(f"  {role:6s} {cand:14s}   0 notes  (silence titulaire)")
+            continue
         lo = min(x["midi"] for x in e)
         hi = max(x["midi"] for x in e)
         over = sum(1 for x in e if x["at"] + x["dur"] > LOOP_LEN + 1e-6)
@@ -470,6 +497,11 @@ if __name__ == "__main__":
     # memes notes aux memes instants. Sans ca, un fondu croise flangerait.
     print()
     for role, cands in CANDIDATES.items():
+        if role == "pulse":
+            # chaque titulaire du pouls est une ECRITURE differente — la
+            # substitution de rythme passe par la, pas par le fondu note a note
+            print(f"  {role:6s} : {len(cands)} ecritures distinctes (voulu)")
+            continue
         ref = None
         ok = True
         for cand in cands:

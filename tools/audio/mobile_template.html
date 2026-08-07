@@ -29,8 +29,7 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;
 header{padding-top:calc(22px + env(safe-area-inset-top));text-align:center}
 .crest{font-size:.8rem;letter-spacing:.45em;color:var(--fg-3)}
 h1{margin:4px 0 2px;font-weight:500;font-style:italic;font-size:1.9rem;line-height:1.05}
-#milieu{font-style:italic;color:var(--glow);transition:color 1.4s ease;
-  text-transform:capitalize}
+#milieu{font-style:italic;color:var(--glow);transition:color 1.4s ease}
 .bar{
   position:sticky;top:env(safe-area-inset-top);z-index:30;margin-top:14px;
   display:flex;align-items:center;gap:14px;padding:10px 14px;
@@ -77,6 +76,7 @@ section{margin-top:22px}
 .chip:active{transform:scale(.95)}
 .chip[aria-pressed="true"]{color:var(--ink);background:var(--glow);
   border-color:var(--glow);font-weight:600}
+.chip .sub{font-family:var(--mono);font-size:.62rem;opacity:.75}
 .ic{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;
   stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
 .cast-line{font-size:.86rem;font-style:italic;color:var(--fg-2);margin-top:10px;
@@ -92,7 +92,7 @@ section{margin-top:22px}
   -webkit-user-select:text;user-select:text}
 #entries li{border-left:2px solid var(--line-2);padding-left:9px;margin-bottom:6px}
 #entries li.auto{border-left-color:var(--glow)}
-#entries:empty::after{content:"— vide. « Marquer » fige l’instant courant ; les erreurs des pistes s’ajoutent toutes seules —";
+#entries:empty::after{content:"— vide. « Marquer » fige l’instant courant ; les incidents des pistes s’ajoutent tout seuls —";
   font-style:italic;color:var(--fg-3)}
 footer{margin-top:26px;text-align:center;font-family:var(--mono);
   font-size:.6rem;letter-spacing:.2em;color:var(--fg-3)}
@@ -104,6 +104,10 @@ footer{margin-top:26px;text-align:center;font-family:var(--mono);
 [data-milieu="orage"]{--sky1:#171420;--sky2:#0b0a10;--glow:#dda257}
 [data-milieu="brume"]{--sky1:#151b19;--sky2:#0e1211;--glow:#a4bfb2}
 [data-milieu="neige"]{--sky1:#12202a;--sky2:#0b1218;--glow:#c4dcec}
+/* l'heure teinte APRES la meteo (meme specificite : l'ordre gagne) */
+[data-heure="aube"]{--sky1:#1d1a14;--glow:#e3c286}
+[data-heure="soiree"]{--sky1:#191410;--sky2:#0b0a09}
+[data-heure="nuit"]{--sky1:#0a0d16;--sky2:#06070c;--glow:#9aa8cf}
 </style>
 
 <div class="sky" aria-hidden="true"></div>
@@ -119,7 +123,7 @@ footer{margin-top:26px;text-align:center;font-family:var(--mono);
         <circle class="rr" id="ring" cx="27" cy="27" r="24"/>
       </svg><span id="glyph">▶</span>
     </button>
-    <div class="clock"><b id="t">0:00</b> / <span id="dur">3:16</span></div>
+    <div class="clock"><b id="t">0:00</b> / <span id="dur">3:16</span> · <span id="ratero">×1.00</span></div>
     <div class="readout" id="readout"></div>
     <div class="msg" id="msg"></div>
   </div>
@@ -134,9 +138,15 @@ footer{margin-top:26px;text-align:center;font-family:var(--mono);
 </section>
 
 <section>
-  <h2 class="lbl">Météo</h2>
+  <h2 class="lbl">Météo — l’instrument de la mélodie</h2>
   <div class="chips" id="meteo"></div>
   <div class="cast-line" id="castline"></div>
+</section>
+
+<section>
+  <h2 class="lbl">Heure — la vitesse</h2>
+  <div class="chips" id="heure"></div>
+  <div class="cast-line" id="heureline"></div>
 </section>
 
 <section>
@@ -169,26 +179,41 @@ const ICON = {
   orage:'<path d="M4.6 9.5a3 3 0 1 1 .7-5.9 3.8 3.8 0 0 1 7.4 1.1 2.4 2.4 0 0 1-.5 4.8z"/><path d="M8.6 9.6l-2.1 3.1h2.2L7.4 15.5"/>',
   brume:'<path d="M2.5 6h11M4 9h9M3 12h10"/>',
   neige:'<path d="M8 2v12M3 5l10 6M13 5L3 11"/>',
-  defaut:'<path d="M8 15V9M8 9C4.5 9 3 6.2 3 3c3 0 5 1.2 5 4.2C8 4.2 10 3 13 3c0 3.2-1.5 6-5 6z"/>',
+  aube:'<path d="M2 11h12M8 11a4 4 0 0 0-8 0z" transform="translate(0,-1)"/><path d="M8 2.5v2.3M3.6 4.6l1.5 1.5M12.4 4.6l-1.5 1.5"/>',
+  matinee:'<circle cx="8" cy="9" r="3"/><path d="M8 3.6v1.6M2.6 9h1.6M11.8 9h1.6M4.4 5.4l1.1 1.1M11.6 5.4l-1.1 1.1"/>',
+  midi:'<circle cx="8" cy="8" r="3.4"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>',
+  apres_midi:'<circle cx="9" cy="7" r="3"/><path d="M9 1.6v1.6M14 7h-1.6M12.5 3.5l-1.1 1.1M2 13h12"/>',
+  soiree:'<path d="M2 11h12M11 11a3 3 0 0 0-6 0"/><path d="M8 5V3.5M4.2 6.8l-1-1M11.8 6.8l1-1"/>',
+  nuit:'<path d="M12.6 10.2A5.4 5.4 0 1 1 5.8 3.4a4.4 4.4 0 1 0 6.8 6.8z"/>',
   vent:'<path d="M2 5.5h7a2 2 0 1 0-2-2M2 8.5h10a2 2 0 1 1-2 2M2 11.5h5"/>',
   oiseau:'<path d="M1.5 11c3.5.5 6-1 7.5-4.5M9 6.5C10 4.5 12 4 14 4.5L12.5 6l1.5 1c-2 1.5-4 1.5-5 .5M9 6.5 6 13"/>',
   grillon:'<path d="M3 9a5 5 0 0 1 10 0M5.5 9a2.6 2.6 0 0 1 5 0M8 9v3.5"/>',
 };
 const icon = n => ICON[n] ? '<svg class="ic" viewBox="0 0 16 16">'+ICON[n]+'</svg>' : '';
-const WLABEL = {defaut:"Brocéliande", clair:"clair", couvert:"couvert",
-  pluie:"pluie", orage:"orage", brume:"brume", neige:"neige"};
-const ROLE_FR = {chant:"chant", corde:"corde", halo:"halo", pulse:"pouls"};
+const WLABEL = {clair:"clair", couvert:"couvert", pluie:"pluie",
+  orage:"orage", brume:"brume", neige:"neige"};
+const HLABEL = {aube:"aube", matinee:"matinée", midi:"midi",
+  apres_midi:"après-midi", soiree:"soirée", nuit:"nuit"};
 const $ = s => document.querySelector(s);
 
-/* ── moteur : DEUX elements en fondu, c'est tout ───────────────────────────
-   La version a 21 elements simultanes etranglait la webview du telephone :
-   boutons muets, craquements. Ici chaque meteo est un mix pre-rendu ; on ne
-   fait jamais jouer plus de deux elements de musique a la fois. Le fondu
-   passe par des noeuds de gain Web Audio (volume est en lecture seule sur
-   iOS) ; sans Web Audio, bascule franche — moins jolie, jamais muette. */
+/* ── moteur en COUCHES ─────────────────────────────────────────────────────
+   meteo -> la couche CHANT (l'instrument de la melodie) ;
+   heure -> playbackRate (hauteur preservee), l'extra eventuel, et la nuit le
+   FOND substitue. Jamais plus de 2-3 elements de musique audibles — c'est la
+   lecon de la webview iPhone (21 elements = boutons muets, craquements).
+   Les fondus passent par des noeuds de gain Web Audio (volume est en lecture
+   seule sur iOS) ; sans Web Audio, bascule franche — moins jolie, jamais
+   muette. */
 let AC = null; const el = {}, gain = {};
-let cur = null, playing = false, fading = 0;
+let W = "couvert", H = "apres_midi";
+let RATE = META.tempo[H] || 1.0;
+let playing = false, pos = 0;
+const layers = {fond: null, chant: null, extra: null};   /* noms d'elements */
+const fadeTok = {fond: 0, chant: 0, extra: 0};
 const fxOn = {};
+
+const fondId  = () => H === "nuit" ? "nuit" : "jour";
+const extraOf = h => (META.extras[h] || null);
 
 function ctx(){
   if(AC !== null) return AC;
@@ -201,6 +226,9 @@ function make(name){
   const a = new Audio();
   a.loop = !(name === "FX_tonnerre");
   a.preload = "auto";
+  try{ a.preservesPitch = true; }catch(e){}
+  try{ a.webkitPreservesPitch = true; }catch(e){}
+  if(!name.startsWith("FX_")) a.playbackRate = RATE;
   a.src = "data:audio/mpeg;base64," + (AUDIO[name] || "");
   el[name] = a;
   const c = ctx();
@@ -213,9 +241,9 @@ function make(name){
     }catch(e){}
   }
   /* tout incident d'une piste entre au journal TOUT SEUL */
-  ["error", "stalled", "waiting", "suspend"].forEach(ev =>
+  ["error", "stalled"].forEach(ev =>
     a.addEventListener(ev, () => {
-      if(ev === "error" || (playing && (ev === "stalled")))
+      if(ev === "error" || playing)
         logAuto("piste " + name + " : " + ev +
                 (a.error ? " (code " + a.error.code + ")" : ""));
     }));
@@ -225,33 +253,79 @@ function setG(name, v){
   if(gain[name]){ try{ gain[name].gain.value = v; return; }catch(e){} }
   const a = el[name]; if(a){ try{ a.volume = Math.min(1, v); }catch(e){} }
 }
+function master(){ return layers.fond ? el[layers.fond] : null; }
+function curTime(){ const m = master(); return m ? (m.currentTime || 0) : pos; }
 
-function switchMix(wid){
-  const name = "MIX_" + wid;
-  document.documentElement.dataset.milieu = wid === "defaut" ? "" : wid;
-  $("#milieu").textContent = WLABEL[wid];
-  paintCast(wid); drawTimeline(wid);
-  document.querySelectorAll("#meteo .chip").forEach(b =>
-    b.setAttribute("aria-pressed", String(b.dataset.w === wid)));
-  if(!playing){ cur = wid; return; }
-  const prev = cur; cur = wid;
-  const a = make(name);
-  try{ a.currentTime = el["MIX_" + prev] ? el["MIX_" + prev].currentTime : 0; }catch(e){}
-  const p = a.play();                     /* DANS le geste : iOS l'accepte */
-  if(p && p.catch) p.catch(err => logAuto("refus de lecture " + name + " : " + err.name));
-  fading = performance.now();
-  fadeLoop(prev, wid);
-}
-function fadeLoop(from, to){
-  const t0 = fading;
+/* fondu croise d'UNE couche — les autres ne bougent pas */
+function swapLayer(layer, name, inGesture){
+  const prev = layers[layer];
+  if(prev === name) return;
+  layers[layer] = name;
+  if(!playing){ return; }
+  const tok = ++fadeTok[layer];
+  const t0 = performance.now();
+  if(name){
+    const a = make(name);
+    a.playbackRate = RATE;
+    try{ a.currentTime = curTime(); }catch(e){}
+    const p = a.play();               /* DANS le geste : iOS l'accepte */
+    if(p && p.catch) p.catch(err => logAuto("refus de lecture " + name + " : " + err.name));
+  }
   function step(){
-    if(fading !== t0) return;
+    if(fadeTok[layer] !== tok) return;
     const k = Math.min(1, (performance.now() - t0) / 1200);
-    setG("MIX_" + to, k); if(from && from !== to) setG("MIX_" + from, 1 - k);
+    if(name) setG(name, k);
+    if(prev) setG(prev, 1 - k);
     if(k < 1){ requestAnimationFrame(step); }
-    else if(from && from !== to && el["MIX_" + from]){ el["MIX_" + from].pause(); }
+    else if(prev && el[prev]){ el[prev].pause(); }
   }
   requestAnimationFrame(step);
+}
+
+/* rampe de vitesse — 0,8 s, appliquee a toutes les couches en lecture */
+let rateTok = 0;
+function rampRate(target){
+  const tok = ++rateTok, from = RATE, t0 = performance.now();
+  $("#ratero").textContent = "×" + target.toFixed(2);
+  function step(){
+    if(rateTok !== tok) return;
+    const k = Math.min(1, (performance.now() - t0) / 800);
+    RATE = from + (target - from) * k;
+    ["fond", "chant", "extra"].forEach(l => {
+      if(layers[l] && el[layers[l]]) el[layers[l]].playbackRate = RATE;
+    });
+    if(k < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function paintState(){
+  document.documentElement.dataset.milieu = W;
+  document.documentElement.dataset.heure = H;
+  $("#milieu").textContent = WLABEL[W] + " · " + HLABEL[H];
+  document.querySelectorAll("#meteo .chip").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.w === W)));
+  document.querySelectorAll("#heure .chip").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.h === H)));
+  const x = extraOf(H);
+  $("#castline").innerHTML = "mélodie <b>" + META.chant[W] + "</b>";
+  $("#heureline").innerHTML =
+    "vitesse <b>×" + (META.tempo[H] || 1).toFixed(2) + "</b>" +
+    " &nbsp;·&nbsp; fond <b>" + META.fonds[fondId()] + "</b>" +
+    (x ? " &nbsp;·&nbsp; en plus <b>" + x.label + "</b>" : "");
+  drawTimeline();
+}
+
+function setMeteo(w){
+  W = w; paintState();
+  swapLayer("chant", "CHANT_" + w, true);
+}
+function setHeure(h){
+  H = h; paintState();
+  rampRate(META.tempo[h] || 1.0);
+  swapLayer("fond", "FOND_" + fondId(), true);
+  const x = extraOf(h);
+  swapLayer("extra", x ? "ADD_" + x.id : null, true);
 }
 
 /* ── transport ── */
@@ -259,34 +333,71 @@ const playBtn = $("#play"), glyph = $("#glyph");
 playBtn.addEventListener("click", () => {
   const c = ctx(); if(c && c.state === "suspended"){ try{ c.resume(); }catch(e){} }
   if(playing){
+    pos = curTime();
     playing = false; glyph.textContent = "▶";
     Object.values(el).forEach(a => { try{ a.pause(); }catch(e){} });
     return;
   }
   playing = true; glyph.textContent = "❚❚";
-  const a = make("MIX_" + cur);
-  setG("MIX_" + cur, 1);
-  const p = a.play();
-  if(p && p.catch) p.catch(err => {
-    playing = false; glyph.textContent = "▶";
-    $("#msg").textContent = "Lecture refusée (" + err.name + "). Retouche ▶.";
-    logAuto("refus de lecture initial : " + err.name);
+  layers.fond = "FOND_" + fondId();
+  layers.chant = "CHANT_" + W;
+  const x = extraOf(H);
+  layers.extra = x ? "ADD_" + x.id : null;
+  let first = null;
+  ["fond", "chant", "extra"].forEach(l => {
+    if(!layers[l]) return;
+    const a = make(layers[l]);
+    a.playbackRate = RATE;
+    try{ a.currentTime = pos; }catch(e){}
+    setG(layers[l], 1);
+    const p = a.play();
+    if(p && p.catch && !first){ first = p.catch(err => {
+      playing = false; glyph.textContent = "▶";
+      $("#msg").textContent = "Lecture refusée (" + err.name + "). Retouche ▶.";
+      logAuto("refus de lecture initial : " + err.name);
+    }); }
+    else if(p && p.catch) p.catch(()=>{});
   });
   Object.keys(fxOn).forEach(n => { const f = make(n);
     if(f.paused){ const q = f.play(); if(q && q.catch) q.catch(()=>{}); } });
   if(!raf) raf = requestAnimationFrame(tick);
 });
 
-let raf = 0, lastDraw = 0;
+/* ── tenue de synchronisation ──────────────────────────────────────────────
+   Le fond est l'horloge. Chant et extra sont PILOTES par leur playbackRate
+   (± 0,4 %), jamais par des seeks — un seek s'entend, un pilotage non. Au
+   bouclage la derive apparente saute d'une duree : on la replie modulo la
+   boucle avant de juger. Au-dela de 300 ms on recale d'un coup (et on le
+   consigne : c'est un defaut a entendre). */
+function steer(){
+  const m = master(); if(!m || !playing) return;
+  const d = m.duration || 196;
+  ["chant", "extra"].forEach(l => {
+    const n = layers[l]; if(!n || !el[n]) return;
+    const a = el[n]; if(a.paused) return;
+    let drift = (a.currentTime || 0) - (m.currentTime || 0);
+    if(drift > d / 2) drift -= d;
+    if(drift < -d / 2) drift += d;
+    if(Math.abs(drift) > 0.3){
+      try{ a.currentTime = m.currentTime; }catch(e){}
+      logAuto("recalage " + n + " (dérive " + (drift * 1000 | 0) + " ms)");
+    }else{
+      a.playbackRate = RATE * (1 - Math.max(-0.004, Math.min(0.004, drift / 5)));
+    }
+  });
+  m.playbackRate = RATE;
+}
+
+let raf = 0, lastDraw = 0, lastSteer = 0;
 function tick(ts){
   raf = requestAnimationFrame(tick);
-  const a = el["MIX_" + cur];
-  if(!a) return;
-  const t = a.currentTime || 0, d = a.duration || 196;
+  const m = master(); if(!m) return;
+  const t = m.currentTime || 0, d = m.duration || 196;
   $("#t").textContent = (t/60|0) + ":" + String(t%60|0).padStart(2,"0");
   const ring = $("#ring");
   if(ring) ring.style.strokeDashoffset = (151 * (1 - t/d)).toFixed(1);
-  if(ts - lastDraw > 200){ lastDraw = ts; drawTimeline(cur); updateReadout(t); }
+  if(ts - lastSteer > 500){ lastSteer = ts; steer(); }
+  if(ts - lastDraw > 200){ lastDraw = ts; drawTimeline(); updateReadout(t); }
 }
 
 /* ── courbe temporelle ─────────────────────────────────────────────────── */
@@ -299,8 +410,9 @@ function sizeCanvas(){
 function glowColor(){
   return getComputedStyle(document.documentElement).getPropertyValue("--glow").trim() || "#c9a25e";
 }
-function drawTimeline(wid){
-  const m = META.mixes[wid]; if(!m || !cvW) return;
+function combo(){ return META.combos[fondId() + "|" + W]; }
+function drawTimeline(){
+  const m = combo(); if(!m || !cvW) return;
   const g = cv.getContext("2d");
   g.clearRect(0, 0, cvW, cvH);
   const N = m.curve.length, gl = glowColor();
@@ -312,7 +424,7 @@ function drawTimeline(wid){
   g.fillStyle = gl + "33"; g.fill();
   g.strokeStyle = gl; g.lineWidth = 1.2; g.stroke();
   /* marqueurs d'attaques */
-  const a = el["MIX_" + wid], d = (a && a.duration) || 196;
+  const a = master(), d = (a && a.duration) || 196;
   g.strokeStyle = "rgba(233,226,206,.5)";
   m.onsets.forEach(([t, s]) => {
     const x = t / d * cvW, h = Math.min(1, s / 18) * 22 + 5;
@@ -325,43 +437,55 @@ function drawTimeline(wid){
     g.beginPath(); g.moveTo(x, cvH - 8); g.lineTo(x, cvH); g.stroke();
   }
   /* tete de lecture */
-  if(a){
-    const x = (a.currentTime || 0) / d * cvW;
-    g.strokeStyle = "#e9e2ce"; g.lineWidth = 1.6;
-    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, cvH); g.stroke();
-  }
+  const t = playing || pos ? curTime() : 0;
+  const x = t / d * cvW;
+  g.strokeStyle = "#e9e2ce"; g.lineWidth = 1.6;
+  g.beginPath(); g.moveTo(x, 0); g.lineTo(x, cvH); g.stroke();
 }
 function seekAt(clientX){
   const r = cv.getBoundingClientRect();
   const frac = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
-  const a = make("MIX_" + cur), d = a.duration || 196;
-  try{ a.currentTime = frac * d; }catch(e){}
-  drawTimeline(cur); updateReadout(frac * d);
+  const m = master() || make("FOND_" + fondId());
+  const d = m.duration || 196;
+  pos = frac * d;
+  try{ m.currentTime = pos; }catch(e){}
+  ["chant", "extra"].forEach(l => {
+    if(layers[l] && el[layers[l]]){
+      try{ el[layers[l]].currentTime = pos; }catch(e){}
+    }
+  });
+  drawTimeline(); updateReadout(pos);
 }
 cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); seekAt(e.clientX); });
 cv.addEventListener("pointermove", e => { if(e.buttons) seekAt(e.clientX); });
 
 function barAt(t){ return Math.min(META.bars, Math.floor(t / META.bar) + 1); }
+function stateLine(){
+  const x = extraOf(H);
+  return "mélodie:" + META.chant[W] + " · fond:" + META.fonds[fondId()] +
+         (x ? " · +" + x.label : "");
+}
 function updateReadout(t){
   const b = barAt(t);
   const chord = META.progression[b - 1] || "—";
-  const c = META.mixes[cur].cast;
   $("#readout").textContent =
-    "t=" + t.toFixed(1) + "s · mesure " + b + " · " + chord + " · " +
-    Object.entries(c).map(([r, l]) => ROLE_FR[r] + ":" + l).join(" · ");
+    "t=" + t.toFixed(1) + "s · mesure " + b + " · " + chord +
+    " · ×" + RATE.toFixed(2) + " · " + stateLine();
 }
 
-/* ── meteo ── */
-$("#meteo").innerHTML = Object.keys(META.mixes).map(w =>
-  '<button class="chip" data-w="' + w + '" aria-pressed="' + (w === "defaut") + '">' +
+/* ── meteo & heure ── */
+$("#meteo").innerHTML = META.meteos.map(w =>
+  '<button class="chip" data-w="' + w + '" aria-pressed="false">' +
   icon(w) + '<span>' + WLABEL[w] + '</span></button>').join("");
 document.querySelectorAll("#meteo .chip").forEach(b =>
-  b.addEventListener("click", () => switchMix(b.dataset.w)));
-function paintCast(wid){
-  const c = META.mixes[wid].cast;
-  $("#castline").innerHTML = Object.entries(c).map(([r, l]) =>
-    ROLE_FR[r] + " <b>" + l + "</b>").join(" &nbsp;·&nbsp; ");
-}
+  b.addEventListener("click", () => setMeteo(b.dataset.w)));
+
+$("#heure").innerHTML = META.heures.map(h =>
+  '<button class="chip" data-h="' + h + '" aria-pressed="false">' +
+  icon(h) + '<span>' + HLABEL[h] +
+  ' <span class="sub">×' + (META.tempo[h] || 1).toFixed(2) + '</span></span></button>').join("");
+document.querySelectorAll("#heure .chip").forEach(b =>
+  b.addEventListener("click", () => setHeure(b.dataset.h)));
 
 /* ── effets ── */
 $("#fx").innerHTML = (META.sfx || []).map(e =>
@@ -390,6 +514,7 @@ document.querySelectorAll("#fx .chip").forEach(b => b.addEventListener("click", 
    « Marquer » fige l'instant ; les incidents des pistes s'ajoutent seuls. */
 const entries = [];
 function fmt(t){ return (t/60|0) + ":" + (t % 60).toFixed(1).padStart(4, "0"); }
+function tag(){ return "[" + WLABEL[W] + " · " + HLABEL[H] + " ×" + RATE.toFixed(2) + "]"; }
 function addEntry(text, auto){
   entries.push(text);
   const li = document.createElement("li");
@@ -398,18 +523,12 @@ function addEntry(text, auto){
   $("#entries").appendChild(li);
 }
 function logAuto(what){
-  const a = el["MIX_" + cur];
-  const t = a ? a.currentTime || 0 : 0;
-  addEntry("⚠ " + fmt(t) + " [" + WLABEL[cur] + "] " + what, true);
+  addEntry("⚠ " + fmt(curTime()) + " " + tag() + " " + what, true);
 }
 $("#mark").addEventListener("click", () => {
-  const a = el["MIX_" + cur];
-  const t = a ? a.currentTime || 0 : 0;
-  const b = barAt(t);
-  addEntry("✳ " + fmt(t) + " [" + WLABEL[cur] + "] mesure " + b + " (" +
-           (META.progression[b - 1] || "—") + ") — " +
-           Object.entries(META.mixes[cur].cast)
-             .map(([r, l]) => ROLE_FR[r] + ":" + l).join(", "));
+  const t = curTime(), b = barAt(t);
+  addEntry("✳ " + fmt(t) + " " + tag() + " mesure " + b + " (" +
+           (META.progression[b - 1] || "—") + ") — " + stateLine());
 });
 $("#copy").addEventListener("click", () => {
   const text = entries.join("\n") || "(journal vide)";
@@ -426,10 +545,19 @@ function fallbackCopy(text, done){
 }
 
 document.addEventListener("visibilitychange", () => {
-  if(document.hidden) logAuto("page cachée (écran verrouillé ?)");
+  if(document.hidden){ logAuto("page cachée (écran verrouillé ?)"); }
+  else if(playing){
+    /* au retour, recaler les esclaves d'un coup — rAF etait gele */
+    const m = master();
+    if(m) ["chant", "extra"].forEach(l => {
+      if(layers[l] && el[layers[l]]){
+        try{ el[layers[l]].currentTime = m.currentTime; }catch(e){}
+      }
+    });
+  }
 });
 
-cur = "defaut";
-sizeCanvas(); paintCast("defaut"); drawTimeline("defaut");
-addEventListener("resize", () => { sizeCanvas(); drawTimeline(cur); });
+sizeCanvas(); paintState();
+$("#ratero").textContent = "×" + RATE.toFixed(2);
+addEventListener("resize", () => { sizeCanvas(); drawTimeline(); });
 </script>

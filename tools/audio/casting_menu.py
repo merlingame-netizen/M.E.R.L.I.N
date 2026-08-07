@@ -74,6 +74,9 @@ CANDIDATES = {
         "basson":      ("bassoon",     1.00, (34, 70), "Basson"),
         "flute_alto":  ("alto_flute",  1.00, (58, 90), "Flûte alto"),
         "clar_basse":  ("bass_clarinet", 1.00, (38, 74), "Clarinette basse"),
+        # REGLE UTILISATEUR (2026-08-07) : quand il pleut, c'est LA HARPE — et
+        # depuis le pivot meteo=melodie, c'est la MELODIE elle-meme qu'elle porte.
+        "harpe":       ("harp",        1.00, (36, 93), "Harpe"),
     },
     "corde": {
         "celtic_guitar": ("celtic_guitar", 1.00, (24, 80), "Guitare celtique"),
@@ -124,56 +127,79 @@ DEFAULT = {
     "pulse": "calme", "chant": "cor_anglais", "corde": "celtic_guitar", "halo": "celesta"}
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LES CONTEXTES
+# LES CONTEXTES — deux axes (pivot 2026-08-07, la saison est SUPPRIMEE)
 # ═══════════════════════════════════════════════════════════════════════════════
-# Un contexte ne redistribue que ce qu'il a une raison de redistribuer. Les roles
-# absents d'une entree gardent leur titulaire — c'est ce qui permet de cumuler
-# les trois axes sans qu'ils se contredisent : la meteo prend la main sur la
-# saison, qui prend la main sur le moment, role par role.
+# SPEC UTILISATEUR : « c'est bien la melodie principale avec l'instrument qui
+# change en fonction de la meteo, la musique doit comporter moins d'elements.
+# En fonction de l'heure de la journee : aube / matinee / midi / apres-midi /
+# soiree / nuit c'est la vitesse de la musique et parfois quelques instruments
+# en plus voir substitution la nuit ! Pour la saison on oublie. »
+#
+#   meteo  -> QUI porte la melodie (chant). Rien d'autre : c'est la voix
+#             principale qui change de timbre avec le temps qu'il fait.
+#   heure  -> la VITESSE (TEMPO, applique a la lecture, hauteur preservee),
+#             parfois un instrument EN PLUS (EXTRAS), et la nuit une
+#             SUBSTITUTION du fond (corde, halo, pouls).
 
 AXES = {
-    "meteo":  ["clair", "couvert", "pluie", "orage", "brume", "neige"],
-    "saison": ["printemps", "ete", "automne", "hiver"],
-    "moment": ["aube", "jour", "crepuscule", "nuit"],
+    "meteo": ["clair", "couvert", "pluie", "orage", "brume", "neige"],
+    "heure": ["aube", "matinee", "midi", "apres_midi", "soiree", "nuit"],
 }
 
 # ordre de priorite : le premier qui se prononce sur un role l'emporte
-PRIORITY = ["meteo", "saison", "moment"]
+PRIORITY = ["meteo", "heure"]
 
 CONTEXT = {
-    # ── meteo : SUBSTITUTION QUASI TOTALE ────────────────────────────────────
-    # Chaque temps redistribue chant, corde et halo — et le pouls quand la
-    # meteo a une opinion rythmique. Le beau temps et le couvert laissent le
-    # pouls aux saisons : c'est le « quasi » — sans quoi la meteo volerait la
-    # danse de l'ete (deja arrive, corrige, ne pas y revenir).
-    "clair":     {"chant": "violon",     "corde": "celtic_guitar",
-                  "halo": "glockenspiel"},
-    "couvert":   {"chant": "hautbois",   "corde": "dan_tranh",
-                  "halo": "celesta"},
-    # REGLE UTILISATEUR (2026-08-08) : quand il pleut, c'est LA HARPE.
-    "pluie":     {"chant": "clarinette", "corde": "harpe",
-                  "halo": "celesta",     "pulse": "calme"},
-    "orage":     {"chant": "basson",     "corde": "oud",
-                  "halo": "hand_chimes", "pulse": "orage"},
-    "brume":     {"chant": "flute_alto", "corde": "mbira",
-                  "halo": "wine_glasses", "pulse": "aucun"},
-    "neige":     {"chant": "flute",      "corde": "psaltery",
-                  "halo": "hand_chimes", "pulse": "nuit"},
-    # ── saison ───────────────────────────────────────────────────────────────
-    "printemps": {"corde": "kalimba", "chant": "flute", "halo": "hand_chimes",
-                  "pulse": "danse"},
-    "ete":       {"chant": "violon", "corde": "celtic_guitar", "pulse": "danse"},
-    "automne":   {"chant": "harmonica", "corde": "harpe", "pulse": "calme"},
-    "hiver":     {"corde": "psaltery", "halo": "vibraphone", "pulse": "sourd"},
-    # ── moment ───────────────────────────────────────────────────────────────
-    "aube":      {"chant": "ocarina", "halo": "glockenspiel", "pulse": "aucun"},
-    "jour":      {},
-    "crepuscule": {"chant": "harmonica", "corde": "harpe"},
-    # La nuit : clarinette basse, dan tranh, cloches tubulaires au loin,
-    # une frappe toutes les deux mesures.
-    "nuit":      {"chant": "clar_basse", "corde": "dan_tranh",
-                  "halo": "tubulaires", "pulse": "nuit"},
+    # ── meteo : L'INSTRUMENT DE LA MELODIE, et lui seul ──────────────────────
+    "clair":   {"chant": "flute"},
+    # le ciel couvert garde le titulaire : le cor anglais EST la voix voilee
+    "couvert": {"chant": "cor_anglais"},
+    # REGLE UTILISATEUR : quand il pleut, c'est LA HARPE — sur la melodie.
+    "pluie":   {"chant": "harpe"},
+    "orage":   {"chant": "basson"},
+    "brume":   {"chant": "flute_alto"},
+    "neige":   {"chant": "ocarina"},
+    # ── heure : muette sur la distribution, sauf la nuit ─────────────────────
+    "aube":       {},
+    "matinee":    {},
+    "midi":       {},
+    "apres_midi": {},
+    "soiree":     {},
+    # La nuit SUBSTITUE le fond : dan tranh, cloches tubulaires au loin, une
+    # frappe toutes les deux mesures. La melodie reste a la meteo.
+    "nuit": {"corde": "dan_tranh", "halo": "tubulaires", "pulse": "nuit"},
 }
+
+# ── LA VITESSE PAR HEURE ─────────────────────────────────────────────────────
+# Facteur de lecture (playbackRate, hauteur preservee par le navigateur).
+# Applique A LA LECTURE : le rendu reste unique, la boucle reste calee — c'est
+# le meme fichier qui respire plus vite a midi et plus lentement la nuit.
+TEMPO = {
+    "aube":       0.88,        # le jour se leve, la musique aussi
+    "matinee":    0.96,
+    "midi":       1.06,        # le plus allant
+    "apres_midi": 1.00,        # la reference
+    "soiree":     0.93,
+    "nuit":       0.84,        # le plus lent, avec la substitution du fond
+}
+
+# ── « PARFOIS QUELQUES INSTRUMENTS EN PLUS » ─────────────────────────────────
+# Un extra est une piste de role AJOUTEE par-dessus le fond a certaines heures
+# — l'exception assumee au principe de remplacement, demandee telle quelle.
+# Le fond de jour n'a PAS de halo (moins d'elements) : le scintillement
+# n'existe qu'aux heures qui l'appellent, et la nuit l'integre en substitution.
+EXTRAS = {
+    "midi":   {"id": "guirlande", "part": "halo__glockenspiel",
+               "label": "Guirlande (glockenspiel)", "gain": 0.85},
+    "soiree": {"id": "veilleuse", "part": "halo__celesta",
+               "label": "Veilleuse (célesta)", "gain": 0.90},
+}
+
+# ── LE FOND ──────────────────────────────────────────────────────────────────
+# Ce qui joue toujours sous la melodie. Le jour : socle + corde + pouls,
+# sans halo. La nuit : la substitution de CONTEXT["nuit"], halo compris.
+FOND_JOUR = {"corde": "celtic_guitar", "pulse": "calme"}
+FOND_NUIT = dict(CONTEXT["nuit"])
 
 
 def resolve(context: dict) -> dict:
@@ -221,33 +247,33 @@ def all_parts() -> list[tuple[str, str]]:
 MIX_NEUTRAL = {"low": 0.0, "high": 0.0, "space": 0.16, "decay": 2.6, "damp": 5200}
 
 MIX = {
-    # ── gele : l'archetype Phendrana. Aigu ouvert, queue longue et sombre,
-    #    grave retire — le froid s'entend a ce qui MANQUE dans le bas.
+    # ── meteo ────────────────────────────────────────────────────────────────
+    # gele : l'archetype Phendrana. Aigu ouvert, queue longue et sombre,
+    # grave retire — le froid s'entend a ce qui MANQUE dans le bas.
     "neige":      {"low": -4.5, "high": +3.0, "space": 0.42, "decay": 6.4, "damp": 2600},
-    "hiver":      {"low": -3.0, "high": +1.5, "space": 0.34, "decay": 5.2, "damp": 3000},
-    # ── voile : la brume mange l'aigu mais garde la profondeur
+    # voile : la brume mange l'aigu mais garde la profondeur
     "orage":      {"low": +3.0, "high": -1.0, "space": 0.30, "decay": 3.6, "damp": 3400},
     "brume":      {"low": -1.5, "high": -4.0, "space": 0.50, "decay": 5.8, "damp": 1900},
-    # ── vegetal : proche, median, peu de queue
+    # vegetal : proche, median, peu de queue
     "pluie":      {"low": +1.0, "high": -1.5, "space": 0.24, "decay": 3.0, "damp": 4200},
-    "printemps":  {"low": 0.0,  "high": +1.0, "space": 0.18, "decay": 2.4, "damp": 6000},
-    "aube":       {"low": -1.0, "high": +2.0, "space": 0.14, "decay": 2.2, "damp": 6800},
-    "ete":        {"low": +0.5, "high": +0.5, "space": 0.16, "decay": 2.4, "damp": 6200},
-    # ── ruines : tenu, tres long, sans transitoire
+    # ruines : tenu, tres long, sans transitoire
     "couvert":    {"low": +0.5, "high": -2.0, "space": 0.36, "decay": 5.0, "damp": 3200},
-    "automne":    {"low": +1.5, "high": -1.5, "space": 0.30, "decay": 4.2, "damp": 3600},
-    "nuit":       {"low": +2.0, "high": -2.5, "space": 0.46, "decay": 7.0, "damp": 2400},
-    "crepuscule": {"low": +1.0, "high": -0.5, "space": 0.30, "decay": 4.0, "damp": 3800},
-    # ── ouvert : le plus sec, spectre neutre
+    # ouvert : le plus sec, spectre neutre
     "clair":      {"low": 0.0,  "high": +1.5, "space": 0.12, "decay": 2.0, "damp": 7000},
-    "jour":       {"low": 0.0,  "high": 0.0,  "space": 0.14, "decay": 2.2, "damp": 6500},
+    # ── heure ────────────────────────────────────────────────────────────────
+    "aube":       {"low": -1.0, "high": +2.0, "space": 0.14, "decay": 2.2, "damp": 6800},
+    "matinee":    {"low": 0.0,  "high": +1.0, "space": 0.14, "decay": 2.2, "damp": 6500},
+    "midi":       {"low": 0.0,  "high": 0.0,  "space": 0.12, "decay": 2.0, "damp": 6800},
+    "apres_midi": {"low": 0.0,  "high": 0.0,  "space": 0.14, "decay": 2.2, "damp": 6500},
+    "soiree":     {"low": +1.0, "high": -0.5, "space": 0.30, "decay": 4.0, "damp": 3800},
+    "nuit":       {"low": +2.0, "high": -2.5, "space": 0.46, "decay": 7.0, "damp": 2400},
 }
 
 
 def resolve_mix(context: dict) -> dict:
-    """Le mix suit la meme priorite que la distribution : meteo > saison >
-    moment. Le premier axe qui se prononce donne le milieu — un seul gagne,
-    car deux traitements d'espace superposes ne veulent plus rien dire."""
+    """Le mix suit la meme priorite que la distribution : meteo > heure. Le
+    premier axe qui se prononce donne le milieu — un seul gagne, car deux
+    traitements d'espace superposes ne veulent plus rien dire."""
     for axis in PRIORITY:
         value = context.get(axis)
         if value and value in MIX:
@@ -262,6 +288,10 @@ def manifest() -> dict:
         "axes": AXES,
         "priority": PRIORITY,
         "context": CONTEXT,
+        "tempo": TEMPO,
+        "extras": EXTRAS,
+        "fond_jour": FOND_JOUR,
+        "fond_nuit": FOND_NUIT,
         "mix": MIX,
         "mix_neutral": MIX_NEUTRAL,
         "candidates": {
@@ -306,10 +336,22 @@ def main() -> int:
     print(f"  {'OK' if not (bad or missing or holes) else 'INCOMPLET'} — "
           f"{len(list(product(*AXES.values())))} combinaisons, {holes} incomplete(s)\n")
 
-    for ctx in ({"meteo": "pluie"}, {"saison": "hiver"}, {"moment": "nuit"},
-                {"meteo": "pluie", "saison": "hiver", "moment": "nuit"},
-                {"meteo": "neige", "saison": "printemps"}):
-        print(f"  {str(ctx):58s} -> {resolve(ctx)}")
+    for ctx in ({"meteo": "pluie"}, {"heure": "nuit"},
+                {"meteo": "pluie", "heure": "nuit"},
+                {"meteo": "neige", "heure": "midi"}):
+        t = TEMPO.get(ctx.get("heure", ""), 1.0)
+        x = EXTRAS.get(ctx.get("heure", ""))
+        print(f"  {str(ctx):40s} -> {resolve(ctx)}  tempo x{t}"
+              + (f"  + {x['id']}" if x else ""))
+
+    # Controle 4 : tempo et extras couvrent des valeurs d'heure existantes.
+    for k in list(TEMPO) + list(EXTRAS):
+        if k not in AXES["heure"]:
+            print(f"  ! '{k}' (tempo/extras) n'est pas une heure connue")
+            holes += 1
+    if set(TEMPO) != set(AXES["heure"]):
+        print(f"  ! TEMPO ne couvre pas toutes les heures")
+        holes += 1
     return 0 if not (bad or missing or holes) else 1
 
 

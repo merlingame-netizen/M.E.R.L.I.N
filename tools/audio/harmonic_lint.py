@@ -152,7 +152,14 @@ def lint(verbose: bool = True) -> dict:
                 if pc not in pcs and harsh(pc, pcs):
                     ok_dur = e["dur"] <= BEAT * 1.05
                     nxt = line[i + 1] if i + 1 < len(line) else None
-                    ok_res = nxt is not None and abs(nxt["midi"] - e["midi"]) <= 2
+                    # resolution par mouvement conjoint, MODULO L'OCTAVE : les
+                    # candidats a tessiture etroite replient la ligne ecrite
+                    # par octaves (arrange_menu, repli en dernier), un pas
+                    # conjoint ecrit peut donc apparaitre deplace d'une octave.
+                    # La ligne ECRITE — commune a tous les candidats — resout
+                    # bien par pas ; c'est elle que la regle juge.
+                    d = abs(nxt["midi"] - e["midi"]) % 12 if nxt else 99
+                    ok_res = nxt is not None and min(d, 12 - d) <= 2
                     if not (ok_dur and ok_res):
                         findings["foreign"].append(
                             (name, inst, e["midi"], round(e["at"], 2),

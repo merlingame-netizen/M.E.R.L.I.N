@@ -2627,3 +2627,25 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - **Round 2 non répondu** : budget d'écran, testabilité sans pool, définition de la victoire, sort du golden. Consigné comme ouvert dans bible §31.
 - **Livrables invalidés** (§31.5) : golden 3 routes, corpus 100 références, 36 résolutions du pool, mélange + anti-répétition + ordre des arcs, équilibrage calibré sur 25.
 - **Restent valides** : grammaire de carte, beat de résolution, graine de variation, porte de nouveauté, tout l'outillage de mesure.
+
+## 2026-08-07 — Musique menu : pivot axes v2 (meteo=melodie, heure=vitesse)
+- [x] P1 casting_menu.py : saison SUPPRIMEE ; axes = meteo(6) x heure(6) ;
+      meteo ne change que le CHANT (pluie=harpe sur la melodie, couvert=cor
+      anglais titulaire) ; TEMPO par heure (0.84 nuit -> 1.06 midi) ; EXTRAS
+      (midi: guirlande glockenspiel, soiree: veilleuse celesta) ; FOND_JOUR
+      sans halo, FOND_NUIT = substitution nocturne. Self-check OK (36 combos).
+- [x] P2 arrange_menu.py : repli d'octave APRES les garde-fous (les decisions
+      purge/damp se prennent sur la ligne ECRITE) + damp_rings au max des
+      releases du role -> chant 11 / corde 7 / halo 6 candidats byte-synchrones
+      (la clarinette basse desynchronisait via ses intervalles replies).
+- [x] Lint harmonique : R1/R3/R4 = 0 (R3 juge la resolution modulo octave,
+      la ligne ecrite etant l'autorite) ; 27 tranches chaudes tutti inchangees.
+- [ ] P3 re-rendu complet en cours (render_v2.log)
+- [x] P4 build_mobile_page.py v2 : couches FOND jour/nuit + CHANT x6 + ADD x2,
+      marge anti-ecretage sur la somme pire cas, courbes par combinaison.
+- [x] P5 mobile_template.html v2 : axes meteo/heure, playbackRate preservesPitch
+      avec rampe 0,8 s, moteur 3 couches (fond=horloge, pilotage ±0,4 %,
+      recalage >300 ms journalise), timeline par combo, journal enrichi.
+- [ ] P6 artefact + tests Playwright + publication (meme URL) + commit/push
+- DIFFERE : lecteur desktop (app_template.html) reference encore saison/moment
+  — a realigner sur les axes v2 si l'utilisateur redemande le lecteur complet.
