@@ -2766,3 +2766,9 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       harpe en coda. Guitare : 4 dessins differents par section.
 - [x] Lint 0/0/0 (un echo raccourci a 1,2 s), boucles 4 echelles propres.
 - [x] Artefact AAC 14,16 Mo, tests verts, publie c2a7221f.
+
+## 2026-08-07 — Musique menu v12 : moteur d'echantillonneur reel — LIVRE
+- [x] Fondu de couches de velocite (xfade adjacent), vie des tenues (arc
+      messa di voce + derive ±2,5 cents anti-gel), sieges STAGE completes.
+- [x] Re-rendu des 4 jeux, boucles 0 couture partout, tests verts.
+- [x] Artefact AAC 14,16 Mo publie c2a7221f.
