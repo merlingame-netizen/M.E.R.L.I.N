@@ -184,6 +184,10 @@ def main() -> int:
     ap.add_argument("--template", default=None,
                     help="gabarit a utiliser (defaut : page_template.html). "
                          "app_template.html donne le lecteur pilotable.")
+    ap.add_argument("--mobile", action="store_true",
+                    help="edition artefact <16 Mo : axe meteo seul, bancs "
+                         "reserres aux titulaires que la meteo emploie, debits "
+                         "reduits (parties 16k, socle 48k)")
     ap.add_argument("--quality", default=None,
                     help="force la qualite VBR LAME pour toutes les pistes (0=meilleur, 9=pire)")
     args = ap.parse_args()
@@ -207,8 +211,27 @@ def main() -> int:
     with open(tpl_probe, encoding="utf-8") as fh:
         _tpl_src = fh.read()
 
+    # ── EDITION MOBILE : tenir sous la limite de 16 Mo d'un artefact ────────
+    # On garde TOUTE la substitution meteo (6 temps x quatuor complet), les
+    # effets et les teintes ; on retire les axes saison/moment et leurs
+    # titulaires exclusifs, et on reduit les debits. C'est une edition de
+    # CONTROLE : le but est de constater le comportement sur mobile.
+    MOBILE_KEEP = {
+        "chant": {"cor_anglais", "violon", "hautbois", "clarinette",
+                  "basson", "flute_alto", "flute"},
+        "corde": {"celtic_guitar", "harpe", "oud", "mbira", "psaltery",
+                  "dan_tranh"},
+        "halo":  {"celesta", "glockenspiel", "hand_chimes", "wine_glasses"},
+        "pulse": {"calme", "orage", "nuit", "aucun"},
+    }
+    part_bitrate, part_rate = PART_BITRATE, PART_RATE
+    stems = dict(STEMS)
+    if args.mobile:
+        part_bitrate = "16k"
+        stems["bed"] = "48k"
+
     audio = {}
-    for name, rate in STEMS.items():
+    for name, rate in stems.items():
         if name != "bed" and name not in _tpl_src:
             print(f"  · {name} non utilise par le gabarit — non embarque")
             continue
@@ -222,6 +245,12 @@ def main() -> int:
 
     # ── PARTIES DE ROLE ──────────────────────────────────────────────────────
     cast = load_casting(args.stems)
+    if args.mobile and cast:
+        cast["axes"] = {"meteo": cast.get("axes", {}).get("meteo", [])}
+        for role, keep in MOBILE_KEEP.items():
+            cast["candidates"][role] = [
+                c for c in cast.get("candidates", {}).get(role, [])
+                if c["id"] in keep]
     for role, cands in (cast.get("candidates") or {}).items():
         for entry in cands:
             name = f"{role}__{entry['id']}"
@@ -231,8 +260,8 @@ def main() -> int:
                 continue
             dst = os.path.join(tmp, name + ".mp3")
             subprocess.run([ff, "-y", "-loglevel", "error", "-i", src, "-ac", "1",
-                            "-ar", PART_RATE, "-c:a", "libmp3lame",
-                            "-b:a", PART_BITRATE, dst], check=True)
+                            "-ar", part_rate, "-c:a", "libmp3lame",
+                            "-b:a", part_bitrate, dst], check=True)
             with open(dst, "rb") as fh:
                 audio["P_" + name] = base64.b64encode(fh.read()).decode()
             os.remove(dst)

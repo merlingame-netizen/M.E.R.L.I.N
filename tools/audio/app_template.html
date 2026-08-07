@@ -895,7 +895,9 @@ function resolve(){
 }
 
 /* presets — combinables avec les axes : un preset POSE des axes, il ne fige rien */
-$("#presets").innerHTML = PRESETS.map(pz =>
+const PRESETS_AVAIL = PRESETS.filter(pz =>
+  Object.keys(pz.ctx).every(a => CAST.axes && CAST.axes[a]));
+$("#presets").innerHTML = PRESETS_AVAIL.map(pz =>
   '<button class="chip amb" data-amb="'+pz.id+'" aria-pressed="false">'+
   icon(pz.ic)+'<span>'+pz.label+'</span></button>').join("");
 $("#presets").querySelectorAll(".amb").forEach(b => b.addEventListener("click", () => {
