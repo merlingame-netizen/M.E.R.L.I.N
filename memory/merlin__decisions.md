@@ -49,3 +49,17 @@
   liee a la vitesse comme une bande) : lecture parfaitement lisse, la piece
   entiere se transpose avec l'heure (nuit plus grave, midi plus brillant) —
   toutes les couches au meme taux, donc toujours accordees entre elles.
+
+## 2026-08-07: Musique menu v7 — nuit hauteur normale, motif intangible
+- La nuit, la boite a musique garde sa HAUTEUR NORMALE : rendu REEL au tempo
+  x0,80 (MERLIN_TEMPO_SCALE, boucle 10 800 000 ech. = 2^4*3^3*5^5), lecture a
+  1,0 — aucun traitement. Les heures de jour restent en varispeed DOUX
+  (0,94-1,05, moins d'un demi-ton de derive).
+- Le drone doit avoir de la VARIETE et SUIVRE la melodie : il porte la
+  fondamentale de l'harmonie (grave, lourd, legato), plus une octave au coeur.
+- Les percussions doivent etre AUDIBLES (entree mesure 5, pas 13) et de TYPES
+  DIFFERENTS selon l'heure : calme (matinee/apres-midi), danse (midi),
+  sourd (aube/soiree), tambour de nuit (nuit, integre au rendu lent).
+- Tri Martolod : partition FIDELE, motif garde a 100 % — les garde-fous
+  harmoniques ne deplacent JAMAIS une note du chant (purge_harsh exempte,
+  lint R3 exempte) ; ornementation reduite a quelques twists sur les reprises.

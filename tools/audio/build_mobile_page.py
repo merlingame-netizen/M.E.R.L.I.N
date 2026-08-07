@@ -44,11 +44,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from score_menu import BAR, N_BARS, PROGRESSION  # noqa: E402
 
 SR = 48_000
-FOND_BITRATE = "64k"         # stereo joint — 2 fonds seulement
-CHANT_BITRATE = "48k"        # mono : la melodie seule — la voix
-                             # principale merite le meilleur debit
-ADD_BITRATE = "32k"          # mono : halo clairseme
-FX_BITRATE = "40k"
+# AAC (v7) : a debit egal, l'AAC-LC rend nettement mieux que le MP3 — c'est
+# le levier « meilleure qualite » qui ne coute aucun octet. Conteneur .m4a,
+# lu partout (iOS natif, Chromium).
+FOND_BITRATE = "48k"         # stereo — drone de jour, fond de nuit
+PERC_BITRATE = "24k"         # mono : percussions eparses
+CHANT_BITRATE = "40k"        # mono : la melodie seule
+FX_BITRATE = "24k"
 
 
 def decode(ff: str, path: str) -> np.ndarray:
@@ -58,8 +60,8 @@ def decode(ff: str, path: str) -> np.ndarray:
     return np.frombuffer(raw, dtype="<f4").reshape(-1, 2).T.copy()
 
 
-def encode_mp3(ff: str, sig: np.ndarray, dst: str, bitrate: str) -> None:
-    """sig : (2, n) stereo ou (n,) mono."""
+def encode_aac(ff: str, sig: np.ndarray, dst: str, bitrate: str) -> None:
+    """sig : (2, n) stereo ou (n,) mono -> AAC-LC dans un conteneur .m4a."""
     if sig.ndim == 1:
         pcm = np.clip(sig, -1, 1).astype("<f4").tobytes()
         ac = "1"
@@ -68,8 +70,8 @@ def encode_mp3(ff: str, sig: np.ndarray, dst: str, bitrate: str) -> None:
         ac = "2"
     subprocess.run([ff, "-y", "-loglevel", "error", "-f", "f32le",
                     "-ar", str(SR), "-ac", ac, "-i", "-",
-                    "-c:a", "libmp3lame", "-b:a", bitrate, dst],
-                   input=pcm, check=True)
+                    "-c:a", "aac", "-b:a", bitrate, "-movflags", "+faststart",
+                    dst], input=pcm, check=True)
 
 
 def envelope_and_onsets(mono: np.ndarray, points: int = 480):
@@ -107,6 +109,9 @@ def envelope_and_onsets(mono: np.ndarray, points: int = 480):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stems", default="audio/music/menu")
+    ap.add_argument("--stems-nuit", dest="stems_nuit",
+                    default="audio/music/menu_nuit",
+                    help="rendu au tempo reel x0,8 (MERLIN_TEMPO_SCALE)")
     ap.add_argument("--out", default="artefact_mobile.html")
     a = ap.parse_args()
 
@@ -122,52 +127,60 @@ def main() -> int:
     meteos = cast["axes"]["meteo"]
     heures = cast["axes"]["heure"]
     tempo = cast["tempo"]
-    extras = cast["extras"]
+    perc_by_h = cast.get("perc", {})
 
-    def part(key: str) -> np.ndarray:
-        return decode(ff, os.path.join(a.stems, key + ".ogg"))
+    def part(key: str, stems: str | None = None) -> np.ndarray:
+        return decode(ff, os.path.join(stems or a.stems, key + ".ogg"))
 
     # ── les couches ──────────────────────────────────────────────────────────
+    # v7 : DRONE de jour (bed) + PERCUSSIONS par heure en couche separee +
+    # CHANT par instrument, tous au tempo 1,0 (varispeed doux a la lecture).
+    # La NUIT vient d'un RENDU REEL a l'echelle 0,8 (--stems-nuit) : drone +
+    # cloches + tambour premixes, boite a musique seule — hauteur normale,
+    # tempo lent vrai, aucun traitement a la lecture.
     print("[mobile] couches…")
     bed = decode(ff, os.path.join(a.stems, "bed.ogg"))
     n = bed.shape[1]
 
-    def fond_sum(cast_fond: dict) -> np.ndarray:
-        sig = bed.copy()
-        for role, cid in cast_fond.items():
-            sig += part(f"{role}__{cid}")[:, :n] * gains[(role, cid)]
-        return sig
+    drone = bed.copy()
+    for role, cid in cast["fond_jour"].items():
+        drone += part(f"{role}__{cid}")[:, :n] * gains[(role, cid)]
 
-    fonds = {"jour": fond_sum(cast["fond_jour"]),
-             "nuit": fond_sum(cast["fond_nuit"])}
-    # une piste de melodie PAR INSTRUMENT — l'instrument depend du couple
-    # (meteo, heure) : le jour c'est la meteo qui choisit, la nuit c'est la
-    # boite a musique quelle que soit la meteo
     night_cid = cast["context"]["nuit"]["chant"]
     day_cids = {w: cast["context"][w]["chant"] for w in meteos}
     MELODY_BOOST = 1.15          # « la musique se centre sur le motif »
     chants = {}
-    for cid in sorted(set(day_cids.values()) | {night_cid}):
+    for cid in sorted(set(day_cids.values())):
         chants[cid] = (part(f"chant__{cid}")[:, :n]
                        * gains[("chant", cid)] * MELODY_BOOST).mean(0)
-    adds = {}
-    for h, x in extras.items():
-        role, cid = x["part"].split("__")
-        adds[x["id"]] = (part(x["part"])[:, :n]
-                         * gains[(role, cid)] * float(x["gain"])).mean(0)
+    percs = {}
+    for pid in sorted({p for p in perc_by_h.values() if p}):
+        percs[pid] = (part(f"pulse__{pid}")[:, :n]
+                      * gains[("pulse", pid)]).mean(0)
+
+    # le set de nuit, rendu lent pour de vrai
+    bed_n = decode(ff, os.path.join(a.stems_nuit, "bed.ogg"))
+    nn = bed_n.shape[1]
+    fond_nuit = bed_n.copy()
+    for role, cid in cast["fond_nuit"].items():
+        fond_nuit += part(f"{role}__{cid}", a.stems_nuit)[:, :nn] * gains[(role, cid)]
+    chant_nuit = (part(f"chant__{night_cid}", a.stems_nuit)[:, :nn]
+                  * gains[("chant", night_cid)] * MELODY_BOOST).mean(0)
+    night_scale = nn / n
 
     # ── marge : la SOMME des couches ne doit pas ecreter cote client ────────
-    worst_add = max((np.abs(s) for s in adds.values()),
-                    key=lambda s: float(s.max())) if adds else 0.0
-    peak = 0.0
-    for f in fonds.values():
-        fm = np.abs(f).max(axis=0)
-        for c in chants.values():
-            p = float((fm + np.abs(c) + (worst_add if f is fonds["jour"] else 0.0)).max())
-            peak = max(peak, p)
+    worst_perc = max((np.abs(s) for s in percs.values()),
+                     key=lambda s: float(s.max())) if percs else 0.0
+    dm = np.abs(drone).max(axis=0)
+    peak = max(float((dm + np.abs(c) + worst_perc).max())
+               for c in chants.values())
+    peak = max(peak, float((np.abs(fond_nuit).max(axis=0) + np.abs(chant_nuit)).max()))
     k = min(1.0, 0.985 / peak)
     print(f"[mobile] pic somme pire cas {peak:.3f} -> facteur {k:.3f}")
-    for d in (fonds, chants, adds):
+    drone *= k
+    fond_nuit *= k
+    chant_nuit = chant_nuit * k
+    for d in (chants, percs):
         for key in d:
             d[key] = d[key] * k
 
@@ -177,25 +190,26 @@ def main() -> int:
     audio: dict = {}
 
     def emit(name: str, sig: np.ndarray, bitrate: str) -> None:
-        dst = os.path.join(tmp, "t.mp3")
-        encode_mp3(ff, sig, dst, bitrate)
+        dst = os.path.join(tmp, "t.m4a")
+        encode_aac(ff, sig, dst, bitrate)
         audio[name] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)
         print(f"  {name:16s} {len(audio[name]) / 1e6:5.2f} Mo b64")
 
-    for fid, sig in fonds.items():
-        emit("FOND_" + fid, sig, FOND_BITRATE)
+    emit("FOND_jour", drone, FOND_BITRATE)
+    emit("FOND_nuit", fond_nuit, FOND_BITRATE)
     for cid, sig in chants.items():
         emit("CHANT_" + cid, sig, CHANT_BITRATE)
-    for xid, sig in adds.items():
-        emit("ADD_" + xid, sig, ADD_BITRATE)
+    emit("CHANT_" + night_cid, chant_nuit, CHANT_BITRATE)
+    for pid, sig in percs.items():
+        emit("PERC_" + pid, sig, PERC_BITRATE)
 
     # ── l'introduction : le bourdon se leve, les cloches appellent ──────────
     # Deux mesures avant la boucle : le drone seul, en fondu d'entree, avec
     # les cloches tubulaires par-dessus. Le lecteur enchaine sur la piece par
     # un fondu de 300 ms.
     intro_bars = 2
-    ns = int(intro_bars * BAR * 48_000)
+    ns = int(intro_bars * BAR * SR)
     fade = np.linspace(0.0, 1.0, ns, dtype=np.float32) ** 1.5
     tubes = part("halo__tubulaires")[:, :ns] * gains[("halo", "tubulaires")]
     intro = (bed[:, :ns] * k) * fade + tubes * (0.9 * k)
@@ -203,39 +217,46 @@ def main() -> int:
     meta_intro = {"dur": round(intro_bars * BAR, 3)}
 
     # ── courbes par combinaison reellement jouable ──────────────────────────
-    # le jour : fond jour x chaque instrument de meteo ; la nuit : fond nuit
-    # x la boite a musique — pas de produit cartesien inutile
+    # le jour : drone x chaque instrument de meteo ; la nuit : fond de nuit
+    # x la boite a musique — chaque combo porte sa duree et sa mesure (la
+    # nuit est 25 % plus longue : rendu reel a l'echelle 0,8)
     meta: dict = {"bar": BAR, "bars": N_BARS, "progression": PROGRESSION,
                   "heures": heures, "meteos": meteos, "tempo": tempo,
+                  "perc": perc_by_h, "night_scale": round(night_scale, 4),
                   "intro": meta_intro, "combos": {}}
-    fond_mono = {fid: f.mean(0) for fid, f in fonds.items()}
-    pairs = [("jour", cid) for cid in sorted(set(day_cids.values()))]
-    pairs.append(("nuit", night_cid))
-    for fid, cid in pairs:
-        curve, onsets = envelope_and_onsets(fond_mono[fid] + chants[cid])
-        meta["combos"][f"{fid}|{cid}"] = {"curve": curve, "onsets": onsets}
+    dmono = drone.mean(0)
+    for cid, c in chants.items():
+        curve, onsets = envelope_and_onsets(dmono + c)
+        meta["combos"][f"jour|{cid}"] = {
+            "curve": curve, "onsets": onsets,
+            "dur": round(n / SR, 3), "barsec": round(BAR, 4)}
+    curve, onsets = envelope_and_onsets(fond_nuit.mean(0) + chant_nuit)
+    meta["combos"][f"nuit|{night_cid}"] = {
+        "curve": curve, "onsets": onsets,
+        "dur": round(nn / SR, 3), "barsec": round(BAR * night_scale, 4)}
     print(f"[mobile] {len(meta['combos'])} courbes fond x melodie")
 
     meta["melodie"] = {
         "nuit": night_cid,
         "meteo": day_cids,
-        "labels": {cid: labels[("chant", cid)] for cid in chants},
+        "labels": dict({cid: labels[("chant", cid)] for cid in chants},
+                       **{night_cid: labels[("chant", night_cid)]}),
     }
+    meta["perclabels"] = {pid: labels[("pulse", pid)] for pid in percs}
     meta["fonds"] = {
-        fid: " + ".join(["drone"] + [labels[(r, c)]
-                                     for r, c in cast[f"fond_{fid}"].items()])
-        for fid in ("jour", "nuit")}
-    meta["extras"] = {h: {"id": x["id"], "label": x["label"]}
-                      for h, x in extras.items()}
+        "jour": "drone",
+        "nuit": " + ".join(["drone (lent, hauteur normale)"]
+                           + [labels[(r, c)] for r, c in cast["fond_nuit"].items()]),
+    }
 
     # ── effets ───────────────────────────────────────────────────────────────
     for e in cast.get("sfx", []):
         src = os.path.join(a.stems, e["file"])
         if not os.path.exists(src):
             continue
-        dst = os.path.join(tmp, "fx.mp3")
+        dst = os.path.join(tmp, "fx.m4a")
         subprocess.run([ff, "-y", "-loglevel", "error", "-i", src, "-ac", "1",
-                        "-ar", "32000", "-c:a", "libmp3lame",
+                        "-ar", "32000", "-c:a", "aac",
                         "-b:a", FX_BITRATE, dst], check=True)
         audio["FX_" + e["id"]] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)

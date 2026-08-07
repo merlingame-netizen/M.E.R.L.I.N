@@ -71,9 +71,15 @@ N_BARS = 40
 # 8 640 000 = 2^7 x 3^3 x 5^4. Tous les facteurs sont petits, la FFT est rapide —
 # et le tempo qui en decoule tombe sur 49,000 BPM tout rond.
 SR = 44100
-LOOP_SAMPLES = 8_640_000                    # 2^7 x 3^3 x 5^4
-LOOP_LEN = LOOP_SAMPLES / SR                # 195,918 s
-BPM = N_BARS * 4 * 60.0 / LOOP_LEN          # 49,000 tout rond
+# MERLIN_TEMPO_SCALE : rendu a un AUTRE tempo reel (v7). La nuit est rendue a
+# 0,8 — la boucle passe a 10 800 000 = 2^4 x 3^3 x 5^5, TOUJOURS 5-lisse (la
+# division par 4/5 multiplie par 5/4). C'est ce qui donne une boite a musique
+# LENTE A HAUTEUR NORMALE : aucun etirement, aucun varispeed, un vrai rendu.
+import os as _os
+TEMPO_SCALE = float(_os.environ.get("MERLIN_TEMPO_SCALE", "1.0"))
+LOOP_SAMPLES = int(round(8_640_000 / TEMPO_SCALE))
+LOOP_LEN = LOOP_SAMPLES / SR                # 195,918 s a l'echelle 1,0
+BPM = N_BARS * 4 * 60.0 / LOOP_LEN          # 49,000 tout rond a l'echelle 1,0
 BEAT = 60.0 / BPM
 BAR = 4 * BEAT
 
@@ -145,7 +151,7 @@ TRI_MARTOLOD = [
     (3, 3.5, 69, 0.5), (3, 4.0, 69, 0.5), (3, 4.5, 69, 0.5),
 ]
 
-def ornament(phrase: list, seed: int = 0) -> list:
+def ornament(phrase: list, seed: int = 0, amount: float = 1.0) -> list:
     """Version ornee de l'air — c'est ce qui separe une melodie d'une suite de notes.
 
     Trois ornements, tous pris au repertoire celtique et places la ou un joueur
@@ -160,6 +166,12 @@ def ornament(phrase: list, seed: int = 0) -> list:
 
     On n'orne PAS le premier enonce : l'air doit d'abord etre entendu nu, sinon
     l'ornement n'orne rien. Les reprises seules sont brodees.
+
+    amount (v7) : la DOSE d'ornementation, 0..1. « La partition doit etre
+    fidele avec quelques twists mais le motif garde a 100 % » — a 0,35 chaque
+    ornement ne se produit qu'une fois sur trois : la ligne traditionnelle
+    domine, la broderie est l'exception. Toute note ornee retombe sur les
+    notes ECRITES du motif : un ornement decore, il ne remplace jamais.
     """
     rng = np.random.default_rng(seed + 5150)
     # degres du mode de re dorien, pour que tout ornement reste dans le mode :
@@ -186,28 +198,28 @@ def ornament(phrase: list, seed: int = 0) -> list:
 
         # 1. NOTE DE PASSAGE — comble un saut de tierce, dans le mode.
         #    C'est l'ornement qui rend la ligne conjointe, donc chantante.
-        if nxt and abs(gap) in (3, 4) and dur >= 0.5:
+        if nxt and abs(gap) in (3, 4) and dur >= 0.5 and rng.random() < amount:
             mid = up(midi) if gap > 0 else down(midi)
             out.append((bar, beat, midi, dur * 0.6))
             out.append((bar, beat + dur * 0.6, mid, dur * 0.4))
             continue
 
         # 2. APPOGGIATURE — sur une longue abordee par saut : on attaque au-dessus.
-        if dur >= 1.0 and prev and abs(midi - prev[2]) >= 3:
+        if dur >= 1.0 and prev and abs(midi - prev[2]) >= 3 and rng.random() < amount * 0.8:
             out.append((bar, beat, up(midi), dur * 0.28))
             out.append((bar, beat + dur * 0.28, midi, dur * 0.72))
             continue
 
         # 3. GRUPETTO — sur une longue tenue sans saut : note, voisine, note.
         #    Trois notes la ou il y en avait une : c'est le coeur du « plus melodique ».
-        if dur >= 1.0 and rng.random() < 0.75:
+        if dur >= 1.0 and rng.random() < 0.55 * amount:
             out.append((bar, beat, midi, dur * 0.45))
             out.append((bar, beat + dur * 0.45, up(midi), dur * 0.2))
             out.append((bar, beat + dur * 0.65, midi, dur * 0.35))
             continue
 
         # 4. CADENCE BRODEE — la voisine superieure, tres brievement, avant la fin.
-        if nxt is None and dur >= 0.5:
+        if nxt is None and dur >= 0.5 and rng.random() < max(amount, 0.3):
             out.append((bar, beat, up(midi), dur * 0.22))
             out.append((bar, beat + dur * 0.22, midi, dur * 0.78))
             continue

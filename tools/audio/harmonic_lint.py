@@ -137,6 +137,11 @@ def lint(verbose: bool = True) -> dict:
     # ── R3 + R4, par partie ─────────────────────────────────────────────────
     bounds = chord_boundaries()
     for name, evs in parts.items():
+        # LE MOTIF EST INTANGIBLE (v7) : Tri Martolod est la partition — on
+        # ne juge pas la melodie traditionnelle contre l'accompagnement (R3),
+        # c'est l'accompagnement qui s'ecrit sous elle. R1 (mode) et R4
+        # (resonances etouffees a la construction) s'appliquent toujours.
+        skip_r3 = name.startswith("chant__")
         by_inst: dict = {}
         for e in sorted(evs, key=lambda x: x["at"]):
             by_inst.setdefault(e["inst"], []).append(e)
@@ -149,7 +154,7 @@ def lint(verbose: bool = True) -> dict:
                 bar = int((e["at"] + 0.06) // BAR) + 1
                 pcs, _ = chord_at_bar(bar)
                 pc = int(round(e["midi"])) % 12
-                if pc not in pcs and harsh(pc, pcs):
+                if not skip_r3 and pc not in pcs and harsh(pc, pcs):
                     ok_dur = e["dur"] <= BEAT * 1.05
                     nxt = line[i + 1] if i + 1 < len(line) else None
                     # resolution par mouvement conjoint, MODULO L'OCTAVE : les

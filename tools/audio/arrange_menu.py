@@ -62,19 +62,23 @@ def _jitter(seed: int) -> tuple[float, float]:
             float(np.clip(rng.normal(1.0, 0.055), 0.6, 1.3)))
 
 AIR = TRI_MARTOLOD
-AIR_ORNE = ornament(TRI_MARTOLOD, seed=1)
-REFRAIN_ORNE = ornament(REFRAIN, seed=2)
+# v7 : « la partition doit etre fidele avec quelques twists mais le motif
+# garde a 100 % ». La dose d'ornements tombe a 0,35 : la ligne traditionnelle
+# telle que relevee domine, la broderie n'apparait qu'une fois sur trois, et
+# seulement sur les REPRISES — jamais sur un enonce premier.
+AIR_LEGER = ornament(TRI_MARTOLOD, seed=1, amount=0.35)
+REFRAIN_LEGER = ornament(REFRAIN, seed=2, amount=0.35)
 
 # Ou le chant se pose : (mesure, phrase, transposition, niveau relatif)
 CHANT_AT = [
-    (5,  AIR,          0, 1.00),      # nu — l'air doit d'abord etre entendu simple
-    (9,  AIR_ORNE,     0, 1.00),
-    (13, REFRAIN_ORNE, 0, 0.92),
-    (17, AIR_ORNE,     0, 1.00),
+    (5,  AIR,           0, 1.00),     # nu — l'air d'abord entendu simple
+    (9,  AIR_LEGER,     0, 1.00),
+    (13, REFRAIN,       0, 0.92),     # le refrain, nu lui aussi
+    (17, AIR,           0, 1.00),
     #  21-24 : silence du chant
-    (25, REFRAIN_ORNE, 0, 0.95),
-    (29, AIR_ORNE,     0, 1.00),
-    (33, AIR_ORNE,     0, 0.96),
+    (25, REFRAIN_LEGER, 0, 0.95),
+    (29, AIR_LEGER,     0, 1.00),
+    (33, AIR,           0, 0.96),     # retour a la lettre du releve
 ]
 
 # Dessus — une ligne haute, ecrite au-dessus de l'air pendant le plein.
@@ -221,29 +225,31 @@ def build_bed() -> list[dict]:
     roles — chant, corde, halo, pouls — c'est leur raison d'etre, et c'est
     la qu'on peut les remplacer.
     """
-    # LE DRONE (v6, 2026-08-07) : « le fond doit etre un drone sound plus
-    # lourd ». Bourdon STATIQUE en re — la pedale modale du morceau, comme le
-    # bourdon d'un biniou : il ne suit PAS la progression, c'est la melodie
-    # qui porte l'harmonie au-dessus de lui. Contrebasses a l'octave grave,
-    # cordes graves en re + quinte : lourd, sombre, immobile. Il RESPIRE par
-    # la dynamique (l'arc du morceau), par blocs de quatre mesures qui se
-    # recouvrent d'une mesure — jamais de trou, jamais d'attaque dure.
+    # LE DRONE v7 : il SUIT LA MELODIE. Le bourdon statique manquait de
+    # variete — le drone porte maintenant la FONDAMENTALE de chaque accord
+    # (et sa quinte), grave, lourd, legato : chaque bloc d'harmonie deborde
+    # d'une mesure sur le suivant, les changements sont des fondus de masse,
+    # jamais des attaques. Contrebasse a l'octave grave, cordes graves en
+    # fondamentale + quinte ; le coeur (17-32) s'epaissit d'une octave.
     ev: list[dict] = []
-    D2, A2, D3 = 38, 45, 50
-    for b0 in range(1, N_BARS + 1, 4):
+    for (b0, b1, name) in _chord_groups():
         t0 = t_of(b0, 1.0)
-        span = 5 * BAR if b0 + 4 <= N_BARS else (N_BARS - b0 + 1) * BAR
+        span = (b1 - b0 + 1) * BAR + BAR          # deborde d'une mesure
         span = min(span, LOOP_LEN - t0 - 0.06)
-        d = dyn(b0 + 1)
-        ev.append(_ev("contrabass", "bed", D2 - 12, t0, span,
+        d = dyn(b0)
+        _pcs, root = CHORDS[name]
+        bass = root - 12
+        while bass < 33:
+            bass += 12
+        ev.append(_ev("contrabass", "bed", bass - 12, t0, span,
                       0.30 + 0.38 * d, b0 * 3))
-        ev.append(_ev("strings_low", "bed", D2, t0, span,
+        ev.append(_ev("strings_low", "bed", bass, t0, span,
                       0.26 + 0.36 * d, b0 * 5))
-        ev.append(_ev("strings_low", "bed", A2, t0, span,
-                      0.16 + 0.26 * d, b0 * 7))
+        ev.append(_ev("strings_low", "bed", bass + 7, t0, span,
+                      0.15 + 0.26 * d, b0 * 7))
         if 17 <= b0 <= 32:                     # le coeur s'epaissit d'une octave
-            ev.append(_ev("strings_low", "bed", D3, t0, span,
-                          0.12 + 0.22 * d, b0 * 11))
+            ev.append(_ev("strings_low", "bed", bass + 12, t0, span,
+                          0.11 + 0.20 * d, b0 * 11))
 
     ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])
@@ -340,7 +346,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
         inst, gain, span, _lab = CANDIDATES["pulse"][candidate]
         if candidate == "aucun":
             return []
-        for bar in range(13, N_BARS + 1):
+        for bar in range(5, N_BARS + 1):
             d = dyn(bar)
             if candidate == "danse":
                 # le pas de la danse bretonne : deux appuis courts, un long.
@@ -432,7 +438,10 @@ def build_role(role: str, candidate: str) -> list[dict]:
     # resonances etouffees avant un accord qu'elles saliraient. Le damp d'un
     # role s'evalue avec la release la plus longue parmi SES candidats : tous
     # portent alors exactement les memes durees — condition du fondu croise.
-    if role in ("chant", "corde", "halo"):
+    # LE MOTIF EST INTANGIBLE (v7) : purge_harsh ne touche JAMAIS le chant —
+    # Tri Martolod est la partition, c'est l'accompagnement qui s'ecrit sous
+    # lui, pas l'inverse. Seuls corde et halo restent purges.
+    if role in ("corde", "halo"):
         ev = purge_harsh(ev)
     from sample_bank import MultiSampleBank
     _K, _E = MultiSampleBank.KIND, MultiSampleBank.ENV

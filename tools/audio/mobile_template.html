@@ -207,18 +207,23 @@ const $ = s => document.querySelector(s);
    muette. */
 let AC = null, MASTER = null; const el = {}, gain = {};
 let W = "couvert", H = "apres_midi";
-let RATE = META.tempo[H] || 1.0;
+let RATE = 1.0;
 let playing = false, pos = 0;
 let LOOP = true, INTROING = false;
-const layers = {fond: null, chant: null, extra: null};   /* noms d'elements */
-const fadeTok = {fond: 0, chant: 0, extra: 0};
+const layers = {fond: null, chant: null, perc: null};    /* noms d'elements */
+const fadeTok = {fond: 0, chant: 0, perc: 0};
 const fxOn = {};
 
 const fondId  = () => H === "nuit" ? "nuit" : "jour";
-const extraOf = h => (META.extras[h] || null);
+/* la percussion depend de l'heure — la nuit, elle est DANS le fond lent */
+const percOf  = h => h === "nuit" ? null : (META.perc[h] || null);
 /* l'instrument de la melodie depend du COUPLE (meteo, heure) : la nuit
    impose la boite a musique quelle que soit la meteo */
 const chantId = () => H === "nuit" ? META.melodie.nuit : META.melodie.meteo[W];
+/* la NUIT est un RENDU REEL au tempo 0,8, lu a 1,0 : hauteur normale.
+   Les heures de jour restent en varispeed doux (<= 1 demi-ton). */
+const rateFor = h => h === "nuit" ? 1.0 : (META.tempo[h] || 1.0);
+const comboScale = () => H === "nuit" ? META.night_scale : 1.0;
 
 function ctx(){
   if(AC !== null) return AC;
@@ -252,7 +257,7 @@ function make(name){
   try{ a.preservesPitch = false; }catch(e){}
   try{ a.webkitPreservesPitch = false; }catch(e){}
   if(!name.startsWith("FX_")) a.playbackRate = RATE;
-  a.src = "data:audio/mpeg;base64," + (AUDIO[name] || "");
+  a.src = "data:audio/mp4;base64," + (AUDIO[name] || "");
   el[name] = a;
   const c = ctx();
   if(c){
@@ -281,7 +286,8 @@ function master(){ return layers.fond ? el[layers.fond] : null; }
 function curTime(){ const m = master(); return m ? (m.currentTime || 0) : pos; }
 
 /* fondu croise d'UNE couche — les autres ne bougent pas */
-function swapLayer(layer, name, inGesture){
+function swapLayer(layer, name, timeMul){
+  timeMul = timeMul || 1;
   const prev = layers[layer];
   if(prev === name) return;
   /* capturer la position AVANT de basculer la couche : pour le fond, curTime()
@@ -295,7 +301,7 @@ function swapLayer(layer, name, inGesture){
   if(name){
     const a = make(name);
     a.playbackRate = RATE;
-    try{ a.currentTime = ref; }catch(e){}
+    try{ a.currentTime = ref * timeMul; }catch(e){}
     const p = a.play();               /* DANS le geste : iOS l'accepte */
     if(p && p.catch) p.catch(err => logAuto("refus de lecture " + name + " : " + err.name));
   }
@@ -318,12 +324,12 @@ function swapLayer(layer, name, inGesture){
    220 ms. Une respiration, pas un accroc. Sans Web Audio : saut direct. */
 function applyRate(target){
   RATE = target;
-  ["fond", "chant", "extra"].forEach(l => {
+  ["fond", "chant", "perc"].forEach(l => {
     if(layers[l] && el[layers[l]]) el[layers[l]].playbackRate = RATE;
   });
 }
 function setRate(target){
-  $("#ratero").textContent = "×" + target.toFixed(2);
+  $("#ratero").textContent = "×" + (META.tempo[H] || 1).toFixed(2);
   const playingNow = playing && master() && !master().paused;
   if(!playingNow || !MASTER || !AC){ applyRate(target); return; }
   const g = MASTER.gain, now = AC.currentTime;
@@ -345,12 +351,13 @@ function paintState(){
     b.setAttribute("aria-pressed", String(b.dataset.w === W)));
   document.querySelectorAll("#heure .chip").forEach(b =>
     b.setAttribute("aria-pressed", String(b.dataset.h === H)));
-  const x = extraOf(H);
+  const pid = percOf(H);
   $("#castline").innerHTML = "mélodie <b>" + META.melodie.labels[chantId()] + "</b>";
   $("#heureline").innerHTML =
-    "vitesse <b>×" + (META.tempo[H] || 1).toFixed(2) + "</b>" +
+    "vitesse <b>×" + (META.tempo[H] || 1).toFixed(2) +
+    (H === "nuit" ? " (rendu réel)" : "") + "</b>" +
     " &nbsp;·&nbsp; fond <b>" + META.fonds[fondId()] + "</b>" +
-    (x ? " &nbsp;·&nbsp; en plus <b>" + x.label + "</b>" : "");
+    (pid ? " &nbsp;·&nbsp; percussion <b>" + (META.perclabels[pid] || pid) + "</b>" : "");
   drawTimeline();
 }
 
@@ -360,18 +367,22 @@ function setMeteo(w){
   swapLayer("chant", "CHANT_" + chantId(), true);
 }
 function setHeure(h){
+  const oldScale = comboScale();
   H = h; paintState();
-  setRate(META.tempo[h] || 1.0);
+  setRate(rateFor(h));
   if(INTROING){
     if(el.INTRO) el.INTRO.playbackRate = RATE;
-    layers.fond = null; layers.chant = null;
+    layers.fond = null; layers.chant = null; layers.perc = null;
     unlock("FOND_" + fondId()); unlock("CHANT_" + chantId());
     return;
   }
-  swapLayer("fond", "FOND_" + fondId(), true);
-  swapLayer("chant", "CHANT_" + chantId(), true);   /* la nuit change la voix */
-  const x = extraOf(h);
-  swapLayer("extra", x ? "ADD_" + x.id : null, true);
+  /* jour <-> nuit : les boucles n'ont pas la meme duree (la nuit est un
+     rendu reel 25 % plus long) — la position se convertit en proportion */
+  const mul = comboScale() / oldScale;
+  swapLayer("fond", "FOND_" + fondId(), mul);
+  swapLayer("chant", "CHANT_" + chantId(), 1);   /* s'aligne sur le nouveau fond */
+  const pid = percOf(h);
+  swapLayer("perc", pid ? "PERC_" + pid : null, 1);
 }
 
 /* ── transport ── */
@@ -398,10 +409,10 @@ function startLayers(fromGesture){
   INTROING = false;
   layers.fond = "FOND_" + fondId();
   layers.chant = "CHANT_" + chantId();
-  const x = extraOf(H);
-  layers.extra = x ? "ADD_" + x.id : null;
+  const pid = percOf(H);
+  layers.perc = pid ? "PERC_" + pid : null;
   let first = null;
-  ["fond", "chant", "extra"].forEach(l => {
+  ["fond", "chant", "perc"].forEach(l => {
     if(!layers[l]) return;
     const a = make(layers[l]);
     a.playbackRate = RATE;
@@ -465,7 +476,7 @@ playBtn.addEventListener("click", () => {
 $("#loopbtn").addEventListener("click", () => {
   LOOP = !LOOP;
   $("#loopbtn").setAttribute("aria-pressed", String(LOOP));
-  ["fond", "chant", "extra"].forEach(l => {
+  ["fond", "chant", "perc"].forEach(l => {
     if(layers[l] && el[layers[l]]) el[layers[l]].loop = LOOP;
   });
 });
@@ -481,7 +492,7 @@ $("#loopbtn").addEventListener("click", () => {
 function steer(){
   const m = master(); if(!m || !playing) return;
   const d = m.duration || 196;
-  ["chant", "extra"].forEach(l => {
+  ["chant", "perc"].forEach(l => {
     const n = layers[l]; if(!n || !el[n]) return;
     const a = el[n]; if(a.paused) return;
     let drift = (a.currentTime || 0) - (m.currentTime || 0);
@@ -535,7 +546,7 @@ function drawTimeline(){
   g.fillStyle = gl + "33"; g.fill();
   g.strokeStyle = gl; g.lineWidth = 1.2; g.stroke();
   /* marqueurs d'attaques */
-  const a = master(), d = (a && a.duration) || 196;
+  const a = master(), d = (a && a.duration) || (m && m.dur) || 196;
   g.strokeStyle = "rgba(233,226,206,.5)";
   m.onsets.forEach(([t, s]) => {
     const x = t / d * cvW, h = Math.min(1, s / 18) * 22 + 5;
@@ -543,8 +554,9 @@ function drawTimeline(){
   });
   /* mesures (une graduation toutes les 4) */
   g.strokeStyle = "rgba(111,117,101,.35)";
+  const bs = (m && m.barsec) || META.bar;
   for(let b = 4; b < META.bars; b += 4){
-    const x = b * META.bar / d * cvW;
+    const x = b * bs / d * cvW;
     g.beginPath(); g.moveTo(x, cvH - 8); g.lineTo(x, cvH); g.stroke();
   }
   /* tete de lecture */
@@ -565,7 +577,7 @@ function seekAt(clientX){
   const d = m.duration || 196;
   pos = frac * d;
   try{ m.currentTime = pos; }catch(e){}
-  ["chant", "extra"].forEach(l => {
+  ["chant", "perc"].forEach(l => {
     if(layers[l] && el[layers[l]]){
       try{ el[layers[l]].currentTime = pos; }catch(e){}
     }
@@ -575,11 +587,14 @@ function seekAt(clientX){
 cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); seekAt(e.clientX); });
 cv.addEventListener("pointermove", e => { if(e.buttons) seekAt(e.clientX); });
 
-function barAt(t){ return Math.min(META.bars, Math.floor(t / META.bar) + 1); }
+function barAt(t){
+  const m = combo(), bs = (m && m.barsec) || META.bar;
+  return Math.min(META.bars, Math.floor(t / bs) + 1);
+}
 function stateLine(){
-  const x = extraOf(H);
+  const pid = percOf(H);
   return "mélodie:" + META.melodie.labels[chantId()] + " · fond:" + META.fonds[fondId()] +
-         (x ? " · +" + x.label : "");
+         (pid ? " · perc:" + (META.perclabels[pid] || pid) : "");
 }
 function updateReadout(t){
   const b = barAt(t);
@@ -674,6 +689,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 sizeCanvas(); paintState();
-$("#ratero").textContent = "×" + RATE.toFixed(2);
+RATE = rateFor(H);
+$("#ratero").textContent = "×" + (META.tempo[H] || 1).toFixed(2);
 addEventListener("resize", () => { sizeCanvas(); drawTimeline(); });
 </script>

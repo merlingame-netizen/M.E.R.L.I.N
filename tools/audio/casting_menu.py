@@ -174,16 +174,32 @@ CONTEXT = {
 }
 
 # ── LA VITESSE PAR HEURE ─────────────────────────────────────────────────────
-# Facteur de lecture (playbackRate, hauteur preservee par le navigateur).
-# Applique A LA LECTURE : le rendu reste unique, la boucle reste calee — c'est
-# le meme fichier qui respire plus vite a midi et plus lentement la nuit.
+# v7 : le jour, VARISPEED DOUX (moins d'un demi-ton de derive de hauteur —
+# 0,94 = -1,07 st, 1,05 = +0,85 st) : assez pour respirer, pas assez pour
+# detoner. La NUIT n'est PAS un varispeed : elle est RENDUE au tempo reel
+# x0,80 (MERLIN_TEMPO_SCALE) et lue a 1,0 — la boite a musique garde sa
+# hauteur normale, exigence utilisateur.
 TEMPO = {
-    "aube":       0.88,        # le jour se leve, la musique aussi
-    "matinee":    0.96,
-    "midi":       1.06,        # le plus allant
+    "aube":       0.94,
+    "matinee":    0.98,
+    "midi":       1.05,        # le plus allant
     "apres_midi": 1.00,        # la reference
-    "soiree":     0.93,
-    "nuit":       0.80,        # boite a musique LENTE — le plus lent de tous
+    "soiree":     0.95,
+    "nuit":       0.80,        # affiche x0,80 — rendu reel, lu a 1,0
+}
+NIGHT_TRUE_RENDER = True       # la nuit vient d'un rendu a l'echelle 0,8
+
+# ── LES PERCUSSIONS PAR HEURE ────────────────────────────────────────────────
+# « des percussions de differents types selon le moment de la journee » :
+# une ecriture de pouls par heure, jouee en couche separee sur le drone.
+# La nuit, le tambour de nuit est integre au rendu lent du fond.
+PERC = {
+    "aube":       "sourd",     # taiko etouffe, le jour se leve a peine
+    "matinee":    "calme",     # bodhran doux
+    "midi":       "danse",     # le pas d'an dro — le plus vivant
+    "apres_midi": "calme",
+    "soiree":     "sourd",
+    "nuit":       None,        # dans le fond de nuit (rendu x0,8)
 }
 
 # ── EXTRAS : SUPPRIMES (regle « max 3 instruments », 2026-08-07) ─────────────
@@ -194,13 +210,12 @@ TEMPO = {
 EXTRAS: dict = {}
 
 # ── LE FOND ──────────────────────────────────────────────────────────────────
-# v6 (2026-08-07) : « le fond doit etre un drone sound plus lourd, quelques
-# percussions aussi et pas de guitare celte ». Toujours MAX 3 INSTRUMENTS :
-#   1. le drone — bourdon statique en re, contrebasses + cordes graves (bed)
-#   2. quelques percussions sourdes le jour / cloches tubulaires la nuit
-#   3. la melodie — l'instrument de la table (meteo, heure)
-FOND_JOUR = {"pulse": "sourd"}
-FOND_NUIT = {"halo": "tubulaires"}
+# v7 : le jour, le fond premixe = DRONE seul (bed) — les percussions sont une
+# COUCHE SEPAREE choisie par l'heure (PERC). La nuit, tout est premixe dans
+# le rendu lent : drone + cloches tubulaires + tambour de nuit.
+# Toujours MAX 3 instruments audibles : drone + percussion + melodie.
+FOND_JOUR: dict = {}
+FOND_NUIT = {"halo": "tubulaires", "pulse": "nuit"}
 
 
 def resolve(context: dict) -> dict:
@@ -290,6 +305,8 @@ def manifest() -> dict:
         "priority": PRIORITY,
         "context": CONTEXT,
         "tempo": TEMPO,
+        "perc": PERC,
+        "night_true_render": NIGHT_TRUE_RENDER,
         "extras": EXTRAS,
         "fond_jour": FOND_JOUR,
         "fond_nuit": FOND_NUIT,
