@@ -2756,3 +2756,13 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - [x] « Opaques » : melodie 32k -> 40k, fond -> 64k stereo, oud 3,4 kHz.
 - [x] Rendus x4 echelles, 0 couture partout. Artefact AAC 14,16 Mo,
       tests verts, publie c2a7221f.
+
+## 2026-08-07 — Musique menu v11 : orchestration + leitmotiv — LIVRE
+- [x] References : Margulis (On Repeat), pratique leitmotiv jeu video,
+      Rimsky-Korsakov (couches structurelles). Notees en memoire.
+- [x] Orchestration par sections : annonce du motif (clochettes, ouverture),
+      contre-chant d'alto 9-16, coussin seconds violons + doublure celesta +
+      trait de harpe au sommet, echos appel-reponse (8, 16), reminiscence
+      harpe en coda. Guitare : 4 dessins differents par section.
+- [x] Lint 0/0/0 (un echo raccourci a 1,2 s), boucles 4 echelles propres.
+- [x] Artefact AAC 14,16 Mo, tests verts, publie c2a7221f.
