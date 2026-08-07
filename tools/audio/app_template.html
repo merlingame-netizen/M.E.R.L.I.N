@@ -1,231 +1,257 @@
 <title>Brocéliande — lecteur</title>
 <style>
+/* ── Brocéliande, de nuit. Un seul theme, assume. ───────────────────────────
+   La page EST le milieu : --sky1/--sky2 (ciel), --glow (lueur d'accent) et
+   --fogop (densite de brume) glissent quand le milieu change. Les proprietes
+   sont enregistrees pour que les degrades se fondent au lieu de sauter. */
+@property --sky1{syntax:'<color>';inherits:true;initial-value:#0e1712;}
+@property --sky2{syntax:'<color>';inherits:true;initial-value:#090f0b;}
+@property --glow{syntax:'<color>';inherits:true;initial-value:#c9a25e;}
+
 :root{
-  --ink:#0B1512; --panel:#121F1A; --panel-2:#0E1A16; --line:#22352C;
-  --fg:#DDE7E2; --fg-2:#9FB3AB; --fg-3:#6C8279;
-  --frost:#7FB8AE; --ember:#C8934E;
-  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -18px rgba(0,0,0,.8);
+  --sky1:#0e1712; --sky2:#090f0b; --glow:#c9a25e; --fogop:.05;
+  --ink:#0a100c; --panel:rgba(16,24,19,.72); --line:#242f26; --line-2:#31402f;
+  --fg:#e9e2ce; --fg-2:#a8a893; --fg-3:#6f7565;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,ui-serif,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  transition:--sky1 1.6s ease,--sky2 1.6s ease,--glow 1.6s ease;
 }
-@media (prefers-color-scheme:light){
-  :root{
-    --ink:#E8E4D9; --panel:#F2EFE6; --panel-2:#DCD8CB; --line:#C3BFB0;
-    --fg:#14201B; --fg-2:#41544C; --fg-3:#6E8078;
-    --frost:#2F7A70; --ember:#8A5C18;
-    --shadow:0 1px 2px rgba(20,32,27,.08),0 12px 32px -20px rgba(20,32,27,.35);
-  }
-}
-:root[data-theme="light"]{
-  --ink:#E8E4D9; --panel:#F2EFE6; --panel-2:#DCD8CB; --line:#C3BFB0;
-  --fg:#14201B; --fg-2:#41544C; --fg-3:#6E8078;
-  --frost:#2F7A70; --ember:#8A5C18;
-  --shadow:0 1px 2px rgba(20,32,27,.08),0 12px 32px -20px rgba(20,32,27,.35);
-}
-:root[data-theme="dark"]{
-  --ink:#0B1512; --panel:#121F1A; --panel-2:#0E1A16; --line:#22352C;
-  --fg:#DDE7E2; --fg-2:#9FB3AB; --fg-3:#6C8279;
-  --frost:#7FB8AE; --ember:#C8934E;
-  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -18px rgba(0,0,0,.8);
-}
-
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;background:var(--ink)}
 body{
-  margin:0;background:var(--ink);color:var(--fg);
-  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
-  padding-bottom:calc(40px + env(safe-area-inset-bottom));
-  overflow-x:hidden;
+  margin:0;color:var(--fg);background:var(--ink);
+  font-family:var(--serif);font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  padding-bottom:calc(44px + env(safe-area-inset-bottom));
 }
-.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
-/* Encoches et coins arrondis : sans les marges de sécurité le texte passe sous
-   la barre d'état et sous l'indicateur d'accueil de l'iPhone. */
-.wrap{
-  max-width:940px;margin:0 auto;
-  padding-left:calc(18px + env(safe-area-inset-left));
-  padding-right:calc(18px + env(safe-area-inset-right));
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;font-family:inherit}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ── le ciel, la brume, le grain ── */
+.sky{position:fixed;inset:0;z-index:-3;
+  background:radial-gradient(130% 95% at 50% -12%,var(--sky1),var(--sky2) 72%);}
+.fog{position:fixed;inset:-20%;z-index:-2;opacity:var(--fogop);
+  transition:opacity 1.6s ease;pointer-events:none;
+  background:
+    radial-gradient(45% 30% at 22% 34%,#cfd8cb 0%,transparent 70%),
+    radial-gradient(50% 34% at 76% 58%,#b9c8bd 0%,transparent 72%),
+    radial-gradient(38% 26% at 48% 82%,#c2ccc0 0%,transparent 70%);
+  animation:drift 46s linear infinite alternate;}
+@keyframes drift{from{transform:translate3d(-2.5%,-1.5%,0)}to{transform:translate3d(2.5%,2%,0)}}
+.grain{position:fixed;inset:0;z-index:-1;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.55'/></svg>");}
+
+.wrap{max-width:620px;margin:0 auto;
+  padding-left:calc(20px + env(safe-area-inset-left));
+  padding-right:calc(20px + env(safe-area-inset-right));}
+
+/* ── l'en-tete : marque, titre, milieu ── */
+header{padding-top:calc(26px + env(safe-area-inset-top))}
+.crest{font-size:.86rem;letter-spacing:.45em;color:var(--fg-3);text-align:center}
+.title{
+  margin:6px 0 0;text-align:center;font-weight:500;font-style:italic;
+  font-size:clamp(1.9rem,7vw,2.5rem);letter-spacing:.01em;line-height:1.05;
 }
-/* Pas de délai de 300 ms, pas de flash gris au doigt, pas de loupe de sélection
-   sur appui long : trois réflexes de Safari mobile qui font paraître l'interface
-   molle alors que le code répond tout de suite. */
-button{
-  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  -webkit-user-select:none;user-select:none;
+.milieu-line{display:flex;justify-content:center;align-items:center;gap:10px;margin:8px 0 18px}
+.milieu-line::before,.milieu-line::after{content:"᚜";color:var(--fg-3);font-size:.8rem}
+.milieu-line::before{content:"᚛"}
+#milieu{
+  text-transform:capitalize;
+  font-style:italic;font-size:1.02rem;color:var(--glow);
+  transition:color 1.6s ease;letter-spacing:.04em;
 }
 
-/* ── en-tête + transport ─────────────────────────────────────── */
-header{padding:34px 0 18px}
-
+/* ── transport ── */
 .bar{
-  position:sticky;top:0;z-index:20;background:var(--panel);
-  border:1px solid var(--line);border-radius:5px;box-shadow:var(--shadow);
-  margin-top:22px;padding:13px 15px;display:flex;align-items:center;
-  gap:14px;flex-wrap:wrap;
+  position:sticky;top:env(safe-area-inset-top);z-index:30;
+  display:flex;align-items:center;gap:16px;padding:10px 14px;margin:0 -2px 4px;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 12px 32px -18px rgba(0,0,0,.9);flex-wrap:wrap;
 }
 .play{
-  display:inline-flex;align-items:center;gap:9px;cursor:pointer;
-  background:var(--frost);color:var(--ink);border:none;border-radius:3px;
-  padding:10px 19px;font:600 .92rem/1 inherit;font-family:inherit;
-  transition:opacity .15s;
+  position:relative;width:58px;height:58px;border-radius:50%;flex:none;
+  background:transparent;border:none;color:var(--glow);cursor:pointer;
+  display:grid;place-items:center;transition:color 1.6s ease;
 }
-@media (hover:hover){.play:hover{opacity:.86}}
-.play[disabled]{opacity:.5;cursor:progress}
-.clock{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;
-  font-variant-numeric:tabular-nums;color:var(--fg-2);
-}
-.clock b{color:var(--fg);font-weight:600}
-.tag{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.63rem;
-  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);
-  border:1px solid var(--line);border-radius:2px;padding:4px 8px;
-}
-.tag.on{color:var(--ember);border-color:var(--ember)}
-.msg{flex-basis:100%;font-size:.8rem;color:var(--fg-3);line-height:1.5}
+.play[disabled]{opacity:.45;cursor:progress}
+.play svg.ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.rr-bg,.rr{fill:none;stroke-width:2.5}
+.rr-bg{stroke:var(--line-2)}
+.rr{stroke:currentColor;stroke-linecap:round;stroke-dasharray:157;stroke-dashoffset:157}
+#glyph{font-size:1.05rem;line-height:1;transform:translateX(1px)}
+.clock{font-family:var(--mono);font-size:.92rem;color:var(--fg-2);
+  font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:baseline}
+.clock b{color:var(--fg);font-weight:600;font-size:1.05rem}
+.tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--fg-3)}
+.tag.ghost{margin-left:auto}
+.tag.ghost:empty{display:none}
+.tag.on{color:var(--glow)}
+.msg{flex-basis:100%;font-size:.82rem;color:var(--fg-2);font-style:italic}
 .msg:empty{display:none}
-.msg.warn{color:var(--ember)}
+.msg.warn{color:var(--glow)}
 
-/* ── la table : une ligne par piste — jauge, titulaire, remplaçants ── */
-.board{display:grid;gap:8px}
+/* ── sections ── */
+section{margin-top:26px}
+.lbl{
+  display:flex;align-items:center;gap:12px;margin:0 0 12px;
+  font-family:var(--mono);font-weight:400;font-size:.62rem;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--fg-3);
+}
+.lbl::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,var(--line-2),transparent)}
+
+/* ── scenes : cartes a defilement ── */
+.scenes{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none}
+.scenes::-webkit-scrollbar{display:none}
+.scenes .amb{
+  scroll-snap-align:start;flex:none;width:104px;min-height:96px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  color:var(--fg-2);cursor:pointer;padding:12px 8px;
+  font-family:var(--serif);font-size:.88rem;font-style:italic;line-height:1.15;
+  text-align:center;transition:border-color .18s,color .18s,transform .1s;
+}
+.scenes .amb .ic{width:22px;height:22px}
+.scenes .amb:active{transform:scale(.96)}
+.scenes .amb[aria-pressed="true"]{
+  color:var(--fg);border-color:var(--glow);
+  box-shadow:inset 0 0 0 1px var(--glow),0 0 22px -8px var(--glow);
+}
+.scenes .amb[aria-pressed="true"] .ic{color:var(--glow)}
+
+/* ── conditions : rangées d'icones ── */
+.axis{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.axis > b{font-family:var(--mono);font-weight:400;font-size:.6rem;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--fg-3);width:100%}
+.chip.ax{
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+  background:transparent;border:1px solid var(--line);border-radius:999px;
+  color:var(--fg-2);font-family:var(--serif);font-size:.88rem;
+  padding:8px 14px;transition:border-color .15s,color .15s,transform .1s;
+}
+.chip.ax:active{transform:scale(.95)}
+.chip.ax[aria-pressed="true"]{
+  color:var(--ink);background:var(--glow);border-color:var(--glow);font-weight:600;
+}
+.ic{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;
+  stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── pistes ── */
+.board{display:grid;gap:10px}
 .track{
-  background:var(--panel);border:1px solid var(--line);border-radius:5px;
-  padding:11px 13px 12px;display:grid;gap:9px;box-shadow:var(--shadow);
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:12px 15px 13px;display:grid;gap:8px;
+  transition:border-color .5s,box-shadow .5s;
 }
+.track.swap{border-color:var(--glow);box-shadow:0 0 18px -10px var(--glow)}
 .tr-top{display:flex;align-items:center;gap:12px}
-.tr-name{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
-  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);min-width:54px;
-}
+.tr-name{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--fg-3)}
+.tr-name::before{content:"ᚋ ";color:var(--line-2)}
+.meter{margin-left:auto;width:84px;height:3px;background:var(--line);
+  border-radius:2px;overflow:hidden;flex:none}
+.meter i{display:block;height:100%;width:0%;background:var(--fg-3);
+  border-radius:2px;transition:width .09s linear}
+.track.hot .meter i{background:var(--glow)}
 .tr-now{
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
-  font-size:1.08rem;color:var(--ember);flex:1;min-width:0;
+  font-size:1.35rem;line-height:1.15;color:var(--fg);font-style:italic;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.tr-now .from{color:var(--fg-3)}
-.tr-now .arr{color:var(--frost);padding:0 4px}
-.meter{width:90px;flex:none}
-.track.hot .meter i{background:var(--ember)}
-.meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
-.meter i{
-  display:block;height:100%;width:0%;background:var(--frost);
-  border-radius:2px;transition:width .09s linear;
-}
-
-/* ── sections ─────────────────────────────────────────────────── */
-section{margin-top:30px}
-
-.chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.axis{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
-.axis > b{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
-  letter-spacing:.15em;text-transform:uppercase;color:var(--fg-3);
-  min-width:74px;font-weight:400;
-}
-.chip{
-  cursor:pointer;font:inherit;font-size:.82rem;background:transparent;
-  color:var(--fg-2);border:1px solid var(--line);border-radius:2px;
-  padding:5px 11px;transition:.14s;
-}
-@media (hover:hover){.chip:hover{color:var(--fg);border-color:var(--fg-3)}}
-.chip[aria-pressed="true"]{
-  background:var(--frost);border-color:var(--frost);color:var(--ink);font-weight:500;
-}
-.chip.amb[aria-pressed="true"]{background:var(--ember);border-color:var(--ember)}
-
-.bench{display:flex;gap:6px;flex-wrap:wrap}
+.track.hot .tr-now{color:var(--glow);transition:color 1.6s ease}
+.tr-now .from{color:var(--fg-3);font-size:.95rem}
+.tr-now .arr{color:var(--fg-2);padding:0 6px;font-style:normal}
+.bench{display:flex;gap:7px;flex-wrap:wrap}
 .cand{
-  cursor:pointer;font:inherit;font-size:.8rem;background:transparent;
-  color:var(--fg-3);border:1px solid var(--line);border-radius:2px;
-  padding:4px 10px;transition:.14s;
+  cursor:pointer;background:transparent;color:var(--fg-2);
+  border:1px solid var(--line);border-radius:999px;
+  font-family:var(--serif);font-size:.85rem;padding:7px 13px;
+  transition:border-color .15s,color .15s,transform .1s;
 }
-@media (hover:hover){.cand:hover{color:var(--fg);border-color:var(--fg-3)}}
+.cand:active{transform:scale(.95)}
 .cand[aria-pressed="true"]{
-  background:var(--ember);border-color:var(--ember);color:var(--ink);font-weight:500;
+  color:var(--ink);background:var(--glow);border-color:var(--glow);font-weight:600;
 }
 
-a{color:var(--frost)}
-button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offset:3px;border-radius:2px}
-@media (max-width:640px){
-  .meter{width:56px}
-  .axis > b{min-width:100%}
-  header{padding-top:calc(20px + env(safe-area-inset-top))}
-  .bar{top:env(safe-area-inset-top)}
+footer{margin-top:30px;text-align:center;font-family:var(--mono);
+  font-size:.6rem;letter-spacing:.2em;color:var(--fg-3)}
+
+@media (hover:hover){
+  .chip.ax:hover,.cand:hover,.scenes .amb:hover{border-color:var(--line-2);color:var(--fg)}
 }
-/* CIBLES TACTILES. Au doigt, les puces faisaient 28 px de haut — sous le
-   minimum de 44x44 px que le projet s'impose (bible §21.1, pilier TACTILE).
-   On n'agrandit que sur pointeur grossier : à la souris les puces compactes
-   restent préférables. */
 @media (pointer:coarse){
-  .chip,.cand{min-height:44px;padding:9px 15px;font-size:.86rem}
-  .play{min-height:48px;padding:12px 22px}
-  .bench{gap:8px}
-  .chips,.axis{gap:9px}
+  .chip.ax,.cand{min-height:44px;padding:10px 16px}
+  .scenes .amb{min-height:104px}
+}
+@media (min-width:760px){
+  .wrap{max-width:680px}
+  .scenes{flex-wrap:wrap;overflow:visible}
 }
 @media (prefers-reduced-motion:reduce){
-  *{transition:none !important}
+  *{transition:none !important;animation:none !important}
 }
 
-/* ── attestation de provenance ────────────────────────────────── */
-.prov{
-  margin-top:26px;border:1px solid var(--line);border-radius:4px;
-  background:var(--panel);overflow:hidden;
-}
-.prov-head{
-  display:flex;align-items:center;gap:12px;padding:14px 17px;
-  background:var(--panel-2);border-bottom:1px solid var(--line);flex-wrap:wrap;
-}
-.prov-head h3{
-  font-family:"Iowan Old Style",Palatino,Georgia,ui-serif,serif;
-  font-size:1.02rem;font-weight:600;margin:0;
-}
-.pill{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
-  letter-spacing:.13em;text-transform:uppercase;padding:4px 9px;border-radius:2px;
-  border:1px solid currentColor;
-}
-.pill.synth{color:var(--frost)}
-.pill.sampled{color:var(--ember)}
-.prov-body{padding:16px 17px;display:flex;flex-direction:column;gap:13px}
-.prov-body p{font-size:.87rem;color:var(--fg-2);max-width:62ch;margin:0}
-.prov-rows{display:flex;flex-direction:column;gap:7px;margin:0}
-.prov-rows div{display:grid;grid-template-columns:140px 1fr;gap:14px;font-size:.8rem}
-.prov-rows dt{
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.64rem;
-  letter-spacing:.11em;text-transform:uppercase;color:var(--fg-3);padding-top:.2em;
-}
-.prov-rows dd{
-  margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;
-  font-size:.76rem;overflow-wrap:anywhere;
-}
-.prov details{font-size:.8rem}
-.prov summary{cursor:pointer;color:var(--fg-3);font-size:.78rem;min-height:44px;
-  display:flex;align-items:center}
-.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
-.prov table{border-collapse:collapse;margin-top:10px;font-size:.74rem}
-.prov th,.prov td{
-  text-align:left;padding:5px 10px 5px 0;border-bottom:1px solid var(--line);
-  white-space:nowrap;
-}
-.prov th{color:var(--fg-3);font-weight:400;font-size:.66rem;text-transform:uppercase;
-  letter-spacing:.1em}
-.prov td.k{font-family:ui-monospace,Menlo,Consolas,monospace}
-@media (max-width:720px){.prov-rows div{grid-template-columns:1fr;gap:2px}}
+/* ── teintes par milieu ── */
+[data-milieu="clair"]{--sky1:#17220f;--sky2:#0c120a;--glow:#dcbb6d;--fogop:.03}
+[data-milieu="jour"]{--sky1:#151f10;--sky2:#0c110b;--glow:#d3b166;--fogop:.04}
+[data-milieu="ete"]{--sky1:#1a220e;--sky2:#0d1109;--glow:#dfc06a;--fogop:.03}
+[data-milieu="printemps"]{--sky1:#14230f;--sky2:#0b1309;--glow:#b9cc6d;--fogop:.05}
+[data-milieu="aube"]{--sky1:#241d10;--sky2:#100d0a;--glow:#e4c27c;--fogop:.07}
+[data-milieu="automne"]{--sky1:#221a0d;--sky2:#110d08;--glow:#d09a52;--fogop:.06}
+[data-milieu="crepuscule"]{--sky1:#231712;--sky2:#100b0a;--glow:#d99e63;--fogop:.07}
+[data-milieu="couvert"]{--sky1:#161c14;--sky2:#0d110c;--glow:#adaf8e;--fogop:.09}
+[data-milieu="pluie"]{--sky1:#101b20;--sky2:#0a1013;--glow:#8fb3c2;--fogop:.08}
+[data-milieu="orage"]{--sky1:#171420;--sky2:#0b0a10;--glow:#dda257;--fogop:.09}
+[data-milieu="brume"]{--sky1:#151b19;--sky2:#0e1211;--glow:#a4bfb2;--fogop:.2}
+[data-milieu="neige"]{--sky1:#12202a;--sky2:#0b1218;--glow:#c4dcec;--fogop:.12}
+[data-milieu="hiver"]{--sky1:#101c22;--sky2:#0a1014;--glow:#a9c8d8;--fogop:.1}
+[data-milieu="nuit"]{--sky1:#0e1220;--sky2:#080a12;--glow:#9daed3;--fogop:.08}
 </style>
+
+<div class="sky" aria-hidden="true"></div>
+<div class="fog" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
 
 <div class="wrap">
 <header>
+  <div class="crest">᚛ᚋᚓᚏᚂᚔᚅ᚜</div>
+  <h1 class="title">Tri Martolod</h1>
+  <div class="milieu-line"><span id="milieu">Brocéliande</span></div>
+
   <div class="bar">
-    <button class="play" id="play"><span id="glyph">▶</span><span id="playlabel">Écouter</span></button>
-    <div class="clock"><b id="t">0:00</b> / <span id="dur">3:16</span></div>
-    <div class="tag" id="milieu">milieu · neutre</div>
-    <div class="tag" id="engine">—</div>
+    <button class="play" id="play" aria-label="Écouter">
+      <svg class="ring" viewBox="0 0 56 56" aria-hidden="true">
+        <circle class="rr-bg" cx="28" cy="28" r="25"/>
+        <circle class="rr" id="ring" cx="28" cy="28" r="25"/>
+      </svg>
+      <span id="glyph">▶</span><span id="playlabel" class="sr">Écouter</span>
+    </button>
+    <div class="clock"><b id="t">0:00</b><span>/</span><span id="dur">3:16</span></div>
+    <div class="tag ghost" id="engine"></div>
     <div class="msg" id="msg"></div>
   </div>
 </header>
 
-<section><div class="chips" id="presets"></div></section>
-<section><div class="board" id="board"></div></section>
-<section><div id="axes"></div></section>
+<section>
+  <h2 class="lbl">Scènes</h2>
+  <div class="chips scenes" id="presets"></div>
+</section>
 
+<section>
+  <h2 class="lbl">Conditions</h2>
+  <div id="axes"></div>
+</section>
+
+<section>
+  <h2 class="lbl">Pistes</h2>
+  <div class="board" id="board"></div>
+</section>
+
+<footer>᚛ ᚜</footer>
 </div>
 
 <script>
@@ -233,20 +259,49 @@ const AUDIO = __AUDIO_JSON__;
 const CAST  = __CASTING_JSON__;
 
 const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment"};
+/* les valeurs internes sont sans accent (cles de fichiers) ; l'ecran, lui,
+   ecrit le francais correctement */
+const VAL_LABEL = {ete:"été", crepuscule:"crépuscule"};
+const vlabel = v => VAL_LABEL[v] || v;
 const ROLE_LABEL = {chant:"Chant", corde:"Corde", halo:"Halo", pulse:"Pouls"};
 
 /* Présets COMBINATOIRES : chacun pose des AXES (météo + saison + moment),
    pas une distribution figée. La table de contexte en déduit les titulaires ET
    le milieu — et l'état reste lisible et modifiable axe par axe après coup. */
 const PRESETS = [
-  {id:"broceliande", label:"Brocéliande",   ctx:{}},
-  {id:"pluie",       label:"Pluie d’été",   ctx:{meteo:"pluie", saison:"ete"}},
-  {id:"orage",       label:"Orage",         ctx:{meteo:"orage"}},
-  {id:"neige",       label:"Neige",         ctx:{meteo:"neige"}},
-  {id:"hiver",       label:"Nuit d’hiver",  ctx:{saison:"hiver", moment:"nuit"}},
-  {id:"printemps",   label:"Aube claire",   ctx:{moment:"aube"}},
-  {id:"lointain",    label:"Brume de nuit", ctx:{meteo:"brume", moment:"nuit"}},
+  {id:"broceliande", label:"Brocéliande",   ctx:{}, ic:"broceliande"},
+  {id:"pluie",       label:"Pluie d’été",   ctx:{meteo:"pluie", saison:"ete"}, ic:"pluie"},
+  {id:"orage",       label:"Orage",         ctx:{meteo:"orage"}, ic:"orage"},
+  {id:"neige",       label:"Neige",         ctx:{meteo:"neige"}, ic:"neige"},
+  {id:"hiver",       label:"Nuit d’hiver",  ctx:{saison:"hiver", moment:"nuit"}, ic:"nuit"},
+  {id:"printemps",   label:"Aube claire",   ctx:{moment:"aube"}, ic:"aube"},
+  {id:"lointain",    label:"Brume de nuit", ctx:{meteo:"brume", moment:"nuit"}, ic:"brume"},
 ];
+
+/* Icones gravees au trait — 15 px, courant de couleur. Des dessins, pas des
+   emojis : le rendu emoji change de style selon la plateforme et jure avec
+   l'encre. */
+const ICON = {
+  clair:'<circle cx="8" cy="8" r="3.1"/><path d="M8 1.4v2M8 12.6v2M1.4 8h2M12.6 8h2M3.5 3.5l1.3 1.3M11.2 11.2l1.3 1.3M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3"/>',
+  couvert:'<path d="M4.6 11.5a3 3 0 1 1 .7-5.9 3.8 3.8 0 0 1 7.4 1.1 2.4 2.4 0 0 1-.5 4.8z"/>',
+  pluie:'<path d="M4.6 9.5a3 3 0 1 1 .7-5.9 3.8 3.8 0 0 1 7.4 1.1 2.4 2.4 0 0 1-.5 4.8z"/><path d="M5 12v2.2M8 12.6v2.2M11 12v2.2"/>',
+  orage:'<path d="M4.6 9.5a3 3 0 1 1 .7-5.9 3.8 3.8 0 0 1 7.4 1.1 2.4 2.4 0 0 1-.5 4.8z"/><path d="M8.6 9.6l-2.1 3.1h2.2L7.4 15.5"/>',
+  brume:'<path d="M2.5 6h11M4 9h9M3 12h10"/>',
+  neige:'<path d="M8 2v12M3 5l10 6M13 5L3 11"/>',
+  printemps:'<path d="M8 14.5V7M8 7C8 4 6 3 3.5 3c0 3 1.5 4 4.5 4zM8 9c0-2.5 2-3.5 4.5-3.5C12.5 8 11 9 8 9z"/>',
+  ete:'<circle cx="8" cy="8" r="3.5"/><path d="M8 1v2.1M8 12.9V15M1 8h2.1M12.9 8H15"/>',
+  automne:'<path d="M8 14c0-4 .5-8 5-11-6 0-9 3-9 8 0 1.7 1.8 3 4 3z"/>',
+  hiver:'<path d="M8 2v12M4 4.5l8 7M12 4.5l-8 7"/>',
+  aube:'<path d="M1.5 11.5h13M4.5 11.5a3.5 3.5 0 0 1 7 0M8 4v2.2M3.2 6l1.4 1.4M12.8 6l-1.4 1.4"/>',
+  jour:'<circle cx="8" cy="8" r="3.4"/><path d="M8 1.2v2M8 12.8v2M1.2 8h2M12.8 8h2"/>',
+  crepuscule:'<path d="M1.5 10.5h13M4.5 10.5a3.5 3.5 0 0 1 7 0M8 13.2v1.6M4.4 13.6l1 1.1M11.6 13.6l-1 1.1"/>',
+  nuit:'<path d="M12.6 10.2A5.6 5.6 0 1 1 7 2.4a4.5 4.5 0 0 0 5.6 7.8z"/>',
+  broceliande:'<path d="M8 15V9M8 9C4.5 9 3 6.2 3 3c3 0 5 1.2 5 4.2C8 4.2 10 3 13 3c0 3.2-1.5 6-5 6z"/>',
+};
+function icon(name){
+  const d = ICON[name];
+  return d ? '<svg class="ic" viewBox="0 0 16 16" aria-hidden="true">'+d+'</svg>' : '';
+}
 
 const $ = s => document.querySelector(s);
 const playBtn=$("#play"), glyph=$("#glyph"), playLabel=$("#playlabel");
@@ -358,8 +413,10 @@ function applyMix(m){
   if(sig !== mixNow){                          /* l'IR ne se recalcule qu'au besoin */
     try{ CONV.buffer = makeIR(m.decay, m.damp); mixNow = sig; }catch(e){}
   }
+  /* la page entiere prend la teinte du milieu : ciel, brume, lueur */
+  document.documentElement.dataset.milieu = m.source || "neutre";
   const tag = document.querySelector("#milieu");
-  if(tag) tag.textContent = "milieu · " + (m.source || "neutre");
+  if(tag) tag.textContent = m.source && m.source !== "neutre" ? vlabel(m.source) : "Brocéliande";
 }
 
 /* Même priorité que la distribution : météo > saison > moment. Un seul milieu
@@ -587,6 +644,11 @@ function paintLevels(){
   };
   set("bed", "bed", false, 1);
   (CAST.roles||[]).forEach(r => set(r, key(r, cast[r]), true, trim(r, cast[r])));
+  const ring = document.getElementById("ring");
+  if(ring && el.bed && el.bed.duration){
+    ring.style.strokeDashoffset =
+      (157 * (1 - el.bed.currentTime / el.bed.duration)).toFixed(1);
+  }
 }
 
 function sameCtx(a, b){
@@ -617,11 +679,17 @@ function setCast(next){
     if(playing) startPart(key(r, cast[r]));
     /* pendant le fondu croise, la ligne montre le remplacement en cours */
     const now = boardEl.querySelector('[data-now="'+r+'"]');
+    const row = boardEl.querySelector('.track[data-tr="'+r+'"]');
     if(now && oldE && newE){
       now.innerHTML = '<span class="from">'+oldE.label+'</span>'+
                       '<span class="arr">→</span>'+newE.label;
+      if(row) row.classList.add("swap");
       clearTimeout(switching[r]);
-      switching[r] = setTimeout(() => { delete switching[r]; paint(); }, 3200);
+      switching[r] = setTimeout(() => {
+        delete switching[r];
+        if(row) row.classList.remove("swap");
+        paint();
+      }, 3200);
     }
   });
   applyTargets(); paint(); applyMix(resolveMix());
@@ -641,7 +709,8 @@ function resolve(){
 
 /* presets — combinables avec les axes : un preset POSE des axes, il ne fige rien */
 $("#presets").innerHTML = PRESETS.map(pz =>
-  '<button class="chip amb" data-amb="'+pz.id+'" aria-pressed="false">'+pz.label+'</button>').join("");
+  '<button class="chip amb" data-amb="'+pz.id+'" aria-pressed="false">'+
+  icon(pz.ic)+'<span>'+pz.label+'</span></button>').join("");
 $("#presets").querySelectorAll(".amb").forEach(b => b.addEventListener("click", () => {
   const pz = PRESETS.find(x => x.id === b.dataset.amb);
   context = Object.assign({}, pz.ctx);
@@ -657,7 +726,8 @@ Object.keys(CAST.axes || {}).forEach(axis => {
   row.innerHTML = "<b>"+(AXIS_LABEL[axis]||axis)+"</b>";
   CAST.axes[axis].forEach(value => {
     const b = document.createElement("button");
-    b.className = "chip ax"; b.textContent = value;
+    b.className = "chip ax";
+    b.innerHTML = icon(value) + "<span>" + vlabel(value) + "</span>";
     b.setAttribute("aria-pressed","false");
     b.dataset.axis = axis; b.dataset.val = value;
     b.addEventListener("click", () => {
