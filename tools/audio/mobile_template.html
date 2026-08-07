@@ -257,7 +257,7 @@ function make(name){
   try{ a.preservesPitch = false; }catch(e){}
   try{ a.webkitPreservesPitch = false; }catch(e){}
   if(!name.startsWith("FX_")) a.playbackRate = RATE;
-  a.src = "data:audio/mp4;base64," + (AUDIO[name] || "");
+  a.src = "data:" + (META.mime || "audio/mp4") + ";base64," + (AUDIO[name] || "");
   el[name] = a;
   const c = ctx();
   if(c){
@@ -601,7 +601,7 @@ function updateReadout(t){
   const chord = META.progression[b - 1] || "—";
   $("#readout").textContent =
     "t=" + t.toFixed(1) + "s · mesure " + b + " · " + chord +
-    " · ×" + RATE.toFixed(2) + " · " + stateLine();
+    " · ×" + (META.tempo[H] || 1).toFixed(2) + " · " + stateLine();
 }
 
 /* ── meteo & heure ── */
@@ -645,7 +645,7 @@ document.querySelectorAll("#fx .chip").forEach(b => b.addEventListener("click", 
    « Marquer » fige l'instant ; les incidents des pistes s'ajoutent seuls. */
 const entries = [];
 function fmt(t){ return (t/60|0) + ":" + (t % 60).toFixed(1).padStart(4, "0"); }
-function tag(){ return "[" + WLABEL[W] + " · " + HLABEL[H] + " ×" + RATE.toFixed(2) + "]"; }
+function tag(){ return "[" + WLABEL[W] + " · " + HLABEL[H] + " ×" + (META.tempo[H] || 1).toFixed(2) + "]"; }
 function addEntry(text, auto){
   entries.push(text);
   const li = document.createElement("li");
@@ -688,6 +688,16 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+/* garde-fou : si le navigateur ne decode pas le codec embarque, le dire
+   AU JOURNAL plutot que d'echouer en silence */
+(function(){
+  const t = document.createElement("audio");
+  const probe = (META.mime === "audio/mpeg") ? "audio/mpeg"
+              : 'audio/mp4; codecs="mp4a.40.2"';
+  if(!t.canPlayType(probe))
+    addEntry("⚠ codec " + (META.mime || "audio/mp4") +
+             " non supporté par ce navigateur", true);
+})();
 sizeCanvas(); paintState();
 RATE = rateFor(H);
 $("#ratero").textContent = "×" + (META.tempo[H] || 1).toFixed(2);

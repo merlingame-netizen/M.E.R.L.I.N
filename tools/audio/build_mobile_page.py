@@ -60,18 +60,20 @@ def decode(ff: str, path: str) -> np.ndarray:
     return np.frombuffer(raw, dtype="<f4").reshape(-1, 2).T.copy()
 
 
-def encode_aac(ff: str, sig: np.ndarray, dst: str, bitrate: str) -> None:
-    """sig : (2, n) stereo ou (n,) mono -> AAC-LC dans un conteneur .m4a."""
+def encode_track(ff: str, sig: np.ndarray, dst: str, bitrate: str,
+                 codec: str) -> None:
+    """sig : (2, n) stereo ou (n,) mono -> AAC-LC (.m4a) ou MP3."""
     if sig.ndim == 1:
         pcm = np.clip(sig, -1, 1).astype("<f4").tobytes()
         ac = "1"
     else:
         pcm = np.clip(sig.T.reshape(-1), -1, 1).astype("<f4").tobytes()
         ac = "2"
+    enc = (["-c:a", "aac", "-b:a", bitrate, "-movflags", "+faststart"]
+           if codec == "aac" else ["-c:a", "libmp3lame", "-b:a", bitrate])
     subprocess.run([ff, "-y", "-loglevel", "error", "-f", "f32le",
-                    "-ar", str(SR), "-ac", ac, "-i", "-",
-                    "-c:a", "aac", "-b:a", bitrate, "-movflags", "+faststart",
-                    dst], input=pcm, check=True)
+                    "-ar", str(SR), "-ac", ac, "-i", "-"] + enc + [dst],
+                   input=pcm, check=True)
 
 
 def envelope_and_onsets(mono: np.ndarray, points: int = 480):
@@ -113,6 +115,10 @@ def main() -> int:
                     default="audio/music/menu_nuit",
                     help="rendu au tempo reel x0,8 (MERLIN_TEMPO_SCALE)")
     ap.add_argument("--out", default="artefact_mobile.html")
+    ap.add_argument("--codec", choices=("aac", "mp3"), default="aac",
+                    help="aac pour la page publiee (meilleure qualite par bit, "
+                         "lu par tous les webviews reels) ; mp3 pour la page de "
+                         "test Playwright (le Chromium libre n'a pas l'AAC)")
     a = ap.parse_args()
 
     import imageio_ffmpeg
@@ -189,9 +195,11 @@ def main() -> int:
     os.makedirs(tmp, exist_ok=True)
     audio: dict = {}
 
+    ext = "m4a" if a.codec == "aac" else "mp3"
+
     def emit(name: str, sig: np.ndarray, bitrate: str) -> None:
-        dst = os.path.join(tmp, "t.m4a")
-        encode_aac(ff, sig, dst, bitrate)
+        dst = os.path.join(tmp, "t." + ext)
+        encode_track(ff, sig, dst, bitrate, a.codec)
         audio[name] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)
         print(f"  {name:16s} {len(audio[name]) / 1e6:5.2f} Mo b64")
@@ -254,14 +262,17 @@ def main() -> int:
         src = os.path.join(a.stems, e["file"])
         if not os.path.exists(src):
             continue
-        dst = os.path.join(tmp, "fx.m4a")
+        dst = os.path.join(tmp, "fx." + ext)
+        fxenc = (["-c:a", "aac"] if a.codec == "aac"
+                 else ["-c:a", "libmp3lame"])
         subprocess.run([ff, "-y", "-loglevel", "error", "-i", src, "-ac", "1",
-                        "-ar", "32000", "-c:a", "aac",
-                        "-b:a", FX_BITRATE, dst], check=True)
+                        "-ar", "32000"] + fxenc +
+                       ["-b:a", FX_BITRATE, dst], check=True)
         audio["FX_" + e["id"]] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)
     meta["sfx"] = [{key: e[key] for key in ("id", "label", "loop", "gain", "ic")}
                    for e in cast.get("sfx", [])]
+    meta["mime"] = "audio/mp4" if a.codec == "aac" else "audio/mpeg"
     os.rmdir(tmp)
 
     tpl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),

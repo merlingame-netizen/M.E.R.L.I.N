@@ -487,9 +487,9 @@
   },
   "levels": {
     "bed": {
-      "peak_rms": 3.4629818115827673,
-      "rms": 2.350002588253215,
-      "rel_db": -0.99
+      "peak_rms": 3.5068633674892493,
+      "rms": 2.3787258783841625,
+      "rel_db": -0.89
     },
     "chant__harpe": {
       "peak_rms": 1.227486799200337,
@@ -522,7 +522,7 @@
       "rel_db": -13.13
     },
     "chant__boite": {
-      "peak_rms": 1.2550571152865666,
+      "peak_rms": 1.3482969990212306,
       "rms": 0.5810176044569382,
       "rel_db": -13.13
     },
@@ -587,8 +587,8 @@
       "rel_db": -9.79
     },
     "halo__tubulaires": {
-      "peak_rms": 3.3187158571315494,
-      "rms": 0.8533260752378073,
+      "peak_rms": 3.61333197424785,
+      "rms": 0.8533260752378075,
       "rel_db": -9.79
     },
     "pulse__calme": {
@@ -617,7 +617,7 @@
       "rel_db": -14.44
     },
     "pulse__nuit": {
-      "peak_rms": 1.5571099077625636,
+      "peak_rms": 1.7428102470042113,
       "rms": 0.49976596525801725,
       "rel_db": -14.44
     },
@@ -630,8 +630,8 @@
       "rms": 2.6347495073625757
     }
   },
-  "loop_seconds": 195.918,
-  "bpm": 49.0,
+  "loop_seconds": 244.898,
+  "bpm": 39.2,
   "level_matching": {
     "metric": "peak_rms(500 ms) mesure sur les .ogg rendus",
     "applied_as": "champ `gain` par candidat, applique a la lecture",

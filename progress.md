@@ -2712,3 +2712,19 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - [x] Artefact 14,98 Mo, tests verts (intro -> couches, boucle on/off,
       varispeed nuit x0,80), publie c2a7221f.
 - [x] Rendu de coherence complet — 29/29 boucles propres, commit/push OK.
+
+## 2026-08-07 — Musique menu v7 : LIVRE
+- [x] Nuit = RENDU REEL x0,80 (MERLIN_TEMPO_SCALE ; TOTAL_SAMPLES derive,
+      5-lisse) : boite a musique a hauteur normale, boucle 244,9 s lue a 1,0.
+      Jour = varispeed doux 0,94-1,05 (< 1 demi-ton).
+- [x] Drone harmonique (fondamentale + quinte par accord, legato, octave au
+      coeur) ; percussions par heure en couche separee des la mesure 5 :
+      sourd (aube/soiree), calme (matinee/apres-midi), danse (midi), tambour
+      de nuit dans le rendu lent.
+- [x] Motif 100 % intangible : purge_harsh et lint R3 exemptes pour le chant,
+      ornements a 0,35 sur les seules reprises (223 notes vs 272).
+- [x] AAC pour la page publiee (13,76 Mo, meilleure qualite par bit) ; page de
+      test MP3 pour Playwright (Chromium libre sans AAC) ; garde-fou codec au
+      journal. Tests verts : nuit taux reel 1,0 duree 244,9 s derive 0 ms,
+      perc danse a midi, boucle on/off, seek a l'echelle nuit.
+- [x] Publie c2a7221f. Boucles 29/29 (jour) + 4/4 (nuit, echelle 0,8) propres.
