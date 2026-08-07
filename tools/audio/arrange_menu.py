@@ -271,6 +271,69 @@ def build_bed() -> list[dict]:
                 ev.append(_ev("contrabass", "bed", step - 12, at, wdur,
                               0.16 + 0.22 * d, b1 * 13))
 
+    # ═══ ORCHESTRATION v11 — couches structurelles (Rimsky-Korsakov) et
+    # LEITMOTIV omnipresent (pratique du jeu video : annonce, enonce, echo,
+    # reminiscence). Margulis (On Repeat) : dans une boucle, c'est
+    # l'ACCOMPAGNEMENT qui doit changer entre les repetitions du theme —
+    # chaque section a donc sa propre orchestration. ═══
+
+    # 1) ANNONCE (ouverture 2-4) : la tete du motif en AUGMENTATION aux
+    #    clochettes, pianissimo sur le drone — on promet le theme avant lui
+    for (bar, beat, midi, nb) in ((2, 1.0, 74, 3.0), (3, 1.0, 76, 2.0),
+                                  (3, 3.0, 74, 2.0), (4, 1.0, 72, 4.0)):
+        ev.append(_ev("hand_chimes", "bed", midi, t_of(bar, beat), nb * BEAT,
+                      0.16 + 0.18 * dyn(bar), bar * 97 + int(beat)))
+
+    # 2) CONTRE-CHANT (alto, 9-16) : mouvement contraire sous le refrain et
+    #    la reprise — la couche que la texture n'avait pas ; tons d'accord
+    for (bar, beat, midi, nb) in (
+            (9, 1.0, 62, 2), (9, 3.0, 65, 2), (10, 1.0, 64, 2), (10, 3.0, 60, 2),
+            (11, 1.0, 62, 2), (11, 3.0, 57, 2), (12, 1.0, 60, 2), (12, 3.0, 64, 2),
+            (13, 1.0, 65, 2), (13, 3.0, 62, 2), (14, 1.0, 62, 2), (14, 3.0, 59, 2),
+            (15, 1.0, 60, 2), (15, 3.0, 57, 2), (16, 1.0, 57, 4)):
+        ev.append(_ev("viola", "bed", midi, t_of(bar, beat), nb * BEAT * 1.05,
+                      0.15 + 0.28 * dyn(bar), bar * 101 + int(beat)))
+
+    # 3) COUSSIN (seconds violons, 13-16) : deux tons d'accord au medium —
+    #    le sommet s'arrondit sans forcer
+    for bar in range(13, 17):
+        tones = _tones(bar, 60, 72)
+        ev.append(_ev("strings_mid", "bed", tones[0], t_of(bar, 1.0), BAR + 0.5,
+                      0.09 + 0.18 * dyn(bar), bar * 103))
+        ev.append(_ev("strings_mid", "bed", tones[1 % len(tones)], t_of(bar, 1.0),
+                      BAR + 0.5, 0.07 + 0.14 * dyn(bar), bar * 107))
+
+    # 4) DOUBLURE cristalline du sommet (celesta, mesure 13) : la tete du
+    #    motif a l'octave — timbre contrastant, pas volume (Rimsky)
+    _T3 = 1.0 / 3.0
+    for (beat, midi, nb) in ((1.0, 86, 1.0), (2.0, 86, _T3),
+                             (2.0 + _T3, 88, _T3), (2.0 + 2 * _T3, 86, _T3),
+                             (3.0, 84, 1.0)):
+        ev.append(_ev("celesta", "bed", midi, t_of(13, beat), nb * BEAT,
+                      0.13 + 0.16 * dyn(13), 1300 + int(beat * 4)))
+
+    # 5) TRAIT DE HARPE au depart du sommet (mesure 13) : la figuration
+    for i, m in enumerate((50, 57, 62, 65, 69, 74)):
+        ev.append(_ev("harp", "bed", m, t_of(13, 1.0) + i * 0.09, 1.6,
+                      0.11 + 0.15 * dyn(13), 1370 + i))
+
+    # 6) ECHOS de fin de phrase (8 et 16) : la tete du motif repondue par
+    #    les clochettes — l'appel-reponse qui fait vivre la boucle
+    for bar in (8, 16):
+        for i, (beat, m) in enumerate(((3.0, 74), (3.5, 76),
+                                       (4.0, 74), (4.5, 72))):
+            # 1,2 s : la broderie mi reste BREVE (regle R3) et se resout
+            ev.append(_ev("hand_chimes", "bed", m, t_of(bar, beat), 1.2,
+                          0.11 + 0.15 * dyn(bar), bar * 109 + i))
+
+    # 7) REMINISCENCE (coda 17-19) : la tete du motif en augmentation a la
+    #    harpe, qui s'eteint vers le point de boucle
+    for (bar, beat, midi, nb) in ((17, 1.0, 74, 2), (17, 3.0, 77, 2),
+                                  (18, 1.0, 76, 4),
+                                  (19, 1.0, 72, 2), (19, 3.0, 69, 4)):
+        ev.append(_ev("harp", "bed", midi, t_of(bar, beat), nb * BEAT,
+                      0.13 + 0.17 * dyn(bar), bar * 113 + int(beat)))
+
     ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])
     return ev
@@ -304,17 +367,26 @@ def build_role(role: str, candidate: str) -> list[dict]:
         # drone seul ne donnait pas. La premiere attaque reste decalee de
         # 90 ms du point de boucle (transitoires dans la fenetre du join) et
         # les tenues meurent avant le raccord (marge = release du role).
-        # v10 : registre 55-76, AU-DESSUS du drone — les registres etages
-        # (basse grave / arpeges medium / melodie dessus) sont le controle
-        # classique qui rend chaque voix lisible
+        # v11 : le DESSIN change par section (Margulis : c'est
+        # l'accompagnement qui varie entre les repetitions du theme).
+        # Registre 55-76, au-dessus du drone ; l'ouverture appartient aux
+        # cloches — la guitare entre avec l'air.
         for bar in range(1, N_BARS + 1):
+            if bar <= 4:
+                continue                       # ouverture : pas de guitare
             tones = _tones(bar, 55, 76)
             d = dyn(bar)
-            for j, (beat, idx) in enumerate(
-                    ((1.0, 0), (2.0, 2), (3.0, 4), (4.0, 2))):
+            if bar <= 8:                       # l'air nu : arpege simple
+                pattern = ((1.0, 0), (2.0, 2), (3.0, 4), (4.0, 2))
+            elif bar <= 12:                    # refrain : picking plus dense
+                pattern = ((1.0, 0), (2.0, 2), (2.5, 4), (3.0, 2),
+                           (4.0, 1), (4.5, 3))
+            elif bar <= 16:                    # sommet : position haute
+                pattern = ((1.0, 2), (2.0, 4), (3.0, 5), (4.0, 4))
+            else:                              # coda : la guitare s'efface
+                pattern = ((1.0, 0), (3.0, 2))
+            for j, (beat, idx) in enumerate(pattern):
                 at = t_of(bar, beat)
-                if bar == 1 and beat == 1.0:
-                    at += 0.09
                 dur = min(2.6, LOOP_LEN - at - 0.98)
                 if dur < 0.4:
                     continue

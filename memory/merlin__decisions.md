@@ -94,3 +94,17 @@
   arpeges 55-76 (guitare, AU-DESSUS du drone), melodie dessus.
 - « Instruments opaques » : la melodie etait encodee a 32k (regression v9)
   -> 40k ; fond 48k -> 64k stereo ; oud passe-bas 2,4 -> 3,4 kHz.
+
+## 2026-08-07: Musique menu v11 — orchestration et leitmotiv (references)
+- References etudiees : Margulis « On Repeat » (la repetition structure la
+  musique, MAIS l'accompagnement doit varier entre les repetitions du theme
+  pour rediriger l'attention) ; pratique du leitmotiv en musique de jeu
+  (annonce / enonce / echo-reponse / reminiscence augmentee) ;
+  Rimsky-Korsakov « Principles of Orchestration » (couches structurelles :
+  melodie, contre-chant, harmonie, basse, figuration — reponses en timbre
+  CONTRASTANT, densite qui suit l'arc).
+- Application : annonce du motif aux clochettes (ouverture), contre-chant
+  d'alto 9-16 en mouvement contraire, coussin de seconds violons au sommet,
+  doublure celesta + trait de harpe mesure 13, echos d'appel-reponse aux
+  fins de phrase (8, 16), reminiscence a la harpe en coda. Guitare : dessin
+  different par section (simple / picking dense / position haute / efface).
