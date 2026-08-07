@@ -102,18 +102,30 @@ def gen_oiseaux(dur: float = 14.0, seed: int = 37) -> np.ndarray:
     rng = np.random.default_rng(seed)
     n = int((dur + 1.0) * SR)
     out = np.zeros(n)
+    # L'audit mesurait 70 dB de chute en 30 ms : chaque sifflement tombait
+    # dans le silence ABSOLU — un bruitage qui se coupe, litteralement. Deux
+    # remedes : une queue exponentielle de 120 ms par syllabe, et un fond
+    # d'air continu tres bas — dans une foret, le silence n'est jamais zero.
+    tail = int(0.12 * SR)
     for _ in range(11):                                   # phrases
         at = rng.integers(0, n - SR)
         for k in range(rng.integers(2, 6)):               # syllabes
             ln = rng.integers(int(0.05 * SR), int(0.16 * SR))
             f0, f1 = rng.uniform(2200, 4300), rng.uniform(2000, 4600)
-            tt = np.arange(ln) / SR
-            freq = f0 + (f1 - f0) * (tt / tt[-1]) + 60 * np.sin(2 * np.pi * 38 * tt)
+            tot = ln + tail
+            tt = np.arange(tot) / SR
+            u = np.minimum(tt / (ln / SR), 1.0)
+            freq = f0 + (f1 - f0) * u + 60 * np.sin(2 * np.pi * 38 * tt)
             ph = 2 * np.pi * np.cumsum(freq) / SR
-            syl = np.sin(ph) * np.hanning(ln) * rng.uniform(0.4, 1.0)
-            p = min(at + k * int(ln * 1.5), n - ln - 1)
-            out[p:p + ln] += syl
-    return norm(fold_loop(out, int(dur * SR)), 0.30)
+            w = np.clip(tt * SR / (0.18 * ln), 0, 1) * \
+                np.sin(np.pi * np.minimum(u, 1.0) / 2 + 1e-9)
+            w = w * np.where(tt > ln / SR,
+                             np.exp(-(tt - ln / SR) / 0.045), 1.0)
+            syl = np.sin(ph) * w * rng.uniform(0.4, 1.0)
+            p = min(int(at + k * int(ln * 1.5)), n - tot - 1)
+            out[p:p + tot] += syl
+    air = bandpass(rng.normal(0, 1, n), 2400, 6400, slope=-0.4) * 0.045
+    return norm(fold_loop(out + air, int(dur * SR)), 0.30)
 
 
 def gen_grillons(dur: float = 12.0, seed: int = 41) -> np.ndarray:
@@ -123,9 +135,12 @@ def gen_grillons(dur: float = 12.0, seed: int = 41) -> np.ndarray:
     n = int((dur + 1.0) * SR)
     out = np.zeros(n)
     t = np.arange(n) / SR
+    # Meme lecon que les oiseaux : la stridulation coupait a zero absolu 26
+    # fois par seconde (74 dB de chute mesuree). La porte garde un plancher —
+    # l'aile ne s'arrete pas net — et un choeur lointain continu tient le fond.
     for carrier, trem, cyc in ((4300.0, 26.0, 0), (4520.0, 24.0, 1)):
-        tone = np.sin(2 * np.pi * carrier * t) * \
-            np.clip(np.sin(2 * np.pi * trem * t), 0, 1) ** 2
+        gate = np.clip(np.sin(2 * np.pi * trem * t), 0, 1) ** 1.6
+        tone = np.sin(2 * np.pi * carrier * t) * (0.12 + 0.88 * gate)
         env = np.zeros(n)
         p = int(rng.uniform(0, 0.5) * SR)
         while p < n:
@@ -134,7 +149,11 @@ def gen_grillons(dur: float = 12.0, seed: int = 41) -> np.ndarray:
             env[p:p + len(e)] = np.maximum(env[p:p + len(e)], e)
             p += ln + int(rng.uniform(0.4, 1.1) * SR)
         out += tone * env * (0.8 if cyc else 1.0)
-    return norm(fold_loop(out, int(dur * SR)), 0.22)
+    # le choeur ne descend JAMAIS a zero : sa modulation touchait le silence
+    # deux fois par boucle, et les fins de bouffees y retombaient a pic
+    chorus = np.sin(2 * np.pi * 4380.0 * t) * \
+        (0.68 + 0.32 * np.sin(2 * np.pi * 2 * t / (dur + 1.0))) * 0.07
+    return norm(fold_loop(out + chorus, int(dur * SR)), 0.22)
 
 
 def gen_tonnerre(dur: float = 5.5, seed: int = 53) -> np.ndarray:
@@ -149,7 +168,13 @@ def gen_tonnerre(dur: float = 5.5, seed: int = 53) -> np.ndarray:
     env[:int(0.08 * SR)] *= np.linspace(0, 1, int(0.08 * SR))
     crack = bandpass(rng.normal(0, 1, n), 300, 2400, slope=-0.3) * \
         np.exp(-t / 0.16) * 0.7
-    return norm(rumble * env + crack, 0.66)
+    out = rumble * env + crack
+    # FIN EXACTEMENT A ZERO. La queue exponentielle laisse ~-30 dB au dernier
+    # echantillon : l'arret de l'element <audio> posait une marche seche. Le
+    # dernier tiers de seconde descend en cosinus jusqu'au silence vrai.
+    nf = int(0.35 * SR)
+    out[-nf:] *= 0.5 * (1 + np.cos(np.linspace(0, np.pi, nf)))
+    return norm(out, 0.66)
 
 
 SFX = [

@@ -72,6 +72,8 @@ CANDIDATES = {
         "hautbois":    ("oboe",        1.00, (58, 84), "Hautbois"),
         "clarinette":  ("clarinet",    1.00, (53, 91), "Clarinette"),
         "basson":      ("bassoon",     1.00, (34, 70), "Basson"),
+        "flute_alto":  ("alto_flute",  1.00, (58, 90), "Flûte alto"),
+        "clar_basse":  ("bass_clarinet", 1.00, (38, 74), "Clarinette basse"),
     },
     "corde": {
         "celtic_guitar": ("celtic_guitar", 1.00, (24, 80), "Guitare celtique"),
@@ -89,6 +91,8 @@ CANDIDATES = {
         "wine_glasses": ("wine_glasses", 1.05, (63, 74), "Verres frottés"),
         "hand_chimes":  ("hand_chimes",  0.95, (48, 84), "Clochettes à main"),
         "glockenspiel": ("glockenspiel", 0.95, (79, 108), "Glockenspiel"),
+        "vibraphone":   ("vibraphone",   1.00, (40, 89),  "Vibraphone"),
+        "tubulaires":   ("tubular_bells", 1.00, (57, 77), "Cloches tubulaires"),
     },
     # Le POULS — sorti du socle pour devenir remplacable. Un tambour d'orage
     # doit REMPLACER la frappe calme, jamais s'y ajouter.
@@ -137,34 +141,38 @@ AXES = {
 PRIORITY = ["meteo", "saison", "moment"]
 
 CONTEXT = {
-    # ── meteo ────────────────────────────────────────────────────────────────
+    # ── meteo : SUBSTITUTION QUASI TOTALE ────────────────────────────────────
+    # Chaque temps redistribue chant, corde et halo — et le pouls quand la
+    # meteo a une opinion rythmique. Le beau temps et le couvert laissent le
+    # pouls aux saisons : c'est le « quasi » — sans quoi la meteo volerait la
+    # danse de l'ete (deja arrive, corrige, ne pas y revenir).
+    "clair":     {"chant": "violon",     "corde": "celtic_guitar",
+                  "halo": "glockenspiel"},
+    "couvert":   {"chant": "hautbois",   "corde": "dan_tranh",
+                  "halo": "celesta"},
     # REGLE UTILISATEUR (2026-08-08) : quand il pleut, c'est LA HARPE.
-    # L'oud etait mon choix ; la decision est revenue et elle est claire.
-    "pluie":     {"corde": "harpe", "pulse": "calme"},
-    # L'orage : tambours denses, basson sombre au chant.
-    "orage":     {"corde": "oud", "chant": "basson", "pulse": "orage",
-                  "halo": "hand_chimes"},
-    "brume":     {"halo": "wine_glasses", "chant": "clarinette", "pulse": "aucun"},
-    # La neige : cristallin (psalterion, clochettes), flute froide, pouls rarefie.
-    "neige":     {"halo": "hand_chimes", "corde": "psaltery", "chant": "flute",
-                  "pulse": "nuit"},
-    "couvert":   {"chant": "hautbois"},
-    "clair":     {"halo": "glockenspiel"},
+    "pluie":     {"chant": "clarinette", "corde": "harpe",
+                  "halo": "celesta",     "pulse": "calme"},
+    "orage":     {"chant": "basson",     "corde": "oud",
+                  "halo": "hand_chimes", "pulse": "orage"},
+    "brume":     {"chant": "flute_alto", "corde": "mbira",
+                  "halo": "wine_glasses", "pulse": "aucun"},
+    "neige":     {"chant": "flute",      "corde": "psaltery",
+                  "halo": "hand_chimes", "pulse": "nuit"},
     # ── saison ───────────────────────────────────────────────────────────────
     "printemps": {"corde": "kalimba", "chant": "flute", "halo": "hand_chimes",
                   "pulse": "danse"},
     "ete":       {"chant": "violon", "corde": "celtic_guitar", "pulse": "danse"},
     "automne":   {"chant": "harmonica", "corde": "harpe", "pulse": "calme"},
-    "hiver":     {"corde": "psaltery", "halo": "wine_glasses", "pulse": "sourd"},
+    "hiver":     {"corde": "psaltery", "halo": "vibraphone", "pulse": "sourd"},
     # ── moment ───────────────────────────────────────────────────────────────
     "aube":      {"chant": "ocarina", "halo": "glockenspiel", "pulse": "aucun"},
     "jour":      {},
     "crepuscule": {"chant": "harmonica", "corde": "harpe"},
-    # La nuit ralentit le pouls : une frappe toutes les deux mesures,
-    # tambour a fente sourd. Le tempo ne change pas — c'est l'ecriture
-    # qui respire, sans quoi la boucle se decalerait.
-    "nuit":      {"corde": "dan_tranh", "halo": "hand_chimes", "chant": "clarinette",
-                  "pulse": "nuit"},
+    # La nuit : clarinette basse, dan tranh, cloches tubulaires au loin,
+    # une frappe toutes les deux mesures.
+    "nuit":      {"chant": "clar_basse", "corde": "dan_tranh",
+                  "halo": "tubulaires", "pulse": "nuit"},
 }
 
 

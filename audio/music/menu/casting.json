@@ -39,32 +39,39 @@
   "moment"
  ],
  "context": {
+  "clair": {
+   "chant": "violon",
+   "corde": "celtic_guitar",
+   "halo": "glockenspiel"
+  },
+  "couvert": {
+   "chant": "hautbois",
+   "corde": "dan_tranh",
+   "halo": "celesta"
+  },
   "pluie": {
+   "chant": "clarinette",
    "corde": "harpe",
+   "halo": "celesta",
    "pulse": "calme"
   },
   "orage": {
-   "corde": "oud",
    "chant": "basson",
-   "pulse": "orage",
-   "halo": "hand_chimes"
+   "corde": "oud",
+   "halo": "hand_chimes",
+   "pulse": "orage"
   },
   "brume": {
+   "chant": "flute_alto",
+   "corde": "mbira",
    "halo": "wine_glasses",
-   "chant": "clarinette",
    "pulse": "aucun"
   },
   "neige": {
-   "halo": "hand_chimes",
-   "corde": "psaltery",
    "chant": "flute",
+   "corde": "psaltery",
+   "halo": "hand_chimes",
    "pulse": "nuit"
-  },
-  "couvert": {
-   "chant": "hautbois"
-  },
-  "clair": {
-   "halo": "glockenspiel"
   },
   "printemps": {
    "corde": "kalimba",
@@ -84,7 +91,7 @@
   },
   "hiver": {
    "corde": "psaltery",
-   "halo": "wine_glasses",
+   "halo": "vibraphone",
    "pulse": "sourd"
   },
   "aube": {
@@ -98,9 +105,9 @@
    "corde": "harpe"
   },
   "nuit": {
+   "chant": "clar_basse",
    "corde": "dan_tranh",
-   "halo": "hand_chimes",
-   "chant": "clarinette",
+   "halo": "tubulaires",
    "pulse": "nuit"
   }
  },
@@ -223,7 +230,7 @@
     ],
     "gain": 1.0,
     "file": "chant__cor_anglais.ogg",
-    "measured_db": -26.97,
+    "measured_db": -26.95,
     "trim_db": 0.0
    },
    {
@@ -234,9 +241,9 @@
      48,
      84
     ],
-    "gain": 1.1943,
+    "gain": 1.194,
     "file": "chant__flute.ogg",
-    "measured_db": -28.51,
+    "measured_db": -28.49,
     "trim_db": 1.54
    },
    {
@@ -247,10 +254,10 @@
      57,
      73
     ],
-    "gain": 1.2314,
+    "gain": 1.2309,
     "file": "chant__ocarina.ogg",
-    "measured_db": -28.77,
-    "trim_db": 1.81
+    "measured_db": -28.76,
+    "trim_db": 1.8
    },
    {
     "id": "harmonica",
@@ -260,9 +267,9 @@
      36,
      84
     ],
-    "gain": 0.8479,
+    "gain": 0.8483,
     "file": "chant__harmonica.ogg",
-    "measured_db": -25.53,
+    "measured_db": -25.52,
     "trim_db": -1.43
    },
    {
@@ -273,10 +280,10 @@
      55,
      94
     ],
-    "gain": 0.8663,
+    "gain": 0.8654,
     "file": "chant__violon.ogg",
-    "measured_db": -25.72,
-    "trim_db": -1.25
+    "measured_db": -25.7,
+    "trim_db": -1.26
    },
    {
     "id": "hautbois",
@@ -286,7 +293,7 @@
      58,
      84
     ],
-    "gain": 1.1508,
+    "gain": 1.1512,
     "file": "chant__hautbois.ogg",
     "measured_db": -28.18,
     "trim_db": 1.22
@@ -299,9 +306,9 @@
      53,
      91
     ],
-    "gain": 1.0055,
+    "gain": 1.0056,
     "file": "chant__clarinette.ogg",
-    "measured_db": -27.01,
+    "measured_db": -27.0,
     "trim_db": 0.05
    },
    {
@@ -312,10 +319,36 @@
      34,
      70
     ],
-    "gain": 1.1461,
+    "gain": 1.1469,
     "file": "chant__basson.ogg",
-    "measured_db": -28.15,
-    "trim_db": 1.18
+    "measured_db": -28.14,
+    "trim_db": 1.19
+   },
+   {
+    "id": "flute_alto",
+    "label": "Flûte alto",
+    "instrument": "alto_flute",
+    "range": [
+     58,
+     90
+    ],
+    "gain": 1.0932,
+    "file": "chant__flute_alto.ogg",
+    "measured_db": -27.73,
+    "trim_db": 0.77
+   },
+   {
+    "id": "clar_basse",
+    "label": "Clarinette basse",
+    "instrument": "bass_clarinet",
+    "range": [
+     38,
+     74
+    ],
+    "gain": 0.9944,
+    "file": "chant__clar_basse.ogg",
+    "measured_db": -26.9,
+    "trim_db": -0.05
    }
   ],
   "corde": [
@@ -329,7 +362,7 @@
     ],
     "gain": 1.0,
     "file": "corde__celtic_guitar.ogg",
-    "measured_db": -21.68,
+    "measured_db": -21.67,
     "trim_db": 0.0
    },
    {
@@ -340,10 +373,10 @@
      40,
      76
     ],
-    "gain": 1.1226,
+    "gain": 1.1231,
     "file": "corde__oud.ogg",
     "measured_db": -22.68,
-    "trim_db": 1.0
+    "trim_db": 1.01
    },
    {
     "id": "dan_tranh",
@@ -353,7 +386,7 @@
      35,
      71
     ],
-    "gain": 1.68,
+    "gain": 1.6807,
     "file": "corde__dan_tranh.ogg",
     "measured_db": -26.18,
     "trim_db": 4.51
@@ -366,9 +399,9 @@
      31,
      85
     ],
-    "gain": 1.0246,
+    "gain": 1.0243,
     "file": "corde__kalimba.ogg",
-    "measured_db": -21.89,
+    "measured_db": -21.88,
     "trim_db": 0.21
    },
    {
@@ -379,10 +412,10 @@
      58,
      78
     ],
-    "gain": 1.7095,
+    "gain": 1.7078,
     "file": "corde__psaltery.ogg",
-    "measured_db": -26.33,
-    "trim_db": 4.66
+    "measured_db": -26.32,
+    "trim_db": 4.65
    },
    {
     "id": "harpe",
@@ -392,10 +425,10 @@
      36,
      93
     ],
-    "gain": 1.5284,
+    "gain": 1.5263,
     "file": "corde__harpe.ogg",
-    "measured_db": -25.36,
-    "trim_db": 3.68
+    "measured_db": -25.34,
+    "trim_db": 3.67
    },
    {
     "id": "mbira",
@@ -405,9 +438,9 @@
      34,
      73
     ],
-    "gain": 1.4741,
+    "gain": 1.474,
     "file": "corde__mbira.ogg",
-    "measured_db": -25.05,
+    "measured_db": -25.04,
     "trim_db": 3.37
    }
   ],
@@ -422,7 +455,7 @@
     ],
     "gain": 1.0,
     "file": "halo__celesta.ogg",
-    "measured_db": -20.36,
+    "measured_db": -20.2,
     "trim_db": 0.0
    },
    {
@@ -433,10 +466,10 @@
      63,
      74
     ],
-    "gain": 1.0619,
+    "gain": 1.0962,
     "file": "halo__wine_glasses.ogg",
-    "measured_db": -20.88,
-    "trim_db": 0.52
+    "measured_db": -21.0,
+    "trim_db": 0.8
    },
    {
     "id": "hand_chimes",
@@ -446,10 +479,10 @@
      48,
      84
     ],
-    "gain": 0.8599,
+    "gain": 0.8797,
     "file": "halo__hand_chimes.ogg",
-    "measured_db": -19.05,
-    "trim_db": -1.31
+    "measured_db": -19.09,
+    "trim_db": -1.11
    },
    {
     "id": "glockenspiel",
@@ -459,10 +492,36 @@
      79,
      108
     ],
-    "gain": 1.1309,
+    "gain": 1.1667,
     "file": "halo__glockenspiel.ogg",
-    "measured_db": -21.42,
-    "trim_db": 1.07
+    "measured_db": -21.54,
+    "trim_db": 1.34
+   },
+   {
+    "id": "vibraphone",
+    "label": "Vibraphone",
+    "instrument": "vibraphone",
+    "range": [
+     40,
+     89
+    ],
+    "gain": 0.7277,
+    "file": "halo__vibraphone.ogg",
+    "measured_db": -17.44,
+    "trim_db": -2.76
+   },
+   {
+    "id": "tubulaires",
+    "label": "Cloches tubulaires",
+    "instrument": "tubular_bells",
+    "range": [
+     57,
+     77
+    ],
+    "gain": 0.611,
+    "file": "halo__tubulaires.ogg",
+    "measured_db": -15.92,
+    "trim_db": -4.28
    }
   ],
   "pulse": [
@@ -476,7 +535,7 @@
     ],
     "gain": 1.0,
     "file": "pulse__calme.ogg",
-    "measured_db": -22.41,
+    "measured_db": -22.37,
     "trim_db": 0.0
    },
    {
@@ -487,10 +546,10 @@
      36,
      60
     ],
-    "gain": 1.1938,
+    "gain": 1.1834,
     "file": "pulse__danse.ogg",
-    "measured_db": -23.95,
-    "trim_db": 1.54
+    "measured_db": -23.83,
+    "trim_db": 1.46
    },
    {
     "id": "orage",
@@ -500,10 +559,10 @@
      36,
      60
     ],
-    "gain": 1.1529,
+    "gain": 1.1381,
     "file": "pulse__orage.ogg",
-    "measured_db": -23.64,
-    "trim_db": 1.24
+    "measured_db": -23.49,
+    "trim_db": 1.12
    },
    {
     "id": "ondee",
@@ -513,10 +572,10 @@
      48,
      72
     ],
-    "gain": 2.3413,
+    "gain": 2.4061,
     "file": "pulse__ondee.ogg",
-    "measured_db": -29.8,
-    "trim_db": 7.39
+    "measured_db": -30.0,
+    "trim_db": 7.63
    },
    {
     "id": "sourd",
@@ -526,10 +585,10 @@
      33,
      57
     ],
-    "gain": 1.162,
+    "gain": 1.1692,
     "file": "pulse__sourd.ogg",
-    "measured_db": -23.71,
-    "trim_db": 1.3
+    "measured_db": -23.73,
+    "trim_db": 1.36
    },
    {
     "id": "nuit",
@@ -539,10 +598,10 @@
      33,
      72
     ],
-    "gain": 1.1894,
+    "gain": 1.2002,
     "file": "pulse__nuit.ogg",
-    "measured_db": -23.91,
-    "trim_db": 1.51
+    "measured_db": -23.96,
+    "trim_db": 1.58
    },
    {
     "id": "aucun",
@@ -562,140 +621,160 @@
   "bed": {
    "peak_rms": 5.3754145548575005,
    "rms": 2.95712940944941,
-   "rel_db": -0.76
+   "rel_db": -0.74
   },
   "chant__cor_anglais": {
    "peak_rms": 1.2206729906758371,
    "rms": 0.5025307266404674,
-   "rel_db": -16.15
+   "rel_db": -16.14
   },
   "chant__flute": {
    "peak_rms": 0.9240964750490311,
    "rms": 0.5025307266404674,
-   "rel_db": -16.15
+   "rel_db": -16.14
   },
   "chant__ocarina": {
    "peak_rms": 0.9678632637631664,
    "rms": 0.5025307266404674,
-   "rel_db": -16.15
+   "rel_db": -16.14
   },
   "chant__harmonica": {
    "peak_rms": 1.4086695878362512,
    "rms": 0.5025307266404674,
-   "rel_db": -16.15
+   "rel_db": -16.14
   },
   "chant__violon": {
    "peak_rms": 1.2621443776405088,
    "rms": 0.5025307266404673,
-   "rel_db": -16.15
+   "rel_db": -16.14
   },
   "chant__hautbois": {
    "peak_rms": 1.002342780462062,
    "rms": 0.5025307266404673,
-   "rel_db": -16.15
+   "rel_db": -16.14
   },
   "chant__clarinette": {
    "peak_rms": 1.1001526737791951,
    "rms": 0.5025307266404674,
-   "rel_db": -16.15
+   "rel_db": -16.14
   },
   "chant__basson": {
    "peak_rms": 1.0060784547249977,
    "rms": 0.5025307266404673,
-   "rel_db": -16.15
+   "rel_db": -16.14
+  },
+  "chant__flute_alto": {
+   "peak_rms": 1.0338034205283675,
+   "rms": 0.5025307266404673,
+   "rel_db": -16.14
+  },
+  "chant__clar_basse": {
+   "peak_rms": 1.1008191504963367,
+   "rms": 0.5025307266404673,
+   "rel_db": -16.14
   },
   "corde__celtic_guitar": {
-   "peak_rms": 1.9319333176398097,
-   "rms": 0.5688677312129595,
-   "rel_db": -15.07
+   "peak_rms": 1.9319333176398206,
+   "rms": 0.5688741683393372,
+   "rel_db": -15.06
   },
   "corde__oud": {
-   "peak_rms": 1.7306730519980464,
-   "rms": 0.5688677312129594,
-   "rel_db": -15.07
+   "peak_rms": 1.7306926357440997,
+   "rms": 0.5688741683393372,
+   "rel_db": -15.06
   },
   "corde__dan_tranh": {
-   "peak_rms": 1.2182293666060586,
-   "rms": 0.5688677312129595,
-   "rel_db": -15.07
+   "peak_rms": 1.218418531764945,
+   "rms": 0.5688741683393373,
+   "rel_db": -15.06
   },
   "corde__kalimba": {
-   "peak_rms": 1.8133669791011824,
-   "rms": 0.5688677312129596,
-   "rel_db": -15.07
+   "peak_rms": 1.8133911359910668,
+   "rms": 0.5688741683393372,
+   "rel_db": -15.06
   },
   "corde__psaltery": {
-   "peak_rms": 1.4467989106890295,
-   "rms": 0.5688677312129595,
-   "rel_db": -15.07
+   "peak_rms": 1.4468152822056373,
+   "rms": 0.5688741683393371,
+   "rel_db": -15.06
   },
   "corde__harpe": {
-   "peak_rms": 1.3884296232347364,
-   "rms": 0.5688677312129595,
-   "rel_db": -15.07
+   "peak_rms": 1.3884644231371839,
+   "rms": 0.5688741683393372,
+   "rel_db": -15.06
   },
   "corde__mbira": {
-   "peak_rms": 1.3799349868602313,
-   "rms": 0.5688677312129595,
-   "rel_db": -15.07
+   "peak_rms": 1.3799507933210633,
+   "rms": 0.5688741683393373,
+   "rel_db": -15.06
   },
   "halo__celesta": {
-   "peak_rms": 2.741161689315962,
-   "rms": 0.9075374178507347,
-   "rel_db": -11.02
+   "peak_rms": 2.781933734298509,
+   "rms": 0.8897227864578532,
+   "rel_db": -11.17
   },
   "halo__wine_glasses": {
-   "peak_rms": 2.399552439294496,
-   "rms": 0.9075374178507347,
-   "rel_db": -11.02
+   "peak_rms": 2.3524500924673237,
+   "rms": 0.8897227864578533,
+   "rel_db": -11.17
   },
   "halo__hand_chimes": {
-   "peak_rms": 2.985375951760897,
-   "rms": 0.9075374178507347,
-   "rel_db": -11.02
+   "peak_rms": 2.9612453464476562,
+   "rms": 0.8897227864578532,
+   "rel_db": -11.17
   },
   "halo__glockenspiel": {
-   "peak_rms": 2.2863929500372797,
-   "rms": 0.9075374178507347,
-   "rel_db": -11.02
+   "peak_rms": 2.251056035169136,
+   "rms": 0.8897227864578533,
+   "rel_db": -11.17
+  },
+  "halo__vibraphone": {
+   "peak_rms": 3.596201918751844,
+   "rms": 0.8897227864578531,
+   "rel_db": -11.17
+  },
+  "halo__tubulaires": {
+   "peak_rms": 4.348549527307182,
+   "rms": 0.8897227864578532,
+   "rel_db": -11.17
   },
   "pulse__calme": {
-   "peak_rms": 1.804045791231805,
-   "rms": 0.47233866550407766,
-   "rel_db": -16.69
+   "peak_rms": 1.803367972623597,
+   "rms": 0.4683971733176855,
+   "rel_db": -16.75
   },
   "pulse__danse": {
-   "peak_rms": 1.4531598072705705,
-   "rms": 0.47233866550407766,
-   "rel_db": -16.69
+   "peak_rms": 1.4700160247096368,
+   "rms": 0.46839717331768543,
+   "rel_db": -16.75
   },
   "pulse__orage": {
-   "peak_rms": 1.5298830803670085,
-   "rms": 0.47233866550407766,
-   "rel_db": -16.69
+   "peak_rms": 1.5614509426564351,
+   "rms": 0.46839717331768554,
+   "rel_db": -16.75
   },
   "pulse__ondee": {
-   "peak_rms": 0.8078811513481865,
-   "rms": 0.47233866550407766,
-   "rel_db": -16.69
+   "peak_rms": 0.7998873776443411,
+   "rms": 0.46839717331768543,
+   "rel_db": -16.75
   },
   "pulse__sourd": {
-   "peak_rms": 1.6823563707754714,
-   "rms": 0.4723386655040776,
-   "rel_db": -16.69
+   "peak_rms": 1.723842913580759,
+   "rms": 0.46839717331768554,
+   "rel_db": -16.75
   },
   "pulse__nuit": {
-   "peak_rms": 1.6428483906077007,
-   "rms": 0.47233866550407766,
-   "rel_db": -16.69
+   "peak_rms": 1.6291559743220392,
+   "rms": 0.46839717331768543,
+   "rel_db": -16.75
   },
   "pulse__aucun": {
    "peak_rms": 0.0,
    "rms": 0.0,
-   "rel_db": -190.17
+   "rel_db": -190.16
   },
   "__mix": {
-   "rms": 3.2259371105567736
+   "rms": 3.220582135720369
   }
  },
  "loop_seconds": 195.918,

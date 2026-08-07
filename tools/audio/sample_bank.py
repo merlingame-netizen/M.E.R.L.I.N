@@ -293,10 +293,15 @@ class MultiSampleBank:
     # Enveloppes appliquees par-dessus l'echantillon. Volontairement discretes :
     # l'attaque et le corps sont deja dans l'enregistrement, on ne fait que
     # gerer la duree demandee et la fin de note.
+    # LES RESONANCES NE SE COUPENT PAS. Un celesta sonne 8 s, des clochettes
+    # 5 s : les etouffer en 100 ms au bout de leur duree ecrite est un arret
+    # brutal — le reproche « manque de smooth » pointait aussi ici. La release
+    # des instruments resonants est longue ; sur les frappes seches (bodhran)
+    # elle est sans effet, l'echantillon meurt de lui-meme avant la rampe.
     ENV = {
         "sustained": dict(a=0.06, d=0.10, s=0.94, r=0.45),
-        "plucked":   dict(a=0.001, d=0.02, s=0.97, r=0.25),
-        "struck":    dict(a=0.001, d=0.0, s=1.0, r=0.10),
+        "plucked":   dict(a=0.001, d=0.02, s=0.97, r=0.90),
+        "struck":    dict(a=0.001, d=0.0, s=1.0, r=1.40),
     }
     KIND = {
         "harp": "plucked", "celtic_guitar": "plucked", "pizzicato": "plucked",
@@ -310,6 +315,7 @@ class MultiSampleBank:
         "kalimba": "plucked", "mbira": "plucked", "dan_tranh": "plucked",
         "strumstick": "plucked", "hand_chimes": "struck", "bell_tree": "struck",
         "mark_tree": "struck", "hand_bells": "struck", "slit_drum": "struck",
+        "vibraphone": "struck", "tubular_bells": "struck",
         # ocean_drum, didgeridoo, wine_glasses, psaltery, ocarina, harmonica
         # restent "sustained" : ils le sont vraiment.
     }

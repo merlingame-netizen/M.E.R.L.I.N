@@ -86,7 +86,16 @@ header{padding-top:calc(26px + env(safe-area-inset-top))}
 .clock b{color:var(--fg);font-weight:600;font-size:1.05rem}
 .tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--fg-3)}
-.tag.ghost{margin-left:auto}
+.tag.toggle{
+  margin-left:auto;background:transparent;border:1px solid var(--line);
+  border-radius:999px;padding:7px 12px;cursor:pointer;min-height:34px;
+}
+.tag.toggle[aria-pressed="true"]{color:var(--ink);background:var(--glow);border-color:var(--glow)}
+/* mode simple : la table se reduit aux commandes — le diagnostic
+   (spectrogrammes, pupitres, ligne mixage, moteur) se deplie via « détail » */
+body.simple .spectro,body.simple .insts,
+body.simple .track[data-tr="mix"],body.simple #engine{display:none}
+.tag.ghost{}
 .tag.ghost:empty{display:none}
 .tag.on{color:var(--glow)}
 .msg{flex-basis:100%;font-size:.82rem;color:var(--fg-2);font-style:italic}
@@ -246,6 +255,7 @@ footer{margin-top:30px;text-align:center;font-family:var(--mono);
       <span id="glyph">▶</span><span id="playlabel" class="sr">Écouter</span>
     </button>
     <div class="clock"><b id="t">0:00</b><span>/</span><span id="dur">3:16</span></div>
+    <button class="tag toggle" id="detail" aria-pressed="false">détail</button>
     <div class="tag ghost" id="engine"></div>
     <div class="msg" id="msg"></div>
   </div>
@@ -752,6 +762,7 @@ let GLOW_RGB = [201, 162, 94];
 setInterval(() => { GLOW_RGB = glowRGB(); }, 900);
 
 function drawSpectros(){
+  if(document.body.classList.contains("simple")) return;   /* rien a peindre */
   spFlip = !spFlip;
   if(!spFlip || !AC) return;
   Object.keys(spCtx).forEach(id => {
@@ -790,6 +801,7 @@ function playingSpans(spans, t){
 }
 let lastInst = 0;
 function paintInsts(ts){
+  if(document.body.classList.contains("simple")) return;
   if(ts - lastInst < 120) return;
   lastInst = ts;
   const t = el.bed && el.bed.duration ? el.bed.currentTime : 0;
@@ -867,6 +879,7 @@ function setCast(next){
     }
   });
   applyTargets(); paint(); applyMix(resolveMix());
+  applyWeatherFx();
 }
 
 /* Role par role, le premier axe qui se prononce l'emporte ; le titulaire par
@@ -922,11 +935,54 @@ Object.keys(CAST.axes || {}).forEach(axis => {
    le tonnerre est un one-shot joue a la demande. */
 const fxOn = {};
 const FXLIST = CAST.sfx || [];
+/* chaque temps propose son ambiance ; le bouton « Ambiance auto » active ou
+   coupe ce lien d'un geste — les boutons individuels restent souverains */
+const FX_BY_METEO = {
+  clair:["oiseaux"], couvert:["vent"], pluie:["pluie"],
+  orage:["pluie","vent"], brume:["vent"], neige:["vent"],
+};
+let fxAuto = true;
+function applyWeatherFx(){
+  if(!fxAuto) return;
+  const want = FX_BY_METEO[context.meteo] || [];
+  FXLIST.forEach(e => {
+    if(!e.loop) return;
+    const name = "FX_" + e.id, on = want.indexOf(e.id) >= 0;
+    if(on && !fxOn[name]){
+      fxOn[name] = e.gain;
+      const a = make(name);
+      if(playing && a.paused){ const pr = a.play(); if(pr && pr.catch) pr.catch(()=>{}); }
+    }else if(!on && fxOn[name]){
+      delete fxOn[name];
+    }
+    const b = document.querySelector('.chip.fx[data-fx="' + e.id + '"]');
+    if(b) b.setAttribute("aria-pressed", String(!!fxOn[name]));
+  });
+  /* l'orage tonne une fois en entrant */
+  if(context.meteo === "orage" && playing){
+    const th = FXLIST.find(x => x.id === "tonnerre");
+    if(th){
+      const name = "FX_tonnerre", a = make(name);
+      a.loop = false;
+      vol[name] = {cur:th.gain, target:th.gain};
+      setLevel(name, th.gain);
+      try{ a.currentTime = 0; }catch(err){}
+      const pr = a.play(); if(pr && pr.catch) pr.catch(()=>{});
+    }
+  }
+  applyTargets();
+}
 if(FXLIST.length){
-  $("#fx").innerHTML = FXLIST.map(e =>
+  $("#fx").innerHTML = '<button class="chip fx" id="fxauto" aria-pressed="true">'+
+    icon("broceliande")+'<span>Ambiance auto</span></button>' + FXLIST.map(e =>
     '<button class="chip fx" data-fx="'+e.id+'" aria-pressed="false">'+
     icon(e.ic)+'<span>'+e.label+'</span></button>').join("");
-  $("#fx").querySelectorAll(".fx").forEach(b => b.addEventListener("click", () => {
+  $("#fxauto").addEventListener("click", () => {
+    fxAuto = !fxAuto;
+    $("#fxauto").setAttribute("aria-pressed", String(fxAuto));
+    if(fxAuto) applyWeatherFx();
+  });
+  $("#fx").querySelectorAll(".fx[data-fx]").forEach(b => b.addEventListener("click", () => {
     const e = FXLIST.find(x => x.id === b.dataset.fx);
     const name = "FX_" + e.id;
     if(!e.loop){
@@ -957,6 +1013,13 @@ function syncAxisChips(){
   document.querySelectorAll(".chip.ax").forEach(c =>
     c.setAttribute("aria-pressed", String(context[c.dataset.axis] === c.dataset.val)));
 }
+
+document.body.classList.add("simple");
+document.getElementById("detail").addEventListener("click", () => {
+  const on = document.body.classList.toggle("simple");
+  document.getElementById("detail").setAttribute("aria-pressed", String(!on));
+  if(!on) initSpectros();          /* les canvas naissent avec leur vraie largeur */
+});
 
 buildBoard(); paint();
 
