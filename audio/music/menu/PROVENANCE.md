@@ -31,7 +31,7 @@
 | Fichier | SHA-256 | Octets |
 |---|---|---|
 | `menu_theme.ogg` | `2b76fd58dc11dba220bf14cd8803090d2acaf013e8c639a4c7f86fcda39d594d` | 2520108 |
-| `bed.ogg` | `f360c767ebb46190ad36ecc534590b7bad30d8520883b6a90ddb4bf3ca56e8fe` | 2392610 |
+| `bed.ogg` | `857f1d7a2a022348bb87197cf32fecda139d220a6bd829d8f8f4f7656c373c7e` | 1998231 |
 | `chant__harpe.ogg` | `eb75231459fd0a758aca5ab16436caa4c534c1f6309e03004f85dcef3c93dcaa` | 2117613 |
 | `chant__oud.ogg` | `4baa0504414819fdcf8eb50dfc072d69601911eb6f26499484ddbbce16cd6a29` | 1789236 |
 | `chant__flute.ogg` | `8f2c3e0abd25e8e1acdadc296c7ee86b37285c5a9f061101967fb4147f469676` | 1926076 |
@@ -73,5 +73,13 @@
 
 - **Le** : 2026-08-07T16:24:39Z
 - **Parties refaites** : `corde__celtic_guitar`, `corde__dan_tranh`, `corde__harpe`, `corde__kalimba`, `corde__mbira`, `corde__oud`, `corde__psaltery`
+
+> Rendu partiel : seules ces parties ont ete refaites.
+
+
+## Rendu partiel
+
+- **Le** : 2026-08-07T18:05:53Z
+- **Parties refaites** : `bed`
 
 > Rendu partiel : seules ces parties ont ete refaites.

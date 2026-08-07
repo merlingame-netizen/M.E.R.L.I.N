@@ -59,8 +59,7 @@
     "soiree": {},
     "nuit": {
       "chant": "boite",
-      "halo": "tubulaires",
-      "pulse": "nuit"
+      "halo": "tubulaires"
     }
   },
   "tempo": {
@@ -71,27 +70,12 @@
     "soiree": 0.93,
     "nuit": 0.8
   },
-  "extras": {
-    "midi": {
-      "id": "guirlande",
-      "part": "halo__glockenspiel",
-      "label": "Guirlande (glockenspiel)",
-      "gain": 0.85
-    },
-    "soiree": {
-      "id": "veilleuse",
-      "part": "halo__celesta",
-      "label": "Veilleuse (célesta)",
-      "gain": 0.9
-    }
-  },
+  "extras": {},
   "fond_jour": {
-    "corde": "celtic_guitar",
-    "pulse": "calme"
+    "corde": "celtic_guitar"
   },
   "fond_nuit": {
-    "halo": "tubulaires",
-    "pulse": "nuit"
+    "halo": "tubulaires"
   },
   "mix": {
     "neige": {
@@ -495,9 +479,9 @@
   },
   "levels": {
     "bed": {
-      "peak_rms": 4.398128505129914,
-      "rms": 2.2962602239897976,
-      "rel_db": -1.05
+      "peak_rms": 2.3317801090568713,
+      "rms": 1.622698847059797,
+      "rel_db": -4.07
     },
     "chant__harpe": {
       "peak_rms": 1.2512620577389226,

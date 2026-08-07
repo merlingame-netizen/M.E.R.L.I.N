@@ -2670,3 +2670,12 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - [x] Rendu v3 complet (29 fichiers) — 29/29 boucles propres apres 2 fixes
       corde (marge de release au raccord ; 1re attaque decalee de 90 ms hors
       de la fenetre du join). Artefact 14,63 Mo, tests verts, publie c2a7221f.
+
+## 2026-08-07 — Musique menu v4 : MAX 3 INSTRUMENTS A LA FOIS
+- [x] Regle utilisateur capturee (memory) : jamais plus de 3 instruments.
+- [x] Assemblage : socle = UN pupitre (cordes graves, basse+quinte) ;
+      accompagnement = guitare (jour) / cloches tubulaires (nuit) ;
+      melodie = table (meteo, heure). Pouls et extras RETIRES.
+- [x] Rugosite mediane 2,57x -> 1,79x. Lint R1/R3/R4 = 0.
+- [x] Artefact 12,64 Mo (14 pistes), tests verts, publie c2a7221f.
+- [ ] Rendu complet de coherence (menu_theme) puis commit/push

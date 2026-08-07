@@ -168,9 +168,9 @@ CONTEXT = {
     "apres_midi": {},
     "soiree":     {},
     # « La nuit c'est boite a musique lente » : la melodie passe au celesta
-    # replie dans l'aigu, le fond s'efface — cloches tubulaires au loin, une
-    # frappe toutes les deux mesures, PAS de corde.
-    "nuit": {"chant": "boite", "halo": "tubulaires", "pulse": "nuit"},
+    # replie dans l'aigu, l'accompagnement aux cloches tubulaires au loin.
+    # Trois instruments, pas un de plus : socle + tubulaires + boite.
+    "nuit": {"chant": "boite", "halo": "tubulaires"},
 }
 
 # ── LA VITESSE PAR HEURE ─────────────────────────────────────────────────────
@@ -186,25 +186,22 @@ TEMPO = {
     "nuit":       0.80,        # boite a musique LENTE — le plus lent de tous
 }
 
-# ── « PARFOIS QUELQUES INSTRUMENTS EN PLUS » ─────────────────────────────────
-# Un extra est une piste de role AJOUTEE par-dessus le fond a certaines heures
-# — l'exception assumee au principe de remplacement, demandee telle quelle.
-# Le fond de jour n'a PAS de halo (moins d'elements) : le scintillement
-# n'existe qu'aux heures qui l'appellent, et la nuit l'integre en substitution.
-EXTRAS = {
-    "midi":   {"id": "guirlande", "part": "halo__glockenspiel",
-               "label": "Guirlande (glockenspiel)", "gain": 0.85},
-    "soiree": {"id": "veilleuse", "part": "halo__celesta",
-               "label": "Veilleuse (célesta)", "gain": 0.90},
-}
+# ── EXTRAS : SUPPRIMES (regle « max 3 instruments », 2026-08-07) ─────────────
+# Un extra etait une piste ajoutee a certaines heures (guirlande a midi,
+# veilleuse en soiree). Avec socle + accompagnement + melodie on est deja a
+# trois : tout ajout depasse la regle. L'heure ne fait plus que la VITESSE,
+# et la nuit une SUBSTITUTION.
+EXTRAS: dict = {}
 
 # ── LE FOND ──────────────────────────────────────────────────────────────────
-# Ce qui joue sous la melodie — le motif d'abord, l'accompagnement s'efface.
-# Le jour : socle + corde + pouls, sans halo. La nuit : socle + cloches
-# tubulaires + une frappe toutes les deux mesures — pas de corde, la boite
-# a musique est seule en avant.
-FOND_JOUR = {"corde": "celtic_guitar", "pulse": "calme"}
-FOND_NUIT = {"halo": "tubulaires", "pulse": "nuit"}
+# REGLE ABSOLUE (2026-08-07) : MAX 3 INSTRUMENTS A LA FOIS.
+#   1. le socle — UN pupitre de cordes graves (basse + quinte, deux voix du
+#      meme pupitre = un instrument)
+#   2. l'accompagnement — guitare le jour, cloches tubulaires la nuit
+#   3. la melodie — l'instrument de la table (meteo, heure)
+# Le pouls (bodhran, timbales) est SORTI du fond.
+FOND_JOUR = {"corde": "celtic_guitar"}
+FOND_NUIT = {"halo": "tubulaires"}
 
 
 def resolve(context: dict) -> dict:

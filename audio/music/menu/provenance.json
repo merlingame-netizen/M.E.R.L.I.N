@@ -87,8 +87,8 @@
       "bytes": 2520108
     },
     "bed.ogg": {
-      "sha256": "f360c767ebb46190ad36ecc534590b7bad30d8520883b6a90ddb4bf3ca56e8fe",
-      "bytes": 2392610
+      "sha256": "857f1d7a2a022348bb87197cf32fecda139d220a6bd829d8f8f4f7656c373c7e",
+      "bytes": 1998231
     },
     "chant__harpe.ogg": {
       "sha256": "eb75231459fd0a758aca5ab16436caa4c534c1f6309e03004f85dcef3c93dcaa",
@@ -200,15 +200,9 @@
     }
   },
   "partial_rerender": {
-    "at": "2026-08-07T16:24:39Z",
+    "at": "2026-08-07T18:05:53Z",
     "parts": [
-      "corde__celtic_guitar",
-      "corde__dan_tranh",
-      "corde__harpe",
-      "corde__kalimba",
-      "corde__mbira",
-      "corde__oud",
-      "corde__psaltery"
+      "bed"
     ],
     "note": "Rendu partiel : seules ces parties ont ete refaites."
   }

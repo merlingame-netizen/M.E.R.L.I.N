@@ -31,3 +31,10 @@
 - Le changement de vitesse ne doit JAMAIS s'entendre comme une coupure :
   un seul saut de playbackRate (pas de rampe continue, pas de pilotage
   micro-ajuste — chaque changement reinitialise l'etireur du navigateur).
+
+## 2026-08-07: MAX 3 INSTRUMENTS A LA FOIS (menu)
+- Regle absolue : jamais plus de 3 instruments simultanes.
+- Assemblage : 1 socle (UN pupitre de cordes, basse+quinte) + 1 accompagnement
+  (guitare le jour, cloches tubulaires la nuit) + 1 melodie (table meteo/heure).
+- Consequence : pouls (bodhran/timbales) et extras (guirlande/veilleuse)
+  RETIRES du fond — l'heure ne fait plus que la vitesse (+ substitution nuit).

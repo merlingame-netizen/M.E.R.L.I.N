@@ -231,20 +231,14 @@ def build_bed() -> list[dict]:
         d = dyn(b0)
         bass, upper = voicings[b0 - 1][0], voicings[b0 - 1][1:]
 
-        # ENCORE RABOTE (2026-08-07) : « moins d'instruments au global, la
-        # musique se centre sur le motif ». Sortis : cordes hautes, cor,
-        # basson, tremolo. Restent trois voix — la basse, son octave, un alto
-        # a partir du deuxieme enonce. Le socle PORTE, le motif PARLE.
-        ev.append(_ev("contrabass", "bed", bass - 12, t0, span + 0.9,
-                      0.24 + 0.36 * d, b0 * 3))
+        # REGLE MAX 3 INSTRUMENTS (2026-08-07) : le socle est UN SEUL pupitre.
+        # Les cordes graves tiennent basse + quinte — deux voix du meme
+        # instrument. Contrebasse, alto et seconds violons sont sortis :
+        # avec l'accompagnement et la melodie, on est a trois, jamais plus.
         ev.append(_ev("strings_low", "bed", bass, t0, span + 0.8,
-                      0.22 + 0.40 * d, b0 * 5))
-        if b0 >= 9:
-            ev.append(_ev("viola", "bed", upper[0], t0, span + 0.8,
-                          0.20 + 0.36 * d, b0 * 7))
-        if b0 >= 21:
-            ev.append(_ev("strings_mid", "bed", upper[1], t0, span + 0.7,
-                          0.18 + 0.34 * d, b0 * 11))
+                      0.24 + 0.40 * d, b0 * 5))
+        ev.append(_ev("strings_low", "bed", bass + 7, t0, span + 0.8,
+                      0.18 + 0.32 * d, b0 * 7))
 
     ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])
