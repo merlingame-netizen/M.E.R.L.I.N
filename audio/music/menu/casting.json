@@ -72,7 +72,7 @@
   },
   "extras": {},
   "fond_jour": {
-    "corde": "celtic_guitar"
+    "pulse": "sourd"
   },
   "fond_nuit": {
     "halo": "tubulaires"
@@ -479,147 +479,147 @@
   },
   "levels": {
     "bed": {
-      "peak_rms": 2.3317801090568713,
-      "rms": 1.622698847059797,
-      "rel_db": -1.9
+      "peak_rms": 3.9519050454202875,
+      "rms": 2.205321309995563,
+      "rel_db": -1.11
     },
     "chant__harpe": {
       "peak_rms": 1.2512620577389226,
       "rms": 0.6180804009533231,
-      "rel_db": -10.29
+      "rel_db": -12.16
     },
     "chant__oud": {
       "peak_rms": 1.149926914228377,
       "rms": 0.6180804009533231,
-      "rel_db": -10.29
+      "rel_db": -12.16
     },
     "chant__flute": {
       "peak_rms": 1.1486758627371598,
       "rms": 0.618080400953323,
-      "rel_db": -10.29
+      "rel_db": -12.16
     },
     "chant__basson": {
       "peak_rms": 1.2435777457792214,
       "rms": 0.6180804009533231,
-      "rel_db": -10.29
+      "rel_db": -12.16
     },
     "chant__flute_alto": {
       "peak_rms": 1.2846215091437223,
       "rms": 0.6180804009533231,
-      "rel_db": -10.29
+      "rel_db": -12.16
     },
     "chant__ocarina": {
       "peak_rms": 1.1999129392990893,
       "rms": 0.6180804009533231,
-      "rel_db": -10.29
+      "rel_db": -12.16
     },
     "chant__boite": {
       "peak_rms": 1.337654110141109,
       "rms": 0.618080400953323,
-      "rel_db": -10.29
+      "rel_db": -12.16
     },
     "corde__celtic_guitar": {
       "peak_rms": 1.0546787792293182,
       "rms": 0.33053409206896206,
-      "rel_db": -15.72
+      "rel_db": -17.6
     },
     "corde__oud": {
       "peak_rms": 0.9525439463431834,
       "rms": 0.330534092068962,
-      "rel_db": -15.72
+      "rel_db": -17.6
     },
     "corde__dan_tranh": {
       "peak_rms": 0.7083297609648779,
       "rms": 0.3305340920689621,
-      "rel_db": -15.72
+      "rel_db": -17.6
     },
     "corde__kalimba": {
       "peak_rms": 0.8361344588606302,
       "rms": 0.3305340920689621,
-      "rel_db": -15.72
+      "rel_db": -17.6
     },
     "corde__psaltery": {
       "peak_rms": 1.075310858759303,
       "rms": 0.3305340920689621,
-      "rel_db": -15.72
+      "rel_db": -17.6
     },
     "corde__harpe": {
       "peak_rms": 0.8674227336495824,
       "rms": 0.33053409206896206,
-      "rel_db": -15.72
+      "rel_db": -17.6
     },
     "corde__mbira": {
       "peak_rms": 0.7694618920981645,
       "rms": 0.33053409206896206,
-      "rel_db": -15.72
+      "rel_db": -17.6
     },
     "halo__celesta": {
       "peak_rms": 2.7802723957214197,
       "rms": 0.8533260752378075,
-      "rel_db": -7.48
+      "rel_db": -9.36
     },
     "halo__wine_glasses": {
       "peak_rms": 2.0600654792159236,
       "rms": 0.8533260752378076,
-      "rel_db": -7.48
+      "rel_db": -9.36
     },
     "halo__hand_chimes": {
       "peak_rms": 2.954149402906733,
       "rms": 0.8533260752378073,
-      "rel_db": -7.48
+      "rel_db": -9.36
     },
     "halo__glockenspiel": {
       "peak_rms": 2.2936424220260885,
       "rms": 0.8533260752378075,
-      "rel_db": -7.48
+      "rel_db": -9.36
     },
     "halo__vibraphone": {
       "peak_rms": 3.855976246520538,
       "rms": 0.8533260752378075,
-      "rel_db": -7.48
+      "rel_db": -9.36
     },
     "halo__tubulaires": {
       "peak_rms": 3.3187158571315494,
       "rms": 0.8533260752378073,
-      "rel_db": -7.48
+      "rel_db": -9.36
     },
     "pulse__calme": {
       "peak_rms": 1.803367972623597,
       "rms": 0.4683971733176855,
-      "rel_db": -12.69
+      "rel_db": -14.57
     },
     "pulse__danse": {
       "peak_rms": 1.4700160247096368,
       "rms": 0.46839717331768543,
-      "rel_db": -12.69
+      "rel_db": -14.57
     },
     "pulse__orage": {
       "peak_rms": 1.5614509426564351,
       "rms": 0.46839717331768554,
-      "rel_db": -12.69
+      "rel_db": -14.57
     },
     "pulse__ondee": {
       "peak_rms": 0.9025737906487007,
       "rms": 0.46839717331768554,
-      "rel_db": -12.69
+      "rel_db": -14.57
     },
     "pulse__sourd": {
       "peak_rms": 1.739136073395891,
       "rms": 0.46839717331768543,
-      "rel_db": -12.69
+      "rel_db": -14.57
     },
     "pulse__nuit": {
       "peak_rms": 1.6291559743220392,
       "rms": 0.46839717331768543,
-      "rel_db": -12.69
+      "rel_db": -14.57
     },
     "pulse__aucun": {
       "peak_rms": 0.0,
       "rms": 0.0,
-      "rel_db": -186.11
+      "rel_db": -187.98
     },
     "__mix": {
-      "rms": 2.019906430384832
+      "rms": 2.507080012114293
     }
   },
   "loop_seconds": 195.918,

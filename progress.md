@@ -2711,4 +2711,4 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       s'arrete a la fin et revient au debut (l'intro rejouera).
 - [x] Artefact 14,98 Mo, tests verts (intro -> couches, boucle on/off,
       varispeed nuit x0,80), publie c2a7221f.
-- [ ] Rendu de coherence menu_theme puis commit/push
+- [x] Rendu de coherence complet — 29/29 boucles propres, commit/push OK.

@@ -1,6 +1,6 @@
 {
   "tool": "synth_palette.py 4.0.0",
-  "rendered_at": "2026-08-07T18:23:43Z",
+  "rendered_at": "2026-08-07T19:11:55Z",
   "composition": {
     "key": "D dorian",
     "bpm": 49.0,
@@ -8,8 +8,8 @@
     "loop_seconds": 195.918,
     "sample_rate": 44100,
     "form": "ouverture / air nu / air orne / refrain / harmonise / developpement / plein / coda",
-    "instruments": 6,
-    "note_events": 529,
+    "instruments": 7,
+    "note_events": 495,
     "roles": [
       "chant",
       "corde",
@@ -54,6 +54,7 @@
       "bodhran",
       "celesta",
       "celtic_guitar",
+      "contrabass",
       "dan_tranh",
       "flute",
       "glockenspiel",
@@ -64,6 +65,7 @@
       "music_box",
       "ocarina",
       "ocean_drum",
+      "oud",
       "psaltery",
       "slit_drum",
       "strings_low",
@@ -73,135 +75,129 @@
       "vibraphone",
       "wine_glasses"
     ],
-    "synthesized_instruments": [
-      "oud"
-    ],
-    "statement": "23 pupitres sur 24 rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les 1 autres sont des modeles synthetises, faute de source libre. AUCUN echantillon issu de Metroid Prime n'est utilise."
+    "synthesized_instruments": [],
+    "aliased_instruments": {
+      "music_box": "celesta (enveloppe pincee)",
+      "oud": "celtic_guitar (double choeur desaccorde + passe-bas — aucune banque d'oud a licence libre n'existe)"
+    },
+    "statement": "25 pupitres sur 25 rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise).  AUCUN echantillon issu de Metroid Prime n'est utilise."
   },
   "outputs": {
     "menu_theme.ogg": {
-      "sha256": "62eebdc88cac8358e4c8f3ffbd5e3d2bcf7cae2a67641e52ff1b6ab7f281c84e",
-      "bytes": 2439289
+      "sha256": "c30d4b601f239197b21367237c71a35135f52840213ff0c7c406b409146d2c2c",
+      "bytes": 2396757
     },
     "bed.ogg": {
-      "sha256": "7b76314add092ec993c3b5678136f9ee566d45ab2aecf7c681cff301bfd71af7",
-      "bytes": 2001631
+      "sha256": "850788d6dfdf5d4dcce3402f52d8d76d04e76da3ef368348c1b0cc3636bb47bd",
+      "bytes": 1998133
     },
     "chant__harpe.ogg": {
-      "sha256": "b76371153796ad1ad845ed0b0e81ab7a306970ad51518930455810b58aa8a2fe",
-      "bytes": 2144948
+      "sha256": "9bd0244c8c25880a0fb7883867359fd8eb914a974c0a2e7c16391a9b719033b4",
+      "bytes": 2121067
     },
     "chant__oud.ogg": {
-      "sha256": "eb065d3702c829e6173063c1a487a92416fef14a019e9aa976c798cd6a2438e9",
-      "bytes": 1910931
+      "sha256": "eddb4be05b3d991b64c74a99b9bb4fca9e49d82e903abe4dc54a7fbe6cfc566c",
+      "bytes": 1895580
     },
     "chant__flute.ogg": {
-      "sha256": "cc81dafe7592e296c1e13a03a4e94009dcb8228ef11c42768039aa80a59ce6eb",
-      "bytes": 1939102
+      "sha256": "0c1b77d3e0c861c2b96af3264bf0fdb008ffd788ca52b5184155c737c5722943",
+      "bytes": 1927751
     },
     "chant__basson.ogg": {
-      "sha256": "3489f6b971c4350e18660e7664774ab5f63926519751d6c62ba9e6e531c85126",
-      "bytes": 1742298
+      "sha256": "f2f8146741d27365ea261fa218f3f32983d3e087a8f20603824f83404bbc9914",
+      "bytes": 1738498
     },
     "chant__flute_alto.ogg": {
-      "sha256": "d2de3f775d60426a7595c611159b6b0261054f3e17822738cfda3d8bf8b916f1",
-      "bytes": 1932794
+      "sha256": "0cab12f40d929e633dd57a8474fa4fa2543972d04f670b3ee38dd45e7e9b282c",
+      "bytes": 1923628
     },
     "chant__ocarina.ogg": {
-      "sha256": "d328362ff1e15d4e5e1f3d939b2fc31b2e6bf80ecf256084ba0adcb35e67ce98",
-      "bytes": 1623547
+      "sha256": "c4728c492d26ac186ace5c94c4368fb5a7353a4fef231f645cd21c4d4414a4a5",
+      "bytes": 1629001
     },
     "chant__boite.ogg": {
-      "sha256": "2cd0d55af1aeb3dc7dcd3be01db96acadd9c7f9b85f443f9a0e6e92d0ef9d2b1",
-      "bytes": 1885866
+      "sha256": "d41c998beadd23655518abf25970352d4befa2c71037d8e1e1004f17bc1993d6",
+      "bytes": 1872086
     },
     "corde__celtic_guitar.ogg": {
-      "sha256": "5242741756d877f639c4855208bc86fe93c4ba286d54c54e012c6df5ab55f757",
-      "bytes": 2593273
+      "sha256": "59734c4a564bd75de1a8f2fd7b1fd6260840319a5c83e55030110c70c9cad853",
+      "bytes": 2558642
     },
     "corde__oud.ogg": {
-      "sha256": "c99a2c697679f0a3a8d0c644b38e413943d11bfdbb622276221aeb9d8414b20d",
-      "bytes": 2199977
+      "sha256": "c9e313fad4d7b3a659214ef52efbb7d68bafede37b07629e1015b7e79477db6c",
+      "bytes": 2226290
     },
     "corde__dan_tranh.ogg": {
-      "sha256": "fd8267ce3e411480a446150be51669ae8610f55fe9d6289b03bcf7b87de63f03",
-      "bytes": 2604164
+      "sha256": "da51e789da171ee03f25d73ef5989ad41d7e4343b9506739f2bc6249dfc65d09",
+      "bytes": 2578413
     },
     "corde__kalimba.ogg": {
-      "sha256": "0232ef711bde858342568e334868b64648c046d20cb4def646eb2c676b83ddb7",
-      "bytes": 2493550
+      "sha256": "f173a9bf28ecd192c616afd258278dc5835ac05dabae66414aa4c88c35832e2a",
+      "bytes": 2473729
     },
     "corde__psaltery.ogg": {
-      "sha256": "9c649d9b907afb131dcd00d208a76082de4ac6a692db7fabff4be173009a3735",
-      "bytes": 2983985
+      "sha256": "4aae42755696fc569a3ae080b2c9f9f25e06bbdfba283330ed119349fcc38aaf",
+      "bytes": 2963727
     },
     "corde__harpe.ogg": {
-      "sha256": "9c9840ac278af0a66d57d879a8bb2eaf391fcd185dcc60d58384387f88cecbd7",
-      "bytes": 2300845
+      "sha256": "80ac5a421b863ff7b47e38c4f09b2ff405277751781c29ee69f0ad2e0cfe927c",
+      "bytes": 2281779
     },
     "corde__mbira.ogg": {
-      "sha256": "59a1427171d312cee8d88d24241698d3a1a3fadac65cc06db514447965b78534",
-      "bytes": 2641678
+      "sha256": "d13663d2534c119e85b6e19ab607e783ebd9acc06decf3f174e213efa85124f7",
+      "bytes": 2626092
     },
     "halo__celesta.ogg": {
-      "sha256": "6f1f03e2dcbc668e0b291a15b95b2ba75cc0ecaca28c72ef4cd71f9b101cdd80",
-      "bytes": 1696033
+      "sha256": "5ca638eba30f0888c6bab751ba8a8b05d2cb880b7d37644dbcc2dfbde1e506de",
+      "bytes": 1681871
     },
     "halo__wine_glasses.ogg": {
-      "sha256": "64ca1341ce4bd4ff6bf49cdc3895acbbbbbef9d8f46f408a48e9c8226bfa3543",
-      "bytes": 1361219
+      "sha256": "263180e1a0b3fd971bd2c7eec23b9698e700b20564bf02ae3e60d64cc11ed73d",
+      "bytes": 1353804
     },
     "halo__hand_chimes.ogg": {
-      "sha256": "28fc14d3e5ee0b09200c221a7e462b4d14e7a66507b31872716f606148ff47a7",
-      "bytes": 1760929
+      "sha256": "19f4f99c5fd75d2bfaea5621f766ab124b97aebe3891bddedea2c83563d1c000",
+      "bytes": 1743275
     },
     "halo__glockenspiel.ogg": {
-      "sha256": "41eb230fb14968dcf69b2c66c7256d2a5aca4969866a60560615320090a925a4",
-      "bytes": 2007025
+      "sha256": "7ce43efa02ef5335df13a8898c33e0bd7fd6001bbabf1fb953f6080561fb161d",
+      "bytes": 1980637
     },
     "halo__vibraphone.ogg": {
-      "sha256": "861b4ecf1b917011b3ec6dd07eaa03932dc417ff3c2430dab6efc42485c7d99b",
-      "bytes": 1597864
+      "sha256": "36019103363ca13308dc1239abe116e8436d0559b6118924b3cee1da26178bf7",
+      "bytes": 1587733
     },
     "halo__tubulaires.ogg": {
-      "sha256": "7bf8af3974b33e8b3d763fd057e5d0f876016c5757eb28aabe8f9d4dd705b9e6",
-      "bytes": 1828469
+      "sha256": "09d8e0bcd25a2dc4abaa028a4d92ef51acc6f8d9624d19104797c3a8a162ef75",
+      "bytes": 1813936
     },
     "pulse__calme.ogg": {
-      "sha256": "12c97eebd92d8f0115f13528cd431ad324ace3911f1e95ec32421acfbad921cd",
-      "bytes": 1581498
+      "sha256": "478e51e01ff3bd3b4d5399cd176896283132f9bace1b3e810f6ba73c06178022",
+      "bytes": 1573668
     },
     "pulse__danse.ogg": {
-      "sha256": "a5282849ea1dcbf1268a0170e40cddc9d15d24b203a08c3fe69c708f84fe8942",
-      "bytes": 1600055
+      "sha256": "d3e57e88626547128bd9bea987d34f17c68ce2703ed592236b04f665848190eb",
+      "bytes": 1593943
     },
     "pulse__orage.ogg": {
-      "sha256": "718ce86ef40ef957fa8f63dbf7820d41905b01f8e23ee4148f0c87640cc7ed67",
-      "bytes": 1590693
+      "sha256": "ff0bd283dbf38b441df974906902afcee1140d5b2654d570841444de4d34125f",
+      "bytes": 1584717
     },
     "pulse__ondee.ogg": {
-      "sha256": "ecda76a2ad74a3b4fff85f2503a735d573fe05914760f891ba6e8555686e3791",
-      "bytes": 1681965
+      "sha256": "6f928225bfc3adad01e807b4474bd1135bb942d291609338302ad00ec8d071ba",
+      "bytes": 1676592
     },
     "pulse__sourd.ogg": {
-      "sha256": "9405e9a362332364197dbb0fa51072653ee8bbe96963e8deacd9d94ddb20ffbf",
-      "bytes": 1547468
+      "sha256": "9cbc2c389445761ff9b917f27741448f27a332db24759a29f0991d2597cf4f5c",
+      "bytes": 1548946
     },
     "pulse__nuit.ogg": {
-      "sha256": "a494145d21089405ff70b04587f8cd93d2f772aeaef190a5e34b4c109c3bfb15",
-      "bytes": 1495523
+      "sha256": "f0a0be3fad58576f93a5474d01e2bf3dd0b7f0747d8cc083339060f39954649d",
+      "bytes": 1509828
     },
     "pulse__aucun.ogg": {
-      "sha256": "5cbd006c2f0490d71a8d0d3f6a6fe204ecf4e353a9c3035a40f379461c79e47c",
+      "sha256": "4547ba834ad5489fe5f589bf61e2dfc041a0e92c9e0648c18fdd844ef3175ff4",
       "bytes": 26367
     }
-  },
-  "partial_rerender": {
-    "at": "2026-08-07T18:41:10Z",
-    "parts": [
-      "chant__oud",
-      "corde__oud"
-    ],
-    "note": "Rendu partiel : seules ces parties ont ete refaites."
   }
 }
