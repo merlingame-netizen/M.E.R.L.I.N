@@ -128,14 +128,14 @@ section{margin-top:26px}
 .axis{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .axis > b{font-family:var(--mono);font-weight:400;font-size:.6rem;
   letter-spacing:.22em;text-transform:uppercase;color:var(--fg-3);width:100%}
-.chip.ax{
+.chip.ax,.chip.fx{
   display:inline-flex;align-items:center;gap:7px;cursor:pointer;
   background:transparent;border:1px solid var(--line);border-radius:999px;
   color:var(--fg-2);font-family:var(--serif);font-size:.88rem;
   padding:8px 14px;transition:border-color .15s,color .15s,transform .1s;
 }
 .chip.ax:active{transform:scale(.95)}
-.chip.ax[aria-pressed="true"]{
+.chip.ax[aria-pressed="true"],.chip.fx[aria-pressed="true"]{
   color:var(--ink);background:var(--glow);border-color:var(--glow);font-weight:600;
 }
 .ic{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;
@@ -181,10 +181,10 @@ footer{margin-top:30px;text-align:center;font-family:var(--mono);
   font-size:.6rem;letter-spacing:.2em;color:var(--fg-3)}
 
 @media (hover:hover){
-  .chip.ax:hover,.cand:hover,.scenes .amb:hover{border-color:var(--line-2);color:var(--fg)}
+  .chip.ax:hover,.chip.fx:hover,.cand:hover,.scenes .amb:hover{border-color:var(--line-2);color:var(--fg)}
 }
 @media (pointer:coarse){
-  .chip.ax,.cand{min-height:44px;padding:10px 16px}
+  .chip.ax,.chip.fx,.cand{min-height:44px;padding:10px 16px}
   .scenes .amb{min-height:104px}
 }
 @media (min-width:760px){
@@ -247,6 +247,11 @@ footer{margin-top:30px;text-align:center;font-family:var(--mono);
 </section>
 
 <section>
+  <h2 class="lbl">Effets</h2>
+  <div class="chips" id="fx"></div>
+</section>
+
+<section>
   <h2 class="lbl">Pistes</h2>
   <div class="board" id="board"></div>
 </section>
@@ -299,6 +304,9 @@ const ICON = {
   crepuscule:'<path d="M1.5 10.5h13M4.5 10.5a3.5 3.5 0 0 1 7 0M8 13.2v1.6M4.4 13.6l1 1.1M11.6 13.6l-1 1.1"/>',
   nuit:'<path d="M12.6 10.2A5.6 5.6 0 1 1 7 2.4a4.5 4.5 0 0 0 5.6 7.8z"/>',
   broceliande:'<path d="M8 15V9M8 9C4.5 9 3 6.2 3 3c3 0 5 1.2 5 4.2C8 4.2 10 3 13 3c0 3.2-1.5 6-5 6z"/>',
+  vent:'<path d="M2 5.5h7a2 2 0 1 0-2-2M2 8.5h10a2 2 0 1 1-2 2M2 11.5h5"/>',
+  oiseau:'<path d="M1.5 11c3.5.5 6-1 7.5-4.5M9 6.5C10 4.5 12 4 14 4.5L12.5 6l1.5 1c-2 1.5-4 1.5-5 .5M9 6.5 6 13"/>',
+  grillon:'<path d="M3 9a5 5 0 0 1 10 0M5.5 9a2.6 2.6 0 0 1 5 0M8 9v3.5"/>',
 };
 function icon(name){
   const d = ICON[name];
@@ -529,6 +537,12 @@ function applyTargets(){
     vol[n] = vol[n] || {cur:0, target:0};
     vol[n].target = trim(r, cast[r]);
   });
+  /* les effets d'ambiance actives gardent leur niveau : ils ne dependent pas
+     de la distribution */
+  Object.keys(fxOn).forEach(n => {
+    vol[n] = vol[n] || {cur:0, target:0};
+    vol[n].target = fxOn[n];
+  });
   /* Couper franchement ce qui est déjà à zéro. Le fondu ne met en pause que ce
      qui DESCEND ; les douze pistes réveillées par le déverrouillage restaient
      donc en lecture à gain nul — inaudibles, mais douze décodages simultanés
@@ -582,7 +596,7 @@ function tick(ts){
       lastSync = ts;
       const t = el.bed.currentTime, d = el.bed.duration || 1;
       Object.keys(el).forEach(n => {
-        if(n === "bed") return;
+        if(n === "bed" || n.slice(0, 3) === "FX_") return;
         const a = el[n];
         if(a.paused || !a.duration) return;
         let diff = a.currentTime - t;
@@ -742,6 +756,44 @@ Object.keys(CAST.axes || {}).forEach(axis => {
   });
   axesEl.appendChild(row);
 });
+
+/* ── effets d'ambiance ──────────────────────────────────────────────────
+   Independants de la distribution, mais routes par le MEME bus : la pluie
+   recoit la reverbe du milieu, le tonnerre gronde dans la salle en cours.
+   Les boucles se fondent en 3 s par la meme rampe que les instruments ;
+   le tonnerre est un one-shot joue a la demande. */
+const fxOn = {};
+const FXLIST = CAST.sfx || [];
+if(FXLIST.length){
+  $("#fx").innerHTML = FXLIST.map(e =>
+    '<button class="chip fx" data-fx="'+e.id+'" aria-pressed="false">'+
+    icon(e.ic)+'<span>'+e.label+'</span></button>').join("");
+  $("#fx").querySelectorAll(".fx").forEach(b => b.addEventListener("click", () => {
+    const e = FXLIST.find(x => x.id === b.dataset.fx);
+    const name = "FX_" + e.id;
+    if(!e.loop){
+      const a = make(name);
+      a.loop = false;
+      vol[name] = {cur:e.gain, target:e.gain};
+      setLevel(name, e.gain);
+      try{ a.currentTime = 0; }catch(err){}
+      const pr = a.play(); if(pr && pr.catch) pr.catch(()=>{});
+      b.setAttribute("aria-pressed","true");
+      setTimeout(() => b.setAttribute("aria-pressed","false"), 1400);
+      return;
+    }
+    const on = !fxOn[name];
+    if(on){
+      fxOn[name] = e.gain;
+      const a = make(name);
+      if(a.paused){ const pr = a.play(); if(pr && pr.catch) pr.catch(()=>{}); }
+    }else{
+      delete fxOn[name];
+    }
+    b.setAttribute("aria-pressed", String(on));
+    applyTargets();
+  }));
+}
 
 function syncAxisChips(){
   document.querySelectorAll(".chip.ax").forEach(c =>

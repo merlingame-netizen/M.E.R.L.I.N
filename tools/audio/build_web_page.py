@@ -196,6 +196,22 @@ def main() -> int:
                 audio["P_" + name] = base64.b64encode(fh.read()).decode()
             os.remove(dst)
 
+    # ── EFFETS D'AMBIANCE ────────────────────────────────────────────────────
+    # Boucles courtes et un one-shot, synthetiques (sfx_ambiance.py). Mono a
+    # debit modere : ce sont des textures, pas des instruments.
+    for e in (cast.get("sfx") or []):
+        src = os.path.join(args.stems, e["file"])
+        if not os.path.exists(src):
+            print(f"  ! effet {e['id']} absent", file=sys.stderr)
+            continue
+        dst = os.path.join(tmp, "fx_" + e["id"] + ".mp3")
+        subprocess.run([ff, "-y", "-loglevel", "error", "-i", src, "-ac", "1",
+                        "-ar", "32000", "-c:a", "libmp3lame", "-b:a", "40k", dst],
+                       check=True)
+        with open(dst, "rb") as fh:
+            audio["FX_" + e["id"]] = base64.b64encode(fh.read()).decode()
+        os.remove(dst)
+
     # boucle silencieuse : sert a basculer la session audio iOS en "playback",
     # sans quoi le commutateur silencieux de l'iPhone coupe tout le Web Audio
     sil = os.path.join(tmp, "silence.mp3")

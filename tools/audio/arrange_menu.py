@@ -117,104 +117,53 @@ def _tones(bar: int, lo: int, hi: int) -> list[int]:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def build_bed() -> list[dict]:
+    """Le socle recompose : l'HARMONIE, rien qu'elle.
+
+    La version precedente empilait 534 notes — harpe en arpeges continus
+    (190 notes, alors que la harpe est devenue titulaire du role corde),
+    contre-chant de clarinette, violon solo au developpement, descant de
+    piccolo, cloches, glockenspiel, pizzicati. A tout instant du milieu de
+    piece une quinzaine de voix sonnaient ENSEMBLE, avant meme les quatre
+    roles : le reproche « trop d'instruments ensemble » decrivait
+    litteralement la partition.
+
+    Le socle ne fait plus que PORTER. Cordes graves des la premiere mesure,
+    altos et seconds violons a la neuvieme, premiers violons a la vingt-et-
+    unieme, cor et basson seulement dans le plein (25-32), tremolo pianissimo
+    en lisiere. Tout le mouvement, le dessin et la couleur appartiennent aux
+    roles — chant, corde, halo, pouls — c'est leur raison d'etre, et c'est
+    la qu'on peut les remplacer.
+    """
     ev: list[dict] = []
     voicings = build_voicings()
     groups = _chord_groups()
 
-    # ── HARMONIE TENUE ───────────────────────────────────────────────────────
     for (b0, b1, _name) in groups:
         t0 = t_of(b0, 1.0)
         span = (b1 - b0 + 1) * BAR
         d = dyn(b0)
         bass, upper = voicings[b0 - 1][0], voicings[b0 - 1][1:]
 
-        ev.append(_ev("contrabass", "bed", bass - 12, t0, span + 0.9, 0.26 + 0.40 * d, b0 * 3))
-        ev.append(_ev("strings_low", "bed", bass, t0, span + 0.8, 0.24 + 0.42 * d, b0 * 5))
+        ev.append(_ev("contrabass", "bed", bass - 12, t0, span + 0.9,
+                      0.24 + 0.36 * d, b0 * 3))
+        ev.append(_ev("strings_low", "bed", bass, t0, span + 0.8,
+                      0.22 + 0.40 * d, b0 * 5))
         if b0 >= 9:
-            ev.append(_ev("viola", "bed", upper[0], t0, span + 0.8, 0.22 + 0.40 * d, b0 * 7))
-            ev.append(_ev("strings_mid", "bed", upper[1], t0, span + 0.7, 0.22 + 0.42 * d, b0 * 11))
-        if b0 >= 17:
-            ev.append(_ev("horn", "bed", upper[1] - 12, t0, span + 0.6, 0.18 + 0.30 * d, b0 * 13))
-            ev.append(_ev("bassoon", "bed", bass + 12, t0, span + 0.6, 0.16 + 0.28 * d, b0 * 17))
+            ev.append(_ev("viola", "bed", upper[0], t0, span + 0.8,
+                          0.20 + 0.36 * d, b0 * 7))
+            ev.append(_ev("strings_mid", "bed", upper[1], t0, span + 0.7,
+                          0.20 + 0.38 * d, b0 * 11))
         if b0 >= 21:
-            ev.append(_ev("strings_high", "bed", upper[2], t0, span + 0.6, 0.20 + 0.40 * d, b0 * 19))
-        if 23 <= b0 <= 28:
-            for k, m in enumerate(upper[:2]):
-                ev.append(_ev("strings_tremolo", "bed", m + 12, t0, span + 0.4,
-                              0.14 + 0.30 * d, b0 * 23 + k))
-        # Le hautbois double l'air une octave dessous pendant les enonces ornes :
-        # c'est ce qui donne du corps au chant sans lui disputer sa ligne.
-        if b0 in (9, 10, 11, 12, 17, 18, 19, 20):
-            ev.append(_ev("oboe", "bed", upper[0], t0, span + 0.4, 0.14 + 0.24 * d, b0 * 29))
-
-    # ── CONTRECHANT — en mouvement contraire, sur presque toute la piece ──────
-    # Il monte quand l'air descend. C'est ce qui evite l'effet « melodie + tapis »,
-    # et c'est la moitie de ce qu'on entend comme « melodique ».
-    counter = [
-        (9, 1.0, 57, 2.0), (9, 3.0, 60, 2.0), (10, 1.0, 62, 3.0), (10, 4.0, 60, 1.0),
-        (11, 1.0, 57, 2.0), (11, 3.0, 62, 2.0), (12, 1.0, 58, 4.0),
-        (13, 1.0, 60, 2.0), (13, 3.0, 62, 2.0), (14, 1.0, 64, 4.0),
-        (15, 1.0, 62, 2.0), (15, 3.0, 59, 2.0), (16, 1.0, 57, 4.0),
-        (17, 1.0, 62, 2.0), (17, 3.0, 65, 2.0), (18, 1.0, 59, 4.0),
-        (19, 1.0, 57, 2.0), (19, 3.0, 60, 2.0), (20, 1.0, 62, 4.0),
-        (21, 1.0, 65, 2.0), (21, 3.0, 64, 2.0), (22, 1.0, 62, 4.0),
-        (23, 1.0, 58, 4.0), (24, 1.0, 57, 4.0),
-        (25, 1.0, 60, 2.0), (25, 3.0, 62, 2.0), (26, 1.0, 64, 4.0),
-        (27, 1.0, 62, 2.0), (27, 3.0, 59, 2.0),
-        (28, 1.0, 61, 4.0),                                  # do diese : la dominante
-        (29, 1.0, 62, 2.0), (29, 3.0, 65, 2.0), (30, 1.0, 59, 4.0),
-        (31, 1.0, 57, 2.0), (31, 3.0, 60, 2.0), (32, 1.0, 62, 4.0),
-        (33, 1.0, 65, 2.0), (33, 3.0, 64, 2.0), (34, 1.0, 62, 4.0),
-        (35, 1.0, 58, 4.0), (36, 1.0, 57, 4.0),
-    ]
-    for (bar, beat, midi, nb) in counter:
-        ev.append(_ev("clarinet", "bed", midi, t_of(bar, beat), nb * BEAT * 0.94,
-                      0.20 + 0.30 * dyn(bar), bar * 31))
-
-    # ── DESSUS — au piccolo, pendant le plein ────────────────────────────────
-    for (bar, beat, midi, nb) in DESCANT:
-        ev.append(_ev("piccolo", "bed", midi, t_of(bar, beat), nb * BEAT * 0.96,
-                      0.16 + 0.24 * dyn(bar), bar * 37 + midi))
-
-    # ── VIOLON SOLO — le developpement lui appartient ────────────────────────
-    for (bar, beat, midi, nb) in place_phrase(REFRAIN_ORNE, 21, -12):
-        ev.append(_ev("violin_solo", "bed", midi, t_of(bar, beat),
-                      max(0.2, nb * BEAT * 0.94), 0.22 + 0.34 * dyn(bar), bar * 41 + midi))
-
-    # ── HARPE — elle fait partie du socle, elle ne se remplace pas ───────────
-    for (b0, _b1, name) in groups:
-        pcs, _ = CHORDS[name]
-        d = dyn(b0)
-        for k, m in enumerate(sorted({o * 12 + pc for pc in pcs for o in (4, 5, 6)
-                                      if 57 <= o * 12 + pc <= 86})[:5]):
-            ev.append(_ev("harp", "bed", m, t_of(b0, 1.0) + k * 0.16, 4.2,
-                          0.22 + 0.34 * d, b0 * 43 + k))
-    for bar in range(1, N_BARS + 1, 2):
-        tones = _tones(bar, 62, 81)
-        ev.append(_ev("harp", "bed", tones[(bar * 3) % len(tones)], t_of(bar, 3.5),
-                      3.6, 0.10 + 0.18 * dyn(bar), bar * 47))
-
-    # ── CLOCHES FROIDES — les extremites ─────────────────────────────────────
-    for bar in list(range(1, 9)) + list(range(37, 41)):
-        pcs, _ = CHORDS[PROGRESSION[bar - 1]]
-        d = dyn(bar)
-        for j, beat in enumerate((1.0, 3.0)):
-            ev.append(_ev("celesta_bell", "bed", 72 + pcs[(bar + j) % len(pcs)] % 12,
-                          t_of(bar, beat), 4.4, 0.16 + 0.26 * d, bar * 53 + j))
-    for bar in range(29, 37):
-        pcs, _ = CHORDS[PROGRESSION[bar - 1]]
-        for j, beat in enumerate((1.0, 3.5)):
-            ev.append(_ev("glockenspiel", "bed", 84 + pcs[(j + bar) % len(pcs)] % 12,
-                          t_of(bar, beat), 3.2, 0.18 + 0.28 * dyn(bar), bar * 59 + j))
-
-    # La PERCUSSION n'est plus dans le socle : elle est devenue le role "pulse"
-    # (voir build_role). Un tambour d'orage devait pouvoir REMPLACER la frappe
-    # calme, pas s'ajouter par-dessus — sans quoi on retombe sur l'empilement.
-    for bar in range(17, 21):                                # pizzicati
-        tones = _tones(bar, 45, 64)
-        for j, beat in enumerate((1.0, 3.0)):
-            ev.append(_ev("pizzicato", "bed", tones[j % len(tones)], t_of(bar, beat),
-                          1.8, 0.16 + 0.26 * dyn(bar), bar * 71 + j))
+            ev.append(_ev("strings_high", "bed", upper[2], t0, span + 0.6,
+                          0.16 + 0.34 * d, b0 * 19))
+        if 25 <= b0 <= 32:
+            ev.append(_ev("horn", "bed", upper[1] - 12, t0, span + 0.6,
+                          0.14 + 0.26 * d, b0 * 13))
+            ev.append(_ev("bassoon", "bed", bass + 12, t0, span + 0.6,
+                          0.12 + 0.22 * d, b0 * 17))
+        if 25 <= b0 <= 28:
+            ev.append(_ev("strings_tremolo", "bed", upper[1] + 12, t0, span + 0.4,
+                          0.10 + 0.22 * d, b0 * 23))
 
     ev.sort(key=lambda e: e["at"])
     return ev
@@ -326,13 +275,18 @@ def build_role(role: str, candidate: str) -> list[dict]:
                         ev.append(_ev("taiko", "pulse", 45, at, dur,
                                       0.12 + 0.16 * d, bar * 79))
             elif candidate == "ondee":
-                # une nappe par mesure, sur la note enregistree du tambour
-                # d'ocean (60) : le transposer changerait la vitesse du ressac.
-                at = t_of(bar, 1.0)
-                dur = min(4.2, LOOP_LEN - at - 0.06)
-                if dur >= 1.0:
-                    ev.append(_ev(inst, "pulse", 60, at, dur,
-                                  0.16 + 0.20 * d, bar * 61))
+                # Nappes une mesure sur deux mais longues de DEUX mesures et
+                # demie : chacune recouvre le depart de la suivante. La version
+                # precedente posait une nappe de 4,2 s par mesure de 4,9 s —
+                # un trou a chaque mesure, le « bruitage qui se coupe » decrit
+                # mot pour mot. Note enregistree du tambour (60) : le
+                # transposer changerait la vitesse du ressac.
+                if bar % 2 == 1:
+                    at = t_of(bar, 1.0)
+                    dur = min(2.5 * BAR, LOOP_LEN - at - 0.06)
+                    if dur >= 2.0:
+                        ev.append(_ev(inst, "pulse", 60, at, dur,
+                                      0.13 + 0.16 * d, bar * 61))
                 for beat in (2.5, 4.0):                # gouttes de bodhran
                     at = t_of(bar, beat)
                     dur = min(1.2, LOOP_LEN - at - 0.06)

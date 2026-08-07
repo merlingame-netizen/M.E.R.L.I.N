@@ -2,12 +2,12 @@
 
 - **Mode** : HYBRIDE (instruments enregistres CC0 + synthese)
 - **Outil** : synth_palette.py 4.0.0
-- **Rendu le** : 2026-08-07T08:08:34Z
+- **Rendu le** : 2026-08-07T08:52:28Z
 - **Composition** : D dorian, 49 BPM, 40 mesures, boucle 195.918 s
-- **Effectif** : 21 instruments, 1045 evenements
+- **Effectif** : 13 instruments, 673 evenements
 - **Distribution** : 4 roles, 26 parties
 
-> 33 pupitres sur 34 rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les 1 autres sont des modeles synthetises, faute de source libre. AUCUN echantillon issu de Metroid Prime n'est utilise.
+> 30 pupitres sur 31 rejouent des instruments reellement enregistres, issus de bibliotheques sous CC0 (domaine public, usage commercial compris, sans attribution requise). Les 1 autres sont des modeles synthetises, faute de source libre. AUCUN echantillon issu de Metroid Prime n'est utilise.
 
 ## Bibliothèques utilisées
 
@@ -17,9 +17,9 @@
 | Versilian Community Sample Library (VCSL) | Versilian Studios LLC | `CC0-1.0` | https://github.com/sgossner/VCSL |
 | Virtual Playing Orchestra 3 | Paul Battersby | `libre (sources CC0 / CC-BY-SA / Sampling Plus)` | https://virtualplaying.com/virtual-playing-orchestra/ |
 
-## Pupitres enregistrés (33)
+## Pupitres enregistrés (30)
 
-`bassoon`, `bodhran`, `celesta`, `celesta_bell`, `celtic_guitar`, `clarinet`, `contrabass`, `cor_anglais`, `dan_tranh`, `flute`, `glockenspiel`, `hand_chimes`, `harmonica`, `harp`, `horn`, `kalimba`, `mbira`, `oboe`, `ocarina`, `ocean_drum`, `piccolo`, `pizzicato`, `psaltery`, `slit_drum`, `strings_high`, `strings_low`, `strings_mid`, `strings_tremolo`, `taiko`, `timpani`, `viola`, `violin_solo`, `wine_glasses`
+`bassoon`, `bodhran`, `celesta`, `celtic_guitar`, `clarinet`, `contrabass`, `cor_anglais`, `dan_tranh`, `flute`, `glockenspiel`, `hand_chimes`, `harmonica`, `harp`, `horn`, `kalimba`, `mbira`, `oboe`, `ocarina`, `ocean_drum`, `psaltery`, `slit_drum`, `strings_high`, `strings_low`, `strings_mid`, `strings_tremolo`, `taiko`, `timpani`, `viola`, `violin_solo`, `wine_glasses`
 
 ## Pupitres synthétisés (1)
 
@@ -29,31 +29,31 @@
 
 | Fichier | SHA-256 | Octets |
 |---|---|---|
-| `menu_theme.ogg` | `bc75a91df6749cad4a4b5e47fe9139281bbb58ee4324fa478a04d52390c27e9c` | 2520579 |
-| `bed.ogg` | `84e24234cad3e2786a448e3d19204cc162e9f140122ac01dc0faee930ceaf508` | 2507134 |
-| `chant__cor_anglais.ogg` | `8f2724e3b6e018587137b1973050d68f7394099ac6747c92f57475d316f36807` | 1873441 |
-| `chant__flute.ogg` | `1c354471e336b528de05e9abb6f49168674911f3b7de721a118dadc4f6d9e7bd` | 1898445 |
-| `chant__ocarina.ogg` | `dab5f32e738b3d00d6b5e02ac5ca7a934109411dee52f331e1aba9b25e4b12f4` | 1692092 |
-| `chant__harmonica.ogg` | `5903cdbb1e52382c42d91c447e1b10568d5d300d06820f845b83cae036620536` | 2264750 |
-| `chant__violon.ogg` | `551da3766f67e3d1a6184df912691f1abf32345462f674af3c281faa81915695` | 2049620 |
-| `chant__hautbois.ogg` | `b29bd276dd3464ab2456de97ea72503a39347f4303aaa2f6a8a251bd7a315733` | 1986047 |
-| `chant__clarinette.ogg` | `522a6608b4a436e495bc95fa0cf0c6d5a749d98357a4d47f3661fcbdd8393621` | 1796208 |
-| `chant__basson.ogg` | `a7bbb0bd2a2b32979401e31194efbf10c06f66d07ff6e32c0a1a1bfd5da4319c` | 1756010 |
-| `corde__celtic_guitar.ogg` | `3a0e5349b459b2cdc86e3a10345fa364e9a6fa625d2e30d8f8baee549926f751` | 2529319 |
-| `corde__oud.ogg` | `4022acaff2db8d00776a2caf4a0e89eb9f5aa01798281b218232ce0a0d463078` | 2182878 |
-| `corde__dan_tranh.ogg` | `8cd965a9132faf689654f2a49b96fb2ed27f368d457c3cab7c5b18d8dea7e8cf` | 2615060 |
-| `corde__kalimba.ogg` | `8cf5caa95d9399c7927dd9201dd937d4b4ae76693786002fc40a16c0627d3ab6` | 2494644 |
-| `corde__psaltery.ogg` | `25dfb40c02ac7a9351d917237b8a8798b3460156bb0edd6f3ec01757b9cf95cf` | 3098869 |
-| `corde__harpe.ogg` | `573825482b96cc527ba0adc25224cddbe98a292af942ba648834c50ab4c42a82` | 2245015 |
-| `corde__mbira.ogg` | `9b34f17d51385e6f742bc4510079c55ef7ed2aeb40575f89c5bfde0414a47033` | 2614707 |
-| `halo__celesta.ogg` | `296947b9bb847a43633d0162b0e5ca95a94c7863311d7c850890caad1a254142` | 1666552 |
-| `halo__wine_glasses.ogg` | `3443aa56889719a3214759309a9d98ff674514708032da015a137b95964308c0` | 1384487 |
-| `halo__hand_chimes.ogg` | `3265d9c979fe8b56c0625a68f4cc02fee46d4d7bf6cef6a5c3017918105575a5` | 1708780 |
-| `halo__glockenspiel.ogg` | `cb0ec4d8f37fa6aece34fde5b50192b1ac778e9e3585814bf76ad1bdc6489e85` | 1973401 |
-| `pulse__calme.ogg` | `dfc50ee7a34c68e7527684872845247d495e1fedb210214c9907cc5a6d0dcd47` | 1562894 |
-| `pulse__danse.ogg` | `6431fc90ce6fe4f5ff893efcabb384639fdd6769dc19a3b0dcef64340a82daab` | 1583102 |
-| `pulse__orage.ogg` | `49809c89aa71b3a4d57b64560310949c4eaed7162f06b4e3d8c20f56dd93cae4` | 1575245 |
-| `pulse__ondee.ogg` | `06795d19365510abd63f8289dfc2d827a5fbc862dd1cfc42c292afc627162e01` | 1664239 |
-| `pulse__sourd.ogg` | `cbdb14f9d7570d19e083ef356180ef00ac77f7f9e062f65c22f841e6bc66fabe` | 1549594 |
-| `pulse__nuit.ogg` | `fa8df922b333bf9f35e93060b3e53bc8c60eea093b1a948d91b9c2acca353bbc` | 1532745 |
-| `pulse__aucun.ogg` | `8868fe504b197c65735e5dd1c812faab4d871f60f96ff82c9eb142efcb90cadd` | 26367 |
+| `menu_theme.ogg` | `48466c6332b6f85cfb41e24cf6f3fbf5fa073d6c345ff248fd4ad0874ca7a413` | 2432897 |
+| `bed.ogg` | `b71675a6a864e494b808fb24764f1da0d3b0a1ebaa929ae7480bb296fa69c415` | 2326209 |
+| `chant__cor_anglais.ogg` | `489a4ce3e4dfa42e93b824e039dde691395050f188a7d87f4881be44a75789d8` | 1870844 |
+| `chant__flute.ogg` | `5aabab062e11c88b5f4e8671ecd192106ab82d6de0cdd3c7fc9a046758921358` | 1907032 |
+| `chant__ocarina.ogg` | `7a7d450ba7c061de3e8243ba6e41a2240495de00332f2cd5910ceb600c28ca8b` | 1660258 |
+| `chant__harmonica.ogg` | `79f6363f2c0b30ec98b097e1a9df844caecbf97f820d498c7a481fe8c0684b62` | 2280613 |
+| `chant__violon.ogg` | `7f9d9e75fb1c9eae864f7c6ded925fe03900d6491cba71607fbd9ec29aa619ec` | 2075773 |
+| `chant__hautbois.ogg` | `5bf13381848633e73e59e2d95930d031af92ac85ff35362c63b463568d341bbc` | 1989980 |
+| `chant__clarinette.ogg` | `00073d7de7f798ab1b7e68e96c91e9d0d3dfcd1ee5218d2cf4b80a01172b56a6` | 1780574 |
+| `chant__basson.ogg` | `7a36cd18f2c36f9efbf20f711c87d63d828ff83a329c792e39962c4c0f5587c3` | 1742156 |
+| `corde__celtic_guitar.ogg` | `0564959816abd8629118ab27c1d570ac486b5873ba1b1e6f770a6177649dc30e` | 2575452 |
+| `corde__oud.ogg` | `ac85ca9b9315569d2e3ead876ca63b85a43d51ccd094535a60e17c72eba662e3` | 2137431 |
+| `corde__dan_tranh.ogg` | `fc35f7adb8ca74e0c2121683b573e631f2d1c1a13a6d311eb4b43be87171719e` | 2647385 |
+| `corde__kalimba.ogg` | `e87d8ac2a05b86984b34f771b9f0950f92e2224c1a7510918284e32fa333cf35` | 2518529 |
+| `corde__psaltery.ogg` | `0dfd0cbfc157f11b105afeaf87436b75ff430e6c9105b8f187c54f4937e12386` | 3123882 |
+| `corde__harpe.ogg` | `eec4543c309fb4146be48daaa1bac1032d71f6eaa43f03f09a39b77c2b0bae87` | 2248735 |
+| `corde__mbira.ogg` | `9d7de23431e14995473b435d8b927dee7bb1bacb2b688721c63b1857d4103cca` | 2630655 |
+| `halo__celesta.ogg` | `aef01bec9669100f9f74978da3a98d53f02308c25c72e9ef58a840e944cb3625` | 1680073 |
+| `halo__wine_glasses.ogg` | `2594a56c37f3d1c41bffe247992281ee9fdb72d49cd3be94564b30a4660ca51a` | 1378698 |
+| `halo__hand_chimes.ogg` | `207666ddc7a134301eefcf2a0a5fb6fd685d6d2951c8be565b27a7c3ed9205bd` | 1729478 |
+| `halo__glockenspiel.ogg` | `81096b27401bdf135fc52195b56ba74aa4d29b50b5cd07cb37e14594563fab6a` | 1996997 |
+| `pulse__calme.ogg` | `8aeb80c4468b97384f0b285ded4e166375ab87fb960b9be3f34fa7f449ed58d1` | 1569009 |
+| `pulse__danse.ogg` | `7895eedfc8ab4d70daf9d25142558618c983da101e8086a075f161cb1830ce7a` | 1589473 |
+| `pulse__orage.ogg` | `c4c9385435d886b6a9f668633f12a696756dad5cd67dc1ce3a8958b26a21bedf` | 1580081 |
+| `pulse__ondee.ogg` | `3dedd734ef16b6ad7ab050ed19457a37b12a463d330f88808babadd84241c134` | 1671864 |
+| `pulse__sourd.ogg` | `0a392a58056a51a1046a3f3de0045449ee839eb20fae6482e6c8897be459d97a` | 1547806 |
+| `pulse__nuit.ogg` | `ab557bb30f11422050c032487fe1410deb6b076120b1be213bb295b43a69dea3` | 1520898 |
+| `pulse__aucun.ogg` | `68e409a67c4f042ba585bb527bc45770a3e54752f91856bd5db66184247565dc` | 26367 |

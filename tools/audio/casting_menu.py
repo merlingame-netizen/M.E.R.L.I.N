@@ -136,9 +136,9 @@ PRIORITY = ["meteo", "saison", "moment"]
 
 CONTEXT = {
     # ── meteo ────────────────────────────────────────────────────────────────
-    # La pluie appelle l'oud (un manche sans frettes fait entendre ce qui
-    # coule), la clarinette feutree, et le pouls "ondee" — tambour d'ocean.
-    "pluie":     {"corde": "oud", "chant": "clarinette", "pulse": "ondee"},
+    # REGLE UTILISATEUR (2026-08-08) : quand il pleut, c'est LA HARPE.
+    # L'oud etait mon choix ; la decision est revenue et elle est claire.
+    "pluie":     {"corde": "harpe", "pulse": "calme"},
     # L'orage : tambours denses, basson sombre au chant.
     "orage":     {"corde": "oud", "chant": "basson", "pulse": "orage",
                   "halo": "hand_chimes"},
