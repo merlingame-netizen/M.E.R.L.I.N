@@ -1000,6 +1000,12 @@ STAGE = {
     "ocarina": (-0.30, 0.46), "kalimba": (0.54, 0.42), "mbira": (-0.58, 0.44),
     "strumstick": (0.50, 0.36), "harmonica": (-0.40, 0.50),
     "dan_tranh": (0.66, 0.48), "hand_bells": (-0.68, 0.74),
+    # v12 : les pupitres arrives apres la table restaient au CENTRE (defaut
+    # 0.0/0.4) — l'image etait plate. Chacun prend son siege.
+    "music_box": (-0.14, 0.30),          # la boite, devant, a peine a gauche
+    "tubular_bells": (0.55, 0.75),       # cloches au loin a droite
+    "alto_flute": (-0.14, 0.52), "bass_clarinet": (0.18, 0.58),
+    "vibraphone": (-0.48, 0.55),
 }
 
 # Repli quand la banque d'echantillons est absente : la couche doit rester

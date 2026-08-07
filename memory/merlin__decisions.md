@@ -108,3 +108,15 @@
   doublure celesta + trait de harpe mesure 13, echos d'appel-reponse aux
   fins de phrase (8, 16), reminiscence a la harpe en coda. Guitare : dessin
   different par section (simple / picking dense / position haute / efface).
+
+## 2026-08-07: Musique menu v12 — moteur d'echantillonneur reel
+- « Gros manque qualitatif des instruments » : le moteur numpy re-implantait
+  un sampler pauvrement. Trois mecanismes de vrai sampler ajoutes :
+  1. FONDU DE COUCHES DE VELOCITE (xfade entre couches adjacentes — le
+     timbre correspond enfin a la nuance ecrite) ;
+  2. VIE DES TENUES : arc d'expression (messa di voce ±0,8 dB) + derive de
+     hauteur lissee ±2,5 cents — le GEL au point de boucle de l'echantillon
+     etait le « faux » detecte par l'oreille ;
+  3. SIEGES MANQUANTS dans STAGE (music_box, tubular_bells, alto_flute,
+     bass_clarinet, vibraphone tombaient au centre — image plate).
+- sfizz (vrai moteur SFZ) indisponible en binaire — ameliorations natives.

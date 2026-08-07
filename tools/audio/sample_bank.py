@@ -388,6 +388,32 @@ class MultiSampleBank:
         want = vels[k]
         return next(e for e in same if e.get("velocity", 2) == want)
 
+    def _pick2(self, inst: str, midi: float, vel: float = 0.7):
+        """Deux couches de velocite ADJACENTES et le poids de fondu.
+
+        Un vrai echantillonneur fond les couches de nuance entre elles
+        (xfade) : choisir seulement « la plus proche » fait sauter le timbre
+        d'une couche a l'autre — la nuance ECRITE ne correspond jamais tout
+        a fait a la nuance ENREGISTREE. C'est un des « instruments opaques ».
+        """
+        lst = self.by_inst[inst]
+        note = min(lst, key=lambda e: abs(e["base_note"] - midi))["base_note"]
+        same = [e for e in lst if e["base_note"] == note]
+        if len(same) == 1:
+            return same[0], None, 0.0
+        vels = sorted({e.get("velocity", 2) for e in same})
+        pos = max(0.0, min(1.0, vel)) * (len(vels) - 1)
+        i0 = int(pos)
+        i1 = min(i0 + 1, len(vels) - 1)
+        w = pos - i0
+        e0 = next(e for e in same if e.get("velocity", 2) == vels[i0])
+        e1 = next(e for e in same if e.get("velocity", 2) == vels[i1])
+        if i0 == i1 or w < 0.03:
+            return e0, None, 0.0
+        if w > 0.97:
+            return e1, None, 0.0
+        return e0, e1, w
+
     def _load(self, entry: dict) -> tuple[np.ndarray, int]:
         key = entry["file"]
         if key not in self._cache:
@@ -399,7 +425,7 @@ class MultiSampleBank:
         n = int(dur * SR)
         if n <= 0 or inst not in self.by_inst:
             return np.zeros(max(0, n))
-        entry = self._pick(inst, midi, vel)
+        entry, entry2, xfw = self._pick2(inst, midi, vel)
         data, file_rate = self._load(entry)
         if len(data) < 2:
             return np.zeros(n)
@@ -442,6 +468,19 @@ class MultiSampleBank:
             return out
 
         sig = read(step)
+        # FONDU DE COUCHES DE VELOCITE : la nuance ecrite tombe ENTRE deux
+        # couches enregistrees — on les melange, comme un vrai sampler.
+        if entry2 is not None:
+            data2, rate2f = self._load(entry2)
+            if len(data2) >= 2:
+                d_save, ls_s, ll_s, lp_s = data, ls, ll, looped
+                data = data2
+                r2 = entry2.get("sample_rate") or rate2f
+                ls, ll = int(entry2.get("loop_start", 0)), int(entry2.get("loop_length", 0))
+                looped = entry2.get("looped") and ll > 1 and ls + ll <= len(data)
+                sig2 = read(step * (r2 / rate))
+                data, ls, ll, looped = d_save, ls_s, ll_s, lp_s
+                sig = sig * (1.0 - xfw) + sig2 * xfw
         # TONE : traitement d'alias (voir __init__). L'oud double chaque note
         # quelques cents plus haut — les COURSES DOUBLES de l'instrument, ce
         # battement lent qui fait l'oud — puis arrondit l'aigu (pas de
@@ -451,6 +490,31 @@ class MultiSampleBank:
             sig = sig + tone["double_gain"] * read(
                 step * 2.0 ** (tone["double_cents"] / 1200.0))
             sig = _soft_lowpass(sig, tone["lp"])
+
+        # LA VIE DES TENUES. Au-dela du point de boucle de l'echantillon, le
+        # son GELE — c'est le « pas assez realiste » que l'oreille detecte.
+        # Deux gestes discrets sur les tenues (> 1,1 s, instruments tenus) :
+        #   - un arc d'expression (messa di voce, ±0,8 dB) : la note respire ;
+        #   - une derive de hauteur tres lente (±2,5 cents, aleatoire lissee,
+        #     seedee par note) : le gel se rompt sans vibrato artificiel —
+        #     les vibratos ENREGISTRES des echantillons restent les seuls.
+        if kind == "sustained" and dur > 1.1:
+            tt = np.arange(n) / SR
+            arc = 1.0 + 0.10 * np.sin(np.pi * np.clip(tt / dur, 0.0, 1.0))
+            walk = rng.standard_normal(max(2, int(dur * 2.0) + 2))
+            drift_c = np.interp(tt, np.linspace(0, dur, len(walk)),
+                                np.cumsum(walk))
+            drift_c *= 2.5 / max(1e-9, np.abs(drift_c).max())
+            # la derive re-echantillonne le signal DEJA compose (fondu de
+            # couches et TONE compris) a pas variable — ±2,5 cents devient
+            # une lecture qui ondule de quelques echantillons
+            step_t = 2.0 ** (drift_c / 1200.0)
+            pos_v = np.concatenate(([0.0], np.cumsum(step_t[:-1])))
+            pos_v = np.clip(pos_v, 0, n - 1.001)
+            i0v = pos_v.astype(np.int64)
+            frv = pos_v - i0v
+            i1v = np.minimum(i0v + 1, n - 1)
+            sig = (sig[i0v] * (1.0 - frv) + sig[i1v] * frv) * arc
 
         # Le filtre ne sert plus que lorsqu'une seule couche existe pour cette
         # note : sinon c'est la vraie couche enregistree qui porte le timbre, et
