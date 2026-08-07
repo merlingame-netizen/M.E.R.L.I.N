@@ -260,6 +260,10 @@ function curTime(){ const m = master(); return m ? (m.currentTime || 0) : pos; }
 function swapLayer(layer, name, inGesture){
   const prev = layers[layer];
   if(prev === name) return;
+  /* capturer la position AVANT de basculer la couche : pour le fond, curTime()
+     lit la couche elle-meme — apres bascule il lirait le NOUVEL element (a 0)
+     et la musique repartait du debut a chaque passage a la nuit */
+  const ref = curTime();
   layers[layer] = name;
   if(!playing){ return; }
   const tok = ++fadeTok[layer];
@@ -267,7 +271,7 @@ function swapLayer(layer, name, inGesture){
   if(name){
     const a = make(name);
     a.playbackRate = RATE;
-    try{ a.currentTime = curTime(); }catch(e){}
+    try{ a.currentTime = ref; }catch(e){}
     const p = a.play();               /* DANS le geste : iOS l'accepte */
     if(p && p.catch) p.catch(err => logAuto("refus de lecture " + name + " : " + err.name));
   }

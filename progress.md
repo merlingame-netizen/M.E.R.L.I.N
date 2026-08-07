@@ -2640,12 +2640,14 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       (la clarinette basse desynchronisait via ses intervalles replies).
 - [x] Lint harmonique : R1/R3/R4 = 0 (R3 juge la resolution modulo octave,
       la ligne ecrite etant l'autorite) ; 27 tranches chaudes tutti inchangees.
-- [ ] P3 re-rendu complet en cours (render_v2.log)
+- [x] P3 re-rendu complet (33 fichiers, 22 min) — 32/32 boucles propres (loop_check)
 - [x] P4 build_mobile_page.py v2 : couches FOND jour/nuit + CHANT x6 + ADD x2,
       marge anti-ecretage sur la somme pire cas, courbes par combinaison.
 - [x] P5 mobile_template.html v2 : axes meteo/heure, playbackRate preservesPitch
       avec rampe 0,8 s, moteur 3 couches (fond=horloge, pilotage ±0,4 %,
       recalage >300 ms journalise), timeline par combo, journal enrichi.
-- [ ] P6 artefact + tests Playwright + publication (meme URL) + commit/push
+- [x] P6 artefact 13,40 Mo, tests Playwright verts (0 erreur console ; bug
+      « la nuit repartait de zero » attrape par le journal auto et corrige),
+      publie sur l'URL d'origine c2a7221f
 - DIFFERE : lecteur desktop (app_template.html) reference encore saison/moment
   — a realigner sur les axes v2 si l'utilisateur redemande le lecteur complet.
