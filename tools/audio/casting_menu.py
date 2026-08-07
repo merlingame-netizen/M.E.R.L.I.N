@@ -67,6 +67,11 @@ CANDIDATES = {
         "flute":       ("flute",       0.92, (48, 84), "Flûte"),
         "ocarina":     ("ocarina",     1.05, (57, 73), "Ocarina"),
         "harmonica":   ("harmonica",   0.95, (36, 84), "Harmonica"),
+        # Pupitres VPO a tenues bouclees — tessitures relevees dans le manifeste
+        "violon":      ("violin_solo", 1.00, (55, 94), "Violon"),
+        "hautbois":    ("oboe",        1.00, (58, 84), "Hautbois"),
+        "clarinette":  ("clarinet",    1.00, (53, 91), "Clarinette"),
+        "basson":      ("bassoon",     1.00, (34, 70), "Basson"),
     },
     "corde": {
         "celtic_guitar": ("celtic_guitar", 1.00, (24, 80), "Guitare celtique"),
@@ -74,19 +79,28 @@ CANDIDATES = {
         "dan_tranh":     ("dan_tranh",     1.00, (35, 71), "Đàn tranh"),
         "kalimba":       ("kalimba",       0.95, (31, 85), "Kalimba"),
         "psaltery":      ("psaltery",      0.90, (58, 78), "Psaltérion"),
+        "harpe":         ("harp",          1.00, (38, 101), "Harpe"),
+        "mbira":         ("mbira",         1.00, (34, 73),  "Mbira"),
     },
     "halo": {
         "celesta":      ("celesta",      1.00, (67, 96), "Célesta"),
         "wine_glasses": ("wine_glasses", 1.05, (63, 74), "Verres frottés"),
         "hand_chimes":  ("hand_chimes",  0.95, (48, 84), "Clochettes à main"),
+        "glockenspiel": ("glockenspiel", 0.95, (79, 108), "Glockenspiel"),
     },
     # Le POULS — sorti du socle pour devenir remplacable. Un tambour d'orage
     # doit REMPLACER la frappe calme, jamais s'y ajouter.
+    # Chaque titulaire du pouls est une ECRITURE differente, pas seulement un
+    # autre tambour : la substitution de rythme passe par la. Le tempo, lui, ne
+    # bouge jamais — c'est la condition pour que la boucle reste calee.
     "pulse": {
-        "calme":  ("bodhran", 1.00, (36, 60), "Calme"),
-        "orage":  ("bodhran", 1.10, (36, 60), "Orage"),
-        "nuit":   ("slit_drum", 1.00, (33, 72), "Nuit"),
-        "aucun":  ("bodhran", 1.00, (36, 60), "Aucun"),
+        "calme":  ("bodhran",    1.00, (36, 60), "Calme"),
+        "danse":  ("bodhran",    1.00, (36, 60), "Danse"),
+        "orage":  ("bodhran",    1.10, (36, 60), "Orage"),
+        "ondee":  ("ocean_drum", 1.00, (48, 72), "Ondée"),
+        "sourd":  ("taiko",      1.00, (33, 57), "Sourd"),
+        "nuit":   ("slit_drum",  1.00, (33, 72), "Nuit"),
+        "aucun":  ("bodhran",    1.00, (36, 60), "Aucun"),
     },
 }
 
@@ -122,30 +136,33 @@ PRIORITY = ["meteo", "saison", "moment"]
 
 CONTEXT = {
     # ── meteo ────────────────────────────────────────────────────────────────
-    # La pluie appelle l'oud : un luth sans frettes, corps rond, attaque au risha.
-    # C'est la demande d'origine, et c'est aussi le bon choix — le glissando d'un
-    # manche sans frettes fait entendre quelque chose qui coule.
-    "pluie":     {"corde": "oud", "pulse": "calme"},
-    # L'orage appelle les tambours : c'est la demande, et le pouls est le
-    # seul role capable de la porter sans empiler.
-    "orage":     {"corde": "oud", "pulse": "orage", "halo": "hand_chimes"},
-    "brume":     {"halo": "wine_glasses", "pulse": "aucun"},
-    "neige":     {"halo": "hand_chimes", "corde": "psaltery", "pulse": "nuit"},
-    "couvert":   {},
-    "clair":     {"pulse": "aucun"},
+    # La pluie appelle l'oud (un manche sans frettes fait entendre ce qui
+    # coule), la clarinette feutree, et le pouls "ondee" — tambour d'ocean.
+    "pluie":     {"corde": "oud", "chant": "clarinette", "pulse": "ondee"},
+    # L'orage : tambours denses, basson sombre au chant.
+    "orage":     {"corde": "oud", "chant": "basson", "pulse": "orage",
+                  "halo": "hand_chimes"},
+    "brume":     {"halo": "wine_glasses", "chant": "clarinette", "pulse": "aucun"},
+    # La neige : cristallin (psalterion, clochettes), flute froide, pouls rarefie.
+    "neige":     {"halo": "hand_chimes", "corde": "psaltery", "chant": "flute",
+                  "pulse": "nuit"},
+    "couvert":   {"chant": "hautbois"},
+    "clair":     {"halo": "glockenspiel"},
     # ── saison ───────────────────────────────────────────────────────────────
-    "printemps": {"corde": "kalimba", "chant": "flute"},
-    "ete":       {"chant": "flute"},
-    "automne":   {"chant": "harmonica"},
-    "hiver":     {"corde": "psaltery", "halo": "wine_glasses"},
+    "printemps": {"corde": "kalimba", "chant": "flute", "halo": "hand_chimes",
+                  "pulse": "danse"},
+    "ete":       {"chant": "violon", "corde": "celtic_guitar", "pulse": "danse"},
+    "automne":   {"chant": "harmonica", "corde": "harpe", "pulse": "calme"},
+    "hiver":     {"corde": "psaltery", "halo": "wine_glasses", "pulse": "sourd"},
     # ── moment ───────────────────────────────────────────────────────────────
-    "aube":      {"chant": "ocarina"},
+    "aube":      {"chant": "ocarina", "halo": "glockenspiel", "pulse": "aucun"},
     "jour":      {},
-    "crepuscule": {"chant": "harmonica"},
+    "crepuscule": {"chant": "harmonica", "corde": "harpe"},
     # La nuit ralentit le pouls : une frappe toutes les deux mesures,
     # tambour a fente sourd. Le tempo ne change pas — c'est l'ecriture
     # qui respire, sans quoi la boucle se decalerait.
-    "nuit":      {"corde": "dan_tranh", "halo": "hand_chimes", "pulse": "nuit"},
+    "nuit":      {"corde": "dan_tranh", "halo": "hand_chimes", "chant": "clarinette",
+                  "pulse": "nuit"},
 }
 
 

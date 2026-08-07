@@ -297,14 +297,64 @@ def build_role(role: str, candidate: str) -> list[dict]:
         #
         #   aucun  : rien. Le silence est un titulaire a part entiere.
         #   calme  : la frappe douce d'origine, bodhran seul, 2 par mesure
+        #   danse  : le pas d'an dro — court-court-long, taiko leger sur le 1
         #   orage  : dense et franc — bodhran double, taiko sur les temps forts
-        #   nuit   : demi-tempo, une frappe par mesure, tambour sourd
+        #   ondee  : nappes de tambour d'ocean, bodhran en gouttes eparses
+        #   sourd  : taiko etouffe une mesure sur deux, tam-tam au loin
+        #   nuit   : demi-tempo, une frappe toutes les deux mesures
         inst, gain, span, _lab = CANDIDATES["pulse"][candidate]
         if candidate == "aucun":
             return []
         for bar in range(13, N_BARS + 1):
             d = dyn(bar)
-            if candidate == "nuit":
+            if candidate == "danse":
+                # le pas de la danse bretonne : deux appuis courts, un long.
+                # Les temps 1 et 3 coincident avec "calme" — la bascule
+                # calme <-> danse ne deplace pas le pied, elle l'orne.
+                for beat, g in ((1.0, 1.0), (2.0, 0.4), (2.5, 0.6),
+                                (3.0, 0.85), (4.5, 0.5)):
+                    at = t_of(bar, beat)
+                    dur = min(1.6, LOOP_LEN - at - 0.06)
+                    if dur < 0.25:
+                        continue
+                    ev.append(_ev(inst, "pulse", fold(45, span), at, dur,
+                                  g * (0.17 + 0.27 * d), bar * 61 + int(beat * 2)))
+                if bar % 4 == 1:
+                    at = t_of(bar, 1.0)
+                    dur = min(2.0, LOOP_LEN - at - 0.06)
+                    if dur >= 0.4:
+                        ev.append(_ev("taiko", "pulse", 45, at, dur,
+                                      0.12 + 0.16 * d, bar * 79))
+            elif candidate == "ondee":
+                # une nappe par mesure, sur la note enregistree du tambour
+                # d'ocean (60) : le transposer changerait la vitesse du ressac.
+                at = t_of(bar, 1.0)
+                dur = min(4.2, LOOP_LEN - at - 0.06)
+                if dur >= 1.0:
+                    ev.append(_ev(inst, "pulse", 60, at, dur,
+                                  0.16 + 0.20 * d, bar * 61))
+                for beat in (2.5, 4.0):                # gouttes de bodhran
+                    at = t_of(bar, beat)
+                    dur = min(1.2, LOOP_LEN - at - 0.06)
+                    if dur >= 0.25:
+                        ev.append(_ev("bodhran", "pulse", 48, at, dur,
+                                      0.10 + 0.14 * d, bar * 83 + int(beat * 2)))
+            elif candidate == "sourd":
+                # l'hiver : un appui etouffe une mesure sur deux, et le tam-tam
+                # tres loin tous les huit — de la masse, pas du dessin.
+                if bar % 2 == 0:
+                    at = t_of(bar, 1.0)
+                    dur = min(2.8, LOOP_LEN - at - 0.06)
+                    if dur >= 0.4:
+                        ev.append(_ev(inst, "pulse", fold(41, span), at, dur,
+                                      0.15 + 0.20 * d, bar * 61))
+                if bar % 8 == 5:
+                    at = t_of(bar, 3.0)
+                    dur = min(4.0, LOOP_LEN - at - 0.06)
+                    if dur >= 0.8:
+                        ev.append(_ev("tam_tam", "pulse", 60, at, dur,
+                                      0.08 + 0.10 * d, bar * 89))
+            elif candidate == "nuit":
                 # une seule frappe toutes les deux mesures : le rythme respire
                 if bar % 2:
                     continue
@@ -332,7 +382,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
                     ev.append(_ev(inst, "pulse", fold(45, span), t_of(bar, beat), 1.8,
                                   g * (0.16 + 0.26 * d), bar * 61 + int(beat)))
         # les timbales restent liees au pouls, sauf la nuit et par temps calme
-        if candidate in ("calme", "orage"):
+        if candidate in ("calme", "orage", "danse"):
             for bar in range(17, N_BARS - 3, 4):
                 _pcs, root = CHORDS[PROGRESSION[bar - 1]]
                 ev.append(_ev("timpani", "pulse", root - 24, t_of(bar, 1.0), 3.6,
