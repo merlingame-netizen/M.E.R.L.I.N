@@ -48,7 +48,7 @@ SR = 48_000
 # le levier « meilleure qualite » qui ne coute aucun octet. Conteneur .m4a,
 # lu partout (iOS natif, Chromium).
 FOND_BITRATE = "48k"         # stereo — drone de jour, fond de nuit
-PERC_BITRATE = "24k"         # mono : percussions eparses
+PERC_BITRATE = "32k"         # mono : percussions eparses
 CHANT_BITRATE = "40k"        # mono : la melodie seule
 FX_BITRATE = "24k"
 
@@ -145,16 +145,19 @@ def main() -> int:
     # cloches + tambour premixes, boite a musique seule — hauteur normale,
     # tempo lent vrai, aucun traitement a la lecture.
     print("[mobile] couches…")
+    MELODY_BOOST = 1.15          # « la musique se centre sur le motif »
+    FOND_GAIN = 0.62             # « le fond doit etre moins sonore » (-4 dB)
+    PERC_BOOST = 2.0             # « les percussions sont manquantes » (+6 dB)
     bed = decode(ff, os.path.join(a.stems, "bed.ogg"))
     n = bed.shape[1]
 
     drone = bed.copy()
     for role, cid in cast["fond_jour"].items():
         drone += part(f"{role}__{cid}")[:, :n] * gains[(role, cid)]
+    drone *= FOND_GAIN
 
     night_cid = cast["context"]["nuit"]["chant"]
     day_cids = {w: cast["context"][w]["chant"] for w in meteos}
-    MELODY_BOOST = 1.15          # « la musique se centre sur le motif »
     chants = {}
     for cid in sorted(set(day_cids.values())):
         chants[cid] = (part(f"chant__{cid}")[:, :n]
@@ -162,7 +165,7 @@ def main() -> int:
     percs = {}
     for pid in sorted({p for p in perc_by_h.values() if p}):
         percs[pid] = (part(f"pulse__{pid}")[:, :n]
-                      * gains[("pulse", pid)]).mean(0)
+                      * gains[("pulse", pid)] * PERC_BOOST).mean(0)
 
     # le set de nuit, rendu lent pour de vrai
     bed_n = decode(ff, os.path.join(a.stems_nuit, "bed.ogg"))
@@ -170,6 +173,7 @@ def main() -> int:
     fond_nuit = bed_n.copy()
     for role, cid in cast["fond_nuit"].items():
         fond_nuit += part(f"{role}__{cid}", a.stems_nuit)[:, :nn] * gains[(role, cid)]
+    fond_nuit *= FOND_GAIN
     chant_nuit = (part(f"chant__{night_cid}", a.stems_nuit)[:, :nn]
                   * gains[("chant", night_cid)] * MELODY_BOOST).mean(0)
     night_scale = nn / n
@@ -212,15 +216,13 @@ def main() -> int:
     for pid, sig in percs.items():
         emit("PERC_" + pid, sig, PERC_BITRATE)
 
-    # ── l'introduction : le bourdon se leve, les cloches appellent ──────────
-    # Deux mesures avant la boucle : le drone seul, en fondu d'entree, avec
-    # les cloches tubulaires par-dessus. Le lecteur enchaine sur la piece par
-    # un fondu de 300 ms.
-    intro_bars = 2
+    # ── l'introduction : COURTE et SIMPLE (v8) ──────────────────────────────
+    # Une seule mesure : le drone seul se leve depuis le silence, et la piece
+    # entre. Rien d'autre — l'utilisateur a demande moins long, plus simple.
+    intro_bars = 1
     ns = int(intro_bars * BAR * SR)
     fade = np.linspace(0.0, 1.0, ns, dtype=np.float32) ** 1.5
-    tubes = part("halo__tubulaires")[:, :ns] * gains[("halo", "tubulaires")]
-    intro = (bed[:, :ns] * k) * fade + tubes * (0.9 * k)
+    intro = drone[:, :ns] * k * fade
     emit("INTRO", intro, FOND_BITRATE)
     meta_intro = {"dur": round(intro_bars * BAR, 3)}
 

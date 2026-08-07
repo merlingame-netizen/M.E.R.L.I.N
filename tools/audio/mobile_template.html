@@ -316,31 +316,29 @@ function swapLayer(layer, name, timeMul){
   requestAnimationFrame(step);
 }
 
-/* changement de vitesse — UN saut de playbackRate, MASQUE par un creux.
-   Meme un saut unique fait tressauter l'etireur temporel du navigateur (il
-   se recale d'un bloc). On ne peut pas l'empecher — on peut le rendre
-   inaudible : le bus maitre descend a 8 % en 120 ms (automation Web Audio,
-   echantillon-precise), le saut a lieu au fond du creux, puis remontee en
-   220 ms. Une respiration, pas un accroc. Sans Web Audio : saut direct. */
+/* changement de vitesse — GLISSE DE BANDE (v8). En varispeed pur, changer
+   le taux est un simple re-echantillonnage : une RAMPE est parfaitement
+   propre (c'etait l'etireur temporel qui detestait les rampes, et il n'est
+   plus la). 350 ms de glisse, comme une bande qu'on amene a la main — plus
+   de creux de gain, plus rien a masquer. */
 function applyRate(target){
   RATE = target;
   ["fond", "chant", "perc"].forEach(l => {
     if(layers[l] && el[layers[l]]) el[layers[l]].playbackRate = RATE;
   });
 }
+let rateTok = 0;
 function setRate(target){
   $("#ratero").textContent = "×" + (META.tempo[H] || 1).toFixed(2);
   const playingNow = playing && master() && !master().paused;
-  if(!playingNow || !MASTER || !AC){ applyRate(target); return; }
-  const g = MASTER.gain, now = AC.currentTime;
-  try{
-    g.cancelScheduledValues(now);
-    g.setValueAtTime(g.value, now);
-    g.linearRampToValueAtTime(0.08, now + 0.12);
-    g.setValueAtTime(0.08, now + 0.16);
-    g.linearRampToValueAtTime(1.0, now + 0.38);
-  }catch(e){ applyRate(target); return; }
-  setTimeout(() => applyRate(target), 130);   /* au fond du creux */
+  if(!playingNow){ applyRate(target); return; }
+  const tok = ++rateTok, from = RATE, t0 = performance.now();
+  (function step(){
+    if(rateTok !== tok) return;
+    const kk = Math.min(1, (performance.now() - t0) / 350);
+    applyRate(from + (target - from) * (kk * kk * (3 - 2 * kk)));
+    if(kk < 1) requestAnimationFrame(step);
+  })();
 }
 
 function paintState(){

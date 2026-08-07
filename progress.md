@@ -2728,3 +2728,12 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       journal. Tests verts : nuit taux reel 1,0 duree 244,9 s derive 0 ms,
       perc danse a midi, boucle on/off, seek a l'echelle nuit.
 - [x] Publie c2a7221f. Boucles 29/29 (jour) + 4/4 (nuit, echelle 0,8) propres.
+
+## 2026-08-07 — Musique menu v8 : mix, intro, glisse de bande
+- [x] Intro 1 mesure (4,9 s), drone seul en fondu — courte et simple.
+- [x] Percussions +6 dB (PERC_BOOST 2.0, debit 32k) — audibles sous le drone.
+- [x] Fond -4 dB (FOND_GAIN 0.62) : le motif domine, le drone porte.
+- [x] Artefacts de vitesse : rampe de VARISPEED 350 ms (glisse de bande,
+      propre en re-echantillonnage pur) — creux de gain retire.
+- [x] Artefact AAC 14,44 Mo publie c2a7221f ; page test MP3 15,78 Mo,
+      tests verts (intro 4,9 s, perc danse a midi, nuit reelle 244,9 s).

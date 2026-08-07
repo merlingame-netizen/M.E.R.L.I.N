@@ -63,3 +63,10 @@
 - Tri Martolod : partition FIDELE, motif garde a 100 % — les garde-fous
   harmoniques ne deplacent JAMAIS une note du chant (purge_harsh exempte,
   lint R3 exempte) ; ornementation reduite a quelques twists sur les reprises.
+
+## 2026-08-07: Musique menu v8 — mix et transitions
+- Intro COURTE et SIMPLE : 1 mesure, drone seul qui se leve (4,9 s).
+- Percussions +6 dB dans les mixes mobiles (noyees sous le drone sinon).
+- Le fond (drone) a -4 dB sous la melodie : le motif domine, le fond porte.
+- En VARISPEED pur, la rampe de vitesse est propre (c'est l'etireur temporel
+  qui detestait les rampes) : glisse de bande ~350 ms, creux de gain retire.
