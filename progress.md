@@ -2737,3 +2737,14 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
       propre en re-echantillonnage pur) — creux de gain retire.
 - [x] Artefact AAC 14,44 Mo publie c2a7221f ; page test MP3 15,78 Mo,
       tests verts (intro 4,9 s, perc danse a midi, nuit reelle 244,9 s).
+
+## 2026-08-07 — Musique menu v9 : LIVRE
+- [x] 4 jeux complets en RENDU REEL (3/4, 5/6, 1, 9/8), boucles propres aux
+      4 echelles (0 couture). Piece 20 mesures. TOTAL_SAMPLES derive partout
+      (le total code en dur cassait le repli de queue a la nouvelle boucle).
+- [x] Fond : drone x0,5 avec basse qui marche (ton d'approche consonant —
+      3 recalibrages du lint R3 sur la note de passage), arpeges de guitare
+      acoustique, percussions x2,2 des la mesure 3 qui epousent l'air.
+- [x] Neige = psalterion a archet ; ocarina orphelin purge.
+- [x] Artefact AAC 11,34 Mo (19 combos, 29 pistes), tests verts (midi 87,1 s
+      reel, nuit 130,6 s reelle, derive 6 ms), publie c2a7221f.

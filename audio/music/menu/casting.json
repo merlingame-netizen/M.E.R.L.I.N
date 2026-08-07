@@ -50,7 +50,7 @@
       "chant": "flute_alto"
     },
     "neige": {
-      "chant": "ocarina"
+      "chant": "psalterion"
     },
     "aube": {},
     "matinee": {},
@@ -63,24 +63,37 @@
     }
   },
   "tempo": {
-    "aube": 0.94,
-    "matinee": 0.98,
-    "midi": 1.05,
+    "aube": 0.83,
+    "matinee": 1.0,
+    "midi": 1.13,
     "apres_midi": 1.0,
-    "soiree": 0.95,
-    "nuit": 0.8
+    "soiree": 0.83,
+    "nuit": 0.75
+  },
+  "scale_groups": {
+    "lent": "5/6",
+    "ref": "1",
+    "vif": "9/8",
+    "nuit": "3/4"
+  },
+  "group_of": {
+    "aube": "lent",
+    "matinee": "ref",
+    "midi": "vif",
+    "apres_midi": "ref",
+    "soiree": "lent",
+    "nuit": "nuit"
   },
   "perc": {
-    "aube": "sourd",
-    "matinee": "calme",
-    "midi": "danse",
-    "apres_midi": "calme",
-    "soiree": "sourd",
-    "nuit": null
+    "lent": "sourd",
+    "ref": "calme",
+    "vif": "danse",
+    "nuit": "nuit"
   },
-  "night_true_render": true,
   "extras": {},
-  "fond_jour": {},
+  "fond_jour": {
+    "corde": "celtic_guitar"
+  },
   "fond_nuit": {
     "halo": "tubulaires",
     "pulse": "nuit"
@@ -236,15 +249,15 @@
         "file": "chant__flute_alto.ogg"
       },
       {
-        "id": "ocarina",
-        "label": "Ocarina",
-        "instrument": "ocarina",
+        "id": "psalterion",
+        "label": "Psaltérion",
+        "instrument": "psaltery",
         "range": [
-          57,
-          73
+          58,
+          78
         ],
-        "gain": 1.05,
-        "file": "chant__ocarina.ogg"
+        "gain": 0.95,
+        "file": "chant__psalterion.ogg"
       },
       {
         "id": "boite",
@@ -487,151 +500,152 @@
   },
   "levels": {
     "bed": {
-      "peak_rms": 3.4629818115827673,
-      "rms": 2.350002588253215,
-      "rel_db": -0.99
+      "peak_rms": 2.8206517929103816,
+      "rms": 2.073124090604183,
+      "rel_db": -1.59
     },
     "chant__harpe": {
-      "peak_rms": 1.227486799200337,
-      "rms": 0.5810176044569382,
-      "rel_db": -13.13
+      "peak_rms": 1.1213579056320016,
+      "rms": 0.49775764181594917,
+      "rel_db": -13.98
     },
     "chant__oud": {
-      "peak_rms": 1.2386259451241084,
-      "rms": 0.5810176044569383,
-      "rel_db": -13.13
+      "peak_rms": 1.1167629232171992,
+      "rms": 0.4977576418159491,
+      "rel_db": -13.98
     },
     "chant__flute": {
-      "peak_rms": 1.5907972783534965,
-      "rms": 0.5810176044569382,
-      "rel_db": -13.13
+      "peak_rms": 1.1457484177147075,
+      "rms": 0.4977576418159491,
+      "rel_db": -13.98
     },
     "chant__basson": {
-      "peak_rms": 1.3013035456009001,
-      "rms": 0.5810176044569382,
-      "rel_db": -13.13
+      "peak_rms": 1.1616343112242244,
+      "rms": 0.49775764181594917,
+      "rel_db": -13.98
     },
     "chant__flute_alto": {
-      "peak_rms": 1.5170477516109817,
-      "rms": 0.5810176044569382,
-      "rel_db": -13.13
+      "peak_rms": 1.0769189410969793,
+      "rms": 0.4977576418159492,
+      "rel_db": -13.98
     },
-    "chant__ocarina": {
-      "peak_rms": 1.2505812658825752,
-      "rms": 0.5810176044569382,
-      "rel_db": -13.13
+    "chant__psalterion": {
+      "peak_rms": 1.5553877149675286,
+      "rms": 0.49775764181594917,
+      "rel_db": -13.98
     },
     "chant__boite": {
-      "peak_rms": 1.2550571152865666,
-      "rms": 0.5810176044569382,
-      "rel_db": -13.13
+      "peak_rms": 1.201764730751918,
+      "rms": 0.4977576418159492,
+      "rel_db": -13.98
     },
     "corde__celtic_guitar": {
-      "peak_rms": 1.0546787792293182,
-      "rms": 0.33053409206896206,
-      "rel_db": -18.03
+      "peak_rms": 1.3203165465275848,
+      "rms": 0.6051123648483044,
+      "rel_db": -12.29
     },
     "corde__oud": {
-      "peak_rms": 0.9525439463431834,
-      "rms": 0.330534092068962,
-      "rel_db": -18.03
+      "peak_rms": 1.3804651649786526,
+      "rms": 0.6051123648483044,
+      "rel_db": -12.29
     },
     "corde__dan_tranh": {
-      "peak_rms": 0.7083297609648779,
-      "rms": 0.3305340920689621,
-      "rel_db": -18.03
+      "peak_rms": 0.9435355051692635,
+      "rms": 0.6051123648483044,
+      "rel_db": -12.29
     },
     "corde__kalimba": {
-      "peak_rms": 0.8361344588606302,
-      "rms": 0.3305340920689621,
-      "rel_db": -18.03
+      "peak_rms": 1.2999301930614844,
+      "rms": 0.6051123648483043,
+      "rel_db": -12.29
     },
     "corde__psaltery": {
-      "peak_rms": 1.075310858759303,
-      "rms": 0.3305340920689621,
-      "rel_db": -18.03
+      "peak_rms": 1.3749751417420355,
+      "rms": 0.6051123648483046,
+      "rel_db": -12.29
     },
     "corde__harpe": {
-      "peak_rms": 0.8674227336495824,
-      "rms": 0.33053409206896206,
-      "rel_db": -18.03
+      "peak_rms": 1.818364979763993,
+      "rms": 0.6051123648483046,
+      "rel_db": -12.29
     },
     "corde__mbira": {
-      "peak_rms": 0.7694618920981645,
-      "rms": 0.33053409206896206,
-      "rel_db": -18.03
+      "peak_rms": 1.100486723739577,
+      "rms": 0.6051123648483044,
+      "rel_db": -12.29
     },
     "halo__celesta": {
-      "peak_rms": 2.7802723957214197,
-      "rms": 0.8533260752378075,
-      "rel_db": -9.79
+      "peak_rms": 2.3122700621247065,
+      "rms": 0.9936487034212781,
+      "rel_db": -7.98
     },
     "halo__wine_glasses": {
-      "peak_rms": 2.0600654792159236,
-      "rms": 0.8533260752378076,
-      "rel_db": -9.79
+      "peak_rms": 1.8533944003855725,
+      "rms": 0.9936487034212781,
+      "rel_db": -7.98
     },
     "halo__hand_chimes": {
-      "peak_rms": 2.954149402906733,
-      "rms": 0.8533260752378073,
-      "rel_db": -9.79
+      "peak_rms": 3.056868918188912,
+      "rms": 0.993648703421278,
+      "rel_db": -7.98
     },
     "halo__glockenspiel": {
-      "peak_rms": 2.2936424220260885,
-      "rms": 0.8533260752378075,
-      "rel_db": -9.79
+      "peak_rms": 2.490428203603728,
+      "rms": 0.993648703421278,
+      "rel_db": -7.98
     },
     "halo__vibraphone": {
-      "peak_rms": 3.855976246520538,
-      "rms": 0.8533260752378075,
-      "rel_db": -9.79
+      "peak_rms": 2.5063496231730653,
+      "rms": 0.9936487034212781,
+      "rel_db": -7.98
     },
     "halo__tubulaires": {
-      "peak_rms": 3.3187158571315494,
-      "rms": 0.8533260752378073,
-      "rel_db": -9.79
+      "peak_rms": 3.6267998326895716,
+      "rms": 0.9936487034212782,
+      "rel_db": -7.98
     },
     "pulse__calme": {
-      "peak_rms": 1.803367972623597,
-      "rms": 0.49976596525801725,
-      "rel_db": -14.44
+      "peak_rms": 0.877232860269939,
+      "rms": 0.5342631743752019,
+      "rel_db": -13.37
     },
     "pulse__danse": {
-      "peak_rms": 1.439621136792112,
-      "rms": 0.4997659652580173,
-      "rel_db": -14.44
+      "peak_rms": 0.9948148877953011,
+      "rms": 0.5342631743752019,
+      "rel_db": -13.37
     },
     "pulse__orage": {
-      "peak_rms": 1.5289422189138695,
-      "rms": 0.49976596525801725,
-      "rel_db": -14.44
+      "peak_rms": 1.1766632307223814,
+      "rms": 0.5342631743752019,
+      "rel_db": -13.37
     },
     "pulse__ondee": {
-      "peak_rms": 0.879487677777878,
-      "rms": 0.4997659652580172,
-      "rel_db": -14.44
+      "peak_rms": 0.8846408046989165,
+      "rms": 0.5342631743752019,
+      "rel_db": -13.37
     },
     "pulse__sourd": {
-      "peak_rms": 1.737571330244152,
-      "rms": 0.49976596525801725,
-      "rel_db": -14.44
+      "peak_rms": 1.2237609465764596,
+      "rms": 0.5342631743752019,
+      "rel_db": -13.37
     },
     "pulse__nuit": {
-      "peak_rms": 1.5571099077625636,
-      "rms": 0.49976596525801725,
-      "rel_db": -14.44
+      "peak_rms": 1.5703551996078176,
+      "rms": 0.534263174375202,
+      "rel_db": -13.37
     },
     "pulse__aucun": {
       "peak_rms": 0.0,
       "rms": 0.0,
-      "rel_db": -188.41
+      "rel_db": -187.92
     },
     "__mix": {
-      "rms": 2.6347495073625757
+      "rms": 2.4894914901113636
     }
   },
-  "loop_seconds": 195.918,
+  "loop_seconds": 97.959,
   "bpm": 49.0,
+  "night_true_render": true,
   "level_matching": {
     "metric": "peak_rms(500 ms) mesure sur les .ogg rendus",
     "applied_as": "champ `gain` par candidat, applique a la lecture",
