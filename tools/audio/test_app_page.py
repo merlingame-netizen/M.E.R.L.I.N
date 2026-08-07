@@ -36,15 +36,19 @@ async def main():
         print("  gains actifs    :", st["g"])
         await pg.click('.cand[data-id="psaltery"]'); await pg.wait_for_timeout(5000)
         g=await pg.evaluate("()=>+gain['corde__psaltery'].gain.value.toFixed(3)")
+        # LA CIBLE VIENT DE LA PAGE, PAS DU TEST. La valeur mesuree change a
+        # chaque rendu ; un chiffre code en dur perime le test au premier
+        # reappariement — c'est arrive (1,927 -> 1,710).
+        want=await pg.evaluate("()=>+((CAST.candidates.corde.find(c=>c.id=='psaltery')||{}).gain||1)")
         old=await pg.evaluate("()=>+gain['corde__celtic_guitar'].gain.value.toFixed(3)")
-        print(f"  psalterion      : {g}  (cible 1.927 — impossible sans noeud de gain)")
+        print(f"  psalterion      : {g}  (cible {want} lue dans la page)")
         print(f"  guitare sortie  : {old}  (cible 0)")
         # etat des elements : un seul titulaire par role doit jouer
         pl=await pg.evaluate("()=>Object.entries(el).filter(([k,a])=>!a.paused).map(([k])=>k)")
         print("  pistes en cours :", sorted(pl))
         await b.close()
     print("  erreurs console :", len(errs), errs[:3])
-    ok = not errs and not small and abs(g-1.927)<0.02 and old<0.01
+    ok = not errs and not small and abs(g-want)<0.02 and old<0.01
     print("  ==>", "OK" if ok else "A CORRIGER")
     return 0 if ok else 1
 sys.exit(asyncio.run(main()))

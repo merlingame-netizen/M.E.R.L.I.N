@@ -376,12 +376,18 @@ class MultiSampleBank:
         rate = entry.get("sample_rate") or file_rate
         semis = midi - entry["base_note"]
         # VARIATION PAR NOTE — sinon deux notes identiques sont bit-a-bit
-        # identiques, ce qu'aucun instrumentiste ne produit. Quatre cents de
-        # justesse et un demi-decibel : imperceptibles isolement, mais c'est
-        # leur absence qui s'entend sur une repetition.
+        # identiques, ce qu'aucun instrumentiste ne produit.
+        #
+        # DOSAGE REVU A LA BAISSE. Quatre cents d'ecart-type paraissent
+        # inoffensifs sur une note isolee, mais entre DEUX voix tenues l'ecart
+        # typique devient ~5,6 cents (les variances s'additionnent) : a 440 Hz
+        # c'est un battement d'environ 1,4 Hz, audible comme un tremblement
+        # continu — le reproche « instable » le decrit exactement. A 1,5 cent
+        # d'ecart-type le battement tombe sous 0,6 Hz, sous le vibrato naturel
+        # des instruments enregistres.
         rng = np.random.default_rng(90210 + int(seed))
-        cents = float(rng.normal(0.0, 4.0))
-        amp = float(10 ** (rng.normal(0.0, 0.35) / 20.0))
+        cents = float(rng.normal(0.0, 1.5))
+        amp = float(10 ** (rng.normal(0.0, 0.2) / 20.0))
         step = (rate / SR) * (2.0 ** ((semis + cents / 100.0) / 12.0))
 
         kind = self.KIND.get(inst, "sustained")

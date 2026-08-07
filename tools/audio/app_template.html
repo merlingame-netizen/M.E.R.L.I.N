@@ -84,29 +84,31 @@ header{padding:34px 0 18px}
 .msg:empty{display:none}
 .msg.warn{color:var(--ember)}
 
-/* ── barre de niveaux : le cœur de la démonstration ───────────── */
-.levels{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
-  background:var(--line);border:1px solid var(--line);border-radius:4px;
-  overflow:hidden;margin-top:16px;
+/* ── la table : une ligne par piste — jauge, titulaire, remplaçants ── */
+.board{display:grid;gap:8px}
+.track{
+  background:var(--panel);border:1px solid var(--line);border-radius:5px;
+  padding:11px 13px 12px;display:grid;gap:9px;box-shadow:var(--shadow);
 }
-.lv{background:var(--panel-2);padding:9px 11px 11px;display:grid;gap:6px;min-width:0}
-.lv-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.lv-name{
+.tr-top{display:flex;align-items:center;gap:12px}
+.tr-name{
   font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.62rem;
-  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);
+  letter-spacing:.13em;text-transform:uppercase;color:var(--fg-3);min-width:54px;
 }
-.lv-who{
-  font-size:.8rem;color:var(--fg-2);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;min-width:0;
+.tr-now{
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
+  font-size:1.08rem;color:var(--ember);flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.lv.hot .lv-who{color:var(--ember)}
+.tr-now .from{color:var(--fg-3)}
+.tr-now .arr{color:var(--frost);padding:0 4px}
+.meter{width:90px;flex:none}
+.track.hot .meter i{background:var(--ember)}
 .meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
 .meter i{
   display:block;height:100%;width:0%;background:var(--frost);
   border-radius:2px;transition:width .09s linear;
 }
-.lv.hot .meter i{background:var(--ember)}
 
 /* ── sections ─────────────────────────────────────────────────── */
 section{margin-top:30px}
@@ -129,21 +131,6 @@ section{margin-top:30px}
 }
 .chip.amb[aria-pressed="true"]{background:var(--ember);border-color:var(--ember)}
 
-/* ── cartes de rôle ───────────────────────────────────────────── */
-.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:12px}
-.role{
-  background:var(--panel);border:1px solid var(--line);border-radius:5px;
-  padding:15px 16px 16px;display:grid;gap:11px;box-shadow:var(--shadow);
-}
-.role-name{
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
-  font-size:1.06rem;font-weight:600;
-}
-.now{
-  font-size:1.5rem;line-height:1.15;color:var(--ember);
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,ui-serif,serif;
-  text-wrap:balance;
-}
 .bench{display:flex;gap:6px;flex-wrap:wrap}
 .cand{
   cursor:pointer;font:inherit;font-size:.8rem;background:transparent;
@@ -158,7 +145,7 @@ section{margin-top:30px}
 a{color:var(--frost)}
 button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offset:3px;border-radius:2px}
 @media (max-width:640px){
-  .levels{grid-template-columns:repeat(2,1fr)}
+  .meter{width:56px}
   .axis > b{min-width:100%}
   header{padding-top:calc(20px + env(safe-area-inset-top))}
   .bar{top:env(safe-area-inset-top)}
@@ -233,12 +220,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--frost);outline-offs
     <div class="tag" id="engine">—</div>
     <div class="msg" id="msg"></div>
   </div>
-  <div class="levels" id="levels"></div>
 </header>
 
-<section><div class="chips" id="ambiances"></div></section>
+<section><div class="chips" id="presets"></div></section>
+<section><div class="board" id="board"></div></section>
 <section><div id="axes"></div></section>
-<section><div class="roles" id="roles"></div></section>
 
 </div>
 
@@ -247,15 +233,19 @@ const AUDIO = __AUDIO_JSON__;
 const CAST  = __CASTING_JSON__;
 
 const AXIS_LABEL = {meteo:"Météo", saison:"Saison", moment:"Moment"};
-const ROLE_LABEL = {chant:"Chant", corde:"Corde", halo:"Halo"};
+const ROLE_LABEL = {chant:"Chant", corde:"Corde", halo:"Halo", pulse:"Pouls"};
 
-/* Des distributions completes, pour changer le caractere d'un coup. */
-const AMBIANCES = [
-  {id:"broceliande", label:"Brocéliande", mix:"couvert", cast:{chant:"cor_anglais", corde:"celtic_guitar", halo:"celesta"}},
-  {id:"pluie",       label:"Pluie",       mix:"pluie",   cast:{chant:"cor_anglais", corde:"oud",           halo:"celesta"}},
-  {id:"hiver",       label:"Nuit d’hiver",mix:"neige",   cast:{chant:"cor_anglais", corde:"psaltery",      halo:"wine_glasses"}},
-  {id:"printemps",   label:"Matin clair", mix:"aube",    cast:{chant:"ocarina",     corde:"kalimba",       halo:"hand_chimes"}},
-  {id:"lointain",    label:"Lointain",    mix:"brume",   cast:{chant:"harmonica",   corde:"dan_tranh",     halo:"wine_glasses"}},
+/* Présets COMBINATOIRES : chacun pose des AXES (météo + saison + moment),
+   pas une distribution figée. La table de contexte en déduit les titulaires ET
+   le milieu — et l'état reste lisible et modifiable axe par axe après coup. */
+const PRESETS = [
+  {id:"broceliande", label:"Brocéliande",   ctx:{}},
+  {id:"pluie",       label:"Pluie d’été",   ctx:{meteo:"pluie", saison:"ete"}},
+  {id:"orage",       label:"Orage",         ctx:{meteo:"orage"}},
+  {id:"neige",       label:"Neige",         ctx:{meteo:"neige"}},
+  {id:"hiver",       label:"Nuit d’hiver",  ctx:{saison:"hiver", moment:"nuit"}},
+  {id:"printemps",   label:"Aube claire",   ctx:{moment:"aube"}},
+  {id:"lointain",    label:"Brume de nuit", ctx:{meteo:"brume", moment:"nuit"}},
 ];
 
 const $ = s => document.querySelector(s);
@@ -264,7 +254,6 @@ const clock=$("#t"), durEl=$("#dur"), msgEl=$("#msg"), engineEl=$("#engine"), lo
 
 let cast = Object.assign({}, CAST.default);
 let context = {};
-let ambianceMix = null;   /* milieu choisi par une ambiance, faute d'axe explicite */
 let playing = false, unlocked = false;
 const el = {};            /* nom -> HTMLAudioElement */
 const vol = {};           /* nom -> {cur, target} */
@@ -381,8 +370,6 @@ function resolveMix(){
     const v = context[axis];
     if(v && table[v]) return Object.assign({source:v}, table[v]);
   }
-  if(ambianceMix && table[ambianceMix])
-    return Object.assign({source:ambianceMix}, table[ambianceMix]);
   return Object.assign({source:"neutre"}, CAST.mix_neutral ||
     {low:0, high:0, space:0.16, decay:2.6, damp:5200});
 }
@@ -523,8 +510,16 @@ function tick(ts){
   });
 
   if(playing && el.bed){
-    /* recalage : des <audio> indépendants dérivent lentement */
-    if(ts - lastSync > 2000){
+    /* RECALAGE SANS SEEK. L'ancienne version faisait a.currentTime = t sur
+       des pistes EN LECTURE dès 80 ms d'écart. Un seek sur un élément qui
+       joue est un trou audible — et sur un téléphone qui décode dix-huit
+       éléments, les écarts sont fréquents : c'était le « ça coupe », remis
+       toutes les deux secondes.
+       Une piste audible n'est plus JAMAIS repositionnée : on corrige sa
+       VITESSE (±0,3 %, ~5 cents, sous le vibrato des instruments), et le
+       seek reste réservé aux pistes inaudibles ou à un décrochage franc
+       (>0,6 s), où le trou est de toute façon moindre que le décalage. */
+    if(ts - lastSync > 500){
       lastSync = ts;
       const t = el.bed.currentTime, d = el.bed.duration || 1;
       Object.keys(el).forEach(n => {
@@ -534,7 +529,19 @@ function tick(ts){
         let diff = a.currentTime - t;
         if(diff >  d/2) diff -= d;
         if(diff < -d/2) diff += d;
-        if(Math.abs(diff) > 0.08){ try{ a.currentTime = t; }catch(e){} }
+        const audible = vol[n] && vol[n].cur > 0.02;
+        if(!audible){
+          if(Math.abs(diff) > 0.05){ try{ a.currentTime = t; }catch(e){} }
+          if(a.playbackRate !== 1) a.playbackRate = 1;
+        }else if(Math.abs(diff) > 0.6){
+          try{ a.currentTime = t; }catch(e){}
+          if(a.playbackRate !== 1) a.playbackRate = 1;
+        }else if(Math.abs(diff) > 0.03){
+          try{ a.preservesPitch = false; a.webkitPreservesPitch = false; }catch(e){}
+          a.playbackRate = 1 - Math.max(-0.003, Math.min(0.003, diff * 0.05));
+        }else if(a.playbackRate !== 1){
+          a.playbackRate = 1;
+        }
       });
     }
     const t = el.bed.currentTime;
@@ -544,46 +551,60 @@ function tick(ts){
 }
 
 /* ── interface ─────────────────────────────────────────────────────────── */
-const levelsEl = $("#levels");
-function buildLevels(){
-  const rows = [{id:"bed", name:"socle", fixed:true}]
+const boardEl = $("#board");
+const switching = {};          /* role -> minuterie du fondu affiche */
+
+function buildBoard(){
+  const rows = [{id:"bed", name:"Socle", fixed:true}]
     .concat((CAST.roles||[]).map(r => ({id:r, name:ROLE_LABEL[r]||r})));
-  levelsEl.innerHTML = rows.map(r =>
-    '<div class="lv" data-lv="'+r.id+'">'+
-      '<div class="lv-top"><span class="lv-name">'+r.name+'</span></div>'+
-      '<div class="lv-who" data-who="'+r.id+'">'+(r.fixed?"fixe":"—")+'</div>'+
-      '<div class="meter"><i></i></div>'+
+  boardEl.innerHTML = rows.map(r =>
+    '<div class="track" data-tr="'+r.id+'">'+
+      '<div class="tr-top"><span class="tr-name">'+r.name+'</span>'+
+        '<span class="tr-now" data-now="'+r.id+'">'+(r.fixed?"— fixe —":"—")+'</span>'+
+        '<span class="meter"><i></i></span></div>'+
+      (r.fixed ? "" :
+      '<div class="bench">'+ cands(r.id).map(c =>
+        '<button class="cand" data-role="'+r.id+'" data-id="'+c.id+'" aria-pressed="false">'+
+        c.label+'</button>').join("") +'</div>')+
     '</div>').join("");
+  document.querySelectorAll(".cand").forEach(b => b.addEventListener("click", () => {
+    context = {}; syncAxisChips();
+    const next = Object.assign({}, cast); next[b.dataset.role] = b.dataset.id;
+    setCast(next);
+  }));
 }
+
 function paintLevels(){
-  /* La jauge est rapportée au gain nominal du titulaire, pas à 1 : le
-     psaltérion joue à 1,93 et saturerait la barre dès le début du fondu. */
+  /* La jauge est rapportee au gain nominal du titulaire, pas a 1 : le
+     psalterion joue a 1,93 et saturerait la barre des le debut du fondu. */
   const set = (id, name, hot, full) => {
-    const box = levelsEl.querySelector('.lv[data-lv="'+id+'"]');
+    const box = boardEl.querySelector('.track[data-tr="'+id+'"]');
     if(!box) return;
     const v = vol[name] ? vol[name].cur : 0;
-    const pct = Math.round(Math.min(1, v / (full || 1)) * 100);
-    box.querySelector(".meter i").style.width = pct + "%";
+    box.querySelector(".meter i").style.width =
+      Math.round(Math.min(1, v / (full || 1)) * 100) + "%";
     box.classList.toggle("hot", !!hot && v > 0.02);
   };
   set("bed", "bed", false, 1);
   (CAST.roles||[]).forEach(r => set(r, key(r, cast[r]), true, trim(r, cast[r])));
 }
 
+function sameCtx(a, b){
+  return Object.keys(CAST.axes || {}).every(k => (a[k] || null) === (b[k] || null));
+}
+
 function paint(){
   document.querySelectorAll(".cand").forEach(b =>
     b.setAttribute("aria-pressed", String(cast[b.dataset.role] === b.dataset.id)));
   (CAST.roles||[]).forEach(r => {
+    if(switching[r]) return;             /* la ligne montre « ancien → nouveau » */
     const e = entry(r, cast[r]);
-    const now = document.querySelector('.now[data-now="'+r+'"]');
+    const now = boardEl.querySelector('[data-now="'+r+'"]');
     if(now && e) now.textContent = e.label;
-    const who = levelsEl.querySelector('[data-who="'+r+'"]');
-    if(who && e) who.textContent = e.label;
   });
   document.querySelectorAll(".chip.amb").forEach(b => {
-    const a = AMBIANCES.find(x => x.id === b.dataset.amb);
-    const same = a && (CAST.roles||[]).every(r => cast[r] === a.cast[r]);
-    b.setAttribute("aria-pressed", String(!!same));
+    const pz = PRESETS.find(x => x.id === b.dataset.amb);
+    b.setAttribute("aria-pressed", String(!!pz && sameCtx(context, pz.ctx)));
   });
   paintLevels();
 }
@@ -591,14 +612,23 @@ function paint(){
 function setCast(next){
   (CAST.roles||[]).forEach(r => {
     if(cast[r] === next[r]) return;
+    const oldE = entry(r, cast[r]), newE = entry(r, next[r]);
     cast[r] = next[r];
     if(playing) startPart(key(r, cast[r]));
+    /* pendant le fondu croise, la ligne montre le remplacement en cours */
+    const now = boardEl.querySelector('[data-now="'+r+'"]');
+    if(now && oldE && newE){
+      now.innerHTML = '<span class="from">'+oldE.label+'</span>'+
+                      '<span class="arr">→</span>'+newE.label;
+      clearTimeout(switching[r]);
+      switching[r] = setTimeout(() => { delete switching[r]; paint(); }, 3200);
+    }
   });
   applyTargets(); paint(); applyMix(resolveMix());
 }
 
-/* Rôle par rôle, le premier axe qui se prononce l'emporte ; le titulaire par
-   défaut ferme la marche, donc il y a toujours exactement un instrument par rôle. */
+/* Role par role, le premier axe qui se prononce l'emporte ; le titulaire par
+   defaut ferme la marche, donc il y a toujours exactement un instrument par role. */
 function resolve(){
   const out = Object.assign({}, CAST.default), done = {};
   (CAST.priority||[]).forEach(axis => {
@@ -609,15 +639,14 @@ function resolve(){
   return out;
 }
 
-/* ambiances */
-$("#ambiances").innerHTML = AMBIANCES.map(a =>
-  '<button class="chip amb" data-amb="'+a.id+'" aria-pressed="false">'+a.label+'</button>').join("");
-$("#ambiances").querySelectorAll(".amb").forEach(b => b.addEventListener("click", () => {
-  const a = AMBIANCES.find(x => x.id === b.dataset.amb);
-  context = {};
-  ambianceMix = a.mix || null;
-  document.querySelectorAll(".chip.ax").forEach(c => c.setAttribute("aria-pressed","false"));
-  setCast(Object.assign({}, a.cast));
+/* presets — combinables avec les axes : un preset POSE des axes, il ne fige rien */
+$("#presets").innerHTML = PRESETS.map(pz =>
+  '<button class="chip amb" data-amb="'+pz.id+'" aria-pressed="false">'+pz.label+'</button>').join("");
+$("#presets").querySelectorAll(".amb").forEach(b => b.addEventListener("click", () => {
+  const pz = PRESETS.find(x => x.id === b.dataset.amb);
+  context = Object.assign({}, pz.ctx);
+  syncAxisChips();
+  setCast(resolve());
 }));
 
 /* axes */
@@ -629,36 +658,25 @@ Object.keys(CAST.axes || {}).forEach(axis => {
   CAST.axes[axis].forEach(value => {
     const b = document.createElement("button");
     b.className = "chip ax"; b.textContent = value;
-    b.setAttribute("aria-pressed","false"); b.dataset.axis = axis;
+    b.setAttribute("aria-pressed","false");
+    b.dataset.axis = axis; b.dataset.val = value;
     b.addEventListener("click", () => {
-      const off = context[axis] === value;
-      row.querySelectorAll(".chip").forEach(o => o.setAttribute("aria-pressed","false"));
-      if(off) delete context[axis];
-      else { context[axis] = value; b.setAttribute("aria-pressed","true"); }
-      setCast(resolve()); applyMix(resolveMix());
+      if(context[axis] === value) delete context[axis];
+      else context[axis] = value;
+      syncAxisChips();
+      setCast(resolve());
     });
     row.appendChild(b);
   });
   axesEl.appendChild(row);
 });
 
-/* rôles */
-$("#roles").innerHTML = (CAST.roles||[]).map(r =>
-  '<div class="role">'+
-    '<div class="role-name">'+(ROLE_LABEL[r]||r)+'</div>'+
-    '<div class="now" data-now="'+r+'">—</div>'+
-    '<div class="bench">'+ cands(r).map(c =>
-      '<button class="cand" data-role="'+r+'" data-id="'+c.id+'" aria-pressed="false">'+
-      c.label+'</button>').join("") +'</div>'+
-  '</div>').join("");
-document.querySelectorAll(".cand").forEach(b => b.addEventListener("click", () => {
-  context = {};
-  document.querySelectorAll(".chip.ax").forEach(c => c.setAttribute("aria-pressed","false"));
-  const next = Object.assign({}, cast); next[b.dataset.role] = b.dataset.id;
-  setCast(next);
-}));
+function syncAxisChips(){
+  document.querySelectorAll(".chip.ax").forEach(c =>
+    c.setAttribute("aria-pressed", String(context[c.dataset.axis] === c.dataset.val)));
+}
 
-buildLevels(); paint();
+buildBoard(); paint();
 
 /* CONTRÔLE AU CHARGEMENT. La panne précédente était invisible : l'interface
    réagissait, les jauges montaient, et il ne sortait qu'un socle. On vérifie
