@@ -2748,3 +2748,11 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - [x] Neige = psalterion a archet ; ocarina orphelin purge.
 - [x] Artefact AAC 11,34 Mo (19 combos, 29 pistes), tests verts (midi 87,1 s
       reel, nuit 130,6 s reelle, derive 6 ms), publie c2a7221f.
+
+## 2026-08-07 — Musique menu v10 : harmonie et transparence — LIVRE
+- [x] « Pas harmonieux » : le drone chevauchait d'UNE MESURE (bitonalite
+      grave) -> joint legato 0,6 s. Rugosite mediane 9,8x -> 2,88x.
+- [x] Controle musical : registres etages (basse / arpeges 55-76 / melodie).
+- [x] « Opaques » : melodie 32k -> 40k, fond -> 64k stereo, oud 3,4 kHz.
+- [x] Rendus x4 echelles, 0 couture partout. Artefact AAC 14,16 Mo,
+      tests verts, publie c2a7221f.
