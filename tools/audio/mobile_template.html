@@ -207,23 +207,22 @@ const $ = s => document.querySelector(s);
    muette. */
 let AC = null, MASTER = null; const el = {}, gain = {};
 let W = "couvert", H = "apres_midi";
-let RATE = 1.0;
 let playing = false, pos = 0;
 let LOOP = true, INTROING = false;
-const layers = {fond: null, chant: null, perc: null};    /* noms d'elements */
-const fadeTok = {fond: 0, chant: 0, perc: 0};
+const layers = {fond: null, chant: null};                /* noms d'elements */
+const fadeTok = {fond: 0, chant: 0};
 const fxOn = {};
 
-const fondId  = () => H === "nuit" ? "nuit" : "jour";
-/* la percussion depend de l'heure — la nuit, elle est DANS le fond lent */
-const percOf  = h => h === "nuit" ? null : (META.perc[h] || null);
+/* v9 : TOUT EN RENDU REEL. Chaque groupe d'heures est un jeu complet rendu
+   a son echelle exacte, lu a 1,0 — plus aucun varispeed, plus aucun
+   etirement, hauteur normale partout. */
+const groupOf = h => META.group_of[h] || "ref";
 /* l'instrument de la melodie depend du COUPLE (meteo, heure) : la nuit
    impose la boite a musique quelle que soit la meteo */
 const chantId = () => H === "nuit" ? META.melodie.nuit : META.melodie.meteo[W];
-/* la NUIT est un RENDU REEL au tempo 0,8, lu a 1,0 : hauteur normale.
-   Les heures de jour restent en varispeed doux (<= 1 demi-ton). */
-const rateFor = h => h === "nuit" ? 1.0 : (META.tempo[h] || 1.0);
-const comboScale = () => H === "nuit" ? META.night_scale : 1.0;
+const fondName  = () => "FOND_" + groupOf(H);
+const chantName = () => "CHANT_" + groupOf(H) + "_" + chantId();
+const grpMeta   = () => META.groups[groupOf(H)];
 
 function ctx(){
   if(AC !== null) return AC;
@@ -256,7 +255,7 @@ function make(name){
      (plus grave, plus lourde), midi monte d'un demi-ton (plus clair). */
   try{ a.preservesPitch = false; }catch(e){}
   try{ a.webkitPreservesPitch = false; }catch(e){}
-  if(!name.startsWith("FX_")) a.playbackRate = RATE;
+  if(!name.startsWith("FX_")) a.playbackRate = 1.0;
   a.src = "data:" + (META.mime || "audio/mp4") + ";base64," + (AUDIO[name] || "");
   el[name] = a;
   const c = ctx();
@@ -300,7 +299,7 @@ function swapLayer(layer, name, timeMul){
   const t0 = performance.now();
   if(name){
     const a = make(name);
-    a.playbackRate = RATE;
+    a.playbackRate = 1.0;
     try{ a.currentTime = ref * timeMul; }catch(e){}
     const p = a.play();               /* DANS le geste : iOS l'accepte */
     if(p && p.catch) p.catch(err => logAuto("refus de lecture " + name + " : " + err.name));
@@ -316,30 +315,9 @@ function swapLayer(layer, name, timeMul){
   requestAnimationFrame(step);
 }
 
-/* changement de vitesse — GLISSE DE BANDE (v8). En varispeed pur, changer
-   le taux est un simple re-echantillonnage : une RAMPE est parfaitement
-   propre (c'etait l'etireur temporel qui detestait les rampes, et il n'est
-   plus la). 350 ms de glisse, comme une bande qu'on amene a la main — plus
-   de creux de gain, plus rien a masquer. */
-function applyRate(target){
-  RATE = target;
-  ["fond", "chant", "perc"].forEach(l => {
-    if(layers[l] && el[layers[l]]) el[layers[l]].playbackRate = RATE;
-  });
-}
-let rateTok = 0;
-function setRate(target){
-  $("#ratero").textContent = "×" + (META.tempo[H] || 1).toFixed(2);
-  const playingNow = playing && master() && !master().paused;
-  if(!playingNow){ applyRate(target); return; }
-  const tok = ++rateTok, from = RATE, t0 = performance.now();
-  (function step(){
-    if(rateTok !== tok) return;
-    const kk = Math.min(1, (performance.now() - t0) / 350);
-    applyRate(from + (target - from) * (kk * kk * (3 - 2 * kk)));
-    if(kk < 1) requestAnimationFrame(step);
-  })();
-}
+/* v9 : PLUS AUCUNE manipulation de vitesse a la lecture. Chaque groupe
+   d'heures est un rendu reel lu a 1,0 ; changer d'heure est un fondu croise
+   vers l'autre rendu, position convertie en proportion musicale. */
 
 function paintState(){
   document.documentElement.dataset.milieu = W;
@@ -349,38 +327,33 @@ function paintState(){
     b.setAttribute("aria-pressed", String(b.dataset.w === W)));
   document.querySelectorAll("#heure .chip").forEach(b =>
     b.setAttribute("aria-pressed", String(b.dataset.h === H)));
-  const pid = percOf(H);
   $("#castline").innerHTML = "mélodie <b>" + META.melodie.labels[chantId()] + "</b>";
   $("#heureline").innerHTML =
-    "vitesse <b>×" + (META.tempo[H] || 1).toFixed(2) +
-    (H === "nuit" ? " (rendu réel)" : "") + "</b>" +
-    " &nbsp;·&nbsp; fond <b>" + META.fonds[fondId()] + "</b>" +
-    (pid ? " &nbsp;·&nbsp; percussion <b>" + (META.perclabels[pid] || pid) + "</b>" : "");
+    "vitesse <b>×" + (META.tempo[H] || 1).toFixed(2) + " (rendu réel)</b>" +
+    " &nbsp;·&nbsp; fond <b>" + grpMeta().fond + "</b>";
   drawTimeline();
 }
 
 function setMeteo(w){
   W = w; paintState();
-  if(INTROING){ layers.chant = null; unlock("CHANT_" + chantId()); return; }
-  swapLayer("chant", "CHANT_" + chantId(), true);
+  if(INTROING){ layers.chant = null; unlock(chantName()); return; }
+  swapLayer("chant", chantName(), 1);
 }
 function setHeure(h){
-  const oldScale = comboScale();
+  const oldBar = grpMeta().barsec;
   H = h; paintState();
-  setRate(rateFor(h));
+  $("#ratero").textContent = "×" + (META.tempo[H] || 1).toFixed(2);
   if(INTROING){
-    if(el.INTRO) el.INTRO.playbackRate = RATE;
-    layers.fond = null; layers.chant = null; layers.perc = null;
-    unlock("FOND_" + fondId()); unlock("CHANT_" + chantId());
+    layers.fond = null; layers.chant = null;
+    unlock(fondName()); unlock(chantName());
     return;
   }
-  /* jour <-> nuit : les boucles n'ont pas la meme duree (la nuit est un
-     rendu reel 25 % plus long) — la position se convertit en proportion */
-  const mul = comboScale() / oldScale;
-  swapLayer("fond", "FOND_" + fondId(), mul);
-  swapLayer("chant", "CHANT_" + chantId(), 1);   /* s'aligne sur le nouveau fond */
-  const pid = percOf(h);
-  swapLayer("perc", pid ? "PERC_" + pid : null, 1);
+  /* d'un groupe a l'autre les boucles n'ont pas la meme duree (rendus
+     reels) : la position se convertit en PROPORTION MUSICALE — meme mesure,
+     autre horloge */
+  const mul = grpMeta().barsec / oldBar;
+  swapLayer("fond", fondName(), mul);
+  swapLayer("chant", chantName(), 1);   /* s'aligne sur le nouveau fond */
 }
 
 /* ── transport ── */
@@ -405,15 +378,13 @@ function unlock(name){
 
 function startLayers(fromGesture){
   INTROING = false;
-  layers.fond = "FOND_" + fondId();
-  layers.chant = "CHANT_" + chantId();
-  const pid = percOf(H);
-  layers.perc = pid ? "PERC_" + pid : null;
+  layers.fond = fondName();
+  layers.chant = chantName();
   let first = null;
-  ["fond", "chant", "perc"].forEach(l => {
+  ["fond", "chant"].forEach(l => {
     if(!layers[l]) return;
     const a = make(layers[l]);
-    a.playbackRate = RATE;
+    a.playbackRate = 1.0;
     a.loop = LOOP;
     try{ a.currentTime = pos; }catch(e){}
     setG(layers[l], 1);
@@ -433,9 +404,9 @@ function startLayers(fromGesture){
    couches. Les couches sont deverrouillees PENDANT le geste. */
 function playIntro(){
   playing = true; INTROING = true; glyph.textContent = "❚❚";
-  unlock("FOND_" + fondId()); unlock("CHANT_" + chantId());
+  unlock(fondName()); unlock(chantName());
   const a = make("INTRO");
-  a.playbackRate = RATE;
+  a.playbackRate = 1.0;
   try{ a.currentTime = 0; }catch(e){}
   setG("INTRO", 1);
   const p = a.play();
@@ -474,7 +445,7 @@ playBtn.addEventListener("click", () => {
 $("#loopbtn").addEventListener("click", () => {
   LOOP = !LOOP;
   $("#loopbtn").setAttribute("aria-pressed", String(LOOP));
-  ["fond", "chant", "perc"].forEach(l => {
+  ["fond", "chant"].forEach(l => {
     if(layers[l] && el[layers[l]]) el[layers[l]].loop = LOOP;
   });
 });
@@ -489,8 +460,8 @@ $("#loopbtn").addEventListener("click", () => {
    consigne au journal s'il depasse 400 ms. */
 function steer(){
   const m = master(); if(!m || !playing) return;
-  const d = m.duration || 196;
-  ["chant", "perc"].forEach(l => {
+  const d = m.duration || grpMeta().dur;
+  ["chant"].forEach(l => {
     const n = layers[l]; if(!n || !el[n]) return;
     const a = el[n]; if(a.paused) return;
     let drift = (a.currentTime || 0) - (m.currentTime || 0);
@@ -512,7 +483,7 @@ function tick(ts){
     return;
   }
   const m = master(); if(!m) return;
-  const t = m.currentTime || 0, d = m.duration || 196;
+  const t = m.currentTime || 0, d = m.duration || grpMeta().dur;
   $("#t").textContent = (t/60|0) + ":" + String(t%60|0).padStart(2,"0");
   const ring = $("#ring");
   if(ring) ring.style.strokeDashoffset = (151 * (1 - t/d)).toFixed(1);
@@ -530,7 +501,7 @@ function sizeCanvas(){
 function glowColor(){
   return getComputedStyle(document.documentElement).getPropertyValue("--glow").trim() || "#c9a25e";
 }
-function combo(){ return META.combos[fondId() + "|" + chantId()]; }
+function combo(){ return META.combos[groupOf(H) + "|" + chantId()]; }
 function drawTimeline(){
   const m = combo(); if(!m || !cvW) return;
   const g = cv.getContext("2d");
@@ -544,7 +515,7 @@ function drawTimeline(){
   g.fillStyle = gl + "33"; g.fill();
   g.strokeStyle = gl; g.lineWidth = 1.2; g.stroke();
   /* marqueurs d'attaques */
-  const a = master(), d = (a && a.duration) || (m && m.dur) || 196;
+  const a = master(), d = (a && a.duration) || grpMeta().dur;
   g.strokeStyle = "rgba(233,226,206,.5)";
   m.onsets.forEach(([t, s]) => {
     const x = t / d * cvW, h = Math.min(1, s / 18) * 22 + 5;
@@ -552,7 +523,7 @@ function drawTimeline(){
   });
   /* mesures (une graduation toutes les 4) */
   g.strokeStyle = "rgba(111,117,101,.35)";
-  const bs = (m && m.barsec) || META.bar;
+  const bs = grpMeta().barsec;
   for(let b = 4; b < META.bars; b += 4){
     const x = b * bs / d * cvW;
     g.beginPath(); g.moveTo(x, cvH - 8); g.lineTo(x, cvH); g.stroke();
@@ -571,11 +542,11 @@ function seekAt(clientX){
   }
   const r = cv.getBoundingClientRect();
   const frac = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
-  const m = master() || make("FOND_" + fondId());
-  const d = m.duration || 196;
+  const m = master() || make(fondName());
+  const d = m.duration || grpMeta().dur;
   pos = frac * d;
   try{ m.currentTime = pos; }catch(e){}
-  ["chant", "perc"].forEach(l => {
+  ["chant"].forEach(l => {
     if(layers[l] && el[layers[l]]){
       try{ el[layers[l]].currentTime = pos; }catch(e){}
     }
@@ -586,13 +557,10 @@ cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); see
 cv.addEventListener("pointermove", e => { if(e.buttons) seekAt(e.clientX); });
 
 function barAt(t){
-  const m = combo(), bs = (m && m.barsec) || META.bar;
-  return Math.min(META.bars, Math.floor(t / bs) + 1);
+  return Math.min(META.bars, Math.floor(t / grpMeta().barsec) + 1);
 }
 function stateLine(){
-  const pid = percOf(H);
-  return "mélodie:" + META.melodie.labels[chantId()] + " · fond:" + META.fonds[fondId()] +
-         (pid ? " · perc:" + (META.perclabels[pid] || pid) : "");
+  return "mélodie:" + META.melodie.labels[chantId()] + " · fond:" + grpMeta().fond;
 }
 function updateReadout(t){
   const b = barAt(t);
@@ -697,7 +665,6 @@ document.addEventListener("visibilitychange", () => {
              " non supporté par ce navigateur", true);
 })();
 sizeCanvas(); paintState();
-RATE = rateFor(H);
 $("#ratero").textContent = "×" + (META.tempo[H] || 1).toFixed(2);
 addEventListener("resize", () => { sizeCanvas(); drawTimeline(); });
 </script>

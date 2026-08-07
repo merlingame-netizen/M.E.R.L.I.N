@@ -70,3 +70,18 @@
 - Le fond (drone) a -4 dB sous la melodie : le motif domine, le fond porte.
 - En VARISPEED pur, la rampe de vitesse est propre (c'est l'etireur temporel
   qui detestait les rampes) : glisse de bande ~350 ms, creux de gain retire.
+
+## 2026-08-07: Musique menu v9 — tout en rendu reel, fond melodique, guitare
+- TOUT en RENDU REEL, vitesses PRONONCEES : 4 jeux complets rendus aux
+  echelles 3/4 (nuit), 5/6 (aube, soiree), 1 (matinee, apres-midi),
+  9/8 (midi). Plus AUCUN varispeed. Echelles en fractions exactes pour des
+  boucles 5-lisses (base 4 320 000 ech).
+- Piece resserree a 20 MESURES (98 s) — la boucle d'un menu — pour que les
+  4 jeux tiennent dans l'artefact. Forme : ouverture / air nu / refrain /
+  air orne / coda. Le motif reste integral.
+- FOND : drone ADOUCI et MELODIQUE (basse qui marche vers l'accord suivant)
+  + ARPEGES DE GUITARE ACOUSTIQUE (celtic guitar reelle) + percussions
+  RENFORCEES qui accompagnent la melodie (des la mesure 3). La regle
+  « max 3 » est remplacee : drone + guitare + percussion + melodie.
+- Palette bretonne/medievale/fantastique : neige = PSALTERION a archet
+  (medieval, glace) au lieu de l'ocarina.

@@ -56,7 +56,7 @@ import numpy as np
 
 # ═══════════════════════════════════════════════════════════════════════════════
 
-N_BARS = 40
+N_BARS = 20
 
 # LA BOUCLE EST DEFINIE EN ECHANTILLONS, PAS EN SECONDES — et le tempo en decoule.
 #
@@ -71,14 +71,23 @@ N_BARS = 40
 # 8 640 000 = 2^7 x 3^3 x 5^4. Tous les facteurs sont petits, la FFT est rapide —
 # et le tempo qui en decoule tombe sur 49,000 BPM tout rond.
 SR = 44100
-# MERLIN_TEMPO_SCALE : rendu a un AUTRE tempo reel (v7). La nuit est rendue a
-# 0,8 — la boucle passe a 10 800 000 = 2^4 x 3^3 x 5^5, TOUJOURS 5-lisse (la
-# division par 4/5 multiplie par 5/4). C'est ce qui donne une boite a musique
-# LENTE A HAUTEUR NORMALE : aucun etirement, aucun varispeed, un vrai rendu.
+# MERLIN_TEMPO_SCALE : rendu a un AUTRE tempo reel (v7, generalise v9 — PLUS
+# AUCUN varispeed : chaque heure est un rendu). L'echelle s'ecrit en FRACTION
+# (« 3/4 », « 5/6 », « 9/8 ») pour que la boucle reste un ENTIER 5-lisse :
+#   base 20 mesures = 4 320 000 = 2^6 x 3^3 x 5^4 (97,96 s, 49 BPM)
+#   3/4 (nuit)  -> 5 760 000    5/6 (aube, soiree) -> 5 184 000
+#   9/8 (midi)  -> 3 840 000    1   (matinee, apres-midi)
 import os as _os
-TEMPO_SCALE = float(_os.environ.get("MERLIN_TEMPO_SCALE", "1.0"))
-LOOP_SAMPLES = int(round(8_640_000 / TEMPO_SCALE))
-LOOP_LEN = LOOP_SAMPLES / SR                # 195,918 s a l'echelle 1,0
+BASE_LOOP = 4_320_000
+_ts = _os.environ.get("MERLIN_TEMPO_SCALE", "1")
+if "/" in _ts:
+    _num, _den = (int(x) for x in _ts.split("/"))
+    TEMPO_SCALE = _num / _den
+    LOOP_SAMPLES = BASE_LOOP * _den // _num          # exact, 5-lisse par choix
+else:
+    TEMPO_SCALE = float(_ts)
+    LOOP_SAMPLES = int(round(BASE_LOOP / TEMPO_SCALE))
+LOOP_LEN = LOOP_SAMPLES / SR                # 97,959 s a l'echelle 1,0
 BPM = N_BARS * 4 * 60.0 / LOOP_LEN          # 49,000 tout rond a l'echelle 1,0
 BEAT = 60.0 / BPM
 BAR = 4 * BEAT
@@ -94,33 +103,26 @@ CHORDS = {
     "A":   ([9, 1, 4], 45),                 # LA MAJEUR — le do diese, hors mode
 }
 
+# v9 : 20 mesures — la boucle d'un MENU (98 s), pas une suite de concert.
+# Forme resserree : ouverture / air nu / refrain / air orne / coda. Le
+# developpement et le plein sont sortis ; le motif, lui, reste integral.
 PROGRESSION = [
-    "Dm", "Dm", "C", "Dm",                          # 1-4    intro
-    "Dm", "G", "F", "Dm",                           # 5-8    theme, 1re fois
-    "Dm", "G", "F", "Dm",                           # 9-12   theme, 2e fois
-    "Dm", "C", "Dm", "C",                           # 13-16  refrain instrumental
-    "Dm", "G", "F", "Am",                           # 17-20  theme, harmonise
-    "F", "C", "Dm", "G",                            # 21-24  developpement
-    "F", "C", "G", "Am",                            # 25-28  ... suspension modale
-    "Dm", "G", "F", "Dm",                           # 29-32  tutti
-    "Dm", "G", "C", "Am",                           # 33-36  tutti, variante
-    "Dm", "C", "Am", "Am",                          # 37-40  coda, retour a la boucle
+    "Dm", "Dm", "C", "Dm",                          # 1-4    ouverture
+    "Dm", "G", "F", "Dm",                           # 5-8    l'air, nu
+    "Dm", "C", "Dm", "C",                           # 9-12   refrain instrumental
+    "Dm", "G", "F", "Am",                           # 13-16  l'air, orne
+    "Dm", "C", "Am", "Am",                          # 17-20  coda, retour boucle
 ]
 
 # Arc encore rabote. Il culminait a 1,00 sur six mesures, puis a 0,84 ; il monte
 # maintenant a 0,70 et redescend aussitot. Un sommet, dans une piece feerique, ne
 # se fabrique pas en montant le volume mais en ouvrant le registre — c'est le
 # glockenspiel et les verres qui marquent la mesure 29, pas la force.
-DYNAMICS = [.16, .18, .20, .22,                     # intro : presque rien
-            .28, .30, .32, .30,                     # l'air, nu
-            .36, .38, .40, .38,                     # l'air, double et orne
-            .42, .44, .46, .44,                     # refrain
-            .48, .50, .52, .49,                     # l'air harmonise
-            .52, .55, .58, .61,                     # developpement
-            .64, .66, .68, .70,                     # ... jusqu'a la dominante
-            .70, .68, .66, .64,                     # plein — cristallin, pas fort
-            .60, .56, .48, .40,                     # retrait
-            .32, .26, .21, .16]                     # coda
+DYNAMICS = [.20, .22, .25, .28,                     # ouverture : le drone se pose
+            .36, .38, .40, .38,                     # l'air, nu
+            .46, .48, .50, .48,                     # refrain
+            .52, .55, .57, .53,                     # l'air, orne — le sommet
+            .42, .34, .27, .21]                     # coda, retour a la boucle
 
 assert len(PROGRESSION) == N_BARS and len(DYNAMICS) == N_BARS
 

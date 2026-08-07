@@ -69,16 +69,13 @@ AIR = TRI_MARTOLOD
 AIR_LEGER = ornament(TRI_MARTOLOD, seed=1, amount=0.35)
 REFRAIN_LEGER = ornament(REFRAIN, seed=2, amount=0.35)
 
-# Ou le chant se pose : (mesure, phrase, transposition, niveau relatif)
+# Ou le chant se pose (v9, 20 mesures) : l'air nu, le refrain, l'air orne.
+# L'ouverture (1-4) et la coda (17-20) restent au fond seul — la respiration
+# qui fait qu'on attend le motif.
 CHANT_AT = [
     (5,  AIR,           0, 1.00),     # nu — l'air d'abord entendu simple
-    (9,  AIR_LEGER,     0, 1.00),
-    (13, REFRAIN,       0, 0.92),     # le refrain, nu lui aussi
-    (17, AIR,           0, 1.00),
-    #  21-24 : silence du chant
-    (25, REFRAIN_LEGER, 0, 0.95),
-    (29, AIR_LEGER,     0, 1.00),
-    (33, AIR,           0, 0.96),     # retour a la lettre du releve
+    (9,  REFRAIN,       0, 0.92),     # le refrain, nu lui aussi
+    (13, AIR_LEGER,     0, 1.00),     # la reprise, quelques twists
 ]
 
 # Dessus — une ligne haute, ecrite au-dessus de l'air pendant le plein.
@@ -225,14 +222,14 @@ def build_bed() -> list[dict]:
     roles — chant, corde, halo, pouls — c'est leur raison d'etre, et c'est
     la qu'on peut les remplacer.
     """
-    # LE DRONE v7 : il SUIT LA MELODIE. Le bourdon statique manquait de
-    # variete — le drone porte maintenant la FONDAMENTALE de chaque accord
-    # (et sa quinte), grave, lourd, legato : chaque bloc d'harmonie deborde
-    # d'une mesure sur le suivant, les changements sont des fondus de masse,
-    # jamais des attaques. Contrebasse a l'octave grave, cordes graves en
-    # fondamentale + quinte ; le coeur (17-32) s'epaissit d'une octave.
+    # LE DRONE v9 : ADOUCI et MELODIQUE. La basse ne se contente plus de
+    # porter la fondamentale : sur la DERNIERE demi-mesure de chaque bloc,
+    # elle MARCHE vers l'accord suivant par une note de passage — le fond a
+    # un dessin, pas seulement une masse. Contrebasse a l'octave, cordes
+    # graves en fondamentale + quinte, legato, blocs qui se recouvrent.
     ev: list[dict] = []
-    for (b0, b1, name) in _chord_groups():
+    groups = _chord_groups()
+    for gi, (b0, b1, name) in enumerate(groups):
         t0 = t_of(b0, 1.0)
         span = (b1 - b0 + 1) * BAR + BAR          # deborde d'une mesure
         span = min(span, LOOP_LEN - t0 - 0.06)
@@ -242,14 +239,33 @@ def build_bed() -> list[dict]:
         while bass < 33:
             bass += 12
         ev.append(_ev("contrabass", "bed", bass - 12, t0, span,
-                      0.30 + 0.38 * d, b0 * 3))
+                      0.28 + 0.34 * d, b0 * 3))
         ev.append(_ev("strings_low", "bed", bass, t0, span,
-                      0.26 + 0.36 * d, b0 * 5))
+                      0.24 + 0.32 * d, b0 * 5))
         ev.append(_ev("strings_low", "bed", bass + 7, t0, span,
-                      0.15 + 0.26 * d, b0 * 7))
-        if 17 <= b0 <= 32:                     # le coeur s'epaissit d'une octave
-            ev.append(_ev("strings_low", "bed", bass + 12, t0, span,
-                          0.11 + 0.20 * d, b0 * 11))
+                      0.13 + 0.22 * d, b0 * 7))
+        # la marche : une note de passage vers la basse suivante, posee sur
+        # la derniere demi-mesure du bloc (contrebasse seule, discrete)
+        nxt_name = groups[(gi + 1) % len(groups)][2]
+        _np, nroot = CHORDS[nxt_name]
+        nbass = nroot - 12
+        while nbass < 33:
+            nbass += 12
+        gap = nbass - bass
+        if abs(gap) >= 2:
+            # ton d'APPROCHE : le degre dorien juste sous (ou sur) la basse
+            # SUIVANTE — D vers G passe par F, pas par E : c'est adjacent a
+            # la cible ET consonant avec l'accord en cours
+            step = nbass + (-1 if gap > 0 else 1)
+            while step % 12 not in _DORIAN:
+                step += -1 if gap > 0 else 1
+            # UN temps, sur le 4 : une vraie note de passage — tenue deux
+            # temps dans le grave, elle salissait l'accord (6 flags R3)
+            at = t_of(b1, 4.0)
+            wdur = min(BEAT * 1.0, LOOP_LEN - at - 0.06)
+            if wdur >= 0.5:
+                ev.append(_ev("contrabass", "bed", step - 12, at, wdur,
+                              0.16 + 0.22 * d, b1 * 13))
 
     ev = damp_rings(ev)
     ev.sort(key=lambda e: e["at"])
@@ -278,40 +294,30 @@ def build_role(role: str, candidate: str) -> list[dict]:
                               gain * lvl * (0.30 + 0.46 * dyn(bar)), bar * 73 + midi))
 
     elif role == "corde":
-        # DEUX notes par mesure, tenues cinq secondes : elles se recouvrent
-        # d'une mesure sur l'autre et forment une nappe discrete. C'etait
-        # trois notes plus un bourdon de basse toutes les quatre mesures —
-        # rabote (2026-08-07) : le motif d'abord, l'accompagnement s'efface.
-        # Rien ne deborde le point de boucle (le psalterion frotte sonne
-        # encore a plein niveau a 5 s, sa fin se repliait sur la mesure 1).
+        # v9 : des ARPEGES — « il manque de la guitare acoustique ». Quatre
+        # notes par mesure en accord brise (grave, tierce, quinte, tierce),
+        # le dessin d'accompagnement du folk. C'est le fond MELODIQUE que le
+        # drone seul ne donnait pas. La premiere attaque reste decalee de
+        # 90 ms du point de boucle (transitoires dans la fenetre du join) et
+        # les tenues meurent avant le raccord (marge = release du role).
         for bar in range(1, N_BARS + 1):
-            tones = _tones(bar, 55, 74)
+            tones = _tones(bar, 48, 72)
             d = dyn(bar)
-            for j, (beat, idx) in enumerate(((1.0, 0), (3.0, 2))):
+            for j, (beat, idx) in enumerate(
+                    ((1.0, 0), (2.0, 2), (3.0, 4), (4.0, 2))):
                 at = t_of(bar, beat)
-                # la premiere attaque ne se pose PAS sur le point de boucle :
-                # un pince a transitoire dur (mbira) exactement au raccord met
-                # ses aigus dans la fenetre d'analyse du join — le detecteur
-                # y voit une couture (+3,4 pts d'exces HF) alors que l'ecart
-                # d'echantillon est infime. 90 ms plus tard, l'attaque est
-                # entiere ET clairement apres le raccord.
                 if bar == 1 and beat == 1.0:
                     at += 0.09
-                # marge = release du role (0,9 s pincee) + flottement : la
-                # RESONANCE aussi doit mourir avant le raccord. Avec 0,06 s
-                # seulement, la queue de la mbira (attaque riche en aigus,
-                # encore forte a 2,4 s) se repliait sur la mesure 1 —
-                # +3,52 points d'exces HF au raccord, seul stem a cliquer.
-                dur = min(5.6, LOOP_LEN - at - 0.98)
+                dur = min(2.6, LOOP_LEN - at - 0.98)
                 if dur < 0.4:
                     continue
                 ev.append(_ev(inst, "corde", tones[idx % len(tones)],
-                              at, dur, gain * (0.22 + 0.30 * d), bar * 79 + j))
+                              at, dur, gain * (0.20 + 0.28 * d), bar * 79 + j))
 
     elif role == "halo":
         # Tres peu de notes, tres haut, tres longues. C'est le registre qui fait
         # le feerique, pas la quantite.
-        for bar in list(range(1, 9)) + list(range(13, 17)) + list(range(29, 41)):
+        for bar in list(range(1, 9)) + list(range(13, 21)):
             tones = _tones(bar, 76, 88)
             if not tones:
                 continue
@@ -346,7 +352,7 @@ def build_role(role: str, candidate: str) -> list[dict]:
         inst, gain, span, _lab = CANDIDATES["pulse"][candidate]
         if candidate == "aucun":
             return []
-        for bar in range(5, N_BARS + 1):
+        for bar in range(3, N_BARS + 1):
             d = dyn(bar)
             if candidate == "danse":
                 # le pas de la danse bretonne : deux appuis courts, un long.
@@ -386,14 +392,20 @@ def build_role(role: str, candidate: str) -> list[dict]:
                         ev.append(_ev("bodhran", "pulse", 48, at, dur,
                                       0.10 + 0.14 * d, bar * 83 + int(beat * 2)))
             elif candidate == "sourd":
-                # l'hiver : un appui etouffe une mesure sur deux, et le tam-tam
-                # tres loin tous les huit — de la masse, pas du dessin.
+                # v9 : un appui etouffe CHAQUE mesure (il n'accompagnait
+                # rien une mesure sur deux), reponse douce sur le 3 une
+                # mesure sur deux, tam-tam au loin tous les huit.
+                at = t_of(bar, 1.0)
+                dur = min(2.8, LOOP_LEN - at - 0.06)
+                if dur >= 0.4:
+                    ev.append(_ev(inst, "pulse", 41, at, dur,
+                                  0.16 + 0.22 * d, bar * 61))
                 if bar % 2 == 0:
-                    at = t_of(bar, 1.0)
-                    dur = min(2.8, LOOP_LEN - at - 0.06)
+                    at = t_of(bar, 3.0)
+                    dur = min(2.0, LOOP_LEN - at - 0.06)
                     if dur >= 0.4:
-                        ev.append(_ev(inst, "pulse", 41, at, dur,
-                                      0.15 + 0.20 * d, bar * 61))
+                        ev.append(_ev(inst, "pulse", 45, at, dur,
+                                      0.10 + 0.16 * d, bar * 67))
                 if bar % 8 == 5:
                     at = t_of(bar, 3.0)
                     dur = min(4.0, LOOP_LEN - at - 0.06)
@@ -424,9 +436,16 @@ def build_role(role: str, candidate: str) -> list[dict]:
                         ev.append(_ev("taiko", "pulse", 33, at, dur,
                                       0.22 + 0.26 * d, bar * 73))
             else:                                       # calme
-                for beat, g in ((1.0, 1.0), (3.0, 0.55)):
-                    ev.append(_ev(inst, "pulse", 45, t_of(bar, beat), 1.8,
-                                  g * (0.16 + 0.26 * d), bar * 61 + int(beat)))
+                # v9 : le dessin EPOUSE l'air — appui sur 1, pied leve sur
+                # 2,5 (la syncope recurrente du motif), appui sur 3, releve
+                # sur 4,5 qui appelle la mesure suivante.
+                for beat, g in ((1.0, 1.0), (2.5, 0.45), (3.0, 0.7), (4.5, 0.5)):
+                    at = t_of(bar, beat)
+                    dur = min(1.8, LOOP_LEN - at - 0.06)
+                    if dur < 0.25:
+                        continue
+                    ev.append(_ev(inst, "pulse", 45, at, dur,
+                                  g * (0.18 + 0.28 * d), bar * 61 + int(beat * 2)))
         # les timbales restent liees au pouls, sauf la nuit et par temps calme
         if candidate in ("calme", "orage", "danse"):
             for bar in range(17, N_BARS - 3, 4):

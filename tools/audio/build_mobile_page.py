@@ -1,33 +1,25 @@
 #!/usr/bin/env python3
-"""Edition de controle mobile v2 — meteo = l'instrument de la MELODIE,
-heure = la VITESSE (+ extras, + substitution nocturne du fond).
+"""Edition de controle mobile v9 — TOUT EN RENDU REEL.
 
-ARCHITECTURE EN COUCHES (pivot 2026-08-07). La v1 pre-mixait un fichier par
-meteo : impossible d'y croiser 6 meteos x 6 heures sans 36 mixes. Ici la page
-embarque des COUCHES, jamais plus de deux ou trois audibles a la fois — la
-lecon de la webview iPhone (21 elements = boutons muets) reste appliquee :
+Plus aucun varispeed, plus aucun etirement : chaque GROUPE d'heures est un
+jeu complet rendu a son echelle exacte (fractions 5-lisses, voir score_menu)
+et lu a 1,0 — hauteur normale partout, vitesses prononcees.
 
-    FOND_jour   socle + corde + pouls, SANS halo (moins d'elements)
-    FOND_nuit   la substitution nocturne : dan tranh, cloches tubulaires,
-                tambour de nuit — le fond change, la melodie reste a la meteo
-    CHANT_<instrument>  la melodie seule, une piste par instrument ; le choix
-                   depend du COUPLE (meteo, heure) — le jour la meteo decide
-                   (clair=oud, couvert=harpe, pluie=flute...), la nuit c'est
-                   la boite a musique lente quelle que soit la meteo
-    ADD_<extra>    « parfois quelques instruments en plus » : guirlande de
-                   glockenspiel a midi, veilleuse de celesta en soiree
+    groupe  echelle  heures                fond
+    lent    5/6      aube, soiree          drone + guitare + taiko sourd
+    ref     1        matinee, apres-midi   drone + guitare + bodhran calme
+    vif     9/8      midi                  drone + guitare + pas d'an dro
+    nuit    3/4      nuit                  drone + cloches + tambour de nuit
 
-La VITESSE ne demande aucun rendu : c'est playbackRate (hauteur preservee par
-le navigateur), applique au meme facteur sur toutes les couches. La position
-musicale reste currentTime — mesures et accords ne bougent pas.
+    FOND_<groupe>         drone ADOUCI (x0,5) + arpeges de guitare acoustique
+                          + percussion du groupe, premixes a l'echelle
+    CHANT_<groupe>_<cid>  la melodie par instrument de meteo, a l'echelle
+                          (la nuit : la boite a musique seule)
 
-Toutes les couches d'un role portent les memes notes aux memes instants
-(arrange_menu, repli d'octave en dernier) : un changement de meteo est un
-fondu croise de la seule couche CHANT, un passage a la nuit un fondu de la
-seule couche FOND.
+La piece fait 20 mesures (98 s a l'echelle 1) : c'est ce qui permet a
+4 jeux complets de tenir sous les 16 Mo de l'artefact.
 
-    python3 tools/audio/build_mobile_page.py --stems audio/music/menu \\
-        --out artefact_mobile.html
+    python3 tools/audio/build_mobile_page.py --codec aac --out artefact.html
 """
 from __future__ import annotations
 
@@ -44,13 +36,18 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from score_menu import BAR, N_BARS, PROGRESSION  # noqa: E402
 
 SR = 48_000
-# AAC (v7) : a debit egal, l'AAC-LC rend nettement mieux que le MP3 — c'est
-# le levier « meilleure qualite » qui ne coute aucun octet. Conteneur .m4a,
-# lu partout (iOS natif, Chromium).
-FOND_BITRATE = "48k"         # stereo — drone de jour, fond de nuit
-PERC_BITRATE = "32k"         # mono : percussions eparses
-CHANT_BITRATE = "40k"        # mono : la melodie seule
+# AAC : a debit egal, l'AAC-LC rend nettement mieux que le MP3. Conteneur
+# .m4a, lu par tous les webviews reels (iOS natif, Chrome Android).
+FOND_BITRATE = "48k"         # stereo — drone + guitare + percussion
+CHANT_BITRATE = "32k"        # mono : la melodie seule
 FX_BITRATE = "24k"
+
+DRONE_GAIN = 0.50            # « le fond drone est toujours trop fort »
+CORDE_GAIN = 0.85            # les arpeges de guitare, presents sans dominer
+PERC_BOOST = 2.2             # « les percussions... trop peu presentes »
+MELODY_BOOST = 1.20          # le motif au premier plan
+
+GROUPS = ("lent", "ref", "vif", "nuit")
 
 
 def decode(ff: str, path: str) -> np.ndarray:
@@ -77,10 +74,7 @@ def encode_track(ff: str, sig: np.ndarray, dst: str, bitrate: str,
 
 
 def envelope_and_onsets(mono: np.ndarray, points: int = 480):
-    """Courbe d'enveloppe (0-100) + marqueurs d'evenements (pics de flux).
-
-    2,2 dB par trame de 25 ms : une vraie attaque monte de 3 a 5 dB, le
-    vibrato d'une tenue moins de 1. Espacement minimal 0,8 s."""
+    """Courbe d'enveloppe (0-100) + marqueurs d'evenements (pics de flux)."""
     n = len(mono)
     hop = max(1, n // points)
     env = np.array([np.abs(mono[i * hop:(i + 1) * hop]).max()
@@ -110,16 +104,21 @@ def envelope_and_onsets(mono: np.ndarray, points: int = 480):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stems", default="audio/music/menu")
+    ap.add_argument("--stems", default="audio/music/menu",
+                    help="rendu de reference (echelle 1)")
+    ap.add_argument("--stems-lent", dest="stems_lent",
+                    default="audio/music/menu_lent")
+    ap.add_argument("--stems-vif", dest="stems_vif",
+                    default="audio/music/menu_vif")
     ap.add_argument("--stems-nuit", dest="stems_nuit",
-                    default="audio/music/menu_nuit",
-                    help="rendu au tempo reel x0,8 (MERLIN_TEMPO_SCALE)")
+                    default="audio/music/menu_nuit")
     ap.add_argument("--out", default="artefact_mobile.html")
     ap.add_argument("--codec", choices=("aac", "mp3"), default="aac",
-                    help="aac pour la page publiee (meilleure qualite par bit, "
-                         "lu par tous les webviews reels) ; mp3 pour la page de "
+                    help="aac pour la page publiee ; mp3 pour la page de "
                          "test Playwright (le Chromium libre n'a pas l'AAC)")
     a = ap.parse_args()
+    dirs = {"lent": a.stems_lent, "ref": a.stems, "vif": a.stems_vif,
+            "nuit": a.stems_nuit}
 
     import imageio_ffmpeg
     ff = imageio_ffmpeg.get_ffmpeg_exe()
@@ -132,65 +131,50 @@ def main() -> int:
               for r, v in cast["candidates"].items() for c in v}
     meteos = cast["axes"]["meteo"]
     heures = cast["axes"]["heure"]
-    tempo = cast["tempo"]
-    perc_by_h = cast.get("perc", {})
-
-    def part(key: str, stems: str | None = None) -> np.ndarray:
-        return decode(ff, os.path.join(stems or a.stems, key + ".ogg"))
-
-    # ── les couches ──────────────────────────────────────────────────────────
-    # v7 : DRONE de jour (bed) + PERCUSSIONS par heure en couche separee +
-    # CHANT par instrument, tous au tempo 1,0 (varispeed doux a la lecture).
-    # La NUIT vient d'un RENDU REEL a l'echelle 0,8 (--stems-nuit) : drone +
-    # cloches + tambour premixes, boite a musique seule — hauteur normale,
-    # tempo lent vrai, aucun traitement a la lecture.
-    print("[mobile] couches…")
-    MELODY_BOOST = 1.15          # « la musique se centre sur le motif »
-    FOND_GAIN = 0.62             # « le fond doit etre moins sonore » (-4 dB)
-    PERC_BOOST = 2.0             # « les percussions sont manquantes » (+6 dB)
-    bed = decode(ff, os.path.join(a.stems, "bed.ogg"))
-    n = bed.shape[1]
-
-    drone = bed.copy()
-    for role, cid in cast["fond_jour"].items():
-        drone += part(f"{role}__{cid}")[:, :n] * gains[(role, cid)]
-    drone *= FOND_GAIN
-
+    perc = cast["perc"]
     night_cid = cast["context"]["nuit"]["chant"]
     day_cids = {w: cast["context"][w]["chant"] for w in meteos}
-    chants = {}
-    for cid in sorted(set(day_cids.values())):
-        chants[cid] = (part(f"chant__{cid}")[:, :n]
-                       * gains[("chant", cid)] * MELODY_BOOST).mean(0)
-    percs = {}
-    for pid in sorted({p for p in perc_by_h.values() if p}):
-        percs[pid] = (part(f"pulse__{pid}")[:, :n]
-                      * gains[("pulse", pid)] * PERC_BOOST).mean(0)
 
-    # le set de nuit, rendu lent pour de vrai
-    bed_n = decode(ff, os.path.join(a.stems_nuit, "bed.ogg"))
-    nn = bed_n.shape[1]
-    fond_nuit = bed_n.copy()
-    for role, cid in cast["fond_nuit"].items():
-        fond_nuit += part(f"{role}__{cid}", a.stems_nuit)[:, :nn] * gains[(role, cid)]
-    fond_nuit *= FOND_GAIN
-    chant_nuit = (part(f"chant__{night_cid}", a.stems_nuit)[:, :nn]
-                  * gains[("chant", night_cid)] * MELODY_BOOST).mean(0)
-    night_scale = nn / n
+    def part(grp: str, key: str) -> np.ndarray:
+        return decode(ff, os.path.join(dirs[grp], key + ".ogg"))
 
-    # ── marge : la SOMME des couches ne doit pas ecreter cote client ────────
-    worst_perc = max((np.abs(s) for s in percs.values()),
-                     key=lambda s: float(s.max())) if percs else 0.0
-    dm = np.abs(drone).max(axis=0)
-    peak = max(float((dm + np.abs(c) + worst_perc).max())
-               for c in chants.values())
-    peak = max(peak, float((np.abs(fond_nuit).max(axis=0) + np.abs(chant_nuit)).max()))
+    # ── les couches, par groupe d'echelle ────────────────────────────────────
+    print("[mobile] couches par groupe…")
+    fonds: dict = {}
+    chants: dict = {}          # (grp, cid) -> mono
+    lens: dict = {}
+    for grp in GROUPS:
+        bed = part(grp, "bed")
+        n = bed.shape[1]
+        lens[grp] = n
+        fond = bed * DRONE_GAIN
+        if grp == "nuit":
+            fond += part(grp, "halo__tubulaires")[:, :n] * gains[("halo", "tubulaires")]
+            fond += part(grp, "pulse__nuit")[:, :n] * (gains[("pulse", "nuit")] * 1.5)
+            chants[(grp, night_cid)] = (
+                part(grp, f"chant__{night_cid}")[:, :n]
+                * gains[("chant", night_cid)] * MELODY_BOOST).mean(0)
+        else:
+            fond += part(grp, "corde__celtic_guitar")[:, :n] * (
+                gains[("corde", "celtic_guitar")] * CORDE_GAIN)
+            pid = perc[grp]
+            fond += part(grp, f"pulse__{pid}")[:, :n] * (
+                gains[("pulse", pid)] * PERC_BOOST)
+            for cid in sorted(set(day_cids.values())):
+                chants[(grp, cid)] = (
+                    part(grp, f"chant__{cid}")[:, :n]
+                    * gains[("chant", cid)] * MELODY_BOOST).mean(0)
+        fonds[grp] = fond
+        print(f"  groupe {grp:5s} {n / SR:6.1f} s")
+
+    # ── marge anti-ecretage sur la somme fond + chant, pire cas ──────────────
+    peak = 0.0
+    for (grp, cid), c in chants.items():
+        p = float((np.abs(fonds[grp]).max(axis=0) + np.abs(c)).max())
+        peak = max(peak, p)
     k = min(1.0, 0.985 / peak)
     print(f"[mobile] pic somme pire cas {peak:.3f} -> facteur {k:.3f}")
-    drone *= k
-    fond_nuit *= k
-    chant_nuit = chant_nuit * k
-    for d in (chants, percs):
+    for d in (fonds, chants):
         for key in d:
             d[key] = d[key] * k
 
@@ -198,7 +182,6 @@ def main() -> int:
     tmp = os.path.join(os.path.dirname(a.out) or ".", "_mob_tmp")
     os.makedirs(tmp, exist_ok=True)
     audio: dict = {}
-
     ext = "m4a" if a.codec == "aac" else "mp3"
 
     def emit(name: str, sig: np.ndarray, bitrate: str) -> None:
@@ -206,57 +189,42 @@ def main() -> int:
         encode_track(ff, sig, dst, bitrate, a.codec)
         audio[name] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)
-        print(f"  {name:16s} {len(audio[name]) / 1e6:5.2f} Mo b64")
+        print(f"  {name:22s} {len(audio[name]) / 1e6:5.2f} Mo b64")
 
-    emit("FOND_jour", drone, FOND_BITRATE)
-    emit("FOND_nuit", fond_nuit, FOND_BITRATE)
-    for cid, sig in chants.items():
-        emit("CHANT_" + cid, sig, CHANT_BITRATE)
-    emit("CHANT_" + night_cid, chant_nuit, CHANT_BITRATE)
-    for pid, sig in percs.items():
-        emit("PERC_" + pid, sig, PERC_BITRATE)
+    for grp in GROUPS:
+        emit("FOND_" + grp, fonds[grp], FOND_BITRATE)
+    for (grp, cid), sig in sorted(chants.items()):
+        emit(f"CHANT_{grp}_{cid}", sig, CHANT_BITRATE)
 
-    # ── l'introduction : COURTE et SIMPLE (v8) ──────────────────────────────
-    # Une seule mesure : le drone seul se leve depuis le silence, et la piece
-    # entre. Rien d'autre — l'utilisateur a demande moins long, plus simple.
-    intro_bars = 1
-    ns = int(intro_bars * BAR * SR)
+    # ── l'introduction : une mesure, le fond seul se leve ────────────────────
+    ns = int(BAR * SR)
     fade = np.linspace(0.0, 1.0, ns, dtype=np.float32) ** 1.5
-    intro = drone[:, :ns] * k * fade
-    emit("INTRO", intro, FOND_BITRATE)
-    meta_intro = {"dur": round(intro_bars * BAR, 3)}
+    emit("INTRO", fonds["ref"][:, :ns] * fade, FOND_BITRATE)
 
-    # ── courbes par combinaison reellement jouable ──────────────────────────
-    # le jour : drone x chaque instrument de meteo ; la nuit : fond de nuit
-    # x la boite a musique — chaque combo porte sa duree et sa mesure (la
-    # nuit est 25 % plus longue : rendu reel a l'echelle 0,8)
-    meta: dict = {"bar": BAR, "bars": N_BARS, "progression": PROGRESSION,
-                  "heures": heures, "meteos": meteos, "tempo": tempo,
-                  "perc": perc_by_h, "night_scale": round(night_scale, 4),
-                  "intro": meta_intro, "combos": {}}
-    dmono = drone.mean(0)
-    for cid, c in chants.items():
-        curve, onsets = envelope_and_onsets(dmono + c)
-        meta["combos"][f"jour|{cid}"] = {
-            "curve": curve, "onsets": onsets,
-            "dur": round(n / SR, 3), "barsec": round(BAR, 4)}
-    curve, onsets = envelope_and_onsets(fond_nuit.mean(0) + chant_nuit)
-    meta["combos"][f"nuit|{night_cid}"] = {
-        "curve": curve, "onsets": onsets,
-        "dur": round(nn / SR, 3), "barsec": round(BAR * night_scale, 4)}
-    print(f"[mobile] {len(meta['combos'])} courbes fond x melodie")
+    # ── meta : courbes et geometrie par combinaison ─────────────────────────
+    meta: dict = {"bars": N_BARS, "progression": PROGRESSION,
+                  "heures": heures, "meteos": meteos,
+                  "tempo": cast["tempo"], "group_of": cast["group_of"],
+                  "intro": {"dur": round(BAR, 3)},
+                  "groups": {}, "combos": {}}
+    speed = {"lent": 5 / 6, "ref": 1.0, "vif": 9 / 8, "nuit": 3 / 4}
+    for grp in GROUPS:
+        meta["groups"][grp] = {
+            "dur": round(lens[grp] / SR, 3),
+            "barsec": round(BAR / speed[grp], 4),
+            "fond": ("drone + guitare + " + labels[("pulse", perc[grp])]
+                     if grp != "nuit" else
+                     "drone + cloches tubulaires + tambour de nuit"),
+        }
+    for (grp, cid), c in chants.items():
+        curve, onsets = envelope_and_onsets(fonds[grp].mean(0) + c)
+        meta["combos"][f"{grp}|{cid}"] = {"curve": curve, "onsets": onsets}
+    print(f"[mobile] {len(meta['combos'])} courbes groupe x melodie")
 
     meta["melodie"] = {
-        "nuit": night_cid,
-        "meteo": day_cids,
-        "labels": dict({cid: labels[("chant", cid)] for cid in chants},
-                       **{night_cid: labels[("chant", night_cid)]}),
-    }
-    meta["perclabels"] = {pid: labels[("pulse", pid)] for pid in percs}
-    meta["fonds"] = {
-        "jour": "drone",
-        "nuit": " + ".join(["drone (lent, hauteur normale)"]
-                           + [labels[(r, c)] for r, c in cast["fond_nuit"].items()]),
+        "nuit": night_cid, "meteo": day_cids,
+        "labels": {cid: labels[("chant", cid)]
+                   for cid in set(day_cids.values()) | {night_cid}},
     }
 
     # ── effets ───────────────────────────────────────────────────────────────
@@ -265,11 +233,10 @@ def main() -> int:
         if not os.path.exists(src):
             continue
         dst = os.path.join(tmp, "fx." + ext)
-        fxenc = (["-c:a", "aac"] if a.codec == "aac"
-                 else ["-c:a", "libmp3lame"])
+        fxenc = ["-c:a", "aac"] if a.codec == "aac" else ["-c:a", "libmp3lame"]
         subprocess.run([ff, "-y", "-loglevel", "error", "-i", src, "-ac", "1",
-                        "-ar", "32000"] + fxenc +
-                       ["-b:a", FX_BITRATE, dst], check=True)
+                        "-ar", "32000"] + fxenc + ["-b:a", FX_BITRATE, dst],
+                       check=True)
         audio["FX_" + e["id"]] = base64.b64encode(open(dst, "rb").read()).decode()
         os.remove(dst)
     meta["sfx"] = [{key: e[key] for key in ("id", "label", "loop", "gain", "ic")}

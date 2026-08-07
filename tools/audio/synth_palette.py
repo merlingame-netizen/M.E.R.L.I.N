@@ -77,14 +77,14 @@ def _next_5smooth(n: int) -> int:
     return best
 
 
-# A l'echelle 1,0 la valeur historique est conservee (2^20 x 3^2). A une autre
-# echelle (rendu de nuit MERLIN_TEMPO_SCALE=0,8), la boucle depasse ce total :
-# on prend le premier 5-lisse au-dela de boucle + ~17,7 s de queue — a 0,8
-# cela donne 11 664 000 = 2^7 x 3^6 x 5^3, queue de 19,6 s.
-from score_menu import TEMPO_SCALE as _TS
-TOTAL_SAMPLES = (9_437_184 if _TS == 1.0
-                 else _next_5smooth(LOOP_SAMPLES + 780_000))
-TAIL = (TOTAL_SAMPLES - LOOP_SAMPLES) / SR              # 18,08 s a l'echelle 1
+# Le total DERIVE de la boucle a toutes les echelles : premier 5-lisse
+# au-dela de boucle + ~17,7 s de queue. (La formule redonnait exactement la
+# valeur historique 9 437 184 = 2^20 x 3^2 pour l'ancienne boucle de 40
+# mesures — coherence verifiee.) La queue doit rester STRICTEMENT plus
+# courte que la boucle : finish() la replie en un seul tour.
+TOTAL_SAMPLES = _next_5smooth(LOOP_SAMPLES + 780_000)
+assert TOTAL_SAMPLES - LOOP_SAMPLES < LOOP_SAMPLES
+TAIL = (TOTAL_SAMPLES - LOOP_SAMPLES) / SR              # ~19,6 s en 20 mesures
 BANK = None
 SAMPLES = None      # banque multi-echantillons (instruments reellement enregistres)
 

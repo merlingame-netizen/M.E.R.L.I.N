@@ -72,7 +72,9 @@ CANDIDATES = {
         "flute":      ("flute",      0.92, (48, 84), "Flûte"),
         "basson":     ("bassoon",    1.00, (34, 70), "Basson"),
         "flute_alto": ("alto_flute", 1.00, (58, 90), "Flûte alto"),
-        "ocarina":    ("ocarina",    1.05, (57, 73), "Ocarina"),
+        # medieval-fantastique : le psalterion A L'ARCHET, glace et etrange —
+        # la neige le reclame plus qu'un ocarina
+        "psalterion": ("psaltery",   0.95, (58, 78), "Psaltérion"),
         # la boite a musique : les echantillons du celesta avec l'enveloppe
         # pincee (sample_bank), l'air replie dans l'aigu ou vivent les picots
         "boite":      ("music_box",  1.00, (72, 96), "Boîte à musique"),
@@ -160,7 +162,7 @@ CONTEXT = {
     "pluie":   {"chant": "flute"},
     "orage":   {"chant": "basson"},
     "brume":   {"chant": "flute_alto"},
-    "neige":   {"chant": "ocarina"},
+    "neige":   {"chant": "psalterion"},
     # ── heure : muette sur la distribution, sauf la nuit ─────────────────────
     "aube":       {},
     "matinee":    {},
@@ -173,33 +175,36 @@ CONTEXT = {
     "nuit": {"chant": "boite", "halo": "tubulaires"},
 }
 
-# ── LA VITESSE PAR HEURE ─────────────────────────────────────────────────────
-# v7 : le jour, VARISPEED DOUX (moins d'un demi-ton de derive de hauteur —
-# 0,94 = -1,07 st, 1,05 = +0,85 st) : assez pour respirer, pas assez pour
-# detoner. La NUIT n'est PAS un varispeed : elle est RENDUE au tempo reel
-# x0,80 (MERLIN_TEMPO_SCALE) et lue a 1,0 — la boite a musique garde sa
-# hauteur normale, exigence utilisateur.
-TEMPO = {
-    "aube":       0.94,
-    "matinee":    0.98,
-    "midi":       1.05,        # le plus allant
-    "apres_midi": 1.00,        # la reference
-    "soiree":     0.95,
-    "nuit":       0.80,        # affiche x0,80 — rendu reel, lu a 1,0
+# ── LA VITESSE PAR HEURE (v9 : TOUT EN RENDU REEL) ───────────────────────────
+# Plus aucun varispeed : chaque GROUPE d'heures est un rendu complet a son
+# echelle, lu a 1,0 — hauteur normale partout, vitesses PRONONCEES. Les
+# echelles sont des fractions exactes (boucles 5-lisses, voir score_menu).
+#   nuit  3/4  (-25 %)   lent  5/6  (-17 %)   ref  1   vif  9/8  (+12,5 %)
+SCALE_GROUPS = {
+    "lent": "5/6", "ref": "1", "vif": "9/8", "nuit": "3/4",
 }
-NIGHT_TRUE_RENDER = True       # la nuit vient d'un rendu a l'echelle 0,8
+GROUP_OF = {
+    "aube": "lent", "matinee": "ref", "midi": "vif",
+    "apres_midi": "ref", "soiree": "lent", "nuit": "nuit",
+}
+TEMPO = {                      # facteur AFFICHE (= vitesse reelle du rendu)
+    "aube":       0.83,
+    "matinee":    1.00,
+    "midi":       1.13,        # le plus allant
+    "apres_midi": 1.00,        # la reference
+    "soiree":     0.83,
+    "nuit":       0.75,        # boite a musique lente, hauteur normale
+}
 
-# ── LES PERCUSSIONS PAR HEURE ────────────────────────────────────────────────
-# « des percussions de differents types selon le moment de la journee » :
-# une ecriture de pouls par heure, jouee en couche separee sur le drone.
-# La nuit, le tambour de nuit est integre au rendu lent du fond.
+# ── LES PERCUSSIONS PAR GROUPE ───────────────────────────────────────────────
+# Une ecriture de pouls par groupe d'heures, PREMIXEE dans le fond de son
+# echelle — elle accompagne la melodie (dessins v9 : appuis sur le phrase
+# de l'air, entree mesure 3).
 PERC = {
-    "aube":       "sourd",     # taiko etouffe, le jour se leve a peine
-    "matinee":    "calme",     # bodhran doux
-    "midi":       "danse",     # le pas d'an dro — le plus vivant
-    "apres_midi": "calme",
-    "soiree":     "sourd",
-    "nuit":       None,        # dans le fond de nuit (rendu x0,8)
+    "lent": "sourd",           # taiko etouffe — aube et soiree
+    "ref":  "calme",           # bodhran qui epouse l'air — matinee, apres-midi
+    "vif":  "danse",           # le pas d'an dro — midi
+    "nuit": "nuit",            # tambour de nuit, dans le fond lent
 }
 
 # ── EXTRAS : SUPPRIMES (regle « max 3 instruments », 2026-08-07) ─────────────
@@ -210,11 +215,11 @@ PERC = {
 EXTRAS: dict = {}
 
 # ── LE FOND ──────────────────────────────────────────────────────────────────
-# v7 : le jour, le fond premixe = DRONE seul (bed) — les percussions sont une
-# COUCHE SEPAREE choisie par l'heure (PERC). La nuit, tout est premixe dans
-# le rendu lent : drone + cloches tubulaires + tambour de nuit.
-# Toujours MAX 3 instruments audibles : drone + percussion + melodie.
-FOND_JOUR: dict = {}
+# v9 : le fond de jour = drone ADOUCI + ARPEGES DE GUITARE ACOUSTIQUE
+# (« il manque de la guitare acoustique » — c'est aussi ce qui rend le fond
+# melodique) + la percussion du groupe. La nuit garde son epure : drone +
+# cloches tubulaires + tambour de nuit, la boite a musique seule en avant.
+FOND_JOUR = {"corde": "celtic_guitar"}
 FOND_NUIT = {"halo": "tubulaires", "pulse": "nuit"}
 
 
@@ -305,8 +310,9 @@ def manifest() -> dict:
         "priority": PRIORITY,
         "context": CONTEXT,
         "tempo": TEMPO,
+        "scale_groups": SCALE_GROUPS,
+        "group_of": GROUP_OF,
         "perc": PERC,
-        "night_true_render": NIGHT_TRUE_RENDER,
         "extras": EXTRAS,
         "fond_jour": FOND_JOUR,
         "fond_nuit": FOND_NUIT,
