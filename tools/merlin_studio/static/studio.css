@@ -1,0 +1,227 @@
+/* MERLIN Studio — charte CRT/gold (docs/UI_UX_CHARTER.md §0-§3).
+   Règles intraitables : VT323 partout, corner-radius 0, pas de gradient,
+   pas d'ombre >2px, pas de glow, outline noir sur le texte, bordures 4px gold
+   (6px hover), cibles ≥44px, feedback ≤100ms, pas de hover-only. */
+
+@font-face {
+  font-family: 'VT323';
+  src: url('/assets/fonts/VT323-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+:root {
+  --bg-dark: #0A0A0A;
+  --bg-panel: #140F0D;
+  --bg-deep: #1A1410;
+  --bg-highlight: #291F14;
+  --phosphor: #E5BF4D;
+  --phosphor-dim: #8C732E;
+  --phosphor-bright: #FFD966;
+  --amber: #D9A64D;
+  --crimson: #CC3326;
+  --cream: #F5EBC7;
+  --gold: #EBBF4D;
+  --white: #F7F7F0;
+  --black: #050505;
+  /* outline noir "web" : 4 directions, 1px (équivalent charte outline 3px jeu) */
+  --outline: -1px -1px 0 var(--black), 1px -1px 0 var(--black),
+             -1px  1px 0 var(--black), 1px  1px 0 var(--black);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  background: var(--bg-dark);
+  color: var(--cream);
+  font: 18px/1.45 'VT323', monospace;
+}
+
+/* ── header terminal ── */
+header {
+  padding: 10px 16px;
+  border-bottom: 4px solid var(--gold);
+  display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
+  position: sticky; top: 0; background: var(--bg-dark); z-index: 5;
+}
+h1 {
+  font-size: 26px; margin: 0; font-weight: 400;
+  color: var(--phosphor-bright); text-transform: uppercase; letter-spacing: 2px;
+  text-shadow: var(--outline);
+}
+h1 .dim { color: var(--phosphor-dim); letter-spacing: 0; }
+#sum { color: var(--phosphor); font-size: 16px; text-transform: uppercase; }
+#sum::after {
+  content: '▊'; margin-left: 6px; color: var(--phosphor);
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── nav ── */
+nav {
+  display: flex; gap: 8px; padding: 10px 12px;
+  position: sticky; top: 52px; background: var(--bg-dark); z-index: 4;
+  border-bottom: 2px solid var(--phosphor-dim); overflow-x: auto;
+}
+nav button {
+  flex: 0 0 auto;
+  background: var(--bg-panel); color: var(--cream);
+  border: 2px solid var(--phosphor-dim); border-radius: 0;
+  padding: 8px 16px; font: inherit; font-size: 19px;
+  text-transform: uppercase; letter-spacing: 1px;
+  cursor: pointer; min-height: 46px;
+  transition: background 80ms, border-color 80ms, color 80ms;
+}
+nav button:hover { background: var(--bg-highlight); border-color: var(--gold); }
+nav button.on {
+  color: var(--black); background: var(--gold); border-color: var(--gold);
+  text-shadow: none; font-weight: 400;
+}
+
+main { padding: 4px 0 46px; }
+.pane { display: none; } .pane.on { display: block; }
+
+h2 {
+  font-size: 18px; color: var(--phosphor); margin: 20px 16px 8px;
+  text-transform: uppercase; letter-spacing: 2px; font-weight: 400;
+}
+h2::before { content: '▚ '; color: var(--phosphor-dim); }
+
+/* ── grilles & cards ── */
+.grid {
+  display: grid; gap: 12px; padding: 6px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+}
+.card {
+  background: var(--bg-panel); border: 2px solid var(--phosphor-dim);
+  border-radius: 0; padding: 12px;
+  border-left: 4px solid var(--phosphor-dim);
+}
+.card.up, .card.done { border-left-color: var(--phosphor); }
+.card.down, .card.failed, .card.ended { border-left-color: var(--crimson); }
+.card.pending, .card.warn { border-left-color: var(--amber); }
+.card.running { border-left-color: var(--phosphor-bright); }
+
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.name {
+  color: var(--white); text-transform: uppercase; letter-spacing: 1px;
+  text-shadow: var(--outline); font-size: 19px;
+}
+.mut { color: var(--phosphor-dim); font-size: 16px; }
+
+.badge {
+  font-size: 14px; padding: 2px 10px; border-radius: 0;
+  white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;
+  border: 1px solid currentColor;
+}
+.badge.up, .badge.done { color: var(--phosphor); background: var(--bg-deep); }
+.badge.down, .badge.failed, .badge.ended { color: var(--crimson); background: var(--bg-deep); }
+.badge.pending, .badge.idle, .badge.warn { color: var(--amber); background: var(--bg-deep); }
+.badge.running { color: var(--phosphor-bright); background: var(--bg-deep); }
+
+.metrics {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  color: var(--phosphor-dim); font-size: 15px; margin-top: 6px;
+  text-transform: uppercase;
+}
+.metrics b { color: var(--cream); font-weight: 400; }
+
+.bar { height: 8px; border-radius: 0; background: var(--bg-deep); margin-top: 8px;
+       overflow: hidden; border: 1px solid var(--phosphor-dim); }
+.bar > i { display: block; height: 100%; background: var(--phosphor); }
+.bar.warn > i { background: var(--amber); }
+.bar.crit > i { background: var(--crimson); }
+
+/* ── boutons d'action ── */
+button.go {
+  background: var(--bg-panel); color: var(--white);
+  border: 4px solid var(--gold); border-radius: 0;
+  padding: 8px 18px; font: inherit; font-size: 19px;
+  text-transform: uppercase; letter-spacing: 1px;
+  text-shadow: var(--outline);
+  cursor: pointer; min-height: 48px;
+  /* compense le passage 4px→6px du hover pour éviter tout reflow */
+  margin: 2px;
+  transition: background 80ms, border 80ms;
+}
+button.go:hover {
+  background: var(--bg-highlight); border-width: 6px;
+  border-color: var(--phosphor-bright); margin: 0;
+}
+button.go:active { border-color: var(--crimson); }
+button.go:disabled {
+  opacity: .45; cursor: not-allowed;
+  border-color: var(--phosphor-dim);
+}
+button.go:disabled:hover { border-width: 4px; margin: 2px; background: var(--bg-panel); }
+button.sm { padding: 5px 12px; min-height: 44px; font-size: 17px; border-width: 2px; }
+button.sm:hover { border-width: 4px; margin: 0; }
+button.stop { border-color: var(--crimson); }
+button.stop:hover { border-color: var(--crimson); background: var(--bg-highlight); }
+
+select, input {
+  background: var(--bg-deep); color: var(--cream);
+  border: 2px solid var(--phosphor-dim); border-radius: 0;
+  padding: 10px; font: inherit; font-size: 18px; min-height: 46px; width: 100%;
+}
+select:focus, input:focus { outline: none; border-color: var(--gold); }
+label {
+  display: block; font-size: 15px; color: var(--phosphor-dim);
+  margin: 10px 0 4px; text-transform: uppercase; letter-spacing: 1px;
+}
+.form {
+  background: var(--bg-panel); border: 2px solid var(--phosphor-dim);
+  border-radius: 0; padding: 14px; margin: 6px 16px;
+}
+.res { font-size: 16px; color: var(--phosphor-dim); word-break: break-word; }
+.res.ok { color: var(--phosphor); }
+.res.err { color: var(--crimson); }
+
+pre.log {
+  white-space: pre-wrap; background: var(--bg-dark);
+  border: 1px solid var(--phosphor-dim); border-radius: 0;
+  padding: 8px; font: 14px/1.4 'VT323', monospace; color: var(--phosphor-dim);
+  max-height: 190px; overflow: auto; margin: 8px 0 0;
+}
+
+ul.feed { list-style: none; margin: 0 16px; padding: 0; }
+ul.feed li {
+  border-bottom: 1px solid var(--bg-highlight);
+  padding: 7px 2px; font-size: 16px; display: flex; gap: 10px;
+}
+ul.feed li .when { color: var(--phosphor-dim); flex: 0 0 auto; }
+
+footer { color: var(--phosphor-dim); font-size: 15px; padding: 16px; text-transform: uppercase; }
+a { color: var(--phosphor); }
+code { color: var(--phosphor-bright); }
+
+/* ── écran de jeu (onglet Jouer) ── */
+.crt-frame {
+  margin: 6px 16px; background: var(--black);
+  border: 4px solid var(--gold); border-radius: 0;
+  aspect-ratio: 16 / 9; position: relative; overflow: hidden;
+}
+.crt-frame.live { border-color: var(--phosphor-bright); }
+#vnc-screen { position: absolute; inset: 0; }
+#vnc-screen canvas { border-radius: 0; }
+.crt-off {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  color: var(--phosphor-dim); text-transform: uppercase; letter-spacing: 2px;
+  font-size: 22px; text-align: center; padding: 12px;
+}
+.crt-off .big { font-size: 30px; color: var(--phosphor); text-shadow: var(--outline); }
+.game-readout {
+  margin: 0 16px; padding: 6px 10px;
+  background: var(--bg-deep); border: 1px solid var(--phosphor-dim);
+  color: var(--phosphor); font-size: 15px;
+  text-transform: uppercase; letter-spacing: 1px;
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+.game-readout .err { color: var(--crimson); }
+
+@media (max-width: 520px) {
+  h1 { font-size: 20px; }
+  nav button { padding: 8px 12px; font-size: 17px; }
+  .crt-frame { margin: 6px 8px; }
+}

@@ -56,3 +56,25 @@ de lancement) ; seul `/healthz` reste ouvert pour les sondes.
 Endpoints 200 · auth 401/200 (page, API, POST) · **smoke Godot réel exécuté** (`MenuTest`,
 exit 0, 0 SCRIPT ERROR) · garde de concurrence · 4 refus de sécurité (traversée, injection,
 hors-périmètre, type inconnu) · suivi des jobs + état par scène.
+
+## Jeu natif (VNC) — onglet Jouer
+
+Le jeu tourne **en natif Linux** sur la VM (Godot 4.6 arm64, `godot --path .`) dans un
+conteneur **podman rootless** (Fedora aarch64 : Xvfb + x11vnc + Mesa llvmpipe), affiché
+dans le portail via **noVNC** (vendorisé dans `tools/merlin_studio/static/novnc/`).
+
+- **Provisioning** (une fois, ré-exécutable) :
+  `python infra/oracle/scripts/agent_takeover.py --cmd 'bash ~/workspace/M.E.R.L.I.N/infra/oracle/game/provision-game-user.sh'`
+  → build de l'image, `pip install flask-sock simple-websocket`, smoke screenshot, restart Studio.
+- **Cycle de vie** : lanceurs Studio `game-start` / `game-stop` / `game-restart`
+  (→ `infra/oracle/game/game-stack.sh`), résolution allow-listée (1280x720 / 960x540 / 1920x1080).
+- **Flux** : navigateur → tunnel → Flask `/websockify` (pont WS↔TCP ~40 lignes, flask-sock)
+  → x11vnc `-localhost:5900`. **Un seul port tunnelé (8790), keepalive inchangé.**
+- **Sécurité** : x11vnc jamais exposé ; handshake WS accepté sur **Basic auth OU ticket à
+  usage unique TTL 60 s** (`POST /api/vnc/ticket`) — jamais le STUDIO_TOKEN en URL.
+- **Dégradé propre** : sans flask-sock ou sans podman, le portail tourne normalement,
+  PLAY est désactivé avec la raison affichée (`/api/game.reason`).
+- **Dépannage** : conteneur mort au boot → logs dans le job `game-start` (onglet Jobs) ou
+  `podman logs merlin-game` ; écran noir → vérifier le fix `renderer/rendering_method`
+  desktop dans `project.godot` + `--rendering-driver opengl3` (entrypoint) ; perfs faibles
+  → passer en 960x540.
