@@ -32,10 +32,17 @@ command -v rpm2cpio >/dev/null || fail "rpm2cpio absent"
 dnf download --help >/dev/null 2>&1 || fail "plugin 'dnf download' absent (dnf-plugins-core)"
 
 # EPEL : x11vnc et scrot n'existent que là. Oracle Linux le fournit en
-# ol9_developer_EPEL ; on active tout id de repo contenant EPEL.
+# ol9_developer_EPEL ; si aucun repo EPEL n'est défini sur l'hôte, on pointe
+# directement le miroir Oracle via --repofrompath (aucun droit root requis).
 EPEL="$(dnf repolist all 2>/dev/null | awk 'tolower($1) ~ /epel/ {print $1; exit}')"
-ENABLE=()
-[ -n "$EPEL" ] && ENABLE=(--enablerepo="$EPEL") && log "repo EPEL: $EPEL"
+if [ -n "$EPEL" ]; then
+    ENABLE=(--enablerepo="$EPEL")
+    log "repo EPEL: $EPEL"
+else
+    EPEL_URL="https://yum.oracle.com/repo/OracleLinux/OL9/developer/EPEL/aarch64/"
+    ENABLE=(--repofrompath="merlin-epel,$EPEL_URL" --setopt=merlin-epel.gpgcheck=0)
+    log "repo EPEL absent de l'hôte -> --repofrompath $EPEL_URL"
+fi
 
 mkdir -p "$RPMS" "$SYSROOT"
 log "téléchargement RPM (--resolve, manquants uniquement)…"
