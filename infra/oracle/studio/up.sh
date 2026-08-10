@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# MERLIN Studio : TOUT en une seule commande, a coller dans le Cloud Shell Oracle
-# (ou dans un SSH sur la VM) :
+# MERLIN Studio : TOUT en une seule commande, a executer *** SUR LA VM A1 ***
+# (pas dans le Cloud Shell : celui-ci est un conteneur separe, sans systemd, et ephemere.
+#  Depuis le Cloud Shell, saute d'abord sur la VM :
+#    ssh -i ~/.ssh/merlin_oracle ubuntu@<IP_DE_LA_VM>
+#  ou utilise infra/oracle/studio/from-cloudshell.sh qui fait le saut pour toi.)
 #
 #   curl -fsSL https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/infra/oracle/studio/up.sh | bash
 #
