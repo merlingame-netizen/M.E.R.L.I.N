@@ -69,3 +69,13 @@ total quand la session navigateur a expiré) :
 - Cloud Account Name (tenancy), OCID de la tenancy, OCID de l'instance, IP publique de la VM.
 - Ces valeurs vivent dans `infra/oracle/terraform/terraform.tfvars` (gitignoré) ou
   `infra/fleet/fleet.local.yaml` — **jamais** dans un fichier suivi (dépôt public).
+
+## Oracle A1 — réalité de la tenancy perso (2026-08-10)
+- **Limite de service A1 accordée : 2 OCPU / 12 Go** (l'utilisateur avait raison ; 4/24 est le
+  max du *programme*, pas de la tenancy — une demande d'augmentation est possible en PAYG).
+- Accès API acquis (clé dans ~/.oci de l'agent, jamais commitée) : l'agent pilote la tenancy
+  (create/launch/Run Command) — le SSH sortant reste bloqué, le canal VM = Instance Agent.
+- Réseau terraform (VCN merlin-arm-a1) existe ; AUCUNE instance n'avait jamais été créée
+  (le « c'est passé » de juin = réseau+budget seulement). Paris n'a qu'UN AD.
+- Capacité Paris : OUT_OF_HOST_CAPACITY même en 1/6 et E2.Micro → `capacity_hunt.py` poll le
+  rapport officiel et lance dès dispo. Lancements à l'aveugle = throttle 429, à éviter.

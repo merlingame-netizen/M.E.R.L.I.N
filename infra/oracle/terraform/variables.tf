@@ -140,7 +140,7 @@ variable "expose_ollama" {
 variable "ollama_models" {
   type        = list(string)
   description = "Gemma models to pull on first boot (CPU inference)."
-  default     = ["gemma3:4b", "gemma3:12b"]
+  default     = ["gemma4:e4b-it-qat", "gemma4:12b-it-qat", "gemma4:26b-a4b-it-qat"]
 }
 
 variable "godot_version" {
