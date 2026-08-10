@@ -93,3 +93,28 @@ total quand la session navigateur a expiré) :
 - Run Command exécute sous `ocarun` SANS sudo → tout le provisioning est user-mode (`provision-ol9-user.sh`) : ~/bin/godot 4.6, ~/bin/cloudflared, venv Flask, crontab @reboot+minute (`keepalive-user.sh`).
 - MERLIN Studio : port 8790 local, tunnel Cloudflare quick (URL change à chaque restart du tunnel → `cat /var/lib/ocarun/tunnel-url.txt` via Run Command). Auth Basic merlin + token dans `~/.config/merlin-studio.env` (VM) et `infra/fleet/fleet.local.yaml` (gitignore).
 - Portail : onglet Jouer → /play/ sert build/web (export Godot Web, COOP/COEP). Autres onglets = automatisations (smoke, contenu, LLM, repo, hôte).
+
+## VM Oracle — jeu natif VNC + Studio premium (2026-08-10)
+- **Jeu natif Linux sur la VM** : pile 100 % user-mode (pas de podman/docker sur l'OL9 de
+  la VM, pas de sudo via Run Command). RPM OL9+EPEL téléchargés (`dnf download --resolve
+  --enablerepo=ol9_developer_EPEL`) et extraits rpm2cpio dans `~/opt/gamestack/sysroot`.
+- **Piège Xvfb** : spawn `/usr/bin/xkbcomp` en chemin ABSOLU compilé en dur (via system()),
+  insensible à PATH/XKB_BINDIR/LD_LIBRARY_PATH. Solution : `unshare --user --map-root-user
+  --mount` + overlayfs rootless (OK sur UEK 6.12) montant le sysroot par-dessus /usr/bin et
+  /usr/share/X11 (`native-inner.sh`) ; fallback bind d'un répertoire fusionné de symlinks.
+- **scrot n'existe pas en EPEL9 aarch64** → xwd (AppStream) + analyse Python du % de pixels
+  non noirs pour le smoke de preuve.
+- **Flux VNC** : Xvfb :99 → x11vnc -localhost:5900 → pont WS↔TCP dans Flask (flask-sock,
+  ~40 lignes) → tunnel quick (WebSocket OK, testé 101). Auth : Basic OU ticket usage unique
+  TTL 60 s (`POST /api/vnc/ticket`). Un seul port tunnelé (8790), keepalive inchangé.
+- **Piège test WS via Cloudflare** : curl négocie HTTP/2 avec l'edge → handshake Upgrade
+  invalide → 400 trompeur. TOUJOURS tester avec `curl --http1.1` (les navigateurs font ça
+  naturellement).
+- **Fix repo critique** : `project.godot` n'avait QUE `renderer/rendering_method.mobile`
+  — sans la variante desktop, un binaire Linux natif part sur forward_plus/Vulkan (KO sans
+  GPU). Ajouté `renderer/rendering_method="gl_compatibility"`.
+- **Sortie Run Command tronquée (~4 Ko)** : pour les longs scripts, rediriger vers un log
+  sur la VM (`> ~/x.log 2>&1; echo exit=$?; tail -n ~/x.log`) et lire le log ensuite.
+- Studio premium : charte CRT/gold (docs/UI_UX_CHARTER.md) appliquée au portail, VT323
+  self-hostée, noVNC v1.5.0 vendorisé (`static/novnc/`, attention règle .gitignore `lib/`
+  → `git add -f` pour pako/lib). Contrats /api/* inchangés (extension VS Code intacte).

@@ -2627,3 +2627,19 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - **Round 2 non répondu** : budget d'écran, testabilité sans pool, définition de la victoire, sort du golden. Consigné comme ouvert dans bible §31.
 - **Livrables invalidés** (§31.5) : golden 3 routes, corpus 100 références, 36 résolutions du pool, mélange + anti-répétition + ordre des arcs, équilibrage calibré sur 25.
 - **Restent valides** : grammaire de carte, beat de résolution, graine de variation, porte de nouveauté, tout l'outillage de mesure.
+
+## 2026-08-10 — Portail Studio premium + jeu natif Linux (VNC) sur la VM Oracle
+- **Fait** (branche `claude/oracle-free-tier-access-IN1Wm`, déployé et vérifié E2E) :
+  - Fix `project.godot` : `renderer/rendering_method="gl_compatibility"` desktop manquant.
+  - `infra/oracle/game/` : pile jeu natif dual-mode (container podman si dispo / natif
+    userland sinon) — sysroot RPM extraits, userns+overlay pour xkbcomp, game-stack.sh,
+    provisioning idempotent via OCI Run Command.
+  - Studio backend : `/api/game`, lanceurs `game-start/stop/restart`, tickets VNC usage
+    unique, pont WS↔TCP `/websockify` (flask-sock optionnel), port 5900 surveillé.
+  - Studio frontend : refonte premium charte CRT/gold + VT323, onglet Jouer par défaut
+    (PLAY natif noVNC plein écran, fallback web /play/ conservé), noVNC vendorisé.
+- **Vérifié** : provision OK sur la VM (screenshot 50 % pixels non noirs), game-start via
+  API → vnc_open, handshake WS 101 local + public (tunnel), anti-replay ticket 401,
+  régression /healthz /api/* /play/ 200, auth 401 sans credentials.
+- **Reste (manuel, Maxime)** : ouvrir l'URL du tunnel sur PC/mobile, onglet Jouer → PLAY,
+  jouer 5 min (latence/fps), ajuster la résolution si besoin (960x540 si lent).
