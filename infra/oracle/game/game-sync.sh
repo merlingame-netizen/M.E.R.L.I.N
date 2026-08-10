@@ -42,12 +42,23 @@ if [ "$NEED_IMPORT" = 1 ]; then
     # - merlin_llm.gdextension : DLL Windows-only (aucune section linux.arm64)
     # - [editor_plugins] : godot_mcp démarre un serveur TCP dans l'éditeur et
     #   empêche le process --import de se terminer (constaté : 5% CPU sans fin)
+    # Pas de Blender sur la VM : sans ce réglage l'éditeur boucle sur les
+    # Assets/blender/*.blend (constaté : 316% CPU sans fin). Les GLB équivalents
+    # sont dans le repo et l'export exclut déjà *.blend.
+    GDV_MM="$("$GODOT_BIN" --headless --version 2>/dev/null | head -1 | cut -d. -f1-2)"
+    ES="$HOME/.config/godot/editor_settings-${GDV_MM}.tres"
+    if [ ! -f "$ES" ] || ! grep -q "filesystem/import/blender/enabled" "$ES"; then
+        mkdir -p "$HOME/.config/godot"
+        printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nfilesystem/import/blender/enabled = false\n' > "$ES"
+        log "import Blender désactivé ($ES)"
+    fi
     GDEXT="$REPO/addons/merlin_llm/merlin_llm.gdextension"
     [ -f "$GDEXT" ] && mv "$GDEXT" "$GDEXT.import-disabled"
     sed -i '/\[editor_plugins\]/,/^$/d' "$REPO/project.godot"
     # L'import peut sortir en code non nul malgré un import complet (warnings) :
     # le critère de réussite est le contenu de .godot/imported.
-    timeout 1200 "$GODOT_BIN" --headless --path "$REPO" --import \
+    # 104 GLB + génération de LOD sur 4 cœurs ARM : le froid peut dépasser 30 min.
+    timeout 3600 "$GODOT_BIN" --headless --path "$REPO" --import \
         > "$RUNDIR/import.log" 2>&1 || true
     # Restauration : arbre propre pour les pulls suivants.
     git -C "$REPO" checkout -- project.godot
