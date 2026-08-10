@@ -18,7 +18,7 @@ import os
 import sys
 from pathlib import Path
 
-from flask import Flask, Response, jsonify, render_template, request
+from flask import Flask, Response, jsonify, render_template, request, send_from_directory
 
 # Allow both `python3 tools/merlin_studio/app.py` and `python3 -m tools.merlin_studio.app`.
 if __package__ in (None, ""):
@@ -107,6 +107,23 @@ def build_app() -> Flask:
     @app.route("/api/job/<jid>/stop", methods=["POST"])
     def api_job_stop(jid):
         return jsonify(actions.stop(jid))
+
+    # ── /play/ : build web du jeu, jouable navigateur (PC + mobile via tunnel) ──
+    _WEB_BUILD = probes.ROOT / "build" / "web"
+
+    @app.route("/play/")
+    @app.route("/play/<path:f>")
+    def play(f: str = "index.html"):
+        if not (_WEB_BUILD / "index.html").exists():
+            return Response(
+                "Build web absent. Lancer « Build web du jeu » depuis l'onglet Run "
+                "(ou: bash infra/oracle/studio/build-web.sh).\n",
+                404, {"Content-Type": "text/plain; charset=utf-8"})
+        resp = send_from_directory(str(_WEB_BUILD), f)
+        # SharedArrayBuffer (threads Godot Web) exige l'isolation cross-origin.
+        resp.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        resp.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+        return resp
 
     return app
 

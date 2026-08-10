@@ -53,6 +53,7 @@
 <header><h1>🜨 MERLIN Studio <span class="mut">— VM perso</span></h1><span class="mut" id="sum">…</span></header>
 <nav>
  <button data-tab="run" class="on">Run</button>
+ <button data-tab="play">Jouer</button>
  <button data-tab="content">Contenu</button>
  <button data-tab="jobs">Jobs</button>
  <button data-tab="llm">LLM</button>
@@ -70,6 +71,21 @@
     <button class="go" onclick="parseProj()">Import/parse ⏱</button>
   </div><div class="res" id="runres" style="margin-top:10px"></div></div>
   <h2>Scènes</h2><div class="grid" id="scenes"></div>
+ </section>
+
+ <section class="pane" id="pane-play">
+  <h2>Jouer au jeu (navigateur)</h2>
+  <div class="grid" id="playcards"></div>
+  <div class="form">
+   <div class="row" style="flex-wrap:wrap;gap:10px">
+    <button class="go" id="playbtn" onclick="window.open('/play/','_blank')">Jouer ▶ (nouvel onglet)</button>
+    <button class="go" onclick="run('godot-build-web')">Build web du jeu 🛠</button>
+   </div>
+   <div class="mut" style="margin-top:10px">Le build s'ouvre dans un onglet dédié (isolation
+    cross-origin requise par Godot Web). Premier build : télécharge les templates d'export
+    (~1 Go, une seule fois) puis exporte — compter 10-20 min. Jouable sur PC et mobile via
+    le tunnel, avec le même identifiant que le Studio.</div>
+  </div>
  </section>
 
  <section class="pane" id="pane-content">
@@ -161,6 +177,14 @@ async function refreshRun(){const d=await j('/api/godot'),g=d.godot||{},runs=d.r
    ${r?`<div class="mut">exit ${r.exit_code} · ${r.script_errors} SCRIPT ERROR · ${esc(r.at||'')}</div>`:'<div class="mut">pas encore testée</div>'}
    <div style="margin-top:9px"><button class="go sm" onclick="run('godot-smoke',{scene:'${esc(s)}',duration:8})">Smoke ▶</button></div></div>`;
  }).join('');}
+
+async function refreshPlay(){let ok=false,size='';
+ try{const r=await fetch('/play/',{method:'HEAD'});ok=r.ok;size=r.headers.get('content-length')||''}catch(e){}
+ $('#playcards').innerHTML=card('Build web',ok
+  ?`<div class="metrics"><span>état <b>prêt</b></span></div><div class="mut">build/web/index.html servi sur <code>/play/</code></div>`
+  :`<div class="mut">aucun build — lancer « Build web du jeu » ci-dessous, puis revenir ici</div>`,
+  ok?'up':'pending');
+ $('#playbtn').disabled=!ok;}
 
 async function refreshContent(){const d=await j('/api/content'),c=d.canon||{},co=d.corpus||{},lp=d.loops||{};
  const cnt=c.counts||{};
@@ -260,10 +284,10 @@ const stopJob=async id=>{await j('/api/job/'+id+'/stop',{method:'POST'});refresh
 async function refreshSum(){const o=await j('/api/overview');const m=o.mem||{};
  $('#sum').textContent=`${o.cpus} cœurs · ${m.available_gb}/${m.total_gb} Go · ${o.models} modèles · ${o.branch}`;}
 
-function tick(){refreshSum();refreshRun();refreshContent();refreshLlm();refreshRepo();refreshHost();refreshJobs();}
+function tick(){refreshSum();refreshRun();refreshPlay();refreshContent();refreshLlm();refreshRepo();refreshHost();refreshJobs();}
 loadCat();tick();
 setInterval(refreshJobs,10000);
-setInterval(()=>{refreshSum();refreshRun();refreshHost()},30000);
+setInterval(()=>{refreshSum();refreshRun();refreshPlay();refreshHost()},30000);
 setInterval(()=>{refreshContent();refreshLlm();refreshRepo()},60000);
 </script>
 </body>

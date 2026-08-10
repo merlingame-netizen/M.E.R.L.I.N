@@ -86,6 +86,10 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
         out = "build/web/index.html" if preset == "web" else f"build/{preset}/merlin"
         return ([GODOT, "--headless", "--path", ".", "--export-release", preset, out],
                 "godot", f"Export {preset}")
+    if kind == "godot-build-web":
+        # Build web complet (installe les templates d'export au 1er passage) —
+        # le jeu devient jouable dans le navigateur via /play/ (PC + mobile).
+        return (["bash", "infra/oracle/studio/build-web.sh"], "godot", "Build web du jeu")
 
     # -- Contenu --
     if kind == "content-gen":
@@ -166,6 +170,10 @@ def catalog() -> dict:
          "available": (ROOT / "export_presets.cfg").exists(),
          "reason": "" if (ROOT / "export_presets.cfg").exists() else "export_presets.cfg absent",
          "params": [{"name": "preset", "default": "web"}]},
+        {"kind": "godot-build-web", "label": "Build web du jeu (jouable sur /play/)", "group": "godot",
+         "available": (ROOT / "export_presets.cfg").exists(),
+         "reason": "" if (ROOT / "export_presets.cfg").exists() else "export_presets.cfg absent",
+         "params": []},
         {"kind": "content-gen", "label": "Générer des cartes", "group": "content", "available": True,
          "params": [{"name": "count", "default": 12},
                     {"name": "backend", "options": ["template", "ollama", "workers-ai"]}]},
