@@ -38,10 +38,20 @@ NEED_IMPORT=0
 if [ "$NEED_IMPORT" = 1 ]; then
     log "=== import des assets (godot --headless --import, long à froid) ==="
     mkdir -p "$RUNDIR"
+    # Même neutralisation que la CI (godot-export.yml) pendant l'import :
+    # - merlin_llm.gdextension : DLL Windows-only (aucune section linux.arm64)
+    # - [editor_plugins] : godot_mcp démarre un serveur TCP dans l'éditeur et
+    #   empêche le process --import de se terminer (constaté : 5% CPU sans fin)
+    GDEXT="$REPO/addons/merlin_llm/merlin_llm.gdextension"
+    [ -f "$GDEXT" ] && mv "$GDEXT" "$GDEXT.import-disabled"
+    sed -i '/\[editor_plugins\]/,/^$/d' "$REPO/project.godot"
     # L'import peut sortir en code non nul malgré un import complet (warnings) :
     # le critère de réussite est le contenu de .godot/imported.
     timeout 1200 "$GODOT_BIN" --headless --path "$REPO" --import \
         > "$RUNDIR/import.log" 2>&1 || true
+    # Restauration : arbre propre pour les pulls suivants.
+    git -C "$REPO" checkout -- project.godot
+    [ -f "$GDEXT.import-disabled" ] && mv "$GDEXT.import-disabled" "$GDEXT"
     CNT="$(imported_count)"
     if [ "$CNT" -gt 0 ]; then
         echo "$HEAD" > "$IMPORT_MARK"
