@@ -115,6 +115,11 @@ stop_native() {
         pid_alive "$pid" && kill -KILL -- "-$pid" 2>/dev/null
     fi
     rm -f "$RUNDIR/inner.pid"
+    # Balayage des orphelins sur l'affichage :99 (Xvfb/x11vnc survivants d'un
+    # crash godot ou d'un kill partiel — sinon le port 5900 reste faux-ouvert).
+    pkill -f 'x11vnc -display :99' 2>/dev/null
+    pkill -f 'Xvfb :99' 2>/dev/null
+    rm -f /tmp/.X99-lock 2>/dev/null
     sleep 0.5
 }
 
