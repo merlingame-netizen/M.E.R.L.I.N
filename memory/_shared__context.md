@@ -86,3 +86,10 @@ total quand la session navigateur a expiré) :
   (le « c'est passé » de juin = réseau+budget seulement). Paris n'a qu'UN AD.
 - Capacité Paris : OUT_OF_HOST_CAPACITY même en 1/6 et E2.Micro → `capacity_hunt.py` poll le
   rapport officiel et lance dès dispo. Lancements à l'aveugle = throttle 429, à éviter.
+
+## VM Oracle perso — pilotage & Studio (2026-08-10)
+- VM `merlin-arm-a1` : Oracle Linux 9.8 aarch64, A1.Flex 4/24 Always Free, pilotable via Run Command.
+- Prérequis IAM Run Command (créés, autorisation Maxime) : dynamic group `merlin-run-command` + policy `use instance-agent-command-execution-family`. Sans eux : commandes ACCEPTED/VISIBLE jamais livrées.
+- Run Command exécute sous `ocarun` SANS sudo → tout le provisioning est user-mode (`provision-ol9-user.sh`) : ~/bin/godot 4.6, ~/bin/cloudflared, venv Flask, crontab @reboot+minute (`keepalive-user.sh`).
+- MERLIN Studio : port 8790 local, tunnel Cloudflare quick (URL change à chaque restart du tunnel → `cat /var/lib/ocarun/tunnel-url.txt` via Run Command). Auth Basic merlin + token dans `~/.config/merlin-studio.env` (VM) et `infra/fleet/fleet.local.yaml` (gitignore).
+- Portail : onglet Jouer → /play/ sert build/web (export Godot Web, COOP/COEP). Autres onglets = automatisations (smoke, contenu, LLM, repo, hôte).
