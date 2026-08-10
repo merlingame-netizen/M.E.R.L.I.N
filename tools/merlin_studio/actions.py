@@ -36,7 +36,10 @@ PY = sys.executable or "python3"
 GODOT = probes.GODOT
 
 # group -> max concurrent (1 = serialized)
-GROUPS = {"godot": 1, "content": 1, "llm": 1, "git": 1, "daemon": 4, "misc": 2}
+GROUPS = {"godot": 1, "content": 1, "llm": 1, "git": 1, "daemon": 4, "misc": 2, "game": 1}
+
+# Résolutions autorisées pour le jeu natif (jamais interpolé librement).
+GAME_RES = ("1280x720", "960x540", "1920x1080")
 
 
 def _now() -> str:
@@ -141,6 +144,23 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
     if kind == "asr-start":
         return ([PY, "tools/asr/asr_server.py", "--port", "8770"], "daemon", "Service ASR")
 
+    # -- Jeu natif (conteneur podman Xvfb+x11vnc, affiché via noVNC) --
+    if kind == "game-start":
+        res = _s(p.get("res", "1280x720"))
+        if res not in GAME_RES:
+            res = "1280x720"
+        return (["bash", "infra/oracle/game/game-stack.sh", "start", "--res", res],
+                "game", f"Jeu natif : démarrer ({res})")
+    if kind == "game-stop":
+        return (["bash", "infra/oracle/game/game-stack.sh", "stop"],
+                "game", "Jeu natif : arrêter")
+    if kind == "game-restart":
+        res = _s(p.get("res", "1280x720"))
+        if res not in GAME_RES:
+            res = "1280x720"
+        return (["bash", "infra/oracle/game/game-stack.sh", "restart", "--res", res],
+                "game", f"Jeu natif : redémarrer ({res})")
+
     # -- Repo (lecture/avance rapide seulement — jamais commit/push/reset) --
     if kind == "git-fetch":
         return (["git", "fetch", "--all", "--prune"], "git", "Git fetch")
@@ -153,7 +173,18 @@ def catalog() -> dict:
     """What the UI offers, with availability so impossible buttons render disabled."""
     g = probes.godot_info()
     sc = probes.scenes()
+    gm = probes.game()
     return {"launchers": [
+        {"kind": "game-start", "label": "Jeu natif : démarrer (VNC)", "group": "game",
+         "available": gm.get("available", False) and gm.get("image_built", False),
+         "reason": gm.get("reason", ""),
+         "params": [{"name": "res", "options": list(GAME_RES)}]},
+        {"kind": "game-stop", "label": "Jeu natif : arrêter", "group": "game",
+         "available": gm.get("available", False), "params": []},
+        {"kind": "game-restart", "label": "Jeu natif : redémarrer", "group": "game",
+         "available": gm.get("available", False) and gm.get("image_built", False),
+         "reason": gm.get("reason", ""),
+         "params": [{"name": "res", "options": list(GAME_RES)}]},
         {"kind": "godot-boot", "label": "Boot check (rapide)", "group": "godot",
          "available": g.get("available", False), "params": []},
         {"kind": "godot-test", "label": "Suite de tests headless", "group": "godot",

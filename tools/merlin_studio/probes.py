@@ -31,7 +31,7 @@ GODOT = os.environ.get("GODOT_BIN", "godot")
 PORTS = [
     (11434, "ollama"), (3000, "open-webui"), (8443, "code-server"),
     (8081, "filebrowser"), (5432, "postgres"), (8770, "asr"),
-    (8772, "tts"), (8790, "studio"),
+    (8772, "tts"), (8790, "studio"), (5900, "vnc-game"),
 ]
 
 _cache: dict = {}
@@ -117,6 +117,27 @@ def godot_info() -> dict:
 def last_runs() -> dict:
     """Latest smoke/test outcomes per scene, written by the action layer."""
     return _read_json(STATUS_DIR / "studio_runs.json", {})
+
+
+def game() -> dict:
+    """État du jeu natif (conteneur podman merlin-game + VNC). Never raises."""
+    if "podman" not in _cache:
+        _cache["podman"] = _sh(["which", "podman"], timeout=4)[1] == 0
+    available = _cache["podman"]
+    info = {"available": available, "image_built": False, "container": "absent",
+            "vnc_open": False}
+    if not available:
+        info["reason"] = "podman absent — lancer infra/oracle/game/provision-game-user.sh"
+        return info
+    _, rc = _sh(["podman", "image", "exists", "localhost/merlin-game"], timeout=6)
+    info["image_built"] = rc == 0
+    if not info["image_built"]:
+        info["reason"] = "image non buildée — lancer infra/oracle/game/provision-game-user.sh"
+    out, rc = _sh(["podman", "inspect", "-f", "{{.State.Status}}", "merlin-game"], timeout=6)
+    if rc == 0:
+        info["container"] = out.strip() or "unknown"
+    info["vnc_open"] = _port_open(5900)
+    return info
 
 
 # ── Contenu (canon / corpus / loops) ─────────────────────────────────────────

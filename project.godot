@@ -93,6 +93,7 @@ low_spec_mode=true
 
 [rendering]
 
+renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 ; v7.7.16 — Aggressive 60 FPS audit per user request « 60 fps constants ».
 ; MSAA 2→0 + FXAA on (lighter on GL Compatibility renderer).

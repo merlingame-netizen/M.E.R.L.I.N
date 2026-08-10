@@ -1,0 +1,33 @@
+# M.E.R.L.I.N — image d'affichage rootless pour le jeu natif sur la VM Oracle (aarch64).
+# Contient uniquement la pile X/VNC + Mesa llvmpipe ; le binaire Godot est monté
+# depuis l'hôte (~/bin/godot -> /opt/godot) pour éviter de rebuilder l'image à
+# chaque bump de version moteur.
+#
+# Build (sur la VM, user ocarun) :
+#   podman build -t merlin-game -f infra/oracle/game/Containerfile infra/oracle/game/
+FROM registry.fedoraproject.org/fedora:41
+
+RUN dnf install -y --setopt=install_weak_deps=False \
+        xorg-x11-server-Xvfb \
+        x11vnc \
+        mesa-dri-drivers \
+        mesa-libGL \
+        mesa-libEGL \
+        libglvnd-glx \
+        libX11 \
+        libXcursor \
+        libXinerama \
+        libXrandr \
+        libXi \
+        libXext \
+        libxkbcommon \
+        fontconfig \
+        freetype \
+        alsa-lib \
+        scrot \
+    && dnf clean all
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
