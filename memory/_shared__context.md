@@ -71,8 +71,15 @@ total quand la session navigateur a expiré) :
   `infra/fleet/fleet.local.yaml` — **jamais** dans un fichier suivi (dépôt public).
 
 ## Oracle A1 — réalité de la tenancy perso (2026-08-10)
-- **Limite de service A1 accordée : 2 OCPU / 12 Go** (l'utilisateur avait raison ; 4/24 est le
-  max du *programme*, pas de la tenancy — une demande d'augmentation est possible en PAYG).
+- **RÉSOLU : la cause racine de 2 mois de « Out of host capacity » était le FREE TIER.**
+  Ajouter une carte ≠ upgrade : la tenancy restait `plan_type=FREE_TIER` (vérifiable via
+  osp_gateway). Après le VRAI upgrade PAYG (bouton « Upgrade to Pay As You Go ») :
+  limites A1 2/12 → **250 cœurs/1666 Go**, régions 1→3, et capacité **immédiatement
+  AVAILABLE en 4/24**. VM `merlin-arm-a1` créée par l'agent via l'API (4 OCPU/24 Go,
+  Ubuntu 22.04 ARM, cloud-init complet : Godot 4.6 + Ollama/Gemma 4 + Docker + repos).
+  OCID/IP dans `infra/fleet/fleet.local.yaml` (gitignoré).
+- Leçon : en cas d'OUT_OF_HOST_CAPACITY chronique chez Oracle, VÉRIFIER le plan_type
+  avant toute chasse à la capacité — Free tier = dernière priorité d'allocation.
 - Accès API acquis (clé dans ~/.oci de l'agent, jamais commitée) : l'agent pilote la tenancy
   (create/launch/Run Command) — le SSH sortant reste bloqué, le canal VM = Instance Agent.
 - Réseau terraform (VCN merlin-arm-a1) existe ; AUCUNE instance n'avait jamais été créée
