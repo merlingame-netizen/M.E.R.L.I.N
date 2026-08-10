@@ -39,8 +39,8 @@ status_json() {
             state="$(podman inspect -f '{{.State.Status}}' "$NAME" 2>/dev/null || echo unknown)"
         fi
     elif [ "$GAME_MODE" = "native" ]; then
-        if pid_alive "$(cat "$RUNDIR/godot.pid" 2>/dev/null)"; then state="running"
-        elif [ -f "$RUNDIR/godot.pid" ]; then state="exited"
+        if pid_alive "$(cat "$RUNDIR/inner.pid" 2>/dev/null)"; then state="running"
+        elif [ -f "$RUNDIR/inner.pid" ]; then state="exited"
         fi
     fi
     port_open && vnc=true
@@ -88,54 +88,33 @@ stop_container() {
     podman rm -f "$NAME" >/dev/null 2>&1 || true
 }
 
-# ── mode native (sysroot userland) ───────────────────────────────────────────
-native_env() {
-    export LD_LIBRARY_PATH="$SYSROOT/usr/lib64:$SYSROOT/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-    export PATH="$SYSROOT/usr/bin:$PATH"
-    export XKB_BINDIR="$SYSROOT/usr/bin"            # xkbcomp pour Xvfb
-    export LIBGL_DRIVERS_PATH="$SYSROOT/usr/lib64/dri"
-    export LIBGL_ALWAYS_SOFTWARE=1
-    export GALLIUM_DRIVER=llvmpipe
-    export DISPLAY=:99
-}
+# ── mode native (sysroot userland dans un userns non privilégié) ─────────────
+# Xvfb spawn /usr/bin/xkbcomp en chemin ABSOLU compilé en dur -> impossible en
+# pur LD_LIBRARY_PATH. native-inner.sh tourne dans `unshare --user --mount` et
+# monte le sysroot par-dessus /usr/bin + /usr/share/X11 (overlay, ou bind d'un
+# répertoire fusionné en fallback). Le réseau reste celui de l'hôte (port 5900).
+GAME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 start_native() {
     [ -f "$SYSROOT/.merlin-ready" ] || {
         echo "FATAL: sysroot absent — lancer provision-game-user.sh" >&2; exit 1; }
     stop_native
     mkdir -p "$RUNDIR"
-    native_env
-
-    "$SYSROOT/usr/bin/Xvfb" :99 -screen 0 "${RES}x24" -nolisten tcp \
-        -fp built-ins -xkbdir "$SYSROOT/usr/share/X11/xkb" \
-        > "$RUNDIR/xvfb.log" 2>&1 &
-    echo $! > "$RUNDIR/xvfb.pid"
-    for _ in $(seq 1 50); do [ -e /tmp/.X11-unix/X99 ] && break; sleep 0.2; done
-    [ -e /tmp/.X11-unix/X99 ] || {
-        echo "FATAL: Xvfb n'a pas démarré — $RUNDIR/xvfb.log :" >&2
-        tail -20 "$RUNDIR/xvfb.log" >&2; exit 1; }
-
-    "$SYSROOT/usr/bin/x11vnc" -display :99 -localhost -rfbport 5900 -forever \
-        -shared -nopw -noxdamage -defer 20 -wait 20 -quiet \
-        > "$RUNDIR/x11vnc.log" 2>&1 &
-    echo $! > "$RUNDIR/x11vnc.pid"
-
-    ( cd "$REPO" && exec "$GODOT_BIN" --path . --rendering-driver opengl3 \
-        --audio-driver Dummy --resolution "$RES" ) \
-        > "$RUNDIR/godot.log" 2>&1 &
-    echo $! > "$RUNDIR/godot.pid"
-
-    wait_vnc 'pid_alive "$(cat "$RUNDIR/godot.pid" 2>/dev/null)"' \
-             'tail -30 "$RUNDIR/godot.log" "$RUNDIR/x11vnc.log"'
+    setsid unshare --user --map-root-user --mount \
+        bash "$GAME_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
+    echo $! > "$RUNDIR/inner.pid"
+    wait_vnc 'pid_alive "$(cat "$RUNDIR/inner.pid" 2>/dev/null)"' \
+             'tail -30 "$RUNDIR/inner.log" "$RUNDIR/xvfb.log" "$RUNDIR/godot.log" 2>/dev/null'
 }
 
 stop_native() {
-    for p in godot x11vnc xvfb; do
-        local pid; pid="$(cat "$RUNDIR/$p.pid" 2>/dev/null || true)"
-        if pid_alive "$pid"; then kill "$pid" 2>/dev/null; fi
-        rm -f "$RUNDIR/$p.pid"
-    done
-    # laisser le temps aux sockets de se libérer
+    local pid; pid="$(cat "$RUNDIR/inner.pid" 2>/dev/null || true)"
+    if pid_alive "$pid"; then
+        kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
+        for _ in $(seq 1 10); do pid_alive "$pid" || break; sleep 0.3; done
+        pid_alive "$pid" && kill -KILL -- "-$pid" 2>/dev/null
+    fi
+    rm -f "$RUNDIR/inner.pid"
     sleep 0.5
 }
 

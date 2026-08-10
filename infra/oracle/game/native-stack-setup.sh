@@ -62,5 +62,21 @@ done
 [ -x "$SYSROOT/usr/bin/x11vnc" ] || fail "x11vnc absent du sysroot après extraction"
 [ -e "$SYSROOT/usr/lib64/dri/swrast_dri.so" ] || log "warn: swrast_dri.so introuvable (llvmpipe ?)"
 
+# Répertoires fusionnés (symlinks hôte + binaires sysroot) : fallback de
+# native-inner.sh quand l'overlayfs rootless est refusé par le noyau.
+MERGED="$BASE/merged"
+log "construction des répertoires fusionnés ($MERGED)…"
+for sub in usr/bin usr/share/X11; do
+    rm -rf "$MERGED/$sub"; mkdir -p "$MERGED/$sub"
+    if [ -d "/$sub" ]; then
+        for f in "/$sub"/* ; do [ -e "$f" ] && ln -s "$f" "$MERGED/$sub/" 2>/dev/null; done
+    fi
+    # le sysroot gagne en cas de collision
+    for f in "$SYSROOT/$sub"/* ; do
+        [ -e "$f" ] || continue
+        ln -sfn "$f" "$MERGED/$sub/$(basename "$f")"
+    done
+done
+
 echo "$HASH" > "$READY"
 log "OK — sysroot prêt ($SYSROOT)"
