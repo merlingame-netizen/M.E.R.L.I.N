@@ -13,7 +13,9 @@ READY="$SYSROOT/.merlin-ready"
 # llvmpipe (mesa-dri-drivers) + serveur X virtuel + scraper VNC + screenshot +
 # libs X que Godot dlopen (celles déjà présentes sur l'hôte restent visibles via
 # le linker par défaut ; --resolve ne télécharge que les manquantes).
-PKGS=(xorg-x11-server-Xvfb x11vnc scrot
+# NB: scrot n'existe pas en EPEL9 aarch64 — xwd (AppStream) le remplace pour
+# le screenshot de preuve (dump brut, analysé côté provision en Python).
+PKGS=(xorg-x11-server-Xvfb x11vnc xwd
       mesa-dri-drivers mesa-libGL mesa-libEGL libglvnd-glx libglvnd-egl
       libX11 libXcursor libXinerama libXrandr libXi libXext libXfixes
       libxkbcommon libxkbcommon-x11 xkeyboard-config xkbcomp alsa-lib)

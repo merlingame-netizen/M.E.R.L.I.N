@@ -72,15 +72,24 @@ log "=== 6/6 smoke : start -> screenshot -> stop ==="
 bash "$GAME/game-stack.sh" start || fail "game-stack start KO"
 sleep 6   # laisser une frame se dessiner
 if [ "$MODE" = "container" ]; then
+    # PNG : un écran noir se compresse en quelques Ko -> seuil de taille suffisant.
     podman exec merlin-game scrot -o /tmp/shot.png || fail "scrot KO"
     SIZE="$(podman exec merlin-game stat -c %s /tmp/shot.png)"
+    log "screenshot: ${SIZE} octets (>20000 attendu pour une frame non vide)"
+    bash "$GAME/game-stack.sh" stop >/dev/null
+    [ "$SIZE" -gt 20000 ] || fail "screenshot suspect (${SIZE} o) — écran probablement noir"
 else
+    # xwd = dump brut (taille constante) -> on mesure la part de pixels non noirs.
     env LD_LIBRARY_PATH="$SYSROOT/usr/lib64:$SYSROOT/usr/lib" DISPLAY=:99 \
-        "$SYSROOT/usr/bin/scrot" -o /tmp/merlin-shot.png || fail "scrot KO"
-    SIZE="$(stat -c %s /tmp/merlin-shot.png)"
+        "$SYSROOT/usr/bin/xwd" -root -silent > /tmp/merlin-shot.xwd || fail "xwd KO"
+    PCT="$(python3 - <<'PYEOF'
+data = open("/tmp/merlin-shot.xwd", "rb").read()[4096:]
+print(0 if not data else sum(1 for b in data if b) * 100 // len(data))
+PYEOF
+)"
+    log "screenshot xwd: $(stat -c %s /tmp/merlin-shot.xwd) octets, ${PCT}% de pixels non noirs"
+    bash "$GAME/game-stack.sh" stop >/dev/null
+    [ "${PCT:-0}" -ge 2 ] || fail "écran quasi noir (${PCT}% non noir) — le jeu ne rend pas"
 fi
-log "screenshot: ${SIZE} octets (>20000 attendu pour une frame non vide)"
-bash "$GAME/game-stack.sh" stop >/dev/null
-[ "$SIZE" -gt 20000 ] || fail "screenshot suspect (${SIZE} o) — écran probablement noir"
 
 log "=== PROVISION OK (mode $MODE) ==="
