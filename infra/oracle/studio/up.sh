@@ -58,17 +58,47 @@ if ! command -v cloudflared >/dev/null 2>&1; then
   curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$ca" -o /tmp/cloudflared
   sudo install -m 0755 /tmp/cloudflared /usr/local/bin/cloudflared && rm -f /tmp/cloudflared
 fi
-pkill -f "cloudflared.*:$PORT" 2>/dev/null || true
-pkill -f "cloudflared tunnel --no-autoupdate --url http://127.0.0.1:$PORT" 2>/dev/null || true
 LOG="$HOME/tunnel-studio.log"
-nohup cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$PORT" >"$LOG" 2>&1 &
-URL=""
-for i in $(seq 1 30); do
-  sleep 2
-  URL="$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$LOG" 2>/dev/null | tail -1 || true)"
-  [ -n "$URL" ] && break
-done
-[ -n "$URL" ] || { say "[ECHEC] pas d'URL de tunnel — voir $LOG"; tail -20 "$LOG"; exit 1; }
+if command -v systemctl >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+  # Tunnel en SERVICE systemd : survit a la deconnexion, au nettoyage de Run Command
+  # et aux reboots de la VM. (Un restart genere une nouvelle URL trycloudflare.)
+  sudo tee /etc/systemd/system/merlin-tunnel.service >/dev/null <<UNIT
+[Unit]
+Description=MERLIN Studio tunnel (cloudflared quick tunnel -> 127.0.0.1:$PORT)
+After=network-online.target merlin-studio.service
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate --url http://127.0.0.1:$PORT
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+  sudo systemctl daemon-reload
+  sudo systemctl enable merlin-tunnel >/dev/null 2>&1 || true
+  sudo systemctl restart merlin-tunnel
+  URL=""
+  for i in $(seq 1 30); do
+    sleep 2
+    URL="$(sudo journalctl -u merlin-tunnel --since '-3 min' --no-pager 2>/dev/null \
+           | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' | tail -1 || true)"
+    [ -n "$URL" ] && break
+  done
+  [ -n "$URL" ] || { say "[ECHEC] pas d'URL — sudo journalctl -u merlin-tunnel -n 30"; exit 1; }
+else
+  # Repli sans systemd/sudo : nohup (ne survit pas a un reboot)
+  pkill -f "cloudflared tunnel --no-autoupdate --url http://127.0.0.1:$PORT" 2>/dev/null || true
+  nohup cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$PORT" >"$LOG" 2>&1 &
+  URL=""
+  for i in $(seq 1 30); do
+    sleep 2
+    URL="$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$LOG" 2>/dev/null | tail -1 || true)"
+    [ -n "$URL" ] && break
+  done
+  [ -n "$URL" ] || { say "[ECHEC] pas d'URL de tunnel — voir $LOG"; tail -20 "$LOG"; exit 1; }
+fi
 
 # ── 4. Verification de bout en bout (comme le fera VS Code) ─────────────────
 say "==> Verification via l'URL publique"
@@ -91,4 +121,4 @@ else
   say " Reessaie dans 30 s (propagation du tunnel), URL : $URL"
 fi
 say "=============================================="
-say "Tunnel en arriere-plan (log : $LOG). L'URL change si le tunnel redemarre."
+say "Tunnel : service systemd merlin-tunnel (ou nohup en repli). L'URL change a chaque restart du tunnel."
