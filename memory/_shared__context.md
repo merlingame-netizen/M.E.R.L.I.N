@@ -118,3 +118,28 @@ total quand la session navigateur a expiré) :
 - Studio premium : charte CRT/gold (docs/UI_UX_CHARTER.md) appliquée au portail, VT323
   self-hostée, noVNC v1.5.0 vendorisé (`static/novnc/`, attention règle .gitignore `lib/`
   → `git add -f` pour pako/lib). Contrats /api/* inchangés (extension VS Code intacte).
+
+## VM Oracle — import Godot headless : pièges bloquants (2026-08-10)
+- **Le vrai projet MERLIN tourne enfin en natif sur la VM** (validé visuellement :
+  écran d'intro « M.E.R.L.I.N. » + bouton ENTRER, assets importés). La v1 affichait un
+  rendu méconnaissable car .godot/imported était vide.
+- **Import headless bloqué par 3 causes cumulées** (godot --headless --path . --import) :
+  1. `addons/merlin_llm/merlin_llm.gdextension` : DLL Windows-only, pas de section
+     linux.arm64 → erreur de chargement (déjà géré par la CI godot-export.yml).
+  2. `[editor_plugins]` (godot_mcp) : démarre un serveur TCP éditeur → --import ne se
+     termine jamais (5% CPU sans fin).
+  3. **`*.blend` (LE bloquant définitif)** : sans exécutable Blender, l'import se fige
+     TOTALEMENT sur le 1er .blend — et `editor_settings blender/enabled=false` NE
+     suffit PAS (le hang persiste). Seule solution fiable : écarter physiquement les
+     .blend le temps de l'import. Les GLB équivalents sont dans le repo, *.blend est
+     déjà exclu de l'export. Après retrait : 919 ressources importées, exit 0.
+- **Diagnostic** : gdb -p <pid> "thread apply all bt" a montré tous les threads worker
+  en pthread_cond_wait (thread pool jamais réveillé) → import bloqué, pas lent. La
+  bisection par répertoire (retirer Assets/, puis sous-dossiers) a isolé les .blend.
+- **Rapatrier une image depuis la VM** : Run Command tronque à ~4 Ko → base64 inline
+  KO. Copier le PNG dans tools/merlin_studio/static/ sur la VM puis le curler via
+  l'URL du tunnel avec le token (l'agent a l'HTTPS sortant). Nettoyer après.
+- Godot installé en natif à la version du PROJET (features 4.5, pas 4.6) : parse
+  config/features → télécharge Godot_v<GV>-stable_linux.arm64.zip + templates d'export.
+- Le jeu du PC de Maxime vit dans C:/Users/PGNK2128/Godot-MCP → doit être poussé sur
+  GitHub puis « game-sync » depuis le portail (fetch+pull+réimport si HEAD changé).
