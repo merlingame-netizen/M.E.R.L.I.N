@@ -130,6 +130,8 @@ wheels/
 .installed.cfg
 *.egg
 venv/
+.venv/
+.venv-studio/
 .env/
 
 # -------------------------------------------
