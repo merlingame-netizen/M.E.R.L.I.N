@@ -120,23 +120,36 @@ def last_runs() -> dict:
 
 
 def game() -> dict:
-    """État du jeu natif (conteneur podman merlin-game + VNC). Never raises."""
-    if "podman" not in _cache:
-        _cache["podman"] = _sh(["which", "podman"], timeout=4)[1] == 0
-    available = _cache["podman"]
-    info = {"available": available, "image_built": False, "container": "absent",
-            "vnc_open": False}
-    if not available:
-        info["reason"] = "podman absent — lancer infra/oracle/game/provision-game-user.sh"
+    """État du jeu natif (VNC), via game-stack.sh status — source de vérité
+    unique pour les deux modes (container podman / native sysroot). Never raises."""
+    info = {"available": False, "image_built": False, "container": "absent",
+            "vnc_open": False, "mode": "none"}
+    gs = ROOT / "infra" / "oracle" / "game" / "game-stack.sh"
+    if not gs.exists():
+        info["reason"] = "game-stack.sh absent du repo"
         return info
-    _, rc = _sh(["podman", "image", "exists", "localhost/merlin-game"], timeout=6)
-    info["image_built"] = rc == 0
-    if not info["image_built"]:
-        info["reason"] = "image non buildée — lancer infra/oracle/game/provision-game-user.sh"
-    out, rc = _sh(["podman", "inspect", "-f", "{{.State.Status}}", "merlin-game"], timeout=6)
-    if rc == 0:
-        info["container"] = out.strip() or "unknown"
-    info["vnc_open"] = _port_open(5900)
+    out, rc = _sh(["bash", str(gs), "status"], timeout=12)
+    if rc != 0:
+        info["reason"] = ("pile non provisionnée — lancer "
+                          "infra/oracle/game/provision-game-user.sh")
+        return info
+    try:
+        st = json.loads(out.splitlines()[-1])
+    except Exception:
+        info["reason"] = "status illisible: " + out[:120]
+        return info
+    info["available"] = True
+    info["mode"] = st.get("mode", "?")
+    info["container"] = st.get("container", "?")
+    info["vnc_open"] = bool(st.get("vnc_open"))
+    if info["mode"] == "container":
+        info["image_built"] = _sh(["podman", "image", "exists",
+                                   "localhost/merlin-game"], timeout=6)[1] == 0
+        if not info["image_built"]:
+            info["reason"] = ("image non buildée — lancer "
+                              "infra/oracle/game/provision-game-user.sh")
+    else:
+        info["image_built"] = True   # mode native : le sysroot est le gate d'entrée
     return info
 
 
