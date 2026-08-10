@@ -2,7 +2,8 @@
 """Creation de la VM A1 par l'agent, via l'API OCI (sans console, sans Cloud Shell).
 
 Reutilise le reseau existant (VCN/subnet du terraform), lance VM.Standard.A1.Flex
-4 OCPU / 24 GB (allocation Always Free — 0 EUR meme en PAYG), Ubuntu 22.04 aarch64,
+4 OCPU / 24 GB (allocation Always Free — 0 EUR meme en PAYG), Oracle Linux 9 aarch64
+par defaut (--os ubuntu22 possible mais SANS Run Command : plugin absent du snap),
 avec le cloud-init du depot (gzip) et le plugin Run Command ACTIVE des la creation
 (c'est notre canal de pilotage : le port 22 sortant est bloque cote agent).
 
@@ -32,13 +33,23 @@ def say(m: str) -> None:
     print(m, flush=True)
 
 
-def newest_ubuntu_arm(compute: ComputeClient, ten: str) -> cm.Image:
+OS_CHOICES = {
+    # Oracle Linux 9 : oracle-cloud-agent natif AVEC le plugin Run Command (notre
+    # canal de pilotage). L'agent snap des images Ubuntu ne l'embarque PAS
+    # (constate le 2026-08-10 : plugin absent de la liste apres 50 min / reboot).
+    "oracle9": ("Oracle Linux", "9"),
+    "ubuntu22": ("Canonical Ubuntu", "22.04"),
+}
+
+
+def newest_image(compute: ComputeClient, ten: str, os_key: str) -> cm.Image:
+    os_name, os_ver = OS_CHOICES[os_key]
     imgs = oci.pagination.list_call_get_all_results(
         compute.list_images, ten,
-        operating_system="Canonical Ubuntu", operating_system_version="22.04",
+        operating_system=os_name, operating_system_version=os_ver,
         shape=SHAPE, sort_by="TIMECREATED", sort_order="DESC").data
     if not imgs:
-        raise SystemExit("[ECHEC] aucune image Ubuntu 22.04 aarch64 pour A1")
+        raise SystemExit(f"[ECHEC] aucune image {os_name} {os_ver} aarch64 pour A1")
     return imgs[0]
 
 
@@ -49,6 +60,7 @@ def main() -> int:
     ap.add_argument("--ocpus", type=float, default=4)
     ap.add_argument("--mem", type=float, default=24)
     ap.add_argument("--boot-gb", type=int, default=100)
+    ap.add_argument("--os", choices=sorted(OS_CHOICES), default="oracle9")
     ap.add_argument("--attempts", type=int, default=3)
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
@@ -64,7 +76,7 @@ def main() -> int:
     if not subnets:
         raise SystemExit("[ECHEC] aucun subnet — le reseau terraform a disparu ?")
     subnet = subnets[0]
-    img = newest_ubuntu_arm(compute, ten)
+    img = newest_image(compute, ten, a.os)
     raw = Path(a.user_data).read_bytes()
     user_data = base64.b64encode(gzip.compress(raw)).decode()
     ssh_pub = Path(a.ssh_pub).read_text().strip()
