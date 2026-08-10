@@ -78,3 +78,33 @@ dans le portail via **noVNC** (vendorisé dans `tools/merlin_studio/static/novnc
   `podman logs merlin-game` ; écran noir → vérifier le fix `renderer/rendering_method`
   desktop dans `project.godot` + `--rendering-driver opengl3` (entrypoint) ; perfs faibles
   → passer en 960x540.
+
+## Déployer TON projet actuel (PC → GitHub → VM)
+
+Le projet qui tourne sur la VM est celui du **repo GitHub** (branche affichée dans le
+readout de l'onglet Jouer : `branche @ commit · GODOT x.y · IMPORT OK`). La VM n'a pas
+accès à ton PC : pour jouer à ta version locale (`C:/Users/PGNK2128/Godot-MCP`), il faut
+la pousser une fois, puis appuyer sur **⟳ Sync** dans le portail.
+
+**Cas 1 — Godot-MCP est un clone du repo GitHub** (le plus probable) :
+```powershell
+cd C:\Users\PGNK2128\Godot-MCP
+git add -A ; git commit -m "wip: état courant du jeu" ; git push origin main
+```
+
+**Cas 2 — Godot-MCP n'est PAS un clone** (pas de dossier .git ou autre remote) :
+```powershell
+cd C:\Users\PGNK2128\Godot-MCP
+git init ; git checkout -b pc-current
+git remote add origin https://github.com/merlingame-netizen/M.E.R.L.I.N.git
+git add -A ; git commit -m "feat: import du projet PC courant"
+git push -u origin pc-current
+```
+Puis, une fois, pointer la VM sur cette branche (Run Command ou demande à l'agent) :
+`echo "GAME_REF=pc-current" >> ~/.config/merlin-game.env`
+
+**Ensuite, à chaque itération** : push depuis le PC → bouton **⟳ Sync** (onglet Jouer)
+→ PLAY. Le Sync fait `fetch + pull --ff-only` puis **ré-importe les assets**
+(`godot --headless --import`) seulement si le commit a changé — 5-15 min au premier
+passage, quasi instantané ensuite. PLAY refuse de démarrer tant que l'import n'a
+jamais été fait (sinon Godot rendrait des placeholders méconnaissables).

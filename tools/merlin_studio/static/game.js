@@ -15,6 +15,23 @@ function readout(msg, isErr) {
   if (el) el.innerHTML = `<span class="${isErr ? 'err' : ''}">${msg}</span>`;
 }
 
+/* Ligne de transparence : QUOI tourne exactement (branche@commit, godot, import). */
+function versionReadout(g) {
+  const el = $('#game-version');
+  if (!el) return;
+  const parts = [
+    `${g.repo_branch || '?'} @ ${g.repo_commit || '?'}`,
+    `GODOT ${g.godot_version || '?'}`,
+    `IMPORT ${g.imported ? 'OK' : '<span class="err">JAMAIS FAIT — SYNC REQUIS</span>'}`,
+  ];
+  if (g.version_warning) parts.push(`<span class="err">⚠ ${g.version_warning}</span>`);
+  el.innerHTML = parts.join(' · ');
+}
+
+async function refreshVersion() {
+  try { versionReadout(await j('/api/game')); } catch (e) {}
+}
+
 function setState(s) {
   state = s;
   const play = $('#btn-play'), stop = $('#btn-stop'), fs = $('#btn-fs');
@@ -124,14 +141,54 @@ function fullscreen() {
   else f.requestFullscreen && f.requestFullscreen();
 }
 
+async function sync() {
+  const btn = $('#btn-sync');
+  btn.disabled = true;
+  readout('SYNC GITHUB → VM…');
+  let job;
+  try {
+    job = await j('/api/launch', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ kind: 'game-sync', params: {} }),
+    });
+  } catch (e) { job = { error: 'réseau' }; }
+  if (job.error) {
+    btn.disabled = false;
+    readout('SYNC REFUSÉE : ' + job.error, true);
+    return;
+  }
+  // Suivi du job (l'import à froid peut prendre 5-15 min).
+  const t0 = Date.now();
+  const timer = setInterval(async () => {
+    let done = null;
+    try {
+      const d = await j('/api/jobs');
+      done = (d.jobs || []).find(x => x.id === job.id && x.status !== 'running');
+    } catch (e) {}
+    const min = Math.floor((Date.now() - t0) / 60000);
+    if (done) {
+      clearInterval(timer);
+      btn.disabled = false;
+      readout(done.status === 'done' ? 'SYNC + IMPORT OK' : `SYNC ÉCHOUÉE (voir Jobs #${job.id})`,
+              done.status !== 'done');
+      refreshVersion();
+    } else {
+      readout(`SYNC + IMPORT EN COURS… (${min} min — long au premier passage)`);
+    }
+  }, 4000);
+}
+
 export async function initGame() {
   $('#btn-play').onclick = play;
   $('#btn-stop').onclick = stop;
+  $('#btn-sync').onclick = sync;
   $('#btn-fs').onclick = fullscreen;
   offMessage('SIGNAL PERDU', 'APPUYER SUR PLAY');
+  setInterval(refreshVersion, 30000);
   // État initial : si le jeu tourne déjà (autre session), proposer la reconnexion.
   try {
     const g = await j('/api/game');
+    versionReadout(g);
     if (!g.available) {
       readout(g.reason || 'PODMAN ABSENT SUR CET HÔTE', true);
       $('#btn-play').disabled = true;

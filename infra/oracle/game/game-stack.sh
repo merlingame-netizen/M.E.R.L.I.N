@@ -122,7 +122,16 @@ stop_native() {
 [ "$GAME_MODE" = "none" ] && {
     echo "FATAL: ni podman ni sysroot — lancer provision-game-user.sh" >&2; exit 1; }
 
-do_start() { if [ "$GAME_MODE" = "container" ]; then start_container; else start_native; fi; }
+require_import() {
+    # Sans .godot/imported, Godot rend des placeholders méconnaissables :
+    # on refuse de démarrer plutôt que d'afficher « un autre jeu ».
+    if [ -z "$(find "$REPO/.godot/imported" -type f -print -quit 2>/dev/null)" ]; then
+        echo "FATAL: assets jamais importés — lancer game-sync (Studio) ou provision-game-user.sh" >&2
+        exit 1
+    fi
+}
+
+do_start() { require_import; if [ "$GAME_MODE" = "container" ]; then start_container; else start_native; fi; }
 do_stop()  { if [ "$GAME_MODE" = "container" ]; then stop_container;  else stop_native;  fi; }
 
 case "${1:-status}" in

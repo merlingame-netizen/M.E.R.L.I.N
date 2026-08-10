@@ -154,6 +154,10 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
     if kind == "game-stop":
         return (["bash", "infra/oracle/game/game-stack.sh", "stop"],
                 "game", "Jeu natif : arrêter")
+    if kind == "game-sync":
+        # Sync GitHub -> VM + réimport des assets si HEAD a changé (long à froid).
+        return (["bash", "infra/oracle/game/game-sync.sh"],
+                "game", "Jeu natif : sync + import")
     if kind == "game-restart":
         res = _s(p.get("res", "1280x720"))
         if res not in GAME_RES:
@@ -180,6 +184,8 @@ def catalog() -> dict:
          "reason": gm.get("reason", ""),
          "params": [{"name": "res", "options": list(GAME_RES)}]},
         {"kind": "game-stop", "label": "Jeu natif : arrêter", "group": "game",
+         "available": gm.get("available", False), "params": []},
+        {"kind": "game-sync", "label": "Jeu natif : sync + import assets", "group": "game",
          "available": gm.get("available", False), "params": []},
         {"kind": "game-restart", "label": "Jeu natif : redémarrer", "group": "game",
          "available": gm.get("available", False) and gm.get("image_built", False),
