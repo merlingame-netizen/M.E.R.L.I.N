@@ -82,6 +82,14 @@
       "desc": "Lit les lacunes documentées du canon, choisit le biome le moins couvert et rédige une carte validée. Propose — n'écrit jamais dans le jeu."
     },
     {
+      "id": "coder-local",
+      "label": "Codeur local (auto/nightly)",
+      "schedule": "*/30 * * * *",
+      "cmd": "a_coder_local.sh",
+      "enabled": true,
+      "desc": "Applique les missions acceptées (before/after, périmètre data+constantes+patchs ≤30 lignes) sur auto/nightly, smoke à l'appui. Suspendu quand le jeu tourne. Le merge reste un tap."
+    },
+    {
       "id": "billing",
       "label": "Facturation Oracle",
       "schedule": "17 * * * *",

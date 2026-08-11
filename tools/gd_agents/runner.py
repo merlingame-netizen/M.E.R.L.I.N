@@ -178,6 +178,15 @@ def run(agent_id: str, dry: bool = False) -> str:
 
     if dry:
         return f"[dry] {title} · palier={plan.get('tier')} · {secs}s"
+
+    # Doctrine « auto sauf stratégique » : une CARTE validée sans erreur est du
+    # contenu à faible risque → intégrée seule au corpus curé. Tout le reste
+    # (équilibrage, design, bugs) reste une décision pour Maxime.
+    if ok_card and cfg["kind"] == "content" and not verdict.get("warnings"):
+        PROP.write(prop)
+        res = PROP.decide(prop["id"], "accept", "auto : contenu validé sans erreur ni avertissement")
+        return (f"carte auto-intégrée {prop['id']} ({res.get('effect', '?')}, "
+                f"palier {plan.get('tier')}, {secs}s)")
     PROP.write(prop)
     return (f"proposition {prop['id']} écrite (palier {plan.get('tier')}, "
             f"{secs}s, confiance {conf})")

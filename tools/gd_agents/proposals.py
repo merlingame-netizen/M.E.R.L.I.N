@@ -29,7 +29,7 @@ MISSIONS = Path.home() / ".cache" / "merlin-missions" / "queue"
 CURATED = "data/ai/training/curated_corpus.jsonl"
 
 SCHEMA = "merlin.proposal/1"
-KINDS = ("balance", "content", "design", "ux", "bug", "infra")
+KINDS = ("balance", "content", "design", "ux", "bug", "infra", "merge")
 ID_RE = re.compile(r"^[0-9a-z][0-9a-z-]{7,63}$")
 MAX_INBOX = 200
 REQUIRED = ("schema", "id", "created", "agent", "kind", "title",
@@ -143,7 +143,32 @@ def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = N
 
     out = {"ok": True, "id": prop["id"], "status": prop["status"], "effect": "aucun"}
     if decision == "accept":
-        if prop["kind"] == "content" and prop.get("payload") is not None:
+        if prop["kind"] == "merge" and str(prop.get("mission_text", "")).startswith("MERGE:"):
+            # LE tap qui fait bouger la branche du jeu : fusion de auto/nightly.
+            import subprocess
+            _, branch, ref = prop["mission_text"].split(":", 2)
+            game = Path.home() / "workspace" / "merlin-game"
+            try:
+                for args in (["fetch", "origin", branch, ref],
+                             ["checkout", ref], ["merge", "--no-ff", "-m",
+                              f"merge(auto): intégration {branch} — {prop['id']}",
+                              f"origin/{branch}"],
+                             ["push", "origin", ref]):
+                    p = subprocess.run(["git", "-C", str(game), *args],
+                                       capture_output=True, text=True, timeout=180)
+                    if p.returncode != 0:
+                        raise RuntimeError(f"git {args[0]}: {(p.stdout + p.stderr)[-140:]}")
+                out["effect"] = f"{branch} fusionnée dans {ref} et poussée — la CI re-testera"
+            except Exception as exc:
+                subprocess.run(["git", "-C", str(game), "merge", "--abort"],
+                               capture_output=True, timeout=60)
+                subprocess.run(["git", "-C", str(game), "checkout", ref],
+                               capture_output=True, timeout=60)
+                prop["status"] = "pending"          # le merge a échoué : on rend la carte
+                (INBOX / src.name).write_text(json.dumps(prop, ensure_ascii=False, indent=1),
+                                              encoding="utf-8")
+                return {"error": f"merge impossible : {exc}"[:200]}
+        elif prop["kind"] == "content" and prop.get("payload") is not None:
             root = repo_root or Path(__file__).resolve().parents[2]
             target = root / CURATED
             target.parent.mkdir(parents=True, exist_ok=True)
