@@ -47,13 +47,24 @@ def main(conv: str, adviser: str) -> int:
         "technique. Si sa demande implique d'ajuster un agent, de confier une tâche "
         "au codeur ou de graver une décision, PROPOSE l'action correspondante avec "
         "une ligne ACTION: (il la validera d'un tap).")
+    # Le chat est INTERACTIF : il tourne sur le modèle rapide (e4b, 10 tok/s),
+    # jamais sur le 12b de triage (4 tok/s) qui ferait patienter des minutes.
+    import os
+    conf = Path.home() / ".config" / "merlin-llm.env"
+    model = "gemma4:e4b-it-qat"
     try:
-        p = subprocess.run(["bash", str(LLM_ASK), "--timeout", "420", "--ctx", "4096"],
-                           input=prompt, capture_output=True, text=True, timeout=480)
+        for line in conf.read_text().splitlines():
+            if "COPILOT_MODEL" in line:
+                model = line.split("=", 1)[1].strip()
+    except Exception:
+        pass
+    try:
+        p = subprocess.run(["bash", str(LLM_ASK), "--model", model,
+                            "--predict", "300", "--timeout", "300", "--ctx", "4096"],
+                           input=prompt, capture_output=True, text=True, timeout=360)
         reply = (p.stdout or "").strip()
-    except Exception as exc:
+    except Exception:
         reply = ""
-        err = str(exc)
     if not reply:
         memory.chat_append(conv, "assistant", who,
                            "(je n'ai pas réussi à répondre — le modèle local était "
