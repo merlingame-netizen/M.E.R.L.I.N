@@ -30,6 +30,22 @@ if [ "$TOTAL" != "null" ] && [ "$POSITIF" = "1" ]; then
     if [ "$(cat "$MARK" 2>/dev/null)" != "$TOTAL" ]; then
         bash "$HERE/notify.sh" urgent "FACTURATION NON NULLE" \
             "Oracle facture $TOTAL ce mois — la VM devait rester à 0. Vérifie le portail."
+        # Compte PAYG : un montant non nul est une DÉCISION urgente, pas un fait divers.
+        "$PY" - <<PYEOF 2>/dev/null || true
+import sys
+sys.path.insert(0, "$HOME/workspace/M.E.R.L.I.N/tools/gd_agents")
+import proposals as P
+P.write(P.make("billing", "infra",
+    "FACTURATION ORACLE NON NULLE : $TOTAL EUR",
+    "La VM est en Pay-As-You-Go et devait rester a 0. Un service facture actuellement.",
+    {"summary": "Identifier le service facture (fenetre Facturation du portail, "
+                "ventilation par service) et le supprimer ou le ramener dans les "
+                "limites Always Free.", "target": "console Oracle"},
+    "Ouvrir la console Oracle -> Billing -> Cost Analysis, identifier le service "
+    "qui facture, et le supprimer ou le redimensionner dans l'offre Always Free.",
+    impact={"axis": "cout", "expected": "retour a 0 EUR", "risk": "high"},
+    confidence=0.99))
+PYEOF
         printf '%s' "$TOTAL" > "$MARK"
     fi
     echo "ALERTE : $TOTAL facturé ce mois (devrait être 0)"
