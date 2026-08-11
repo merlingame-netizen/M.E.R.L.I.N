@@ -50,7 +50,7 @@ if [ ! -f "$CONF" ]; then
 # Réglages LLM locaux (VM ARM 4 cœurs, CPU only) — sourcé par les scripts llm/.
 export OLLAMA_HOST=127.0.0.1:11434
 export OLLAMA_KEEP_ALIVE=30m
-export OLLAMA_NUM_PARALLEL=1
+export OLLAMA_NUM_PARALLEL=2
 export OLLAMA_MAX_LOADED_MODELS=2
 # Modèles par rôle (le bench peut réécrire TRIAGE_MODEL s'il reste sur AUTO)
 export COPILOT_MODEL=qwen2.5:1.5b
