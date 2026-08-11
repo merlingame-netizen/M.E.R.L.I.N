@@ -241,6 +241,28 @@ async function refreshHealth() {
   } catch { }
 }
 
+// ── Journal de bord : les derniers développements, en français, avec preuves ─
+const J_ICON = { commit: '✎', ci: '🛠', proposal: '💡', playtest: '🎮', corpus: '🏭' };
+function agoTxt(m) {
+  return m < 1 ? "à l'instant" : m < 60 ? `il y a ${m} min`
+       : m < 1440 ? `il y a ${Math.round(m / 60)} h` : `il y a ${Math.round(m / 1440)} j`;
+}
+async function refreshJournal() {
+  let d;
+  try { d = await j('/api/journal'); } catch { return; }
+  const ev = d.events || [];
+  $('#journal-meta').textContent = ev.length ? `${ev.length} événement(s) · 48 h` : 'rien encore';
+  if (!ev.length) return;
+  $('#journal-list').innerHTML = ev.map(e => `
+    <div class="jentry">
+      <div class="jhead"><span class="jico">${J_ICON[e.kind] || '·'}</span>
+        <span class="jtitle">${esc(e.title)}</span>
+        <span class="jago">${agoTxt(e.ago_min)}</span></div>
+      ${e.detail ? `<div class="jdetail">${esc(e.detail)}</div>` : ''}
+      ${e.shot ? `<img class="jshot" loading="lazy" src="${esc(e.shot)}" alt="capture">` : ''}
+    </div>`).join('');
+}
+
 // ── Propositions : les agents proposent, l'humain tranche en un tap ──────────
 async function refreshProposals() {
   let d;
@@ -422,7 +444,7 @@ Object.assign(window, { run, runAll, parseProj, genCards, askOllama, renderParam
 
 function tick() {
   refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshContent();
-  refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshProposals(); refreshHealth(); refreshClock();
+  refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshProposals(); refreshHealth(); refreshJournal(); refreshClock();
 }
 const mBtn = $('#btn-mission');
 if (mBtn) mBtn.onclick = async () => {
@@ -441,5 +463,5 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
 loadCat(); tick(); initGame();
 setInterval(refreshClock, 20000);
 setInterval(refreshJobs, 10000);
-setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); refreshProposals(); refreshHealth(); }, 30000);
+setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); refreshProposals(); refreshHealth(); refreshJournal(); }, 30000);
 setInterval(() => { refreshContent(); refreshLlm(); refreshRepo(); }, 60000);

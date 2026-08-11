@@ -175,6 +175,107 @@ def agents() -> dict:
             "smoke": _read_json(state_dir / "smoke-scenes.json", {})}
 
 
+def journal(hours: int = 48, limit: int = 40) -> list[dict]:
+    """Le journal de développement : QUE s'est-il passé, en français, avec preuves.
+
+    Aucune instrumentation nouvelle : on agrège ce que la plateforme trace déjà
+    (commits du jeu, verdicts CI avec captures, propositions et leurs décisions,
+    sessions de playtest, production de corpus). Chaque événement :
+    {t, kind, title, detail, shot} — shot est une URL du portail. Never raises."""
+    state = Path.home() / ".cache" / "merlin-agents"
+    now = time.time()
+    floor = now - hours * 3600
+    ev: list[dict] = []
+
+    def _ts(s: str) -> float:
+        try:
+            return time.mktime(time.strptime(str(s)[:19], "%Y-%m-%dT%H:%M:%S"))
+        except Exception:
+            return 0.0
+
+    # Commits réels sur la branche du jeu — le développement vécu.
+    game = Path.home() / "workspace" / "merlin-game"
+    if (game / ".git").exists():
+        out, rc = _sh(["git", "-C", str(game), "log", f"--since={hours} hours ago",
+                       "--format=%ct|%h|%s", "--all"], timeout=10)
+        if rc == 0:
+            for line in out.splitlines()[:15]:
+                try:
+                    ts, sha, subj = line.split("|", 2)
+                    ev.append({"t": float(ts), "kind": "commit",
+                               "title": f"Commit {sha}", "detail": subj[:120], "shot": ""})
+                except ValueError:
+                    continue
+
+    # Verdicts CI — avec la capture du jeu rendu.
+    try:
+        for line in (state / "ci" / "history.jsonl").read_text(encoding="utf-8").splitlines():
+            c = json.loads(line)
+            t = _ts(c.get("t", ""))
+            if t < floor:
+                continue
+            ok = c.get("scenes_failing") == 0 and c.get("boot_ok")
+            ev.append({"t": t, "kind": "ci",
+                       "title": ("Build VERT " if ok else "Build ROUGE ") + str(c.get("sha", "")),
+                       "detail": (c.get("subject", "") or "")[:110]
+                       + (f" — {c.get('diag', '')[:90]}" if c.get("diag") else ""),
+                       "shot": f"/api/ci/shot/{c['sha']}" if c.get("shot") else ""})
+    except Exception:
+        pass
+
+    # Propositions : naissances et décisions (y compris auto-intégrations).
+    base = Path.home() / ".cache" / "merlin-proposals"
+    for sub, label in (("inbox", "Décision en attente"), ("accepted", "Accepté"),
+                       ("rejected", "Rejeté")):
+        try:
+            for f in (base / sub).glob("*.json"):
+                p = json.loads(f.read_text(encoding="utf-8"))
+                t = _ts(p.get("decided_at") or p.get("created", ""))
+                if t < floor:
+                    continue
+                auto = "auto" in str(p.get("decision_reason", ""))
+                lab = "Auto-intégré" if (sub == "accepted" and auto) else label
+                ev.append({"t": t, "kind": "proposal",
+                           "title": f"{lab} · {p.get('agent', '?')}",
+                           "detail": str(p.get("title", ""))[:120], "shot": ""})
+        except Exception:
+            continue
+
+    # Sessions de playtest — le bot a joué ; on joint la dernière capture.
+    try:
+        shots = sorted((state / "playtest").glob("*.png"))
+        sessions: dict[str, list[Path]] = {}
+        for s in shots:
+            sessions.setdefault(s.name.rsplit("-", 1)[0], []).append(s)
+        for tag, files in sessions.items():
+            t = files[-1].stat().st_mtime
+            if t < floor:
+                continue
+            ev.append({"t": t, "kind": "playtest",
+                       "title": f"Playtest bot : {len(files)} écran(s) joués",
+                       "detail": f"session {tag}",
+                       "shot": f"/api/playtest/shot/{files[-1].name}"})
+    except Exception:
+        pass
+
+    # Usine à corpus — dernier passage + cumul.
+    loops = _read_json(ROOT / "tools" / "autodev" / "status" / "cockpit_loops.json", {})
+    g = loops.get("gen", {})
+    t = _ts(g.get("last", ""))
+    if t >= floor and g.get("accepted") is not None:
+        ev.append({"t": t, "kind": "corpus",
+                   "title": f"Usine : {g.get('accepted', 0)} carte(s) acceptée(s)",
+                   "detail": f"backend {g.get('backend', '?')} · rejets {g.get('rejected', 0)}"
+                             f" · corpus total {g.get('corpus_total', '?')}"
+                             + (f" · sauté : {g['skipped']}" if g.get("skipped") else ""),
+                   "shot": ""})
+
+    ev.sort(key=lambda e: -e["t"])
+    for e in ev:
+        e["ago_min"] = max(0, int((now - e["t"]) // 60))
+    return ev[:limit]
+
+
 def game() -> dict:
     """État du jeu natif (VNC), via game-stack.sh status — source de vérité
     unique pour les deux modes (container podman / native sysroot). Never raises."""

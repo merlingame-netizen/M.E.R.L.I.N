@@ -1,14 +1,16 @@
-/* Service worker MERLIN OS — volontairement MINIMAL.
-   Cache-first sur les assets statiques (offline shell + démarrage instantané),
-   réseau pur pour tout le reste : /api, /websockify et la page elle-même ne
-   sont JAMAIS interceptés — un portail de pilotage ne doit rien montrer de
-   périmé, et le flux VNC ne supporte aucun intermédiaire. */
-const VERSION = 'merlin-os-v1';
-const ASSETS = ['/static/studio.css', '/static/studio.js', '/static/game.js',
-                '/static/icon-192.png', '/static/icon-512.png'];
+/* Service worker MERLIN OS — v2.
+   LEÇON (bug réel) : cache-first sur du code non fingerprinté a servi un
+   studio.js périmé après déploiement — l'onglet Décider restait invisible.
+   Désormais : NETWORK-FIRST pour le code et le CSS (la VM est proche, et le
+   cache ne sert qu'en secours hors-ligne) ; cache-first seulement pour ce qui
+   ne change jamais (icônes, noVNC vendorisé). /api, la page et le VNC ne sont
+   JAMAIS interceptés. */
+const VERSION = 'merlin-os-v2';
+const PRECACHE = ['/static/icon-192.png', '/static/icon-512.png'];
+const IMMUTABLE = (p) => p.startsWith('/vendor/') || p.startsWith('/static/icon-');
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -21,11 +23,20 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   if (!url.pathname.startsWith('/static/') && !url.pathname.startsWith('/vendor/')) return;
-  e.respondWith(
-    caches.match(e.request).then((hit) => hit ||
+
+  if (IMMUTABLE(url.pathname)) {
+    e.respondWith(caches.match(e.request).then((hit) => hit ||
       fetch(e.request).then((res) => {
         if (res.ok) { const cp = res.clone(); caches.open(VERSION).then((c) => c.put(e.request, cp)); }
         return res;
-      }))
+      })));
+    return;
+  }
+  // Code & CSS : le réseau d'abord — le cache n'est qu'un secours hors-ligne.
+  e.respondWith(
+    fetch(e.request).then((res) => {
+      if (res.ok) { const cp = res.clone(); caches.open(VERSION).then((c) => c.put(e.request, cp)); }
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });

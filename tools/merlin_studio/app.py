@@ -340,6 +340,23 @@ def build_app() -> Flask:
         resp.headers["Service-Worker-Allowed"] = "/"
         return resp
 
+    # ── journal de développement : la timeline agrégée, avec preuves ─────────
+    @app.route("/api/journal")
+    def api_journal():
+        try:
+            return jsonify({"events": probes.journal()})
+        except Exception as exc:
+            return jsonify({"events": [], "error": str(exc)[:200]})
+
+    # Captures du playtest bot (nom strict : pas de traversée possible).
+    @app.route("/api/playtest/shot/<name>")
+    def api_playtest_shot(name: str):
+        import re as _re
+        if not _re.fullmatch(r"[0-9]{8}-[0-9]{4}[0-9a-z-]{0,16}\.png", name):
+            return Response("bad name\n", 400)
+        return send_from_directory(str(Path.home() / ".cache" / "merlin-agents" / "playtest"),
+                                   name, max_age=3600)
+
     # Vignettes CI (sha court hexa uniquement — pas de traversée possible).
     @app.route("/api/ci/shot/<sha>")
     def api_ci_shot(sha: str):
