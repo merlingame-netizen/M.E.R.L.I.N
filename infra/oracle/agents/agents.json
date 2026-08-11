@@ -90,6 +90,14 @@
       "desc": "Applique les missions acceptées (before/after, périmètre data+constantes+patchs ≤30 lignes) sur auto/nightly, smoke à l'appui. Suspendu quand le jeu tourne. Le merge reste un tap."
     },
     {
+      "id": "corpus-night",
+      "label": "Usine à corpus (Gemma)",
+      "schedule": "10 */1 * * *",
+      "cmd": "a_corpus_night.sh",
+      "enabled": true,
+      "desc": "Génère des cartes Gemma 4 contraintes par schéma, filtrées par scenario_validator. Rejets journalisés (auto_rejects). Cède la place au jeu, 35 min max par passage."
+    },
+    {
       "id": "billing",
       "label": "Facturation Oracle",
       "schedule": "17 * * * *",

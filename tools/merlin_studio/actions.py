@@ -99,7 +99,7 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
     if kind == "content-gen":
         n = str(max(1, min(int(p.get("count", 12) or 12), 200)))
         backend = _s(p.get("backend", "template"))
-        backend = backend if backend in ("template", "ollama", "workers-ai") else "template"
+        backend = backend if backend in ("template", "ollama", "workers-ai", "gemma") else "template"
         return ([PY, "tools/cockpit/control_loops.py", "gen", "--count", n,
                  "--backend", backend], "content", f"Génération {n} ({backend})")
     if kind == "content-validate":

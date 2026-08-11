@@ -153,7 +153,91 @@ def _gen_workers_ai(canon, rng) -> dict | None:
         return None
 
 
-BACKENDS = {"template": _gen_template, "ollama": _gen_ollama, "workers-ai": _gen_workers_ai}
+GOLD = ROOT / "data" / "ai" / "scenario_golden_prose.json"
+REJECTS = ROOT / "data" / "ai" / "training" / "auto_rejects.jsonl"
+
+
+def _card_schema(canon) -> dict:
+    """Contrainte de DÉCODAGE (pas un vœu de prompt) : Ollama force ce schéma."""
+    factions = [f.get("id", "") for f in canon.get("factions", [])] or \
+        ["druides", "anciens", "korrigans", "niamh", "ankou"]
+    return {
+        "type": "object",
+        "properties": {
+            "text": {"type": "string"},
+            "biome": {"type": "string"},
+            "options": {
+                "type": "array", "minItems": 3, "maxItems": 3,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "label": {"type": "string"},
+                        "verb": {"type": "string"},
+                        "effects": {
+                            "type": "array", "maxItems": 3,
+                            "items": {"type": "object", "properties": {
+                                "type": {"type": "string"},
+                                "faction": {"type": "string", "enum": factions},
+                                "amount": {"type": "integer"}},
+                                "required": ["type"]}},
+                    },
+                    "required": ["label", "verb"],
+                },
+            },
+        },
+        "required": ["text", "options"],
+    }
+
+
+def _gen_gemma(canon, rng, recent=None) -> dict | None:
+    """Backend Gemma 4 local : schéma imposé au décodage + ancrage canon serré.
+
+    Trois choix délibérés : (1) seul le champ lexical TIRÉ est fourni (~6-8
+    verbes, pas 45 — le contexte est précieux à 8 tok/s de lecture) ; (2) deux
+    exemples d'or humains donnent le ton ; (3) les derniers résumés acceptés
+    sont cités en « ne répète pas » — exactement ce que le validateur mesure.
+    """
+    url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434") + "/api/generate"
+    model = os.environ.get("OLLAMA_MODEL", "gemma4:e4b-it-qat")
+    sc = canon.get("scenario_constraints", {})
+    vbf = {k: v for k, v in (sc.get("verbs_by_field") or {}).items() if v}
+    field = rng.choice(list(vbf)) if vbf else "esprit"
+    verbs = vbf.get(field, ["observer", "parler", "fuir"])[:8]
+    biome = rng.choice(canon.get("biomes", [{"name": "Brocéliande"}]))
+    gold_cards = list(_load_json(GOLD, {}).get("cards", {}).values())
+    examples = ""
+    for g in rng.sample(gold_cards, min(2, len(gold_cards))):
+        opts = " / ".join(o.get("label", "") for o in g.get("options", [])[:3])
+        examples += f"- « {g.get('summary', '')} » (options : {opts})\n"
+    avoid = "\n".join(f"- {t[:90]}" for t in (recent or [])[-5:])
+    prompt = (
+        "Tu écris UNE carte narrative du jeu MERLIN (Bretagne celtique, ton druidique, "
+        "français uniquement, aucun mot moderne).\n"
+        f"Biome : {biome.get('name', '?')}. Champ lexical imposé : {field} — verbes "
+        f"AUTORISÉS (un par option, à l'infinitif) : {', '.join(verbs)}.\n"
+        "text : 2 à 4 phrases (40-120 mots), concret et sensoriel. Exactement 3 options.\n"
+        "effects facultatifs : ADD_REPUTATION (faction druides/anciens/korrigans/niamh/"
+        "ankou, -20..20), HEAL_LIFE (≤18), DAMAGE_LIFE (≤15).\n"
+        f"Ton attendu (exemples humains) :\n{examples}"
+        + (f"NE répète PAS ces situations récentes :\n{avoid}\n" if avoid else ""))
+    try:
+        out = _http_json(url, {"model": model, "prompt": prompt, "stream": False,
+                               "format": _card_schema(canon),
+                               "keep_alive": os.environ.get("OLLAMA_KEEP_ALIVE", "30m"),
+                               "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
+                                           "num_ctx": 4096, "temperature": 0.85,
+                                           "num_predict": 280}},
+                         timeout=600)
+        card = _extract_card(out.get("response", ""))
+        if card is not None:
+            card.setdefault("biome", biome.get("id", biome.get("name", "")))
+        return card
+    except Exception:
+        return None
+
+
+BACKENDS = {"template": _gen_template, "ollama": _gen_ollama,
+            "workers-ai": _gen_workers_ai, "gemma": _gen_gemma}
 
 
 def cmd_gen(args):
@@ -161,19 +245,50 @@ def cmd_gen(args):
     rng = random.Random()
     backend = args.backend if args.backend in BACKENDS else "template"
     gen = BACKENDS[backend]
+
+    # Les backends LLM cèdent la place au jeu (doctrine « 24/7 sauf jeu ») et
+    # exigent de la marge RAM — le template, lui, tourne toujours.
+    if backend in ("gemma", "ollama"):
+        try:
+            sys.path.insert(0, str(ROOT / "tools" / "gd_agents"))
+            import gates
+            ok, why = gates.chain_allowed()
+            if not ok:
+                _log_loop("gen", {"backend": backend, "skipped": why})
+                print(json.dumps({"loop": "gen", "skipped": why}, ensure_ascii=False))
+                return
+        except Exception:
+            pass
+        try:
+            mem_kb = int(next(l for l in open("/proc/meminfo") if "MemAvailable" in l).split()[1])
+            if mem_kb < 8 * 1024 * 1024:
+                why = f"RAM insuffisante ({mem_kb // 1024} Mo)"
+                _log_loop("gen", {"backend": backend, "skipped": why})
+                print(json.dumps({"loop": "gen", "skipped": why}, ensure_ascii=False))
+                return
+        except Exception:
+            pass
+
+    deadline = time.time() + args.max_secs if args.max_secs else None
     accepted, rejected, recent = 0, 0, []
     CORPUS.parent.mkdir(parents=True, exist_ok=True)
-    with CORPUS.open("a", encoding="utf-8") as f:
+    with CORPUS.open("a", encoding="utf-8") as f, REJECTS.open("a", encoding="utf-8") as rj:
         for _ in range(max(1, args.count)):
-            card = gen(canon, rng)
+            if deadline and time.time() > deadline:
+                break
+            card = gen(canon, rng, recent[-5:]) if backend == "gemma" else gen(canon, rng)
             if backend != "template" and card is None:
                 card = _gen_template(canon, rng)  # graceful fallback keeps the loop alive
                 backend_used = "template(fallback)"
             else:
                 backend_used = backend
-            errs, _w = sv.validate_card(card, recent_texts=recent[-5:])
+            errs, warns = sv.validate_card(card, recent_texts=recent[-5:])
             if errs:
                 rejected += 1
+                # Le gisement : les rejets disent EXACTEMENT ce que le modèle rate.
+                rj.write(json.dumps({"card": card, "errors": [str(e) for e in errs[:6]],
+                                     "backend": backend_used, "ts": _now()},
+                                    ensure_ascii=False) + "\n")
                 continue
             body = card.get("text") or card.get("summary") or ""
             if body:
@@ -234,7 +349,7 @@ def cmd_status(args):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="MERLIN cockpit autonomous loops")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    g = sub.add_parser("gen"); g.add_argument("--count", type=int, default=12); g.add_argument("--backend", default="template")
+    g = sub.add_parser("gen"); g.add_argument("--count", type=int, default=12); g.add_argument("--backend", default="template"); g.add_argument("--max-secs", type=int, default=0, help="budget temps (0 = illimité) — à ~1 tok/s, boxer par le temps, pas par le nombre")
     sub.add_parser("validate")
     t = sub.add_parser("train"); t.add_argument("--brain", default="narrator")
     sub.add_parser("status")
