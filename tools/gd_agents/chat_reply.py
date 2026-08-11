@@ -16,8 +16,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import memory       # noqa: E402
-import prompts      # noqa: E402
+import chat_actions  # noqa: E402
+import memory        # noqa: E402
+import prompts       # noqa: E402
 
 LLM_ASK = HERE.parents[1] / "infra" / "oracle" / "llm" / "llm-ask.sh"
 
@@ -40,11 +41,12 @@ def main(conv: str, adviser: str) -> int:
         f"{persona}\n\n"
         f"MÉMOIRE DU DESIGN RETENU (ne contredis jamais ces décisions) :\n"
         f"{memory.digest(700)}\n\n"
+        f"{chat_actions.catalogue_for_prompt()}\n\n"
         f"CONVERSATION :\n{hist}\n\n"
         "Réponds à Maxime en FRANÇAIS, 2 à 5 phrases, concret et sans jargon "
-        "technique. Si la conversation fait émerger une règle de design à retenir, "
-        "termine par une ligne exactement de la forme : "
-        "MEMORISER: <la règle en une phrase>")
+        "technique. Si sa demande implique d'ajuster un agent, de confier une tâche "
+        "au codeur ou de graver une décision, PROPOSE l'action correspondante avec "
+        "une ligne ACTION: (il la validera d'un tap).")
     try:
         p = subprocess.run(["bash", str(LLM_ASK), "--timeout", "420", "--ctx", "4096"],
                            input=prompt, capture_output=True, text=True, timeout=480)
@@ -65,8 +67,10 @@ def main(conv: str, adviser: str) -> int:
             memory.add("règle", rule, f"issue de la conversation {conv}",
                        source=f"chat/{who}")
             reply = head.strip() + f"\n\n📌 J'ai gravé dans la mémoire : « {rule} »"
-    memory.chat_append(conv, "assistant", who, reply)
-    print(f"réponse écrite ({len(reply)} car.)")
+    # Actions proposées : extraites du texte, validées, attachées au message.
+    reply, actions = chat_actions.parse(reply)
+    memory.chat_append(conv, "assistant", who, reply, actions=actions)
+    print(f"réponse écrite ({len(reply)} car., {len(actions)} action(s) proposée(s))")
     return 0
 
 

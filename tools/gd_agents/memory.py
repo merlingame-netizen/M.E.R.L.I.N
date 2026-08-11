@@ -68,11 +68,39 @@ def digest(max_chars: int = 900) -> str:
 
 
 # ── conversations du chat interne ────────────────────────────────────────────
-def chat_append(conv: str, role: str, who: str, text: str) -> None:
+def chat_append(conv: str, role: str, who: str, text: str, actions=None) -> None:
     CHATS.mkdir(parents=True, exist_ok=True)
+    row = {"t": _now(), "role": role, "who": who, "text": str(text)[:4000]}
+    if actions:
+        row["actions"] = actions          # boutons proposés par le conseiller
     with (CHATS / f"{conv}.jsonl").open("a", encoding="utf-8") as f:
-        f.write(json.dumps({"t": _now(), "role": role, "who": who,
-                            "text": str(text)[:4000]}, ensure_ascii=False) + "\n")
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def chat_mark_action_done(conv: str, action_id: str) -> None:
+    """Marque une action exécutée (append-only : on réécrit le fichier)."""
+    try:
+        rows = [json.loads(x) for x in
+                (CHATS / f"{conv}.jsonl").read_text(encoding="utf-8").splitlines()
+                if x.strip()]
+    except Exception:
+        return
+    for r in rows:
+        for a in r.get("actions", []):
+            if a.get("id") == action_id:
+                a["done"] = True
+    (CHATS / f"{conv}.jsonl").write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n",
+        encoding="utf-8")
+
+
+def chat_find_action(conv: str, action_id: str) -> dict | None:
+    """Retrouve une action par id — le backend ne fait JAMAIS confiance au front."""
+    for r in chat_read(conv, limit=200):
+        for a in r.get("actions", []):
+            if a.get("id") == action_id:
+                return a
+    return None
 
 
 def chat_read(conv: str, limit: int = 40) -> list[dict]:

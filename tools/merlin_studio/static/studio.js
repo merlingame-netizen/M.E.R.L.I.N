@@ -246,12 +246,29 @@ async function refreshConvs() {
   } catch { }
 }
 function talkRender(msgs) {
-  $('#talk-thread').innerHTML = msgs.map(m => `
-    <div class="msg ${m.role === 'user' ? 'me' : 'them'}">
+  $('#talk-thread').innerHTML = msgs.map(m => {
+    const acts = (m.actions || []).map(a => a.done
+      ? `<span class="act done">✓ ${esc(a.label)}</span>`
+      : `<button class="act" data-aid="${esc(a.id)}">${esc(a.label)}</button>`).join('');
+    return `<div class="msg ${m.role === 'user' ? 'me' : 'them'}">
       <div class="mwho">${m.role === 'user' ? 'Toi' : esc(WHO_FR[m.who] || m.who)}</div>
-      <div class="mtext">${esc(m.text)}</div></div>`).join('')
-    || '<div class="mut">…</div>';
+      <div class="mtext">${esc(m.text)}</div>
+      ${acts ? `<div class="acts">${acts}</div>` : ''}</div>`;
+  }).join('') || '<div class="mut">…</div>';
+  $('#talk-thread').querySelectorAll('button.act').forEach(b =>
+    b.onclick = () => doChatAction(b.dataset.aid, b));
   $('#talk-thread').scrollTop = $('#talk-thread').scrollHeight;
+}
+async function doChatAction(aid, btn) {
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const r = await j('/api/chat/action', { method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ conv: TALK_CONV, action_id: aid }) });
+    if (r.error) { btn.disabled = false; alert('✗ ' + r.error); return; }
+    await talkPoll();
+    refreshAgents();
+  } catch { btn.disabled = false; }
 }
 async function talkPoll() {
   if (!TALK_CONV) return;

@@ -471,6 +471,32 @@ Fenêtre ouverte encore {left} min.</p>
         M = _gd("memory")
         return jsonify({"conv": conv, "messages": M.chat_read(conv)})
 
+    @app.route("/api/chat/action", methods=["POST"])
+    def api_chat_action():
+        # Le front n'envoie qu'un id ; le backend relit l'action depuis le
+        # message stocké et la re-valide. Impossible de forger une action.
+        import re as _re
+        body = request.get_json(silent=True) or {}
+        conv = str(body.get("conv", ""))
+        aid = str(body.get("action_id", ""))
+        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv) or not _re.fullmatch(r"[0-9a-f]{10}", aid):
+            return jsonify({"error": "requête invalide"}), 400
+        try:
+            M = _gd("memory")
+            CA = _gd("chat_actions")
+            action = M.chat_find_action(conv, aid)
+            if not action:
+                return jsonify({"error": "action introuvable"}), 404
+            if action.get("done"):
+                return jsonify({"ok": True, "effect": "déjà fait"})
+            res = CA.execute(action)
+            if res.get("ok"):
+                M.chat_mark_action_done(conv, aid)
+                M.chat_append(conv, "assistant", "studio", "✓ " + res["effect"])
+            return jsonify(res), (200 if res.get("ok") else 400)
+        except Exception as exc:
+            return jsonify({"error": str(exc)[:150]}), 500
+
     @app.route("/api/chat", methods=["POST"])
     def api_chat_send():
         import re as _re

@@ -325,3 +325,12 @@ code { color: var(--blue); }
 .msg.them { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); }
 .mwho { font-size: 11px; color: var(--dim); margin-bottom: 3px; }
 .mtext { font-size: 14px; line-height: 1.45; white-space: pre-wrap; }
+
+/* ── Actions du chat de contrôle : boutons de confirmation sous les messages ── */
+.acts { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.act { min-height: 44px; padding: 0 14px; border-radius: 8px; cursor: pointer;
+  font: 600 13px ui-monospace, monospace; text-align: left;
+  background: var(--gold); color: var(--deep); border: 0; }
+.act:disabled { opacity: .5; }
+.act.done { display: inline-block; background: transparent; color: var(--green);
+  border: 1px solid var(--green); line-height: 42px; }
