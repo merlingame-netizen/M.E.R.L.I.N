@@ -103,8 +103,9 @@ start_native() {
         echo "FATAL: sysroot absent — lancer provision-game-user.sh" >&2; exit 1; }
     stop_native
     mkdir -p "$RUNDIR"
+    # native-inner.sh vit avec l'OUTILLAGE (SCRIPT_DIR), pas dans le dépôt du jeu.
     setsid unshare --user --map-root-user --mount \
-        bash "$GAME_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
+        bash "$SCRIPT_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
     echo $! > "$RUNDIR/inner.pid"
     wait_vnc 'pid_alive "$(cat "$RUNDIR/inner.pid" 2>/dev/null)"' \
              'tail -30 "$RUNDIR/inner.log" "$RUNDIR/xvfb.log" "$RUNDIR/godot.log" 2>/dev/null'
