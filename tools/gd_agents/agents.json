@@ -1,0 +1,18 @@
+{
+  "_comment": "Contrats de tâche des agents de game design. `shape` + `out_tokens` + `deadline_s` pilotent le routeur (tools/gd_agents/router.py) ; `card` est la fiche .claude/agents/*.md compilée en prompt système par prompts.py. Un agent ne décrit JAMAIS sa difficulté : il décrit sa sortie.",
+  "version": "1.0",
+  "agents": [
+    {
+      "id": "gd-content-gap",
+      "label": "Comble une lacune de contenu",
+      "card": ".claude/agents/content_card_writer.md",
+      "analyzer": "content_gap",
+      "shape": "compose",
+      "out_tokens": 320,
+      "deadline_s": 420,
+      "evidence_tokens": 500,
+      "kind": "content",
+      "desc": "Lit les `gaps` documentés du canon, choisit le biome le moins couvert, et rédige UNE carte conforme au schéma. La carte est validée par scenario_validator avant d'être proposée."
+    }
+  ]
+}
