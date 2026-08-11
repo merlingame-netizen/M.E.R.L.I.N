@@ -29,6 +29,11 @@ async function token() {
   return (await ctxRef.secrets.get(SECRET_KEY)) || "";
 }
 
+const MFA_KEY = "merlinStudio.mfaDeviceToken";
+async function mfaToken() {
+  return (await ctxRef.secrets.get(MFA_KEY)) || "";
+}
+
 async function request(path, { method = "GET", body = null, raw = false, timeout = 30000 } = {}) {
   const base = (cfg().get("url") || "").replace(/\/+$/, "");
   if (!base) {
@@ -44,6 +49,8 @@ async function request(path, { method = "GET", body = null, raw = false, timeout
     const user = cfg().get("user") || "merlin";
     headers.Authorization = "Basic " + Buffer.from(`${user}:${tok}`).toString("base64");
   }
+  const mfa = await mfaToken();
+  if (mfa) headers["X-Merlin-MFA"] = mfa;
   let payload = null;
   if (body) {
     payload = JSON.stringify(body);
@@ -57,7 +64,10 @@ async function request(path, { method = "GET", body = null, raw = false, timeout
         let data = "";
         res.on("data", (c) => (data += c));
         res.on("end", () => {
-          if (res.statusCode === 401) return reject(new Error("401 — token invalide ou manquant (MERLIN: Configurer la connexion)"));
+          if (res.statusCode === 401) {
+            if (/mfa_required/.test(data)) return reject(new Error("401 — second facteur requis (« MERLIN: Vérifier MFA »)"));
+            return reject(new Error("401 — token invalide ou manquant (MERLIN: Configurer la connexion)"));
+          }
           if (raw) return resolve(data);
           try {
             resolve(JSON.parse(data || "{}"));
@@ -257,6 +267,74 @@ async function updateStatus() {
   statusBar.show();
 }
 
+// ── Portail intégré : proxy local qui injecte l'auth (HTTP + WebSocket VNC) ──
+// VS Code ne peut ni afficher la popup Basic-auth dans un webview, ni poser
+// nos en-têtes sur un iframe distant : on sert donc le portail via
+// 127.0.0.1:<port aléatoire>, chaque requête sortante recevant Authorization
+// et X-Merlin-MFA. L'upgrade WebSocket (/websockify) est relayé à la main.
+let portalServer = null;
+let portalPort = 0;
+
+async function portalHeaders() {
+  const tok = await token();
+  const user = cfg().get("user") || "merlin";
+  const h = {};
+  if (tok) h.Authorization = "Basic " + Buffer.from(`${user}:${tok}`).toString("base64");
+  const mfa = await mfaToken();
+  if (mfa) h["X-Merlin-MFA"] = mfa;
+  return h;
+}
+
+async function startPortalProxy() {
+  const base = (cfg().get("url") || "").replace(/\/+$/, "");
+  if (!base) throw Object.assign(new Error("URL du studio non configurée"), { notConfigured: true });
+  const target = new URL(base);
+  const tls = target.protocol === "https:";
+  const tPort = target.port || (tls ? 443 : 80);
+  if (portalServer) return portalPort;
+
+  const net = require("net");
+  const tlsMod = require("tls");
+  const inject = await portalHeaders();
+
+  portalServer = http.createServer(async (req, res) => {
+    const headers = { ...req.headers, ...(await portalHeaders()), host: target.hostname };
+    const lib = tls ? https : http;
+    const up = lib.request(
+      { hostname: target.hostname, port: tPort, path: req.url, method: req.method, headers },
+      (ur) => { res.writeHead(ur.statusCode, ur.headers); ur.pipe(res); }
+    );
+    up.on("error", () => { try { res.writeHead(502); res.end("VM injoignable"); } catch {} });
+    req.pipe(up);
+  });
+
+  // WebSocket VNC : on rejoue l'handshake HTTP côté VM avec nos en-têtes,
+  // puis on raccorde les deux sockets — le flux binaire passe tel quel.
+  portalServer.on("upgrade", (req, sock) => {
+    const remote = tls
+      ? tlsMod.connect({ host: target.hostname, port: tPort, servername: target.hostname })
+      : net.connect({ host: target.hostname, port: tPort });
+    remote.on(tls ? "secureConnect" : "connect", () => {
+      const lines = [`GET ${req.url} HTTP/1.1`, `Host: ${target.hostname}`];
+      for (const [k, v] of Object.entries(req.headers)) {
+        if (!/^(host|authorization|x-merlin-mfa)$/i.test(k)) lines.push(`${k}: ${v}`);
+      }
+      for (const [k, v] of Object.entries(inject)) lines.push(`${k}: ${v}`);
+      remote.write(lines.join("\r\n") + "\r\n\r\n");
+      remote.pipe(sock);
+      sock.pipe(remote);
+    });
+    const drop = () => { try { sock.destroy(); remote.destroy(); } catch {} };
+    remote.on("error", drop); sock.on("error", drop);
+  });
+
+  await new Promise((ok, ko) => {
+    portalServer.listen(0, "127.0.0.1", () => { portalPort = portalServer.address().port; ok(); });
+    portalServer.on("error", ko);
+  });
+  return portalPort;
+}
+
 // ── Activation ───────────────────────────────────────────────────────────────
 function activate(context) {
   ctxRef = context;
@@ -275,6 +353,30 @@ function activate(context) {
   );
 
   const reg = (id, fn) => context.subscriptions.push(vscode.commands.registerCommand(id, fn));
+
+  reg("merlinStudio.openPortal", async () => {
+    try {
+      const port = await startPortalProxy();
+      await vscode.commands.executeCommand("simpleBrowser.show", `http://127.0.0.1:${port}/`);
+    } catch (e) { fail(e); }
+  });
+
+  reg("merlinStudio.mfaVerify", async () => {
+    const code = await vscode.window.showInputBox({
+      prompt: "Code MFA à 6 chiffres (application d'authentification)",
+      ignoreFocusOut: true, placeHolder: "123456",
+    });
+    if (!code) return;
+    try {
+      const r = await request("/api/mfa/verify", { method: "POST", body: { code: code.trim(), device: true } });
+      if (r.device_token) {
+        await ctxRef.secrets.store(MFA_KEY, r.device_token);
+        vscode.window.showInformationMessage("MFA vérifiée — extension enrôlée pour 90 jours.");
+      }
+    } catch (e) {
+      vscode.window.showErrorMessage("Code refusé — vérifie l'heure de ton téléphone et réessaie.");
+    }
+  });
 
   reg("merlinStudio.configure", async () => {
     const url = await vscode.window.showInputBox({
@@ -491,6 +593,7 @@ function activate(context) {
 }
 
 function deactivate() {
+  if (portalServer) { try { portalServer.close(); } catch {} portalServer = null; }
   if (timer) clearInterval(timer);
 }
 

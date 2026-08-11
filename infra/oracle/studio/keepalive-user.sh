@@ -25,12 +25,29 @@ if ! curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1; then
     >> "$LOGDIR/studio.log" 2>&1 &
 fi
 
-# ── tunnel Cloudflare quick (HTTPS public, aucun port entrant) ─────────────
-if ! pgrep -u "$(id -un)" -f "cloudflared tunnel" >/dev/null 2>&1; then
+# ── tunnel Cloudflare (HTTPS public, aucun port entrant) ───────────────────
+# Deux modes :
+#   NOMMÉ (URL stable, ex. studio.mondomaine.fr) — si ~/.config/merlin-tunnel.env
+#     contient TUNNEL_TOKEN (créé dans Cloudflare Zero Trust → Tunnels) et
+#     TUNNEL_HOSTNAME. Le hostname public → http://127.0.0.1:8790 se règle
+#     dans le dashboard Cloudflare du tunnel.
+#   QUICK (URL aléatoire *.trycloudflare.com, changeante) — repli sans config.
+TUNF="$HOME/.config/merlin-tunnel.env"
+[ -f "$TUNF" ] && . "$TUNF"
+if ! pgrep -u "$(id -un)" -f "cloudflared.*tunnel" >/dev/null 2>&1; then
   : > "$LOGDIR/tunnel.log"
-  nohup "$HOME/bin/cloudflared" tunnel --no-autoupdate --url "http://127.0.0.1:$PORT" \
-    >> "$LOGDIR/tunnel.log" 2>&1 &
+  if [ -n "${TUNNEL_TOKEN:-}" ]; then
+    nohup "$HOME/bin/cloudflared" tunnel --no-autoupdate run --token "$TUNNEL_TOKEN" \
+      >> "$LOGDIR/tunnel.log" 2>&1 &
+  else
+    nohup "$HOME/bin/cloudflared" tunnel --no-autoupdate --url "http://127.0.0.1:$PORT" \
+      >> "$LOGDIR/tunnel.log" 2>&1 &
+  fi
 fi
-URL="$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$LOGDIR/tunnel.log" 2>/dev/null | tail -1)"
-[ -n "$URL" ] && printf '%s\n' "$URL" > "$HOME/tunnel-url.txt"
+if [ -n "${TUNNEL_TOKEN:-}" ]; then
+  [ -n "${TUNNEL_HOSTNAME:-}" ] && printf 'https://%s\n' "$TUNNEL_HOSTNAME" > "$HOME/tunnel-url.txt"
+else
+  URL="$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' "$LOGDIR/tunnel.log" 2>/dev/null | tail -1)"
+  [ -n "$URL" ] && printf '%s\n' "$URL" > "$HOME/tunnel-url.txt"
+fi
 exit 0

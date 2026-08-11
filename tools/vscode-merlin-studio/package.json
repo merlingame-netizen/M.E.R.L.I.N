@@ -51,6 +51,16 @@
     },
     "commands": [
       {
+        "command": "merlinStudio.openPortal",
+        "title": "MERLIN: Ouvrir le portail VM (dans VS Code)",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "merlinStudio.mfaVerify",
+        "title": "MERLIN: Vérifier MFA (second facteur)",
+        "icon": "$(shield)"
+      },
+      {
         "command": "merlinStudio.configure",
         "title": "MERLIN: Configurer la connexion (URL + token)",
         "icon": "$(gear)"

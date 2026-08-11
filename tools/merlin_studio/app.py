@@ -81,6 +81,79 @@ def _auth_ok() -> bool:
     return hmac.compare_digest(auth.password, token)
 
 
+# ── MFA TOTP (2e facteur DEVANT la VM — activée dès que le fichier existe) ──
+# ~/.config/merlin-mfa.env : MFA_SECRET (base32, app authenticator)
+#                            MFA_SIGN_KEY (signe cookies + jetons d'appareil)
+def _mfa_conf() -> dict:
+    conf = {}
+    try:
+        for line in (Path.home() / ".config" / "merlin-mfa.env").read_text().splitlines():
+            k, _, v = line.partition("=")
+            if k.strip() and not k.startswith("#"):
+                conf[k.strip()] = v.strip()
+    except Exception:
+        pass
+    return conf
+
+
+def _totp_now(secret_b32: str, at: int | None = None, step: int = 30) -> str:
+    import base64
+    import hashlib
+    import struct
+    key = base64.b32decode(secret_b32.upper() + "=" * (-len(secret_b32) % 8))
+    counter = int((at or time.time()) // step)
+    digest = hmac.new(key, struct.pack(">Q", counter), hashlib.sha1).digest()
+    off = digest[-1] & 0x0F
+    code = (struct.unpack(">I", digest[off:off + 4])[0] & 0x7FFFFFFF) % 1_000_000
+    return f"{code:06d}"
+
+
+def _totp_ok(secret_b32: str, code: str) -> bool:
+    code = (code or "").strip().replace(" ", "")
+    now = int(time.time())
+    return any(hmac.compare_digest(_totp_now(secret_b32, now + drift), code)
+               for drift in (-30, 0, 30))
+
+
+def _mfa_token(sign_key: str, days: int) -> str:
+    import hashlib
+    exp = str(int(time.time()) + days * 86400)
+    sig = hmac.new(sign_key.encode(), exp.encode(), hashlib.sha256).hexdigest()
+    return f"{exp}.{sig}"
+
+
+def _mfa_token_ok(sign_key: str, token: str | None) -> bool:
+    import hashlib
+    if not token or "." not in token:
+        return False
+    exp, _, sig = token.partition(".")
+    if not exp.isdigit() or int(exp) < time.time():
+        return False
+    want = hmac.new(sign_key.encode(), exp.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(sig, want)
+
+
+_MFA_PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1E1A14"><title>MERLIN OS — vérification</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#14100C;
+color:#E8DCC0;font:16px/1.5 ui-monospace,monospace}form{background:#241E16;border:1px solid #4A3B28;
+border-radius:12px;padding:28px 32px;text-align:center;max-width:320px}h1{font-size:17px;margin:0 0 4px;color:#C9A24B}
+p{margin:0 0 16px;color:#9C8C6A;font-size:13px}input{width:100%;box-sizing:border-box;font:28px ui-monospace,monospace;
+letter-spacing:8px;text-align:center;background:#1E1A14;border:1px solid #4A3B28;border-radius:8px;color:#E8DCC0;
+padding:10px 0;margin-bottom:14px}button{width:100%;min-height:48px;font:bold 15px ui-monospace,monospace;
+background:#C9A24B;color:#14100C;border:0;border-radius:8px;cursor:pointer}
+.err{color:#E0483A;font-size:13px;margin-top:10px;min-height:1.2em}</style></head><body>
+<form id="f"><h1>&#128737; Second facteur</h1><p>Code à 6 chiffres de ton application d'authentification</p>
+<input id="c" inputmode="numeric" autocomplete="one-time-code" maxlength="6" autofocus>
+<button>Vérifier</button><div class="err" id="e"></div></form>
+<script>document.getElementById('f').onsubmit=async(ev)=>{ev.preventDefault();
+const r=await fetch('/api/mfa/verify',{method:'POST',headers:{'content-type':'application/json'},
+body:JSON.stringify({code:document.getElementById('c').value})});
+if(r.ok){location.reload()}else{document.getElementById('e').textContent='Code refusé — réessaie.'}};
+</script></body></html>"""
+
+
 def build_app() -> Flask:
     app = Flask(__name__, template_folder=str(_HERE / "templates"),
                 static_folder=str(_HERE / "static"))
@@ -98,6 +171,23 @@ def build_app() -> Flask:
         if not _auth_ok():
             return Response("Authentication required.\n", 401,
                             {"WWW-Authenticate": 'Basic realm="MERLIN Studio"'})
+        # ── 2e facteur TOTP (opt-in : actif dès que merlin-mfa.env existe) ──
+        mfa = _mfa_conf()
+        if not mfa.get("MFA_SECRET") or not mfa.get("MFA_SIGN_KEY"):
+            return None
+        # Assets purs et vérification elle-même. PAS /websockify : la voie
+        # légitime (ticket) est déjà sortie plus haut — ici on bloque le
+        # VNC direct au mot de passe seul.
+        if (request.path.startswith("/static/") or request.path.startswith("/vendor/")
+                or request.path in ("/sw.js", "/manifest.webmanifest", "/api/mfa/verify")):
+            return None
+        key = mfa["MFA_SIGN_KEY"]
+        if _mfa_token_ok(key, request.cookies.get("merlin_mfa")) \
+                or _mfa_token_ok(key, request.headers.get("X-Merlin-MFA")):
+            return None
+        if request.path.startswith("/api/") or request.path == "/websockify":
+            return jsonify({"error": "mfa_required"}), 401
+        return Response(_MFA_PAGE, 200, {"content-type": "text/html; charset=utf-8"})
 
     @app.route("/")
     def index():
@@ -193,6 +283,25 @@ def build_app() -> Flask:
         (qdir / name).write_text(text, encoding="utf-8")
         return jsonify({"ok": True, "mission": name,
                         "queued": len(list(qdir.glob("*")))})
+
+    # ── MFA : vérification du code TOTP (derrière Basic auth) ────────────────
+    @app.route("/api/mfa/verify", methods=["POST"])
+    def api_mfa_verify():
+        mfa = _mfa_conf()
+        if not mfa.get("MFA_SECRET"):
+            return jsonify({"error": "mfa non activée"}), 400
+        body = request.get_json(silent=True) or {}
+        if not _totp_ok(mfa["MFA_SECRET"], str(body.get("code", ""))):
+            time.sleep(1)          # freine la force brute
+            return jsonify({"error": "code refusé"}), 401
+        key = mfa["MFA_SIGN_KEY"]
+        out = {"ok": True}
+        if body.get("device"):     # jeton long pour l'extension VS Code (90 j)
+            out["device_token"] = _mfa_token(key, 90)
+        resp = jsonify(out)
+        resp.set_cookie("merlin_mfa", _mfa_token(key, 30), max_age=30 * 86400,
+                        secure=True, httponly=True, samesite="Lax")
+        return resp
 
     # ── PWA : manifest + service worker servis À LA RACINE (portée "/") ──────
     @app.route("/manifest.webmanifest")
