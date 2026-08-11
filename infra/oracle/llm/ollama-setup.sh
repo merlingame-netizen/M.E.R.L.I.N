@@ -19,10 +19,13 @@ FREE_G="$(df -BG --output=avail "$HOME" | tail -1 | tr -dc 0-9)"
 [ "$FREE_G" -ge 8 ] || { echo "disque insuffisant (${FREE_G}G libres, 8G requis)"; exit 1; }
 
 if [ ! -x "$BIN" ]; then
-    echo "téléchargement ollama-linux-$ARCH…"
-    curl -fL --retry 3 -o /tmp/ollama.tgz \
-        "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-$ARCH.tgz"
-    tar -xzf /tmp/ollama.tgz -C "$OLLAMA_DIR" && rm -f /tmp/ollama.tgz
+    # Depuis ~v0.30 les assets GitHub sont en .tar.zst (le .tgz n'existe plus).
+    command -v zstd >/dev/null 2>&1 || command -v unzstd >/dev/null 2>&1 \
+        || { echo "zstd absent — impossible de décompresser l'archive Ollama"; exit 1; }
+    echo "téléchargement ollama-linux-$ARCH.tar.zst…"
+    curl -fL --retry 3 -o /tmp/ollama.tar.zst \
+        "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-$ARCH.tar.zst"
+    tar --zstd -xf /tmp/ollama.tar.zst -C "$OLLAMA_DIR" && rm -f /tmp/ollama.tar.zst
     ln -sf "$BIN" "$HOME/bin/ollama"
 fi
 "$BIN" --version
