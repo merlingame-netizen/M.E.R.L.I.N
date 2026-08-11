@@ -42,10 +42,17 @@ for _ in $(seq 1 50); do [ -e /tmp/.X11-unix/X99 ] && break; sleep 0.2; done
 [ -e /tmp/.X11-unix/X99 ] || {
     echo "FATAL: Xvfb n'a pas démarré :" >&2; tail -20 "$RUNDIR/xvfb.log" >&2; exit 1; }
 
+# Perf : -threads sert chaque client dans son propre fil (l'encodage ne bloque
+# plus la capture) ; -defer/-wait 10 double la réactivité par rapport à 20 ms ;
+# -nolookup/-noxfixes/-nowf coupent des allers-retours X inutiles.
 x11vnc -display :99 -localhost -rfbport 5900 -forever -shared -nopw \
-    -noxdamage -defer 20 -wait 20 -quiet > "$RUNDIR/x11vnc.log" 2>&1 &
+    -noxdamage -threads -defer 10 -wait 10 -nolookup -noxfixes -nowf -quiet \
+    > "$RUNDIR/x11vnc.log" 2>&1 &
 
 cd "$GAME_DIR"
-echo "[native-inner] projet joué : $GAME_DIR" >&2
+echo "[native-inner] projet joué : $GAME_DIR (max-fps=${MAX_FPS:-30})" >&2
+# Plafonner les FPS libère massivement le CPU : en rendu logiciel, viser 60 fps
+# sature les 4 cœurs pour rien. 30 suffit largement à un jeu de cartes et laisse
+# du CPU à l'encodage VNC — donc MOINS de latence perçue.
 exec "$GODOT_BIN" --path . --rendering-driver opengl3 --audio-driver Dummy \
-    --resolution "$RES" > "$RUNDIR/godot.log" 2>&1
+    --max-fps "${MAX_FPS:-30}" --resolution "$RES" > "$RUNDIR/godot.log" 2>&1

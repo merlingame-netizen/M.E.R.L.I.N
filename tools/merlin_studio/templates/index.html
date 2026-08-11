@@ -8,18 +8,25 @@
 <link rel="stylesheet" href="/static/studio.css">
 </head>
 <body>
+<div class="statusbar" id="statusbar">
+ <span class="chip idle" id="ch-game"><i class="dot"></i>Jeu …</span>
+ <span class="chip idle" id="ch-mem">RAM …</span>
+ <span class="chip idle" id="ch-cpu">CPU …</span>
+ <span class="chip idle" id="ch-jobs">Jobs …</span>
+ <span class="chip idle" id="ch-llm">LLM …</span>
+</div>
 <header>
  <h1>🜨 Merlin Studio <span class="dim">// VM Oracle</span></h1>
  <span id="sum">…</span>
 </header>
 <nav>
- <button data-tab="play" class="on">Jouer</button>
- <button data-tab="run">Run</button>
- <button data-tab="content">Contenu</button>
- <button data-tab="jobs">Jobs</button>
- <button data-tab="llm">LLM</button>
- <button data-tab="repo">Repo</button>
- <button data-tab="host">Hôte</button>
+ <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
+ <button data-tab="run"><span class="g">⚙</span>Run</button>
+ <button data-tab="content"><span class="g">✎</span>Contenu</button>
+ <button data-tab="jobs"><span class="g">⧗</span>Jobs</button>
+ <button data-tab="llm"><span class="g">◈</span>LLM</button>
+ <button data-tab="repo"><span class="g">⑂</span>Repo</button>
+ <button data-tab="host"><span class="g">▤</span>Hôte</button>
 </nav>
 <main>
  <!-- ══ JOUER : jeu natif VM via VNC (défaut) ══ -->

@@ -104,7 +104,7 @@ start_native() {
     stop_native
     mkdir -p "$RUNDIR"
     # native-inner.sh vit avec l'OUTILLAGE (SCRIPT_DIR), pas dans le dépôt du jeu.
-    setsid unshare --user --map-root-user --mount \
+    setsid env MAX_FPS="${MAX_FPS:-30}" unshare --user --map-root-user --mount \
         bash "$SCRIPT_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
     echo $! > "$RUNDIR/inner.pid"
     wait_vnc 'pid_alive "$(cat "$RUNDIR/inner.pid" 2>/dev/null)"' \

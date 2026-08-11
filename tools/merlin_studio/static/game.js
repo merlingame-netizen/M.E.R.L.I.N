@@ -15,6 +15,23 @@ function readout(msg, isErr) {
   if (el) el.innerHTML = `<span class="${isErr ? 'err' : ''}">${msg}</span>`;
 }
 
+/* Résolution de rendu choisie selon l'appareil : sans carte graphique sur la VM,
+   diviser le nombre de pixels par ~1,8 est le levier de fluidité le plus efficace. */
+function autoRes() {
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const big = Math.max(window.innerWidth, window.innerHeight);
+  return (coarse || big < 1100) ? '960x540' : '1280x720';
+}
+
+/* Bandeau d'état : le jeu tourne-t-il, et sur quelle branche. */
+function statusGame(g) {
+  const e = $('#ch-game'); if (!e) return;
+  const live = g && g.vnc_open;
+  e.className = 'chip ' + (live ? 'ok' : (g && g.available ? 'idle' : 'warn'));
+  e.innerHTML = `<i class="dot"></i>JEU <b>${live ? 'EN COURS' : 'ARRÊTÉ'}</b>`
+    + (g && g.repo_branch ? ` · ${g.repo_branch}` : '');
+}
+
 /* Ligne de transparence : QUOI tourne exactement (branche@commit, godot, import). */
 function versionReadout(g) {
   const el = $('#game-version');
@@ -29,7 +46,7 @@ function versionReadout(g) {
 }
 
 async function refreshVersion() {
-  try { versionReadout(await j('/api/game')); } catch (e) {}
+  try { const g = await j('/api/game'); versionReadout(g); statusGame(g); } catch (e) {}
 }
 
 function setState(s) {
@@ -64,11 +81,16 @@ async function connectVNC() {
   const url = `${proto}://${location.host}/websockify?ticket=${encodeURIComponent(ticket)}`;
   rfb = new RFB($('#vnc-screen'), url);
   rfb.scaleViewport = true;
-  rfb.qualityLevel = 4;
-  rfb.compressionLevel = 6;
+  rfb.showDotCursor = false;
+  // Le goulot est le CPU de la VM (4 cœurs ARM, encodage logiciel), pas la bande
+  // passante : on baisse la compression (moins de zlib à faire) et on remonte la
+  // qualité d'image. Résultat : moins de latence ET une image plus nette.
+  rfb.qualityLevel = 7;
+  rfb.compressionLevel = 1;
   rfb.addEventListener('connect', () => {
     setState('live');
     readout(`SIGNAL OK · ${rfb._fbWidth || ''}×${rfb._fbHeight || ''}`);
+    refreshVersion();
   });
   rfb.addEventListener('disconnect', ev => {
     rfb = null;
@@ -183,12 +205,14 @@ export async function initGame() {
   $('#btn-stop').onclick = stop;
   $('#btn-sync').onclick = sync;
   $('#btn-fs').onclick = fullscreen;
+  const sel = $('#game-res');
+  if (sel) sel.value = autoRes();   // pré-sélection selon l'appareil (modifiable)
   offMessage('SIGNAL PERDU', 'APPUYER SUR PLAY');
   setInterval(refreshVersion, 30000);
   // État initial : si le jeu tourne déjà (autre session), proposer la reconnexion.
   try {
     const g = await j('/api/game');
-    versionReadout(g);
+    versionReadout(g); statusGame(g);
     if (!g.available) {
       readout(g.reason || 'PODMAN ABSENT SUR CET HÔTE', true);
       $('#btn-play').disabled = true;

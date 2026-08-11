@@ -57,21 +57,26 @@ h1 .dim { color: var(--phosphor-dim); letter-spacing: 0; }
 }
 @keyframes blink { 50% { opacity: 0; } }
 
-/* ── nav ── */
+/* ── nav ──
+   Passe à la ligne au lieu de défiler : sur mobile, un onglet caché derrière un
+   scroll horizontal est un onglet qui n'existe pas. Cibles ≥ 48 px, jamais de
+   dépendance au survol (l'état actif est porté par le fond, pas par le hover). */
 nav {
-  display: flex; gap: 8px; padding: 10px 12px;
+  display: flex; gap: 8px; padding: 10px 12px; flex-wrap: wrap;
   position: sticky; top: 52px; background: var(--bg-dark); z-index: 4;
-  border-bottom: 2px solid var(--phosphor-dim); overflow-x: auto;
+  border-bottom: 2px solid var(--phosphor-dim);
 }
 nav button {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   background: var(--bg-panel); color: var(--cream);
   border: 2px solid var(--phosphor-dim); border-radius: 0;
-  padding: 8px 16px; font: inherit; font-size: 19px;
+  padding: 8px 14px; font: inherit; font-size: 19px;
   text-transform: uppercase; letter-spacing: 1px;
-  cursor: pointer; min-height: 46px;
+  cursor: pointer; min-height: 48px; min-width: 48px;
   transition: background 80ms, border-color 80ms, color 80ms;
 }
+nav button .g { color: var(--phosphor-dim); margin-right: 6px; }
+nav button.on .g { color: var(--black); }
 nav button:hover { background: var(--bg-highlight); border-color: var(--gold); }
 nav button.on {
   color: var(--black); background: var(--gold); border-color: var(--gold);
@@ -195,11 +200,21 @@ footer { color: var(--phosphor-dim); font-size: 15px; padding: 16px; text-transf
 a { color: var(--phosphor); }
 code { color: var(--phosphor-bright); }
 
-/* ── écran de jeu (onglet Jouer) ── */
+/* ── écran de jeu (onglet Jouer) ──
+   Borné à la fenêtre : la hauteur pilote, la largeur suit le 16/9. L'écran ne
+   déborde donc JAMAIS, ni en paysage ni en portrait, et l'atelier reste visible
+   autour (onglets + bandeau d'état). --screen-h est réglable à chaud en JS. */
 .crt-frame {
-  margin: 6px 16px; background: var(--black);
+  --screen-h: 52vh;
+  margin: 6px auto; background: var(--black);
   border: 4px solid var(--gold); border-radius: 0;
-  aspect-ratio: 16 / 9; position: relative; overflow: hidden;
+  aspect-ratio: 16 / 9;
+  width: min(calc(100% - 32px), calc(var(--screen-h) * 16 / 9));
+  max-height: var(--screen-h);
+  position: relative; overflow: hidden;
+}
+.crt-frame:fullscreen {
+  width: 100%; max-height: none; height: 100%; margin: 0; border-width: 0;
 }
 .crt-frame.live { border-color: var(--phosphor-bright); }
 #vnc-screen { position: absolute; inset: 0; }
@@ -220,8 +235,37 @@ code { color: var(--phosphor-bright); }
 }
 .game-readout .err { color: var(--crimson); }
 
-@media (max-width: 520px) {
+/* ── bandeau d'état permanent (« ce qui tourne », d'un coup d'œil) ── */
+.statusbar {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  padding: 6px 12px; background: var(--bg-deep);
+  border-bottom: 2px solid var(--phosphor-dim);
+  position: sticky; top: 0; z-index: 6;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; min-height: 32px;
+  border: 1px solid var(--phosphor-dim); background: var(--bg-panel);
+  color: var(--cream); font-size: 15px;
+  text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;
+}
+.chip b { color: var(--phosphor-bright); font-weight: 400; }
+.chip.ok    { border-color: var(--phosphor); color: var(--phosphor); }
+.chip.warn  { border-color: var(--amber);    color: var(--amber); }
+.chip.crit  { border-color: var(--crimson);  color: var(--crimson); }
+.chip.idle  { color: var(--phosphor-dim); }
+.chip .dot { width: 9px; height: 9px; background: currentColor; flex: 0 0 auto; }
+
+@media (max-width: 640px) {
   h1 { font-size: 20px; }
-  nav button { padding: 8px 12px; font-size: 17px; }
-  .crt-frame { margin: 6px 8px; }
+  h1 .dim { display: none; }          /* épurer : le sous-titre ne sert à rien au doigt */
+  nav { top: 44px; }
+  nav button { padding: 8px 10px; font-size: 17px; flex: 1 1 30%; }
+  .crt-frame { --screen-h: 38vh; }    /* portrait : l'écran laisse la place aux commandes */
+  .grid { grid-template-columns: 1fr; padding: 6px 10px; }
+  .form { margin: 6px 10px; }
+  #sum { display: none; }             /* doublon du bandeau d'état */
+}
+@media (min-width: 641px) and (max-width: 1024px) {
+  .crt-frame { --screen-h: 46vh; }
 }

@@ -164,19 +164,45 @@ async function refreshJobs() {
      ${job.status === 'running' ? `<button class="go sm stop" onclick="stopJob('${job.id}')">Stop ■</button>` : ''}</div></div>`).join('')
     || '<div class="mut" style="padding:0 16px">aucun job</div>';
   $('#foot').textContent = 'MERLIN STUDIO · VM ORACLE · ' + (busy ? ('OCCUPÉ : ' + busy) : 'LIBRE') + ' · REFRESH 10 S';
+  statusJobs(d);
 }
 const stopJob = async id => { await j('/api/job/' + id + '/stop', { method: 'POST' }); refreshJobs(); };
 
 async function refreshSum() {
   const o = await j('/api/overview'); const m = o.mem || {};
   $('#sum').textContent = `${o.cpus} CŒURS · ${m.available_gb}/${m.total_gb} GO · ${o.models} MODÈLES · ${o.branch}`;
+  // Bandeau d'état : ce qui tourne, lisible sans changer d'onglet.
+  const chip = (id, cls, html) => { const e = $(id); if (e) { e.className = 'chip ' + cls; e.innerHTML = html; } };
+  const pct = m.used_pct || 0;
+  chip('#ch-mem', pct >= 90 ? 'crit' : pct >= 75 ? 'warn' : 'ok',
+       `RAM <b>${pct}%</b> · ${m.available_gb} GO LIBRES`);
+  chip('#ch-llm', o.ollama ? 'ok' : 'idle', `LLM <b>${o.ollama ? o.models : '—'}</b>`);
+}
+
+/* Bandeau : jobs (l'état du jeu est mis à jour par game.js, qui le sonde déjà). */
+function statusJobs(d) {
+  const n = Object.values(d.running || {}).reduce((a, b) => a + b, 0);
+  const e = $('#ch-jobs'); if (!e) return;
+  e.className = 'chip ' + (n ? 'warn' : 'idle');
+  e.innerHTML = `JOBS <b>${n || 0}</b>`;
+}
+async function refreshCpu() {
+  try {
+    const h = await j('/api/host');
+    const load1 = parseFloat((h.load || '0').split(' ')[0]) || 0;
+    const cpus = parseInt(h.cpus, 10) || 4;
+    const r = load1 / cpus;
+    const e = $('#ch-cpu'); if (!e) return;
+    e.className = 'chip ' + (r >= 0.95 ? 'crit' : r >= 0.7 ? 'warn' : 'ok');
+    e.innerHTML = `CPU <b>${h.load ? h.load.split(' ')[0] : '?'}</b> / ${cpus}`;
+  } catch (e) {}
 }
 
 /* handlers appelés depuis les attributs onclick du HTML */
 Object.assign(window, { run, runAll, parseProj, genCards, askOllama, renderParams, launchGeneric, stopJob });
 
-function tick() { refreshSum(); refreshRun(); refreshPlay(); refreshContent(); refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); }
+function tick() { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshContent(); refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); }
 loadCat(); tick(); initGame();
 setInterval(refreshJobs, 10000);
-setInterval(() => { refreshSum(); refreshRun(); refreshPlay(); refreshHost(); }, 30000);
+setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); }, 30000);
 setInterval(() => { refreshContent(); refreshLlm(); refreshRepo(); }, 60000);
