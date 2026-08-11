@@ -25,3 +25,24 @@
 - Pourquoi : l'agent Oracle des images Ubuntu (snap) N'EMBARQUE PAS le plugin « Compute Instance Run Command » (vérifié : 10 plugins listés, Run Command absent après 50 min + reboot). Sans SSH sortant depuis le sandbox Claude, Run Command est le SEUL canal de pilotage agent → Ubuntu = VM impilotable.
 - Règle : toute VM OCI destinée à être pilotée par l'agent DOIT être Oracle Linux (utilisateur `opc`). `agent_launch.py --os oracle9` est le défaut.
 - Provisioning : cloud-init minimal + `infra/oracle/studio/provision-ol9.sh` via Run Command (godot 4.6 arm64, node 20, ollama, repo, up.sh Studio+tunnel, pull Gemma en arrière-plan).
+
+## 2026-08-11: Finalité de la VM Oracle (questionnaire Maxime, 9 réponses)
+- **Usage n°1 : atelier de dév distant** — Godot + Claude + LLM tournent en continu
+  sur la VM, Maxime pilote. Le jeu s'y joue, mais l'outillage prime sur le confort pur.
+- **Accès** : Maxime + quelques testeurs (lien + identifiants). Pas public.
+- **Appareils** : PC ET mobile à parts égales → tactile obligatoire (cibles ≥ 44 px,
+  pas de survol, pas de scroll horizontal masquant des onglets).
+- **Disponibilité** : 24/7, toujours prête (relance auto après reboot).
+- **Écran de jeu** : adaptatif à la fenêtre, l'atelier reste visible autour
+  (pas de mode plein écran par défaut).
+- **Refonte demandée = navigation DU PORTAIL**, pas le menu du jeu.
+- **Priorités UX** (dans l'ordre) : utilisable au doigt · état visible d'un coup d'œil ·
+  épuré.
+- **Lag** : déclaré RÉSOLU après optimisations (30 FPS, 960×540, compression 6→1,
+  x11vnc -threads). Ne pas dégrader davantage sans nouvelle demande.
+- **Non tranché** (defaults appliqués, réversibles) : plancher de qualité, allègement
+  du rendu du jeu (→ non appliqué), agents supplémentaires, autonomie des agents,
+  canal d'alerte, budget CPU nocturne.
+- **Question ouverte majeure** : sort de `main` (170 commits, DA CRT périmée) face à
+  `feat/practices-docs` (207 commits, le vrai jeu). Opération destructrice → jamais
+  entreprise sans demande explicite.
