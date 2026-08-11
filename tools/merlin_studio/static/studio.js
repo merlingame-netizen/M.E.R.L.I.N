@@ -200,6 +200,56 @@ async function refreshCpu() {
 }
 
 /* ── Agents : planification, dernier passage, santé, smoke ─────────────── */
+// ── Propositions : les agents proposent, l'humain tranche en un tap ──────────
+async function refreshProposals() {
+  let d;
+  try { d = await j('/api/proposals'); } catch { return; }
+  const n = (d.counts || {}).pending || 0;
+  const chip = $('#ch-prop');
+  chip.className = 'chip ' + (n ? 'up' : 'idle');
+  chip.textContent = '💡 ' + n;
+  $('#ideas-meta').textContent = n
+    ? `${n} en attente · ${(d.counts||{}).accepted||0} acceptées · ${(d.counts||{}).rejected||0} rejetées`
+    : 'rien en attente';
+  const list = $('#ideas-list');
+  if (!n) { list.innerHTML = '<div class="mut">aucune proposition — les agents tournent la nuit</div>'; return; }
+  list.innerHTML = (d.pending || []).map(p => {
+    const ev = (p.evidence || []).map(e =>
+      `<div class="mut">• ${esc(e.metric || e.source || '')} ${e.quote ? '— « ' + esc(String(e.quote).slice(0,120)) + ' »' : ''}</div>`).join('');
+    return `<div class="card" data-pid="${esc(p.id)}" style="margin-bottom:12px">
+      <div class="row"><span class="name">${esc(p.title)}</span>
+        <span class="badge ${p.kind === 'bug' ? 'down' : 'up'}">${esc(p.kind)}</span></div>
+      <div class="mut" style="margin:4px 0 8px">${esc(p.claim)}</div>
+      <div class="metrics"><span>${esc(p.agent)}</span><span>${esc(p.tier || p.model || '—')}</span>
+        <span>confiance ${Math.round((p.confidence || 0) * 100)}%</span>
+        ${p.cost && p.cost.secs ? `<span>${p.cost.secs}s</span>` : ''}</div>
+      <pre class="log" style="max-height:150px;margin-top:8px">${esc((p.change || {}).summary || '')}${
+        (p.change || {}).target ? '\n\ncible : ' + esc(p.change.target) : ''}</pre>
+      ${ev ? `<details style="margin-top:6px"><summary class="mut">preuves</summary>${ev}</details>` : ''}
+      <div class="row" style="gap:8px;margin-top:10px">
+        <button class="go" style="flex:1;min-height:48px" data-act="accept">Accepter</button>
+        <button class="go sm" style="flex:1;min-height:48px" data-act="reject">Rejeter</button>
+      </div></div>`;
+  }).join('');
+  list.querySelectorAll('button[data-act]').forEach(b => {
+    b.onclick = () => decideProposal(b.closest('.card').dataset.pid, b.dataset.act, b);
+  });
+}
+
+async function decideProposal(pid, decision, btn) {
+  const card = btn.closest('.card');
+  card.style.opacity = '0.4';                       // retrait optimiste
+  btn.parentElement.querySelectorAll('button').forEach(x => x.disabled = true);
+  try {
+    const r = await j(`/api/proposal/${encodeURIComponent(pid)}/decide`,
+      { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ decision }) });
+    if (r.error) { card.style.opacity = '1'; alert('✗ ' + r.error); return; }
+    card.remove();
+    refreshProposals();
+  } catch { card.style.opacity = '1'; }
+}
+
 async function refreshAgents() {
   let d; try { d = await j('/api/agents'); } catch (e) { return; }
   const list = d.agents || [];
@@ -331,7 +381,7 @@ Object.assign(window, { run, runAll, parseProj, genCards, askOllama, renderParam
 
 function tick() {
   refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshContent();
-  refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshClock();
+  refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshProposals(); refreshClock();
 }
 const mBtn = $('#btn-mission');
 if (mBtn) mBtn.onclick = async () => {
@@ -350,5 +400,5 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
 loadCat(); tick(); initGame();
 setInterval(refreshClock, 20000);
 setInterval(refreshJobs, 10000);
-setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); }, 30000);
+setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); refreshProposals(); }, 30000);
 setInterval(() => { refreshContent(); refreshLlm(); refreshRepo(); }, 60000);

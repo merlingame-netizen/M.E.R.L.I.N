@@ -270,6 +270,30 @@ def build_app() -> Flask:
         return jsonify({"ok": not rec.get("error"), "job": rec.get("id"),
                         "error": rec.get("error")}), (202 if not rec.get("error") else 409)
 
+    # ── propositions des agents de game design ───────────────────────────────
+    # Doctrine : les agents proposent, Maxime tranche. Accepter met une mission
+    # en file ; lancer le codeur reste un second geste explicite.
+    @app.route("/api/proposals")
+    def api_proposals():
+        try:
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gd_agents"))
+            import proposals as P
+            return jsonify(P.listing())
+        except Exception as exc:
+            return jsonify({"pending": [], "counts": {}, "error": str(exc)[:200]})
+
+    @app.route("/api/proposal/<pid>/decide", methods=["POST"])
+    def api_proposal_decide(pid: str):
+        body = request.get_json(silent=True) or {}
+        try:
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gd_agents"))
+            import proposals as P
+            res = P.decide(pid, str(body.get("decision", "")),
+                           str(body.get("reason", "")))
+        except Exception as exc:
+            return jsonify({"error": str(exc)[:200]}), 500
+        return jsonify(res), (400 if res.get("error") else 200)
+
     # ── file de missions du codeur résident ──────────────────────────────────
     @app.route("/api/mission", methods=["POST"])
     def api_mission():

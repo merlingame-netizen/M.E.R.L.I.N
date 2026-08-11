@@ -25,11 +25,13 @@
   <span class="chip idle" id="ch-mem">RAM …</span>
   <span class="chip idle" id="ch-jobs">Jobs …</span>
   <span class="chip idle" id="ch-llm">LLM …</span>
+  <span class="chip idle" id="ch-prop" title="Propositions des agents en attente de ton verdict">💡 …</span>
   <span class="chip idle" id="ch-bill" title="Facturation Oracle du mois — doit rester à 0">€ …</span>
   <span class="chip idle" id="ch-clock">--:--</span>
  </div>
  <nav class="dock">
   <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
+  <button data-tab="ideas"><span class="g">💡</span>Idées</button>
   <button data-tab="agents"><span class="g">◆</span>Agents</button>
   <button data-tab="godot"><span class="g">⚙</span>Godot</button>
   <button data-tab="content"><span class="g">✎</span>Contenu</button>
@@ -64,6 +66,19 @@
      <a id="weblink" class="mut" target="_blank">Version web…</a>
      <button class="go sm" onclick="run('godot-build-web')">Build web</button>
     </div>
+   </div>
+  </div>
+ </section>
+
+ <!-- ══ IDÉES ══ propositions des agents : Maxime tranche, rien ne part sans lui -->
+ <section class="pane" id="pane-ideas">
+  <div class="win">
+   <div class="win-bar"><span class="t">Propositions des agents</span><span class="hatch"></span>
+    <span class="meta" id="ideas-meta">…</span></div>
+   <div class="win-body">
+    <div class="mut" style="margin-bottom:10px">Les agents proposent — ils n'écrivent jamais dans le jeu.
+     Accepter met une mission en file ; lancer le codeur reste un second geste.</div>
+    <div id="ideas-list"><div class="mut">aucune proposition pour l'instant</div></div>
    </div>
   </div>
  </section>
