@@ -7,7 +7,8 @@ set -uo pipefail
 CONF="$HOME/.config/merlin-llm.env"
 [ -f "$CONF" ] || { echo "llm non installé"; exit 0; }
 . "$CONF"
-OUT="$HOME/.cache/merlin-agents/llm-bench.json"
+# PAS llm-bench.json : agent-run écrit son état sous ce nom (collision).
+OUT="$HOME/.cache/merlin-agents/llm-bench-results.json"
 mkdir -p "$(dirname "$OUT")"
 
 curl -fsS -m 3 "http://$OLLAMA_HOST/api/version" >/dev/null 2>&1 || { echo "serveur ollama mort"; exit 1; }
@@ -54,7 +55,7 @@ print(ok[-1]["model"] if ok else "")
 PY
 CHAMP="$(python3 -c "
 import json
-r=[x for x in json.load(open('$OUT'))['rows'] if x.get('wall_s',999)<60]
+r=[x for x in json.load(open('$OUT')).get('rows',[]) if x.get('wall_s',999)<60]
 r.sort(key=lambda x:x['wall_s'])
 print(r[-1]['model'] if r else '')")"
 if [ -n "$CHAMP" ] && grep -q '^export TRIAGE_MODEL=AUTO$' "$CONF"; then
