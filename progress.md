@@ -2713,3 +2713,15 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
   en attente dans Décider.
 - Reste côté Maxime : extension disque root (55 Go → débloque e2b + 12b),
   tri des premières cartes dans Décider.
+
+## 2026-08-11 — v13 : mémoire absolue + chat interne + 100 conseillers (validé e2e)
+- Mémoire append-only ~/merlin-memory (aucune API de suppression) ; hooks sur
+  chaque décision du portail ; condensé injecté dans les prompts de TOUS les agents.
+- Onglet Parler : 100 conseillers (fiches .claude/agents compilées) + MERLIN-mémoire.
+  Chat asynchrone e4b (1-3 min), MEMORISER: <règle> gravé automatiquement 📌,
+  gravure manuelle par Maxime (fenêtre Mémoire du jeu).
+- E2E réel : question « pourquoi une seule barre de vie ? » → réponse Gemma cohérente
+  avec le design (« fragilité et urgence, chaque erreur potentiellement fatale »).
+  2 souvenirs au registre.
+- Suite envisagée : « conseil de design » hebdo initié par un conseiller (cadence à
+  valider par Maxime).
