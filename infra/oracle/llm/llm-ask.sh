@@ -31,7 +31,9 @@ req = urllib.request.Request(
     data=json.dumps({
         "model": model, "prompt": prompt, "stream": False,
         "keep_alive": os.environ.get("OLLAMA_KEEP_ALIVE", "30m"),
-        "options": {"num_thread": 4, "num_ctx": ctx, "temperature": 0.2},
+        # num_thread vient du routeur : 2 quand le jeu tourne (il garde 2 cœurs).
+        "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
+                    "num_ctx": ctx, "temperature": 0.2},
     }).encode(),
     headers={"content-type": "application/json"})
 try:

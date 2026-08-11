@@ -1,0 +1,46 @@
+{
+  "_comment": "Table UNIQUE des paliers de modèles pour l'outillage (routeur d'agents locaux). Le jeu a ses propres tables GDScript (addons/merlin_ai/brain_swarm_config.gd + ollama_backend.gd) — duplication connue, un agent d'audit émet une proposition quand elles divergent. Ne PAS coder de débit en dur ici : tok_s_fallback ne sert que si llm-bench-results.json est absent.",
+  "version": "1.0",
+  "updated": "2026-08-11",
+  "tiers": [
+    {
+      "name": "LEGER",
+      "tag": "gemma4:e2b-it-qat",
+      "ram_mb": 3000,
+      "ctx": 2048,
+      "shapes_ok": ["classify", "extract"],
+      "tok_s_fallback": 5.0,
+      "desc": "Tri et extraction. Choix fermés, recopie structurée depuis un contexte fourni."
+    },
+    {
+      "name": "MOYEN",
+      "tag": "gemma4:e4b-it-qat",
+      "ram_mb": 6100,
+      "ctx": 4096,
+      "shapes_ok": ["classify", "extract", "judge", "compose"],
+      "tok_s_fallback": 3.5,
+      "desc": "Analyse et rédaction. Le défaut du jeu — la cible du fine-tune MERLIN."
+    },
+    {
+      "name": "DUR",
+      "tag": "gemma4:26b-a4b-it-qat",
+      "ram_mb": 16000,
+      "ctx": 8192,
+      "shapes_ok": ["classify", "extract", "judge", "compose"],
+      "tok_s_fallback": 2.5,
+      "desc": "MoE 4B actifs. Exige ~16 Go de disque ET de RAM : indisponible tant que le boot volume n'est pas étendu, et refusé dès que le jeu tourne. Le routeur se rabat alors sur du map-reduce e4b."
+    }
+  ],
+  "prompt_eval_tok_s_fallback": 18.0,
+  "gates": {
+    "disk_margin_gb": 2.0,
+    "ram_margin_mb": 2500,
+    "night_start_hour": 0,
+    "night_end_hour": 6,
+    "day_ceiling_tier": "LEGER",
+    "day_num_thread": 2,
+    "night_num_thread": 4,
+    "time_safety_factor": 1.4,
+    "max_escalations": 1
+  }
+}
