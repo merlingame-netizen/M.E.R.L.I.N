@@ -53,14 +53,21 @@ ok.sort(key=lambda r: (float((r["model"].split(":")[1] or "0").rstrip("b").split
                        if ":" in r["model"] and r["model"].split(":")[1][:1].isdigit() else 0))
 print(ok[-1]["model"] if ok else "")
 PY
+# Champion = le plus GROS modèle (qualité) qui reste sous 60 s de mur.
+# La taille se lit dans le tag (qwen2.5:3b → 3.0) — PAS le temps de mur :
+# un gros modèle peut être plus rapide s'il génère moins de tokens.
 CHAMP="$(python3 -c "
-import json
-r=[x for x in json.load(open('$OUT')).get('rows',[]) if x.get('wall_s',999)<60]
-r.sort(key=lambda x:x['wall_s'])
+import json, re
+def size(m):
+    g = re.search(r':(\d+(?:\.\d+)?)b', m)
+    return float(g.group(1)) if g else 0.0
+r = [x for x in json.load(open('$OUT')).get('rows', []) if x.get('wall_s', 999) < 60]
+r.sort(key=lambda x: size(x['model']))
 print(r[-1]['model'] if r else '')")"
-if [ -n "$CHAMP" ] && grep -q '^export TRIAGE_MODEL=AUTO$' "$CONF"; then
-    sed -i "s|^export TRIAGE_MODEL=AUTO$|export TRIAGE_MODEL=$CHAMP|" "$CONF"
-    echo "TRIAGE_MODEL figé sur $CHAMP (le plus lent sous 60 s = le plus gros utilisable)"
+if [ -n "$CHAMP" ] && grep -q '^export TRIAGE_MODEL=' "$CONF" \
+        && ! grep -q "^export TRIAGE_MODEL=$CHAMP$" "$CONF"; then
+    sed -i "s|^export TRIAGE_MODEL=.*$|export TRIAGE_MODEL=$CHAMP|" "$CONF"
+    echo "TRIAGE_MODEL figé sur $CHAMP (le plus gros sous 60 s)"
 else
-    echo "champion: ${CHAMP:-aucun} · TRIAGE_MODEL actuel conservé"
+    echo "champion: ${CHAMP:-aucun} · TRIAGE_MODEL inchangé"
 fi
