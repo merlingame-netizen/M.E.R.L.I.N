@@ -133,6 +133,30 @@ def _mfa_token_ok(sign_key: str, token: str | None) -> bool:
     return hmac.compare_digest(sig, want)
 
 
+def _enroll_open() -> bool:
+    """La fenêtre d'enrôlement est-elle encore ouverte ? (échoue fermé)"""
+    try:
+        until = int((Path.home() / ".config" / "merlin-mfa-enroll-until")
+                    .read_text().strip())
+        return time.time() < until
+    except Exception:
+        return False
+
+
+def _qr_svg(data: str) -> str:
+    """QR en SVG, sans dépendance obligatoire — vide si segno est absent."""
+    try:
+        import io
+
+        import segno
+        buf = io.StringIO()
+        segno.make(data, error="m").save(buf, kind="svg", scale=6, dark="#14100C",
+                                         light="#E8DCC0", border=3)
+        return buf.getvalue()
+    except Exception:
+        return ""
+
+
 _MFA_PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#1E1A14"><title>MERLIN OS — vérification</title>
@@ -183,6 +207,11 @@ def build_app() -> Flask:
         # VNC direct au mot de passe seul.
         if (request.path.startswith("/static/") or request.path.startswith("/vendor/")
                 or request.path in ("/sw.js", "/manifest.webmanifest", "/api/mfa/verify")):
+            return None
+        # Page d'enrôlement : accessible avec le mot de passe seul, mais UNIQUEMENT
+        # pendant la fenêtre de 30 min ouverte par mfa-setup.sh --rotate. Sinon on
+        # laisserait une porte permanente derrière le seul Basic auth.
+        if request.path == "/mfa/enroll" and _enroll_open():
             return None
         key = mfa["MFA_SIGN_KEY"]
         if _mfa_token_ok(key, request.cookies.get("merlin_mfa")) \
@@ -313,6 +342,47 @@ def build_app() -> Flask:
         (qdir / name).write_text(text, encoding="utf-8")
         return jsonify({"ok": True, "mission": name,
                         "queued": len(list(qdir.glob("*")))})
+
+    # ── MFA : page d'enrôlement (QR à scanner), fenêtre de 30 min ────────────
+    @app.route("/mfa/enroll")
+    def mfa_enroll():
+        if not _enroll_open():
+            return Response(
+                "<p style='font:16px sans-serif;padding:24px'>Fenêtre d'enrôlement fermée."
+                "<br>Relance <code>mfa-setup.sh --rotate</code> pour en ouvrir une.</p>",
+                403, {"content-type": "text/html; charset=utf-8"})
+        mfa = _mfa_conf()
+        secret = mfa.get("MFA_SECRET", "")
+        if not secret:
+            return Response("MFA non configurée\n", 404)
+        uri = f"otpauth://totp/MERLIN-OS:merlin?secret={secret}&issuer=MERLIN-OS"
+        groups = " ".join(secret[i:i + 4] for i in range(0, len(secret), 4))
+        qr = _qr_svg(uri)
+        left = int((int((Path.home() / ".config" / "merlin-mfa-enroll-until")
+                        .read_text().strip()) - time.time()) // 60)
+        html = f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MERLIN OS — enrôlement</title><style>
+body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#14100C;
+color:#E8DCC0;font:16px/1.5 ui-monospace,monospace;padding:20px}}
+.box{{background:#241E16;border:1px solid #4A3B28;border-radius:14px;padding:24px;
+max-width:420px;text-align:center}}h1{{font-size:18px;color:#C9A24B;margin:0 0 6px}}
+p{{color:#9C8C6A;font-size:13px;margin:0 0 16px}}
+.qr{{background:#E8DCC0;border-radius:10px;padding:8px;display:inline-block}}
+.qr svg{{display:block;width:100%;height:auto;max-width:260px}}
+code{{display:block;font-size:17px;letter-spacing:2px;color:#E8DCC0;background:#1E1A14;
+border:1px solid #4A3B28;border-radius:8px;padding:12px;margin:16px 0;word-break:break-all}}
+a{{display:block;min-height:48px;line-height:48px;background:#C9A24B;color:#14100C;
+text-decoration:none;font-weight:700;border-radius:8px}}</style></head><body>
+<div class="box"><h1>&#128241; Enrôler ton téléphone</h1>
+<p>Scanne ce code avec ton application d'authentification.<br>
+Fenêtre ouverte encore {left} min.</p>
+{f'<div class="qr">{qr}</div>' if qr else '<p>QR indisponible — saisis la clé ci-dessous.</p>'}
+<p style="margin-top:16px">Ou saisis la clé à la main :</p>
+<code>{groups}</code>
+<a href="/">J'ai scanné — aller au portail</a></div></body></html>"""
+        return Response(html, 200, {"content-type": "text/html; charset=utf-8",
+                                    "cache-control": "no-store"})
 
     # ── MFA : vérification du code TOTP (derrière Basic auth) ────────────────
     @app.route("/api/mfa/verify", methods=["POST"])

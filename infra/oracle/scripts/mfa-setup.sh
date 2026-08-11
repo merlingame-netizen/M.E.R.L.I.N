@@ -7,6 +7,12 @@
 set -euo pipefail
 CONF="$HOME/.config/merlin-mfa.env"
 
+# --rotate : nouvelle clé + fenêtre d'enrôlement de 30 min sur le portail.
+if [ "${1:-}" = "--rotate" ]; then
+    rm -f "$CONF"
+    echo "ancienne clé révoquée."
+fi
+
 if [ -f "$CONF" ]; then
     echo "MFA déjà activée ($CONF présent) — clé conservée."
 else
@@ -16,6 +22,13 @@ else
     chmod 600 "$CONF"
     echo "MFA activée."
 fi
+
+# Fenêtre d'enrôlement : le QR n'est servi par le portail que pendant 30 min.
+# Passé ce délai, la page se referme d'elle-même — pas de porte laissée ouverte.
+date -u -d '+30 minutes' +%s > "$HOME/.config/merlin-mfa-enroll-until" 2>/dev/null \
+    || echo $(( $(date -u +%s) + 1800 )) > "$HOME/.config/merlin-mfa-enroll-until"
+chmod 600 "$HOME/.config/merlin-mfa-enroll-until"
+echo "fenêtre d'enrôlement ouverte 30 min : page /mfa/enroll du portail (QR à scanner)"
 
 SECRET="$(grep ^MFA_SECRET= "$CONF" | cut -d= -f2)"
 cat <<EOF
