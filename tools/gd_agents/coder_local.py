@@ -37,6 +37,10 @@ AUTO = Path.home() / "workspace" / "merlin-auto"
 BRANCH = "auto/nightly"
 GODOT = Path.home() / "bin" / "godot"
 MAX_PATCH_LINES = 30
+# Le codeur raisonne sur le palier DUR (gemma4:12b) : c'est le modèle choisi
+# par Maxime pour sa compréhension. Il n'écrit pas le diff (décidé en amont),
+# mais il juge la pertinence d'une mission avant de l'appliquer.
+CODER_SHAPE = "judge"
 ALLOWED = (re.compile(r"^data/"), re.compile(r"merlin_constants\.gd$"),
            re.compile(r"\.gd$"))
 
