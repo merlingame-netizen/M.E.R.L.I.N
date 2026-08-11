@@ -8,9 +8,10 @@ const card = (n, b, st) => `<div class="card ${st||''}"><div class="row"><span c
 const gauge = p => { const c = p >= 90 ? 'crit' : p >= 70 ? 'warn' : ''; return `<div class="bar ${c}"><i style="width:${Math.min(p,100)}%"></i></div>`; };
 let CAT = [];
 
-document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
+document.querySelectorAll('.dock button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.dock button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + b.dataset.tab));
+  window.scrollTo(0, 0);
 });
 
 async function run(kind, params) {
@@ -170,7 +171,7 @@ const stopJob = async id => { await j('/api/job/' + id + '/stop', { method: 'POS
 
 async function refreshSum() {
   const o = await j('/api/overview'); const m = o.mem || {};
-  $('#sum').textContent = `${o.cpus} CŒURS · ${m.available_gb}/${m.total_gb} GO · ${o.models} MODÈLES · ${o.branch}`;
+  const s = $('#sum'); if (s) s.textContent = `${o.cpus} CŒURS · ${m.available_gb}/${m.total_gb} GO`;
   // Bandeau d'état : ce qui tourne, lisible sans changer d'onglet.
   const chip = (id, cls, html) => { const e = $(id); if (e) { e.className = 'chip ' + cls; e.innerHTML = html; } };
   const pct = m.used_pct || 0;
@@ -198,11 +199,83 @@ async function refreshCpu() {
   } catch (e) {}
 }
 
+/* ── Agents : planification, dernier passage, santé, smoke ─────────────── */
+async function refreshAgents() {
+  let d; try { d = await j('/api/agents'); } catch (e) { return; }
+  const list = d.agents || [];
+  const ko = list.filter(a => a.enabled && a.ok === false).length;
+  const never = list.filter(a => a.enabled && !a.last_run).length;
+  const on = list.filter(a => a.enabled).length;
+
+  const chip = $('#ch-agents');
+  if (chip) {
+    chip.className = 'chip ' + (!d.installed ? 'warn' : ko ? 'crit' : 'ok');
+    chip.innerHTML = `AGENTS <b>${d.installed ? on : '—'}</b>${ko ? ' · ' + ko + ' KO' : ''}`;
+  }
+  const meta = $('#agents-meta');
+  if (meta) meta.textContent = d.installed
+    ? `${on} planifié(s)${ko ? ' · ' + ko + ' en échec' : ''}${never ? ' · ' + never + ' jamais exécuté' : ''}`
+    : 'planification non installée';
+  const hint = $('#agents-hint');
+  if (hint) hint.textContent = d.installed ? '' : 'Aucune tâche planifiée sur la VM — cliquer pour installer.';
+
+  $('#agentlist').innerHTML = list.map(a => {
+    const cls = !a.enabled ? 'off' : a.ok === true ? 'ok' : a.ok === false ? 'ko' : 'never';
+    const st = !a.enabled ? 'DÉSACTIVÉ' : a.ok === true ? 'OK' : a.ok === false ? 'ÉCHEC' : 'JAMAIS';
+    const bcl = !a.enabled ? 'idle' : a.ok === true ? 'up' : a.ok === false ? 'down' : 'pending';
+    return `<div class="agent ${cls}">
+      <div class="row"><span class="name">${esc(a.label)}</span><span class="badge ${bcl}">${st}</span></div>
+      <div class="mut" style="margin-top:3px">${esc(a.desc)}</div>
+      <div class="metrics"><span class="sched">${esc(a.schedule || '—')}</span>
+        ${a.last_run ? `<span>${esc(a.last_run.replace('T', ' ').replace('Z', ''))}</span>` : ''}
+        ${a.duration_s != null ? `<span>${a.duration_s}s</span>` : ''}</div>
+      ${a.summary ? `<div class="mut" style="margin-top:4px">→ ${esc(a.summary)}</div>` : ''}
+      <div style="margin-top:7px"><button class="go sm" onclick="run('agent-run',{id:'${esc(a.id)}'})">Exécuter</button></div>
+    </div>`;
+  }).join('') || '<div class="mut">aucun agent déclaré</div>';
+
+  // Santé : deux sparklines (charge et RAM) sur les derniers relevés.
+  const h = d.health || [];
+  if (h.length) {
+    const spark = (vals, max) => `<div class="spark">` + vals.map(v => {
+      const p = Math.min(100, Math.round(v / max * 100));
+      const c = p >= 90 ? 'max' : p >= 70 ? 'hi' : '';
+      return `<i class="${c}" style="height:${Math.max(2, p)}%"></i>`;
+    }).join('') + `</div>`;
+    const last = h[h.length - 1];
+    $('#healthbody').innerHTML =
+      `<div class="mut">CHARGE (sur ${last.cpus} cœurs)</div>${spark(h.map(x => x.load1), last.cpus)}
+       <div class="mut" style="margin-top:8px">RAM %</div>${spark(h.map(x => x.mem_pct), 100)}`;
+    $('#health-meta').textContent =
+      `charge ${last.load1} · RAM ${last.mem_pct}% · disque ${last.disk_pct}%`;
+  }
+
+  const sm = d.smoke || {};
+  if (sm.total) {
+    $('#smoke-meta').textContent = `${sm.total} scènes · ${sm.failing} en erreur · ${esc(sm.commit || '')}`;
+    $('#smokebody').innerHTML = `<div class="grid">` + (sm.scenes || []).map(s =>
+      `<div class="card ${s.script_errors ? 'failed' : 'done'}"><div class="row">
+        <span class="name">${esc(s.scene.replace('.tscn', ''))}</span>
+        <span class="badge ${s.script_errors ? 'down' : 'up'}">${s.script_errors || 0} err</span>
+      </div></div>`).join('') + `</div>`;
+  }
+}
+
+function refreshClock() {
+  const e = $('#ch-clock'); if (!e) return;
+  const d = new Date();
+  e.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
 /* handlers appelés depuis les attributs onclick du HTML */
 Object.assign(window, { run, runAll, parseProj, genCards, askOllama, renderParams, launchGeneric, stopJob });
 
-function tick() { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshContent(); refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); }
+function tick() {
+  refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshContent();
+  refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshClock();
+}
 loadCat(); tick(); initGame();
+setInterval(refreshClock, 20000);
 setInterval(refreshJobs, 10000);
-setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); }, 30000);
+setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); }, 30000);
 setInterval(() => { refreshContent(); refreshLlm(); refreshRepo(); }, 60000);

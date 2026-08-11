@@ -3,130 +3,198 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0A0A0A">
-<title>MERLIN Studio</title>
+<meta name="theme-color" content="#1E1A14">
+<title>MERLIN OS</title>
 <link rel="stylesheet" href="/static/studio.css">
 </head>
 <body>
-<div class="statusbar" id="statusbar">
- <span class="chip idle" id="ch-game"><i class="dot"></i>Jeu …</span>
- <span class="chip idle" id="ch-mem">RAM …</span>
- <span class="chip idle" id="ch-cpu">CPU …</span>
- <span class="chip idle" id="ch-jobs">Jobs …</span>
- <span class="chip idle" id="ch-llm">LLM …</span>
+
+<!-- Barre système + dock : UN SEUL bloc collant (sinon le haut de l'écran de jeu se fait rogner) -->
+<div class="topbar">
+ <div class="sysbar">
+  <span class="brand">◈ Merlin <span class="dim">OS</span></span>
+  <span class="chip idle" id="ch-game"><i class="dot"></i>Jeu …</span>
+  <span class="chip idle" id="ch-agents">Agents …</span>
+  <span class="spacer"></span>
+  <span class="chip idle" id="ch-cpu">CPU …</span>
+  <span class="chip idle" id="ch-mem">RAM …</span>
+  <span class="chip idle" id="ch-jobs">Jobs …</span>
+  <span class="chip idle" id="ch-llm">LLM …</span>
+  <span class="chip idle" id="ch-clock">--:--</span>
+ </div>
+ <nav class="dock">
+  <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
+  <button data-tab="agents"><span class="g">◆</span>Agents</button>
+  <button data-tab="godot"><span class="g">⚙</span>Godot</button>
+  <button data-tab="content"><span class="g">✎</span>Contenu</button>
+  <button data-tab="jobs"><span class="g">⧗</span>Jobs</button>
+  <button data-tab="system"><span class="g">▤</span>Système</button>
+ </nav>
 </div>
-<header>
- <h1>🜨 Merlin Studio <span class="dim">// VM Oracle</span></h1>
- <span id="sum">…</span>
-</header>
-<nav>
- <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
- <button data-tab="run"><span class="g">⚙</span>Run</button>
- <button data-tab="content"><span class="g">✎</span>Contenu</button>
- <button data-tab="jobs"><span class="g">⧗</span>Jobs</button>
- <button data-tab="llm"><span class="g">◈</span>LLM</button>
- <button data-tab="repo"><span class="g">⑂</span>Repo</button>
- <button data-tab="host"><span class="g">▤</span>Hôte</button>
-</nav>
+
 <main>
- <!-- ══ JOUER : jeu natif VM via VNC (défaut) ══ -->
+ <!-- ══ JOUER ══ -->
  <section class="pane on" id="pane-play">
   <div class="crt-frame" id="crt-frame">
    <div id="vnc-screen"></div>
    <div class="crt-off" id="crt-off"></div>
   </div>
   <div class="game-readout"><span id="game-status">…</span></div>
-  <div class="game-readout" id="game-version-row"><span id="game-version">…</span></div>
-  <div class="form">
-   <div class="row" style="flex-wrap:wrap;gap:10px;justify-content:flex-start">
-    <button class="go" id="btn-play">▶ Play (natif VM)</button>
-    <button class="go stop" id="btn-stop" style="display:none">■ Stop</button>
-    <button class="go" id="btn-sync">⟳ Sync</button>
-    <button class="go" id="btn-fs" disabled>⛶ Plein écran</button>
-    <select id="game-res" style="width:auto;min-width:150px">
-     <option selected>1280x720</option>
-     <option>960x540</option>
-     <option>1920x1080</option>
-    </select>
-   </div>
-   <div class="row" style="flex-wrap:wrap;gap:10px;margin-top:12px">
-    <a id="weblink" class="mut" target="_blank">Version web…</a>
-    <button class="go sm" onclick="run('godot-build-web')">🛠 Build web</button>
+  <div class="game-readout"><span id="game-version">…</span></div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Commandes</span><span class="hatch"></span>
+    <span class="meta" id="play-meta">natif · vnc</span></div>
+   <div class="win-body">
+    <div class="row" style="flex-wrap:wrap;gap:8px;justify-content:flex-start">
+     <button class="go primary" id="btn-play">▶ Play</button>
+     <button class="go stop" id="btn-stop" style="display:none">■ Stop</button>
+     <button class="go" id="btn-sync">⟳ Sync</button>
+     <button class="go" id="btn-fs" disabled>⛶ Plein écran</button>
+     <select id="game-res" style="width:auto;min-width:140px">
+      <option selected>1280x720</option><option>960x540</option><option>1920x1080</option>
+     </select>
+    </div>
+    <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:8px;justify-content:flex-start">
+     <a id="weblink" class="mut" target="_blank">Version web…</a>
+     <button class="go sm" onclick="run('godot-build-web')">Build web</button>
+    </div>
    </div>
   </div>
  </section>
 
- <!-- ══ RUN ══ -->
- <section class="pane" id="pane-run">
-  <h2>Godot</h2><div class="grid" id="godotcard"></div>
-  <h2>Actions rapides</h2>
-  <div class="form"><div class="row" style="flex-wrap:wrap;gap:10px;justify-content:flex-start">
-    <button class="go" onclick="run('godot-boot')">Boot check</button>
-    <button class="go" onclick="run('godot-test')">Tests headless</button>
-    <button class="go" onclick="runAll()">Smoke toutes scènes</button>
-    <button class="go" onclick="parseProj()">Import/parse ⏱</button>
-  </div><div class="res" id="runres" style="margin-top:10px"></div></div>
-  <h2>Scènes</h2><div class="grid" id="scenes"></div>
+ <!-- ══ AGENTS ══ -->
+ <section class="pane" id="pane-agents">
+  <div class="win">
+   <div class="win-bar"><span class="t">Automatisations</span><span class="hatch"></span>
+    <span class="meta" id="agents-meta">…</span></div>
+   <div class="win-body">
+    <div class="grid" id="agentlist"></div>
+    <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:10px;justify-content:flex-start">
+     <button class="go sm" onclick="run('agents-install')">Réinstaller la planification</button>
+     <span class="mut" id="agents-hint"></span>
+    </div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Santé — 2 dernières heures</span><span class="hatch"></span>
+    <span class="meta" id="health-meta">…</span></div>
+   <div class="win-body" id="healthbody"><div class="mut">aucun relevé</div></div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Smoke nocturne</span><span class="hatch"></span>
+    <span class="meta" id="smoke-meta">…</span></div>
+   <div class="win-body" id="smokebody"><div class="mut">pas encore exécuté</div></div>
+  </div>
  </section>
 
- <!-- ══ CONTENU ══ -->
+ <!-- ══ GODOT ══ -->
+ <section class="pane" id="pane-godot">
+  <div class="win">
+   <div class="win-bar"><span class="t">Moteur &amp; projet</span><span class="hatch"></span></div>
+   <div class="win-body"><div class="grid" id="godotcard"></div></div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Actions rapides</span><span class="hatch"></span></div>
+   <div class="win-body">
+    <div class="row" style="flex-wrap:wrap;gap:8px;justify-content:flex-start">
+     <button class="go" onclick="run('godot-boot')">Boot check</button>
+     <button class="go" onclick="run('godot-test')">Tests headless</button>
+     <button class="go" onclick="runAll()">Smoke toutes scènes</button>
+     <button class="go" onclick="parseProj()">Import/parse</button>
+    </div>
+    <div class="res" id="runres" style="margin-top:8px"></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Scènes</span><span class="hatch"></span></div>
+   <div class="win-body"><div class="grid" id="scenes"></div></div>
+  </div>
+ </section>
+
+ <!-- ══ CONTENU (cartes + LLM) ══ -->
  <section class="pane" id="pane-content">
-  <h2>Canon &amp; corpus</h2><div class="grid" id="contentcards"></div>
-  <h2>Générer / valider</h2>
-  <div class="form">
-   <label>Nombre</label><select id="genN"><option>6</option><option selected>12</option><option>24</option><option>48</option></select>
-   <label>Backend</label><select id="genB"><option value="template" selected>template (hors-ligne)</option><option value="ollama">ollama (local)</option></select>
-   <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:10px;justify-content:flex-start">
-    <button class="go" onclick="genCards()">Générer ▶</button>
-    <button class="go" onclick="run('content-validate')">Valider (selftest)</button>
-    <button class="go" onclick="run('content-eval',{backend:'template',count:20})">Éval modèles</button>
-   </div><div class="res" id="genres" style="margin-top:10px"></div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Canon &amp; corpus</span><span class="hatch"></span></div>
+   <div class="win-body"><div class="grid" id="contentcards"></div></div>
   </div>
-  <h2>Divergences code ↔ bible</h2><ul class="feed" id="divs"></ul>
+  <div class="win">
+   <div class="win-bar"><span class="t">Générer / valider</span><span class="hatch"></span></div>
+   <div class="win-body">
+    <label>Nombre</label>
+    <select id="genN"><option>6</option><option selected>12</option><option>24</option><option>48</option></select>
+    <label>Backend</label>
+    <select id="genB"><option value="template" selected>template (hors-ligne)</option><option value="ollama">ollama (local)</option></select>
+    <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px;justify-content:flex-start">
+     <button class="go" onclick="genCards()">Générer</button>
+     <button class="go" onclick="run('content-validate')">Valider</button>
+     <button class="go" onclick="run('content-eval',{backend:'template',count:20})">Éval modèles</button>
+    </div>
+    <div class="res" id="genres" style="margin-top:8px"></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Modèles locaux</span><span class="hatch"></span></div>
+   <div class="win-body">
+    <div class="grid" id="llmcards"></div>
+    <label style="margin-top:10px">Modèle</label><input id="omodel" value="gemma3:4b">
+    <label>Prompt</label><input id="oprompt" value="Décris Brocéliande en une phrase.">
+    <button class="go" style="margin-top:10px" onclick="askOllama()">Générer</button>
+    <div class="res" id="ores" style="margin-top:8px"></div>
+    <div class="grid" id="voicecards" style="margin-top:10px"></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Divergences code ↔ bible</span><span class="hatch"></span></div>
+   <div class="win-body"><ul class="feed" id="divs"></ul></div>
+  </div>
  </section>
 
  <!-- ══ JOBS ══ -->
  <section class="pane" id="pane-jobs">
-  <h2>Lancer</h2>
-  <div class="form">
-   <label>Type</label><select id="lk" onchange="renderParams()"></select>
-   <div id="lparams"></div>
-   <button class="go" id="lbtn" style="margin-top:14px" onclick="launchGeneric()">Lancer ▶</button>
-   <div class="res" id="lres" style="margin-top:10px"></div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Lancer une tâche</span><span class="hatch"></span></div>
+   <div class="win-body">
+    <label>Type</label><select id="lk" onchange="renderParams()"></select>
+    <div id="lparams"></div>
+    <button class="go" id="lbtn" style="margin-top:10px" onclick="launchGeneric()">Lancer</button>
+    <div class="res" id="lres" style="margin-top:8px"></div>
+   </div>
   </div>
-  <h2>Jobs récents</h2><div class="grid" id="jobs"></div>
- </section>
-
- <!-- ══ LLM ══ -->
- <section class="pane" id="pane-llm">
-  <h2>Ollama local</h2><div class="grid" id="llmcards"></div>
-  <h2>Tester le modèle</h2>
-  <div class="form">
-   <label>Modèle</label><input id="omodel" value="gemma3:4b">
-   <label>Prompt</label><input id="oprompt" value="Décris Brocéliande en une phrase.">
-   <button class="go" style="margin-top:12px" onclick="askOllama()">Générer ▶</button>
-   <div class="res" id="ores" style="margin-top:10px"></div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Tâches récentes</span><span class="hatch"></span></div>
+   <div class="win-body"><div class="grid" id="jobs"></div></div>
   </div>
-  <h2>Voix</h2><div class="grid" id="voicecards"></div>
  </section>
 
- <!-- ══ REPO ══ -->
- <section class="pane" id="pane-repo">
-  <h2>Dépôt du jeu</h2><div class="grid" id="repocards"></div>
-  <div class="form"><div class="row" style="flex-wrap:wrap;gap:10px;justify-content:flex-start">
-    <button class="go" onclick="run('git-fetch')">Fetch</button>
-    <button class="go" onclick="run('git-pull')">Pull (ff-only)</button>
-   </div><div class="mut" style="margin-top:8px">Lecture seule : pas de commit/push/reset depuis l'UI.</div></div>
-  <h2>Commits</h2><ul class="feed" id="commits"></ul>
- </section>
-
- <!-- ══ HÔTE ══ -->
- <section class="pane" id="pane-host">
-  <h2>Machine</h2><div class="grid" id="hostcards"></div>
-  <h2>Ports</h2><div class="grid" id="ports"></div>
+ <!-- ══ SYSTÈME (dépôt + machine) ══ -->
+ <section class="pane" id="pane-system">
+  <div class="win">
+   <div class="win-bar"><span class="t">Machine</span><span class="hatch"></span></div>
+   <div class="win-body"><div class="grid" id="hostcards"></div></div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Ports</span><span class="hatch"></span></div>
+   <div class="win-body"><div class="grid" id="ports"></div></div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Dépôt de l'outillage</span><span class="hatch"></span></div>
+   <div class="win-body">
+    <div class="grid" id="repocards"></div>
+    <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:10px;justify-content:flex-start">
+     <button class="go sm" onclick="run('git-fetch')">Fetch</button>
+     <button class="go sm" onclick="run('git-pull')">Pull (ff-only)</button>
+    </div>
+    <div class="mut" style="margin-top:6px">Lecture seule : jamais de commit/push/reset depuis l'UI.</div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Commits</span><span class="hatch"></span></div>
+   <div class="win-body"><ul class="feed" id="commits"></ul></div>
+  </div>
  </section>
 </main>
 <footer id="foot"></footer>
+<span id="sum" hidden></span>
 <script type="module" src="/static/studio.js"></script>
 </body>
 </html>

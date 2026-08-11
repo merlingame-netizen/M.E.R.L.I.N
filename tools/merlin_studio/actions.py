@@ -36,7 +36,8 @@ PY = sys.executable or "python3"
 GODOT = probes.GODOT
 
 # group -> max concurrent (1 = serialized)
-GROUPS = {"godot": 1, "content": 1, "llm": 1, "git": 1, "daemon": 4, "misc": 2, "game": 1}
+GROUPS = {"godot": 1, "content": 1, "llm": 1, "git": 1, "daemon": 4, "misc": 2,
+          "game": 1, "agents": 2}
 
 # Résolutions autorisées pour le jeu natif (jamais interpolé librement).
 GAME_RES = ("1280x720", "960x540", "1920x1080")
@@ -164,6 +165,18 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
             res = "1280x720"
         return (["bash", "infra/oracle/game/game-stack.sh", "restart", "--res", res],
                 "game", f"Jeu natif : redémarrer ({res})")
+
+    # -- Agents de la VM (allow-list stricte : ids du manifeste uniquement) --
+    if kind == "agent-run":
+        aid = _s(p.get("id", "")).strip()
+        valid = {a.get("id") for a in probes.agents().get("agents", [])}
+        if aid not in valid:
+            return (None, "agents", f"agent inconnu: {aid or '(vide)'}")
+        return (["bash", "infra/oracle/agents/agent-run.sh", aid],
+                "agents", f"Agent : {aid}")
+    if kind == "agents-install":
+        return (["bash", "infra/oracle/agents/install-agents.sh"],
+                "agents", "Agents : (ré)installer la planification")
 
     # -- Repo (lecture/avance rapide seulement — jamais commit/push/reset) --
     if kind == "git-fetch":

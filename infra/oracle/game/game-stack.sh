@@ -140,8 +140,19 @@ require_import() {
     fi
 }
 
-do_start() { require_import; if [ "$GAME_MODE" = "container" ]; then start_container; else start_native; fi; }
-do_stop()  { if [ "$GAME_MODE" = "container" ]; then stop_container;  else stop_native;  fi; }
+# État DÉSIRÉ : le veilleur (agent game-watchdog) ne relance que si l'humain a
+# demandé que le jeu tourne. Un stop explicite doit rester un stop.
+desire() { mkdir -p "$RUNDIR"; printf '%s' "$1" > "$RUNDIR/desired"; }
+
+do_start() {
+    require_import
+    desire running; printf '%s' "$RES" > "$RUNDIR/last-res"
+    if [ "$GAME_MODE" = "container" ]; then start_container; else start_native; fi
+}
+do_stop() {
+    desire stopped
+    if [ "$GAME_MODE" = "container" ]; then stop_container; else stop_native; fi
+}
 
 case "${1:-status}" in
     start)   shift || true; [ "${1:-}" = "--res" ] && RES="$2"; do_start ;;

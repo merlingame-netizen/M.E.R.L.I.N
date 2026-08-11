@@ -140,6 +140,10 @@ def build_app() -> Flask:
                               "flask-sock absent — pip install flask-sock simple-websocket")
         return jsonify(info)
 
+    @app.route("/api/agents")
+    def api_agents():
+        return jsonify(probes.agents())
+
     @app.route("/api/vnc/ticket", methods=["POST"])
     def api_vnc_ticket():
         # Derrière le gate Basic auth : délivre un laissez-passer 60 s à usage

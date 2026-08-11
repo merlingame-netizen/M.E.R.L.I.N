@@ -119,6 +119,42 @@ def last_runs() -> dict:
     return _read_json(STATUS_DIR / "studio_runs.json", {})
 
 
+AGENTS_DIR = ROOT / "infra" / "oracle" / "agents"
+
+
+def agents() -> dict:
+    """Agents planifiés sur la VM + leur dernier passage. Never raises."""
+    manifest = _read_json(AGENTS_DIR / "agents.json", {})
+    defs = manifest.get("agents", []) if isinstance(manifest, dict) else []
+    state_dir = Path.home() / ".cache" / "merlin-agents"
+    out = []
+    for a in defs:
+        st = _read_json(state_dir / f"{a.get('id')}.json", {})
+        out.append({
+            "id": a.get("id"), "label": a.get("label", a.get("id")),
+            "desc": a.get("desc", ""), "schedule": a.get("schedule", ""),
+            "enabled": bool(a.get("enabled")),
+            "last_run": st.get("last_run", ""), "ok": st.get("ok"),
+            "rc": st.get("rc"), "duration_s": st.get("duration_s"),
+            "summary": st.get("summary", ""),
+        })
+    installed = False
+    try:
+        cron = _sh(["crontab", "-l"], timeout=5)[0]
+        installed = "merlin-agents" in cron
+    except Exception:
+        pass
+    health = []
+    try:
+        hist = (state_dir / "health-history.jsonl").read_text(encoding="utf-8").splitlines()
+        health = [json.loads(x) for x in hist[-24:] if x.strip()]
+    except Exception:
+        pass
+    return {"available": AGENTS_DIR.exists(), "installed": installed,
+            "agents": out, "health": health,
+            "smoke": _read_json(state_dir / "smoke-scenes.json", {})}
+
+
 def game() -> dict:
     """État du jeu natif (VNC), via game-stack.sh status — source de vérité
     unique pour les deux modes (container podman / native sysroot). Never raises."""
