@@ -169,6 +169,7 @@ def agents() -> dict:
     return {"available": AGENTS_DIR.exists(), "installed": installed,
             "agents": out, "health": health, "ci": ci, "report": report,
             "missions_queued": missions,
+            "billing": _read_json(state_dir / "billing.json", {}),
             "smoke": _read_json(state_dir / "smoke-scenes.json", {})}
 
 

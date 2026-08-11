@@ -86,11 +86,24 @@ PY
 ls -t "$CI_DIR"/*.png 2>/dev/null | tail -n +16 | xargs -r rm -f
 
 # ── 7. verdict final + notification téléphone ───────────────────────────────
-PREV_RED=false
-[ -n "$LAST_DONE" ] && grep "\"sha\":\"$LAST_DONE\"" "$HIST" 2>/dev/null | tail -1 \
-    | grep -q '"scenes_failing":0,"boot_ok":true' || PREV_RED=true
+# Le verdict précédent est lu en JSON : un grep sur le texte brut est faux dès
+# que l'écriture change d'espacement (python json.dumps met un espace après ':').
+PREV_RED="$(env HIST="$HIST" LAST="$LAST_DONE" python3 -c "
+import json, os
+last = os.environ['LAST']
+if not last:
+    print('unknown'); raise SystemExit
+for line in reversed(open(os.environ['HIST'], encoding='utf-8').read().splitlines()[:-1]):
+    try: r = json.loads(line)
+    except Exception: continue
+    if r.get('sha') == last:
+        print('false' if (r.get('scenes_failing') == 0 and r.get('boot_ok')) else 'true')
+        break
+else:
+    print('unknown')" 2>/dev/null || echo unknown)"
 if [ "$BAD" -eq 0 ] && [ "$BOOT_OK" = true ]; then
-    [ "$PREV_RED" = true ] && [ -n "$LAST_DONE" ] && \
+    # Notifier seulement une VRAIE bascule rouge→vert (jamais sur un vert connu).
+    [ "$PREV_RED" = true ] && \
         bash "$HERE/notify.sh" default "CI de nouveau VERTE" "$SHA — $SUBJECT"
     echo "CI $SHA : VERT — $TOTAL scènes saines, boot rendu OK"
 else

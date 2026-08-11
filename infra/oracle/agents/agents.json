@@ -74,6 +74,14 @@
       "desc": "Consomme la file de missions (Claude Code headless) et committe sur une branche auto/coder. Requiert une clé API dans ~/.config/merlin-coder.env."
     },
     {
+      "id": "billing",
+      "label": "Facturation Oracle",
+      "schedule": "17 * * * *",
+      "cmd": "a_billing.sh",
+      "enabled": true,
+      "desc": "Relève le coût du mois (Usage API). La VM est sur l'offre Always Free : tout montant non nul déclenche une alerte urgente."
+    },
+    {
       "id": "ollama-serve",
       "label": "Serveur LLM local",
       "schedule": "*/2 * * * *",

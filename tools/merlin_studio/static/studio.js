@@ -269,6 +269,38 @@ async function refreshAgents() {
       </div>`;
     }).join('');
   }
+  // Facturation : doit rester à 0. Le chip vire au rouge au premier centime.
+  const b = d.billing || {};
+  const billChip = $('#ch-bill');
+  if (b.total === 0) {
+    billChip.className = 'chip up'; billChip.textContent = '€ 0,00';
+  } else if (typeof b.total === 'number') {
+    billChip.className = 'chip down';
+    billChip.textContent = '€ ' + b.total.toFixed(2).replace('.', ',');
+  } else {
+    billChip.className = 'chip idle'; billChip.textContent = '€ ?';
+  }
+  if (b.t) {
+    const age = Math.max(0, Math.round((Date.now() - Date.parse(b.t)) / 60000));
+    const src = b.source === 'live' ? 'live' : (b.source === 'snapshot' ? 'instantané' : '—');
+    $('#bill-meta').textContent = `${src} · il y a ${age} min`;
+    billChip.title = `Facturation Oracle ${b.month || ''} — source ${src}, relevé il y a ${age} min`;
+  }
+  if (typeof b.total === 'number') {
+    const zero = b.total === 0;
+    $('#bill-body').innerHTML =
+      `<div style="font:700 30px ui-monospace,monospace;color:${zero ? 'var(--green)' : 'var(--red)'}">
+         ${b.total.toFixed(2).replace('.', ',')} ${esc(b.currency || 'EUR')}</div>
+       <div class="mut" style="margin-top:4px">cumul du mois ${esc(b.month || '')} — ${
+         zero ? 'offre Always Free respectée' : '⚠ montant non nul, à vérifier dans la console Oracle'}</div>
+       ${(b.services || []).length ? `<div class="metrics" style="margin-top:8px">${
+         b.services.map(s => `<span>${esc(s.name)} : ${s.amount} ${esc(b.currency || '')}</span>`).join('')
+       }</div>` : ''}
+       ${b.live_error ? `<div class="mut" style="margin-top:8px">relevé direct indisponible : ${esc(String(b.live_error).slice(0, 120))}</div>` : ''}`;
+  } else if (b.error) {
+    $('#bill-body').innerHTML = `<div class="mut">indisponible — ${esc(String(b.error).slice(0, 160))}</div>`;
+  }
+
   const mq = d.missions_queued || 0;
   $('#mission-meta').textContent = mq ? `${mq} mission(s) en file` : 'file vide';
   if (d.report) {

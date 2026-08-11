@@ -25,6 +25,7 @@
   <span class="chip idle" id="ch-mem">RAM …</span>
   <span class="chip idle" id="ch-jobs">Jobs …</span>
   <span class="chip idle" id="ch-llm">LLM …</span>
+  <span class="chip idle" id="ch-bill" title="Facturation Oracle du mois — doit rester à 0">€ …</span>
   <span class="chip idle" id="ch-clock">--:--</span>
  </div>
  <nav class="dock">
@@ -74,6 +75,16 @@
     <span class="meta" id="ci-meta">…</span></div>
    <div class="win-body">
     <div class="grid" id="cilist"><div class="mut">aucun passage — pousser un commit sur la branche du jeu</div></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Facturation Oracle</span><span class="hatch"></span>
+    <span class="meta" id="bill-meta">…</span></div>
+   <div class="win-body">
+    <div id="bill-body" class="mut">relevé en attente…</div>
+    <div class="row" style="justify-content:flex-start;margin-top:10px">
+     <button class="go sm" onclick="run('agent-run',{id:'billing'})">Relever maintenant</button>
+    </div>
    </div>
   </div>
   <div class="win">
