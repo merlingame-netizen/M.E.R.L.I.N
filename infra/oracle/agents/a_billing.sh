@@ -11,16 +11,21 @@ PY="$HOME/workspace/M.E.R.L.I.N/.venv/bin/python"
 "$PY" "$HERE/../scripts/billing_probe.py"
 RC=$?
 
+# Comparaison faite en python (bc n'est pas garanti sur la VM).
 TOTAL="$("$PY" -c "
 import json
 try:
-    d = json.load(open('$STATE/billing.json'))
-    print(d.get('total') if d.get('total') is not None else 'null')
+    d = json.load(open('$STATE/billing-data.json'))
+    t = d.get('total')
+    print('null' if t is None else t)
 except Exception:
     print('null')")"
+POSITIF="$("$PY" -c "
+try: print('1' if float('$TOTAL') > 0 else '0')
+except Exception: print('0')")"
 
 # Alerte au premier centime — et une seule fois par palier (pas de spam horaire).
-if [ "$TOTAL" != "null" ] && [ "$(echo "$TOTAL > 0" | bc -l 2>/dev/null || echo 0)" = "1" ]; then
+if [ "$TOTAL" != "null" ] && [ "$POSITIF" = "1" ]; then
     MARK="$STATE/billing-alerted"
     if [ "$(cat "$MARK" 2>/dev/null)" != "$TOTAL" ]; then
         bash "$HERE/notify.sh" urgent "FACTURATION NON NULLE" \

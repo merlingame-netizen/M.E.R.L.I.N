@@ -13,8 +13,12 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 STATE_DIR="$HOME/.cache/merlin-agents"
 LOG_DIR="$STATE_DIR/logs"
+# L'état va dans un SOUS-DOSSIER : à la racine, "<id>.json" entrait en collision
+# avec les fichiers de données produits par les agents eux-mêmes (déjà vu deux
+# fois : llm-bench, billing). Ici, plus aucun nom d'agent ne peut en écraser un.
+RUN_DIR="$STATE_DIR/state"
 MANIFEST="$HERE/agents.json"
-mkdir -p "$STATE_DIR" "$LOG_DIR"
+mkdir -p "$STATE_DIR" "$LOG_DIR" "$RUN_DIR"
 
 if [ "${1:-}" = "--list" ]; then cat "$MANIFEST"; exit 0; fi
 
@@ -38,7 +42,7 @@ if ! flock -n 9; then
     exit 0
 fi
 
-STATE="$STATE_DIR/$ID.json"
+STATE="$RUN_DIR/$ID.json"
 LOG="$LOG_DIR/$ID.log"
 START_TS="$(date -u +%s)"
 START_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

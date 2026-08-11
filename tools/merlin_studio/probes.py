@@ -129,7 +129,9 @@ def agents() -> dict:
     state_dir = Path.home() / ".cache" / "merlin-agents"
     out = []
     for a in defs:
-        st = _read_json(state_dir / f"{a.get('id')}.json", {})
+        # état dans state/<id>.json ; repli sur l'ancien emplacement (racine)
+        st = _read_json(state_dir / "state" / f"{a.get('id')}.json", None) \
+            or _read_json(state_dir / f"{a.get('id')}.json", {})
         out.append({
             "id": a.get("id"), "label": a.get("label", a.get("id")),
             "desc": a.get("desc", ""), "schedule": a.get("schedule", ""),
@@ -169,7 +171,7 @@ def agents() -> dict:
     return {"available": AGENTS_DIR.exists(), "installed": installed,
             "agents": out, "health": health, "ci": ci, "report": report,
             "missions_queued": missions,
-            "billing": _read_json(state_dir / "billing.json", {}),
+            "billing": _read_json(state_dir / "billing-data.json", {}),
             "smoke": _read_json(state_dir / "smoke-scenes.json", {})}
 
 

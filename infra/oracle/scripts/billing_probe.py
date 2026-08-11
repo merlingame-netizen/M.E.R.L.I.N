@@ -19,7 +19,7 @@ import json
 import sys
 from pathlib import Path
 
-OUT = Path.home() / ".cache" / "merlin-agents" / "billing.json"
+OUT = Path.home() / ".cache" / "merlin-agents" / "billing-data.json"
 SNAP = Path.home() / ".cache" / "merlin-agents" / "billing-snapshot.json"
 
 
