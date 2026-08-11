@@ -263,6 +263,7 @@ async function refreshAgents() {
         <div class="mut">${esc(c.subject || '')}</div>
         <div class="metrics"><span>${c.scenes_failing}/${c.scenes_total} scènes KO</span>
           <span>boot ${c.boot_ok ? 'OK' : 'KO'}</span><span>${esc((c.t || '').slice(5, 16).replace('T', ' '))}</span></div>
+        ${c.diag ? `<div class="mut" style="margin-top:6px;color:var(--amber)">🜁 ${esc(c.diag)}</div>` : ''}
         ${c.shot ? `<img src="/api/ci/shot/${esc(c.sha)}" alt="rendu ${esc(c.sha)}"
              style="width:100%;margin-top:6px;border:1px solid var(--border)">` : ''}
       </div>`;
@@ -311,6 +312,8 @@ if (mBtn) mBtn.onclick = async () => {
     if (!r.error) { inp.value = ''; refreshAgents(); }
   } catch (e) { res.className = 'res err'; res.textContent = '✗ réseau'; }
 };
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
 loadCat(); tick(); initGame();
 setInterval(refreshClock, 20000);

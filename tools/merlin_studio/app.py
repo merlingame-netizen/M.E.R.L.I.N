@@ -194,6 +194,19 @@ def build_app() -> Flask:
         return jsonify({"ok": True, "mission": name,
                         "queued": len(list(qdir.glob("*")))})
 
+    # ── PWA : manifest + service worker servis À LA RACINE (portée "/") ──────
+    @app.route("/manifest.webmanifest")
+    def pwa_manifest():
+        return send_from_directory(str(Path(app.static_folder)), "manifest.webmanifest",
+                                   mimetype="application/manifest+json")
+
+    @app.route("/sw.js")
+    def pwa_sw():
+        resp = send_from_directory(str(Path(app.static_folder)), "sw.js",
+                                   mimetype="text/javascript", max_age=0)
+        resp.headers["Service-Worker-Allowed"] = "/"
+        return resp
+
     # Vignettes CI (sha court hexa uniquement — pas de traversée possible).
     @app.route("/api/ci/shot/<sha>")
     def api_ci_shot(sha: str):

@@ -23,7 +23,9 @@ fi
 RES="$(cat "$HOME/.cache/merlin-game/last-res" 2>/dev/null || echo 960x540)"
 echo "jeu mort alors qu'il devait tourner — relance en $RES" >&2
 if bash "$GS" start --res "$RES" >&2; then
+    bash "$HERE/notify.sh" default "Jeu relancé" "Le jeu était tombé — relancé en $RES par le veilleur."
     echo "jeu relancé ($RES)"
 else
+    bash "$HERE/notify.sh" urgent "Jeu KO" "Relance impossible — voir les journaux du jeu sur le portail."
     echo "ÉCHEC de la relance — voir les journaux du jeu"; exit 1
 fi

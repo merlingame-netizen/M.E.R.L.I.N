@@ -88,4 +88,6 @@ PY
 
 ROUGES="$(grep -c '^- ROUGE' "$OUT" || true)"
 ECHECS="$(grep -c '^- ÉCHEC' "$OUT" || true)"
+bash "$HERE/notify.sh" low "Rapport du matin" \
+    "$ROUGES CI rouge(s), $ECHECS agent(s) en échec — détail sur le portail."
 echo "rapport écrit ($(wc -l < "$OUT") lignes) · $ROUGES CI rouge(s) · $ECHECS agent(s) en échec"
