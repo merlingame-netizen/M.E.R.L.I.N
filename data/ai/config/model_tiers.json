@@ -12,7 +12,7 @@
         "classify",
         "extract"
       ],
-      "tok_s_fallback": 5.0,
+      "tok_s_fallback": 1.8,
       "desc": "Tri et extraction. Choix fermés, recopie structurée depuis un contexte fourni."
     },
     {
@@ -26,7 +26,7 @@
         "judge",
         "compose"
       ],
-      "tok_s_fallback": 3.5,
+      "tok_s_fallback": 1.0,
       "desc": "Analyse et rédaction. Le défaut du jeu — la cible du fine-tune MERLIN."
     },
     {
@@ -40,11 +40,11 @@
         "judge",
         "compose"
       ],
-      "tok_s_fallback": 2.5,
+      "tok_s_fallback": 0.6,
       "desc": "MoE 4B actifs. Exige ~16 Go de disque ET de RAM : indisponible tant que le boot volume n'est pas étendu, et refusé dès que le jeu tourne. Le routeur se rabat alors sur du map-reduce e4b."
     }
   ],
-  "prompt_eval_tok_s_fallback": 18.0,
+  "prompt_eval_tok_s_fallback": 8.0,
   "gates": {
     "disk_margin_gb": 2.0,
     "ram_margin_mb": 2500,

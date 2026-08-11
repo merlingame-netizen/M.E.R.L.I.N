@@ -8,8 +8,8 @@
       "card": ".claude/agents/content_card_writer.md",
       "analyzer": "content_gap",
       "shape": "compose",
-      "out_tokens": 320,
-      "deadline_s": 420,
+      "out_tokens": 220,
+      "deadline_s": 900,
       "evidence_tokens": 500,
       "kind": "content",
       "desc": "Lit les `gaps` documentés du canon, choisit le biome le moins couvert, et rédige UNE carte conforme au schéma. La carte est validée par scenario_validator avant d'être proposée."

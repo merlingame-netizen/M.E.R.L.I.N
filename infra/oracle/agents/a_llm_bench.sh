@@ -39,13 +39,22 @@ for m in models:
                 "keep_alive": "0", "options": {"num_thread": 4, "num_ctx": 2048}})
         wall = round(time.time() - t0, 1)
         toks = round(d.get("eval_count", 0) / max(d.get("eval_duration", 1) / 1e9, .001), 1)
+        # Le débit de LECTURE du prompt est distinct de celui de génération et
+        # pèse lourd pour un agent qui envoie des preuves : on le mesure aussi.
+        p_toks = round(d.get("prompt_eval_count", 0)
+                       / max(d.get("prompt_eval_duration", 1) / 1e9, .001), 1)
+        load_s = round(d.get("load_duration", 0) / 1e9, 1)
         rows.append({"model": m, "wall_s": wall, "tok_s": toks,
+                     "prompt_eval_tok_s": p_toks, "load_s": load_s,
                      "sample": d.get("response", "")[:160]})
-        print(f"  {m}: {wall}s · {toks} tok/s", file=sys.stderr)
+        print(f"  {m}: {wall}s · gen {toks} tok/s · prompt {p_toks} tok/s · load {load_s}s",
+              file=sys.stderr)
     except Exception as e:
         rows.append({"model": m, "error": str(e)[:100]})
 
-json.dump({"t": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "rows": rows},
+peval = [r["prompt_eval_tok_s"] for r in rows if r.get("prompt_eval_tok_s")]
+json.dump({"t": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "rows": rows,
+           "prompt_eval_tok_s": round(sum(peval) / len(peval), 1) if peval else None},
           open(out, "w"), ensure_ascii=False, indent=1)
 # champion triage : le plus lourd sous 60 s de mur (les noms qwen trient par taille)
 ok = [r for r in rows if r.get("wall_s", 999) < 60]
