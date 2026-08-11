@@ -65,6 +65,31 @@
  <!-- ══ AGENTS ══ -->
  <section class="pane" id="pane-agents">
   <div class="win">
+   <div class="win-bar"><span class="t">CI des commits</span><span class="hatch"></span>
+    <span class="meta" id="ci-meta">…</span></div>
+   <div class="win-body">
+    <div class="grid" id="cilist"><div class="mut">aucun passage — pousser un commit sur la branche du jeu</div></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Missions du codeur</span><span class="hatch"></span>
+    <span class="meta" id="mission-meta">…</span></div>
+   <div class="win-body">
+    <label>Nouvelle mission (exécutée par le codeur résident, sur une branche auto/coder)</label>
+    <input id="mission-text" placeholder="ex. Corrige les erreurs remontées par le smoke nocturne">
+    <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:8px;justify-content:flex-start">
+     <button class="go sm" id="btn-mission">Mettre en file</button>
+     <button class="go sm" onclick="run('agent-run',{id:'coder'})">Lancer le codeur</button>
+     <span class="res" id="mission-res"></span>
+    </div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">Rapport du matin</span><span class="hatch"></span>
+    <span class="meta" id="report-meta">…</span></div>
+   <div class="win-body"><pre class="log" id="reportbody" style="max-height:340px">pas encore généré</pre></div>
+  </div>
+  <div class="win">
    <div class="win-bar"><span class="t">Automatisations</span><span class="hatch"></span>
     <span class="meta" id="agents-meta">…</span></div>
    <div class="win-body">

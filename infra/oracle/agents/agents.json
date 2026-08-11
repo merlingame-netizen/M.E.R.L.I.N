@@ -50,6 +50,30 @@
       "desc": "Lance chaque scène du jeu en headless et compte les erreurs de script. Rapport consultable au réveil."
     },
     {
+      "id": "ci-commit",
+      "label": "CI de commit",
+      "schedule": "webhook/push",
+      "cmd": "a_ci_commit.sh",
+      "enabled": false,
+      "desc": "À chaque push sur la branche du jeu : sync + import + smoke de toutes les scènes + boot rendu + capture d'écran. Déclenchée par le webhook GitHub ou par la synchro (15 min)."
+    },
+    {
+      "id": "daily-report",
+      "label": "Rapport du matin",
+      "schedule": "0 7 * * *",
+      "cmd": "a_daily_report.sh",
+      "enabled": true,
+      "desc": "Compile les 24 dernières heures en une page : commits, verdicts CI, agents en échec, santé, smoke."
+    },
+    {
+      "id": "coder",
+      "label": "Codeur résident",
+      "schedule": "à la demande",
+      "cmd": "a_coder.sh",
+      "enabled": false,
+      "desc": "Consomme la file de missions (Claude Code headless) et committe sur une branche auto/coder. Requiert une clé API dans ~/.config/merlin-coder.env."
+    },
+    {
       "id": "ollama-idle",
       "label": "Décharge des modèles",
       "schedule": "*/10 * * * *",

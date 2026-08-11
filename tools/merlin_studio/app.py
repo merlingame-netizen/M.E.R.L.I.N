@@ -92,6 +92,9 @@ def build_app() -> Flask:
         # Handshake noVNC : un ticket frais (délivré derrière Basic auth) vaut auth.
         if request.path == "/websockify" and _ticket_ok(request.args.get("ticket")):
             return None
+        # Webhook GitHub : signé HMAC (GitHub ne sait pas faire de Basic auth).
+        if request.path == "/api/hook/push":
+            return None
         if not _auth_ok():
             return Response("Authentication required.\n", 401,
                             {"WWW-Authenticate": 'Basic realm="MERLIN Studio"'})
@@ -143,6 +146,61 @@ def build_app() -> Flask:
     @app.route("/api/agents")
     def api_agents():
         return jsonify(probes.agents())
+
+    # ── webhook GitHub : push sur la branche du jeu → CI immédiate ───────────
+    def _game_env() -> dict:
+        env = {}
+        try:
+            for line in (Path.home() / ".config" / "merlin-game.env").read_text().splitlines():
+                k, _, v = line.partition("=")
+                if k.strip():
+                    env[k.strip()] = v.strip()
+        except Exception:
+            pass
+        return env
+
+    @app.route("/api/hook/push", methods=["POST"])
+    def api_hook_push():
+        import hashlib
+        env = _game_env()
+        secret = env.get("WEBHOOK_SECRET", "")
+        if not secret:
+            return jsonify({"error": "webhook non configuré (WEBHOOK_SECRET absent)"}), 503
+        sig = request.headers.get("X-Hub-Signature-256", "")
+        body = request.get_data()
+        want = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, want):
+            return jsonify({"error": "signature invalide"}), 401
+        payload = request.get_json(silent=True) or {}
+        ref = str(payload.get("ref", ""))
+        game_ref = env.get("GAME_REF", "")
+        if not game_ref or ref != f"refs/heads/{game_ref}":
+            return jsonify({"ok": True, "skipped": f"ref {ref} ≠ branche du jeu"}), 200
+        rec = actions.launch("agent-run", {"id": "ci-commit"})
+        return jsonify({"ok": not rec.get("error"), "job": rec.get("id"),
+                        "error": rec.get("error")}), (202 if not rec.get("error") else 409)
+
+    # ── file de missions du codeur résident ──────────────────────────────────
+    @app.route("/api/mission", methods=["POST"])
+    def api_mission():
+        body = request.get_json(silent=True) or {}
+        text = str(body.get("text", "")).strip()
+        if not (10 <= len(text) <= 4000):
+            return jsonify({"error": "mission entre 10 et 4000 caractères"}), 400
+        qdir = Path.home() / ".cache" / "merlin-missions" / "queue"
+        qdir.mkdir(parents=True, exist_ok=True)
+        name = time.strftime("%Y%m%d-%H%M%S") + ".md"
+        (qdir / name).write_text(text, encoding="utf-8")
+        return jsonify({"ok": True, "mission": name,
+                        "queued": len(list(qdir.glob("*")))})
+
+    # Vignettes CI (sha court hexa uniquement — pas de traversée possible).
+    @app.route("/api/ci/shot/<sha>")
+    def api_ci_shot(sha: str):
+        if not sha.isalnum() or len(sha) > 16:
+            return Response("bad sha\n", 400)
+        return send_from_directory(str(Path.home() / ".cache" / "merlin-agents" / "ci"),
+                                   sha + ".png", max_age=3600)
 
     @app.route("/api/vnc/ticket", methods=["POST"])
     def api_vnc_ticket():

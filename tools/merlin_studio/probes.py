@@ -150,8 +150,25 @@ def agents() -> dict:
         health = [json.loads(x) for x in hist[-24:] if x.strip()]
     except Exception:
         pass
+    ci = []
+    try:
+        lines = (state_dir / "ci" / "history.jsonl").read_text(encoding="utf-8").splitlines()
+        ci = [json.loads(x) for x in lines[-8:] if x.strip()]
+    except Exception:
+        pass
+    report = ""
+    try:
+        report = (state_dir / "daily-report.md").read_text(encoding="utf-8")[:8000]
+    except Exception:
+        pass
+    missions = 0
+    try:
+        missions = len(list((Path.home() / ".cache" / "merlin-missions" / "queue").glob("*")))
+    except Exception:
+        pass
     return {"available": AGENTS_DIR.exists(), "installed": installed,
-            "agents": out, "health": health,
+            "agents": out, "health": health, "ci": ci, "report": report,
+            "missions_queued": missions,
             "smoke": _read_json(state_dir / "smoke-scenes.json", {})}
 
 

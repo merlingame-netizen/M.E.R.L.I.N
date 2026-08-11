@@ -250,6 +250,32 @@ async function refreshAgents() {
       `charge ${last.load1} · RAM ${last.mem_pct}% · disque ${last.disk_pct}%`;
   }
 
+  // CI des commits : verdict + vignette du rendu réel par commit.
+  const ci = d.ci || [];
+  if (ci.length) {
+    const greens = ci.filter(c => c.scenes_failing === 0 && c.boot_ok).length;
+    $('#ci-meta').textContent = `${ci.length} commit(s) testés · ${ci.length - greens} rouge(s)`;
+    $('#cilist').innerHTML = [...ci].reverse().map(c => {
+      const ok = c.scenes_failing === 0 && c.boot_ok;
+      return `<div class="card ${ok ? 'done' : 'failed'}">
+        <div class="row"><span class="name">${esc(c.sha)}</span>
+          <span class="badge ${ok ? 'up' : 'down'}">${ok ? 'VERT' : 'ROUGE'}</span></div>
+        <div class="mut">${esc(c.subject || '')}</div>
+        <div class="metrics"><span>${c.scenes_failing}/${c.scenes_total} scènes KO</span>
+          <span>boot ${c.boot_ok ? 'OK' : 'KO'}</span><span>${esc((c.t || '').slice(5, 16).replace('T', ' '))}</span></div>
+        ${c.shot ? `<img src="/api/ci/shot/${esc(c.sha)}" alt="rendu ${esc(c.sha)}"
+             style="width:100%;margin-top:6px;border:1px solid var(--border)">` : ''}
+      </div>`;
+    }).join('');
+  }
+  const mq = d.missions_queued || 0;
+  $('#mission-meta').textContent = mq ? `${mq} mission(s) en file` : 'file vide';
+  if (d.report) {
+    $('#reportbody').textContent = d.report;
+    const m = d.report.match(/# Rapport du ([^\n]*)/);
+    $('#report-meta').textContent = m ? m[1] : '';
+  }
+
   const sm = d.smoke || {};
   if (sm.total) {
     $('#smoke-meta').textContent = `${sm.total} scènes · ${sm.failing} en erreur · ${esc(sm.commit || '')}`;
@@ -274,6 +300,18 @@ function tick() {
   refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshContent();
   refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshClock();
 }
+const mBtn = $('#btn-mission');
+if (mBtn) mBtn.onclick = async () => {
+  const inp = $('#mission-text'), res = $('#mission-res');
+  try {
+    const r = await j('/api/mission', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: inp.value }) });
+    res.className = 'res ' + (r.error ? 'err' : 'ok');
+    res.textContent = r.error ? '✗ ' + r.error : `✓ en file (${r.queued})`;
+    if (!r.error) { inp.value = ''; refreshAgents(); }
+  } catch (e) { res.className = 'res err'; res.textContent = '✗ réseau'; }
+};
+
 loadCat(); tick(); initGame();
 setInterval(refreshClock, 20000);
 setInterval(refreshJobs, 10000);
