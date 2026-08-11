@@ -182,6 +182,21 @@ def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = N
             (MISSIONS / name).write_text(prop["mission_text"], encoding="utf-8")
             out["effect"] = f"mission {name} en file (codeur non lancé)"
 
+    # Mémoire absolue : toute décision se grave, avec sa raison. Jamais d'effacement.
+    try:
+        import memory
+        auto = "auto" in str(prop.get("decision_reason", ""))
+        memory.add(
+            "contenu" if (decision == "accept" and prop["kind"] == "content") else
+            "intégration" if (decision == "accept" and prop["kind"] == "merge") else
+            "décision" if decision == "accept" else "rejet",
+            prop["title"],
+            (prop.get("decision_reason", "") or prop.get("claim", ""))[:300],
+            source=("auto" if auto else "maxime") + f"/{prop.get('agent', '?')}",
+            refs=[prop["id"]])
+    except Exception:
+        pass
+
     dest = (ACCEPTED if decision == "accept" else REJECTED)
     dest.mkdir(parents=True, exist_ok=True)
     (dest / src.name).write_text(json.dumps(prop, ensure_ascii=False, indent=1),

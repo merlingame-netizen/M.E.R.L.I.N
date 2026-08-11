@@ -167,6 +167,16 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
                 "game", f"Jeu natif : redémarrer ({res})")
 
     # -- Agents de la VM (allow-list stricte : ids du manifeste uniquement) --
+    if kind == "chat-reply":
+        import re as _re
+        conv = _s(p.get("conv", ""))
+        to = _s(p.get("to", "merlin"))
+        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
+            return (None, "llm", "conversation invalide")
+        if to != "merlin" and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
+            return (None, "llm", "conseiller invalide")
+        return ([PY, "tools/gd_agents/chat_reply.py", conv, to],
+                "llm", "Réponse du conseiller")
     if kind == "agent-run":
         aid = _s(p.get("id", "")).strip()
         valid = {a.get("id") for a in probes.agents().get("agents", [])}

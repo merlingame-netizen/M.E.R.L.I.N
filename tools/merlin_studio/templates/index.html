@@ -34,6 +34,7 @@
  <nav class="dock">
   <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
   <button data-tab="ideas"><span class="g">💡</span>Décider<span class="pill" id="dock-pending" hidden></span></button>
+  <button data-tab="talk"><span class="g">💬</span>Parler</button>
   <button data-tab="health"><span class="g">✚</span>Santé</button>
   <button data-tab="cogs" class="cog" title="Coulisses — le détail technique"><span class="g">⚙</span></button>
  </nav>
@@ -85,6 +86,36 @@
     <span class="meta" id="journal-meta">…</span></div>
    <div class="win-body">
     <div id="journal-list" class="journal"><div class="mut">le journal se remplit au fil des développements…</div></div>
+   </div>
+  </div>
+ </section>
+
+ <!-- ══ PARLER ══ conversations avec les conseillers + mémoire absolue du design -->
+ <section class="pane" id="pane-talk">
+  <div class="win">
+   <div class="win-bar"><span class="t">💬 Parler au studio</span><span class="hatch"></span>
+    <span class="meta" id="talk-meta">…</span></div>
+   <div class="win-body">
+    <div class="row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">
+     <select id="talk-to" style="max-width:100%"><option value="merlin">MERLIN — la mémoire du studio</option></select>
+    </div>
+    <div id="talk-thread" class="thread"><div class="mut">Choisis un conseiller et pose ta question —
+     la réponse arrive en une à trois minutes (le sage réfléchit lentement mais gratuitement).</div></div>
+    <div class="row" style="gap:8px;margin-top:10px">
+     <input id="talk-input" placeholder="Parle du jeu, du design, de ce qui est retenu…" style="flex:1">
+     <button class="go" id="talk-send" style="min-height:48px">Envoyer</button>
+    </div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">🧠 Mémoire du jeu</span><span class="hatch"></span>
+    <span class="meta" id="mem-meta">…</span></div>
+   <div class="win-body">
+    <div class="row" style="gap:8px;margin-bottom:10px">
+     <input id="mem-input" placeholder="Graver un souvenir : une règle, une décision, une idée retenue…" style="flex:1">
+     <button class="go sm" id="mem-add" style="min-height:48px">📌 Graver</button>
+    </div>
+    <div id="mem-list" class="journal"><div class="mut">la mémoire est vide — elle se remplit à chaque décision</div></div>
    </div>
   </div>
  </section>

@@ -346,6 +346,78 @@ def build_app() -> Flask:
         resp.headers["Service-Worker-Allowed"] = "/"
         return resp
 
+    # ── mémoire absolue + chat interne + roster des conseillers ──────────────
+    def _gd(mod):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gd_agents"))
+        return __import__(mod)
+
+    @app.route("/api/roster")
+    def api_roster():
+        """Les 101 conseillers : chaque fiche .claude/agents/*.md, titre + rôle."""
+        out = []
+        root = Path(__file__).resolve().parents[2]
+        for f in sorted((root / ".claude" / "agents").glob("*.md")):
+            if f.name == "AGENTS.md":
+                continue
+            try:
+                lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+                title = next((l.lstrip("# ").strip() for l in lines if l.startswith("#")),
+                             f.stem)
+                out.append({"file": f".claude/agents/{f.name}", "id": f.stem,
+                            "title": title[:70]})
+            except Exception:
+                continue
+        return jsonify({"count": len(out), "advisers": out})
+
+    @app.route("/api/memory")
+    def api_memory():
+        try:
+            M = _gd("memory")
+            return jsonify({"count": M.count(), "entries": M.entries(limit=30)})
+        except Exception as exc:
+            return jsonify({"count": 0, "entries": [], "error": str(exc)[:150]})
+
+    @app.route("/api/memory", methods=["POST"])
+    def api_memory_add():
+        body = request.get_json(silent=True) or {}
+        title = str(body.get("title", "")).strip()
+        if not (3 <= len(title) <= 200):
+            return jsonify({"error": "titre entre 3 et 200 caractères"}), 400
+        M = _gd("memory")
+        e = M.add(str(body.get("kind", "note")), title,
+                  str(body.get("detail", ""))[:800], source="maxime/portail")
+        return jsonify({"ok": True, "entry": e, "count": M.count()})
+
+    @app.route("/api/chats")
+    def api_chats():
+        M = _gd("memory")
+        return jsonify({"chats": M.chat_list()})
+
+    @app.route("/api/chat/<conv>")
+    def api_chat_read(conv: str):
+        import re as _re
+        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
+            return jsonify({"error": "conversation invalide"}), 400
+        M = _gd("memory")
+        return jsonify({"conv": conv, "messages": M.chat_read(conv)})
+
+    @app.route("/api/chat", methods=["POST"])
+    def api_chat_send():
+        import re as _re
+        body = request.get_json(silent=True) or {}
+        conv = str(body.get("conv") or time.strftime("%Y%m%d-%H%M"))
+        text = str(body.get("text", "")).strip()
+        to = str(body.get("to", "merlin"))
+        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv) or not (1 <= len(text) <= 2000):
+            return jsonify({"error": "message ou conversation invalide"}), 400
+        if to != "merlin" and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
+            return jsonify({"error": "conseiller inconnu"}), 400
+        M = _gd("memory")
+        M.chat_append(conv, "user", "maxime", text)
+        rec = actions.launch("chat-reply", {"conv": conv, "to": to})
+        return jsonify({"ok": not rec.get("error"), "conv": conv,
+                        "job": rec.get("id"), "error": rec.get("error")})
+
     # ── journal de développement : la timeline agrégée, avec preuves ─────────
     @app.route("/api/journal")
     def api_journal():

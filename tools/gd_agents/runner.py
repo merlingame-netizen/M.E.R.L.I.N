@@ -100,6 +100,15 @@ def run(agent_id: str, dry: bool = False) -> str:
     plan = ROUTER.choose(cfg["shape"], cfg["out_tokens"], cfg["deadline_s"],
                          cfg.get("evidence_tokens", 600))
     system = PR.compile_prompt(cfg["card"])
+    # La mémoire absolue encadre TOUT agent : ce qui est décidé ne se re-propose
+    # pas, ce qui est rejeté ne revient pas sous un autre nom.
+    try:
+        import memory
+        mem = memory.digest(600)
+        if mem and "vide" not in mem:
+            system += f"\n\nDESIGN DÉJÀ DÉCIDÉ (à respecter, ne pas re-proposer) :\n{mem}"
+    except Exception:
+        pass
     schema_hint = (
         'Réponds UNIQUEMENT par un objet JSON : {"text": "…", "biome": "…", '
         '"options": [{"label": "…", "verb": "…", "effects": [{"type": "ADD_REPUTATION", '

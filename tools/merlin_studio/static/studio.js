@@ -211,6 +211,80 @@ async function refreshCpu() {
 }
 
 /* ── Agents : planification, dernier passage, santé, smoke ─────────────── */
+// ── Parler : conversations avec les 101 conseillers + mémoire absolue ────────
+let TALK_CONV = null, TALK_POLL = null;
+async function initTalk() {
+  try {
+    const r = await j('/api/roster');
+    $('#talk-meta').textContent = `${r.count} conseillers disponibles`;
+    const sel = $('#talk-to');
+    (r.advisers || []).forEach(a => {
+      const o = document.createElement('option');
+      o.value = a.file; o.textContent = a.title;
+      sel.appendChild(o);
+    });
+  } catch { }
+  refreshMemory();
+}
+function talkRender(msgs) {
+  $('#talk-thread').innerHTML = msgs.map(m => `
+    <div class="msg ${m.role === 'user' ? 'me' : 'them'}">
+      <div class="mwho">${m.role === 'user' ? 'Toi' : esc(WHO_FR[m.who] || m.who)}</div>
+      <div class="mtext">${esc(m.text)}</div></div>`).join('')
+    || '<div class="mut">…</div>';
+  $('#talk-thread').scrollTop = $('#talk-thread').scrollHeight;
+}
+async function talkPoll() {
+  if (!TALK_CONV) return;
+  try {
+    const d = await j('/api/chat/' + TALK_CONV);
+    talkRender(d.messages || []);
+    const last = (d.messages || [])[d.messages.length - 1];
+    if (last && last.role !== 'user' && TALK_POLL) { clearInterval(TALK_POLL); TALK_POLL = null; }
+  } catch { }
+}
+async function talkSend() {
+  const inp = $('#talk-input'), text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  const r = await j('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ conv: TALK_CONV || undefined, text, to: $('#talk-to').value }) });
+  if (r.error) { alert('✗ ' + r.error); return; }
+  TALK_CONV = r.conv;
+  await talkPoll();
+  $('#talk-thread').insertAdjacentHTML('beforeend',
+    '<div class="mut" id="talk-typing">le conseiller réfléchit… (1 à 3 min)</div>');
+  if (TALK_POLL) clearInterval(TALK_POLL);
+  TALK_POLL = setInterval(talkPoll, 6000);
+}
+async function refreshMemory() {
+  try {
+    const d = await j('/api/memory');
+    $('#mem-meta').textContent = `${d.count} souvenir(s) — rien ne s'efface jamais`;
+    const MK = { 'décision': '✓', 'rejet': '✗', 'règle': '■', 'contenu': '+', 'intégration': '⇧', 'note': '·' };
+    if ((d.entries || []).length) {
+      $('#mem-list').innerHTML = d.entries.map(e => `
+        <div class="jentry"><div class="jhead"><span class="jico">${MK[e.kind] || '·'}</span>
+          <span class="jtitle">${esc(e.title)}</span>
+          <span class="jago">${esc((e.t || '').slice(5, 16).replace('T', ' '))}</span></div>
+          ${e.detail ? `<div class="jdetail">${esc(e.detail)}</div>` : ''}</div>`).join('');
+    }
+  } catch { }
+}
+const talkBtn = $('#talk-send');
+if (talkBtn) {
+  talkBtn.onclick = talkSend;
+  $('#talk-input').addEventListener('keydown', e => { if (e.key === 'Enter') talkSend(); });
+  $('#mem-add').onclick = async () => {
+    const inp = $('#mem-input'), t = inp.value.trim();
+    if (t.length < 3) return;
+    const r = await j('/api/memory', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: t, kind: 'règle' }) });
+    if (!r.error) { inp.value = ''; refreshMemory(); }
+  };
+  initTalk();
+}
+
 // ── Santé : cinq voyants, trois couleurs, zéro jargon ────────────────────────
 function vital(id, state, text) {          // state: up (vert) | down (rouge) | idle
   const e = $(id);

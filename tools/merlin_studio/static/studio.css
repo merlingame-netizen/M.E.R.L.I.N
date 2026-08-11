@@ -315,3 +315,13 @@ code { color: var(--blue); }
 .jago { margin-left: auto; color: var(--dim); font-size: 12px; white-space: nowrap; }
 .jdetail { color: var(--dim); font-size: 13px; margin-top: 2px; }
 .jshot { width: min(100%, 340px); margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; }
+
+/* ── Parler : fil de conversation ───────────────────────────────────────── */
+.thread { display: flex; flex-direction: column; gap: 10px; max-height: 420px;
+  overflow-y: auto; margin-top: 12px; padding: 4px 2px; }
+.msg { max-width: 88%; padding: 10px 13px; border-radius: 12px; }
+.msg.me { align-self: flex-end; background: var(--gold-dim); color: var(--deep); }
+.msg.me .mwho { color: var(--deep); opacity: .7; }
+.msg.them { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); }
+.mwho { font-size: 11px; color: var(--dim); margin-bottom: 3px; }
+.mtext { font-size: 14px; line-height: 1.45; white-space: pre-wrap; }
