@@ -193,6 +193,18 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
         except Exception:
             return 0.0
 
+    # Qui parle dans le journal : des noms français, jamais des identifiants.
+    WHO = {"gd-content-gap": "l'écrivain de cartes", "gd-balance": "l'équilibreur",
+           "coder-local": "le codeur", "playtest-bot": "le robot testeur",
+           "billing": "le comptable", "corpus-night": "l'atelier d'écriture",
+           "ci": "le vérificateur"}
+
+    def _fr_subject(s: str) -> str:
+        """Décape le jargon des messages de commit (feat(x): … → la phrase)."""
+        import re as _re
+        s = _re.sub(r"^\w+(\([\w./-]+\))?\s*:\s*", "", s.strip())
+        return (s[:1].upper() + s[1:])[:130] if s else ""
+
     # Commits réels sur la branche du jeu — le développement vécu.
     game = Path.home() / "workspace" / "merlin-game"
     if (game / ".git").exists():
@@ -203,7 +215,8 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
                 try:
                     ts, sha, subj = line.split("|", 2)
                     ev.append({"t": float(ts), "kind": "commit",
-                               "title": f"Commit {sha}", "detail": subj[:120], "shot": ""})
+                               "title": "Le jeu a été mis à jour",
+                               "detail": _fr_subject(subj), "shot": ""})
                 except ValueError:
                     continue
 
@@ -216,28 +229,33 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
                 continue
             ok = c.get("scenes_failing") == 0 and c.get("boot_ok")
             ev.append({"t": t, "kind": "ci",
-                       "title": ("Build VERT " if ok else "Build ROUGE ") + str(c.get("sha", "")),
-                       "detail": (c.get("subject", "") or "")[:110]
-                       + (f" — {c.get('diag', '')[:90]}" if c.get("diag") else ""),
+                       "title": "Le jeu a été testé : tout fonctionne ✓" if ok
+                       else "Le test du jeu a échoué ✗",
+                       "detail": _fr_subject(c.get("subject", "") or "")
+                       + (f" — Diagnostic : {c.get('diag', '')[:110]}" if c.get("diag") else ""),
                        "shot": f"/api/ci/shot/{c['sha']}" if c.get("shot") else ""})
     except Exception:
         pass
 
     # Propositions : naissances et décisions (y compris auto-intégrations).
     base = Path.home() / ".cache" / "merlin-proposals"
-    for sub, label in (("inbox", "Décision en attente"), ("accepted", "Accepté"),
-                       ("rejected", "Rejeté")):
+    for sub, label in (("inbox", "💡 Une décision t'attend"),
+                       ("accepted", "Tu as accepté une proposition"),
+                       ("rejected", "Tu as rejeté une proposition")):
         try:
             for f in (base / sub).glob("*.json"):
                 p = json.loads(f.read_text(encoding="utf-8"))
                 t = _ts(p.get("decided_at") or p.get("created", ""))
                 if t < floor:
                     continue
+                who = WHO.get(str(p.get("agent", "")), p.get("agent", "un agent"))
                 auto = "auto" in str(p.get("decision_reason", ""))
-                lab = "Auto-intégré" if (sub == "accepted" and auto) else label
+                lab = ("Du contenu validé a rejoint le recueil tout seul"
+                       if (sub == "accepted" and auto) else label)
                 ev.append({"t": t, "kind": "proposal",
-                           "title": f"{lab} · {p.get('agent', '?')}",
-                           "detail": str(p.get("title", ""))[:120], "shot": ""})
+                           "title": lab,
+                           "detail": f"De la part de {who} : "
+                                     f"{str(p.get('title', ''))[:110]}", "shot": ""})
         except Exception:
             continue
 
@@ -252,8 +270,9 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
             if t < floor:
                 continue
             ev.append({"t": t, "kind": "playtest",
-                       "title": f"Playtest bot : {len(files)} écran(s) joués",
-                       "detail": f"session {tag}",
+                       "title": "Le robot testeur a joué au jeu",
+                       "detail": f"{len(files)} écrans parcourus, clics et touches "
+                                 f"comme un vrai joueur — voici son dernier écran :",
                        "shot": f"/api/playtest/shot/{files[-1].name}"})
     except Exception:
         pass
@@ -263,11 +282,13 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
     g = loops.get("gen", {})
     t = _ts(g.get("last", ""))
     if t >= floor and g.get("accepted") is not None:
+        rej = g.get("rejected", 0)
         ev.append({"t": t, "kind": "corpus",
-                   "title": f"Usine : {g.get('accepted', 0)} carte(s) acceptée(s)",
-                   "detail": f"backend {g.get('backend', '?')} · rejets {g.get('rejected', 0)}"
-                             f" · corpus total {g.get('corpus_total', '?')}"
-                             + (f" · sauté : {g['skipped']}" if g.get("skipped") else ""),
+                   "title": f"L'atelier d'écriture a produit {g.get('accepted', 0)} "
+                            f"nouvelle(s) carte(s) de jeu",
+                   "detail": (f"{rej} refusée(s) par le contrôle qualité · " if rej else "")
+                             + f"le recueil compte {g.get('corpus_total', '?')} cartes"
+                             + (f" · passage sauté : {g['skipped']}" if g.get("skipped") else ""),
                    "shot": ""})
 
     ev.sort(key=lambda e: -e["t"])

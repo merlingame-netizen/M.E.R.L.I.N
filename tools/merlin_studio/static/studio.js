@@ -1,6 +1,6 @@
 /* MERLIN Studio — logique du portail (extraite d'index.html, re-skin premium).
    Les contrats /api/* sont inchangés ; seules les classes CSS générées changent. */
-import { initGame } from '/static/game.js';
+import { initGame } from '/static/game.js?v=2';
 
 const $ = s => document.querySelector(s), j = (u, o) => fetch(u, o).then(r => r.json());
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -264,6 +264,12 @@ async function refreshJournal() {
 }
 
 // ── Propositions : les agents proposent, l'humain tranche en un tap ──────────
+// Des noms français à l'écran, jamais des identifiants techniques.
+const WHO_FR = { 'gd-content-gap': 'Écrivain de cartes', 'gd-balance': 'Équilibreur',
+  'coder-local': 'Codeur', 'playtest-bot': 'Robot testeur', 'billing': 'Comptable',
+  'corpus-night': 'Atelier d’écriture', 'selftest': 'Test' };
+const KIND_FR = { balance: 'équilibrage', content: 'nouvelle carte', design: 'game design',
+  ux: 'ergonomie', bug: 'anomalie', infra: 'plateforme', merge: 'intégration' };
 async function refreshProposals() {
   let d;
   try { d = await j('/api/proposals'); } catch { return; }
@@ -281,11 +287,10 @@ async function refreshProposals() {
       `<div class="mut">• ${esc(e.metric || e.source || '')} ${e.quote ? '— « ' + esc(String(e.quote).slice(0,120)) + ' »' : ''}</div>`).join('');
     return `<div class="card" data-pid="${esc(p.id)}" style="margin-bottom:12px">
       <div class="row"><span class="name">${esc(p.title)}</span>
-        <span class="badge ${p.kind === 'bug' ? 'down' : 'up'}">${esc(p.kind)}</span></div>
+        <span class="badge ${p.kind === 'bug' ? 'down' : 'up'}">${esc(KIND_FR[p.kind] || p.kind)}</span></div>
       <div class="mut" style="margin:4px 0 8px">${esc(p.claim)}</div>
-      <div class="metrics"><span>${esc(p.agent)}</span><span>${esc(p.tier || p.model || '—')}</span>
-        <span>confiance ${Math.round((p.confidence || 0) * 100)}%</span>
-        ${p.cost && p.cost.secs ? `<span>${p.cost.secs}s</span>` : ''}</div>
+      <div class="metrics"><span>proposé par : ${esc(WHO_FR[p.agent] || p.agent)}</span>
+        <span>fiabilité ${Math.round((p.confidence || 0) * 100)}%</span></div>
       <pre class="log" style="max-height:150px;margin-top:8px">${esc((p.change || {}).summary || '')}${
         (p.change || {}).target ? '\n\ncible : ' + esc(p.change.target) : ''}</pre>
       ${ev ? `<details style="margin-top:6px"><summary class="mut">preuves</summary>${ev}</details>` : ''}

@@ -154,6 +154,9 @@ if(r.ok){location.reload()}else{document.getElementById('e').textContent='Code r
 </script></body></html>"""
 
 
+_ASSET_V = str(int(time.time()))
+
+
 def build_app() -> Flask:
     app = Flask(__name__, template_folder=str(_HERE / "templates"),
                 static_folder=str(_HERE / "static"))
@@ -191,7 +194,10 @@ def build_app() -> Flask:
 
     @app.route("/")
     def index():
-        return render_template("index.html")
+        # Cache-busting : l'URL des assets change à chaque redémarrage du Studio
+        # (on redémarre à chaque déploiement). Un service worker périmé ne peut
+        # pas servir une URL qu'il n'a jamais vue — leçon du bug « Décider vide ».
+        return render_template("index.html", asset_v=_ASSET_V)
 
     @app.route("/healthz")
     def healthz():
