@@ -169,6 +169,7 @@ def choose(shape: str, out_tokens: int, deadline_s: int,
                 return {"ok": True, "tier": t["name"], "tag": tag,
                         "ctx": min(t["ctx"], 8192), "num_thread": num_thread,
                         "keep_alive": "30m" if night else "5m",
+                        "out_tokens": out_tokens,   # borne DURE de la sortie
                         "est_secs": int(est), "mapreduce": False,
                         "reason": " · ".join(notes + [f"{shape}→{t['name']}"])}
         notes.append(f"{t['name']} écarté : {rejected}")

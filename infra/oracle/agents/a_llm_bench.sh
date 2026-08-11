@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Bench LLM : mesure chaque modèle installé sur la VRAIE tâche (triage d'un log
-# d'erreur GDScript) — latence totale + tokens/s — puis fige TRIAGE_MODEL :
-# le plus GROS modèle qui répond en moins de 60 s (qualité d'abord, dans le
-# budget). Ne réécrit le choix que s'il est encore sur AUTO (respect du manuel).
+# d'erreur GDScript) — génération, lecture de prompt et chargement, séparément —
+# puis fige TRIAGE_MODEL sur le plus GROS modèle qui écrit à ≥ 3 tok/s.
+# Sortie bornée à 200 tokens : sans cela le modèle discourt et fausse la mesure.
 set -uo pipefail
 CONF="$HOME/.config/merlin-llm.env"
 [ -f "$CONF" ] || { echo "llm non installé"; exit 0; }
@@ -22,7 +22,7 @@ python3 - "$OLLAMA_HOST" "$PROMPT" "$OUT" <<'PY'
 import json, sys, time, urllib.request
 host, prompt, out = sys.argv[1:4]
 
-def api(path, payload=None, timeout=180):
+def api(path, payload=None, timeout=420):
     req = urllib.request.Request(f"http://{host}{path}",
         data=json.dumps(payload).encode() if payload else None,
         headers={"content-type": "application/json"})
@@ -36,7 +36,7 @@ for m in models:
     try:
         t0 = time.time()
         d = api("/api/generate", {"model": m, "prompt": prompt, "stream": False,
-                "keep_alive": "0", "options": {"num_thread": 4, "num_ctx": 2048}})
+                "keep_alive": "0", "options": {"num_thread": 4, "num_ctx": 2048, "num_predict": 200}})
         wall = round(time.time() - t0, 1)
         toks = round(d.get("eval_count", 0) / max(d.get("eval_duration", 1) / 1e9, .001), 1)
         # Le débit de LECTURE du prompt est distinct de celui de génération et
@@ -56,27 +56,28 @@ peval = [r["prompt_eval_tok_s"] for r in rows if r.get("prompt_eval_tok_s")]
 json.dump({"t": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "rows": rows,
            "prompt_eval_tok_s": round(sum(peval) / len(peval), 1) if peval else None},
           open(out, "w"), ensure_ascii=False, indent=1)
-# champion triage : le plus lourd sous 60 s de mur (les noms qwen trient par taille)
-ok = [r for r in rows if r.get("wall_s", 999) < 60]
+# Champion : le plus gros modèle dont la génération est utilisable (≥ 3 tok/s).
+ok = [r for r in rows if r.get("tok_s", 0) >= 3.0]
 ok.sort(key=lambda r: (float((r["model"].split(":")[1] or "0").rstrip("b").split("-")[0] or 0)
                        if ":" in r["model"] and r["model"].split(":")[1][:1].isdigit() else 0))
 print(ok[-1]["model"] if ok else "")
 PY
-# Champion = le plus GROS modèle (qualité) qui reste sous 60 s de mur.
-# La taille se lit dans le tag (qwen2.5:3b → 3.0) — PAS le temps de mur :
-# un gros modèle peut être plus rapide s'il génère moins de tokens.
+# Champion = le plus GROS modèle dont la GÉNÉRATION est utilisable (≥ 3 tok/s).
+# Le temps de mur est un mauvais critère : il inclut le chargement du modèle
+# (87 à 110 s mesurés), qui ne dit rien de la vitesse d'écriture.
+# La taille se lit dans le tag ; e2b/e4b comptent pour leur nombre effectif.
 CHAMP="$(python3 -c "
 import json, re
 def size(m):
-    g = re.search(r':(\d+(?:\.\d+)?)b', m)
+    g = re.search(r':e?(\d+(?:\.\d+)?)b', m)
     return float(g.group(1)) if g else 0.0
-r = [x for x in json.load(open('$OUT')).get('rows', []) if x.get('wall_s', 999) < 60]
+r = [x for x in json.load(open('$OUT')).get('rows', []) if x.get('tok_s', 0) >= 3.0]
 r.sort(key=lambda x: size(x['model']))
 print(r[-1]['model'] if r else '')")"
 if [ -n "$CHAMP" ] && grep -q '^export TRIAGE_MODEL=' "$CONF" \
         && ! grep -q "^export TRIAGE_MODEL=$CHAMP$" "$CONF"; then
     sed -i "s|^export TRIAGE_MODEL=.*$|export TRIAGE_MODEL=$CHAMP|" "$CONF"
-    echo "TRIAGE_MODEL figé sur $CHAMP (le plus gros sous 60 s)"
+    echo "TRIAGE_MODEL figé sur $CHAMP (le plus gros à >= 3 tok/s)"
 else
     echo "champion: ${CHAMP:-aucun} · TRIAGE_MODEL inchangé"
 fi

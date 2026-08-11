@@ -7,20 +7,25 @@
 set -uo pipefail
 CONF="$HOME/.config/merlin-llm.env"
 [ -f "$CONF" ] && . "$CONF"
-MODEL="${TRIAGE_MODEL:-qwen2.5:3b}"; [ "$MODEL" = "AUTO" ] && MODEL="${COPILOT_MODEL:-qwen2.5:1.5b}"
+MODEL="${TRIAGE_MODEL:-gemma4:e4b-it-qat}"; [ "$MODEL" = "AUTO" ] && MODEL="${COPILOT_MODEL:-gemma4:e4b-it-qat}"
 TIMEOUT=120; CTX="${LLM_NUM_CTX:-2048}"
+# Borne DURE de la sortie : sans elle, le modèle discourt jusqu'au timeout —
+# c'est ce qui faisait exploser les échéances (mesuré : 700 tokens rendus pour
+# 80 demandés). 320 tokens ≈ 33 s à 9,8 tok/s.
+PREDICT="${LLM_NUM_PREDICT:-320}"
 
 while [ $# -gt 0 ]; do case "$1" in
     --model)   MODEL="$2";   shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
     --ctx)     CTX="$2";     shift 2 ;;
+    --predict) PREDICT="$2"; shift 2 ;;
     *) echo "option inconnue: $1" >&2; exit 2 ;;
 esac; done
 
 PROMPT="$(cat)"
 [ -n "$PROMPT" ] || { echo "prompt vide" >&2; exit 2; }
 
-export _LLM_PROMPT="$PROMPT"
+export _LLM_PROMPT="$PROMPT" _LLM_PREDICT="$PREDICT"
 python3 - "$MODEL" "$TIMEOUT" "$CTX" <<'PY'
 import json, os, sys, urllib.request
 model, timeout, ctx = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
@@ -33,7 +38,8 @@ req = urllib.request.Request(
         "keep_alive": os.environ.get("OLLAMA_KEEP_ALIVE", "30m"),
         # num_thread vient du routeur : 2 quand le jeu tourne (il garde 2 cœurs).
         "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
-                    "num_ctx": ctx, "temperature": 0.2},
+                    "num_ctx": ctx, "temperature": 0.2,
+                    "num_predict": int(os.environ.get("_LLM_PREDICT", "320"))},
     }).encode(),
     headers={"content-type": "application/json"})
 try:

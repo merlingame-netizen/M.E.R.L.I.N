@@ -56,8 +56,8 @@ def _ask(prompt: str, plan: dict, timeout: int) -> tuple[str, str]:
            "OLLAMA_KEEP_ALIVE": plan["keep_alive"]}
     try:
         p = subprocess.run(
-            ["bash", str(LLM_ASK), "--model", plan["tag"],
-             "--ctx", str(plan["ctx"]), "--timeout", str(timeout)],
+            ["bash", str(LLM_ASK), "--model", plan["tag"], "--ctx", str(plan["ctx"]),
+             "--predict", str(plan.get("out_tokens", 320)), "--timeout", str(timeout)],
             input=prompt, capture_output=True, text=True,
             timeout=timeout + 30, env={**os.environ, **env})
         if p.returncode == 0 and (p.stdout or "").strip():

@@ -25,4 +25,4 @@ EST="$(printf '%s' "$PLAN"    | python3 -c "import json,sys; print(json.load(sys
 echo "[route] $TAG ctx=$CTX threads=$THREADS est=${EST}s" >&2
 # nice : le jeu passe avant le LLM quand les deux tournent.
 OLLAMA_NUM_THREAD="$THREADS" OLLAMA_KEEP_ALIVE="$KEEP" \
-    nice -n 10 bash "$HERE/llm-ask.sh" --model "$TAG" --ctx "$CTX" --timeout "$((EST * 2 + 60))"
+    nice -n 10 bash "$HERE/llm-ask.sh" --model "$TAG" --ctx "$CTX" --predict "${OUT_TOKENS:-320}" --timeout "$((EST * 2 + 60))"
