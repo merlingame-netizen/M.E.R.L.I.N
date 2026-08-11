@@ -20,7 +20,8 @@ FREE_G="$(df -BG --output=avail "$HOME" | tail -1 | tr -dc 0-9)"
 
 if [ ! -x "$BIN" ]; then
     echo "téléchargement ollama-linux-$ARCH…"
-    curl -fL --retry 3 -o /tmp/ollama.tgz "https://ollama.com/download/ollama-linux-$ARCH.tgz"
+    curl -fL --retry 3 -o /tmp/ollama.tgz \
+        "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-$ARCH.tgz"
     tar -xzf /tmp/ollama.tgz -C "$OLLAMA_DIR" && rm -f /tmp/ollama.tgz
     ln -sf "$BIN" "$HOME/bin/ollama"
 fi
