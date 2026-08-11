@@ -58,6 +58,14 @@
       "desc": "À chaque push sur la branche du jeu : sync + import + smoke de toutes les scènes + boot rendu + capture d'écran. Déclenchée par le webhook GitHub ou par la synchro (15 min)."
     },
     {
+      "id": "design-council",
+      "label": "Conseil de design (quotidien)",
+      "schedule": "40 6 * * *",
+      "cmd": "a_design_council.sh",
+      "enabled": true,
+      "desc": "Chaque matin, un conseiller différent relit la mémoire du design et ouvre une conversation dans Parler : une réflexion + deux questions franches."
+    },
+    {
       "id": "daily-report",
       "label": "Rapport du matin",
       "schedule": "0 7 * * *",

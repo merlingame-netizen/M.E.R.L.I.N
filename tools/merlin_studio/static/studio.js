@@ -225,6 +225,25 @@ async function initTalk() {
     });
   } catch { }
   refreshMemory();
+  refreshConvs();
+}
+async function refreshConvs() {
+  try {
+    const d = await j('/api/chats');
+    const box = $('#talk-convs');
+    if (!box) return;
+    box.innerHTML = (d.chats || []).map(c => {
+      const label = c.conv.startsWith('conseil-')
+        ? '🏛 Conseil du ' + c.conv.slice(14) + '/' + c.conv.slice(12, 14)
+        : '💬 ' + c.conv;
+      return `<button data-conv="${esc(c.conv)}" class="${c.conv === TALK_CONV ? 'on' : ''}">${label}</button>`;
+    }).join('');
+    box.querySelectorAll('button').forEach(b => b.onclick = async () => {
+      TALK_CONV = b.dataset.conv;
+      await talkPoll();
+      refreshConvs();
+    });
+  } catch { }
 }
 function talkRender(msgs) {
   $('#talk-thread').innerHTML = msgs.map(m => `
