@@ -157,8 +157,12 @@ GOLD = ROOT / "data" / "ai" / "scenario_golden_prose.json"
 REJECTS = ROOT / "data" / "ai" / "training" / "auto_rejects.jsonl"
 
 
-def _card_schema(canon) -> dict:
-    """Contrainte de DÉCODAGE (pas un vœu de prompt) : Ollama force ce schéma."""
+def _card_schema(canon, verbs=None) -> dict:
+    """Contrainte de DÉCODAGE (pas un vœu de prompt) : Ollama force ce schéma.
+
+    `verbs` : la liste fermée du champ lexical tiré — passée en enum, le modèle
+    ne PEUT PAS inventer un verbe (mesuré : sans enum, il recopie le nom du
+    champ, « bluff » au lieu d'un infinitif)."""
     factions = [f.get("id", "") for f in canon.get("factions", [])] or \
         ["druides", "anciens", "korrigans", "niamh", "ankou"]
     return {
@@ -172,7 +176,7 @@ def _card_schema(canon) -> dict:
                     "type": "object",
                     "properties": {
                         "label": {"type": "string"},
-                        "verb": {"type": "string"},
+                        "verb": {"type": "string", **({"enum": verbs} if verbs else {})},
                         "effects": {
                             "type": "array", "maxItems": 3,
                             "items": {"type": "object", "properties": {
@@ -222,7 +226,7 @@ def _gen_gemma(canon, rng, recent=None) -> dict | None:
         + (f"NE répète PAS ces situations récentes :\n{avoid}\n" if avoid else ""))
     try:
         out = _http_json(url, {"model": model, "prompt": prompt, "stream": False,
-                               "format": _card_schema(canon),
+                               "format": _card_schema(canon, verbs),
                                "keep_alive": os.environ.get("OLLAMA_KEEP_ALIVE", "30m"),
                                "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
                                            "num_ctx": 4096, "temperature": 0.85,
@@ -230,7 +234,9 @@ def _gen_gemma(canon, rng, recent=None) -> dict | None:
                          timeout=600)
         card = _extract_card(out.get("response", ""))
         if card is not None:
-            card.setdefault("biome", biome.get("id", biome.get("name", "")))
+            # Le biome est IMPOSÉ par le tirage, jamais laissé au modèle : mesuré,
+            # il y recopie des bouts de prompt (« Villages Celtes (ton druidique…) »).
+            card["biome"] = biome.get("id", biome.get("name", ""))
         return card
     except Exception:
         return None

@@ -2696,3 +2696,20 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
   Cloudflare + domaine de Maxime. Quick tunnel non renommable (nom aléatoire).
 - Pièges VM consignés : collision nom d'état agent-run vs sortie de script dans
   .cache/merlin-agents ; Run Command tronque la sortie (~1Ko) → sorties minimales.
+
+## 2026-08-11 — v10.4 + v11 COMPLET : la plateforme s'auto-gère (chaîne fermée)
+- **Usine à corpus Gemma** validée en réel : 30/30 cartes acceptées en un passage
+  (schéma imposé au décodage). 2 fuites corrigées après échantillonnage : verbe
+  contraint par enum (le modèle recopiait le nom du champ), biome imposé par le
+  tirage (il recopiait des bouts de prompt). Corpus VM purgé à regénérer propre.
+- **Playtest bot** validé en réel : 17 écrans joués via client RFB python pur,
+  0 anomalie, pellicule 20260811-1402. NOIR/FIGÉ/MORT → cartes Décider.
+- **Interface 3 onglets** (Jouer/Décider/Santé + Coulisses) déployée.
+- **Chaîne complète** : agents gd → auto-accept contenu / cartes Décider →
+  codeur local (before/after, worktree auto/nightly, smoke) → carte « Intégrer »
+  → merge 1 tap → CI. Suspendue quand Maxime joue (+10 min).
+- **PAYG verrouillé** : budget Oracle ACTUAL+FORECAST, audit 0 ressource payante.
+- 17 agents planifiés. Première carte LLM validée (confiance 0.75) + 2 propositions
+  en attente dans Décider.
+- Reste côté Maxime : extension disque root (55 Go → débloque e2b + 12b),
+  tri des premières cartes dans Décider.
