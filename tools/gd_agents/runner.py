@@ -44,20 +44,29 @@ def _load_analyzer(name: str):
     return mod
 
 
-def _ask(prompt: str, plan: dict, timeout: int) -> str:
-    """Un appel LLM. Rend "" si indisponible — l'appelant DOIT avoir un repli."""
+def _ask(prompt: str, plan: dict, timeout: int) -> tuple[str, str]:
+    """Un appel LLM → (réponse, raison d'échec).
+
+    La raison est REMONTÉE jusqu'à la proposition : sans elle, un échec coûte
+    des minutes et ne dit rien. Rend ("", motif) si indisponible — l'appelant
+    DOIT avoir un repli.
+    """
+    import os
     env = {"OLLAMA_NUM_THREAD": str(plan["num_thread"]),
            "OLLAMA_KEEP_ALIVE": plan["keep_alive"]}
     try:
-        import os
         p = subprocess.run(
             ["bash", str(LLM_ASK), "--model", plan["tag"],
              "--ctx", str(plan["ctx"]), "--timeout", str(timeout)],
             input=prompt, capture_output=True, text=True,
             timeout=timeout + 30, env={**os.environ, **env})
-        return (p.stdout or "").strip() if p.returncode == 0 else ""
-    except Exception:
-        return ""
+        if p.returncode == 0 and (p.stdout or "").strip():
+            return p.stdout.strip(), ""
+        return "", (p.stderr or "").strip().replace("\n", " ")[:200] or f"rc={p.returncode}"
+    except subprocess.TimeoutExpired:
+        return "", f"timeout après {timeout + 30}s"
+    except Exception as exc:
+        return "", f"{type(exc).__name__}: {exc}"[:200]
 
 
 def _extract_json(text: str):
@@ -97,7 +106,9 @@ def run(agent_id: str, dry: bool = False) -> str:
         '"faction": "druides", "amount": 5}]}]} — exactement 3 options.')
     prompt = f"{system}\n\n{schema_hint}\n\n{ana.brief(a)}"
 
+    # Si le routeur refuse, sa raison EST le diagnostic (aucun appel n'aura lieu).
     card, raw, escal = None, "", 0
+    why = "" if plan["ok"] else plan.get("reason", "aucun palier utilisable")
     if plan["ok"] and not dry:
         for escal in range(0, ROUTER._load_tiers()["gates"]["max_escalations"] + 1):
             if escal:                       # G5 : un rejet → un palier au-dessus
@@ -105,9 +116,14 @@ def run(agent_id: str, dry: bool = False) -> str:
                                      cfg.get("evidence_tokens", 600), escalate=escal)
                 if not plan["ok"]:
                     break
-            raw = _ask(prompt, plan, plan["est_secs"] * 2 + 90)
+            raw, why = _ask(prompt, plan, plan["est_secs"] * 2 + 90)
             card = _extract_json(raw)
             if card:
+                why = ""
+                break
+            # Réessayer à l'identique après un échec d'infrastructure est du
+            # temps perdu : on n'escalade que si le modèle a bien répondu.
+            if not raw:
                 break
 
     # 3. Validation déterministe de ce que le modèle a produit.
@@ -136,9 +152,9 @@ def run(agent_id: str, dry: bool = False) -> str:
         conf = 0.75 if not verdict.get("warnings") else 0.6
         payload = card
     else:
-        why = "LLM indisponible" if not raw else (
-            "JSON illisible" if card is None else
-            f"{len(errs)} erreur(s) de validation")
+        why = (f"LLM indisponible — {why}" if not raw else
+               "JSON illisible" if card is None else
+               f"{len(errs)} erreur(s) de validation : {'; '.join(str(e)[:50] for e in errs[:2])}")
         title = f"Lacune de contenu non comblée sur « {a['biome']} » ({why})"
         claim = (f"L'analyse a identifié la lacune et rassemblé les contraintes, "
                  f"mais la rédaction automatique a échoué : {why}.")
