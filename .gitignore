@@ -463,3 +463,4 @@ tools/autodev/status/studio_runs.json
 .tmp_pipeline_output.json
 
 # VS Code extension build artifact
+data/ai/training/auto_rejects.jsonl
