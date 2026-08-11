@@ -37,16 +37,15 @@ def main(conv: str, adviser: str) -> int:
         who = "merlin"
     hist = "\n".join(f"{'Maxime' if r['role'] == 'user' else r['who']} : {r['text'][:300]}"
                      for r in rows[-8:])
-    prompt = (
+    base = (
         f"{persona}\n\n"
         f"MÉMOIRE DU DESIGN RETENU (ne contredis jamais ces décisions) :\n"
-        f"{memory.digest(700)}\n\n"
-        f"{chat_actions.catalogue_for_prompt()}\n\n"
+        f"{memory.digest(600)}\n\n"
         f"CONVERSATION :\n{hist}\n\n"
-        "Réponds à Maxime en FRANÇAIS, 2 à 5 phrases, concret et sans jargon "
-        "technique. Si sa demande implique d'ajuster un agent, de confier une tâche "
-        "au codeur ou de graver une décision, PROPOSE l'action correspondante avec "
-        "une ligne ACTION: (il la validera d'un tap).")
+        "Réponds à Maxime en FRANÇAIS, 2 à 4 phrases, concret et sans jargon.")
+    # Deux versions : avec le catalogue d'actions, et une version nue de secours.
+    prompt = base + "\n\n" + chat_actions.catalogue_for_prompt()
+    prompt_plain = base
     # Le chat est INTERACTIF : il tourne sur le modèle rapide (e4b, 10 tok/s),
     # jamais sur le 12b de triage (4 tok/s) qui ferait patienter des minutes.
     import os
@@ -58,13 +57,19 @@ def main(conv: str, adviser: str) -> int:
                 model = line.split("=", 1)[1].strip()
     except Exception:
         pass
-    try:
-        p = subprocess.run(["bash", str(LLM_ASK), "--model", model,
-                            "--predict", "300", "--timeout", "300", "--ctx", "4096"],
-                           input=prompt, capture_output=True, text=True, timeout=360)
-        reply = (p.stdout or "").strip()
-    except Exception:
-        reply = ""
+    def _one(pr: str) -> str:
+        try:
+            p = subprocess.run(["bash", str(LLM_ASK), "--model", model,
+                                "--predict", "280", "--timeout", "200", "--ctx", "4096"],
+                               input=pr, capture_output=True, text=True, timeout=240)
+            return (p.stdout or "").strip()
+        except Exception:
+            return ""
+    reply = _one(prompt)
+    # Filet : certains prompts (catalogue d'actions) font rendre du vide au e4b.
+    # On réessaie alors en conversation pure — le chat répond TOUJOURS.
+    if not reply:
+        reply = _one(prompt_plain)
     if not reply:
         memory.chat_append(conv, "assistant", who,
                            "(je n'ai pas réussi à répondre — le modèle local était "

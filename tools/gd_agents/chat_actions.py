@@ -52,20 +52,21 @@ def agent_ids() -> dict:
 
 
 def catalogue_for_prompt() -> str:
-    """Ce que le LLM a le droit de proposer, décrit en français."""
-    ids = "\n".join(f"  - {i} ({lbl})" for i, lbl in agent_ids().items())
+    """Ce que le LLM a le droit de proposer — court et en français simple.
+
+    Un e4b se bloque (réponse vide) sur un long catalogue plein de symboles :
+    on reste bref, une seule ligne d'exemple, les ids listés à part."""
+    ids = ", ".join(agent_ids())
     return (
-        "TU PEUX proposer des actions concrètes en fin de réponse, UNE par ligne,\n"
-        "au format EXACT : ACTION: verbe | cible | valeur | libellé court\n"
-        "Verbes autorisés :\n"
-        "  agent.toggle  | <id agent> | on|off      → activer/désactiver un agent\n"
-        "  agent.cadence | <id agent> | horaire|nuit|actif|matin → changer sa fréquence\n"
-        "  agent.run     | <id agent> | -           → le lancer tout de suite\n"
-        "  mission.queue | - | <consigne de dev>    → confier une tâche au codeur\n"
-        "  memory.grave  | - | <règle à retenir>    → graver une décision\n"
-        f"Agents existants (utilise l'id exact) :\n{ids}\n"
-        "Ne propose une action QUE si Maxime le demande ou si c'est manifestement utile. "
-        "N'invente jamais un id. Le libellé décrit l'effet en clair.")
+        "Si Maxime veut régler un agent, confier une tâche au codeur ou noter une "
+        "décision, ajoute à la fin de ta réponse une ligne commençant par ACTION: "
+        "puis quatre champs séparés par des barres verticales. Exemple :\n"
+        "ACTION: agent.cadence | playtest-bot | nuit | Playtest une fois par nuit\n"
+        "Actions possibles : agent.toggle (valeur on ou off), agent.cadence "
+        "(valeur horaire, nuit, actif ou matin), agent.run (valeur -), "
+        "mission.queue (cible -, valeur = la tâche), memory.grave (cible -, "
+        "valeur = la règle).\n"
+        f"Identifiants d'agents valides : {ids}.")
 
 
 def _aid(verb: str, target: str, value: str) -> str:
