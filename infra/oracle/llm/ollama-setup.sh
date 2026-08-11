@@ -20,12 +20,25 @@ FREE_G="$(df -BG --output=avail "$HOME" | tail -1 | tr -dc 0-9)"
 
 if [ ! -x "$BIN" ]; then
     # Depuis ~v0.30 les assets GitHub sont en .tar.zst (le .tgz n'existe plus).
-    command -v zstd >/dev/null 2>&1 || command -v unzstd >/dev/null 2>&1 \
-        || { echo "zstd absent — impossible de décompresser l'archive Ollama"; exit 1; }
     echo "téléchargement ollama-linux-$ARCH.tar.zst…"
     curl -fL --retry 3 -o /tmp/ollama.tar.zst \
         "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-$ARCH.tar.zst"
-    tar --zstd -xf /tmp/ollama.tar.zst -C "$OLLAMA_DIR" && rm -f /tmp/ollama.tar.zst
+    if command -v zstd >/dev/null 2>&1; then
+        tar --zstd -xf /tmp/ollama.tar.zst -C "$OLLAMA_DIR"
+    else
+        # Pas de zstd CLI sur la VM (pas de sudo pour l'installer) : on passe
+        # par le paquet python `zstandard` dans le venv du Studio.
+        PY="$HOME/workspace/M.E.R.L.I.N/.venv/bin/python"
+        [ -x "$PY" ] || PY="$(command -v python3)"
+        "$PY" -m pip install --quiet zstandard
+        "$PY" - <<'PYEOF'
+import zstandard
+with open("/tmp/ollama.tar.zst", "rb") as src, open("/tmp/ollama.tar", "wb") as dst:
+    zstandard.ZstdDecompressor().copy_stream(src, dst)
+PYEOF
+        tar -xf /tmp/ollama.tar -C "$OLLAMA_DIR" && rm -f /tmp/ollama.tar
+    fi
+    rm -f /tmp/ollama.tar.zst
     ln -sf "$BIN" "$HOME/bin/ollama"
 fi
 "$BIN" --version
