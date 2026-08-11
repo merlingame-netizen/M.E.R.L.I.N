@@ -149,10 +149,10 @@ def _qr_svg(data: str) -> str:
         import io
 
         import segno
-        buf = io.StringIO()
+        buf = io.BytesIO()          # segno écrit des OCTETS, jamais du texte
         segno.make(data, error="m").save(buf, kind="svg", scale=6, dark="#14100C",
-                                         light="#E8DCC0", border=3)
-        return buf.getvalue()
+                                         light="#E8DCC0", border=3, xmldecl=False)
+        return buf.getvalue().decode("utf-8")
     except Exception:
         return ""
 
