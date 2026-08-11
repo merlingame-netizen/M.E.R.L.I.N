@@ -2673,3 +2673,26 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
   GitHub doit être mis à jour (l'agent tunnel-watch archive l'historique des URL).
 - Restent (ordre validé) : 3. playtester VNC (xdotool + jugement des captures),
   4. usine à contenu nocturne (Ollama + scenario_validator).
+
+## 2026-08-11 — v7 (IA locale + ntfy + PWA) et v8 (VS Code + tunnel nommé + MFA) livrés
+- **Ollama userland sur la VM** (v0.32.8, arm64) : 3 tentatives (l'URL .tgz officielle
+  n'existe plus → GitHub .tar.zst → zstd absent → décompression python-zstandard).
+  qwen2.5:1.5b (copilote résident, agent ollama-serve */2) + qwen2.5:3b.
+- **Bench sur tâche réelle** : 3b=26.5s/3.8tok/s, 1.5b=41.2s/5.7tok/s. Leçon : le plus
+  gros peut être plus rapide au mur (moins de tokens générés) → champion = le plus
+  GROS sous 60s. TRIAGE_MODEL=qwen2.5:3b. Triage réel vérifié : 54s à froid,
+  diagnostic correct en français.
+- **Triage CI** : échec smoke → extraits d'erreurs → diagnostic LLM dans le verdict
+  (champ diag, ambre dans le portail) + notification ntfy urgente avec le diagnostic.
+- **ntfy** : topic merlin-os-934f14edcd40 (s'abonner dans l'app ntfy). CI rouge/retour
+  au vert, jeu relancé/KO, rapport du matin.
+- **PWA** : portail installable (manifest+SW racine, icônes DA OS, cache statics only).
+- **MFA TOTP** opt-in active sur le portail : interstitiel, cookie 30j, jeton appareil
+  90j (extension), VNC 401 sans ticket MFA. Clé livrée à Maxime (chat 2026-08-11).
+  Désactivation : rm ~/.config/merlin-mfa.env.
+- **Extension VS Code** : « Ouvrir le portail VM » (proxy local auth+MFA, WS VNC relayé),
+  « Vérifier MFA ». Réinstaller depuis tools/vscode-merlin-studio.
+- **Tunnel nommé** prêt (TUNNEL_TOKEN dans ~/.config/merlin-tunnel.env) — attend compte
+  Cloudflare + domaine de Maxime. Quick tunnel non renommable (nom aléatoire).
+- Pièges VM consignés : collision nom d'état agent-run vs sortie de script dans
+  .cache/merlin-agents ; Run Command tronque la sortie (~1Ko) → sorties minimales.
