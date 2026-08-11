@@ -54,6 +54,15 @@ def installed_tags() -> set[str]:
         return set()
 
 
+def loaded_tags() -> set[str]:
+    """Modèles DÉJÀ résidents. Un modèle froid coûte son chargement disque→RAM."""
+    try:
+        with urllib.request.urlopen(f"http://{OLLAMA}/api/ps", timeout=5) as r:
+            return {m.get("name", "") for m in json.load(r).get("models", [])}
+    except Exception:
+        return set()
+
+
 def mem_available_mb() -> int:
     try:
         for line in Path("/proc/meminfo").read_text().splitlines():
@@ -107,8 +116,12 @@ def choose(shape: str, out_tokens: int, deadline_s: int,
     """Rend {ok, tier, tag, ctx, num_thread, keep_alive, reason, est_secs, mapreduce}."""
     cfg = _load_tiers()
     gates, tiers = cfg["gates"], cfg["tiers"]
-    have = installed_tags()
+    have, warm = installed_tags(), loaded_tags()
     speeds = measured_speeds()
+    # Chargement à froid : mesuré ~18 s/Go sur cette VM (e4b 6,1 Go → 189 s
+    # réels contre 78 s de génération seule). Ignorer ce coût fait exploser
+    # toutes les premières échéances de la nuit.
+    cold_s_per_gb = cfg["gates"].get("cold_load_s_per_gb", 18.0)
     prompt_eval = speeds.get("_prompt_eval", cfg["prompt_eval_tok_s_fallback"])
     mem, free_gb, playing = mem_available_mb(), disk_free_gb(), game_running()
     night = _is_night(gates)
@@ -147,7 +160,9 @@ def choose(shape: str, out_tokens: int, deadline_s: int,
             rejected = f"RAM insuffisante ({mem} Mo dispo)"
         else:                                                                # G4
             tok_s = speeds.get(tag, t["tok_s_fallback"])
-            est = (evidence_tokens / prompt_eval + out_tokens / tok_s) * gates["time_safety_factor"]
+            cold = 0.0 if tag in warm else (t["ram_mb"] / 1000.0) * cold_s_per_gb
+            est = cold + (evidence_tokens / prompt_eval
+                          + out_tokens / tok_s) * gates["time_safety_factor"]
             if est > deadline_s:
                 rejected = f"budget temps dépassé ({int(est)}s > {deadline_s}s)"
             else:
