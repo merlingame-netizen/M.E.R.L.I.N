@@ -79,32 +79,49 @@ dans le portail via **noVNC** (vendorisé dans `tools/merlin_studio/static/novnc
   desktop dans `project.godot` + `--rendering-driver opengl3` (entrypoint) ; perfs faibles
   → passer en 960x540.
 
-## Déployer TON projet actuel (PC → GitHub → VM)
+## Quel jeu tourne sur la VM ? (architecture deux dossiers)
 
-Le projet qui tourne sur la VM est celui du **repo GitHub** (branche affichée dans le
-readout de l'onglet Jouer : `branche @ commit · GODOT x.y · IMPORT OK`). La VM n'a pas
-accès à ton PC : pour jouer à ta version locale (`C:/Users/PGNK2128/Godot-MCP`), il faut
-la pousser une fois, puis appuyer sur **⟳ Sync** dans le portail.
+Le jeu et l'outillage sont **deux dépôts/branches distincts**, dans **deux dossiers
+séparés** sur la VM — obligatoire, car la branche du jeu ne contient pas
+`infra/oracle/game` : tout mélanger casserait l'outillage à chaque changement de
+branche du jeu.
 
-**Cas 1 — Godot-MCP est un clone du repo GitHub** (le plus probable) :
-```powershell
-cd C:\Users\PGNK2128\Godot-MCP
-git add -A ; git commit -m "wip: état courant du jeu" ; git push origin main
+| Dossier VM | Contenu | Branche |
+|---|---|---|
+| `~/workspace/M.E.R.L.I.N` | Outillage : portail Studio, scripts VNC/provisioning | `claude/oracle-free-tier-access-IN1Wm` |
+| `~/workspace/merlin-game` | **Le projet Godot joué** | `feat/practices-docs` (défaut) |
+
+> **Important — deux lignées divergentes dans ce dépôt.** Elles ont divergé le
+> 2026-05-17 et n'ont jamais fusionné. `main` a poursuivi l'ancienne direction
+> artistique (CRT/Persona : `scenes/MenuTest.tscn`, écran noir + bouton ENTRER).
+> Toute la refonte visuelle validée (menu flat brun/or, écran CHRONIQUES, éclats
+> du Graal, `scripts/game/merlin_*.gd`, main scene `MerlinBoot.tscn`) vit sur
+> **`feat/practices-docs`** et ses sœurs `feat/*`. C'est cette branche que la VM
+> joue par défaut.
+
+### Réglages (VM, `~/.config/merlin-game.env`)
+```sh
+GAME_REF=feat/practices-docs                  # branche du jeu à jouer
+GAME_REPO_DIR=/var/lib/ocarun/workspace/merlin-game
+GAME_REPO_URL=https://github.com/merlingame-netizen/M.E.R.L.I.N.git
 ```
+Changer de branche de jeu = éditer `GAME_REF` puis cliquer **⟳ Sync**. La version
+de Godot suit automatiquement le `config/features` du projet (`godot-install.sh`),
+donc une branche sur un autre moteur réinstalle la bonne version toute seule.
 
-**Cas 2 — Godot-MCP n'est PAS un clone** (pas de dossier .git ou autre remote) :
-```powershell
-cd C:\Users\PGNK2128\Godot-MCP
-git init ; git checkout -b pc-current
-git remote add origin https://github.com/merlingame-netizen/M.E.R.L.I.N.git
-git add -A ; git commit -m "feat: import du projet PC courant"
-git push -u origin pc-current
-```
-Puis, une fois, pointer la VM sur cette branche (Run Command ou demande à l'agent) :
-`echo "GAME_REF=pc-current" >> ~/.config/merlin-game.env`
+### Boucle de travail quotidienne
+1. Depuis ton PC (`C:/Users/PGNK2128/Godot-MCP`, qui est ce même dépôt) :
+   `git add -A ; git commit -m "..." ; git push origin feat/practices-docs`
+2. Dans le portail, onglet **Jouer** → **⟳ Sync** (fetch + pull + réimport si le
+   commit a changé — quelques minutes à froid, quasi instantané ensuite).
+3. **▶ PLAY** — le readout affiche en permanence `JEU : branche @ commit ·
+   GODOT x.y · IMPORT OK`, donc aucun doute sur ce qui tourne.
 
-**Ensuite, à chaque itération** : push depuis le PC → bouton **⟳ Sync** (onglet Jouer)
-→ PLAY. Le Sync fait `fetch + pull --ff-only` puis **ré-importe les assets**
-(`godot --headless --import`) seulement si le commit a changé — 5-15 min au premier
-passage, quasi instantané ensuite. PLAY refuse de démarrer tant que l'import n'a
-jamais été fait (sinon Godot rendrait des placeholders méconnaissables).
+### Import des assets : trois pièges (déjà gérés par `game-sync.sh`)
+Sans `.godot/imported`, Godot affiche des placeholders méconnaissables — d'où le
+refus de `PLAY` tant que l'import n'a pas eu lieu. L'import headless se bloque sur :
+- **`*.blend`** — sans exécutable Blender, blocage définitif (`editor_settings
+  blender/enabled=false` NE suffit PAS) → écartés le temps de l'import, restaurés après ;
+- **`*.gdextension`** — bibliothèques natives Windows, aucune section `linux.arm64` ;
+- **`[editor_plugins]`** — `godot_mcp` ouvre un serveur TCP et `--import` ne rend
+  jamais la main (même recette que la CI `godot-export.yml`).

@@ -10,6 +10,7 @@ set -uo pipefail
 
 REPO="${MERLIN_REPO:-$HOME/workspace/M.E.R.L.I.N}"
 GAME="$REPO/infra/oracle/game"
+. "$GAME/game-env.sh"          # TOOLS_REPO, GAME_DIR, GAME_REF, GAME_REPO_DIR
 CONF_DIR="$HOME/.config"
 GAME_ENV="$CONF_DIR/merlin-game.env"
 IMAGE="localhost/merlin-game"
@@ -56,41 +57,14 @@ else
     bash "$GAME/native-stack-setup.sh" || fail "native-stack-setup KO"
 fi
 
-log "=== 2b/6 godot complet, version alignée au projet ==="
-# La version cible vient du projet lui-même (config/features, ex: "4.5").
-GV="$(grep -m1 'config/features' "$REPO/project.godot" | grep -oE '[0-9]+\.[0-9]+' | head -1)"
-GV="${GV:-4.5}"
-mkdir -p "$HOME/bin"
-# Préserver un éventuel binaire non versionné (ex: l'ancien 4.6 installé à plat).
-if [ -x "$HOME/bin/godot" ] && [ ! -L "$HOME/bin/godot" ]; then
-    OLD_V="$("$HOME/bin/godot" --headless --version 2>/dev/null | head -1 | cut -d. -f1-2)"
-    mv "$HOME/bin/godot" "$HOME/bin/godot-${OLD_V:-old}"
-    log "binaire existant préservé en godot-${OLD_V:-old}"
-fi
-if [ ! -x "$HOME/bin/godot-$GV" ]; then
-    log "téléchargement Godot $GV arm64 (éditeur complet)…"
-    curl -fsSL "https://github.com/godotengine/godot/releases/download/${GV}-stable/Godot_v${GV}-stable_linux.arm64.zip" \
-        -o /tmp/godot-$GV.zip || fail "téléchargement Godot $GV KO"
-    unzip -o -q /tmp/godot-$GV.zip -d /tmp && rm -f /tmp/godot-$GV.zip
-    install -m 0755 "/tmp/Godot_v${GV}-stable_linux.arm64" "$HOME/bin/godot-$GV"
-fi
-ln -sfn "$HOME/bin/godot-$GV" "$HOME/bin/godot"
-log "godot actif: $("$HOME/bin/godot" --headless --version 2>/dev/null | head -1 || echo KO)"
-# Templates d'export $GV (pour les exports depuis le Studio) — best-effort (~1 Go).
-TDIR="$HOME/.local/share/godot/export_templates/${GV}.stable"
-if [ ! -d "$TDIR" ]; then
-    log "téléchargement templates d'export $GV (long, une fois)…"
-    if curl -fsSL "https://github.com/godotengine/godot/releases/download/${GV}-stable/Godot_v${GV}-stable_export_templates.tpz" \
-            -o /tmp/tpl.tpz && unzip -q -o /tmp/tpl.tpz -d /tmp/tpl-$GV; then
-        mkdir -p "$TDIR" && mv /tmp/tpl-$GV/templates/* "$TDIR"/ && rm -rf /tmp/tpl.tpz /tmp/tpl-$GV
-        log "templates $GV installés"
-    else
-        log "warn: templates $GV non installés (exports indisponibles, jeu natif non affecté)"
-    fi
-fi
-
-log "=== 2c/6 sync + import des assets ==="
-bash "$GAME/game-sync.sh" || fail "game-sync KO (sync ou import des assets)"
+log "=== 2b/6 sync du jeu + moteur + import des assets ==="
+# game-sync clone/actualise le dépôt DU JEU (dossier séparé), installe la version
+# de Godot exigée par CE projet, puis importe ses assets.
+bash "$GAME/game-sync.sh" || fail "game-sync KO (sync, moteur ou import des assets)"
+. "$GAME/game-env.sh"          # recharge GAME_DIR : le clone du jeu existe désormais
+log "projet joué : $GAME_DIR ($GAME_REF)"
+# Templates d'export pour le projet joué (best-effort, ~1 Go, hors jeu natif).
+bash "$GAME/godot-install.sh" "$GAME_DIR" --templates || true
 
 log "=== 3/6 dépendances python (pont WebSocket) ==="
 PIP="$(ls "$REPO"/.venv*/bin/pip "$HOME"/.venv*/bin/pip "$HOME"/venv*/bin/pip 2>/dev/null | head -1 || true)"

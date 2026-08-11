@@ -20,7 +20,7 @@ function versionReadout(g) {
   const el = $('#game-version');
   if (!el) return;
   const parts = [
-    `${g.repo_branch || '?'} @ ${g.repo_commit || '?'}`,
+    `JEU : ${g.repo_branch || '?'} @ ${g.repo_commit || '?'}`,
     `GODOT ${g.godot_version || '?'}`,
     `IMPORT ${g.imported ? 'OK' : '<span class="err">JAMAIS FAIT — SYNC REQUIS</span>'}`,
   ];

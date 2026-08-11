@@ -142,15 +142,17 @@ def game() -> dict:
     info["mode"] = st.get("mode", "?")
     info["container"] = st.get("container", "?")
     info["vnc_open"] = bool(st.get("vnc_open"))
-    # Transparence : QUOI tourne exactement (branche@commit, version godot, import).
-    info["repo_branch"] = _sh(["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=5)[0]
-    info["repo_commit"] = _sh(["git", "log", "-1", "--format=%h %cd", "--date=format:%Y-%m-%d"],
-                              timeout=5)[0]
+    # Transparence : QUEL PROJET est joué. Le jeu vit dans son propre dossier,
+    # séparé de l'outillage (sa branche ne contient pas infra/oracle/game).
+    info["game_dir"] = st.get("game_dir", "")
+    info["repo_branch"] = st.get("game_branch", "?")
+    info["repo_commit"] = st.get("game_commit", "?")
+    info["imported"] = bool(st.get("imported"))
+    # Outillage (ce dépôt) — utile pour diagnostiquer, jamais confondu avec le jeu.
+    info["tools_branch"] = _sh(["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=5)[0]
     gi = godot_info()
     info["godot_version"] = gi.get("version", "")
-    info["version_warning"] = gi.get("warning", "")
-    info["imported"] = bool(list((ROOT / ".godot" / "imported").glob("*"))
-                            if (ROOT / ".godot" / "imported").exists() else [])
+    info["version_warning"] = ""
     if info["mode"] == "container":
         info["image_built"] = _sh(["podman", "image", "exists",
                                    "localhost/merlin-game"], timeout=6)[1] == 0

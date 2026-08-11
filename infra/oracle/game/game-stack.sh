@@ -6,17 +6,15 @@
 #   native    — sysroot userland ~/opt/gamestack (RPM extraits, native-stack-setup.sh)
 set -uo pipefail
 
-REPO="${MERLIN_REPO:-$HOME/workspace/M.E.R.L.I.N}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/game-env.sh"    # TOOLS_REPO, GAME_DIR, GAME_REF, GAME_REPO_DIR
+
 GODOT_BIN="${GODOT_BIN:-$HOME/bin/godot}"
 IMAGE="localhost/merlin-game"
 NAME="merlin-game"
 RES="${RES:-1280x720}"
 SYSROOT="$HOME/opt/gamestack/sysroot"
 RUNDIR="$HOME/.cache/merlin-game"
-
-# Config optionnelle écrite par provision-game-user.sh (GAME_MODE, USERNS_FLAG…).
-CONF="$HOME/.config/merlin-game.env"
-[ -f "$CONF" ] && . "$CONF"
 USERNS_FLAG="${USERNS_FLAG:---userns=keep-id}"
 
 if [ -z "${GAME_MODE:-}" ]; then
@@ -44,8 +42,15 @@ status_json() {
         fi
     fi
     port_open && vnc=true
-    printf '{"mode":"%s","container":"%s","vnc_open":%s,"res":"%s"}\n' \
-        "$GAME_MODE" "$state" "$vnc" "$RES"
+    # Transparence : QUEL projet est joué (dossier, branche, commit, import).
+    local gbranch="?" gcommit="?" gimported=false
+    if [ -d "$GAME_DIR/.git" ]; then
+        gbranch="$(git -C "$GAME_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+        gcommit="$(git -C "$GAME_DIR" rev-parse --short HEAD 2>/dev/null || echo '?')"
+    fi
+    [ -n "$(find "$GAME_DIR/.godot/imported" -type f -print -quit 2>/dev/null)" ] && gimported=true
+    printf '{"mode":"%s","container":"%s","vnc_open":%s,"res":"%s","game_dir":"%s","game_branch":"%s","game_commit":"%s","imported":%s}\n' \
+        "$GAME_MODE" "$state" "$vnc" "$RES" "$GAME_DIR" "$gbranch" "$gcommit" "$gimported"
 }
 
 wait_vnc() {  # $1 = "check-cmd de vie" (retourne 0 si le process principal vit encore)
@@ -72,7 +77,7 @@ start_container() {
     podman rm -f "$NAME" >/dev/null 2>&1 || true
     local common=(-d --name "$NAME" --replace --network=host "$USERNS_FLAG"
                   --shm-size=1g
-                  -v "$REPO:/game"
+                  -v "$GAME_DIR:/game"
                   -v "$GODOT_BIN:/opt/godot:ro"
                   -e "RES=$RES")
     if ! podman run "${common[@]}" --memory=8g --cpus=3 "$IMAGE" >/dev/null 2>&1; then
@@ -93,8 +98,6 @@ stop_container() {
 # pur LD_LIBRARY_PATH. native-inner.sh tourne dans `unshare --user --mount` et
 # monte le sysroot par-dessus /usr/bin + /usr/share/X11 (overlay, ou bind d'un
 # répertoire fusionné en fallback). Le réseau reste celui de l'hôte (port 5900).
-GAME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 start_native() {
     [ -f "$SYSROOT/.merlin-ready" ] || {
         echo "FATAL: sysroot absent — lancer provision-game-user.sh" >&2; exit 1; }
@@ -130,8 +133,8 @@ stop_native() {
 require_import() {
     # Sans .godot/imported, Godot rend des placeholders méconnaissables :
     # on refuse de démarrer plutôt que d'afficher « un autre jeu ».
-    if [ -z "$(find "$REPO/.godot/imported" -type f -print -quit 2>/dev/null)" ]; then
-        echo "FATAL: assets jamais importés — lancer game-sync (Studio) ou provision-game-user.sh" >&2
+    if [ -z "$(find "$GAME_DIR/.godot/imported" -type f -print -quit 2>/dev/null)" ]; then
+        echo "FATAL: assets jamais importés dans $GAME_DIR — lancer game-sync (bouton Sync du Studio)" >&2
         exit 1
     fi
 }

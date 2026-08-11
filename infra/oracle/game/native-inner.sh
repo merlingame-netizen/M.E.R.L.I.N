@@ -2,12 +2,15 @@
 # Corps du mode natif — s'exécute DANS un namespace user+mount non privilégié
 # (lancé par game-stack.sh via `unshare --user --map-root-user --mount`).
 # Monte le sysroot par-dessus /usr/bin et /usr/share/X11 (Xvfb spawn
-# /usr/bin/xkbcomp en chemin absolu compilé en dur — voir provision), puis
-# lance Xvfb -> x11vnc -> godot (avant-plan : sa mort termine le namespace).
+# /usr/bin/xkbcomp en chemin absolu compilé en dur), puis lance
+# Xvfb -> x11vnc -> godot (avant-plan : sa mort termine le namespace).
 set -euo pipefail
 
 RES="${1:-1280x720}"
-REPO="${MERLIN_REPO:-$HOME/workspace/M.E.R.L.I.N}"
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/game-env.sh"          # fournit GAME_DIR (le projet joué)
+
 GODOT_BIN="${GODOT_BIN:-$HOME/bin/godot}"
 SYSROOT="$HOME/opt/gamestack/sysroot"
 MERGED="$HOME/opt/gamestack/merged"
@@ -42,6 +45,7 @@ for _ in $(seq 1 50); do [ -e /tmp/.X11-unix/X99 ] && break; sleep 0.2; done
 x11vnc -display :99 -localhost -rfbport 5900 -forever -shared -nopw \
     -noxdamage -defer 20 -wait 20 -quiet > "$RUNDIR/x11vnc.log" 2>&1 &
 
-cd "$REPO"
+cd "$GAME_DIR"
+echo "[native-inner] projet joué : $GAME_DIR" >&2
 exec "$GODOT_BIN" --path . --rendering-driver opengl3 --audio-driver Dummy \
     --resolution "$RES" > "$RUNDIR/godot.log" 2>&1
