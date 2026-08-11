@@ -46,3 +46,19 @@
 - **Question ouverte majeure** : sort de `main` (170 commits, DA CRT périmée) face à
   `feat/practices-docs` (207 commits, le vrai jeu). Opération destructrice → jamais
   entreprise sans demande explicite.
+
+## 2026-08-11: Chaîne autonome + interface enfantine (questionnaire 3 rounds, 11 réponses)
+- **Autonomie** : auto sauf décisions stratégiques. Contenu validé auto-intégré au corpus ;
+  balance/design/bugs/UX/DA/bible/gros diffs (>30 lignes) = cartes Décider.
+- **Codeur** : LOCAL Gemma 4 (refus du cloud). e4b maintenant, 12b après extension disque.
+  Le diff est décidé en amont (before/after) — application déterministe, périmètre
+  data+constantes+patchs ≤30 lignes, worktree auto/nightly, smoke par patch.
+- **Merge** : jamais automatique. Carte « Intégrer la nuit » = 1 tap = merge --no-ff + push.
+- **Interface** : 3 onglets (Jouer/Décider/Santé) + engrenage Coulisses. Santé = 5 voyants
+  géants dont la facture Oracle.
+- **Cadence** : 24/7 sauf jeu ouvert, reprise +10 min. Alertes : digest 7h (sauf bloquant).
+- **Playtest bot** : heuristiques déterministes d'abord (écran noir/figé/crash), captures
+  jointes aux cartes ; jugement esthétique = humain. (v11.3 à faire)
+- **PAYG IMPÉRATIF 0 €** : budget Oracle double alerte (ACTUAL 1 centime + FORECAST 50 %,
+  2 emails), audit ressources = zéro payant (A1 plein free, 100/200 Go), montant non nul
+  → carte Décider urgente + ntfy. Extension disque growfs = 0 € (volume déjà compté).
