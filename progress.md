@@ -2658,3 +2658,18 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
 - **Reste (décision Maxime)** : que faire de `main` (170 commits) face à `feat/practices-docs`
   (207 commits) — fusion, bascule de branche par défaut, ou statu quo. Non traité :
   opération destructrice, à cadrer explicitement.
+
+## 2026-08-11 — Plateforme auto-agent : boucle push→CI→rapport + socle codeur (v6)
+- **Webhook** `/api/hook/push` signé HMAC (secret sur la VM), n'agit que sur GAME_REF,
+  lance la CI ; autosync 15 min en secours (délègue tout à la CI). Testé e2e via tunnel :
+  bonne sig → 202+job, mauvaise → 401. À brancher côté GitHub (URL tunnel + secret).
+- **CI de commit** : sync+import → smoke 7 scènes → restart → capture rendu réel →
+  verdict + vignette dans le portail. 1er passage : VERT (596bbbe6, 7/7, boot OK).
+- **Rapport du matin** (7h) : commits/CI/agents/santé/smoke des 24 h, affiché au portail.
+- **Codeur résident** (socle, désactivé) : file de missions (POST /api/mission + fenêtre
+  portail), Claude Code headless sur branche auto/coder uniquement ; attend
+  ANTHROPIC_API_KEY dans ~/.config/merlin-coder.env + node/npm sur la VM.
+- Limite connue : l'URL du tunnel change à chaque restart de cloudflared → le webhook
+  GitHub doit être mis à jour (l'agent tunnel-watch archive l'historique des URL).
+- Restent (ordre validé) : 3. playtester VNC (xdotool + jugement des captures),
+  4. usine à contenu nocturne (Ollama + scenario_validator).
