@@ -29,14 +29,13 @@
   <span class="chip idle" id="ch-bill" title="Facturation Oracle du mois — doit rester à 0">€ …</span>
   <span class="chip idle" id="ch-clock">--:--</span>
  </div>
+ <!-- Dock ENFANTIN : 3 destinations + un engrenage discret. Tout le technique
+      vit derrière Coulisses — présent, jamais imposé. -->
  <nav class="dock">
   <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
-  <button data-tab="ideas"><span class="g">💡</span>Idées</button>
-  <button data-tab="agents"><span class="g">◆</span>Agents</button>
-  <button data-tab="godot"><span class="g">⚙</span>Godot</button>
-  <button data-tab="content"><span class="g">✎</span>Contenu</button>
-  <button data-tab="jobs"><span class="g">⧗</span>Jobs</button>
-  <button data-tab="system"><span class="g">▤</span>Système</button>
+  <button data-tab="ideas"><span class="g">💡</span>Décider<span class="pill" id="dock-pending" hidden></span></button>
+  <button data-tab="health"><span class="g">✚</span>Santé</button>
+  <button data-tab="cogs" class="cog" title="Coulisses — le détail technique"><span class="g">⚙</span></button>
  </nav>
 </div>
 
@@ -81,6 +80,30 @@
     <div id="ideas-list"><div class="mut">aucune proposition pour l'instant</div></div>
    </div>
   </div>
+ </section>
+
+ <!-- ══ SANTÉ ══ cinq voyants géants, lisibles par un enfant -->
+ <section class="pane" id="pane-health">
+  <div class="vitals" id="vitals">
+   <button class="vital idle" id="v-game" data-tab="play"><span class="ico">🎮</span><span class="lbl">Jeu</span><span class="val">…</span></button>
+   <button class="vital idle" id="v-decide" data-tab="ideas"><span class="ico">💡</span><span class="lbl">Décisions</span><span class="val">…</span></button>
+   <button class="vital idle" id="v-ci" data-tab="cogs"><span class="ico">🛠</span><span class="lbl">Dernier build</span><span class="val">…</span></button>
+   <button class="vital idle" id="v-agents" data-tab="cogs"><span class="ico">◆</span><span class="lbl">Automates</span><span class="val">…</span></button>
+   <button class="vital idle" id="v-euro" data-tab="cogs"><span class="ico">€</span><span class="lbl">Facture Oracle</span><span class="val">…</span></button>
+  </div>
+ </section>
+
+ <!-- ══ COULISSES ══ les anciens onglets, regroupés derrière l'engrenage -->
+ <section class="pane" id="pane-cogs">
+  <nav class="subnav">
+   <button data-tab="agents"><span class="g">◆</span>Agents</button>
+   <button data-tab="godot"><span class="g">⚙</span>Godot</button>
+   <button data-tab="content"><span class="g">✎</span>Contenu</button>
+   <button data-tab="jobs"><span class="g">⧗</span>Jobs</button>
+   <button data-tab="system"><span class="g">▤</span>Système</button>
+  </nav>
+  <div class="mut" style="margin-top:14px">Le détail technique vit ici : agents, moteur, contenu, jobs, système.
+   Au quotidien, Jouer · Décider · Santé suffisent.</div>
  </section>
 
  <!-- ══ AGENTS ══ -->

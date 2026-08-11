@@ -8,11 +8,22 @@ const card = (n, b, st) => `<div class="card ${st||''}"><div class="row"><span c
 const gauge = p => { const c = p >= 90 ? 'crit' : p >= 70 ? 'warn' : ''; return `<div class="bar ${c}"><i style="width:${Math.min(p,100)}%"></i></div>`; };
 let CAT = [];
 
-document.querySelectorAll('.dock button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.dock button').forEach(x => x.classList.toggle('on', x === b));
-  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + b.dataset.tab));
+// Un seul switcher pour le dock, la sous-nav des Coulisses et les voyants de
+// Santé (taper un voyant mène à l'endroit concerné). Les onglets techniques
+// n'ont plus de bouton au dock : l'engrenage reste allumé quand on y est.
+const TECH_TABS = ['agents', 'godot', 'content', 'jobs', 'system'];
+function showTab(tab) {
+  const dockTab = TECH_TABS.includes(tab) ? 'cogs' : tab;
+  document.querySelectorAll('.dock button').forEach(x =>
+    x.classList.toggle('on', x.dataset.tab === dockTab));
+  document.querySelectorAll('.subnav button').forEach(x =>
+    x.classList.toggle('on', x.dataset.tab === tab));
+  document.querySelectorAll('.pane').forEach(p =>
+    p.classList.toggle('on', p.id === 'pane-' + tab));
   window.scrollTo(0, 0);
-});
+}
+document.querySelectorAll('.dock button, .subnav button, .vital').forEach(b =>
+  b.onclick = () => showTab(b.dataset.tab));
 
 async function run(kind, params) {
   try {
@@ -200,6 +211,36 @@ async function refreshCpu() {
 }
 
 /* ── Agents : planification, dernier passage, santé, smoke ─────────────── */
+// ── Santé : cinq voyants, trois couleurs, zéro jargon ────────────────────────
+function vital(id, state, text) {          // state: up (vert) | down (rouge) | idle
+  const e = $(id);
+  if (e) { e.className = 'vital ' + state; e.querySelector('.val').textContent = text; }
+}
+async function refreshHealth() {
+  try {
+    const g = await j('/api/game');
+    vital('#v-game', g.vnc_open ? 'up' : 'idle', g.vnc_open ? 'en cours' : 'prêt');
+  } catch { vital('#v-game', 'down', 'injoignable'); }
+  try {
+    const d = await j('/api/agents');
+    const ko = (d.agents || []).filter(a => a.enabled && a.ok === false).length;
+    vital('#v-agents', ko ? 'down' : 'up', ko ? ko + ' en panne' : 'tous OK');
+    const c = (d.ci || [])[d.ci.length - 1];
+    if (c) vital('#v-ci', (c.scenes_failing === 0 && c.boot_ok) ? 'up' : 'down',
+                 (c.scenes_failing === 0 && c.boot_ok) ? 'vert' : 'rouge');
+    const b = d.billing || {};
+    if (b.total === 0) vital('#v-euro', 'up', '0,00 €');
+    else if (typeof b.total === 'number') vital('#v-euro', 'down', b.total.toFixed(2) + ' € !');
+  } catch { /* les voyants gardent leur dernier état */ }
+  try {
+    const p = await j('/api/proposals');
+    const n = (p.counts || {}).pending || 0;
+    vital('#v-decide', n ? 'up' : 'idle', n ? n + ' à trancher' : 'rien');
+    const pill = $('#dock-pending');
+    if (pill) { pill.hidden = !n; pill.textContent = n; }
+  } catch { }
+}
+
 // ── Propositions : les agents proposent, l'humain tranche en un tap ──────────
 async function refreshProposals() {
   let d;
@@ -381,7 +422,7 @@ Object.assign(window, { run, runAll, parseProj, genCards, askOllama, renderParam
 
 function tick() {
   refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshContent();
-  refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshProposals(); refreshClock();
+  refreshLlm(); refreshRepo(); refreshHost(); refreshJobs(); refreshAgents(); refreshProposals(); refreshHealth(); refreshClock();
 }
 const mBtn = $('#btn-mission');
 if (mBtn) mBtn.onclick = async () => {
@@ -400,5 +441,5 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
 loadCat(); tick(); initGame();
 setInterval(refreshClock, 20000);
 setInterval(refreshJobs, 10000);
-setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); refreshProposals(); }, 30000);
+setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); refreshProposals(); refreshHealth(); }, 30000);
 setInterval(() => { refreshContent(); refreshLlm(); refreshRepo(); }, 60000);
