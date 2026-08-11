@@ -2643,3 +2643,18 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
   régression /healthz /api/* /play/ 200, auth 401 sans credentials.
 - **Reste (manuel, Maxime)** : ouvrir l'URL du tunnel sur PC/mobile, onglet Jouer → PLAY,
   jouer 5 min (latence/fps), ajuster la résolution si besoin (960x540 si lent).
+
+## 2026-08-11 — Le VRAI jeu tourne sur la VM (feat/practices-docs)
+- **Diagnostic** : la VM jouait `main` (écran noir + ENTRER). Le jeu attendu vit sur
+  `origin/feat/practices-docs` — lignée `feat/*` divergée de `main` le 2026-05-17,
+  jamais fusionnée. Rien à pousser depuis le PC : le jeu était déjà sur GitHub.
+- **Architecture deux dossiers** (la branche du jeu ne contient pas `infra/oracle/game`) :
+  `~/workspace/M.E.R.L.I.N` = outillage · `~/workspace/merlin-game` = le jeu.
+  `game-env.sh` (GAME_REF/GAME_REPO_DIR/GAME_REPO_URL), `game-sync.sh` (clone/pull +
+  moteur + import), `godot-install.sh` (version depuis `config/features`).
+- **Vérifié visuellement** : menu flat brun/or, wordmark M·E·R·L·I·N, 5 entrées à icônes,
+  Merlin encapuchonné yeux bleus + lune à anneaux, « À PROPOS ». Godot 4.5,
+  175 ressources importées, `MerlinBoot.tscn`, `vnc_open:true`.
+- **Reste (décision Maxime)** : que faire de `main` (170 commits) face à `feat/practices-docs`
+  (207 commits) — fusion, bascule de branche par défaut, ou statu quo. Non traité :
+  opération destructrice, à cadrer explicitement.

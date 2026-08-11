@@ -33,3 +33,25 @@
 2. Ajouter un job fleet `validate-ci` (needs `[service]`) sur gcp-micro, déclenché sur push.
 3. Schéma **D1** cartes/télémétrie + endpoints Worker (réutiliser `backup-d1`/`kv-write`).
 4. **Débloquer Oracle** (PAYG ou polling capacity-report) pour activer LLM/heavy (#7, #8).
+
+## Deux lignées divergentes du jeu (constat 2026-08-11)
+
+Le dépôt porte **deux versions du jeu qui ont divergé le 2026-05-17 et n'ont jamais
+fusionné**. Confondre les deux fait perdre des heures — vérifier la branche AVANT tout
+travail visuel.
+
+| | `main` (+ branches claude/*) | `feat/*` — dont `feat/practices-docs` |
+|---|---|---|
+| Scène de départ | `scenes/MenuTest.tscn` | `scenes/MerlinBoot.tscn` |
+| Menu | écran noir, titre centré, bouton ENTRER | menu flat : M·E·R·L·I·N + 5 entrées à icônes |
+| Code | `scripts/menu_test.gd`, `scripts/ui/` | `scripts/game/merlin_*.gd` (34 fichiers) |
+| DA | CRT / Persona (or + cramoisi sur noir) | flat rétro-minimaliste brun/or/crème |
+| Écrans | — | CHRONIQUES, éclats du Graal, voix LLM au menu |
+
+- **La version attendue par Maxime est `feat/practices-docs`** (la plus avancée,
+  2026-07-31, commit d'origine du menu : `d831a007` « menu refait sur le mockup flat »).
+- Empreinte non ambiguë du bon menu : le sous-titre « N éclats déjà arrachés à la brume »
+  (`_fragments_preamble()` — nombres en toutes lettres jusqu'à douze, en chiffres au-delà).
+- `main` n'a JAMAIS reçu cette refonte ; y chercher le menu du screenshot est vain.
+- `C:/Users/PGNK2128/Godot-MCP` sur le PC de Maxime **est ce dépôt** (nom hérité du serveur
+  MCP Godot qu'il contient) — il n'existe pas de second projet Godot parallèle.
