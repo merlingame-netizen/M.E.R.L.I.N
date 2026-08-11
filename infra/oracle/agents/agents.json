@@ -98,6 +98,14 @@
       "desc": "Génère des cartes Gemma 4 contraintes par schéma, filtrées par scenario_validator. Rejets journalisés (auto_rejects). Cède la place au jeu, 35 min max par passage."
     },
     {
+      "id": "playtest-bot",
+      "label": "Playtest bot (VNC réel)",
+      "schedule": "30 3 * * *",
+      "cmd": "a_playtest_bot.sh",
+      "enabled": true,
+      "desc": "Joue réellement au jeu rendu (clics et touches via VNC), capture chaque écran, détecte NOIR/FIGÉ/MORT par heuristiques. Chaque anomalie devient une carte Décider."
+    },
+    {
       "id": "billing",
       "label": "Facturation Oracle",
       "schedule": "17 * * * *",
