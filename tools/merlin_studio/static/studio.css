@@ -395,3 +395,25 @@ code { color: var(--blue); }
 .chat-send { width: 48px; height: 48px; flex: 0 0 auto; border-radius: 50%; border: 0;
   background: var(--gold); color: var(--deep); font-size: 19px; cursor: pointer; }
 .chat-send:disabled { opacity: .4; }
+
+/* ── Les agents au travail : vue vivante dans Décider ────────────────────── */
+.crew { display: flex; flex-direction: column; gap: 2px; }
+.crew-row { display: flex; align-items: center; gap: 11px; padding: 10px 8px;
+  border-bottom: 1px solid var(--border); }
+.crew-row:last-child { border-bottom: 0; }
+.crew-dot { width: 11px; height: 11px; flex: 0 0 auto; border-radius: 50%; background: var(--dim); }
+.crew-dot.run { background: var(--gold); animation: pulse 1.1s ease-in-out infinite; }
+.crew-dot.ok { background: var(--green); }
+.crew-dot.ko { background: var(--red); }
+.crew-dot.off { background: transparent; border: 1px solid var(--border); }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(1.35); } }
+.crew-main { flex: 1 1 auto; min-width: 0; }
+.crew-name { font-size: 14px; font-weight: 700; color: var(--cream); }
+.crew-name .now { color: var(--gold); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.crew-what { font-size: 12.5px; color: var(--dim); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crew-when { flex: 0 0 auto; text-align: right; font-size: 11.5px; color: var(--dim); line-height: 1.35; }
+.crew-when b { display: block; color: var(--cream); font-weight: 400; }
+.crew-go { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--gold); font-size: 14px; }
+.crew-go:disabled { opacity: .35; cursor: default; }

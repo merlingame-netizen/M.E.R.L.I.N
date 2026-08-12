@@ -122,6 +122,73 @@ def last_runs() -> dict:
 AGENTS_DIR = ROOT / "infra" / "oracle" / "agents"
 
 
+def _is_running(agent_id: str) -> bool:
+    """Un agent tourne-t-il MAINTENANT ? agent-run.sh tient un flock par id :
+    si on ne peut pas le prendre, c'est qu'il travaille."""
+    lock = Path.home() / ".cache" / "merlin-agents" / f"{agent_id}.lock"
+    if not lock.exists():
+        return False
+    try:
+        import fcntl
+        with lock.open("r") as f:
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                return False          # libre → l'agent ne tourne pas
+            except OSError:
+                return True           # pris → il travaille
+    except Exception:
+        return False
+
+
+def _next_run(schedule: str, now: float | None = None) -> str:
+    """Prochain passage, en français. Balaie les minutes à venir (cron simple :
+    minute + heure, les autres champs valant *)."""
+    sched = (schedule or "").strip()
+    if not sched or sched.startswith(("webhook", "à la")):
+        return "sur demande"
+    parts = sched.split()
+    if len(parts) < 2:
+        return sched
+
+    def _match(field: str, value: int) -> bool:
+        for tok in field.split(","):
+            if tok == "*":
+                return True
+            if tok.startswith("*/"):
+                try:
+                    if value % int(tok[2:]) == 0:
+                        return True
+                except ValueError:
+                    pass
+            elif "-" in tok:
+                try:
+                    lo, hi = (int(x) for x in tok.split("-", 1))
+                    if lo <= value <= hi:
+                        return True
+                except ValueError:
+                    pass
+            elif tok.isdigit() and int(tok) == value:
+                return True
+        return False
+
+    base = time.localtime(now or time.time())
+    start = time.mktime(base) // 60 * 60 + 60      # minute suivante
+    for step in range(0, 60 * 24 * 7):             # jusqu'à 7 jours
+        t = time.localtime(start + step * 60)
+        if _match(parts[0], t.tm_min) and _match(parts[1], t.tm_hour):
+            mins = step
+            if mins < 1:
+                return "dans moins d'une minute"
+            if mins < 60:
+                return f"dans {mins} min"
+            if mins < 60 * 24:
+                h, m = divmod(mins, 60)
+                return f"dans {h} h" + (f" {m}" if m else "")
+            return f"dans {mins // (60 * 24)} j"
+    return sched
+
+
 def agents() -> dict:
     """Agents planifiés sur la VM + leur dernier passage. Never raises."""
     # État RÉEL = manifeste + réglages faits depuis le portail (hors dépôt).
@@ -139,13 +206,26 @@ def agents() -> dict:
         # état dans state/<id>.json ; repli sur l'ancien emplacement (racine)
         st = _read_json(state_dir / "state" / f"{a.get('id')}.json", None) \
             or _read_json(state_dir / f"{a.get('id')}.json", {})
+        aid = a.get("id")
+        last = st.get("last_run", "")
+        ago = None
+        if last:
+            try:
+                ago = max(0, int((time.time()
+                                  - time.mktime(time.strptime(last[:19], "%Y-%m-%dT%H:%M:%S"))
+                                  - time.timezone) // 60))
+            except Exception:
+                ago = None
         out.append({
-            "id": a.get("id"), "label": a.get("label", a.get("id")),
+            "id": aid, "label": a.get("label", aid),
             "desc": a.get("desc", ""), "schedule": a.get("schedule", ""),
             "enabled": bool(a.get("enabled")),
-            "last_run": st.get("last_run", ""), "ok": st.get("ok"),
+            "last_run": last, "ago_min": ago, "ok": st.get("ok"),
             "rc": st.get("rc"), "duration_s": st.get("duration_s"),
             "summary": st.get("summary", ""),
+            # Vue « en direct » : qui travaille maintenant, qui passe ensuite.
+            "running": _is_running(aid),
+            "next_run": _next_run(a.get("schedule", "")) if a.get("enabled") else "en pause",
         })
     installed = False
     try:

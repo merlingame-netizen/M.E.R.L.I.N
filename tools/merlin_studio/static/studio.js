@@ -390,6 +390,70 @@ async function refreshJournal() {
     </div>`).join('');
 }
 
+// ── Les agents au travail : ce que fait la VM, en direct, dans Décider ───────
+// Rôles en français : le nom technique ne dit rien de ce que l'agent FAIT.
+const CREW_ROLE = {
+  'game-watchdog': 'Relance le jeu s\'il tombe',
+  'game-autosync': 'Récupère les nouveaux commits du jeu',
+  'health': 'Surveille processeur, mémoire et disque',
+  'disk-guard': 'Fait le ménage quand le disque se remplit',
+  'tunnel-watch': 'Vérifie que le portail reste joignable',
+  'smoke-scenes': 'Teste chaque écran du jeu',
+  'ci-commit': 'Teste le jeu à chaque commit, capture à l\'appui',
+  'design-council': 'Ouvre le conseil de design du matin',
+  'daily-report': 'Résume les dernières 24 heures',
+  'coder': 'Écrit du code (Claude, sur demande)',
+  'gd-content-gap': 'Écrit des exemples pour entraîner le modèle',
+  'gd-balance': 'Mesure l\'équilibrage et propose des ajustements',
+  'coder-local': 'Applique les corrections que tu as validées',
+  'corpus-night': 'Fabrique le jeu d\'entraînement du modèle',
+  'playtest-bot': 'Joue au jeu et repère les blocages',
+  'billing': 'Vérifie que la facture Oracle reste à zéro',
+  'ollama-serve': 'Garde le modèle IA prêt à répondre',
+  'llm-bench': 'Mesure la vitesse des modèles',
+  'ollama-idle': 'Libère la mémoire des modèles inactifs',
+};
+async function refreshCrew() {
+  const list = $('#crew-list');
+  if (!list) return;
+  let d;
+  try { d = await j('/api/agents'); } catch { return; }
+  const ags = (d.agents || []).slice().sort((a, b) => {
+    if (a.running !== b.running) return a.running ? -1 : 1;          // au travail d'abord
+    if (a.enabled !== b.enabled) return a.enabled ? -1 : 1;
+    return (a.ago_min ?? 1e9) - (b.ago_min ?? 1e9);                  // puis les plus récents
+  });
+  const busy = ags.filter(a => a.running).length;
+  const ko = ags.filter(a => a.enabled && a.ok === false).length;
+  $('#crew-meta').textContent = busy
+    ? `${busy} au travail en ce moment`
+    : (ko ? `${ko} en difficulté` : `${ags.filter(a => a.enabled).length} en veille`);
+  list.innerHTML = ags.map(a => {
+    const cls = a.running ? 'run' : !a.enabled ? 'off' : a.ok === false ? 'ko' : a.ok ? 'ok' : '';
+    const quand = a.running ? 'maintenant'
+      : a.ago_min == null ? 'jamais lancé'
+      : a.ago_min < 60 ? `il y a ${a.ago_min} min`
+      : a.ago_min < 1440 ? `il y a ${Math.round(a.ago_min / 60)} h`
+      : `il y a ${Math.round(a.ago_min / 1440)} j`;
+    const quoi = a.running ? 'travaille en ce moment…'
+      : (a.summary || CREW_ROLE[a.id] || a.desc || '').slice(0, 90);
+    return `<div class="crew-row">
+      <span class="crew-dot ${cls}"></span>
+      <div class="crew-main">
+        <div class="crew-name">${esc(a.label)}${a.running ? '<span class="now">en cours</span>' : ''}</div>
+        <div class="crew-what" title="${esc(CREW_ROLE[a.id] || a.desc || '')}">${esc(quoi)}</div>
+      </div>
+      <div class="crew-when">${esc(quand)}<b>${esc(a.next_run || '')}</b></div>
+      <button class="crew-go" data-agent="${esc(a.id)}" ${a.running ? 'disabled' : ''}
+        title="Lancer maintenant">▶</button></div>`;
+  }).join('');
+  list.querySelectorAll('button[data-agent]').forEach(b => b.onclick = async () => {
+    b.disabled = true; b.textContent = '…';
+    await run('agent-run', { id: b.dataset.agent });
+    setTimeout(refreshCrew, 1500);
+  });
+}
+
 // ── Mémoire du jeu : élément de décision, affiché dans Décider ───────────────
 async function refreshMemory() {
   try {
@@ -417,6 +481,7 @@ const KIND_FR = { balance: 'équilibrage', content: 'nouvelle carte', design: 'g
   ux: 'ergonomie', bug: 'anomalie', infra: 'plateforme', merge: 'intégration' };
 async function refreshProposals() {
   refreshMemory();   // la Mémoire est un élément de décision : elle vit ici
+  refreshCrew();     // et l'activité des agents, en direct
   let d;
   try { d = await j('/api/proposals'); } catch { return; }
   const n = (d.counts || {}).pending || 0;
@@ -614,5 +679,6 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
 loadCat(); tick(); initGame();
 setInterval(refreshClock, 20000);
 setInterval(refreshJobs, 10000);
+setInterval(refreshCrew, 10000);   // vue vivante des agents
 setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); refreshProposals(); refreshHealth(); refreshJournal(); }, 30000);
 setInterval(() => { refreshContent(); refreshLlm(); refreshRepo(); }, 60000);
