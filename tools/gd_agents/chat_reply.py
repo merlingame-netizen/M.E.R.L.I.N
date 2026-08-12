@@ -47,9 +47,19 @@ def main(conv: str, adviser: str) -> int:
         who = "merlin"
     hist = "\n".join(f"{'Maxime' if r['role'] == 'user' else r['who']} : {r['text'][:300]}"
                      for r in rows[-8:])
+    # La carte du jeu : sans elle, le modèle ne sait pas qu'un écran MERLIN
+    # existe séparément du biome — mesuré, il a interverti les deux et la mission
+    # partie au codeur visait le mauvais écran.
+    try:
+        import parcours
+        carte = parcours.condense(1400)
+    except Exception:
+        carte = ""
     base = (
         f"{persona}\n\n"
-        f"=== ÉTAT RÉEL DU STUDIO (utilise CES données, n'invente rien) ===\n"
+        + (f"=== LE JEU, TEL QU'IL EST CODÉ ===\n{carte}\n=== FIN DE LA CARTE ===\n\n"
+           if carte else "")
+        + f"=== ÉTAT RÉEL DU STUDIO (utilise CES données, n'invente rien) ===\n"
         f"{chat_actions.studio_state()}\n"
         f"=== FIN DE L'ÉTAT ===\n\n"
         f"CONVERSATION :\n{hist}\n\n"
@@ -58,7 +68,12 @@ def main(conv: str, adviser: str) -> int:
         "- réponds DIRECTEMENT à la question, sans préambule ni « je peux te… » ;\n"
         "- s'il demande une liste, DONNE la liste complète avec les vrais noms et "
         "cadences ci-dessus, pas une promesse de la donner ;\n"
-        "- cite des chiffres et des noms réels, jamais de généralités.")
+        "- cite des chiffres et des noms réels, jamais de généralités ;\n"
+        "- quand il parle d'un ÉCRAN ou d'un MOMENT du jeu, NOMME l'écran de la "
+        "carte ci-dessus et le fichier concerné. Si tu n'es pas sûr de l'écran, "
+        "DIS-LE et demande — ne devine jamais ;\n"
+        "- ne REFORMULE pas sa demande dans tes propres mots : reprends ses termes "
+        "exacts. S'il dit « MERLIN », ne dis pas « le biome ».")
     # Deux versions : avec le catalogue d'actions, et une version nue de secours.
     prompt = base + "\n\n" + chat_actions.catalogue_for_prompt()
     prompt_plain = base

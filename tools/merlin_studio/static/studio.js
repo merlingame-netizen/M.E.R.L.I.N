@@ -547,6 +547,7 @@ const CREW_ROLE = {
   'relance': 'Rattrape tes messages restés sans réponse',
   'parole': 'Laisse les agents te parler quand ça le mérite',
   'mesures': 'Relève chaque nuit tous les chiffres du jeu',
+  'parcours': 'Relit le jeu et tient la carte de ses écrans',
   'coder': 'Écrit du code (Claude, sur demande)',
   'gd-content-gap': 'Écrit des exemples pour entraîner le modèle',
   'gd-balance': 'Mesure l\'équilibrage et propose des ajustements',

@@ -189,7 +189,32 @@ def _texte_mission(resume: str, demande: str) -> str:
     return (f"DEMANDE DE MAXIME, MOT POUR MOT :\n« {demande[:1500]} »\n\n"
             f"Lecture qu'en a faite l'assistant (indicative, elle peut se tromper) :\n"
             f"{resume[:400]}\n\n"
-            "En cas de désaccord entre les deux, la demande de Maxime fait foi.")
+            + _pistes(demande + " " + resume)
+            + "En cas de désaccord entre les deux, la demande de Maxime fait foi.")
+
+
+def _pistes(texte: str) -> str:
+    """Les écrans et fichiers RÉELS que cette demande semble viser.
+
+    C'est l'orchestration qui manquait : une mission qui dit « refactoriser la
+    séquence d'apparition » sans nommer un fichier n'est exécutable par
+    personne. On croise les mots de Maxime avec la carte du jeu (parcours.py) et
+    on livre les pistes — en les annonçant comme des pistes, jamais comme des
+    certitudes : c'est le codeur qui tranche."""
+    try:
+        import parcours
+        vus, pistes = set(), []
+        for mot in re.findall(r"[A-Za-zÀ-ÿ]{4,}", texte):
+            for p in parcours.chercher(mot):
+                if p.split(" ")[0] not in vus:
+                    vus.add(p.split(" ")[0])
+                    pistes.append(p)
+        if not pistes:
+            return ""
+        return ("PISTES (croisement avec la carte du jeu — à vérifier, pas à croire) :\n"
+                + "\n".join(f"- {p}" for p in pistes[:4]) + "\n\n")
+    except Exception:
+        return ""
 
 
 def execute(action: dict, demande: str = "") -> dict:

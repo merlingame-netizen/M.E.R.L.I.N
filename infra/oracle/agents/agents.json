@@ -208,6 +208,14 @@
       "schedule": "5 5 * * *",
       "enabled": true,
       "desc": "Relève chaque nuit tous les chiffres du jeu (cartes, factions, verbes, rythme, économie, vestiges). Aucun appel au modèle — c'est ce qui permet au journal de dire « ×2,5 → ×2,0 »."
+    },
+    {
+      "id": "parcours",
+      "label": "Le Cartographe",
+      "cmd": "a_parcours.sh",
+      "schedule": "15 5 * * *",
+      "enabled": true,
+      "desc": "Relit le jeu chaque nuit et met à jour la carte du parcours : les écrans, leur enchaînement, l'ordre d'apparition des choses. C'est ce que MERLIN consulte pour savoir de quel écran tu parles."
     }
   ]
 }
