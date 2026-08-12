@@ -216,6 +216,14 @@
       "schedule": "15 5 * * *",
       "enabled": true,
       "desc": "Relit le jeu chaque nuit et met à jour la carte du parcours : les écrans, leur enchaînement, l'ordre d'apparition des choses. C'est ce que MERLIN consulte pour savoir de quel écran tu parles."
+    },
+    {
+      "id": "gd-run",
+      "label": "L'Arbitre de la run",
+      "cmd": "a_gd_run.sh",
+      "schedule": "35 2 * * *",
+      "enabled": true,
+      "desc": "Mesure chaque nuit l'équilibrage du jeu que tu joues vraiment : intégrité, main, corruption, talents, butin, soin."
     }
   ]
 }

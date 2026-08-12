@@ -61,6 +61,18 @@
       "evidence_tokens": 350,
       "kind": "design",
       "desc": "Compte les systèmes que la bible déclare supprimés mais qui vivent encore dans le code. Pur comptage de greps : tourne sur le plus petit modèle. Ne propose jamais de patch — retirer un système est structurel."
+    },
+    {
+      "id": "gd-run",
+      "label": "L'Arbitre de la run",
+      "card": ".claude/agents/gd_difficulty.md",
+      "analyzer": "run_merlin",
+      "shape": "judge",
+      "out_tokens": 180,
+      "deadline_s": 900,
+      "evidence_tokens": 450,
+      "kind": "balance",
+      "desc": "Mesure l'équilibrage du jeu RÉELLEMENT joué : intégrité, main, corruption, élan, talents, butin, soin. Joint le patch quand deux règles se contredisent."
     }
   ]
 }

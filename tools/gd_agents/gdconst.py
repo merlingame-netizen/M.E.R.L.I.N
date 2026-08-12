@@ -52,15 +52,22 @@ def provenance() -> dict:
         return {"chemin": cible, "depot": "jeu", "fiable": True,
                 "dit": f"le jeu ({CONSTANTS_TARGET})"}
     if JEU.exists():
-        # Le jeu est là mais n'a pas de fichier de constantes unique : on prend
-        # le script qui en porte le plus, et on le DIT.
+        # Le jeu n'a pas de fichier nommé `merlin_constants.gd` : on cherche
+        # celui qui porte les constantes d'ÉQUILIBRAGE — pas celui qui en porte
+        # le plus. La différence compte : `merlin_visual.gd` gagnait au nombre
+        # (87 constantes de couleurs et de tailles) alors que les règles du jeu
+        # vivent dans `merlin_run.gd` (intégrité, corruption, main, butin, soin).
+        JEU_MOTS = re.compile(
+            r"^const\s+[A-Z0-9_]*(INTEGRITE|LIFE|HEAL|DAMAGE|HAND|CARD|TURN|LOOT|"
+            r"REWARD|GAIN|CORRUPTION|MOMENTUM|TALENT|DRAFT|ROLL|CHANCE|CAP|MAX|MIN|"
+            r"COST|PRICE|THRESHOLD|WEIGHT)", re.M)
         best, n_best = None, 0
         for p in sorted((JEU / "scripts").rglob("*.gd")) if (JEU / "scripts").exists() else []:
             try:
-                n = len(re.findall(r"^const\s+[A-Z]", p.read_text(encoding="utf-8",
-                                                                  errors="replace"), re.M))
+                txt = p.read_text(encoding="utf-8", errors="replace")
             except Exception:
                 continue
+            n = len(JEU_MOTS.findall(txt))
             if n > n_best:
                 best, n_best = p, n
         if best:

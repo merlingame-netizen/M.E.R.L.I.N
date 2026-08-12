@@ -548,6 +548,7 @@ const CREW_ROLE = {
   'parole': 'Laisse les agents te parler quand ça le mérite',
   'mesures': 'Relève chaque nuit tous les chiffres du jeu',
   'parcours': 'Relit le jeu et tient la carte de ses écrans',
+  'gd-run': 'Mesure l\'équilibrage du jeu que tu joues vraiment',
   'coder': 'Écrit du code (Claude, sur demande)',
   'gd-content-gap': 'Écrit des exemples pour entraîner le modèle',
   'gd-balance': 'Mesure l\'équilibrage et propose des ajustements',
@@ -644,7 +645,7 @@ async function refreshMemory() {
 // ── Propositions : les agents proposent, l'humain tranche en un tap ──────────
 // Des noms français à l'écran, jamais des identifiants techniques.
 const WHO_FR = { 'gd-content-gap': 'Écrivain de cartes', 'gd-balance': 'Équilibreur',
-  'gd-pacing': 'Rythmeur', 'gd-economy': 'Trésorier', 'gd-audit': 'Auditeur bible',
+  'gd-pacing': 'Rythmeur', 'gd-economy': 'Trésorier', 'gd-audit': 'Auditeur bible', 'gd-run': 'Arbitre de la run',
   'coder-local': 'Codeur', 'playtest-bot': 'Robot testeur', 'billing': 'Comptable',
   'corpus-night': 'Atelier d’écriture', 'selftest': 'Test' };
 const KIND_FR = { balance: 'équilibrage', content: 'nouvelle carte', design: 'game design',
