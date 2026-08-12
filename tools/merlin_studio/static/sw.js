@@ -5,7 +5,7 @@
    cache ne sert qu'en secours hors-ligne) ; cache-first seulement pour ce qui
    ne change jamais (icônes, noVNC vendorisé). /api, la page et le VNC ne sont
    JAMAIS interceptés. */
-const VERSION = 'merlin-os-v2';
+const VERSION = 'merlin-os-v3';
 const PRECACHE = ['/static/icon-192.png', '/static/icon-512.png'];
 const IMMUTABLE = (p) => p.startsWith('/vendor/') || p.startsWith('/static/icon-');
 
