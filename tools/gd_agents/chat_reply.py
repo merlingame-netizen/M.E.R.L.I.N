@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -80,11 +81,46 @@ def main(conv: str, adviser: str) -> int:
             return (p.stdout or "").strip()
         except Exception:
             return ""
-    reply = _one(prompt)
-    # Filet : certains prompts (catalogue d'actions) font rendre du vide au e4b.
-    # On réessaie alors en conversation pure — le chat répond TOUJOURS.
-    if not reply:
-        reply = _one(prompt_plain)
+
+    # Le verrou LLM PARTAGÉ : ce module était le seul consommateur à ne pas le
+    # prendre. Deux modèles de 6,1 Go pouvaient donc se charger en même temps sur
+    # 22 Go, la VM partait en swap, et l'appel rendait du vide — exactement la
+    # signature « LLM indisponible — rc=0 » qu'on lit dans le journal.
+    import contextlib
+
+    @contextlib.contextmanager
+    def _verrou_llm(attente=600):
+        lock = Path.home() / ".cache" / "merlin-agents" / "llm.lock"
+        lock.parent.mkdir(parents=True, exist_ok=True)
+        f = lock.open("a+")
+        try:
+            try:
+                import fcntl
+                debut = time.time()
+                while True:
+                    try:
+                        fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except OSError:
+                        if time.time() - debut > attente:
+                            break        # on répond quand même : le chat prime
+                        time.sleep(2)
+            except Exception:
+                pass
+            yield
+        finally:
+            with contextlib.suppress(Exception):
+                f.close()
+
+    # Les deux tentatives sous LE MÊME verrou : le relâcher entre les deux
+    # laisserait un autre agent charger son modèle pile entre l'échec et le
+    # repli, et le repli échouerait pour la même raison que l'appel initial.
+    with _verrou_llm():
+        reply = _one(prompt)
+        # Filet : certains prompts (catalogue d'actions) font rendre du vide au
+        # e4b. On réessaie alors en conversation pure — le chat répond TOUJOURS.
+        if not reply:
+            reply = _one(prompt_plain)
     if not reply:
         memory.chat_append(conv, "assistant", who,
                            "(je n'ai pas réussi à répondre — le modèle local était "

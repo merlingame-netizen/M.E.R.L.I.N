@@ -58,9 +58,19 @@ def main() -> int:
                 "Deux questions : laquelle mérite d'être affinée ? "
                 "Y en a-t-il une que tu regrettes déjà ?")
     memory.chat_append(conv, "assistant", adviser, text)
+    # Le fil s'inscrit dans la boîte : c'est ce qui le rend NON LU, ce qui
+    # l'ouvre en un tap, et ce qui fait que la réponse de Maxime reviendra à CE
+    # conseiller au lieu de partir chez MERLIN.
+    try:
+        import boite
+        boite.declarer(conv, f".claude/agents/{adviser}.md",
+                       f"Conseil du jour — {adviser.replace('_', ' ')}")
+    except Exception:
+        pass
     subprocess.run(["bash", str(HERE.parents[1] / "infra" / "oracle" / "agents" / "notify.sh"),
                     "low", "Conseil de design",
-                    f"Le conseiller du jour t'attend dans Parler ({adviser})."],
+                    f"Le conseiller du jour t'attend dans Parler ({adviser}).",
+                    "?tab=talk"],
                    capture_output=True, timeout=20)
     print(f"conseil ouvert ({conv}, conseiller {adviser}, {len(text)} car.)")
     return 0

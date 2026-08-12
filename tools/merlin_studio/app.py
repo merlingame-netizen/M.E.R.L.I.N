@@ -586,13 +586,43 @@ Fenêtre ouverte encore {left} min.</p>
         to = str(body.get("to", "merlin"))
         if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv) or not (1 <= len(text) <= 2000):
             return jsonify({"error": "message ou conversation invalide"}), 400
+        # Le destinataire est celui du FIL, pas celui du menu du front. Sans ça,
+        # répondre au conseiller du matin s'adressait en réalité à MERLIN, et le
+        # conseiller ne voyait jamais la réponse — la boucle restait ouverte aux
+        # deux bouts. Le menu ne sert plus que pour un fil neuf.
+        try:
+            B = _gd("boite")
+            propre = B.destinataire(conv)
+            if propre:
+                to = propre
+        except Exception:
+            pass
         if to != "merlin" and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
             return jsonify({"error": "conseiller inconnu"}), 400
         M = _gd("memory")
         M.chat_append(conv, "user", "maxime", text)
         rec = actions.launch("chat-reply", {"conv": conv, "to": to})
-        return jsonify({"ok": not rec.get("error"), "conv": conv,
+        return jsonify({"ok": not rec.get("error"), "conv": conv, "to": to,
                         "job": rec.get("id"), "error": rec.get("error")})
+
+    # ── La boîte aux lettres : qui t'a écrit, qui attend ta réponse ─────────
+    @app.route("/api/boite")
+    def api_boite():
+        try:
+            return jsonify(_gd("boite").etat())
+        except Exception as exc:
+            return jsonify({"non_lus": 0, "fils": [], "error": str(exc)[:200]})
+
+    @app.route("/api/boite/lu", methods=["POST"])
+    def api_boite_lu():
+        import re as _re
+        conv = str((request.get_json(silent=True) or {}).get("conv", ""))
+        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
+            return jsonify({"error": "conversation invalide"}), 400
+        try:
+            return jsonify({"ok": _gd("boite").marquer_lu(conv)})
+        except Exception as exc:
+            return jsonify({"error": str(exc)[:200]}), 500
 
     # ── « Ce matin » : les 4 lignes lues avant tout le reste ────────────────
     @app.route("/api/briefing")

@@ -91,30 +91,61 @@ def reponses_de_maxime(agent: str, limit: int = 5, max_chars: int = 400) -> str:
 
 
 # ── conversations du chat interne ────────────────────────────────────────────
-def chat_append(conv: str, role: str, who: str, text: str, actions=None) -> None:
+import contextlib
+import os
+
+
+@contextlib.contextmanager
+def _verrou(conv: str):
+    """Verrou par conversation — PRÉALABLE DUR à plusieurs agents qui écrivent.
+
+    `chat_mark_action_done` lit tout le fichier, le modifie et le RÉÉCRIT. Avec
+    un seul écrivain par jour (le conseil du matin), c'était inoffensif. Dès que
+    plusieurs agents peuvent ouvrir un fil, un message écrit pendant cette
+    séquence disparaît sans laisser de trace. Le verrou est posé sur un fichier
+    à part : `chats/` ne doit contenir QUE des `.jsonl`, sinon `chat_list()` les
+    prendrait pour des conversations."""
     CHATS.mkdir(parents=True, exist_ok=True)
+    lock = BASE / ".locks"
+    lock.mkdir(parents=True, exist_ok=True)
+    f = (lock / f"{conv}.lock").open("a+")
+    try:
+        try:
+            import fcntl
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        except Exception:
+            pass                      # pas de fcntl : on continue sans verrou
+        yield
+    finally:
+        with contextlib.suppress(Exception):
+            f.close()
+
+
+def chat_append(conv: str, role: str, who: str, text: str, actions=None) -> None:
     row = {"t": _now(), "role": role, "who": who, "text": str(text)[:4000]}
     if actions:
         row["actions"] = actions          # boutons proposés par le conseiller
-    with (CHATS / f"{conv}.jsonl").open("a", encoding="utf-8") as f:
-        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    with _verrou(conv):
+        with (CHATS / f"{conv}.jsonl").open("a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def chat_mark_action_done(conv: str, action_id: str) -> None:
     """Marque une action exécutée (append-only : on réécrit le fichier)."""
-    try:
-        rows = [json.loads(x) for x in
-                (CHATS / f"{conv}.jsonl").read_text(encoding="utf-8").splitlines()
-                if x.strip()]
-    except Exception:
-        return
-    for r in rows:
-        for a in r.get("actions", []):
-            if a.get("id") == action_id:
-                a["done"] = True
-    (CHATS / f"{conv}.jsonl").write_text(
-        "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n",
-        encoding="utf-8")
+    with _verrou(conv):
+        try:
+            rows = [json.loads(x) for x in
+                    (CHATS / f"{conv}.jsonl").read_text(encoding="utf-8").splitlines()
+                    if x.strip()]
+        except Exception:
+            return
+        for r in rows:
+            for a in r.get("actions", []):
+                if a.get("id") == action_id:
+                    a["done"] = True
+        (CHATS / f"{conv}.jsonl").write_text(
+            "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n",
+            encoding="utf-8")
 
 
 def chat_find_action(conv: str, action_id: str) -> dict | None:
@@ -141,7 +172,13 @@ def chat_list(limit: int = 12) -> list[dict]:
         out = []
         for f in sorted(CHATS.glob("*.jsonl"), key=lambda p: -p.stat().st_mtime)[:limit]:
             rows = chat_read(f.stem, limit=1)
-            out.append({"conv": f.stem, "last": rows[-1]["text"][:80] if rows else "",
+            dernier = rows[-1] if rows else {}
+            out.append({"conv": f.stem, "id": f.stem,
+                        "last": str(dernier.get("text", ""))[:80],
+                        # QUI a parlé en dernier : sans ça, impossible de savoir
+                        # si un fil attend une réponse de Maxime ou d'un agent.
+                        "role": dernier.get("role", ""), "who": dernier.get("who", ""),
+                        "t": dernier.get("t", ""),
                         "mtime": int(f.stat().st_mtime)})
         return out
     except Exception:
