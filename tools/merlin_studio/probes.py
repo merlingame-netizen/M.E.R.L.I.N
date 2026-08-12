@@ -423,9 +423,27 @@ def briefing() -> dict:
     except Exception:
         pass
     try:
+        # L'atelier d'écriture résume son passage en JSON brut. Le recopier tel
+        # quel affichait « {"loop": "gen", "accepted": … } » en plein milieu du
+        # briefing : exactement le jargon que cet écran est censé remplacer.
         g = _read_json(Path.home() / ".cache" / "merlin-agents" / "state" / "corpus-night.json", {})
-        if g.get("summary"):
-            out["nuit"].append(f"atelier d'écriture : {g['summary'][:90]}")
+        brut = str(g.get("summary") or "")
+        if brut.lstrip().startswith("{"):
+            try:
+                o = json.loads(brut)
+                acc, rej = o.get("accepted"), o.get("rejected")
+                if acc is not None:
+                    phrase = f"{acc} carte(s) écrite(s)" + (f", {rej} refusée(s)" if rej else "")
+                elif o.get("skipped"):
+                    phrase = f"passage sauté ({o['skipped']})"
+                else:
+                    phrase = ""
+            except Exception:
+                phrase = ""
+        else:
+            phrase = brut[:90]
+        if phrase:
+            out["nuit"].append(f"atelier d'écriture : {phrase}")
     except Exception:
         pass
     if not out["nuit"]:
