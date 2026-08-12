@@ -619,6 +619,14 @@ Fenêtre ouverte encore {left} min.</p>
         except Exception as exc:
             return jsonify({"id": aid, "error": str(exc)[:200]})
 
+    # Les chapitres gravés : le récit qui survit aux purges de sources.
+    @app.route("/api/chapitres")
+    def api_chapitres():
+        try:
+            return jsonify(probes.chapitres())
+        except Exception as exc:
+            return jsonify({"chapitres": [], "fils_ouverts": [], "error": str(exc)[:200]})
+
     # ── journal de développement : la timeline agrégée, avec preuves ─────────
     @app.route("/api/journal")
     def api_journal():

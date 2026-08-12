@@ -262,6 +262,28 @@ def agents() -> dict:
             "smoke": _read_json(state_dir / "smoke-scenes.json", {})}
 
 
+def chapitres(limite: int = 20) -> dict:
+    """Les chapitres GRAVÉS du journal — le récit qui survit aux purges.
+
+    `journal()` (ci-dessous) reste la vue « live » des dernières 48 h ; ici on
+    lit le registre append-only de `tools/gd_agents/journal.py`, qui garde tout
+    et porte la causalité (« ce commit vient de ta décision de mardi »).
+    Never raises."""
+    try:
+        import sys as _s
+        _s.path.insert(0, str(ROOT / "tools" / "gd_agents"))
+        import journal as J
+        chaps = J.chapitres(limite)
+        fils = _read_json(J.FILS, {}) or {}
+        ouverts = [{"cle": k, **v} for k, v in fils.items() if not v.get("clos")]
+        ouverts.sort(key=lambda f: f.get("ouvert", ""))
+        return {"chapitres": chaps, "fils_ouverts": ouverts[:6],
+                "total": len(chaps)}
+    except Exception as exc:
+        return {"chapitres": [], "fils_ouverts": [], "total": 0,
+                "error": str(exc)[:150]}
+
+
 def journal(hours: int = 48, limit: int = 40) -> list[dict]:
     """Le journal de développement : QUE s'est-il passé, en français, avec preuves.
 

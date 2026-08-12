@@ -176,6 +176,14 @@
       "cmd": "a_gd_audit.sh",
       "enabled": false,
       "desc": "Compte les systèmes que la bible déclare supprimés mais qui vivent encore dans le code."
+    },
+    {
+      "id": "journal",
+      "label": "Le Chroniqueur",
+      "cmd": "a_journal.sh",
+      "schedule": "30 6 * * *",
+      "enabled": true,
+      "desc": "Grave le chapitre du jour : ce que les agents ont fait, ce que tu as décidé, ce qui a bougé et ce qui reste en suspens. Aucun appel au modèle — il ne peut pas se taire."
     }
   ]
 }

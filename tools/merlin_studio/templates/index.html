@@ -38,6 +38,7 @@
       vit derrière Coulisses — présent, jamais imposé. -->
  <nav class="dock">
   <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
+  <button data-tab="journal"><span class="g">📖</span>Journal</button>
   <button data-tab="ideas"><span class="g">💡</span>Décider<span class="pill" id="dock-pending" hidden></span></button>
   <button data-tab="talk"><span class="g">💬</span>Parler</button>
   <button data-tab="health"><span class="g">✚</span>Santé</button>
@@ -69,6 +70,35 @@
       <option selected>1280x720</option><option>960x540</option><option>1920x1080</option>
      </select>
     </div>
+   </div>
+  </div>
+ </section>
+
+ <!-- ══ JOURNAL ══ le récit du développement, gravé chapitre par chapitre.
+      En 2e position : c'était le 8e et dernier bloc de Décider, à ~3900 px de
+      défilement, enfermé dans une zone de 520 px qui piégeait le doigt. -->
+ <section class="pane" id="pane-journal">
+  <div class="win">
+   <div class="win-bar"><span class="t">🧵 Fils en cours</span><span class="hatch"></span>
+    <span class="meta" id="fils-meta">…</span></div>
+   <div class="win-body">
+    <div class="mut" style="margin-bottom:8px">Ce qui n'est pas refermé. Un fil s'ouvre au
+     premier accroc et se ferme tout seul quand la chose est réglée.</div>
+    <div id="fils-list"><div class="mut">rien en suspens</div></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">📖 Journal de l'atelier</span><span class="hatch"></span>
+    <span class="meta" id="chap-meta">…</span></div>
+   <div class="win-body">
+    <div id="chap-list"><div class="mut">le premier chapitre s'écrit cette nuit…</div></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">⏱ Les dernières 48 h, fait par fait</span><span class="hatch"></span>
+    <span class="meta" id="journal-meta">…</span></div>
+   <div class="win-body">
+    <div id="journal-list" class="journal"><div class="mut">le journal se remplit au fil des développements…</div></div>
    </div>
   </div>
  </section>
@@ -129,13 +159,6 @@
     <div class="mut" style="margin-bottom:10px">Un relevé par jour, jamais réécrit.
      Si une courbe est plate depuis une semaine, c'est le sujet du jour.</div>
     <div id="prog-list"><div class="mut">le relevé démarre au prochain rapport du matin</div></div>
-   </div>
-  </div>
-  <div class="win">
-   <div class="win-bar"><span class="t">📖 Journal de bord</span><span class="hatch"></span>
-    <span class="meta" id="journal-meta">…</span></div>
-   <div class="win-body">
-    <div id="journal-list" class="journal"><div class="mut">le journal se remplit au fil des développements…</div></div>
    </div>
   </div>
  </section>

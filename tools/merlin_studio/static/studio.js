@@ -443,6 +443,51 @@ async function refreshJournal() {
     </div>`).join('');
 }
 
+/* ── Le récit gravé : chapitres + fils en cours ─────────────────────────────
+   Le journal ne se recalculait qu'à la volée sur 48 h : dès qu'une source était
+   purgée, l'événement disparaissait pour toujours. Ici on lit le registre. */
+function _md(s) {
+  // Micro-rendu : **gras** et *italique*, rien d'autre. La chaîne est déjà
+  // échappée en amont — on n'introduit aucune balise venant des données.
+  return esc(s)
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<i>$2</i>')
+    .replace(/\n/g, '<br>');
+}
+async function refreshChapitres() {
+  const liste = $('#chap-list'), filsBox = $('#fils-list');
+  if (!liste) return;
+  let d;
+  try { d = await j('/api/chapitres'); } catch { return; }
+  const ch = d.chapitres || [], fils = d.fils_ouverts || [];
+
+  const fm = $('#fils-meta');
+  if (fm) fm.textContent = fils.length ? `${fils.length} en suspens` : 'rien en suspens';
+  if (filsBox) filsBox.innerHTML = fils.length ? fils.map(f => {
+    const n = (f.jours || []).length;
+    const duree = n <= 1 ? 'ouvert aujourd\'hui'
+      : `ouvert le ${esc(f.ouvert || '?')} · ${n}ᵉ jour`;
+    return `<div class="jentry"><div class="jhead">
+        <span class="jico">🧵</span><span class="jtitle err">${esc(f.sujet || f.cle)}</span>
+        <span class="jago">${duree}</span></div>
+      ${f.dernier && f.dernier !== f.sujet ? `<div class="jdetail">${esc(f.dernier)}</div>` : ''}</div>`;
+  }).join('') : '<div class="mut">rien en suspens — tout ce qui s\'est ouvert s\'est refermé</div>';
+
+  const cm = $('#chap-meta');
+  if (cm) cm.textContent = ch.length
+    ? `${ch.length} chapitre(s) · le récit garde tout` : 'aucun chapitre encore';
+  if (!ch.length) return;
+  liste.innerHTML = ch.map((c, i) => `
+    <article class="chapitre${i ? ' vieux' : ''}">
+      <div class="chap-texte">${_md(c.texte || '')}</div>
+      ${(c.images || []).map(u =>
+        `<img class="jshot" loading="lazy" src="${esc(u)}" alt="le jeu, cette nuit-là">`).join('')}
+      <div class="mut chap-pied">${esc(c.redige_par === 'gabarits'
+        ? 'rédigé sans modèle' : 'rédigé par ' + (c.redige_par || '?'))}${
+        c.cout && c.cout.appels ? ` · ${c.cout.appels} appel(s), ${c.cout.secs || '?'} s` : ''}</div>
+    </article>`).join('');
+}
+
 // ── Les agents au travail : ce que fait la VM, en direct, dans Décider ───────
 // Rôles en français : le nom technique ne dit rien de ce que l'agent FAIT.
 const CREW_ROLE = {
@@ -455,6 +500,7 @@ const CREW_ROLE = {
   'ci-commit': 'Teste le jeu à chaque commit, capture à l\'appui',
   'design-council': 'Ouvre le conseil de design du matin',
   'daily-report': 'Résume les dernières 24 heures',
+  'journal': 'Écrit le chapitre du jour, sans modèle',
   'coder': 'Écrit du code (Claude, sur demande)',
   'gd-content-gap': 'Écrit des exemples pour entraîner le modèle',
   'gd-balance': 'Mesure l\'équilibrage et propose des ajustements',
@@ -886,8 +932,9 @@ if (mBtn) mBtn.onclick = async () => {
    leur seule raison d'être. */
 const BARRE = () => { refreshClock(); refreshSum(); refreshProposals(); };
 const PAR_ONGLET = {
-  play:   () => { refreshPlay(); refreshRun(); },
-  ideas:  () => { refreshProposals(); refreshJournal(); },
+  play:    () => { refreshPlay(); refreshRun(); },
+  journal: () => { refreshChapitres(); refreshJournal(); },
+  ideas:   () => refreshProposals(),
   talk:   () => {},                       // talkPoll a sa propre minuterie
   health: () => { refreshHealth(); refreshCpu(); refreshHost(); },
   agents: () => { refreshAgents(); refreshCrew(); refreshJobs(); },

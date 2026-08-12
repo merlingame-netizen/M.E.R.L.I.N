@@ -342,6 +342,15 @@ code { color: var(--blue); }
 .jtitle.err, .crew-what.err, .jdetail.err { color: var(--red); }
 .crew-what.err { opacity: 1; }
 
+/* ── Le chapitre : le seul endroit du portail qui se LIT vraiment ───────── */
+.chapitre { padding: 4px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.chapitre:last-child { border-bottom: 0; margin-bottom: 0; }
+.chapitre.vieux { opacity: .78; }
+.chap-texte { font-size: 17px; line-height: 1.62; color: var(--cream); max-width: 62ch; }
+.chap-texte b { color: var(--gold); font-weight: 700; letter-spacing: .5px; }
+.chap-texte i { color: var(--dim); font-style: italic; }
+.chap-pied { margin-top: 12px; font-size: 12px; }
+
 /* ── « Pourquoi ? » sous une décision ───────────────────────────────────── */
 .pourquoi { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
 .pourquoi .mut i { opacity: .75; }
