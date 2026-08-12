@@ -454,6 +454,11 @@ tools/autodev/status/cockpit_logs/
 tools/autodev/status/cockpit_launches.json
 data/ai/colab_queue.json
 data/ai/training/auto_corpus.jsonl
+# Corpus cure : ecrit par proposals.decide() a CHAQUE carte auto-acceptee (gd-content-gap
+# tourne 4x/jour). Versionne, il salit l'arbre de travail de la VM et `git pull` refuse de
+# tourner — plus aucun deploiement. Meme panne que celle documentee dans overrides.py.
+data/ai/training/curated_corpus.jsonl
+data/ai/training/auto_rejects.jsonl
 tools/autodev/status/cockpit_loops.json
 
 # MERLIN Studio runtime (job logs/registry)

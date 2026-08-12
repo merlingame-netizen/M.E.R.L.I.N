@@ -423,6 +423,9 @@ const CREW_ROLE = {
   'coder': 'Écrit du code (Claude, sur demande)',
   'gd-content-gap': 'Écrit des exemples pour entraîner le modèle',
   'gd-balance': 'Mesure l\'équilibrage et propose des ajustements',
+  'gd-pacing': 'Simule une run : durée, courbe de vie, marge de survie',
+  'gd-economy': 'Vérifie que les récompenses donnent envie de rejouer',
+  'gd-audit': 'Traque ce que la bible a supprimé mais qui vit encore',
   'coder-local': 'Applique les corrections que tu as validées',
   'corpus-night': 'Fabrique le jeu d\'entraînement du modèle',
   'playtest-bot': 'Joue au jeu et repère les blocages',
@@ -453,15 +456,22 @@ async function refreshCrew() {
       : a.ago_min < 60 ? `il y a ${a.ago_min} min`
       : a.ago_min < 1440 ? `il y a ${Math.round(a.ago_min / 60)} h`
       : `il y a ${Math.round(a.ago_min / 1440)} j`;
+    // Un agent muet doit DIRE pourquoi. Son dernier résumé porte déjà la raison
+    // en français (« jeu en cours — la chaîne cède les 4 cœurs », « aucun palier
+    // utilisable »…) : on l'affiche au lieu de retomber sur la description du rôle.
     const quoi = a.running ? 'travaille en ce moment…'
-      : (a.summary || CREW_ROLE[a.id] || a.desc || '').slice(0, 90);
-    return `<div class="crew-row">
+      : (a.summary || CREW_ROLE[a.id] || a.desc || '').slice(0, 140);
+    const muet = !a.running && a.enabled && (a.ok === false ||
+      /suspendu|rien d'applicable|indisponible|absent|sauté|vide|aucun/i.test(a.summary || ''));
+    return `<div class="crew-row" data-row="${esc(a.id)}">
       <span class="crew-dot ${cls}"></span>
       <div class="crew-main">
         <div class="crew-name">${esc(a.label)}${a.running ? '<span class="now">en cours</span>' : ''}</div>
-        <div class="crew-what" title="${esc(CREW_ROLE[a.id] || a.desc || '')}">${esc(quoi)}</div>
+        <div class="crew-what${muet ? ' err' : ''}" title="${esc(CREW_ROLE[a.id] || a.desc || '')}">${esc(quoi)}</div>
+        <div class="crew-log mut" data-logbox="${esc(a.id)}" style="display:none"></div>
       </div>
       <div class="crew-when">${esc(quand)}<b>${esc(a.next_run || '')}</b></div>
+      <button class="crew-go" data-log="${esc(a.id)}" title="Voir son journal">📄</button>
       <button class="crew-go" data-agent="${esc(a.id)}" ${a.running ? 'disabled' : ''}
         title="Lancer maintenant">▶</button></div>`;
   }).join('');
@@ -469,6 +479,19 @@ async function refreshCrew() {
     b.disabled = true; b.textContent = '…';
     await run('agent-run', { id: b.dataset.agent });
     setTimeout(refreshCrew, 1500);
+  });
+  // Journal complet d'un agent : la seule façon de comprendre un échec sans SSH.
+  list.querySelectorAll('button[data-log]').forEach(b => b.onclick = async () => {
+    const box = list.querySelector(`[data-logbox="${CSS.escape(b.dataset.log)}"]`);
+    if (!box) return;
+    if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+    box.style.display = ''; box.textContent = 'lecture du journal…';
+    try {
+      const d = await j(`/api/agent/${encodeURIComponent(b.dataset.log)}/log`);
+      box.innerHTML = d.text
+        ? `<pre class="log" style="max-height:220px;margin:6px 0">${esc(d.text)}</pre>`
+        : `<div class="mut">${esc(d.note || d.error || 'journal vide')}</div>`;
+    } catch { box.textContent = 'journal illisible'; }
   });
 }
 
@@ -493,19 +516,115 @@ async function refreshMemory() {
 // ── Propositions : les agents proposent, l'humain tranche en un tap ──────────
 // Des noms français à l'écran, jamais des identifiants techniques.
 const WHO_FR = { 'gd-content-gap': 'Écrivain de cartes', 'gd-balance': 'Équilibreur',
+  'gd-pacing': 'Rythmeur', 'gd-economy': 'Trésorier', 'gd-audit': 'Auditeur bible',
   'coder-local': 'Codeur', 'playtest-bot': 'Robot testeur', 'billing': 'Comptable',
   'corpus-night': 'Atelier d’écriture', 'selftest': 'Test' };
 const KIND_FR = { balance: 'équilibrage', content: 'nouvelle carte', design: 'game design',
   ux: 'ergonomie', bug: 'anomalie', infra: 'plateforme', merge: 'intégration' };
+// ── « Ce matin » : ce qu'on lit avant tout le reste ─────────────────────────
+const BRIEF_ROWS = [
+  ['nuit', '🌙', 'Cette nuit'],
+  ['attente', '👉', 'En attente de toi'],
+  ['bloque', '⛔', 'Bloqué'],
+  ['jeu', '🎮', 'Le jeu'],
+];
+async function refreshBriefing() {
+  const list = $('#brief-list');
+  if (!list) return;
+  let d;
+  try { d = await j('/api/briefing'); } catch { return; }
+  const attente = (d.attente || []).length;
+  const meta = $('#brief-meta');
+  if (meta) meta.textContent = new Date().toLocaleDateString('fr-FR',
+    { weekday: 'long', day: 'numeric', month: 'long' });
+  list.innerHTML = BRIEF_ROWS.map(([k, ico, titre]) => {
+    const lignes = d[k] || [];
+    if (!lignes.length) return '';
+    const alerte = k === 'bloque' && !/rien de bloqué/.test(lignes[0]);
+    return `<div class="jentry"><div class="jhead">
+        <span class="jico">${ico}</span>
+        <span class="jtitle${alerte ? ' err' : ''}">${titre}</span></div>
+      <div class="jdetail">${lignes.map(esc).join(' · ')}</div></div>`;
+  }).join('') || '<div class="mut">rien à signaler</div>';
+}
+
+// ── Courbe d'avancement : le jeu progresse-t-il vraiment ? ──────────────────
+const PROG_SERIES = [
+  ['cartes', 'Cartes du recueil'],
+  ['propositions_acceptees', 'Décisions prises'],
+  ['missions_faites', 'Corrections appliquées'],
+  ['propositions_attente', 'En attente de toi'],
+];
+function sparkline(vals) {
+  // Sparkline en caractères : lisible sur mobile, zéro dépendance, zéro image.
+  const B = '▁▂▃▄▅▆▇█';
+  const ok = vals.filter(v => typeof v === 'number');
+  if (!ok.length) return '—';
+  const lo = Math.min(...ok), hi = Math.max(...ok);
+  return vals.map(v => typeof v !== 'number' ? ' '
+    : B[hi === lo ? 3 : Math.round((v - lo) / (hi - lo) * (B.length - 1))]).join('');
+}
+async function refreshProgress() {
+  const list = $('#prog-list');
+  if (!list) return;
+  let d;
+  try { d = await j('/api/progress'); } catch { return; }
+  const pts = d.points || [];
+  const meta = $('#prog-meta');
+  if (meta) meta.textContent = pts.length ? `${pts.length} jour(s) relevé(s)` : 'pas encore de relevé';
+  if (!pts.length) return;
+  list.innerHTML = PROG_SERIES.map(([k, titre]) => {
+    const vals = pts.map(p => p[k]);
+    const der = vals[vals.length - 1], prem = vals.find(v => typeof v === 'number');
+    const delta = (typeof der === 'number' && typeof prem === 'number') ? der - prem : null;
+    const fleche = delta === null ? '' : delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : 'stable';
+    return `<div class="crew-row">
+      <div class="crew-main"><div class="crew-name">${titre}</div>
+        <div class="crew-what" style="font-family:monospace;font-size:15px;letter-spacing:1px"
+          >${sparkline(vals)}</div></div>
+      <div class="crew-when">${der ?? '—'}<b>${fleche}</b></div></div>`;
+  }).join('');
+}
+
+// ── Le parcours d'une décision : acceptée → patchée → smoke → poussée ───────
+const STEP_ICO = { 'acceptée': '✓', 'patchée': '✎', 'smoke vert': '✅', 'smoke sauté': '⏭',
+  'smoke rouge': '⛔', 'poussée': '⇧', 'poussée KO': '⚠', 'fusionnée': '🎮',
+  'écartée': '✗', 'sans suite automatique': '💬' };
+function renderSuivi(suivi) {
+  const list = $('#suivi-list');
+  if (!list) return;
+  const meta = $('#suivi-meta');
+  const abouties = (suivi || []).filter(s => s.step === 'fusionnée').length;
+  if (meta) meta.textContent = (suivi || []).length
+    ? `${suivi.length} décision(s) · ${abouties} arrivée(s) dans le jeu` : 'aucune décision';
+  if (!(suivi || []).length) { list.innerHTML = '<div class="mut">rien de décidé pour l\'instant</div>'; return; }
+  list.innerHTML = suivi.map(s => {
+    const fil = (s.trail || []).map(e =>
+      `<span title="${esc(e.detail || '')}">${STEP_ICO[e.step] || '·'} ${esc(e.step)}</span>`)
+      .join(' <span class="mut">→</span> ') || '<span class="mut">aucune étape</span>';
+    const dernier = (s.trail || [])[s.trail.length - 1];
+    const souci = /rouge|KO|écartée|sans suite/.test(s.step || '');
+    return `<div class="jentry"><div class="jhead">
+        <span class="jico">${STEP_ICO[s.step] || '·'}</span>
+        <span class="jtitle${souci ? ' err' : ''}">${esc(s.title || '')}</span>
+        <span class="jago">${esc((s.decided_at || '').slice(5, 16).replace('T', ' '))}</span></div>
+      <div class="jdetail">${fil}</div>
+      ${dernier && dernier.detail ? `<div class="mut">${esc(dernier.detail)}</div>` : ''}</div>`;
+  }).join('');
+}
+
 async function refreshProposals() {
   refreshMemory();   // la Mémoire est un élément de décision : elle vit ici
   refreshCrew();     // et l'activité des agents, en direct
+  refreshBriefing(); // et « Ce matin » ouvre l'écran
+  refreshProgress();
   let d;
   try { d = await j('/api/proposals'); } catch { return; }
   const n = (d.counts || {}).pending || 0;
   const chip = $('#ch-prop');
   chip.className = 'chip ' + (n ? 'up' : 'idle');
   chip.textContent = '💡 ' + n;
+  renderSuivi(d.suivi);
   $('#ideas-meta').textContent = n
     ? `${n} en attente · ${(d.counts||{}).accepted||0} acceptées · ${(d.counts||{}).rejected||0} rejetées`
     : 'rien en attente';

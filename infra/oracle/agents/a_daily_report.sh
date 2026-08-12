@@ -53,14 +53,28 @@ else:
 L.append("")
 
 # Agents en échec
+# ATTENTION : agent-run.sh ecrit dans le SOUS-DOSSIER state/ (RUN_DIR="$STATE_DIR/state",
+# deplacement fait pour eviter la collision de noms avec llm-bench.json / billing.json).
+# Scanner la racine ne trouvait plus AUCUN etat d'agent : le rapport annoncait donc
+# invariablement "tous les agents au vert". On scanne le sous-dossier, avec repli sur la
+# racine pour les etats historiques — meme logique que probes.agents().
 L += ["## Agents", ""]
 bad = []
-for f in os.listdir(state):
-    if f.endswith(".json") and f != "daily-report.json":
-        try: d = json.load(open(os.path.join(state, f)))
+seen = set()
+for d_dir in (os.path.join(state, "state"), state):
+    if not os.path.isdir(d_dir):
+        continue
+    for f in os.listdir(d_dir):
+        if not f.endswith(".json") or f == "daily-report.json" or f in seen:
+            continue
+        try: d = json.load(open(os.path.join(d_dir, f)))
         except Exception: continue
+        if not isinstance(d, dict) or "ok" not in d:
+            continue          # billing-data.json, smoke-scenes.json… : pas des etats d'agent
+        seen.add(f)
         if d.get("ok") is False:
-            bad.append(f"- ÉCHEC `{d.get('id')}` ({d.get('last_run','?')}) : {d.get('summary','')[:100]}")
+            bad.append(f"- ÉCHEC `{d.get('id', f[:-5])}` ({d.get('last_run','?')}) : "
+                       f"{str(d.get('summary',''))[:100]}")
 L += bad or ["- tous les agents au vert"]
 L.append("")
 
@@ -77,12 +91,59 @@ else:
 L.append("")
 
 # Smoke nocturne
+smoke_ko = None
 try:
     sm = json.load(open(os.path.join(state, "smoke-scenes.json")))
+    smoke_ko = sm.get("failing")
     L += ["## Smoke nocturne", "",
           f"- {sm.get('total')} scènes · {sm.get('failing')} en erreur · commit `{sm.get('commit')}` ({sm.get('t','')[:16]})"]
 except Exception:
     L += ["## Smoke nocturne", "", "- pas encore exécuté"]
+
+# ── Relevé d'avancement (une ligne par jour, append-only, HORS dépôt) ────────
+# Une photo quotidienne des chiffres qui comptent : le portail en trace la
+# courbe. Le fichier vit dans ~/merlin-memory/ (jamais purgé par le garde-disque)
+# et n'est jamais réécrit — on ne peut pas embellir le passé.
+def _count(d):
+    try: return len([x for x in os.listdir(d) if x.endswith(".json")])
+    except Exception: return 0
+
+def _lines(p):
+    try: return sum(1 for x in open(p, encoding="utf-8") if x.strip())
+    except Exception: return 0
+
+try:
+    home = os.path.expanduser("~")
+    props = os.path.join(home, ".cache", "merlin-proposals")
+    tool_repo = os.path.join(home, "workspace", "M.E.R.L.I.N")
+    point = {
+        "t": time.strftime("%Y-%m-%d", time.gmtime()),
+        "cartes": (_lines(os.path.join(tool_repo, "data/ai/training/auto_corpus.jsonl"))
+                   + _lines(os.path.join(tool_repo, "data/ai/training/curated_corpus.jsonl"))),
+        "propositions_attente": _count(os.path.join(props, "inbox")),
+        "propositions_acceptees": _count(os.path.join(props, "accepted")),
+        "propositions_rejetees": _count(os.path.join(props, "rejected")),
+        "missions_en_file": _count(os.path.join(home, ".cache/merlin-missions/queue")),
+        "missions_faites": _count(os.path.join(home, ".cache/merlin-missions/done")),
+        "scenes_ko": smoke_ko,
+        "agents_ko": len(bad),
+        "commits_24h": len(commits),
+    }
+    prog = os.path.join(home, "merlin-memory", "progress.jsonl")
+    os.makedirs(os.path.dirname(prog), exist_ok=True)
+    # Un seul point par jour : on remplace la ligne du jour si elle existe déjà.
+    old = [x for x in (open(prog, encoding="utf-8").read().splitlines()
+                       if os.path.exists(prog) else []) if x.strip()]
+    old = [x for x in old if '"t": "%s"' % point["t"] not in x and
+           '"t":"%s"' % point["t"] not in x]
+    with open(prog, "w", encoding="utf-8") as f:
+        f.write("\n".join(old[-400:] + [json.dumps(point, ensure_ascii=False)]) + "\n")
+    L += ["", "## Avancement", "",
+          f"- {point['cartes']} cartes · {point['propositions_attente']} décision(s) en attente "
+          f"· {point['missions_faites']} mission(s) faite(s)"]
+except Exception as exc:
+    L += ["", f"- relevé d'avancement indisponible : {type(exc).__name__}"]
+
 print("\n".join(L))
 PY
 

@@ -41,8 +41,12 @@ MAX_PATCH_LINES = 30
 # par Maxime pour sa compréhension. Il n'écrit pas le diff (décidé en amont),
 # mais il juge la pertinence d'une mission avant de l'appliquer.
 CODER_SHAPE = "judge"
-ALLOWED = (re.compile(r"^data/"), re.compile(r"merlin_constants\.gd$"),
-           re.compile(r"\.gd$"))
+# Périmètre RÉELLEMENT autorisé. La 3ᵉ entrée d'origine (`\.gd$`) ouvrait en fait
+# TOUT le code du jeu, rendant la 2ᵉ décorative et le commentaire d'en-tête plus
+# restrictif que le code. On s'en tient à ce qui est annoncé : les données, et le
+# seul fichier de constantes d'équilibrage.
+ALLOWED = (re.compile(r"^data/"),
+           re.compile(r"^scripts/merlin/merlin_constants\.gd$"))
 
 
 def _git(*args, cwd=AUTO, timeout=120) -> tuple[int, str]:
@@ -76,9 +80,31 @@ def _worktree_ready(ref: str) -> str | None:
     return None
 
 
+def _resolve(target: str) -> Path | None:
+    """Chemin absolu du fichier à patcher, ou None s'il sort du périmètre.
+
+    Une SEULE fonction décide, et elle rend le chemin qu'on utilisera vraiment.
+    Avant, `_in_scope` testait `target.lstrip("./")` pendant que `_apply`
+    utilisait le `target` d'origine : `AUTO / "/etc/x.gd"` donne `/etc/x.gd`,
+    hors du worktree. On résout d'abord, on vérifie l'appartenance ensuite."""
+    t = str(target or "").strip().lstrip("./")
+    if not t or t.startswith("/") or ".." in Path(t).parts:
+        return None
+    if not any(rx.search(t) for rx in ALLOWED):
+        return None
+    try:
+        path = (AUTO / t).resolve()
+        # Le worktree lui-même doit exister pour que resolve() soit fiable.
+        if not path.is_relative_to(AUTO.resolve()):
+            return None
+    except Exception:
+        return None
+    return path
+
+
 def _in_scope(target: str) -> bool:
-    t = target.lstrip("./")
-    return any(rx.search(t) for rx in ALLOWED) and ".." not in t
+    """Conservé pour les tests et l'affichage — même décision que `_resolve`."""
+    return _resolve(target) is not None
 
 
 def _apply(change: dict) -> str | None:
@@ -86,9 +112,9 @@ def _apply(change: dict) -> str | None:
     target, before, after = change.get("target", ""), change.get("before"), change.get("after")
     if not (target and before and after):
         return "mission sans before/after — génération LLM non tentée (périmètre sûreté)"
-    if not _in_scope(target):
+    path = _resolve(target)
+    if path is None:
         return f"cible hors périmètre autorisé : {target}"
-    path = AUTO / target
     if not path.exists():
         return f"fichier introuvable : {target}"
     if max(len(before.splitlines()), len(after.splitlines())) > MAX_PATCH_LINES:
@@ -122,15 +148,31 @@ def run() -> str:
         return f"suspendu — {why}"
     missions = sorted(MISSIONS.glob("*.md")) if MISSIONS.exists() else []
     # Le codeur ne traite que les missions issues de propositions structurées.
-    jobs = []
+    jobs, inertes = [], []
     for m in missions:
         src = PROP.ACCEPTED / f"{m.stem}.json"
-        if src.exists():
+        if not src.exists():
+            inertes.append((m, None))
+            continue
+        try:
             prop = json.loads(src.read_text(encoding="utf-8"))
-            if prop.get("change", {}).get("before"):
-                jobs.append((m, prop))
+        except Exception:
+            inertes.append((m, None))
+            continue
+        if prop.get("change", {}).get("before"):
+            jobs.append((m, prop))
+        else:
+            inertes.append((m, prop))
+    # Une mission sans patch ne partira JAMAIS : elle doit le dire une fois, sur
+    # sa propre carte, au lieu d'attendre indéfiniment dans une file muette.
+    for m, prop in inertes:
+        if prop and prop.get("step") in (None, "acceptée"):
+            PROP.add_step(prop["id"], "sans suite automatique",
+                          "aucune ligne précise à remplacer : cette idée demande une "
+                          "décision d'architecture, elle restera ici jusqu'à ton arbitrage")
     if not jobs:
-        return f"rien d'applicable ({len(missions)} mission(s) en file, aucune avec before/after)"
+        return (f"rien d'applicable — {len(missions)} mission(s) en file, "
+                f"{len(inertes)} sans patch (décisions d'architecture), 0 correction mécanique")
 
     ref = _ref()
     err = _worktree_ready(ref)
@@ -141,37 +183,56 @@ def run() -> str:
     for m, prop in jobs[:5]:                      # 5 max par passage : prudence
         e = _apply(prop["change"])
         if e:
+            PROP.add_step(prop["id"], "écartée", e)
             skipped.append((m.stem, e))
             continue
+        PROP.add_step(prop["id"], "patchée",
+                      f"{prop['change'].get('target')} modifié dans {BRANCH}")
         oks, verdict = _smoke_ok()
         if not oks:
             _git("checkout", "--", ".")           # on annule ce patch
+            PROP.add_step(prop["id"], "smoke rouge",
+                          f"{verdict} — patch annulé, le jeu reste intact")
             skipped.append((m.stem, f"smoke rouge ({verdict})"))
             continue
+        # « smoke vert » et « smoke sauté » ne valent pas la même chose : ne pas
+        # afficher la garantie qu'on n'a pas obtenue.
+        PROP.add_step(prop["id"], "smoke sauté" if "absent" in verdict else "smoke vert",
+                      verdict)
         _git("add", "-A")
         _git("commit", "-m",
              f"auto(nightly): {prop['title'][:60]}\n\nProposition {prop['id']} "
              f"acceptée — appliquée par le codeur local.")
-        applied.append(prop["title"][:50])
+        applied.append((prop["title"][:50], prop["id"]))
         DONE.mkdir(parents=True, exist_ok=True)
         m.rename(DONE / m.name)
 
     if applied:
         rc, out = _git("push", "-u", "origin", BRANCH, timeout=180)
         if rc != 0:
+            for _t, pid in applied:
+                PROP.add_step(pid, "poussée KO", out[:200])
             return f"{len(applied)} patch(s) appliqués mais push KO: {out[:100]}"
+        for _t, pid in applied:
+            PROP.add_step(pid, "poussée",
+                          f"commit sur {BRANCH} — reste à intégrer dans {ref} (1 tap)")
         # La carte « Intégrer » : LE tap de Maxime qui fait bouger la branche du jeu.
-        PROP.write(PROP.make(
+        carte = PROP.make(
             "coder-local", "merge",
             f"Intégrer {len(applied)} patch(s) de la nuit dans {ref}",
             "Patchs appliqués sur auto/nightly, smoke vert sur chacun. "
             "Accepter fusionne dans la branche du jeu (la CI re-testera).",
-            {"summary": "\n".join("· " + t for t in applied),
+            {"summary": "\n".join("· " + t for t, _ in applied),
              "target": f"{BRANCH} → {ref}"},
             f"MERGE:{BRANCH}:{ref}",
             impact={"axis": "intégration", "expected": f"+{len(applied)} patchs",
                     "risk": "med"},
-            confidence=0.8))
+            confidence=0.8)
+        # Les propositions que ce merge fait aboutir : accepter la carte clôt
+        # leur parcours d'un « fusionnée ». Sans ce lien, le fil s'arrête à
+        # « poussée » et Maxime ne sait pas si c'est entré dans le jeu.
+        carte["integrates"] = [pid for _t, pid in applied]
+        PROP.write(carte)
     parts = []
     if applied:
         parts.append(f"{len(applied)} appliqué(s) → {BRANCH}")

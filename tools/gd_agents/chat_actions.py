@@ -40,6 +40,15 @@ VERBS = ("agent.toggle", "agent.cadence", "agent.run", "mission.queue",
          "memory.grave", "agent.create", "task.plan")
 
 
+def _cron_ok(schedule: str | None) -> bool:
+    """Le `schedule` est-il une vraie cadence cron à 5 champs ?
+
+    Les agents « à la demande » / « webhook/push » n'en ont pas : les planifier
+    fait rejeter la crontab ENTIÈRE par `crontab -`."""
+    f = str(schedule or "").split()
+    return len(f) == 5 and all(re.fullmatch(r"[\d*/,\-]+", x) for x in f)
+
+
 def _agents() -> list[dict]:
     try:
         return json.loads(AGENTS_JSON.read_text(encoding="utf-8")).get("agents", [])
@@ -237,14 +246,27 @@ def _patch_agent(verb: str, target: str, value: str) -> dict:
         return {"error": "agent introuvable"}
     if verb == "agent.toggle":
         on = (value == "on")
+        # Certains agents n'ont PAS de cadence cron (« à la demande »,
+        # « webhook/push »). Les activer écrivait cette chaîne telle quelle dans la
+        # crontab, que `crontab -` rejette EN BLOC : les 15 agents planifiés
+        # disparaissaient d'un coup, et le portail répondait « activé ».
+        if on and not _cron_ok(hit.get("schedule")):
+            return {"error": f"« {hit.get('label', target)} » n'a pas de cadence "
+                             f"({hit.get('schedule') or 'aucune'}) — choisis d'abord "
+                             f"une fréquence, sinon la planification serait refusée."}
         OV.set_override(target, enabled=on)
         eff = "activé" if on else "désactivé"
     else:  # agent.cadence
         cron, human = CADENCES[value]
         OV.set_override(target, schedule=cron, enabled=True)
         eff = f"réglé sur « {human} »"
-    # La crontab reflète le nouvel état.
-    subprocess.run(["bash", str(INSTALL)], capture_output=True, timeout=60)
+    # La crontab reflète le nouvel état — et un refus doit remonter à Maxime.
+    p = subprocess.run(["bash", str(INSTALL)], capture_output=True, text=True, timeout=60)
+    if p.returncode != 0:
+        OV.set_override(target, **({"enabled": not on} if verb == "agent.toggle"
+                                   else {"schedule": hit.get("schedule")}))
+        return {"error": "planification refusée, réglage annulé : "
+                         + (p.stderr or p.stdout or "").strip()[:160]}
     # Trace en mémoire : un réglage d'agent est une décision.
     memory.add("décision", f"Agent « {hit.get('label', target)} » {eff}",
                "réglé depuis Parler", source="chat/maxime")

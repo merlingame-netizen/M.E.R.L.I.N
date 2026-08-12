@@ -24,7 +24,43 @@
       "deadline_s": 900,
       "evidence_tokens": 400,
       "kind": "balance",
-      "desc": "Mesure la distribution des effets, la couverture des factions et la diversité des verbes sur tout le corpus, puis propose un ajustement chiffré."
+      "desc": "Mesure la distribution des effets, la couverture des factions et la diversité des verbes sur tout le corpus, puis propose un ajustement chiffré. Quand l'écart est mécanique (deux constantes qui doivent s'accorder), il joint le patch exact."
+    },
+    {
+      "id": "gd-pacing",
+      "label": "Rythmeur",
+      "card": ".claude/agents/gd_difficulty.md",
+      "analyzer": "pacing",
+      "shape": "judge",
+      "out_tokens": 180,
+      "deadline_s": 900,
+      "evidence_tokens": 400,
+      "kind": "balance",
+      "desc": "Simule une run entière en Python : durée de session, courbe de vie, marge de survie à la victoire. Joint le patch quand la fenêtre de session est incohérente."
+    },
+    {
+      "id": "gd-economy",
+      "label": "Trésorier",
+      "card": ".claude/agents/balance_tuner.md",
+      "analyzer": "economy",
+      "shape": "judge",
+      "out_tokens": 180,
+      "deadline_s": 900,
+      "evidence_tokens": 400,
+      "kind": "balance",
+      "desc": "Simule les gains d'une session (Faveurs, Anam, multiplicateurs) et détecte l'inflation ou les récompenses qui ne récompensent rien."
+    },
+    {
+      "id": "gd-audit",
+      "label": "Auditeur bible",
+      "card": ".claude/agents/game_design_auditor.md",
+      "analyzer": "audit",
+      "shape": "classify",
+      "out_tokens": 140,
+      "deadline_s": 600,
+      "evidence_tokens": 350,
+      "kind": "design",
+      "desc": "Compte les systèmes que la bible déclare supprimés mais qui vivent encore dans le code. Pur comptage de greps : tourne sur le plus petit modèle. Ne propose jamais de patch — retirer un système est structurel."
     }
   ]
 }

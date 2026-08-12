@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Playtest nocturne : le bot joue au jeu rendu et remonte les anomalies.
 # Démarre le jeu s'il est éteint (et le rééteint après), jamais quand Maxime joue.
+#
+# `pipefail` est INDISPENSABLE ici : sans lui, `OUT="$(… | tail -1)"` suivi de
+# `RC=$?` lit le code de retour de `tail`, qui vaut toujours 0. Un crash du bot
+# était donc enregistré « ok: true », et le portail affichait un agent au vert.
+set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HERE/../game/game-env.sh"
 GS="$HERE/../game/game-stack.sh"

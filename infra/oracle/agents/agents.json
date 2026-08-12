@@ -152,6 +152,30 @@
       "cmd": "a_ollama_idle.sh",
       "enabled": false,
       "desc": "Décharge les modèles LLM inactifs pour rendre la RAM au jeu. Désactivé par défaut : cette VM est un atelier, l'IA doit pouvoir tourner en continu."
+    },
+    {
+      "id": "gd-pacing",
+      "label": "Rythmeur",
+      "schedule": "40 2 * * *",
+      "cmd": "a_gd_pacing.sh",
+      "enabled": false,
+      "desc": "Simule une run complète : durée, courbe de vie, marge de survie. Joint le patch quand le rythme est incohérent."
+    },
+    {
+      "id": "gd-economy",
+      "label": "Trésorier",
+      "schedule": "50 2 * * *",
+      "cmd": "a_gd_economy.sh",
+      "enabled": false,
+      "desc": "Simule les gains d'une session (Faveurs, Anam, multiplicateurs) et repère l'inflation."
+    },
+    {
+      "id": "gd-audit",
+      "label": "Auditeur bible",
+      "schedule": "10 3 * * *",
+      "cmd": "a_gd_audit.sh",
+      "enabled": false,
+      "desc": "Compte les systèmes que la bible déclare supprimés mais qui vivent encore dans le code."
     }
   ]
 }

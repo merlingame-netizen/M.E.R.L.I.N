@@ -109,10 +109,16 @@ def run(agent_id: str, dry: bool = False) -> str:
             system += f"\n\nDESIGN DÉJÀ DÉCIDÉ (à respecter, ne pas re-proposer) :\n{mem}"
     except Exception:
         pass
-    schema_hint = (
-        'Réponds UNIQUEMENT par un objet JSON : {"text": "…", "biome": "…", '
-        '"options": [{"label": "…", "verb": "…", "effects": [{"type": "ADD_REPUTATION", '
-        '"faction": "druides", "amount": 5}]}]} — exactement 3 options.')
+    # La consigne de sortie vient du CONTRAT de l'agent, pas d'une constante.
+    # Elle était codée en dur au format « carte de scénario » et collée au prompt
+    # de TOUS les agents : un agent d'analyse recevait donc trois consignes
+    # contradictoires, et pouvait répondre « { » là où on attendait une phrase.
+    CARTE = ('Réponds UNIQUEMENT par un objet JSON : {"text": "…", "biome": "…", '
+             '"options": [{"label": "…", "verb": "…", "effects": [{"type": "ADD_REPUTATION", '
+             '"faction": "druides", "amount": 5}]}]} — exactement 3 options.')
+    ANALYSE = ("Réponds en français, en prose, 4 phrases maximum. Pas de JSON, pas de "
+               "liste à puces. Première phrase = le constat, chiffres à l'appui.")
+    schema_hint = cfg.get("output_hint") or (CARTE if cfg["kind"] == "content" else ANALYSE)
     prompt = f"{system}\n\n{schema_hint}\n\n{ana.brief(a)}"
 
     # Si le routeur refuse, sa raison EST le diagnostic (aucun appel n'aura lieu).
@@ -145,7 +151,13 @@ def run(agent_id: str, dry: bool = False) -> str:
                        "errors": len(errs), "warnings": len(warns),
                        "codes": [str(e)[:60] for e in errs[:4]]}
         except Exception as exc:
-            verdict = {"validator": "indisponible", "error": str(exc)[:80]}
+            # Un validateur ABSENT ne doit jamais valoir « validé ». En laissant
+            # `errs` vide ici, `ok_card` passait à True et la carte était
+            # auto-intégrée au corpus d'entraînement avec la mention « validé sans
+            # erreur ni avertissement » — sans qu'aucune règle n'ait été vérifiée.
+            errs = [f"validateur indisponible ({type(exc).__name__})"]
+            verdict = {"validator": "indisponible", "error": str(exc)[:80],
+                       "errors": 1, "codes": errs}
 
     secs = int(time.time() - t0)
     ok_card = card is not None and not errs
@@ -166,11 +178,21 @@ def run(agent_id: str, dry: bool = False) -> str:
     elif raw and cfg["kind"] != "content":
         # Agents d'ANALYSE (équilibrage, audit…) : la prose du modèle EST la
         # proposition ; il n'y a pas de carte JSON à valider.
+        #
+        # Nouveauté v17 : si l'analyseur a trouvé un écart MÉCANIQUE, il sait
+        # produire le diff exact (`change()`), et la proposition le porte. C'est
+        # ce couple before/after — et lui seul — que le codeur local sait
+        # appliquer. Sans lui, accepter n'a jamais rien produit.
         title = f"{cfg['label']} : {sujet}"
         claim = raw.strip().split("\n")[0][:300]
         change = {"summary": raw.strip()[:700], "target": "à décider avec Maxime"}
+        patch = getattr(ana, "change", lambda _a: None)(a)
+        if patch and patch.get("before"):
+            change = {**patch, "summary": patch.get("summary", "")[:400],
+                      "justification": raw.strip()[:500]}
+            title = f"{cfg['label']} — correction : {patch['summary'][:70]}"
         mission = raw.strip()[:1500]
-        conf, payload = 0.65, None
+        conf, payload = (0.8 if change.get("before") else 0.65), None
     else:
         why = (f"LLM indisponible — {why}" if not raw else
                "JSON illisible" if card is None else
@@ -181,6 +203,14 @@ def run(agent_id: str, dry: bool = False) -> str:
         change = {"summary": ana.brief(a)[:600], "target": "—"}
         mission = f"Reprendre à la main l'analyse suivante :\n{ana.brief(a)[:1200]}"
         conf, payload = 0.2, None
+        # Un écart mécanique est calculé par du Python : il reste valable même
+        # quand le LLM est mort. On perd la belle explication, pas la correction.
+        patch = getattr(ana, "change", lambda _a: None)(a)
+        if patch and patch.get("before"):
+            change = {**patch, "summary": patch.get("summary", "")[:400]}
+            title = f"{cfg['label']} — correction : {patch['summary'][:70]}"
+            claim = f"Écart mesuré dans le code : {patch['summary'][:220]}"
+            conf = 0.7          # le chiffre est sûr ; seule la prose manque
 
     kind = cfg["kind"] if (ok_card or cfg["kind"] != "content") else "design"
     prop = PROP.make(

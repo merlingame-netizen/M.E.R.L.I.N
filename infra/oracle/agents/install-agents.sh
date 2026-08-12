@@ -22,12 +22,29 @@ try:
     agents_list = _agents()
 except Exception:
     agents_list = json.load(open(manifest))["agents"]
-lines = []
+
+def cron_ok(s: str) -> bool:
+    """Un `schedule` non-cron (« à la demande », « webhook/push ») écrit tel quel
+    fait REJETER LA CRONTAB ENTIÈRE par `crontab -` : les 15 agents planifiés
+    disparaissent d'un coup. On filtre ici, en dernière ligne de défense."""
+    f = str(s or "").split()
+    if len(f) != 5:
+        return False
+    import re
+    return all(re.fullmatch(r"[\d*/,\-]+", x) for x in f)
+
+lines, skipped = [], []
 for a in agents_list:
     if not a.get("enabled"):
         continue
+    if not cron_ok(a.get("schedule")):
+        skipped.append(f'{a["id"]} ({a.get("schedule","")!r})')
+        continue
     lines.append(f'{a["schedule"]} /bin/bash {here}/agent-run.sh {a["id"]} '
                  f'>> $HOME/.cache/merlin-agents/cron.log 2>&1')
+if skipped:
+    sys.stderr.write("[install-agents] cadence invalide, non planifié : "
+                     + ", ".join(skipped) + "\n")
 print("\n".join(lines))
 PY
 )"
@@ -40,6 +57,13 @@ CLEAN="$(printf '%s\n' "$CUR" | awk -v b="$BEGIN" -v e="$END" '
   printf '%s\n' "$BEGIN"
   printf '%s\n' "$BLOCK"
   printf '%s\n' "$END"; } | crontab -
+RC=$?
+if [ "$RC" -ne 0 ]; then
+    # `crontab -` est tout-ou-rien : un refus laisse l'ancienne table en place,
+    # mais l'appelant DOIT le savoir (le portail répondait « activé » sur un échec).
+    echo "[install-agents] ÉCHEC : crontab a refusé le bloc (rc=$RC) — table inchangée" >&2
+    exit "$RC"
+fi
 
 mkdir -p "$HOME/.cache/merlin-agents/logs"
 N="$(printf '%s\n' "$BLOCK" | grep -c agent-run || true)"

@@ -122,7 +122,69 @@ def listing(limit: int = 40) -> dict:
             counts[name] = len(list(d.glob("*.json")))
         except Exception:
             counts[name] = 0
-    return {"pending": pend[:limit], "counts": counts}
+    # Décisions récentes AVEC leur parcours : sans ça, accepter une proposition
+    # la faisait disparaître de l'écran et Maxime n'apprenait jamais ce qu'elle
+    # était devenue. Neuf missions ont ainsi attendu sans que rien ne le dise.
+    suivi = []
+    try:
+        recents = sorted(ACCEPTED.glob("*.json"), key=lambda p: p.stat().st_mtime,
+                         reverse=True)[:12]
+        for p in recents:
+            d = _read(p) or {}
+            suivi.append({"id": d.get("id"), "title": d.get("title"),
+                          "kind": d.get("kind"), "agent": d.get("agent"),
+                          "step": d.get("step", "acceptée"),
+                          "trail": d.get("trail", []),
+                          "decided_at": d.get("decided_at", "")})
+    except Exception:
+        pass
+    return {"pending": pend[:limit], "counts": counts, "suivi": suivi}
+
+
+def _find(pid: str) -> Path | None:
+    """La proposition, où qu'elle en soit de son parcours."""
+    name = f"{Path(str(pid)).name}.json"
+    for d in (ACCEPTED, INBOX, REJECTED):
+        if (d / name).exists():
+            return d / name
+    return None
+
+
+def add_step(pid: str, step: str, detail: str = "") -> bool:
+    """Grave une étape horodatée sur le parcours d'une proposition.
+
+    Le codeur local CONNAISSAIT déjà chacun de ces états (« patché », « smoke
+    rouge », « poussé », « écarté : cible hors périmètre ») — il ne les écrivait
+    nulle part. Résultat : neuf décisions de Maxime ont disparu sans laisser de
+    trace. Ici, chaque acteur dépose son étape, et le portail affiche le fil.
+    Ne lève jamais : une trace manquante ne doit pas casser un patch."""
+    if not ID_RE.match(str(pid)):
+        return False
+    try:
+        path = _find(pid)
+        if not path:
+            return False
+        prop = _read(path)
+        if not prop:
+            return False
+        trail = prop.setdefault("trail", [])
+        trail.append({"t": _now(), "step": str(step)[:40], "detail": str(detail)[:300]})
+        prop["trail"] = trail[-20:]
+        prop["step"] = str(step)[:40]          # l'étape courante, pour l'affichage
+        path.write_text(json.dumps(prop, ensure_ascii=False, indent=1), encoding="utf-8")
+        return True
+    except Exception:
+        return False
+
+
+def applicable(prop: dict) -> bool:
+    """La proposition porte-t-elle un patch que le codeur sait appliquer ?
+
+    C'est la distinction qui manquait : sans elle, `decide` répondait « mission
+    en file » pour TOUT, y compris pour des propositions que le codeur rejette
+    définitivement. Maxime lisait « ça va être fait » là où rien n'arriverait."""
+    ch = prop.get("change") or {}
+    return bool(ch.get("before") and ch.get("after") and ch.get("target"))
 
 
 def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = None) -> dict:
@@ -161,6 +223,9 @@ def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = N
                     if p.returncode != 0:
                         raise RuntimeError(f"git {args[0]}: {(p.stdout + p.stderr)[-140:]}")
                 out["effect"] = f"{branch} fusionnée dans {ref} et poussée — la CI re-testera"
+                # Clôture du parcours de chaque proposition intégrée.
+                for pid in (prop.get("integrates") or []):
+                    add_step(pid, "fusionnée", f"entrée dans {ref} via {prop['id']}")
             except Exception as exc:
                 subprocess.run(["git", "-C", str(game), "merge", "--abort"],
                                capture_output=True, timeout=60)
@@ -182,7 +247,17 @@ def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = N
             MISSIONS.mkdir(parents=True, exist_ok=True)
             name = f"{prop['id']}.md"
             (MISSIONS / name).write_text(prop["mission_text"], encoding="utf-8")
-            out["effect"] = f"mission {name} en file (codeur non lancé)"
+            # Dire la vérité sur ce qui va se passer. « En file » laissait croire
+            # à une application imminente ; sans before/after, le codeur écarte
+            # la mission à chaque passage, pour toujours.
+            if applicable(prop):
+                out["effect"] = ("correction en file — le codeur l'appliquera à son "
+                                 "prochain passage, puis te proposera l'intégration")
+                out["auto"] = True
+            else:
+                out["effect"] = ("noté, sans application automatique : cette idée demande "
+                                 "une décision d'architecture, pas un remplacement de ligne")
+                out["auto"] = False
 
     # Mémoire absolue : toute décision se grave, avec sa raison. Jamais d'effacement.
     try:
@@ -198,6 +273,13 @@ def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = N
             refs=[prop["id"]])
     except Exception:
         pass
+
+    # Première étape du parcours visible par Maxime (suite écrite par le codeur).
+    prop["step"] = "acceptée" if decision == "accept" else "écartée"
+    prop.setdefault("trail", []).append(
+        {"t": prop["decided_at"], "step": prop["step"],
+         "detail": out.get("effect", "") if decision == "accept"
+                   else (prop.get("decision_reason", "") or "sans suite")})
 
     dest = (ACCEPTED if decision == "accept" else REJECTED)
     dest.mkdir(parents=True, exist_ok=True)

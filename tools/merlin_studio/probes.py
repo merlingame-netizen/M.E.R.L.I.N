@@ -384,6 +384,153 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
     return ev[:limit]
 
 
+# ── « Ce matin » : les 4 lignes à lire avant tout le reste ───────────────────
+
+def _proposals_mod():
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "tools" / "gd_agents"))
+    import proposals as P
+    return P
+
+
+def briefing() -> dict:
+    """Ce qu'il faut savoir en 5 secondes, en français, sans jargon.
+
+    Rien de nouveau n'est instrumenté : on agrège ce que la plateforme trace
+    déjà (états d'agents, propositions et leur parcours, corpus, jeu). Chaque
+    ligne répond à UNE question : qu'a-t-on fait cette nuit, qu'attend-on de
+    moi, qu'est-ce qui coince, où en est le jeu. Never raises."""
+    now = time.time()
+    out = {"nuit": [], "attente": [], "bloque": [], "jeu": []}
+
+    # 1. Cette nuit — ce que la chaîne a réellement produit.
+    try:
+        P = _proposals_mod()
+        recent, merges = [], 0
+        for p in P.ACCEPTED.glob("*.json"):
+            if p.stat().st_mtime < now - 24 * 3600:
+                continue
+            d = _read_json(p, {})
+            if d.get("kind") == "merge":
+                merges += 1
+            elif d.get("step") in ("poussée", "fusionnée"):
+                recent.append(d)
+        if recent:
+            out["nuit"].append(f"{len(recent)} correction(s) appliquée(s) et vérifiée(s) "
+                               f"sur la branche de nuit")
+        if merges:
+            out["nuit"].append(f"{merges} intégration(s) dans le jeu")
+    except Exception:
+        pass
+    try:
+        g = _read_json(Path.home() / ".cache" / "merlin-agents" / "state" / "corpus-night.json", {})
+        if g.get("summary"):
+            out["nuit"].append(f"atelier d'écriture : {g['summary'][:90]}")
+    except Exception:
+        pass
+    if not out["nuit"]:
+        out["nuit"].append("rien de neuf — la chaîne n'a rien eu à appliquer")
+
+    # 2. En attente de toi — les décisions, séparées par nature.
+    try:
+        P = _proposals_mod()
+        pend = [d for d in (_read_json(p, {}) for p in P.INBOX.glob("*.json")) if d]
+        fusions = sum(1 for d in pend if d.get("kind") == "merge")
+        auto = sum(1 for d in pend if P.applicable(d))
+        if fusions:
+            out["attente"].append(f"{fusions} intégration(s) à valider — 1 tap et c'est dans le jeu")
+        if auto - fusions > 0:
+            out["attente"].append(f"{auto - fusions} correction(s) prête(s) à être appliquée(s)")
+        reste = len(pend) - auto
+        if reste > 0:
+            out["attente"].append(f"{reste} idée(s) qui demandent ton arbitrage")
+        if not pend:
+            out["attente"].append("rien à décider — les agents n'ont rien trouvé de neuf")
+    except Exception:
+        pass
+
+    # 3. Bloqué — et POURQUOI, en clair. C'est la ligne qui manquait le plus.
+    try:
+        for a in agents().get("agents", []):
+            if not a.get("enabled"):
+                continue
+            why = str(a.get("summary") or "")
+            if a.get("ok") is False:
+                out["bloque"].append(f"{a['label']} : {why[:110] or 'échec sans message'}")
+            elif any(k in why for k in ("suspendu", "rien d'applicable", "indisponible",
+                                        "absent", "sauté", "vide")):
+                out["bloque"].append(f"{a['label']} : {why[:110]}")
+    except Exception:
+        pass
+    out["bloque"] = out["bloque"][:4]
+    if not out["bloque"]:
+        out["bloque"].append("rien de bloqué")
+
+    # 4. Le jeu — les chiffres qui bougent.
+    try:
+        c = corpus()
+        out["jeu"].append(f"{c.get('lines', 0)} cartes au recueil")
+    except Exception:
+        pass
+    try:
+        sm = _read_json(Path.home() / ".cache" / "merlin-agents" / "smoke-scenes.json", {})
+        if sm:
+            ko = sm.get("failed") or sm.get("ko") or 0
+            out["jeu"].append("toutes les scènes démarrent" if not ko
+                              else f"{ko} scène(s) en erreur au démarrage")
+    except Exception:
+        pass
+    try:
+        g = Path.home() / "workspace" / "merlin-game"
+        if (g / ".git").exists():
+            o, rc = _sh(["git", "-C", str(g), "log", "-1", "--format=%cr|%s"], timeout=8)
+            if rc == 0 and "|" in o:
+                quand, sujet = o.split("|", 1)
+                out["jeu"].append(f"dernier changement {quand.strip()} : {sujet.strip()[:60]}")
+    except Exception:
+        pass
+    return out
+
+
+PROGRESS = Path.home() / "merlin-memory" / "progress.jsonl"
+
+
+def progress(days: int = 30) -> list[dict]:
+    """Relevé quotidien d'avancement — écrit par le rapport du matin, lu ici.
+
+    Hors dépôt (`~/merlin-memory/`, jamais purgé par le garde-disque) et
+    append-only : la courbe ne peut pas être réécrite. Never raises."""
+    out = []
+    try:
+        for line in PROGRESS.read_text(encoding="utf-8").splitlines()[-days:]:
+            if line.strip():
+                out.append(json.loads(line))
+    except Exception:
+        pass
+    return out
+
+
+def agent_log(agent_id: str, lines: int = 120) -> dict:
+    """La sortie complète d'un agent — la seule façon de comprendre un échec
+    sans se connecter en SSH. `agent-run.sh` écrit déjà ce fichier ; il n'était
+    simplement exposé nulle part."""
+    import re as _re
+    if not _re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,40}", str(agent_id)):
+        return {"error": "identifiant invalide"}
+    path = Path.home() / ".cache" / "merlin-agents" / "logs" / f"{agent_id}.log"
+    if not path.exists():
+        return {"id": agent_id, "text": "", "missing": True,
+                "note": "aucun journal — cet agent n'a jamais tourné sur cette machine"}
+    try:
+        txt = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        return {"id": agent_id, "text": "\n".join(txt[-lines:]),
+                "lines": len(txt),
+                "mtime": time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                       time.gmtime(path.stat().st_mtime))}
+    except Exception as exc:
+        return {"id": agent_id, "error": str(exc)[:150]}
+
+
 def game() -> dict:
     """État du jeu natif (VNC), via game-stack.sh status — source de vérité
     unique pour les deux modes (container podman / native sysroot). Never raises."""

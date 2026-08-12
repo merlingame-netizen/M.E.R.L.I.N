@@ -70,6 +70,15 @@
 
  <!-- ══ IDÉES ══ propositions des agents : Maxime tranche, rien ne part sans lui -->
  <section class="pane" id="pane-ideas">
+  <!-- Ce matin : les 4 lignes à lire AVANT les cartes. Qu'a-t-on fait, qu'attend-on
+       de moi, qu'est-ce qui coince, où en est le jeu. -->
+  <div class="win">
+   <div class="win-bar"><span class="t">☀ Ce matin</span><span class="hatch"></span>
+    <span class="meta" id="brief-meta">…</span></div>
+   <div class="win-body">
+    <div id="brief-list"><div class="mut">lecture de l'état…</div></div>
+   </div>
+  </div>
   <div class="win">
    <div class="win-bar"><span class="t">Propositions des agents</span><span class="hatch"></span>
     <span class="meta" id="ideas-meta">…</span></div>
@@ -77,6 +86,15 @@
     <div class="mut" style="margin-bottom:10px">Les agents proposent — ils n'écrivent jamais dans le jeu.
      Accepter met une mission en file ; lancer le codeur reste un second geste.</div>
     <div id="ideas-list"><div class="mut">aucune proposition pour l'instant</div></div>
+   </div>
+  </div>
+  <!-- Où en sont les décisions déjà prises : acceptée → patchée → smoke → poussée
+       → fusionnée. Ce fil est ce qui manquait pour voir une décision aboutir. -->
+  <div class="win">
+   <div class="win-bar"><span class="t">🧭 Tes décisions, où elles en sont</span><span class="hatch"></span>
+    <span class="meta" id="suivi-meta">…</span></div>
+   <div class="win-body">
+    <div id="suivi-list"><div class="mut">rien de décidé pour l'instant</div></div>
    </div>
   </div>
   <div class="win">
@@ -97,6 +115,15 @@
      <button class="go sm" id="mem-add" style="min-height:48px">📌 Graver</button>
     </div>
     <div id="mem-list" class="journal"><div class="mut">la mémoire se remplit à chaque décision</div></div>
+   </div>
+  </div>
+  <div class="win">
+   <div class="win-bar"><span class="t">📈 Le jeu avance-t-il ?</span><span class="hatch"></span>
+    <span class="meta" id="prog-meta">…</span></div>
+   <div class="win-body">
+    <div class="mut" style="margin-bottom:10px">Un relevé par jour, jamais réécrit.
+     Si une courbe est plate depuis une semaine, c'est le sujet du jour.</div>
+    <div id="prog-list"><div class="mut">le relevé démarre au prochain rapport du matin</div></div>
    </div>
   </div>
   <div class="win">

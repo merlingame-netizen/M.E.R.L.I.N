@@ -594,6 +594,31 @@ Fenêtre ouverte encore {left} min.</p>
         return jsonify({"ok": not rec.get("error"), "conv": conv,
                         "job": rec.get("id"), "error": rec.get("error")})
 
+    # ── « Ce matin » : les 4 lignes lues avant tout le reste ────────────────
+    @app.route("/api/briefing")
+    def api_briefing():
+        try:
+            return jsonify(probes.briefing())
+        except Exception as exc:
+            return jsonify({"nuit": [], "attente": [], "bloque": [],
+                            "jeu": [], "error": str(exc)[:200]})
+
+    # Courbe d'avancement : le jeu progresse-t-il vraiment, semaine après semaine ?
+    @app.route("/api/progress")
+    def api_progress():
+        try:
+            return jsonify({"points": probes.progress()})
+        except Exception as exc:
+            return jsonify({"points": [], "error": str(exc)[:200]})
+
+    # Journal complet d'un agent : sans lui, diagnostiquer un échec imposait un SSH.
+    @app.route("/api/agent/<aid>/log")
+    def api_agent_log(aid: str):
+        try:
+            return jsonify(probes.agent_log(aid))
+        except Exception as exc:
+            return jsonify({"id": aid, "error": str(exc)[:200]})
+
     # ── journal de développement : la timeline agrégée, avec preuves ─────────
     @app.route("/api/journal")
     def api_journal():
