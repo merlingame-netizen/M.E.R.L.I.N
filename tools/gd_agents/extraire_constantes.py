@@ -35,16 +35,20 @@ if not (JEU / "scripts").exists():                 # poste de dev : le dépôt l
 # distingue un nombre d'équilibrage d'un nombre d'affichage.
 FAMILLES = {
     "vie et dégâts": r"\b(hp|health|vie|life|damage|degat|dmg|heal|soin|drain)\w*",
-    "rythme de partie": r"\b(cards?|cartes?|turn|tour|round|step|pas|duration|duree|timer)\w*",
+    "rythme de partie": r"\b(cards?|cartes?|turn|tour|round|deck|main|hand)\w*",
     "récompenses": r"\b(reward|recompense|gain|score|points?|faveur|anam|xp|loot)\w*",
-    "hasard et dés": r"\b(dice|de|roll|chance|proba|luck|random|seuil|threshold)\w*",
+    # PAS « de » : dans un dépôt commenté en français, « de » est partout et
+    # ramenait 61 faux positifs (« pied réservé aux 3 slots de greffe »).
+    "hasard et dés": r"\b(dice|roll|chance|proba|luck|seuil|threshold)\w*",
     "difficulté": r"\b(difficulty|difficulte|niveau|level|tier|palier|malus|bonus)\w*",
 }
-# Ce qu'on ne veut PAS : les nombres d'affichage, de position, de couleur.
+# Ce qu'on ne veut PAS : les nombres d'affichage, de position, de durée d'anim.
 BRUIT = re.compile(
     r"\b(color|colour|alpha|rgba?|pos|position|offset|margin|padding|size|width|"
     r"height|scale|rot|angle|pixel|px|font|volume|db|hz|fps|delta|lerp|tween|"
-    r"anim|fade|zoom|camera|light|shader|mesh|uv|vector|basis)\w*", re.I)
+    r"anim|fade|zoom|camera|light|shader|mesh|uv|vector|basis|z_index|stagger|"
+    r"_ms\b|frame|warmup|viewport|texture|sprite|label|theme|style|panel|"
+    r"duration|duree|timer|sleep|wait|msec|seconds?)\w*", re.I)
 # Les nombres sans intérêt : 0, 1, -1, 2 (indices, booléens déguisés).
 BANALS = {"0", "1", "-1", "2", "0.0", "1.0", "100.0"}
 
@@ -68,6 +72,11 @@ def scanner() -> dict:
     """Rend {famille: [{fichier, ligne, texte, nombres}]} + ce qui est déjà const."""
     trouve: dict[str, list] = defaultdict(list)
     deja_const: dict[str, int] = defaultdict(int)
+    # Les constantes DÉJÀ déclarées : 203 dans 28 fichiers. Le jeu est donc
+    # largement paramétré — simplement pas sous les noms que les analyseurs
+    # cherchaient. Avant d'extraire quoi que ce soit, il faut savoir ce qui
+    # existe : on ne refactorise pas ce qui est déjà réglable.
+    constantes: list[dict] = []
     for f in _fichiers():
         try:
             lignes = f.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -78,11 +87,19 @@ def scanner() -> dict:
             nu = ligne.strip()
             if not nu or nu.startswith("#"):
                 continue
-            if nu.startswith("const ") and re.search(r"=\s*-?\d", nu):
-                deja_const[rel] += 1
-                continue                       # déjà réglable : rien à faire
-            if BRUIT.search(nu):
+            # Un commentaire n'est pas du code : le laisser dans l'analyse
+            # faisait repérer « pied réservé aux 3 slots » comme une règle de jeu.
+            code = nu.split("#", 1)[0].strip()
+            if not code:
                 continue
+            if code.startswith("const ") and re.search(r"=\s*-?\d", code):
+                deja_const[rel] += 1
+                constantes.append({"fichier": rel, "ligne": i, "texte": code[:110],
+                                   "famille": _famille(code)})
+                continue                       # déjà réglable : rien à faire
+            if BRUIT.search(code):
+                continue
+            nu = code
             nombres = [n for n in NOMBRE.findall(nu) if n not in BANALS]
             if not nombres:
                 continue
@@ -93,6 +110,7 @@ def scanner() -> dict:
                                 "texte": nu[:110], "nombres": nombres[:4]})
     return {"jeu": str(JEU), "familles": dict(trouve),
             "deja_constantes": dict(deja_const),
+            "constantes": constantes,
             "fichiers_scannes": len(_fichiers())}
 
 
@@ -101,6 +119,21 @@ def rapport(d: dict, par_famille: int = 4) -> str:
               f"Constantes déjà déclarées : "
               f"{sum(d['deja_constantes'].values())} dans "
               f"{len(d['deja_constantes'])} fichier(s)", ""]
+    # CE QUI EST DÉJÀ RÉGLABLE, par famille : la vraie première question.
+    par_fam: dict = {}
+    for c in d.get("constantes") or []:
+        if c.get("famille"):
+            par_fam.setdefault(c["famille"], []).append(c)
+    if par_fam:
+        lignes.append("DÉJÀ RÉGLABLE (constantes existantes) :")
+        for nom, cs in sorted(par_fam.items(), key=lambda x: -len(x[1])):
+            lignes.append(f"  ■ {nom} — {len(cs)} constante(s)")
+            for c in cs[:5]:
+                lignes.append(f"      {c['fichier']}:{c['ligne']}  {c['texte'][:82]}")
+            if len(cs) > 5:
+                lignes.append(f"      … et {len(cs) - 5} autre(s)")
+        lignes.append("")
+        lignes.append("EN DUR (candidats à extraire) :")
     fam = d.get("familles") or {}
     if not fam:
         lignes.append("Aucun nombre d'équilibrage repéré — le jeu est peut-être "
