@@ -129,6 +129,12 @@ def run(steps: int = 16, session: str | None = None) -> str:
             anomalies.append({"type": "NOIR", "step": 0,
                               "detail": f"luminance {mean0:.0f} après boot",
                               "shot": f"{tag}-00b.png"})
+    # La pellicule : on garde ce que chaque écran valait. L'empreinte et la
+    # luminance étaient DÉJÀ calculées à chaque pas — et jetées. Les conserver
+    # permet de retenir les 3 écrans qui racontent la session, au lieu du dernier
+    # pris au hasard.
+    pellicule = [{"i": 0, "luminance": round(mean0, 1), "empreinte": fp,
+                  "change": 0.0, "png": f"{tag}-00.png"}]
     for i in range(1, steps + 1):
         kind, *args = WALK[(i - 1) % len(WALK)]
         try:
@@ -140,6 +146,12 @@ def run(steps: int = 16, session: str | None = None) -> str:
         time.sleep(1.8)
         _, mean, fp2 = _capture(f"{tag}-{i:02d}")
         shots += 1
+        # « À quel point l'écran a-t-il changé » : distance de Hamming entre les
+        # deux empreintes, normalisée. C'est ce qui repère le vrai basculement.
+        saut = (sum(1 for a, b in zip(fp or "", fp2 or "") if a != b)
+                / max(1, len(fp2 or "1"))) if (fp and fp2) else 1.0
+        pellicule.append({"i": i, "luminance": round(mean, 1), "empreinte": fp2,
+                          "change": round(saut, 3), "png": f"{tag}-{i:02d}.png"})
         if fp2 and fp2 == fp:
             same += 1
             if same == FROZEN_K:
@@ -155,6 +167,35 @@ def run(steps: int = 16, session: str | None = None) -> str:
                               "shot": ""})
             break
     v.close()
+
+    # ── Les 3 écrans qui racontent la session ──────────────────────────────
+    # Le premier (d'où l'on part), celui du plus grand basculement (ce qui s'est
+    # passé), celui de l'anomalie ou le dernier (où l'on a fini). Copiés HORS de
+    # .cache : sinon le chapitre de la semaine dernière pointera vers des PNG
+    # purgés à 200, et le journal montrerait des cadres vides.
+    try:
+        import shutil
+        vues = Path.home() / "merlin-memory" / "journal" / "vues"
+        vues.mkdir(parents=True, exist_ok=True)
+        pivot = max(pellicule[1:], key=lambda p: p["change"], default=pellicule[0])
+        fin = next((p for p in pellicule if p["png"] == (anomalies[0].get("shot") if anomalies else None)),
+                   pellicule[-1])
+        cles, vus = [], set()
+        for p in (pellicule[0], pivot, fin):
+            if p["png"] in vus:
+                continue
+            vus.add(p["png"])
+            src = SHOTS / p["png"]
+            if src.exists():
+                shutil.copy2(src, vues / p["png"])
+                cles.append(p["png"])
+        (vues / f"{tag}.json").write_text(json.dumps(
+            {"tag": tag, "pas": len(pellicule), "cles": cles,
+             "anomalies": [a["type"] for a in anomalies],
+             "pellicule": pellicule[:60]}, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
     # pellicule bornée : 200 captures max
     for old in sorted(SHOTS.glob("*.png"))[:-200]:
         old.unlink(missing_ok=True)

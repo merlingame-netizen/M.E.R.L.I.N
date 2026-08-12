@@ -181,7 +181,7 @@
       "id": "journal",
       "label": "Le Chroniqueur",
       "cmd": "a_journal.sh",
-      "schedule": "30 6 * * *",
+      "schedule": "50 5 * * *",
       "enabled": true,
       "desc": "Grave le chapitre du jour : ce que les agents ont fait, ce que tu as décidé, ce qui a bougé et ce qui reste en suspens. Aucun appel au modèle — il ne peut pas se taire."
     },
@@ -200,6 +200,14 @@
       "schedule": "25 * * * *",
       "enabled": true,
       "desc": "Laisse les agents t'interpeller quand quelque chose le mérite vraiment : une scène qui casse deux fois, un écran figé, un patch annulé. 2 fils par jour maximum, aucun appel au modèle."
+    },
+    {
+      "id": "mesures",
+      "label": "Le Métreur du jeu",
+      "cmd": "a_mesures.sh",
+      "schedule": "5 5 * * *",
+      "enabled": true,
+      "desc": "Relève chaque nuit tous les chiffres du jeu (cartes, factions, verbes, rythme, économie, vestiges). Aucun appel au modèle — c'est ce qui permet au journal de dire « ×2,5 → ×2,0 »."
     }
   ]
 }

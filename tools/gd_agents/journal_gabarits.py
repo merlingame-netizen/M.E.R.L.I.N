@@ -54,7 +54,10 @@ def _nom(acteur: str) -> str:
         t = json.loads(TROUPE.read_text(encoding="utf-8"))
         fiche = t.get("acteurs", {}).get(acteur)
         if fiche and fiche.get("nom"):
-            return f"{fiche.get('article', 'le')} {fiche['nom']}".strip()
+            art = fiche.get("article", "le")
+            # « l'Équilibreur », pas « l' Équilibreur » : l'élision se colle.
+            sep = "" if art.endswith("'") else " "
+            return f"{art}{sep}{fiche['nom']}"
     except Exception:
         pass
     return NOMS.get(acteur, acteur)
@@ -117,18 +120,33 @@ def _scene(fait: dict, causalite: dict) -> str:
     return f"{tete}\n{corps}"
 
 
+LISIBLE = {
+    "cartes": "cartes au recueil", "propositions_attente": "décisions en attente",
+    "propositions_acceptees": "décisions prises", "missions_faites": "corrections appliquées",
+    "missions_en_file": "missions en file", "scenes_ko": "scènes en erreur",
+    "agents_ko": "agents en échec", "commits_24h": "changements du jour",
+    # Mesures des analyseurs (préfixées par leur analyseur).
+    "balance.cards": "cartes analysées", "balance.part_faible": "part de la faction la moins servie (%)",
+    "balance.ratio": "écart entre la faction la plus et la moins servie",
+    "balance.verbes_hors_liste_n": "verbes employés hors de la liste fermée",
+    "balance.verbes_distincts": "verbes distincts", "balance.ecarts": "écarts mécaniques d'équilibrage",
+    "pacing.marge_survie": "marge de vie à la victoire", "pacing.echecs_tolerables": "échecs tolérables par partie",
+    "pacing.cartes_max_sans_degat": "cartes tenables sans dégât",
+    "economy.faveurs_par_session": "faveurs gagnées par partie", "economy.anam_par_run": "Anam par partie gagnée",
+    "economy.multiplicateur_max": "multiplicateur maximal réel", "economy.cap_declare": "plafond déclaré",
+    "audit.survivants_n": "systèmes supprimés encore dans le code",
+    "audit.occurrences_totales": "occurrences de systèmes morts",
+}
+
+
 def _chiffres(fiche: dict) -> str:
     """Ce qui a bougé depuis hier. Rien d'inventé : deux relevés comparés."""
-    c = fiche.get("chiffres") or {}
-    bouge = c.get("bouge") or {}
+    bouge = dict((fiche.get("chiffres") or {}).get("bouge") or {})
+    bouge.update((fiche.get("mesures") or {}).get("bouge") or {})
     if not bouge:
         return ""
-    LISIBLE = {"cartes": "cartes au recueil", "propositions_attente": "décisions en attente",
-               "propositions_acceptees": "décisions prises", "missions_faites": "corrections appliquées",
-               "missions_en_file": "missions en file", "scenes_ko": "scènes en erreur",
-               "agents_ko": "agents en échec", "commits_24h": "changements du jour"}
     lignes = []
-    for k, v in sorted(bouge.items(), key=lambda x: -abs(x[1]["delta"]))[:4]:
+    for k, v in sorted(bouge.items(), key=lambda x: -abs(x[1]["delta"]))[:5]:
         signe = "+" if v["delta"] > 0 else ""
         lignes.append(f"· {LISIBLE.get(k, k)} : {v['avant']} → {v['apres']} ({signe}{v['delta']})")
     return "**CE QUI A BOUGÉ**\n" + "\n".join(lignes)

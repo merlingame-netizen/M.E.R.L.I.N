@@ -369,13 +369,11 @@ def _playtest(depuis: float) -> list[dict]:
     return faits
 
 
-def _chiffres() -> dict:
-    """Les deux derniers relevés d'avancement : ce qui a bougé depuis hier."""
-    pts = _lire_jsonl(Path.home() / "merlin-memory" / "progress.jsonl", 60)
+def _delta(pts: list[dict]) -> dict:
+    """Ce qui a bougé entre les deux derniers relevés d'une série."""
     if not pts:
         return {}
-    dernier = pts[-1]
-    veille = pts[-2] if len(pts) > 1 else {}
+    dernier, veille = pts[-1], (pts[-2] if len(pts) > 1 else {})
     bouge = {}
     for k, v in dernier.items():
         if k == "t" or not isinstance(v, (int, float)):
@@ -384,6 +382,32 @@ def _chiffres() -> dict:
         if isinstance(av, (int, float)) and av != v:
             bouge[k] = {"avant": av, "apres": v, "delta": round(v - av, 2)}
     return {"dernier": dernier, "bouge": bouge}
+
+
+def _chiffres() -> dict:
+    """Les deux derniers relevés d'avancement : ce qui a bougé depuis hier."""
+    return _delta(_lire_jsonl(Path.home() / "merlin-memory" / "progress.jsonl", 60))
+
+
+def _mesures() -> dict:
+    """Les relevés des analyseurs — la démonstration chiffrée du chapitre.
+
+    Ces mesures ne coûtent RIEN en modèle (du Python déterministe), et trois des
+    analyseurs qui les produisent sont désactivés comme agents précisément parce
+    qu'un agent coûte un appel. Leurs chiffres, eux, sont relevés tous les jours."""
+    return _delta(_lire_jsonl(BASE / "mesures.jsonl", 60))
+
+
+def _vues() -> list[str]:
+    """Les 3 écrans clés de la dernière session de jeu, conservés hors du cache."""
+    try:
+        sessions = sorted((VUES).glob("*.json"))
+        if not sessions:
+            return []
+        d = _lire_json(sessions[-1], {})
+        return [f"/api/journal/vue/{n}" for n in (d.get("cles") or [])][:3]
+    except Exception:
+        return []
 
 
 # ── les fils : ce qui relie les jours entre eux ──────────────────────────────
@@ -442,9 +466,13 @@ def collecte(heures: int = 24) -> dict:
         "saillants": sorted(faits, key=lambda f: (-f["poids"], -f["t"]))[:5],
         "causalite": index,
         "chiffres": _chiffres(),
+        "mesures": _mesures(),
         "fils_ouverts": [{"cle": k, **v} for k, v in
                          sorted(ouverts.items(), key=lambda x: x[1].get("ouvert", ""))][:6],
-        "images": [f["image"] for f in faits if f.get("image")][:3],
+        # Les 3 écrans clés d'abord (ils montrent le jeu JOUÉ), les images des
+        # faits ensuite. La capture CI, elle, est toujours le premier écran neuf
+        # secondes après le boot : elle ne raconte rien.
+        "images": (_vues() or [f["image"] for f in faits if f.get("image")])[:3],
     }
 
 

@@ -19,8 +19,14 @@ while [ $# -gt 0 ]; do case "$1" in
     --timeout) TIMEOUT="$2"; shift 2 ;;
     --ctx)     CTX="$2";     shift 2 ;;
     --predict) PREDICT="$2"; shift 2 ;;
+    # 0,2 reste le défaut de l'ANALYSE (on veut des chiffres stables). Le
+    # journal appelle à 0,75 avec une graine = numéro de chapitre : deux nuits
+    # semblables ne produisent pas deux fois la même phrase.
+    --temp)    TEMP="$2";    shift 2 ;;
+    --seed)    SEED="$2";    shift 2 ;;
     *) echo "option inconnue: $1" >&2; exit 2 ;;
 esac; done
+export _LLM_TEMP="${TEMP:-0.2}" _LLM_SEED="${SEED:--1}"
 
 PROMPT="$(cat)"
 [ -n "$PROMPT" ] || { echo "prompt vide" >&2; exit 2; }
@@ -43,14 +49,29 @@ req = urllib.request.Request(
         "think": False,
         # num_thread vient du routeur : 2 quand le jeu tourne (il garde 2 cœurs).
         "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
-                    "num_ctx": ctx, "temperature": 0.2,
+                    "num_ctx": ctx,
+                    "temperature": float(os.environ.get("_LLM_TEMP", "0.2")),
+                    "seed": int(os.environ.get("_LLM_SEED", "-1")),
                     "num_predict": int(os.environ.get("_LLM_PREDICT", "320"))},
     }).encode(),
     headers={"content-type": "application/json"})
 try:
     with urllib.request.urlopen(req, timeout=timeout) as r:
         d = json.load(r)
-    print(d.get("response", "").strip())
+    rep = (d.get("response") or "").strip()
+    if not rep:
+        # Une réponse vide n'est PAS un succès. Rendre rc=0 avec zéro caractère
+        # a rempli le journal de « LLM indisponible — rc=0 » sans jamais dire
+        # pourquoi. On remonte le vrai motif : le modèle a-t-il été coupé par
+        # le budget de tokens (done_reason=length), a-t-il tout mis dans sa
+        # réflexion interne, ou n'a-t-il rien produit du tout ?
+        print(f"reponse vide (fin={d.get('done_reason')}, "
+              f"tokens={d.get('eval_count')}, "
+              f"reflexion={len(d.get('thinking') or '')} car)", file=sys.stderr)
+        sys.exit(3)
+    print(rep)
+except SystemExit:
+    raise
 except Exception as e:
     print(f"llm indisponible: {e}", file=sys.stderr); sys.exit(1)
 PY
