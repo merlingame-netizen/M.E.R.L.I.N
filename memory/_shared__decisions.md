@@ -74,3 +74,12 @@
   équilibrage et mécaniques · stabilité et expérience de jeu · préparation du fine-tune.
 - **Interface** : PARLER = uniquement le chat IA. DÉCIDER = tous les éléments de décision
   (propositions, **Mémoire**, journal de bord).
+
+## 2026-08-12: Orchestrateur mobile via Parler (canal PWA, VM-only)
+- **Canal retenu** : PWA (Parler), tout reste sur la VM. Rejet de Telegram/WhatsApp
+  (sortie de données, dépendance externe) — ntfy suffit pour le push d'alerte.
+- **Principe** : le LLM local est le chef d'orchestre. Une demande multi-étapes est
+  décomposée en un PLAN de N actions ; bouton « ⚡ Tout lancer » ou étape par étape.
+  Suivi immédiat dans « Les agents au travail ».
+- **Partage** : le e4b orchestre le CONNU (régler/lancer/planifier/mémoriser) ; les
+  décisions stratégiques remontent dans Décider.

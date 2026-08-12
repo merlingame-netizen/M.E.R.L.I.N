@@ -100,6 +100,11 @@ def main(conv: str, adviser: str) -> int:
             reply = head.strip() + f"\n\n📌 J'ai gravé dans la mémoire : « {rule} »"
     # Actions proposées : extraites du texte, validées, attachées au message.
     reply, actions = chat_actions.parse(reply)
+    # Le modèle met parfois tout dans les lignes ACTION → texte vide. On habille.
+    if not reply.strip() and actions:
+        reply = (f"Voici le plan que je te propose ({len(actions)} étapes) — "
+                 "valide-le d'un tap." if len(actions) > 1
+                 else "Voici ce que je te propose — valide-le d'un tap.")
     memory.chat_append(conv, "assistant", who, reply, actions=actions)
     print(f"réponse écrite ({len(reply)} car., {len(actions)} action(s) proposée(s))")
     return 0
