@@ -501,13 +501,32 @@ def briefing() -> dict:
     try:
         g = Path.home() / "workspace" / "merlin-game"
         if (g / ".git").exists():
-            o, rc = _sh(["git", "-C", str(g), "log", "-1", "--format=%cr|%s"], timeout=8)
+            # `%cr` rend « 12 days ago » : git parle la langue du système, et la
+            # VM est en anglais. On prend l'horodatage brut et on l'écrit nous-mêmes.
+            o, rc = _sh(["git", "-C", str(g), "log", "-1", "--format=%ct|%s"], timeout=8)
             if rc == 0 and "|" in o:
-                quand, sujet = o.split("|", 1)
-                out["jeu"].append(f"dernier changement {quand.strip()} : {sujet.strip()[:60]}")
+                brut, sujet = o.split("|", 1)
+                out["jeu"].append(f"dernier changement {_il_y_a(brut)} : {sujet.strip()[:60]}")
     except Exception:
         pass
     return out
+
+
+def _il_y_a(ts) -> str:
+    """« il y a 3 jours » — jamais « 3 days ago »."""
+    try:
+        d = max(0, int(time.time() - float(ts)))
+    except Exception:
+        return "récemment"
+    if d < 3600:
+        return f"il y a {max(1, d // 60)} min"
+    if d < 86400:
+        return f"il y a {d // 3600} h"
+    if d < 2592000:
+        n = d // 86400
+        return f"il y a {n} jour" + ("s" if n > 1 else "")
+    n = d // 2592000
+    return f"il y a {n} mois"
 
 
 PROGRESS = Path.home() / "merlin-memory" / "progress.jsonl"
