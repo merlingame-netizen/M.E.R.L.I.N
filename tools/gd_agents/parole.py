@@ -227,7 +227,16 @@ def _idee_sans_patch() -> list[dict]:
             continue
         if _ts(d.get("created")) < time.time() - 30 * 3600:
             continue
-        if not str(d.get("claim", "")).strip():
+        claim = str(d.get("claim", "")).strip()
+        if not claim:
+            continue
+        # Une PANNE D'OUTILLAGE n'est pas une question de design. Sans ce filtre,
+        # l'agent venait dire « la rédaction automatique a échoué : JSON
+        # illisible… qu'est-ce que tu en penses ? » — il demandait son avis à
+        # Maxime sur son propre bug. Ces cas restent des cartes dans Décider.
+        if any(x in claim.lower() for x in (
+                "llm indisponible", "json illisible", "rédaction automatique a échoué",
+                "validateur indisponible", "modèle local", "analyse seule")):
             continue
         return [{"poids": 4, "qui": d.get("agent", "gd-balance"),
                  "cle": "idee-" + str(d.get("id", ""))[-6:],

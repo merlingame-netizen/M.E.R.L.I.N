@@ -104,7 +104,12 @@ def etat(limite: int = 20) -> dict:
     for c in memory.chat_list(limit=limite):
         cid = c.get("conv") or ""
         e = index.get(cid, {})
-        neuf = bool(c.get("role") and c["role"] != "user"
+        # NON LU = un agent a DÉLIBÉRÉMENT ouvert ce fil (il est dans l'index) et
+        # son dernier mot est postérieur à ton passage. Les conversations
+        # antérieures à la boîte ne sont pas des messages en attente : les
+        # compter affichait « 20 non lus » dès la première minute, ce qui vide
+        # la pastille de tout sens.
+        neuf = bool(e and c.get("role") and c["role"] != "user"
                     and str(c.get("t", "")) > str(e.get("lu_jusqu_a", "")))
         if neuf:
             non_lus += 1
