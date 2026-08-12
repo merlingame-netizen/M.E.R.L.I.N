@@ -120,6 +120,12 @@ def run(agent_id: str, dry: bool = False) -> str:
                "liste à puces. Première phrase = le constat, chiffres à l'appui.")
     schema_hint = cfg.get("output_hint") or (CARTE if cfg["kind"] == "content" else ANALYSE)
     prompt = f"{system}\n\n{schema_hint}\n\n{ana.brief(a)}"
+    # Attend-on du JSON de cet agent ? C'est ce qui décide si une réponse sans
+    # JSON est un échec (donc une escalade) ou le résultat normal.
+    # On le lit dans le CONTRAT, jamais dans le texte de la consigne : celle des
+    # agents d'analyse contient le mot « JSON » dans « Pas de JSON », et une
+    # détection par mot-clé y répondait exactement à l'envers.
+    attend_json = bool(cfg.get("attend_json", cfg["kind"] == "content"))
 
     # Si le routeur refuse, sa raison EST le diagnostic (aucun appel n'aura lieu).
     card, raw, escal = None, "", 0
@@ -134,6 +140,13 @@ def run(agent_id: str, dry: bool = False) -> str:
             raw, why = _ask(prompt, plan, plan["est_secs"] * 2 + 90)
             card = _extract_json(raw)
             if card:
+                why = ""
+                break
+            # Un agent d'ANALYSE doit répondre en prose : sa consigne INTERDIT le
+            # JSON. Juger sa réussite sur `card` le condamnait donc à échouer à
+            # tous les coups et à escalader d'un palier — un appel 12b à
+            # 4 tok/s, 7 Go rechargés, deux fois par jour, pour rien.
+            if attend_json is False and raw:
                 why = ""
                 break
             # Réessayer à l'identique après un échec d'infrastructure est du
