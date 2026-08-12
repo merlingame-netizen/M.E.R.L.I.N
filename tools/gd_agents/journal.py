@@ -52,7 +52,7 @@ ID_PROP = re.compile(r"\b(\d{8}-\d{4}-[a-z0-9-]+?-[0-9a-f]{6})\b")
 
 # Poids : ce qui mérite d'ouvrir un chapitre plutôt que d'y figurer en passant.
 POIDS = {"resolution": 5, "echec": 4, "maxime": 4, "integration": 3,
-         "parole": 3, "mesure": 2, "production": 1}
+         "parole": 3, "mot": 3, "mesure": 2, "production": 1}
 
 
 # ── outils communs ───────────────────────────────────────────────────────────
@@ -196,8 +196,11 @@ def _decisions(depuis: float) -> list[dict]:
                 t0, "toi" if mienne else "la chaîne", "maxime" if mienne else "production",
                 f"Tu as {verbe} : {p.get('title', '')}" if mienne
                 else f"Intégré automatiquement : {p.get('title', '')}",
+                # Sans raison, on ne fabrique pas de « tes mots » : on rappelle
+                # l'argument de l'agent, en le nommant pour ce qu'il est.
                 (f"tes mots : « {raison} »" if (mienne and raison) else
-                 str(p.get("claim", ""))),
+                 (f"son argument : {p.get('claim', '')}" if mienne
+                  else str(p.get("claim", "")))),
                 fil=fil, refs=[p.get("id", "")]))
             # Chaque étape du parcours devient un fait à part entière.
             for e in (p.get("trail") or []):
@@ -330,8 +333,11 @@ def _paroles(depuis: float) -> list[dict]:
             if t < depuis:
                 continue
             qui = str(m.get("who") or m.get("role") or "")
+            # `mot` et non `maxime` : une phrase envoyée dans le chat n'est pas
+            # une décision. Les confondre faisait annoncer « 38 décisions de ta
+            # main » là où il y en avait 17 et 21 messages.
             faits.append(_fait(t, "toi" if m.get("role") == "user" else qui,
-                               "maxime" if m.get("role") == "user" else "parole",
+                               "mot" if m.get("role") == "user" else "parole",
                                str(m.get("text", ""))[:160], "", fil=f"fil:{cid}"))
     return faits
 

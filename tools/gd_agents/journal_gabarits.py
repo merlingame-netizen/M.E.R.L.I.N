@@ -70,6 +70,7 @@ def _chapo(fiche: dict) -> str:
     echecs = [f for f in faits if f["type"] == "echec"]
     res = [f for f in faits if f["type"] == "resolution"]
     mine = [f for f in faits if f["type"] == "maxime"]
+    mots = [f for f in faits if f["type"] == "mot"]
     # Les changements ENTRÉS DANS LE JEU se comptent en commits, pas en étapes :
     # « patchée » et « poussée » sont deux jalons du même changement, les
     # additionner gonflait le chiffre d'un facteur deux ou trois.
@@ -94,6 +95,8 @@ def _chapo(fiche: dict) -> str:
                      "refermé non plus : l'atelier a tourné à son rythme.")
     if mine:
         bouts.append(f"Tu es passé par là — {_pluriel(len(mine), 'décision')} de ta main.")
+    if mots:
+        bouts.append(f"Tu as aussi écrit {_pluriel(len(mots), 'message')} aux agents.")
     if integ:
         bouts.append(f"{_pluriel(len(integ), 'changement')} {'est entré' if len(integ) <= 1 else 'sont entrés'} "
                      "dans le jeu.")
