@@ -107,8 +107,46 @@ def _git(*args, cwd: Path | None = None, timeout: int = 15) -> str:
         return ""
 
 
+# Le jargon que produisent les outils, et sa traduction en français lisible.
+# Le narrateur RECOPIE fidèlement ce qu'on lui donne : lui servir « LLM
+# indisponible — rc=0 » produit une phrase qui contient « rc=0 ». On nettoie donc
+# à la source, pas dans le prompt — c'est la seule façon fiable.
+JARGON = [
+    # La forme parenthésée emporte sa parenthèse ET rétablit la ponctuation :
+    # sans virgule, on obtenait « sur « Villages Celtes » le modèle n'a pas
+    # répondu », une phrase soudée que le narrateur recopiait telle quelle.
+    (r"\s*\(\s*LLM indisponible[^)]*\)", ", le modèle n'a pas répondu"),
+    (r"\s*[—-]\s*LLM indisponible[^,.]*", ", le modèle n'a pas répondu"),
+    (r"\s*\(\s*JSON illisible\s*\)", ", la réponse était inutilisable"),
+    (r"\bJSON illisible\b", "réponse inutilisable"),
+    (r"\brc=-?\d+\b", ""),
+    (r"\bSCRIPT ERROR\b", "erreur de script"),
+    (r"\bsmoke\b", "test de démarrage"),
+    (r"\bcommit\b", "changement"),
+    (r"\bbefore/after\b", "ligne exacte à remplacer"),
+    (r"\bvalidateur indisponible[^,.]*", "le contrôle qualité n'a pas pu tourner"),
+    (r"\bauto/nightly\b", "la branche de nuit"),
+    (r"\bpayload\b", "contenu"),
+    (r"\s{2,}", " "),
+    (r"\s+([,.;:])", r"\1"),
+    (r"—\s*—", "—"),
+]
+
+
+def _francais(s: str) -> str:
+    """Débarrasse une phrase du vocabulaire d'outillage. Ne lève jamais."""
+    out = str(s or "")
+    for motif, remplacement in JARGON:
+        try:
+            out = re.sub(motif, remplacement, out, flags=re.I)
+        except Exception:
+            continue
+    return out.strip(" —·-")
+
+
 def _fait(t: float, acteur: str, type_: str, titre: str, detail: str = "",
           fil: str = "", refs=None, image: str = "", origine: str = "") -> dict:
+    titre, detail = _francais(titre), _francais(detail)
     # `origine` dit de QUELLE source vient le fait. Sans elle, compter les
     # « changements entrés dans le jeu » additionnait les commits ET les jalons
     # « patchée »/« poussée » du même changement — un facteur deux ou trois.

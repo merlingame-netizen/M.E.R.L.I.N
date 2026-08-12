@@ -124,9 +124,17 @@ def rediger(fiche: dict) -> tuple[str, str, dict]:
     faits = _bloc_faits(fiche)
     resume = _resume_courant()
     cadre = (
-        "Tu écris le journal de bord d'un atelier de développement de jeu vidéo.\n"
-        "RÈGLES ABSOLUES : en français ; JAMAIS un chiffre qui n'est pas dans les "
-        "faits ci-dessous ; pas de liste à puces ; pas de titre ; pas de JSON.\n\n"
+        "Tu écris la chronique d'un atelier où des artisans fabriquent un jeu.\n"
+        "RÈGLES ABSOLUES :\n"
+        "- en français simple, comme un romancier qui visite un atelier ;\n"
+        "- JAMAIS un chiffre absent des faits ci-dessous ;\n"
+        "- JAMAIS de vocabulaire technique : pas de « LLM », « rc », « JSON », "
+        "« commit », « script », « architecture », « projet », « développeur » ;\n"
+        "- les artisans sont DÉSIGNÉS par leur nom (le Codeur, l'Équilibreur…) et "
+        "on parle d'eux à la troisième personne ;\n"
+        "- le lecteur est le créateur du jeu : on lui dit « tu », jamais « le "
+        "développeur » ni « l'utilisateur » ;\n"
+        "- pas de liste à puces, pas de titre, pas de préambule.\n\n"
         + (f"CE QUI PRÉCÈDE :\n{resume}\n\n" if resume else "")
         + f"LES FAITS DE LA NUIT :\n{faits}\n\n")
 
