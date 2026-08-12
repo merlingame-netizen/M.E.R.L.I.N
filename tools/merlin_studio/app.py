@@ -497,6 +497,42 @@ Fenêtre ouverte encore {left} min.</p>
         except Exception as exc:
             return jsonify({"error": str(exc)[:150]}), 500
 
+    @app.route("/api/chat/plan", methods=["POST"])
+    def api_chat_plan():
+        # « Tout lancer » : exécute toutes les actions encore en attente d'un
+        # message. Le backend relit les actions depuis le message stocké.
+        import re as _re
+        body = request.get_json(silent=True) or {}
+        conv = str(body.get("conv", ""))
+        mid = str(body.get("msg_ts", ""))       # horodatage du message porteur
+        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
+            return jsonify({"error": "conversation invalide"}), 400
+        try:
+            M = _gd("memory")
+            CA = _gd("chat_actions")
+            todo, done_ids = [], []
+            for r in M.chat_read(conv, limit=200):
+                if mid and r.get("t") != mid:
+                    continue
+                for a in r.get("actions", []):
+                    if not a.get("done"):
+                        todo.append(a)
+            if not todo:
+                return jsonify({"ok": True, "results": [], "effect": "rien à lancer"})
+            results = CA.execute_plan(todo)
+            for res in results:
+                if res.get("ok"):
+                    M.chat_mark_action_done(conv, res["id"])
+                    done_ids.append(res["id"])
+            recap = "\n".join(("✓ " if r.get("ok") else "✗ ")
+                              + (r.get("effect") or r.get("error") or r.get("label", ""))
+                              for r in results)
+            M.chat_append(conv, "assistant", "studio",
+                          f"Plan exécuté ({len(done_ids)}/{len(todo)}) :\n{recap}")
+            return jsonify({"ok": True, "results": results, "done": len(done_ids)})
+        except Exception as exc:
+            return jsonify({"error": str(exc)[:150]}), 500
+
     @app.route("/api/chat", methods=["POST"])
     def api_chat_send():
         import re as _re

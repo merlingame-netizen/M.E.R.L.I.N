@@ -269,16 +269,24 @@ function renderThread(msgs) {
   }
   th.innerHTML = msgs.map(m => {
     const me = m.role === 'user';
-    const acts = (m.actions || []).map(a => a.done
+    const list = m.actions || [];
+    const pending = list.filter(a => !a.done).length;
+    const acts = list.map(a => a.done
       ? `<span class="act done">✓ ${esc(a.label)}</span>`
       : `<button class="act" data-aid="${esc(a.id)}">${esc(a.label)}</button>`).join('');
+    // Plusieurs actions en attente = un PLAN : un bouton « Tout lancer » en tête.
+    const plan = pending > 1
+      ? `<button class="act plan" data-plan="${esc(m.t || '')}">⚡ Tout lancer (${pending} étapes)</button>`
+      : '';
     return `<div class="turn ${me ? 'me' : 'them'}">
       <div class="ava">${me ? '🙂' : whoAva(m.who)}</div>
       <div><div class="bubble">${esc(m.text)}</div>
-        ${acts ? `<div class="actbtns">${acts}</div>` : ''}</div></div>`;
+        ${acts ? `<div class="actbtns">${plan}${acts}</div>` : ''}</div></div>`;
   }).join('');
-  th.querySelectorAll('button.act').forEach(b =>
+  th.querySelectorAll('button.act[data-aid]').forEach(b =>
     b.onclick = () => doChatAction(b.dataset.aid, b));
+  th.querySelectorAll('button.act[data-plan]').forEach(b =>
+    b.onclick = () => doChatPlan(b.dataset.plan, b));
   th.scrollTop = th.scrollHeight;
 }
 
@@ -297,7 +305,17 @@ async function doChatAction(aid, btn) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ conv: TALK_CONV, action_id: aid }) });
     if (r.error) { btn.disabled = false; alert('✗ ' + r.error); return; }
-    await talkPoll(); refreshAgents(); refreshMemory();
+    await talkPoll(); refreshAgents(); refreshMemory(); refreshCrew();
+  } catch { btn.disabled = false; }
+}
+async function doChatPlan(msgTs, btn) {
+  btn.disabled = true; btn.textContent = 'exécution du plan…';
+  try {
+    const r = await j('/api/chat/plan', { method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ conv: TALK_CONV, msg_ts: msgTs }) });
+    if (r.error) { btn.disabled = false; alert('✗ ' + r.error); return; }
+    await talkPoll(); refreshAgents(); refreshMemory(); refreshCrew();
   } catch { btn.disabled = false; }
 }
 

@@ -417,3 +417,8 @@ code { color: var(--blue); }
 .crew-go { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
   border: 1px solid var(--border); background: var(--surface); color: var(--gold); font-size: 14px; }
 .crew-go:disabled { opacity: .35; cursor: default; }
+
+/* ── Plan de l'orchestrateur : « Tout lancer » se démarque des étapes ──────── */
+.act.plan { background: var(--green); color: var(--deep); font-weight: 700;
+  margin-bottom: 4px; }
+.act.plan:hover { filter: brightness(1.1); }

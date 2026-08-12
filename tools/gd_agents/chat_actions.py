@@ -210,6 +210,23 @@ def execute(action: dict) -> dict:
     return {"error": "verbe inconnu"}
 
 
+def execute_plan(actions: list[dict]) -> list[dict]:
+    """Exécute un PLAN entier (le « Tout lancer » de l'orchestrateur).
+
+    Chaque action garde son propre résultat : un échec n'arrête pas les autres,
+    et le fil affiche ce qui a marché et ce qui a bloqué."""
+    out = []
+    for a in actions:
+        if a.get("done"):
+            out.append({"id": a["id"], "ok": True, "effect": "déjà fait"})
+            continue
+        res = execute(a)
+        res["id"] = a["id"]
+        res["label"] = a.get("label", "")
+        out.append(res)
+    return out
+
+
 def _patch_agent(verb: str, target: str, value: str) -> dict:
     """Pose un réglage HORS du dépôt — écrire dans agents.json versionné
     bloquerait tous les déploiements (git pull refusé sur modification locale)."""
