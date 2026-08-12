@@ -60,6 +60,13 @@ def code_findings() -> list[dict]:
     Le miroir seul est corrigé, jamais la source : on ne « rééquilibre » rien
     ici, on répare une incohérence interne. Rend une liste de
     {regle, cible, actuel, propose, pourquoi, before, after}."""
+    # Un patch calculé sur un AUTRE jeu que celui que Maxime joue est pire que
+    # pas de patch : il vise un fichier qui n'existe pas côté codeur, et il
+    # décrit des constantes qui ne pilotent rien. Mesuré : le dépôt du jeu n'a
+    # pas de `merlin_constants.gd` et l'ancien repli lisait l'outillage en
+    # silence.
+    if not GC.SOURCE.get("fiable"):
+        return []
     sc = GC.scalars()
     caps = GC.dict_ints("EFFECT_CAPS")
     if not sc:
@@ -108,7 +115,7 @@ def code_findings() -> list[dict]:
         patch = GC.patch_line(entry, attendu)
         if not patch:
             continue          # déjà cohérent, ou ligne ambiguë : rien à proposer
-        out.append({"regle": cle, "cible": GC.CONSTANTS_TARGET,
+        out.append({"regle": cle, "cible": GC.CIBLE_REELLE,
                     "actuel": entry["value"], "propose": attendu,
                     "ligne": entry["lineno"], "pourquoi": pourquoi,
                     "before": patch[0], "after": patch[1]})
@@ -212,7 +219,7 @@ def evidence(a: dict) -> list[dict]:
          "metric": (f"{len(a['depassements'])} dépassement(s)" if a["depassements"]
                     else "aucun dépassement de plafond"),
          "quote": " · ".join(a["depassements"])},
-        {"source": f"{GC.CONSTANTS_TARGET} ({a.get('regles_verifiees', 0)} règles de cohérence)",
+        {"source": f"{GC.SOURCE['dit']} ({a.get('regles_verifiees', 0)} règles de cohérence)",
          "metric": (f"{len(ec)} écart mécanique : {ec[0]['regle']} vaut {ec[0]['actuel']}, "
                     f"devrait valoir {ec[0]['propose']}" if ec
                     else "aucun écart mécanique — les constantes sont cohérentes entre elles"),

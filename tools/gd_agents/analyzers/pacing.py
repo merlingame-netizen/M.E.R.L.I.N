@@ -75,6 +75,10 @@ def analyze(seed: int | None = None) -> dict:
 def _code_findings(sc, vie, drain, victoire, lo, hi, cible, marge) -> list[dict]:
     """Les seuls constats à correction unique."""
     out = []
+    # Pas de patch si la source n'est pas le jeu réellement joué :
+    # il viserait un fichier absent côté codeur.
+    if not GC.SOURCE.get("fiable"):
+        return []
 
     def add(nom, attendu, pourquoi):
         e = sc.get(nom)
@@ -82,7 +86,7 @@ def _code_findings(sc, vie, drain, victoire, lo, hi, cible, marge) -> list[dict]
             return
         p = GC.patch_line(e, attendu)
         if p:
-            out.append({"regle": nom, "cible": GC.CONSTANTS_TARGET,
+            out.append({"regle": nom, "cible": GC.CIBLE_REELLE,
                         "actuel": e["value"], "propose": attendu,
                         "ligne": e["lineno"], "pourquoi": pourquoi,
                         "before": p[0], "after": p[1]})
@@ -131,7 +135,7 @@ def evidence(a: dict) -> list[dict]:
          "metric": " · ".join(f"{n} cartes ≈ {m} min" for n, m in a["duree_min"].items()),
          "quote": f"{a['echecs_tolerables']} échec(s) d'événement tolérable(s) "
                   f"sur une session cible"},
-        {"source": f"{GC.CONSTANTS_TARGET} ({a['regles_verifiees']} règles de rythme)",
+        {"source": f"{GC.SOURCE['dit']} ({a['regles_verifiees']} règles de rythme)",
          "metric": (f"{len(ec)} écart : {ec[0]['regle']} vaut {ec[0]['actuel']}, "
                     f"devrait valoir {ec[0]['propose']}" if ec
                     else "aucun écart mécanique — le rythme est cohérent")},

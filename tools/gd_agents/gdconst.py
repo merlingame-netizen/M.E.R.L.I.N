@@ -34,19 +34,52 @@ ROOT = Path(__file__).resolve().parents[2]
 CONSTANTS_TARGET = "scripts/merlin/merlin_constants.gd"
 
 
-def _constants_path() -> Path:
-    """Le fichier de VÉRITÉ pour produire un `before`.
-
-    Sur la VM, le jeu vit dans son propre dépôt (`~/workspace/merlin-game`) et le
-    codeur patche un worktree de CE dépôt. Lire la copie du dépôt d'outillage
-    donnerait un `before` qui n'existe pas là-bas : le patch serait rejeté avec
-    « le texte à remplacer n'existe pas ». On lit donc le clone du jeu s'il est
-    présent, l'outillage sinon (poste de dev, tests)."""
-    game = Path.home() / "workspace" / "merlin-game" / CONSTANTS_TARGET
-    return game if game.exists() else ROOT / CONSTANTS_TARGET
+JEU = Path.home() / "workspace" / "merlin-game"
 
 
-CONSTANTS = _constants_path()
+def provenance() -> dict:
+    """QUEL fichier, dans QUEL dépôt, on est réellement en train de mesurer.
+
+    Ce repli était SILENCIEUX, et c'était un piège. Sur la VM, le dépôt du jeu
+    (~/workspace/merlin-game) ne contient PAS `merlin_constants.gd` : ses
+    constantes sont dispersées dans 39 fichiers `scripts/game/merlin_*.gd`. Les
+    analyseurs retombaient donc sur le dépôt d'outillage — un AUTRE jeu, plus
+    gros et plus ancien — et rendaient des chiffres présentés comme ceux du jeu
+    de Maxime. Désormais on dit toujours ce qu'on a lu, et `fiable` vaut False
+    dès qu'on n'a pas pu lire le vrai jeu."""
+    cible = JEU / CONSTANTS_TARGET
+    if cible.exists():
+        return {"chemin": cible, "depot": "jeu", "fiable": True,
+                "dit": f"le jeu ({CONSTANTS_TARGET})"}
+    if JEU.exists():
+        # Le jeu est là mais n'a pas de fichier de constantes unique : on prend
+        # le script qui en porte le plus, et on le DIT.
+        best, n_best = None, 0
+        for p in sorted((JEU / "scripts").rglob("*.gd")) if (JEU / "scripts").exists() else []:
+            try:
+                n = len(re.findall(r"^const\s+[A-Z]", p.read_text(encoding="utf-8",
+                                                                  errors="replace"), re.M))
+            except Exception:
+                continue
+            if n > n_best:
+                best, n_best = p, n
+        if best:
+            return {"chemin": best, "depot": "jeu", "fiable": True,
+                    "dit": f"le jeu ({best.relative_to(JEU)}, {n_best} constantes)"}
+        return {"chemin": ROOT / CONSTANTS_TARGET, "depot": "outillage", "fiable": False,
+                "dit": "AUCUN fichier de constantes dans le jeu — mesures non fiables"}
+    return {"chemin": ROOT / CONSTANTS_TARGET, "depot": "outillage", "fiable": False,
+            "dit": "le dépôt d'outillage (le jeu n'est pas cloné ici) — hors production"}
+
+
+SOURCE = provenance()
+CONSTANTS = SOURCE["chemin"]
+# Chemin RELATIF au dépôt lu — c'est lui qui part dans `change.target`, et il
+# doit désigner un fichier qui existe vraiment côté codeur.
+try:
+    CIBLE_REELLE = str(CONSTANTS.relative_to(JEU if SOURCE["depot"] == "jeu" else ROOT))
+except Exception:
+    CIBLE_REELLE = CONSTANTS_TARGET
 
 # `const NOM[: type] =|:= <nombre>` suivi éventuellement d'un commentaire.
 _SCALAR = re.compile(

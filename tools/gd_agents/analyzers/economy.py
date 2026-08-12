@@ -85,13 +85,17 @@ def analyze(seed: int | None = None) -> dict:
 
 def _code_findings(sc, caps, mult_max, cap_declare) -> list[dict]:
     out = []
+    # Pas de patch si la source n'est pas le jeu réellement joué :
+    # il viserait un fichier absent côté codeur.
+    if not GC.SOURCE.get("fiable"):
+        return []
 
     def add(entry, nom, attendu, pourquoi):
         if not entry:
             return
         p = GC.patch_line(entry, attendu)
         if p:
-            out.append({"regle": nom, "cible": GC.CONSTANTS_TARGET,
+            out.append({"regle": nom, "cible": GC.CIBLE_REELLE,
                         "actuel": entry["value"], "propose": attendu,
                         "ligne": entry["lineno"], "pourquoi": pourquoi,
                         "before": p[0], "after": p[1]})
@@ -136,7 +140,7 @@ def evidence(a: dict) -> list[dict]:
                     f"(la bible fixe ×2,0) ou relever le plafond"
                     if a["multiplicateur_max"] > a["cap_declare"] else
                     f"table ×{a['multiplicateur_max']} ≤ plafond ×{a['cap_declare']}")},
-        {"source": f"{GC.CONSTANTS_TARGET} ({a['regles_verifiees']} règles d'économie)",
+        {"source": f"{GC.SOURCE['dit']} ({a['regles_verifiees']} règles d'économie)",
          "metric": (f"{len(ec)} écart : {ec[0]['regle']}" if ec
                     else "aucun écart mécanique — les gains sont cohérents")},
     ]
