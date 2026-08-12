@@ -131,8 +131,10 @@ def _gen_ollama(canon, rng) -> dict | None:
               f"Biome: {biome}. text: 2-4 phrases françaises (40-120 mots), ton druidique, sans mot moderne. "
               "Exactement 3 options, verbe à l'infinitif, effets ADD_REPUTATION (faction druides/anciens/korrigans/niamh/ankou, ±20).")
     try:
+        # `think: False` : sans lui, la réponse revient vide (voir llm-ask.sh).
         out = _http_json(url, {"model": os.environ.get("OLLAMA_MODEL", "merlin-narrator"),
-                               "prompt": prompt, "stream": False, "format": "json"})
+                               "prompt": prompt, "stream": False, "format": "json",
+                               "think": False})
         return _extract_card(out.get("response", ""))
     except Exception:
         return None

@@ -550,8 +550,12 @@ func _construire_payload(messages: Array, streaming: bool) -> Dictionary:
 			"num_ctx": _num_ctx,
 		},
 	}
-	if thinking_mode:
-		payload["think"] = true
+	# `think` doit TOUJOURS etre pose, jamais seulement quand on veut la reflexion.
+	# Mesure sur la VM (gemma4, 2026-08-12) : champ absent = meme comportement que
+	# think=true — le modele consomme tout son budget en reflexion interne et rend
+	# une reponse VIDE (eval_count=60, done_reason="length", response=""). Avec
+	# think=false explicite : reponse immediate, done_reason="stop".
+	payload["think"] = thinking_mode
 	if _format_constraint != null:
 		payload["format"] = _format_constraint
 	return payload

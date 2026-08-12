@@ -129,7 +129,12 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
         prompt = _s(p.get("prompt", "Décris Brocéliande en une phrase."))
         if any(c in model for c in " ;|&$`"):
             return (None, "llm", "nom de modèle invalide")
-        payload = json.dumps({"model": model, "prompt": prompt, "stream": False})
+        # `think: False` OBLIGATOIRE — sans ce champ, gemma4 part en réflexion
+        # interne, épuise son budget de tokens et rend une réponse VIDE
+        # (mesuré : eval_count=60, done_reason="length", response=""). Le bouton
+        # « Générer » du portail ne rendait donc jamais rien.
+        payload = json.dumps({"model": model, "prompt": prompt, "stream": False,
+                              "think": False})
         return ([PY, "-c",
                  "import json,os,sys,urllib.request;"
                  "u=os.environ.get('OLLAMA_URL','http://127.0.0.1:11434').rstrip('/')+'/api/generate';"
