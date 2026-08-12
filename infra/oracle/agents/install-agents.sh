@@ -14,8 +14,16 @@ chmod +x "$HERE"/*.sh
 BLOCK="$(python3 - "$MANIFEST" "$HERE" <<'PY'
 import json, sys
 manifest, here = sys.argv[1], sys.argv[2]
+# Les réglages faits depuis le portail vivent HORS du dépôt (overrides.py) :
+# écrire dans le manifeste versionné bloquerait les déploiements.
+sys.path.insert(0, here)
+try:
+    from overrides import agents as _agents
+    agents_list = _agents()
+except Exception:
+    agents_list = json.load(open(manifest))["agents"]
 lines = []
-for a in json.load(open(manifest))["agents"]:
+for a in agents_list:
     if not a.get("enabled"):
         continue
     lines.append(f'{a["schedule"]} /bin/bash {here}/agent-run.sh {a["id"]} '

@@ -137,24 +137,21 @@ def execute(action: dict) -> dict:
 
 
 def _patch_agent(verb: str, target: str, value: str) -> dict:
-    data = json.loads(AGENTS_JSON.read_text(encoding="utf-8"))
-    hit = None
-    for a in data.get("agents", []):
-        if a["id"] == target:
-            hit = a
-            break
+    """Pose un réglage HORS du dépôt — écrire dans agents.json versionné
+    bloquerait tous les déploiements (git pull refusé sur modification locale)."""
+    sys.path.insert(0, str(AGENTS_JSON.parent))
+    import overrides as OV
+    hit = next((a for a in OV.agents() if a["id"] == target), None)
     if not hit:
         return {"error": "agent introuvable"}
     if verb == "agent.toggle":
-        hit["enabled"] = (value == "on")
-        eff = "activé" if hit["enabled"] else "désactivé"
+        on = (value == "on")
+        OV.set_override(target, enabled=on)
+        eff = "activé" if on else "désactivé"
     else:  # agent.cadence
         cron, human = CADENCES[value]
-        hit["schedule"] = cron
-        hit["enabled"] = True
+        OV.set_override(target, schedule=cron, enabled=True)
         eff = f"réglé sur « {human} »"
-    AGENTS_JSON.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-                           encoding="utf-8")
     # La crontab reflète le nouvel état.
     subprocess.run(["bash", str(INSTALL)], capture_output=True, timeout=60)
     # Trace en mémoire : un réglage d'agent est une décision.

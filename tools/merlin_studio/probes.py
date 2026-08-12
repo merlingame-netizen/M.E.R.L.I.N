@@ -124,8 +124,15 @@ AGENTS_DIR = ROOT / "infra" / "oracle" / "agents"
 
 def agents() -> dict:
     """Agents planifiés sur la VM + leur dernier passage. Never raises."""
-    manifest = _read_json(AGENTS_DIR / "agents.json", {})
-    defs = manifest.get("agents", []) if isinstance(manifest, dict) else []
+    # État RÉEL = manifeste + réglages faits depuis le portail (hors dépôt).
+    try:
+        import sys as _s
+        _s.path.insert(0, str(AGENTS_DIR))
+        from overrides import agents as _ag
+        defs = _ag()
+    except Exception:
+        manifest = _read_json(AGENTS_DIR / "agents.json", {})
+        defs = manifest.get("agents", []) if isinstance(manifest, dict) else []
     state_dir = Path.home() / ".cache" / "merlin-agents"
     out = []
     for a in defs:
