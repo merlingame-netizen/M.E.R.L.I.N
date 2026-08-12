@@ -205,6 +205,18 @@ export async function initGame() {
   $('#btn-stop').onclick = stop;
   $('#btn-sync').onclick = sync;
   $('#btn-fs').onclick = fullscreen;
+  // Son du jeu : flux MP3 depuis la VM, activé au tap (les navigateurs bloquent
+  // le son automatique). Se recharge à chaud si le lien casse.
+  const sndBtn = $('#btn-sound'), audio = $('#game-audio');
+  if (sndBtn && audio) sndBtn.onclick = () => {
+    if (audio.paused) {
+      audio.src = '/audio/stream?t=' + Date.now();
+      audio.play().then(() => { sndBtn.textContent = '🔊 Son'; sndBtn.classList.add('primary'); })
+        .catch(() => { sndBtn.textContent = '🔇 indispo'; });
+    } else {
+      audio.pause(); audio.src = ''; sndBtn.textContent = '🔇 Son'; sndBtn.classList.remove('primary');
+    }
+  };
   const sel = $('#game-res');
   if (sel) sel.value = autoRes();   // pré-sélection selon l'appareil (modifiable)
   offMessage('SIGNAL PERDU', 'APPUYER SUR PLAY');

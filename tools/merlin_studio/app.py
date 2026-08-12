@@ -403,6 +403,44 @@ Fenêtre ouverte encore {left} min.</p>
                         secure=True, httponly=True, samesite="Lax")
         return resp
 
+    # ── flux audio du jeu : ffmpeg capte la sortie « merlin » → MP3 → <audio> ─
+    @app.route("/audio/stream")
+    def audio_stream():
+        import os
+        import signal
+        import subprocess as _sp
+        aud = Path.home() / "opt" / "audio"
+        ff = aud / "ffmpeg"
+        if not ff.exists():
+            return Response("audio non installé\n", 503)
+        env = {**os.environ,
+               "LD_LIBRARY_PATH": f"{aud}/sysroot/usr/lib64:{aud}/sysroot/usr/lib",
+               "PULSE_RUNTIME_PATH": str(Path.home() / ".cache" / "pulse")}
+        # -f pulse -i merlin.monitor : le son qui sort de la sortie virtuelle.
+        # MP3 96 kbps : lu nativement par <audio>, léger pour le tunnel.
+        proc = _sp.Popen(
+            [str(ff), "-hide_banner", "-loglevel", "error", "-f", "pulse",
+             "-i", "merlin.monitor", "-ac", "2", "-c:a", "libmp3lame",
+             "-b:a", "96k", "-f", "mp3", "-"],
+            stdout=_sp.PIPE, stderr=_sp.DEVNULL, env=env, bufsize=0,
+            preexec_fn=os.setsid)
+
+        def _gen():
+            try:
+                while True:
+                    chunk = proc.stdout.read(4096)
+                    if not chunk:
+                        break
+                    yield chunk
+            finally:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+                except Exception:
+                    pass
+
+        return Response(_gen(), mimetype="audio/mpeg",
+                        headers={"Cache-Control": "no-store"})
+
     # ── PWA : manifest + service worker servis À LA RACINE (portée "/") ──────
     @app.route("/manifest.webmanifest")
     def pwa_manifest():

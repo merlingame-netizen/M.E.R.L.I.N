@@ -1,6 +1,6 @@
 /* MERLIN Studio — logique du portail (extraite d'index.html, re-skin premium).
    Les contrats /api/* sont inchangés ; seules les classes CSS générées changent. */
-import { initGame } from '/static/game.js?v=3';
+import { initGame } from '/static/game.js?v=4';
 
 const $ = s => document.querySelector(s), j = (u, o) => fetch(u, o).then(r => r.json());
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

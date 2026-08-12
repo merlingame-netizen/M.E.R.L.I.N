@@ -49,10 +49,23 @@ x11vnc -display :99 -localhost -rfbport 5900 -forever -shared -nopw \
     -noxdamage -threads -defer 10 -wait 10 -nolookup -noxfixes -nowf -quiet \
     > "$RUNDIR/x11vnc.log" 2>&1 &
 
+# Son : si la pile audio userland est là, on démarre la sortie virtuelle et on
+# lance Godot dessus. Sinon on garde le driver Dummy — le jeu tourne quand même.
+AUDIO_DRIVER="Dummy"
+if [ -x "$HOME/opt/audio/start-audio.sh" ] && [ -x "$HOME/opt/audio/sysroot/usr/bin/pulseaudio" ]; then
+    if bash "$HOME/opt/audio/start-audio.sh" 2>>"$RUNDIR/audio.log" | grep -q "prêt"; then
+        export LD_LIBRARY_PATH="$HOME/opt/audio/sysroot/usr/lib64:$HOME/opt/audio/sysroot/usr/lib:${LD_LIBRARY_PATH:-}"
+        export PULSE_RUNTIME_PATH="$HOME/.cache/pulse"
+        export PULSE_SINK="merlin"
+        AUDIO_DRIVER="PulseAudio"
+        echo "[native-inner] audio activé (sortie merlin)" >&2
+    fi
+fi
+
 cd "$GAME_DIR"
-echo "[native-inner] projet joué : $GAME_DIR (max-fps=${MAX_FPS:-30})" >&2
+echo "[native-inner] projet joué : $GAME_DIR (max-fps=${MAX_FPS:-30}, audio=$AUDIO_DRIVER)" >&2
 # Plafonner les FPS libère massivement le CPU : en rendu logiciel, viser 60 fps
 # sature les 4 cœurs pour rien. 30 suffit largement à un jeu de cartes et laisse
 # du CPU à l'encodage VNC — donc MOINS de latence perçue.
-exec "$GODOT_BIN" --path . --rendering-driver opengl3 --audio-driver Dummy \
+exec "$GODOT_BIN" --path . --rendering-driver opengl3 --audio-driver "$AUDIO_DRIVER" \
     --max-fps "${MAX_FPS:-30}" --resolution "$RES" > "$RUNDIR/godot.log" 2>&1
