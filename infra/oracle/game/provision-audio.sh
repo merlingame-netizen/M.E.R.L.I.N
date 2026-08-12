@@ -50,18 +50,24 @@ fi
 cat > "$AUD/start-audio.sh" <<'PA'
 #!/usr/bin/env bash
 # Démarre PulseAudio userland avec une sortie virtuelle dont on capte le son.
+# libpulsecore vit dans un sous-dossier, les modules dans un autre : les deux
+# doivent être dans le chemin, sinon le daemon ne démarre pas.
 AUD="$HOME/opt/audio"; SYS="$AUD/sysroot"
-export LD_LIBRARY_PATH="$SYS/usr/lib64:$SYS/usr/lib:${LD_LIBRARY_PATH:-}"
+CORE="$(dirname "$(find "$SYS" -name libpulsecore-*.so 2>/dev/null | head -1)")"
+MODS="$(dirname "$(find "$SYS" -name module-null-sink.so 2>/dev/null | head -1)")"
+export LD_LIBRARY_PATH="$SYS/usr/lib64:$SYS/usr/lib:$CORE:$MODS:${LD_LIBRARY_PATH:-}"
 export PULSE_RUNTIME_PATH="$HOME/.cache/pulse"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$HOME/.cache/xdg}"
 mkdir -p "$PULSE_RUNTIME_PATH" "$XDG_RUNTIME_DIR"
 if ! "$SYS/usr/bin/pactl" info >/dev/null 2>&1; then
-    "$SYS/usr/bin/pulseaudio" --daemonize=yes --exit-idle-time=-1 \
+    "$SYS/usr/bin/pulseaudio" --daemonize=yes --exit-idle-time=-1 -n -p "$MODS" \
+        --load="module-native-protocol-unix" \
         --load="module-null-sink sink_name=merlin sink_properties=device.description=merlin" \
-        >/dev/null 2>&1
+        >/dev/null 2>>"$HOME/.cache/pulse/daemon.log"
     sleep 2
 fi
-"$SYS/usr/bin/pactl" info >/dev/null 2>&1 && echo "audio prêt (sortie merlin)" || echo "audio KO"
+"$SYS/usr/bin/pactl" list short sinks 2>/dev/null | grep -q merlin \
+    && echo "audio prêt (sortie merlin)" || echo "audio KO"
 PA
 chmod +x "$AUD/start-audio.sh"
 say "lanceur audio écrit : $AUD/start-audio.sh"

@@ -411,19 +411,25 @@ Fenêtre ouverte encore {left} min.</p>
         import subprocess as _sp
         aud = Path.home() / "opt" / "audio"
         ff = aud / "ffmpeg"
-        if not ff.exists():
+        parec = aud / "sysroot" / "usr" / "bin" / "parec"
+        if not (ff.exists() and parec.exists()):
             return Response("audio non installé\n", 503)
-        env = {**os.environ,
-               "LD_LIBRARY_PATH": f"{aud}/sysroot/usr/lib64:{aud}/sysroot/usr/lib",
+        # Le ffmpeg statique n'a pas le support PulseAudio : on capte avec parec
+        # (client Pulse) → PCM brut → ffmpeg encode en MP3. libpulsecore dans son
+        # sous-dossier, sinon parec ne démarre pas.
+        core = next(aud.glob("sysroot/**/libpulsecore-*.so"), None)
+        libs = f"{aud}/sysroot/usr/lib64:{aud}/sysroot/usr/lib"
+        if core:
+            libs += f":{core.parent}"
+        env = {**os.environ, "LD_LIBRARY_PATH": libs,
                "PULSE_RUNTIME_PATH": str(Path.home() / ".cache" / "pulse")}
-        # -f pulse -i merlin.monitor : le son qui sort de la sortie virtuelle.
-        # MP3 96 kbps : lu nativement par <audio>, léger pour le tunnel.
-        proc = _sp.Popen(
-            [str(ff), "-hide_banner", "-loglevel", "error", "-f", "pulse",
-             "-i", "merlin.monitor", "-ac", "2", "-c:a", "libmp3lame",
-             "-b:a", "96k", "-f", "mp3", "-"],
-            stdout=_sp.PIPE, stderr=_sp.DEVNULL, env=env, bufsize=0,
-            preexec_fn=os.setsid)
+        # parec sort du s16le 44.1 kHz stéréo ; ffmpeg le prend en entrée brute.
+        cmd = (f'exec "{parec}" --format=s16le --rate=44100 --channels=2 '
+               f'-d merlin.monitor 2>/dev/null | '
+               f'exec "{ff}" -hide_banner -loglevel error -f s16le -ar 44100 -ac 2 '
+               f'-i - -c:a libmp3lame -b:a 96k -f mp3 -')
+        proc = _sp.Popen(["bash", "-c", cmd], stdout=_sp.PIPE, stderr=_sp.DEVNULL,
+                         env=env, bufsize=0, preexec_fn=os.setsid)
 
         def _gen():
             try:
