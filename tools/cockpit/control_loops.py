@@ -227,6 +227,8 @@ def _gen_gemma(canon, rng, recent=None) -> dict | None:
     try:
         out = _http_json(url, {"model": model, "prompt": prompt, "stream": False,
                                "format": _card_schema(canon, verbs),
+                               # Gemma 4 raisonne : sans think=false la réponse revient vide.
+                               "think": False,
                                "keep_alive": os.environ.get("OLLAMA_KEEP_ALIVE", "30m"),
                                "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
                                            "num_ctx": 2048, "temperature": 0.85,

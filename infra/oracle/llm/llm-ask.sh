@@ -36,6 +36,11 @@ req = urllib.request.Request(
     data=json.dumps({
         "model": model, "prompt": prompt, "stream": False,
         "keep_alive": os.environ.get("OLLAMA_KEEP_ALIVE", "30m"),
+        # Gemma 4 RAISONNE avant de répondre. Sans think=false, le budget de
+        # tokens part entièrement en réflexion interne et le champ `response`
+        # revient VIDE (mesuré : eval_count=50, réponse 0 caractère) — cause
+        # réelle de tous les « modèle indisponible » du chat et des agents.
+        "think": False,
         # num_thread vient du routeur : 2 quand le jeu tourne (il garde 2 cœurs).
         "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
                     "num_ctx": ctx, "temperature": 0.2,

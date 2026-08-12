@@ -36,7 +36,7 @@ for m in models:
     try:
         t0 = time.time()
         d = api("/api/generate", {"model": m, "prompt": prompt, "stream": False,
-                "keep_alive": "0", "options": {"num_thread": 4, "num_ctx": 2048, "num_predict": 200}})
+                "keep_alive": "0", "think": False, "options": {"num_thread": 4, "num_ctx": 2048, "num_predict": 200}})
         wall = round(time.time() - t0, 1)
         toks = round(d.get("eval_count", 0) / max(d.get("eval_duration", 1) / 1e9, .001), 1)
         # Le débit de LECTURE du prompt est distinct de celui de génération et
