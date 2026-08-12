@@ -36,7 +36,8 @@ CADENCES = {
     "actif":   ("*/30 * * * *", "toutes les 30 min"),
     "matin":   ("40 6 * * *", "chaque matin"),
 }
-VERBS = ("agent.toggle", "agent.cadence", "agent.run", "mission.queue", "memory.grave")
+VERBS = ("agent.toggle", "agent.cadence", "agent.run", "mission.queue",
+         "memory.grave", "agent.create", "task.plan")
 
 
 def _agents() -> list[dict]:
@@ -64,8 +65,10 @@ def catalogue_for_prompt() -> str:
         "ACTION: agent.cadence | playtest-bot | nuit | Playtest une fois par nuit\n"
         "Actions possibles : agent.toggle (valeur on ou off), agent.cadence "
         "(valeur horaire, nuit, actif ou matin), agent.run (valeur -), "
-        "mission.queue (cible -, valeur = la tâche), memory.grave (cible -, "
-        "valeur = la règle).\n"
+        "mission.queue (cible -, valeur = la tâche pour le codeur), memory.grave "
+        "(cible -, valeur = la règle), task.plan (cible -, valeur = une tâche à "
+        "prévoir), agent.create (cible -, valeur = ce que le nouvel agent devrait "
+        "faire).\n"
         f"Identifiants d'agents valides : {ids}.")
 
 
@@ -97,16 +100,22 @@ def parse(reply: str) -> tuple[str, list[dict]]:
                 continue
             if verb == "agent.cadence" and value not in CADENCES:
                 continue
-        elif verb == "mission.queue":
+        elif verb in ("mission.queue", "task.plan"):
             value = " | ".join(parts[2:]) if len(parts) > 3 else value
             if not (10 <= len(value) <= 2000):
                 continue
-            label = label if len(parts) > 4 else "Confier au codeur : " + value[:40]
+            label = label if len(parts) > 4 else (
+                ("Prévoir : " if verb == "task.plan" else "Confier au codeur : ") + value[:38])
         elif verb == "memory.grave":
             value = " | ".join(parts[2:]) if len(parts) > 3 else value
             if not (5 <= len(value) <= 300):
                 continue
             label = label if len(parts) > 4 else "Graver : " + value[:40]
+        elif verb == "agent.create":
+            value = " | ".join(parts[2:]) if len(parts) > 3 else value
+            if not (10 <= len(value) <= 500):
+                continue
+            label = label if len(parts) > 4 else "Créer un agent : " + value[:36]
         actions.append({"id": _aid(verb, target, value), "verb": verb,
                         "target": target, "value": value, "label": label[:90],
                         "done": False})
@@ -125,6 +134,30 @@ def execute(action: dict) -> dict:
             name = time.strftime("%Y%m%d-%H%M%S") + "-chat.md"
             (MISSIONS / name).write_text(value, encoding="utf-8")
             return {"ok": True, "effect": f"mission {name} en file (codeur au prochain tour)"}
+        if verb == "task.plan":
+            # Une tâche prévue devient une carte Décider (pas d'exécution directe).
+            sys.path.insert(0, str(HERE))
+            import proposals as P
+            P.write(P.make("chat", "design", "Tâche prévue : " + value[:60],
+                           "Tâche notée depuis Parler, à planifier.",
+                           {"summary": value, "target": "à planifier"},
+                           value, confidence=0.6,
+                           impact={"axis": "dev", "expected": value[:50], "risk": "low"}))
+            return {"ok": True, "effect": "tâche ajoutée à Décider"}
+        if verb == "agent.create":
+            # Créer un agent = du code : ça remonte en proposition, jamais direct.
+            sys.path.insert(0, str(HERE))
+            import proposals as P
+            P.write(P.make("chat", "infra", "Nouvel agent : " + value[:55],
+                           "Création d'un agent demandée depuis Parler.",
+                           {"summary": f"Créer un agent de game design qui : {value}",
+                            "target": "tools/gd_agents/"},
+                           f"Créer un nouvel agent de game design qui {value}. "
+                           f"Suivre le patron des agents existants (analyseur + contrat "
+                           f"dans agents.json + wrapper). Il PROPOSE, n'écrit jamais dans le jeu.",
+                           confidence=0.55,
+                           impact={"axis": "plateforme", "expected": value[:50], "risk": "med"}))
+            return {"ok": True, "effect": "création d'agent proposée dans Décider"}
         if verb == "agent.run":
             subprocess.Popen(["bash", str(AGENT_RUN), target],
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

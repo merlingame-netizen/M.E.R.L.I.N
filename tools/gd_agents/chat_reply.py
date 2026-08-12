@@ -32,8 +32,14 @@ def main(conv: str, adviser: str) -> int:
         persona = prompts.compile_prompt(adviser)
         who = Path(adviser).stem
     else:
-        persona = ("Tu es la mémoire vivante du studio MERLIN : tu connais chaque "
-                   "décision de game design retenue et tu aides Maxime à y voir clair.")
+        persona = (
+            "Tu es MERLIN, l'assistant du studio de développement du jeu MERLIN. "
+            "Tu discutes avec Maxime, le créateur. Tu peux : répondre à ses questions "
+            "sur le jeu et son design ; régler les agents automatiques (les activer, "
+            "les ralentir, les lancer) ; entretenir la mémoire du projet ; proposer de "
+            "créer de nouveaux agents ; prévoir des tâches de développement pour le "
+            "codeur. Tu es concret, direct et bienveillant. Quand une demande implique "
+            "une action, tu la PROPOSES (Maxime la validera d'un tap).")
         who = "merlin"
     hist = "\n".join(f"{'Maxime' if r['role'] == 'user' else r['who']} : {r['text'][:300]}"
                      for r in rows[-8:])

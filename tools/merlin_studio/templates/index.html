@@ -104,23 +104,33 @@
  </section>
 
  <!-- ══ PARLER ══ conversations avec les conseillers + mémoire absolue du design -->
- <section class="pane" id="pane-talk">
-  <div class="win">
-   <div class="win-bar"><span class="t">💬 Parler au studio</span><span class="hatch"></span>
-    <span class="meta" id="talk-meta">…</span></div>
-   <div class="win-body">
-    <div class="row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">
-     <select id="talk-to" style="max-width:100%"><option value="merlin">MERLIN — la mémoire du studio</option></select>
-    </div>
-    <div id="talk-convs" class="subnav" style="margin-top:10px"></div>
-    <div id="talk-thread" class="thread"><div class="mut">Choisis un conseiller et pose ta question —
-     la réponse arrive en une à trois minutes (le sage réfléchit lentement mais gratuitement).</div></div>
-    <div class="row" style="gap:8px;margin-top:10px">
-     <input id="talk-input" placeholder="Parle du jeu, du design, de ce qui est retenu…" style="flex:1">
-     <button class="go" id="talk-send" style="min-height:48px">Envoyer</button>
+ <section class="pane chatpane" id="pane-talk">
+  <header class="chat-head">
+   <div class="chat-id">
+    <span class="chat-av">◈</span>
+    <div>
+     <select id="talk-to" class="chat-who"><option value="merlin">MERLIN — mémoire du studio</option></select>
+     <div class="chat-sub" id="talk-meta">assistant du studio · Gemma 4 local</div>
     </div>
    </div>
+   <div class="chat-tools">
+    <button class="chip-btn" id="talk-history" title="Conversations">🕑</button>
+    <button class="chip-btn" id="talk-new" title="Nouvelle conversation">✚</button>
+   </div>
+   <div id="talk-convs" class="chat-drawer" hidden></div>
+  </header>
+  <div id="talk-thread" class="chat-thread"></div>
+  <div class="chat-suggest" id="talk-suggest">
+   <button data-q="Quelles décisions de design sont retenues à ce jour ?">Ce qui est décidé</button>
+   <button data-q="Ralentis l'atelier d'entraînement à une fois par nuit.">Régler un agent</button>
+   <button data-q="Crée un agent qui vérifie la cohérence du lore à chaque nuit.">Créer un agent</button>
+   <button data-q="Prévois une tâche : ajouter un effet sonore au menu principal.">Prévoir une tâche</button>
+   <button data-q="Grave cette règle : le jeu garde une seule barre de vie.">Entretenir la mémoire</button>
   </div>
+  <form class="chat-bar" id="talk-form">
+   <textarea id="talk-input" rows="1" placeholder="Parler au studio — poser une question, régler un agent, prévoir une tâche…"></textarea>
+   <button class="chat-send" id="talk-send" type="submit" title="Envoyer">➤</button>
+  </form>
  </section>
 
  <!-- ══ SANTÉ ══ cinq voyants géants, lisibles par un enfant -->

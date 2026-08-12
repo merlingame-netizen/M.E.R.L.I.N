@@ -213,51 +213,83 @@ async function refreshCpu() {
 /* ── Agents : planification, dernier passage, santé, smoke ─────────────── */
 // ── Parler : conversations avec les 101 conseillers + mémoire absolue ────────
 let TALK_CONV = null, TALK_POLL = null;
+const AV = { merlin: '◈' };
+function whoAva(who) { return AV[who] || (WHO_FR[who] ? '◆' : '◈'); }
+
 async function initTalk() {
   try {
     const r = await j('/api/roster');
-    $('#talk-meta').textContent = `${r.count} conseillers disponibles`;
     const sel = $('#talk-to');
     (r.advisers || []).forEach(a => {
       const o = document.createElement('option');
       o.value = a.file; o.textContent = a.title;
       sel.appendChild(o);
     });
+    sel.onchange = () => { TALK_CONV = null; renderThread([]); };
   } catch { }
-  refreshConvs();
+  const ta = $('#talk-input');
+  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 160) + 'px'; });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); talkSend(); }
+  });
+  $('#talk-form').addEventListener('submit', e => { e.preventDefault(); talkSend(); });
+  $('#talk-new').onclick = () => { TALK_CONV = null; renderThread([]); $('#talk-suggest').classList.remove('gone'); ta.focus(); };
+  $('#talk-history').onclick = () => { const d = $('#talk-convs'); d.hidden = !d.hidden; if (!d.hidden) refreshConvs(); };
+  document.querySelectorAll('.chat-suggest button').forEach(b =>
+    b.onclick = () => { ta.value = b.dataset.q; talkSend(); });
+  renderThread([]);
 }
+
 async function refreshConvs() {
   try {
     const d = await j('/api/chats');
     const box = $('#talk-convs');
-    if (!box) return;
     box.innerHTML = (d.chats || []).map(c => {
       const label = c.conv.startsWith('conseil-')
         ? '🏛 Conseil du ' + c.conv.slice(14) + '/' + c.conv.slice(12, 14)
-        : '💬 ' + c.conv;
+        : '💬 ' + (c.last ? c.last.slice(0, 28) : c.conv);
       return `<button data-conv="${esc(c.conv)}" class="${c.conv === TALK_CONV ? 'on' : ''}">${label}</button>`;
-    }).join('');
+    }).join('') || '<div class="mut" style="padding:10px">aucune conversation</div>';
     box.querySelectorAll('button').forEach(b => b.onclick = async () => {
-      TALK_CONV = b.dataset.conv;
+      TALK_CONV = b.dataset.conv; box.hidden = true;
+      $('#talk-suggest').classList.add('gone');
       await talkPoll();
-      refreshConvs();
     });
   } catch { }
 }
-function talkRender(msgs) {
-  $('#talk-thread').innerHTML = msgs.map(m => {
+
+function renderThread(msgs) {
+  const th = $('#talk-thread');
+  if (!msgs.length) {
+    th.innerHTML = `<div class="welcome"><b>◈ Parler au studio</b>
+      Pose une question sur le jeu, règle un agent, entretiens la mémoire,
+      crée un nouvel agent ou prévois une tâche de développement.<br><br>
+      Le studio réfléchit puis te répond, et propose des actions à valider d'un tap.</div>`;
+    return;
+  }
+  th.innerHTML = msgs.map(m => {
+    const me = m.role === 'user';
     const acts = (m.actions || []).map(a => a.done
       ? `<span class="act done">✓ ${esc(a.label)}</span>`
       : `<button class="act" data-aid="${esc(a.id)}">${esc(a.label)}</button>`).join('');
-    return `<div class="msg ${m.role === 'user' ? 'me' : 'them'}">
-      <div class="mwho">${m.role === 'user' ? 'Toi' : esc(WHO_FR[m.who] || m.who)}</div>
-      <div class="mtext">${esc(m.text)}</div>
-      ${acts ? `<div class="acts">${acts}</div>` : ''}</div>`;
-  }).join('') || '<div class="mut">…</div>';
-  $('#talk-thread').querySelectorAll('button.act').forEach(b =>
+    return `<div class="turn ${me ? 'me' : 'them'}">
+      <div class="ava">${me ? '🙂' : whoAva(m.who)}</div>
+      <div><div class="bubble">${esc(m.text)}</div>
+        ${acts ? `<div class="actbtns">${acts}</div>` : ''}</div></div>`;
+  }).join('');
+  th.querySelectorAll('button.act').forEach(b =>
     b.onclick = () => doChatAction(b.dataset.aid, b));
-  $('#talk-thread').scrollTop = $('#talk-thread').scrollHeight;
+  th.scrollTop = th.scrollHeight;
 }
+
+function showTyping() {
+  const th = $('#talk-thread');
+  th.insertAdjacentHTML('beforeend',
+    `<div class="turn them typing" id="typing"><div class="ava">◈</div>
+      <div class="bubble">le studio réfléchit<span class="dots"></span></div></div>`);
+  th.scrollTop = th.scrollHeight;
+}
+
 async function doChatAction(aid, btn) {
   btn.disabled = true; btn.textContent = '…';
   try {
@@ -265,53 +297,38 @@ async function doChatAction(aid, btn) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ conv: TALK_CONV, action_id: aid }) });
     if (r.error) { btn.disabled = false; alert('✗ ' + r.error); return; }
-    await talkPoll();
-    refreshAgents();
+    await talkPoll(); refreshAgents(); refreshMemory();
   } catch { btn.disabled = false; }
 }
+
 async function talkPoll() {
   if (!TALK_CONV) return;
   try {
     const d = await j('/api/chat/' + TALK_CONV);
-    talkRender(d.messages || []);
-    const last = (d.messages || [])[d.messages.length - 1];
+    const msgs = d.messages || [];
+    renderThread(msgs);
+    const last = msgs[msgs.length - 1];
     if (last && last.role !== 'user' && TALK_POLL) { clearInterval(TALK_POLL); TALK_POLL = null; }
   } catch { }
 }
+
 async function talkSend() {
-  const inp = $('#talk-input'), text = inp.value.trim();
+  const ta = $('#talk-input'), text = ta.value.trim();
   if (!text) return;
-  inp.value = '';
-  const r = await j('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ conv: TALK_CONV || undefined, text, to: $('#talk-to').value }) });
-  if (r.error) { alert('✗ ' + r.error); return; }
-  TALK_CONV = r.conv;
-  await talkPoll();
-  $('#talk-thread').insertAdjacentHTML('beforeend',
-    '<div class="mut" id="talk-typing">le conseiller réfléchit… (1 à 3 min)</div>');
-  if (TALK_POLL) clearInterval(TALK_POLL);
-  TALK_POLL = setInterval(talkPoll, 6000);
-}
-async function refreshMemory() {
+  ta.value = ''; ta.style.height = 'auto';
+  $('#talk-suggest').classList.add('gone');
   try {
-    const d = await j('/api/memory');
-    $('#mem-meta').textContent = `${d.count} souvenir(s) — rien ne s'efface jamais`;
-    const MK = { 'décision': '✓', 'rejet': '✗', 'règle': '■', 'contenu': '+', 'intégration': '⇧', 'note': '·' };
-    if ((d.entries || []).length) {
-      $('#mem-list').innerHTML = d.entries.map(e => `
-        <div class="jentry"><div class="jhead"><span class="jico">${MK[e.kind] || '·'}</span>
-          <span class="jtitle">${esc(e.title)}</span>
-          <span class="jago">${esc((e.t || '').slice(5, 16).replace('T', ' '))}</span></div>
-          ${e.detail ? `<div class="jdetail">${esc(e.detail)}</div>` : ''}</div>`).join('');
-    }
+    const r = await j('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ conv: TALK_CONV || undefined, text, to: $('#talk-to').value }) });
+    if (r.error) { alert('✗ ' + r.error); return; }
+    TALK_CONV = r.conv;
+    await talkPoll();
+    showTyping();
+    if (TALK_POLL) clearInterval(TALK_POLL);
+    TALK_POLL = setInterval(talkPoll, 5000);
   } catch { }
 }
-const talkBtn = $('#talk-send');
-if (talkBtn) {
-  talkBtn.onclick = talkSend;
-  $('#talk-input').addEventListener('keydown', e => { if (e.key === 'Enter') talkSend(); });
-  initTalk();
-}
+if ($('#talk-form')) initTalk();
 const memBtn = $('#mem-add');   // la Mémoire vit dans Décider, pas dans Parler
 if (memBtn) memBtn.onclick = async () => {
   const inp = $('#mem-input'), t = inp.value.trim();
