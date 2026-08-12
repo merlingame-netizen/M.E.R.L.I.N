@@ -45,10 +45,16 @@ def main(conv: str, adviser: str) -> int:
                      for r in rows[-8:])
     base = (
         f"{persona}\n\n"
-        f"MÉMOIRE DU DESIGN RETENU (ne contredis jamais ces décisions) :\n"
-        f"{memory.digest(600)}\n\n"
+        f"=== ÉTAT RÉEL DU STUDIO (utilise CES données, n'invente rien) ===\n"
+        f"{chat_actions.studio_state()}\n"
+        f"=== FIN DE L'ÉTAT ===\n\n"
         f"CONVERSATION :\n{hist}\n\n"
-        "Réponds à Maxime en FRANÇAIS, 2 à 4 phrases, concret et sans jargon.")
+        "Réponds à Maxime en FRANÇAIS. Règles de style STRICTES :\n"
+        "- ne dis JAMAIS « Bonjour » si la conversation a déjà commencé ;\n"
+        "- réponds DIRECTEMENT à la question, sans préambule ni « je peux te… » ;\n"
+        "- s'il demande une liste, DONNE la liste complète avec les vrais noms et "
+        "cadences ci-dessus, pas une promesse de la donner ;\n"
+        "- cite des chiffres et des noms réels, jamais de généralités.")
     # Deux versions : avec le catalogue d'actions, et une version nue de secours.
     prompt = base + "\n\n" + chat_actions.catalogue_for_prompt()
     prompt_plain = base
@@ -66,7 +72,7 @@ def main(conv: str, adviser: str) -> int:
     def _one(pr: str) -> str:
         try:
             p = subprocess.run(["bash", str(LLM_ASK), "--model", model,
-                                "--predict", "280", "--timeout", "200", "--ctx", "2048"],
+                                "--predict", "400", "--timeout", "280", "--ctx", "4096"],
                                input=pr, capture_output=True, text=True, timeout=240)
             return (p.stdout or "").strip()
         except Exception:

@@ -52,6 +52,47 @@ def agent_ids() -> dict:
     return {a["id"]: a.get("label", a["id"]) for a in _agents()}
 
 
+def studio_state() -> str:
+    """L'ÉTAT RÉEL du studio, en clair — sans ça le modèle répond dans le vague.
+
+    Mesuré : sans ces données, il improvise des listes d'agents inexactes et
+    tourne autour du pot. Avec, il cite les vraies cadences et les vrais noms."""
+    lines = []
+    state = Path.home() / ".cache" / "merlin-agents" / "state"
+    human = {"*/2 * * * *": "toutes les 2 min", "*/5 * * * *": "toutes les 5 min",
+             "*/10 * * * *": "toutes les 10 min", "*/15 * * * *": "tous les quarts d'heure",
+             "*/30 * * * *": "toutes les 30 min", "17 * * * *": "chaque heure",
+             "10 0-6 * * *": "chaque heure la nuit", "0 3 * * *": "à 3 h",
+             "20 2 * * *": "à 2 h 20", "0 7 * * *": "à 7 h", "40 6 * * *": "à 6 h 40",
+             "50 7,19 * * *": "2 fois par jour", "20 1,9,15,21 * * *": "4 fois par jour"}
+    lines.append("LES AGENTS DU STUDIO (id — rôle — cadence — état) :")
+    for a in _agents():
+        aid = a["id"]
+        cad = human.get(a.get("schedule", ""), a.get("schedule", "?"))
+        etat = "actif" if a.get("enabled") else "en pause"
+        last = ""
+        try:
+            st = json.loads((state / f"{aid}.json").read_text(encoding="utf-8"))
+            if st.get("summary"):
+                last = f" · dernier passage : {st['summary'][:70]}"
+        except Exception:
+            pass
+        lines.append(f"  {aid} — {a.get('label', aid)} — {cad} — {etat}{last}")
+    try:
+        import memory
+        lines.append(f"\nMÉMOIRE DU PROJET ({memory.count()} souvenirs) :\n{memory.digest(500)}")
+    except Exception:
+        pass
+    try:
+        import proposals as P
+        c = P.listing()["counts"]
+        lines.append(f"\nDÉCISIONS : {c.get('pending', 0)} en attente, "
+                     f"{c.get('accepted', 0)} acceptées, {c.get('rejected', 0)} rejetées.")
+    except Exception:
+        pass
+    return "\n".join(lines)
+
+
 def catalogue_for_prompt() -> str:
     """Ce que le LLM a le droit de proposer — court et en français simple.
 

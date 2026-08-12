@@ -390,6 +390,24 @@ async function refreshJournal() {
     </div>`).join('');
 }
 
+// ── Mémoire du jeu : élément de décision, affiché dans Décider ───────────────
+async function refreshMemory() {
+  try {
+    const d = await j('/api/memory');
+    const meta = $('#mem-meta');
+    if (meta) meta.textContent = `${d.count} souvenir(s) — rien ne s'efface jamais`;
+    const MK = { 'décision': '✓', 'rejet': '✗', 'règle': '■', 'contenu': '+', 'intégration': '⇧', 'note': '·' };
+    const list = $('#mem-list');
+    if (list && (d.entries || []).length) {
+      list.innerHTML = d.entries.map(e => `
+        <div class="jentry"><div class="jhead"><span class="jico">${MK[e.kind] || '·'}</span>
+          <span class="jtitle">${esc(e.title)}</span>
+          <span class="jago">${esc((e.t || '').slice(5, 16).replace('T', ' '))}</span></div>
+          ${e.detail ? `<div class="jdetail">${esc(e.detail)}</div>` : ''}</div>`).join('');
+    }
+  } catch { }
+}
+
 // ── Propositions : les agents proposent, l'humain tranche en un tap ──────────
 // Des noms français à l'écran, jamais des identifiants techniques.
 const WHO_FR = { 'gd-content-gap': 'Écrivain de cartes', 'gd-balance': 'Équilibreur',
@@ -398,7 +416,7 @@ const WHO_FR = { 'gd-content-gap': 'Écrivain de cartes', 'gd-balance': 'Équili
 const KIND_FR = { balance: 'équilibrage', content: 'nouvelle carte', design: 'game design',
   ux: 'ergonomie', bug: 'anomalie', infra: 'plateforme', merge: 'intégration' };
 async function refreshProposals() {
-  refreshMemory();   // la Mémoire est un élément de décision
+  refreshMemory();   // la Mémoire est un élément de décision : elle vit ici
   let d;
   try { d = await j('/api/proposals'); } catch { return; }
   const n = (d.counts || {}).pending || 0;
