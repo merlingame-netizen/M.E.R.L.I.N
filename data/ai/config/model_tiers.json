@@ -1,5 +1,5 @@
 {
-  "_comment": "Table UNIQUE des paliers de modèles pour l'outillage (routeur d'agents locaux). Le jeu a ses propres tables GDScript (addons/merlin_ai/brain_swarm_config.gd + ollama_backend.gd) — duplication connue, un agent d'audit émet une proposition quand elles divergent. Ne PAS coder de débit en dur ici : tok_s_fallback ne sert que si llm-bench-results.json est absent. Valeurs MESURÉES au bench du 2026-08-11 : e2b 14,5 tok/s (charge 87 s), e4b 9,8 tok/s (charge 110 s). Le coût dominant est le CHARGEMENT du modèle, pas la génération — d'où keep_alive long la nuit.",
+  "_comment": "Table UNIQUE des paliers de modèles pour l'outillage (routeur d'agents locaux). Le jeu a ses propres tables GDScript (addons/merlin_ai/brain_swarm_config.gd + ollama_backend.gd) — duplication connue, un agent d'audit émet une proposition quand elles divergent. Ne PAS coder de débit en dur ici : tok_s_fallback ne sert que si llm-bench-results.json est absent. Valeurs MESURÉES au bench du 2026-08-11 : e2b 14,5 tok/s (charge 87 s), e4b 9,8 tok/s (charge 110 s). Le coût dominant est le CHARGEMENT du modèle, pas la génération — d'où keep_alive long la nuit. ATTENTION mesuré : au-delà de num_ctx 2048, gemma4:e4b rend une réponse VIDE (rc=0, 0 token) — plafonné à 2048.",
   "version": "1.0",
   "updated": "2026-08-11",
   "tiers": [
@@ -19,7 +19,7 @@
       "name": "MOYEN",
       "tag": "gemma4:e4b-it-qat",
       "ram_mb": 6100,
-      "ctx": 4096,
+      "ctx": 2048,
       "shapes_ok": [
         "classify",
         "extract",
@@ -33,7 +33,7 @@
       "name": "DUR",
       "tag": "gemma4:12b-it-qat",
       "ram_mb": 7200,
-      "ctx": 8192,
+      "ctx": 4096,
       "shapes_ok": [
         "classify",
         "extract",

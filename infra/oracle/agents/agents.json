@@ -84,10 +84,18 @@
     {
       "id": "gd-content-gap",
       "label": "Idées — lacunes de contenu",
-      "schedule": "20 1 * * *",
+      "schedule": "20 1,9,15,21 * * *",
       "cmd": "a_gd_content.sh",
       "enabled": true,
-      "desc": "Lit les lacunes documentées du canon, choisit le biome le moins couvert et rédige une carte validée. Propose — n'écrit jamais dans le jeu."
+      "desc": "Lit les lacunes documentées du canon, choisit le biome le moins couvert et rédige une carte validée. Quatre fois par jour. Propose — n'écrit jamais dans le jeu."
+    },
+    {
+      "id": "gd-balance",
+      "label": "Idées — équilibrage",
+      "schedule": "50 7,19 * * *",
+      "cmd": "a_gd_balance.sh",
+      "enabled": true,
+      "desc": "Analyse l'équilibrage réel du corpus (effets, factions, verbes) et propose un ajustement chiffré. Deux fois par jour."
     },
     {
       "id": "coder-local",

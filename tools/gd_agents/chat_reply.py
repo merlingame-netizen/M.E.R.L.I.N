@@ -60,7 +60,7 @@ def main(conv: str, adviser: str) -> int:
     def _one(pr: str) -> str:
         try:
             p = subprocess.run(["bash", str(LLM_ASK), "--model", model,
-                                "--predict", "280", "--timeout", "200", "--ctx", "4096"],
+                                "--predict", "280", "--timeout", "200", "--ctx", "2048"],
                                input=pr, capture_output=True, text=True, timeout=240)
             return (p.stdout or "").strip()
         except Exception:

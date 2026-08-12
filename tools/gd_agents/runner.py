@@ -151,34 +151,42 @@ def run(agent_id: str, dry: bool = False) -> str:
     ok_card = card is not None and not errs
 
     # 4. Proposition — dégradée mais réelle si le LLM a failli.
-    if ok_card:
-        title = f"Nouvelle carte pour « {a['biome']} » ({a['lexical_field']})"
-        claim = (f"Le canon signale une lacune sur ce biome ; cette carte la comble "
-                 f"et passe le validateur sans erreur.")
+    # Sujet de la proposition : chaque analyseur nomme sa cible à sa façon.
+    sujet = (a.get("biome") or a.get("faction_faible")
+             or a.get("sujet") or cfg["label"])
+    if cfg["kind"] == "content" and ok_card:
+        title = f"Nouvelle carte pour « {sujet} » ({a.get('lexical_field', '')})"
+        claim = ("Le canon signale une lacune sur ce biome ; cette carte la comble "
+                 "et passe le validateur sans erreur.")
         change = {"summary": str(card.get("text", ""))[:400],
                   "target": "data/ai/training/curated_corpus.jsonl"}
-        mission = f"Carte générée pour {a['biome']} — acceptée, elle rejoint le corpus curé."
-        conf = 0.75 if not verdict.get("warnings") else 0.6
-        payload = card
+        mission = f"Carte générée pour {sujet} — acceptée, elle rejoint le corpus curé."
+        conf, payload = (0.75 if not verdict.get("warnings") else 0.6), card
+    elif raw and cfg["kind"] != "content":
+        # Agents d'ANALYSE (équilibrage, audit…) : la prose du modèle EST la
+        # proposition ; il n'y a pas de carte JSON à valider.
+        title = f"{cfg['label']} : {sujet}"
+        claim = raw.strip().split("\n")[0][:300]
+        change = {"summary": raw.strip()[:700], "target": "à décider avec Maxime"}
+        mission = raw.strip()[:1500]
+        conf, payload = 0.65, None
     else:
         why = (f"LLM indisponible — {why}" if not raw else
                "JSON illisible" if card is None else
                f"{len(errs)} erreur(s) de validation : {'; '.join(str(e)[:50] for e in errs[:2])}")
-        title = f"Lacune de contenu non comblée sur « {a['biome']} » ({why})"
-        claim = (f"L'analyse a identifié la lacune et rassemblé les contraintes, "
-                 f"mais la rédaction automatique a échoué : {why}.")
-        change = {"summary": ana.brief(a)[:600],
-                  "target": "data/ai/training/curated_corpus.jsonl"}
-        mission = (f"Rédiger à la main une carte pour le biome {a['biome']}, champ "
-                   f"lexical {a['lexical_field']}, verbes autorisés : "
-                   f"{', '.join(a['verbs'])}. Lacune visée : {a['gap']}")
+        title = f"{cfg['label']} — analyse seule sur « {sujet} » ({why})"
+        claim = (f"L'analyse a produit ses chiffres, mais la rédaction automatique "
+                 f"a échoué : {why}.")
+        change = {"summary": ana.brief(a)[:600], "target": "—"}
+        mission = f"Reprendre à la main l'analyse suivante :\n{ana.brief(a)[:1200]}"
         conf, payload = 0.2, None
 
+    kind = cfg["kind"] if (ok_card or cfg["kind"] != "content") else "design"
     prop = PROP.make(
-        agent_id, cfg["kind"] if ok_card else "design", title, claim, change, mission,
+        agent_id, kind, title, claim, change, mission,
         evidence=evidence,
-        impact={"axis": "contenu", "expected": f"+1 carte sur {a['biome']}",
-                "risk": "low"},
+        impact={"axis": "contenu" if kind == "content" else "équilibrage",
+                "expected": f"sur « {sujet} »", "risk": "low"},
         confidence=conf,
         model=plan.get("tag") or "none", tier=plan.get("tier"),
         cost={"secs": secs, "tokens_out": len(raw) // 4, "escalations": escal,

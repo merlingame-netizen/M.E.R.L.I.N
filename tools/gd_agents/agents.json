@@ -13,6 +13,18 @@
       "evidence_tokens": 500,
       "kind": "content",
       "desc": "Lit les `gaps` documentés du canon, choisit le biome le moins couvert, et rédige UNE carte conforme au schéma. La carte est validée par scenario_validator avant d'être proposée."
+    },
+    {
+      "id": "gd-balance",
+      "label": "Équilibreur",
+      "card": ".claude/agents/gd_difficulty.md",
+      "analyzer": "balance",
+      "shape": "compose",
+      "out_tokens": 200,
+      "deadline_s": 900,
+      "evidence_tokens": 400,
+      "kind": "balance",
+      "desc": "Mesure la distribution des effets, la couverture des factions et la diversité des verbes sur tout le corpus, puis propose un ajustement chiffré."
     }
   ]
 }
