@@ -224,7 +224,6 @@ async function initTalk() {
       sel.appendChild(o);
     });
   } catch { }
-  refreshMemory();
   refreshConvs();
 }
 async function refreshConvs() {
@@ -311,15 +310,16 @@ const talkBtn = $('#talk-send');
 if (talkBtn) {
   talkBtn.onclick = talkSend;
   $('#talk-input').addEventListener('keydown', e => { if (e.key === 'Enter') talkSend(); });
-  $('#mem-add').onclick = async () => {
-    const inp = $('#mem-input'), t = inp.value.trim();
-    if (t.length < 3) return;
-    const r = await j('/api/memory', { method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title: t, kind: 'règle' }) });
-    if (!r.error) { inp.value = ''; refreshMemory(); }
-  };
   initTalk();
 }
+const memBtn = $('#mem-add');   // la Mémoire vit dans Décider, pas dans Parler
+if (memBtn) memBtn.onclick = async () => {
+  const inp = $('#mem-input'), t = inp.value.trim();
+  if (t.length < 3) return;
+  const r = await j('/api/memory', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ title: t, kind: 'règle' }) });
+  if (!r.error) { inp.value = ''; refreshMemory(); }
+};
 
 // ── Santé : cinq voyants, trois couleurs, zéro jargon ────────────────────────
 function vital(id, state, text) {          // state: up (vert) | down (rouge) | idle
@@ -381,6 +381,7 @@ const WHO_FR = { 'gd-content-gap': 'Écrivain de cartes', 'gd-balance': 'Équili
 const KIND_FR = { balance: 'équilibrage', content: 'nouvelle carte', design: 'game design',
   ux: 'ergonomie', bug: 'anomalie', infra: 'plateforme', merge: 'intégration' };
 async function refreshProposals() {
+  refreshMemory();   // la Mémoire est un élément de décision
   let d;
   try { d = await j('/api/proposals'); } catch { return; }
   const n = (d.counts || {}).pending || 0;

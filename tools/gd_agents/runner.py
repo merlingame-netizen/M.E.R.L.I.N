@@ -156,11 +156,12 @@ def run(agent_id: str, dry: bool = False) -> str:
              or a.get("sujet") or cfg["label"])
     if cfg["kind"] == "content" and ok_card:
         title = f"Nouvelle carte pour « {sujet} » ({a.get('lexical_field', '')})"
-        claim = ("Le canon signale une lacune sur ce biome ; cette carte la comble "
-                 "et passe le validateur sans erreur.")
+        claim = ("Le canon signale une lacune sur ce biome ; cet exemple d'entraînement "
+                 "la comble et passe le validateur sans erreur.")
         change = {"summary": str(card.get("text", ""))[:400],
                   "target": "data/ai/training/curated_corpus.jsonl"}
-        mission = f"Carte générée pour {sujet} — acceptée, elle rejoint le corpus curé."
+        mission = (f"Exemple d'entraînement pour {sujet} — accepté, il rejoint le jeu "
+                   f"d'entraînement du modèle MERLIN.")
         conf, payload = (0.75 if not verdict.get("warnings") else 0.6), card
     elif raw and cfg["kind"] != "content":
         # Agents d'ANALYSE (équilibrage, audit…) : la prose du modèle EST la

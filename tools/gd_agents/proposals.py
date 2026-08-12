@@ -26,6 +26,8 @@ from pathlib import Path
 BASE = Path.home() / ".cache" / "merlin-proposals"
 INBOX, ACCEPTED, REJECTED = BASE / "inbox", BASE / "accepted", BASE / "rejected"
 MISSIONS = Path.home() / ".cache" / "merlin-missions" / "queue"
+# Jeu d'entraînement du modèle — PAS du contenu de jeu : les scénarios
+# sont générés 100 % en direct par le LLM (décision Maxime, 2026-08-12).
 CURATED = "data/ai/training/curated_corpus.jsonl"
 
 SCHEMA = "merlin.proposal/1"

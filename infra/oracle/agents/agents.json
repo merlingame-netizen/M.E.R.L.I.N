@@ -83,11 +83,11 @@
     },
     {
       "id": "gd-content-gap",
-      "label": "Idées — lacunes de contenu",
+      "label": "Professeur du modèle",
       "schedule": "20 1,9,15,21 * * *",
       "cmd": "a_gd_content.sh",
       "enabled": true,
-      "desc": "Lit les lacunes documentées du canon, choisit le biome le moins couvert et rédige une carte validée. Quatre fois par jour. Propose — n'écrit jamais dans le jeu."
+      "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN (le jeu génère ses scénarios 100 % en direct — ces cartes ne sont pas du contenu de jeu). Quatre fois par jour."
     },
     {
       "id": "gd-balance",
@@ -107,11 +107,11 @@
     },
     {
       "id": "corpus-night",
-      "label": "Usine à corpus (Gemma)",
+      "label": "Jeu d'entraînement (nuit)",
       "schedule": "10 0-6 * * *",
       "cmd": "a_corpus_night.sh",
       "enabled": true,
-      "desc": "Génère des cartes Gemma 4 contraintes par schéma, filtrées par scenario_validator. Rejets journalisés (auto_rejects). Cède la place au jeu, 35 min max par passage."
+      "desc": "Produit en masse des exemples pour le fine-tune merlin-e4b, filtrés par le validateur. Ce n'est PAS du contenu de jeu : le jeu génère ses scénarios en direct."
     },
     {
       "id": "playtest-bot",

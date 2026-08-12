@@ -4,7 +4,7 @@
   "agents": [
     {
       "id": "gd-content-gap",
-      "label": "Comble une lacune de contenu",
+      "label": "Professeur du modèle",
       "card": ".claude/agents/content_card_writer.md",
       "analyzer": "content_gap",
       "shape": "compose",
@@ -12,7 +12,7 @@
       "deadline_s": 900,
       "evidence_tokens": 500,
       "kind": "content",
-      "desc": "Lit les `gaps` documentés du canon, choisit le biome le moins couvert, et rédige UNE carte conforme au schéma. La carte est validée par scenario_validator avant d'être proposée."
+      "desc": "Écrit des exemples d'entraînement pour le fine-tune merlin-e4b. Les scénarios du jeu étant générés 100 % en direct par le LLM, ces cartes ne sont PAS du contenu de jeu : ce sont des leçons destinées à faire écrire le modèle mieux. Vise les lacunes documentées du canon."
     },
     {
       "id": "gd-balance",

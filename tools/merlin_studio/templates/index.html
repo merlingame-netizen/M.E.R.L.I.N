@@ -82,6 +82,19 @@
    </div>
   </div>
   <div class="win">
+   <div class="win-bar"><span class="t">🧠 Mémoire du jeu</span><span class="hatch"></span>
+    <span class="meta" id="mem-meta">…</span></div>
+   <div class="win-body">
+    <div class="mut" style="margin-bottom:10px">Ce qui est décidé ne se re-propose plus :
+     tous les agents lisent cette mémoire avant de travailler.</div>
+    <div class="row" style="gap:8px;margin-bottom:10px">
+     <input id="mem-input" placeholder="Graver une règle, une décision, une idée retenue…" style="flex:1">
+     <button class="go sm" id="mem-add" style="min-height:48px">📌 Graver</button>
+    </div>
+    <div id="mem-list" class="journal"><div class="mut">la mémoire se remplit à chaque décision</div></div>
+   </div>
+  </div>
+  <div class="win">
    <div class="win-bar"><span class="t">📖 Journal de bord</span><span class="hatch"></span>
     <span class="meta" id="journal-meta">…</span></div>
    <div class="win-body">
@@ -106,17 +119,6 @@
      <input id="talk-input" placeholder="Parle du jeu, du design, de ce qui est retenu…" style="flex:1">
      <button class="go" id="talk-send" style="min-height:48px">Envoyer</button>
     </div>
-   </div>
-  </div>
-  <div class="win">
-   <div class="win-bar"><span class="t">🧠 Mémoire du jeu</span><span class="hatch"></span>
-    <span class="meta" id="mem-meta">…</span></div>
-   <div class="win-body">
-    <div class="row" style="gap:8px;margin-bottom:10px">
-     <input id="mem-input" placeholder="Graver un souvenir : une règle, une décision, une idée retenue…" style="flex:1">
-     <button class="go sm" id="mem-add" style="min-height:48px">📌 Graver</button>
-    </div>
-    <div id="mem-list" class="journal"><div class="mut">la mémoire est vide — elle se remplit à chaque décision</div></div>
    </div>
   </div>
  </section>

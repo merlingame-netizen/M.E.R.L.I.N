@@ -62,3 +62,15 @@
 - **PAYG IMPÉRATIF 0 €** : budget Oracle double alerte (ACTUAL 1 centime + FORECAST 50 %,
   2 emails), audit ressources = zéro payant (A1 plein free, 100/200 Go), montant non nul
   → carte Décider urgente + ntfy. Extension disque growfs = 0 € (volume déjà compté).
+
+## 2026-08-12: Scénarios 100 % LLM — le contenu statique n'est plus du contenu de jeu
+- **Règle** : les scénarios du jeu sont générés **100 % en direct par le LLM**. Aucun pool
+  de cartes statiques en secours. `_sel_fallback_pool()` (merlin_scenario.gd) est un
+  **vestige à supprimer** → proposition à faire remonter dans Décider.
+- **Conséquence** : l'agent « Écrivain de cartes » devient le **« Professeur du modèle »** —
+  ses cartes sont des EXEMPLES D'ENTRAÎNEMENT pour le fine-tune merlin-e4b, jamais du
+  contenu joué. Idem pour l'usine nocturne, renommée « Jeu d'entraînement ».
+- **Priorités des agents** (choix Maxime) : qualité des scénarios générés en direct ·
+  équilibrage et mécaniques · stabilité et expérience de jeu · préparation du fine-tune.
+- **Interface** : PARLER = uniquement le chat IA. DÉCIDER = tous les éléments de décision
+  (propositions, **Mémoire**, journal de bord).
