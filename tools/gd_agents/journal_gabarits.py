@@ -104,6 +104,9 @@ def _scene(fait: dict, causalite: dict) -> str:
     """Un fait devient un paragraphe daté, avec son acteur nommé."""
     tete = f"**{fait['heure']} — {_nom(fait['acteur']).upper()}**"
     corps = fait["titre"]
+    n = fait.get("repetitions", 1)
+    if n > 1:
+        corps += f" — et {n - 1} autre(s) cas identiques dans la nuit"
     if fait.get("detail"):
         corps += f" {fait['detail']}" if corps.endswith((".", "!", "?")) else f" — {fait['detail']}"
     if not corps.endswith((".", "!", "?", "»")):
@@ -145,21 +148,19 @@ def _fils(fiche: dict) -> str:
 def rediger(fiche: dict) -> str:
     """Le chapitre complet, en français, sans un seul appel au modèle."""
     faits = fiche.get("faits", [])
-    saillants = fiche.get("saillants", [])
-    # On ne raconte pas tout : les cinq faits de plus haut poids portent la nuit,
-    # le reste est consultable dans « les faits ».
-    # Les faits sont CHOISIS par poids, mais RACONTÉS dans l'ordre où ils se sont
-    # produits : un récit qui saute de 17 h 58 à 18 h 28 puis revient à 15 h 58
-    # n'est plus un récit.
-    vus, retenus = set(), []
-    for f in saillants:
-        cle = (f["acteur"], f["titre"][:40])
-        if cle in vus:
-            continue
-        vus.add(cle)
-        retenus.append(f)
+    # Cinq fois le même acteur disant la même chose n'est pas cinq scènes : c'est
+    # une scène et un chiffre. On regroupe sur TOUS les faits — les répétitions
+    # se cachent dans la masse, pas dans les cinq déjà retenus —, on garde les
+    # cinq groupes les plus lourds, et on les raconte dans l'ordre où ils se sont
+    # produits : un récit qui saute de 17 h 58 à 15 h 58 n'en est plus un.
+    groupes: dict[tuple, list] = {}
+    for f in faits:
+        groupes.setdefault((f["acteur"], f["type"], f.get("detail", "")[:60]), []).append(f)
+    retenus = [{**min(g, key=lambda x: x["t"]), "repetitions": len(g)}
+               for g in groupes.values()]
+    retenus.sort(key=lambda f: (-f["poids"], -f["repetitions"], -f["t"]))
     scenes = [_scene(f, fiche.get("causalite", {}))
-              for f in sorted(retenus, key=lambda x: x["t"])]
+              for f in sorted(retenus[:5], key=lambda x: x["t"])]
 
     entete = (f"**JOURNAL DE L'ATELIER — {fiche.get('jour', '')} · chapitre {fiche.get('n', '?')}**\n"
               f"*« {_titre_court(fiche)} »*")

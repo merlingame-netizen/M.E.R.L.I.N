@@ -177,13 +177,15 @@ def _decisions(depuis: float) -> list[dict]:
         if not dossier.exists():
             continue
         for f in dossier.glob("*.json"):
-            try:
-                if f.stat().st_mtime < depuis:
-                    continue
-            except Exception:
-                continue
             p = _lire_json(f, {})
             if not p:
+                continue
+            # On date sur `decided_at`, JAMAIS sur la date du fichier : le codeur
+            # réécrit chaque proposition à chaque étape qu'il grave, ce qui
+            # rafraîchit toutes les dates de fichier d'un coup. Filtrer dessus
+            # faisait passer 39 décisions vieilles de plusieurs jours pour
+            # « 39 décisions de ta main cette nuit ».
+            if _ts(p.get("decided_at")) < depuis:
                 continue
             fil = "proposition:" + str(p.get("id", ""))
             t0 = _ts(p.get("decided_at") or p.get("created"))
