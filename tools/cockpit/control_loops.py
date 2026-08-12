@@ -229,7 +229,7 @@ def _gen_gemma(canon, rng, recent=None) -> dict | None:
                                "format": _card_schema(canon, verbs),
                                "keep_alive": os.environ.get("OLLAMA_KEEP_ALIVE", "30m"),
                                "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
-                                           "num_ctx": 4096, "temperature": 0.85,
+                                           "num_ctx": 2048, "temperature": 0.85,
                                            "num_predict": 280}},
                          timeout=600)
         card = _extract_card(out.get("response", ""))

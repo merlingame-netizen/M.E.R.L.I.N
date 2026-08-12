@@ -17,7 +17,7 @@ PLAN="$(python3 "$REPO/tools/gd_agents/router.py" --explain "$@" 2>&1 >/dev/null
 TAG="$(python3 "$REPO/tools/gd_agents/router.py" "$@" 2>/dev/null)"
 [ -n "$TAG" ] || { echo "aucun palier utilisable: $PLAN" >&2; exit 1; }
 
-CTX="$(printf '%s' "$PLAN"    | python3 -c "import json,sys; print(json.load(sys.stdin)['ctx'])" 2>/dev/null || echo 4096)"
+CTX="$(printf '%s' "$PLAN"    | python3 -c "import json,sys; print(json.load(sys.stdin)['ctx'])" 2>/dev/null || echo 2048)"
 THREADS="$(printf '%s' "$PLAN" | python3 -c "import json,sys; print(json.load(sys.stdin)['num_thread'])" 2>/dev/null || echo 4)"
 KEEP="$(printf '%s' "$PLAN"   | python3 -c "import json,sys; print(json.load(sys.stdin)['keep_alive'])" 2>/dev/null || echo 5m)"
 EST="$(printf '%s' "$PLAN"    | python3 -c "import json,sys; print(json.load(sys.stdin)['est_secs'])" 2>/dev/null || echo 180)"

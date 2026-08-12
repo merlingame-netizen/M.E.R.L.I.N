@@ -44,7 +44,7 @@ def main() -> int:
         "deux questions courtes et franches qui l'aident à trancher ou approfondir. "
         "Ne poste rien d'autre.")
     try:
-        p = subprocess.run(["bash", str(LLM_ASK), "--timeout", "420", "--ctx", "4096"],
+        p = subprocess.run(["bash", str(LLM_ASK), "--timeout", "420", "--ctx", "2048"],
                            input=prompt, capture_output=True, text=True, timeout=480)
         text = (p.stdout or "").strip()
     except Exception:
