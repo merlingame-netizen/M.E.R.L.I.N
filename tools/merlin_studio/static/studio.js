@@ -273,6 +273,49 @@ async function initTalk() {
   document.querySelectorAll('.chat-suggest button').forEach(b =>
     b.onclick = () => { ta.value = b.dataset.q; talkSend(); });
   renderThread([]);
+  refreshBoite();
+}
+
+/* ── La boîte aux lettres ───────────────────────────────────────────────────
+   Avant : un agent ouvrait une conversation et RIEN ne le disait. Il fallait
+   ouvrir Parler, ouvrir l'historique, repérer le bon fil, le taper — quatre
+   gestes pour découvrir qu'on t'avait écrit. Maintenant une pastille le dit, et
+   un tap ouvre le fil non lu le plus récent. */
+async function refreshBoite() {
+  let d;
+  try { d = await j('/api/boite'); } catch { return; }
+  const n = d.non_lus || 0;
+  const pastille = $('#dock-unread');
+  if (pastille) { pastille.textContent = n; pastille.hidden = !n; }
+  const banniere = $('#talk-boite');
+  if (!banniere) return;
+  const attente = (d.fils || []).filter(f => f.non_lu);
+  if (!attente.length) { banniere.hidden = true; return; }
+  banniere.hidden = false;
+  banniere.innerHTML = attente.slice(0, 3).map(f =>
+    `<button class="go sm" data-ouvrir="${esc(f.conv)}" style="width:100%;text-align:left">
+       ✉ <b>${esc(WHO_FR[f.qui] || _conseiller(f.qui))}</b> — ${esc((f.sujet || f.dernier).slice(0, 60))}
+     </button>`).join('');
+  banniere.querySelectorAll('button[data-ouvrir]').forEach(b => b.onclick = () => ouvrirFil(b.dataset.ouvrir));
+}
+
+function _conseiller(f) {
+  // « .claude/agents/gd_difficulty.md » → « gd difficulty »
+  return String(f || '').replace(/^.*\//, '').replace(/\.md$/, '').replace(/_/g, ' ') || 'un agent';
+}
+
+async function ouvrirFil(conv) {
+  TALK_CONV = conv;
+  const box = $('#talk-convs'); if (box) box.hidden = true;
+  const sug = $('#talk-suggest'); if (sug) sug.classList.add('gone');
+  showTab('talk');
+  await talkPoll();
+  // Marquer lu APRÈS affichage : si le rendu échoue, le fil reste signalé.
+  try {
+    await j('/api/boite/lu', { method: 'POST', headers: { 'content-type': 'application/json' },
+                               body: JSON.stringify({ conv }) });
+  } catch {}
+  refreshBoite();
 }
 
 async function refreshConvs() {
@@ -501,6 +544,8 @@ const CREW_ROLE = {
   'design-council': 'Ouvre le conseil de design du matin',
   'daily-report': 'Résume les dernières 24 heures',
   'journal': 'Écrit le chapitre du jour, sans modèle',
+  'relance': 'Rattrape tes messages restés sans réponse',
+  'parole': 'Laisse les agents te parler quand ça le mérite',
   'coder': 'Écrit du code (Claude, sur demande)',
   'gd-content-gap': 'Écrit des exemples pour entraîner le modèle',
   'gd-balance': 'Mesure l\'équilibrage et propose des ajustements',
@@ -930,7 +975,7 @@ if (mBtn) mBtn.onclick = async () => {
    onglet déclare ce qu'il a besoin de savoir, et tout s'arrête quand l'écran
    n'est plus visible. Les pastilles de la barre restent à jour partout : c'est
    leur seule raison d'être. */
-const BARRE = () => { refreshClock(); refreshSum(); refreshProposals(); };
+const BARRE = () => { refreshClock(); refreshSum(); refreshProposals(); refreshBoite(); };
 const PAR_ONGLET = {
   play:    () => { refreshPlay(); refreshRun(); },
   journal: () => { refreshChapitres(); refreshJournal(); },

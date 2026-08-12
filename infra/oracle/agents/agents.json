@@ -184,6 +184,22 @@
       "schedule": "30 6 * * *",
       "enabled": true,
       "desc": "Grave le chapitre du jour : ce que les agents ont fait, ce que tu as décidé, ce qui a bougé et ce qui reste en suspens. Aucun appel au modèle — il ne peut pas se taire."
+    },
+    {
+      "id": "relance",
+      "label": "Le Facteur",
+      "cmd": "a_relance.sh",
+      "schedule": "*/10 * * * *",
+      "enabled": true,
+      "desc": "Rattrape les messages que tu as envoyés et auxquels aucun agent n'a répondu — le cas où le modèle était occupé au moment de l'envoi."
+    },
+    {
+      "id": "parole",
+      "label": "La Parole",
+      "cmd": "a_parole.sh",
+      "schedule": "25 * * * *",
+      "enabled": true,
+      "desc": "Laisse les agents t'interpeller quand quelque chose le mérite vraiment : une scène qui casse deux fois, un écran figé, un patch annulé. 2 fils par jour maximum, aucun appel au modèle."
     }
   ]
 }

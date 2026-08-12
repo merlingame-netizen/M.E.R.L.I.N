@@ -342,6 +342,12 @@ code { color: var(--blue); }
 .jtitle.err, .crew-what.err, .jdetail.err { color: var(--red); }
 .crew-what.err { opacity: 1; }
 
+/* ── La boîte aux lettres, en tête de Parler ────────────────────────────── */
+.boite { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--gold-dim); }
+.boite button { border-color: var(--gold-dim); }
+.boite button b { color: var(--gold); }
+
 /* ── Le chapitre : le seul endroit du portail qui se LIT vraiment ───────── */
 .chapitre { padding: 4px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
 .chapitre:last-child { border-bottom: 0; margin-bottom: 0; }

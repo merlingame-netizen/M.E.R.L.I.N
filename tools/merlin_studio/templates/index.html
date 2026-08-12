@@ -40,7 +40,7 @@
   <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
   <button data-tab="journal"><span class="g">📖</span>Journal</button>
   <button data-tab="ideas"><span class="g">💡</span>Décider<span class="pill" id="dock-pending" hidden></span></button>
-  <button data-tab="talk"><span class="g">💬</span>Parler</button>
+  <button data-tab="talk"><span class="g">💬</span>Parler<span class="pill" id="dock-unread" hidden></span></button>
   <button data-tab="health"><span class="g">✚</span>Santé</button>
   <button data-tab="cogs" class="cog" title="Coulisses — le détail technique"><span class="g">⚙</span></button>
  </nav>
@@ -179,6 +179,8 @@
    </div>
    <div id="talk-convs" class="chat-drawer" hidden></div>
   </header>
+  <!-- Qui t'a écrit sans que tu demandes rien. Un tap ouvre le fil. -->
+  <div class="boite" id="talk-boite" hidden></div>
   <div id="talk-thread" class="chat-thread"></div>
   <div class="chat-suggest" id="talk-suggest">
    <button data-q="Quelles décisions de design sont retenues à ce jour ?">Ce qui est décidé</button>
