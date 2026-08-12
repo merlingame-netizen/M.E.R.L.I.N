@@ -172,7 +172,27 @@ def parse(reply: str) -> tuple[str, list[dict]]:
     return "\n".join(keep).strip(), actions
 
 
-def execute(action: dict) -> dict:
+def _texte_mission(resume: str, demande: str) -> str:
+    """Le texte que lira le codeur : les MOTS DE MAXIME d'abord.
+
+    Mesuré sur un cas réel : Maxime écrit « la deuxième apparition de MERLIN une
+    fois le biome sélectionné est inutile, on doit voir lentement la scène se
+    construire… », le modèle résume en « Refactorisation séquence apparition
+    biome/HUD » — il a interverti MERLIN et le biome, et jeté « lentement »,
+    « plus animée », « plus d'éléments graphiques » et l'ordre d'apparition du
+    HUD. Un codeur qui reçoit ce résumé ne peut PAS faire le travail demandé.
+    La demande d'origine est donc la source, le résumé n'est qu'un titre."""
+    resume = str(resume or "").strip()
+    demande = str(demande or "").strip()
+    if not demande:
+        return resume
+    return (f"DEMANDE DE MAXIME, MOT POUR MOT :\n« {demande[:1500]} »\n\n"
+            f"Lecture qu'en a faite l'assistant (indicative, elle peut se tromper) :\n"
+            f"{resume[:400]}\n\n"
+            "En cas de désaccord entre les deux, la demande de Maxime fait foi.")
+
+
+def execute(action: dict, demande: str = "") -> dict:
     """Exécute une action DÉJÀ validée (relue depuis le message stocké)."""
     verb, target, value = action["verb"], action.get("target", ""), action.get("value", "")
     try:
@@ -182,16 +202,20 @@ def execute(action: dict) -> dict:
         if verb == "mission.queue":
             MISSIONS.mkdir(parents=True, exist_ok=True)
             name = time.strftime("%Y%m%d-%H%M%S") + "-chat.md"
-            (MISSIONS / name).write_text(value, encoding="utf-8")
+            (MISSIONS / name).write_text(_texte_mission(value, demande), encoding="utf-8")
             return {"ok": True, "effect": f"mission {name} en file (codeur au prochain tour)"}
         if verb == "task.plan":
             # Une tâche prévue devient une carte Décider (pas d'exécution directe).
             sys.path.insert(0, str(HERE))
             import proposals as P
             P.write(P.make("chat", "design", "Tâche prévue : " + value[:60],
-                           "Tâche notée depuis Parler, à planifier.",
-                           {"summary": value, "target": "à planifier"},
-                           value, confidence=0.6,
+                           # Le claim porte les MOTS DE MAXIME, pas le résumé du
+                           # modèle : c'est ce qu'on relira dans six mois.
+                           (f"Demande de Maxime : « {demande[:300]} »" if demande
+                            else "Tâche notée depuis Parler, à planifier."),
+                           {"summary": _texte_mission(value, demande),
+                            "target": "à planifier"},
+                           _texte_mission(value, demande), confidence=0.6,
                            impact={"axis": "dev", "expected": value[:50], "risk": "low"}))
             return {"ok": True, "effect": "tâche ajoutée à Décider"}
         if verb == "agent.create":
@@ -219,7 +243,7 @@ def execute(action: dict) -> dict:
     return {"error": "verbe inconnu"}
 
 
-def execute_plan(actions: list[dict]) -> list[dict]:
+def execute_plan(actions: list[dict], demande: str = "") -> list[dict]:
     """Exécute un PLAN entier (le « Tout lancer » de l'orchestrateur).
 
     Chaque action garde son propre résultat : un échec n'arrête pas les autres,
@@ -229,7 +253,7 @@ def execute_plan(actions: list[dict]) -> list[dict]:
         if a.get("done"):
             out.append({"id": a["id"], "ok": True, "effect": "déjà fait"})
             continue
-        res = execute(a)
+        res = execute(a, demande)
         res["id"] = a["id"]
         res["label"] = a.get("label", "")
         out.append(res)

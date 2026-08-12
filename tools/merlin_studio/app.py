@@ -515,6 +515,21 @@ Fenêtre ouverte encore {left} min.</p>
         M = _gd("memory")
         return jsonify({"conv": conv, "messages": M.chat_read(conv)})
 
+    def _derniere_demande(M, conv: str) -> str:
+        """Le dernier message de Maxime dans ce fil — la source de vérité.
+
+        Ce qui part au codeur ne doit pas être le résumé du modèle : mesuré, ce
+        résumé a interverti « MERLIN » et « le biome » et jeté « lentement »,
+        « plus animée » et l'ordre d'apparition du HUD. Les mots d'origine
+        accompagnent donc chaque mission."""
+        try:
+            for m in reversed(M.chat_read(conv, limit=12)):
+                if m.get("role") == "user" and str(m.get("text", "")).strip():
+                    return str(m["text"]).strip()
+        except Exception:
+            pass
+        return ""
+
     @app.route("/api/chat/action", methods=["POST"])
     def api_chat_action():
         # Le front n'envoie qu'un id ; le backend relit l'action depuis le
@@ -533,7 +548,7 @@ Fenêtre ouverte encore {left} min.</p>
                 return jsonify({"error": "action introuvable"}), 404
             if action.get("done"):
                 return jsonify({"ok": True, "effect": "déjà fait"})
-            res = CA.execute(action)
+            res = CA.execute(action, _derniere_demande(M, conv))
             if res.get("ok"):
                 M.chat_mark_action_done(conv, aid)
                 M.chat_append(conv, "assistant", "studio", "✓ " + res["effect"])
@@ -563,7 +578,7 @@ Fenêtre ouverte encore {left} min.</p>
                         todo.append(a)
             if not todo:
                 return jsonify({"ok": True, "results": [], "effect": "rien à lancer"})
-            results = CA.execute_plan(todo)
+            results = CA.execute_plan(todo, _derniere_demande(M, conv))
             for res in results:
                 if res.get("ok"):
                     M.chat_mark_action_done(conv, res["id"])
