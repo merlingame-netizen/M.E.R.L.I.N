@@ -41,8 +41,14 @@ def analyze(seed: int | None = None) -> dict:
     sc = GC.scalars()
     caps = GC.dict_ints("EFFECT_CAPS")
 
+    # Même règle que pacing : un défaut n'est pas une mesure.
+    manquantes: list[str] = []
+
     def v(name, default=0):
-        return sc[name]["value"] if name in sc else default
+        if name in sc:
+            return sc[name]["value"]
+        manquantes.append(name)
+        return default
 
     cible = v("SESSION_CARDS_TARGET", 30)
     gain_win = v("FAVEURS_PER_MINIGAME_WIN", 3)
@@ -80,6 +86,9 @@ def analyze(seed: int | None = None) -> dict:
         "multiplicateur_max": mult_max, "cap_declare": cap_declare,
         "code_ecarts": ecarts,
         "regles_verifiees": 2,
+        "constantes_manquantes": manquantes,
+        "mesure_reelle": not manquantes,
+        "source_lue": GC.SOURCE.get("dit", ""),
     }
 
 
@@ -126,6 +135,11 @@ def change(a: dict) -> dict | None:
 
 def evidence(a: dict) -> list[dict]:
     ec = a.get("code_ecarts") or []
+    if not a.get("mesure_reelle", True):
+        return [{"source": a.get("source_lue", "le jeu"),
+                 "metric": f"{len(a['constantes_manquantes'])} constante(s) d'économie "
+                           f"introuvable(s) : aucune mesure possible",
+                 "quote": ", ".join(a["constantes_manquantes"][:6])}]
     return [
         {"source": "simulation d'une session cible",
          "metric": f"{a['faveurs_par_session']} faveurs gagnées sur {a['cartes_session']} "
@@ -148,6 +162,11 @@ def evidence(a: dict) -> list[dict]:
 
 def brief(a: dict) -> str:
     ec = a.get("code_ecarts") or []
+    if not a.get("mesure_reelle", True):
+        return (f"Source lue : {a.get('source_lue', '?')}\n"
+                f"Constantes d'économie introuvables : "
+                f"{', '.join(a['constantes_manquantes'][:8])}\n"
+                "Dis en 3 phrases ce que cela empêche, sans inventer de chiffre.")
     return (
         f"Faveurs gagnées sur une session de {a['cartes_session']} cartes : "
         f"{a['faveurs_par_session']} (réussite {a['faveurs_win']}, participation "

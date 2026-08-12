@@ -31,8 +31,18 @@ MARGE_MIN = 0.25
 def analyze(seed: int | None = None) -> dict:
     sc = GC.scalars()
 
+    # `default` ne doit JAMAIS passer pour une mesure. Le jeu réel n'a pas de
+    # fichier de constantes d'équilibrage : le mieux qu'on trouve est
+    # `merlin_visual.gd`, qui ne contient AUCUNE de ces clés. Sans ce compteur,
+    # l'analyseur rendait « vie 100, drain 1, victoire à 25 » — ses propres
+    # valeurs par défaut — présentées à Maxime comme les chiffres de son jeu.
+    manquantes: list[str] = []
+
     def v(name, default=None):
-        return sc[name]["value"] if name in sc else default
+        if name in sc:
+            return sc[name]["value"]
+        manquantes.append(name)
+        return default
 
     vie = v("LIFE_ESSENCE_START", 100)
     drain = v("LIFE_ESSENCE_DRAIN_PER_CARD", 1)
@@ -69,6 +79,10 @@ def analyze(seed: int | None = None) -> dict:
         "echecs_tolerables": echecs_tolerables,
         "code_ecarts": ecarts,
         "regles_verifiees": 3,
+        # La franchise du relevé : combien de chiffres viennent VRAIMENT du jeu.
+        "constantes_manquantes": manquantes,
+        "mesure_reelle": not manquantes,
+        "source_lue": GC.SOURCE.get("dit", ""),
     }
 
 
@@ -123,6 +137,17 @@ def change(a: dict) -> dict | None:
 
 def evidence(a: dict) -> list[dict]:
     ec = a.get("code_ecarts") or []
+    if not a.get("mesure_reelle", True):
+        # On ne maquille pas une absence en mesure. C'est un constat utile en
+        # soi : le jeu n'expose pas ses règles de rythme dans des constantes
+        # lisibles, donc personne — ni agent, ni humain — ne peut les vérifier.
+        return [{"source": a.get("source_lue", "le jeu"),
+                 "metric": f"{len(a['constantes_manquantes'])} constante(s) de rythme "
+                           f"introuvable(s) dans le jeu : aucune mesure possible",
+                 "quote": ", ".join(a["constantes_manquantes"][:6])},
+                {"source": "conséquence",
+                 "metric": "le rythme du jeu n'est réglé nulle part de façon lisible — "
+                           "il est codé en dur ou calculé ailleurs"}]
     return [
         {"source": "simulation d'une run (aucun dégât subi)",
          "metric": f"le joueur tient {a['cartes_max_sans_degat']} cartes sur la seule usure "
@@ -144,6 +169,14 @@ def evidence(a: dict) -> list[dict]:
 
 def brief(a: dict) -> str:
     ec = a.get("code_ecarts") or []
+    if not a.get("mesure_reelle", True):
+        return (
+            f"Source lue : {a.get('source_lue', '?')}\n"
+            f"Constantes de rythme introuvables : "
+            f"{', '.join(a['constantes_manquantes'][:8])}\n"
+            "Le jeu ne déclare pas ces règles dans des constantes lisibles.\n"
+            "Dis en 3 phrases pourquoi c'est un problème pour régler le rythme, "
+            "sans inventer de chiffre.")
     return (
         f"Barre de vie au départ : {a['vie_depart']} · usure {a['drain']} PV par carte\n"
         f"Sans subir un seul dégât, le joueur tient {a['cartes_max_sans_degat']} cartes\n"
