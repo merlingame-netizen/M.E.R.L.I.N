@@ -11,5 +11,14 @@
   "icons": [
     { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "_shortcuts": "Appui long sur l'icône : on va droit au but, sans passer par Jouer.",
+  "shortcuts": [
+    { "name": "Journal de bord", "short_name": "Journal", "url": "/?tab=journal",
+      "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Décider", "short_name": "Décider", "url": "/?tab=ideas",
+      "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Parler aux agents", "short_name": "Parler", "url": "/?tab=talk",
+      "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }] }
   ]
 }

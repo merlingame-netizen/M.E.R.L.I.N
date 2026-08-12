@@ -262,7 +262,11 @@ def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = N
     # Mémoire absolue : toute décision se grave, avec sa raison. Jamais d'effacement.
     try:
         import memory
-        auto = "auto" in str(prop.get("decision_reason", ""))
+        # Le seul appelant automatique préfixe sa raison par « auto : ». Chercher
+        # « auto » n'importe où marchait tant que les raisons venaient de la
+        # machine ; maintenant que Maxime écrit les siennes, « je le fais en
+        # automatique » lui volerait sa signature dans la mémoire.
+        auto = str(prop.get("decision_reason", "")).lstrip().startswith("auto ")
         memory.add(
             "contenu" if (decision == "accept" and prop["kind"] == "content") else
             "intégration" if (decision == "accept" and prop["kind"] == "merge") else

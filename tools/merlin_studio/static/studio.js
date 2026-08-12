@@ -12,6 +12,7 @@ let CAT = [];
 // Santé (taper un voyant mène à l'endroit concerné). Les onglets techniques
 // n'ont plus de bouton au dock : l'engrenage reste allumé quand on y est.
 const TECH_TABS = ['agents', 'godot', 'content', 'jobs', 'system'];
+let TAB = 'play';
 function showTab(tab) {
   const dockTab = TECH_TABS.includes(tab) ? 'cogs' : tab;
   document.querySelectorAll('.dock button').forEach(x =>
@@ -21,9 +22,43 @@ function showTab(tab) {
   document.querySelectorAll('.pane').forEach(p =>
     p.classList.toggle('on', p.id === 'pane-' + tab));
   window.scrollTo(0, 0);
+  // Quitter Jouer doit COUPER le flux vidéo : il se connectait tout seul et ne
+  // se coupait jamais, donc le jeu continuait d'encoder pour un écran caché.
+  if (TAB === 'play' && tab !== 'play' && window.merlinLeavePlay) window.merlinLeavePlay();
+  TAB = tab;
+  try { history.replaceState(null, '', '?tab=' + tab); } catch (e) {}
+  rafraichirOnglet();
 }
 document.querySelectorAll('.dock button, .subnav button, .vital').forEach(b =>
   b.onclick = () => showTab(b.dataset.tab));
+
+/* ── Mesure réelle de la barre collante ────────────────────────────────────
+   `--topbar-h` était UTILISÉE par studio.css sans être définie nulle part : on
+   retombait sur le repli de 132 px face à une barre bien plus haute, et la zone
+   de saisie de Parler passait sous la ligne de flottaison. On la mesure. */
+function mesurerTopbar() {
+  const t = document.querySelector('.topbar');
+  if (!t) return;
+  document.documentElement.style.setProperty('--topbar-h', Math.ceil(t.getBoundingClientRect().height) + 'px');
+}
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(mesurerTopbar);
+  const t = document.querySelector('.topbar');
+  if (t) ro.observe(t);
+}
+window.addEventListener('orientationchange', () => setTimeout(mesurerTopbar, 200));
+window.addEventListener('resize', mesurerTopbar);
+mesurerTopbar();
+
+/* Repli des détails techniques : deux pastilles visibles, sept derrière « ⋯ ». */
+{
+  const bt = document.getElementById('ch-more'), bar = document.getElementById('sysbar');
+  if (bt && bar) bt.onclick = () => {
+    bar.classList.toggle('replie');
+    bt.textContent = bar.classList.contains('replie') ? '⋯' : '×';
+    mesurerTopbar();
+  };
+}
 
 async function run(kind, params) {
   try {
@@ -652,18 +687,50 @@ async function refreshProposals() {
   });
 }
 
-async function decideProposal(pid, decision, btn) {
+/* ── Ton pourquoi ───────────────────────────────────────────────────────────
+   Le serveur savait déjà tout recevoir : app.py lit `reason`, proposals.decide
+   le range dans `decision_reason`, memory.add le grave dans la mémoire absolue.
+   Le front n'envoyait que `{ decision }` — d'où un journal qui ne pouvait
+   raconter QUE l'argument de la machine, jamais celui de son auteur.
+   Quatre pastilles, un champ libre, et « passer » qui n'empêche rien. */
+const RAISONS = {
+  accept: ['ça corrige un vrai souci', 'ça me plaît', "j'essaie, on verra"],
+  reject: ['pas maintenant', "je n'y crois pas", 'hors sujet'],
+};
+function decideProposal(pid, decision, btn) {
   const card = btn.closest('.card');
-  card.style.opacity = '0.4';                       // retrait optimiste
-  btn.parentElement.querySelectorAll('button').forEach(x => x.disabled = true);
-  try {
-    const r = await j(`/api/proposal/${encodeURIComponent(pid)}/decide`,
-      { method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ decision }) });
-    if (r.error) { card.style.opacity = '1'; alert('✗ ' + r.error); return; }
-    card.remove();
-    refreshProposals();
-  } catch { card.style.opacity = '1'; }
+  const zone = btn.parentElement;
+  zone.querySelectorAll('button').forEach(x => x.disabled = true);
+  const verbe = decision === 'accept' ? 'Accepter' : 'Rejeter';
+  const boite = document.createElement('div');
+  boite.className = 'pourquoi';
+  boite.innerHTML = `<div class="mut">${verbe} — pourquoi ? <i>(facultatif, mais c'est ce que
+      le journal citera demain)</i></div>
+    <div class="pastilles">${RAISONS[decision].map(r =>
+      `<button class="go sm" data-r="${esc(r)}">${esc(r)}</button>`).join('')}</div>
+    <div class="row" style="gap:8px;margin-top:8px">
+      <input class="libre" placeholder="…ou dis-le avec tes mots" style="flex:1">
+      <button class="go sm" data-r="">Passer</button>
+    </div>`;
+  card.appendChild(boite);
+  boite.querySelector('.libre').focus();
+  const envoyer = async raison => {
+    boite.remove();
+    card.style.opacity = '0.4';                     // retrait optimiste
+    try {
+      const r = await j(`/api/proposal/${encodeURIComponent(pid)}/decide`,
+        { method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ decision, reason: raison }) });
+      if (r.error) { card.style.opacity = '1'; alert('✗ ' + r.error); return; }
+      card.remove();
+      refreshProposals();
+    } catch { card.style.opacity = '1'; }
+  };
+  boite.querySelectorAll('button[data-r]').forEach(b => b.onclick = () =>
+    envoyer(b.dataset.r || boite.querySelector('.libre').value.trim()));
+  boite.querySelector('.libre').onkeydown = e => {
+    if (e.key === 'Enter') envoyer(e.target.value.trim());
+  };
 }
 
 async function refreshAgents() {
@@ -811,11 +878,47 @@ if (mBtn) mBtn.onclick = async () => {
   } catch (e) { res.className = 'res err'; res.textContent = '✗ réseau'; }
 };
 
+/* ── Rafraîchissement : seulement ce qu'on REGARDE, et rien en arrière-plan ──
+   Avant : 6 minuteries tournaient en permanence et le tour de 30 s déclenchait
+   NEUF requêtes, même page fermée — sur 4G et sur batterie. Maintenant chaque
+   onglet déclare ce qu'il a besoin de savoir, et tout s'arrête quand l'écran
+   n'est plus visible. Les pastilles de la barre restent à jour partout : c'est
+   leur seule raison d'être. */
+const BARRE = () => { refreshClock(); refreshSum(); refreshProposals(); };
+const PAR_ONGLET = {
+  play:   () => { refreshPlay(); refreshRun(); },
+  ideas:  () => { refreshProposals(); refreshJournal(); },
+  talk:   () => {},                       // talkPoll a sa propre minuterie
+  health: () => { refreshHealth(); refreshCpu(); refreshHost(); },
+  agents: () => { refreshAgents(); refreshCrew(); refreshJobs(); },
+  jobs:   () => refreshJobs(),
+  godot:  () => refreshRun(),
+  content: () => { refreshContent(); refreshLlm(); },
+  system: () => { refreshHost(); refreshRepo(); },
+};
+function rafraichirOnglet() {
+  if (document.hidden) return;
+  try { (PAR_ONGLET[TAB] || (() => {}))(); } catch (e) {}
+}
+
+let BOUCLE = null;
+function demarrerBoucles() {
+  if (BOUCLE) return;
+  BOUCLE = setInterval(() => { if (document.hidden) return; BARRE(); rafraichirOnglet(); }, 20000);
+}
+function arreterBoucles() { clearInterval(BOUCLE); BOUCLE = null; }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { arreterBoucles(); }
+  else { demarrerBoucles(); BARRE(); rafraichirOnglet(); }
+});
+
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
+// Ouverture directe sur un onglet : c'est ce qui rend une notification cliquable
+// utile (« un agent te parle » → ?tab=talk mène droit au fil).
+{
+  const veut = new URLSearchParams(location.search).get('tab');
+  if (veut && document.getElementById('pane-' + veut)) showTab(veut);
+}
 loadCat(); tick(); initGame();
-setInterval(refreshClock, 20000);
-setInterval(refreshJobs, 10000);
-setInterval(refreshCrew, 10000);   // vue vivante des agents
-setInterval(() => { refreshSum(); refreshCpu(); refreshRun(); refreshPlay(); refreshHost(); refreshAgents(); refreshProposals(); refreshHealth(); refreshJournal(); }, 30000);
-setInterval(() => { refreshContent(); refreshLlm(); refreshRepo(); }, 60000);
+BARRE(); rafraichirOnglet(); demarrerBoucles();

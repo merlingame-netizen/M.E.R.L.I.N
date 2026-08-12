@@ -16,18 +16,23 @@
 
 <!-- Barre système + dock : UN SEUL bloc collant (sinon le haut de l'écran de jeu se fait rogner) -->
 <div class="topbar">
- <div class="sysbar">
+ <!-- Deux pastilles visibles (le jeu, les décisions en attente), le reste replié
+      derrière « ⋯ ». Neuf pastilles mangeaient la moitié de l'écran d'un mobile. -->
+ <div class="sysbar replie" id="sysbar">
   <span class="brand">◈ Merlin <span class="dim">OS</span></span>
   <span class="chip idle" id="ch-game"><i class="dot"></i>Jeu …</span>
-  <span class="chip idle" id="ch-agents">Agents …</span>
-  <span class="spacer"></span>
-  <span class="chip idle" id="ch-cpu">CPU …</span>
-  <span class="chip idle" id="ch-mem">RAM …</span>
-  <span class="chip idle" id="ch-jobs">Jobs …</span>
-  <span class="chip idle" id="ch-llm">LLM …</span>
   <span class="chip idle" id="ch-prop" title="Propositions des agents en attente de ton verdict">💡 …</span>
-  <span class="chip idle" id="ch-bill" title="Facturation Oracle du mois — doit rester à 0">€ …</span>
-  <span class="chip idle" id="ch-clock">--:--</span>
+  <span class="spacer"></span>
+  <span class="more">
+   <span class="chip idle" id="ch-agents">Agents …</span>
+   <span class="chip idle" id="ch-cpu">CPU …</span>
+   <span class="chip idle" id="ch-mem">RAM …</span>
+   <span class="chip idle" id="ch-jobs">Jobs …</span>
+   <span class="chip idle" id="ch-llm">LLM …</span>
+   <span class="chip idle" id="ch-bill" title="Facturation Oracle du mois — doit rester à 0">€ …</span>
+   <span class="chip idle" id="ch-clock">--:--</span>
+  </span>
+  <span class="chip toggle" id="ch-more" title="Détails techniques">⋯</span>
  </div>
  <!-- Dock ENFANTIN : 3 destinations + un engrenage discret. Tout le technique
       vit derrière Coulisses — présent, jamais imposé. -->

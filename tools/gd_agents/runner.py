@@ -104,7 +104,14 @@ def run(agent_id: str, dry: bool = False) -> str:
     # pas, ce qui est rejeté ne revient pas sous un autre nom.
     try:
         import memory
-        mem = memory.digest(600)
+        # Ce que Maxime a répondu À CET AGENT passe AVANT le condensé général :
+        # c'est plus court, plus récent et plus décisif. Le bloc REMPLACE une
+        # part du digest au lieu de s'y ajouter — le budget de contexte est fixe.
+        sien = memory.reponses_de_maxime(agent_id, limit=4)
+        mem = memory.digest(600 - len(sien))
+        if sien:
+            system += ("\n\nCE QUE MAXIME T'A RÉPONDU (ses mots, à respecter avant "
+                       f"tout le reste) :\n{sien}")
         if mem and "vide" not in mem:
             system += f"\n\nDESIGN DÉJÀ DÉCIDÉ (à respecter, ne pas re-proposer) :\n{mem}"
     except Exception:

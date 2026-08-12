@@ -67,6 +67,29 @@ def digest(max_chars: int = 900) -> str:
     return text[:max_chars] if text else "(mémoire vide pour l'instant)"
 
 
+def reponses_de_maxime(agent: str, limit: int = 5, max_chars: int = 400) -> str:
+    """Ce que Maxime a répondu À CET AGENT, dans ses mots à lui.
+
+    C'est la seule trace d'intention humaine du système. Un agent qui la relit
+    cesse de re-proposer ce qui vient d'être refusé « pas maintenant », et sait
+    sur quoi son auteur l'attend. Rend une chaîne vide s'il n'y a rien : on
+    n'occupe pas le contexte pour dire qu'on n'a rien à dire."""
+    suffixe = f"/{agent}"
+    lignes = []
+    for e in entries(limit=120):
+        src = str(e.get("source", ""))
+        if not (src.startswith("maxime") and src.endswith(suffixe)):
+            continue
+        detail = str(e.get("detail", "")).strip()
+        if not detail or detail.startswith("auto "):
+            continue
+        mark = "✗" if e.get("kind") == "rejet" else "✓"
+        lignes.append(f"{mark} « {detail[:110]} » (à propos de : {e['title'][:60]})")
+        if len(lignes) >= limit:
+            break
+    return "\n".join(lignes)[:max_chars]
+
+
 # ── conversations du chat interne ────────────────────────────────────────────
 def chat_append(conv: str, role: str, who: str, text: str, actions=None) -> None:
     CHATS.mkdir(parents=True, exist_ok=True)

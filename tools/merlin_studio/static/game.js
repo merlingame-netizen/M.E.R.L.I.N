@@ -217,6 +217,18 @@ export async function initGame() {
       audio.pause(); audio.src = ''; sndBtn.textContent = '🔇 Son'; sndBtn.classList.remove('primary');
     }
   };
+  // Quitter l'onglet Jouer coupe le flux vidéo ET le son. Sans ça, la VM
+  // continuait d'encoder du VNC pour un écran que personne ne regarde — sur
+  // 4 cœurs ARM sans GPU, c'est autant de moins pour les agents. Le jeu, lui,
+  // continue de tourner : revenir sur l'onglet se reconnecte.
+  window.merlinLeavePlay = () => {
+    clearInterval(pollTimer);
+    if (rfb) { try { rfb.disconnect(); } catch (e) {} rfb = null; }
+    if (audio && !audio.paused) { audio.pause(); audio.src = ''; }
+    if (sndBtn) { sndBtn.textContent = '🔇 Son'; sndBtn.classList.remove('primary'); }
+    setState('offline');
+    offMessage('EN PAUSE', 'REVENIR SUR JOUER POUR RECONNECTER');
+  };
   const sel = $('#game-res');
   if (sel) sel.value = autoRes();   // pré-sélection selon l'appareil (modifiable)
   offMessage('SIGNAL PERDU', 'APPUYER SUR PLAY');
