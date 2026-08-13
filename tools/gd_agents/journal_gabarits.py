@@ -267,7 +267,11 @@ def _guillemets(t: str) -> str:
     elif fer > ouv:
         t = t.replace("»", "", fer - ouv)
     # Retirer un guillemet laisse son espace derrière lui (« Niamh , le modèle »).
-    return re.sub(r"\s+([,.])", r"\1", re.sub(r"\s{2,}", " ", t)).strip()
+    t = re.sub(r"\s+([,.])", r"\1", re.sub(r"\s{2,}", " ", t))
+    # Et on RÉPARE les deux-points collés gravés avant le correctif du nettoyage
+    # (« Équilibreur: niamh ») : en français, le deux-points prend son espace.
+    # Jamais après un chiffre (12:30) ni devant un chemin (res://).
+    return re.sub(r"(?<=[^\W\d_])\s*:(?=\s)(?!//)", " :", t).strip()
 
 
 if __name__ == "__main__":
