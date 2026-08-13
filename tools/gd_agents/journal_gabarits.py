@@ -169,6 +169,30 @@ def _fils(fiche: dict) -> str:
     return "**FILS EN COURS**\n" + "\n".join(lignes)
 
 
+def retenir(faits: list[dict], n: int = 5) -> list[dict]:
+    """Les n faits qui méritent une scène, répétitions FUSIONNÉES.
+
+    Cinq fois le même acteur disant la même chose n'est pas cinq scènes : c'est
+    une scène et un chiffre. Le regroupement se fait sur TOUS les faits — les
+    répétitions se cachent dans la masse, pas dans les cinq déjà retenus.
+
+    Extrait de `rediger()` parce que la plume en a besoin AUSSI : elle tirait
+    ses deux scènes de `saillants` brut, d'où deux paragraphes « 14h14 — TOI »
+    consécutifs racontant la même acceptation avec d'autres mots."""
+    groupes: dict[tuple, list] = {}
+    for f in faits:
+        # On regroupe sur le SUJET, pas sur le détail : « Nouvelle carte pour
+        # X » et « Nouvelle carte pour Y » ont des détails différents mais
+        # forment un seul événement pour qui lit son journal le matin.
+        cle = (f["acteur"], f["type"],
+               re.sub(r"[«»\"'].*", "", f.get("titre", ""))[:40].strip().lower())
+        groupes.setdefault(cle, []).append(f)
+    retenus = [{**min(g, key=lambda x: x["t"]), "repetitions": len(g)}
+               for g in groupes.values()]
+    retenus.sort(key=lambda f: (-f["poids"], -f["repetitions"], -f["t"]))
+    return retenus[:n]
+
+
 def rediger(fiche: dict) -> str:
     """Le chapitre complet, en français, sans un seul appel au modèle."""
     faits = fiche.get("faits", [])
@@ -177,14 +201,8 @@ def rediger(fiche: dict) -> str:
     # se cachent dans la masse, pas dans les cinq déjà retenus —, on garde les
     # cinq groupes les plus lourds, et on les raconte dans l'ordre où ils se sont
     # produits : un récit qui saute de 17 h 58 à 15 h 58 n'en est plus un.
-    groupes: dict[tuple, list] = {}
-    for f in faits:
-        groupes.setdefault((f["acteur"], f["type"], f.get("detail", "")[:60]), []).append(f)
-    retenus = [{**min(g, key=lambda x: x["t"]), "repetitions": len(g)}
-               for g in groupes.values()]
-    retenus.sort(key=lambda f: (-f["poids"], -f["repetitions"], -f["t"]))
     scenes = [_scene(f, fiche.get("causalite", {}))
-              for f in sorted(retenus[:5], key=lambda x: x["t"])]
+              for f in sorted(retenir(faits, 5), key=lambda x: x["t"])]
 
     entete = (f"**JOURNAL DE L'ATELIER — {fiche.get('jour', '')} · chapitre {fiche.get('n', '?')}**\n"
               f"*« {_titre_court(fiche)} »*")

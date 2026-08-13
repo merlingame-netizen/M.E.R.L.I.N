@@ -126,7 +126,7 @@ def _honnete(texte: str, autorises: set[str]) -> tuple[bool, str]:
 def _bloc_faits(fiche: dict, n: int = 5) -> str:
     """La fiche élaguée : les n faits de plus haut poids, déjà en français."""
     lignes = []
-    for f in fiche.get("saillants", [])[:n]:
+    for f in G.retenir(fiche.get("faits") or fiche.get("saillants", []), n):
         lignes.append(f"- {f['heure']} · {G._nom(f['acteur'])} : {f['titre']}"
                       + (f" ({f['detail'][:140]})" if f.get("detail") else ""))
     return "\n".join(lignes) or "- (aucun fait notable)"
@@ -142,7 +142,11 @@ def _resume_courant() -> str:
 def rediger(fiche: dict) -> tuple[str, str, dict]:
     """(texte, rédigé_par, coût). Retombe sur les gabarits à la moindre faiblesse."""
     gabarit = G.rediger(fiche)
-    saillants = fiche.get("saillants", [])
+    # Les répétitions sont FUSIONNÉES avant de choisir les scènes — même règle
+    # que les gabarits, même fonction. Sans elle, la plume tirait ses deux scènes
+    # de `saillants` brut et produisait deux paragraphes « 14h14 — TOI »
+    # consécutifs racontant la même acceptation avec d'autres mots.
+    saillants = G.retenir(fiche.get("faits") or fiche.get("saillants", []), 5)
     if not saillants:
         return gabarit, "gabarits", {"appels": 0, "secs": 0}
 
