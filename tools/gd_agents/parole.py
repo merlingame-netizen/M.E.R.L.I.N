@@ -271,6 +271,26 @@ def _muet(qui: str, reg: dict) -> bool:
     return bool(dernier and dernier > time.time() - SILENCE_JOURS * 86400)
 
 
+# Quelle VOIX répond quand Maxime écrit dans le fil d'un agent. Un identifiant
+# d'agent (« playtest-bot ») n'est pas une voix : le portail ne sait faire
+# répondre que MERLIN, le personnage du jeu, ou une fiche de conseiller. On ne
+# fabrique JAMAIS un chemin de fiche sans vérifier qu'il existe — sinon le
+# verrou passe et chat_reply retombe en silence sur la persona générique en
+# affichant un conseiller qui n'existe pas.
+VOIX_PAR_AGENT = {
+    "playtest-bot": ".claude/agents/game_playtester.md",
+    "gd-balance": ".claude/agents/balance_tuner.md",
+    "gd-run": ".claude/agents/gd_difficulty.md",
+    "gd-content-gap": ".claude/agents/content_card_writer.md",
+}
+
+
+def _voix(qui: str) -> str:
+    racine = HERE.parents[1]
+    cand = VOIX_PAR_AGENT.get(qui) or f".claude/agents/{str(qui).replace('-', '_')}.md"
+    return cand if (racine / cand).exists() else "merlin"
+
+
 def ouvrir(sig: dict, sec: bool = False) -> str:
     conv = f"mot-{time.strftime('%Y%m%d')}-{boite.slug(sig['cle'])}"[:40]
     if sec:
@@ -286,7 +306,7 @@ def ouvrir(sig: dict, sec: bool = False) -> str:
                         "verb": verbe, "target": cible,
                         "value": valeur, "label": a["libelle"]})
     memory.chat_append(conv, "assistant", sig["qui"], sig["texte"], actions=actions or None)
-    boite.declarer(conv, sig["qui"], sig["sujet"])
+    boite.declarer(conv, sig["qui"], sig["sujet"], repondre_a=_voix(sig["qui"]))
     try:
         subprocess.run(["bash", str(NOTIFY), "default", sig["qui"],
                         sig["sujet"][:120], "?tab=talk"],

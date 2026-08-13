@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import hmac
+import json
 import os
 import secrets
 import socket
@@ -515,6 +516,26 @@ Fenêtre ouverte encore {left} min.</p>
         M = _gd("memory")
         return jsonify({"conv": conv, "messages": M.chat_read(conv)})
 
+    def _demarquer(M, conv: str, aid: str) -> None:
+        """Rendre un bouton après un échec — le pendant de chat_mark_action_done.
+
+        On marque AVANT d'exécuter pour bloquer le double tap ; il faut donc
+        savoir revenir en arrière, sinon un échec réseau consommerait le bouton
+        à vie."""
+        try:
+            with M._verrou(conv):
+                p = M.CHATS / f"{conv}.jsonl"
+                rows = [json.loads(x) for x in
+                        p.read_text(encoding="utf-8").splitlines() if x.strip()]
+                for r in rows:
+                    for a in r.get("actions", []):
+                        if a.get("id") == aid:
+                            a.pop("done", None)
+                p.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows)
+                             + "\n", encoding="utf-8")
+        except Exception:
+            pass
+
     def _derniere_demande(M, conv: str) -> str:
         """Le dernier message de Maxime dans ce fil — la source de vérité.
 
@@ -543,15 +564,26 @@ Fenêtre ouverte encore {left} min.</p>
         try:
             M = _gd("memory")
             CA = _gd("chat_actions")
+            # Deux taps coup sur coup exécutaient l'action DEUX FOIS : rien ne
+            # séparait la relecture du marquage. On marque d'abord — un « déjà
+            # fait » injuste est moins grave qu'une mission mise en file deux
+            # fois ou qu'un agent relancé en double.
             action = M.chat_find_action(conv, aid)
             if not action:
                 return jsonify({"error": "action introuvable"}), 404
             if action.get("done"):
                 return jsonify({"ok": True, "effect": "déjà fait"})
+            M.chat_mark_action_done(conv, aid)
             res = CA.execute(action, _derniere_demande(M, conv))
             if res.get("ok"):
-                M.chat_mark_action_done(conv, aid)
                 M.chat_append(conv, "assistant", "studio", "✓ " + res["effect"])
+            else:
+                # Échec : on rend le bouton, ET on laisse une trace dans le fil.
+                # Sans elle, une action ratée ne laissait AUCUNE trace durable —
+                # ni ici, ni en mémoire, ni dans le journal.
+                _demarquer(M, conv, aid)
+                M.chat_append(conv, "assistant", "studio",
+                              "✗ " + str(res.get("error", "échec"))[:200])
             return jsonify(res), (200 if res.get("ok") else 400)
         except Exception as exc:
             return jsonify({"error": str(exc)[:150]}), 500

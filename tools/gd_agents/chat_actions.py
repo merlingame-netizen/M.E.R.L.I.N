@@ -129,7 +129,7 @@ def _aid(verb: str, target: str, value: str) -> str:
 def parse(reply: str) -> tuple[str, list[dict]]:
     """Extrait les lignes ACTION du texte. Rend (texte nettoyé, actions valides)."""
     ids = agent_ids()
-    actions, keep = [], []
+    actions, keep, rejets = [], [], []
     for line in reply.splitlines():
         m = re.match(r"\s*ACTION:\s*(.+)", line)
         if not m:
@@ -137,39 +137,64 @@ def parse(reply: str) -> tuple[str, list[dict]]:
             continue
         parts = [p.strip() for p in m.group(1).split("|")]
         if len(parts) < 3:
+            rejets.append(("?", "moins de trois champs"))
             continue
         verb, target, value = parts[0], parts[1], parts[2]
         label = parts[3] if len(parts) > 3 else verb
         if verb not in VERBS:
+            rejets.append((verb, "verbe inconnu"))
             continue
         # Validation stricte selon le verbe.
         if verb in ("agent.toggle", "agent.cadence", "agent.run"):
             if target not in ids:
+                rejets.append((verb, f"agent inconnu : {target}"))
                 continue
             if verb == "agent.toggle" and value not in ("on", "off"):
+                rejets.append((verb, f"« {value} » n'est pas on/off"))
                 continue
             if verb == "agent.cadence" and value not in CADENCES:
+                rejets.append((verb, f"« {value} » n'est pas une cadence connue"))
                 continue
         elif verb in ("mission.queue", "task.plan"):
-            value = " | ".join(parts[2:]) if len(parts) > 3 else value
+            # Le DERNIER champ est le libellé du bouton. Le coller dans la
+            # valeur écrivait « Ne jamais dépasser 25 cartes | Grave cette règle »
+            # dans la mission et dans la mémoire — Maxime relira ça dans six mois.
+            # On ne joint que ce qui est ENTRE la valeur et le libellé, pour
+            # continuer de tolérer une barre verticale dans un texte libre.
+            value = " | ".join(parts[2:-1]) if len(parts) > 3 else value
             if not (10 <= len(value) <= 2000):
+                rejets.append((verb, f"longueur {len(value)} hors 10-2000"))
                 continue
-            label = label if len(parts) > 4 else (
+            label = parts[-1] if len(parts) > 3 else (
                 ("Prévoir : " if verb == "task.plan" else "Confier au codeur : ") + value[:38])
         elif verb == "memory.grave":
-            value = " | ".join(parts[2:]) if len(parts) > 3 else value
-            if not (5 <= len(value) <= 300):
+            value = " | ".join(parts[2:-1]) if len(parts) > 3 else value
+            # 200 et non 300 : `memory.add` tronque le titre à 200 caractères,
+            # donc au-delà la fin de la règle se perdait en silence.
+            if not (5 <= len(value) <= 200):
+                rejets.append((verb, f"longueur {len(value)} hors 5-200"))
                 continue
-            label = label if len(parts) > 4 else "Graver : " + value[:40]
+            label = parts[-1] if len(parts) > 3 else "Graver : " + value[:40]
         elif verb == "agent.create":
-            value = " | ".join(parts[2:]) if len(parts) > 3 else value
+            value = " | ".join(parts[2:-1]) if len(parts) > 3 else value
             if not (10 <= len(value) <= 500):
+                rejets.append((verb, f"longueur {len(value)} hors 10-500"))
                 continue
-            label = label if len(parts) > 4 else "Créer un agent : " + value[:36]
+            label = parts[-1] if len(parts) > 3 else "Créer un agent : " + value[:36]
         actions.append({"id": _aid(verb, target, value), "verb": verb,
                         "target": target, "value": value, "label": label[:90],
                         "done": False})
-    return "\n".join(keep).strip(), actions
+    texte = "\n".join(keep).strip()
+    # Une ligne ACTION rejetée emportait son texte avec elle : le modèle mettait
+    # tout dans la ligne, la ligne était écartée, et Maxime recevait une BULLE
+    # VIDE après plusieurs minutes d'attente — sans texte, sans bouton, sans
+    # explication. C'est le mode d'échec le plus fréquent d'un petit modèle
+    # (confondre une cadence avec un état, nommer un agent en français).
+    if rejets and not texte and not actions:
+        detail = " · ".join(f"{v} : {pourquoi}" for v, pourquoi in rejets[:2])
+        texte = ("J'avais quelque chose à te proposer mais je l'ai mal formulé "
+                 f"({detail}). Redemande-moi, je reformulerai.")
+    return texte, actions
 
 
 def _texte_mission(resume: str, demande: str) -> str:
@@ -282,6 +307,15 @@ def execute_plan(actions: list[dict], demande: str = "") -> list[dict]:
     for a in actions:
         if a.get("done"):
             out.append({"id": a["id"], "ok": True, "effect": "déjà fait"})
+            continue
+        # « En parler » ne s'exécute pas : elle amorce la saisie de Maxime dans
+        # le navigateur. L'inclure dans un plan la consommait et écrivait un ✓
+        # mensonger dans le fil — le bouton devenait inutilisable sans que rien
+        # n'ait eu lieu.
+        if a.get("verb") == "chat.parler":
+            out.append({"id": a["id"], "ok": True, "ignore": True,
+                        "label": a.get("label", ""),
+                        "effect": "laissée de côté — c'est à toi d'écrire"})
             continue
         res = execute(a, demande)
         res["id"] = a["id"]

@@ -61,13 +61,28 @@ def slug(texte: str) -> str:
     return s or "fil"
 
 
-def declarer(conv: str, qui: str, sujet: str, attend_reponse: bool = True) -> bool:
-    """Inscrit (ou met à jour) un fil dans la boîte."""
+# Une voix que le portail accepte : `merlin`, `jeu`, ou une fiche de conseiller.
+FICHE_RE = re.compile(r"^\.claude/agents/[\w-]+\.md$")
+
+
+def declarer(conv: str, qui: str, sujet: str, attend_reponse: bool = True,
+             repondre_a: str = "") -> bool:
+    """Inscrit (ou met à jour) un fil dans la boîte.
+
+    `qui` est le nom AFFICHÉ (« playtest-bot »), `repondre_a` est la VOIX que le
+    portail sait faire répondre. Les confondre rendait tout fil ouvert par un
+    agent impossible à répondre : la route validait le destinataire contre
+    `.claude/agents/<x>.md`, recevait « playtest-bot », et rendait « conseiller
+    inconnu ». Et comme le front vide la saisie avant l'envoi, le message de
+    Maxime était perdu par la même occasion."""
     if not CONV_RE.match(str(conv)):
         return False
     d = _lire()
     e = d.get(conv) or {"ouvert": _now(), "lu_jusqu_a": ""}
     e.update({"qui": str(qui)[:40], "sujet": str(sujet)[:120],
+              # PAS de troncature à 40 ici : un chemin de fiche fait souvent
+              # plus long, et le couper produisait exactement le même mur.
+              "repondre_a": str(repondre_a or "")[:120],
               "dernier": _now(), "attend_reponse": bool(attend_reponse)})
     d[conv] = e
     _ecrire(d)
@@ -87,10 +102,18 @@ def marquer_lu(conv: str) -> bool:
 def destinataire(conv: str) -> str:
     """À QUI Maxime répond quand il écrit dans ce fil.
 
-    C'est la correction du travers principal : le front imposait un destinataire
-    choisi dans un menu, donc répondre au conseiller du matin s'adressait en
-    réalité à MERLIN, et le conseiller ne voyait jamais la réponse."""
-    return str((_lire().get(conv) or {}).get("qui", "")) or ""
+    On rend une voix que le portail ACCEPTE, jamais un nom d'affichage. Les
+    fils écrits avant l'ajout de `repondre_a` portaient la fiche dans `qui` :
+    on la reconnaît, sinon on retombe sur MERLIN — le chef d'orchestre sait au
+    moins mettre une mission en file, ce qui vaut mieux qu'un mur."""
+    e = _lire().get(conv) or {}
+    cible = str(e.get("repondre_a") or "").strip()
+    if cible in ("merlin", "jeu") or FICHE_RE.match(cible):
+        return cible
+    qui = str(e.get("qui") or "").strip()
+    if qui in ("merlin", "jeu") or FICHE_RE.match(qui):
+        return qui
+    return "merlin" if e else ""
 
 
 def etat(limite: int = 20) -> dict:

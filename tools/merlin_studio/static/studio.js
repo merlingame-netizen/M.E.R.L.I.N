@@ -540,13 +540,19 @@ async function talkSend() {
   try {
     const r = await j('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ conv: TALK_CONV || undefined, text, to: $('#talk-to').value }) });
-    if (r.error) { alert('✗ ' + r.error); return; }
+    // Un refus ne doit JAMAIS coûter ses mots à Maxime : la zone est vidée
+    // avant l'envoi (pour le confort), le serveur peut répondre 400, et le
+    // texte n'est enregistré nulle part. On le rend.
+    if (r.error) { ta.value = text; ta.style.height = 'auto'; annonce('✗ ' + r.error, true); return; }
     TALK_CONV = r.conv;
     await talkPoll();
     showTyping();
     if (TALK_POLL) clearInterval(TALK_POLL);
     TALK_POLL = setInterval(talkPoll, 5000);
-  } catch { }
+  } catch {
+    ta.value = text; ta.style.height = 'auto';
+    annonce('✗ réseau — ton message est resté dans la zone de saisie', true);
+  }
 }
 if ($('#talk-form')) initTalk();
 const memBtn = $('#mem-add');   // la Mémoire vit dans Décider, pas dans Parler
