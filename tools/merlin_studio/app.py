@@ -612,13 +612,38 @@ Fenêtre ouverte encore {left} min.</p>
                 to = propre
         except Exception:
             pass
-        if to != "merlin" and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
+        # « jeu » = le personnage du jeu (merlin_jeu.py), pas un conseiller du
+        # studio : il n'a pas de fiche .md, sa voix vit dans son propre fichier.
+        if to not in ("merlin", "jeu") \
+                and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
             return jsonify({"error": "conseiller inconnu"}), 400
         M = _gd("memory")
         M.chat_append(conv, "user", "maxime", text)
         rec = actions.launch("chat-reply", {"conv": conv, "to": to})
         return jsonify({"ok": not rec.get("error"), "conv": conv, "to": to,
                         "job": rec.get("id"), "error": rec.get("error")})
+
+    # ── La voix du MERLIN du jeu : la lire, l'affiner ───────────────────────
+    # « Fine-tuner » utilement, ici, ce n'est pas réentraîner un modèle : c'est
+    # écrire ce que le personnage EST. Quelques lignes font 90 % du travail,
+    # pour 0 € et 0 minute de calcul. Le vrai LoRA viendra quand le corpus le
+    # justifiera.
+    @app.route("/api/merlin/voix")
+    def api_voix():
+        try:
+            return jsonify(_gd("merlin_jeu").apercu())
+        except Exception as exc:
+            return jsonify({"error": str(exc)[:200]}), 500
+
+    @app.route("/api/merlin/voix", methods=["POST"])
+    def api_voix_set():
+        body = request.get_json(silent=True) or {}
+        try:
+            M = _gd("merlin_jeu")
+            v = M.enregistrer(body)
+            return jsonify({"ok": True, "voix": v, "prompt": M.prompt(v)})
+        except Exception as exc:
+            return jsonify({"error": str(exc)[:200]}), 500
 
     # ── La boîte aux lettres : qui t'a écrit, qui attend ta réponse ─────────
     @app.route("/api/boite")

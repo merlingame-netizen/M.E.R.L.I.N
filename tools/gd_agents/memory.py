@@ -14,6 +14,7 @@ Stdlib seule, ne lève jamais en lecture.
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 
@@ -38,7 +39,17 @@ def add(kind: str, title: str, detail: str = "", source: str = "", refs=None) ->
     return entry
 
 
-def entries(limit: int = 50, kind: str | None = None) -> list[dict]:
+# La signature d'une panne d'outillage. Ces entrées ont été gravées quand
+# accepter une proposition ratée gravait son titre : la mémoire s'est remplie de
+# vingt « analyse seule — JSON illisible ». On ne les EFFACE pas (rien ne
+# s'efface jamais, c'est le principe du registre), mais on ne les montre plus et
+# on ne les sert plus aux agents : ce ne sont pas des décisions de design.
+_BRUIT = re.compile(
+    r"(JSON illisible|LLM indisponible|analyse seule|rédaction automatique a échoué"
+    r"|validateur indisponible|^```)", re.I)
+
+
+def entries(limit: int = 50, kind: str | None = None, tout: bool = False) -> list[dict]:
     try:
         out = [json.loads(x) for x in REGISTRY.read_text(encoding="utf-8").splitlines()
                if x.strip()]
@@ -46,6 +57,9 @@ def entries(limit: int = 50, kind: str | None = None) -> list[dict]:
         return []
     if kind:
         out = [e for e in out if e.get("kind") == kind]
+    if not tout:
+        out = [e for e in out
+               if not _BRUIT.search(f"{e.get('title','')} {e.get('detail','')}")]
     return out[-limit:][::-1]
 
 

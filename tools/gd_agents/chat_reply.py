@@ -29,6 +29,32 @@ def main(conv: str, adviser: str) -> int:
     if not rows or rows[-1]["role"] != "user":
         print("rien à répondre")
         return 0
+    # ── LE MERLIN DU JEU ────────────────────────────────────────────────────
+    # C'est le PERSONNAGE que rencontre le joueur, pas l'assistant du studio :
+    # il ne sait rien des agents et ne parle que depuis le monde du jeu. On sort
+    # AVANT toute la machinerie du studio — lui coller l'état des agents et le
+    # catalogue d'actions le ferait immédiatement sortir de son rôle.
+    if adviser == "jeu":
+        import merlin_jeu
+        echange = "\n".join(
+            f"{'Le voyageur' if r['role'] == 'user' else 'Merlin'} : {r['text'][:300]}"
+            for r in rows[-6:])
+        p = f"{merlin_jeu.prompt()}\n\nLA CONVERSATION :\n{echange}\n\nMerlin :"
+        modele = (merlin_jeu.charger().get("modele") or "").strip()
+        argv = ["bash", str(LLM_ASK), "--predict", "220", "--timeout", "280",
+                "--ctx", "2048", "--temp", "0.8"]
+        if modele:
+            argv += ["--model", modele]
+        try:
+            r = subprocess.run(argv, input=p, capture_output=True, text=True, timeout=300)
+            texte = (r.stdout or "").strip()
+        except Exception:
+            texte = ""
+        memory.chat_append(conv, "assistant", "merlin-du-jeu",
+                           texte or "(Merlin garde le silence — le modèle n'a pas répondu.)")
+        print(f"Merlin du jeu a répondu ({len(texte)} car.)")
+        return 0
+
     if adviser and adviser not in ("merlin", "") and Path(prompts.ROOT / adviser).exists():
         persona = prompts.compile_prompt(adviser)
         who = Path(adviser).stem

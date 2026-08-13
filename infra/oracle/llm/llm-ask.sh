@@ -24,9 +24,13 @@ while [ $# -gt 0 ]; do case "$1" in
     # semblables ne produisent pas deux fois la même phrase.
     --temp)    TEMP="$2";    shift 2 ;;
     --seed)    SEED="$2";    shift 2 ;;
+    # Contraint Ollama à ne produire QUE du JSON valide. Sans ça, un e4b
+    # bavarde autour de son objet, la sortie est tronquée au milieu, et
+    # l'appelant lit « JSON illisible » sans savoir pourquoi.
+    --json)    FORMAT="json"; shift ;;
     *) echo "option inconnue: $1" >&2; exit 2 ;;
 esac; done
-export _LLM_TEMP="${TEMP:-0.2}" _LLM_SEED="${SEED:--1}"
+export _LLM_TEMP="${TEMP:-0.2}" _LLM_SEED="${SEED:--1}" _LLM_FORMAT="${FORMAT:-}"
 
 PROMPT="$(cat)"
 [ -n "$PROMPT" ] || { echo "prompt vide" >&2; exit 2; }
@@ -47,6 +51,9 @@ req = urllib.request.Request(
         # revient VIDE (mesuré : eval_count=50, réponse 0 caractère) — cause
         # réelle de tous les « modèle indisponible » du chat et des agents.
         "think": False,
+        # `format: "json"` force une sortie JSON valide côté Ollama : c'est le
+        # remède au « JSON illisible » qui a rempli Décider.
+        **({"format": os.environ["_LLM_FORMAT"]} if os.environ.get("_LLM_FORMAT") else {}),
         # num_thread vient du routeur : 2 quand le jeu tourne (il garde 2 cœurs).
         "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
                     "num_ctx": ctx,

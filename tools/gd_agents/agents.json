@@ -8,11 +8,11 @@
       "card": ".claude/agents/content_card_writer.md",
       "analyzer": "content_gap",
       "shape": "compose",
-      "out_tokens": 220,
+      "out_tokens": 420,
       "deadline_s": 900,
       "evidence_tokens": 500,
       "kind": "content",
-      "desc": "Écrit des exemples d'entraînement pour le fine-tune merlin-e4b. Les scénarios du jeu étant générés 100 % en direct par le LLM, ces cartes ne sont PAS du contenu de jeu : ce sont des leçons destinées à faire écrire le modèle mieux. Vise les lacunes documentées du canon."
+      "desc": "Écrit des exemples d'entraînement pour le modèle. Ces cartes ne sont PAS du contenu de jeu (les scénarios sont générés 100 % en direct) : ce sont des leçons. Une carte ratée ne remonte JAMAIS dans Décider — c'est une panne d'atelier, pas une décision."
     },
     {
       "id": "gd-balance",

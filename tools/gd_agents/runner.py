@@ -55,10 +55,12 @@ def _ask(prompt: str, plan: dict, timeout: int) -> tuple[str, str]:
     env = {"OLLAMA_NUM_THREAD": str(plan["num_thread"]),
            "OLLAMA_KEEP_ALIVE": plan["keep_alive"]}
     try:
+        argv = ["bash", str(LLM_ASK), "--model", plan["tag"], "--ctx", str(plan["ctx"]),
+                "--predict", str(plan.get("out_tokens", 320)), "--timeout", str(timeout)]
+        if plan.get("json"):
+            argv.append("--json")     # sortie contrainte : plus de JSON tronqué
         p = subprocess.run(
-            ["bash", str(LLM_ASK), "--model", plan["tag"], "--ctx", str(plan["ctx"]),
-             "--predict", str(plan.get("out_tokens", 320)), "--timeout", str(timeout)],
-            input=prompt, capture_output=True, text=True,
+            argv, input=prompt, capture_output=True, text=True,
             timeout=timeout + 30, env={**os.environ, **env})
         if p.returncode == 0 and (p.stdout or "").strip():
             return p.stdout.strip(), ""
@@ -144,7 +146,10 @@ def run(agent_id: str, dry: bool = False) -> str:
                                      cfg.get("evidence_tokens", 600), escalate=escal)
                 if not plan["ok"]:
                     break
-            raw, why = _ask(prompt, plan, plan["est_secs"] * 2 + 90)
+            # Un agent qui attend du JSON le DEMANDE : Ollama contraint alors sa
+            # sortie et ne peut plus la tronquer au milieu d'un objet.
+            raw, why = _ask(prompt, {**plan, "json": attend_json},
+                            plan["est_secs"] * 2 + 90)
             card = _extract_json(raw)
             if card:
                 why = ""
@@ -213,6 +218,19 @@ def run(agent_id: str, dry: bool = False) -> str:
             title = f"{cfg['label']} — correction : {patch['summary'][:70]}"
         mission = raw.strip()[:1500]
         conf, payload = (0.8 if change.get("before") else 0.65), None
+    elif cfg["kind"] == "content":
+        # UNE CARTE RATÉE N'EST PAS UNE DÉCISION. Ces cartes servent à entraîner
+        # le modèle, pas à choisir quoi que ce soit : quand l'écriture échoue,
+        # c'est une panne d'atelier, pas un sujet pour Maxime. Le repli
+        # « preuves seules » a inondé Décider de 19 cartes « analyse seule —
+        # JSON illisible », toutes identiques, toutes inutiles. On ne propose
+        # plus rien : on RAPPORTE l'échec dans le résumé de l'agent, qui est lu
+        # par le journal et par « Les agents au travail ».
+        motif = (f"LLM indisponible — {why}" if not raw else
+                 "JSON illisible" if card is None else
+                 f"{len(errs)} erreur(s) de validation")
+        return (f"carte non écrite pour « {sujet} » ({motif}) — "
+                f"rien mis dans Décider, c'est une panne d'atelier · {secs}s")
     else:
         why = (f"LLM indisponible — {why}" if not raw else
                "JSON illisible" if card is None else

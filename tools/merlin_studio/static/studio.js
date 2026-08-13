@@ -278,6 +278,39 @@ async function initTalk() {
     if (z.hidden) ouvrirGravure(); else z.hidden = true;
   };
   window.merlinGraver = graverMaintenant;   // appelé par le bouton du gabarit
+
+  /* ── Le MERLIN du jeu ────────────────────────────────────────────────────
+     Un second interlocuteur : le PERSONNAGE, pas l'assistant du studio. Sa
+     voix se règle ici même, et le réglage prend effet à la phrase suivante. */
+  const sel = $('#talk-to'), bv = $('#talk-voix');
+  const majVoixBouton = () => { if (bv) bv.hidden = sel.value !== 'jeu'; };
+  if (sel) { sel.addEventListener('change', () => { majVoixBouton(); $('#talk-voix-panel').hidden = true; }); majVoixBouton(); }
+  if (bv) bv.onclick = async () => {
+    const p = $('#talk-voix-panel');
+    if (!p.hidden) { p.hidden = true; return; }
+    try {
+      const d = await j('/api/merlin/voix');
+      $('#voix-identite').value = (d.voix || {}).identite || '';
+      $('#voix-ton').value = (d.voix || {}).ton || '';
+      $('#voix-regles').value = ((d.voix || {}).regles || []).join('\n');
+      $('#voix-taille').textContent = `sa voix pèse ~${d.taille_prompt} tokens`;
+      p.hidden = false;
+    } catch { annonce('✗ voix illisible', true); }
+  };
+  window.merlinVoixSave = async () => {
+    try {
+      const r = await j('/api/merlin/voix', { method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          identite: $('#voix-identite').value,
+          ton: $('#voix-ton').value,
+          regles: $('#voix-regles').value.split('\n').map(x => x.trim()).filter(Boolean),
+        }) });
+      if (r.error) { annonce('✗ ' + r.error, true); return; }
+      $('#talk-voix-panel').hidden = true;
+      annonce('🜁 sa voix est changée — parle-lui, tu verras la différence');
+    } catch { annonce('✗ réseau', true); }
+  };
   document.querySelectorAll('.chat-suggest button').forEach(b =>
     b.onclick = () => { ta.value = b.dataset.q; talkSend(); });
   renderThread([]);
