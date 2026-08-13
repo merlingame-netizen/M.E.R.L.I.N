@@ -44,7 +44,7 @@ LLM_ASK = HERE.parents[1] / "infra" / "oracle" / "llm" / "llm-ask.sh"
 LEDGER = Path.home() / ".cache" / "merlin-agents" / "llm-ledger.jsonl"
 RESUME = J.BASE / "resume_courant.txt"
 
-TEMP = "0.75"
+TEMP = "0.35"      # 0,75 = température de prose ; ici on rapporte
 CTX = "4096"                     # le régime que chat_reply impose déjà
 NOMBRE = re.compile(r"\d+(?:[.,]\d+)?")
 
@@ -88,11 +88,38 @@ def _chiffres_autorises(fiche: dict) -> set[str]:
     return {n.replace(",", ".") for n in NOMBRE.findall(brut)}
 
 
+# Ce que le modèle n'a AUCUN moyen de savoir, donc qu'il a forcément inventé.
+# Le garde-fou ne contrôlait que les chiffres arabes : « le développeur hoche la
+# tête en murmurant » le passait à 100 %. Liste volontairement COURTE et sûre —
+# on préfère laisser filer une tournure que jeter une scène honnête.
+BRODERIE = re.compile(
+    r"\b("
+    # gestes et mimiques : personne ne les a observés
+    r"hoche|hochant|acquiesce|murmur\w*|souri\w*|sourit|soupir\w*|fronce|"
+    r"grimace|se penche|lève les yeux|se redresse|s'attarde|contemple|"
+    # états d'âme prêtés à quelqu'un
+    r"satisfait\w*|frustré\w*|impatien\w*|serein\w*|inquiet\w*|fier\w*|"
+    r"songeu\w*|pensi\w*|résigné\w*|avec plaisir|avec satisfaction|"
+    # décor et ambiance : l'atelier n'a ni lampes ni parchemins
+    r"lueur|lampes?|bougies?|chandelles?|parchemins?|atelier baigné|"
+    r"pénombre|obscurité|silence de la nuit|au creux de la nuit|"
+    # étiquettes d'acteur qui ne désignent personne de réel
+    r"le développeur|l'utilisateur|les artisans|l'équipe"
+    r")\b", re.I)
+
+
 def _honnete(texte: str, autorises: set[str]) -> tuple[bool, str]:
-    """Un seul chiffre hors fiche et on jette la scène entière."""
+    """Un chiffre hors fiche OU un mot inventé, et on jette la scène entière.
+
+    Le principe est le même que pour les nombres : on ne corrige pas la phrase,
+    on la remplace par sa version gabarit. Retoucher une broderie laisserait un
+    texte bancal dans un registre qui ne s'efface jamais."""
     for n in NOMBRE.findall(texte):
         if n.replace(",", ".") not in autorises:
             return False, n
+    m = BRODERIE.search(texte)
+    if m:
+        return False, f"« {m.group(0)} » (inventé)"
     return True, ""
 
 
@@ -123,18 +150,25 @@ def rediger(fiche: dict) -> tuple[str, str, dict]:
     autorises = _chiffres_autorises(fiche)
     faits = _bloc_faits(fiche)
     resume = _resume_courant()
+    # « Comme un romancier qui visite un atelier » était un MANDAT DE FICTION :
+    # un romancier décrit des gestes, des lumières, des visages. Le modèle a donc
+    # écrit « tu hoches la tête avec satisfaction en murmurant » — Maxime avait
+    # tapé une pastille. On demande maintenant un compte rendu.
+    #
+    # On ne liste plus non plus les mots interdits : nommer « développeur » dans
+    # une interdiction, c'est le mettre dans le contexte, et c'est exactement le
+    # mot que le modèle a choisi pour désigner Maxime.
     cadre = (
-        "Tu écris la chronique d'un atelier où des artisans fabriquent un jeu.\n"
+        "Tu rédiges le compte rendu de la nuit pour celui qui dirige l'atelier.\n"
         "RÈGLES ABSOLUES :\n"
-        "- en français simple, comme un romancier qui visite un atelier ;\n"
-        "- JAMAIS un chiffre absent des faits ci-dessous ;\n"
-        "- JAMAIS de vocabulaire technique : pas de « LLM », « rc », « JSON », "
-        "« commit », « script », « architecture », « projet », « développeur » ;\n"
-        "- les artisans sont DÉSIGNÉS par leur nom (le Codeur, l'Équilibreur…) et "
-        "on parle d'eux à la troisième personne ;\n"
-        "- le lecteur est le créateur du jeu : on lui dit « tu », jamais « le "
-        "développeur » ni « l'utilisateur » ;\n"
-        "- pas de liste à puces, pas de titre, pas de préambule.\n\n"
+        "- UNE phrase par fait, en français simple. Rien de plus.\n"
+        "- tu ne rapportes QUE ce qui est écrit dans les faits ci-dessous ;\n"
+        "- AUCUN geste, AUCUNE émotion, AUCUN décor, AUCUNE heure du jour, "
+        "AUCUNE supposition sur ce que quelqu'un a ressenti ou pensé ;\n"
+        "- JAMAIS un chiffre absent des faits ;\n"
+        "- les agents portent leur nom (le Codeur, l'Équilibreur…) ;\n"
+        "- « toi », c'est le lecteur : tu lui dis « tu », jamais autre chose ;\n"
+        "- pas de liste à puces, pas de titre, pas de préambule, pas de morale.\n\n"
         + (f"CE QUI PRÉCÈDE :\n{resume}\n\n" if resume else "")
         + f"LES FAITS DE LA NUIT :\n{faits}\n\n")
 
@@ -154,36 +188,44 @@ def rediger(fiche: dict) -> tuple[str, str, dict]:
             sources.append(f"rejet:{faux}")
             return secours
         sources.append("llm")
-        return txt.strip()
+        # `_francais` n'était appliqué qu'aux FAITS, jamais à la sortie du
+        # modèle : s'il produisait du jargon de lui-même, rien ne l'attrapait.
+        return J._francais(txt.strip())
 
-    # 1. Le chapô — de quoi la nuit a été faite.
-    chapo = _tenter("Écris trois phrases d'ouverture qui disent de quoi cette nuit "
-                    "a été faite. Pas de préambule, commence directement.",
-                    160, G._chapo(fiche), chap)
+    # 1. Le chapô — de quoi la nuit a été faite. DEUX phrases : trois, sur cinq
+    # lignes de faits, obligeaient à meubler.
+    chapo = _tenter("En deux phrases : de quoi cette nuit a été faite. "
+                    "Commence directement, sans préambule.",
+                    110, G._chapo(fiche), chap)
 
-    # 2-3. Deux scènes, chacune avec la voix de son acteur.
+    # 2-3. Deux faits, rapportés. PAS de « personnage » : `_voix()` prescrivait
+    # une humeur (« ce soir il est impatient »), ce qui contredisait l'interdit
+    # des émotions — et pour l'acteur « toi » elle rendait une chaîne VIDE, si
+    # bien que le modèle inventait le personnage principal de sa propre scène.
     for i, f in enumerate(saillants[:2]):
         secours = G._scene({**f, "repetitions": 1}, fiche.get("causalite", {}))
-        v = _voix(f["acteur"], chap + i)
+        qui = G._nom(f["acteur"])
+        sujet = ("Toi" if f["acteur"] == "toi" else qui)
         txt = _tenter(
-            f"PERSONNAGE : {v}\n"
-            f"SON FAIT : {f['heure']} — {f['titre']}"
+            f"LE FAIT : à {f['heure']}, {sujet} — {f['titre']}"
             + (f" ({f['detail'][:200]})" if f.get("detail") else "") + "\n\n"
-            "Raconte CE fait en quatre-vingts mots environ, à la troisième "
-            "personne, comme une scène. N'invente aucun détail technique.",
-            200, secours, chap * 10 + i)
-        entete = f"**{f['heure']} — {G._nom(f['acteur']).upper()}**"
+            "Rapporte CE fait en deux phrases, vingt-cinq mots environ. "
+            "Dis ce qui s'est passé et ce que ça change. Rien d'autre.",
+            120, secours, chap * 10 + i)
+        entete = f"**{f['heure']} — {qui.upper()}**"
         morceaux.append(entete + "\n" + txt if not txt.startswith("**") else txt)
 
-    # 4. L'« à suivre » + le résumé courant pour la nuit prochaine.
+    # 4. Ce qui reste ouvert. On ne demande PLUS « ce qu'on saura demain » :
+    # c'était une invitation explicite à la prédiction, donc à l'invention — sur
+    # des fils qui, de surcroît, ne bougeaient jamais.
     fils = fiche.get("fils_ouverts") or []
     suite = _tenter(
-        "FILS ENCORE OUVERTS :\n"
-        + ("\n".join(f"- {x.get('sujet', x.get('cle', ''))}" for x in fils[:4])
-           or "- (aucun)")
-        + "\n\nÉcris deux phrases : ce qui reste en suspens et ce qu'on saura "
-          "demain. Termine par rien d'autre.",
-        180, G._fils(fiche) or "Rien ne reste en suspens.", chap * 100)
+        "CE QUI RESTE OUVERT :\n"
+        + ("\n".join(f"- {x.get('libelle') or x.get('dernier') or x.get('sujet') or x.get('cle', '')}"
+                     for x in fils[:4]) or "- (rien)")
+        + "\n\nEn deux phrases : ce qui reste en suspens, et rien d'autre. "
+          "Ne suppose pas ce qui va arriver.",
+        120, G._fils(fiche) or "Rien ne reste en suspens.", chap * 100)
 
     try:
         RESUME.parent.mkdir(parents=True, exist_ok=True)
@@ -227,7 +269,8 @@ def _ledger(cout: dict, chap: int) -> None:
 
 def main(argv=None) -> int:
     sec = "--sec" in (argv or sys.argv)
-    fiche = J.collecte(24)
+    # `--sec` est un essai à blanc : il ne grave ni chapitre ni fil.
+    fiche = J.collecte(24, graver=not sec)
     texte, par, cout = rediger(fiche)
     if sec:
         print(texte)

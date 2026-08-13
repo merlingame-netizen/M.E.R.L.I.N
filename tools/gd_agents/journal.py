@@ -52,7 +52,7 @@ ID_PROP = re.compile(r"\b(\d{8}-\d{4}-[a-z0-9-]+?-[0-9a-f]{6})\b")
 
 # Poids : ce qui mérite d'ouvrir un chapitre plutôt que d'y figurer en passant.
 POIDS = {"resolution": 5, "echec": 4, "maxime": 4, "integration": 3,
-         "parole": 3, "mot": 3, "mesure": 2, "production": 1}
+         "parole": 3, "mot": 3, "attente": 2, "mesure": 2, "production": 1}
 
 
 # ── outils communs ───────────────────────────────────────────────────────────
@@ -128,7 +128,10 @@ JARGON = [
     (r"\bauto/nightly\b", "la branche de nuit"),
     (r"\bpayload\b", "contenu"),
     (r"\s{2,}", " "),
-    (r"\s+([,.;:])", r"\1"),
+    # En français, `:` `;` `!` `?` gardent leur espace insécable AVANT. La règle
+    # d'origine les mangeait aussi, d'où « Équilibreur: niamh » et « Tu as
+    # accepté: … » dans tous les titres. On ne colle que la virgule et le point.
+    (r"\s+([,.])", r"\1"),
     (r"—\s*—", "—"),
 ]
 
@@ -154,6 +157,24 @@ def _fait(t: float, acteur: str, type_: str, titre: str, detail: str = "",
             "poids": POIDS.get(type_, 1), "titre": titre[:180],
             "detail": detail[:600], "fil": fil, "refs": refs or [],
             "image": image, "origine": origine}
+
+
+def _fils_ouverts(prefixe: str = "") -> dict:
+    """Les fils encore ouverts, lus sur le registre. Ne lève jamais.
+
+    Les collecteurs en ont besoin AVANT que `_majfils` ne tourne : un fait ne
+    peut se déclarer « resolution » que s'il referme quelque chose. Sans cette
+    lecture, un agent au vert émettait « production » et son fil restait ouvert
+    à vie."""
+    d = _lire_json(FILS, {})
+    if not isinstance(d, dict):
+        return {}
+    return {k: v for k, v in d.items()
+            if isinstance(v, dict) and not v.get("clos") and k.startswith(prefixe)}
+
+
+def _fil_ouvert(cle: str) -> bool:
+    return cle in _fils_ouverts()
 
 
 # ── les collecteurs, un par source ───────────────────────────────────────────
@@ -245,13 +266,26 @@ def _decisions(depuis: float) -> list[dict]:
                 pas = str(e.get("step", ""))
                 if pas in ("acceptée", "écartée"):
                     continue          # déjà porté par le fait ci-dessus
-                dur = pas in ("smoke rouge", "poussée KO", "écartée",
-                              "sans suite automatique")
+                # « sans suite automatique » N'EST PAS un échec : c'est le
+                # système qui marche et qui dit « à toi de trancher ». Le classer
+                # ainsi ouvrait un fil permanent, et un fil MATHÉMATIQUEMENT
+                # infermable : il ne se clôt que sur « fusionnée », qui exige un
+                # `change.before`… dont l'absence est justement la raison pour
+                # laquelle le fil s'est ouvert.
+                # (« écartée » était du code mort : le `continue` ci-dessus
+                # l'intercepte avant d'arriver ici.)
+                dur = pas in ("smoke rouge", "poussée KO")
+                if pas == "sans suite automatique":
+                    type_ = "attente"      # ni échec ni progrès : en attente de toi
+                    fil_e = ""             # et surtout : n'ouvre AUCUN fil
+                else:
+                    type_ = ("echec" if dur else
+                             "resolution" if pas == "fusionnée" else "integration")
+                    fil_e = fil
                 faits.append(_fait(
-                    _ts(e.get("t")), "le codeur",
-                    "echec" if dur else "resolution" if pas == "fusionnée" else "integration",
+                    _ts(e.get("t")), "le codeur", type_,
                     f"{p.get('title', '')[:80]} — {pas}",
-                    str(e.get("detail", "")), fil=fil, refs=[p.get("id", "")]))
+                    str(e.get("detail", "")), fil=fil_e, refs=[p.get("id", "")]))
     return faits
 
 
@@ -272,9 +306,20 @@ def _agents(depuis: float) -> list[dict]:
         # chapitre entier construit sur du vide.
         if not resume or resume.strip("()").lower().startswith(("sans résumé", "sans resume")):
             continue
-        echec = st.get("ok") is False
-        faits.append(_fait(t, st.get("id", f.stem), "echec" if echec else "production",
-                           resume, "", fil=f"agent:{st.get('id', f.stem)}"))
+        # Un agent qui repart au vert doit CLORE son fil. Il n'émettait que
+        # « echec » ou « production », jamais « resolution » — donc un fil
+        # `agent:<id>` était structurellement infermable. Le succès ne compte
+        # comme résolution que si un fil est ouvert sur cet agent.
+        aid = st.get("id", f.stem)
+        cle = f"agent:{aid}"
+        if st.get("ok") is False:
+            type_ = "echec"
+        elif _fil_ouvert(cle):
+            type_ = "resolution"
+            resume = f"{resume} — reparti au vert"
+        else:
+            type_ = "production"
+        faits.append(_fait(t, aid, type_, resume, "", fil=cle))
     return faits
 
 
@@ -308,16 +353,31 @@ def _ci(depuis: float) -> list[dict]:
         ko = int(r.get("scenes_failing") or 0)
         sha = str(r.get("sha", ""))[:8]
         scenes = _scenes_en_echec(sha)
-        faits.append(_fait(
-            t, "le vérificateur", "echec" if ko else "resolution",
-            (f"{ko} scène refuse de démarrer" if ko == 1 else
-             f"{ko} scènes refusent de démarrer" if ko
-             else f"Les {r.get('scenes_total', '?')} scènes démarrent"),
-            " · ".join(x for x in [str(r.get("diag", "")).strip(),
-                                   ("scènes : " + ", ".join(scenes)) if scenes else ""] if x),
-            fil=("scene:" + scenes[0]) if scenes else "ci",
-            refs=[sha],
-            image=f"/api/ci/shot/{sha}" if r.get("shot") else ""))
+        image = f"/api/ci/shot/{sha}" if r.get("shot") else ""
+        detail = " · ".join(x for x in [str(r.get("diag", "")).strip(),
+                                        ("scènes : " + ", ".join(scenes)) if scenes else ""] if x)
+        if ko:
+            faits.append(_fait(
+                t, "le vérificateur", "echec",
+                f"{ko} scène refuse de démarrer" if ko == 1
+                else f"{ko} scènes refusent de démarrer",
+                detail, fil=("scene:" + scenes[0]) if scenes else "ci",
+                refs=[sha], image=image))
+            continue
+        # Tout est vert. Un succès n'a PAS de scène en échec à nommer : la clé
+        # « ci » ne référençait donc aucun fil ouvert, et les fils `scene:<X>`
+        # nés d'un rouge ne se refermaient jamais. On ferme explicitement chacun
+        # d'eux — un fait par fil, sinon un seul est clos et les autres restent.
+        cles = list(_fils_ouverts("scene:")) or list(_fils_ouverts("ci"))
+        titre = f"Les {r.get('scenes_total', '?')} scènes démarrent"
+        if not cles:
+            faits.append(_fait(t, "le vérificateur", "resolution", titre,
+                               detail, fil="", refs=[sha], image=image))
+        for cle in cles[:4]:
+            faits.append(_fait(
+                t, "le vérificateur", "resolution", titre,
+                (detail + " · " if detail else "") + f"{cle.split(':', 1)[-1]} repart",
+                fil=cle, refs=[sha], image=image))
     return faits
 
 
@@ -450,38 +510,96 @@ def _vues() -> list[str]:
 
 # ── les fils : ce qui relie les jours entre eux ──────────────────────────────
 
-def _majfils(faits: list[dict], jour: str) -> dict:
+def _majfils(faits: list[dict], jour: str, graver: bool = False) -> dict:
     """Ouvre un fil au premier signe, le ferme à la résolution. Aucun LLM.
 
     La clé est déterministe (`scene:X`, `proposition:<id>`, `agent:<id>`) : deux
     nuits différentes qui parlent du même problème atterrissent dans le même fil,
-    et c'est ce qui permet d'écrire « troisième nuit consécutive »."""
-    fils = _lire_json(FILS, {}) or {}
+    et c'est ce qui permet d'écrire « troisième nuit consécutive ».
+
+    `graver` est FAUX par défaut : une simple lecture (`--fiche`, le portail) ne
+    doit pas faire vieillir les fils. Elle le faisait, et chaque inspection
+    ajoutait le jour courant à des fils que personne n'avait touchés."""
+    fils = _lire_json(FILS, {})
+    if not isinstance(fils, dict):
+        fils = {}
     for f in sorted(faits, key=lambda x: x["t"]):
         cle = f.get("fil")
         if not cle:
             continue
         d = fils.get(cle)
+        if not isinstance(d, dict):
+            d = None
+        # Le jour se lit sur le FAIT, jamais sur le run : une collecte de 24 h
+        # lancée à 5 h 50 embrasse deux dates, et compter le jour du run faisait
+        # passer un incident unique pour une « 2ᵉ nuit consécutive ».
+        jr = time.strftime("%Y-%m-%d", time.localtime(f["t"])) or jour
         # Seul un ÉCHEC ouvre un fil. Une décision de Maxime est un événement,
         # pas une question en suspens : ouvrir un fil à chaque « oui » ou « non »
         # remplissait la rubrique de choses déjà tranchées.
-        if f["type"] == "echec" and not d:
-            fils[cle] = {"ouvert": jour, "sujet": f["titre"][:120],
-                         "jours": [jour], "clos": None, "dernier": f["titre"][:120]}
+        if f["type"] == "echec" and (d is None or d.get("clos")):
+            # Un échec qui revient ROUVRE le fil. L'ancienne règle (`not d`)
+            # rendait toute rechute muette : le fil clos absorbait l'échec sans
+            # rien afficher, et le problème récurrent n'existait plus nulle part.
+            anciens = (d.get("jours") if d else None) or []
+            fils[cle] = {"ouvert": jr, "sujet": f["titre"][:120],
+                         "jours": list(dict.fromkeys([*anciens, jr])),
+                         "clos": None, "dernier": f["titre"][:120],
+                         "rouvert": jr if d else "",
+                         "t": f["t"]}
         elif d and not d.get("clos"):
-            if jour not in d["jours"]:
-                d["jours"].append(jour)
+            if jr not in d.get("jours", []):
+                d.setdefault("jours", []).append(jr)
             d["dernier"] = f["titre"][:120]
+            d["t"] = f["t"]
             if f["type"] == "resolution":
-                d["clos"] = jour
-    BASE.mkdir(parents=True, exist_ok=True)
-    FILS.write_text(json.dumps(fils, ensure_ascii=False, indent=1), encoding="utf-8")
+                d["clos"] = jr
+    if graver:
+        try:
+            BASE.mkdir(parents=True, exist_ok=True)
+            FILS.write_text(json.dumps(fils, ensure_ascii=False, indent=1),
+                            encoding="utf-8")
+        except Exception:
+            pass
     return fils
+
+
+def fils_visibles(fils: dict | None = None, limite: int = 6) -> list[dict]:
+    """Les fils ouverts, prêts à afficher : dédoublonnés, les plus graves devant.
+
+    Trois corrections d'affichage, aucune donnée effacée (le registre reste
+    intact — c'est la règle de la mémoire) :
+
+    · on montre `dernier` et non `sujet` : le sujet est gelé à l'ouverture, d'où
+      des fils qui portaient encore le jargon d'avant le nettoyage ;
+    · deux clés distinctes au même libellé (« Équilibreur : niamh », une par
+      nuit) ne font qu'une ligne, comme les faits répétés d'un chapitre ;
+    · le tri va du plus grave au plus frais. Trier par date d'ouverture
+      croissante réservait les six places aux plus vieux — les zombies — et
+      l'incident de la nuit n'apparaissait jamais."""
+    src = fils if isinstance(fils, dict) else _lire_json(FILS, {})
+    if not isinstance(src, dict):
+        return []
+    groupes: dict[str, list[dict]] = {}
+    for cle, v in src.items():
+        if not isinstance(v, dict) or v.get("clos"):
+            continue
+        f = {"cle": cle, **v}
+        etiquette = _francais(str(f.get("dernier") or f.get("sujet") or cle))
+        f["libelle"] = etiquette[:120]
+        groupes.setdefault(re.sub(r"\W+", " ", etiquette.lower()).strip()[:70], []).append(f)
+    out = []
+    for g in groupes.values():
+        recent = max(g, key=lambda x: (x.get("t") or 0, x.get("ouvert", "")))
+        jours = sorted({j for x in g for j in (x.get("jours") or [])})
+        out.append({**recent, "jours": jours, "repetitions": len(g)})
+    out.sort(key=lambda f: (-len(f.get("jours") or []), -(f.get("t") or 0)))
+    return out[:limite]
 
 
 # ── la fiche de nuit ─────────────────────────────────────────────────────────
 
-def collecte(heures: int = 24) -> dict:
+def collecte(heures: int = 24, graver: bool = False) -> dict:
     """La matière du chapitre : des faits datés, pondérés, déjà en français."""
     depuis = time.time() - heures * 3600
     jour = time.strftime("%Y-%m-%d", time.localtime())
@@ -495,8 +613,7 @@ def collecte(heures: int = 24) -> dict:
                                f"{type(exc).__name__}: {exc}"[:120]))
     faits = [f for f in faits if f["t"] >= depuis]
     faits.sort(key=lambda f: f["t"])
-    fils = _majfils(faits, jour)
-    ouverts = {k: v for k, v in fils.items() if not v.get("clos")}
+    fils = _majfils(faits, jour, graver=graver)
     n = len(_lire_jsonl(CHAPITRES, 5000)) + 1
     return {
         "n": n, "jour": jour, "depuis": depuis, "heures": heures,
@@ -505,8 +622,7 @@ def collecte(heures: int = 24) -> dict:
         "causalite": index,
         "chiffres": _chiffres(),
         "mesures": _mesures(),
-        "fils_ouverts": [{"cle": k, **v} for k, v in
-                         sorted(ouverts.items(), key=lambda x: x[1].get("ouvert", ""))][:6],
+        "fils_ouverts": fils_visibles(fils),
         # Les 3 écrans clés d'abord (ils montrent le jeu JOUÉ), les images des
         # faits ensuite. La capture CI, elle, est toujours le premier écran neuf
         # secondes après le boot : elle ne raconte rien.
@@ -559,7 +675,9 @@ def main(argv=None) -> int:
     ap.add_argument("--gabarits", action="store_true", help="rédiger sans LLM")
     ap.add_argument("--heures", type=int, default=24)
     a = ap.parse_args(argv)
-    fiche = collecte(a.heures)
+    # Seule une gravure met les fils à jour : `--fiche` inspecte, elle ne
+    # vieillit rien (V4 du plan : md5sum de fils.json identique avant/après).
+    fiche = collecte(a.heures, graver=bool(a.ecrire) and not a.fiche)
     if a.fiche or not (a.ecrire):
         print(json.dumps(fiche, ensure_ascii=False, indent=1)[:6000])
         print(f"\n{len(fiche['faits'])} fait(s) · {len(fiche['fils_ouverts'])} fil(s) ouvert(s)"

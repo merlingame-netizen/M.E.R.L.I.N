@@ -670,13 +670,17 @@ async function refreshChapitres() {
   const fm = $('#fils-meta');
   if (fm) fm.textContent = fils.length ? `${fils.length} en suspens` : 'rien en suspens';
   if (filsBox) filsBox.innerHTML = fils.length ? fils.map(f => {
+    // `libelle` est l'état COURANT du fil (dernier fait connu), pas le sujet
+    // gelé à son ouverture : c'est ce que Maxime veut lire.
     const n = (f.jours || []).length;
     const duree = n <= 1 ? 'ouvert aujourd\'hui'
-      : `ouvert le ${esc(f.ouvert || '?')} · ${n}ᵉ jour`;
+      : `${n} jours · depuis le ${esc(f.ouvert || '?')}`;
+    const quoi = f.libelle || f.dernier || f.sujet || f.cle;
+    const rouvert = f.rouvert ? ' · revenu' : '';
     return `<div class="jentry"><div class="jhead">
-        <span class="jico">🧵</span><span class="jtitle err">${esc(f.sujet || f.cle)}</span>
-        <span class="jago">${duree}</span></div>
-      ${f.dernier && f.dernier !== f.sujet ? `<div class="jdetail">${esc(f.dernier)}</div>` : ''}</div>`;
+        <span class="jico">🧵</span><span class="jtitle err">${esc(quoi)}</span>
+        <span class="jago">${duree}${rouvert}</span></div>
+      ${f.sujet && f.sujet !== quoi ? `<div class="jdetail">au départ : ${esc(f.sujet)}</div>` : ''}</div>`;
   }).join('') : '<div class="mut">rien en suspens — tout ce qui s\'est ouvert s\'est refermé</div>';
 
   const cm = $('#chap-meta');

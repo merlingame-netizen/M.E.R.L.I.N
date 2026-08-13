@@ -160,9 +160,12 @@ def _fils(fiche: dict) -> str:
     lignes = []
     for f in ouverts[:4]:
         n = len(f.get("jours") or [])
-        duree = ("ouvert cette nuit" if n <= 1 else
-                 f"ouvert le {f.get('ouvert', '?')}, {n}ᵉ nuit consécutive")
-        lignes.append(f"· {f.get('sujet', f.get('cle', ''))} — {duree}.")
+        # « consécutive » était faux : `jours` collecte des dates distinctes, pas
+        # une suite. On dit ce qu'on sait — le nombre de jours où ça s'est vu.
+        duree = ("ouvert aujourd'hui" if n <= 1 else
+                 f"ouvert le {f.get('ouvert', '?')}, revu {n} jours")
+        quoi = f.get("libelle") or f.get("dernier") or f.get("sujet") or f.get("cle", "")
+        lignes.append(f"· {quoi} — {duree}.")
     return "**FILS EN COURS**\n" + "\n".join(lignes)
 
 
@@ -205,8 +208,47 @@ def _titre_court(fiche: dict) -> str:
         return "Une nuit sans histoire"
     prio = ([f for f in s if f["type"] == "echec"]
             or [f for f in s if f["type"] == "maxime"] or s)
-    t = re.sub(r"\s+—\s+(fusionnée|poussée|patchée|smoke \w+)$", "", prio[0]["titre"])
-    return (t[:70] + "…") if len(t) > 71 else t
+    return _sujet_de(prio[0]["titre"])
+
+
+# Ce qui précède le vrai sujet : l'étiquette administrative du fait, le jalon
+# du parcours, le nom de l'agent. « Tu as accepté : Professeur du modèle —
+# analyse seule sur « Cotes Sauvag… » n'annonce rien ; « Cotes Sauvages » si.
+_PREFIXE = re.compile(
+    r"^(tu as (accepté|écarté|rejeté)|intégré automatiquement|"
+    r"proposition|mission|analyse seule( sur)?)\s*[:—-]?\s*", re.I)
+_JALON = re.compile(r"\s+—\s+(fusionnée|poussée( KO)?|patchée|sans suite\b.*|"
+                    r"test de démarrage \w+|smoke \w+)\s*$", re.I)
+
+
+def _sujet_de(titre: str, largeur: int = 66) -> str:
+    """Le sujet nu d'un titre, coupé sur un MOT entier.
+
+    Trois fautes cumulées produisaient « Tu as accepté: Professeur du modèle —
+    analyse seule sur « Cotes Sauvag… » : le préfixe administratif, le libellé
+    d'agent, et une coupe au 70ᵉ caractère en plein milieu d'un mot."""
+    def _nu(x: str) -> str:
+        for _ in range(3):                   # « Tu as accepté : Proposition … »
+            y = _PREFIXE.sub("", x).strip(" :—-")
+            if y == x:
+                return x
+            x = y
+        return x
+
+    t = _nu(_JALON.sub("", str(titre or "").strip()))
+    # Un libellé d'agent (« Professeur du modèle — le vrai sujet ») : on garde
+    # ce qui suit le tiret quand la partie de droite est la plus parlante, puis
+    # on la débarrasse à son tour de son propre préfixe (« analyse seule sur »).
+    bouts = [x.strip() for x in re.split(r"\s+—\s+", t) if x.strip()]
+    if len(bouts) > 1 and len(bouts[-1]) >= 12:
+        t = _nu(bouts[-1])
+    t = t.strip(" «»\"'·-")
+    if not t:
+        return "Une nuit sans histoire"
+    if len(t) > largeur + 1:
+        coupe = t[:largeur].rsplit(" ", 1)[0].rstrip(" ,;:—-«")
+        t = (coupe or t[:largeur]) + "…"
+    return t[:1].upper() + t[1:]
 
 
 if __name__ == "__main__":

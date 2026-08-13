@@ -274,10 +274,9 @@ def chapitres(limite: int = 20) -> dict:
         _s.path.insert(0, str(ROOT / "tools" / "gd_agents"))
         import journal as J
         chaps = J.chapitres(limite)
-        fils = _read_json(J.FILS, {}) or {}
-        ouverts = [{"cle": k, **v} for k, v in fils.items() if not v.get("clos")]
-        ouverts.sort(key=lambda f: f.get("ouvert", ""))
-        return {"chapitres": chaps, "fils_ouverts": ouverts[:6],
+        # Le tri, la déduplication et le libellé à jour sont dans `journal.py` —
+        # une seule règle pour la page ET pour le chapitre écrit la nuit.
+        return {"chapitres": chaps, "fils_ouverts": J.fils_visibles(limite=6),
                 "total": len(chaps)}
     except Exception as exc:
         return {"chapitres": [], "fils_ouverts": [], "total": 0,
