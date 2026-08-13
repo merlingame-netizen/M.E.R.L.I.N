@@ -386,10 +386,17 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
                     g["n"] += 1
                     g["t"] = max(g["t"], t)   # la ligne porte le DERNIER geste
                     continue
+                # Le SUJET dans le titre, l'auteur dans le détail. Seize lignes
+                # « Tu as accepté une proposition » sont illisibles : le libellé
+                # ne disait pas de QUOI il s'agissait, et la seule information
+                # utile était reléguée en seconde ligne.
+                sujet = str(p.get("title", "")).strip()
                 ev.append({"t": t, "kind": "proposal", "auto": False,
-                           "title": label,
-                           "detail": f"De la part de {who} : "
-                                     f"{str(p.get('title', ''))[:110]}", "shot": ""})
+                           "title": f"{label.split(' une ')[0]} : {sujet[:90]}"
+                                    if sujet else label,
+                           "detail": f"proposé par {who}"
+                                     + (f" · {raison}" if raison else ""),
+                           "shot": ""})
         except Exception:
             continue
     for (sub, _jour), g in autos.items():
