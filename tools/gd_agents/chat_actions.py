@@ -50,6 +50,21 @@ def _cron_ok(schedule: str | None) -> bool:
 
 
 def _agents() -> list[dict]:
+    """L'état EFFECTIF des agents : le manifeste PLUS les réglages de Maxime.
+
+    Ne lire que le manifeste versionné faisait mentir la conversation : Maxime
+    mettait un agent en pause depuis le portail (ce qui écrit dans overrides.py,
+    hors dépôt), puis demandait « qui tourne ? » — et on lui répondait que
+    l'agent tournait toujours, en citant le fichier d'origine. La crontab, elle,
+    lit déjà les overrides ; c'est ici seulement qu'ils étaient ignorés."""
+    try:
+        sys.path.insert(0, str(AGENTS_JSON.parent))
+        import overrides as OV
+        liste = OV.agents()
+        if liste:
+            return liste
+    except Exception:
+        pass
     try:
         return json.loads(AGENTS_JSON.read_text(encoding="utf-8")).get("agents", [])
     except Exception:
@@ -122,12 +137,27 @@ def catalogue_for_prompt() -> str:
         f"Identifiants d'agents valides : {ids}.")
 
 
-def _aid(verb: str, target: str, value: str) -> str:
-    return hashlib.sha1(f"{verb}|{target}|{value}".encode()).hexdigest()[:10]
+def _schedule_de(aid: str) -> str:
+    return next((a.get("schedule", "") for a in _agents() if a.get("id") == aid), "")
 
 
-def parse(reply: str) -> tuple[str, list[dict]]:
-    """Extrait les lignes ACTION du texte. Rend (texte nettoyé, actions valides)."""
+def _aid(verb: str, target: str, value: str, sel: str = "") -> str:
+    """Identifiant du bouton — UNIQUE par proposition, pas par contenu.
+
+    L'ancienne version hachait seulement (verbe, cible, valeur) : reproposer la
+    même action deux jours plus tard rendait le MÊME identifiant, et le front,
+    qui mémorise les boutons déjà tapés, affichait « déjà fait » sur un bouton
+    jamais touché. `sel` (le fil et la position) rend chaque proposition
+    distincte tout en restant déterministe pour un même message."""
+    return hashlib.sha1(f"{verb}|{target}|{value}|{sel}".encode()).hexdigest()[:10]
+
+
+def parse(reply: str, sel: str = "") -> tuple[str, list[dict]]:
+    """Extrait les lignes ACTION du texte. Rend (texte nettoyé, actions valides).
+
+    `sel` distingue deux propositions identiques faites à deux moments : sans
+    lui, la seconde héritait de l'identifiant de la première et s'affichait
+    « déjà fait » avant d'avoir été tapée. L'appelant y met le fil."""
     ids = agent_ids()
     actions, keep, rejets = [], [], []
     for line in reply.splitlines():
@@ -151,6 +181,16 @@ def parse(reply: str) -> tuple[str, list[dict]]:
                 continue
             if verb == "agent.toggle" and value not in ("on", "off"):
                 rejets.append((verb, f"« {value} » n'est pas on/off"))
+                continue
+            # Ne propose JAMAIS un bouton qui échouera. `_patch_agent` refuse
+            # d'activer un agent sans cadence cron (« à la demande », « webhook »)
+            # — la crontab entière serait rejetée. Le bouton s'affichait quand
+            # même, et Maxime tapait pour recevoir un refus. Le vérifier ici, à
+            # l'écriture, lui évite ce geste inutile.
+            if verb == "agent.toggle" and value == "on" \
+                    and not _cron_ok(_schedule_de(target)):
+                rejets.append((verb, f"« {ids[target]} » n'a pas de cadence — "
+                                     "il faut d'abord lui en donner une"))
                 continue
             if verb == "agent.cadence" and value not in CADENCES:
                 rejets.append((verb, f"« {value} » n'est pas une cadence connue"))
@@ -181,7 +221,8 @@ def parse(reply: str) -> tuple[str, list[dict]]:
                 rejets.append((verb, f"longueur {len(value)} hors 10-500"))
                 continue
             label = parts[-1] if len(parts) > 3 else "Créer un agent : " + value[:36]
-        actions.append({"id": _aid(verb, target, value), "verb": verb,
+        actions.append({"id": _aid(verb, target, value, f"{sel}#{len(actions)}"),
+                        "verb": verb,
                         "target": target, "value": value, "label": label[:90],
                         "done": False})
     texte = "\n".join(keep).strip()

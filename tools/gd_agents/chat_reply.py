@@ -181,7 +181,9 @@ def main(conv: str, adviser: str) -> int:
                        source=f"chat/{who}")
             reply = head.strip() + f"\n\n📌 J'ai gravé dans la mémoire : « {rule} »"
     # Actions proposées : extraites du texte, validées, attachées au message.
-    reply, actions = chat_actions.parse(reply)
+    # Le fil ET l'instant distinguent deux propositions identiques : sans eux,
+    # reproposer la même action affichait un bouton « déjà fait ».
+    reply, actions = chat_actions.parse(reply, sel=f"{conv}@{int(time.time())}")
     # Le modèle met parfois tout dans les lignes ACTION → texte vide. On habille.
     if not reply.strip() and actions:
         reply = (f"Voici le plan que je te propose ({len(actions)} étapes) — "

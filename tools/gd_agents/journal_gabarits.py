@@ -221,7 +221,7 @@ _JALON = re.compile(r"\s+—\s+(fusionnée|poussée( KO)?|patchée|sans suite\b.
                     r"test de démarrage \w+|smoke \w+)\s*$", re.I)
 
 
-def _sujet_de(titre: str, largeur: int = 66) -> str:
+def _sujet_de(titre: str, largeur: int = 66, garder_acteur: bool = False) -> str:
     """Le sujet nu d'un titre, coupé sur un MOT entier.
 
     Trois fautes cumulées produisaient « Tu as accepté: Professeur du modèle —
@@ -241,14 +241,33 @@ def _sujet_de(titre: str, largeur: int = 66) -> str:
     # on la débarrasse à son tour de son propre préfixe (« analyse seule sur »).
     bouts = [x.strip() for x in re.split(r"\s+—\s+", t) if x.strip()]
     if len(bouts) > 1 and len(bouts[-1]) >= 12:
-        t = _nu(bouts[-1])
-    t = t.strip(" «»\"'·-")
+        # Un FIL garde son acteur : « Équilibreur — niamh » dit qui bloque et
+        # sur quoi. Un TITRE de chapitre, lui, n'a que faire du nom de l'agent.
+        t = (bouts[0] + " — " + _nu(bouts[-1])) if garder_acteur else _nu(bouts[-1])
+    t = _guillemets(t.strip(" «»\"'·-"))
     if not t:
         return "Une nuit sans histoire"
     if len(t) > largeur + 1:
         coupe = t[:largeur].rsplit(" ", 1)[0].rstrip(" ,;:—-«")
-        t = (coupe or t[:largeur]) + "…"
+        t = _guillemets(coupe or t[:largeur]) + "…"
     return t[:1].upper() + t[1:]
+
+
+def _guillemets(t: str) -> str:
+    """Rétablit l'équilibre des guillemets français.
+
+    Retirer un préfixe ou couper à la bonne longueur laissait des orphelins —
+    « Professeur du modèle — « Marais des Korrigans » ouvre sans fermer, et
+    « Niamh », le modèle… » ferme sans avoir ouvert. C'est le genre de détail
+    qui fait qu'une ligne « a l'air cassée » sans qu'on sache dire pourquoi."""
+    ouv, fer = t.count("«"), t.count("»")
+    if ouv > fer:
+        # On ferme la citation plutôt que de la rouvrir : le texte cité est là.
+        t = t.rstrip(" ,;:—-") + " »"
+    elif fer > ouv:
+        t = t.replace("»", "", fer - ouv)
+    # Retirer un guillemet laisse son espace derrière lui (« Niamh , le modèle »).
+    return re.sub(r"\s+([,.])", r"\1", re.sub(r"\s{2,}", " ", t)).strip()
 
 
 if __name__ == "__main__":

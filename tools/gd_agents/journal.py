@@ -190,6 +190,20 @@ def _fil_ouvert(cle: str) -> bool:
     return cle in _fils_ouverts()
 
 
+def _auto(p: dict) -> bool:
+    """Cette décision est-elle de la MACHINE, ou de Maxime ?
+
+    L'ancien test (`ne commence pas par « auto »`) était trop étroit : mesuré sur
+    la VM, quinze cartes intégrées seules par la chaîne s'affichaient « Tu as
+    accepté ». Attribuer à quelqu'un un geste qu'il n'a pas fait est la pire
+    erreur que puisse commettre un journal."""
+    raison = str(p.get("decision_reason", "")).lstrip().lower()
+    return (str(p.get("source", "")) in ("menage", "chaine", "auto")
+            or raison.startswith("auto")
+            or "automatiquement" in raison
+            or "validé sans erreur" in raison)
+
+
 # ── les collecteurs, un par source ───────────────────────────────────────────
 
 def _commits(depuis: float) -> tuple[list[dict], dict]:
@@ -262,7 +276,7 @@ def _decisions(depuis: float) -> list[dict]:
             fil = "proposition:" + str(p.get("id", ""))
             t0 = _ts(p.get("decided_at") or p.get("created"))
             raison = str(p.get("decision_reason", "")).strip()
-            mienne = not raison.lstrip().startswith("auto ")
+            mienne = not _auto(p)
             verbe = "accepté" if issue == "acceptée" else "écarté"
             faits.append(_fait(
                 t0, "toi" if mienne else "la chaîne", "maxime" if mienne else "production",
@@ -563,10 +577,16 @@ def _majfils(faits: list[dict], jour: str, graver: bool = False) -> dict:
         elif d and not d.get("clos"):
             if jr not in d.get("jours", []):
                 d.setdefault("jours", []).append(jr)
-            d["dernier"] = f["titre"][:120]
-            d["t"] = f["t"]
+            # Seul un fait de la MÊME nature que le problème raconte où en est le
+            # fil. Laisser une décision écraser `dernier` donnait des fils
+            # intitulés « Tu as écarté : … » — le fil parlait de ce que Maxime
+            # avait fait, plus de ce qui restait à régler.
+            if f["type"] in ("echec", "resolution", "integration"):
+                d["dernier"] = f["titre"][:120]
+                d["t"] = f["t"]
             if f["type"] == "resolution":
                 d["clos"] = jr
+    _clore_perimes(fils, jour)
     if graver:
         try:
             BASE.mkdir(parents=True, exist_ok=True)
@@ -575,6 +595,36 @@ def _majfils(faits: list[dict], jour: str, graver: bool = False) -> dict:
         except Exception:
             pass
     return fils
+
+
+def _clore_perimes(fils: dict, jour: str) -> None:
+    """Ferme les fils qui n'ont PLUS RIEN en suspens.
+
+    Six fils traînaient depuis des nuits, ouverts par « sans suite automatique »
+    avant que ce cas ne cesse d'être compté comme un échec. On ne les efface
+    pas — la règle « rien ne s'efface » vaut ici comme pour la mémoire — mais un
+    fil dont la proposition a été TRANCHÉE (écartée, ou acceptée puis fusionnée)
+    ne pose plus de question. On le clôt sur un fait vérifiable, pas sur son âge."""
+    for cle, d in list(fils.items()):
+        if not isinstance(d, dict) or d.get("clos") or not cle.startswith("proposition:"):
+            continue
+        pid = cle.split(":", 1)[1]
+        if not pid:
+            continue
+        try:
+            rej = (PROPS / "rejected" / f"{pid}.json")
+            acc = (PROPS / "accepted" / f"{pid}.json")
+            if rej.exists():
+                d["clos"] = jour
+                d["clos_parce_que"] = "proposition écartée — plus rien en suspens"
+            elif acc.exists():
+                p = _lire_json(acc, {})
+                etapes = {str(e.get("step", "")) for e in (p.get("trail") or [])}
+                if "fusionnée" in etapes:
+                    d["clos"] = jour
+                    d["clos_parce_que"] = "changement entré dans le jeu"
+        except Exception:
+            continue
 
 
 def fils_visibles(fils: dict | None = None, limite: int = 6) -> list[dict]:
@@ -599,6 +649,13 @@ def fils_visibles(fils: dict | None = None, limite: int = 6) -> list[dict]:
             continue
         f = {"cle": cle, **v}
         etiquette = _francais(str(f.get("dernier") or f.get("sujet") or cle))
+        # Même nettoyage que pour les titres de chapitre : on retire le préfixe
+        # administratif et le libellé d'agent, et on coupe sur un mot entier.
+        try:
+            import journal_gabarits as G
+            etiquette = G._sujet_de(etiquette, 90, garder_acteur=True)
+        except Exception:
+            pass
         f["libelle"] = etiquette[:120]
         groupes.setdefault(re.sub(r"\W+", " ", etiquette.lower()).strip()[:70], []).append(f)
     out = []
