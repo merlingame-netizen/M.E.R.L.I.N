@@ -205,7 +205,7 @@ def rediger(fiche: dict) -> str:
               for f in sorted(retenir(faits, 5), key=lambda x: x["t"])]
 
     entete = (f"**JOURNAL DE L'ATELIER — {fiche.get('jour', '')} · chapitre {fiche.get('n', '?')}**\n"
-              f"*« {_titre_court(fiche)} »*")
+              f"*{titre_habille(fiche)}*")
     blocs = [entete, _chapo(fiche)] + scenes
     for extra in (_chiffres(fiche), _fils(fiche)):
         if extra:
@@ -213,6 +213,16 @@ def rediger(fiche: dict) -> str:
     blocs.append(f"*{_pluriel(len(faits), 'fait consigné', 'faits consignés')} cette nuit. "
                  "Rédigé sans modèle.*")
     return "\n\n".join(blocs)
+
+
+def titre_habille(fiche: dict) -> str:
+    """Le titre entre guillemets — sauf s'il en contient déjà.
+
+    « « Nouvelle carte pour « Foret de Broceliande » » » : les guillemets
+    imbriqués sont illisibles, et le titre porte souvent déjà le nom cité d'un
+    biome. Dans ce cas on le laisse nu."""
+    t = _titre_court(fiche)
+    return t if ("«" in t or "»" in t) else f"« {t} »"
 
 
 def _titre_court(fiche: dict) -> str:

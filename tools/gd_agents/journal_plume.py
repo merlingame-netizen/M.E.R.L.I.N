@@ -238,7 +238,7 @@ def rediger(fiche: dict) -> tuple[str, str, dict]:
         pass
 
     entete = (f"**JOURNAL DE L'ATELIER — {fiche.get('jour','')} · chapitre {chap}**\n"
-              f"*« {G._titre_court(fiche)} »*")
+              f"*{G.titre_habille(fiche)}*")
     blocs = [entete, chapo] + morceaux
     for extra in (G._chiffres(fiche), G._fils(fiche), suite):
         if extra:
