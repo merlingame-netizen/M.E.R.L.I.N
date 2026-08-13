@@ -174,11 +174,24 @@
     </div>
    </div>
    <div class="chat-tools">
+    <!-- La mémoire est TOUJOURS à portée, quel que soit le moment de la
+         conversation : on discute d'abord, on grave quand c'est mûr. -->
+    <button class="chip-btn" id="talk-grave" title="Graver dans la mémoire du jeu">📌</button>
     <button class="chip-btn" id="talk-history" title="Conversations">🕑</button>
     <button class="chip-btn" id="talk-new" title="Nouvelle conversation">✚</button>
    </div>
    <div id="talk-convs" class="chat-drawer" hidden></div>
   </header>
+  <!-- Ce qui sera gravé est proposé, puis CORRIGÉ par Maxime : ce sont ses mots
+       qui entrent dans la mémoire, jamais le résumé d'un modèle. -->
+  <div class="graver" id="talk-graver" hidden>
+   <div class="mut">Graver dans la mémoire du jeu — corrige la phrase, c'est elle qui restera :</div>
+   <div class="row" style="gap:8px;margin-top:8px">
+    <input type="text" maxlength="200" placeholder="La règle ou la décision à retenir…" style="flex:1">
+    <button class="go sm" onclick="window.merlinGraver()">📌 Graver</button>
+    <button class="go sm" onclick="document.getElementById('talk-graver').hidden = true">Annuler</button>
+   </div>
+  </div>
   <!-- Qui t'a écrit sans que tu demandes rien. Un tap ouvre le fil. -->
   <div class="boite" id="talk-boite" hidden></div>
   <div id="talk-thread" class="chat-thread"></div>

@@ -270,6 +270,14 @@ async function initTalk() {
   $('#talk-form').addEventListener('submit', e => { e.preventDefault(); talkSend(); });
   $('#talk-new').onclick = () => { TALK_CONV = null; renderThread([]); $('#talk-suggest').classList.remove('gone'); ta.focus(); };
   $('#talk-history').onclick = () => { const d = $('#talk-convs'); d.hidden = !d.hidden; if (!d.hidden) refreshConvs(); };
+  // Graver, à tout moment : la mémoire n'est plus un bouton posé sous UN
+  // message, c'est un geste disponible pendant toute la conversation.
+  const bg = $('#talk-grave');
+  if (bg) bg.onclick = () => {
+    const z = $('#talk-graver');
+    if (z.hidden) ouvrirGravure(); else z.hidden = true;
+  };
+  window.merlinGraver = graverMaintenant;   // appelé par le bouton du gabarit
   document.querySelectorAll('.chat-suggest button').forEach(b =>
     b.onclick = () => { ta.value = b.dataset.q; talkSend(); });
   renderThread([]);
@@ -348,10 +356,16 @@ function renderThread(msgs) {
   th.innerHTML = msgs.map(m => {
     const me = m.role === 'user';
     const list = m.actions || [];
-    const pending = list.filter(a => !a.done).length;
+    // « En parler » n'est pas une étape de plan : elle n'exécute rien côté
+    // serveur, la compter ferait promettre à « Tout lancer » ce qu'il ne fait pas.
+    const pending = list.filter(a => !a.done && a.verb !== 'chat.parler').length;
+    // `data-label` : le bouton doit pouvoir REDIRE ce qu'il fait après un échec.
+    // `data-parler` : cette action-là n'exécute rien, elle amorce la saisie.
     const acts = list.map(a => a.done
       ? `<span class="act done">✓ ${esc(a.label)}</span>`
-      : `<button class="act" data-aid="${esc(a.id)}">${esc(a.label)}</button>`).join('');
+      : `<button class="act" data-aid="${esc(a.id)}" data-label="${esc(a.label)}"${
+          a.verb === 'chat.parler' ? ` data-parler="${esc(a.value || '')}"` : ''
+        }>${esc(a.label)}</button>`).join('');
     // Plusieurs actions en attente = un PLAN : un bouton « Tout lancer » en tête.
     const plan = pending > 1
       ? `<button class="act plan" data-plan="${esc(m.t || '')}">⚡ Tout lancer (${pending} étapes)</button>`
@@ -377,14 +391,91 @@ function showTyping() {
 }
 
 async function doChatAction(aid, btn) {
+  // « En parler » n'exécute rien : il ouvre la conversation. On amorce la
+  // saisie avec le sujet et on rend la main à Maxime — ce sont SES mots qui
+  // partiront, pas une phrase écrite à sa place.
+  if (btn.dataset.parler !== undefined) {
+    const inp = $('#talk-input');
+    if (inp) {
+      inp.value = btn.dataset.parler;
+      inp.focus();
+      try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {}
+      inp.dispatchEvent(new Event('input'));
+    }
+    btn.classList.add('done'); btn.textContent = '✓ à toi d\'écrire';
+    return;
+  }
   btn.disabled = true; btn.textContent = '…';
   try {
     const r = await j('/api/chat/action', { method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ conv: TALK_CONV, action_id: aid }) });
-    if (r.error) { btn.disabled = false; alert('✗ ' + r.error); return; }
+    if (r.error) {
+      // Le bouton doit REDEVENIR utilisable et redire ce qu'il fait : laisser
+      // « … » sur un échec transformait une erreur en bouton mort.
+      btn.disabled = false;
+      btn.textContent = btn.dataset.label || 'réessayer';
+      annonce('✗ ' + r.error, true);
+      return;
+    }
     await talkPoll(); refreshAgents(); refreshMemory(); refreshCrew();
-  } catch { btn.disabled = false; }
+  } catch {
+    btn.disabled = false;
+    btn.textContent = btn.dataset.label || 'réessayer';
+    annonce('✗ réseau — réessaie', true);
+  }
+}
+
+/* Un mot d'état dans le fil, à la place d'`alert()` : sur mobile une alerte
+   bloque tout et ne dit rien de plus. */
+function annonce(texte, erreur) {
+  const th = $('#talk-thread');
+  if (!th) { alert(texte); return; }
+  const d = document.createElement('div');
+  d.className = 'turn them';
+  d.innerHTML = `<div class="ava">◈</div><div class="bubble${erreur ? ' err' : ''}">${esc(texte)}</div>`;
+  th.appendChild(d);
+  th.scrollTop = th.scrollHeight;
+}
+
+/* ── Graver, à tout moment ───────────────────────────────────────────────────
+   La mémoire ne se remplit plus par un bouton posé sous UN message : elle est
+   toujours à portée, dans l'en-tête du fil. On propose un texte tiré de
+   l'échange, Maxime le corrige, et ce sont ses mots qui sont gravés. */
+function ouvrirGravure(suggestion) {
+  const zone = $('#talk-graver');
+  if (!zone) return;
+  zone.hidden = false;
+  const inp = zone.querySelector('input');
+  inp.value = suggestion || _dernierEchange();
+  inp.focus();
+  try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {}
+}
+function _dernierEchange() {
+  // Ce que Maxime vient de dire prime : c'est sa décision qu'on garde, pas le
+  // commentaire de l'agent.
+  const miens = document.querySelectorAll('#talk-thread .turn.me .bubble');
+  if (miens.length) return miens[miens.length - 1].textContent.trim().slice(0, 180);
+  const eux = document.querySelectorAll('#talk-thread .turn.them .bubble');
+  return eux.length ? eux[eux.length - 1].textContent.trim().slice(0, 180) : '';
+}
+async function graverMaintenant() {
+  const zone = $('#talk-graver'), inp = zone.querySelector('input');
+  const titre = (inp.value || '').trim();
+  if (titre.length < 3) { inp.focus(); return; }
+  const btn = zone.querySelector('button.go');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const r = await j('/api/memory', { method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: titre, kind: 'règle',
+                             detail: `gravé depuis le fil ${TALK_CONV}` }) });
+    if (r.error) { annonce('✗ ' + r.error, true); return; }
+    zone.hidden = true; inp.value = '';
+    annonce('📌 gravé dans la mémoire : « ' + titre + ' »');
+    refreshMemory();
+  } catch { annonce('✗ réseau', true); }
+  finally { btn.disabled = false; btn.textContent = '📌 Graver'; }
 }
 async function doChatPlan(msgTs, btn) {
   btn.disabled = true; btn.textContent = 'exécution du plan…';

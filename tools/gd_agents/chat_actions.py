@@ -221,6 +221,11 @@ def execute(action: dict, demande: str = "") -> dict:
     """Exécute une action DÉJÀ validée (relue depuis le message stocké)."""
     verb, target, value = action["verb"], action.get("target", ""), action.get("value", "")
     try:
+        # « En parler » se joue entièrement dans le navigateur : elle amorce la
+        # saisie de Maxime. Si elle arrive tout de même ici (plan groupé, vieux
+        # message), elle ne doit rien casser ni prétendre avoir agi.
+        if verb == "chat.parler":
+            return {"ok": True, "effect": "à toi d'écrire — la saisie est amorcée"}
         if verb == "memory.grave":
             memory.add("règle", value, "décidé depuis Parler", source="chat/maxime")
             return {"ok": True, "effect": f"gravé : « {value[:60]} »"}

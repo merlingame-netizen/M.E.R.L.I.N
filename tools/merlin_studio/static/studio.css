@@ -357,6 +357,13 @@ code { color: var(--blue); }
 .chap-texte i { color: var(--dim); font-style: italic; }
 .chap-pied { margin-top: 12px; font-size: 12px; }
 
+/* ── Graver, à tout moment, depuis l'en-tête du fil ─────────────────────── */
+.graver { padding: 12px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border); }
+.graver input { min-height: 44px; }
+.bubble.err { color: var(--red); }
+.act.done { cursor: default; }
+
 /* ── « Pourquoi ? » sous une décision ───────────────────────────────────── */
 .pourquoi { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
 .pourquoi .mut i { opacity: .75; }

@@ -31,8 +31,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import boite      # noqa: E402
-import memory     # noqa: E402
+import boite         # noqa: E402
+import chat_actions  # noqa: E402  (générateur d'identifiants d'action)
+import memory        # noqa: E402
 import proposals as PROP  # noqa: E402
 
 CACHE = Path.home() / ".cache" / "merlin-agents"
@@ -129,9 +130,9 @@ def _ci_deux_fois() -> list[dict]:
                   "valeur": f"Réparer {nom} : elle échoue sur deux commits consécutifs. "
                             f"Diagnostic : {str(a.get('diag',''))[:200]}",
                   "libelle": "Mets une mission en file"},
-                 {"verbe": "memory.grave", "cible": "",
-                  "valeur": f"{nom} est fragile — surveiller à chaque commit",
-                  "libelle": "Note-le dans la mémoire"}]}]
+                 {"verbe": "chat.parler", "cible": "",
+                  "valeur": f"À propos de {nom} : ",
+                  "libelle": "En parler"}]}]
 
 
 def _playtest_anomalie() -> list[dict]:
@@ -186,9 +187,9 @@ def _patch_annule() -> list[dict]:
                             {"verbe": "mission.queue", "cible": "",
                              "valeur": f"Reprendre autrement : {d.get('title','')[:120]}",
                              "libelle": "Remets-la en file, autrement"},
-                            {"verbe": "memory.grave", "cible": "",
+                            {"verbe": "chat.parler", "cible": "",
                              "valeur": f"Patch refusé par le smoke : {d.get('title','')[:100]}",
-                             "libelle": "Grave l'échec"}]})
+                             "libelle": "En parler"}]})
     return out[:1]
 
 
@@ -245,10 +246,13 @@ def _idee_sans_patch() -> list[dict]:
                            "Je ne sais pas corriger ça tout seul : il n'y a pas une ligne "
                            "précise à remplacer, c'est un choix de design. "
                            "Qu'est-ce que tu en penses ?"),
+                 # On ne grave PAS une question : une question n'est pas une
+                 # décision. On l'approfondit d'abord — la mémoire reste à un
+                 # tap, dans l'en-tête du fil, quand la réponse est mûre.
                  "actions": [
-                     {"verbe": "memory.grave", "cible": "",
-                      "valeur": str(d.get("title", ""))[:150],
-                      "libelle": "Grave la question"}]}]
+                     {"verbe": "chat.parler", "cible": "",
+                      "valeur": f"À propos de « {str(d.get('title',''))[:80]} » : ",
+                      "libelle": "En parler"}]}]
     return []
 
 
@@ -271,10 +275,16 @@ def ouvrir(sig: dict, sec: bool = False) -> str:
     conv = f"mot-{time.strftime('%Y%m%d')}-{boite.slug(sig['cle'])}"[:40]
     if sec:
         return f"[à sec] {conv} · {sig['qui']} · {sig['sujet'][:60]}"
+    # L'identifiant DOIT être celui qu'attend le portail : `/api/chat/action`
+    # valide `[0-9a-f]{10}`. Fabriquer « mot-20260812-idee-5fe360-0 » faisait
+    # rejeter le tap avec « requête invalide » AVANT toute exécution — le bouton
+    # ne pouvait pas marcher. On réutilise le générateur officiel.
     actions = []
-    for i, a in enumerate(sig.get("actions") or []):
-        actions.append({"id": f"{conv}-{i}", "verb": a["verbe"], "target": a.get("cible", ""),
-                        "value": a.get("valeur", ""), "label": a["libelle"]})
+    for a in (sig.get("actions") or []):
+        verbe, cible, valeur = a["verbe"], a.get("cible", ""), a.get("valeur", "")
+        actions.append({"id": chat_actions._aid(verbe, cible, valeur),
+                        "verb": verbe, "target": cible,
+                        "value": valeur, "label": a["libelle"]})
     memory.chat_append(conv, "assistant", sig["qui"], sig["texte"], actions=actions or None)
     boite.declarer(conv, sig["qui"], sig["sujet"])
     try:
