@@ -284,7 +284,27 @@ async function initTalk() {
      voix se règle ici même, et le réglage prend effet à la phrase suivante. */
   const sel = $('#talk-to'), bv = $('#talk-voix');
   const majVoixBouton = () => { if (bv) bv.hidden = sel.value !== 'jeu'; };
-  if (sel) { sel.addEventListener('change', () => { majVoixBouton(); $('#talk-voix-panel').hidden = true; }); majVoixBouton(); }
+  // Le duo pilote la conversation. Changer d'interlocuteur OUVRE un fil neuf :
+  // l'orchestrateur et le personnage n'ont rien à faire dans le même fil, et
+  // mélanger leurs voix rendrait les deux incompréhensibles.
+  document.querySelectorAll('.duo-btn').forEach(b => b.onclick = () => {
+    if (sel.value === b.dataset.to) return;
+    sel.value = b.dataset.to;
+    document.querySelectorAll('.duo-btn').forEach(x => x.classList.toggle('on', x === b));
+    TALK_CONV = null;
+    renderThread([]);
+    $('#talk-suggest').classList.toggle('gone', b.dataset.to === 'jeu');
+    $('#talk-voix-panel').hidden = true;
+    majVoixBouton();
+    const ta = $('#talk-input');
+    if (ta) {
+      ta.placeholder = b.dataset.to === 'jeu'
+        ? 'Parler à Merlin — il ne sait rien du studio, il est dans la forêt…'
+        : 'Parler au studio — poser une question, régler un agent, prévoir une tâche…';
+      ta.focus();
+    }
+  });
+  if (sel) { sel.addEventListener('change', majVoixBouton); majVoixBouton(); }
   if (bv) bv.onclick = async () => {
     const p = $('#talk-voix-panel');
     if (!p.hidden) { p.hidden = true; return; }
@@ -415,11 +435,21 @@ function renderThread(msgs) {
   th.scrollTop = th.scrollHeight;
 }
 
+/* Merlin s'anime quand il parle : la rune s'accélère pendant qu'il écrit, et
+   revient à son souffle lent quand il a fini. C'est le même signal que dans le
+   jeu — on ne fait pas semblant d'attendre, on montre qu'il pense. */
+function merlinParle(oui) {
+  const av = $('#merlin-av');
+  if (av) av.classList.toggle('parle', !!oui);
+}
+
 function showTyping() {
   const th = $('#talk-thread');
+  const jeu = $('#talk-to') && $('#talk-to').value === 'jeu';
+  merlinParle(jeu);
   th.insertAdjacentHTML('beforeend',
-    `<div class="turn them typing" id="typing"><div class="ava">◈</div>
-      <div class="bubble">le studio réfléchit<span class="dots"></span></div></div>`);
+    `<div class="turn them typing" id="typing"><div class="ava">${jeu ? '🜁' : '◈'}</div>
+      <div class="bubble">${jeu ? 'Merlin cherche ses mots' : 'le studio réfléchit'}<span class="dots"></span></div></div>`);
   th.scrollTop = th.scrollHeight;
 }
 
@@ -528,7 +558,10 @@ async function talkPoll() {
     const msgs = d.messages || [];
     renderThread(msgs);
     const last = msgs[msgs.length - 1];
-    if (last && last.role !== 'user' && TALK_POLL) { clearInterval(TALK_POLL); TALK_POLL = null; }
+    if (last && last.role !== 'user' && TALK_POLL) {
+      clearInterval(TALK_POLL); TALK_POLL = null;
+      merlinParle(false);          // il a répondu : la rune reprend son souffle
+    }
   } catch { }
 }
 

@@ -166,15 +166,25 @@
  <!-- ══ PARLER ══ conversations avec les conseillers + mémoire absolue du design -->
  <section class="pane chatpane" id="pane-talk">
   <header class="chat-head">
+   <!-- DEUX interlocuteurs, pas cent. À gauche celui qui commande le studio,
+        à droite le personnage du jeu. Les 101 conseillers ne sont plus une
+        liste à dérouler : ils viennent d'eux-mêmes quand ils ont à dire, et
+        leur fil s'ouvre depuis la boîte. -->
    <div class="chat-id">
-    <span class="chat-av">◈</span>
-    <div>
-     <select id="talk-to" class="chat-who">
-      <option value="merlin">MERLIN — chef d'orchestre du studio</option>
-      <option value="jeu">🜁 MERLIN du JEU — le personnage</option>
-     </select>
-     <div class="chat-sub" id="talk-meta">assistant du studio · Gemma 4 local</div>
+    <div class="duo" role="tablist">
+     <button type="button" class="duo-btn on" data-to="merlin" role="tab">
+      <span class="duo-av">◈</span>
+      <span class="duo-txt"><b>L'orchestrateur</b><i>le studio, les agents, la mémoire</i></span>
+     </button>
+     <button type="button" class="duo-btn" data-to="jeu" role="tab">
+      <span class="duo-av merlin-av" id="merlin-av"><i class="rune">🜁</i></span>
+      <span class="duo-txt"><b>Merlin</b><i>le personnage du jeu</i></span>
+     </button>
     </div>
+    <select id="talk-to" hidden>
+     <option value="merlin" selected>merlin</option>
+     <option value="jeu">jeu</option>
+    </select>
    </div>
    <div class="chat-tools">
     <!-- La mémoire est TOUJOURS à portée, quel que soit le moment de la

@@ -22,6 +22,7 @@ Stdlib seule. Ne lève jamais.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -61,12 +62,53 @@ DEFAUT = {
 }
 
 
+JEU = Path.home() / "workspace" / "merlin-game"
+
+# Les répliques du jeu se reconnaissent à leur longueur et à leur ponctuation :
+# une vraie phrase française, pas un identifiant ni un nom de nœud.
+_REPLIQUE = re.compile(r'"([A-ZÀ-Ý][^"\\]{28,180}[.!?…»])"')
+_TECHNIQUE = re.compile(r"(res://|user://|\.gd|\.tscn|\.png|http|%s|\{|_[a-z])")
+
+
+def repliques_du_jeu(limite: int = 6) -> list[str]:
+    """Ce que Merlin dit VRAIMENT dans le jeu, lu dans le code du jeu.
+
+    C'est ce qui fait de lui une copie conforme et non une imitation : sa voix
+    dans Parler est calquée sur ses répliques réelles, et elle suit le jeu quand
+    le jeu change. On lit les fichiers où il parle (menu, chronique, boot), on
+    garde les phrases françaises et on écarte tout ce qui sent le code."""
+    src = JEU / "scripts" / "game"
+    if not src.exists():
+        return []
+    vues, out = set(), []
+    for nom in ("merlin_menu_voice.gd", "merlin_chronicle.gd", "merlin_boot.gd",
+                "merlin_menu.gd", "merlin_game.gd", "merlin_end.gd"):
+        f = src / nom
+        try:
+            texte = f.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        for m in _REPLIQUE.finditer(texte):
+            phrase = m.group(1).strip()
+            if _TECHNIQUE.search(phrase) or phrase.lower() in vues:
+                continue
+            vues.add(phrase.lower())
+            out.append(phrase)
+            if len(out) >= limite:
+                return out
+    return out
+
+
 def charger() -> dict:
     try:
         d = json.loads(VOIX.read_text(encoding="utf-8"))
-        return {**DEFAUT, **d} if isinstance(d, dict) else dict(DEFAUT)
+        v = {**DEFAUT, **d} if isinstance(d, dict) else dict(DEFAUT)
     except Exception:
-        return dict(DEFAUT)
+        v = dict(DEFAUT)
+    # La copie conforme : ses vraies répliques passent AVANT mes exemples
+    # inventés. Si le jeu change ses dialogues, sa voix ici suit toute seule.
+    v["repliques_du_jeu"] = repliques_du_jeu()
+    return v
 
 
 def enregistrer(d: dict) -> dict:
@@ -100,8 +142,15 @@ def prompt(v: dict | None = None) -> str:
         bouts.append("RÈGLES :")
         bouts += [f"- {r}" for r in v["regles"]]
         bouts.append("")
+    # Ses VRAIES répliques d'abord — c'est ce qui fait la copie conforme. Un
+    # petit modèle imite bien mieux qu'il n'obéit : deux phrases authentiques
+    # pèsent plus lourd que dix consignes de style.
+    if v.get("repliques_du_jeu"):
+        bouts.append("VOICI CE QUE TU DIS DANS LE JEU — c'est TA voix, garde-la :")
+        bouts += [f"« {r} »" for r in v["repliques_du_jeu"][:5]]
+        bouts.append("")
     if v.get("exemples"):
-        bouts.append("AINSI PARLES-TU :")
+        bouts.append("AINSI RÉPONDS-TU :")
         for e in v["exemples"]:
             bouts.append(f"— {e.get('joueur','')}")
             bouts.append(f"— {e.get('merlin','')}")

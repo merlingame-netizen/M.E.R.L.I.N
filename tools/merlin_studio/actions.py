@@ -178,7 +178,12 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
         to = _s(p.get("to", "merlin"))
         if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
             return (None, "llm", "conversation invalide")
-        if to != "merlin" and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
+        # « jeu » = le MERLIN du JEU, le personnage. Il n'a pas de fiche .md :
+        # sa voix vit dans merlin_jeu.py. Ce second contrôle l'ignorait, et
+        # choisir le personnage rendait « conseiller invalide » alors que la
+        # route principale, elle, l'acceptait déjà.
+        if to not in ("merlin", "jeu") \
+                and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
             return (None, "llm", "conseiller invalide")
         return ([PY, "tools/gd_agents/chat_reply.py", conv, to],
                 "llm", "Réponse du conseiller")
