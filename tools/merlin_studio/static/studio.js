@@ -337,27 +337,71 @@ async function initTalk() {
   refreshBoite();
 }
 
-/* ── La boîte aux lettres ───────────────────────────────────────────────────
-   Avant : un agent ouvrait une conversation et RIEN ne le disait. Il fallait
-   ouvrir Parler, ouvrir l'historique, repérer le bon fil, le taper — quatre
-   gestes pour découvrir qu'on t'avait écrit. Maintenant une pastille le dit, et
-   un tap ouvre le fil non lu le plus récent. */
+/* ── Le courrier des agents, dans Décider ───────────────────────────────────
+   Il vivait dans Parler, mêlé à la conversation avec l'orchestrateur, et n'y
+   montrait que les 80 premiers caractères — un message coupé en plein milieu
+   d'une phrase n'est pas un message. Il est maintenant là où l'on tranche, en
+   ENTIER, avec de quoi répondre sans changer de page. */
 async function refreshBoite() {
   let d;
   try { d = await j('/api/boite'); } catch { return; }
   const n = d.non_lus || 0;
   const pastille = $('#dock-unread');
   if (pastille) { pastille.textContent = n; pastille.hidden = !n; }
-  const banniere = $('#talk-boite');
-  if (!banniere) return;
-  const attente = (d.fils || []).filter(f => f.non_lu);
-  if (!attente.length) { banniere.hidden = true; return; }
-  banniere.hidden = false;
-  banniere.innerHTML = attente.slice(0, 3).map(f =>
-    `<button class="go sm" data-ouvrir="${esc(f.conv)}" style="width:100%;text-align:left">
-       ✉ <b>${esc(WHO_FR[f.qui] || _conseiller(f.qui))}</b> — ${esc((f.sujet || f.dernier).slice(0, 60))}
-     </button>`).join('');
-  banniere.querySelectorAll('button[data-ouvrir]').forEach(b => b.onclick = () => ouvrirFil(b.dataset.ouvrir));
+  const win = $('#courrier-win'), liste = $('#courrier-list'), meta = $('#courrier-meta');
+  if (!win || !liste) return;
+  // On garde les fils NON LUS d'abord, puis ceux qui attendent encore l'agent :
+  // un fil auquel on a répondu ne doit pas disparaître tant que rien n'est venu.
+  const fils = (d.fils || []).filter(f => f.non_lu || f.attend_agent).slice(0, 5);
+  win.hidden = !fils.length;
+  if (meta) meta.textContent = n ? `${n} non lu(s)` : (fils.length ? 'en attente de réponse' : '');
+  if (!fils.length) return;
+  liste.innerHTML = fils.map(f => {
+    const qui = esc(WHO_FR[f.qui] || _conseiller(f.qui));
+    // `texte` porte le message complet ; `dernier` n'en était qu'un aperçu.
+    const corps = esc(f.texte || f.dernier || '').replace(/\n/g, '<br>');
+    const etat = f.non_lu ? '<span class="pill">nouveau</span>'
+      : '<span class="mut">tu as répondu — il n\'a pas encore repris</span>';
+    return `<div class="jentry courrier" data-conv="${esc(f.conv)}">
+      <div class="jhead"><span class="jico">✉</span>
+        <span class="jtitle"><b>${qui}</b> — ${esc(f.sujet || '')}</span>
+        <span class="jago">${etat}</span></div>
+      <div class="jdetail courrier-texte">${corps}</div>
+      <div class="row" style="gap:6px;margin-top:8px;align-items:flex-start">
+        <textarea class="courrier-rep" rows="2" style="flex:1"
+          placeholder="Lui répondre…"></textarea>
+        <button class="go sm courrier-envoi">Répondre</button>
+      </div>
+      <button class="go sm ghost courrier-ouvrir" style="margin-top:6px">Voir tout le fil</button>
+    </div>`;
+  }).join('');
+  liste.querySelectorAll('.courrier').forEach(carte => {
+    const conv = carte.dataset.conv;
+    const zone = carte.querySelector('.courrier-rep');
+    const envoi = carte.querySelector('.courrier-envoi');
+    carte.querySelector('.courrier-ouvrir').onclick = () => ouvrirFil(conv);
+    envoi.onclick = async () => {
+      const texte = zone.value.trim();
+      if (!texte) { zone.focus(); return; }
+      envoi.disabled = true; envoi.textContent = '…';
+      try {
+        const r = await j('/api/chat', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ conv, text: texte }) });
+        if (r.error) throw new Error(r.error);
+        // On ne vide la saisie qu'une fois le message ACCEPTÉ : la vider avant
+        // l'envoi a déjà fait perdre des réponses de Maxime.
+        zone.value = '';
+        await j('/api/boite/lu', { method: 'POST', headers: { 'content-type': 'application/json' },
+                                   body: JSON.stringify({ conv }) });
+        annonce('✉ envoyé — il répond dans un instant');
+        refreshBoite();
+      } catch (e) {
+        annonce('✗ ' + (e.message || 'réseau') + ' — ton texte est resté', true);
+        envoi.disabled = false; envoi.textContent = 'Répondre';
+      }
+    };
+  });
 }
 
 function _conseiller(f) {
@@ -628,7 +672,11 @@ async function refreshHealth() {
 }
 
 // ── Journal de bord : les derniers développements, en français, avec preuves ─
-const J_ICON = { commit: '✎', ci: '🛠', proposal: '💡', playtest: '🎮', corpus: '🏭' };
+// Trois choses très différentes partageaient l'ampoule 💡 : une décision qui
+// t'attend, une décision que tu as prise, un geste de la chaîne. Impossible de
+// les distinguer d'un coup d'œil dans un mur de vingt lignes.
+const J_ICON = { commit: '✎', ci: '🛠', proposal: '💡', playtest: '🎮',
+                 corpus: '🏭', auto: '⚙' };
 function agoTxt(m) {
   return m < 1 ? "à l'instant" : m < 60 ? `il y a ${m} min`
        : m < 1440 ? `il y a ${Math.round(m / 60)} h` : `il y a ${Math.round(m / 1440)} j`;
@@ -641,7 +689,9 @@ async function refreshJournal() {
   if (!ev.length) return;
   $('#journal-list').innerHTML = ev.map(e => `
     <div class="jentry">
-      <div class="jhead"><span class="jico">${J_ICON[e.kind] || '·'}</span>
+      <div class="jhead"><span class="jico">${
+        e.kind === 'proposal' && /^Tu as/.test(e.title || '') ? '🗳'
+        : J_ICON[e.kind] || '·'}</span>
         <span class="jtitle">${esc(e.title)}</span>
         <span class="jago">${agoTxt(e.ago_min)}</span></div>
       ${e.detail ? `<div class="jdetail">${esc(e.detail)}</div>` : ''}

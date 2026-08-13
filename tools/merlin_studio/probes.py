@@ -296,10 +296,14 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
     ev: list[dict] = []
 
     def _ts(s: str) -> float:
+        # Ces horodatages sont écrits en UTC (suffixe Z) ; `mktime` les lisait
+        # comme du local, ce qui décalait tous les « il y a N h » d'un fuseau.
         try:
-            return time.mktime(time.strptime(str(s)[:19], "%Y-%m-%dT%H:%M:%S"))
+            t = time.strptime(str(s)[:19], "%Y-%m-%dT%H:%M:%S")
         except Exception:
             return 0.0
+        import calendar
+        return calendar.timegm(t) if str(s).rstrip().endswith("Z") else time.mktime(t)
 
     # Qui parle dans le journal : des noms français, jamais des identifiants.
     WHO = {"gd-content-gap": "l'écrivain de cartes", "gd-balance": "l'équilibreur",
@@ -346,26 +350,56 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
         pass
 
     # Propositions : naissances et décisions (y compris auto-intégrations).
+    #
+    # « Tu as rejeté une proposition », vingt-cinq fois d'affilée : aucune de ces
+    # lignes ne venait de Maxime. C'était le ménage automatique de la veille, et
+    # le libellé était déduit du NOM DU DOSSIER — un fichier dans `rejected/`
+    # produisait mécaniquement « Tu as ». On lit maintenant qui a décidé, et les
+    # gestes automatiques d'un même jour tiennent en UNE ligne.
     base = Path.home() / ".cache" / "merlin-proposals"
+    autos: dict[tuple, dict] = {}
+    # `accepted/` et `rejected/` ne sont jamais purgés : sans borne, le mur
+    # repousse tout seul dès que la chaîne tourne quelques nuits. On lit les plus
+    # récents par date de fichier, la fenêtre de 48 h fait le reste.
     for sub, label in (("inbox", "💡 Une décision t'attend"),
                        ("accepted", "Tu as accepté une proposition"),
-                       ("rejected", "Tu as rejeté une proposition")):
+                       ("rejected", "Tu as écarté une proposition")):
         try:
-            for f in (base / sub).glob("*.json"):
+            fichiers = sorted((base / sub).glob("*.json"),
+                              key=lambda x: -x.stat().st_mtime)[:80]
+            for f in fichiers:
                 p = json.loads(f.read_text(encoding="utf-8"))
                 t = _ts(p.get("decided_at") or p.get("created", ""))
                 if t < floor:
                     continue
                 who = WHO.get(str(p.get("agent", "")), p.get("agent", "un agent"))
-                auto = "auto" in str(p.get("decision_reason", ""))
-                lab = ("Du contenu validé a rejoint le recueil tout seul"
-                       if (sub == "accepted" and auto) else label)
-                ev.append({"t": t, "kind": "proposal",
-                           "title": lab,
+                raison = str(p.get("decision_reason", ""))
+                # Un geste AUTOMATIQUE se reconnaît à sa source ou à sa raison ;
+                # `auto` était déjà calculé ici, et n'était utilisé que pour les
+                # acceptations — les rejets automatiques passaient pour les tiens.
+                auto = (str(p.get("source", "")) == "menage"
+                        or raison.lstrip().startswith("auto")
+                        or "automatiquement" in raison)
+                if auto and sub != "inbox":
+                    cle = (sub, time.strftime("%Y-%m-%d", time.localtime(t)))
+                    g = autos.setdefault(cle, {"t": t, "n": 0, "motif": raison[:110]})
+                    g["n"] += 1
+                    g["t"] = max(g["t"], t)   # la ligne porte le DERNIER geste
+                    continue
+                ev.append({"t": t, "kind": "proposal", "auto": False,
+                           "title": label,
                            "detail": f"De la part de {who} : "
                                      f"{str(p.get('title', ''))[:110]}", "shot": ""})
         except Exception:
             continue
+    for (sub, _jour), g in autos.items():
+        quoi = ("intégrée sans toi" if sub == "accepted" else "écartée sans toi")
+        ev.append({
+            "t": g["t"], "kind": "auto", "auto": True,
+            "title": (f"{g['n']} proposition {quoi}" if g["n"] == 1
+                      else f"{g['n']} propositions {quoi.replace('ée', 'ées')}"),
+            "detail": g["motif"] or "geste automatique de la chaîne, pas une décision",
+            "shot": ""})
 
     # Sessions de playtest — le bot a joué ; on joint la dernière capture.
     try:
@@ -400,8 +434,20 @@ def journal(hours: int = 48, limit: int = 40) -> list[dict]:
                    "shot": ""})
 
     ev.sort(key=lambda e: -e["t"])
+    # Le nettoyage du jargon existe depuis le registre et n'a jamais été appliqué
+    # ici : c'est de là que venaient les « (JSON illisible) » et les « rc=0 »
+    # bruts à l'écran. On réutilise la MÊME table, on n'en écrit pas une seconde.
+    try:
+        import sys as _s
+        _s.path.insert(0, str(ROOT / "tools" / "gd_agents"))
+        from journal import _francais as _fr
+    except Exception:
+        def _fr(x):
+            return x
     for e in ev:
         e["ago_min"] = max(0, int((now - e["t"]) // 60))
+        e["title"] = _fr(e.get("title", ""))
+        e["detail"] = _fr(e.get("detail", ""))
     return ev[:limit]
 
 

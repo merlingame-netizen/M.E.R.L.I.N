@@ -186,6 +186,14 @@
       "desc": "Grave le chapitre du jour : ce que les agents ont fait, ce que tu as décidé, ce qui a bougé et ce qui reste en suspens. Aucun appel au modèle — il ne peut pas se taire."
     },
     {
+      "id": "brasero",
+      "label": "Le Braséro",
+      "cmd": "a_brasero.sh",
+      "schedule": "*/20 * * * *",
+      "enabled": true,
+      "desc": "Garde le modèle de conversation chaud en RAM : sans lui, le premier message après une heure de silence paie 40 s de chargement avant même de commencer à répondre. Un seul token demandé toutes les 20 min, zéro euro, et rien du tout quand tu joues."
+    },
+    {
       "id": "relance",
       "label": "Le Facteur",
       "cmd": "a_relance.sh",

@@ -140,7 +140,13 @@ def etat(limite: int = 20) -> dict:
             "conv": cid,
             "qui": e.get("qui") or c.get("who") or "merlin",
             "sujet": e.get("sujet") or (c.get("last") or "")[:80],
-            "dernier": c.get("last", ""), "t": c.get("t", ""),
+            "dernier": c.get("last", ""),
+            # Ce que l'agent a VRAIMENT écrit, en entier : Décider l'affiche tel
+            # quel. Sans ce champ, la carte ne disposait que de `dernier`, coupé
+            # à 80 caractères en amont.
+            "texte": c.get("last_full") or c.get("last", ""),
+            "actions": c.get("actions") or [],
+            "t": c.get("t", ""),
             "non_lu": neuf, "attend_toi": neuf,
             # Un fil dont le dernier mot est de Maxime attend l'AGENT : c'est ce
             # que la relance surveille (le message perdu quand le LLM était pris).

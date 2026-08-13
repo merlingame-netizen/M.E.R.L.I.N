@@ -36,8 +36,13 @@ PY = sys.executable or "python3"
 GODOT = probes.GODOT
 
 # group -> max concurrent (1 = serialized)
+# Une conversation N'EST PAS un job d'analyse. Les mettre dans le même groupe
+# `llm` faisait répondre « groupe 'llm' déjà occupé » dès qu'un agent tournait —
+# c'est-à-dire précisément quand Maxime voulait savoir ce qui se passait. Le chat
+# a donc son propre groupe : le modèle étant résident (voir a_brasero.sh), un
+# second appel ne recharge rien, il partage juste le CPU quelques secondes.
 GROUPS = {"godot": 1, "content": 1, "llm": 1, "git": 1, "daemon": 4, "misc": 2,
-          "game": 1, "agents": 2}
+          "game": 1, "agents": 2, "chat": 2}
 
 # Résolutions autorisées pour le jeu natif (jamais interpolé librement).
 GAME_RES = ("1280x720", "960x540", "1920x1080")
@@ -177,16 +182,16 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
         conv = _s(p.get("conv", ""))
         to = _s(p.get("to", "merlin"))
         if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
-            return (None, "llm", "conversation invalide")
+            return (None, "chat", "conversation invalide")
         # « jeu » = le MERLIN du JEU, le personnage. Il n'a pas de fiche .md :
         # sa voix vit dans merlin_jeu.py. Ce second contrôle l'ignorait, et
         # choisir le personnage rendait « conseiller invalide » alors que la
         # route principale, elle, l'acceptait déjà.
         if to not in ("merlin", "jeu") \
                 and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
-            return (None, "llm", "conseiller invalide")
+            return (None, "chat", "conseiller invalide")
         return ([PY, "tools/gd_agents/chat_reply.py", conv, to],
-                "llm", "Réponse du conseiller")
+                "chat", "Réponse du conseiller")
     if kind == "agent-run":
         aid = _s(p.get("id", "")).strip()
         valid = {a.get("id") for a in probes.agents().get("agents", [])}

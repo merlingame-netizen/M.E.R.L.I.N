@@ -39,8 +39,10 @@
  <nav class="dock">
   <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
   <button data-tab="journal"><span class="g">📖</span>Journal</button>
-  <button data-tab="ideas"><span class="g">💡</span>Décider<span class="pill" id="dock-pending" hidden></span></button>
-  <button data-tab="talk"><span class="g">💬</span>Parler<span class="pill" id="dock-unread" hidden></span></button>
+  <!-- La pastille des non-lus est passée de Parler à Décider : c'est là que le
+       courrier des agents arrive désormais. -->
+  <button data-tab="ideas"><span class="g">💡</span>Décider<span class="pill" id="dock-pending" hidden></span><span class="pill" id="dock-unread" hidden></span></button>
+  <button data-tab="talk"><span class="g">💬</span>Parler</button>
   <button data-tab="health"><span class="g">✚</span>Santé</button>
   <button data-tab="cogs" class="cog" title="Coulisses — le détail technique"><span class="g">⚙</span></button>
  </nav>
@@ -68,6 +70,13 @@
      <audio id="game-audio" preload="none"></audio>
      <select id="game-res" style="width:auto;min-width:140px">
       <option selected>1280x720</option><option>960x540</option><option>1920x1080</option>
+     </select>
+     <!-- Le débit : moins d'octets (fluide) ou plus d'image (net). Vide = selon
+          l'appareil — tactile donc probablement mobile → fluide. -->
+     <select id="game-debit" style="width:auto;min-width:120px" title="Débit de l'image">
+      <option value="" selected>Débit auto</option>
+      <option value="fluide">Fluide</option>
+      <option value="net">Net</option>
      </select>
     </div>
    </div>
@@ -112,6 +121,16 @@
     <span class="meta" id="brief-meta">…</span></div>
    <div class="win-body">
     <div id="brief-list"><div class="mut">lecture de l'état…</div></div>
+   </div>
+  </div>
+  <!-- Ce que les agents t'écrivent, EN ENTIER, avec de quoi leur répondre sur
+       place. Ces messages vivaient dans Parler, où ils se mélangeaient à la
+       conversation avec l'orchestrateur — et n'y montraient que 80 caractères. -->
+  <div class="win" id="courrier-win" hidden>
+   <div class="win-bar"><span class="t">✉ Les agents t'écrivent</span><span class="hatch"></span>
+    <span class="meta" id="courrier-meta">…</span></div>
+   <div class="win-body">
+    <div id="courrier-list"><div class="mut">personne ne t'a écrit</div></div>
    </div>
   </div>
   <div class="win">
@@ -223,8 +242,9 @@
     <span class="mut" id="voix-taille"></span>
    </div>
   </div>
-  <!-- Qui t'a écrit sans que tu demandes rien. Un tap ouvre le fil. -->
-  <div class="boite" id="talk-boite" hidden></div>
+  <!-- Le courrier des agents a quitté cette page : il vit dans Décider, avec
+       son texte complet et son champ de réponse. Ici, on ne parle qu'à
+       l'orchestrateur (et à Merlin, à droite). -->
   <div id="talk-thread" class="chat-thread"></div>
   <div class="chat-suggest" id="talk-suggest">
    <button data-q="Quelles décisions de design sont retenues à ce jour ?">Ce qui est décidé</button>

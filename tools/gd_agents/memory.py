@@ -189,6 +189,12 @@ def chat_list(limit: int = 12) -> list[dict]:
             dernier = rows[-1] if rows else {}
             out.append({"conv": f.stem, "id": f.stem,
                         "last": str(dernier.get("text", ""))[:80],
+                        # Le texte ENTIER du dernier message. `last` reste court
+                        # pour les listes ; les 80 caractères étaient la vraie
+                        # cause des messages d'agents coupés au milieu d'un mot
+                        # — la carte, elle, doit pouvoir tout montrer.
+                        "last_full": str(dernier.get("text", ""))[:4000],
+                        "actions": dernier.get("actions") or [],
                         # QUI a parlé en dernier : sans ça, impossible de savoir
                         # si un fil attend une réponse de Maxime ou d'un agent.
                         "role": dernier.get("role", ""), "who": dernier.get("who", ""),

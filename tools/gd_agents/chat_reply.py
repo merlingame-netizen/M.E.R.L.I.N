@@ -130,7 +130,12 @@ def main(conv: str, adviser: str) -> int:
     import contextlib
 
     @contextlib.contextmanager
-    def _verrou_llm(attente=600):
+    def _verrou_llm(attente=20):
+        # 20 s, pas 600 : le verrou protège du DOUBLE CHARGEMENT (deux modèles de
+        # 6 Go sur 22), pas de l'usage simultané. Le braséro garde le modèle
+        # résident, donc une conversation ne charge plus rien — attendre dix
+        # minutes qu'une analyse finisse revenait à rendre le chat inutilisable
+        # pendant tout le travail de nuit.
         lock = Path.home() / ".cache" / "merlin-agents" / "llm.lock"
         lock.parent.mkdir(parents=True, exist_ok=True)
         f = lock.open("a+")

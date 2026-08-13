@@ -821,6 +821,12 @@ Fenêtre ouverte encore {left} min.</p>
 
     # ── pont WebSocket ↔ VNC (x11vnc -localhost:5900) ────────────────────────
     if _HAS_SOCK:
+        # Un ping toutes les 25 s. Sans lui, un tunnel Cloudflare coupe une
+        # connexion silencieuse : dès que l'image du jeu est fixe (un menu, une
+        # pause), plus rien ne transite et le tunnel ferme — c'est la cause
+        # première du « je perds souvent le signal ». Le ping est un cadre
+        # WebSocket de contrôle : quelques octets, jamais du pixel.
+        app.config.setdefault("SOCK_SERVER_OPTIONS", {"ping_interval": 25})
         sock = Sock(app)
 
         @sock.route("/websockify")

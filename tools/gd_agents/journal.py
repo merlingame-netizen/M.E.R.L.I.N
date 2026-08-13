@@ -79,13 +79,26 @@ def _lire_jsonl(p: Path, limite: int = 500) -> list[dict]:
 
 
 def _ts(s) -> float:
-    """Horodatage ISO ou epoch → float. 0 si illisible."""
+    """Horodatage ISO ou epoch → float. 0 si illisible.
+
+    Les horodatages du système sont écrits en UTC (`time.gmtime()`, suffixe Z).
+    Les lire avec `mktime`, qui interprète du LOCAL, décalait tout d'un fuseau :
+    tous les « il y a N h » du portail étaient faux d'une ou deux heures dès que
+    la machine n'était pas en UTC."""
     try:
         return float(s)
     except (TypeError, ValueError):
         pass
+    texte = str(s)
     try:
-        return time.mktime(time.strptime(str(s)[:19], "%Y-%m-%dT%H:%M:%S"))
+        t = time.strptime(texte[:19], "%Y-%m-%dT%H:%M:%S")
+    except Exception:
+        return 0.0
+    try:
+        import calendar
+        # Sans « Z » ni décalage explicite, on garde l'ancienne lecture locale :
+        # deviner serait pire que de conserver le comportement d'origine.
+        return calendar.timegm(t) if texte.rstrip().endswith("Z") else time.mktime(t)
     except Exception:
         return 0.0
 

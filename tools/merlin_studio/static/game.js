@@ -66,14 +66,56 @@ function offMessage(big, small) {
   $('#crt-off').innerHTML = `<div class="big">${big}</div><div>${small || ''}</div>`;
 }
 
-async function connectVNC() {
+/* Reconnexion : le signal tombe pour des raisons qui n'ont rien à voir avec le
+   jeu (réseau mobile qui change de cellule, veille de l'écran, tunnel qui se
+   renouvelle). Avant, il fallait retaper PLAY à chaque fois. On réessaie seul,
+   en espaçant les tentatives, et on ABANDONNE franchement au bout de 5 — une
+   boucle infinie silencieuse tournerait toute la nuit sur une VM à 0 €. */
+let retryN = 0;
+let retryTimer = null;
+
+function annuleReconnexion() {
+  retryN = 0;
+  clearTimeout(retryTimer);
+  retryTimer = null;
+}
+
+function reconnecte() {
+  if (retryN >= 5) {
+    offMessage('SIGNAL PERDU', 'APPUYER SUR PLAY');
+    readout('5 TENTATIVES SANS SUCCÈS — RELANCE MANUELLE', true);
+    return;
+  }
+  const delai = Math.min(2000 * Math.pow(2, retryN), 30000);
+  retryN++;
+  offMessage('RECONNEXION…', `TENTATIVE ${retryN}/5 DANS ${Math.round(delai / 1000)} S`);
+  readout(`SIGNAL PERDU — RECONNEXION AUTOMATIQUE (${retryN}/5)`);
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(async () => {
+    // Le jeu tourne-t-il encore ? Se reconnecter à un conteneur mort ne ferait
+    // que répéter l'échec en annonçant la mauvaise cause.
+    let g = {};
+    try { g = await j('/api/game'); } catch (e) {}
+    if (!g.vnc_open) {
+      setState('offline');
+      offMessage('LE JEU S\'EST ARRÊTÉ', 'APPUYER SUR PLAY');
+      readout('CONTENEUR ARRÊTÉ — CE N\'EST PAS LE RÉSEAU', true);
+      annuleReconnexion();
+      return;
+    }
+    connectVNC(true);
+  }, delai);
+}
+
+async function connectVNC(reprise) {
   setState('connecting');
-  readout('CONNEXION VNC…');
+  readout(reprise ? 'RECONNEXION VNC…' : 'CONNEXION VNC…');
   let ticket;
   try {
     ticket = (await j('/api/vnc/ticket', { method: 'POST' })).ticket;
   } catch (e) {
     setState('offline');
+    if (reprise) { reconnecte(); return; }
     readout('TICKET REFUSÉ — RECHARGER LA PAGE', true);
     return;
   }
@@ -82,22 +124,41 @@ async function connectVNC() {
   rfb = new RFB($('#vnc-screen'), url);
   rfb.scaleViewport = true;
   rfb.showDotCursor = false;
-  // Le goulot est le CPU de la VM (4 cœurs ARM, encodage logiciel), pas la bande
-  // passante : on baisse la compression (moins de zlib à faire) et on remonte la
-  // qualité d'image. Résultat : moins de latence ET une image plus nette.
-  rfb.qualityLevel = 7;
-  rfb.compressionLevel = 1;
+  // Le goulot dépend du chemin : sur le Wi-Fi de la maison c'est le CPU de la VM
+  // (4 cœurs ARM, encodage logiciel), en 4G à travers le tunnel c'est le réseau.
+  // « fluide » compresse plus (moins d'octets, un peu plus de CPU), « net »
+  // compresse moins et soigne l'image. Le défaut suit l'appareil.
+  const dbt = debit();
+  rfb.qualityLevel = dbt === 'net' ? 7 : 6;
+  rfb.compressionLevel = dbt === 'net' ? 1 : 2;
   rfb.addEventListener('connect', () => {
     setState('live');
-    readout(`SIGNAL OK · ${rfb._fbWidth || ''}×${rfb._fbHeight || ''}`);
+    annuleReconnexion();
+    readout(`SIGNAL OK · ${rfb._fbWidth || ''}×${rfb._fbHeight || ''} · ${dbt}`);
     refreshVersion();
   });
   rfb.addEventListener('disconnect', ev => {
     rfb = null;
     setState('offline');
-    offMessage('SIGNAL PERDU', 'APPUYER SUR PLAY');
-    readout(ev.detail && ev.detail.clean ? 'DÉCONNECTÉ' : 'CONNEXION PERDUE', !ev.detail?.clean);
+    // Une fermeture PROPRE, c'est Maxime qui a arrêté : on ne relance rien.
+    // Tout le reste (tunnel, réseau, veille) mérite une reconnexion.
+    if (ev.detail && ev.detail.clean) {
+      offMessage('SIGNAL PERDU', 'APPUYER SUR PLAY');
+      readout('DÉCONNECTÉ');
+      annuleReconnexion();
+    } else {
+      reconnecte();
+    }
   });
+}
+
+/* Le débit choisi : « fluide » (moins d'octets) ou « net » (plus d'image). Sur
+   un écran tactile — donc souvent en mobile — la fluidité prime par défaut. */
+function debit() {
+  const sel = $('#game-debit');
+  if (sel && sel.value) return sel.value;
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  return coarse ? 'fluide' : 'net';
 }
 
 async function play() {

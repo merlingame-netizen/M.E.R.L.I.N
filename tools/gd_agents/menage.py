@@ -79,6 +79,13 @@ def appliquer(lots: dict) -> str:
             d["status"] = "rejected"
             d["decision_reason"] = ("retiré automatiquement : panne technique de "
                                     "l'atelier, jamais une décision à prendre")
+            # `decided_at` et `source` MANQUAIENT, et c'est ce qui faisait
+            # raconter au journal « Tu as rejeté une proposition » vingt-cinq
+            # fois, étalé de 8 h à 16 h : faute de date de décision, il retombait
+            # sur la date de CRÉATION de chaque proposition, et faute de source,
+            # il attribuait le geste à Maxime.
+            d["decided_at"] = PROP._now()
+            d["source"] = "menage"
             d.setdefault("trail", []).append(
                 {"t": PROP._now(), "step": "écartée",
                  "detail": "ménage : échec d'écriture, pas un sujet"})
