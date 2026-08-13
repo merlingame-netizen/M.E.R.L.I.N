@@ -27,9 +27,13 @@ OLLAMA="${OLLAMA_URL:-http://127.0.0.1:11434}"
 CONF="$HOME/.config/merlin-llm.env"
 [ -f "$CONF" ] && . "$CONF"
 
-# Le modèle du chat, exactement comme llm-ask.sh le résout.
-MODEL="${TRIAGE_MODEL:-gemma4:e4b-it-qat}"
-[ "$MODEL" = "AUTO" ] && MODEL="${COPILOT_MODEL:-gemma4:e4b-it-qat}"
+# Le modèle du CHAT, résolu exactement comme chat_reply.py le fait : COPILOT_MODEL,
+# repli e4b. Surtout PAS TRIAGE_MODEL — mesuré sur la VM, celui-ci vaut 12b ou
+# e2b selon le bench, et le braséro a chauffé un modèle que la conversation
+# n'utilise jamais. Chauffer le mauvais modèle coûte la RAM sans rien accélérer :
+# c'est pire que ne rien chauffer du tout.
+MODEL="${COPILOT_MODEL:-gemma4:e4b-it-qat}"
+[ "$MODEL" = "AUTO" ] && MODEL="gemma4:e4b-it-qat"
 
 # Le jeu passe AVANT le confort du chat : quand Maxime joue, les 4 cœurs lui
 # reviennent et on ne réveille rien.
@@ -83,9 +87,19 @@ try:
 except Exception:
     print('injoignable')")"
 
-if [ "$OK" = "1" ]; then
-    echo "modèle chaud en ${SECS}s — résident : $RESIDENTS"
+# On vérifie que c'est BIEN le modèle du chat qui est résident, pas un autre.
+# Dire « modèle chaud » sans le contrôler, c'est transformer une absence en
+# fausse certitude — le travers que ce projet traque partout ailleurs.
+case "$RESIDENTS" in
+    *"$MODEL"*) CHAUD="oui" ;;
+    *)          CHAUD="non" ;;
+esac
+
+if [ "$OK" = "1" ] && [ "$CHAUD" = "oui" ]; then
+    echo "$MODEL chaud en ${SECS}s — résidents : $RESIDENTS"
+elif [ "$OK" = "1" ]; then
+    echo "$MODEL appelé (${SECS}s) mais absent de la RAM — résidents : $RESIDENTS"
 else
-    echo "le modèle n'a pas répondu (${SECS}s) — résident : $RESIDENTS"
+    echo "$MODEL n'a pas répondu (${SECS}s) — résidents : $RESIDENTS"
 fi
 exit 0
