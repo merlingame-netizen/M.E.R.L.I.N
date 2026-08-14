@@ -1,0 +1,116 @@
+# Compile la GDExtension MerlinLLM pour Linux ARM64 — le binaire qui manque à la VM.
+#
+# POURQUOI : merlin_llm.gdextension ne déclarait que Windows x86_64. Sur la VM Oracle
+# (aarch64), ClassDB.class_exists("MerlinLLM") échoue au démarrage, MerlinNative.is_ready()
+# reste faux, et TOUT le récit retombe sur les textes écrits d'avance — les trois cartes
+# « Le Marché des Murmures / Le Rite sans Fin / La Fontaine qui Rêve » en sont le symptôme.
+#
+# OÙ : sur un runner ARM natif (gratuit, le dépôt est public) — pas de compilation croisée.
+# La VM, elle, n'a ni g++ ni cmake ni sudo, et ses 4 cœurs sont pour le jeu.
+#
+# CE QUI N'EST PAS TOUCHÉ : native/CMakeLists.txt. Ses chemins Windows sont déjà des
+# variables CACHE, surchargées ici par -D. Le build Windows de Maxime est intact. Le nom de
+# sortie, lui, est figé dans le CMakeLists : on renomme le fichier produit plutôt que d'y
+# toucher.
+name: native-arm
+
+on:
+  push:
+    branches: [feat/practices-docs]
+    paths:
+      - 'native/**'
+      - '.github/workflows/native-arm.yml'
+  workflow_dispatch:
+    inputs:
+      llama_ref:
+        description: "Version de llama.cpp (tag ou branche)"
+        default: master
+      godot_cpp_ref:
+        description: "Branche godot-cpp (doit suivre la version de Godot de la VM)"
+        default: "4.5"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Outils de compilation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential cmake scons python3 git
+          echo "cœurs : $(nproc) · arch : $(uname -m)"
+
+      # godot-cpp doit suivre la version de Godot qui EXÉCUTE le jeu (4.5 sur la VM).
+      # Si la branche n'existe pas encore en amont, on retombe sur master plutôt que d'échouer.
+      - name: godot-cpp
+        run: |
+          REF="${{ inputs.godot_cpp_ref || '4.5' }}"
+          git clone --depth 1 -b "$REF" https://github.com/godotengine/godot-cpp native/godot-cpp \
+            || git clone --depth 1 https://github.com/godotengine/godot-cpp native/godot-cpp
+          cd native/godot-cpp
+          echo "godot-cpp @ $(git describe --all --always)"
+          scons platform=linux target=template_release arch=arm64 -j"$(nproc)"
+          ls -la bin/
+
+      # API moderne côté source (llama_model_load_from_file, llama_get_memory,
+      # llama_memory_seq_rm) : master convient. L'entrée permet d'épingler si l'amont casse.
+      - name: llama.cpp (statique, CPU)
+        run: |
+          git clone --depth 1 -b "${{ inputs.llama_ref || 'master' }}" \
+            https://github.com/ggml-org/llama.cpp native/llama.cpp
+          cd native/llama.cpp
+          echo "llama.cpp @ $(git rev-parse --short HEAD)"
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF -DLLAMA_CURL=OFF -DGGML_NATIVE=OFF \
+            -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF
+          cmake --build build --config Release -j"$(nproc)"
+          find build -name '*.a' | sort
+
+      - name: MerlinLLM
+        run: |
+          cd native
+          GC="$PWD/godot-cpp"; LL="$PWD/llama.cpp"
+          # Les .a ne sont pas tous au même endroit selon la version de llama.cpp : on les
+          # cherche, plutôt que de figer des chemins qui casseront à la prochaine montée.
+          f() { find "$LL/build" -name "$1" | head -1; }
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+            -DGODOT_CPP_ROOT="$GC" -DLLAMA_ROOT="$LL" \
+            -DGODOT_CPP_LIB="$(find "$GC/bin" -name 'libgodot-cpp*template_release*arm64*.a' | head -1)" \
+            -DLLAMA_LIB="$(f libllama.a)" \
+            -DGGML_LIB="$(f libggml.a)" \
+            -DGGML_BASE_LIB="$(f libggml-base.a)" \
+            -DGGML_CPU_LIB="$(f libggml-cpu.a)"
+          cmake --build build --config Release -j"$(nproc)"
+          find . -name '*.so' -newer CMakeLists.txt
+
+      # OUTPUT_NAME est figé « windows.release.x86_64 » dans le CMakeLists : on renomme ici
+      # plutôt que d'éditer un fichier partagé avec le build Windows.
+      - name: Ranger le binaire
+        run: |
+          mkdir -p addons/merlin_llm/bin
+          SO="$(find native -name 'libmerlin_llm*.so' -o -name 'merlin_llm*.so' | head -1)"
+          [ -n "$SO" ] || { echo "aucun .so produit"; exit 1; }
+          cp "$SO" addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
+          ls -la addons/merlin_llm/bin/
+          file addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merlin_llm-linux-arm64
+          path: addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
+
+      # Le binaire est commité : le webhook GitHub → VM existant suffit alors à le livrer,
+      # sans nouvelle mécanique de déploiement.
+      - name: Livrer sur la branche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
+          git diff --cached --quiet && { echo "binaire inchangé"; exit 0; }
+          git commit -m "build(native): merlin_llm.linux.release.arm64.so"
+          git push origin HEAD:feat/practices-docs

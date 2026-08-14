@@ -6,6 +6,12 @@ reloadable = true
 [libraries]
 windows.release.x86_64 = "res://addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll"
 windows.debug.x86_64 = "res://addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll"
+; Linux ARM64 — la VM Oracle. Sans ces deux lignes, ClassDB.class_exists("MerlinLLM") echoue
+; au demarrage la-bas et TOUT le recit retombe sur les textes ecrits d'avance. Le binaire est
+; produit par .github/workflows/native-arm.yml ; llama et ggml y sont lies en STATIQUE, d'ou
+; l'absence de section [dependencies] cote Linux — un seul fichier suffit.
+linux.release.arm64 = "res://addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so"
+linux.debug.arm64 = "res://addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so"
 
 ; TEC-07-A — DLL llama.cpp copiées A COTE de l'exe a l'export (cible "" = racine du build).
 ; Sans cette section, seule merlin_llm.*.dll est exportee et le build crashe au chargement.

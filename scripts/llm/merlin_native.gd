@@ -15,6 +15,11 @@ signal model_failed(reason: String)
 signal generation_finished(result: Dictionary)
 
 const MODEL_E2B: String = "res://addons/merlin_llm/models/gemma4-e2b-q4_k_m.gguf"
+# Le e4b quand il est là, le e2b sinon. Le choix est un CONSTAT, pas un jour de bascule : la VM
+# ARM dispose du e4b (6,1 Go, meilleure prose) là où le PC livre le e2b à côté de son exe. Aucune
+# machine n'a besoin d'être reconfigurée — chacune prend ce qu'elle a.
+const MODEL_E4B: String = "res://addons/merlin_llm/models/gemma4-e4b-q4_k_m.gguf"
+const MODELES: Array = [MODEL_E4B, MODEL_E2B]
 # n_ctx 2048 (et NON 4096 R58) : perf-driven. Le C++ note un speedup 3-4x + KV cache /2
 # vs gros ctx, et les prompts MVP (system + résumé + situation) tiennent largement dans 2048.
 # Critique sur cette machine (RAM libre faible) pour éviter le swap → générations lentes.
@@ -99,16 +104,25 @@ func _boot() -> void:
 # Build EXPORTÉ : globalize_path(res://) ne fonctionne PAS hors éditeur et le modèle (3,3 GB)
 # n'est pas embarqué — il est livré À CÔTÉ de l'exe : <exe_dir>/models/<nom>, sinon <exe_dir>/<nom>.
 func _resolve_model_path() -> String:
+	# Le e4b passe en premier partout : présent → il l'emporte ; absent → le e2b, comme avant.
 	if OS.has_feature("editor"):
-		return ProjectSettings.globalize_path(MODEL_E2B)
+		for res_path in MODELES:
+			var abs_path: String = ProjectSettings.globalize_path(res_path)
+			if FileAccess.file_exists(abs_path):
+				return abs_path
+		return ProjectSettings.globalize_path(MODEL_E2B)  # échec propre → model_failed
 	var exe_dir: String = OS.get_executable_path().get_base_dir()
-	var fname: String = MODEL_E2B.get_file()
-	var candidates: Array = [exe_dir.path_join("models").path_join(fname), exe_dir.path_join(fname)]
+	var candidates: Array = []
+	for res_path in MODELES:
+		var fname: String = res_path.get_file()
+		candidates.append(exe_dir.path_join("models").path_join(fname))
+		candidates.append(exe_dir.path_join(fname))
 	for cand in candidates:
 		if FileAccess.file_exists(cand):
 			return cand
-	push_error("[MerlinNative] GGUF introuvable à côté de l'exe (%s) — attendu : %s" % [exe_dir, fname])
-	return candidates[0]  # load_model échouera proprement → model_failed
+	push_error("[MerlinNative] GGUF introuvable à côté de l'exe (%s) — attendu : %s"
+			% [exe_dir, MODEL_E2B.get_file()])
+	return candidates[candidates.size() - 1]  # load_model échouera proprement → model_failed
 
 
 # Exécuté sur un thread SÉPARÉ : seule l'opération CPU de chargement (aucune interaction SceneTree).
