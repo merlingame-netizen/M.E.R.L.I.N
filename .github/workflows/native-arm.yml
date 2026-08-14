@@ -67,8 +67,15 @@ jobs:
           echo "llama.cpp @ $(git rev-parse --short HEAD)"
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=OFF -DLLAMA_CURL=OFF -DGGML_NATIVE=OFF \
-            -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF
-          cmake --build build --config Release -j"$(nproc)"
+            -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF \
+            -DLLAMA_BUILD_TOOLS=OFF
+          # UNIQUEMENT les bibliothèques. Construire `all` compile aussi les outils, et
+          # l'un d'eux (bin/llama) ne s'edite pas en statique sur master :
+          #   ld: cannot find -lllama-server-impl / -lllama-cli-impl
+          # L'echec survenait a 100 %, toutes les .a deja produites. On ne demande donc
+          # que ce dont la GDExtension a besoin — et c'est plus rapide.
+          cmake --build build --config Release -j"$(nproc)" \
+            --target llama ggml ggml-base ggml-cpu
           find build -name '*.a' | sort
 
       - name: MerlinLLM
