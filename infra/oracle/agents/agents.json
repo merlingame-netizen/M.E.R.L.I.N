@@ -147,11 +147,11 @@
     },
     {
       "id": "ollama-idle",
-      "label": "Décharge des modèles",
-      "schedule": "*/10 * * * *",
+      "label": "Le Délesteur",
+      "schedule": "*/15 * * * *",
       "cmd": "a_ollama_idle.sh",
-      "enabled": false,
-      "desc": "Décharge les modèles LLM inactifs pour rendre la RAM au jeu. Désactivé par défaut : cette VM est un atelier, l'IA doit pouvoir tourner en continu."
+      "enabled": true,
+      "desc": "Rend la RAM à l'atelier d'écriture : il libère le modèle de triage (8 Go) qui ne sert qu'en lot deux fois par jour, et ne touche JAMAIS au modèle de conversation ni à un modèle en train de travailler. Sans lui, 14 Go de modèles restaient chargés et la boucle de corpus, qui en exige 8 de libres, était sautée toute la nuit."
     },
     {
       "id": "gd-pacing",
