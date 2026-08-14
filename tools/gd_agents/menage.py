@@ -167,22 +167,22 @@ def appliquer(lots: dict) -> str:
 def missions_mortes() -> list[Path]:
     """Les missions que le codeur ne saura JAMAIS appliquer.
 
-    Une mission n'est applicable que si sa proposition portait un `before`/
-    `after` (`proposals.applicable`). On remonte à la proposition par son
-    identifiant — le nom du fichier —, et on ne bouge que ce dont on est sûr :
-    une mission dont la proposition est introuvable reste où elle est."""
+    On applique SON critère, mot pour mot (`coder_local.run`) : une mission est
+    inerte si sa proposition acceptée est introuvable, illisible, ou si elle ne
+    porte pas de `before`. Deviner autrement produirait deux avis divergents sur
+    la même file — et c'est le sien qui compte, puisque c'est lui qui travaille.
+
+    Les missions écrites depuis Parler n'ont aucune proposition : ce sont des
+    consignes en français, jamais un remplacement de ligne. Elles sont donc
+    inertes par construction, ce que le codeur confirmait à chaque passage
+    (« 2 mission(s) en file, 2 sans patch »)."""
     if not PROP.MISSIONS.exists():
         return []
     out = []
     for m in sorted(PROP.MISSIONS.glob("*.md")):
-        pid = m.stem
-        prop = None
-        for dossier in (PROP.INBOX, PROP.ACCEPTED, PROP.REJECTED):
-            f = dossier / f"{pid}.json"
-            if f.exists():
-                prop = PROP._read(f)
-                break
-        if prop and not PROP.applicable(prop):
+        src = PROP.ACCEPTED / f"{m.stem}.json"
+        prop = PROP._read(src) if src.exists() else None
+        if not prop or not (prop.get("change") or {}).get("before"):
             out.append(m)
     return out
 
