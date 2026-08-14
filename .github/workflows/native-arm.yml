@@ -35,15 +35,22 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
+    # DANS UN CONTENEUR ORACLE LINUX 9 — la même famille que la VM. Compilé
+    # directement sur le runner (Ubuntu 24.04, glibc 2.39), le .so réclamait
+    # GLIBC_2.38 alors que la VM n'offre que 2.34, et Godot le rejetait :
+    #   libm.so.6: version `GLIBC_2.38' not found
+    # La glibc n'est compatible que vers l'avant : il faut donc construire sur
+    # une base au moins aussi ancienne que la cible.
+    container: oraclelinux:9
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
       - name: Outils de compilation
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends build-essential cmake scons python3 git
-          echo "cœurs : $(nproc) · arch : $(uname -m)"
+          dnf install -y -q gcc-c++ cmake make git python3-pip findutils file which
+          pip3 install --quiet scons
+          echo "cœurs : $(nproc) · arch : $(uname -m) · glibc : $(ldd --version | head -1)"
 
       # godot-cpp doit suivre la version de Godot qui EXÉCUTE le jeu (4.5 sur la VM).
       # Si la branche n'existe pas encore en amont, on retombe sur master plutôt que d'échouer.
