@@ -28,6 +28,9 @@ AGENTS_JSON = HERE.parents[1] / "infra" / "oracle" / "agents" / "agents.json"
 INSTALL = HERE.parents[1] / "infra" / "oracle" / "agents" / "install-agents.sh"
 AGENT_RUN = HERE.parents[1] / "infra" / "oracle" / "agents" / "agent-run.sh"
 MISSIONS = Path.home() / ".cache" / "merlin-missions" / "queue"
+# Les travaux qu'aucun agent ne sait exécuter — mais que Maxime doit revoir.
+# Même dossier que `proposals.A_LA_MAIN` : une seule liste, pas deux.
+A_LA_MAIN = Path.home() / ".cache" / "merlin-missions" / "a_la_main"
 
 # Cadences proposables (jamais de cron brut tapé par le LLM — que des presets sûrs).
 CADENCES = {
@@ -130,7 +133,7 @@ def catalogue_for_prompt() -> str:
         "ACTION: agent.cadence | playtest-bot | nuit | Playtest une fois par nuit\n"
         "Actions possibles : agent.toggle (valeur on ou off), agent.cadence "
         "(valeur horaire, nuit, actif ou matin), agent.run (valeur -), "
-        "mission.queue (cible -, valeur = la tâche pour le codeur), memory.grave "
+        "mission.queue (cible -, valeur = un travail à retenir pour plus tard), memory.grave "
         "(cible -, valeur = la règle), task.plan (cible -, valeur = une tâche à "
         "prévoir), agent.create (cible -, valeur = ce que le nouvel agent devrait "
         "faire).\n"
@@ -206,7 +209,10 @@ def parse(reply: str, sel: str = "") -> tuple[str, list[dict]]:
                 rejets.append((verb, f"longueur {len(value)} hors 10-2000"))
                 continue
             label = parts[-1] if len(parts) > 3 else (
-                ("Prévoir : " if verb == "task.plan" else "Confier au codeur : ") + value[:38])
+                # Plus « Confier au codeur » : il n'applique que des corrections
+                # ligne à ligne, jamais une consigne écrite. Le bouton promettait
+                # une exécution qui n'arrivait pas.
+                ("Prévoir : " if verb == "task.plan" else "Retenir ce travail : ") + value[:38])
         elif verb == "memory.grave":
             value = " | ".join(parts[2:-1]) if len(parts) > 3 else value
             # 200 et non 300 : `memory.add` tronque le titre à 200 caractères,
@@ -296,10 +302,20 @@ def execute(action: dict, demande: str = "") -> dict:
             memory.add("règle", value, "décidé depuis Parler", source="chat/maxime")
             return {"ok": True, "effect": f"gravé : « {value[:60]} »"}
         if verb == "mission.queue":
-            MISSIONS.mkdir(parents=True, exist_ok=True)
+            # « Confier au codeur » promettait une exécution qui n'arrivait
+            # jamais : le codeur n'applique QUE des remplacements de ligne
+            # (before/after), et une consigne écrite en français n'en est pas
+            # un. Deux demandes de Maxime — le système de Palier, la séquence
+            # biome/HUD — ont ainsi dormi deux jours dans une file qui ne
+            # pouvait pas les lire. On les met là où elles seront VUES, et on
+            # dit ce qui va réellement se passer.
+            A_LA_MAIN.mkdir(parents=True, exist_ok=True)
             name = time.strftime("%Y%m%d-%H%M%S") + "-chat.md"
-            (MISSIONS / name).write_text(_texte_mission(value, demande), encoding="utf-8")
-            return {"ok": True, "effect": f"mission {name} en file (codeur au prochain tour)"}
+            (A_LA_MAIN / name).write_text(_texte_mission(value, demande), encoding="utf-8")
+            return {"ok": True,
+                    "effect": ("noté dans tes travaux à faire — le codeur ne sait "
+                               "appliquer qu'une correction ligne à ligne, pas une "
+                               "consigne écrite. Tu la retrouveras dans « Ce matin »")}
         if verb == "task.plan":
             # Une tâche prévue devient une carte Décider (pas d'exécution directe).
             sys.path.insert(0, str(HERE))
