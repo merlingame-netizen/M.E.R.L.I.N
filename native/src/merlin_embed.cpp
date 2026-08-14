@@ -191,7 +191,11 @@ PackedFloat32Array MerlinEmbed::embed(String text) {
 	}
 
 	// Reset KV cache for a clean single-sequence decode.
-	llama_kv_self_clear(ctx);
+	// llama_kv_self_clear a disparu en amont au profit de l'API mémoire. merlin_llm.cpp
+	// utilisait DÉJÀ cette API (llama_get_memory / llama_memory_clear, lignes 211-236) :
+	// ce fichier était le seul resté en arrière, si bien qu'aucune version de llama.cpp ne
+	// pouvait compiler les deux à la fois. Les voilà alignés.
+	llama_memory_clear(llama_get_memory(ctx), true);
 
 	// Build a single-sequence batch.
 	llama_batch batch = llama_batch_init(n_tokens, /*embd=*/0, /*n_seq_max=*/1);

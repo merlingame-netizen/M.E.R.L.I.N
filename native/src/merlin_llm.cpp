@@ -277,7 +277,11 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 
 			// Then the usual chain on the grammar-filtered logits: penalties -> top_k -> top_p -> temp
 			if (repetition_penalty > 1.0f) {
+				// n_vocab est (re)devenu le PREMIER paramètre en amont — sans lui la
+				// compilation échoue en « too few arguments ». Le vocab est déjà résolu
+				// plus haut (llama_model_get_vocab), on n'ouvre donc rien de neuf ici.
 				llama_sampler_chain_add(sampler, llama_sampler_init_penalties(
+					/*n_vocab=*/llama_vocab_n_tokens(vocab),
 					/*penalty_last_n=*/64,
 					/*penalty_repeat=*/repetition_penalty,
 					/*penalty_freq=*/0.0f,
