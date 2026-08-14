@@ -127,6 +127,9 @@ jobs:
       # sans nouvelle mécanique de déploiement.
       - name: Livrer sur la branche
         run: |
+          # Dans le conteneur on est root, le checkout appartient a un autre uid :
+          # git refuse alors le depot (« fatal: not in a git directory »).
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
