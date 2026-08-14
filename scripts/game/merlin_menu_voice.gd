@@ -15,7 +15,6 @@ const MODES: Array = ["journee", "encourage", "souvenir", "blague", "journee", "
 var _voice: String = ""
 var _ctx: Dictionary = {}
 var _queue: Array[String] = []
-var _depart: String = ""             # réplique « le Voyageur s'élance » consommée par la transition de lancement
 var _hover_cache: Dictionary = {}   # bouton (String) → réplique prête
 var _hover_pending: Dictionary = {} # bouton → true (génération en cours)
 var _mode_idx: int = 0
@@ -50,14 +49,6 @@ func has_ready() -> bool:
 
 func take_thought() -> String:
 	return _queue.pop_front() if not _queue.is_empty() else ""
-
-
-# Réplique de DÉPART (lancement Nouvelle/Continuer) : consommée par la transition. "" si pas encore prête
-# (la transition retombe alors sur une réplique procédurale courte). Re-générée au pump suivant.
-func take_depart() -> String:
-	var d: String = _depart
-	_depart = ""
-	return d
 
 
 # Réplique de survol : instantanée si en cache (consommée), sinon "" (une fraîche sera re-générée).
@@ -101,13 +92,8 @@ func _pump_body() -> void:
 			_greeted = true
 			_queue.append(hello)
 		return
-	# 2) Réplique de DÉPART (lancement) — en garder UNE prête pour la transition Nouvelle/Continuer.
-	if _depart == "":
-		var dep: String = await _generate("depart", {})
-		if dep != "" and _running:
-			_depart = dep
-		return
-	# 3) File de pensées idle.
+	# 2) File de pensées idle. (La réplique de DÉPART a été retirée le 2026-08-14 avec le montage qui
+	# la prononçait : la générer en priorité prenait le moteur au préfetch des scénarios pour rien.)
 	if _queue.size() < QUEUE_CAP:
 		var mode: String = str(MODES[_mode_idx % MODES.size()])
 		_mode_idx += 1
@@ -115,7 +101,7 @@ func _pump_body() -> void:
 		if line != "" and _running:
 			_queue.append(line)
 		return
-	# 4) Sinon, alimente le cache de survol (1 bouton manquant à la fois).
+	# 3) Sinon, alimente le cache de survol (1 bouton manquant à la fois).
 	for b in _ctx.get("hover_buttons", []):
 		var bs: String = str(b)
 		if not _hover_cache.has(bs) and not bool(_hover_pending.get(bs, false)):

@@ -2,8 +2,8 @@ extends Control
 ## MerlinSelection — écran de sélection (bible R56). Merlin propose 3 sentiers (titre + pitch),
 ## le joueur en CHOISIT un MANUELLEMENT → montage (squelette + arc) → scène de jeu.
 ## v10.19 (user 2026-06-29) : les 3 TITRES sont FORCÉMENT LLM — montage « Merlin rêve les sentiers »
-## ultra-animé tant qu'ils ne sont pas prêts (filet ~75 s + skip après 20 s). Le pick lance la
-## transition « zoom vers Merlin qui parle » (montage du scénario).
+## ultra-animé tant qu'ils ne sont pas prêts (filet ~75 s + skip après 20 s). Le pick enchaîne sur
+## la transition à l'encre (user 2026-08-14 : le montage « zoom vers Merlin » a été retiré).
 
 const COL_BG: Color = MerlinVisual.BG_DEEP
 const COL_SURFACE: Color = MerlinVisual.SURFACE
@@ -165,10 +165,10 @@ func _on_pick(title: String, pitch: String) -> void:
 	get_node("/root/MerlinRun").new_run(skel)
 	# Arc narratif LLM en arrière-plan (fire-and-forget) ; l'interstitiel in-game (R111) le couvre.
 	get_node("/root/MerlinScenario").prepare_arc(skel)
-	# v10.19 - montage du scénario : transition « zoom vers Merlin ». Vague D (D1) : plus de caption
-	# CANNÉE (« Le sentier se dessine sous mes doigts… ») - on garde le montage VISUEL (voile + zoom
-	# vers Merlin), sans bulle de texte (réplique vide → change_scene_merlin n'affiche aucun panneau).
-	MerlinTransition.change_scene_merlin(GAME_SCENE, "")
+	# Transition à l'encre, sans légende (user 2026-08-14) : le montage « zoom vers Merlin » est retiré
+	# — il montrait Merlin seul, agrandi, sur fond sombre, sans rien dire. Les captions CANNÉES restent
+	# neutralisées depuis la Vague D (D1) : aucun panneau de texte à la bascule.
+	MerlinTransition.change_scene(GAME_SCENE)
 
 
 func _build_ui() -> void:

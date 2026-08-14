@@ -54,7 +54,7 @@ var _next_speak: float = 3.0         # 1re prise de parole dès qu'une pensée e
 var _voice_test: bool = false        # dev : MERLIN_VOICE_TEST → bulle factice instantanée (rendu)
 var _voice_test_done: bool = false
 var _voice_test_acc: float = 0.0
-var _autoclick_done: bool = false    # dev : MERLIN_AUTOCLICK → déclenche Nouvelle Partie (capture transition)
+var _autoclick_done: bool = false    # dev : MERLIN_AUTOCLICK → déclenche Nouvelle Partie (capture entrée)
 var _autoclick_acc: float = 0.0
 
 
@@ -676,7 +676,7 @@ func _process(delta: float) -> void:
 	# Dev (MERLIN_EYE_MOOD=neutral|surprise|angry) : force l'humeur des yeux pour capture/QA.
 	if _scene_art != null and OS.has_environment("MERLIN_EYE_MOOD"):
 		_scene_art.set_eye_mood(OS.get_environment("MERLIN_EYE_MOOD"))
-	# Dev (MERLIN_AUTOCLICK) : déclenche Nouvelle Partie après ~2s pour capturer la transition zoom-parole.
+	# Dev (MERLIN_AUTOCLICK) : déclenche Nouvelle Partie après ~2s pour capturer l'entrée en jeu.
 	if not _autoclick_done and OS.has_environment("MERLIN_AUTOCLICK"):
 		_autoclick_acc += delta
 		if _autoclick_acc >= 2.0:
@@ -926,29 +926,27 @@ func _on_biome_picked(bio: String) -> void:
 		pop.tween_callback(_scene_art.flash_moon)
 		pop.tween_interval(0.5 * m)
 		pop.tween_callback(func() -> void:
-			var line: String = _depart_line()
-			MerlinTransition.change_scene_merlin(SELECTION_SCENE, line))
+			_stop_voice()
+			MerlinTransition.change_scene(SELECTION_SCENE))
 	else:
-		var line: String = _depart_line()
-		MerlinTransition.change_scene_merlin(SELECTION_SCENE, line)
+		_stop_voice()
+		MerlinTransition.change_scene(SELECTION_SCENE)
 
 
 func _on_continue() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.has_save() and run.load_run():
 		_confirm_row("spark")
-		var line: String = _depart_line()
-		MerlinTransition.change_scene_merlin(GAME_SCENE, line)
+		_stop_voice()
+		MerlinTransition.change_scene(GAME_SCENE)
 
 
-# Réplique de départ (pré-générée par la voix) + on coupe la voix du menu (single-flight : la scène
-# suivante a besoin du moteur, et le menu va être quitté). Filet "" → la transition met sa réplique.
-func _depart_line() -> String:
-	var line: String = ""
+# Coupe la voix du menu avant de quitter la scène (single-flight : la scène suivante a besoin du
+# moteur, et le menu va être quitté). Ne rend plus de réplique : le montage qui la prononçait est
+# retiré — l'entrée en jeu se fait sur la révélation du décor puis la transition à l'encre.
+func _stop_voice() -> void:
 	if _voice != null:
-		line = _voice.take_depart()
 		_voice.stop()
-	return line
 
 
 # v10.18 — Retour de confirmation (anneau qui s'évase + flash) sur la rangée d'une clé donnée.
