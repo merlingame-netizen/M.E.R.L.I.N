@@ -98,8 +98,13 @@ def reglages_du_jeu() -> dict:
 # Le gabarit de chat du jeu (merlin_native.gd:build_prompt). Ollama applique le
 # gabarit du modèle au champ `prompt` : pour ne pas le doubler, on l'envoie en
 # `raw` avec CETTE chaîne — l'entrée devient identique token pour token.
+#
+# `<bos>` est AJOUTÉ ici : le jeu ne l'écrit pas parce que llama.cpp le pose
+# lui-même à la tokenisation (add_special), tandis qu'Ollama en mode `raw` ne
+# pose plus rien. Sans lui, gemma4 rend une suite de chiffres — mesuré :
+# « n0101010101010000000000000000067594032… ».
 def gabarit(system_text: str, user_text: str) -> str:
-    return ("<start_of_turn>user\n%s\n\n%s<end_of_turn>\n<start_of_turn>model\n"
+    return ("<bos><start_of_turn>user\n%s\n\n%s<end_of_turn>\n<start_of_turn>model\n"
             % (system_text, user_text))
 
 
