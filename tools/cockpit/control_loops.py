@@ -306,8 +306,13 @@ def cmd_gen(args):
             f.write(json.dumps({"card": card, "backend": backend_used, "ts": _now()}, ensure_ascii=False) + "\n")
             accepted += 1
     total = sum(1 for _ in CORPUS.open(encoding="utf-8")) if CORPUS.exists() else 0
+    # `skipped` doit DISPARAÎTRE quand le passage a lieu : `_log_loop` fusionne
+    # dans l'enregistrement précédent, donc un motif de saut survivait aux
+    # passages réussis. Mesuré : l'atelier venait d'écrire 30 cartes et « Ce
+    # matin » annonçait toujours « passage sauté (RAM insuffisante) ».
     st = _log_loop("gen", {"backend": backend, "generated": args.count,
-                           "accepted": accepted, "rejected": rejected, "corpus_total": total})
+                           "accepted": accepted, "rejected": rejected,
+                           "corpus_total": total, "skipped": ""})
     print(json.dumps({"loop": "gen", **st}, ensure_ascii=False))
     return 0
 
