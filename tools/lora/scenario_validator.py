@@ -146,17 +146,45 @@ def _banned_hit(low: str, term: str) -> bool:
 # bornes DURES (sinon ce serait une erreur, pas un avertissement). Tous les
 # autres — terme anachronique, verbe hors des 45, répétition Jaccard — touchent
 # au CONTENU et méritent un arbitrage humain.
-_FORME = ("words outside target", "sentences outside target")
+_W_MOTS = re.compile(r"text (\d+) words outside target")
+_W_PHRASES = re.compile(r"(\d+) sentences outside target")
+
+# Jusqu'où un écart de forme reste une NUANCE. 36 mots pour une cible de 40, oui.
+# 17 mots pour une cible de 40, non : ce n'est plus le même objet, c'est une
+# ébauche. Et ces cartes servent à ENTRAÎNER le modèle — intégrer des ébauches
+# lui apprend à en écrire, ce qui est précisément le défaut qu'on corrige.
+_MARGE_MOTS = 0.25          # ±25 % de la cible douce
+_MARGE_PHRASES = 1          # ±1 phrase
 
 
 def soft_only(warns) -> bool:
-    """Les avertissements ne portent-ils QUE sur la forme du texte ?
+    """Les avertissements ne sont-ils QUE des nuances de forme ?
 
     Sert à décider ce qui mérite l'attention de Maxime. Mesuré sur la VM :
     19 cartes sur 19 attendaient une décision pour un texte de 34-38 mots là où
     la cible douce commence à 40 — un réglage de style, jamais un arbitrage.
-    La liste est BLANCHE : un motif inconnu est considéré comme bloquant."""
-    return all(any(f in str(w) for f in _FORME) for w in (warns or []))
+
+    Deux garde-fous : la liste est BLANCHE (un motif inconnu reste bloquant), et
+    l'écart doit rester PROCHE de la cible — une carte de 17 mots passe la borne
+    dure (12) mais reste une décision, parce qu'elle n'a pas la substance d'une
+    carte."""
+    for w in (warns or []):
+        w = str(w)
+        m = _W_MOTS.search(w)
+        if m:
+            n = int(m.group(1))
+            if not (WORDS_SOFT[0] * (1 - _MARGE_MOTS) <= n
+                    <= WORDS_SOFT[1] * (1 + _MARGE_MOTS)):
+                return False
+            continue
+        m = _W_PHRASES.search(w)
+        if m:
+            n = int(m.group(1))
+            if not (SENT_SOFT[0] - _MARGE_PHRASES <= n <= SENT_SOFT[1] + _MARGE_PHRASES):
+                return False
+            continue
+        return False        # motif inconnu ou avertissement de contenu
+    return True
 
 
 def validate_card(card: dict, recent_texts=None):
