@@ -141,6 +141,24 @@ def _banned_hit(low: str, term: str) -> bool:
     return re.search(r"(?<![a-z])" + re.escape(term) + r"(?![a-z])", low) is not None
 
 
+# Les deux seuls avertissements qui portent sur la FORME du texte : la longueur
+# et le nombre de phrases s'écartent de la cible douce, tout en restant dans les
+# bornes DURES (sinon ce serait une erreur, pas un avertissement). Tous les
+# autres — terme anachronique, verbe hors des 45, répétition Jaccard — touchent
+# au CONTENU et méritent un arbitrage humain.
+_FORME = ("words outside target", "sentences outside target")
+
+
+def soft_only(warns) -> bool:
+    """Les avertissements ne portent-ils QUE sur la forme du texte ?
+
+    Sert à décider ce qui mérite l'attention de Maxime. Mesuré sur la VM :
+    19 cartes sur 19 attendaient une décision pour un texte de 34-38 mots là où
+    la cible douce commence à 40 — un réglage de style, jamais un arbitrage.
+    La liste est BLANCHE : un motif inconnu est considéré comme bloquant."""
+    return all(any(f in str(w) for f in _FORME) for w in (warns or []))
+
+
 def validate_card(card: dict, recent_texts=None):
     """Return (errors, warnings) for a single card dict.
 

@@ -39,6 +39,20 @@ def _agents() -> dict:
     return {a["id"]: a for a in json.loads(AGENTS.read_text(encoding="utf-8"))["agents"]}
 
 
+def _forme_seulement(warns) -> bool:
+    """Ces avertissements ne portent-ils que sur la forme du texte ?
+
+    La règle vit dans `scenario_validator` — c'est lui qui écrit ces messages,
+    c'est à lui de les classer ; en garder une copie ici, c'est signer une
+    divergence future. Si le validateur est introuvable, on répond NON : sans
+    lui, on ne sait rien, et une absence ne vaut jamais un feu vert."""
+    try:
+        import scenario_validator as sv
+        return sv.soft_only(warns)
+    except Exception:
+        return False
+
+
 def _load_analyzer(name: str):
     mod = __import__(f"analyzers.{name}", fromlist=["analyze"])
     return mod
@@ -167,14 +181,19 @@ def run(agent_id: str, dry: bool = False) -> str:
                 break
 
     # 3. Validation déterministe de ce que le modèle a produit.
-    verdict, errs = {}, []
+    verdict, errs, warns = {}, [], []
     if card is not None:
         try:
             import scenario_validator as sv
             errs, warns = sv.validate_card(card)
             verdict = {"validator": "scenario_validator",
                        "errors": len(errs), "warnings": len(warns),
-                       "codes": [str(e)[:60] for e in errs[:4]]}
+                       "codes": [str(e)[:60] for e in errs[:4]],
+                       # Les TEXTES des avertissements, pas seulement leur nombre.
+                       # Sans eux, une carte attendait dans Décider sans que rien,
+                       # nulle part, ne puisse dire pourquoi — mesuré : 19 cartes
+                       # bloquées par le même reproche, invisible partout.
+                       "warn_codes": [str(w)[:80] for w in warns[:4]]}
         except Exception as exc:
             # Un validateur ABSENT ne doit jamais valoir « validé ». En laissant
             # `errs` vide ici, `ok_card` passait à True et la carte était
@@ -268,9 +287,22 @@ def run(agent_id: str, dry: bool = False) -> str:
     # Doctrine « auto sauf stratégique » : une CARTE validée sans erreur est du
     # contenu à faible risque → intégrée seule au corpus curé. Tout le reste
     # (équilibrage, design, bugs) reste une décision pour Maxime.
-    if ok_card and cfg["kind"] == "content" and not verdict.get("warnings"):
+    #
+    # La porte exigeait ZÉRO avertissement. Résultat mesuré : 19 cartes sur 19
+    # bloquées par le même reproche de forme — un texte de 36 mots pour une cible
+    # qui commence à 40 —, et 19 gestes demandés à Maxime pour un réglage de
+    # style. Un avertissement de FORME n'est pas un arbitrage ; un avertissement
+    # de CONTENU (terme anachronique, verbe hors liste, répétition) en reste un.
+    forme = _forme_seulement(warns)
+    if ok_card and cfg["kind"] == "content" and forme:
         PROP.write(prop)
-        res = PROP.decide(prop["id"], "accept", "auto : contenu validé sans erreur ni avertissement")
+        # La raison dit ce qui s'est réellement passé. « Validé sans erreur ni
+        # avertissement » aurait été faux dès qu'un avertissement de forme existe,
+        # et c'est cette phrase que Maxime relira dans six mois.
+        motif = ("auto : contenu validé sans erreur ni avertissement" if not warns
+                 else "auto : contenu validé, seule la forme du texte s'écarte "
+                      f"de la cible ({str(warns[0])[:70]})")
+        res = PROP.decide(prop["id"], "accept", motif)
         return (f"carte auto-intégrée {prop['id']} ({res.get('effect', '?')}, "
                 f"palier {plan.get('tier')}, {secs}s)")
     PROP.write(prop)

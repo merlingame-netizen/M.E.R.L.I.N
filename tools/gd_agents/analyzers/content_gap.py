@@ -115,8 +115,14 @@ def brief(a: dict) -> str:
         f"Champ lexical imposé : {a['lexical_field']}\n"
         f"Verbes AUTORISÉS (choisis-en 3, à l'infinitif) : {', '.join(a['verbs'])}{npc}\n"
         f"Lacune à combler : {a['gap']}\n"
+        # 60-100 et non 40-120 : mesuré sur 19 cartes d'affilée, le modèle vise la
+        # borne basse annoncée et retombe ~15 % dessous — 34 à 38 mots pour une
+        # consigne de 40. En demandant 60, il écrit 50-60 : dans la cible. La
+        # borne du validateur (40-120) ne bouge pas ; c'est la CONSIGNE qui était
+        # calibrée sur le résultat espéré au lieu du comportement observé.
         f"Contraintes : exactement {a['options_rule']} options ; texte de 2 à 4 phrases "
-        f"françaises (40-120 mots) ; effets plafonnés ({caps}) ; "
+        f"françaises (60 à 100 mots — vise 80, un texte trop court est refusé) ; "
+        f"effets plafonnés ({caps}) ; "
         f"factions valides : druides, anciens, korrigans, niamh, ankou.\n"
         f"Mots interdits : {', '.join(a['forbidden'][:8])}."
     )
