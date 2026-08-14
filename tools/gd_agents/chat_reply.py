@@ -75,15 +75,17 @@ def main(conv: str, adviser: str) -> int:
         echange = "\n".join(
             f"{'Le voyageur' if r['role'] == 'user' else 'Merlin'} : {r['text'][:300]}"
             for r in rows[-6:])
-        # Le gabarit de chat du JEU, posé ici et envoyé en --raw : l'entrée du
-        # modèle devient identique token pour token à celle d'une prise de parole
-        # en jeu. Sans --raw, Ollama poserait son propre gabarit par-dessus.
-        p = merlin_jeu.gabarit(merlin_jeu.prompt(),
-                               f"LA CONVERSATION :\n{echange}\n\nMerlin :")
+        # PAS de --raw : le gabarit est laissé à Ollama. Essayé en brut avec le
+        # gabarit du jeu — c'est le même `<start_of_turn>`, mais `think: False`
+        # n'a alors plus de prise (il n'y a plus de gabarit où l'injecter) et
+        # gemma4 ouvre son canal de raisonnement : la réponse arrivait préfixée
+        # de « thought <channel|> ». La justesse prime sur la parité de jetons ;
+        # tout le reste (voix, échantillonnage, modèle) reste celui du jeu.
+        p = (f"{merlin_jeu.prompt()}\n\nLA CONVERSATION :\n{echange}\n\nMerlin :")
         rg = merlin_jeu.reglages_du_jeu()
         modele = (merlin_jeu.charger().get("modele") or "").strip()
         # Les réglages viennent de merlin_native.gd — pas d'une copie locale.
-        argv = ["bash", str(LLM_ASK), "--raw",
+        argv = ["bash", str(LLM_ASK),
                 "--predict", str(rg["predict"]), "--timeout", "280",
                 "--ctx", str(rg["ctx"]), "--temp", str(rg["temp"]),
                 "--top-p", str(rg["top_p"]), "--top-k", str(rg["top_k"]),
@@ -106,8 +108,8 @@ def main(conv: str, adviser: str) -> int:
         with _verrou_llm():
             texte = _dire(p)
             if not texte:
-                texte = _dire(merlin_jeu.gabarit(merlin_jeu.prompt(),
-                                                 rows[-1]["text"][:300]))
+                texte = _dire(f'{merlin_jeu.prompt()}\n\nLe voyageur : '
+                              f'{rows[-1]["text"][:300]}\n\nMerlin :')
         memory.chat_append(conv, "assistant", "merlin-du-jeu",
                            texte or "(Merlin garde le silence — le modèle n'a pas répondu.)",
                            to="jeu")

@@ -112,9 +112,20 @@ def gabarit(system_text: str, user_text: str) -> str:
 # eux (merlin_native.gd:STOP_MARKERS), le portail ne le faisait pas.
 STOP_MARKERS = ("<start_of_turn", "</start_of_turn", "<end_of_turn", "</end_of_turn",
                 "<turn|", "<|turn", "<|im_", "<eos", "<bos", "<pad", "<unk", "<0x")
+# Le canal de raisonnement de gemma4. `think: False` le supprime déjà, mais il a
+# fuité une fois (« thought\n<channel|>… ») et un préfixe de ce genre est plus
+# visible pour Maxime que n'importe quel autre défaut : on le coupe aussi ici.
+CANAUX = ("<channel|", "<|channel", "<think", "</think")
 
 
 def nettoyer(t: str) -> str:
+    for c in CANAUX:
+        i = t.find(c)
+        if i != -1:
+            fin = t.find(">", i)
+            t = (t[:i] + t[fin + 1:]) if fin != -1 else t[:i]
+    if t.lstrip().lower().startswith("thought"):
+        t = t.lstrip()[len("thought"):].lstrip()
     coupe = -1
     for m in STOP_MARKERS:
         i = t.find(m)
