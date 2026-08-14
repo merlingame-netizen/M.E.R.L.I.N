@@ -65,7 +65,12 @@ jobs:
             https://github.com/ggml-org/llama.cpp native/llama.cpp
           cd native/llama.cpp
           echo "llama.cpp @ $(git rev-parse --short HEAD)"
+          # POSITION_INDEPENDENT_CODE : ces .a finissent DANS un .so (la GDExtension).
+          # Sans -fPIC l'editeur de liens refuse en aarch64 :
+          #   relocation R_AARCH64_ADR_PREL_PG_HI21 ... can not be used when making
+          #   a shared object; recompile with -fPIC
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DBUILD_SHARED_LIBS=OFF -DLLAMA_CURL=OFF -DGGML_NATIVE=OFF \
             -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF \
             -DLLAMA_BUILD_TOOLS=OFF
