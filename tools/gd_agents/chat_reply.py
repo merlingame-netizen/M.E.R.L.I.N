@@ -24,6 +24,42 @@ import prompts       # noqa: E402
 LLM_ASK = HERE.parents[1] / "infra" / "oracle" / "llm" / "llm-ask.sh"
 
 
+# Le verrou LLM PARTAGÉ : le personnage du JEU était le dernier consommateur à ne pas le
+# prendre. Deux modèles de 6,1 Go pouvaient donc se charger en même temps sur
+# 22 Go, la VM partait en swap, et l'appel rendait du vide — exactement la
+# signature « LLM indisponible — rc=0 » qu'on lit dans le journal.
+import contextlib
+
+@contextlib.contextmanager
+def _verrou_llm(attente=20):
+    # 20 s, pas 600 : le verrou protège du DOUBLE CHARGEMENT (deux modèles de
+    # 6 Go sur 22), pas de l'usage simultané. Le braséro garde le modèle
+    # résident, donc une conversation ne charge plus rien — attendre dix
+    # minutes qu'une analyse finisse revenait à rendre le chat inutilisable
+    # pendant tout le travail de nuit.
+    lock = Path.home() / ".cache" / "merlin-agents" / "llm.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    f = lock.open("a+")
+    try:
+        try:
+            import fcntl
+            debut = time.time()
+            while True:
+                try:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except OSError:
+                    if time.time() - debut > attente:
+                        break        # on répond quand même : le chat prime
+                    time.sleep(2)
+        except Exception:
+            pass
+        yield
+    finally:
+        with contextlib.suppress(Exception):
+            f.close()
+
+
 def main(conv: str, adviser: str) -> int:
     rows = memory.chat_read(conv, limit=10)
     if not rows or rows[-1]["role"] != "user":
@@ -39,19 +75,42 @@ def main(conv: str, adviser: str) -> int:
         echange = "\n".join(
             f"{'Le voyageur' if r['role'] == 'user' else 'Merlin'} : {r['text'][:300]}"
             for r in rows[-6:])
-        p = f"{merlin_jeu.prompt()}\n\nLA CONVERSATION :\n{echange}\n\nMerlin :"
+        # Le gabarit de chat du JEU, posé ici et envoyé en --raw : l'entrée du
+        # modèle devient identique token pour token à celle d'une prise de parole
+        # en jeu. Sans --raw, Ollama poserait son propre gabarit par-dessus.
+        p = merlin_jeu.gabarit(merlin_jeu.prompt(),
+                               f"LA CONVERSATION :\n{echange}\n\nMerlin :")
+        rg = merlin_jeu.reglages_du_jeu()
         modele = (merlin_jeu.charger().get("modele") or "").strip()
-        argv = ["bash", str(LLM_ASK), "--predict", "220", "--timeout", "280",
-                "--ctx", "2048", "--temp", "0.8"]
+        # Les réglages viennent de merlin_native.gd — pas d'une copie locale.
+        argv = ["bash", str(LLM_ASK), "--raw",
+                "--predict", str(rg["predict"]), "--timeout", "280",
+                "--ctx", str(rg["ctx"]), "--temp", str(rg["temp"]),
+                "--top-p", str(rg["top_p"]), "--top-k", str(rg["top_k"]),
+                "--repeat-penalty", str(rg["repeat_penalty"])]
         if modele:
             argv += ["--model", modele]
-        try:
-            r = subprocess.run(argv, input=p, capture_output=True, text=True, timeout=300)
-            texte = (r.stdout or "").strip()
-        except Exception:
-            texte = ""
+
+        def _dire(pr: str) -> str:
+            try:
+                r = subprocess.run(argv, input=pr, capture_output=True, text=True,
+                                   timeout=300)
+                return merlin_jeu.nettoyer((r.stdout or "").strip())
+            except Exception:
+                return ""
+
+        # Le verrou partagé ET le second essai : la branche studio les a reçus en
+        # v20.6, le personnage jamais — il sortait de la fonction avant. Sans le
+        # verrou, deux modèles de 6,1 Go se chargent ensemble sur 22, la VM part
+        # en swap et l'appel rend du vide.
+        with _verrou_llm():
+            texte = _dire(p)
+            if not texte:
+                texte = _dire(merlin_jeu.gabarit(merlin_jeu.prompt(),
+                                                 rows[-1]["text"][:300]))
         memory.chat_append(conv, "assistant", "merlin-du-jeu",
-                           texte or "(Merlin garde le silence — le modèle n'a pas répondu.)")
+                           texte or "(Merlin garde le silence — le modèle n'a pas répondu.)",
+                           to="jeu")
         print(f"Merlin du jeu a répondu ({len(texte)} car.)")
         return 0
 
@@ -123,40 +182,6 @@ def main(conv: str, adviser: str) -> int:
         except Exception:
             return ""
 
-    # Le verrou LLM PARTAGÉ : ce module était le seul consommateur à ne pas le
-    # prendre. Deux modèles de 6,1 Go pouvaient donc se charger en même temps sur
-    # 22 Go, la VM partait en swap, et l'appel rendait du vide — exactement la
-    # signature « LLM indisponible — rc=0 » qu'on lit dans le journal.
-    import contextlib
-
-    @contextlib.contextmanager
-    def _verrou_llm(attente=20):
-        # 20 s, pas 600 : le verrou protège du DOUBLE CHARGEMENT (deux modèles de
-        # 6 Go sur 22), pas de l'usage simultané. Le braséro garde le modèle
-        # résident, donc une conversation ne charge plus rien — attendre dix
-        # minutes qu'une analyse finisse revenait à rendre le chat inutilisable
-        # pendant tout le travail de nuit.
-        lock = Path.home() / ".cache" / "merlin-agents" / "llm.lock"
-        lock.parent.mkdir(parents=True, exist_ok=True)
-        f = lock.open("a+")
-        try:
-            try:
-                import fcntl
-                debut = time.time()
-                while True:
-                    try:
-                        fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                        break
-                    except OSError:
-                        if time.time() - debut > attente:
-                            break        # on répond quand même : le chat prime
-                        time.sleep(2)
-            except Exception:
-                pass
-            yield
-        finally:
-            with contextlib.suppress(Exception):
-                f.close()
 
     # Les deux tentatives sous LE MÊME verrou : le relâcher entre les deux
     # laisserait un autre agent charger son modèle pile entre l'échec et le
@@ -170,7 +195,7 @@ def main(conv: str, adviser: str) -> int:
     if not reply:
         memory.chat_append(conv, "assistant", who,
                            "(je n'ai pas réussi à répondre — le modèle local était "
-                           "indisponible ; réessaie dans une minute)")
+                           "indisponible ; réessaie dans une minute)", to=adviser or "merlin")
         return 1
     # Une proposition de souvenir dans la réponse → gravée, et signalée.
     if "MEMORISER:" in reply:
@@ -189,7 +214,8 @@ def main(conv: str, adviser: str) -> int:
         reply = (f"Voici le plan que je te propose ({len(actions)} étapes) — "
                  "valide-le d'un tap." if len(actions) > 1
                  else "Voici ce que je te propose — valide-le d'un tap.")
-    memory.chat_append(conv, "assistant", who, reply, actions=actions)
+    memory.chat_append(conv, "assistant", who, reply, actions=actions,
+                       to=adviser or "merlin")
     print(f"réponse écrite ({len(reply)} car., {len(actions)} action(s) proposée(s))")
     return 0
 

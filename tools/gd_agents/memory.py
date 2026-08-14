@@ -135,10 +135,16 @@ def _verrou(conv: str):
             f.close()
 
 
-def chat_append(conv: str, role: str, who: str, text: str, actions=None) -> None:
+def chat_append(conv: str, role: str, who: str, text: str, actions=None,
+                to: str = "") -> None:
     row = {"t": _now(), "role": role, "who": who, "text": str(text)[:4000]}
     if actions:
         row["actions"] = actions          # boutons proposés par le conseiller
+    # À QUI ce fil s'adresse — inscrit sur le premier message. Sans lui, rouvrir
+    # « le dernier fil de cet interlocuteur » est impossible : quand c'est Maxime
+    # qui a parlé en dernier, `who` vaut « maxime » et ne dit rien du destinataire.
+    if to:
+        row["to"] = str(to)[:60]
     with _verrou(conv):
         with (CHATS / f"{conv}.jsonl").open("a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -181,6 +187,21 @@ def chat_read(conv: str, limit: int = 40) -> list[dict]:
         return []
 
 
+def chat_to(conv: str) -> str:
+    """L'interlocuteur d'un fil, lu sur le premier message qui le porte.
+
+    Les fils ouverts avant que `to` existe n'en ont pas : on retombe alors sur le
+    `who` d'une réponse (« merlin-du-jeu » = le personnage), pour que l'historique
+    reste classable sans réécrire les fichiers."""
+    for r in chat_read(conv, limit=200):
+        if r.get("to"):
+            return str(r["to"])
+    for r in chat_read(conv, limit=200):
+        if r.get("who") == "merlin-du-jeu":
+            return "jeu"
+    return ""
+
+
 def chat_list(limit: int = 12) -> list[dict]:
     try:
         out = []
@@ -198,6 +219,9 @@ def chat_list(limit: int = 12) -> list[dict]:
                         # QUI a parlé en dernier : sans ça, impossible de savoir
                         # si un fil attend une réponse de Maxime ou d'un agent.
                         "role": dernier.get("role", ""), "who": dernier.get("who", ""),
+                        # À QUI parle ce fil : ce qui permet à Parler de rouvrir
+                        # le dernier échange du BON interlocuteur.
+                        "to": chat_to(f.stem),
                         "t": dernier.get("t", ""),
                         "mtime": int(f.stat().st_mtime)})
         return out

@@ -28,9 +28,19 @@ while [ $# -gt 0 ]; do case "$1" in
     # bavarde autour de son objet, la sortie est tronquée au milieu, et
     # l'appelant lit « JSON illisible » sans savoir pourquoi.
     --json)    FORMAT="json"; shift ;;
+    # Parité avec le JEU (merlin_native.gd) : sans ces trois-là, le personnage
+    # échantillonnait autrement dans Parler que dans le jeu. Sans défaut ici —
+    # aucun autre appelant ne change de comportement.
+    --top-p)   TOP_P="$2";   shift 2 ;;
+    --top-k)   TOP_K="$2";   shift 2 ;;
+    --repeat-penalty) REPEAT="$2"; shift 2 ;;
+    # Le prompt part TEL QUEL : c'est à l'appelant d'avoir posé le gabarit de
+    # chat. Sans ça Ollama applique le sien par-dessus et le gabarit est doublé.
+    --raw)     RAW="1"; shift ;;
     *) echo "option inconnue: $1" >&2; exit 2 ;;
 esac; done
 export _LLM_TEMP="${TEMP:-0.2}" _LLM_SEED="${SEED:--1}" _LLM_FORMAT="${FORMAT:-}"
+export _LLM_TOP_P="${TOP_P:-}" _LLM_TOP_K="${TOP_K:-}" _LLM_REPEAT="${REPEAT:-}" _LLM_RAW="${RAW:-}"
 
 PROMPT="$(cat)"
 [ -n "$PROMPT" ] || { echo "prompt vide" >&2; exit 2; }
@@ -54,12 +64,19 @@ req = urllib.request.Request(
         # `format: "json"` force une sortie JSON valide côté Ollama : c'est le
         # remède au « JSON illisible » qui a rempli Décider.
         **({"format": os.environ["_LLM_FORMAT"]} if os.environ.get("_LLM_FORMAT") else {}),
+        # `raw` : le prompt porte déjà son gabarit de chat (parité avec le jeu).
+        **({"raw": True} if os.environ.get("_LLM_RAW") else {}),
         # num_thread vient du routeur : 2 quand le jeu tourne (il garde 2 cœurs).
         "options": {"num_thread": int(os.environ.get("OLLAMA_NUM_THREAD", "4")),
                     "num_ctx": ctx,
                     "temperature": float(os.environ.get("_LLM_TEMP", "0.2")),
                     "seed": int(os.environ.get("_LLM_SEED", "-1")),
-                    "num_predict": int(os.environ.get("_LLM_PREDICT", "320"))},
+                    "num_predict": int(os.environ.get("_LLM_PREDICT", "320")),
+                    # Absents par défaut : Ollama garde alors les valeurs du
+                    # modèle, comme avant. Seul l'appelant qui les demande change.
+                    **({"top_p": float(os.environ["_LLM_TOP_P"])} if os.environ.get("_LLM_TOP_P") else {}),
+                    **({"top_k": int(os.environ["_LLM_TOP_K"])} if os.environ.get("_LLM_TOP_K") else {}),
+                    **({"repeat_penalty": float(os.environ["_LLM_REPEAT"])} if os.environ.get("_LLM_REPEAT") else {})},
     }).encode(),
     headers={"content-type": "application/json"})
 try:

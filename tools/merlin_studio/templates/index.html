@@ -229,12 +229,13 @@
        écrire ce qu'il EST : ces quelques lignes valent mieux qu'un
        réentraînement, coûtent 0 € et prennent effet à la phrase suivante. -->
   <div class="graver" id="talk-voix-panel" hidden>
-   <div class="mut">La voix de Merlin — ce qu'il est, comment il parle. Modifie, teste, recommence.</div>
-   <label class="mut" style="display:block;margin-top:10px">Qui il est</label>
-   <textarea id="voix-identite" rows="3" style="width:100%"></textarea>
-   <label class="mut" style="display:block;margin-top:8px">Comment il parle</label>
-   <textarea id="voix-ton" rows="2" style="width:100%"></textarea>
-   <label class="mut" style="display:block;margin-top:8px">Ce qu'il ne fait jamais (une règle par ligne)</label>
+   <div class="mut">Sa voix vient du JEU — c'est la même en toutes circonstances. Ici tu ne peux
+    qu'y AJOUTER un réglage ; rien ne peut la contredire.</div>
+   <label class="mut" style="display:block;margin-top:10px">Sa voix, telle qu'elle est dans le jeu (lecture seule)</label>
+   <div id="voix-canon" class="mut"
+        style="max-height:9em;overflow:auto;border-left:2px solid var(--or,#c9a227);padding:6px 10px;margin-top:4px;font-size:.92em"></div>
+   <div class="mut" id="voix-reglages" style="margin-top:6px;font-size:.86em"></div>
+   <label class="mut" style="display:block;margin-top:10px">Ton réglage, ajouté après (une règle par ligne)</label>
    <textarea id="voix-regles" rows="4" style="width:100%"></textarea>
    <div class="row" style="gap:8px;margin-top:10px">
     <button class="go sm" onclick="window.merlinVoixSave()">Enregistrer sa voix</button>

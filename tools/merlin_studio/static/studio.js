@@ -251,6 +251,31 @@ let TALK_CONV = null, TALK_POLL = null;
 const AV = { merlin: '◈' };
 function whoAva(who) { return AV[who] || (WHO_FR[who] ? '◆' : '◈'); }
 
+/* Rouvrir le dernier échange de CET interlocuteur.
+   Parler s'ouvrait toujours sur une page blanche : une réponse qui arrivait
+   après un rechargement (Merlin écrit en 20-60 s) n'était plus jamais réclamée
+   par personne. Mesuré : trois « coucou ! » dans trois fils séparés, trois
+   réponses écrites sur le disque, aucune vue. Le bouton « nouveau fil » reste
+   le SEUL chemin vers une page blanche. */
+async function rouvrirDernierFil(to) {
+  TALK_CONV = null;
+  renderThread([]);
+  try {
+    const d = await j('/api/chats');
+    const fil = (d.chats || []).find(c => (c.to || 'merlin') === to);
+    if (!fil) return;
+    TALK_CONV = fil.conv;
+    await talkPoll();
+    // Le dernier mot est de Maxime : une réponse est encore en vol. On remet
+    // l'attente en scène plutôt que de laisser un silence qui ressemble à un bug.
+    if (fil.role === 'user') {
+      showTyping();
+      if (TALK_POLL) clearInterval(TALK_POLL);
+      TALK_POLL = setInterval(talkPoll, 5000);
+    }
+  } catch { }
+}
+
 async function initTalk() {
   try {
     const r = await j('/api/roster');
@@ -260,7 +285,7 @@ async function initTalk() {
       o.value = a.file; o.textContent = a.title;
       sel.appendChild(o);
     });
-    sel.onchange = () => { TALK_CONV = null; renderThread([]); };
+    sel.onchange = () => { rouvrirDernierFil(sel.value); };
   } catch { }
   const ta = $('#talk-input');
   ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 160) + 'px'; });
@@ -291,8 +316,7 @@ async function initTalk() {
     if (sel.value === b.dataset.to) return;
     sel.value = b.dataset.to;
     document.querySelectorAll('.duo-btn').forEach(x => x.classList.toggle('on', x === b));
-    TALK_CONV = null;
-    renderThread([]);
+    rouvrirDernierFil(b.dataset.to);
     $('#talk-suggest').classList.toggle('gone', b.dataset.to === 'jeu');
     $('#talk-voix-panel').hidden = true;
     majVoixBouton();
@@ -310,10 +334,15 @@ async function initTalk() {
     if (!p.hidden) { p.hidden = true; return; }
     try {
       const d = await j('/api/merlin/voix');
-      $('#voix-identite').value = (d.voix || {}).identite || '';
-      $('#voix-ton').value = (d.voix || {}).ton || '';
+      // La voix du jeu en lecture : on voit CE QU'ON RÈGLE avant de le régler.
+      $('#voix-canon').textContent = d.canon_lu ? d.canon
+        : '⚠ voix du jeu introuvable — le dépôt du jeu est absent de cette machine.';
+      const r = d.reglages || {};
+      $('#voix-reglages').textContent = d.canon_lu
+        ? `réglages lus dans le jeu : temp ${r.temp} · top_p ${r.top_p} · top_k ${r.top_k} · répétition ${r.repeat_penalty} · contexte ${r.ctx}`
+        : '';
       $('#voix-regles').value = ((d.voix || {}).regles || []).join('\n');
-      $('#voix-taille').textContent = `sa voix pèse ~${d.taille_prompt} tokens`;
+      $('#voix-taille').textContent = `l'ensemble pèse ~${d.taille_prompt} tokens`;
       p.hidden = false;
     } catch { annonce('✗ voix illisible', true); }
   };
@@ -321,19 +350,19 @@ async function initTalk() {
     try {
       const r = await j('/api/merlin/voix', { method: 'POST',
         headers: { 'content-type': 'application/json' },
+        // Seul le CALQUE part : identité et ton appartiennent au jeu.
         body: JSON.stringify({
-          identite: $('#voix-identite').value,
-          ton: $('#voix-ton').value,
           regles: $('#voix-regles').value.split('\n').map(x => x.trim()).filter(Boolean),
         }) });
       if (r.error) { annonce('✗ ' + r.error, true); return; }
       $('#talk-voix-panel').hidden = true;
-      annonce('🜁 sa voix est changée — parle-lui, tu verras la différence');
+      annonce('🜁 ton réglage est posé — parle-lui, tu verras la différence');
     } catch { annonce('✗ réseau', true); }
   };
   document.querySelectorAll('.chat-suggest button').forEach(b =>
     b.onclick = () => { ta.value = b.dataset.q; talkSend(); });
-  renderThread([]);
+  // Le dernier échange plutôt qu'une page blanche — voir rouvrirDernierFil().
+  rouvrirDernierFil(($('#talk-to') || {}).value || 'merlin');
   refreshBoite();
 }
 

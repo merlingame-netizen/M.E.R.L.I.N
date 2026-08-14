@@ -650,7 +650,9 @@ Fenêtre ouverte encore {left} min.</p>
                 and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
             return jsonify({"error": "conseiller inconnu"}), 400
         M = _gd("memory")
-        M.chat_append(conv, "user", "maxime", text)
+        # `to` est gravé sur le message : c'est lui qui permettra de rouvrir le
+        # dernier fil du BON interlocuteur quand Maxime revient sur Parler.
+        M.chat_append(conv, "user", "maxime", text, to=to)
         rec = actions.launch("chat-reply", {"conv": conv, "to": to})
         return jsonify({"ok": not rec.get("error"), "conv": conv, "to": to,
                         "job": rec.get("id"), "error": rec.get("error")})
