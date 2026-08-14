@@ -127,12 +127,14 @@ jobs:
       # sans nouvelle mécanique de déploiement.
       - name: Livrer sur la branche
         run: |
-          # Dans le conteneur on est root, le checkout appartient a un autre uid :
-          # git refuse alors le depot (« fatal: not in a git directory »).
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
-          git diff --cached --quiet && { echo "binaire inchangé"; exit 0; }
-          git commit -m "build(native): merlin_llm.linux.release.arm64.so"
-          git push origin HEAD:feat/practices-docs
+          # Dans le conteneur on est root et le checkout appartient a un autre uid :
+          # git refuse le depot (« fatal: not in a git directory »). L'autorisation est
+          # posee sur CHAQUE commande — la config globale ne suffisait pas, le HOME du
+          # conteneur n'etant pas celui qu'on croit.
+          G="git -c safe.directory=* -c user.name=github-actions[bot] \
+             -c user.email=41898282+github-actions[bot]@users.noreply.github.com"
+          $G status --short | head -3
+          $G add -f addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
+          $G diff --cached --quiet && { echo "binaire inchangé"; exit 0; }
+          $G commit -m "build(native): merlin_llm.linux.release.arm64.so"
+          $G push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" HEAD:feat/practices-docs
