@@ -53,12 +53,23 @@ x11vnc -display :99 -localhost -rfbport 5900 -forever -shared -nopw \
 # lance Godot dessus. Sinon on garde le driver Dummy — le jeu tourne quand même.
 AUDIO_DRIVER="Dummy"
 if [ -x "$HOME/opt/audio/start-audio.sh" ] && [ -x "$HOME/opt/audio/sysroot/usr/bin/pulseaudio" ]; then
-    if bash "$HOME/opt/audio/start-audio.sh" 2>>"$RUNDIR/audio.log" | grep -q "prêt"; then
-        export LD_LIBRARY_PATH="$HOME/opt/audio/sysroot/usr/lib64:$HOME/opt/audio/sysroot/usr/lib:${LD_LIBRARY_PATH:-}"
+    # La sortie du script est CONSERVÉE : quand la porte retombe sur Dummy, il faut
+    # pouvoir lire pourquoi. Sans ça le jeu se lance muet en silence — c'est ce qui
+    # a laissé vivre un `start-audio.sh` périmé (LD_LIBRARY_PATH sans le dossier
+    # pulseaudio/ → pactl ne démarre pas → « audio KO ») pendant des semaines.
+    AUDIO_OUT="$(bash "$HOME/opt/audio/start-audio.sh" 2>>"$RUNDIR/audio.log")"
+    printf '%s\n' "$AUDIO_OUT" >> "$RUNDIR/audio.log"
+    if printf '%s' "$AUDIO_OUT" | grep -q "prêt"; then
+        # Le dossier pulseaudio/ porte libpulsecommon et libpulsecore : sans lui,
+        # aucun client Pulse ne démarre. On le résout comme start-audio.sh le fait.
+        PA_LIBS="$(dirname "$(find "$HOME/opt/audio/sysroot" -name 'libpulsecommon-*.so' 2>/dev/null | head -1)")"
+        export LD_LIBRARY_PATH="$HOME/opt/audio/sysroot/usr/lib64:$HOME/opt/audio/sysroot/usr/lib${PA_LIBS:+:$PA_LIBS}:${LD_LIBRARY_PATH:-}"
         export PULSE_RUNTIME_PATH="$HOME/.cache/pulse"
         export PULSE_SINK="merlin"
         AUDIO_DRIVER="PulseAudio"
         echo "[native-inner] audio activé (sortie merlin)" >&2
+    else
+        echo "[native-inner] SON DÉSACTIVÉ — start-audio.sh a répondu : ${AUDIO_OUT:-(rien)}" >&2
     fi
 fi
 
