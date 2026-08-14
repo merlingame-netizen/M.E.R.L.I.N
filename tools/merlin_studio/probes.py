@@ -250,14 +250,18 @@ def agents() -> dict:
         report = (state_dir / "daily-report.md").read_text(encoding="utf-8")[:8000]
     except Exception:
         pass
-    missions = 0
-    try:
-        missions = len(list((Path.home() / ".cache" / "merlin-missions" / "queue").glob("*")))
-    except Exception:
-        pass
+    # Deux files, deux sens. « En file » = le codeur va l'appliquer. « À la
+    # main » = personne ne le fera à ta place. Les confondre annonçait 30
+    # missions en cours là où rien ne bougeait depuis trois jours.
+    def _compte(nom: str) -> int:
+        try:
+            return len(list((Path.home() / ".cache" / "merlin-missions" / nom).glob("*")))
+        except Exception:
+            return 0
+    missions = _compte("queue")
     return {"available": AGENTS_DIR.exists(), "installed": installed,
             "agents": out, "health": health, "ci": ci, "report": report,
-            "missions_queued": missions,
+            "missions_queued": missions, "notes_a_la_main": _compte("a_la_main"),
             "billing": _read_json(state_dir / "billing-data.json", {}),
             "smoke": _read_json(state_dir / "smoke-scenes.json", {})}
 
@@ -538,6 +542,13 @@ def briefing() -> dict:
             out["attente"].append(f"{reste} idée(s) qui demandent ton arbitrage")
         if not pend:
             out["attente"].append("rien à décider — les agents n'ont rien trouvé de neuf")
+        # Les notes à faire à la main sont une attente RÉELLE mais d'une autre
+        # nature : aucun agent ne les fera à ta place. Elles vivaient dans la
+        # file du codeur, qui les écartait en silence à chaque passage.
+        notes = len(list(P.A_LA_MAIN.glob("*"))) if P.A_LA_MAIN.exists() else 0
+        if notes:
+            out["attente"].append(
+                f"{notes} note(s) qui demandent ta main — aucun agent ne sait les faire")
     except Exception:
         pass
 

@@ -158,7 +158,50 @@ def appliquer(lots: dict) -> str:
     bilan = [f"{n} proposition(s) retirée(s) de Décider (conservées dans rejected/)"]
     if k:
         bilan.append(f"{k} carte(s) intégrée(s) seule(s) au corpus d'entraînement")
+    d = deplacer_missions_mortes()
+    if d:
+        bilan.append(f"{d} mission(s) sortie(s) de la file du codeur")
     return " · ".join(bilan)
+
+
+def missions_mortes() -> list[Path]:
+    """Les missions que le codeur ne saura JAMAIS appliquer.
+
+    Une mission n'est applicable que si sa proposition portait un `before`/
+    `after` (`proposals.applicable`). On remonte à la proposition par son
+    identifiant — le nom du fichier —, et on ne bouge que ce dont on est sûr :
+    une mission dont la proposition est introuvable reste où elle est."""
+    if not PROP.MISSIONS.exists():
+        return []
+    out = []
+    for m in sorted(PROP.MISSIONS.glob("*.md")):
+        pid = m.stem
+        prop = None
+        for dossier in (PROP.INBOX, PROP.ACCEPTED, PROP.REJECTED):
+            f = dossier / f"{pid}.json"
+            if f.exists():
+                prop = PROP._read(f)
+                break
+        if prop and not PROP.applicable(prop):
+            out.append(m)
+    return out
+
+
+def deplacer_missions_mortes() -> int:
+    """Les sort de la file du codeur SANS les détruire — même règle que le reste
+    de la mémoire : on déplace, on ne réécrit pas l'histoire."""
+    mortes = missions_mortes()
+    if not mortes:
+        return 0
+    PROP.A_LA_MAIN.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for m in mortes:
+        try:
+            m.replace(PROP.A_LA_MAIN / m.name)
+            n += 1
+        except Exception:
+            continue
+    return n
 
 
 if __name__ == "__main__":
@@ -169,5 +212,7 @@ if __name__ == "__main__":
     else:
         pannes = sum(len(l["pannes"]) for l in lots.values())
         formes = sum(len(l["formes"]) for l in lots.values())
-        print(f"\n(essai à blanc — relancer avec --appliquer pour retirer {pannes} "
-              f"panne(s) et intégrer {formes} carte(s))")
+        mortes = len(missions_mortes())
+        print(f"\nfile du codeur : {mortes} mission(s) qu'aucun agent ne sait appliquer")
+        print(f"(essai à blanc — relancer avec --appliquer pour retirer {pannes} "
+              f"panne(s), intégrer {formes} carte(s) et sortir {mortes} mission(s))")

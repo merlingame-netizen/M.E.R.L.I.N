@@ -26,6 +26,12 @@ from pathlib import Path
 BASE = Path.home() / ".cache" / "merlin-proposals"
 INBOX, ACCEPTED, REJECTED = BASE / "inbox", BASE / "accepted", BASE / "rejected"
 MISSIONS = Path.home() / ".cache" / "merlin-missions" / "queue"
+# Ce qu'aucun agent ne sait faire. Mesuré sur la VM : 30 missions dans la file du
+# codeur, la plus ancienne de 63 h, ZÉRO applicable — il se réveillait toutes les
+# 25 min pour dire « rien d'applicable ». Toutes disaient « Rédiger à la main une
+# carte pour le biome X » : des tâches pour Maxime, déposées chez un agent qui ne
+# saura jamais les traiter. Elles ont leur dossier, jamais purgé.
+A_LA_MAIN = Path.home() / ".cache" / "merlin-missions" / "a_la_main"
 # Jeu d'entraînement du modèle — PAS du contenu de jeu : les scénarios
 # sont générés 100 % en direct par le LLM (décision Maxime, 2026-08-12).
 CURATED = "data/ai/training/curated_corpus.jsonl"
@@ -244,19 +250,24 @@ def decide(pid: str, decision: str, reason: str = "", repo_root: Path | None = N
                                     "ts": _now()}, ensure_ascii=False) + "\n")
             out["effect"] = f"carte ajoutée à {CURATED}"
         else:
-            MISSIONS.mkdir(parents=True, exist_ok=True)
-            name = f"{prop['id']}.md"
-            (MISSIONS / name).write_text(prop["mission_text"], encoding="utf-8")
-            # Dire la vérité sur ce qui va se passer. « En file » laissait croire
-            # à une application imminente ; sans before/after, le codeur écarte
-            # la mission à chaque passage, pour toujours.
-            if applicable(prop):
+            # La destination suit ce que le codeur SAIT faire. Le message disait
+            # déjà la vérité, mais le fichier partait quand même dans sa file :
+            # d'où 30 missions qu'il écartait à chaque passage, pour toujours,
+            # et un compteur « 30 missions en file » qui laissait croire à du
+            # travail en cours.
+            auto = applicable(prop)
+            dossier = MISSIONS if auto else A_LA_MAIN
+            dossier.mkdir(parents=True, exist_ok=True)
+            (dossier / f"{prop['id']}.md").write_text(prop["mission_text"],
+                                                      encoding="utf-8")
+            if auto:
                 out["effect"] = ("correction en file — le codeur l'appliquera à son "
                                  "prochain passage, puis te proposera l'intégration")
                 out["auto"] = True
             else:
-                out["effect"] = ("noté, sans application automatique : cette idée demande "
-                                 "une décision d'architecture, pas un remplacement de ligne")
+                out["effect"] = ("noté dans tes notes à faire à la main : cette idée "
+                                 "demande une décision d'architecture, pas un "
+                                 "remplacement de ligne")
                 out["auto"] = False
 
     # Mémoire absolue : toute décision se grave, avec sa raison. Jamais d'effacement.
