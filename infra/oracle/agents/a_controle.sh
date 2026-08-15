@@ -129,6 +129,40 @@ if "VERT" in resume:
                          "metric": f"aucun fichier *{sha}*.png dans {ci_dir}"}],
         })
 
+# ── Règle 5 : le garde du 0 € doit être VIVANT ───────────────────────────────────────────
+# Le 0 € est non négociable, et la seule chose qui le surveille est l'agent `billing`. Un
+# garde-fou muet ne garde rien : s'il cesse de tourner, plus personne ne verrait une facture
+# naître. On ne vérifie donc pas ce qu'il DIT (0,00 €) mais qu'il l'ait dit RÉCEMMENT.
+#
+# Contexte qui explique le seuil : les agents de cette VM n'ont AUCUN accès à l'API Oracle
+# (pas de ~/.oci) — ils ne peuvent structurellement rien provisionner. Le risque n'est donc
+# pas qu'un agent dépense, mais qu'une dérive passe inaperçue faute de relevé. 3 h de retard
+# sur une cadence horaire = deux passages manqués, largement au-delà d'un simple hoquet.
+bill = lire(etats / "billing.json")
+horodatage = str(bill.get("last_run", ""))
+if horodatage:
+    try:
+        vu = time.mktime(time.strptime(horodatage[:19], "%Y-%m-%dT%H:%M:%S")) - time.timezone
+        retard_h = (maintenant - vu) / 3600.0
+        if retard_h > 3:
+            ecarts.append({
+                "titre": "Le contrôle de facturation ne répond plus",
+                "claim": f"Aucun relevé depuis {retard_h:.0f} h alors qu'il passe toutes les "
+                         "heures. Le 0 € n'est donc plus surveillé — et une facture qui "
+                         "naîtrait maintenant ne serait vue par personne.",
+                "preuves": [{"source": "état de l'agent billing",
+                             "metric": f"dernier passage {horodatage} · retard {retard_h:.1f} h"}],
+            })
+    except Exception:
+        pass
+else:
+    ecarts.append({
+        "titre": "Le contrôle de facturation n'a jamais tourné",
+        "claim": "Aucun relevé de facturation n'existe. Le 0 € obligatoire n'est surveillé "
+                 "par rien.",
+        "preuves": [{"source": "état de l'agent billing", "metric": "aucun last_run"}],
+    })
+
 # ── Dépôt des écarts ─────────────────────────────────────────────────────────────────────
 # Un identifiant STABLE par écart (jour + titre) : sans lui, un écart persistant redéposerait
 # une proposition à chaque passage et noierait Décider en une nuit.
