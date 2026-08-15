@@ -3603,3 +3603,38 @@ climax plein 2,4 OUT · greffes 3,88 (offerts 5,02). Hors-pool = 0 (DUR, chemin 
    latéralement, pied compris, au lieu de plier en cime.
 3. `_tree()` produit toujours le MÊME archétype (2 branches, 5 blobs de canopée) ; `tseed` dérivé de
    base.x ne fait varier que la PHASE, pas la SILHOUETTE. 6 appels -> lecture "4 arbres identiques".
+
+## Session: 2026-08-15 (v23.A — Les titres de quête viennent toujours du modèle)
+
+### Décisions Maxime
+- Pas de bouton « passer » à la sélection.
+- Échec du moteur : un second essai, puis retour au menu. Jamais de titres en dur.
+- (Pour plus tard) une SEULE quête par partie, 7-25 cartes, fil rouge rédigé en entier
+  par le modèle d'entrée de jeu.
+
+### Le défaut trouvé en chemin (le plus grave)
+`warmup_and_prefetch_selection` mettait le SECOURS en cache et passait l'état à « ready ».
+En chaîne : `is_selection_ready()` répondait oui sans que le modèle ait rien écrit,
+l'attente forcée de l'écran ressortait instantanément, et `ensure_selection_prefetch()`
+ne réessayait plus jamais (il s'arrête sur « ready »). Un seul hoquet du moteur au menu
+condamnait la partie entière aux trois titres en dur — sans attente, sans nouvel essai,
+quelle que soit la vitesse du moteur. Le bouton « passer » n'était que la fuite visible.
+
+### Fait
+- `_generate_selection_sourced()` rend `{titres, du_modele}` : la provenance devient le
+  cœur du contrat. `generate_selection()` reste un wrapper pour les harnais de mesure.
+- « ready » ne vaut plus que si le modèle a écrit ; sinon nouvel essai, puis « failed ».
+- `take_selection()` redevient un simple récupérateur (son budget de 8 s servait le
+  secours en douce — la seconde porte, invisible, par laquelle les titres en dur passaient).
+- Écran : skip retiré, second essai annoncé, forfait nommé avant le retour au menu.
+
+### Vérifié
+Parse check projet complet (0 erreur) · machine à états (échec → 2e essai → forfait →
+invalidate) · bout en bout moteur en panne → retour au menu en 78 s avec ZÉRO titre
+affiché · smoke runtime MerlinSelection / MerlinMenu / MerlinGame à 0 script_error.
+
+### Reste
+`TITLES_CAP_S` est encore à 75 s : la durée juste dépend de la vitesse réelle du moteur,
+que l'agent `native-bench` doit mesurer sur la VM. Et la partie B (une quête par partie,
+fil rouge complet) attend ce même chiffre — rédiger 7 à 25 cartes d'un coup est une
+génération bien plus grosse que tout ce que le jeu demande aujourd'hui.
