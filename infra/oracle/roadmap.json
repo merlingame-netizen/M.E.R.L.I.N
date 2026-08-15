@@ -78,9 +78,9 @@
     {
       "id": "v30",
       "titre": "L'agent de contrôle qui vérifie les déclarations",
-      "etat": "prevu",
+      "etat": "fait",
       "pourquoi": "Trois composants ont échoué en se déclarant sains le 15 août. Un tableau de bord qui recopie ce que les agents annoncent ne vaut rien : il faut confronter chaque affirmation à une preuve (la capture existe ? le commit est bien celui annoncé ?).",
-      "preuve": ""
+      "preuve": "a_controle.sh · 4 règles éprouvées sur mensonges fabriqués : succès sans résumé, agent bloqué, commit annoncé ≠ réel, CI verte sans capture"
     },
     {
       "id": "v31",
@@ -89,7 +89,6 @@
       "pourquoi": "Seuls ci-commit et native-bench annoncent leurs étapes. Le playtest et le codeur, longs eux aussi, restent muets pendant qu'ils travaillent.",
       "preuve": ""
     },
-
     {
       "id": "v22",
       "titre": "Mesurer la vraie vitesse du moteur du jeu",

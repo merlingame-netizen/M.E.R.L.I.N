@@ -248,6 +248,14 @@
       "schedule": "35 2 * * *",
       "enabled": true,
       "desc": "Mesure chaque nuit l'équilibrage du jeu que tu joues vraiment : intégrité, main, corruption, talents, butin, soin."
+    },
+    {
+      "id": "controle",
+      "label": "Le Contrôleur",
+      "schedule": "11,41 * * * *",
+      "cmd": "a_controle.sh",
+      "enabled": true,
+      "desc": "Confronte ce que les agents déclarent à des traces vérifiables et signale les écarts dans Décider."
     }
   ]
 }
