@@ -43,6 +43,26 @@ HEAD="$(git rev-parse HEAD)"
 SHORT="$(git rev-parse --short HEAD)"
 imported_count() { find "$GAME_DIR/.godot/imported" -type f 2>/dev/null | wc -l; }
 
+# Le REGISTRE des GDExtensions. Godot ne charge que ce qui est listé dans
+# .godot/extension_list.cfg — un fichier que l'ÉDITEUR écrit, et que
+# `--headless --import` ne crée jamais. Sans lui, une extension parfaitement
+# valide est ignorée en silence : sur cette VM, MerlinLLM était bien présent et
+# compilé pour la bonne architecture, mais Godot ne tentait même pas de l'ouvrir,
+# et TOUT le récit retombait sur les textes écrits d'avance. Le fichier vit dans
+# .godot/ (hors dépôt) : il faut donc le régénérer à chaque synchro.
+ecrire_registre_extensions() {
+    local reg="$GAME_DIR/.godot/extension_list.cfg"
+    local trouvees
+    trouvees="$(cd "$GAME_DIR" && find . -name '*.gdextension' -not -path './.godot/*' \
+                | sed 's|^\./|res://|' | sort)"
+    [ -n "$trouvees" ] || return 0
+    mkdir -p "$GAME_DIR/.godot"
+    if [ "$trouvees" != "$(cat "$reg" 2>/dev/null)" ]; then
+        printf '%s\n' "$trouvees" > "$reg"
+        log "registre d'extensions écrit : $(printf '%s' "$trouvees" | tr '\n' ' ')"
+    fi
+}
+
 NEED_IMPORT=0
 [ "$(cat "$IMPORT_MARK" 2>/dev/null)" != "$GAME_DIR:$HEAD" ] && NEED_IMPORT=1
 [ "$(imported_count)" -eq 0 ] && NEED_IMPORT=1
@@ -103,6 +123,12 @@ if [ "$NEED_IMPORT" = 1 ]; then
 else
     log "import à jour (HEAD $SHORT inchangé, $(imported_count) ressources)"
 fi
+
+# Toujours APRÈS l'import : les .gdextension sont écartés pendant celui-ci (voir (b))
+# et restaurés juste avant — c'est donc ici, et seulement ici, que le registre peut
+# refléter l'arbre réel. Appelé sur les deux chemins : un binaire livré sans nouvel
+# import doit lui aussi être déclaré.
+ecrire_registre_extensions
 
 MAIN_SCENE="$(grep -m1 'run/main_scene' "$GAME_DIR/project.godot" | cut -d'"' -f2)"
 printf '{"ref":"%s","commit":"%s","dir":"%s","main_scene":"%s","imported":%s}\n' \
