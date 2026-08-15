@@ -61,7 +61,13 @@ bash "$HERE/install-agents.sh" >/dev/null 2>&1 && CRON="crontab régénéré" ||
 # Le Studio (Flask) garde son code en mémoire : sans redémarrage, un probes.py ou un
 # app.py fraîchement tiré ne sert à rien. Le keepalive (cron, chaque minute) le relève seul —
 # on ne le relance donc pas nous-mêmes, on le laisse simplement mourir.
-pkill -u "$(id -un)" -f "merlin_studio/app.py" >/dev/null 2>&1 && STUDIO="Studio relancé" || STUDIO="Studio non actif"
+#
+# `[a]pp` et non `app` : ce bloc tourne via `bash -c`, donc LE TEXTE DU SCRIPT EST SA PROPRE
+# LIGNE DE COMMANDE. Un motif écrit en clair se trouve lui-même, et pkill tue le shell qui
+# l appelle — mesuré ici : rc=143 (SIGTERM), tout le travail fait mais la derniere ligne jamais
+# atteinte, donc un agent qui reussit en se signalant en echec. Les crochets cassent
+# l auto-correspondance sans changer ce qui est matche ailleurs.
+pkill -u "$(id -un)" -f "merlin_studio/[a]pp.py" >/dev/null 2>&1 && STUDIO="Studio relancé" || STUDIO="Studio non actif"
 
 echo "outillage mis à jour -> $NEW · $CRON · $STUDIO"
 ' _ "$REPO" "$REF" "$HERE"
