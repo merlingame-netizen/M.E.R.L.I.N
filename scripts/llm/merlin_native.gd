@@ -201,14 +201,38 @@ func build_prompt(system_text: String, user_text: String) -> String:
 	return "<start_of_turn>user\n%s\n\n%s<end_of_turn>\n<start_of_turn>model\n" % [system_text, user_text]
 
 
-func _apply_regime(creative: bool, max_tokens: int) -> void:
+# Fils d'exécution de la GÉNÉRATION, choisis SELON LE MOMENT (mesuré 2026-08-15 : 2,93 tok/s
+# avec 2 fils sur les 4 cœurs de la VM). Le natif se règle par défaut sur la moitié des cœurs,
+# volontairement, pour « laisser du CPU au jeu » — sur cette VM le rendu est logiciel (llvmpipe),
+# il coûte cher, et lui voler ses cœurs ferait saccader la marche.
+#
+# Mais ce compromis n'a de sens QUE pendant que tu joues. Devant un voile d'attente — l'écran
+# qui rêve les sentiers, un chargement — plus rien ne réclame la machine : s'y limiter à la
+# moitié, c'est te faire patienter deux fois plus longtemps pour préserver des images que
+# personne ne regarde. D'où deux régimes, et un choix explicite à chaque génération.
+static func _fils_plein() -> int:
+	return maxi(2, OS.get_processor_count())
+
+
+static func _fils_menage() -> int:
+	return maxi(2, int(OS.get_processor_count() / 2.0))
+
+
+func _apply_regime(creative: bool, max_tokens: int, plein_regime: bool = false) -> void:
 	var temp: float = TEMP_CREATIVE if creative else TEMP_STRUCTURED
 	_llm.set_sampling_params(temp, TOP_P, max_tokens)
 	_llm.set_advanced_sampling(TOP_K, REPEAT_PENALTY)
+	# `llama_set_n_threads` s'applique à chaud sur le contexte : le régime peut donc changer
+	# d'une génération à l'autre sans recharger quoi que ce soit.
+	var fils: int = _fils_plein() if plein_regime else _fils_menage()
+	_llm.set_thread_count(fils, _fils_plein())  # batch (évaluation du prompt) toujours à fond
 
 
 ## Génération principale (applique le template de chat). opts:
-##   {creative: bool=true, max_tokens: int=250, grammar: String="", grammar_root: String="root"}
+##   {creative: bool=true, max_tokens: int=250, grammar: String="", grammar_root: String="root",
+##    plein_regime: bool=false}
+## `plein_regime` : true quand le joueur ATTEND devant un voile (rien à rendre → tous les cœurs),
+## false quand il joue (on laisse au rendu de quoi tenir la cadence). Voir _apply_regime.
 ## Retourne {"text": String} ou {"error": String} via await.
 func generate(system_text: String, user_text: String, opts: Dictionary = {}) -> Dictionary:
 	var prompt: String = build_prompt(system_text, user_text)
@@ -225,8 +249,9 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	var max_tokens: int = opts.get("max_tokens", 250)
 	var grammar: String = opts.get("grammar", "")
 	var grammar_root: String = opts.get("grammar_root", "root")
+	var plein_regime: bool = opts.get("plein_regime", false)
 
-	_apply_regime(creative, max_tokens)
+	_apply_regime(creative, max_tokens, plein_regime)
 	if grammar.is_empty():
 		_llm.clear_grammar()
 	else:

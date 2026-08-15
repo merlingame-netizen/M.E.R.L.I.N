@@ -86,7 +86,11 @@ static func selection(voice: String, lieu: String = "Broceliande") -> Dictionary
 	# l'apostrophe ensuite — eviter le double 'Voyageur' empile). v10.22 : `lieu` = biome de la run
 	# (Broceliande | les Falaises du Bout-du-Monde) → titres COHÉRENTS avec le monde choisi.
 	var usr: String = "En tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur', COMPREHENSIBLE EN UNE SEULE LECTURE : nomme une action concrete ET ce qui est en jeu (quoi chercher, qui affronter, quoi risquer) -- mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre, intrigant) sans jamais sacrifier la clarte de l'enjeu." % lieu
-	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 220, "label": "sélection (Merlin)"}}
+	# plein_regime : la sélection s'écrit derrière le voile « Merlin rêve les sentiers », où rien
+	# d'utile n'est joué ni rendu. Tous les cœurs y passent — c'est le seul moment du jeu où le
+	# ménage à moitié de cœurs ne protège aucune image et ne fait que doubler l'attente.
+	return {"system": voice, "user": usr,
+			"opts": {"creative": true, "max_tokens": 220, "label": "sélection (Merlin)", "plein_regime": true}}
 
 
 # --- INTRO DE QUÊTE : légende contée par MERLIN (enrichit le pop-up en arrière-plan) ---
