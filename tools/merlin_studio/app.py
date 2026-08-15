@@ -251,6 +251,12 @@ def build_app() -> Flask:
     def api_llm():
         return jsonify({"ollama": probes.ollama(), "voice": probes.voice()})
 
+    # Route séparée de /api/llm : celle-ci ne fait que lire un fichier, donc Santé
+    # peut l'interroger souvent sans dépendre des délais réseau d'Ollama.
+    @app.route("/api/moteur")
+    def api_moteur():
+        return jsonify(probes.moteur())
+
     @app.route("/api/repo")
     def api_repo():
         return jsonify(probes.repo())

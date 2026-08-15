@@ -698,6 +698,43 @@ async function refreshHealth() {
     const pill = $('#dock-pending');
     if (pill) { pill.hidden = !n; pill.textContent = n; }
   } catch { }
+  await refreshMoteur();
+}
+
+// ── La plume de Merlin : à quelle vitesse le moteur du jeu écrit-il ? ────────
+// Le voyant répond à UNE question — les titres de quête viennent-ils du modèle,
+// ou des trois écrits en dur ? Les nombres en dessous disent pourquoi.
+// `modele_gagne === null` = juge vide : on n'a pas mesuré, on ne prétend rien.
+async function refreshMoteur() {
+  let m;
+  try { m = await j('/api/moteur'); } catch { vital('#v-moteur', 'down', 'injoignable'); return; }
+  const box = $('#moteur-win');
+  if (!m.mesure) {
+    vital('#v-moteur', 'idle', m.raison === 'jamais mesuré' ? 'pas mesurée' : 'mesure ratée');
+    if (box) box.hidden = true;
+    return;
+  }
+  const gagne = m.modele_gagne;
+  vital('#v-moteur', gagne === true ? 'up' : gagne === false ? 'down' : 'idle',
+        gagne === true ? m.tok_par_s + ' mots/s' : gagne === false ? 'secours' : 'à vérifier');
+  if (!box) return;
+  box.hidden = false;
+  $('#moteur-meta').textContent = `${esc(m.depuis || m.quand || '')}${m.commit ? ' · ' + esc(m.commit) : ''}`;
+  const verdict = gagne === true
+    ? '<div class="res ok">Les titres de quête viennent du modèle.</div>'
+    : gagne === false
+      ? '<div class="res err">⚠ Les titres écrits en dur se sont affichés à la place du modèle.</div>'
+      : '<div class="res">Verdict indisponible : aucun titre de secours connu à comparer.</div>';
+  $('#moteur-body').innerHTML = [
+    card('Réveil de Merlin', `<div class="metrics"><span><b>${m.charge_s}</b> s</span></div>
+      <div class="res">Temps de chargement du modèle au démarrage du jeu.</div>`,
+      m.charge_s > 120 ? 'warn' : 'up'),
+    card('Vitesse d\'écriture', `<div class="metrics"><span><b>${m.tok_par_s}</b> mots/s</span></div>
+      <div class="res">Remplace le « 1 mot/s » hérité d'Ollama, qui n'a jamais concerné ce moteur.</div>`,
+      m.tok_par_s >= 5 ? 'up' : m.tok_par_s >= 2 ? 'warn' : 'down'),
+    card('Trois quêtes', `<div class="metrics"><span><b>${m.quetes_s}</b> s</span></div>
+      ${verdict}`, gagne === true ? 'up' : gagne === false ? 'down' : ''),
+  ].join('');
 }
 
 // ── Journal de bord : les derniers développements, en français, avec preuves ─

@@ -146,6 +146,14 @@
       "desc": "Mesure chaque modèle installé sur la tâche de triage (latence, tok/s) et fige TRIAGE_MODEL."
     },
     {
+      "id": "native-bench",
+      "label": "Vitesse du moteur du jeu",
+      "schedule": "25 4 * * *",
+      "cmd": "a_llm_native_bench.sh",
+      "enabled": true,
+      "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 4h25 : après le playtest, hors des créneaux du corpus."
+    },
+    {
       "id": "ollama-idle",
       "label": "Le Délesteur",
       "schedule": "*/15 * * * *",

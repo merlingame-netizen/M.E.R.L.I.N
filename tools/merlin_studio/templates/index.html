@@ -268,6 +268,14 @@
    <button class="vital idle" id="v-ci" data-tab="cogs"><span class="ico">🛠</span><span class="lbl">Dernier build</span><span class="val">…</span></button>
    <button class="vital idle" id="v-agents" data-tab="cogs"><span class="ico">◆</span><span class="lbl">Automates</span><span class="val">…</span></button>
    <button class="vital idle" id="v-euro" data-tab="cogs"><span class="ico">€</span><span class="lbl">Facture Oracle</span><span class="val">…</span></button>
+   <button class="vital idle" id="v-moteur" data-tab="cogs"><span class="ico">✍</span><span class="lbl">Plume de Merlin</span><span class="val">…</span></button>
+  </div>
+  <!-- Le détail chiffré sous les voyants : le voyant dit « ça va / ça ne va pas »,
+       ces trois nombres disent POURQUOI, sans avoir à ouvrir les Coulisses. -->
+  <div class="win" id="moteur-win" hidden>
+   <div class="win-bar"><span class="t">Vitesse de la plume</span><span class="hatch"></span>
+    <span class="meta" id="moteur-meta">…</span></div>
+   <div class="win-body"><div class="grid" id="moteur-body"></div></div>
   </div>
  </section>
 

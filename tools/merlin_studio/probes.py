@@ -775,6 +775,47 @@ def voice() -> dict:
             "asr": _http_json(f"{ASR_URL}/health") or {"ok": False, "url": ASR_URL}}
 
 
+# ── Moteur du jeu (GDExtension MerlinLLM) ────────────────────────────────────
+# À NE PAS confondre avec ollama() juste au-dessus : Ollama sert les agents, ce
+# moteur-ci est compilé DANS le jeu et écrit les titres de quête et la prose. Deux
+# moteurs, deux modèles, deux vitesses — les mélanger a déjà produit un chiffre faux
+# (le « ~1 tok/s » d'Ollama sert de justification aux banques de secours du jeu).
+# Écrit par l'agent native-bench ; lecture de fichier seule, aucun appel réseau.
+def moteur() -> dict:
+    d = _read_json(Path.home() / ".cache" / "merlin-agents" / "native-bench.json", {})
+    if not d:
+        return {"mesure": False, "raison": "jamais mesuré"}
+    if not d.get("ok"):
+        return {"mesure": False, "raison": d.get("etape", "mesure incomplète"),
+                "quand": d.get("t", ""), "commit": d.get("commit", "")}
+    # `verdict` est volontairement None quand le juge était vide : sans banques de
+    # secours connues, « le modèle gagne » n'est pas une observation mais un angle mort.
+    verdict = bool(d.get("modele_gagne_toujours")) if d.get("titres_de_secours_connus") else None
+    return {
+        "mesure": True,
+        "charge_s": round(d.get("charge_ms", 0) / 1000.0, 1),
+        "tok_par_s": round(float(d.get("tok_par_s_max", 0.0)), 1),
+        "quetes_s": round(d.get("mur_ms_max", 0) / 1000.0, 1),
+        "modele_gagne": verdict,
+        "passes": d.get("passes", []),
+        "commit": d.get("commit", ""),
+        "quand": d.get("t", ""),
+        "depuis": _depuis_iso(d.get("t", "")),
+    }
+
+
+def _depuis_iso(t: str) -> str:
+    """« il y a 3 h » à partir de l'horodatage UTC écrit par la sonde Godot.
+    Une mesure ne vaut que rapportée à son âge : un chiffre de la semaine dernière
+    affiché comme un fait du jour est pire que pas de chiffre du tout."""
+    try:
+        from datetime import datetime, timezone
+        d = datetime.fromisoformat(t.replace("Z", "")).replace(tzinfo=timezone.utc)
+        return _il_y_a(d.timestamp())
+    except Exception:
+        return ""
+
+
 # ── Repo ─────────────────────────────────────────────────────────────────────
 def repo() -> dict:
     branch, _ = _sh(["git", "rev-parse", "--abbrev-ref", "HEAD"])
