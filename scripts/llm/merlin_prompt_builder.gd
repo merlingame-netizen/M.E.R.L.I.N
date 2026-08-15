@@ -186,12 +186,22 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	if not eviter.is_empty():
 		anti = " NE REPRENDS AUCUN de ces titres deja proposes, ni leur idee: %s." % "; ".join(eviter)
 	var vari: String = (" Angle impose pour cette fois: %s." % graine) if graine != "" else ""
-	var usr: String = bloc + "\n" + vari + anti + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur', COMPREHENSIBLE EN UNE SEULE LECTURE : nomme une action concrete ET ce qui est en jeu (quoi chercher, qui affronter, quoi risquer) -- mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre, intrigant) sans jamais sacrifier la clarte de l'enjeu." % lieu
+	# « 14 MOTS MAXIMUM » est une optimisation de TEMPS autant que de style : à 4,31 tok/s
+	# (mesuré), chaque mot que le modèle écrit se paie en secondes d'attente pour le joueur.
+	# La consigne d'origine décrivait longuement ce que le pitch devait contenir sans jamais
+	# borner sa LONGUEUR — d'où ~130 tokens produits pour trois accroches, soit ~32 s d'écran
+	# noir. Une accroche brève se lit aussi mieux : ici, écrire moins et écrire mieux sont le
+	# même geste.
+	var usr: String = bloc + "\n" + vari + anti + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = 2 a 4 mots, evocateur, ANCRE dans ce lieu. pitch = UNE phrase de 14 MOTS MAXIMUM, imperatif tutoye SANS dire 'Voyageur' : une action concrete ET ce qui est en jeu. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte. Sois BREF : pas de sous-phrase, pas d'enumeration." % lieu
 	# plein_regime : la sélection s'écrit derrière le voile « Merlin rêve les sentiers », où rien
 	# d'utile n'est joué ni rendu. Tous les cœurs y passent — c'est le seul moment du jeu où le
 	# ménage à moitié de cœurs ne protège aucune image et ne fait que doubler l'attente.
+	#
+	# max_tokens 140 (était 220) : le plafond ne BORNAIT rien, la sortie réelle culminait à 130.
+	# Le descendre juste au-dessus de la cible en fait un vrai garde-fou — si le modèle part en
+	# digression, il est coupé à 140 au lieu de faire attendre le joueur jusqu'à 220.
 	return {"system": voice, "user": usr,
-			"opts": {"creative": true, "max_tokens": 220, "label": "sélection (Merlin)", "plein_regime": true}}
+			"opts": {"creative": true, "max_tokens": 140, "label": "sélection (Merlin)", "plein_regime": true}}
 
 
 # --- INTRO DE QUÊTE : légende contée par MERLIN (enrichit le pop-up en arrière-plan) ---

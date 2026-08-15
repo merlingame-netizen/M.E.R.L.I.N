@@ -1,7 +1,11 @@
 extends Node
 ## MerlinScenario — pipeline de génération (autoload). Bible R6/R68/R101/R107.
 ##
-## ARCHITECTURE (contraintes hardware : Gemma E2B ~1 tok/s CPU, single-flight) :
+## ARCHITECTURE (contrainte hardware : moteur natif SINGLE-FLIGHT — une génération à la fois).
+## Débit MESURÉ le 2026-08-15 sur la VM ARM : 4,31 tok/s (et non « ~1 tok/s », chiffre hérité
+## d'Ollama qui n'avait jamais été vérifié et sur lequel des pans entiers de cette architecture
+## ont pourtant été dimensionnés). Toute décision de course LLM-vs-joueur doit repartir du
+## chiffre mesuré, jamais de celui-ci.
 ## - Le moteur ne peut PAS narrer chaque beat en temps réel (≈40-58s/gen, ~11 gens/run).
 ##   → Principe NON-BLOQUANT : le procédural (instantané, déjà bon) est la BASE ;
 ##     le LLM enrichit en arrière-plan et ne remplace QUE s'il finit avant que le
@@ -345,7 +349,7 @@ static func _shuffle_rng(arr: Array, rng: RandomNumberGenerator) -> void:
 
 # Pitch = UNE ligne d'accroche-action (appel à l'aventure), pas un paragraphe.
 # Le développement complet de la quête arrive dans l'INTRO (pop-up à accepter, voir build_intro).
-# N5-C1 (2026-07-12, fix biome) - le secours est BIOME-AWARE : le LLM (~1 tok/s) ne gagne presque
+# N5-C1 (2026-07-12, fix biome) - le secours est BIOME-AWARE : le LLM (4,31 tok/s mesuré) ne gagne presque
 # jamais la course, donc ce secours s'affiche >95 % du temps ET sert de pool pour la chaîne de quêtes
 # (build_skeleton). Il DOIT coller au biome choisi (mer/falaises en falaises, jamais Brocéliande).
 # _sel_fallback_pool() pioche par _run_biome() aux 3 call-sites (take_selection, generate_selection,
@@ -370,12 +374,12 @@ func _sel_fallback_pool() -> Array:
 	var pool: Variant = SEL_FALLBACK_BY_BIOME.get(b, SEL_FALLBACK_BY_BIOME["foret"])
 	return (pool as Array).duplicate(true)
 
-# Narration procédurale = le texte VU par défaut (le LLM ≈1 tok/s ne gagne presque jamais la
+# Narration procédurale = le texte VU par défaut (le LLM, 4,31 tok/s mesuré, ne gagne presque jamais la
 # course contre la lecture du joueur). Donc 5 variantes/type, tirées au sort → variété cross-run
 # (chaque type n'apparaît qu'1 fois par run). Ton « merveilleux-inquiétant » (bible §21).
 # Scènes COURTES (user 2026-06-06 : « moins avant chaque choix de carte »). 1-2 phrases : poser le
 # décor vite, laisser la place au geste. La VERBOSITÉ est réservée à l'ISSUE des moments forts.
-# N2a (2026-07-05) — BIOME-AWARE : le LLM (~1 tok/s) ne finit presque jamais sa résolution dans la
+# N2a (2026-07-05) — BIOME-AWARE : le LLM (4,31 tok/s mesuré) ne finit presque jamais sa résolution dans la
 # fenêtre du joueur → c'est TOUJOURS le secours qui s'affiche. Il DOIT donc coller au biome (mer /
 # falaises en biome falaises, pas « au creux de la forêt »). SITU_FALLBACKS_BY_BIOME[biome][type] :
 # la forêt garde ses banques ; les falaises ont leurs propres 5 variantes/type (mer/vent/phare/
@@ -563,7 +567,7 @@ const RESO_CONSEQ_BY_DEGREE_BIOME: Dictionary = {
 
 # N3-V1 (2026-07-06) : PONT INTELLIGENT inter-beats. R140 avait SUPPRIMÉ le pont GÉNÉRIQUE (« Sa voie
 # ouverte, le Voyageur s'enfonça plus avant ») car interchangeable/hors-sol ; la continuité reposait
-# alors sur le seul last_gist du prompt LLM. Mais le LLM (~1 tok/s) perd la course >95% du temps → la
+# alors sur le seul last_gist du prompt LLM. Mais le LLM (4,31 tok/s mesuré) perd la course souvent → la
 # situation de SECOURS s'affiche presque toujours SANS lien au beat précédent (playtest : « décroché en
 # event »). Ce pont RESTAURE la continuité VISIBLE, mais ANCRÉ (jamais générique) : il PORTE le degré du
 # beat qui s'achève ET l'imagery du BIOME → il ne pourrait pas apparaître ailleurs (test anti-R140). Il

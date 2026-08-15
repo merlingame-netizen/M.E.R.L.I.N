@@ -18,7 +18,11 @@ const GLOW_A_HI: float = 0.18       # alpha haut de la respiration (parité sust
 const GLOW_A_LO: float = 0.06       # alpha bas
 const FS_WAIT_CAPTION: int = 26     # taille caption (parité sustain fusion)
 const SKIP_TEXT_DEFAULT: String = "▶ clic pour passer"  # copy skip unifiée (plan v10.13 A3)
-const CAP_MS_DEFAULT: int = 20000   # cap par défaut : couvre la gen LLM (≈1 tok/s) sans bloquer
+# NOTE 2026-08-15 : cette classe n'est plus instanciée (v11-V2b — l'attente vit dans l'encart de
+# merlin_game). Le cap ci-dessous ne dimensionne donc RIEN ; il est conservé tel quel pour ne pas
+# toucher à du code dormant, mais ne doit pas servir de référence — il fut calé sur « ≈1 tok/s »,
+# chiffre démenti (mesure réelle : 4,31 tok/s).
+const CAP_MS_DEFAULT: int = 20000
 
 # Configuration figée par start().
 var _caption: String = ""

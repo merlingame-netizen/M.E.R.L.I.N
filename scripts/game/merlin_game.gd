@@ -357,7 +357,10 @@ func _present_current_beat() -> void:
 	run.redraw_hand()
 	var beat: Dictionary = run.current_beat()
 	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
-	# ici : à ~1 tok/s la gen (~40s) ne gagne jamais la course contre la lecture du joueur, et un
+	# ici. ATTENTION : ce choix a été pris sur « ~1 tok/s », chiffre démenti le 2026-08-15 (mesure
+	# réelle : 4,31 tok/s). Il mérite d'être rejugé — une ouverture courte POURRAIT gagner la course
+	# aujourd'hui. Décision de game design, donc laissée à Maxime plutôt que renversée en douce. Un
+	# swap de texte en cours de lecture violerait de toute façon le pilier ÉVIDENT (bible §21.1), et
 	# swap de texte en cours de lecture viole le pilier ÉVIDENT (bible §21.1). Le budget LLM
 	# (moteur single-flight) est réservé à l'ISSUE — l'« effet des choix » que le joueur attend.
 	_current_situation = get_node("/root/MerlinScenario").build_situation(beat)
