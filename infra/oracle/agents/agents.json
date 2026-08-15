@@ -18,6 +18,14 @@
       "desc": "Détecte un nouveau commit sur la branche du jeu, le récupère, réimporte les assets et relance si le jeu tournait."
     },
     {
+      "id": "tools-autosync",
+      "label": "Synchro de l'outillage",
+      "schedule": "7,22,37,52 * * * *",
+      "cmd": "a_tools_autosync.sh",
+      "enabled": true,
+      "desc": "Recupere l'outillage depuis GitHub, regenere le crontab et relance le Studio si le code a bouge."
+    },
+    {
       "id": "health",
       "label": "Santé machine",
       "schedule": "*/5 * * * *",
