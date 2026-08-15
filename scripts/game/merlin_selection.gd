@@ -2,21 +2,25 @@ extends Control
 ## MerlinSelection — écran de sélection (bible R56). Merlin propose 3 sentiers (titre + pitch),
 ## le joueur en CHOISIT un MANUELLEMENT → montage (squelette + arc) → scène de jeu.
 ## v10.19 (user 2026-06-29) : les 3 TITRES sont FORCÉMENT LLM — montage « Merlin rêve les sentiers »
-## ultra-animé tant qu'ils ne sont pas prêts (filet ~75 s + skip après 20 s). Le pick enchaîne sur
-## la transition à l'encre (user 2026-08-14 : le montage « zoom vers Merlin » a été retiré).
+## ultra-animé tant qu'ils ne sont pas prêts. Le pick enchaîne sur la transition à l'encre
+## (user 2026-08-14 : le montage « zoom vers Merlin » a été retiré).
+## v23 (user 2026-08-15) : le contrat devient ABSOLU — plus de bouton « passer », plus de titres
+## écrits en dur. Merlin écrit, ou l'écran renonce et rend la main au menu après un second essai.
+## Le secours n'est plus un lot de consolation silencieux : il n'existe plus ici.
 
 const COL_BG: Color = MerlinVisual.BG_DEEP
 const COL_SURFACE: Color = MerlinVisual.SURFACE
 const COL_TEXT: Color = MerlinVisual.CREAM
 const COL_GOLD: Color = MerlinVisual.GOLD
-const COL_DIM: Color = MerlinVisual.DIM_WARM
 
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 const GAME_MUSIC: String = "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-loop.wav"
 
-const TITLES_CAP_S: float = 75.0    # filet dur : au-delà, on accepte le fallback (jamais d'attente infinie)
-const SKIP_REVEAL_S: float = 3.0    # affordance « passer » révélée vite (user : on doit pouvoir skipper)
+# Filet dur. Au-delà, on ne sert PAS les titres en dur : on renonce et on rend la main au menu
+# (user 2026-08-15). 75 s est hérité de l'époque où ce filet distribuait le secours ; la durée
+# juste dépend de la vitesse réelle du moteur, que l'agent `native-bench` est en train de mesurer.
+const TITLES_CAP_S: float = 75.0
 
 var _cards_box: HBoxContainer
 var _title_lbl: Label
@@ -24,13 +28,10 @@ var _back_btn: Button
 var _overlay: Panel
 var _overlay_art: MerlinSceneArt
 var _overlay_lbl: Label
-var _overlay_skip_lbl: Label
 var _busy: bool = false
 var _overlay_dots_tw: Tween = null
 var _overlay_pulse_tw: Tween = null
 var _overlay_base_txt: String = ""
-var _overlay_skipped: bool = false
-var _overlay_skip_shown: bool = false
 
 
 func _ready() -> void:
@@ -60,32 +61,58 @@ func _setup_music() -> void:
 func _load_selection() -> void:
 	var sc: Node = get_node("/root/MerlinScenario")
 	_show_overlay("Merlin rêve les trois sentiers")
-	# Titres FORCÉMENT LLM : on attend que la sélection soit prête (montage animé), filet TITLES_CAP_S
-	# + skip après SKIP_REVEAL_S. take_selection() ne sert ensuite plus que de récupérateur.
-	await _force_wait_titles(sc)
-	var sels: Array = await sc.take_selection()
-	_hide_overlay()
+	# Titres FORCÉMENT écrits par le modèle. Il n'y a plus de bouton « passer » et plus de secours :
+	# soit Merlin écrit, soit on renonce et on retourne au menu. take_selection() ne sert plus que
+	# de récupérateur et rend un tableau VIDE tant que rien n'a été écrit.
+	var ok: bool = await _force_wait_titles(sc)
+	var sels: Array = await sc.take_selection() if ok else []
 	if not is_inside_tree():
 		return
+	if sels.size() < 3:
+		await _give_up()
+		return
+	_hide_overlay()
 	for s in sels:
 		_add_parchemin(str(s.get("title", "?")), str(s.get("pitch", "")))
 
 
-# Attend les titres LLM (montage). Sort quand prêt, ou au skip (20 s+), ou au cap dur (75 s).
-func _force_wait_titles(sc: Node) -> void:
+# Attend les titres du modèle. Vrai si prêts ; faux si le modèle a déclaré forfait ou si le filet
+# dur a été atteint. Aucune sortie ne distribue de titres en dur (user 2026-08-15).
+func _force_wait_titles(sc: Node) -> bool:
 	var t0: int = Time.get_ticks_msec()
+	var essai_affiche: int = 1
 	while is_inside_tree():
 		if sc.has_method("is_selection_ready") and sc.is_selection_ready():
-			return
-		var elapsed: float = float(Time.get_ticks_msec() - t0) / 1000.0
-		if elapsed >= TITLES_CAP_S or _overlay_skipped:
-			return
-		if elapsed >= SKIP_REVEAL_S and not _overlay_skip_shown:
-			_reveal_overlay_skip()
-		# Robustesse : relance la pré-gen si elle n'a pas démarré (modèle prêt plus tard que le menu).
+			return true
+		if sc.has_method("is_selection_failed") and sc.is_selection_failed():
+			return false  # essais épuisés — inutile de faire patienter pour rien
+		# Le second essai est DIT, pas subi : sans ça, la relance ressemble à un écran figé.
+		if sc.has_method("selection_attempt"):
+			var n: int = int(sc.selection_attempt())
+			if n > essai_affiche:
+				essai_affiche = n
+				_set_overlay_text("Merlin reprend son souffle")
+		if float(Time.get_ticks_msec() - t0) / 1000.0 >= TITLES_CAP_S:
+			return false
+		# Robustesse : relance la pré-gen si elle n'a pas démarré (modèle prêt plus tard que le menu),
+		# ou si le premier essai a échoué. No-op une fois les essais épuisés.
 		if sc.has_method("ensure_selection_prefetch"):
 			sc.ensure_selection_prefetch()
 		await get_tree().create_timer(0.25).timeout
+	return false
+
+
+# Renoncement visible : on nomme ce qui s'est passé, en français simple, puis retour au menu.
+# Jamais de titres écrits en dur en guise de lot de consolation.
+func _give_up() -> void:
+	_set_overlay_text("Merlin ne répond pas ce soir")
+	if _overlay_art != null:
+		_overlay_art.set_thinking(false)
+	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
+		_overlay_dots_tw.kill()   # les points « … » promettent une suite qui ne viendra pas
+	await get_tree().create_timer(2.2).timeout
+	if is_inside_tree():
+		MerlinTransition.change_scene(MENU_SCENE)
 
 
 # v10.22 (QA user, screenshot) — carte À LA CHARTE du menu : hauteur AJUSTÉE AU CONTENU (fini le panneau
@@ -221,8 +248,9 @@ func _build_ui() -> void:
 	var ov_sb: StyleBoxFlat = StyleBoxFlat.new()
 	ov_sb.bg_color = Color(MerlinVisual.BG_DEEP.r, MerlinVisual.BG_DEEP.g, MerlinVisual.BG_DEEP.b, 0.96)
 	_overlay.add_theme_stylebox_override("panel", ov_sb)
+	# MOUSE_FILTER_STOP reste : le voile avale les clics pour qu'aucune carte en dessous ne soit
+	# cliquable pendant l'attente. Plus aucun gui_input à écouter — le « passer » a disparu.
 	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	_overlay.gui_input.connect(_on_overlay_input)
 	add_child(_overlay)
 	# Scène vivante de Merlin (réflexion) en fond du montage, atténuée pour la lisibilité du texte.
 	_overlay_art = MerlinSceneArt.new()
@@ -245,22 +273,8 @@ func _build_ui() -> void:
 	_overlay_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_overlay_lbl.add_theme_font_size_override("font_size", 40)
-	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE  # laisse les clics atteindre gui_input (skip)
+	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.add_child(_overlay_lbl)
-	_overlay_skip_lbl = Label.new()
-	_overlay_skip_lbl.anchor_left = 0.0
-	_overlay_skip_lbl.anchor_right = 1.0
-	_overlay_skip_lbl.anchor_top = 1.0
-	_overlay_skip_lbl.anchor_bottom = 1.0
-	_overlay_skip_lbl.offset_top = -64.0
-	_overlay_skip_lbl.offset_bottom = -32.0
-	_overlay_skip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_overlay_skip_lbl.add_theme_color_override("font_color", COL_DIM)
-	_overlay_skip_lbl.add_theme_font_size_override("font_size", 18)
-	_overlay_skip_lbl.text = "▶ clic pour passer"
-	_overlay_skip_lbl.visible = false
-	_overlay_skip_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.add_child(_overlay_skip_lbl)
 	_overlay.visible = false
 
 
@@ -296,19 +310,12 @@ func _set_overlay_suffix(suffix: String) -> void:
 		_overlay_lbl.text = _overlay_base_txt + suffix
 
 
-func _reveal_overlay_skip() -> void:
-	_overlay_skip_shown = true
-	if _overlay_skip_lbl != null:
-		_overlay_skip_lbl.visible = true
-		_overlay_skip_lbl.modulate.a = 0.0
-		create_tween().tween_property(_overlay_skip_lbl, "modulate:a", 1.0, 0.4)
-
-
-func _on_overlay_input(event: InputEvent) -> void:
-	# Skip autorisé uniquement APRÈS la révélation de l'affordance (≥20 s) → respecte « titres forcément
-	# générés » tout en évitant de piéger le joueur si le modèle est absent.
-	if _overlay_skip_shown and event is InputEventMouseButton and event.pressed:
-		_overlay_skipped = true
+# Change la légende SANS toucher aux animations en cours (les points « … » continuent de suivre
+# le nouveau texte via _set_overlay_suffix, qui lit _overlay_base_txt).
+func _set_overlay_text(txt: String) -> void:
+	_overlay_base_txt = txt
+	if _overlay_lbl != null:
+		_overlay_lbl.text = txt
 
 
 func _hide_overlay() -> void:

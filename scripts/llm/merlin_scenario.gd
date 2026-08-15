@@ -760,8 +760,17 @@ var _rng := RandomNumberGenerator.new()
 
 # --- Warmup async sélection (R6 ; « toujours faire tourner le LLM » côté Menu) ---
 var _sel_cache: Array = []
-var _sel_state: String = "idle"   # idle / running / ready
+# idle / running / ready / failed. « ready » signifie STRICTEMENT « le MODÈLE a écrit les trois
+# titres » (user 2026-08-15 : plus jamais de titres en dur à la sélection). Avant ce contrat, un
+# secours mis en cache passait pour une réussite : is_selection_ready() répondait oui, l'attente
+# de l'écran ressortait aussitôt, et ensure_selection_prefetch() ne réessayait plus jamais — une
+# seule panne au menu condamnait la partie entière aux trois titres écrits en dur.
+var _sel_state: String = "idle"
 var _sel_epoch: int = 0
+# Essais du modèle pour CETTE sélection. Au-delà, l'état passe à « failed » et l'écran rend la
+# main au menu au lieu de servir un secours (user : « réessayer, puis le menu »).
+var _sel_attempts: int = 0
+const SEL_MAX_ATTEMPTS: int = 2
 
 # --- Pré-génération RÉSOLUTION (v10.4, user 2026-06-06 : issue TOUJOURS LLM) ---
 # Lancée pendant la pose des cartes (prefetch_resolution), récupérée au clic Résolution
@@ -915,16 +924,25 @@ func _build_memory_hint() -> String:
 
 
 # --- WARMUP + PREFETCH SÉLECTION (depuis le Menu) ---
+# Ne met en cache QUE ce que le modèle a écrit. Un échec ne devient jamais un « ready » :
+# il consomme un essai et rouvre la porte à une nouvelle tentative, ou déclare forfait.
 func warmup_and_prefetch_selection() -> void:
 	_sel_epoch += 1
 	var epoch: int = _sel_epoch
 	_sel_cache = []
 	_sel_state = "running"
-	var sels: Array = await generate_selection()
+	_sel_attempts += 1
+	var res: Dictionary = await _generate_selection_sourced()
 	if epoch != _sel_epoch:
 		return  # une nouvelle demande a pris le relais → résultat périmé (F3 epoch)
-	_sel_cache = sels
-	_sel_state = "ready"
+	if bool(res.get("du_modele", false)):
+		_sel_cache = res.get("titres", [])
+		_sel_state = "ready"
+		return
+	# Le modèle n'a rien produit d'exploitable. On NE garde rien : servir le secours ici, c'est
+	# ce qui rendait la panne invisible et définitive.
+	_sel_cache = []
+	_sel_state = "failed" if _sel_attempts >= SEL_MAX_ATTEMPTS else "idle"
 
 
 func take_selection() -> Array:
@@ -937,38 +955,44 @@ func take_selection() -> Array:
 		var forced_title: String = str(force.get("title", ""))
 		if forced_title != "":
 			return [{"title": forced_title, "pitch": "Sentier choisi depuis le dashboard."}]
-	# v10/H2 (audit UX bible §21.1 ÉVIDENT) : budget borné 8 s pour ne pas geler le joueur sur
-	# l'overlay « Merlin rêve trois sentiers… ». Si le prefetch n'est pas prêt à temps → fallback
-	# instantané SEL_FALLBACK plutôt que d'attendre indéfiniment. (user 2026-05-31 /goal)
-	var deadline_ms: int = Time.get_ticks_msec() + 8000
-	while _sel_state == "running":
-		if Time.get_ticks_msec() > deadline_ms:
-			break  # n'attend plus le LLM — l'appelant retombe sur le fallback
-		await get_tree().process_frame
+	# Simple RÉCUPÉRATEUR : il rend ce que le modèle a écrit, ou rien. L'ancien budget de 8 s
+	# servait le secours en douce quand la génération courait encore — c'était la seconde porte
+	# par laquelle les titres en dur atteignaient l'écran, sans que personne le voie. L'attente
+	# et le renoncement appartiennent désormais à l'écran de sélection, qui les rend visibles.
 	if _sel_state == "ready" and _sel_cache.size() >= 3:
 		return _sel_cache.duplicate(true)
-	if _sel_state == "running":
-		return _sel_fallback_pool()  # encore en vol mais on a dépassé le budget
-	return await generate_selection()
+	return []
 
 
 func invalidate_selection() -> void:
 	_sel_epoch += 1
 	_sel_cache = []
 	_sel_state = "idle"
+	_sel_attempts = 0  # nouvelle sélection = nouveau crédit d'essais
 
 
-# v10.19 — sélection prête (3 titres LLM en cache) ? Utilisé par l'écran de sélection pour l'attente
-# FORCÉE (titres « forcément générés », user 2026-06-29) au lieu du fallback 8 s.
+# v10.19 — sélection prête ? Vrai UNIQUEMENT si les trois titres viennent du modèle : c'est ce que
+# l'attente de l'écran interroge pour savoir si elle peut s'arrêter.
 func is_selection_ready() -> bool:
 	return _sel_state == "ready" and _sel_cache.size() >= 3
 
 
+# Le modèle a épuisé ses essais : l'écran doit renoncer et rendre la main au menu.
+func is_selection_failed() -> bool:
+	return _sel_state == "failed"
+
+
+# Numéro de l'essai en cours (1 = premier, 2 = seconde tentative). Lu par l'écran pour dire au
+# joueur que Merlin s'y reprend, plutôt que de le laisser devant une animation muette.
+func selection_attempt() -> int:
+	return _sel_attempts
+
+
 # Garantit qu'une pré-génération de sélection est lancée. Robustesse : si le warmup du menu n'a pas
-# tourné (modèle pas prêt à temps, menu déjà quitté), on relance dès que le moteur est dispo. No-op si
-# déjà prête ou en vol.
+# tourné (modèle pas prêt à temps, menu déjà quitté), on relance dès que le moteur est dispo. No-op
+# si déjà prête, en vol, ou si les essais sont épuisés (« failed » — sinon on réessaierait sans fin).
 func ensure_selection_prefetch() -> void:
-	if _sel_state == "ready" or _sel_state == "running":
+	if _sel_state == "ready" or _sel_state == "running" or _sel_state == "failed":
 		return
 	var mn: Node = _mn()
 	if mn != null and mn.is_ready() and not mn.is_busy():
@@ -976,7 +1000,10 @@ func ensure_selection_prefetch() -> void:
 
 
 # --- 1) SÉLECTION : 3 scénarios (titre + pitch) — voix MERLIN (user 2026-05-29) ---
-func generate_selection() -> Array:
+# Renvoie {titres: Array, du_modele: bool}. La PROVENANCE est le cœur du contrat : sans elle,
+# l'appelant ne peut pas distinguer une réussite d'un secours, et c'est précisément cette
+# confusion qui mettait les titres en dur en cache comme s'ils étaient l'œuvre de Merlin.
+func _generate_selection_sourced() -> Dictionary:
 	var mn: Node = _mn()
 	if mn != null and mn.is_ready():
 		var p: Dictionary = MerlinPromptBuilder.selection(_voice_prefix(), _lieu_name())
@@ -985,8 +1012,15 @@ func generate_selection() -> Array:
 			var arr: Array = MerlinJson.extract_array(str(res.get("text", "")))
 			var clean: Array = MerlinProse.clean_selection(arr)
 			if clean.size() >= 3:
-				return clean.slice(0, 3)
-	return _sel_fallback_pool()
+				return {"titres": clean.slice(0, 3), "du_modele": true}
+	return {"titres": _sel_fallback_pool(), "du_modele": false}
+
+
+# Conservée pour les harnais de mesure (probe_native_bench), qui veulent le comportement brut
+# « rends-moi quelque chose » sans la machine à états. Le JEU passe par _generate_selection_sourced.
+func generate_selection() -> Array:
+	var res: Dictionary = await _generate_selection_sourced()
+	return res.get("titres", [])
 
 
 # --- 2) SQUELETTE : CHAÎNE de quêtes (CODE). INSTANTANÉ — le pitch EST le synopsis. ---
