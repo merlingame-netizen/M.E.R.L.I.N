@@ -224,8 +224,15 @@ func _apply_regime(creative: bool, max_tokens: int, plein_regime: bool = false) 
 	_llm.set_advanced_sampling(TOP_K, REPEAT_PENALTY)
 	# `llama_set_n_threads` s'applique à chaud sur le contexte : le régime peut donc changer
 	# d'une génération à l'autre sans recharger quoi que ce soit.
-	var fils: int = _fils_plein() if plein_regime else _fils_menage()
-	_llm.set_thread_count(fils, _fils_plein())  # batch (évaluation du prompt) toujours à fond
+	#
+	# `has_method` OBLIGATOIRE, pas de la prudence décorative : le .so est compilé séparément et
+	# déployé séparément du GDScript. Une machine peut très bien tourner avec une extension plus
+	# ancienne que ce fichier — appeler un symbole absent ferait échouer TOUTES les générations,
+	# et le jeu retomberait silencieusement sur ses banques de secours. Sans le réglage, on garde
+	# simplement le défaut du natif (moitié des cœurs) : dégradé, jamais cassé.
+	if _llm.has_method("set_thread_count"):
+		var fils: int = _fils_plein() if plein_regime else _fils_menage()
+		_llm.set_thread_count(fils, _fils_plein())  # batch (évaluation du prompt) toujours à fond
 
 
 ## Génération principale (applique le template de chat). opts:

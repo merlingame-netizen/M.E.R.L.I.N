@@ -73,24 +73,18 @@ func _ready() -> void:
 	_scene_art.set_season(MerlinSceneArt.season_for_now())  # v10.18 : décor saisonnier (cohérent avec le boot)
 	_setup_dev_capture()
 	_setup_voice()
-	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
+	# Le modèle chauffe dès le menu, mais N'ÉCRIT PLUS ICI (mesuré 2026-08-15) : le menu lançait
+	# 44 s de génération AVANT que le biome soit choisi, et `_on_biome_picked` jetait ce travail
+	# puisqu'il portait le mauvais monde. Le moteur travaillait donc 88 s pour n'en faire gagner
+	# aucune — il est single-flight, ces 44 s volaient le créneau de la vraie génération.
+	# L'écriture part désormais au tap du biome, quand elle sait enfin quoi écrire.
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
-		if mn.is_ready():
-			_trigger_warmup()
-		elif not mn.model_ready.is_connected(_trigger_warmup):
-			mn.model_ready.connect(_trigger_warmup)
 		# v10.13 (B1) : indicateur d'éveil — « Merlin s'éveille… » pulse, flip or sur model_ready.
 		if mn.is_ready():
 			_set_model_awake()
 		elif not mn.model_ready.is_connected(_set_model_awake):
 			mn.model_ready.connect(_set_model_awake)
-
-
-func _trigger_warmup() -> void:
-	var sc: Node = get_node_or_null("/root/MerlinScenario")
-	if sc != null:
-		sc.warmup_and_prefetch_selection()
 
 
 # v10.19 — Voix de Merlin : bulle suivi-tête + ordonnanceur LLM (cède la priorité aux scénarios).
@@ -904,13 +898,15 @@ func _on_biome_picked(bio: String) -> void:
 	_biome_layer = null
 	var run: Node = get_node("/root/MerlinRun")
 	run.biome = bio
-	# N5-C1 (fix biome) - le warmup du menu a pré-généré la sélection AVANT que le biome ne soit posé
-	# (défaut foret → titres/scénarios Brocéliande). On INVALIDE cette pré-gen périmée : l'écran de
-	# Sélection relancera ensure_selection_prefetch avec run.biome désormais correct (falaises → titres
-	# mer), et le secours retombe sur le pool du bon biome (_sel_fallback_pool). Zéro impact balance.
+	# LE POINT DE DÉPART DE L'ÉCRITURE. C'est ici, et pas avant, que Merlin sait dans quel monde
+	# il doit rêver. `invalidate_selection` remet le compteur d'essais à zéro puis le warmup part
+	# aussitôt : les ~3 s d'animation qui suivent (decor_reveal, gust, flash_moon) et la transition
+	# sont autant de pris sur la génération, gratuitement, avant même que l'écran s'affiche.
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc != null and sc.has_method("invalidate_selection"):
 		sc.invalidate_selection()
+		if sc.has_method("warmup_and_prefetch_selection"):
+			sc.warmup_and_prefetch_selection()  # fire-and-forget : l'écran récupérera ce qui est en vol
 	# L'overlay s'efface, le MONDE choisi apparaît en pop progressif (rampe decor_reveal du boot),
 	# la forêt/mer accueille le Voyageur (gust + flash), puis la transition s'enclenche.
 	var m: float = MerlinVisual.motion()
