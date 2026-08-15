@@ -27,11 +27,16 @@ if bash "$HERE/../game/game-stack.sh" status 2>/dev/null | grep -q '"vnc_open":t
     echo "jeu en cours d'utilisation — mesure reportée"; exit 0
 fi
 
+etape 1 3 "vérification de la sonde"
 PROBE="$GAME_DIR/tools/probe_native_bench.gd"
 [ -f "$PROBE" ] || { echo "sonde absente — la branche du jeu n'est pas à jour"; exit 0; }
 
 # Budget large : chargement du e4b (6,1 Go) puis PASSES générations. Mieux vaut une
 # mesure lente qu'une mesure tronquée, qui ferait croire le moteur plus lent qu'il n'est.
+# La mesure est UN appel bloquant de plusieurs minutes : on ne peut pas la subdiviser
+# depuis bash, mais on peut au moins annoncer sa duree possible plutot que de laisser
+# le portail muet pendant 12 minutes.
+etape 2 3 "mesure en cours (jusqu'à 12 min)"
 BUDGET=$((360 + PASSES * 180))
 # MERLIN_ALLOW_HEADLESS_LLM : sans elle, MerlinNative ne charge PAS le modèle en headless (un
 # smoke de 8 s n'a pas à payer 4 Go de lecture disque). Ici on veut justement le moteur, donc on
@@ -41,6 +46,7 @@ LOG="$(MERLIN_BENCH_PASSES="$PASSES" MERLIN_ALLOW_HEADLESS_LLM=1 timeout "$BUDGE
        --headless --path "$GAME_DIR" --script res://tools/probe_native_bench.gd 2>&1)"
 RC=$?
 
+etape 3 3 "lecture du résultat"
 JSON="$(printf '%s\n' "$LOG" | grep -m1 '^\[BENCH_JSON\] ' | cut -d' ' -f2-)"
 if [ -z "$JSON" ]; then
     # Aucune ligne de mesure : on écrit quand même un état daté, sinon le portail

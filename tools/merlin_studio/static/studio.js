@@ -6,6 +6,14 @@ const $ = s => document.querySelector(s), j = (u, o) => fetch(u, o).then(r => r.
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const card = (n, b, st) => `<div class="card ${st||''}"><div class="row"><span class="name">${n}</span></div>${b}</div>`;
 const gauge = p => { const c = p >= 90 ? 'crit' : p >= 70 ? 'warn' : ''; return `<div class="bar ${c}"><i style="width:${Math.min(p,100)}%"></i></div>`; };
+// Durée courte et lisible au pouce : « 40 s », « 4 min », « 1 h 05 ». Pas de secondes
+// au-delà de la minute — sur un agent qui tourne depuis douze minutes, elles ne disent rien.
+const duree_courte = s => {
+  s = Math.max(0, Math.round(s || 0));
+  if (s < 60) return s + ' s';
+  if (s < 3600) return Math.round(s / 60) + ' min';
+  return Math.floor(s / 3600) + ' h ' + String(Math.round((s % 3600) / 60)).padStart(2, '0');
+};
 let CAT = [];
 
 // Un seul switcher pour le dock, la sous-nav des Coulisses et les voyants de
@@ -871,7 +879,17 @@ async function refreshCrew() {
     // Un agent muet doit DIRE pourquoi. Son dernier résumé porte déjà la raison
     // en français (« jeu en cours — la chaîne cède les 4 cœurs », « aucun palier
     // utilisable »…) : on l'affiche au lieu de retomber sur la description du rôle.
-    const quoi = a.running ? 'travaille en ce moment…'
+    // Un agent qui travaille dit OÙ IL EN EST, pas seulement qu'il travaille. « travaille en
+    // ce moment… » pendant douze minutes ne distingue pas un agent qui avance d'un agent
+    // planté — c'est précisément l'angle mort qui a laissé une sonde attendre 300 s dans le
+    // vide sans que rien ne l'indique. Les agents qui n'annoncent pas d'étape gardent
+    // l'ancien texte : aucun n'est cassé par ce changement.
+    const c = a.course || {};
+    const dep = c.depuis_s > 0 ? duree_courte(c.depuis_s) : '';
+    const quoi = a.running
+      ? (c.libelle
+          ? `${c.etapes_total ? c.etape + '/' + c.etapes_total + ' — ' : ''}${c.libelle}${dep ? ' · depuis ' + dep : ''}`
+          : 'travaille en ce moment…')
       : (a.summary || CREW_ROLE[a.id] || a.desc || '').slice(0, 140);
     const muet = !a.running && a.enabled && (a.ok === false ||
       /suspendu|rien d'applicable|indisponible|absent|sauté|vide|aucun/i.test(a.summary || ''));

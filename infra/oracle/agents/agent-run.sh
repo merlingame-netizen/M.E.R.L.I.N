@@ -47,10 +47,31 @@ LOG="$LOG_DIR/$ID.log"
 START_TS="$(date -u +%s)"
 START_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+# --- ÉTAT DE COURSE (le « en direct ») ---
+# `$STATE` n'est écrit qu'À LA FIN : pendant toute l'exécution il porte encore le passage
+# PRÉCÉDENT. Le portail ne pouvait donc rien dire d'un agent en cours, sinon qu'il tournait.
+# Ce fichier-ci vit LE TEMPS DE LA COURSE : posé maintenant, enrichi par `etape`, effacé après.
+# Son absence signifie « aucune course en cours » — pas besoin d'un drapeau de plus.
+RUN_STATE="$RUN_DIR/$ID.run.json"
+export MERLIN_RUN_STATE="$RUN_STATE"
+python3 - "$RUN_STATE" "$ID" "$START_TS" <<'PY' 2>/dev/null || true
+import json, sys
+chemin, aid, debut = sys.argv[1], sys.argv[2], int(sys.argv[3])
+json.dump({"id": aid, "debut": debut, "etape": 0, "etapes_total": 0,
+           "libelle": "démarrage", "maj": debut}, open(chemin, "w"), ensure_ascii=False)
+PY
+
 # L'agent écrit son résumé sur stdout ; tout le reste part dans le journal.
-SUMMARY="$(bash "$SCRIPT" 2>>"$LOG" | tail -1)"
+# `export -f` est INDISPENSABLE et pas décoratif : `bash "$SCRIPT"` démarre un NOUVEAU
+# processus, qui n'hérite pas des fonctions du shell appelant — seulement de celles marquées
+# exportées. Sans lui, tout agent appelant `etape` mourrait sur « command not found ».
+SUMMARY="$(. "$HERE/etape.sh"; export -f etape; bash "$SCRIPT" 2>>"$LOG" | tail -1)"
 RC=$?
 END_TS="$(date -u +%s)"
+
+# La course est finie : on retire l'état de course AVANT d'écrire l'état final, pour qu'aucun
+# instant ne montre à la fois « une course en cours » et « un résultat ».
+rm -f "$RUN_STATE" 2>/dev/null || true
 
 # Journal borné (les agents tournent toutes les 2 minutes : sans cela le disque part).
 tail -c 200000 "$LOG" > "$LOG.tmp" 2>/dev/null && mv "$LOG.tmp" "$LOG"

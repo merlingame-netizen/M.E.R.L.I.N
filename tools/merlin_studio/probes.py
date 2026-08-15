@@ -141,6 +141,32 @@ def _is_running(agent_id: str) -> bool:
         return False
 
 
+def _course(agent_id: str) -> dict:
+    """Où en est l'agent PENDANT qu'il travaille : étape, libellé, temps écoulé.
+
+    `state/<id>.json` n'est écrit qu'à la FIN d'un passage — pendant l'exécution il porte
+    encore le passage PRÉCÉDENT, ce qui rendait tout agent en cours illisible. C'est
+    `state/<id>.run.json`, posé par agent-run.sh et enrichi par la fonction `etape`, qui
+    décrit la course en cours ; son absence signifie qu'aucune course n'est en cours.
+
+    `silence_s` est EXPOSÉ SANS ÊTRE INTERPRÉTÉ : un long silence peut être un agent planté
+    comme un appel bloquant parfaitement légitime (la mesure du moteur dure 12 minutes sans
+    rien pouvoir annoncer). Trancher ici fabriquerait de fausses alertes ; c'est le rôle de
+    l'agent de contrôle, qui connaît la durée habituelle de chacun.
+    """
+    d = _read_json(Path.home() / ".cache" / "merlin-agents" / "state" / f"{agent_id}.run.json", None)
+    if not isinstance(d, dict) or not d:
+        return {}
+    maintenant = int(time.time())
+    return {
+        "etape": int(d.get("etape", 0)),
+        "etapes_total": int(d.get("etapes_total", 0)),
+        "libelle": str(d.get("libelle", "")),
+        "depuis_s": max(0, maintenant - int(d.get("debut", maintenant))),
+        "silence_s": max(0, maintenant - int(d.get("maj", maintenant))),
+    }
+
+
 def _next_run(schedule: str, now: float | None = None) -> str:
     """Prochain passage, en français. Balaie les minutes à venir (cron simple :
     minute + heure, les autres champs valant *)."""
@@ -223,8 +249,9 @@ def agents() -> dict:
             "last_run": last, "ago_min": ago, "ok": st.get("ok"),
             "rc": st.get("rc"), "duration_s": st.get("duration_s"),
             "summary": st.get("summary", ""),
-            # Vue « en direct » : qui travaille maintenant, qui passe ensuite.
+            # Vue « en direct » : qui travaille maintenant, où il en est, qui passe ensuite.
             "running": _is_running(aid),
+            "course": _course(aid),
             "next_run": _next_run(a.get("schedule", "")) if a.get("enabled") else "en pause",
         })
     installed = False

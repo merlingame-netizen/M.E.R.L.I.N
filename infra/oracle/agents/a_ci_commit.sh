@@ -24,9 +24,11 @@ if [ "$SHA" = "$LAST_DONE" ] && [ "${CI_FORCE:-0}" != "1" ]; then
     echo "déjà testé ($SHA) — rien de neuf"; exit 0
 fi
 
+etape 1 4 "synchro et import du projet"
 # ── 2. sync + import (game-sync gère moteur, .blend, plugins) ───────────────
 bash "$HERE/../game/game-sync.sh" >&2 || { echo "CI $SHA : sync/import KO"; exit 1; }
 
+etape 2 4 "smoke de toutes les scènes"
 # ── 3. smoke headless de toutes les scènes (logs d'erreur conservés) ────────
 TOTAL=0; BAD=0
 ERRLOG="$CI_DIR/$SHA-errors.log"; : > "$ERRLOG"
@@ -42,6 +44,7 @@ for scene in "$GAME_DIR"/scenes/*.tscn; do
     fi
 done
 
+etape 3 4 "boot rendu et capture d'écran"
 # ── 4. boot rendu + capture (préserve l'état voulu par l'humain) ────────────
 WAS_RUNNING=false
 bash "$GS" status 2>/dev/null | grep -q '"vnc_open":true' && WAS_RUNNING=true
@@ -59,6 +62,7 @@ fi
 [ "$WAS_RUNNING" = false ] && bash "$GS" stop >/dev/null 2>&1
 
 # ── 5. triage LLM : si rouge, un modèle local écrit le diagnostic ───────────
+etape 4 4 "verdict"
 DIAG=""
 if { [ "$BAD" -gt 0 ] || [ "$BOOT_OK" = false ]; } && [ -s "$ERRLOG" ]; then
     DIAG="$({ echo "Log d'erreurs Godot 4 du commit $SHA :"; head -c 3000 "$ERRLOG"
