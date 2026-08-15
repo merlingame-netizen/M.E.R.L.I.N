@@ -33,7 +33,14 @@ fi
 
 # Des modifs locales non commitées seraient écrasées par le pull : on préfère RENONCER et le
 # dire. Un agent qui détruit du travail humain pour « rester à jour » est pire que pas d'agent.
-if ! git -C "$REPO" diff --quiet || ! git -C "$REPO" diff --cached --quiet; then
+#
+# `core.fileMode=false` n'est PAS une commodité : install-agents.sh fait `chmod +x` sur tous les
+# scripts d'agents, git enregistre le bit exécutable, et un script arrivé non exécutable depuis
+# GitHub apparaît donc modifié — sans une ligne de différence. Sans cette option, le premier
+# agent ajouté rendait la synchro définitivement bloquée, par sa propre installation. (Vécu ici
+# même : ce fichier s'est auto-condamné à sa première exécution.) On ne compare que le CONTENU.
+if ! git -C "$REPO" -c core.fileMode=false diff --quiet \
+		|| ! git -C "$REPO" -c core.fileMode=false diff --cached --quiet; then
     echo "modifs locales non commitées sur $REF — synchro refusée (rien n'est écrasé)"
     exit 1
 fi
