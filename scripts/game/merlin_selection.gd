@@ -18,9 +18,16 @@ const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 const GAME_MUSIC: String = "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Remastered).mp3-loop.wav"
 
 # Filet dur. Au-delà, on ne sert PAS les titres en dur : on renonce et on rend la main au menu
-# (user 2026-08-15). 75 s est hérité de l'époque où ce filet distribuait le secours ; la durée
-# juste dépend de la vitesse réelle du moteur, que l'agent `native-bench` est en train de mesurer.
-const TITLES_CAP_S: float = 75.0
+# (user 2026-08-15).
+#
+# 120 s VIENT DE LA MESURE, pas d'un pifomètre : l'agent `native-bench` a chronométré le moteur
+# sur CETTE tâche (VM ARM, gemma4-e4b) — 2,93 tok/s, 130 tokens, soit **44 s** par sélection,
+# plus 3,4 s de chargement à froid. Deux essais coûtent donc ~90 s dans le pire cas.
+#
+# L'ancienne valeur de 75 s rendait le second essai DÉCORATIF : le filet tombait avant qu'il ait
+# pu aboutir, et le joueur repartait au menu alors que Merlin écrivait encore. Un garde-fou qui
+# tranche au milieu de ce qu'il est censé protéger ne protège rien.
+const TITLES_CAP_S: float = 120.0
 
 var _cards_box: HBoxContainer
 var _title_lbl: Label
