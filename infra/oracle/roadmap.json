@@ -18,6 +18,14 @@
   "maj": "2026-08-15",
   "entrees": [
     {
+      "id": "v35",
+      "titre": "Savoir où passent vraiment les 32 secondes",
+      "etat": "prevu",
+      "pourquoi": "Mesuré le 15/08 : réduire la sortie de 28 % (130 → 94 tokens) n'a rien fait gagner (32,5 → 31,7 s). Le temps n'est donc pas dans ce que le modèle écrit mais dans un coût fixe — probablement l'évaluation du prompt, devenu long avec la matière des 8 biomes. Tant qu'on ne sait pas lequel, toute optimisation de l'attente est un pari. EXPÉRIENCE : lancer la même génération avec un prompt court puis avec le prompt actuel et comparer les temps ; si l'écart est grand, c'est l'évaluation du prompt qu'il faut alléger, pas la sortie.",
+      "preuve": "",
+      "note": "Le C++ ne sépare pas évaluation et génération dans ses métriques — d'où l'expérience par comparaison plutôt qu'une lecture directe."
+    },
+    {
       "id": "v34",
       "titre": "Nettoyer les vieux fichiers d'état à la racine",
       "etat": "prevu",
