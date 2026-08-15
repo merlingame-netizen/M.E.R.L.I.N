@@ -18,6 +18,20 @@
   "maj": "2026-08-15",
   "entrees": [
     {
+      "id": "v37",
+      "titre": "Le moteur du jeu est 2× plus lent qu'Ollama sur la même machine",
+      "etat": "prevu",
+      "pourquoi": "Mesuré le même soir sur la même VM : Ollama sert 8,60 tok/s là où le moteur natif du jeu plafonne à 4,31. Même matériel, même famille de modèle. L'écart double vaut d'être compris — quantification, taille de contexte, réglage des fils, ou surcoût de la GDExtension. S'il se comble, l'attente du joueur passe de 32 s à ~16 s sans changer une ligne de game design.",
+      "preuve": ""
+    },
+    {
+      "id": "v36",
+      "titre": "Le LLM est une ressource SÉRIELLE — mesuré",
+      "etat": "fait",
+      "pourquoi": "Toute l'idée de « doubler les agents LLM » reposait sur l'hypothèse que deux générations à 2 fils rendent plus qu'une à 4. Mesuré : 8,60 tok/s à une voie, 8,23 en agrégé à deux — soit -4 %. Les 4 cœurs sont déjà saturés par UNE génération ; les diviser n'ajoute que du surcoût. Le répartiteur restera donc à une voie, et le rendement viendra de la GARDER PLEINE, pas de la dupliquer.",
+      "preuve": "bench_voies.py · 1 voie 8,60 tok/s vs 2 voies 8,23 tok/s agrégé, gain -4 %"
+    },
+    {
       "id": "v35",
       "titre": "Savoir où passent vraiment les 32 secondes",
       "etat": "prevu",
