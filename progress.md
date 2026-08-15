@@ -2725,3 +2725,38 @@ Les 2 critères en échec sont des **plafonds de contenu**, pas des bugs : 3 tit
   2 souvenirs au registre.
 - Suite envisagée : « conseil de design » hebdo initié par un conseiller (cadence à
   valider par Maxime).
+
+## Session: 2026-08-15 (v22 — Mesurer la vitesse réelle du moteur natif)
+
+### Contexte
+La chaîne de compilation ARM est réparée et livre le binaire toute seule (runs CI 9/10/11
+verts, trois commits `build(native)` + un réglage des noyaux ARM). Le plan précédent, qui
+ne portait que là-dessus, n'a plus d'objet.
+
+Le vrai point ouvert est ailleurs : partout dans `merlin_scenario.gd`, les banques de
+secours sont justifiées par « le LLM (~1 tok/s) ne gagne presque jamais la course, ce
+secours s'affiche >95 % du temps ». Ce chiffre vient d'Ollama, pas du moteur compilé DANS
+le jeu. Ce moteur-là n'a jamais été chronométré sur la VM.
+
+### Fait
+- `tools/probe_native_bench.gd` (branche jeu) — sonde headless sur le modèle de
+  `probe_prose.gd`. Exerce `sc.generate_selection()`, donc le chemin réel (prompt,
+  extraction JSON, nettoyage). Compare les titres rendus aux banques en dur : dit si le
+  modèle a GAGNÉ, pas seulement s'il a répondu. Publie le nombre de titres de secours
+  connus — un juge vide invaliderait le verdict au lieu de le confirmer.
+- `a_llm_native_bench.sh` + entrée `native-bench` (4h25) — ne démarre ni le jeu visible ni
+  le portail, s'efface si une session humaine est en cours.
+- `probes.moteur()` + `/api/moteur` + voyant « Plume de Merlin » dans Santé (réveil,
+  vitesse d'écriture, temps des trois quêtes).
+
+### Vérifié
+- Parse check propre ; chemin d'échec de la sonde éprouvé de bout en bout (code 3, JSON
+  émis, juge chargé à 6). Le chemin nominal exige le `.so` ARM → se mesure sur la VM.
+- Les cinq états de la sonde rendus dans un vrai navigateur (Chromium/Playwright), zéro
+  erreur JS ; horodatage relatif testé jusqu'à l'entrée illisible.
+- Service worker en réseau-d'abord sur le code : pas de bump de version nécessaire.
+
+### Reste
+Déploiement VM (git-pull, puis redémarrage du portail pour la tuile Santé) et première
+mesure réelle. La suite — « les titres viennent toujours du modèle » — est délibérément
+gelée tant que le chiffre n'existe pas : sans lui, retoucher l'attente serait un pari.
