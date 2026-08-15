@@ -146,6 +146,18 @@ def lire_chaine(tools_repo: str, game_dir: str, game_ref: str) -> dict:
         etat = "t'attend" if courante["qui"] == "toi" else "en cours"
         resume = f"{courante['n']}/6 — {courante['titre']} · {courante['detail']}"
 
+    # Les barreaux APRÈS le barreau courant sont remis à « pas franchi », quoi qu'en disent
+    # leurs traces. Sans ça, la CI verte d'un autre travail cochait l'étape 5 pendant que le
+    # codeur en était encore à l'étape 3 : une coche qui ne parle pas du bon élément. Ce
+    # lecteur juge l'état de chaque MAILLON, il ne suit pas encore un élément de bout en bout
+    # (il faudrait relier proposition → commit → sha de CI) ; tant que ce n'est pas fait, il
+    # doit se taire sur l'aval plutôt que de laisser croire qu'il en sait quelque chose.
+    if courante:
+        for e in etapes:
+            if e["n"] > courante["n"]:
+                e["franchie"] = False
+                e["detail"] = "à venir"
+
     return {"id": "dev", "titre": "Boucle de dev autonome", "etapes": etapes,
             "etape_courante": courante["n"] if courante else 0,
             "etat": etat, "attente_s": attente_s, "resume": resume,
