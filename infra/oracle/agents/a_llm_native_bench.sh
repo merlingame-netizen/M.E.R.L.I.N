@@ -33,7 +33,11 @@ PROBE="$GAME_DIR/tools/probe_native_bench.gd"
 # Budget large : chargement du e4b (6,1 Go) puis PASSES générations. Mieux vaut une
 # mesure lente qu'une mesure tronquée, qui ferait croire le moteur plus lent qu'il n'est.
 BUDGET=$((360 + PASSES * 180))
-LOG="$(MERLIN_BENCH_PASSES="$PASSES" timeout "$BUDGET" nice -n 10 "$GODOT_BIN" \
+# MERLIN_ALLOW_HEADLESS_LLM : sans elle, MerlinNative ne charge PAS le modèle en headless (un
+# smoke de 8 s n'a pas à payer 4 Go de lecture disque). Ici on veut justement le moteur, donc on
+# paie sciemment. C'est CE réglage qui manquait le 2026-08-15 : la sonde attendait un modèle que
+# le jeu avait décidé de ne pas charger, et concluait « moteur mort » au bout de 300 s.
+LOG="$(MERLIN_BENCH_PASSES="$PASSES" MERLIN_ALLOW_HEADLESS_LLM=1 timeout "$BUDGET" nice -n 10 "$GODOT_BIN" \
        --headless --path "$GAME_DIR" --script res://tools/probe_native_bench.gd 2>&1)"
 RC=$?
 
