@@ -3677,3 +3677,40 @@ puisse aboutir : la relance décidée le matin même était décorative.
 ### Ce que la mesure dit de la partie B
 7 à 25 cartes rédigées d'un coup au lancement : à 2,93 tok/s, un fil rouge de 1 000 tokens
 coûte ~5,7 min, 2 500 tokens ~14 min. Intenable tel quel — à rediscuter avec Maxime.
+
+## Session: 2026-08-15 (suite — vitesse, variété, asynchrone)
+
+### Mesuré, pas supposé
+| | Avant | Après |
+|---|---|---|
+| Débit du moteur | 2,93 tok/s | **4,31 tok/s** |
+| Une sélection (3 titres) | 44 s | **32 s** |
+| Deux passes consécutives | titres IDENTIQUES | titres **différents** |
+
+### Ce qui a produit ces chiffres
+- **Deux régimes de fils** selon le moment. `set_thread_count` était déjà exposé à GDScript et
+  `llama_set_n_threads` s'applique à chaud : aucune recompilation. Le défaut à la moitié des
+  cœurs est délibéré (rendu logiciel sur la VM) mais ne vaut que pendant qu'on joue ; derrière
+  un voile d'attente, la machine entière y passe.
+- **Matière des 8 biomes** (bible §22) : ce qu'on y touche, ce qui y menace, qui l'habite.
+  Un nom de lieu ne suffisait pas — le modèle repeignait le même texte.
+- **Anti-répétition persistée** (`user://merlin_titres_vus.json`) : la répétition qui dérange
+  est celle qu'on retrouve le lendemain, pas celle d'une même session.
+- **Angle tiré au sort** parmi 12 enjeux (pas des tons : un ton change l'habillage, un enjeu
+  change l'histoire). Tirage par `randi()` et non `_rng`, qui est seedé pour la rejouabilité.
+- **L'écriture part au tap du biome.** Le menu générait 44 s au mauvais biome, jetées ensuite ;
+  le moteur travaillait 88 s pour n'en faire gagner aucune, et comme il est single-flight ces
+  44 s volaient le créneau de la vraie génération.
+
+### Cause racine trouvée, non corrigée
+`native/src/merlin_llm.cpp` termine sa chaîne par `llama_sampler_init_greedy()`
+**inconditionnellement** → tirage déterministe, `temperature`/`top_p`/`top_k` inertes. La
+variété vient aujourd'hui du prompt, pas du tirage. Correction = recompilation ARM (tâche v27).
+
+### Corrections de mes propres erreurs
+- « La VM est surchargée » : faux. J'avais lu la moyenne 1 min cinq secondes après avoir tué
+  le jeu, en pleine décroissance. Elle était à 0,06 juste avant la mesure.
+- « L'auto-synchro du jeu ne fonctionne pas » : faux. 415 passages, avec CI verte derrière.
+  J'avais regardé entre deux passages du quart d'heure.
+- Le vrai manque était ailleurs : **l'outillage n'avait aucune synchro**. Corrigé
+  (`a_tools_autosync.sh`), donc la VM redevient la référence sans geste humain.
