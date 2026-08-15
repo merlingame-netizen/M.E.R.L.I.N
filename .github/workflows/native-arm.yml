@@ -123,25 +123,34 @@ jobs:
           name: merlin_llm-linux-arm64
           path: addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
 
-      # Le binaire est commité : le webhook GitHub → VM existant suffit alors à le livrer,
-      # sans nouvelle mécanique de déploiement.
+      # ── LIVRAISON : HORS CONTENEUR ────────────────────────────────────────────
+      # Le git du conteneur a resiste a trois correctifs (appartenance, safe.directory,
+      # motif mange par le shell). Or au run 4, sur le runner NU, ce meme commit+push a
+      # fonctionne du premier coup. On arrete donc de reparer le mauvais endroit : la
+      # compilation reste dans le conteneur (pour la glibc), la livraison retourne la ou
+      # elle marche. Le binaire passe de l'un a l'autre par l'artefact.
+
+  deliver:
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/practices-docs
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: merlin_llm-linux-arm64
+          path: addons/merlin_llm/bin/
+
       - name: Livrer sur la branche
         run: |
-          # Dans le conteneur on est root et le checkout appartient a un autre uid :
-          # git refuse le depot. L'autorisation est posee sur CHAQUE commande — la config
-          # globale ne prenait pas, le HOME du conteneur n'etant pas celui qu'on croit.
-          #
-          # Le motif est QUOTE. Range dans une variable puis relu sans guillemets, le `*`
-          # etait developpe par le shell en liste de fichiers du dossier : git recevait
-          # « -c safe.directory=addons ... » et finissait en « not a git repository ».
           SO=addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
-          git -c "safe.directory=*" status --short | head -3
-          git -c "safe.directory=*" add -f "$SO"
-          git -c "safe.directory=*" diff --cached --quiet && { echo "binaire inchangé"; exit 0; }
-          git -c "safe.directory=*" \
-              -c "user.name=github-actions[bot]" \
-              -c "user.email=41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -m "build(native): merlin_llm.linux.release.arm64.so"
-          git -c "safe.directory=*" push \
-              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" \
-              HEAD:feat/practices-docs
+          file "$SO"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f "$SO"
+          git diff --cached --quiet && { echo "binaire inchangé"; exit 0; }
+          git commit -m "build(native): merlin_llm.linux.release.arm64.so"
+          git push origin HEAD:feat/practices-docs
