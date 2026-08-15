@@ -186,22 +186,30 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	if not eviter.is_empty():
 		anti = " NE REPRENDS AUCUN de ces titres deja proposes, ni leur idee: %s." % "; ".join(eviter)
 	var vari: String = (" Angle impose pour cette fois: %s." % graine) if graine != "" else ""
-	# « 14 MOTS MAXIMUM » est une optimisation de TEMPS autant que de style : à 4,31 tok/s
-	# (mesuré), chaque mot que le modèle écrit se paie en secondes d'attente pour le joueur.
-	# La consigne d'origine décrivait longuement ce que le pitch devait contenir sans jamais
-	# borner sa LONGUEUR — d'où ~130 tokens produits pour trois accroches, soit ~32 s d'écran
-	# noir. Une accroche brève se lit aussi mieux : ici, écrire moins et écrire mieux sont le
-	# même geste.
-	var usr: String = bloc + "\n" + vari + anti + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = 2 a 4 mots, evocateur, ANCRE dans ce lieu. pitch = UNE phrase de 14 MOTS MAXIMUM, imperatif tutoye SANS dire 'Voyageur' : une action concrete ET ce qui est en jeu. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte. Sois BREF : pas de sous-phrase, pas d'enumeration." % lieu
+	# MESURE 2026-08-15, et elle contredit l'intuition : brider la longueur a fait tomber la
+	# sortie de 130 à 94 tokens (−28 %) SANS rien gagner sur le temps (32,5 s → 31,7 s). Le
+	# mur n'est donc PAS ce que le modèle écrit — c'est le coût fixe d'une génération (dont
+	# l'évaluation du prompt, devenu long depuis l'ajout de la matière des biomes). Raccourcir
+	# la sortie était une fausse piste, et le dire vaut mieux que de la garder pour sauver la face.
+	#
+	# Le compte de mots sur le TITRE est retiré : « 2 à 4 mots » a produit du télégraphique sans
+	# articles (« Source Murmure Oubliée », « Houx Garde Secret ») là où on avait « Le Souffle de
+	# la Pierre ». Une contrainte de longueur sur un titre court casse la langue avant d'économiser
+	# quoi que ce soit.
+	#
+	# La brièveté de l'ACCROCHE reste, mais pour la seule raison qui tienne encore : elle se lit
+	# mieux d'un coup d'œil. Plus aucune promesse de gain de temps là-dessus.
+	var usr: String = bloc + "\n" + vari + anti + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = UNE phrase breve, imperatif tutoye SANS dire 'Voyageur' : une action concrete ET ce qui est en jeu. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
 	# plein_regime : la sélection s'écrit derrière le voile « Merlin rêve les sentiers », où rien
 	# d'utile n'est joué ni rendu. Tous les cœurs y passent — c'est le seul moment du jeu où le
 	# ménage à moitié de cœurs ne protège aucune image et ne fait que doubler l'attente.
 	#
-	# max_tokens 140 (était 220) : le plafond ne BORNAIT rien, la sortie réelle culminait à 130.
-	# Le descendre juste au-dessus de la cible en fait un vrai garde-fou — si le modèle part en
-	# digression, il est coupé à 140 au lieu de faire attendre le joueur jusqu'à 220.
+	# max_tokens 160 (était 220) : à conserver même après le constat ci-dessus, car il ne joue
+	# PAS le même rôle. La consigne guide le cas normal ; ce plafond borne le cas ANORMAL — un
+	# modèle qui part en digression est coupé au lieu de faire attendre jusqu'à 220. 160 laisse
+	# de la marge au-dessus des ~94-130 tokens observés sans jamais mordre sur une sortie saine.
 	return {"system": voice, "user": usr,
-			"opts": {"creative": true, "max_tokens": 140, "label": "sélection (Merlin)", "plein_regime": true}}
+			"opts": {"creative": true, "max_tokens": 160, "label": "sélection (Merlin)", "plein_regime": true}}
 
 
 # --- INTRO DE QUÊTE : légende contée par MERLIN (enrichit le pop-up en arrière-plan) ---
