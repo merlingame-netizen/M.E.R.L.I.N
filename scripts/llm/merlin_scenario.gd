@@ -1073,7 +1073,12 @@ func _generate_selection_sourced() -> Dictionary:
 # protégerait de rien. Fichier séparé du profil : aucune sauvegarde existante n'est touchée,
 # et le perdre ne coûte qu'un peu de répétition (jamais une progression).
 const TITRES_VUS_PATH: String = "user://merlin_titres_vus.json"
-const TITRES_VUS_MAX: int = 24  # au-delà, le prompt gonfle pour rien — on oublie les plus vieux
+# 6 et non 24 (mesuré 2026-08-15) : chaque titre mémorisé s'ajoute au prompt À ÉVALUER avant
+# chaque génération. À 24, la sélection dépassait les 90 s du délai interne du moteur, qui
+# l'annulait — le joueur voyait alors « Merlin réfléchit » puis un retour au menu, et le défaut
+# EMPIRAIT à chaque partie jouée puisque la liste grandissait. Six suffisent à éviter la
+# répétition immédiate, qui est la seule qu'on remarque.
+const TITRES_VUS_MAX: int = 6
 var _titres_vus: Array = []
 var _titres_vus_charges: bool = false
 
