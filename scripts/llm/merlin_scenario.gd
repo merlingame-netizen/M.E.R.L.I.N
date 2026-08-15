@@ -1006,14 +1006,82 @@ func ensure_selection_prefetch() -> void:
 func _generate_selection_sourced() -> Dictionary:
 	var mn: Node = _mn()
 	if mn != null and mn.is_ready():
-		var p: Dictionary = MerlinPromptBuilder.selection(_voice_prefix(), _lieu_name())
+		# La MATIÈRE du biome (bible §22) + les titres déjà vus + un angle tiré au sort. Ces trois
+		# entrées sont ce qui rend une partie différente de la précédente : l'extension échantillonne
+		# en greedy (déterministe, mesuré 2026-08-15), donc à prompt identique la sortie est
+		# identique. Faire varier le PROMPT est le seul levier tant que le C++ n'est pas recompilé.
+		var p: Dictionary = MerlinPromptBuilder.selection(
+				_voice_prefix(), _run_biome(), titres_deja_vus(), _tirer_angle())
 		var res: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 		if not res.has("error"):
 			var arr: Array = MerlinJson.extract_array(str(res.get("text", "")))
 			var clean: Array = MerlinProse.clean_selection(arr)
 			if clean.size() >= 3:
-				return {"titres": clean.slice(0, 3), "du_modele": true}
+				var trois: Array = clean.slice(0, 3)
+				_memoriser_titres(trois)
+				return {"titres": trois, "du_modele": true}
 	return {"titres": _sel_fallback_pool(), "du_modele": false}
+
+
+# --- MÉMOIRE DES TITRES DÉJÀ PROPOSÉS (anti-répétition entre PARTIES) ---
+# Persistée sur disque : la répétition qui dérange n'est pas celle d'une même session — c'est
+# celle qu'on retrouve en relançant le jeu le lendemain. Un tableau en mémoire seule ne
+# protégerait de rien. Fichier séparé du profil : aucune sauvegarde existante n'est touchée,
+# et le perdre ne coûte qu'un peu de répétition (jamais une progression).
+const TITRES_VUS_PATH: String = "user://merlin_titres_vus.json"
+const TITRES_VUS_MAX: int = 24  # au-delà, le prompt gonfle pour rien — on oublie les plus vieux
+var _titres_vus: Array = []
+var _titres_vus_charges: bool = false
+
+# Angles imposés : la variation ne peut pas venir du tirage (greedy), elle vient donc d'ici.
+# Volontairement des ENJEUX, pas des tons : un ton change l'habillage, un enjeu change l'histoire.
+const ANGLES: Array = [
+	"une dette qu'on vient reclamer", "une disparition recente", "un serment rompu",
+	"un objet rendu par erreur", "une frontiere deplacee", "un marche qui se retourne",
+	"une hospitalite piegee", "un retour qu'on n'attendait plus", "un savoir qu'on veut taire",
+	"une reparation impossible", "un temoin qui se retracte", "un heritage conteste",
+]
+
+
+func _charger_titres_vus() -> void:
+	if _titres_vus_charges:
+		return
+	_titres_vus_charges = true
+	if not FileAccess.file_exists(TITRES_VUS_PATH):
+		return
+	var f: FileAccess = FileAccess.open(TITRES_VUS_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var d: Variant = JSON.parse_string(f.get_as_text())
+	f.close()
+	if d is Array:
+		_titres_vus = d
+
+
+func titres_deja_vus() -> Array:
+	_charger_titres_vus()
+	return _titres_vus.duplicate()
+
+
+func _memoriser_titres(sels: Array) -> void:
+	_charger_titres_vus()
+	for s in sels:
+		var t: String = str((s as Dictionary).get("title", ""))
+		if t != "" and not _titres_vus.has(t):
+			_titres_vus.append(t)
+	while _titres_vus.size() > TITRES_VUS_MAX:
+		_titres_vus.pop_front()
+	var f: FileAccess = FileAccess.open(TITRES_VUS_PATH, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(_titres_vus))
+		f.close()
+
+
+# Angle tiré AU HASARD VRAI (randi, pas _rng) : _rng est seedé pour rendre les runs rejouables,
+# et s'en servir ici ferait revenir le même angle à chaque nouvelle partie — exactement ce qu'on
+# cherche à éviter.
+func _tirer_angle() -> String:
+	return str(ANGLES[randi() % ANGLES.size()])
 
 
 # Conservée pour les harnais de mesure (probe_native_bench), qui veulent le comportement brut

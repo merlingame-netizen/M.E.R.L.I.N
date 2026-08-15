@@ -9,6 +9,96 @@ extends RefCounted
 ## API : chaque fonction renvoie {"system": String, "user": String, "opts": Dictionary},
 ## à consommer via `mn.generate(p["system"], p["user"], p["opts"])`.
 
+# --- MATIÈRE DES BIOMES (source : GAME_DESIGN_BIBLE §22, les 8 sous-palettes canoniques) ---
+# Le prompt ne connaissait que DEUX lieux, et seulement par leur nom : « Broceliande » ou « les
+# Falaises du Bout-du-Monde ». Un nom ne suffit pas — le modèle produisait le même texte avec un
+# décor repeint. Ici chaque biome apporte sa MATIÈRE : ce qu'on y touche, ce qui y menace, qui
+# l'habite, ce qu'on y perd. C'est ce qui fait qu'une quête de tourbière ne peut pas être la même
+# qu'une quête de falaise, et c'est la première source de variété du jeu.
+#
+# Clés = identifiants de la bible §22. Les alias (`foret`, `falaises`) sont les identifiants
+# HISTORIQUES du jeu : MerlinRun.biome les emploie encore, et les casser romprait les saves.
+const BIOME_ALIAS: Dictionary = {
+	"foret": "foret_broceliande",
+	"falaises": "cotes_sauvages",
+}
+
+const BIOMES: Dictionary = {
+	"foret_broceliande": {
+		"nom": "Broceliande",
+		"matiere": "mousse gorgee d'eau, chenes tordus, houx, gui, souches creuses, sentiers qui se referment",
+		"danger": "on s'y perd sans s'en apercevoir ; les arbres deplacent les chemins",
+		"figures": "druides, betes qui parlent, une vieille qui connait votre nom",
+		"enjeu": "un pacte ancien, un nom vole, une source qu'il ne fallait pas troubler",
+	},
+	"landes_bruyere": {
+		"nom": "les Landes de Bruyere",
+		"matiere": "bruyere rase, vent qui ne tombe jamais, cairns de pierres empilees, tourbe seche",
+		"danger": "rien pour s'abriter ; on vous voit venir de tres loin",
+		"figures": "bergers sans troupeau, guetteurs, un cavalier qui suit la crete",
+		"enjeu": "une pierre retiree d'un cairn, une frontiere niee, un feu a rallumer avant la nuit",
+	},
+	"cotes_sauvages": {
+		"nom": "les Cotes Sauvages",
+		"matiere": "falaises de gres ocre, embruns qui montent, goemon, epaves, cris d'oiseaux de mer",
+		"danger": "la maree qui coupe le retour, la roche qui cede sous le pied",
+		"figures": "korrigans des greves, naufrages, une gardienne de phare",
+		"enjeu": "un nom que la mer reclame, une epave revenue, un phare eteint",
+	},
+	"villages_celtes": {
+		"nom": "les Villages Celtes",
+		"matiere": "foyers, toits de chaume, forge, betail, palissades de bois",
+		"danger": "les rumeurs, les dettes, ce que le village a decide de taire",
+		"figures": "anciens, forgeron, une famille qui accuse une autre",
+		"enjeu": "un jugement a rendre, une recolte perdue, un enfant qui ne rentre pas",
+	},
+	"cercles_pierres": {
+		"nom": "les Cercles de Pierres",
+		"matiere": "menhirs leves, runes gravees, herbe rase, ombres qui s'allongent trop vite",
+		"danger": "ce qui se reveille quand on marche dans le mauvais sens",
+		"figures": "gardiens muets, un compteur d'equinoxes, des silhouettes entre les pierres",
+		"enjeu": "un rite interrompu, une rune effacee, un jour qui ne doit pas se lever",
+	},
+	"marais_korrigans": {
+		"nom": "les Marais aux Korrigans",
+		"matiere": "brume basse, tourbiere, feux follets, eau noire, planches pourries",
+		"danger": "le sol qui n'en est pas un ; les lumieres qui mènent au fond",
+		"figures": "korrigans farceurs, un passeur, des choses conservees dans la tourbe",
+		"enjeu": "un marche truque, un corps que la tourbe rend, un chemin qu'on vous vend",
+	},
+	"collines_dolmens": {
+		"nom": "les Collines aux Dolmens",
+		"matiere": "collines vertes, dolmens, tumulus, moutons, ciel large",
+		"danger": "les morts qu'on derange, le sol qui s'ouvre",
+		"figures": "ancetres, veilleurs de tombes, une lignee qui reclame son du",
+		"enjeu": "une sepulture violee, un heritage conteste, une promesse faite a un mort",
+	},
+	"iles_mystiques": {
+		"nom": "les Iles Mystiques",
+		"matiere": "brume qui separe les mondes, pommiers, barques sans rameur, lumiere qui ne vient de nulle part",
+		"danger": "le temps n'y coule pas pareil ; on en revient trop tard",
+		"figures": "Niamh, fees, un passeur qui ne demande pas de prix tout de suite",
+		"enjeu": "une invitation qu'on ne peut pas refuser, un retour negocie, une annee perdue",
+	},
+}
+
+
+# Bloc de matière injecté dans les prompts. `biome` accepte les identifiants de la bible ET les
+# alias historiques du jeu. Inconnu → Broceliande (le monde de depart), jamais une erreur.
+static func biome_bloc(biome: String) -> String:
+	var cle: String = str(BIOME_ALIAS.get(biome, biome))
+	var b: Dictionary = BIOMES.get(cle, BIOMES["foret_broceliande"])
+	return "LIEU: %s. On y touche: %s. Ce qui y menace: %s. Qui l'habite: %s. Ce qui s'y joue d'ordinaire: %s." % [
+		str(b["nom"]), str(b["matiere"]), str(b["danger"]), str(b["figures"]), str(b["enjeu"])]
+
+
+# Nom seul (titres, apostrophes) — même tolérance d'alias.
+static func biome_nom(biome: String) -> String:
+	var cle: String = str(BIOME_ALIAS.get(biome, biome))
+	var b: Dictionary = BIOMES.get(cle, BIOMES["foret_broceliande"])
+	return str(b["nom"])
+
+
 const SYSTEM_PREFIX: String = "Tu es le MAITRE DU JEU d'une aventure celtique a Broceliande, dans le gout du merveilleux-inquietant (etrange, feutre, un peu menacant). REGLES: raconte a la 2e PERSONNE en vouvoyant (« Vous »), au PRESENT (« Vous avancez », « la brume monte », « il vous jauge »). JAMAIS de 'je', JAMAIS de 3e personne pour le protagoniste (pas de 'il', pas de nom propre) : le protagoniste, c'est VOUS. Le MONDE est VIVANT: les personnages AGISSENT et PARLENT (un vieil homme sort de sa hutte, une voix vous hele, une bete se dresse), ils ont un but a eux. Francais SIMPLE et CLAIR, phrases qui S'ENCHAINENT (un fait PUIS sa consequence), CONCRETES (qui, quoi, ou). INTERDIT ABSOLU de clore une scene par « que faire ? », « que decidez-vous ? », « vous vous demandez quoi faire » ou toute formule qui prend le joueur par la main: laisse la scene SUSPENDUE sur une tension, sans jamais reclamer de decision. Pas d'enigme abstraite ('le vide', 'le nom'), pas de phrases hachees. Raconte les GESTES et EVENEMENTS precis, pas des descriptions vagues. Pas d'anglicismes. Reste dans le LIEU. Ne romps JAMAIS le 4e mur (INTERDIT 'jeu', 'carte', 'joueur', 'IA', 'simulation'). Evite les cliches ('union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne'). Ne recopie JAMAIS cette consigne dans ta reponse."
 
 # Voix de MERLIN (narrateur) pour les INTROS : il CONNAÎT le Voyageur et l'apostrophe — à l'inverse de
@@ -81,11 +171,22 @@ static func is_strong_moment(situ_type: String, degree: String) -> bool:
 
 
 # --- SÉLECTION : 3 scénarios (titre + pitch) — voix MERLIN (user 2026-05-29) ---
-static func selection(voice: String, lieu: String = "Broceliande") -> Dictionary:
+# `biome` = identifiant (bible §22 ou alias historique), PLUS un nom : la matière du lieu entre
+# dans le prompt (voir biome_bloc). `eviter` = titres déjà proposés au joueur, à ne pas refaire ;
+# `graine` = variation explicite. Ces deux derniers sont la SEULE source de nouveauté tant que
+# l'extension échantillonne en greedy (déterministe : même prompt → même sortie, mesuré
+# 2026-08-15). Sans eux, chaque partie redonne mot pour mot les mêmes trois titres.
+static func selection(voice: String, biome: String = "foret_broceliande",
+		eviter: Array = [], graine: String = "") -> Dictionary:
 	# Le pitch reste un IMPERATIF tutoye SANS appellation (le wrapper Merlin de build_intro
-	# l'apostrophe ensuite — eviter le double 'Voyageur' empile). v10.22 : `lieu` = biome de la run
-	# (Broceliande | les Falaises du Bout-du-Monde) → titres COHÉRENTS avec le monde choisi.
-	var usr: String = "En tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur', COMPREHENSIBLE EN UNE SEULE LECTURE : nomme une action concrete ET ce qui est en jeu (quoi chercher, qui affronter, quoi risquer) -- mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre, intrigant) sans jamais sacrifier la clarte de l'enjeu." % lieu
+	# l'apostrophe ensuite — eviter le double 'Voyageur' empile).
+	var bloc: String = biome_bloc(biome)
+	var lieu: String = biome_nom(biome)
+	var anti: String = ""
+	if not eviter.is_empty():
+		anti = " NE REPRENDS AUCUN de ces titres deja proposes, ni leur idee: %s." % "; ".join(eviter)
+	var vari: String = (" Angle impose pour cette fois: %s." % graine) if graine != "" else ""
+	var usr: String = bloc + "\n" + vari + anti + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur', COMPREHENSIBLE EN UNE SEULE LECTURE : nomme une action concrete ET ce qui est en jeu (quoi chercher, qui affronter, quoi risquer) -- mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre, intrigant) sans jamais sacrifier la clarte de l'enjeu." % lieu
 	# plein_regime : la sélection s'écrit derrière le voile « Merlin rêve les sentiers », où rien
 	# d'utile n'est joué ni rendu. Tous les cœurs y passent — c'est le seul moment du jeu où le
 	# ménage à moitié de cœurs ne protège aucune image et ne fait que doubler l'attente.
