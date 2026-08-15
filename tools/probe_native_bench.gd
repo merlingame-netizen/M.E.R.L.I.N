@@ -112,6 +112,11 @@ func _run() -> void:
 		_emettre(out)
 		quit(3)
 		return
+	# Relevé AU CHARGEMENT : n_threads y vaut encore le défaut du natif (moitié des cœurs). Le
+	# régime réel est posé par _apply_regime à CHAQUE génération — d'où un second relevé après les
+	# passes (`modele_apres`). Publier le premier tout seul ferait croire que la mesure a tourné à
+	# 2 fils alors qu'elle en a utilisé 4 : précisément le genre de chiffre mal lu qui fabrique un
+	# mythe durable.
 	out["modele"] = mn.model_info()
 
 	# ── 2) Passes de génération, sur le vrai chemin du jeu ────────────────────
@@ -151,6 +156,9 @@ func _run() -> void:
 			break  # le moteur patine : inutile de brûler la nuit à le confirmer
 
 	out["passes"] = resultats
+	# Le régime EFFECTIVEMENT utilisé pendant les passes, à confronter à `modele` (relevé au
+	# chargement) : c'est celui-ci qui explique le débit rapporté.
+	out["modele_apres"] = mn.model_info()
 	out["etape"] = "mesure"
 	out["ok"] = resultats.size() > 0
 
