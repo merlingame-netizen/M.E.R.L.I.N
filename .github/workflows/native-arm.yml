@@ -72,6 +72,11 @@ jobs:
             https://github.com/ggml-org/llama.cpp native/llama.cpp
           cd native/llama.cpp
           echo "llama.cpp @ $(git rev-parse --short HEAD)"
+          # GGML_CPU_ARM_ARCH : GGML_NATIVE=OFF (pour ne pas dependre du CPU du runner)
+          # desactive AUSSI les noyaux ARM specialises, et le quantifie s'effondre — mesure :
+          # la premiere generation en jeu a expire a 90 s la ou Ollama tient 10,6 tok/s.
+          # On cible donc explicitement ce que l'Ampere Altra de la VM sait faire
+          # (ARMv8.2 + dotprod + fp16) : portable ET rapide.
           # GGML_OPENMP=OFF : ggml compile avec OpenMP laisse un symbole non resolu dans
           # le .so (« undefined symbol: omp_get_thread_num ») — Godot rejette alors la
           # bibliotheque entiere. Sur 4 coeurs ou l'on plafonne deja les threads, OpenMP
@@ -84,6 +89,7 @@ jobs:
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DBUILD_SHARED_LIBS=OFF -DLLAMA_CURL=OFF -DGGML_NATIVE=OFF \
             -DGGML_OPENMP=OFF \
+            -DGGML_CPU_ARM_ARCH=armv8.2-a+dotprod+fp16 \
             -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF \
             -DLLAMA_BUILD_TOOLS=OFF
           # UNIQUEMENT les bibliothèques. Construire `all` compile aussi les outils, et
