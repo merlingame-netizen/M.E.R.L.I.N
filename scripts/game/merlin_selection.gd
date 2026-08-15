@@ -112,6 +112,16 @@ func _force_wait_titles(sc: Node) -> bool:
 # Renoncement visible : on nomme ce qui s'est passé, en français simple, puis retour au menu.
 # Jamais de titres écrits en dur en guise de lot de consolation.
 func _give_up() -> void:
+	# Le motif n'est PAS montré au joueur — « réponse illisible : aucun tableau JSON trouvé » ne
+	# lui apprendrait rien et casserait la fiction. Mais il part dans le journal, parce que sans
+	# lui le prochain diagnostic recommence à zéro : c'est exactement ce qui vient d'arriver, un
+	# retour au menu sans la moindre raison consignée nulle part.
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc != null and sc.has_method("selection_motif"):
+		var motif: String = str(sc.selection_motif())
+		if motif != "":
+			push_warning("[MerlinSelection] renoncement après %d essai(s) — %s"
+					% [int(sc.selection_attempt()) if sc.has_method("selection_attempt") else 0, motif])
 	_set_overlay_text("Merlin ne répond pas ce soir")
 	if _overlay_art != null:
 		_overlay_art.set_thinking(false)

@@ -774,6 +774,10 @@ var _sel_epoch: int = 0
 # Essais du modèle pour CETTE sélection. Au-delà, l'état passe à « failed » et l'écran rend la
 # main au menu au lieu de servir un secours (user : « réessayer, puis le menu »).
 var _sel_attempts: int = 0
+# POURQUOI le modèle a renoncé. Vide tant que tout va bien. Sans lui, `failed` ne dit rien :
+# Maxime voit un retour au menu, moi un état sans motif, et le diagnostic repart de zéro à
+# chaque fois. Même remède que `boot_error()` côté moteur — nommer la panne plutôt que la subir.
+var _sel_motif: String = ""
 const SEL_MAX_ATTEMPTS: int = 2
 
 # --- Pré-génération RÉSOLUTION (v10.4, user 2026-06-06 : issue TOUJOURS LLM) ---
@@ -946,6 +950,7 @@ func warmup_and_prefetch_selection() -> void:
 	# Le modèle n'a rien produit d'exploitable. On NE garde rien : servir le secours ici, c'est
 	# ce qui rendait la panne invisible et définitive.
 	_sel_cache = []
+	_sel_motif = str(res.get("motif", "raison inconnue"))
 	_sel_state = "failed" if _sel_attempts >= SEL_MAX_ATTEMPTS else "idle"
 
 
@@ -973,12 +978,18 @@ func invalidate_selection() -> void:
 	_sel_cache = []
 	_sel_state = "idle"
 	_sel_attempts = 0  # nouvelle sélection = nouveau crédit d'essais
+	_sel_motif = ""
 
 
 # v10.19 — sélection prête ? Vrai UNIQUEMENT si les trois titres viennent du modèle : c'est ce que
 # l'attente de l'écran interroge pour savoir si elle peut s'arrêter.
 func is_selection_ready() -> bool:
 	return _sel_state == "ready" and _sel_cache.size() >= 3
+
+
+# Pourquoi la sélection a échoué — chaîne vide si tout va bien. Lu par l'écran de renoncement.
+func selection_motif() -> String:
+	return _sel_motif
 
 
 # Le modèle a épuisé ses essais : l'écran doit renoncer et rendre la main au menu.
@@ -1017,14 +1028,29 @@ func _generate_selection_sourced() -> Dictionary:
 		var p: Dictionary = MerlinPromptBuilder.selection(
 				_voice_prefix(), _run_biome(), titres_deja_vus(), _tirer_angle())
 		var res: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
-		if not res.has("error"):
-			var arr: Array = MerlinJson.extract_array(str(res.get("text", "")))
-			var clean: Array = MerlinProse.clean_selection(arr)
-			if clean.size() >= 3:
-				var trois: Array = clean.slice(0, 3)
-				_memoriser_titres(trois)
-				return {"titres": trois, "du_modele": true}
-	return {"titres": _sel_fallback_pool(), "du_modele": false}
+		if res.has("error"):
+			# Le moteur lui-même a rendu la main : délai dépassé (GEN_TIMEOUT_MS), annulation,
+			# modèle absent. Sa raison est plus précise que tout ce qu'on pourrait deviner ici.
+			return {"titres": _sel_fallback_pool(), "du_modele": false,
+					"motif": "le moteur a rendu une erreur : %s" % str(res["error"])}
+		var brut: String = str(res.get("text", ""))
+		var arr: Array = MerlinJson.extract_array(brut)
+		var clean: Array = MerlinProse.clean_selection(arr)
+		if clean.size() >= 3:
+			var trois: Array = clean.slice(0, 3)
+			_memoriser_titres(trois)
+			return {"titres": trois, "du_modele": true}
+		# Le modèle a PARLÉ mais on n'a pas su le relire. On distingue les deux cas, parce qu'ils
+		# se réparent différemment : rien d'exploitable = prompt à revoir ; trop peu d'entrées =
+		# le modèle a compris mais n'en a pas produit assez. Un extrait du brut part dans les logs
+		# — sans lui, corriger un prompt revient à deviner ce que le modèle a répondu.
+		var motif: String = ("réponse illisible : aucun tableau JSON trouvé" if arr.is_empty()
+				else "seulement %d entrée(s) exploitable(s) sur 3" % clean.size())
+		push_warning("[MerlinScenario] sélection — %s · début de la réponse : %s"
+				% [motif, brut.substr(0, 220)])
+		return {"titres": _sel_fallback_pool(), "du_modele": false, "motif": motif}
+	return {"titres": _sel_fallback_pool(), "du_modele": false,
+			"motif": "moteur indisponible (%s)" % (mn.boot_error() if mn != null else "autoload absent")}
 
 
 # --- MÉMOIRE DES TITRES DÉJÀ PROPOSÉS (anti-répétition entre PARTIES) ---
