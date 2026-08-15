@@ -87,6 +87,18 @@
       En 2e position : c'était le 8e et dernier bloc de Décider, à ~3900 px de
       défilement, enfermé dans une zone de 520 px qui piégeait le doigt. -->
  <section class="pane" id="pane-journal">
+  <!-- La feuille de route ouvre l'onglet : il répond désormais aux trois temps — ce qui est
+       prévu, ce qui se fait, ce qui a été fait. Elle vit dans le dépôt (infra/oracle/roadmap.json)
+       et survit donc aux sessions de l'agent, là où une liste tenue en conversation disparaît
+       avec elle. Placée ICI plutôt que dans un 7e bouton : le dock en compte déjà six, et un
+       de plus se paie au pouce. -->
+  <div class="win">
+   <div class="win-bar"><span class="t">🗺 Feuille de route</span><span class="hatch"></span>
+    <span class="meta" id="route-meta">…</span></div>
+   <div class="win-body">
+    <div id="route-list"><div class="mut">chargement…</div></div>
+   </div>
+  </div>
   <div class="win">
    <div class="win-bar"><span class="t">🧵 Fils en cours</span><span class="hatch"></span>
     <span class="meta" id="fils-meta">…</span></div>

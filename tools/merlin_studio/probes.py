@@ -937,3 +937,36 @@ def overview() -> dict:
             "ollama": o.get("available", False), "models": len(o.get("models", [])),
             "branch": _sh(["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=5)[0],
             "checked_at": _now()}
+
+
+def feuille_de_route() -> dict:
+    """La feuille de route versionnée (infra/oracle/roadmap.json). Never raises.
+
+    RÈGLE DE LECTURE, appliquée ici et pas dans le gabarit : une entrée « fait » SANS preuve
+    est republiée comme « annonce » — pas comme un fait. Ce n'est pas de la sévérité pour le
+    principe : le 15 août, trois composants se sont déclarés sains en étant cassés (un moteur
+    suspendu sans erreur, un agent tué qui rapportait rc=0, une synchro annonçant « à jour »
+    sur un dépôt périmé). Une déclaration sans trace vérifiable ne vaut donc rien, et la
+    feuille de route serait le prochain endroit où s'installerait ce genre de mensonge tranquille.
+    """
+    d = _read_json(ROOT / "infra" / "oracle" / "roadmap.json", {})
+    entrees = d.get("entrees", []) if isinstance(d, dict) else []
+    par_etat: dict[str, list] = {"prevu": [], "en_cours": [], "fait": [], "annonce": [], "abandonne": []}
+    for e in entrees:
+        if not isinstance(e, dict):
+            continue
+        etat = str(e.get("etat", "prevu"))
+        preuve = str(e.get("preuve", "")).strip()
+        if etat == "fait" and not preuve:
+            etat = "annonce"
+        par_etat.setdefault(etat, []).append({
+            "id": e.get("id", ""), "titre": e.get("titre", ""),
+            "pourquoi": e.get("pourquoi", ""), "preuve": preuve,
+            "note": e.get("note", ""), "etat": etat,
+        })
+    return {
+        "maj": d.get("maj", ""),
+        "par_etat": par_etat,
+        "compte": {k: len(v) for k, v in par_etat.items()},
+        "checked_at": _now(),
+    }

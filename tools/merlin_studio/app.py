@@ -279,6 +279,11 @@ def build_app() -> Flask:
     def api_agents():
         return jsonify(probes.agents())
 
+    @app.route("/api/route")
+    def api_route():
+        """La feuille de route : ce qui est prévu, en cours, fait — avec la preuve."""
+        return jsonify(probes.feuille_de_route())
+
     # ── webhook GitHub : push sur la branche du jeu → CI immédiate ───────────
     def _game_env() -> dict:
         env = {}

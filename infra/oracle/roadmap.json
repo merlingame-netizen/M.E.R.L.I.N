@@ -1,0 +1,144 @@
+{
+  "_lisez_moi": [
+    "FEUILLE DE ROUTE — ce qui est prévu, en cours, fait. Versionnée exprès : elle survit aux",
+    "sessions de l'agent et garde son historique dans git, là où une liste de tâches vivant",
+    "dans une conversation disparaît avec elle (69 tâches ont failli être perdues ainsi).",
+    "",
+    "Chaque entrée porte QUATRE choses, et la troisième manque partout ailleurs :",
+    "  titre   — en français, ce que ça change pour le joueur ou pour Maxime",
+    "  etat    — prevu | en_cours | fait | abandonne",
+    "  pourquoi— la RAISON, pas la tâche. Ce qu'on cherche à obtenir.",
+    "  preuve  — commit, mesure ou capture. Une entrée 'fait' SANS preuve reste 'annoncé' :",
+    "            le portail l'affiche comme telle. On a vu trois composants se déclarer sains",
+    "            en étant cassés — une déclaration sans preuve ne vaut rien.",
+    "",
+    "Qui écrit ici : l'agent Claude à chaque session, et les agents de la VM (une idée",
+    "acceptée dans Décider peut devenir une entrée 'prevu')."
+  ],
+  "maj": "2026-08-15",
+  "entrees": [
+    {
+      "id": "v27",
+      "titre": "Des scénarios vraiment différents à chaque partie",
+      "etat": "prevu",
+      "pourquoi": "Le moteur tire ses mots en 'greedy' : il prend toujours le plus probable, donc à contexte égal il réécrit exactement le même texte. Température et top_p ne servent à rien depuis toujours. La variété actuelle vient du prompt, ce qui masque le problème sans le corriger.",
+      "preuve": "",
+      "note": "Impose de recompiler llama.cpp et l'extension pour ARM sur la VM. Pas de délai promis."
+    },
+    {
+      "id": "v28",
+      "titre": "Les parchemins arrivent un par un au lieu de tous ensemble",
+      "etat": "prevu",
+      "pourquoi": "Une sélection coûte 32 s. Découpée en trois écritures courtes, le premier parchemin se pose vers 10 s : l'attente totale ne bouge pas, l'attente RESSENTIE est divisée par trois.",
+      "preuve": ""
+    },
+    {
+      "id": "v23.B",
+      "titre": "Une seule quête par partie, 7 à 25 cartes, fil rouge écrit d'un bloc",
+      "etat": "prevu",
+      "pourquoi": "Décision de Maxime : l'histoire doit être décidée au départ, pas improvisée carte par carte. Le code fait aujourd'hui autre chose (2 à 3 quêtes de 2 à 5 étapes).",
+      "preuve": "",
+      "note": "Tout rédiger au lancement coûterait 6 à 14 min d'attente. Retenu : trame complète au départ, prose étoffée pendant la marche."
+    },
+    {
+      "id": "v19",
+      "titre": "Rendre le jeu équilibrable sans toucher au code",
+      "etat": "prevu",
+      "pourquoi": "Les constantes de gameplay sont éparpillées dans les scripts : personne ne peut régler l'équilibre sans être développeur.",
+      "preuve": ""
+    },
+    {
+      "id": "v18.5",
+      "titre": "La troupe et la plume — un narrateur qui raconte la nuit",
+      "etat": "prevu",
+      "pourquoi": "Le matin, savoir ce que les agents ont fait sans lire des journaux techniques.",
+      "preuve": ""
+    },
+    {
+      "id": "v18.6",
+      "titre": "Les agents peuvent t'interpeller",
+      "etat": "prevu",
+      "pourquoi": "Aujourd'hui un agent qui a besoin d'un arbitrage attend sans rien dire. Quota de 2 par jour pour que ça reste lisible.",
+      "preuve": ""
+    },
+    {
+      "id": "v18.7",
+      "titre": "Mesures quotidiennes et trois images clés du playtest",
+      "etat": "prevu",
+      "pourquoi": "Juger l'évolution du jeu sur des chiffres et des images, pas sur une impression.",
+      "preuve": ""
+    },
+    {
+      "id": "v29",
+      "titre": "Le séquenceur de la boucle de dev autonome",
+      "etat": "prevu",
+      "pourquoi": "Les agents sont indépendants et pilotés par cron : rien ne montre qu'ils forment une chaîne. On veut lire 'idée → code → test → déploie → vérifie' comme une échelle, et voir OÙ ça casse.",
+      "preuve": ""
+    },
+    {
+      "id": "v30",
+      "titre": "L'agent de contrôle qui vérifie les déclarations",
+      "etat": "prevu",
+      "pourquoi": "Trois composants ont échoué en se déclarant sains le 15 août. Un tableau de bord qui recopie ce que les agents annoncent ne vaut rien : il faut confronter chaque affirmation à une preuve (la capture existe ? le commit est bien celui annoncé ?).",
+      "preuve": ""
+    },
+    {
+      "id": "v31",
+      "titre": "Les étapes sur les agents restants",
+      "etat": "prevu",
+      "pourquoi": "Seuls ci-commit et native-bench annoncent leurs étapes. Le playtest et le codeur, longs eux aussi, restent muets pendant qu'ils travaillent.",
+      "preuve": ""
+    },
+
+    {
+      "id": "v22",
+      "titre": "Mesurer la vraie vitesse du moteur du jeu",
+      "etat": "fait",
+      "pourquoi": "Toutes les banques de secours étaient justifiées par un '~1 tok/s' hérité d'Ollama et jamais vérifié sur le moteur natif. Sans ce chiffre, tout arbitrage sur l'attente du joueur était un pari.",
+      "preuve": "b4b01968 · mesuré 2,93 puis 4,31 tok/s — le chiffre hérité était pessimiste d'un facteur 3"
+    },
+    {
+      "id": "v23.A",
+      "titre": "Les titres de quête viennent toujours du modèle",
+      "etat": "fait",
+      "pourquoi": "Une panne du moteur au menu mettait les titres de secours en cache comme une réussite : la partie entière servait alors trois titres écrits en dur, sans attente et sans nouvel essai.",
+      "preuve": "2014f6f2 · bout en bout moteur coupé → retour au menu en 78 s avec ZÉRO titre affiché"
+    },
+    {
+      "id": "v25",
+      "titre": "Les titres changent d'une partie à l'autre",
+      "etat": "fait",
+      "pourquoi": "Deux passes du même prompt rendaient des titres rigoureusement identiques. Matière des 8 biomes, anti-répétition persistée et angle tiré au sort donnent enfin de la variété.",
+      "preuve": "34ec19cf · deux passes consécutives : 'Le Souffle de la Pierre…' puis 'Le Murmure du Seuil…'",
+      "note": "Corrigé au niveau du prompt seulement. La cause (v27) est intacte."
+    },
+    {
+      "id": "v26",
+      "titre": "Le moteur utilise toute la machine quand tu attends",
+      "etat": "fait",
+      "pourquoi": "Le natif se limitait à la moitié des cœurs pour laisser tourner le jeu — utile pendant qu'on joue, absurde derrière un voile d'attente où rien n'est rendu.",
+      "preuve": "48380364 · 2,93 → 4,31 tok/s, sélection 44 s → 32 s, sans recompilation"
+    },
+    {
+      "id": "v26.b",
+      "titre": "Le moteur cesse de se figer en headless",
+      "etat": "fait",
+      "pourquoi": "Il attendait un événement de rendu qui n'existe pas sans écran : AUCUN outil headless (smoke, soak, CI) n'a jamais pu charger le modèle. Tous validaient le jeu sur ses banques de secours, en silence.",
+      "preuve": "7a39b0f8 · 300 s d'attente aveugle → 368 ms avec la cause réelle"
+    },
+    {
+      "id": "v24",
+      "titre": "L'outillage se synchronise seul sur la VM",
+      "etat": "fait",
+      "pourquoi": "Le jeu se mettait à jour tout seul depuis des mois, l'outillage jamais : il portait pourtant le portail, les sondes et les agents. La règle 'la version à jour est celle de la VM' ne pouvait pas tenir.",
+      "preuve": "1716c6a2 + 80c4af2f · 'outillage mis à jour → ea8cbed1 · crontab régénéré · Studio relancé'"
+    },
+    {
+      "id": "v32",
+      "titre": "Voir où en est un agent pendant qu'il travaille",
+      "etat": "fait",
+      "pourquoi": "Un agent de 12 minutes affichait 'travaille en ce moment' pendant 12 minutes : impossible de distinguer celui qui avance de celui qui est planté.",
+      "preuve": "dc3676df · relevé sur la mesure réelle : '2/3 — mesure en cours', chrono figé au bon départ"
+    }
+  ]
+}

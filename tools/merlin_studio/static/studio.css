@@ -529,3 +529,17 @@ code { color: var(--blue); }
 .act.plan { background: var(--green); color: var(--deep); font-weight: 700;
   margin-bottom: 4px; }
 .act.plan:hover { filter: brightness(1.1); }
+
+/* --- Feuille de route ------------------------------------------------------------------
+   Blocs empilés et non colonnes : sur un téléphone, trois colonnes deviennent trois bandes
+   illisibles. Chaque entrée porte son POURQUOI en clair sous le titre — c'est ce qui
+   distingue une feuille de route d'une liste de tâches. */
+.route-bloc { margin-bottom: 14px; }
+.route-titre { font-size: .82rem; letter-spacing: .08em; text-transform: uppercase;
+  opacity: .7; margin: 0 0 6px; }
+.route-item { padding: 8px 10px; margin-bottom: 6px; border-left: 3px solid var(--line, #3a3226);
+  background: rgba(255,255,255,.03); border-radius: 0 6px 6px 0; }
+.route-item.err { border-left-color: var(--warn, #c9822f); }
+.route-quoi { font-weight: 600; margin-bottom: 2px; }
+.route-pourquoi { font-size: .9rem; line-height: 1.35; }
+.route-preuve, .route-note { font-size: .82rem; margin-top: 4px; opacity: .75; }

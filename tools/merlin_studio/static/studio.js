@@ -755,6 +755,39 @@ function agoTxt(m) {
   return m < 1 ? "à l'instant" : m < 60 ? `il y a ${m} min`
        : m < 1440 ? `il y a ${Math.round(m / 60)} h` : `il y a ${Math.round(m / 1440)} j`;
 }
+// --- FEUILLE DE ROUTE : le prévu, l'en-cours, le fait --------------------------------------
+// Rendue en trois blocs plutôt qu'en trois colonnes : sur un téléphone, trois colonnes
+// deviennent trois bandes illisibles. L'ordre suit la question qu'on se pose en ouvrant
+// l'écran — « et maintenant ? » d'abord, « qu'est-ce qui a été fait » ensuite.
+const ROUTE_TITRES = {
+  prevu: 'À venir', en_cours: 'En cours', annonce: 'Annoncé — sans preuve',
+  fait: 'Fait', abandonne: 'Abandonné',
+};
+async function refreshRoute() {
+  const d = await api('/api/route');
+  if (!d) return;
+  const par = d.par_etat || {}, c = d.compte || {};
+  $('#route-meta').textContent = `${c.prevu || 0} à venir · ${c.fait || 0} fait`
+    + (c.annonce ? ` · ${c.annonce} sans preuve` : '');
+  const bloc = (cle) => {
+    const items = par[cle] || [];
+    if (!items.length) return '';
+    return `<div class="route-bloc"><div class="route-titre">${ROUTE_TITRES[cle] || cle}</div>`
+      + items.map(e => `<div class="route-item ${cle === 'annonce' ? 'err' : ''}">
+          <div class="route-quoi">${esc(e.titre)}</div>
+          <div class="route-pourquoi mut">${esc(e.pourquoi)}</div>
+          ${e.preuve ? `<div class="route-preuve mut">preuve — ${esc(e.preuve)}</div>` : ''}
+          ${e.note ? `<div class="route-note mut">${esc(e.note)}</div>` : ''}
+        </div>`).join('') + '</div>';
+  };
+  // « annonce » (un fait sans preuve) passe AVANT les faits : c'est ce qui demande une
+  // vérification, pas ce qui est acquis. Le laisser en bas reviendrait à le cacher.
+  $('#route-list').innerHTML =
+    ['en_cours', 'prevu', 'annonce', 'fait', 'abandonne'].map(bloc).join('')
+    || '<div class="mut">feuille de route vide</div>';
+}
+
+
 async function refreshJournal() {
   let d;
   try { d = await j('/api/journal'); } catch { return; }
@@ -1282,7 +1315,7 @@ if (mBtn) mBtn.onclick = async () => {
 const BARRE = () => { refreshClock(); refreshSum(); refreshProposals(); refreshBoite(); };
 const PAR_ONGLET = {
   play:    () => { refreshPlay(); refreshRun(); },
-  journal: () => { refreshChapitres(); refreshJournal(); },
+  journal: () => { refreshRoute(); refreshChapitres(); refreshJournal(); },
   ideas:   () => refreshProposals(),
   talk:   () => {},                       // talkPoll a sa propre minuterie
   health: () => { refreshHealth(); refreshCpu(); refreshHost(); },
