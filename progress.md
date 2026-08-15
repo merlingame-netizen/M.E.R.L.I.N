@@ -3638,3 +3638,42 @@ affiché · smoke runtime MerlinSelection / MerlinMenu / MerlinGame à 0 script_
 que l'agent `native-bench` doit mesurer sur la VM. Et la partie B (une quête par partie,
 fil rouge complet) attend ce même chiffre — rédiger 7 à 25 cartes d'un coup est une
 génération bien plus grosse que tout ce que le jeu demande aujourd'hui.
+
+## Session: 2026-08-15 (suite — la mesure enfin obtenue)
+
+### Le chiffre
+Moteur natif, VM ARM 4 cœurs, gemma4-e4b, machine au repos (charge 0.06) :
+
+| | |
+|---|---|
+| Chargement du modèle | **3,4 s** |
+| Débit | **2,93 tok/s** |
+| Une sélection (3 titres, 130 tokens) | **44 s** |
+| Le modèle a-t-il gagné ? | oui, `secours=false` sur les 2 passes |
+
+Le « ~1 tok/s » hérité d'Ollama était donc pessimiste d'un facteur 3.
+
+### Pourquoi la mesure était impossible (défaut de fond)
+`RenderingServer.frame_post_draw` ne se déclenche JAMAIS sans écran. `MerlinNative._boot()`
+l'attendait avant de charger le modèle → en headless, `_boot` restait suspendu pour toujours,
+sans erreur. Conséquence : **aucun outil headless n'a jamais chargé le modèle** — smokes, soak,
+CI exerçaient tous les banques de secours en silence. C'est ce blocage muet qui a laissé vivre
+le « ~1 tok/s » jamais vérifié : l'outil censé le mesurer ne pouvait pas démarrer le moteur.
+Corrigé : refus explicite en headless (`model_failed` + `boot_error()` interrogeable), opt-in
+via `MERLIN_ALLOW_HEADLESS_LLM`. 300 s d'attente aveugle → 368 ms avec la cause réelle.
+
+### Conséquence sur v23.A
+`TITLES_CAP_S` 75 s → **120 s**. À 44 s par essai, 75 s tranchait avant que le second essai
+puisse aboutir : la relance décidée le matin même était décorative.
+
+### Découvert en passant (non traité)
+- **Les titres ne varient pas** : 2 passes, prompt identique, titres rigoureusement identiques.
+  Le modèle gagne mais se répète. Seconde cause de « toujours les mêmes titres », indépendante
+  du bug de cache. → tâche v25
+- **n_threads=2 sur 4 cœurs** pour la génération (n_threads_batch=4). → tâche v26
+- **Rien ne synchronise les dépôts sur la VM** : ni le webhook ni l'agent de secours n'avaient
+  ramené les pushs ; les deux dépôts étaient périmés de plusieurs heures.
+
+### Ce que la mesure dit de la partie B
+7 à 25 cartes rédigées d'un coup au lancement : à 2,93 tok/s, un fil rouge de 1 000 tokens
+coûte ~5,7 min, 2 500 tokens ~14 min. Intenable tel quel — à rediscuter avec Maxime.
