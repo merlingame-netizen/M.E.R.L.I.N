@@ -18,6 +18,20 @@
   "maj": "2026-08-15",
   "entrees": [
     {
+      "id": "v34",
+      "titre": "Nettoyer les vieux fichiers d'état à la racine",
+      "etat": "prevu",
+      "pourquoi": "Des états périmés (billing.json, llm-bench.json) traînent à la racine du cache depuis un correctif de juillet qui les a déplacés dans state/. Ils m'ont fait conclure à tort que le garde-fou de facturation était mort depuis quatre jours. Un fichier qui ment par obsolescence est aussi nuisible qu'un agent qui ment.",
+      "preuve": ""
+    },
+    {
+      "id": "v33",
+      "titre": "Rejuger le cap de 8 s de l'ouverture de quête",
+      "etat": "prevu",
+      "pourquoi": "INTERSTITIAL_CAP_MS vaut 8 s, ce qui empêche de fait le modèle de gagner la course : l'ouverture procédurale sert toujours. Ce choix fut pris sur le « ~1 tok/s » démenti — à 4,31 tok/s et avec une ouverture courte, le modèle pourrait gagner. C'est du game design, donc à trancher par Maxime, pas à renverser en douce.",
+      "preuve": ""
+    },
+    {
       "id": "v27",
       "titre": "Des scénarios vraiment différents à chaque partie",
       "etat": "prevu",
