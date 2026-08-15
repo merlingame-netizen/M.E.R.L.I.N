@@ -72,6 +72,10 @@ jobs:
             https://github.com/ggml-org/llama.cpp native/llama.cpp
           cd native/llama.cpp
           echo "llama.cpp @ $(git rev-parse --short HEAD)"
+          # GGML_OPENMP=OFF : ggml compile avec OpenMP laisse un symbole non resolu dans
+          # le .so (« undefined symbol: omp_get_thread_num ») — Godot rejette alors la
+          # bibliotheque entiere. Sur 4 coeurs ou l'on plafonne deja les threads, OpenMP
+          # n'apporte rien, et s'en passer garde un fichier autonome.
           # POSITION_INDEPENDENT_CODE : ces .a finissent DANS un .so (la GDExtension).
           # Sans -fPIC l'editeur de liens refuse en aarch64 :
           #   relocation R_AARCH64_ADR_PREL_PG_HI21 ... can not be used when making
@@ -79,6 +83,7 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DBUILD_SHARED_LIBS=OFF -DLLAMA_CURL=OFF -DGGML_NATIVE=OFF \
+            -DGGML_OPENMP=OFF \
             -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF \
             -DLLAMA_BUILD_TOOLS=OFF
           # UNIQUEMENT les bibliothèques. Construire `all` compile aussi les outils, et
