@@ -902,6 +902,11 @@ func _on_biome_picked(bio: String) -> void:
 	# il doit rêver. `invalidate_selection` remet le compteur d'essais à zéro puis le warmup part
 	# aussitôt : les ~3 s d'animation qui suivent (decor_reveal, gust, flash_moon) et la transition
 	# sont autant de pris sur la génération, gratuitement, avant même que l'écran s'affiche.
+	# La voix de Merlin est coupée AVANT de lancer l'écriture, et non 2,5 s plus tard à la fin de
+	# l'animation comme auparavant : le moteur est SINGLE-FLIGHT. Tant que la voix du menu génère,
+	# la demande de sélection se fait répondre « génération déjà en cours » et repart les mains
+	# vides. L'ordre inverse faisait donc échouer le tout premier essai par simple collision.
+	_stop_voice()
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc != null and sc.has_method("invalidate_selection"):
 		sc.invalidate_selection()

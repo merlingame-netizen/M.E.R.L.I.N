@@ -951,6 +951,11 @@ func warmup_and_prefetch_selection() -> void:
 	# ce qui rendait la panne invisible et définitive.
 	_sel_cache = []
 	_sel_motif = str(res.get("motif", "raison inconnue"))
+	# Un refus TRANSITOIRE (moteur occupé) rend son crédit : il n'a rien prouvé sur la capacité
+	# du modèle à écrire. Sans ça, une collision d'une seconde avec la voix du menu consommait
+	# un des deux essais, et le moindre incident suivant renvoyait le joueur au menu.
+	if bool(res.get("transitoire", false)):
+		_sel_attempts = maxi(0, _sel_attempts - 1)
 	_sel_state = "failed" if _sel_attempts >= SEL_MAX_ATTEMPTS else "idle"
 
 
@@ -1030,9 +1035,18 @@ func _generate_selection_sourced() -> Dictionary:
 		var res: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 		if res.has("error"):
 			# Le moteur lui-même a rendu la main : délai dépassé (GEN_TIMEOUT_MS), annulation,
-			# modèle absent. Sa raison est plus précise que tout ce qu'on pourrait deviner ici.
+			# modèle absent, ou simplement OCCUPÉ. Sa raison est plus précise que tout ce qu'on
+			# pourrait deviner ici.
+			#
+			# « transitoire » distingue « pas maintenant » de « ça ne marchera pas ». Un moteur
+			# occupé n'est PAS un échec du modèle : réessayer dans deux secondes suffit. Le
+			# compter comme un essai brûlait la moitié du crédit sur une simple collision — et
+			# c'est exactement ce qui arrive quand la voix du menu tient encore le moteur au
+			# moment du tap sur le biome.
+			var err: String = str(res["error"])
 			return {"titres": _sel_fallback_pool(), "du_modele": false,
-					"motif": "le moteur a rendu une erreur : %s" % str(res["error"])}
+					"transitoire": err.contains("deja en cours") or err.contains("non pret"),
+					"motif": "le moteur a rendu une erreur : %s" % err}
 		var brut: String = str(res.get("text", ""))
 		var arr: Array = MerlinJson.extract_array(brut)
 		var clean: Array = MerlinProse.clean_selection(arr)
