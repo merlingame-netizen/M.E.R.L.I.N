@@ -44,6 +44,11 @@ const STOP_MARKERS: Array = [
 ]
 
 var _llm: Object = null
+# Raison du renoncement, VIDE tant que tout va bien. `model_failed` ne sert qu'aux auditeurs
+# deja branches : `_boot` est appele en differe des le demarrage, donc quiconque arrive une
+# fraction de seconde plus tard (un ecran, un harnais de mesure) manque le signal et attend un
+# moteur qui a deja renonce. Cet etat repond aux retardataires.
+var _boot_error: String = ""
 var _model_ready: bool = false
 var _busy: bool = false
 var _t_start_ms: int = 0
@@ -76,15 +81,34 @@ func _ready() -> void:
 
 
 func _boot() -> void:
-	# v10.13 (B1) : laisse le 1er frame PEINDRE (le menu s'affiche) avant le load bloquant 1-3s
-	# du modèle — sans ça l'app reste sur un écran noir pendant tout le chargement.
-	await RenderingServer.frame_post_draw
+	# HEADLESS (mesuré 2026-08-15) : `RenderingServer.frame_post_draw` ne se déclenche JAMAIS sans
+	# serveur d'affichage. L'attente ci-dessous ne rendait donc pas la main : `_boot` restait
+	# suspendu pour toujours, `is_ready()` restait faux, et AUCUN outil headless (smoke, soak, CI,
+	# sonde de mesure) n'a jamais pu charger le modèle — ils exerçaient tous les banques de secours
+	# en silence, sans qu'aucune erreur ne le signale. C'est ce blocage muet qui a laissé vivre le
+	# « ~1 tok/s » jamais vérifié.
+	#
+	# Par défaut on ne charge PAS le modèle en headless : un smoke de 8 s n'a pas à payer 4 Go de
+	# lecture disque. Mais on le DIT (`model_failed`) au lieu de se figer — un échec visible vaut
+	# mieux qu'une attente éternelle. Un harnais qui veut vraiment le moteur pose
+	# MERLIN_ALLOW_HEADLESS_LLM=1 et paie le chargement en connaissance de cause.
+	if DisplayServer.get_name() == "headless":
+		if not OS.has_environment("MERLIN_ALLOW_HEADLESS_LLM"):
+			_boot_error = "headless sans MERLIN_ALLOW_HEADLESS_LLM"
+			emit_signal("model_failed", "headless sans MERLIN_ALLOW_HEADLESS_LLM")
+			return
+	else:
+		# v10.13 (B1) : laisse le 1er frame PEINDRE (le menu s'affiche) avant le load bloquant 1-3s
+		# du modèle — sans ça l'app reste sur un écran noir pendant tout le chargement.
+		await RenderingServer.frame_post_draw
 	if not ClassDB.class_exists("MerlinLLM"):
 		push_error("[MerlinNative] GDExtension MerlinLLM absente (DLL non chargée ?)")
+		_boot_error = "GDExtension MerlinLLM absente"
 		emit_signal("model_failed", "GDExtension MerlinLLM absente")
 		return
 	_llm = ClassDB.instantiate("MerlinLLM")
 	if _llm == null:
+		_boot_error = "Instanciation MerlinLLM échouée"
 		emit_signal("model_failed", "Instanciation MerlinLLM échouée")
 		return
 	# set_context_size DOIT précéder load_model (ctx créé au chargement) — sur le thread principal.
@@ -140,11 +164,17 @@ func _finish_load() -> void:
 		set_process(false)
 	if _load_err != OK:
 		push_error("[MerlinNative] load_model err=%d path=%s" % [_load_err, _load_path])
+		_boot_error = "load_model err=%d" % _load_err
 		emit_signal("model_failed", "load_model err=%d" % _load_err)
 		return
 	_model_ready = true
 	print("[MerlinNative] Gemma 4 E2B charge (n_ctx=%d) : %s" % [N_CTX, _load_path])
 	emit_signal("model_ready")
+
+
+# Pourquoi le moteur n'est pas la — chaine vide s'il va bien ou s'il charge encore.
+func boot_error() -> String:
+	return _boot_error
 
 
 func is_ready() -> bool:

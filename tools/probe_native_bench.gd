@@ -69,6 +69,16 @@ func _run() -> void:
 		quit(2)
 		return
 
+	# Sans cette variable, MerlinNative REFUSE de charger le modèle en headless (et avant le
+	# correctif du 2026-08-15, il restait suspendu sans rien dire — cette sonde a attendu ses
+	# 300 s pour un événement de rendu qui ne vient jamais sans écran). Le lanceur la pose ; on
+	# le vérifie ICI pour qu'une mesure lancée à la main échoue en une seconde, avec la raison.
+	if DisplayServer.get_name() == "headless" and not OS.has_environment("MERLIN_ALLOW_HEADLESS_LLM"):
+		out["etape"] = "MERLIN_ALLOW_HEADLESS_LLM absente — le moteur ne se charge pas en headless"
+		_emettre(out)
+		quit(4)
+		return
+
 	# Juge lu MAINTENANT, pas après l'attente du modèle : si la lecture des banques casse, on veut
 	# le savoir en une seconde, pas au bout des cinq minutes de chargement (le parse check ne voit
 	# pas ce genre d'erreur — elle n'existe qu'à l'exécution).
@@ -87,11 +97,18 @@ func _run() -> void:
 		var v: int = int(OS.get_environment("MERLIN_BENCH_LOAD_TIMEOUT_MS"))
 		if v > 0:
 			load_timeout_ms = v
-	while not mn.is_ready() and (Time.get_ticks_msec() - t_boot) < load_timeout_ms:
+	# On INTERROGE l'état plutôt que d'écouter `model_failed` : `_boot` est appelé en différé dès le
+	# démarrage, donc le signal part souvent AVANT que cette sonde soit branchée. S'y fier, c'est
+	# attendre cinq minutes un moteur qui a renoncé à la première seconde — le piège exact du
+	# 2026-08-15.
+	while not mn.is_ready() and str(mn.boot_error()) == "" \
+			and (Time.get_ticks_msec() - t_boot) < load_timeout_ms:
 		await create_timer(0.25).timeout
 	out["charge_ms"] = Time.get_ticks_msec() - t_boot
 	if not mn.is_ready():
-		out["etape"] = "modele jamais charge (extension absente, GGUF manquant, ou trop lent)"
+		var raison: String = str(mn.boot_error())
+		out["etape"] = ("le moteur a renonce : %s" % raison) if raison != "" \
+				else "modele jamais charge (aucune raison donnee — trop lent ?)"
 		_emettre(out)
 		quit(3)
 		return
