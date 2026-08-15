@@ -117,11 +117,27 @@ func _give_up() -> void:
 	# lui le prochain diagnostic recommence à zéro : c'est exactement ce qui vient d'arriver, un
 	# retour au menu sans la moindre raison consignée nulle part.
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
-	if sc != null and sc.has_method("selection_motif"):
-		var motif: String = str(sc.selection_motif())
-		if motif != "":
-			push_warning("[MerlinSelection] renoncement après %d essai(s) — %s"
-					% [int(sc.selection_attempt()) if sc.has_method("selection_attempt") else 0, motif])
+	if sc != null:
+		var essais: int = int(sc.selection_attempt()) if sc.has_method("selection_attempt") else 0
+		var motif: String = str(sc.selection_motif()) if sc.has_method("selection_motif") else ""
+		if motif == "":
+			# ZÉRO ESSAI, donc aucun motif : `ensure_selection_prefetch` ne lance rien tant que le
+			# moteur n'est pas prêt ET libre. Si cette condition ne s'ouvre jamais, l'attente tourne
+			# à vide jusqu'au filet et le renoncement partait SANS RIEN DIRE — le cas le plus
+			# fréquent était donc le seul resté muet, et c'est exactement celui qu'on a rencontré.
+			# On interroge alors le moteur lui-même pour nommer le verrou fermé.
+			var mn: Node = get_node_or_null("/root/MerlinNative")
+			if mn == null:
+				motif = "MerlinNative absent"
+			elif not mn.is_ready():
+				var be: String = str(mn.boot_error()) if mn.has_method("boot_error") else ""
+				motif = ("le moteur n'a jamais été prêt (%s)" % be) if be != "" \
+						else "le moteur charge encore — rien n'a pu être tenté"
+			elif mn.is_busy():
+				motif = "le moteur est resté occupé par une autre génération"
+			else:
+				motif = "aucune tentative — cause inconnue"
+		push_warning("[MerlinSelection] renoncement après %d essai(s) — %s" % [essais, motif])
 	_set_overlay_text("Merlin ne répond pas ce soir")
 	if _overlay_art != null:
 		_overlay_art.set_thinking(false)
