@@ -128,13 +128,20 @@ jobs:
       - name: Livrer sur la branche
         run: |
           # Dans le conteneur on est root et le checkout appartient a un autre uid :
-          # git refuse le depot (« fatal: not in a git directory »). L'autorisation est
-          # posee sur CHAQUE commande — la config globale ne suffisait pas, le HOME du
-          # conteneur n'etant pas celui qu'on croit.
-          G="git -c safe.directory=* -c user.name=github-actions[bot] \
-             -c user.email=41898282+github-actions[bot]@users.noreply.github.com"
-          $G status --short | head -3
-          $G add -f addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
-          $G diff --cached --quiet && { echo "binaire inchangé"; exit 0; }
-          $G commit -m "build(native): merlin_llm.linux.release.arm64.so"
-          $G push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" HEAD:feat/practices-docs
+          # git refuse le depot. L'autorisation est posee sur CHAQUE commande — la config
+          # globale ne prenait pas, le HOME du conteneur n'etant pas celui qu'on croit.
+          #
+          # Le motif est QUOTE. Range dans une variable puis relu sans guillemets, le `*`
+          # etait developpe par le shell en liste de fichiers du dossier : git recevait
+          # « -c safe.directory=addons ... » et finissait en « not a git repository ».
+          SO=addons/merlin_llm/bin/merlin_llm.linux.release.arm64.so
+          git -c "safe.directory=*" status --short | head -3
+          git -c "safe.directory=*" add -f "$SO"
+          git -c "safe.directory=*" diff --cached --quiet && { echo "binaire inchangé"; exit 0; }
+          git -c "safe.directory=*" \
+              -c "user.name=github-actions[bot]" \
+              -c "user.email=41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "build(native): merlin_llm.linux.release.arm64.so"
+          git -c "safe.directory=*" push \
+              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" \
+              HEAD:feat/practices-docs
