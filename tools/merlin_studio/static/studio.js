@@ -755,6 +755,34 @@ function agoTxt(m) {
   return m < 1 ? "à l'instant" : m < 60 ? `il y a ${m} min`
        : m < 1440 ? `il y a ${Math.round(m / 60)} h` : `il y a ${Math.round(m / 1440)} j`;
 }
+// --- LA CHAÎNE DE DEV : une échelle, et qui l'on attend ------------------------------------
+// L'attente est le chiffre qui SERT : une chaîne arrêtée depuis la veille l'est presque
+// toujours sur un tap oublié, jamais sur une panne. On l'affiche donc en tête, pas en note.
+async function refreshSequence() {
+  const d = await api('/api/sequence');
+  const box = $('#seq-list');
+  if (!d || !d.etapes) { box.innerHTML = '<div class="mut">le séquenceur n\'a pas encore tourné</div>'; return; }
+  const attend = d.etat === "t'attend";
+  $('#seq-meta').textContent = d.etat === 'au repos' ? 'au repos'
+    : (attend ? `t'attend depuis ${duree_courte(d.attente_s)}` : 'en cours');
+  const barreaux = d.etapes.map(e => {
+    const ici = e.n === d.etape_courante;
+    // Trois états seulement, et le troisième est celui qui compte : franchi, ici, à venir.
+    const marque = e.franchie ? '✓' : ici ? '▸' : '·';
+    const toi = e.qui === 'toi';
+    return `<div class="route-item ${ici && attend ? 'err' : ''}" style="${e.franchie ? 'opacity:.55' : ''}">
+      <div class="route-quoi">${marque} ${esc(e.titre)}${toi ? ' <span class="mut">— toi</span>' : ''}</div>
+      <div class="route-pourquoi mut">${esc(e.detail)}</div>
+    </div>`;
+  }).join('');
+  const bandeau = d.etat === 'au repos'
+    ? `<div class="mut" style="margin-bottom:8px">${esc(d.resume)}</div>`
+    : `<div class="route-titre" style="margin-bottom:8px">${esc(d.resume)}${
+        attend ? ` · depuis ${duree_courte(d.attente_s)}` : ''}</div>`;
+  box.innerHTML = bandeau + barreaux;
+}
+
+
 // --- FEUILLE DE ROUTE : le prévu, l'en-cours, le fait --------------------------------------
 // Rendue en trois blocs plutôt qu'en trois colonnes : sur un téléphone, trois colonnes
 // deviennent trois bandes illisibles. L'ordre suit la question qu'on se pose en ouvrant
@@ -1315,7 +1343,7 @@ if (mBtn) mBtn.onclick = async () => {
 const BARRE = () => { refreshClock(); refreshSum(); refreshProposals(); refreshBoite(); };
 const PAR_ONGLET = {
   play:    () => { refreshPlay(); refreshRun(); },
-  journal: () => { refreshRoute(); refreshChapitres(); refreshJournal(); },
+  journal: () => { refreshSequence(); refreshRoute(); refreshChapitres(); refreshJournal(); },
   ideas:   () => refreshProposals(),
   talk:   () => {},                       // talkPoll a sa propre minuterie
   health: () => { refreshHealth(); refreshCpu(); refreshHost(); },

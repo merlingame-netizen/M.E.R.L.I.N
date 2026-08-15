@@ -284,6 +284,11 @@ def build_app() -> Flask:
         """La feuille de route : ce qui est prévu, en cours, fait — avec la preuve."""
         return jsonify(probes.feuille_de_route())
 
+    @app.route("/api/sequence")
+    def api_sequence():
+        """L'échelle de la chaîne de dev : où elle en est, et qui elle attend."""
+        return jsonify(probes.sequence())
+
     # ── webhook GitHub : push sur la branche du jeu → CI immédiate ───────────
     def _game_env() -> dict:
         env = {}

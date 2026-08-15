@@ -256,6 +256,14 @@
       "cmd": "a_controle.sh",
       "enabled": true,
       "desc": "Confronte ce que les agents déclarent à des traces vérifiables et signale les écarts dans Décider."
+    },
+    {
+      "id": "sequence",
+      "label": "Le Séquenceur",
+      "schedule": "3,13,23,33,43,53 * * * *",
+      "cmd": "a_sequence.sh",
+      "enabled": true,
+      "desc": "Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi."
     }
   ]
 }

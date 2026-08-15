@@ -970,3 +970,16 @@ def feuille_de_route() -> dict:
         "compte": {k: len(v) for k, v in par_etat.items()},
         "checked_at": _now(),
     }
+
+
+def sequence() -> dict:
+    """L'échelle de la chaîne de dev, telle que l'agent `sequence` l'a relue. Never raises.
+
+    Lecture d'un fichier seul : aucun calcul ici. Le portail ne doit jamais devenir l'endroit
+    où l'on décide de l'état du monde — sinon deux lecteurs (lui et l'agent) pourraient en
+    donner deux versions, et on ne saurait plus laquelle croire.
+    """
+    d = _read_json(Path.home() / ".cache" / "merlin-agents" / "state" / "seq-dev.json", {})
+    if not isinstance(d, dict):
+        return {}
+    return d

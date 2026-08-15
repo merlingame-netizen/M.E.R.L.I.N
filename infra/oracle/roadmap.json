@@ -71,9 +71,9 @@
     {
       "id": "v29",
       "titre": "Le séquenceur de la boucle de dev autonome",
-      "etat": "prevu",
+      "etat": "fait",
       "pourquoi": "Les agents sont indépendants et pilotés par cron : rien ne montre qu'ils forment une chaîne. On veut lire 'idée → code → test → déploie → vérifie' comme une échelle, et voir OÙ ça casse.",
-      "preuve": ""
+      "preuve": "a_sequence.sh + sequence.py · échelle de 6 barreaux, dont 2 qui sont des gestes de Maxime ; lit l'état du monde sans relancer aucun agent"
     },
     {
       "id": "v30",
