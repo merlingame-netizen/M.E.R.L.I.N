@@ -49,6 +49,16 @@ var _llm: Object = null
 # fraction de seconde plus tard (un ecran, un harnais de mesure) manque le signal et attend un
 # moteur qui a deja renonce. Cet etat repond aux retardataires.
 var _boot_error: String = ""
+# Reprises déjà tentées après un moteur qui s'est déclaré mort. Bornées : chaque reprise ABANDONNE
+# l'ancien objet natif sans le libérer (son fil d'inférence est coincé DANS le contexte llama —
+# le libérer serait un use-after-free), donc chacune laisse ~6 Go en mémoire. Une passe est
+# abordable sur les 14 Go libres ; en enchaîner sans limite finirait par saturer la machine.
+# Posé quand le natif annonce qu'il s'est désactivé. C'est le RÉSULTAT d'une génération qui
+# porte ce message, jamais `_boot_error` (qui ne parle que du démarrage) — s'appuyer sur ce
+# dernier ne détecterait donc jamais rien.
+var _moteur_mort: bool = false
+var _reprises: int = 0
+const REPRISES_MAX: int = 1
 var _model_ready: bool = false
 var _busy: bool = false
 var _t_start_ms: int = 0
@@ -106,11 +116,19 @@ func _boot() -> void:
 		_boot_error = "GDExtension MerlinLLM absente"
 		emit_signal("model_failed", "GDExtension MerlinLLM absente")
 		return
+	if not _monter_moteur():
+		return
+
+
+# Construit un objet natif NEUF et lance son chargement en tâche de fond. Partagé par le
+# démarrage et par la reprise après panne : les deux ont exactement le même besoin, et les
+# dupliquer garantirait qu'un jour l'un des deux dérive de l'autre.
+func _monter_moteur() -> bool:
 	_llm = ClassDB.instantiate("MerlinLLM")
 	if _llm == null:
 		_boot_error = "Instanciation MerlinLLM échouée"
 		emit_signal("model_failed", "Instanciation MerlinLLM échouée")
-		return
+		return false
 	# set_context_size DOIT précéder load_model (ctx créé au chargement) — sur le thread principal.
 	_llm.set_context_size(N_CTX)
 	# v10.18 — load_model (bloquant ~2-3s) lancé DANS UN THREAD → ZÉRO freeze : l'écran de chargement
@@ -118,9 +136,11 @@ func _boot() -> void:
 	_load_path = _resolve_model_path()
 	_load_done = false
 	_load_err = 0
+	_model_ready = false
 	_load_thread = Thread.new()
 	_load_thread.start(_threaded_load)
 	set_process(true)  # pour poller la fin du thread de chargement
+	return true
 
 
 # TEC-07-A — résout le chemin DISQUE du GGUF (llama.cpp lit par fopen : jamais depuis le .pck).
@@ -175,6 +195,22 @@ func _finish_load() -> void:
 # Pourquoi le moteur n'est pas la — chaine vide s'il va bien ou s'il charge encore.
 func boot_error() -> String:
 	return _boot_error
+
+
+# Le natif ne publie pas `engine_dead` ; on le déduit de son propre message d'erreur, seul
+# canal disponible sans recompiler l'extension. Fragile par nature (on lit une chaîne), donc on
+# teste les DEUX formulations émises par merlin_llm.cpp et on garde la vérification à un seul
+# endroit plutôt que dispersée.
+func _reprise_necessaire() -> bool:
+	return _moteur_mort
+
+
+# Le natif ne publie pas son drapeau `engine_dead` : son message d'erreur est le seul canal
+# disponible sans recompiler l'extension. Lire une chaîne est fragile par nature, d'où les DEUX
+# formulations émises par merlin_llm.cpp (lignes 121 et 144) testées ici, à un seul endroit.
+func _noter_si_moteur_mort(err: String) -> void:
+	if err.contains("stuck") or err.contains("LLM disabled"):
+		_moteur_mort = true
 
 
 func is_ready() -> bool:
@@ -252,6 +288,33 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 		return {"error": "modele non pret"}
 	if _busy:
 		return {"error": "generation deja en cours"}
+	# REPRISE APRÈS MORT DU MOTEUR (mesuré chez Maxime le 2026-08-16). Enchaînement observé :
+	# une génération dépasse GEN_TIMEOUT_MS, on l'annule, le fil d'inférence C++ reste coincé dans
+	# le contexte llama, et à l'appel suivant le natif pose `engine_dead` — DÉFINITIVEMENT. Toute
+	# la session est alors perdue : « Merlin réfléchit » puis retour au menu, à chaque partie,
+	# jusqu'à ce qu'on relance le jeu. Personne ne peut deviner qu'il faut relancer.
+	#
+	# On repart d'un objet natif NEUF plutôt que de rappeler `load_model` sur le mort : celui-ci
+	# libère le contexte que le fil coincé utilise encore — un use-after-free, donc un plantage
+	# possible. L'ancien objet est ABANDONNÉ tel quel (le C++ détache déjà son fil) ; il emporte
+	# sa mémoire, d'où la borne REPRISES_MAX.
+	if _reprise_necessaire():
+		if _reprises >= REPRISES_MAX:
+			return {"error": "moteur mort — reprise déjà tentée, relancer le jeu"}
+		_reprises += 1
+		push_warning("[MerlinNative] moteur mort après une génération coincée — reprise %d/%d"
+				% [_reprises, REPRISES_MAX])
+		if not _monter_moteur():
+			return {"error": "moteur mort — reprise impossible"}
+		# Le rechargement tourne dans un thread ; on l'attend, borné. Sans cette attente on
+		# rendrait « modèle non prêt » juste après avoir annoncé une reprise — incompréhensible.
+		var dl: int = Time.get_ticks_msec() + 60000
+		while not _model_ready and Time.get_ticks_msec() < dl:
+			await get_tree().process_frame
+		if not _model_ready:
+			return {"error": "moteur mort — rechargement trop long"}
+		_moteur_mort = false
+		_boot_error = ""
 	var creative: bool = opts.get("creative", true)
 	var max_tokens: int = opts.get("max_tokens", 250)
 	var grammar: String = opts.get("grammar", "")
@@ -314,6 +377,8 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 	var elapsed_ms: int = Time.get_ticks_msec() - _t_start_ms
 	_busy = false
 	set_process(false)
+	if result.has("error"):
+		_noter_si_moteur_mort(str(result["error"]))
 	var txt: String = _sanitize(str(result.get("text", "")))
 	if result.has("text"):
 		result["text"] = txt  # le consommateur reçoit le texte NETTOYÉ
