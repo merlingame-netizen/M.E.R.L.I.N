@@ -32,9 +32,18 @@ const TOP_P: float = 0.9
 const TOP_K: int = 40
 const REPEAT_PENALTY: float = 1.1
 
-# Timeout d'une génération (auto-polling). Le modèle est lent (~3 tok/s) → 90s couvre une longue
-# génération ; au-delà = blocage présumé → on annule pour ne pas figer (jeu ou harness).
-const GEN_TIMEOUT_MS: int = 90000
+# Délai d'une génération. MESURÉ le 2026-08-16 sur la VM, sélection complète (3 titres) :
+#   · machine libre ................ 63,2 s → RÉUSSIE
+#   · jeu en train de rendre ....... 90,4 s → dépassait les 90 s, donc ANNULÉE
+# 90 s laissait 70 % de marge sur le meilleur cas et zéro sur le cas réel. Ce n'est pas un
+# garde-fou, c'est un piège : l'annulation coince le fil d'inférence côté C++ et le moteur se
+# déclare mort POUR TOUTE LA SESSION (« Previous generation stuck »). Une génération légitime
+# était donc transformée en panne définitive.
+#
+# 150 s laisse une vraie marge au-dessus du pire cas mesuré. Ce n'est PAS masquer la lenteur :
+# le joueur ne subit pas ce délai (l'écran de sélection renonce de lui-même à 120 s et le lui
+# dit) — il ne sert qu'à éviter qu'une génération un peu longue ne brique le moteur.
+const GEN_TIMEOUT_MS: int = 150000
 
 # Marqueurs de template/tokens spéciaux que gemma4 émet parfois en TEXTE (pas comme token EOT).
 # On TRONQUE la sortie au 1er marqueur (tout ce qui suit = divagation) puis on nettoie les résidus.
