@@ -10,6 +10,14 @@
       "desc": "Relance le jeu s'il est mort alors qu'il devait tourner (état désiré posé par PLAY/STOP)."
     },
     {
+      "id": "game-idle",
+      "label": "Veille du jeu",
+      "schedule": "1-59/2 * * * *",
+      "cmd": "a_game_idle.sh",
+      "enabled": true,
+      "desc": "Coupe le jeu apres 5 min sans spectateur, pour rendre les 4 coeurs au developpement."
+    },
+    {
       "id": "game-autosync",
       "label": "Synchro du jeu",
       "schedule": "*/15 * * * *",
