@@ -29,6 +29,15 @@ const GAME_MUSIC: String = "res://music/loop/VOYAGEUR - INTRO (Tri Martolod) (Re
 # tranche au milieu de ce qu'il est censé protéger ne protège rien.
 const TITLES_CAP_S: float = 120.0
 
+# Images par seconde pendant l'attente. 5 et non 1 : en dessous, les fondus et les points
+# cyclants deviennent saccadés au point de faire croire à un blocage — l'écran doit rester
+# VIVANT pendant qu'il attend, c'est ce qui distingue « il travaille » de « il a planté ».
+const FPS_ATTENTE: int = 5
+# Retenu HORS de la coroutine : si la scène est libérée pendant l'attente, celle-ci ne reprend
+# jamais et la restauration en ligne ne s'exécuterait pas — le JEU ENTIER resterait à 5 images
+# par seconde, un mal bien pire que celui qu'on soigne. _exit_tree rattrape ce cas.
+var _fps_avant: int = -1
+
 var _cards_box: HBoxContainer
 var _title_lbl: Label
 var _back_btn: Button
@@ -71,7 +80,19 @@ func _load_selection() -> void:
 	# Titres FORCÉMENT écrits par le modèle. Il n'y a plus de bouton « passer » et plus de secours :
 	# soit Merlin écrit, soit on renonce et on retourne au menu. take_selection() ne sert plus que
 	# de récupérateur et rend un tableau VIDE tant que rien n'a été écrit.
+	# CADENCE RÉDUITE PENDANT QUE MERLIN ÉCRIT (mesuré 2026-08-16). Le jeu consomme ~343 % de CPU
+	# — près de 3,5 cœurs sur 4 — en rendu LOGICIEL (llvmpipe, pas de GPU sur la VM). Le moteur LLM
+	# vit DANS CE MÊME PROCESSUS : il se dispute les cœurs avec le rendu. D'où l'écart qui a résisté
+	# deux jours — 32 s en sonde headless contre plus de 90 s en jeu, même code, même modèle.
+	#
+	# Cet écran est une ATTENTE : un voile immobile et trois points qui clignotent. Personne ne
+	# distingue 5 images par seconde de 30 sur ce contenu, mais le modèle, lui, récupère les cœurs.
+	# Restauré DANS TOUS LES CAS plus bas — un jeu resté à 5 images/s après coup serait pire que le
+	# mal qu'on soigne.
+	_fps_avant = Engine.max_fps
+	Engine.max_fps = FPS_ATTENTE
 	var ok: bool = await _force_wait_titles(sc)
+	_rendre_la_cadence()
 	var sels: Array = await sc.take_selection() if ok else []
 	if not is_inside_tree():
 		return
@@ -309,6 +330,18 @@ func _build_ui() -> void:
 	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
+
+
+# Rend la cadence d'origine. Idempotent : appelée en fin d'attente ET à la sortie de scène,
+# sans qu'aucun des deux chemins n'ait à savoir si l'autre est déjà passé.
+func _rendre_la_cadence() -> void:
+	if _fps_avant >= 0:
+		Engine.max_fps = _fps_avant
+		_fps_avant = -1
+
+
+func _exit_tree() -> void:
+	_rendre_la_cadence()
 
 
 func _on_back() -> void:
