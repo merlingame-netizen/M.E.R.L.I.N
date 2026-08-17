@@ -78,5 +78,14 @@ echo "[native-inner] projet joué : $GAME_DIR (max-fps=${MAX_FPS:-30}, audio=$AU
 # Plafonner les FPS libère massivement le CPU : en rendu logiciel, viser 60 fps
 # sature les 4 cœurs pour rien. 30 suffit largement à un jeu de cartes et laisse
 # du CPU à l'encodage VNC — donc MOINS de latence perçue.
-exec "$GODOT_BIN" --path . --rendering-driver opengl3 --audio-driver "$AUDIO_DRIVER" \
-    --max-fps "${MAX_FPS:-30}" --resolution "$RES" > "$RUNDIR/godot.log" 2>&1
+# MERLIN_SCENE : jouer UNE scène précise au lieu de la scène principale. Sert à éprouver un
+# écran dans son environnement RÉEL — même Xvfb, même rendu logiciel, mêmes drapeaux — là où un
+# smoke headless ne reproduit ni le rendu ni la contention qui va avec. Sans cette poignée, la
+# seule façon de tester l'écran de sélection était de le lancer à côté, dans des conditions qui
+# ne sont pas celles du joueur : c'est ce qui a fait conclure trois fois de travers.
+# MERLIN_QUIT_AFTER : borne la durée, pour qu'un test ne laisse pas une instance derrière lui.
+GODOT_ARGS=(--path . --rendering-driver opengl3 --audio-driver "$AUDIO_DRIVER"
+    --max-fps "${MAX_FPS:-30}" --resolution "$RES")
+[ -n "${MERLIN_SCENE:-}" ] && GODOT_ARGS+=("$MERLIN_SCENE")
+[ -n "${MERLIN_QUIT_AFTER:-}" ] && GODOT_ARGS+=(--quit-after "$MERLIN_QUIT_AFTER")
+exec "$GODOT_BIN" "${GODOT_ARGS[@]}" > "$RUNDIR/godot.log" 2>&1
