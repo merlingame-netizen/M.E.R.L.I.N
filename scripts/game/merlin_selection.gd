@@ -42,6 +42,8 @@ var _fps_avant: int = -1
 var _t_debut: int = 0
 
 var _cards_box: HBoxContainer
+var _backdrop: MerlinSceneArt          # décor de fond, arrêté pendant la génération
+var _decor_gele: bool = false
 var _title_lbl: Label
 var _back_btn: Button
 var _overlay: Panel
@@ -99,9 +101,11 @@ func _load_selection() -> void:
 	# mal qu'on soigne.
 	_fps_avant = Engine.max_fps
 	Engine.max_fps = FPS_ATTENTE
+	_geler_le_decor()
 	_t_debut = Time.get_ticks_msec()
 	var ok: bool = await _force_wait_titles(sc)
 	_rendre_la_cadence()
+	_degeler_le_decor()
 	var sels: Array = await sc.take_selection() if ok else []
 	if not is_inside_tree():
 		return
@@ -307,7 +311,9 @@ func _build_ui() -> void:
 	add_child(bg)
 
 	# v10.20 — fond SCÈNE VIVANTE (DA alignée sur le menu, user 2026-06-29) : même monde, dimmé.
-	add_child(MerlinOrnament.scene_backdrop(0.40))
+	# Retenu dans un champ (2026-08-18) : il faut pouvoir l'ARRÊTER pendant que Merlin écrit.
+	_backdrop = MerlinOrnament.scene_backdrop(0.40)
+	add_child(_backdrop)
 
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -380,6 +386,45 @@ func _build_ui() -> void:
 	_overlay.visible = false
 
 
+# ARRÊTER LE DÉCOR PENDANT QUE MERLIN ÉCRIT (mesuré 2026-08-18).
+#
+# LE CHIFFRE : la même génération prend 31,5 s sans rien dessiner et 112,4 s dans cet écran.
+# Quatre-vingt-une secondes d'écart pour de la décoration. La VM n'a pas de carte graphique —
+# tout est dessiné par le processeur (llvmpipe), et le modèle vit DANS LE MÊME PROCESSUS : chaque
+# pixel peint est un pixel volé à Merlin.
+#
+# Et il y a DEUX décors procéduraux plein écran empilés ici, chacun avec près de quatre-vingt-dix
+# appels de dessin : le fond, et la scène du voile. Le fond est recouvert à 96 % par le voile —
+# on le redessinait donc intégralement pour ne rien montrer.
+#
+# `set_process(false)` en plus de `set_animated(false)` : sans lui `_process` continue de tourner
+# et de demander des redessins (feuilles, regard, halo). Couper l'animation sans couper le
+# processus ne gèlerait que l'apparence, pas le coût.
+#
+# Ce que le joueur perd : Merlin ne respire plus pendant qu'il écrit. Ce qu'il gagne : Merlin
+# écrit. Arbitrage assumé (décision Maxime, 2026-08-18).
+func _geler_le_decor() -> void:
+	if _decor_gele:
+		return
+	_decor_gele = true
+	for art in [_backdrop, _overlay_art]:
+		if art != null and is_instance_valid(art):
+			art.set_animated(false)
+			art.set_process(false)
+
+
+# Idempotent, et appelé sur TOUS les chemins de sortie : un décor resté gelé après coup donnerait
+# un écran mort, exactement le défaut qu'on cherche à éviter ailleurs.
+func _degeler_le_decor() -> void:
+	if not _decor_gele:
+		return
+	_decor_gele = false
+	for art in [_backdrop, _overlay_art]:
+		if art != null and is_instance_valid(art):
+			art.set_process(true)
+			art.set_animated(true)
+
+
 # Rend la cadence d'origine. Idempotent : appelée en fin d'attente ET à la sortie de scène,
 # sans qu'aucun des deux chemins n'ait à savoir si l'autre est déjà passé.
 func _rendre_la_cadence() -> void:
@@ -390,6 +435,7 @@ func _rendre_la_cadence() -> void:
 
 func _exit_tree() -> void:
 	_rendre_la_cadence()
+	_decor_gele = false   # les nœuds partent avec la scène : rien à dégeler, mais l'état doit être net
 
 
 func _on_back() -> void:
