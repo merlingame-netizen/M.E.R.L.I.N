@@ -33,6 +33,9 @@ const TITLES_CAP_S: float = 120.0
 # cyclants deviennent saccadés au point de faire croire à un blocage — l'écran doit rester
 # VIVANT pendant qu'il attend, c'est ce qui distingue « il travaille » de « il a planté ».
 const FPS_ATTENTE: int = 5
+# Attente maximale de l'ouverture après le choix du sentier. Mesuré : tranche d'arc ~110 s +
+# légende ~75 s dans le pire cas à froid ; au-delà de ce cap on part en jeu avec ce qui existe.
+const OUVERTURE_CAP_S: float = 240.0
 # Retenu HORS de la coroutine : si la scène est libérée pendant l'attente, celle-ci ne reprend
 # jamais et la restauration en ligne ne s'exécuterait pas — le JEU ENTIER resterait à 5 images
 # par seconde, un mal bien pire que celui qu'on soigne. _exit_tree rattrape ce cas.
@@ -45,6 +48,12 @@ var _cards_box: HBoxContainer
 var _backdrop: MerlinSceneArt          # décor de fond, arrêté pendant la génération
 var _decor_gele: bool = false
 var _reveles: int = 0                  # parchemins déjà montrés depuis le flux d'écriture
+# Le joueur a CHOISI : la coroutine _load_selection doit rendre la main sans toucher à l'écran
+# (revue adversariale 2026-08-18 : sa reprise démontait le voile de _on_pick, dégelait le décor
+# et restaurait une cadence déjà bridée — le jeu entier restait à 5 images/s pour la session).
+var _picked: bool = false
+# Clic sur le voile « Merlin trace ton sentier » : on part en jeu avec ce qui est déjà écrit.
+var _saut_ouverture: bool = false
 # Instant du PREMIER parchemin. C'est lui la vraie mesure de l'attente : le joueur ne compte pas
 # les secondes jusqu'au troisième titre, il compte celles où il n'a rien devant les yeux.
 var _premier_ms: int = -1
@@ -118,6 +127,8 @@ func _load_selection() -> void:
 	var ok: bool = await _force_wait_titles(sc)
 	if mn != null and mn.has_signal("generation_chunk") and mn.generation_chunk.is_connected(_on_flux):
 		mn.generation_chunk.disconnect(_on_flux)
+	if _picked:
+		return  # cadence, décor et voile appartiennent à _on_pick maintenant — ne rien démonter
 	_rendre_la_cadence()
 	_degeler_le_decor()
 	var sels: Array = await sc.take_selection() if ok else []
@@ -152,6 +163,8 @@ func _force_wait_titles(sc: Node) -> bool:
 	var t0: int = Time.get_ticks_msec()
 	var essai_affiche: int = 1
 	while is_inside_tree():
+		if _picked:
+			return false  # le joueur a choisi pendant l'écriture : _on_pick pilote désormais l'écran
 		if sc.has_method("is_selection_ready") and sc.is_selection_ready():
 			return true
 		if sc.has_method("is_selection_failed") and sc.is_selection_failed():
@@ -316,33 +329,57 @@ func _on_pick(title: String, pitch: String) -> void:
 	if _busy:
 		return
 	_busy = true
+	_picked = true
 	var sc: Node = get_node("/root/MerlinScenario")
 	var skel: Dictionary = sc.build_skeleton(title, pitch)
 	get_node("/root/MerlinRun").new_run(skel)
 	# L'OUVERTURE EST ATTENDUE ICI, sur le vrai chemin joueur (2026-08-18). L'ancien fire-and-forget
 	# lançait l'arc « en arrière-plan » au moment même où la scène de jeu chargeait : le moteur
 	# mono-place était pris par la résolution du beat 1, l'arc ne gagnait jamais, et le joueur
-	# jouait toute la partie sur l'arc en dur avec l'intro en dur. Le harnais de test attendait,
-	# lui — le joueur réel était le seul à ne pas en profiter.
+	# jouait toute la partie sur l'arc en dur avec l'intro en dur.
 	#
-	# Le voile réutilise le montage existant, décor gelé et cadence réduite (mêmes helpers que
-	# l'attente des titres) : le modèle a les cœurs, l'écran reste vivant, et à l'arrivée sur le
-	# pop-up d'intro la légende et les premières scènes sont écrites.
+	# QUATRE gardes, toutes issues de la revue adversariale du 2026-08-18 :
+	# - capture de cadence IDEMPOTENTE : si l'attente des titres a déjà bridé à 5 images/s,
+	#   recapturer ici écraserait la valeur d'origine et le jeu resterait bridé pour la session ;
+	# - _picked fait rendre la main à _load_selection sans qu'elle touche à l'écran ;
+	# - le voile est CLIQUABLE : un clic part en jeu avec ce qui est déjà écrit (le reste
+	#   continue en fond, l'intro en dur sera marquée au journal) ;
+	# - un CAP borne l'attente — un moteur coincé ne doit jamais donner un voile éternel.
 	_show_overlay("Merlin trace ton sentier")
-	_fps_avant = Engine.max_fps
+	if _overlay != null and not _overlay.gui_input.is_connected(_on_ouverture_input):
+		_overlay.gui_input.connect(_on_ouverture_input)
+	if _fps_avant < 0:
+		_fps_avant = Engine.max_fps
 	Engine.max_fps = FPS_ATTENTE
 	_geler_le_decor()
-	await sc.prepare_arc_ouverture(skel)
-	_rendre_la_cadence()
-	_degeler_le_decor()
+	var fini: Array = [false]
+	_ecrire_ouverture(sc, skel, fini)
+	var dl: int = Time.get_ticks_msec() + int(OUVERTURE_CAP_S * 1000.0)
+	while not fini[0] and not _saut_ouverture and Time.get_ticks_msec() < dl and is_inside_tree():
+		await get_tree().create_timer(0.2).timeout
 	if not is_inside_tree():
 		return
-	# Le reste de l'arc s'écrit en fond pendant les premiers beats.
-	sc.prepare_arc(skel)
+	_rendre_la_cadence()
+	_degeler_le_decor()
 	# Transition à l'encre, sans légende (user 2026-08-14) : le montage « zoom vers Merlin » est retiré
 	# — il montrait Merlin seul, agrandi, sur fond sombre, sans rien dire. Les captions CANNÉES restent
 	# neutralisées depuis la Vague D (D1) : aucun panneau de texte à la bascule.
 	MerlinTransition.change_scene(GAME_SCENE)
+
+
+# Écrit l'ouverture (première tranche + légende d'intro), PUIS enchaîne la suite de l'arc en
+# fond. C'est cette coroutine — et non _on_pick — qui lance la suite : ainsi, que l'attente ait
+# été menée au bout, sautée au clic ou coupée par le cap, la suite part toujours exactement une
+# fois, derrière la garde anti-réentrance du scénario.
+func _ecrire_ouverture(sc: Node, skel: Dictionary, fini: Array) -> void:
+	await sc.prepare_arc_ouverture(skel)
+	fini[0] = true
+	sc.prepare_arc(skel)
+
+
+func _on_ouverture_input(e: InputEvent) -> void:
+	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+		_saut_ouverture = true
 
 
 func _build_ui() -> void:
@@ -430,8 +467,8 @@ func _build_ui() -> void:
 # Chaque morceau de texte écrit par le modèle passe ici. On n'attend pas la fin : dès qu'un objet
 # JSON se referme, son parchemin peut être posé.
 func _on_flux(cumul: String) -> void:
-	if not is_inside_tree():
-		return
+	if not is_inside_tree() or _picked:
+		return  # après le choix, un morceau tardif retirerait le voile de _on_pick (_hide_overlay)
 	# DEUX TÉMOINS, pour distinguer deux causes qui donnent le même symptôme (« le premier
 	# parchemin arrive tard ») : le flux qui démarre tard, ou le premier objet JSON qui se ferme
 	# tard parce que le modèle écrit autre chose avant. Sans eux, on choisirait au hasard laquelle

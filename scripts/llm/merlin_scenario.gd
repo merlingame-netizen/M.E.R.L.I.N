@@ -57,13 +57,17 @@ const MIN_RENCONTRE_PER_RUN: int = 2
 # pour marquer les beats concernés dans le document : « écrit par le banc de secours ».
 var _secours_derniers: int = 0
 const ARC_TRANCHE: int = 4
-# Combien de fois on redemande une tranche avant de renoncer. Le moteur est mono-place : une
-# résolution de beat, l'amorçage du préfixe ou une autre tranche peuvent l'occuper au mauvais
-# moment, et ces collisions durent des secondes, pas des minutes.
-const ARC_ESSAIS: int = 4
-# Combien de temps on laisse le moteur finir ce qu'il fait avant de redemander. L'écriture d'une
-# issue coûte ~35 s (mesuré sur la VM) : au-dessous, on redemanderait pour rien.
-const ARC_ATTENTE_S: float = 45.0
+# BUDGET À L'HORLOGE, et non plus un compte d'essais (revue adversariale 2026-08-18). Le moteur
+# est mono-place et la résolution du beat courant passe TOUJOURS devant : elle annule une tranche
+# en vol à chaque pose. Compter ces collisions comme des échecs brûlait le crédit en deux beats
+# et condamnait toute la fin de quête au secours. Une collision n'est pas un échec : seul un
+# moteur LIBRE qui rend un tableau vide en est un (deux suffisent à renoncer).
+const ARC_TRANCHE_BUDGET_S: float = 300.0
+const ARC_ECHECS_REELS_MAX: int = 2
+# Combien de temps on laisse le moteur finir ce qu'il fait avant de retenter. Une résolution
+# coûte jusqu'à ~86 s quand son préfixe a été évincé par un prompt d'arc : 45 s faisaient
+# retomber la retentative en plein milieu, comptée à tort comme un échec.
+const ARC_ATTENTE_S: float = 90.0
 const QUETE_BEATS_MIN: int = 8
 const QUETE_BEATS_MAX: int = 25
 
@@ -1963,7 +1967,20 @@ func prepare_arc(scenario: Dictionary) -> void:
 	await _prepare_arc(scenario, 0)
 
 
+# Garde anti-réentrance : un saut du voile d'ouverture laisse la première tranche en vol pendant
+# que la suite est demandée — deux chantiers concurrents écriraient les mêmes scènes deux fois.
+var _arc_chantier: bool = false
+
+
 func _prepare_arc(scenario: Dictionary, tranches_max: int) -> void:
+	if _arc_chantier:
+		return
+	_arc_chantier = true
+	await _prepare_arc_corps(scenario, tranches_max)
+	_arc_chantier = false
+
+
+func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 	# v10.14 — chain-aware : si le scénario est une CHAÎNE (beats multi-quêtes), l'arc couvre la
 	# quête du PREMIER beat (les suivantes passent par begin_quest). Appelants inchangés.
 	var beats_all: Array = scenario.get("beats", [])
@@ -2039,30 +2056,37 @@ func _prepare_arc(scenario: Dictionary, tranches_max: int) -> void:
 			types_tranche.append(str((beats[i] as Dictionary).get("type", "Exploration")))
 			tags_tranche.append(picked[i] if i < picked.size() else [])
 		var precedent: String = _resume_arc(arc_complet)
-		# PATIENCE, ET NON ABANDON. Première version : un `break` dès qu'une tranche rendait vide.
-		# Or le moteur est MONO-PLACE : au tout premier appel, l'amorçage du préfixe écrivait
-		# encore, `generate` a répondu « génération déjà en cours », et ce break a tué l'arc POUR
-		# TOUTE LA PARTIE — zéro tranche écrite sur 25 beats, constaté le 2026-08-18. Une collision
-		# d'une douzaine de secondes ne doit pas coûter l'histoire entière.
+		# PATIENCE, ET NON ABANDON. Le moteur est mono-place et la résolution du beat courant passe
+		# toujours devant : elle peut annuler cette tranche à chaque pose de cartes. On retente
+		# donc dans un BUDGET d'horloge, et seul un moteur LIBRE qui rend vide compte comme un
+		# échec réel — une collision n'a rien prouvé sur la capacité du modèle à écrire.
 		var morceau: Array = []
-		for essai in ARC_ESSAIS:
+		var echecs_reels: int = 0
+		var dl_tranche: int = Time.get_ticks_msec() + int(ARC_TRANCHE_BUDGET_S * 1000.0)
+		while morceau.is_empty() and echecs_reels < ARC_ECHECS_REELS_MAX \
+				and Time.get_ticks_msec() < dl_tranche:
 			await _laisser_le_moteur_finir()
+			if str(_run_thread.get("title", "")) != title:
+				return  # nouvelle partie pendant l'attente : cet arc n'a plus de destinataire
+			var mn_a: Node = _mn()
+			if mn_a == null or not mn_a.is_ready() or mn_a.is_busy():
+				await get_tree().create_timer(1.0).timeout
+				continue  # toujours occupé : on repatiente, ce n'est PAS un échec
 			morceau = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
 					debut, total, precedent)
-			print("[MerlinScenario] arc tranche %d-%d essai %d : %d scène(s)"
-					% [debut + 1, fin, essai + 1, morceau.size()])
-			if not morceau.is_empty():
-				break
-			# Le titre a changé (nouvelle partie pendant notre attente) → cet arc n'a plus de
-			# destinataire. On s'arrête plutôt que d'écrire dans l'histoire de quelqu'un d'autre.
-			if str(_run_thread.get("title", "")) != title:
-				return
+			if morceau.is_empty():
+				echecs_reels += 1
+				print("[MerlinScenario] arc tranche %d-%d : échec réel %d/%d"
+						% [debut + 1, fin, echecs_reels, ARC_ECHECS_REELS_MAX])
+			else:
+				print("[MerlinScenario] arc tranche %d-%d : %d scène(s)"
+						% [debut + 1, fin, morceau.size()])
 		if str(_run_thread.get("title", "")) != title:
 			return
 		if morceau.is_empty():
 			# Épuisé pour de bon : on garde ce qui est écrit, le reste ira au secours — et on le DIT.
-			push_warning("[MerlinScenario] arc — tranche %d-%d abandonnée après %d essais : le secours prendra ces scènes"
-					% [debut + 1, fin, ARC_ESSAIS])
+			push_warning("[MerlinScenario] arc — tranche %d-%d abandonnée (budget ou échecs épuisés) : le secours prendra ces scènes"
+					% [debut + 1, fin])
 			break
 		for i in morceau.size():
 			arc_complet.append(morceau[i])
