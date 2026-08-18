@@ -37,6 +37,9 @@ const FPS_ATTENTE: int = 5
 # jamais et la restauration en ligne ne s'exécuterait pas — le JEU ENTIER resterait à 5 images
 # par seconde, un mal bien pire que celui qu'on soigne. _exit_tree rattrape ce cas.
 var _fps_avant: int = -1
+# Début de l'attente des titres. Sert au TÉMOIN de réussite : sans chiffre, « ça a marché » ne
+# se distingue pas de « ça a marché en deux minutes », qui est un défaut.
+var _t_debut: int = 0
 
 var _cards_box: HBoxContainer
 var _title_lbl: Label
@@ -51,6 +54,11 @@ var _overlay_base_txt: String = ""
 
 
 func _ready() -> void:
+	# TÉMOIN D'OUVERTURE. Cet écran ne parlait QUE lorsqu'il renonçait : une réussite était muette,
+	# donc indistinguable d'un écran jamais ouvert. Le 2026-08-18, un test lancé sur cette scène
+	# n'a laissé aucune trace, et il a fallu deux tours pour comprendre que le harnais coupait le
+	# jeu avant la fin — ce que cette seule ligne aurait dit tout de suite.
+	print("[MerlinSelection] écran ouvert · biome=%s" % str(get_node("/root/MerlinRun").biome))
 	_build_ui()
 	_animate_entrance()
 	_setup_music()
@@ -91,6 +99,7 @@ func _load_selection() -> void:
 	# mal qu'on soigne.
 	_fps_avant = Engine.max_fps
 	Engine.max_fps = FPS_ATTENTE
+	_t_debut = Time.get_ticks_msec()
 	var ok: bool = await _force_wait_titles(sc)
 	_rendre_la_cadence()
 	var sels: Array = await sc.take_selection() if ok else []
@@ -100,8 +109,15 @@ func _load_selection() -> void:
 		await _give_up()
 		return
 	_hide_overlay()
+	var titres: Array = []
 	for s in sels:
+		titres.append(str(s.get("title", "?")))
 		_add_parchemin(str(s.get("title", "?")), str(s.get("pitch", "")))
+	# La DURÉE, écrite par le jeu lui-même dans les conditions du joueur — rendu logiciel compris.
+	# Une sonde à côté ne mesure pas la même chose : elle ne dessine rien.
+	var mur: int = Time.get_ticks_msec() - _t_debut
+	print("[MerlinSelection] trois sentiers en %.1f s : %s" % [mur / 1000.0, str(titres)])
+	_verdict_e2e(true, "", mur, titres)
 
 
 # Attend les titres du modèle. Vrai si prêts ; faux si le modèle a déclaré forfait ou si le filet
@@ -159,6 +175,7 @@ func _give_up() -> void:
 			else:
 				motif = "aucune tentative — cause inconnue"
 		push_warning("[MerlinSelection] renoncement après %d essai(s) — %s" % [essais, motif])
+		_verdict_e2e(false, motif, Time.get_ticks_msec() - _t_debut, [])
 	_set_overlay_text("Merlin ne répond pas ce soir")
 	if _overlay_art != null:
 		_overlay_art.set_thinking(false)
@@ -167,6 +184,37 @@ func _give_up() -> void:
 	await get_tree().create_timer(2.2).timeout
 	if is_inside_tree():
 		MerlinTransition.change_scene(MENU_SCENE)
+
+
+# VERDICT DE BOUT EN BOUT. Actif uniquement si MERLIN_E2E=1 — le jeu normal ne s'arrête jamais
+# tout seul et n'écrit aucun fichier ici.
+#
+# POURQUOI DANS LA SCÈNE, et non dans une sonde à côté : `tools/probe_selection_e2e.gd` rend déjà
+# un verdict binaire, mais il tourne SANS rien dessiner. Or c'est justement le rendu logiciel qui
+# est suspecté de coûter les secondes. Un verdict qui ne passe pas par le vrai écran ne mesure
+# donc pas ce que Maxime vit. Celui-ci, si.
+#
+# Le fichier ET le code de sortie : le premier porte les détails, le second permet à un script de
+# refuser une livraison. Un test qui rend toujours 0 ne bloque rien.
+func _verdict_e2e(ok: bool, motif: String, mur_ms: int, titres: Array) -> void:
+	if OS.get_environment("MERLIN_E2E") != "1":
+		return
+	var d: Dictionary = {
+		"ok": ok, "motif": motif, "mur_ms": mur_ms, "titres": titres,
+		"biome": str(get_node("/root/MerlinRun").biome),
+		"t": Time.get_datetime_string_from_system(true),
+	}
+	var chemin: String = OS.get_environment("MERLIN_E2E_OUT")
+	if chemin == "":
+		chemin = "user://merlin_e2e_selection.json"
+	var f: FileAccess = FileAccess.open(chemin, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(d))
+		f.close()
+	else:
+		push_warning("[MerlinSelection] verdict e2e non écrit : %s illisible" % chemin)
+	print("[E2E_JSON] " + JSON.stringify(d))
+	get_tree().quit(0 if ok else 1)
 
 
 # v10.22 (QA user, screenshot) — carte À LA CHARTE du menu : hauteur AJUSTÉE AU CONTENU (fini le panneau
