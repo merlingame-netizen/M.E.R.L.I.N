@@ -1943,9 +1943,22 @@ func prepare_arc(scenario: Dictionary) -> void:
 	# porte l'ouverture, celle qui pose la situation), les suivantes s'écrivent pendant qu'on joue
 	# les précédentes. Chaque tranche reçoit le résumé de ce qui précède — sans quoi le fil se
 	# romprait exactement là où on cherche à le tenir.
+	# CHAQUE RENONCEMENT SE NOMME. Deux parties de suite se sont jouées sans une seule tranche
+	# d'arc, sans erreur au journal et sans trace : impossible de savoir laquelle de ces trois
+	# portes s'était refermée. La leçon est déjà écrite en mémoire (« un composant qui renonce
+	# doit le DIRE ») — elle s'applique ici.
+	print("[MerlinScenario] arc : %d beats, %d jeux de tags, verrou=%s, titre=%s" % [
+		beats.size(), picked.size(), str(_run_thread.get("arc_locked", false)),
+		str(_run_thread.get("title", ""))])
 	if picked.is_empty():
+		push_warning("[MerlinScenario] arc abandonné : aucun jeu de tags (0 beat exploitable)")
 		return
-	if bool(_run_thread.get("arc_locked", false)) or str(_run_thread.get("title", "")) != title:
+	if bool(_run_thread.get("arc_locked", false)):
+		push_warning("[MerlinScenario] arc abandonné : le fil est déjà verrouillé (un beat a été présenté avant)")
+		return
+	if str(_run_thread.get("title", "")) != title:
+		push_warning("[MerlinScenario] arc abandonné : le fil porte « %s », on écrivait pour « %s »"
+				% [str(_run_thread.get("title", "")), title])
 		return
 	var total: int = beats.size()
 	var arc_complet: Array = []
@@ -1969,6 +1982,8 @@ func prepare_arc(scenario: Dictionary) -> void:
 			await _laisser_le_moteur_finir()
 			morceau = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
 					debut, total, precedent)
+			print("[MerlinScenario] arc tranche %d-%d essai %d : %d scène(s)"
+					% [debut + 1, fin, essai + 1, morceau.size()])
 			if not morceau.is_empty():
 				break
 			# Le titre a changé (nouvelle partie pendant notre attente) → cet arc n'a plus de
