@@ -1236,6 +1236,8 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false, "arc_du_modele": false, "intro_legende": "",
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
+	_scene_cache = {}
+	_scene_jit_qn = -1
 	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
 	# UNE SEULE QUÊTE PAR PARTIE (décision Maxime, réaffirmée le 2026-08-18).
 	#
@@ -1676,9 +1678,19 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	var arc_tags: Array = _run_thread.get("arc_tags", [])
 	var narration: String = ""
 	var required: Array = []
-	if idx >= 0 and idx < arc.size() and str(arc[idx]).strip_edges() != "":
+	var provenance: String = "secours"
+	# LOOKAHEAD D'ABORD : une scène écrite en connaissant l'issue précédente bat toujours une
+	# scène pré-écrite à l'aveugle — c'est elle qui fait s'enchaîner les beats.
+	var qn_beat: int = int(beat.get("qn", beat.get("n", 1)))
+	if _scene_cache.has(qn_beat):
+		var entree: Dictionary = _scene_cache[qn_beat]
+		narration = str(entree.get("texte", ""))
+		required = (entree.get("tags", []) as Array).duplicate()
+		provenance = "lookahead"
+	if narration == "" and idx >= 0 and idx < arc.size() and str(arc[idx]).strip_edges() != "":
 		narration = str(arc[idx])
-	if idx >= 0 and idx < arc_tags.size() and (arc_tags[idx] is Array) and (arc_tags[idx] as Array).size() > 0:
+		provenance = "arc"
+	if required.is_empty() and idx >= 0 and idx < arc_tags.size() and (arc_tags[idx] is Array) and (arc_tags[idx] as Array).size() > 0:
 		required = (arc_tags[idx] as Array).duplicate()
 	# v1.0-V4a (BAL-14-A/TEC-17-A) — WHITELIST branchée au JEU RÉEL : le pool générable est calculé
 	# ICI, au moment de la présentation (les greffes l'ont fait évoluer depuis le squelette). Les
@@ -1751,6 +1763,7 @@ func build_situation(beat: Dictionary) -> Dictionary:
 					narration = narration.substr(0, 1).to_lower() + narration.substr(1)
 				narration = bridge + " " + narration
 	return {
+		"provenance": provenance,
 		"narration": narration,
 		"required_tags": required,
 		"type": btype,
@@ -1971,6 +1984,73 @@ func prepare_arc(scenario: Dictionary) -> void:
 # que la suite est demandée — deux chantiers concurrents écriraient les mêmes scènes deux fois.
 var _arc_chantier: bool = false
 
+# --- SCÈNES EN LOOKAHEAD (bible §« lookahead », /goal Maxime 2026-08-18) ---
+# La scène N+1 écrite APRÈS l'issue N, en la connaissant. L'arc pré-écrit par tranches ne peut
+# pas savoir ce que la résolution du joueur a fait — c'est l'incohérence constatée (« les beats
+# ne s'enchaînent pas logiquement par rapport à ce qui a été fait »). Le cache est indexé par
+# `qn` (1-based) et porte {texte, tags} : la scène et ses requis restent ALIGNÉS, comme pour
+# l'arc. Une entrée n'est JAMAIS servie pour un beat déjà présenté (garde dans le prefetch).
+var _scene_cache: Dictionary = {}
+var _scene_jit_qn: int = -1   # scène en cours d'écriture (anti-doublon)
+
+
+# Lancée par le jeu juste après l'AFFICHAGE de l'issue : c'est la fenêtre où le joueur lit —
+# la seule où le moteur mono-place est libre sans que personne n'attende. Fire-and-forget,
+# silencieux : si la scène n'est pas prête à la présentation du beat, l'arc ou le secours la
+# couvrent — et le journal dira la provenance.
+func prefetch_scene_suivante(run_node: Node) -> void:
+	var beats: Array = (run_node.scenario as Dictionary).get("beats", [])
+	var prochain: int = int(run_node.beat_index) + 1
+	if prochain >= beats.size():
+		return  # pas de beat suivant : la quête se referme
+	var beat: Dictionary = beats[prochain]
+	var qn: int = int(beat.get("qn", prochain + 1))
+	if _scene_cache.has(qn) or _scene_jit_qn == qn:
+		return
+	var btype: String = str(beat.get("type", "Exploration"))
+	if btype == "Climax":
+		return  # le climax garde la scène de clôture de l'arc — c'est elle qui referme l'histoire
+	var mn: Node = _mn()
+	if mn == null or not mn.is_ready() or mn.is_busy():
+		return  # le moteur travaille (issue en vol ?) : cette scène viendra de l'arc, tant pis
+	_scene_jit_qn = qn
+	var titre: String = str(_run_thread.get("title", ""))
+	# Les tags d'abord, la scène AUTOUR (même principe que l'arc : scène ⇄ tags alignés).
+	var pool_info: Dictionary = _live_pool_info()
+	var tags: Array = []
+	if not pool_info.is_empty():
+		var quest_idx: int = int(beat.get("quest", 0))
+		if not _x1_used_by_quest.has(quest_idx):
+			_x1_used_by_quest[quest_idx] = []
+		tags = pick_required_tags(btype, int(beat.get("difficulte", 2)), pool_info, _rng,
+				_x1_used_by_quest[quest_idx])
+	var fblock: String = MerlinPromptBuilder.faction_pilier_block(
+		str(_run_thread.get("faction", "")), str(_run_thread.get("pilier", "")),
+		str(_run_thread.get("pilier2", "")), bool(_run_thread.get("pnj_recog", false)))
+	var precedent: String = str(_run_thread.get("last_scene", ""))
+	var issue_prec: String = str(_run_thread.get("last_issue", ""))
+	var total: int = beats.size()
+	var pj: Dictionary = MerlinPromptBuilder.scene_jit(
+		{"title": titre, "pitch": str(_run_thread.get("pitch", ""))},
+		btype, qn - 1, total, tags, precedent, issue_prec, fblock, _lieu_name(),
+		pool_display_list(pool_info))
+	var r: Dictionary = await mn.generate(str(pj["system"]), str(pj["user"]), pj["opts"])
+	_scene_jit_qn = -1
+	if r.has("error"):
+		return  # annulée par une pose (priorité correcte) ou moteur en défaut : l'arc couvrira
+	var texte: String = MerlinProse.clean_prose(str(r.get("text", "")).strip_edges())
+	if texte.length() < 30:
+		return
+	if str(_run_thread.get("title", "")) != titre:
+		return  # nouvelle partie pendant l'écriture
+	# Trop tard ? Le beat visé (index 0-based qn-1) est consommé quand le jeu le PRÉSENTE, juste
+	# après l'avancée. Si le run l'a atteint ou dépassé pendant notre écriture, la scène ne sera
+	# jamais lue : on la jette plutôt que de laisser croire au cache qu'elle a servi.
+	if int(run_node.beat_index) >= qn - 1:
+		return
+	_scene_cache[qn] = {"texte": texte, "tags": tags}
+	print("[MerlinScenario] lookahead — scène %d prête (%d car.)" % [qn, texte.length()])
+
 
 func _prepare_arc(scenario: Dictionary, tranches_max: int) -> void:
 	if _arc_chantier:
@@ -2107,6 +2187,12 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 # suffisent — tout l'arc gonflerait le prompt (et le prompt coûte la moitié du temps, mesuré).
 # Nombre de recours au secours depuis le dernier appel, et remise à zéro. La sonde de journal
 # l'interroge après chaque beat : si le compteur a bougé, ce beat porte la marque.
+# L'issue TELLE QU'AFFICHÉE (prose du modèle ou secours) : posée par le jeu après l'affichage,
+# consommée par le lookahead de la scène suivante.
+func note_issue_affichee(prose: String) -> void:
+	_run_thread["last_issue"] = prose.strip_edges().substr(0, 420)
+
+
 func secours_consomme() -> int:
 	var n: int = _secours_derniers
 	_secours_derniers = 0
@@ -2428,6 +2514,9 @@ func fallback_resolution(degree: String, situ_type: String = "", played_cards: A
 # → le prompt d'issue du beat SUIVANT enchaîne sur l'action réelle, ET un PONT procédural relie la
 # situation suivante au résultat (plus de saut « rocher lumineux → chevreuil égaré »).
 func note_outcome(res: Dictionary, _situation: Dictionary = {}, played_cards: Array = []) -> void:
+	# Mémoire du LOOKAHEAD : la scène qui vient de se jouer et son issue TELLE QU'ÉCRITE — c'est
+	# ce que la scène suivante recevra pour en découler visiblement.
+	_run_thread["last_scene"] = str(_situation.get("narration", ""))
 	var degree: String = str(res.get("degree", "reussite"))
 	# Registre de l'ACTION depuis les archétypes des cartes jouées (ce que le geste FUT vraiment).
 	# v11-N1 (R140) — gist en 2e personne (passé composé : le beat qui vient de s'achever), consommé

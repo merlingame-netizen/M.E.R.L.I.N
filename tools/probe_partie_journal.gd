@@ -367,6 +367,7 @@ func _noter_entree(game: Node, run: Node, idx: int) -> void:
 	(_journal["beats"] as Array).append({
 		"index": idx + 1,
 		"type": str(situ.get("type", "")),
+		"provenance": str(situ.get("provenance", "")),
 		"narration": str(situ.get("narration", "")),
 		"tags_requis": situ.get("required_tags", []),
 		"difficulte": int(situ.get("difficulte", 0)),

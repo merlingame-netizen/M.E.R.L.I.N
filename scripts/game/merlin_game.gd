@@ -989,6 +989,12 @@ func _on_resolve() -> void:
 	sc.note_outcome(res, situ, played_cards)  # gist SPECIFIQUE (action reelle) + pont vers la situation suivante
 	run.summary = prose
 	_show_resolution(res, prose, true)
+	# LOOKAHEAD (bible, /goal 2026-08-18) : l'issue est AFFICHÉE — le joueur lit. C'est la seule
+	# fenêtre où le moteur mono-place est libre sans que personne n'attende : la scène suivante
+	# s'y écrit, en CONNAISSANT cette issue. Fire-and-forget — si elle n'est pas prête à temps,
+	# l'arc pré-écrit couvre, et le journal dit la provenance.
+	sc.note_issue_affichee(prose)
+	sc.prefetch_scene_suivante(run)
 	# v10.13 (Fix 6) : PLUS de save ici — il persistait les jauges post-résolution avec un beat_index
 	# non avancé → la reprise REJOUAIT le beat (coûts double-appliqués). Save unique dans _advance_to_next.
 
