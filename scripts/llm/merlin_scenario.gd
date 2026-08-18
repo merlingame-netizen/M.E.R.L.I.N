@@ -1242,7 +1242,16 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	# il y en avait trois, dont deux importés.
 	#
 	# Désormais : le sentier choisi EST l'histoire, du premier beat au dernier.
+	# MERLIN_BEATS force la longueur — pour le DIAGNOSTIC uniquement. Une quête de 8 à 25 beats à
+	# ~45 s le beat coûte une heure par vérification ; à 4 beats elle en coûte cinq minutes, et
+	# c'est ce qu'il faut pour voir l'arc s'écrire ou renoncer. Même patron que MERLIN_BIOME et
+	# MERLIN_MODELE : une variable, un repli, aucun effet en partie normale.
 	var n_beats: int = _rng.randi_range(QUETE_BEATS_MIN, QUETE_BEATS_MAX)
+	if OS.has_environment("MERLIN_BEATS"):
+		var force: int = int(OS.get_environment("MERLIN_BEATS"))
+		if force >= 3:
+			n_beats = force
+			print("[MerlinScenario] longueur forcée par MERLIN_BEATS : %d beats" % n_beats)
 	var beats: Array = build_quest_beats(title, pitch, n_beats, _rng)
 	return {"title": title, "pitch": pitch, "synopsis": pitch, "beats": beats,
 			"total": beats.size(), "quests": 1}
