@@ -158,7 +158,10 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
         '<div class="verbe"><span>%s</span><b>%s</b></div>' % (html.escape(k), v)
         for k, v in sorted(verbes.items(), key=lambda kv: -int(kv[1])) if int(v) > 0)
 
-    return TEMPLATE % {
+    # Substitution par regex et NON par l'operateur % : la feuille de style est pleine de
+    # pourcents litteraux (width:100%, 50%, @media) que le formatage % de Python prendrait pour
+    # des marqueurs. Les doubler partout serait un piege permanent a la moindre retouche CSS.
+    return _remplir(TEMPLATE, {
         "titre_quete": html.escape(choisi.get("titre", "Partie sans titre")),
         "pitch_quete": html.escape(choisi.get("pitch", "")),
         "biome": html.escape(str(d.get("biome", ""))),
@@ -176,10 +179,19 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
         "pnj": puces(fin.get("pnj_rencontres") or [], "Aucune rencontre enregistrée."),
         "incidents": puces([i.get("quoi") for i in (d.get("incidents") or [])], "Aucun."),
         "verbes": verbes_html or '<p class="vide">Aucun verbe joué.</p>',
-    }
+    })
 
 
-TEMPLATE = """<title>L'Écho du Dolmen</title>
+def _remplir(gabarit: str, valeurs: dict) -> str:
+    def cle(m):
+        v = valeurs.get(m.group(1))
+        if v is None:
+            return m.group(0)
+        return str(v)
+    return re.sub(r"%\((\w+)\)[sd]", cle, gabarit)
+
+
+TEMPLATE = """<title>%(titre_quete)s</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
@@ -322,8 +334,12 @@ footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--trait);
 <footer>
   Partie jouée par un harnais automatique sur la VM Oracle, en rendu réel, avec le modèle
   embarqué dans le jeu. Les trois sentiers, les narrations et les résolutions sont écrits par ce
-  modèle — rien n'est pré-rédigé. Les gestes (action + trait) sont choisis par rotation, pas par
-  stratégie : ce document montre ce que le jeu PRODUIT, pas comment il se joue au mieux.
+  modèle — rien n'est pré-rédigé.<br><br>
+  <strong>Ce que le harnais ne fait pas :</strong> il ne joue pas bien. Les gestes (action + trait)
+  tournent en rotation, sans stratégie, et devant un pacte il prend systématiquement la
+  <em>première</em> option — celle qui coûte de la corruption. Une fin corrompue dit donc autant
+  sur cette politique de choix que sur l'équilibrage du jeu. Lire ce document comme un relevé de
+  ce que le jeu PRODUIT, jamais comme une mesure de sa difficulté.
 </footer>
 </div>
 """
