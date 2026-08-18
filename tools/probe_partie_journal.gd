@@ -25,10 +25,13 @@ const SEL_TIMEOUT_MS: int = 300000
 const RUN_DEADLINE_S: float = 3000.0   # 12-15 beats, une narration écrite par beat sur CPU
 const END_DEADLINE_S: float = 40.0
 const SHOTS_MAX: int = 12
-# Temps de « réflexion » du joueur entre la pose des cartes et le clic Résoudre. Mesuré
-# 2026-08-18 : l'issue coûte ~35 s au modèle sur la VM ; sans cette pause, le harnais résolvait
-# dans la frame suivante et lisait le banc de secours à chaque beat.
-const POSE_S: float = 8.0
+# Temps de « réflexion » du joueur entre la pose des cartes et le clic Résoudre. 25 s et non 8
+# (mesuré 2026-08-18, partie de 18 beats) : dans une quête longue, l'arc s'écrit en fond entre
+# les beats et évince le cache du prompt d'issue — l'issue repart alors à froid (~87 s), et la
+# fenêtre 8 s de pose + 70 s de sustain la coupait à 9 s près, beat après beat. Un humain LIT la
+# narration avant de poser (~20-40 s) : 25 s est la pose représentative, pas un maquillage — le
+# harnais à 8 s jouait plus vite qu'aucun joueur réel.
+const POSE_S: float = 25.0
 
 var _journal: Dictionary = {}
 var _shots_dir: String = ""
