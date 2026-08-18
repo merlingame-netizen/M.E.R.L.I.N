@@ -316,11 +316,29 @@ func _on_pick(title: String, pitch: String) -> void:
 	if _busy:
 		return
 	_busy = true
-	# Squelette INSTANTANÉ (le pitch est le synopsis) → bascule immédiate vers le jeu.
-	var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(title, pitch)
+	var sc: Node = get_node("/root/MerlinScenario")
+	var skel: Dictionary = sc.build_skeleton(title, pitch)
 	get_node("/root/MerlinRun").new_run(skel)
-	# Arc narratif LLM en arrière-plan (fire-and-forget) ; l'interstitiel in-game (R111) le couvre.
-	get_node("/root/MerlinScenario").prepare_arc(skel)
+	# L'OUVERTURE EST ATTENDUE ICI, sur le vrai chemin joueur (2026-08-18). L'ancien fire-and-forget
+	# lançait l'arc « en arrière-plan » au moment même où la scène de jeu chargeait : le moteur
+	# mono-place était pris par la résolution du beat 1, l'arc ne gagnait jamais, et le joueur
+	# jouait toute la partie sur l'arc en dur avec l'intro en dur. Le harnais de test attendait,
+	# lui — le joueur réel était le seul à ne pas en profiter.
+	#
+	# Le voile réutilise le montage existant, décor gelé et cadence réduite (mêmes helpers que
+	# l'attente des titres) : le modèle a les cœurs, l'écran reste vivant, et à l'arrivée sur le
+	# pop-up d'intro la légende et les premières scènes sont écrites.
+	_show_overlay("Merlin trace ton sentier")
+	_fps_avant = Engine.max_fps
+	Engine.max_fps = FPS_ATTENTE
+	_geler_le_decor()
+	await sc.prepare_arc_ouverture(skel)
+	_rendre_la_cadence()
+	_degeler_le_decor()
+	if not is_inside_tree():
+		return
+	# Le reste de l'arc s'écrit en fond pendant les premiers beats.
+	sc.prepare_arc(skel)
 	# Transition à l'encre, sans légende (user 2026-08-14) : le montage « zoom vers Merlin » est retiré
 	# — il montrait Merlin seul, agrandi, sur fond sombre, sans rien dire. Les captions CANNÉES restent
 	# neutralisées depuis la Vague D (D1) : aucun panneau de texte à la bascule.
