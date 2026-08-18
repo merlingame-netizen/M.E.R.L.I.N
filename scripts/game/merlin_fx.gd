@@ -15,7 +15,15 @@ extends Control
 ## Le moteur a été mesuré depuis : 9,6 tokens par seconde à l'écriture, et une issue de résolution
 ## coûte ~35 s sur la VM. 48 s laissent donc la marge nécessaire sans jamais figer la partie — et
 ## le clic reste là pour couper court à tout moment.
-const SUSTAIN_CAP_MS: int = 48000
+# 70 s et non 48 (mesuré 2026-08-18) : au premier beat, rien n'est encore en cache et
+# l'évaluation du prompt d'issue coûte ~53 s à elle seule — 48 s coupaient l'attente juste avant
+# que le texte n'arrive, et le secours était servi À CHAQUE beat. Dès le deuxième beat, le cache
+# de préfixe ramène l'attente réelle bien en dessous ; le clic-skip couvre l'impatience.
+const SUSTAIN_CAP_MS: int = 70000
+
+# Cadence d'avant le sustain, restaurée sur TOUS les chemins de sortie (fin de boucle, scène
+# quittée). -1 = rien à restaurer.
+var _fps_avant_sustain: int = -1
 ## v11-W0/W1 (user 2026-07-04 « le jeu est trop complexe ») : la phase « Expression » (slogan jaune +
 ## aberration chromatique + zoom) est SUPPRIMÉE, gather+fuse fusionnés, swell supprimé, le dé UNIQUE
 ## (MerlinDice) se lance en chevauchement sur la décrue — overhead fixe ~2,1-2,4 s (vs ~6-8 s).
@@ -296,6 +304,14 @@ func run() -> void:
 		gui_input.connect(func(e: InputEvent) -> void:
 			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 				skip_box[0] = true)
+		# RENDRE LES CŒURS À MERLIN PENDANT QU'IL ÉCRIT — même arbitrage que l'écran de sélection,
+		# mêmes chiffres : la VM peint en logiciel (llvmpipe), et pendant le sustain l'évaluation
+		# du prompt tombait à 18-19 tok/s contre 23-25 quand le rendu est bridé. Ce voile est une
+		# ATTENTE : personne ne distingue 5 images par seconde de 30 sur un glow qui respire, mais
+		# le modèle, lui, récupère les cœurs. Restauré à la sortie de la boucle ET dans
+		# _exit_tree — un jeu resté à 5 fps après coup serait pire que le mal soigné.
+		_fps_avant_sustain = Engine.max_fps
+		Engine.max_fps = 5
 		var sustain_t0: int = Time.get_ticks_msec()
 		var deadline_ms: int = sustain_t0 + SUSTAIN_CAP_MS
 		var next_spark_ms: int = 0
@@ -327,6 +343,7 @@ func run() -> void:
 				var hint: String = "  ·  clic pour continuer" if now - sustain_t0 > 1500 else ""
 				cap_lbl.text = "Merlin tisse les fils du sort " + ".".repeat(dots) + hint
 			await get_tree().process_frame
+		_rendre_cadence_sustain()
 		if pulse != null and pulse.is_valid():
 			pulse.kill()
 		if is_instance_valid(bar_fill):
@@ -492,3 +509,13 @@ static func pop(node: Control, peak: float) -> void:
 	var t: Tween = node.create_tween()
 	t.tween_property(node, "scale", Vector2(p, p), 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.tween_property(node, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
+
+
+func _rendre_cadence_sustain() -> void:
+	if _fps_avant_sustain >= 0:
+		Engine.max_fps = _fps_avant_sustain
+		_fps_avant_sustain = -1
+
+
+func _exit_tree() -> void:
+	_rendre_cadence_sustain()

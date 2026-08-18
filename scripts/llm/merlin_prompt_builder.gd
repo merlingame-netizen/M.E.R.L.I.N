@@ -213,7 +213,11 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	#
 	# Effet de bord favorable sur le fond : une consigne placée en fin de prompt est mieux suivie
 	# qu'une consigne noyée au milieu. On ne perd donc rien à l'obéissance du modèle.
-	var usr: String = bloc + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = UNE phrase breve, imperatif tutoye SANS dire 'Voyageur' : une action concrete ET ce qui est en jeu. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
+	# Le pitch passe de « UNE phrase breve » à 2-3 phrases (Maxime, 2026-08-18 : « les cartes de
+	# scénarios sont trop courtes et peu inspirées »). Trois phrases, trois rôles : l'action à
+	# accomplir, qui s'y oppose, ce qu'on risque. C'est ce trio qui rend une carte JOUABLE en
+	# profondeur — une carte qui ne nomme pas d'opposition n'annonce aucun jeu.
+	var usr: String = bloc + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = 2 a 3 phrases, imperatif tutoye SANS dire 'Voyageur' : d'abord l'ACTION concrete a accomplir, puis QUI ou QUOI s'y oppose (un etre, un serment, une force nommee), puis ce qui arrive SI TU ECHOUES. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
 	# La part variable EN AVANT-DERNIER, puis un RAPPEL DE FORMAT en toute fin.
 	#
 	# CORRECTION D'UNE RÉGRESSION QUE J'AI CAUSÉE (2026-08-18). En repoussant la part variable en
@@ -232,16 +236,12 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	# d'utile n'est joué ni rendu. Tous les cœurs y passent — c'est le seul moment du jeu où le
 	# ménage à moitié de cœurs ne protège aucune image et ne fait que doubler l'attente.
 	#
-	# max_tokens 180 — la valeur de la bible (R58), et non plus 160.
-	#
-	# Le plafond borne le cas ANORMAL : un modèle qui part en digression est coupé au lieu de
-	# faire attendre. Mais 160 s'est révélé TROP SERRÉ le 2026-08-18 : une réponse enveloppée
-	# dans un bloc de code a consommé son budget en préambule et s'est fait couper à 159 tokens,
-	# tableau non refermé — donc illisible, donc une seconde génération de quarante secondes.
-	# Un plafond qui déclenche un second essai coûte bien plus cher que les vingt tokens qu'il
-	# économise. 180 laisse la marge que les ~150 tokens observés réclament.
+	# max_tokens 300 : trois pitchs de 2-3 phrases tiennent dans ~230-270 tokens ; le plafond
+	# borne le cas anormal sans jamais mordre une sortie saine. L'attente supplémentaire (~+10 s
+	# à 9,6 tok/s) est couverte par la révélation en streaming des parchemins — le premier
+	# apparaît toujours au même moment.
 	return {"system": voice, "user": usr,
-			"opts": {"creative": true, "max_tokens": 180, "label": "sélection (Merlin)", "plein_regime": true}}
+			"opts": {"creative": true, "max_tokens": 300, "label": "sélection (Merlin)", "plein_regime": true}}
 
 
 # --- INTRO DE QUÊTE : légende contée par MERLIN (enrichit le pop-up en arrière-plan) ---
@@ -250,8 +250,12 @@ static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
 	var mem_line: String = ("\nSouviens-toi du Voyageur : %s." % mem) if mem != "" else ""
-	var usr: String = "Quete proposee au Voyageur: \"%s\" -- %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 3 a 4 phrases la LEGENDE derriere cette quete a %s : ce qu'on raconte du lieu, ce qui s'y serait perdu ou cache, le danger qui y rode. Nomme CLAIREMENT, en au moins une phrase, CE QUI EST EN JEU (ce qui est cherche, menace ou risque) -- le mystere doit rester dans l'AMBIANCE, jamais dans la comprehension du but. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
-	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 120, "label": "intro de quête (Merlin)"}}
+	# 5 à 7 phrases et non plus 3-4 (Maxime, 2026-08-18 : « l'introduction est bien trop
+	# courte »). Quatre choses à poser, dans l'ordre où un conteur les pose : le LIEU, l'ENJEU,
+	# QUI S'Y OPPOSE, ce que le Voyageur RISQUE. Une intro qui n'annonce pas d'opposition
+	# n'annonce aucun jeu.
+	var usr: String = "Quete proposee au Voyageur: \"%s\" -- %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 5 a 7 phrases la LEGENDE derriere cette quete a %s, dans cet ordre : (1) le LIEU et ce qu'on en raconte, (2) CE QUI EST EN JEU -- nomme clairement ce qui est cherche, menace ou promis, (3) QUI ou QUOI s'y OPPOSE -- un etre, un serment, une force, nomme-le, (4) ce que le Voyageur RISQUE s'il echoue. Le mystere reste dans l'AMBIANCE, jamais dans la comprehension du but. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
+	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 220, "label": "intro de quête (Merlin)"}}
 
 
 # --- OUVERTURE NARRATIVE : lance VRAIMENT l'histoire de CE scénario (voix narrateur, 3-4 phrases) ---
@@ -470,18 +474,28 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 		ctx += "Juste avant : %s. Enchaine sans rompre le fil.\n" % prev
 	# Longueur VARIABLE (user 2026-06-06 : « plus variable sur la longueur … quelquefois plus long
 	# selon le déroulé ») : ample aux MOMENTS FORTS (Climax ou réussite éclatante), brève sinon.
+	# La cible de phrases vit désormais dans la TÊTE STABLE du prompt (degré-neutre, pour le cache
+	# de préfixe) ; long_form ne pilote plus que le budget de tokens.
 	var long_form: bool = is_strong_moment(str(situation.get("type", "")), degree)
-	var phrase_target: String = "5 a 6 phrases" if long_form else "3 a 4 phrases"
-	# NB (v11-N1) : le wall-clock LLM (~1 tok/s) est borné par max_tokens, PAS par phrase_target. On garde
-	# les cibles de phrases enrichies mais on conserve les budgets tokens PROUVÉS (autoplay 3/3 en V4a) —
-	# les budgets ballonnés (300/200) faisaient FAIL le run#0 COLD du harnais.
 	var tok_budget: int = 260 if long_form else 150
 	# v10.17 (user 2026-06-07) : on PASSE la situation + un EXEMPLE gold (few-shot in-context) pour que
 	# l'issue RESOLVE la situation precise (pas un generique « le chemin s'ouvre ») en fondant les 2
 	# forces, calee sur la prose cible. MerlinProse.strip_scene_echo (côté scénario) reste le filet anti-recopiage.
 	var situ_txt: String = str(situation.get("narration", "")).strip_edges()
 	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu). Situation: une dalle de pierre barre le gue, le courant pousse fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): [i]Vous calez vos pieds dans la vase et poussez la dalle sans jamais rompre l'effort.[/i] La pierre racle, bascule, et libere le passage ; sur l'autre rive, le vieux passeur relache sa gaffe et vous fait signe d'avancer."
-	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en %s. Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. NE RE-DECRIS PAS le decor deja connu (le mur, le chemin, l'etre). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, reg_hint, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
+	# TÊTE STABLE / QUEUE VARIABLE — une décision de PERFORMANCE mesurée (2026-08-18, VM) : le
+	# prompt d'issue pèse ~1000 tokens et son ÉVALUATION seule coûtait 52-53 s, plus que la
+	# fenêtre d'attente entière — l'écriture, elle, ne prend que 9 s. Le moteur ne relit pas ce
+	# qu'il a déjà lu (cache de préfixe) : tout ce qui ne change pas d'un beat à l'autre vient en
+	# tête (exemple + règles, ~600 tokens, lues UNE fois), tout ce qui change vient en queue
+	# (scène, forces, degré, ~350 tokens). Dès le 2e beat, seule la queue est réévaluée.
+	# Les règles sont DEGRE-NEUTRES pour rester identiques d'un beat à l'autre : le degré et sa
+	# directive vivent en queue — la dernière position, celle que le modèle suit le mieux.
+	var tete: String = ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en 3 a 4 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante). Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
+	var queue: String = "\n" + ctx + "CE QUI SE PASSAIT : " + situ_txt + "\n" + combo + reg_hint \
+		+ "\nISSUE = " + str(deg_fr.get(degree, "une reussite")) + ". " + str(deg_directive.get(degree, "")) \
+		+ cover_hint + syn_hint + focus_hint
+	var usr: String = tete + queue
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"}}
 
 
