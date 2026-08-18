@@ -41,8 +41,22 @@ exec 9>"$LOCK"
 # secondes d'écart : c'est exactement ce qui est arrivé le 2026-08-18, et la partie n'a jamais
 # démarré. Trois minutes d'attente couvrent largement une extinction.
 if ! flock -w 180 9; then
-    echo "une autre partie tient encore le verrou après 3 min — abandon"
-    exit 1
+    # VERROU ORPHELIN. Trois lancements de suite ont été refusés ici, dont un tenu par un shell
+    # mort que `pgrep` ne voyait plus : le descripteur survivait, le verrou avec. Un garde-fou qui
+    # protège une partie ne doit pas empêcher toutes les suivantes.
+    #
+    # Le remède est franc : si plus AUCUN jeu ne tourne, le verrou ne protège rien. On remplace le
+    # fichier — un nouvel inode porte un verrou neuf, l'ancien meurt avec son processus fantôme.
+    if pgrep -f "godot.*probe_partie_journal" >/dev/null 2>&1; then
+        echo "une partie tourne vraiment (jeu vivant) — abandon"
+        exit 1
+    fi
+    echo "verrou tenu par un processus mort — je le remplace"
+    exec 9>&-
+    rm -f "$LOCK"
+    touch "$LOCK"
+    exec 9>"$LOCK"
+    flock -n 9 || { echo "verrou toujours pris après remplacement — abandon"; exit 1; }
 fi
 
 etape 1 4 "décharger Ollama"
