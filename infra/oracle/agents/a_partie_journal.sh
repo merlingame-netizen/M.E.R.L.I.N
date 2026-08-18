@@ -82,7 +82,7 @@ if [ "$PHASE" = "selection" ]; then
         bash "$GS" start >/dev/null 2>&1
     BUDGET=430
 else
-    etape 2 4 "la partie (jusqu'à 60 min)"
+    etape 2 4 "la partie (jusqu'à 2 h)"
     [ -s "$SEL" ] || { echo "aucune sélection — lancer la phase 'selection' d'abord"; exit 1; }
     rm -f "$JOURNAL"
     MERLIN_SCRIPT="res://tools/probe_partie_journal.gd" MERLIN_PHASE=partie \
@@ -90,9 +90,9 @@ else
         MERLIN_PICK="$PICK" MERLIN_PICK_RAISON="$RAISON" \
         MERLIN_JOURNAL_OUT="$JOURNAL" MERLIN_SHOTS_DIR="$SHOTS" \
         MERLIN_BEATS="${MERLIN_BEATS:-}" \
-        MERLIN_QUIT_AFTER_S=3900 \
+        MERLIN_QUIT_AFTER_S=7200 \
         bash "$GS" start >/dev/null 2>&1
-    BUDGET=3950
+    BUDGET=7250
 fi
 
 etape 3 4 "attente du résultat"
