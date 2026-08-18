@@ -89,6 +89,7 @@ else
         MERLIN_BIOME="${MERLIN_BIOME:-foret}" MERLIN_SELECTION_IN="$SEL" \
         MERLIN_PICK="$PICK" MERLIN_PICK_RAISON="$RAISON" \
         MERLIN_JOURNAL_OUT="$JOURNAL" MERLIN_SHOTS_DIR="$SHOTS" \
+        MERLIN_BEATS="${MERLIN_BEATS:-}" \
         MERLIN_QUIT_AFTER_S=3900 \
         bash "$GS" start >/dev/null 2>&1
     BUDGET=3950

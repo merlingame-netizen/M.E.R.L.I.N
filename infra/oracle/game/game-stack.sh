@@ -114,6 +114,7 @@ start_native() {
         MERLIN_PICK="${MERLIN_PICK:-}" MERLIN_PICK_RAISON="${MERLIN_PICK_RAISON:-}" \
         MERLIN_SELECTION_OUT="${MERLIN_SELECTION_OUT:-}" MERLIN_SELECTION_IN="${MERLIN_SELECTION_IN:-}" \
         MERLIN_JOURNAL_OUT="${MERLIN_JOURNAL_OUT:-}" MERLIN_SHOTS_DIR="${MERLIN_SHOTS_DIR:-}" \
+        MERLIN_BEATS="${MERLIN_BEATS:-}" MERLIN_MODELE="${MERLIN_MODELE:-}" \
         unshare --user --map-root-user --mount \
         bash "$SCRIPT_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
     echo $! > "$RUNDIR/inner.pid"
