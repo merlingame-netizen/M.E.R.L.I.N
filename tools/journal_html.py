@@ -136,6 +136,7 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
   <div class="rail">
     <span class="beat-num">%(idx)02d</span>
     <span class="beat-type">%(type)s</span>
+    %(prov)s
     <div class="rail-jauges">
       <span class="rail-l">PV</span>%(jint)s<span class="rail-v">%(iap)d</span>
       <span class="rail-l">Cor</span>%(jcor)s<span class="rail-v">%(cap)d</span>
@@ -163,6 +164,10 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
 </article>""" % {
             "idx": int(b.get("index", 0)),
             "type": html.escape(str(b.get("type", "") or "beat")),
+            "prov": {"lookahead": '<span class="prov prov-la">scène en lookahead</span>',
+                     "arc": '<span class="prov">scène de l\'arc</span>',
+                     "secours": '<span class="prov prov-sec">scène de secours</span>'}.get(
+                    str(b.get("provenance", "")), ""),
             "jint": jauge(iap, 10, "j-int"), "jcor": jauge(cap, 18, "j-cor"),
             "iap": iap, "cap": cap,
             "narration": bbcode(str(b.get("narration", ""))) or '<p class="vide">Aucune narration enregistrée.</p>',
@@ -282,6 +287,10 @@ ol.sentiers{list-style:none;padding:0;margin:0;display:grid;gap:.9rem}
   font-variant-numeric:tabular-nums}
 .beat-type{display:block;margin-top:.2rem;font:400 .7rem/1.3 "IBM Plex Mono",monospace;
   letter-spacing:.08em;text-transform:uppercase;color:var(--brume)}
+.prov{display:inline-block;margin-top:.3rem;padding:.1rem .4rem;border:1px solid var(--trait);
+  border-radius:2px;font:400 .62rem/1.3 "IBM Plex Mono",monospace;color:var(--brume)}
+.prov-la{border-color:var(--mousse);color:var(--mousse)}
+.prov-sec{border-color:var(--oxyde);color:var(--oxyde)}
 .rail-jauges{margin-top:1rem;display:grid;grid-template-columns:auto 1fr auto;
   gap:.35rem .4rem;align-items:center;
   font:400 .68rem/1 "IBM Plex Mono",monospace;color:var(--brume)}
