@@ -1989,7 +1989,10 @@ func prepare_arc(scenario: Dictionary) -> void:
 		# dernière. `arc_locked` ne bloque que le remplacement d'une histoire par une AUTRE.
 		_run_thread["arc"] = arc_complet.duplicate()
 		_run_thread["arc_tags"] = tags_complets.duplicate(true)
-		debut = fin
+		# On avance du nombre de scènes REELLEMENT reçues, pas de la taille demandée : si le modèle
+		# n'en a écrit que trois sur quatre, la quatrième repart dans la tranche suivante au lieu
+		# d'être perdue — et surtout l'index de chaque scène reste collé à son beat.
+		debut += morceau.size()
 
 
 # Ce qu'on rappelle au modèle avant d'écrire la tranche suivante : les deux dernières scènes
@@ -2038,7 +2041,7 @@ func narrate_arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, de
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return []
-	return MerlinProse.parse_arc(str(r.get("text", "")))
+	return MerlinProse.parse_arc(str(r.get("text", "")), types.size())
 
 
 # LLM réservé aux MOMENTS FORTS (Climax ou réussite éclatante) → réduit les rafales d'appels

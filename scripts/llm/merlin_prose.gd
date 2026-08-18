@@ -129,7 +129,18 @@ static func norm(t: String) -> String:
 
 
 # Extrait 5 étapes d'une réponse numérotée (« 1. … » … « 5. … »), sans regex. [] si format inattendu.
-static func parse_arc(text: String) -> Array:
+# `attendu` = combien de scènes on a demandées. Le défaut de 5 conserve le comportement des
+# appelants historiques.
+#
+# LE PIÈGE, corrigé le 2026-08-18 : la dernière ligne exigeait CINQ étapes, sinon elle rendait un
+# tableau VIDE. Quand l'arc s'est mis à s'écrire par tranches de quatre, le modèle produisait bien
+# ses quatre scènes et le parseur les jetait — silencieusement, à chaque tentative. Constaté sur
+# une partie : quatre générations d'arc lancées, quatre tableaux vides, zéro scène retenue.
+#
+# Désormais on rend ce qu'on a reçu, plafonné au nombre demandé. Une tranche incomplète n'est plus
+# une perte totale : l'appelant avance du nombre de scènes REELLEMENT obtenues, donc rien ne se
+# désaligne — les scènes manquantes repartent simplement dans la tranche suivante.
+static func parse_arc(text: String, attendu: int = 5) -> Array:
 	var out: Array = []
 	for raw_line in text.split("\n"):
 		var line: String = str(raw_line).strip_edges()
@@ -143,7 +154,8 @@ static func parse_arc(text: String) -> Array:
 		var cleaned: String = clean_prose(line.substr(i).strip_edges())
 		if cleaned.length() >= 12:
 			out.append(cleaned)
-	return out.slice(0, 5) if out.size() >= 5 else []
+	var n: int = maxi(1, attendu)
+	return out.slice(0, n) if not out.is_empty() else []
 
 
 # Garde uniquement les entrées {title, pitch} valides d'une sélection JSON extraite.
