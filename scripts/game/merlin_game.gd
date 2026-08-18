@@ -2922,9 +2922,14 @@ func _show_intro_popup() -> void:
 	# proposé juste APRÈS « Accepter » (_accept_quest → _offer_tuto_or_begin) ; refus → on enchaîne au beat 1.
 	var pitch: String = str(run.scenario.get("pitch", "")).strip_edges().trim_suffix(".")
 	var title: String = str(run.scenario.get("title", "La Quête"))
+	# LA LÉGENDE DU MODÈLE D'ABORD (2026-08-18). Le cadrage en dur — deux phrases de météo — était
+	# tout ce que le joueur lisait : la légende LLM (_bg_intro) n'était JAMAIS appelée. Elle est
+	# désormais écrite pendant « Merlin rêve » (prepare_arc_ouverture) et attendue : à l'arrivée
+	# ici, elle est prête. Le cadrage en dur ne reste que comme secours, et le journal le marque.
+	var legende: String = str(sc.quest_intro()) if sc.has_method("quest_intro") else ""
 	_intro_data = {
 		"title": title,
-		"intro": str(sc.world_setup_short(str(run.biome))),
+		"intro": legende if legende != "" else str(sc.world_setup_short(str(run.biome))),
 		"objectif": pitch if pitch != "" else ("Mener « %s » à son terme" % title),
 	}
 	# Teaser Z5 : la main du beat 1, rendue puis re-éteinte (vigilance V2a #6 : vues créées pendant

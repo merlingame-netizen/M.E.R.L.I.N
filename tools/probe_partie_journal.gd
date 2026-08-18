@@ -207,6 +207,9 @@ func _phase_partie(sc: Node, run: Node, biome: String) -> void:
 		if is_instance_valid(game) and game._intro_open:
 			await _cliche("intro")
 			_journal["intro"] = _texte_intro(game)
+			# La provenance de l'intro est un fait de contrôle : légende du modèle, ou cadrage en
+			# dur servi en secours. Le document l'affiche — même contrat que pour les issues.
+			_journal["intro_du_modele"] = bool(sc.intro_du_modele()) if sc.has_method("intro_du_modele") else false
 			game._accept_quest()
 			print("[JOURNAL] quête acceptée")
 			_sauver()

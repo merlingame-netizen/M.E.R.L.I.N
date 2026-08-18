@@ -1229,7 +1229,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	var fp: Dictionary = _draw_faction_pilier()  # v10.20.2 : faction + pilier PNJ de la run (fil rouge)
 	# Récurrence : si le pilier tiré est CELUI de la run précédente (chronique), il RECONNAÎT le Voyageur.
 	var recog: bool = str(fp["pilier"]) != "" and str(fp["pilier"]) == str(MerlinChronicle.read().get("last_pilier", ""))
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false, "arc_du_modele": false,
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false, "arc_du_modele": false, "intro_legende": "",
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
 	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
@@ -1409,7 +1409,7 @@ func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
 	var pilier2: String = str(_run_thread.get("pilier2", ""))
 	var recog: bool = bool(_run_thread.get("pnj_recog", false))
 	_run_thread = {"title": str(qv.get("title", "")), "pitch": str(qv.get("pitch", "")),
-		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false, "arc_du_modele": false,
+		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false, "arc_du_modele": false, "intro_legende": "",
 		"faction": faction, "pilier": pilier, "pilier2": pilier2, "pnj_recog": recog}
 	prepare_arc(qv)  # fire-and-forget — l'arc LLM remplace le fallback s'il gagne la course
 
@@ -1518,6 +1518,16 @@ const WORLD_SETUP_SHORT: Dictionary = {
 	"foret": "Nous voici à Brocéliande, Voyageur, là où la brume garde le compte des promesses et des dettes. Avance : le sentier ne s'ouvre qu'à ceux qu'il a choisi d'éprouver.",
 	"falaises": "Nous voici aux Falaises du Bout-du-Monde, Voyageur, là où la terre s'achève et où la mer ne rend rien. Avance : sous l'eau noire, quelque chose compte déjà tes pas.",
 }
+
+
+# La légende d'intro écrite par le modèle pendant « Merlin rêve » — chaîne vide si elle n'a pas
+# été écrite (le pop-up sert alors le cadrage en dur, et le journal le marque).
+func quest_intro() -> String:
+	return str(_run_thread.get("intro_legende", ""))
+
+
+func intro_du_modele() -> bool:
+	return str(_run_thread.get("intro_legende", "")) != ""
 
 
 func world_setup_short(biome: String = "") -> String:
@@ -1935,6 +1945,18 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 # à s'écrire. Le reste de l'arc continue en fond, où l'attente polie a du sens.
 func prepare_arc_ouverture(scenario: Dictionary) -> void:
 	await _prepare_arc(scenario, 1)
+	# LA LÉGENDE D'INTRO, dans la même phase attendue. Le pop-up d'intro n'affichait que deux
+	# phrases écrites en dur plus le pitch recopié : la fonction LLM existait (_bg_intro) mais
+	# n'était jamais appelée, et non-bloquante elle n'aurait jamais gagné la course de toute
+	# façon. Ici le moteur vient de finir la première tranche d'arc : il est libre, le joueur
+	# regarde encore « Merlin rêve », c'est le moment exact où cette génération ne coûte rien.
+	await _laisser_le_moteur_finir()
+	var legende: String = await narrate_intro(scenario)
+	if legende != "" and str(_run_thread.get("title", "")) == str(scenario.get("title", "")):
+		_run_thread["intro_legende"] = legende
+		print("[MerlinScenario] intro — légende écrite (%d car.)" % legende.length())
+	else:
+		push_warning("[MerlinScenario] intro — légende NON écrite : le pop-up servira le cadrage en dur")
 
 
 func prepare_arc(scenario: Dictionary) -> void:
