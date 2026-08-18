@@ -492,9 +492,13 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	# Les règles sont DEGRE-NEUTRES pour rester identiques d'un beat à l'autre : le degré et sa
 	# directive vivent en queue — la dernière position, celle que le modèle suit le mieux.
 	var tete: String = ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en 3 a 4 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante). Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
+	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
+	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
+	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.
 	var queue: String = "\n" + ctx + "CE QUI SE PASSAIT : " + situ_txt + "\n" + combo + reg_hint \
 		+ "\nISSUE = " + str(deg_fr.get(degree, "une reussite")) + ". " + str(deg_directive.get(degree, "")) \
-		+ cover_hint + syn_hint + focus_hint
+		+ cover_hint + syn_hint + focus_hint \
+		+ " Fais clairement RESSENTIR le resultat (" + str(deg_fr.get(degree, "une reussite")) + ")."
 	var usr: String = tete + queue
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"}}
 
