@@ -180,7 +180,12 @@ func _phase_partie(sc: Node, run: Node, biome: String) -> void:
 	run.clear_save()
 	var skel: Dictionary = sc.build_skeleton(str(choisi.get("titre", "")), str(choisi.get("pitch", "")))
 	run.new_run(skel)
-	sc.prepare_arc(skel)
+	# L'OUVERTURE EST ATTENDUE : la scène de jeu ne charge pas tant que le modèle n'a pas écrit les
+	# premières scènes. Sans ça la résolution du beat 1 prend le moteur mono-place et l'arc ne
+	# l'obtient plus jamais — mesuré, « 0 scène(s) » à chaque essai.
+	print("[JOURNAL] ouverture en cours d'écriture…")
+	await sc.prepare_arc_ouverture(skel)
+	sc.prepare_arc(skel)   # le reste de l'arc, en fond
 	_journal["squelette"] = {
 		"titre": str(skel.get("title", "")), "synopsis": str(skel.get("pitch", "")),
 		"beats_prevus": (skel.get("beats", []) as Array).size(),

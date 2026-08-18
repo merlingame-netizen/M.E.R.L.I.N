@@ -1229,7 +1229,7 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	var fp: Dictionary = _draw_faction_pilier()  # v10.20.2 : faction + pilier PNJ de la run (fil rouge)
 	# Récurrence : si le pilier tiré est CELUI de la run précédente (chronique), il RECONNAÎT le Voyageur.
 	var recog: bool = str(fp["pilier"]) != "" and str(fp["pilier"]) == str(MerlinChronicle.read().get("last_pilier", ""))
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "bridge": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false, "arc_du_modele": false,
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
 	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
@@ -1409,7 +1409,7 @@ func begin_quest(scenario: Dictionary, quest_idx: int) -> void:
 	var pilier2: String = str(_run_thread.get("pilier2", ""))
 	var recog: bool = bool(_run_thread.get("pnj_recog", false))
 	_run_thread = {"title": str(qv.get("title", "")), "pitch": str(qv.get("pitch", "")),
-		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false,
+		"last_gist": gist, "bridge": bridge, "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false, "arc_du_modele": false,
 		"faction": faction, "pilier": pilier, "pilier2": pilier2, "pnj_recog": recog}
 	prepare_arc(qv)  # fire-and-forget — l'arc LLM remplace le fallback s'il gagne la course
 
@@ -1918,7 +1918,30 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 
 # Lance la génération de l'arc en arrière-plan (fire-and-forget). Swappe l'arc fallback par l'arc LLM
 # SEULEMENT si aucun beat n'a encore été présenté (arc_locked == false) → UNE seule histoire par run.
+# L'OUVERTURE, ATTENDUE — et non lancée en fond.
+#
+# CE QUE LA TRACE A MONTRÉ (2026-08-18) : « arc : 4 beats, 4 jeux de tags, verrou=false, titre=Le
+# Souffle du Vieux Druide » puis « arc tranche 1-4 essai 1 : 0 scène(s) ». Les trois portes étaient
+# ouvertes, la génération était bien tentée — et le moteur refusait.
+#
+# La raison est une course que j'avais créée. Le moteur est mono-place. L'arc partait en
+# arrière-plan au moment même où la scène de jeu chargeait ; le premier beat s'affichait, le
+# joueur posait ses cartes, et la résolution — la seule génération que quelqu'un attend
+# activement — prenait la main. L'arc, poli, attendait son tour et ne l'obtenait jamais : à chaque
+# beat une nouvelle résolution repassait devant.
+#
+# La première tranche est donc désormais ATTENDUE, avant que la scène de jeu n'existe. C'est ce
+# que « l'ouverture d'abord » voulait dire : rien ne se joue tant que l'histoire n'a pas commencé
+# à s'écrire. Le reste de l'arc continue en fond, où l'attente polie a du sens.
+func prepare_arc_ouverture(scenario: Dictionary) -> void:
+	await _prepare_arc(scenario, 1)
+
+
 func prepare_arc(scenario: Dictionary) -> void:
+	await _prepare_arc(scenario, 0)
+
+
+func _prepare_arc(scenario: Dictionary, tranches_max: int) -> void:
 	# v10.14 — chain-aware : si le scénario est une CHAÎNE (beats multi-quêtes), l'arc couvre la
 	# quête du PREMIER beat (les suivantes passent par begin_quest). Appelants inchangés.
 	var beats_all: Array = scenario.get("beats", [])
@@ -1970,10 +1993,23 @@ func prepare_arc(scenario: Dictionary) -> void:
 				% [str(_run_thread.get("title", "")), title])
 		return
 	var total: int = beats.size()
-	var arc_complet: Array = []
-	var tags_complets: Array = []
-	var debut: int = 0
+	# ON REPREND OÙ L'OUVERTURE S'EST ARRÊTÉE. `prepare_arc_ouverture` écrit la première tranche et
+	# rend la main ; l'appel qui suit doit continuer, pas recommencer — sinon il réécrirait les
+	# scènes déjà en place et le joueur verrait le début de son histoire changer sous ses yeux.
+	var arc_complet: Array = (_run_thread.get("arc", []) as Array).duplicate()
+	var tags_complets: Array = (_run_thread.get("arc_tags", []) as Array).duplicate(true)
+	# Le repli procédural compte 5 entrées et n'appartient à personne : on ne le prend pour un
+	# début d'histoire que si une vraie tranche a déjà été publiée.
+	if not bool(_run_thread.get("arc_du_modele", false)):
+		arc_complet = []
+		tags_complets = []
+	var debut: int = arc_complet.size()
+	var faites: int = 0
 	while debut < total:
+		# `tranches_max` > 0 : on ne fait que ce nombre de tranches et on rend la main (l'ouverture
+		# est attendue par l'appelant, le reste suivra en fond).
+		if tranches_max > 0 and faites >= tranches_max:
+			return
 		var fin: int = mini(debut + ARC_TRANCHE, total)
 		var types_tranche: Array = []
 		var tags_tranche: Array = []
@@ -2013,10 +2049,12 @@ func prepare_arc(scenario: Dictionary) -> void:
 		# dernière. `arc_locked` ne bloque que le remplacement d'une histoire par une AUTRE.
 		_run_thread["arc"] = arc_complet.duplicate()
 		_run_thread["arc_tags"] = tags_complets.duplicate(true)
+		_run_thread["arc_du_modele"] = true
 		# On avance du nombre de scènes REELLEMENT reçues, pas de la taille demandée : si le modèle
 		# n'en a écrit que trois sur quatre, la quatrième repart dans la tranche suivante au lieu
 		# d'être perdue — et surtout l'index de chaque scène reste collé à son beat.
 		debut += morceau.size()
+		faites += 1
 
 
 # Ce qu'on rappelle au modèle avant d'écrire la tranche suivante : les deux dernières scènes
