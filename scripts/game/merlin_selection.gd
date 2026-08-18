@@ -48,6 +48,7 @@ var _reveles: int = 0                  # parchemins déjà montrés depuis le fl
 # Instant du PREMIER parchemin. C'est lui la vraie mesure de l'attente : le joueur ne compte pas
 # les secondes jusqu'au troisième titre, il compte celles où il n'a rien devant les yeux.
 var _premier_ms: int = -1
+var _flux_vu: bool = false
 var _title_lbl: Label
 var _back_btn: Button
 var _overlay: Panel
@@ -413,6 +414,14 @@ func _build_ui() -> void:
 func _on_flux(cumul: String) -> void:
 	if not is_inside_tree():
 		return
+	# DEUX TÉMOINS, pour distinguer deux causes qui donnent le même symptôme (« le premier
+	# parchemin arrive tard ») : le flux qui démarre tard, ou le premier objet JSON qui se ferme
+	# tard parce que le modèle écrit autre chose avant. Sans eux, on choisirait au hasard laquelle
+	# corriger. Mesuré le 2026-08-18 : premier parchemin à 45,5 s sur 49,8 s de génération.
+	if not _flux_vu:
+		_flux_vu = true
+		print("[MerlinSelection] premier texte reçu en %.1f s · debut=%s"
+				% [(Time.get_ticks_msec() - _t_debut) / 1000.0, cumul.substr(0, 70).replace("\n", "⏎")])
 	var objets: Array = _objets_complets(cumul)
 	# Un compte qui RECULE veut dire qu'une nouvelle tentative a commencé (le cumul repart de
 	# zéro) : on efface ce que la précédente avait posé plutôt que de mélanger deux écritures.
@@ -427,7 +436,8 @@ func _on_flux(cumul: String) -> void:
 		_hide_overlay()   # idempotent — le voile ne tombe qu'au premier parchemin
 		if _premier_ms < 0:
 			_premier_ms = Time.get_ticks_msec() - _t_debut
-			print("[MerlinSelection] premier parchemin en %.1f s" % [_premier_ms / 1000.0])
+			print("[MerlinSelection] premier parchemin en %.1f s · apres %d caracteres ecrits"
+					% [_premier_ms / 1000.0, cumul.length()])
 		_add_parchemin(str(e.get("title", "?")), str(e.get("pitch", "")))
 
 
@@ -471,6 +481,7 @@ func _objets_complets(txt: String) -> Array:
 func _vider_les_parchemins() -> void:
 	_reveles = 0
 	_premier_ms = -1   # la tentative repart de zéro : son premier parchemin reste à venir
+	_flux_vu = false
 	if _cards_box == null:
 		return
 	for enfant in _cards_box.get_children():
