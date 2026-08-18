@@ -27,6 +27,12 @@ private:
 	std::string pending_text;
 	std::string pending_error;
 	bool pending_ready = false;
+	// Compteurs de llama.cpp du DERNIER appel, protégés par result_mutex comme le texte : le
+	// thread d'inférence les écrit, le thread principal les lit dans _emit_result.
+	double perf_p_eval_ms = 0.0;   // temps d'évaluation du prompt
+	double perf_eval_ms = 0.0;     // temps d'écriture
+	int32_t perf_n_p_eval = 0;     // tokens de prompt évalués
+	int32_t perf_n_eval = 0;       // tokens écrits
 	static std::atomic<int> backend_refs;
 	std::vector<llama_token> last_prompt_tokens;  // KV cache prefix reuse
 	int32_t max_tokens = 256;

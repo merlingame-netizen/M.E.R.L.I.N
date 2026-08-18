@@ -96,6 +96,11 @@ Error MerlinLLM::load_model(String path) {
 	cp.n_ctx = n_ctx;
 	cp.n_threads = n_threads;
 	cp.n_threads_batch = n_threads_batch;
+	// no_perf = false : sans ça llama.cpp ne compte RIEN et llama_perf_context rend des zéros.
+	// C'est la seule source qui sépare l'évaluation du prompt de l'écriture — et cette séparation
+	// est exactement la question ouverte : une sélection prend 112 s en jeu, et personne ne sait
+	// quelle part va au prompt. Le coût de la mesure est un compteur par appel, rien de plus.
+	cp.no_perf = false;
 	cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_DISABLED;  // b9305: AUTO resolves to ENABLED on this build, which (a) ~2x slows CPU gen (0.7 tok/s) and (b) silently crashes the SWA/Gated-Delta-Net + GBNF grammar-decode path on gemma4. DISABLED uses the plain O(n^2) attention — fine for our short prompts and stable under grammar constraints.
 
 	ctx = llama_init_from_model(model, cp);   // b9196 rename (was llama_new_context_with_model)
@@ -161,6 +166,12 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		pending_ready = false;
 		pending_text.clear();
 		pending_error.clear();
+	}
+
+	// Compteurs remis à zéro AVANT la génération : llama_perf_context cumule sur la vie du
+	// contexte, et un cumul ne dit rien de l'appel qu'on est en train de mesurer.
+	if (ctx) {
+		llama_perf_context_reset(ctx);
 	}
 
 	std::string prompt_utf8 = prompt.utf8().get_data();
@@ -390,6 +401,19 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			error_msg = "llama_decode failed";
 		}
 
+		// Relevé des compteurs AVANT de rendre la main : llama.cpp sait exactement combien de
+		// tokens de prompt il a évalués et en combien de temps, puis combien il en a écrits.
+		// Le GDScript approximait « ~4 caractères par token » et ne pouvait pas distinguer les
+		// deux phases — donc pas davantage dire laquelle coûte les secondes.
+		if (ctx) {
+			const llama_perf_context_data pd = llama_perf_context(ctx);
+			std::lock_guard<std::mutex> lock(result_mutex);
+			perf_p_eval_ms = pd.t_p_eval_ms;
+			perf_eval_ms = pd.t_eval_ms;
+			perf_n_p_eval = pd.n_p_eval;
+			perf_n_eval = pd.n_eval;
+		}
+
 		is_generating.store(false);
 
 		{
@@ -431,6 +455,8 @@ void MerlinLLM::_emit_result() {
 		cb = pending_callback;
 		pending_callback = Callable();
 	}
+	double p_eval_ms = 0.0, eval_ms = 0.0;
+	int32_t n_p_eval = 0, n_eval = 0;
 	{
 		std::lock_guard<std::mutex> lock(result_mutex);
 		text = pending_text;
@@ -438,12 +464,22 @@ void MerlinLLM::_emit_result() {
 		pending_text.clear();
 		pending_error.clear();
 		pending_ready = false;
+		p_eval_ms = perf_p_eval_ms;
+		eval_ms = perf_eval_ms;
+		n_p_eval = perf_n_p_eval;
+		n_eval = perf_n_eval;
 	}
 	if (!error_msg.empty()) {
 		result["error"] = String::utf8(error_msg.c_str());
 	} else {
 		result["text"] = String::utf8(text.c_str());
 	}
+	// Toujours joints, même en erreur : un appel qui a expiré a quand même consommé du temps,
+	// et savoir OÙ il l'a passé avant d'être coupé est précisément ce qui manquait.
+	result["prompt_eval_ms"] = p_eval_ms;
+	result["prompt_tokens"] = n_p_eval;
+	result["eval_ms"] = eval_ms;
+	result["eval_tokens"] = n_eval;
 	if (cb.is_valid()) {
 		cb.call(result);
 	}

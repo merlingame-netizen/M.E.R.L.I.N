@@ -391,10 +391,21 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 	var txt: String = _sanitize(str(result.get("text", "")))
 	if result.has("text"):
 		result["text"] = txt  # le consommateur reçoit le texte NETTOYÉ
-	# Approximation tokens (pas de compteur natif sans streaming) : ~4 chars/token.
-	var approx_tokens: int = int(txt.length() / 4.0)
+	# COMPTEURS RÉELS quand le moteur les fournit (llama_perf_context, ajouté 2026-08-18), sinon
+	# l'ancienne approximation « ~4 caractères par token ». La distinction n'est pas cosmétique :
+	# l'approximation additionnait l'évaluation du prompt et l'écriture dans un seul chiffre, donc
+	# elle ne pouvait pas dire laquelle des deux coûte les secondes — la question ouverte depuis
+	# qu'une sélection prend 112 s en jeu contre 31 s sans rien dessiner.
+	var p_eval_ms: float = float(result.get("prompt_eval_ms", 0.0))
+	var eval_ms: float = float(result.get("eval_ms", 0.0))
+	var n_prompt: int = int(result.get("prompt_tokens", 0))
+	var n_ecrits: int = int(result.get("eval_tokens", 0))
+	var reels: bool = n_ecrits > 0 or n_prompt > 0
+	var approx_tokens: int = n_ecrits if reels else int(txt.length() / 4.0)
 	var tok_per_s: float = 0.0
-	if elapsed_ms > 0:
+	if reels and eval_ms > 0.0:
+		tok_per_s = float(n_ecrits) * 1000.0 / eval_ms   # vitesse d'ÉCRITURE seule, comparable à Ollama
+	elif elapsed_ms > 0:
 		tok_per_s = float(approx_tokens) * 1000.0 / float(elapsed_ms)
 	_last_metrics = {
 		"total_ms": elapsed_ms,
@@ -402,7 +413,15 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 		"tok_per_s": tok_per_s,
 		"chars": txt.length(),
 		"ok": not result.has("error"),
+		"compteurs_reels": reels,
+		"prompt_ms": p_eval_ms, "prompt_tokens": n_prompt,
+		"ecriture_ms": eval_ms, "tokens_ecrits": n_ecrits,
 	}
+	if reels:
+		var vp: float = (float(n_prompt) * 1000.0 / p_eval_ms) if p_eval_ms > 0.0 else 0.0
+		print("[MerlinNative] %s : prompt %d tok en %.1f s (%.1f tok/s) · ecriture %d tok en %.1f s (%.1f tok/s) · total %.1f s"
+				% [_current_label, n_prompt, p_eval_ms / 1000.0, vp,
+					n_ecrits, eval_ms / 1000.0, tok_per_s, elapsed_ms / 1000.0])
 	_activity_log.append({
 		"label": _current_label, "ms": elapsed_ms, "chars": txt.length(),
 		"ok": not result.has("error"), "t": Time.get_ticks_msec(),
