@@ -62,6 +62,7 @@ const ARC_TRANCHE: int = 4
 # en vol à chaque pose. Compter ces collisions comme des échecs brûlait le crédit en deux beats
 # et condamnait toute la fin de quête au secours. Une collision n'est pas un échec : seul un
 # moteur LIBRE qui rend un tableau vide en est un (deux suffisent à renoncer).
+const RICHESSE_ISSUE: int = 2
 const ARC_TRANCHE_BUDGET_S: float = 300.0
 const ARC_ECHECS_REELS_MAX: int = 2
 # Combien de temps on laisse le moteur finir ce qu'il fait avant de retenter. Une résolution
@@ -2255,7 +2256,11 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# A4 : TOUT l'assemblage du prompt (deg_fr/directives/registres/cover_hint/ctx/exemple + budget
 	# tokens long_form) vit dans MerlinPromptBuilder.resolution — le fil rouge _run_thread y est
 	# passé en argument (le builder ne lit aucun autoload).
-	var p: Dictionary = MerlinPromptBuilder.resolution(situation, played_cards, res, _run_thread)
+	# Richesse 2 par défaut (laboratoire du 2026-08-18, jugé sur pièce) : au palier 2, TOUS les
+	# personnages nommés de la scène réagissent — la pierre se fissure, le chevalier cesse de
+	# prier, les druides s'interrompent — pour un coût quasi identique (47 → 51 s, l'évaluation
+	# domine). « Les résolutions sont trop légères » : c'est ce palier qui répond.
+	var p: Dictionary = MerlinPromptBuilder.resolution(situation, played_cards, res, _run_thread, RICHESSE_ISSUE)
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return ""

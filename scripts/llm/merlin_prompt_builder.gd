@@ -255,7 +255,9 @@ static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String
 	# QUI S'Y OPPOSE, ce que le Voyageur RISQUE. Une intro qui n'annonce pas d'opposition
 	# n'annonce aucun jeu.
 	var usr: String = "Quete proposee au Voyageur: \"%s\" -- %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 5 a 7 phrases la LEGENDE derriere cette quete a %s, dans cet ordre : (1) le LIEU et ce qu'on en raconte, (2) CE QUI EST EN JEU -- nomme clairement ce qui est cherche, menace ou promis, (3) QUI ou QUOI s'y OPPOSE -- un etre, un serment, une force, nomme-le, (4) ce que le Voyageur RISQUE s'il echoue. Le mystere reste dans l'AMBIANCE, jamais dans la comprehension du but. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
-	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 220, "label": "intro de quête (Merlin)"}}
+	# 260 et non 220 : au laboratoire, la légende de 187 tokens s'est fait couper en pleine
+	# phrase (« sans la clé ») — le budget doit laisser au modèle la place de refermer.
+	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 260, "label": "intro de quête (Merlin)"}}
 
 
 # --- OUVERTURE NARRATIVE : lance VRAIMENT l'histoire de CE scénario (voix narrateur, 3-4 phrases) ---
