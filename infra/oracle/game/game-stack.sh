@@ -110,6 +110,10 @@ start_native() {
     setsid env MAX_FPS="${MAX_FPS:-30}" MERLIN_SCENE="${MERLIN_SCENE:-}" \
         MERLIN_QUIT_AFTER_S="${MERLIN_QUIT_AFTER_S:-}" MERLIN_BIOME="${MERLIN_BIOME:-}" \
         MERLIN_E2E="${MERLIN_E2E:-}" MERLIN_E2E_OUT="${MERLIN_E2E_OUT:-}" \
+        MERLIN_SCRIPT="${MERLIN_SCRIPT:-}" MERLIN_PHASE="${MERLIN_PHASE:-}" \
+        MERLIN_PICK="${MERLIN_PICK:-}" MERLIN_PICK_RAISON="${MERLIN_PICK_RAISON:-}" \
+        MERLIN_SELECTION_OUT="${MERLIN_SELECTION_OUT:-}" MERLIN_SELECTION_IN="${MERLIN_SELECTION_IN:-}" \
+        MERLIN_JOURNAL_OUT="${MERLIN_JOURNAL_OUT:-}" MERLIN_SHOTS_DIR="${MERLIN_SHOTS_DIR:-}" \
         unshare --user --map-root-user --mount \
         bash "$SCRIPT_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
     echo $! > "$RUNDIR/inner.pid"

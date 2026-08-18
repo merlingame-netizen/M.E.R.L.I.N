@@ -98,6 +98,13 @@ GODOT_ARGS=(--path . --rendering-driver opengl3 --audio-driver "$AUDIO_DRIVER"
 if [ -n "${MERLIN_SCENE:-}" ]; then
     GODOT_ARGS+=("$MERLIN_SCENE")
 fi
+# MERLIN_SCRIPT : lancer un HARNAIS (SceneTree) au lieu d'une scène, mais AVEC le rendu réel —
+# fenêtre, Xvfb, llvmpipe, exactement les conditions du joueur. C'est ce qu'il faut pour jouer une
+# partie entière et la raconter : un harnais headless irait plus vite mais ne prouverait rien de
+# ce que le joueur voit, et ne pourrait pas prendre de captures.
+if [ -n "${MERLIN_SCRIPT:-}" ]; then
+    GODOT_ARGS+=(--script "$MERLIN_SCRIPT")
+fi
 if [ -n "${MERLIN_QUIT_AFTER_S:-}" ]; then
     ( sleep "$MERLIN_QUIT_AFTER_S"; kill -TERM $$ 2>/dev/null ) &
     echo "[native-inner] chien de garde : arrêt dans ${MERLIN_QUIT_AFTER_S}s" >&2
