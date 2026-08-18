@@ -104,6 +104,8 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
             if src:
                 img = '<figure class="cliche"><img src="%s" alt="Le jeu au beat %d"></figure>' % (
                     src, int(b.get("index", 0)))
+        marque = ('<p class="secours">Issue servie par le banc de secours — le modèle n\'a pas '
+                  'rendu à temps.</p>') if b.get("secours") else ""
         blocs.append("""
 <article class="beat">
   <div class="rail">
@@ -127,6 +129,7 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
     <div class="issue">
       <span class="degre %(cls)s">%(lib)s</span>
       <span class="delta">%(dint)s PV · %(dcor)s corruption</span>
+      %(marque)s
       %(resolution)s
     </div>
   </div>
@@ -145,6 +148,7 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
             "dint": ("%+d" % dint) if dint else "0",
             "dcor": ("%+d" % dcor) if dcor else "0",
             "resolution": bbcode(str(b.get("resolution", ""))),
+            "marque": marque,
         })
 
     img_fin = ""
@@ -171,6 +175,7 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
         "integrite": int(fin.get("integrite", 0)),
         "corruption": int(fin.get("corruption", 0)),
         "sentiers": "".join(sentiers),
+        "intro": bbcode(str(d.get("intro", ""))) or '<p class="vide">Aucune ouverture enregistrée.</p>',
         "beats": "".join(blocs) or '<p class="vide">Aucun beat joué.</p>',
         "img_fin": img_fin,
         "resume": bbcode(str(fin.get("resume", ""))),
@@ -284,6 +289,11 @@ ol.sentiers{list-style:none;padding:0;margin:0;display:grid;gap:.9rem}
   border-radius:2px;font:400 .8rem/1 "IBM Plex Mono",monospace}
 .verbe b{margin-left:.4rem;font-variant-numeric:tabular-nums}
 .vide{color:var(--brume);font-style:italic}
+.ouverture{max-width:64ch;font-size:1.06rem;padding:1.3rem 1.5rem;background:var(--surface);
+  border-left:3px solid var(--or);border-radius:0 3px 3px 0}
+.ouverture p{margin:0 0 .8rem}.ouverture p:last-child{margin:0}
+.secours{margin:.7rem 0 0;padding:.45rem .7rem;background:var(--oxyde);color:var(--pierre);
+  border-radius:2px;font:600 .74rem/1.4 "IBM Plex Mono",monospace}
 footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--trait);
   font:400 .78rem/1.6 "IBM Plex Mono",monospace;color:var(--brume)}
 @media(max-width:40rem){
@@ -310,6 +320,11 @@ footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--trait);
 <section>
   <h2>Les trois sentiers proposés</h2>
   <ol class="sentiers">%(sentiers)s</ol>
+</section>
+
+<section>
+  <h2>L'ouverture</h2>
+  <div class="ouverture">%(intro)s</div>
 </section>
 
 <section>
