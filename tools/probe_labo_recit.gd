@@ -42,6 +42,12 @@ func _await_node(path: String, max_ms: int) -> Node:
 
 
 func _gen(mn: Node, nom: String, p: Dictionary) -> Dictionary:
+	# Le moteur est MONO-PLACE et l'amorçage du préfixe part tout seul à model_ready : sans cette
+	# attente, la première batterie entière a rebondi en 6 s sur « génération déjà en cours » —
+	# six items, zéro token, constaté à la première exécution.
+	var t_libre: int = Time.get_ticks_msec()
+	while mn.is_busy() and (Time.get_ticks_msec() - t_libre) < 120000:
+		await create_timer(0.5).timeout
 	var t0: int = Time.get_ticks_msec()
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	var m: Dictionary = mn.last_metrics()
