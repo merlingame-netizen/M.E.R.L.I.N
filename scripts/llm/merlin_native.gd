@@ -161,6 +161,25 @@ func _monter_moteur() -> bool:
 # Build EXPORTÉ : globalize_path(res://) ne fonctionne PAS hors éditeur et le modèle (3,3 GB)
 # n'est pas embarqué — il est livré À CÔTÉ de l'exe : <exe_dir>/models/<nom>, sinon <exe_dir>/<nom>.
 func _resolve_model_path() -> String:
+	# BASCULE DE MESURE (2026-08-18). La bible R58 prescrit le e2b « pour la rapidité CPU » et
+	# réserve le e4b à « l'option qualité » ; le jeu tourne en e4b depuis toujours, sans que les
+	# deux aient jamais été comparés sur la même tâche. MERLIN_MODELE=e2b|e4b permet de les
+	# opposer sans toucher au code — la décision se prendra sur les sorties CÔTE À CÔTE, pas sur
+	# une préférence. Chemin absolu accepté aussi, pour un GGUF hors du dépôt.
+	var force: String = OS.get_environment("MERLIN_MODELE")
+	if force != "":
+		var choisi: String = force
+		if force == "e2b":
+			choisi = MODEL_E2B
+		elif force == "e4b":
+			choisi = MODEL_E4B
+		if choisi.begins_with("res://"):
+			choisi = ProjectSettings.globalize_path(choisi)
+		if FileAccess.file_exists(choisi):
+			print("[MerlinNative] modele force par MERLIN_MODELE : %s" % choisi)
+			return choisi
+		push_warning("[MerlinNative] MERLIN_MODELE=%s introuvable (%s) — resolution normale"
+				% [force, choisi])
 	# Le e4b passe en premier partout : présent → il l'emporte ; absent → le e2b, comme avant.
 	if OS.has_feature("editor"):
 		for res_path in MODELES:
