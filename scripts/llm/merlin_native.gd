@@ -403,7 +403,11 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 			# AU FIL DE L'EAU : on vide le tampon du moteur à chaque image. Mesuré le 2026-08-18,
 			# l'écriture prend 38 s en jeu — attendre la fin pour montrer quoi que ce soit gâche
 			# le tiers du temps où le premier résultat est déjà écrit.
-			if _llm.has_method("poll_stream"):
+			# Pas de flux pour un AMORÇAGE : il ne produit qu'un token, aussitôt jeté, et il n'a
+			# rien à montrer. Le laisser passer polluait la mesure — le premier « texte reçu »
+			# datait de l'amorçage, pas de la vraie écriture, et donnait un chiffre faux de 13 s
+			# (constaté 2026-08-18 : « premier texte reçu en 15,7 s · debut=Ah » venait de là).
+			if max_tokens > 1 and _llm.has_method("poll_stream"):
 				var morceau: String = str(_llm.poll_stream())
 				if morceau != "":
 					cumul += morceau
