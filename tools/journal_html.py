@@ -71,6 +71,11 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
     fin = d.get("fin") or {}
     beats = d.get("beats") or []
     cliches = {c["nom"]: pathlib.Path(c["fichier"]) for c in (d.get("cliches") or [])}
+    # Les incidents portent le numero du beat pendant lequel ils sont survenus : on les remet a
+    # leur place dans le recit plutot que de les entasser en fin de document.
+    par_beat: dict = {}
+    for inc in (d.get("incidents") or []):
+        par_beat.setdefault(int(inc.get("beat", 0)), []).append(str(inc.get("quoi", "")))
     if dossier_cliches:
         for p in sorted(dossier_cliches.glob("*")):
             nom = re.sub(r"^\d+_", "", p.stem)
@@ -106,6 +111,26 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
                     src, int(b.get("index", 0)))
         marque = ('<p class="secours">Issue servie par le banc de secours — le modèle n\'a pas '
                   'rendu à temps.</p>') if b.get("secours") else ""
+        # CE QUI ÉTAIT POSSIBLE, pas seulement ce qui a été joué : sans la main et les tuiles, on
+        # lit une histoire, on ne contrôle pas un jeu. La carte choisie est marquée.
+        choisi_a = str((b.get("geste") or {}).get("action", ""))
+        choisi_t = str((b.get("geste") or {}).get("trait", ""))
+        dispo = []
+        for t in (b.get("tuiles") or []):
+            nom = str(t.get("nom", ""))
+            dispo.append('<span class="dispo%s">%s</span>' % (
+                " pris" if nom == choisi_a else "", html.escape(nom)))
+        for c in (b.get("main") or []):
+            nom = str(c.get("nom", ""))
+            cor = int(c.get("corruption", 0))
+            dispo.append('<span class="dispo trait%s">%s%s</span>' % (
+                " pris" if nom == choisi_t else "", html.escape(nom),
+                (" +%d✦" % cor) if cor else ""))
+        main_html = ('<div class="dispos"><span class="geste-l">Disponible</span>%s</div>'
+                     % "".join(dispo)) if dispo else ""
+        incs = par_beat.get(int(b.get("index", 0)), [])
+        inc_html = ('<ul class="incidents">%s</ul>'
+                    % "".join("<li>%s</li>" % html.escape(i) for i in incs)) if incs else ""
         blocs.append("""
 <article class="beat">
   <div class="rail">
@@ -126,6 +151,8 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
       <span class="mecanique">dé %(de)d · difficulté %(diff)d</span>
       %(reqs)s
     </div>
+    %(main)s
+    %(incidents_beat)s
     <div class="issue">
       <span class="degre %(cls)s">%(lib)s</span>
       <span class="delta">%(dint)s PV · %(dcor)s corruption</span>
@@ -149,6 +176,8 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
             "dcor": ("%+d" % dcor) if dcor else "0",
             "resolution": bbcode(str(b.get("resolution", ""))),
             "marque": marque,
+            "main": main_html,
+            "incidents_beat": inc_html,
         })
 
     img_fin = ""
@@ -292,6 +321,13 @@ ol.sentiers{list-style:none;padding:0;margin:0;display:grid;gap:.9rem}
 .ouverture{max-width:64ch;font-size:1.06rem;padding:1.3rem 1.5rem;background:var(--surface);
   border-left:3px solid var(--or);border-radius:0 3px 3px 0}
 .ouverture p{margin:0 0 .8rem}.ouverture p:last-child{margin:0}
+.dispos{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:-.6rem 0 1.1rem;
+  padding:.6rem 1rem;font:400 .74rem/1.5 "IBM Plex Mono",monospace}
+.dispo{padding:.15rem .5rem;border:1px solid var(--trait);border-radius:2px;color:var(--brume)}
+.dispo.trait{border-style:dashed}
+.dispo.pris{border-color:var(--mousse);color:var(--encre);font-weight:600;background:var(--surface)}
+.incidents{margin:0 0 1.1rem;padding-left:1.1rem;color:var(--brume);
+  font:400 .82rem/1.6 "IBM Plex Mono",monospace}
 .secours{margin:.7rem 0 0;padding:.45rem .7rem;background:var(--oxyde);color:var(--pierre);
   border-radius:2px;font:600 .74rem/1.4 "IBM Plex Mono",monospace}
 footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--trait);
