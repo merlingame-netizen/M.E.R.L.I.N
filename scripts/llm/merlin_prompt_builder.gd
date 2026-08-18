@@ -270,6 +270,44 @@ static func opening(scenario: Dictionary, lieu: String = "Broceliande") -> Dicti
 #     la scène DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés). ---
 # v1.0-V4a (spec §F) — `pool_list` = pool générable AFFICHÉ, injecté comme LISTE FERMÉE (contrainte
 # dure) : les scènes ne réclament que des forces atteignables par le build courant. [] = legacy.
+# SCÈNE EN LOOKAHEAD — la scène du beat `pos+1` (sur `total`), écrite APRÈS l'issue du beat
+# précédent, en la connaissant.
+#
+# POURQUOI. L'arc pré-écrit par tranches ne peut pas savoir ce que la résolution du joueur a
+# fait : la scène suivante ignorait le geste, le degré, la conséquence — « les beats ne
+# s'enchaînent pas logiquement par rapport à ce qui a été fait » (Maxime, 2026-08-18). C'est le
+# lookahead que la bible prescrit depuis le départ : la situation N+1 s'écrit pendant que le
+# joueur lit l'issue N, avec cette issue DANS le prompt.
+static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
+		req_tags: Array, precedent: String, issue_precedente: String,
+		faction_block: String = "", lieu: String = "Broceliande", pool_list: Array = []) -> Dictionary:
+	var title: String = str(scenario.get("title", "")).strip_edges()
+	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
+	var role: String = _role_de_beat(btype, pos, total, title)
+	var cues: PackedStringArray = []
+	for t in req_tags:
+		cues.append(str(TAG_CUE.get(str(t), str(t))))
+	var cue_txt: String = " ET ".join(cues) if cues.size() > 0 else "agir"
+	var pool_line: String = ""
+	if not pool_list.is_empty():
+		var pl: PackedStringArray = []
+		for t in pool_list:
+			pl.append(str(t))
+		pool_line = "\nFORCES AUTORISEES (liste FERMEE) : %s. La scene ne doit exiger QUE des forces de cette liste." % ", ".join(pl)
+	var fil: String = ""
+	if precedent.strip_edges() != "":
+		fil += "\nSCENE PRECEDENTE (ne la reecris pas) : %s" % precedent.strip_edges()
+	if issue_precedente.strip_edges() != "":
+		fil += "\nCE QUE LE VOYAGEUR VIENT DE FAIRE ET SON RESULTAT : %s\nTa scene DECOULE de ce resultat : elle en porte la trace visible (une porte ouverte reste ouverte, un etre offense reste offense, une dette suit)." % issue_precedente.strip_edges()
+	var usr: String = faction_block + ("Conte la SCENE %d sur %d de la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [
+		pos + 1, total, title, pitch, lieu]) + fil \
+		+ "\nROLE de cette scene : %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [role, cue_txt] \
+		+ pool_line \
+		+ "\nLa scene = 3 a 5 phrases CONCRETES (qui, quoi, ou) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene."
+	return {"system": SYSTEM_PREFIX, "user": usr,
+			"opts": {"creative": true, "max_tokens": 150, "label": "scène %d (lookahead)" % [pos + 1]}}
+
+
 # TRANCHE D'ARC — les beats `debut+1` à `debut+types.size()` d'une quête qui en compte `total`.
 #
 # POURQUOI DES TRANCHES. L'arc était figé à CINQ étapes, en une seule génération. Une quête plus
@@ -371,7 +409,12 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 
 # --- RÉSOLUTION : le code a calculé le degré ; le prompt fait NARRER la COMBINAISON comme UN geste
 #     unifié (R63/R105). `run_thread` = fil rouge {title, last_gist} passé par merlin_scenario. ---
-static func resolution(situation: Dictionary, played_cards: Array, res: Dictionary, run_thread: Dictionary) -> Dictionary:
+# `richesse` 0|1|2 : cible de phrases et budget de l'issue. 0 = l'équilibre actuel (3-4 phrases) ;
+# 1 = ample (5-7) ; 2 = très ample (7-9). Constante pour une session entière — la cible vit dans
+# la TÊTE STABLE du prompt, donc en changer casse le cache de préfixe : c'est un réglage, pas un
+# paramètre par beat. Ajouté pour le laboratoire du 2026-08-18 (« résolutions trop légères »),
+# et briqué pour le futur preset Éco/Équilibré/Riche des Options (R74).
+static func resolution(situation: Dictionary, played_cards: Array, res: Dictionary, run_thread: Dictionary, richesse: int = 0) -> Dictionary:
 	var degree: String = str(res.get("degree", "reussite"))
 	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes a un prix", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
 	# v10.6 — directive d'ISSUE explicite par degré : la lecture du batch (HTML contrôle) montrait
@@ -478,6 +521,10 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	# de préfixe) ; long_form ne pilote plus que le budget de tokens.
 	var long_form: bool = is_strong_moment(str(situation.get("type", "")), degree)
 	var tok_budget: int = 260 if long_form else 150
+	if richesse == 1:
+		tok_budget = 340 if long_form else 240
+	elif richesse >= 2:
+		tok_budget = 420 if long_form else 340
 	# v10.17 (user 2026-06-07) : on PASSE la situation + un EXEMPLE gold (few-shot in-context) pour que
 	# l'issue RESOLVE la situation precise (pas un generique « le chemin s'ouvre ») en fondant les 2
 	# forces, calee sur la prose cible. MerlinProse.strip_scene_echo (côté scénario) reste le filet anti-recopiage.
@@ -491,7 +538,12 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	# (scène, forces, degré, ~350 tokens). Dès le 2e beat, seule la queue est réévaluée.
 	# Les règles sont DEGRE-NEUTRES pour rester identiques d'un beat à l'autre : le degré et sa
 	# directive vivent en queue — la dernière position, celle que le modèle suit le mieux.
-	var tete: String = ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en 3 a 4 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante). Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
+	var cible_phrases: String = "3 a 4 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante)"
+	if richesse == 1:
+		cible_phrases = "5 a 7 phrases (7 a 8 si le moment est un Climax ou une reussite eclatante)"
+	elif richesse >= 2:
+		cible_phrases = "7 a 9 phrases, amples et sensorielles (jusqu'a 10 si le moment est un Climax)"
+	var tete: String = ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
 	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
 	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
 	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.
