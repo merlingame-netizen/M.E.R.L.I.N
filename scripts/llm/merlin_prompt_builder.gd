@@ -199,7 +199,23 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	#
 	# La brièveté de l'ACCROCHE reste, mais pour la seule raison qui tienne encore : elle se lit
 	# mieux d'un coup d'œil. Plus aucune promesse de gain de temps là-dessus.
-	var usr: String = bloc + "\n" + vari + anti + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = UNE phrase breve, imperatif tutoye SANS dire 'Voyageur' : une action concrete ET ce qui est en jeu. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
+	# L'ORDRE DES BLOCS EST UNE DÉCISION DE PERFORMANCE, pas de style (2026-08-18).
+	#
+	# Le moteur ne relit plus ce qu'il a déjà lu : il compare le nouveau prompt à l'ancien et
+	# reprend au premier point de divergence. Or `vari` (l'angle tiré au sort) et `anti` (les
+	# titres déjà vus) changent à CHAQUE partie. Placés au milieu — ce qu'ils étaient — ils
+	# faisaient diverger le prompt dès le deuxième bloc, et tout ce qui suivait devait être relu
+	# malgré le cache : la consigne entière, la plus longue partie.
+	#
+	# Repoussés à la fin, la divergence n'arrive qu'au dernier moment : la matière du biome et la
+	# consigne, qui ne bougent pas de la partie, sont lues une fois pour toutes. Mesuré avant ce
+	# changement : 26,9 s de lecture de prompt sur les 65,4 s d'une sélection.
+	#
+	# Effet de bord favorable sur le fond : une consigne placée en fin de prompt est mieux suivie
+	# qu'une consigne noyée au milieu. On ne perd donc rien à l'obéissance du modèle.
+	var usr: String = bloc + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = UNE phrase breve, imperatif tutoye SANS dire 'Voyageur' : une action concrete ET ce qui est en jeu. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
+	# La part variable EN DERNIER — voir la note ci-dessus.
+	usr += vari + anti
 	# plein_regime : la sélection s'écrit derrière le voile « Merlin rêve les sentiers », où rien
 	# d'utile n'est joué ni rendu. Tous les cœurs y passent — c'est le seul moment du jeu où le
 	# ménage à moitié de cœurs ne protège aucune image et ne fait que doubler l'attente.
