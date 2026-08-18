@@ -821,6 +821,24 @@ func _ready() -> void:
 	var to: Node = get_node_or_null("/root/TweaksOverlay")
 	if to != null and to.has_signal("tweaks_reloaded"):
 		to.tweaks_reloaded.connect(_on_tweaks_reloaded)
+	# AMORÇAGE : faire lire sa voix à Merlin dès que le modèle est là, pendant que le joueur
+	# regarde encore le menu. Mesuré le 2026-08-18 : la lecture du prompt coûte 26,9 s en jeu
+	# sur les 65,4 s d'une sélection, et la voix en est la plus grosse part. La payer ici, c'est
+	# la payer dans un temps qui ne coûte rien au joueur — le cache la retient ensuite.
+	var mn: Node = _mn()
+	if mn != null:
+		if mn.is_ready():
+			_amorcer()
+		elif mn.has_signal("model_ready"):
+			mn.model_ready.connect(_amorcer, CONNECT_ONE_SHOT)
+
+
+# Silencieux et sans conséquence : si l'amorçage ne se fait pas, la sélection paie simplement la
+# lecture complète, comme avant. Un préchauffage raté ne doit jamais devenir une panne visible.
+func _amorcer() -> void:
+	var mn: Node = _mn()
+	if mn != null and mn.has_method("amorcer_prefixe"):
+		mn.amorcer_prefixe(_voice_prefix())
 
 
 func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:

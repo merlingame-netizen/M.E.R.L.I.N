@@ -204,7 +204,11 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 
 		if (error_msg.empty()) {
 			int32_t n_tok_final = n_tok;
+			// Troncature = les positions glissent, et un préfixe commun calculé dessus désignerait
+			// des tokens qui ne sont plus aux mêmes places. On l'interdit dans ce cas.
+			bool tronque = false;
 			if (ctx_len > 0 && n_tok_final > (ctx_len - 4)) {
+				tronque = true;
 				const int32_t keep = std::max<int32_t>(ctx_len - 4, 1);
 				const int32_t drop = n_tok_final - keep;
 				tokens.erase(tokens.begin(), tokens.begin() + drop);
@@ -212,21 +216,48 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			}
 			tokens.resize(static_cast<size_t>(n_tok_final));
 
-			// Phase 6 KV cache prefix reuse — DISABLED v7.7.26 due to a stale-state
-			// bug : last_prompt_tokens stores only the PROMPT tokens but the KV cache
-			// also contains generated tokens from the previous call, so the prefix
-			// match is incoherent with the actual cache contents. On the second call
-			// this corrupts the cache and llama_decode hangs indefinitely on Gemma 4
-			// E2B. Force full clear + decode every call until the tracker is fixed
-			// to also append generated tokens (see code-review HIGH #1).
+			// RÉUTILISATION DU PRÉFIXE KV — réactivée le 2026-08-18, avec le traqueur réparé.
+			//
+			// LE CHIFFRE QUI JUSTIFIE CE TRAVAIL : mesuré sur la VM, une sélection coûte 31,6 s,
+			// dont **15,9 s rien qu'à relire son prompt** — 656 tokens, la moitié du temps. Et ce
+			// prompt est quasi identique d'un appel à l'autre : la voix de Merlin et la matière du
+			// biome ne changent pas de la partie. On repayait donc chaque fois la lecture de ce
+			// qu'on venait déjà de lire.
+			//
+			// LE BUG D'ORIGINE, et pourquoi la réutilisation avait été coupée : `last_prompt_tokens`
+			// n'enregistrait que les tokens du PROMPT, alors que le cache contient aussi les tokens
+			// ÉCRITS à la suite. Le préfixe commun était donc calculé contre une image fausse du
+			// cache, et au deuxième appel `llama_decode` partait en boucle infinie sur Gemma 4.
+			//
+			// LA RÉPARATION tient en une phrase : le traqueur suit désormais TOUT ce que le cache
+			// contient — prompt PUIS tokens écrits, ajoutés un à un dans la boucle plus bas. Le
+			// préfixe commun est alors calculé contre la réalité, et `llama_memory_seq_rm` coupe
+			// exactement là où les deux suites divergent.
 			llama_memory_t mem = llama_get_memory(ctx);
 			int32_t common_prefix = 0;
-			(void)last_prompt_tokens;  // intentionally unused while reuse is disabled
+			if (!tronque) {
+				// AU MOINS UN TOKEN doit rester à décoder : `llama_decode` sur un lot vide est
+				// invalide, et il nous faut de toute façon les logits du dernier token pour
+				// échantillonner. D'où le `- 1`.
+				const int32_t max_prefix = std::min<int32_t>(
+					static_cast<int32_t>(last_prompt_tokens.size()), n_tok_final - 1);
+				while (common_prefix < max_prefix
+						&& last_prompt_tokens[static_cast<size_t>(common_prefix)]
+							== tokens[static_cast<size_t>(common_prefix)]) {
+					common_prefix++;
+				}
+			}
+			// Un préfixe minuscule ne vaut pas le risque : le gain serait dans le bruit, alors que
+			// tout écart entre le cache et le traqueur coûte une génération corrompue. En dessous
+			// de ce seuil on repart proprement de zéro.
+			if (common_prefix < 32) {
+				common_prefix = 0;
+			}
 
 			if (common_prefix > 0 && mem) {
-				// Remove only the diverging KV entries, keep the common prefix
+				// On garde le préfixe commun et on jette tout ce qui suit — y compris les tokens
+				// écrits au tour précédent, qui n'ont rien à faire dans ce prompt-ci.
 				llama_memory_seq_rm(mem, 0, common_prefix, -1);
-				// Decode only the new (non-cached) tokens
 				llama_batch batch = llama_batch_get_one(
 					tokens.data() + common_prefix,
 					n_tok_final - common_prefix);
@@ -258,8 +289,17 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				}
 			}
 
-			// Store tokens for next call's prefix comparison
-			last_prompt_tokens.assign(tokens.begin(), tokens.begin() + n_tok_final);
+			// Le traqueur reflète EXACTEMENT le cache : le prompt maintenant, les tokens écrits au
+			// fur et à mesure. Sur erreur de décodage on vide les deux — un cache dont on ne sait
+			// plus l'état est pire qu'un cache vide.
+			if (error_msg.empty()) {
+				last_prompt_tokens.assign(tokens.begin(), tokens.begin() + n_tok_final);
+			} else {
+				if (mem) {
+					llama_memory_clear(mem, true);
+				}
+				last_prompt_tokens.clear();
+			}
 		}
 
 		sampler = nullptr;
@@ -353,6 +393,10 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				}
 
 				llama_sampler_accept(sampler, tok);
+				// LE CŒUR DE LA RÉPARATION : le token écrit entre dans le cache, il entre donc
+				// aussi dans le traqueur. C'est cette ligne qui manquait et qui rendait la
+				// réutilisation du préfixe incohérente au deuxième appel.
+				last_prompt_tokens.push_back(tok);
 				if (llm_trace) { std::fprintf(stderr, "[LLMTRACE] i=%d post-accept pre-decode\n", i); std::fflush(stderr); }
 
 				llama_batch next = llama_batch_get_one(&tok, 1);

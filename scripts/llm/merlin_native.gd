@@ -246,6 +246,28 @@ func build_prompt(system_text: String, user_text: String) -> String:
 	return "<start_of_turn>user\n%s\n\n%s<end_of_turn>\n<start_of_turn>model\n" % [system_text, user_text]
 
 
+## AMORÇAGE DU PRÉFIXE — fait lire à Merlin, une fois pour toutes, la partie de son prompt qui
+## ne change jamais.
+##
+## LE CHIFFRE (mesuré 2026-08-18, en jeu) : une sélection coûte 65,4 s au moteur, dont **26,9 s
+## rien qu'à relire son prompt** — 655 tokens, dont l'essentiel est sa propre voix, identique
+## d'un appel à l'autre. Depuis que la réutilisation du cache est réparée côté C++, ce qui a
+## déjà été lu n'est plus relu ; encore faut-il l'avoir lu UNE fois.
+##
+## D'où cet appel-là, lancé dès que le modèle est chargé — pendant que le joueur regarde le menu,
+## donc dans un temps qui ne lui coûte rien. Il ne produit qu'un token, aussitôt jeté : ce qu'on
+## garde, c'est l'empreinte du système dans le cache.
+##
+## Silencieux par construction : aucun signal, aucune erreur remontée. S'il échoue, la sélection
+## paiera simplement la lecture complète, comme avant — un amorçage raté ne doit jamais devenir
+## une panne visible.
+func amorcer_prefixe(system_text: String) -> void:
+	if not is_ready() or _busy or system_text == "":
+		return
+	await generate(system_text, "", {"creative": false, "max_tokens": 1,
+			"plein_regime": true, "label": "amorçage du préfixe"})
+
+
 # Fils d'exécution de la GÉNÉRATION, choisis SELON LE MOMENT (mesuré 2026-08-15 : 2,93 tok/s
 # avec 2 fils sur les 4 cœurs de la VM). Le natif se règle par défaut sur la moitié des cœurs,
 # volontairement, pour « laisser du CPU au jeu » — sur cette VM le rendu est logiciel (llvmpipe),
