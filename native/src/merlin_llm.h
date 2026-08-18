@@ -24,6 +24,8 @@ private:
 	std::mutex callback_mutex;
 	godot::Callable pending_callback;
 	std::mutex result_mutex;
+	std::mutex stream_mutex;       // protège stream_buffer, écrit par le fil d'inférence
+	std::string stream_buffer;     // texte écrit depuis le dernier poll_stream()
 	std::string pending_text;
 	std::string pending_error;
 	bool pending_ready = false;
@@ -56,6 +58,7 @@ public:
 	godot::Error load_model(godot::String path);
 	void generate_async(godot::String prompt, godot::Callable callback);
 	bool poll_result();
+	godot::String poll_stream();
 	bool is_generating_now();
 	void cancel_generation();
 	void set_sampling_params(double p_temperature, double p_top_p, int32_t p_max_tokens);

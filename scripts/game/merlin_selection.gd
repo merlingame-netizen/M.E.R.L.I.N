@@ -44,6 +44,7 @@ var _t_debut: int = 0
 var _cards_box: HBoxContainer
 var _backdrop: MerlinSceneArt          # décor de fond, arrêté pendant la génération
 var _decor_gele: bool = false
+var _reveles: int = 0                  # parchemins déjà montrés depuis le flux d'écriture
 var _title_lbl: Label
 var _back_btn: Button
 var _overlay: Panel
@@ -102,21 +103,38 @@ func _load_selection() -> void:
 	_fps_avant = Engine.max_fps
 	Engine.max_fps = FPS_ATTENTE
 	_geler_le_decor()
+	# RÉVÉLATION PROGRESSIVE (bible R57 « streaming OUI au MVP », jamais fait jusqu'ici).
+	# Mesuré le 2026-08-18 : l'écriture des trois titres prend 38 s en jeu. Le premier est
+	# pourtant terminé au tiers du parcours — le joueur attendait donc vingt-cinq secondes devant
+	# un voile alors que Merlin avait déjà quelque chose à lui montrer.
+	var mn: Node = get_node_or_null("/root/MerlinNative")
+	if mn != null and mn.has_signal("generation_chunk"):
+		mn.generation_chunk.connect(_on_flux)
 	_t_debut = Time.get_ticks_msec()
 	var ok: bool = await _force_wait_titles(sc)
+	if mn != null and mn.has_signal("generation_chunk") and mn.generation_chunk.is_connected(_on_flux):
+		mn.generation_chunk.disconnect(_on_flux)
 	_rendre_la_cadence()
 	_degeler_le_decor()
 	var sels: Array = await sc.take_selection() if ok else []
 	if not is_inside_tree():
 		return
 	if sels.size() < 3:
+		# Renoncement : on retire ce que le flux avait déjà montré. Laisser des parchemins à
+		# l'écran pendant qu'on annonce que Merlin ne répond pas serait un mensonge visuel.
+		_vider_les_parchemins()
 		await _give_up()
 		return
 	_hide_overlay()
 	var titres: Array = []
 	for s in sels:
 		titres.append(str(s.get("title", "?")))
-		_add_parchemin(str(s.get("title", "?")), str(s.get("pitch", "")))
+	# Seuls ceux que le flux n'a pas déjà posés : les réafficher ferait clignoter l'écran, et le
+	# joueur croirait à un défaut. Le nettoyage étant déterministe et appliqué entrée par entrée,
+	# les premiers du flux sont exactement les premiers de la liste finale.
+	for i in range(_reveles, sels.size()):
+		var e: Dictionary = sels[i]
+		_add_parchemin(str(e.get("title", "?")), str(e.get("pitch", "")))
 	# La DURÉE, écrite par le jeu lui-même dans les conditions du joueur — rendu logiciel compris.
 	# Une sonde à côté ne mesure pas la même chose : elle ne dessine rien.
 	var mur: int = Time.get_ticks_msec() - _t_debut
@@ -384,6 +402,71 @@ func _build_ui() -> void:
 	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
+
+
+# Chaque morceau de texte écrit par le modèle passe ici. On n'attend pas la fin : dès qu'un objet
+# JSON se referme, son parchemin peut être posé.
+func _on_flux(cumul: String) -> void:
+	if not is_inside_tree():
+		return
+	var objets: Array = _objets_complets(cumul)
+	# Un compte qui RECULE veut dire qu'une nouvelle tentative a commencé (le cumul repart de
+	# zéro) : on efface ce que la précédente avait posé plutôt que de mélanger deux écritures.
+	if objets.size() < _reveles:
+		_vider_les_parchemins()
+	while _reveles < objets.size():
+		var propre: Array = MerlinProse.clean_selection([objets[_reveles]])
+		_reveles += 1
+		if propre.is_empty():
+			continue   # entrée inexploitable : on la saute sans casser le compte
+		var e: Dictionary = propre[0]
+		_hide_overlay()   # idempotent — le voile ne tombe qu'au premier parchemin
+		_add_parchemin(str(e.get("title", "?")), str(e.get("pitch", "")))
+
+
+# Objets JSON COMPLETS trouvés dans un texte encore en cours d'écriture. On suit l'état des
+# guillemets et des échappements : un « } » à l'intérieur d'un titre ne doit pas être pris pour
+# une fin d'objet, sinon on afficherait des moitiés de parchemin.
+func _objets_complets(txt: String) -> Array:
+	var out: Array = []
+	var profondeur: int = 0
+	var debut: int = -1
+	var dans_chaine: bool = false
+	var echappe: bool = false
+	for i in txt.length():
+		var c: String = txt[i]
+		if dans_chaine:
+			if echappe:
+				echappe = false
+			elif c == "\\":
+				echappe = true
+			elif c == "\"":
+				dans_chaine = false
+			continue
+		if c == "\"":
+			dans_chaine = true
+		elif c == "{":
+			if profondeur == 0:
+				debut = i
+			profondeur += 1
+		elif c == "}":
+			profondeur -= 1
+			if profondeur == 0 and debut >= 0:
+				var d: Variant = JSON.parse_string(txt.substr(debut, i - debut + 1))
+				if d is Dictionary:
+					out.append(d)
+				debut = -1
+			elif profondeur < 0:
+				profondeur = 0   # accolade orpheline : on repart proprement
+	return out
+
+
+func _vider_les_parchemins() -> void:
+	_reveles = 0
+	if _cards_box == null:
+		return
+	for enfant in _cards_box.get_children():
+		enfant.queue_free()
 
 
 # ARRÊTER LE DÉCOR PENDANT QUE MERLIN ÉCRIT (mesuré 2026-08-18).

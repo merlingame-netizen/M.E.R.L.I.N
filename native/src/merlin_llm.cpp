@@ -68,6 +68,7 @@ void MerlinLLM::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_advanced_sampling", "top_k", "repetition_penalty"), &MerlinLLM::set_advanced_sampling);
 	ClassDB::bind_method(D_METHOD("set_grammar", "grammar", "root"), &MerlinLLM::set_grammar, DEFVAL("root"));
 	ClassDB::bind_method(D_METHOD("clear_grammar"), &MerlinLLM::clear_grammar);
+	ClassDB::bind_method(D_METHOD("poll_stream"), &MerlinLLM::poll_stream);
 	ClassDB::bind_method(D_METHOD("set_context_size", "n_ctx"), &MerlinLLM::set_context_size);
 	ClassDB::bind_method(D_METHOD("set_thread_count", "gen_threads", "batch_threads"), &MerlinLLM::set_thread_count);
 	ClassDB::bind_method(D_METHOD("get_model_info"), &MerlinLLM::get_model_info);
@@ -166,6 +167,13 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		pending_ready = false;
 		pending_text.clear();
 		pending_error.clear();
+	}
+
+	{
+		// Tampon vidé avant de commencer : un reste du tour précédent apparaîtrait comme le
+		// début de celui-ci.
+		std::lock_guard<std::mutex> lock(stream_mutex);
+		stream_buffer.clear();
 	}
 
 	// Compteurs remis à zéro AVANT la génération : llama_perf_context cumule sur la vie du
@@ -383,6 +391,17 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				const int32_t n = llama_token_to_piece(vocab, tok, buf, static_cast<int32_t>(sizeof(buf)), 0, true);
 				if (n > 0) {
 					output.append(buf, n);
+					// AU FIL DE L'EAU. Mesuré le 2026-08-18 : l'écriture des trois titres prend
+					// 38 s en jeu, et le joueur ne voit RIEN pendant ce temps — alors que le
+					// premier titre est terminé au tiers du parcours. Le texte part donc dans un
+					// tampon que le fil principal vient vider, et l'écran peut révéler chaque
+					// parchemin dès qu'il est écrit.
+					//
+					// Un TAMPON et non un appel direct : une Callable Godot appelée depuis ce
+					// fil-ci planterait le moteur. Le rendez-vous se fait par poll_stream(),
+					// exactement comme poll_result() le fait déjà pour le résultat final.
+					std::lock_guard<std::mutex> lock(stream_mutex);
+					stream_buffer.append(buf, n);
 				}
 				if (llm_trace) {
 					unsigned char b0 = (n > 0) ? (unsigned char)buf[0] : 0;
@@ -474,6 +493,21 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		thread_active.store(false);  // le thread a TERMINÉ proprement → join() ultérieur sûr/instantané
 	});
 }
+
+// Rend ce qui a été écrit DEPUIS le dernier appel, et vide le tampon. Chaîne vide = rien de
+// neuf. À appeler depuis le fil principal, comme poll_result().
+String MerlinLLM::poll_stream() {
+	std::string morceau;
+	{
+		std::lock_guard<std::mutex> lock(stream_mutex);
+		if (stream_buffer.empty()) {
+			return String();
+		}
+		morceau.swap(stream_buffer);
+	}
+	return String::utf8(morceau.c_str());
+}
+
 
 bool MerlinLLM::poll_result() {
 	bool ready = false;

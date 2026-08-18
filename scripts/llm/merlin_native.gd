@@ -11,6 +11,10 @@ extends Node
 ## (R57/R63 : streaming = ajout C++ futur). Le typewriter se fait côté GDScript.
 
 signal model_ready()
+## Texte CUMULÉ écrit jusqu'ici par la génération en cours. Émis pendant qu'elle écrit, pas
+## après : c'est ce qui permet à un écran de montrer le premier résultat sans attendre le
+## dernier. Ne remplace pas `generation_finished`, qui reste la seule source du résultat validé.
+signal generation_chunk(texte_cumule: String)
 signal model_failed(reason: String)
 signal generation_finished(result: Dictionary)
 
@@ -374,8 +378,17 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	# Auto-polling : on pompe poll_result() nous-mêmes CHAQUE frame (ne plus dépendre uniquement
 	# de _process, qui peut starver en headless --script → await figé). Timeout borné anti-gel.
 	var t0: int = Time.get_ticks_msec()
+	var cumul: String = ""
 	while true:
 		if _llm != null:
+			# AU FIL DE L'EAU : on vide le tampon du moteur à chaque image. Mesuré le 2026-08-18,
+			# l'écriture prend 38 s en jeu — attendre la fin pour montrer quoi que ce soit gâche
+			# le tiers du temps où le premier résultat est déjà écrit.
+			if _llm.has_method("poll_stream"):
+				var morceau: String = str(_llm.poll_stream())
+				if morceau != "":
+					cumul += morceau
+					emit_signal("generation_chunk", cumul)
 			_llm.poll_result()  # fire _on_result quand le thread d'inférence a terminé
 		if _result_ready:
 			break
