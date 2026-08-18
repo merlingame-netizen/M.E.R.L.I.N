@@ -57,6 +57,13 @@ const MIN_RENCONTRE_PER_RUN: int = 2
 # pour marquer les beats concernés dans le document : « écrit par le banc de secours ».
 var _secours_derniers: int = 0
 const ARC_TRANCHE: int = 4
+# Combien de fois on redemande une tranche avant de renoncer. Le moteur est mono-place : une
+# résolution de beat, l'amorçage du préfixe ou une autre tranche peuvent l'occuper au mauvais
+# moment, et ces collisions durent des secondes, pas des minutes.
+const ARC_ESSAIS: int = 4
+# Combien de temps on laisse le moteur finir ce qu'il fait avant de redemander. L'écriture d'une
+# issue coûte ~35 s (mesuré sur la VM) : au-dessous, on redemanderait pour rien.
+const ARC_ATTENTE_S: float = 45.0
 const QUETE_BEATS_MIN: int = 8
 const QUETE_BEATS_MAX: int = 25
 
@@ -1952,14 +1959,29 @@ func prepare_arc(scenario: Dictionary) -> void:
 			types_tranche.append(str((beats[i] as Dictionary).get("type", "Exploration")))
 			tags_tranche.append(picked[i] if i < picked.size() else [])
 		var precedent: String = _resume_arc(arc_complet)
-		var morceau: Array = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
-				debut, total, precedent)
-		# Le titre a changé (nouvelle partie pendant notre attente) → cet arc n'a plus de
-		# destinataire. On s'arrête plutôt que d'écrire dans l'histoire de quelqu'un d'autre.
+		# PATIENCE, ET NON ABANDON. Première version : un `break` dès qu'une tranche rendait vide.
+		# Or le moteur est MONO-PLACE : au tout premier appel, l'amorçage du préfixe écrivait
+		# encore, `generate` a répondu « génération déjà en cours », et ce break a tué l'arc POUR
+		# TOUTE LA PARTIE — zéro tranche écrite sur 25 beats, constaté le 2026-08-18. Une collision
+		# d'une douzaine de secondes ne doit pas coûter l'histoire entière.
+		var morceau: Array = []
+		for essai in ARC_ESSAIS:
+			await _laisser_le_moteur_finir()
+			morceau = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
+					debut, total, precedent)
+			if not morceau.is_empty():
+				break
+			# Le titre a changé (nouvelle partie pendant notre attente) → cet arc n'a plus de
+			# destinataire. On s'arrête plutôt que d'écrire dans l'histoire de quelqu'un d'autre.
+			if str(_run_thread.get("title", "")) != title:
+				return
 		if str(_run_thread.get("title", "")) != title:
 			return
 		if morceau.is_empty():
-			break  # le modèle a rendu la main : on garde ce qui est écrit, le reste ira au secours
+			# Épuisé pour de bon : on garde ce qui est écrit, le reste ira au secours — et on le DIT.
+			push_warning("[MerlinScenario] arc — tranche %d-%d abandonnée après %d essais : le secours prendra ces scènes"
+					% [debut + 1, fin, ARC_ESSAIS])
+			break
 		for i in morceau.size():
 			arc_complet.append(morceau[i])
 			tags_complets.append(tags_tranche[i] if i < tags_tranche.size() else [])
@@ -1978,6 +2000,17 @@ func secours_consomme() -> int:
 	var n: int = _secours_derniers
 	_secours_derniers = 0
 	return n
+
+
+# Laisse le moteur terminer sa tâche en cours. L'arc est le consommateur PATIENT : la résolution
+# du beat courant est la seule que le joueur attend activement, elle passe donc toujours devant.
+func _laisser_le_moteur_finir() -> void:
+	var mn: Node = _mn()
+	if mn == null:
+		return
+	var dl: int = Time.get_ticks_msec() + int(ARC_ATTENTE_S * 1000.0)
+	while (not mn.is_ready() or mn.is_busy()) and Time.get_ticks_msec() < dl:
+		await get_tree().create_timer(0.5).timeout
 
 
 func _resume_arc(arc: Array) -> String:
