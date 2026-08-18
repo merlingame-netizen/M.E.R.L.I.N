@@ -45,6 +45,9 @@ var _cards_box: HBoxContainer
 var _backdrop: MerlinSceneArt          # décor de fond, arrêté pendant la génération
 var _decor_gele: bool = false
 var _reveles: int = 0                  # parchemins déjà montrés depuis le flux d'écriture
+# Instant du PREMIER parchemin. C'est lui la vraie mesure de l'attente : le joueur ne compte pas
+# les secondes jusqu'au troisième titre, il compte celles où il n'a rien devant les yeux.
+var _premier_ms: int = -1
 var _title_lbl: Label
 var _back_btn: Button
 var _overlay: Panel
@@ -223,6 +226,7 @@ func _verdict_e2e(ok: bool, motif: String, mur_ms: int, titres: Array) -> void:
 		return
 	var d: Dictionary = {
 		"ok": ok, "motif": motif, "mur_ms": mur_ms, "titres": titres,
+		"premier_ms": _premier_ms,
 		"biome": str(get_node("/root/MerlinRun").biome),
 		"t": Time.get_datetime_string_from_system(true),
 	}
@@ -421,6 +425,9 @@ func _on_flux(cumul: String) -> void:
 			continue   # entrée inexploitable : on la saute sans casser le compte
 		var e: Dictionary = propre[0]
 		_hide_overlay()   # idempotent — le voile ne tombe qu'au premier parchemin
+		if _premier_ms < 0:
+			_premier_ms = Time.get_ticks_msec() - _t_debut
+			print("[MerlinSelection] premier parchemin en %.1f s" % [_premier_ms / 1000.0])
 		_add_parchemin(str(e.get("title", "?")), str(e.get("pitch", "")))
 
 
@@ -463,6 +470,7 @@ func _objets_complets(txt: String) -> Array:
 
 func _vider_les_parchemins() -> void:
 	_reveles = 0
+	_premier_ms = -1   # la tentative repart de zéro : son premier parchemin reste à venir
 	if _cards_box == null:
 		return
 	for enfant in _cards_box.get_children():
