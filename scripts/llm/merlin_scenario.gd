@@ -2188,6 +2188,7 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	# restauré : sig+running = une génération RÉELLEMENT en vol pour cette signature.
 	_reso_sig = sig
 	_reso_state = "running"
+	print("[MerlinScenario] issue — génération lancée pour %s" % sig)
 	var prose: String = await narrate_resolution(situation, played_cards, res)
 	if epoch != _reso_epoch:
 		# Périmé (invalidate / prefetch plus récent a bumpé l'epoch pendant notre await). Ne remet
@@ -2199,8 +2200,10 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	if prose.length() >= 10:
 		_reso_cache[sig] = prose
 		_reso_state = "ready"
+		print("[MerlinScenario] issue — prête au cache pour %s (%d car.)" % [sig, prose.length()])
 	else:
 		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
+		print("[MerlinScenario] issue — génération VIDE pour %s" % sig)
 
 
 # N4-BUG #2a : relance le prefetch mémorisé quand le modèle vient de charger (one-shot, connecté
@@ -2227,7 +2230,9 @@ func take_resolution(_situation: Dictionary, played_cards: Array, res: Dictionar
 	_pending_prefetch = {}  # N4-BUG #2a : résolution servie ; une relance tardive serait du gâchis moteur
 	var sig: String = _reso_signature(played_cards, res)
 	if _reso_cache.has(sig):
+		print("[MerlinScenario] issue — servie du cache pour %s" % sig)
 		return str(_reso_cache[sig])
+	print("[MerlinScenario] issue — cache VIDE pour %s (état=%s, vol pour=%s)" % [sig, _reso_state, _reso_sig])
 	return ""
 
 
@@ -2259,8 +2264,13 @@ func is_resolution_incoming(played_cards: Array, res: Dictionary) -> bool:
 # 14,6 s : la prose ne peut jamais arriver dans le cap ~12 s à ~3 tok/s) et occupait le moteur
 # single-flight au détriment de l'arc/du lookahead. La relance #2a ne sert donc que la POSE.
 func begin_resolution_wait(played_cards: Array, res: Dictionary) -> bool:
+	var sig: String = _reso_signature(played_cards, res)
 	if is_resolution_incoming(played_cards, res):
+		print("[MerlinScenario] issue — attente engagée pour %s (cache=%s, vol=%s)"
+				% [sig, str(_reso_cache.has(sig)), str(_reso_state == "running" and _reso_sig == sig)])
 		return true
+	print("[MerlinScenario] issue — attente VAINE pour %s (état=%s, vol pour=%s)"
+			% [sig, _reso_state, _reso_sig])
 	_pending_prefetch = {}
 	return false
 
