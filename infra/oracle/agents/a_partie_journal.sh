@@ -34,7 +34,16 @@ mkdir -p "$BASE" "$SHOTS" "$(dirname "$LOCK")"
 # et sans lui elle serait interrompue au bout de cinq minutes, au milieu du récit.
 touch "$LOCK"
 exec 9>"$LOCK"
-flock -n 9 || { echo "une autre partie est en cours — abandon"; exit 1; }
+# ON ATTEND, on n'abandonne pas. Le jeu lancé en arrière-plan HÉRITE de ce descripteur et tient
+# donc le verrou tant qu'il vit — c'est voulu, c'est ce qui empêche le veilleur de le couper. Mais
+# ça veut aussi dire qu'une phase qui vient de finir garde le verrou quelques secondes, le temps
+# que Godot s'éteigne vraiment. Un `-n` refusait alors la phase suivante pour une poignée de
+# secondes d'écart : c'est exactement ce qui est arrivé le 2026-08-18, et la partie n'a jamais
+# démarré. Trois minutes d'attente couvrent largement une extinction.
+if ! flock -w 180 9; then
+    echo "une autre partie tient encore le verrou après 3 min — abandon"
+    exit 1
+fi
 
 etape 1 4 "décharger Ollama"
 # La RAM et les cœurs reviennent au jeu : un modèle résident double le temps de génération
