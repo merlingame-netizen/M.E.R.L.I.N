@@ -1,277 +1,285 @@
 {
-  "_comment": "Manifeste des agents de la VM. schedule = syntaxe cron (user-mode, pas de systemd sur cette VM). enabled=false => installé mais non planifié (lançable à la main depuis le portail).",
-  "agents": [
-    {
-      "id": "game-watchdog",
-      "label": "Veilleur du jeu",
-      "schedule": "*/2 * * * *",
-      "cmd": "a_game_watchdog.sh",
-      "enabled": true,
-      "desc": "Relance le jeu s'il est mort alors qu'il devait tourner (état désiré posé par PLAY/STOP)."
-    },
-    {
-      "id": "game-idle",
-      "label": "Veille du jeu",
-      "schedule": "1-59/2 * * * *",
-      "cmd": "a_game_idle.sh",
-      "enabled": true,
-      "desc": "Coupe le jeu apres 5 min sans spectateur, pour rendre les 4 coeurs au developpement."
-    },
-    {
-      "id": "game-autosync",
-      "label": "Synchro du jeu",
-      "schedule": "*/15 * * * *",
-      "cmd": "a_game_autosync.sh",
-      "enabled": true,
-      "desc": "Détecte un nouveau commit sur la branche du jeu, le récupère, réimporte les assets et relance si le jeu tournait."
-    },
-    {
-      "id": "tools-autosync",
-      "label": "Synchro de l'outillage",
-      "schedule": "7,22,37,52 * * * *",
-      "cmd": "a_tools_autosync.sh",
-      "enabled": true,
-      "desc": "Recupere l'outillage depuis GitHub, regenere le crontab et relance le Studio si le code a bouge."
-    },
-    {
-      "id": "health",
-      "label": "Santé machine",
-      "schedule": "*/5 * * * *",
-      "cmd": "a_health.sh",
-      "enabled": true,
-      "desc": "Relevé CPU / RAM / disque / charge, historisé pour repérer les dérives."
-    },
-    {
-      "id": "disk-guard",
-      "label": "Garde-disque",
-      "schedule": "17 * * * *",
-      "cmd": "a_disk_guard.sh",
-      "enabled": true,
-      "desc": "Purge les vieux journaux et caches quand le disque dépasse 80 %."
-    },
-    {
-      "id": "tunnel-watch",
-      "label": "Veille du tunnel",
-      "schedule": "*/10 * * * *",
-      "cmd": "a_tunnel_watch.sh",
-      "enabled": true,
-      "desc": "Vérifie que le portail répond et journalise l'URL publique (elle change à chaque redémarrage du tunnel)."
-    },
-    {
-      "id": "smoke-scenes",
-      "label": "Smoke nocturne",
-      "schedule": "0 3 * * *",
-      "cmd": "a_smoke_scenes.sh",
-      "enabled": true,
-      "desc": "Lance chaque scène du jeu en headless et compte les erreurs de script. Rapport consultable au réveil."
-    },
-    {
-      "id": "ci-commit",
-      "label": "CI de commit",
-      "schedule": "webhook/push",
-      "cmd": "a_ci_commit.sh",
-      "enabled": false,
-      "desc": "À chaque push sur la branche du jeu : sync + import + smoke de toutes les scènes + boot rendu + capture d'écran. Déclenchée par le webhook GitHub ou par la synchro (15 min)."
-    },
-    {
-      "id": "design-council",
-      "label": "Conseil de design (quotidien)",
-      "schedule": "40 6 * * *",
-      "cmd": "a_design_council.sh",
-      "enabled": true,
-      "desc": "Chaque matin, un conseiller différent relit la mémoire du design et ouvre une conversation dans Parler : une réflexion + deux questions franches."
-    },
-    {
-      "id": "daily-report",
-      "label": "Rapport du matin",
-      "schedule": "0 7 * * *",
-      "cmd": "a_daily_report.sh",
-      "enabled": true,
-      "desc": "Compile les 24 dernières heures en une page : commits, verdicts CI, agents en échec, santé, smoke."
-    },
-    {
-      "id": "coder",
-      "label": "Codeur résident",
-      "schedule": "à la demande",
-      "cmd": "a_coder.sh",
-      "enabled": false,
-      "desc": "Consomme la file de missions (Claude Code headless) et committe sur une branche auto/coder. Requiert une clé API dans ~/.config/merlin-coder.env."
-    },
-    {
-      "id": "gd-content-gap",
-      "label": "Professeur du modèle",
-      "schedule": "20 1,9,15,21 * * *",
-      "cmd": "a_gd_content.sh",
-      "enabled": true,
-      "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN (le jeu génère ses scénarios 100 % en direct — ces cartes ne sont pas du contenu de jeu). Quatre fois par jour."
-    },
-    {
-      "id": "gd-balance",
-      "label": "Idées — équilibrage",
-      "schedule": "50 7,19 * * *",
-      "cmd": "a_gd_balance.sh",
-      "enabled": true,
-      "desc": "Analyse l'équilibrage réel du corpus (effets, factions, verbes) et propose un ajustement chiffré. Deux fois par jour."
-    },
-    {
-      "id": "coder-local",
-      "label": "Codeur local (auto/nightly)",
-      "schedule": "*/30 * * * *",
-      "cmd": "a_coder_local.sh",
-      "enabled": true,
-      "desc": "Applique les missions acceptées (before/after, périmètre data+constantes+patchs ≤30 lignes) sur auto/nightly, smoke à l'appui. Suspendu quand le jeu tourne. Le merge reste un tap."
-    },
-    {
-      "id": "corpus-night",
-      "label": "Jeu d'entraînement (nuit)",
-      "schedule": "10 0-6 * * *",
-      "cmd": "a_corpus_night.sh",
-      "enabled": true,
-      "desc": "Produit en masse des exemples pour le fine-tune merlin-e4b, filtrés par le validateur. Ce n'est PAS du contenu de jeu : le jeu génère ses scénarios en direct."
-    },
-    {
-      "id": "playtest-bot",
-      "label": "Playtest bot (VNC réel)",
-      "schedule": "30 3 * * *",
-      "cmd": "a_playtest_bot.sh",
-      "enabled": true,
-      "desc": "Joue réellement au jeu rendu (clics et touches via VNC), capture chaque écran, détecte NOIR/FIGÉ/MORT par heuristiques. Chaque anomalie devient une carte Décider."
-    },
-    {
-      "id": "billing",
-      "label": "Facturation Oracle",
-      "schedule": "17 * * * *",
-      "cmd": "a_billing.sh",
-      "enabled": true,
-      "desc": "Relève le coût du mois (Usage API). La VM est sur l'offre Always Free : tout montant non nul déclenche une alerte urgente."
-    },
-    {
-      "id": "ollama-serve",
-      "label": "Serveur LLM local",
-      "schedule": "*/2 * * * *",
-      "cmd": "a_ollama_serve.sh",
-      "enabled": true,
-      "desc": "Garantit qu'Ollama tourne (userland) et que le modèle copilote reste résident en RAM."
-    },
-    {
-      "id": "llm-bench",
-      "label": "Bench des modèles",
-      "schedule": "à la demande",
-      "cmd": "a_llm_bench.sh",
-      "enabled": false,
-      "desc": "Mesure chaque modèle installé sur la tâche de triage (latence, tok/s) et fige TRIAGE_MODEL."
-    },
-    {
-      "id": "native-bench",
-      "label": "Vitesse du moteur du jeu",
-      "schedule": "25 4 * * *",
-      "cmd": "a_llm_native_bench.sh",
-      "enabled": true,
-      "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 4h25 : après le playtest, hors des créneaux du corpus."
-    },
-    {
-      "id": "ollama-idle",
-      "label": "Le Délesteur",
-      "schedule": "*/15 * * * *",
-      "cmd": "a_ollama_idle.sh",
-      "enabled": true,
-      "desc": "Rend la RAM à l'atelier d'écriture : il libère le modèle de triage (8 Go) qui ne sert qu'en lot deux fois par jour, et ne touche JAMAIS au modèle de conversation ni à un modèle en train de travailler. Sans lui, 14 Go de modèles restaient chargés et la boucle de corpus, qui en exige 8 de libres, était sautée toute la nuit."
-    },
-    {
-      "id": "gd-pacing",
-      "label": "Rythmeur",
-      "schedule": "40 2 * * *",
-      "cmd": "a_gd_pacing.sh",
-      "enabled": false,
-      "desc": "Simule une run complète : durée, courbe de vie, marge de survie. Joint le patch quand le rythme est incohérent."
-    },
-    {
-      "id": "gd-economy",
-      "label": "Trésorier",
-      "schedule": "50 2 * * *",
-      "cmd": "a_gd_economy.sh",
-      "enabled": false,
-      "desc": "Simule les gains d'une session (Faveurs, Anam, multiplicateurs) et repère l'inflation."
-    },
-    {
-      "id": "gd-audit",
-      "label": "Auditeur bible",
-      "schedule": "10 3 * * *",
-      "cmd": "a_gd_audit.sh",
-      "enabled": false,
-      "desc": "Compte les systèmes que la bible déclare supprimés mais qui vivent encore dans le code."
-    },
-    {
-      "id": "journal",
-      "label": "Le Chroniqueur",
-      "cmd": "a_journal.sh",
-      "schedule": "50 5 * * *",
-      "enabled": true,
-      "desc": "Grave le chapitre du jour : ce que les agents ont fait, ce que tu as décidé, ce qui a bougé et ce qui reste en suspens. Aucun appel au modèle — il ne peut pas se taire."
-    },
-    {
-      "id": "brasero",
-      "label": "Le Braséro",
-      "cmd": "a_brasero.sh",
-      "schedule": "*/20 * * * *",
-      "enabled": true,
-      "desc": "Garde le modèle de conversation chaud en RAM : sans lui, le premier message après une heure de silence paie 40 s de chargement avant même de commencer à répondre. Un seul token demandé toutes les 20 min, zéro euro, et rien du tout quand tu joues."
-    },
-    {
-      "id": "relance",
-      "label": "Le Facteur",
-      "cmd": "a_relance.sh",
-      "schedule": "*/10 * * * *",
-      "enabled": true,
-      "desc": "Rattrape les messages que tu as envoyés et auxquels aucun agent n'a répondu — le cas où le modèle était occupé au moment de l'envoi."
-    },
-    {
-      "id": "parole",
-      "label": "La Parole",
-      "cmd": "a_parole.sh",
-      "schedule": "25 * * * *",
-      "enabled": true,
-      "desc": "Laisse les agents t'interpeller quand quelque chose le mérite vraiment : une scène qui casse deux fois, un écran figé, un patch annulé. 2 fils par jour maximum, aucun appel au modèle."
-    },
-    {
-      "id": "mesures",
-      "label": "Le Métreur du jeu",
-      "cmd": "a_mesures.sh",
-      "schedule": "5 5 * * *",
-      "enabled": true,
-      "desc": "Relève chaque nuit tous les chiffres du jeu (cartes, factions, verbes, rythme, économie, vestiges). Aucun appel au modèle — c'est ce qui permet au journal de dire « ×2,5 → ×2,0 »."
-    },
-    {
-      "id": "parcours",
-      "label": "Le Cartographe",
-      "cmd": "a_parcours.sh",
-      "schedule": "15 5 * * *",
-      "enabled": true,
-      "desc": "Relit le jeu chaque nuit et met à jour la carte du parcours : les écrans, leur enchaînement, l'ordre d'apparition des choses. C'est ce que MERLIN consulte pour savoir de quel écran tu parles."
-    },
-    {
-      "id": "gd-run",
-      "label": "L'Arbitre de la run",
-      "cmd": "a_gd_run.sh",
-      "schedule": "35 2 * * *",
-      "enabled": true,
-      "desc": "Mesure chaque nuit l'équilibrage du jeu que tu joues vraiment : intégrité, main, corruption, talents, butin, soin."
-    },
-    {
-      "id": "controle",
-      "label": "Le Contrôleur",
-      "schedule": "11,41 * * * *",
-      "cmd": "a_controle.sh",
-      "enabled": true,
-      "desc": "Confronte ce que les agents déclarent à des traces vérifiables et signale les écarts dans Décider."
-    },
-    {
-      "id": "sequence",
-      "label": "Le Séquenceur",
-      "schedule": "3,13,23,33,43,53 * * * *",
-      "cmd": "a_sequence.sh",
-      "enabled": true,
-      "desc": "Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi."
-    }
-  ]
+ "_comment": "Manifeste des agents de la VM. schedule = syntaxe cron (user-mode, pas de systemd sur cette VM). enabled=false => installé mais non planifié (lançable à la main depuis le portail).",
+ "agents": [
+  {
+   "id": "game-watchdog",
+   "label": "Veilleur du jeu",
+   "schedule": "*/2 * * * *",
+   "cmd": "a_game_watchdog.sh",
+   "enabled": true,
+   "desc": "Relance le jeu s'il est mort alors qu'il devait tourner (état désiré posé par PLAY/STOP)."
+  },
+  {
+   "id": "game-idle",
+   "label": "Veille du jeu",
+   "schedule": "1-59/2 * * * *",
+   "cmd": "a_game_idle.sh",
+   "enabled": true,
+   "desc": "Coupe le jeu apres 5 min sans spectateur, pour rendre les 4 coeurs au developpement."
+  },
+  {
+   "id": "game-autosync",
+   "label": "Synchro du jeu",
+   "schedule": "*/15 * * * *",
+   "cmd": "a_game_autosync.sh",
+   "enabled": true,
+   "desc": "Détecte un nouveau commit sur la branche du jeu, le récupère, réimporte les assets et relance si le jeu tournait."
+  },
+  {
+   "id": "tools-autosync",
+   "label": "Synchro de l'outillage",
+   "schedule": "7,22,37,52 * * * *",
+   "cmd": "a_tools_autosync.sh",
+   "enabled": true,
+   "desc": "Recupere l'outillage depuis GitHub, regenere le crontab et relance le Studio si le code a bouge."
+  },
+  {
+   "id": "health",
+   "label": "Santé machine",
+   "schedule": "*/5 * * * *",
+   "cmd": "a_health.sh",
+   "enabled": true,
+   "desc": "Relevé CPU / RAM / disque / charge, historisé pour repérer les dérives."
+  },
+  {
+   "id": "disk-guard",
+   "label": "Garde-disque",
+   "schedule": "17 * * * *",
+   "cmd": "a_disk_guard.sh",
+   "enabled": true,
+   "desc": "Purge les vieux journaux et caches quand le disque dépasse 80 %."
+  },
+  {
+   "id": "tunnel-watch",
+   "label": "Veille du tunnel",
+   "schedule": "*/10 * * * *",
+   "cmd": "a_tunnel_watch.sh",
+   "enabled": true,
+   "desc": "Vérifie que le portail répond et journalise l'URL publique (elle change à chaque redémarrage du tunnel)."
+  },
+  {
+   "id": "smoke-scenes",
+   "label": "Smoke nocturne",
+   "schedule": "0 3 * * *",
+   "cmd": "a_smoke_scenes.sh",
+   "enabled": true,
+   "desc": "Lance chaque scène du jeu en headless et compte les erreurs de script. Rapport consultable au réveil."
+  },
+  {
+   "id": "ci-commit",
+   "label": "CI de commit",
+   "schedule": "webhook/push",
+   "cmd": "a_ci_commit.sh",
+   "enabled": false,
+   "desc": "À chaque push sur la branche du jeu : sync + import + smoke de toutes les scènes + boot rendu + capture d'écran. Déclenchée par le webhook GitHub ou par la synchro (15 min)."
+  },
+  {
+   "id": "design-council",
+   "label": "Conseil de design (quotidien)",
+   "schedule": "40 6 * * *",
+   "cmd": "a_design_council.sh",
+   "enabled": true,
+   "desc": "Chaque matin, un conseiller différent relit la mémoire du design et ouvre une conversation dans Parler : une réflexion + deux questions franches."
+  },
+  {
+   "id": "daily-report",
+   "label": "Rapport du matin",
+   "schedule": "0 7 * * *",
+   "cmd": "a_daily_report.sh",
+   "enabled": true,
+   "desc": "Compile les 24 dernières heures en une page : commits, verdicts CI, agents en échec, santé, smoke."
+  },
+  {
+   "id": "coder",
+   "label": "Codeur résident",
+   "schedule": "à la demande",
+   "cmd": "a_coder.sh",
+   "enabled": false,
+   "desc": "Consomme la file de missions (Claude Code headless) et committe sur une branche auto/coder. Requiert une clé API dans ~/.config/merlin-coder.env."
+  },
+  {
+   "id": "gd-content-gap",
+   "label": "Professeur du modèle",
+   "schedule": "20 1,9,15,21 * * *",
+   "cmd": "a_gd_content.sh",
+   "enabled": true,
+   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN (le jeu génère ses scénarios 100 % en direct — ces cartes ne sont pas du contenu de jeu). Quatre fois par jour."
+  },
+  {
+   "id": "gd-balance",
+   "label": "Idées — équilibrage",
+   "schedule": "50 7,19 * * *",
+   "cmd": "a_gd_balance.sh",
+   "enabled": true,
+   "desc": "Analyse l'équilibrage réel du corpus (effets, factions, verbes) et propose un ajustement chiffré. Deux fois par jour."
+  },
+  {
+   "id": "coder-local",
+   "label": "Codeur local (auto/nightly)",
+   "schedule": "*/30 * * * *",
+   "cmd": "a_coder_local.sh",
+   "enabled": true,
+   "desc": "Applique les missions acceptées (before/after, périmètre data+constantes+patchs ≤30 lignes) sur auto/nightly, smoke à l'appui. Suspendu quand le jeu tourne. Le merge reste un tap."
+  },
+  {
+   "id": "corpus-night",
+   "label": "Jeu d'entraînement (nuit)",
+   "schedule": "10 0-6 * * *",
+   "cmd": "a_corpus_night.sh",
+   "enabled": true,
+   "desc": "Produit en masse des exemples pour le fine-tune merlin-e4b, filtrés par le validateur. Ce n'est PAS du contenu de jeu : le jeu génère ses scénarios en direct."
+  },
+  {
+   "id": "playtest-bot",
+   "label": "Playtest bot (VNC réel)",
+   "schedule": "30 3 * * *",
+   "cmd": "a_playtest_bot.sh",
+   "enabled": true,
+   "desc": "Joue réellement au jeu rendu (clics et touches via VNC), capture chaque écran, détecte NOIR/FIGÉ/MORT par heuristiques. Chaque anomalie devient une carte Décider."
+  },
+  {
+   "id": "billing",
+   "label": "Facturation Oracle",
+   "schedule": "17 * * * *",
+   "cmd": "a_billing.sh",
+   "enabled": true,
+   "desc": "Relève le coût du mois (Usage API). La VM est sur l'offre Always Free : tout montant non nul déclenche une alerte urgente."
+  },
+  {
+   "id": "ollama-serve",
+   "label": "Serveur LLM local",
+   "schedule": "*/2 * * * *",
+   "cmd": "a_ollama_serve.sh",
+   "enabled": true,
+   "desc": "Garantit qu'Ollama tourne (userland) et que le modèle copilote reste résident en RAM."
+  },
+  {
+   "id": "llm-bench",
+   "label": "Bench des modèles",
+   "schedule": "à la demande",
+   "cmd": "a_llm_bench.sh",
+   "enabled": false,
+   "desc": "Mesure chaque modèle installé sur la tâche de triage (latence, tok/s) et fige TRIAGE_MODEL."
+  },
+  {
+   "id": "native-bench",
+   "label": "Vitesse du moteur du jeu",
+   "schedule": "25 4 * * *",
+   "cmd": "a_llm_native_bench.sh",
+   "enabled": true,
+   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 4h25 : après le playtest, hors des créneaux du corpus."
+  },
+  {
+   "id": "ollama-idle",
+   "label": "Le Délesteur",
+   "schedule": "*/15 * * * *",
+   "cmd": "a_ollama_idle.sh",
+   "enabled": true,
+   "desc": "Rend la RAM à l'atelier d'écriture : il libère le modèle de triage (8 Go) qui ne sert qu'en lot deux fois par jour, et ne touche JAMAIS au modèle de conversation ni à un modèle en train de travailler. Sans lui, 14 Go de modèles restaient chargés et la boucle de corpus, qui en exige 8 de libres, était sautée toute la nuit."
+  },
+  {
+   "id": "gd-pacing",
+   "label": "Rythmeur",
+   "schedule": "40 2 * * *",
+   "cmd": "a_gd_pacing.sh",
+   "enabled": false,
+   "desc": "Simule une run complète : durée, courbe de vie, marge de survie. Joint le patch quand le rythme est incohérent."
+  },
+  {
+   "id": "gd-economy",
+   "label": "Trésorier",
+   "schedule": "50 2 * * *",
+   "cmd": "a_gd_economy.sh",
+   "enabled": false,
+   "desc": "Simule les gains d'une session (Faveurs, Anam, multiplicateurs) et repère l'inflation."
+  },
+  {
+   "id": "gd-audit",
+   "label": "Auditeur bible",
+   "schedule": "10 3 * * *",
+   "cmd": "a_gd_audit.sh",
+   "enabled": false,
+   "desc": "Compte les systèmes que la bible déclare supprimés mais qui vivent encore dans le code."
+  },
+  {
+   "id": "journal",
+   "label": "Le Chroniqueur",
+   "cmd": "a_journal.sh",
+   "schedule": "50 5 * * *",
+   "enabled": true,
+   "desc": "Grave le chapitre du jour : ce que les agents ont fait, ce que tu as décidé, ce qui a bougé et ce qui reste en suspens. Aucun appel au modèle — il ne peut pas se taire."
+  },
+  {
+   "id": "brasero",
+   "label": "Le Braséro",
+   "cmd": "a_brasero.sh",
+   "schedule": "*/20 * * * *",
+   "enabled": true,
+   "desc": "Garde le modèle de conversation chaud en RAM : sans lui, le premier message après une heure de silence paie 40 s de chargement avant même de commencer à répondre. Un seul token demandé toutes les 20 min, zéro euro, et rien du tout quand tu joues."
+  },
+  {
+   "id": "relance",
+   "label": "Le Facteur",
+   "cmd": "a_relance.sh",
+   "schedule": "*/10 * * * *",
+   "enabled": true,
+   "desc": "Rattrape les messages que tu as envoyés et auxquels aucun agent n'a répondu — le cas où le modèle était occupé au moment de l'envoi."
+  },
+  {
+   "id": "parole",
+   "label": "La Parole",
+   "cmd": "a_parole.sh",
+   "schedule": "25 * * * *",
+   "enabled": true,
+   "desc": "Laisse les agents t'interpeller quand quelque chose le mérite vraiment : une scène qui casse deux fois, un écran figé, un patch annulé. 2 fils par jour maximum, aucun appel au modèle."
+  },
+  {
+   "id": "mesures",
+   "label": "Le Métreur du jeu",
+   "cmd": "a_mesures.sh",
+   "schedule": "5 5 * * *",
+   "enabled": true,
+   "desc": "Relève chaque nuit tous les chiffres du jeu (cartes, factions, verbes, rythme, économie, vestiges). Aucun appel au modèle — c'est ce qui permet au journal de dire « ×2,5 → ×2,0 »."
+  },
+  {
+   "id": "parcours",
+   "label": "Le Cartographe",
+   "cmd": "a_parcours.sh",
+   "schedule": "15 5 * * *",
+   "enabled": true,
+   "desc": "Relit le jeu chaque nuit et met à jour la carte du parcours : les écrans, leur enchaînement, l'ordre d'apparition des choses. C'est ce que MERLIN consulte pour savoir de quel écran tu parles."
+  },
+  {
+   "id": "gd-run",
+   "label": "L'Arbitre de la run",
+   "cmd": "a_gd_run.sh",
+   "schedule": "35 2 * * *",
+   "enabled": true,
+   "desc": "Mesure chaque nuit l'équilibrage du jeu que tu joues vraiment : intégrité, main, corruption, talents, butin, soin."
+  },
+  {
+   "id": "controle",
+   "label": "Le Contrôleur",
+   "schedule": "11,41 * * * *",
+   "cmd": "a_controle.sh",
+   "enabled": true,
+   "desc": "Confronte ce que les agents déclarent à des traces vérifiables et signale les écarts dans Décider."
+  },
+  {
+   "id": "sequence",
+   "label": "Le Séquenceur",
+   "schedule": "3,13,23,33,43,53 * * * *",
+   "cmd": "a_sequence.sh",
+   "enabled": true,
+   "desc": "Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi."
+  },
+  {
+   "id": "llm-decompose",
+   "label": "La Décomposition",
+   "schedule": "à la demande",
+   "cmd": "a_llm_decompose.sh",
+   "enabled": true,
+   "desc": "Sépare le temps du prompt de celui de l'écriture, et confronte le moteur du jeu à Ollama sur le MÊME prompt."
+  }
+ ]
 }
