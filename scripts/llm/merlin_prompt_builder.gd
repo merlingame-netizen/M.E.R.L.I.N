@@ -214,18 +214,34 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	# Effet de bord favorable sur le fond : une consigne placée en fin de prompt est mieux suivie
 	# qu'une consigne noyée au milieu. On ne perd donc rien à l'obéissance du modèle.
 	var usr: String = bloc + "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = UNE phrase breve, imperatif tutoye SANS dire 'Voyageur' : une action concrete ET ce qui est en jeu. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
-	# La part variable EN DERNIER — voir la note ci-dessus.
+	# La part variable EN AVANT-DERNIER, puis un RAPPEL DE FORMAT en toute fin.
+	#
+	# CORRECTION D'UNE RÉGRESSION QUE J'AI CAUSÉE (2026-08-18). En repoussant la part variable en
+	# dernier, j'avais chassé la consigne de format de la position finale — celle que le modèle
+	# suit le mieux. Résultat mesuré : il a répondu en bloc de code markdown (« ```json »), la
+	# sortie a été coupée au plafond avant que le tableau se referme, l'écran a jugé la réponse
+	# illisible et a relancé une seconde génération. Le prompt était plus rapide et la partie
+	# deux fois plus longue : un gain qui coûte un essai n'est pas un gain.
+	#
+	# Le rappel est COURT et CONSTANT : il ne pèse presque rien dans le prompt, et comme il est
+	# identique d'une partie à l'autre il ne casse pas non plus la réutilisation du cache — seule
+	# la part variable qui le précède le fait, et elle est brève.
 	usr += vari + anti
+	usr += " Rappel: ta reponse commence par [ et finit par ] — aucun texte autour, aucun bloc de code."
 	# plein_regime : la sélection s'écrit derrière le voile « Merlin rêve les sentiers », où rien
 	# d'utile n'est joué ni rendu. Tous les cœurs y passent — c'est le seul moment du jeu où le
 	# ménage à moitié de cœurs ne protège aucune image et ne fait que doubler l'attente.
 	#
-	# max_tokens 160 (était 220) : à conserver même après le constat ci-dessus, car il ne joue
-	# PAS le même rôle. La consigne guide le cas normal ; ce plafond borne le cas ANORMAL — un
-	# modèle qui part en digression est coupé au lieu de faire attendre jusqu'à 220. 160 laisse
-	# de la marge au-dessus des ~94-130 tokens observés sans jamais mordre sur une sortie saine.
+	# max_tokens 180 — la valeur de la bible (R58), et non plus 160.
+	#
+	# Le plafond borne le cas ANORMAL : un modèle qui part en digression est coupé au lieu de
+	# faire attendre. Mais 160 s'est révélé TROP SERRÉ le 2026-08-18 : une réponse enveloppée
+	# dans un bloc de code a consommé son budget en préambule et s'est fait couper à 159 tokens,
+	# tableau non refermé — donc illisible, donc une seconde génération de quarante secondes.
+	# Un plafond qui déclenche un second essai coûte bien plus cher que les vingt tokens qu'il
+	# économise. 180 laisse la marge que les ~150 tokens observés réclament.
 	return {"system": voice, "user": usr,
-			"opts": {"creative": true, "max_tokens": 160, "label": "sélection (Merlin)", "plein_regime": true}}
+			"opts": {"creative": true, "max_tokens": 180, "label": "sélection (Merlin)", "plein_regime": true}}
 
 
 # --- INTRO DE QUÊTE : légende contée par MERLIN (enrichit le pop-up en arrière-plan) ---
