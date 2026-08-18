@@ -83,9 +83,27 @@ echo "[native-inner] projet joué : $GAME_DIR (max-fps=${MAX_FPS:-30}, audio=$AU
 # smoke headless ne reproduit ni le rendu ni la contention qui va avec. Sans cette poignée, la
 # seule façon de tester l'écran de sélection était de le lancer à côté, dans des conditions qui
 # ne sont pas celles du joueur : c'est ce qui a fait conclure trois fois de travers.
-# MERLIN_QUIT_AFTER : borne la durée, pour qu'un test ne laisse pas une instance derrière lui.
+# MERLIN_QUIT_AFTER_S : borne la durée EN SECONDES, pour qu'un test ne laisse pas une instance
+# derrière lui. Surtout PAS `--quit-after` de Godot : celui-ci compte des IMAGES, pas des
+# secondes, et le piège a coûté deux tours de diagnostic (2026-08-18). Mesuré sur cette VM :
+# `--quit-after 200`, pris pour 200 s, a rendu 66 s de vie — le rendu logiciel llvmpipe tourne
+# autour de 3 images/s, et l'écran de sélection descend VOLONTAIREMENT à 5 pendant qu'il attend
+# le modèle. Un budget d'images ne borne donc rien de connu : il varie d'un facteur dix selon la
+# charge, et il avait coupé la génération en plein vol sans laisser la moindre trace.
+#
+# Le chien de garde est armé AVANT le `exec` : `$$` ne change pas au travers d'un exec, donc le
+# sous-shell vise bien le processus Godot qui prendra la place de ce script.
 GODOT_ARGS=(--path . --rendering-driver opengl3 --audio-driver "$AUDIO_DRIVER"
     --max-fps "${MAX_FPS:-30}" --resolution "$RES")
-[ -n "${MERLIN_SCENE:-}" ] && GODOT_ARGS+=("$MERLIN_SCENE")
-[ -n "${MERLIN_QUIT_AFTER:-}" ] && GODOT_ARGS+=(--quit-after "$MERLIN_QUIT_AFTER")
+if [ -n "${MERLIN_SCENE:-}" ]; then
+    GODOT_ARGS+=("$MERLIN_SCENE")
+fi
+if [ -n "${MERLIN_QUIT_AFTER_S:-}" ]; then
+    ( sleep "$MERLIN_QUIT_AFTER_S"; kill -TERM $$ 2>/dev/null ) &
+    echo "[native-inner] chien de garde : arrêt dans ${MERLIN_QUIT_AFTER_S}s" >&2
+fi
+# La ligne de commande EXACTE, dans le journal. Son absence est ce qui m'a empêché de voir mon
+# erreur : sans elle, rien ne prouve quelle scène a été lancée ni avec quels drapeaux, et un
+# test qui ne dit pas ce qu'il a lancé ne prouve rien.
+echo "[native-inner] godot : ${GODOT_ARGS[*]}" >&2
 exec "$GODOT_BIN" "${GODOT_ARGS[@]}" > "$RUNDIR/godot.log" 2>&1

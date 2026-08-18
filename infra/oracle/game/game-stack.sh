@@ -104,11 +104,12 @@ start_native() {
     stop_native
     mkdir -p "$RUNDIR"
     # native-inner.sh vit avec l'OUTILLAGE (SCRIPT_DIR), pas dans le dépôt du jeu.
-    # MERLIN_SCENE / MERLIN_QUIT_AFTER transmis explicitement : `unshare` ne conserve que
+    # MERLIN_SCENE / MERLIN_QUIT_AFTER_S / MERLIN_E2E* transmis explicitement : `unshare` ne conserve que
     # l'environnement passé ici, donc une variable exportée par l'appelant se perdrait
     # silencieusement — le test tournerait sur la scène principale en croyant tester la sienne.
     setsid env MAX_FPS="${MAX_FPS:-30}" MERLIN_SCENE="${MERLIN_SCENE:-}" \
-        MERLIN_QUIT_AFTER="${MERLIN_QUIT_AFTER:-}" MERLIN_BIOME="${MERLIN_BIOME:-}" \
+        MERLIN_QUIT_AFTER_S="${MERLIN_QUIT_AFTER_S:-}" MERLIN_BIOME="${MERLIN_BIOME:-}" \
+        MERLIN_E2E="${MERLIN_E2E:-}" MERLIN_E2E_OUT="${MERLIN_E2E_OUT:-}" \
         unshare --user --map-root-user --mount \
         bash "$SCRIPT_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
     echo $! > "$RUNDIR/inner.pid"

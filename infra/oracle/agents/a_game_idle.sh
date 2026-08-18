@@ -48,6 +48,16 @@ if [ -e "$HOME/.cache/merlin-agents/playtest-bot.lock" ] \
     exit 0
 fi
 
+# Même raison pour un test de bout en bout (harnais e2e) : il joue une scène sans qu'aucun
+# spectateur ne se connecte, donc le compte de x11vnc est à ZÉRO alors que la machine travaille.
+# Sans cette porte, une mesure de plus de cinq minutes serait coupée en plein milieu — et le
+# résultat, une fois de plus, ne prouverait rien.
+if [ -e "$HOME/.cache/merlin-agents/e2e.lock" ] \
+   && ! flock -n "$HOME/.cache/merlin-agents/e2e.lock" true 2>/dev/null; then
+    echo "test e2e en cours — on ne coupe pas"
+    exit 0
+fi
+
 etape 2 3 "compter les spectateurs"
 
 # La comptabilité de x11vnc lui-même, et non un comptage de sockets : c'est lui qui sert les
