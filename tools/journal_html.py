@@ -204,7 +204,9 @@ def rendre(d: dict, dossier_cliches: pathlib.Path | None) -> str:
         "integrite": int(fin.get("integrite", 0)),
         "corruption": int(fin.get("corruption", 0)),
         "sentiers": "".join(sentiers),
-        "intro": bbcode(str(d.get("intro", ""))) or '<p class="vide">Aucune ouverture enregistrée.</p>',
+        "intro": (('<p class="secours">Cadrage servi par le banc de secours — la légende du modèle '
+                   "n'était pas prête.</p>") if d.get("intro_du_modele") is False else "")
+                 + (bbcode(str(d.get("intro", ""))) or '<p class="vide">Aucune ouverture enregistrée.</p>'),
         "beats": "".join(blocs) or '<p class="vide">Aucun beat joué.</p>',
         "img_fin": img_fin,
         "resume": bbcode(str(fin.get("resume", ""))),
