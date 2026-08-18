@@ -288,6 +288,14 @@
    "cmd": "a_partie_journal.sh",
    "enabled": true,
    "desc": "Joue une partie entière en rendu réel et en écrit le journal, beat par beat, avec captures."
+  },
+  {
+   "id": "labo-recit",
+   "label": "Le Laboratoire",
+   "schedule": "à la demande",
+   "cmd": "a_labo_recit.sh",
+   "enabled": true,
+   "desc": "Batterie de mini-tests du récit : richesse des issues, enchaînement lookahead, comparaison e2b/e4b."
   }
  ]
 }
