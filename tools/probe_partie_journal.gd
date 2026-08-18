@@ -25,6 +25,10 @@ const SEL_TIMEOUT_MS: int = 300000
 const RUN_DEADLINE_S: float = 3000.0   # 12-15 beats, une narration écrite par beat sur CPU
 const END_DEADLINE_S: float = 40.0
 const SHOTS_MAX: int = 12
+# Temps de « réflexion » du joueur entre la pose des cartes et le clic Résoudre. Mesuré
+# 2026-08-18 : l'issue coûte ~35 s au modèle sur la VM ; sans cette pause, le harnais résolvait
+# dans la frame suivante et lisait le banc de secours à chaque beat.
+const POSE_S: float = 8.0
 
 var _journal: Dictionary = {}
 var _shots_dir: String = ""
@@ -325,6 +329,11 @@ func _boucle(game: Node, run: Node) -> void:
 				elif game._selected_trait == null:
 					game._on_trait_card(run.hand[geste % (run.hand as Array).size()])
 					geste += 1
+					# UNE POSE QUI DURE. La pré-génération de l'issue démarre quand les deux cartes
+					# sont posées ; un harnais qui enchaîne dans la frame suivante ne lui laisse
+					# ZÉRO seconde, et le secours est servi à tous les coups. Un joueur regarde sa
+					# main, lit, hésite — on lui ressemble ici, sinon on ne mesure pas le jeu.
+					await create_timer(POSE_S).timeout
 				else:
 					_noter_geste(game)
 					game._on_resolve()
@@ -386,6 +395,11 @@ func _noter_sortie(run: Node) -> void:
 		return
 	d["degre"] = str(run.last_degree)
 	d["resolution"] = str(run.summary)
+	# Le beat porte-t-il la marque du banc de secours ? La question décide de la valeur de tout le
+	# document : une issue écrite en dur ne dit rien de ce que Merlin sait raconter.
+	var sc: Node = root.get_node_or_null("/root/MerlinScenario")
+	if sc != null and sc.has_method("secours_consomme"):
+		d["secours"] = int(sc.secours_consomme()) > 0
 	d["integrite_apres"] = int(run.integrite)
 	d["corruption_apres"] = int(run.corruption)
 	print("[JOURNAL]   → %s (PV %d→%d, Corr %d→%d)" % [str(run.last_degree),

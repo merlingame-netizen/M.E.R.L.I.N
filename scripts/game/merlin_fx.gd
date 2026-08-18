@@ -3,6 +3,19 @@ extends Control
 ## v10.13 (A2) — Animation cinématique de fusion (extraite VERBATIM de merlin_game.gd, v10.2→v10.13).
 ## MerlinFx EST le layer overlay : il s'ajoute au host (plein écran, absorbe les clics), anime les
 ## 3 phases (Rassemblement → Burst → Décrue+Dé) + le SUSTAIN skippable, puis se queue_free().
+##
+## COMBIEN DE TEMPS ON ATTEND L'ISSUE ÉCRITE PAR MERLIN — la valeur qui décide de tout.
+##
+## Elle avait été baissée à 12 s (v10.20.1) pour « servir le secours procédural plus tôt », à une
+## époque où le moteur était cru à ~1-3 tok/s : attendre n'avait alors aucun sens, la prose ne
+## pouvait pas arriver. Conséquence involontaire mais totale : **le secours était servi à CHAQUE
+## beat**, et les issues lues par le joueur étaient des phrases écrites en dur — pas une ligne du
+## modèle. Constaté sur une partie entière le 2026-08-18.
+##
+## Le moteur a été mesuré depuis : 9,6 tokens par seconde à l'écriture, et une issue de résolution
+## coûte ~35 s sur la VM. 48 s laissent donc la marge nécessaire sans jamais figer la partie — et
+## le clic reste là pour couper court à tout moment.
+const SUSTAIN_CAP_MS: int = 48000
 ## v11-W0/W1 (user 2026-07-04 « le jeu est trop complexe ») : la phase « Expression » (slogan jaune +
 ## aberration chromatique + zoom) est SUPPRIMÉE, gather+fuse fusionnés, swell supprimé, le dé UNIQUE
 ## (MerlinDice) se lance en chevauchement sur la décrue — overhead fixe ~2,1-2,4 s (vs ~6-8 s).
@@ -284,7 +297,7 @@ func run() -> void:
 			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 				skip_box[0] = true)
 		var sustain_t0: int = Time.get_ticks_msec()
-		var deadline_ms: int = sustain_t0 + 12000  # v10.20.1 (T4) : cap baissé 20→12 s → fallback procédural plus tôt
+		var deadline_ms: int = sustain_t0 + SUSTAIN_CAP_MS
 		var next_spark_ms: int = 0
 		var next_dot_ms: int = 0
 		var dots: int = 0
@@ -297,7 +310,9 @@ func run() -> void:
 				and not _is_ready() and Time.get_ticks_msec() < deadline_ms:
 			var now: int = Time.get_ticks_msec()
 			if is_instance_valid(bar_fill):
-				bar_fill.size.x = minf(0.90, float(now - sustain_t0) / 10000.0) * bar_w  # progression estimée (plafond 0.90)
+				# La barre suit le CAP : calée sur 10 s alors que l'attente peut durer quatre fois plus,
+				# elle restait collée à 0,90 pendant l'essentiel du temps et ne renseignait plus rien.
+				bar_fill.size.x = minf(0.90, float(now - sustain_t0) / float(SUSTAIN_CAP_MS)) * bar_w
 			if now >= next_think_ms:
 				next_think_ms = now + randi_range(3000, 5000)  # cadence 3-5 s, jamais superposé
 				MerlinAudio.play_sfx(str(think_sfx[think_idx % think_sfx.size()]))

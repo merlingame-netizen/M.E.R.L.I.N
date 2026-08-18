@@ -266,6 +266,74 @@ static func opening(scenario: Dictionary, lieu: String = "Broceliande") -> Dicti
 #     la scène DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés). ---
 # v1.0-V4a (spec §F) — `pool_list` = pool générable AFFICHÉ, injecté comme LISTE FERMÉE (contrainte
 # dure) : les scènes ne réclament que des forces atteignables par le build courant. [] = legacy.
+# TRANCHE D'ARC — les beats `debut+1` à `debut+types.size()` d'une quête qui en compte `total`.
+#
+# POURQUOI DES TRANCHES. L'arc était figé à CINQ étapes, en une seule génération. Une quête plus
+# longue n'avait donc aucune histoire écrite au-delà du cinquième beat — et comme les quêtes
+# tiraient 2 à 5 beats, `prepare_arc` abandonnait le plus souvent avant même d'appeler le modèle.
+# Une quête unique de 8 à 25 beats ne peut pas s'écrire d'un bloc : trop long à attendre, et le
+# modèle perd le fil. On demande donc quatre ou cinq scènes à la fois, la première tranche avant
+# de jouer, les suivantes pendant qu'on joue les précédentes.
+#
+# `precedent` porte ce qui a déjà été raconté : sans lui, la tranche 3 réinventerait le décor et
+# le fil rouge se romprait exactement là où on cherche à le tenir.
+static func arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, debut: int,
+		total: int, precedent: String, faction_block: String = "",
+		lieu: String = "Broceliande", pool_list: Array = []) -> Dictionary:
+	var title: String = str(scenario.get("title", "")).strip_edges()
+	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
+	var n: int = types.size()
+	var steps: String = ""
+	for i in n:
+		var pos: int = debut + i                       # index absolu dans la quête
+		var role: String = _role_de_beat(str(types[i]), pos, total, title)
+		var pair: Array = (req_tags[i] as Array) if (i < req_tags.size() and req_tags[i] is Array) else []
+		var cues: PackedStringArray = []
+		for t in pair:
+			cues.append(str(TAG_CUE.get(str(t), str(t))))
+		var cue_txt: String = " ET ".join(cues) if cues.size() > 0 else "agir"
+		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que vous devrez faire)." % [
+			pos + 1, role, cue_txt]
+	var pool_line: String = ""
+	if not pool_list.is_empty():
+		var pl: PackedStringArray = []
+		for t in pool_list:
+			pl.append(str(t))
+		pool_line = "\nFORCES AUTORISEES (liste FERMEE) : %s. Chaque scene ne doit exiger QUE des forces de cette liste, jamais d'autres." % ", ".join(pl)
+	var suite: String = ""
+	if precedent.strip_edges() != "":
+		suite = "\nCE QUI S'EST DEJA PASSE (ne le reecris pas, ENCHAINE dessus) : %s" % precedent.strip_edges()
+	var entete: String = ("Conte les ETAPES %d a %d d'une aventure qui en compte %d pour la quete "
+			+ "« %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT. Une seule histoire suivie : "
+			+ "chaque etape decoule de la precedente et rapproche du but de la quete.") % [
+		debut + 1, debut + n, total, title, pitch, lieu]
+	var usr: String = faction_block + entete + suite + steps + pool_line \
+		+ "\nChaque etape = 3 a 4 phrases CONCRETES (qui, quoi, ou) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez »." \
+		+ "\nFormat STRICT : une etape par ligne, prefixee « %d. » a « %d. », rien d'autre." % [debut + 1, debut + n]
+	return {"system": SYSTEM_PREFIX, "user": usr,
+			"opts": {"creative": true, "max_tokens": 90 * n, "label": "arc — etapes %d-%d" % [debut + 1, debut + n]}}
+
+
+# Le RÔLE dramatique d'un beat selon sa place dans la quête : l'ouverture découvre l'enjeu, la
+# fin le résout, l'avant-dernier fait choisir, et le corps alterne selon le type du beat.
+static func _role_de_beat(btype: String, pos: int, total: int, title: String) -> String:
+	if pos == 0:
+		return "arrivee : vous entrez dans le lieu et DECOUVREZ l'enjeu de la quete"
+	if pos >= total - 1:
+		return "la confrontation finale qui RESOUT la quete : vous atteignez, obtenez ou affrontez ce que « %s » promet" % title
+	if pos == total - 2:
+		return "un choix a faire qui engage la fin"
+	match btype:
+		"Rencontre":
+			return "une rencontre (un etre, une voix) qui AGIT et vous APPREND un bout de legende sur le but a atteindre"
+		"Epreuve":
+			return "un obstacle physique sur le chemin du but"
+		"Dilemme":
+			return "un choix a faire qui engage la suite"
+		_:
+			return "une progression dans le lieu qui RAPPROCHE du but et montre ce qui y resiste"
+
+
 static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "", lieu: String = "Broceliande", pool_list: Array = []) -> Dictionary:
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()

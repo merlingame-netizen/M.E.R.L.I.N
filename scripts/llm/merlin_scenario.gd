@@ -48,6 +48,18 @@ const QUEST_PATTERNS: Dictionary = {
 # MIN_RENCONTRE_PER_RUN beats "Rencontre" par run, cf. _ensure_min_rencontres (build_chain_beats).
 const MIN_RENCONTRE_PER_RUN: int = 2
 
+# Longueur de LA quête (décision Maxime : « entre 7 et 25 cartes jouées par quête »). Le haut de
+# la fourchette est assumé : à 25 beats, une partie dépasse l'heure et demie sur la VM, chaque beat
+# demandant au modèle une issue d'environ 35 s.
+# Combien de scènes le modèle écrit d'un coup. Quatre : assez pour qu'il tienne un enchaînement,
+# assez peu pour que la première tranche arrive vite (~40 s) et que la partie commence.
+# Compteur des recours au banc de secours. Lu par la sonde de journal (et remis à zéro par elle)
+# pour marquer les beats concernés dans le document : « écrit par le banc de secours ».
+var _secours_derniers: int = 0
+const ARC_TRANCHE: int = 4
+const QUETE_BEATS_MIN: int = 8
+const QUETE_BEATS_MAX: int = 25
+
 # Biais de tags-cœur par type de beat (R68/R81).
 # v11 (spec §F) : le biais ne définit plus le pool tirable — il ne fait que COLORER le tirage
 # (les candidats du biais passent en premier). La source de vérité de ce qui est requérable est
@@ -1214,22 +1226,55 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 		"faction": str(fp["faction"]), "pilier": str(fp["pilier"]), "pilier2": str(fp["pilier2"]), "pnj_recog": recog}
 	_fb_served = {}  # nouvelle run → toutes les variantes de fallback redeviennent disponibles
 	_x1_used_by_quest = {}  # v1.0-V4a : la borne d'émission ×1 repart avec la run
-	var nq: int = 2 if _rng.randf() < 0.4 else 3
-	var quests: Array = [{"title": title, "pitch": pitch}]
-	var pool: Array = _sel_fallback_pool()
-	_shuffle(pool)
-	for q in pool:
-		if quests.size() >= nq:
-			break
-		if str(q["title"]) != title:
-			quests.append({"title": str(q["title"]), "pitch": str(q["pitch"])})
-	if quests.size() < nq:
-		# Garde anti-race (review HIGH) : des titres DISTINCTS par quête sont requis — c'est le
-		# verrou qui empêche un prepare_arc périmé d'écraser l'arc de la quête suivante.
-		push_warning("MerlinScenario.build_skeleton: pool de quêtes insuffisant (%d/%d titres distincts)" % [quests.size(), nq])
-	var beats: Array = build_chain_beats(quests, _rng)
+	# UNE SEULE QUÊTE PAR PARTIE (décision Maxime, réaffirmée le 2026-08-18).
+	#
+	# CE QUI SE PASSAIT AVANT : la partie enchaînait 2 à 3 quêtes, et les supplémentaires étaient
+	# tirées de `_sel_fallback_pool()` — la banque de titres ÉCRITS EN DUR. Le joueur choisissait
+	# donc un sentier et se retrouvait à jouer, après lui, une ou deux quêtes que personne n'avait
+	# choisies et que le modèle n'avait pas écrites. Il ne pouvait pas y avoir de fil conducteur :
+	# il y en avait trois, dont deux importés.
+	#
+	# Désormais : le sentier choisi EST l'histoire, du premier beat au dernier.
+	var n_beats: int = _rng.randi_range(QUETE_BEATS_MIN, QUETE_BEATS_MAX)
+	var beats: Array = build_quest_beats(title, pitch, n_beats, _rng)
 	return {"title": title, "pitch": pitch, "synopsis": pitch, "beats": beats,
-			"total": beats.size(), "quests": quests.size()}
+			"total": beats.size(), "quests": 1}
+
+
+# COURBE DRAMATIQUE À N BEATS. `QUEST_PATTERNS` plafonnait à 5 : au-delà, il n'existait rien, et
+# c'est pour ça que la partie était découpée en plusieurs quêtes courtes. On construit ici la même
+# forme — ouverture, alternance montées/revers, dilemme d'avant-fin, climax — étirée sur N.
+#
+# La règle tient en trois lignes : le premier beat est une Exploration douce (difficulté 1), le
+# dernier est le Climax (difficulté 3), et entre les deux on alterne en gardant une Rencontre tous
+# les trois beats environ — c'est elle qui porte les PNJ et le marchand.
+static func build_quest_beats(title: String, pitch: String, n_beats: int,
+		rng: RandomNumberGenerator) -> Array:
+	var n: int = maxi(3, n_beats)
+	var corps: Array = ["Rencontre", "Epreuve", "Exploration", "Dilemme", "Epreuve", "Rencontre"]
+	var beats: Array = []
+	for i in n:
+		var btype: String = "Exploration"
+		var diff: int = 2
+		if i == 0:
+			diff = 1
+		elif i == n - 1:
+			btype = "Climax"
+			diff = 3
+		elif i == n - 2:
+			btype = "Dilemme"   # le pas de côté juste avant la fin : on choisit avant d'affronter
+		else:
+			btype = str(corps[(i - 1) % corps.size()])
+		var beat: Dictionary = {
+			"n": i + 1, "qn": i + 1, "qtotal": n, "quest": 0,
+			"quest_title": title, "quest_pitch": pitch,
+			"type": btype, "difficulte": diff,
+		}
+		if i == n - 2:
+			beat["variant_type"] = "Epreuve"   # ramification : le revers précédent peut la durcir
+		beats.append(beat)
+	_ensure_min_rencontres(beats, rng)
+	return beats
 
 
 # STATIQUE PURE (réutilisée par les harnais avec leur rng seedé) : concatène les beats des
@@ -1592,9 +1637,12 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	# Pour les quêtes courtes (k<5), la ligne de CLIMAX de l'arc tombe TOUJOURS sur le climax
 	# de la quête (arc[4]) — l'histoire se referme, jamais tronquée au milieu.
 	var idx: int = int(beat.get("qn", beat.get("n", 1))) - 1
-	if btype == "Climax":
-		idx = 4
 	var arc: Array = _run_thread.get("arc", [])
+	# Le CLIMAX prend la DERNIÈRE scène écrite : c'est elle qui referme l'histoire. L'index était
+	# figé à 4 du temps où l'arc comptait toujours cinq entrées ; avec une quête unique de 8 à 25
+	# beats, il désignait le cinquième beat et la conclusion tombait au milieu de la partie.
+	if btype == "Climax" and not arc.is_empty():
+		idx = arc.size() - 1
 	var arc_tags: Array = _run_thread.get("arc_tags", [])
 	var narration: String = ""
 	var required: Array = []
@@ -1879,12 +1927,85 @@ func prepare_arc(scenario: Dictionary) -> void:
 			picked.append(_pick_tags(btype_a, diff_a))
 		else:
 			picked.append(pick_required_tags(btype_a, diff_a, arc_pool, _rng, x1_local))
-	if picked.size() != 5:
-		return  # arc LLM réservé aux quêtes de 5 beats (k<5 → fallback procédural, mapping climax→arc[4])
-	var arc: Array = await narrate_arc(scenario, picked)
-	if arc.size() == 5 and not bool(_run_thread.get("arc_locked", false)) and str(_run_thread.get("title", "")) == title:
-		_run_thread["arc"] = arc
-		_run_thread["arc_tags"] = picked
+	# LA GARDE DES CINQ BEATS A SAUTÉ (2026-08-18). Elle disait : « arc LLM réservé aux quêtes de
+	# 5 beats ». Or le tirage donnait 2 à 5 beats par quête : quatre fois sur cinq, cette ligne
+	# renvoyait AVANT d'appeler le modèle, et toute la partie se jouait sur l'arc procédural. Le
+	# fil rouge que Maxime cherchait n'a donc, très probablement, jamais été écrit une seule fois.
+	#
+	# Désormais l'arc couvre la quête ENTIÈRE, écrite par TRANCHES : la première est attendue (elle
+	# porte l'ouverture, celle qui pose la situation), les suivantes s'écrivent pendant qu'on joue
+	# les précédentes. Chaque tranche reçoit le résumé de ce qui précède — sans quoi le fil se
+	# romprait exactement là où on cherche à le tenir.
+	if picked.is_empty():
+		return
+	if bool(_run_thread.get("arc_locked", false)) or str(_run_thread.get("title", "")) != title:
+		return
+	var total: int = beats.size()
+	var arc_complet: Array = []
+	var tags_complets: Array = []
+	var debut: int = 0
+	while debut < total:
+		var fin: int = mini(debut + ARC_TRANCHE, total)
+		var types_tranche: Array = []
+		var tags_tranche: Array = []
+		for i in range(debut, fin):
+			types_tranche.append(str((beats[i] as Dictionary).get("type", "Exploration")))
+			tags_tranche.append(picked[i] if i < picked.size() else [])
+		var precedent: String = _resume_arc(arc_complet)
+		var morceau: Array = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
+				debut, total, precedent)
+		# Le titre a changé (nouvelle partie pendant notre attente) → cet arc n'a plus de
+		# destinataire. On s'arrête plutôt que d'écrire dans l'histoire de quelqu'un d'autre.
+		if str(_run_thread.get("title", "")) != title:
+			return
+		if morceau.is_empty():
+			break  # le modèle a rendu la main : on garde ce qui est écrit, le reste ira au secours
+		for i in morceau.size():
+			arc_complet.append(morceau[i])
+			tags_complets.append(tags_tranche[i] if i < tags_tranche.size() else [])
+		# Publication INCRÉMENTALE : la tranche 1 doit servir dès qu'elle existe, sans attendre la
+		# dernière. `arc_locked` ne bloque que le remplacement d'une histoire par une AUTRE.
+		_run_thread["arc"] = arc_complet.duplicate()
+		_run_thread["arc_tags"] = tags_complets.duplicate(true)
+		debut = fin
+
+
+# Ce qu'on rappelle au modèle avant d'écrire la tranche suivante : les deux dernières scènes
+# suffisent — tout l'arc gonflerait le prompt (et le prompt coûte la moitié du temps, mesuré).
+# Nombre de recours au secours depuis le dernier appel, et remise à zéro. La sonde de journal
+# l'interroge après chaque beat : si le compteur a bougé, ce beat porte la marque.
+func secours_consomme() -> int:
+	var n: int = _secours_derniers
+	_secours_derniers = 0
+	return n
+
+
+func _resume_arc(arc: Array) -> String:
+	if arc.is_empty():
+		return ""
+	var debut: int = maxi(0, arc.size() - 2)
+	var bouts: PackedStringArray = []
+	for i in range(debut, arc.size()):
+		bouts.append(str(arc[i]).strip_edges())
+	return " ".join(bouts)
+
+
+# Une tranche d'arc écrite par le modèle. Rend [] si le moteur n'est pas là ou a échoué : le
+# secours prendra le relais, et il sera NOMMÉ dans le journal.
+func narrate_arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, debut: int,
+		total: int, precedent: String) -> Array:
+	var mn: Node = _mn()
+	if mn == null or not mn.is_ready():
+		return []
+	var fblock: String = MerlinPromptBuilder.faction_pilier_block(
+		str(_run_thread.get("faction", "")), str(_run_thread.get("pilier", "")),
+		str(_run_thread.get("pilier2", "")), bool(_run_thread.get("pnj_recog", false)))
+	var p: Dictionary = MerlinPromptBuilder.arc_tranche(scenario, req_tags, types, debut, total,
+			precedent, fblock, _lieu_name(), pool_display_list(_live_pool_info()))
+	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
+	if r.has("error"):
+		return []
+	return MerlinProse.parse_arc(str(r.get("text", "")))
 
 
 # LLM réservé aux MOMENTS FORTS (Climax ou réussite éclatante) → réduit les rafales d'appels
@@ -2108,6 +2229,12 @@ func _pick_served(pool: Array, key: String) -> String:
 # Les anciens appelants (harnais probe_* : 1-2 args) → played_cards vide → filet NEUTRE RESO_FALLBACKS
 # (rétro-compat parfaite). En jeu, merlin_game passe la combinaison + le biome → l'issue reflète le geste.
 func fallback_resolution(degree: String, situ_type: String = "", played_cards: Array = [], biome: String = "") -> String:
+	# LE SECOURS SE DÉCLARE (2026-08-18). Il servait en silence à chaque beat, et le joueur lisait
+	# des phrases écrites en dur en croyant lire Merlin — c'est exactement ce que Maxime a fini par
+	# repérer à l'œil nu. Un filet est légitime ; un filet invisible ne l'est pas.
+	_secours_derniers += 1
+	push_warning("[MerlinScenario] issue servie par le BANC DE SECOURS (degré %s, beat %s) — le modèle n'a pas rendu à temps"
+			% [degree, situ_type])
 	var strong: bool = is_strong_moment(situ_type, degree)
 	# Sans carte (harnais legacy) : filet neutre pré-écrit (déjà « [i]Vous … [/i] conséquence »).
 	if played_cards.is_empty():
