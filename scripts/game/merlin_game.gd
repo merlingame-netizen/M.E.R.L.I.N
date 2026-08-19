@@ -982,7 +982,12 @@ func _on_resolve() -> void:
 	# au sustain animé (cap + skip). Cache prêt → prose LLM instantanée ; sinon filet procédural.
 	var prose: String = str(sc.take_resolution(situ, played_cards, res))
 	if prose.length() < 10:
-		# N2a — secours COMPOSÉ : reflète la combinaison (registre des cartes) + le biome + le degré.
+		# v33 « Les Deux Mains » — le banc ne sert plus JAMAIS sur un délai : l'issue s'ÉCRIT
+		# SOUS LES YEUX (le Vif streame plus vite qu'une lecture humaine). Le filet en dur ne
+		# reste que pour un moteur MORT — et il est marqué (secours_consomme + bandeau).
+		prose = await _stream_resolution(sc, situ, played_cards, res)
+	if prose.length() < 10:
+		# N2a — secours COMPOSÉ (filet ULTIME : moteur mort/erreur uniquement).
 		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")),
 			played_cards, str(run.get("biome")))
 	prose = MerlinProse.ensure_italic_action(prose)  # v11-N1 (R140) : 1re phrase = action en [i]…[/i] (robustesse si le LLM oublie l'italique)
@@ -1002,6 +1007,47 @@ func _on_resolve() -> void:
 # === v10.13 (A2) / v11-W1 — L'animation de fusion (3 phases + sustain skippable) vit dans MerlinFx ===
 # scripts/game/merlin_fx.gd : consts FUSION_* / VIGNETTE_SHADER_CODE, run() (Rassemblement→Burst→
 # Décrue+Dé + sustain), spark_wave public, shake static. Le dé (MerlinDice) est lancé PAR MerlinFx.
+
+
+# v33 — L'ISSUE STREAMÉE : la prose du Vif se révèle au fil de l'écriture, dans le MÊME fil
+# de prose que la situation (la cadence du modèle EST la machine à écrire). Retourne la
+# prose finale, "" si le moteur meurt — l'appelant sert alors le filet, marqué.
+func _stream_resolution(sc: Node, situ: Dictionary, played_cards: Array, res: Dictionary) -> String:
+	var mn: Node = get_node_or_null("/root/MerlinNative")
+	if mn == null or not mn.has_signal("generation_chunk_voie"):
+		return ""
+	if not sc.is_resolution_incoming(played_cards, res):
+		sc.prefetch_resolution(situ, played_cards, res)
+	if _scene_art != null:
+		_scene_art.set_thinking(true)
+	var texte_avant: String = _situation_text.text
+	var base: String = texte_avant
+	if base.ends_with("[/center]"):
+		base = base.substr(0, base.length() - 9)
+	var sur_flux: Callable = func(cerveau: String, cumul: String) -> void:
+		if cerveau != "vif" or not is_instance_valid(self) or _situation_text == null:
+			return
+		var brut: String = MerlinProse.clean_prose(cumul.strip_edges())
+		if brut.length() < 4:
+			return
+		_situation_text.text = base + "\n\n" + MerlinProse.ensure_italic_action(brut) + "[/center]"
+	mn.connect("generation_chunk_voie", sur_flux)
+	var dl: int = Time.get_ticks_msec() + 180000
+	var finale: String = ""
+	while Time.get_ticks_msec() < dl:
+		if sc.is_resolution_ready(played_cards, res):
+			finale = str(sc.take_resolution(situ, played_cards, res))
+			break
+		if not sc.is_resolution_incoming(played_cards, res):
+			break  # la génération est morte (erreur moteur) et rien en cache → filet ultime
+		await get_tree().process_frame
+	mn.disconnect("generation_chunk_voie", sur_flux)
+	if _scene_art != null and is_instance_valid(_scene_art):
+		_scene_art.set_thinking(false)
+	# L'encart revient à son état d'avant le flux : _show_resolution recompose le fil complet.
+	if _situation_text != null:
+		_situation_text.text = texte_avant
+	return finale
 
 
 func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:

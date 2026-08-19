@@ -2103,15 +2103,14 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	# décidée : issue > lookahead > arc. Une issue en vol se RESPECTE (on attend qu'elle rende
 	# la place) ; une tranche d'arc se PRÉEMPTE — pour l'arc, une collision n'est pas un échec,
 	# son budget d'horloge la fera revenir quand le moteur sera libre.
-	if mn.is_busy():
-		# v31.2 — PLUS D'ANNULATION : la préemption produisait une tempête (six tranches
-		# cédées, zéro scène livrée, chaque annulation repayant l'éval de l'arc). On attend,
-		# borné ; si l'arc garde la place, il servira — sa continuité de cache vaut plus
-		# que notre priorité.
+	# v33 — la voie CONTEUR seulement : le Vif peut streamer une issue en même temps,
+	# elle ne nous concerne pas. Attente bornée, jamais d'annulation (v31.2).
+	var conteur_pris: bool = mn.est_occupe("conteur") if mn.has_method("est_occupe") else mn.is_busy()
+	if conteur_pris:
 		var dl_moteur: int = Time.get_ticks_msec() + 30000
-		while mn.is_busy() and Time.get_ticks_msec() < dl_moteur:
+		while (mn.est_occupe("conteur") if mn.has_method("est_occupe") else mn.is_busy()) and Time.get_ticks_msec() < dl_moteur:
 			await get_tree().create_timer(0.5).timeout
-		if mn.is_busy():
+		if (mn.est_occupe("conteur") if mn.has_method("est_occupe") else mn.is_busy()):
 			_scene_jit_qn = -1
 			return  # la place n'a pas été rendue à temps : l'arc couvrira ce beat
 	var titre: String = str(_run_thread.get("title", ""))
@@ -2249,9 +2248,10 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 			if str(_run_thread.get("title", "")) != title:
 				return  # nouvelle partie pendant l'attente : cet arc n'a plus de destinataire
 			var mn_a: Node = _mn()
-			if mn_a == null or not mn_a.is_ready() or mn_a.is_busy():
+			if mn_a == null or not mn_a.is_ready() \
+					or (mn_a.est_occupe("conteur") if mn_a.has_method("est_occupe") else mn_a.is_busy()):
 				await get_tree().create_timer(1.0).timeout
-				continue  # toujours occupé : on repatiente, ce n'est PAS un échec
+				continue  # voie conteur occupée : on repatiente, ce n'est PAS un échec
 			morceau = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
 					debut, total, precedent)
 			if morceau.is_empty() and _arc_cede_au_fil:
@@ -2411,16 +2411,22 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	# single-flight est annulée À LA POSE (take_resolution ne bloque plus jamais au resolve).
 	# Priorité moteur : la prose de résolution du beat courant passe devant tout le reste — c'est
 	# la seule gen que le joueur attend activement.
-	if mn.is_busy():
-		mn.cancel()
+	# v33 — on ne draine que SA voie (vif) : le Conteur continue d'écrire scènes et arc
+	# pendant que l'issue se prépare. Compat mono-voie si le natif n'a pas est_occupe.
+	var vif_pris: bool = mn.est_occupe("vif") if mn.has_method("est_occupe") else mn.is_busy()
+	if vif_pris:
+		if mn.has_method("est_occupe"):
+			mn.cancel("vif")
+		else:
+			mn.cancel()
 		var free_dl: int = Time.get_ticks_msec() + 4000
-		while mn.is_busy() and Time.get_ticks_msec() < free_dl:
+		while (mn.est_occupe("vif") if mn.has_method("est_occupe") else mn.is_busy()) and Time.get_ticks_msec() < free_dl:
 			await get_tree().process_frame
 		if epoch != _reso_epoch:
 			return  # combo/beat changé pendant le drain — un prefetch plus récent a pris la main
-		if mn.is_busy():
+		if (mn.est_occupe("vif") if mn.has_method("est_occupe") else mn.is_busy()):
 			_reso_state = "idle"
-			return  # libération trop lente — le sustain servira le fallback si rien n'arrive
+			return  # libération trop lente — le stream au resolve prendra le relais
 	# N4-BUG (review MEDIUM) : sig posé APRÈS le drain, dans le même geste que « running ».
 	# Avant, _reso_sig était réécrit AVANT le drain pendant que _reso_state portait encore le
 	# « running » du vol PRÉCÉDENT : is_resolution_incoming(nouvelle combo) matchait par
@@ -2533,7 +2539,11 @@ func invalidate_resolution() -> void:
 	if _reso_state == "running":
 		var mn: Node = _mn()
 		if mn != null and mn.is_busy():
-			mn.cancel()
+			# v33 — seule la voie du Vif porte les issues : on n'annule qu'elle.
+			if mn.has_method("est_occupe"):
+				mn.cancel("vif")
+			else:
+				mn.cancel()
 	elif _scene_jit_qn != -1:
 		# UNE SCÈNE LOOKAHEAD EN VOL N'EST PAS ANNULÉE au changement de beat (2026-08-19).
 		# L'annulation générale tuait la scène N+1 en cours d'écriture À CHAQUE présentation :

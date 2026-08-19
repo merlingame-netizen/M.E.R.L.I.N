@@ -80,13 +80,18 @@ var _moteur_mort: bool = false
 var _reprises: int = 0
 const REPRISES_MAX: int = 1
 var _model_ready: bool = false
-var _busy: bool = false
-var _t_start_ms: int = 0
+# v33 « Les Deux Mains » — TOUT l'état de génération vit PAR VOIE (une par cerveau) : les
+# deux moteurs sont des instances séparées avec leurs propres fils d'inférence, et les deux
+# voies écrivent EN MÊME TEMPS (2+2 cœurs via set_thread_count à chaud — _partager_les_coeurs).
+# id = nonce anti-callback-tardif ; plein = régime demandé (restauré quand la voie redevient seule).
+const FILS_PARTAGE: int = 2
+var _voies: Dictionary = {
+	"conteur": {"busy": false, "label": "", "t0": 0, "prompt": "", "ready": false,
+		"result": {}, "id": 0, "plein": false, "metrics": {}},
+	"vif": {"busy": false, "label": "", "t0": 0, "prompt": "", "ready": false,
+		"result": {}, "id": 0, "plein": false, "metrics": {}},
+}
 var _last_metrics: Dictionary = {}
-var _pending_prompt: String = ""
-var _pending_result: Dictionary = {}  # résultat de la génération courante (lu par l'auto-polling)
-var _result_ready: bool = false
-var _gen_id: int = 0  # nonce : invalide les callbacks tardifs (après timeout) → anti-corruption
 var _quitting: bool = false  # v10.13 (Fix 7) : garde anti double-_graceful_quit
 
 # v10.18 — Chargement du modèle DANS UN THREAD (anti-freeze au boot) : le thread principal reste fluide
@@ -108,10 +113,13 @@ var _vif_thread: Thread = null
 var _vif_done: bool = false
 var _vif_err: int = 0
 var _vif_path: String = ""
-# Moteur et cerveau de la génération EN COURS (routage par opts.cerveau).
-var _gen_moteur: Variant = null
-var _gen_cerveau: String = "conteur"
 signal vif_ready()
+# v33 — flux par voie : (cerveau, texte cumulé). L'ancien generation_chunk reste émis (compat).
+signal generation_chunk_voie(cerveau: String, texte_cumule: String)
+
+
+func _moteur_de(cerveau: String) -> Variant:
+	return _llm_vif if cerveau == "vif" else _llm
 
 # Observabilité debug (log Gemma temps réel) : étiquette de l'activité en cours + journal d'événements.
 const ACTIVITY_LOG_MAX: int = 24
@@ -232,7 +240,7 @@ func _finish_load_vif() -> void:
 # Le processus ne s'endort que si plus RIEN ne l'attend : ni génération, ni chargement en fond.
 # Avant le Vif, `not _busy` suffisait ; l'oublier ici aurait gelé le second chargement.
 func _peut_dormir() -> bool:
-	return not _busy and _load_thread == null and _vif_thread == null
+	return not is_busy() and _load_thread == null and _vif_thread == null
 
 
 func est_vif_pret() -> bool:
@@ -333,10 +341,10 @@ func _reprise_necessaire() -> bool:
 # Le natif ne publie pas son drapeau `engine_dead` : son message d'erreur est le seul canal
 # disponible sans recompiler l'extension. Lire une chaîne est fragile par nature, d'où les DEUX
 # formulations émises par merlin_llm.cpp (lignes 121 et 144) testées ici, à un seul endroit.
-func _noter_si_moteur_mort(err: String) -> void:
+func _noter_si_moteur_mort(err: String, cerveau: String = "conteur") -> void:
 	# La mort du VIF n'est pas celle du jeu : on le débranche (repli Conteur) sans reprise —
 	# perdre 20 s par issue vaut mieux qu'une reprise de 4 Go en pleine partie.
-	if _gen_cerveau == "vif":
+	if cerveau == "vif":
 		if err.contains("stuck") or err.contains("LLM disabled"):
 			push_warning("[MerlinNative] Vif mort — repli mono-cerveau sur le Conteur")
 			_vif_ready = false
@@ -355,13 +363,36 @@ func is_ready() -> bool:
 
 
 func is_busy() -> bool:
-	return _busy
+	return bool(_voies["conteur"]["busy"]) or bool(_voies["vif"]["busy"])
 
 
-## L'étiquette de la génération EN COURS ("" si le moteur est libre). Le lookahead s'en sert
-## pour ne préempter QUE l'arc — jamais une issue, jamais l'intro (priorité du fil, v31.1).
+## v33 — occupation d'UNE voie : le prefetch d'issue ne regarde que le Vif, le lookahead
+## et l'arc ne regardent que le Conteur. is_busy() (OU des deux) reste pour les harnais.
+func est_occupe(cerveau: String) -> bool:
+	return bool((_voies.get(cerveau, {}) as Dictionary).get("busy", false))
+
+
+## L'étiquette d'une génération en cours ("" si tout est libre) — compat observabilité.
 func label_en_cours() -> String:
-	return _current_label if _busy else ""
+	for c in ["vif", "conteur"]:
+		if _voies[c]["busy"]:
+			return str(_voies[c]["label"])
+	return ""
+
+
+# v33 — 2+2 : les DEUX voies actives → chacune la moitié des cœurs (batch plein pour
+# l'évaluation du prompt) ; une voie seule → son régime demandé. Appliqué À CHAUD
+# (llama_set_n_threads), à chaque départ ET à chaque fin de génération.
+func _partager_les_coeurs() -> void:
+	var deux: bool = _voies["conteur"]["busy"] and _voies["vif"]["busy"]
+	for c in ["conteur", "vif"]:
+		var m: Variant = _moteur_de(c)
+		if m == null or not _voies[c]["busy"] or not m.has_method("set_thread_count"):
+			continue
+		if deux:
+			m.set_thread_count(FILS_PARTAGE, _fils_plein())
+		else:
+			m.set_thread_count(_fils_plein() if _voies[c]["plein"] else _fils_menage(), _fils_plein())
 
 
 func _process(_delta: float) -> void:
@@ -374,8 +405,10 @@ func _process(_delta: float) -> void:
 		_finish_load()
 	# poll_result() DOIT être appelé sur le thread principal ; il fire le callback
 	# quand le thread d'inférence a terminé.
-	if _llm != null and _busy:
+	if _llm != null and _voies["conteur"]["busy"]:
 		_llm.poll_result()
+	if _llm_vif != null and _voies["vif"]["busy"]:
+		_llm_vif.poll_result()
 
 
 ## Construit le template de chat Gemma (appliqué côté GDScript — le natif tokenise brut).
@@ -399,7 +432,8 @@ func build_prompt(system_text: String, user_text: String) -> String:
 ## paiera simplement la lecture complète, comme avant — un amorçage raté ne doit jamais devenir
 ## une panne visible.
 func amorcer_prefixe(system_text: String, cerveau: String = "conteur", user_text: String = "") -> void:
-	if not is_ready() or _busy or (system_text == "" and user_text == ""):
+	var voie_amorce: String = "vif" if (cerveau == "vif" and est_vif_pret()) else "conteur"
+	if not is_ready() or est_occupe(voie_amorce) or (system_text == "" and user_text == ""):
 		return
 	await generate(system_text, user_text, {"creative": false, "max_tokens": 1,
 			"plein_regime": true, "cerveau": cerveau,
@@ -455,19 +489,17 @@ func generate(system_text: String, user_text: String, opts: Dictionary = {}) -> 
 func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	if not is_ready():
 		return {"error": "modele non pret"}
-	if _busy:
+	# v33 — la voie se résout AVANT tout : deux générations peuvent vivre ensemble, une par
+	# cerveau. Une voie occupée refuse — l'appelant draine SA voie, jamais celle de l'autre.
+	var cerveau: String = str(opts.get("cerveau", "conteur"))
+	if not (cerveau == "vif" and est_vif_pret()):
+		cerveau = "conteur"
+	var v: Dictionary = _voies[cerveau]
+	if v["busy"]:
 		return {"error": "generation deja en cours"}
-	# REPRISE APRÈS MORT DU MOTEUR (mesuré chez Maxime le 2026-08-16). Enchaînement observé :
-	# une génération dépasse GEN_TIMEOUT_MS, on l'annule, le fil d'inférence C++ reste coincé dans
-	# le contexte llama, et à l'appel suivant le natif pose `engine_dead` — DÉFINITIVEMENT. Toute
-	# la session est alors perdue : « Merlin réfléchit » puis retour au menu, à chaque partie,
-	# jusqu'à ce qu'on relance le jeu. Personne ne peut deviner qu'il faut relancer.
-	#
-	# On repart d'un objet natif NEUF plutôt que de rappeler `load_model` sur le mort : celui-ci
-	# libère le contexte que le fil coincé utilise encore — un use-after-free, donc un plantage
-	# possible. L'ancien objet est ABANDONNÉ tel quel (le C++ détache déjà son fil) ; il emporte
-	# sa mémoire, d'où la borne REPRISES_MAX.
-	if _reprise_necessaire():
+	# REPRISE APRÈS MORT DU MOTEUR (2026-08-16) — ne concerne que le Conteur : la mort du Vif
+	# est un simple repli mono-cerveau (_noter_si_moteur_mort), jamais une reprise de 6 Go.
+	if cerveau == "conteur" and _reprise_necessaire():
 		if _reprises >= REPRISES_MAX:
 			return {"error": "moteur mort — reprise déjà tentée, relancer le jeu"}
 		_reprises += 1
@@ -475,8 +507,6 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 				% [_reprises, REPRISES_MAX])
 		if not _monter_moteur():
 			return {"error": "moteur mort — reprise impossible"}
-		# Le rechargement tourne dans un thread ; on l'attend, borné. Sans cette attente on
-		# rendrait « modèle non prêt » juste après avoir annoncé une reprise — incompréhensible.
 		var dl: int = Time.get_ticks_msec() + 60000
 		while not _model_ready and Time.get_ticks_msec() < dl:
 			await get_tree().process_frame
@@ -489,104 +519,87 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	var grammar: String = opts.get("grammar", "")
 	var grammar_root: String = opts.get("grammar_root", "root")
 	var plein_regime: bool = opts.get("plein_regime", false)
-
-	# ROUTAGE PAR CERVEAU (architecture v31). "vif" (e2b) pour les tâches dont tout le contexte
-	# tient dans le prompt — issues, intro ; "conteur" (e4b, défaut) pour tout ce qui porte le
-	# fil. Le Vif absent ou en panne → repli silencieux sur le Conteur : rien ne casse, le
-	# journal des métriques dit toujours QUI a écrit.
-	_gen_cerveau = str(opts.get("cerveau", "conteur"))
-	var moteur: Variant = _llm
-	if _gen_cerveau == "vif" and est_vif_pret():
-		moteur = _llm_vif
-	else:
-		_gen_cerveau = "conteur"
-	_gen_moteur = moteur
-
+	var moteur: Variant = _moteur_de(cerveau)
 	_apply_regime(moteur, creative, max_tokens, plein_regime)
+	v["plein"] = plein_regime
 	if grammar.is_empty():
 		moteur.clear_grammar()
 	else:
 		moteur.set_grammar(grammar, grammar_root)
-	# Arrêt doux : opt-in par tâche (fin_phrase). Jamais pour du JSON — un point dans une chaîne
-	# tronquerait le tableau.
+	# Arrêt doux : opt-in par tâche (fin_phrase). Jamais pour du JSON.
 	if moteur.has_method("set_soft_stop"):
 		moteur.set_soft_stop(bool(opts.get("fin_phrase", false)))
-
-	_busy = true
-	_current_label = str(opts.get("label", "génération"))
-	_t_start_ms = Time.get_ticks_msec()
+	v["busy"] = true
+	v["label"] = str(opts.get("label", "génération"))
+	v["t0"] = Time.get_ticks_msec()
+	_partager_les_coeurs()
 	set_process(true)
-	# Démarre la génération en DIFFÉRÉ : garantit que `await generation_finished` est
-	# enregistré AVANT que le callback puisse émettre (évite le drop de signal si le
-	# natif rappelle de façon synchrone — code-review CRITICAL).
-	_pending_prompt = full_prompt
-	_result_ready = false
-	_pending_result = {}
-	_gen_id += 1
-	var my_id: int = _gen_id
-	call_deferred("_start_generation", my_id)
-	# Auto-polling : on pompe poll_result() nous-mêmes CHAQUE frame (ne plus dépendre uniquement
-	# de _process, qui peut starver en headless --script → await figé). Timeout borné anti-gel.
+	# Démarre en DIFFÉRÉ (le await generation_finished doit être enregistré avant émission).
+	v["prompt"] = full_prompt
+	v["ready"] = false
+	v["result"] = {}
+	v["id"] = int(v["id"]) + 1
+	var my_id: int = int(v["id"])
+	call_deferred("_start_generation", cerveau, my_id)
+	# Auto-polling par VOIE : chaque generate_raw pompe SA voie à chaque frame — deux appels
+	# concurrents cohabitent, chacun draine son moteur et émet son flux.
 	var t0: int = Time.get_ticks_msec()
 	var cumul: String = ""
 	while true:
-		if _gen_moteur != null:
-			# AU FIL DE L'EAU : on vide le tampon du moteur à chaque image. Mesuré le 2026-08-18,
-			# l'écriture prend 38 s en jeu — attendre la fin pour montrer quoi que ce soit gâche
-			# le tiers du temps où le premier résultat est déjà écrit.
-			# Pas de flux pour un AMORÇAGE : il ne produit qu'un token, aussitôt jeté, et il n'a
-			# rien à montrer. Le laisser passer polluait la mesure — le premier « texte reçu »
-			# datait de l'amorçage, pas de la vraie écriture, et donnait un chiffre faux de 13 s
-			# (constaté 2026-08-18 : « premier texte reçu en 15,7 s · debut=Ah » venait de là).
-			if max_tokens > 1 and _gen_moteur.has_method("poll_stream"):
-				var morceau: String = str(_gen_moteur.poll_stream())
+		if moteur != null:
+			# AU FIL DE L'EAU : le tampon du moteur est vidé chaque image. Pas de flux pour un
+			# AMORÇAGE (1 token, aussitôt jeté) — il polluait la mesure du premier texte.
+			if max_tokens > 1 and moteur.has_method("poll_stream"):
+				var morceau: String = str(moteur.poll_stream())
 				if morceau != "":
 					cumul += morceau
 					emit_signal("generation_chunk", cumul)
-			_gen_moteur.poll_result()  # fire _on_result quand le thread d'inférence a terminé
-		if _result_ready:
+					emit_signal("generation_chunk_voie", cerveau, cumul)
+			moteur.poll_result()
+		if v["ready"]:
 			break
 		if Time.get_ticks_msec() - t0 > GEN_TIMEOUT_MS:
-			_gen_id += 1  # invalide tout callback tardif de CETTE génération (anti-corruption)
-			if _gen_moteur != null:
-				_gen_moteur.cancel_generation()
-			_busy = false
+			v["id"] = int(v["id"]) + 1
+			if moteur != null:
+				moteur.cancel_generation()
+			v["busy"] = false
+			_partager_les_coeurs()
 			if _peut_dormir():
 				set_process(false)
-			push_warning("[MerlinNative] timeout génération (%d ms) — annulée" % GEN_TIMEOUT_MS)
+			push_warning("[MerlinNative] timeout génération (%d ms) [%s] — annulée" % [GEN_TIMEOUT_MS, cerveau])
 			return {"error": "timeout"}
 		await get_tree().process_frame
-	return _pending_result
+	return v["result"]
 
 
-func _start_generation(gen_id: int) -> void:
-	if gen_id != _gen_id:
+func _start_generation(cerveau: String, gen_id: int) -> void:
+	var v: Dictionary = _voies[cerveau]
+	if gen_id != int(v["id"]):
 		return  # génération invalidée (timeout) avant l'exécution différée
-	if _gen_moteur == null:
-		_on_result({"error": "moteur indisponible"}, gen_id)
+	var moteur: Variant = _moteur_de(cerveau)
+	if moteur == null:
+		_on_result({"error": "moteur indisponible"}, cerveau, gen_id)
 		return
-	_gen_moteur.generate_async(_pending_prompt, Callable(self, "_on_result").bind(gen_id))
+	moteur.generate_async(str(v["prompt"]), Callable(self, "_on_result").bind(cerveau, gen_id))
 
 
-func _on_result(result: Dictionary, gen_id: int = 0) -> void:
-	if gen_id != _gen_id:
-		return  # callback périmé (génération annulée par timeout / remplacée) → ignore
-	if _result_ready:
-		return  # double-poll (_process + boucle d'auto-polling) → résultat déjà consommé
-	var elapsed_ms: int = Time.get_ticks_msec() - _t_start_ms
-	_busy = false
+func _on_result(result: Dictionary, cerveau: String = "conteur", gen_id: int = 0) -> void:
+	var v: Dictionary = _voies[cerveau]
+	if gen_id != int(v["id"]):
+		return  # callback périmé (annulé/remplacé) → ignore
+	if v["ready"]:
+		return  # double-poll → résultat déjà consommé
+	var elapsed_ms: int = Time.get_ticks_msec() - int(v["t0"])
+	v["busy"] = false
+	_partager_les_coeurs()
 	if _peut_dormir():
 		set_process(false)
 	if result.has("error"):
-		_noter_si_moteur_mort(str(result["error"]))
+		_noter_si_moteur_mort(str(result["error"]), cerveau)
 	var txt: String = _sanitize(str(result.get("text", "")))
 	if result.has("text"):
-		result["text"] = txt  # le consommateur reçoit le texte NETTOYÉ
-	# COMPTEURS RÉELS quand le moteur les fournit (llama_perf_context, ajouté 2026-08-18), sinon
-	# l'ancienne approximation « ~4 caractères par token ». La distinction n'est pas cosmétique :
-	# l'approximation additionnait l'évaluation du prompt et l'écriture dans un seul chiffre, donc
-	# elle ne pouvait pas dire laquelle des deux coûte les secondes — la question ouverte depuis
-	# qu'une sélection prend 112 s en jeu contre 31 s sans rien dessiner.
+		result["text"] = txt
+	# COMPTEURS RÉELS (llama_perf_context) quand fournis, sinon approximation ~4 car./token.
 	var p_eval_ms: float = float(result.get("prompt_eval_ms", 0.0))
 	var eval_ms: float = float(result.get("eval_ms", 0.0))
 	var n_prompt: int = int(result.get("prompt_tokens", 0))
@@ -595,11 +608,11 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 	var approx_tokens: int = n_ecrits if reels else int(txt.length() / 4.0)
 	var tok_per_s: float = 0.0
 	if reels and eval_ms > 0.0:
-		tok_per_s = float(n_ecrits) * 1000.0 / eval_ms   # vitesse d'ÉCRITURE seule, comparable à Ollama
+		tok_per_s = float(n_ecrits) * 1000.0 / eval_ms
 	elif elapsed_ms > 0:
 		tok_per_s = float(approx_tokens) * 1000.0 / float(elapsed_ms)
-	_last_metrics = {
-		"cerveau": _gen_cerveau,
+	var met: Dictionary = {
+		"cerveau": cerveau,
 		"total_ms": elapsed_ms,
 		"approx_tokens": approx_tokens,
 		"tok_per_s": tok_per_s,
@@ -609,19 +622,21 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 		"prompt_ms": p_eval_ms, "prompt_tokens": n_prompt,
 		"ecriture_ms": eval_ms, "tokens_ecrits": n_ecrits,
 	}
+	v["metrics"] = met
+	_last_metrics = met
 	if reels:
 		var vp: float = (float(n_prompt) * 1000.0 / p_eval_ms) if p_eval_ms > 0.0 else 0.0
 		print("[MerlinNative] %s [%s] : prompt %d tok en %.1f s (%.1f tok/s) · ecriture %d tok en %.1f s (%.1f tok/s) · total %.1f s"
-				% [_current_label, _gen_cerveau, n_prompt, p_eval_ms / 1000.0, vp,
+				% [str(v["label"]), cerveau, n_prompt, p_eval_ms / 1000.0, vp,
 					n_ecrits, eval_ms / 1000.0, tok_per_s, elapsed_ms / 1000.0])
 	_activity_log.append({
-		"label": _current_label, "ms": elapsed_ms, "chars": txt.length(),
+		"label": str(v["label"]), "ms": elapsed_ms, "chars": txt.length(),
 		"ok": not result.has("error"), "t": Time.get_ticks_msec(),
 	})
 	while _activity_log.size() > ACTIVITY_LOG_MAX:
 		_activity_log.pop_front()
-	_pending_result = result
-	_result_ready = true
+	v["result"] = result
+	v["ready"] = true
 	emit_signal("generation_finished", result)
 
 
@@ -631,7 +646,7 @@ func last_metrics() -> Dictionary:
 
 # --- Observabilité debug (lus par MerlinDebugOverlay) ---
 func get_current_label() -> String:
-	return _current_label
+	return label_en_cours()
 
 
 func get_activity_log() -> Array:
@@ -639,7 +654,11 @@ func get_activity_log() -> Array:
 
 
 func get_elapsed_ms() -> int:
-	return (Time.get_ticks_msec() - _t_start_ms) if _busy else 0
+	var t_actif: int = 0
+	for c in ["conteur", "vif"]:
+		if _voies[c]["busy"]:
+			t_actif = maxi(t_actif, Time.get_ticks_msec() - int(_voies[c]["t0"]))
+	return t_actif
 
 
 func model_info() -> Dictionary:
@@ -650,9 +669,13 @@ func model_info() -> Dictionary:
 	return d
 
 
-func cancel() -> void:
-	if _gen_moteur != null and _busy:
-		_gen_moteur.cancel_generation()
+func cancel(cerveau: String = "") -> void:
+	for c in (["conteur", "vif"] if cerveau == "" else [cerveau]):
+		if not _voies.has(c):
+			continue
+		var m: Variant = _moteur_de(c)
+		if m != null and _voies[c]["busy"]:
+			m.cancel_generation()
 
 
 func _notification(what: int) -> void:
@@ -668,8 +691,7 @@ func _notification(what: int) -> void:
 		if _load_thread != null:
 			_load_thread.wait_to_finish()
 			_load_thread = null
-		if _llm != null and _busy:
-			if _gen_moteur != null: _gen_moteur.cancel_generation()
+		cancel()
 
 
 # v10.13 (Fix 7) — fermeture propre : cancel de la gen en vol + drain BORNÉ (2s, le flag natif est
@@ -684,11 +706,14 @@ func _graceful_quit() -> void:
 	if _load_thread != null:
 		_load_thread.wait_to_finish()
 		_load_thread = null
-	if _llm != null and _busy:
-		if _gen_moteur != null: _gen_moteur.cancel_generation()
+	if is_busy():
+		cancel()
 		var dl: int = Time.get_ticks_msec() + 2000
-		while _busy and Time.get_ticks_msec() < dl:
-			if _gen_moteur != null: _gen_moteur.poll_result()  # le callback de fin (→ _busy=false) se déclenche au poll
+		while is_busy() and Time.get_ticks_msec() < dl:
+			for c in ["conteur", "vif"]:
+				var m: Variant = _moteur_de(c)
+				if m != null and _voies[c]["busy"]:
+					m.poll_result()  # le callback de fin (→ busy=false) se déclenche au poll
 			await get_tree().process_frame
 	if _vif_thread != null:
 		_vif_thread.wait_to_finish()
