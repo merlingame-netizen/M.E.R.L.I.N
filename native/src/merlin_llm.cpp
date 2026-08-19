@@ -176,12 +176,6 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		stream_buffer.clear();
 	}
 
-	// Compteurs remis à zéro AVANT la génération : llama_perf_context cumule sur la vie du
-	// contexte, et un cumul ne dit rien de l'appel qu'on est en train de mesurer.
-	if (ctx) {
-		llama_perf_context_reset(ctx);
-	}
-
 	std::string prompt_utf8 = prompt.utf8().get_data();
 	inference_thread = std::thread([this, prompt_utf8]() {
 		std::string output;
@@ -190,6 +184,15 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		llama_sampler * sampler = nullptr;  // declared before try{} so the catch can free it on a thrown exception
 
 		try {
+
+		// Compteurs remis à zéro ICI, dans le fil d'inférence, et non dans generate_async :
+		// fait depuis le fil principal, le reset courait contre un fil précédent encore vivant
+		// (annulation en vol) et les relevés cumulaient DEUX générations — « prompt 2582 tok en
+		// 144 s » sur un contexte de 2048, constaté le 2026-08-19. Un chiffre impossible est un
+		// chiffre qui ment : ici, seul le fil qui mesure remet à zéro.
+		if (ctx) {
+			llama_perf_context_reset(ctx);
+		}
 
 		const llama_vocab * vocab = llama_model_get_vocab(model);
 		const int32_t ctx_len = n_ctx;

@@ -62,7 +62,10 @@ const ARC_TRANCHE: int = 4
 # en vol à chaque pose. Compter ces collisions comme des échecs brûlait le crédit en deux beats
 # et condamnait toute la fin de quête au secours. Une collision n'est pas un échec : seul un
 # moteur LIBRE qui rend un tableau vide en est un (deux suffisent à renoncer).
-const RICHESSE_ISSUE: int = 2
+# 1 et non 2 : au palier 2 l'écriture passe à ~33 s et re-rate la fenêtre sous contention
+# (4 secours sur 6 à la validation). Le palier 1 fait déjà réagir la scène (le chevalier se
+# redresse) pour ~22 s d'écriture. Le 2 reste le preset « Riche » des Options.
+const RICHESSE_ISSUE: int = 1
 const ARC_TRANCHE_BUDGET_S: float = 300.0
 const ARC_ECHECS_REELS_MAX: int = 2
 # Combien de temps on laisse le moteur finir ce qu'il fait avant de retenter. Une résolution
@@ -2338,6 +2341,14 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		_reso_cache[sig] = prose
 		_reso_state = "ready"
 		print("[MerlinScenario] issue — prête au cache pour %s (%d car.)" % [sig, prose.length()])
+		# LE LOOKAHEAD S'ENCHAÎNE ICI, dès que l'issue est écrite — pas à son affichage. Lancé à
+		# l'affichage, il n'avait que le temps de lecture : la première scène complète (42,9 s)
+		# est arrivée APRÈS la présentation du beat suivant et a été jetée. Ici, il gagne tout le
+		# temps restant de pose + le sustain + la lecture : la fenêtre maximale possible.
+		_run_thread["last_issue"] = prose.strip_edges().substr(0, 420)
+		var run_n: Node = get_node_or_null("/root/MerlinRun")
+		if run_n != null and not run_n.ended:
+			prefetch_scene_suivante(run_n)
 	else:
 		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
 		print("[MerlinScenario] issue — génération VIDE pour %s" % sig)

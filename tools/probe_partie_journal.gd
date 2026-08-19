@@ -32,6 +32,8 @@ const SHOTS_MAX: int = 12
 # narration avant de poser (~20-40 s) : 25 s est la pose représentative, pas un maquillage — le
 # harnais à 8 s jouait plus vite qu'aucun joueur réel.
 const POSE_S: float = 25.0
+# Temps de lecture de l'issue affichée, avant d'avancer au beat suivant.
+const LECTURE_S: float = 18.0
 
 var _journal: Dictionary = {}
 var _shots_dir: String = ""
@@ -350,6 +352,12 @@ func _boucle(game: Node, run: Node) -> void:
 					game._on_resolve()
 		elif game._state == 2 and game._can_advance:
 			_noter_sortie(run)
+			# LECTURE de l'issue avant d'avancer : un humain lit ce que Merlin a écrit (~15-30 s).
+			# Avancer dans la frame suivante jetait la scène lookahead en cours d'écriture — la
+			# première complète (42,9 s) est arrivée juste après la présentation du beat suivant.
+			await create_timer(LECTURE_S).timeout
+			if not is_instance_valid(game) or run.ended:
+				continue
 			game._advance_to_next()
 		await process_frame
 	_sauver()
