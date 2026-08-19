@@ -181,6 +181,9 @@ func _monter_moteur() -> bool:
 
 
 func _monter_vif() -> void:
+	if _vif_thread != null:
+		return  # un chargement est déjà en route — l'écraser orphelinerait son thread
+	_vif_ready = false
 	var chemin: String = ""
 	if OS.has_feature("editor"):
 		chemin = ProjectSettings.globalize_path(MODEL_E2B)
@@ -305,7 +308,13 @@ func _finish_load() -> void:
 	# Le Vif se charge APRÈS le Conteur, jamais en même temps : deux lectures disque de 4-6 Go en
 	# parallèle se voleraient la bande passante, et le Conteur doit être prêt d'abord — c'est lui
 	# le repli de tout.
-	_monter_vif()
+	#
+	# PREMIER DÉMARRAGE UNIQUEMENT (revue adversariale 2026-08-19, CRITIQUE) : _finish_load
+	# repasse ici lors d'une REPRISE après moteur mort, et remonter le Vif écrasait une instance
+	# SAINE par une coquille vide pendant que _vif_ready restait vrai — la génération suivante
+	# était routée sur un moteur sans modèle, en course avec son propre load_model.
+	if _llm_vif == null and not _vif_ready and _vif_thread == null:
+		_monter_vif()
 
 
 # Pourquoi le moteur n'est pas la — chaine vide s'il va bien ou s'il charge encore.
@@ -536,7 +545,8 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 			if _gen_moteur != null:
 				_gen_moteur.cancel_generation()
 			_busy = false
-			set_process(false)
+			if _peut_dormir():
+				set_process(false)
 			push_warning("[MerlinNative] timeout génération (%d ms) — annulée" % GEN_TIMEOUT_MS)
 			return {"error": "timeout"}
 		await get_tree().process_frame
@@ -559,7 +569,8 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 		return  # double-poll (_process + boucle d'auto-polling) → résultat déjà consommé
 	var elapsed_ms: int = Time.get_ticks_msec() - _t_start_ms
 	_busy = false
-	set_process(false)
+	if _peut_dormir():
+		set_process(false)
 	if result.has("error"):
 		_noter_si_moteur_mort(str(result["error"]))
 	var txt: String = _sanitize(str(result.get("text", "")))
@@ -652,7 +663,7 @@ func _notification(what: int) -> void:
 			_load_thread.wait_to_finish()
 			_load_thread = null
 		if _llm != null and _busy:
-			_llm.cancel_generation()
+			if _gen_moteur != null: _gen_moteur.cancel_generation()
 
 
 # v10.13 (Fix 7) — fermeture propre : cancel de la gen en vol + drain BORNÉ (2s, le flag natif est
@@ -668,11 +679,14 @@ func _graceful_quit() -> void:
 		_load_thread.wait_to_finish()
 		_load_thread = null
 	if _llm != null and _busy:
-		_llm.cancel_generation()
+		if _gen_moteur != null: _gen_moteur.cancel_generation()
 		var dl: int = Time.get_ticks_msec() + 2000
 		while _busy and Time.get_ticks_msec() < dl:
-			_llm.poll_result()  # le callback de fin (→ _busy=false) se déclenche au poll
+			if _gen_moteur != null: _gen_moteur.poll_result()  # le callback de fin (→ _busy=false) se déclenche au poll
 			await get_tree().process_frame
+	if _vif_thread != null:
+		_vif_thread.wait_to_finish()
+		_vif_thread = null
 	get_tree().quit()
 
 

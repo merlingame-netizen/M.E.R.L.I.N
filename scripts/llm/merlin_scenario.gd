@@ -874,12 +874,22 @@ func _amorcer() -> void:
 	# sa queue variable (~350 tokens, ~8 s au lieu de ~50 à froid).
 	if mn.has_method("est_vif_pret"):
 		if mn.est_vif_pret():
-			mn.amorcer_prefixe(MerlinPromptBuilder.SYSTEM_PREFIX, "vif",
-					MerlinPromptBuilder.tete_issue(RICHESSE_ISSUE))
+			_amorcer_vif(mn)
 		elif mn.has_signal("vif_ready"):
-			mn.vif_ready.connect(func() -> void:
-				mn.amorcer_prefixe(MerlinPromptBuilder.SYSTEM_PREFIX, "vif",
-						MerlinPromptBuilder.tete_issue(RICHESSE_ISSUE)), CONNECT_ONE_SHOT)
+			mn.vif_ready.connect(_amorcer_vif.bind(mn), CONNECT_ONE_SHOT)
+
+
+# RÉSILIENT, et non one-shot-perdu (revue adversariale 2026-08-19) : `vif_ready` tombe souvent
+# pendant qu'une génération occupe le moteur mono-place — amorcer_prefixe rendait alors la main
+# en silence, la connexion one-shot était consommée, et la tête d'issue n'était jamais mise en
+# cache : la première issue payait la lecture à froid. Ici on ATTEND la place, borné.
+func _amorcer_vif(mn: Node) -> void:
+	var dl: int = Time.get_ticks_msec() + 120000
+	while mn.is_busy() and Time.get_ticks_msec() < dl:
+		await get_tree().create_timer(0.5).timeout
+	if mn.est_vif_pret():
+		await mn.amorcer_prefixe(MerlinPromptBuilder.SYSTEM_PREFIX, "vif",
+				MerlinPromptBuilder.tete_issue(RICHESSE_ISSUE))
 
 
 func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:
