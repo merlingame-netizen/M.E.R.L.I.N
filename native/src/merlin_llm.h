@@ -46,6 +46,12 @@ private:
 	int32_t top_k = 50;  // Nouveau: diversité sampling
 	float repetition_penalty = 1.1f;  // Nouveau: anti-répétition
 	std::string grammar_str;  // GBNF grammar for constrained decoding
+	// ARRÊT DOUX (opt-in par tâche) : passé ~85 % du budget, on s'arrête à la première fin de
+	// phrase au lieu de couper net au plafond. Sans lui, le plafond tombait au milieu d'une
+	// phrase et le jeu ROGNAIT la fin — des tokens écrits pour être jetés, à chaque appel.
+	// Opt-in et non défaut : une sortie JSON (sélection) contient des points DANS les chaînes,
+	// s'y arrêter tronquerait le tableau.
+	bool soft_stop = false;
 	std::string grammar_root = "root";  // Grammar root rule name
 
 protected:
@@ -64,6 +70,7 @@ public:
 	void set_sampling_params(double p_temperature, double p_top_p, int32_t p_max_tokens);
 	void set_advanced_sampling(int32_t p_top_k, double p_repetition_penalty);
 	void set_grammar(godot::String p_grammar, godot::String p_root = "root");
+	void set_soft_stop(bool p_on);
 	void clear_grammar();
 	void set_context_size(int32_t p_n_ctx);
 	void set_thread_count(int32_t p_gen_threads, int32_t p_batch_threads);

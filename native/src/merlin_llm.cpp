@@ -12,12 +12,33 @@
 #include <cstdlib>   // diagnostic: getenv
 #include <exception> // catch std::exception thrown by llama.cpp grammar accept (empty-stack)
 #include <string>
+#include <random>
 #include <thread>
 #include <vector>
 
 using namespace godot;
 
 std::atomic<int> MerlinLLM::backend_refs{0};
+
+// Vrai si le texte se termine par une ponctuation qui clôt une phrase française.
+// UTF-8 : « » » = C2 BB, « … » = E2 80 A6 ; les autres tiennent sur un octet.
+static bool _clot_une_phrase(const std::string &s) {
+	if (s.empty()) {
+		return false;
+	}
+	const unsigned char c = static_cast<unsigned char>(s.back());
+	if (c == '.' || c == '!' || c == '?') {
+		return true;
+	}
+	if (s.size() >= 2 && c == 0xBB && static_cast<unsigned char>(s[s.size() - 2]) == 0xC2) {
+		return true;  // »
+	}
+	if (s.size() >= 3 && c == 0xA6 && static_cast<unsigned char>(s[s.size() - 2]) == 0x80
+			&& static_cast<unsigned char>(s[s.size() - 3]) == 0xE2) {
+		return true;  // …
+	}
+	return false;
+}
 
 MerlinLLM::MerlinLLM() {
 	if (backend_refs.fetch_add(1) == 0) {
@@ -69,6 +90,7 @@ void MerlinLLM::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_grammar", "grammar", "root"), &MerlinLLM::set_grammar, DEFVAL("root"));
 	ClassDB::bind_method(D_METHOD("clear_grammar"), &MerlinLLM::clear_grammar);
 	ClassDB::bind_method(D_METHOD("poll_stream"), &MerlinLLM::poll_stream);
+	ClassDB::bind_method(D_METHOD("set_soft_stop", "on"), &MerlinLLM::set_soft_stop);
 	ClassDB::bind_method(D_METHOD("set_context_size", "n_ctx"), &MerlinLLM::set_context_size);
 	ClassDB::bind_method(D_METHOD("set_thread_count", "gen_threads", "batch_threads"), &MerlinLLM::set_thread_count);
 	ClassDB::bind_method(D_METHOD("get_model_info"), &MerlinLLM::get_model_info);
@@ -358,7 +380,16 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			llama_sampler_chain_add(sampler, llama_sampler_init_top_p(top_p, 1));
 			llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature));
 
-			llama_sampler_chain_add(sampler, llama_sampler_init_greedy());
+			// v27 (2026-08-19) — le tirage devient RÉEL. `greedy` inconditionnel rendait
+			// temperature/top_p inertes depuis toujours : même prompt → même sortie, toute la
+			// variété reposait sur des angles injectés dans le prompt. `dist` échantillonne la
+			// distribution déjà contrainte par la chaîne (grammaire → pénalités → top_k/top_p →
+			// temp). Sous ~0,05 de température on garde greedy : c'est une demande de déterminisme.
+			if (temperature > 0.05f) {
+				llama_sampler_chain_add(sampler, llama_sampler_init_dist(std::random_device{}()));
+			} else {
+				llama_sampler_chain_add(sampler, llama_sampler_init_greedy());
+			}
 		}
 
 		// Diagnostic: env-gated, flushed stderr trace to pin the silent GBNF-decode crash.
@@ -394,6 +425,17 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				const int32_t n = llama_token_to_piece(vocab, tok, buf, static_cast<int32_t>(sizeof(buf)), 0, true);
 				if (n > 0) {
 					output.append(buf, n);
+					// Arrêt doux : passé 85 % du budget, la première fin de phrase clôt la
+					// génération — le budget est une cible, plus un couperet.
+					if (soft_stop && i >= (max_tokens * 85) / 100 && _clot_une_phrase(output)) {
+						llama_sampler_accept(sampler, tok);
+						last_prompt_tokens.push_back(tok);
+						{
+							std::lock_guard<std::mutex> lock(stream_mutex);
+							stream_buffer.append(buf, n);
+						}
+						break;
+					}
 					// AU FIL DE L'EAU. Mesuré le 2026-08-18 : l'écriture des trois titres prend
 					// 38 s en jeu, et le joueur ne voit RIEN pendant ce temps — alors que le
 					// premier titre est terminé au tiers du parcours. Le texte part donc dans un
@@ -622,6 +664,10 @@ void MerlinLLM::set_grammar(String p_grammar, String p_root) {
 void MerlinLLM::clear_grammar() {
 	grammar_str.clear();
 	grammar_root = "root";
+}
+
+void MerlinLLM::set_soft_stop(bool p_on) {
+	soft_stop = p_on;
 }
 
 void MerlinLLM::set_context_size(int32_t p_n_ctx) {
