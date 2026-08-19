@@ -1,0 +1,1 @@
+2026-08-19 — déclenchement du patcheur v34.1 (fréquence des pactes + sonde acheteuse).
