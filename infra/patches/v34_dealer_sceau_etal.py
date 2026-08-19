@@ -4,17 +4,21 @@
 Décisions Maxime 2026-08-19 soir : issues 3-5 phrases directes (HoF2) · auto-réussite
 sans dé + sceau quand la réussite est acquise · marchand ~40 %/quête · pactes cap +3
 avec compteur par quête. Plus : timings par beat dans le journal de sonde.
-Échec fort si une ancre n'est pas trouvée exactement une fois — rien n'est écrit.
+Échec fort si une ancre n'a pas EXACTEMENT le compte attendu — rien n'est écrit.
 """
 import pathlib
 import sys
 
 
-def exact(texte: str, vieux: str, neuf: str, nom: str) -> str:
+def exact_n(texte: str, vieux: str, neuf: str, nom: str, attendu: int = 1) -> str:
     n = texte.count(vieux)
-    if n != 1:
-        sys.exit("ECHEC %s : motif trouve %d fois (attendu 1) : %r" % (nom, n, vieux[:80]))
+    if n != attendu:
+        sys.exit("ECHEC %s : motif trouve %d fois (attendu %d) : %r" % (nom, n, attendu, vieux[:80]))
     return texte.replace(vieux, neuf)
+
+
+def exact(texte: str, vieux: str, neuf: str, nom: str) -> str:
+    return exact_n(texte, vieux, neuf, nom, 1)
 
 
 # ============ A. merlin_prompt_builder.gd — le ton du dealer ============
@@ -55,10 +59,11 @@ t = exact(t,
     "La scene = 3 a 5 phrases COURTES et CONCRETES (qui, quoi, ou ; une image au plus, pas de lyrisme ni de comparaisons) avec",
     "A4-scene")
 
-t = exact(t,
+# Les DEUX variantes d'écriture d'arc portent la même directive — le même ton pour les deux.
+t = exact_n(t,
     "Chaque etape = 3 a 4 phrases CONCRETES (qui, quoi, ou) avec",
     "Chaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; une image au plus, pas de lyrisme ni de comparaisons) avec",
-    "A5-arc")
+    "A5-arc", 2)
 
 t = exact(t,
     "Images celtiques concretes, SANS remplissage",
