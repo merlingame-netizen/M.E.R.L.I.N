@@ -1,0 +1,1 @@
+2026-08-19 — déclenchement du patcheur v31.2 (tête en dernier + fin des annulations).
