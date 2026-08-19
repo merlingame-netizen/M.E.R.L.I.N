@@ -616,9 +616,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"Chaque tronc semble se resserrer un peu plus depuis vos derniers pas, et c'est entre deux ombres que vous reprenez,",
+				"Le bois retient son souffle autour de votre échec, et c'est sous des branches plus basses que vous avancez,",
+				"Quelque chose a pris note de votre revers sous les fougères, et vous reprenez la marche sans lui tourner le dos,",
 			],
 			"elan": [
 				"Même ce revers ne vous arrête pas, la sève et la terre dans vos veines, et vous rouvrez la marche entre les fûts,",
+				"L'échec glisse sur vous comme la pluie sur l'écorce, et vous repartez d'un pas que rien n'entame,",
+				"Vous laissez le revers derrière vous avec les feuilles mortes, et le bois vous rend déjà un chemin,",
 			],
 		},
 		"falaises": {
@@ -629,9 +633,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"Le vent a tourné contre vous depuis un moment déjà, et c'est en aveugle presque que vous reprenez la corniche,",
+				"La mer garde le compte de vos revers, et c'est sous un ciel plus bas que vous longez le bord,",
+				"L'embrun vous gifle comme un rappel, et vous avancez sur le sel en surveillant l'à-pic,",
 			],
 			"elan": [
 				"Même ce revers ne vous plie pas, le sel vif sur vos lèvres, et vous reprenez le fil de la falaise,",
+				"L'échec s'envole avec les mouettes, et vous reprenez le bord d'un pas que le vent n'ébranle pas,",
+				"Ce que la roche vous a refusé aiguise votre prise, et vous repartez le long du vide, plus sûr qu'avant,",
 			],
 		},
 	},
@@ -644,9 +652,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"Ce demi-gain a un goût de dette, et le bois se fait plus noir à chaque pas que vous risquez plus loin,",
+				"Ce que vous avez payé chuchote encore sous la mousse, et vous avancez entre des troncs qui se souviennent,",
+				"La moitié gagnée pèse comme la moitié perdue, et c'est dans un sous-bois plus sourd que vous continuez,",
 			],
 			"elan": [
 				"Même à demi, ce que vous avez arraché vous porte, et le sous-bois s'ouvre plus franc devant vous,",
+				"Le prix payé vous semble léger dans l'air vert, et vous enjambez les racines d'un pas gagnant,",
+				"Ce demi-succès chante encore dans vos mains, et la forêt vous fait déjà signe plus loin,",
 			],
 		},
 		"falaises": {
@@ -657,9 +669,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"Ce demi-gain sent la marée qui monte, et le vent se fait mauvais à mesure que vous avancez sur le sel,",
+				"Ce que la mer vous a laissé, elle compte le reprendre, et vous serrez la corniche sous un ciel qui charge,",
+				"La moitié arrachée pèse dans votre sac comme une pierre mouillée, et vous longez l'à-pic sans quitter l'eau des yeux,",
 			],
 			"elan": [
 				"Même écorné, ce que vous tenez vous soulève, et la falaise s'ouvre plus large devant vos pas,",
+				"Le demi-gain claque au vent comme une voile, et vous gagnez la roche suivante d'un pas assuré,",
+				"Ce que vous avez pris à la mer vous rend plus vif, et le bord du monde se laisse longer sans mordre,",
 			],
 		},
 	},
@@ -672,9 +688,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"La voie s'est ouverte, mais quelque chose vous suit sous les fougères tandis que vous reprenez,",
+				"Vous avez gagné, et pourtant le bois s'est tu d'un coup, comme s'il attendait la suite,",
+				"Le passage est à vous, mais les ombres entre les fûts marchent au même pas que vous,",
 			],
 			"elan": [
 				"Tout, depuis vos derniers pas, semble s'écarter devant vous, et le bois s'ouvre plus large à mesure que vous avancez,",
+				"La victoire court devant vous de branche en branche, et vous suivez son sillage au cœur du bois,",
+				"Porté par ce qui vient de plier, vous fendez le sous-bois comme si les racines se rangeaient d'elles-mêmes,",
 			],
 		},
 		"falaises": {
@@ -685,9 +705,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"La voie s'est ouverte, mais l'eau noire, en bas, garde l'oeil sur vous quand vous reprenez le bord,",
+				"Vous avez gagné, et pourtant la mer s'est faite trop calme, comme avant un mauvais coup,",
+				"Le passage est acquis, mais le vent porte une odeur d'orage tandis que vous longez le vide,",
 			],
 			"elan": [
 				"Une confiance neuve vous porte depuis vos derniers pas, et le vent lui-même semble vous pousser vers le large,",
+				"La victoire claque dans votre dos comme une cape, et la corniche défile sous vos pas sans un faux appui,",
+				"Porté par ce qui vient de céder, vous suivez le fil du bord comme si le vide lui-même vous portait,",
 			],
 		},
 	},
@@ -700,9 +724,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"Votre éclat a réveillé quelque chose : le bois s'incline, mais une ombre neuve marche à côté de vous,",
+				"Un tel éclat ne passe pas inaperçu ici, et vous sentez des regards anciens peser entre les troncs,",
+				"Le bois plie devant votre gloire, mais son silence a le poids d'une dette qu'on vous fera payer,",
 			],
 			"elan": [
 				"Rien ne semble pouvoir vous arrêter, et le coeur de la forêt se déplie de lui-même devant vous,",
+				"Votre éclat court plus vite que vous de cime en cime, et le bois entier vous fait cortège,",
+				"Ce que vous venez d'accomplir vous précède comme une lumière, et les fûts s'écartent sur votre passage,",
 			],
 		},
 		"falaises": {
@@ -713,9 +741,13 @@ const BRIDGE_BY_DEGREE_BIOME: Dictionary = {
 			],
 			"sombre": [
 				"Votre éclat a réveillé la mer : elle recule devant vous, mais une voix de sel prononce déjà votre nom,",
+				"Un tel éclat s'entend jusqu'au fond de l'eau, et quelque chose d'ancien remonte pour voir qui ose,",
+				"La côte s'incline devant votre gloire, mais l'écume écrit votre nom sur la roche comme une promesse due,",
 			],
 			"elan": [
 				"Rien ne semble pouvoir vous arrêter, et la falaise se penche d'elle-même pour vous livrer passage,",
+				"Votre éclat roule sur l'écume comme un tonnerre clair, et la côte entière vous fait passage,",
+				"Ce que vous venez d'arracher au vide vous précède, et le vent lui-même dégage la corniche devant vous,",
 			],
 		},
 	},
