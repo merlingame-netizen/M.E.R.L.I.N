@@ -257,7 +257,8 @@ static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String
 	var usr: String = "Quete proposee au Voyageur: \"%s\" -- %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 5 a 7 phrases la LEGENDE derriere cette quete a %s, dans cet ordre : (1) le LIEU et ce qu'on en raconte, (2) CE QUI EST EN JEU -- nomme clairement ce qui est cherche, menace ou promis, (3) QUI ou QUOI s'y OPPOSE -- un etre, un serment, une force, nomme-le, (4) ce que le Voyageur RISQUE s'il echoue. Le mystere reste dans l'AMBIANCE, jamais dans la comprehension du but. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
 	# 260 et non 220 : au laboratoire, la légende de 187 tokens s'est fait couper en pleine
 	# phrase (« sans la clé ») — le budget doit laisser au modèle la place de refermer.
-	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 260, "label": "intro de quête (Merlin)"}}
+	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 260,
+			"cerveau": "vif", "fin_phrase": true, "label": "intro de quête (Merlin)"}}
 
 
 # --- OUVERTURE NARRATIVE : lance VRAIMENT l'histoire de CE scénario (voix narrateur, 3-4 phrases) ---
@@ -307,7 +308,8 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		+ pool_line \
 		+ "\nLa scene = 3 a 5 phrases CONCRETES (qui, quoi, ou) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene."
 	return {"system": SYSTEM_PREFIX, "user": usr,
-			"opts": {"creative": true, "max_tokens": 150, "label": "scène %d (lookahead)" % [pos + 1]}}
+			"opts": {"creative": true, "max_tokens": 150, "fin_phrase": true,
+			"label": "scène %d (lookahead)" % [pos + 1]}}
 
 
 # TRANCHE D'ARC — les beats `debut+1` à `debut+types.size()` d'une quête qui en compte `total`.
@@ -416,6 +418,26 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 # la TÊTE STABLE du prompt, donc en changer casse le cache de préfixe : c'est un réglage, pas un
 # paramètre par beat. Ajouté pour le laboratoire du 2026-08-18 (« résolutions trop légères »),
 # et briqué pour le futur preset Éco/Équilibré/Riche des Options (R74).
+# La TÊTE STABLE du prompt d'issue — exposée pour que le Vif puisse l'AMORCER au chargement :
+# lue une fois, elle reste chaude dans SON cache toute la session, et chaque issue ne paie plus
+# que sa queue variable.
+static func _tete_issue_interne(richesse: int) -> String:
+	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu). Situation: une dalle de pierre barre le gue, le courant pousse fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): [i]Vous calez vos pieds dans la vase et poussez la dalle sans jamais rompre l'effort.[/i] La pierre racle, bascule, et libere le passage ; sur l'autre rive, le vieux passeur relache sa gaffe et vous fait signe d'avancer."
+	var cible_phrases: String = "3 a 4 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante)"
+	if richesse == 1:
+		cible_phrases = "5 a 7 phrases (7 a 8 si le moment est un Climax ou une reussite eclatante)"
+	elif richesse >= 2:
+		cible_phrases = "7 a 9 phrases, amples et sensorielles (jusqu'a 10 si le moment est un Climax)"
+	return ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
+	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
+	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
+	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.
+
+
+static func tete_issue(richesse: int = 0) -> String:
+	return _tete_issue_interne(richesse)
+
+
 static func resolution(situation: Dictionary, played_cards: Array, res: Dictionary, run_thread: Dictionary, richesse: int = 0) -> Dictionary:
 	var degree: String = str(res.get("degree", "reussite"))
 	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes a un prix", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
@@ -540,21 +562,14 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	# (scène, forces, degré, ~350 tokens). Dès le 2e beat, seule la queue est réévaluée.
 	# Les règles sont DEGRE-NEUTRES pour rester identiques d'un beat à l'autre : le degré et sa
 	# directive vivent en queue — la dernière position, celle que le modèle suit le mieux.
-	var cible_phrases: String = "3 a 4 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante)"
-	if richesse == 1:
-		cible_phrases = "5 a 7 phrases (7 a 8 si le moment est un Climax ou une reussite eclatante)"
-	elif richesse >= 2:
-		cible_phrases = "7 a 9 phrases, amples et sensorielles (jusqu'a 10 si le moment est un Climax)"
-	var tete: String = ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
-	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
-	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
-	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.
+	var tete: String = _tete_issue_interne(richesse)
 	var queue: String = "\n" + ctx + "CE QUI SE PASSAIT : " + situ_txt + "\n" + combo + reg_hint \
 		+ "\nISSUE = " + str(deg_fr.get(degree, "une reussite")) + ". " + str(deg_directive.get(degree, "")) \
 		+ cover_hint + syn_hint + focus_hint \
 		+ " Fais clairement RESSENTIR le resultat (" + str(deg_fr.get(degree, "une reussite")) + ")."
 	var usr: String = tete + queue
-	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"}}
+	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": tok_budget,
+			"cerveau": "vif", "fin_phrase": true, "label": "issue (combinaison)"}}
 
 
 # --- VOIX DU MENU : pensées COURTES de Merlin au-dessus de sa tête (100% LLM, user 2026-06-29) ---

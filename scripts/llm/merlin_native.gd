@@ -96,6 +96,23 @@ var _load_path: String = ""
 var _load_err: int = 0
 var _load_done: bool = false
 
+# --- LE VIF (e2b) — second cerveau, décision d'architecture du 2026-08-19 ---
+# Deux modèles résidents, chacun avec SON contexte : la fin de la guerre d'éviction. La tête
+# stable du prompt d'issue reste chaude dans le Vif toute la session pendant que les prompts de
+# récit vivent dans le Conteur (_llm). Une seule génération à la fois — le CPU est le vrai
+# mono-place — mais plus jamais un cache qui se repaie à cause de l'autre.
+# Dégradé propre : GGUF absent ou chargement en échec → tout part sur le Conteur, journalisé.
+var _llm_vif: Variant = null
+var _vif_ready: bool = false
+var _vif_thread: Thread = null
+var _vif_done: bool = false
+var _vif_err: int = 0
+var _vif_path: String = ""
+# Moteur et cerveau de la génération EN COURS (routage par opts.cerveau).
+var _gen_moteur: Variant = null
+var _gen_cerveau: String = "conteur"
+signal vif_ready()
+
 # Observabilité debug (log Gemma temps réel) : étiquette de l'activité en cours + journal d'événements.
 const ACTIVITY_LOG_MAX: int = 24
 var _current_label: String = ""
@@ -163,6 +180,62 @@ func _monter_moteur() -> bool:
 	return true
 
 
+func _monter_vif() -> void:
+	var chemin: String = ""
+	if OS.has_feature("editor"):
+		chemin = ProjectSettings.globalize_path(MODEL_E2B)
+	else:
+		var exe_dir: String = OS.get_executable_path().get_base_dir()
+		var fname: String = MODEL_E2B.get_file()
+		for cand in [exe_dir.path_join("models").path_join(fname), exe_dir.path_join(fname)]:
+			if FileAccess.file_exists(cand):
+				chemin = cand
+				break
+	if chemin == "" or not FileAccess.file_exists(chemin):
+		print("[MerlinNative] Vif — GGUF e2b introuvable : mono-cerveau (tout sur le Conteur)")
+		return
+	_llm_vif = ClassDB.instantiate("MerlinLLM")
+	if _llm_vif == null:
+		push_warning("[MerlinNative] Vif — instanciation échouée : mono-cerveau")
+		return
+	_llm_vif.set_context_size(N_CTX)
+	_vif_path = chemin
+	_vif_done = false
+	_vif_thread = Thread.new()
+	_vif_thread.start(_threaded_load_vif)
+	set_process(true)
+
+
+func _threaded_load_vif() -> void:
+	_vif_err = _llm_vif.load_model(_vif_path)
+	_vif_done = true
+
+
+func _finish_load_vif() -> void:
+	if _vif_thread != null:
+		_vif_thread.wait_to_finish()
+		_vif_thread = null
+	if _peut_dormir():
+		set_process(false)
+	if _vif_err != OK:
+		push_warning("[MerlinNative] Vif — load_model err=%d : mono-cerveau (tout sur le Conteur)" % _vif_err)
+		_llm_vif = null
+		return
+	_vif_ready = true
+	print("[MerlinNative] Vif chargé (n_ctx=%d) : %s" % [N_CTX, _vif_path])
+	emit_signal("vif_ready")
+
+
+# Le processus ne s'endort que si plus RIEN ne l'attend : ni génération, ni chargement en fond.
+# Avant le Vif, `not _busy` suffisait ; l'oublier ici aurait gelé le second chargement.
+func _peut_dormir() -> bool:
+	return not _busy and _load_thread == null and _vif_thread == null
+
+
+func est_vif_pret() -> bool:
+	return _vif_ready and _llm_vif != null
+
+
 # TEC-07-A — résout le chemin DISQUE du GGUF (llama.cpp lit par fopen : jamais depuis le .pck).
 # Éditeur (feature "editor", inclut smoke/soak via binaire dev) : res:// globalisé — inchangé.
 # Build EXPORTÉ : globalize_path(res://) ne fonctionne PAS hors éditeur et le modèle (3,3 GB)
@@ -219,7 +292,7 @@ func _finish_load() -> void:
 	if _load_thread != null:
 		_load_thread.wait_to_finish()
 		_load_thread = null
-	if not _busy:
+	if _peut_dormir():
 		set_process(false)
 	if _load_err != OK:
 		push_error("[MerlinNative] load_model err=%d path=%s" % [_load_err, _load_path])
@@ -227,8 +300,12 @@ func _finish_load() -> void:
 		emit_signal("model_failed", "load_model err=%d" % _load_err)
 		return
 	_model_ready = true
-	print("[MerlinNative] Gemma 4 E2B charge (n_ctx=%d) : %s" % [N_CTX, _load_path])
+	print("[MerlinNative] Conteur chargé (n_ctx=%d) : %s" % [N_CTX, _load_path])
 	emit_signal("model_ready")
+	# Le Vif se charge APRÈS le Conteur, jamais en même temps : deux lectures disque de 4-6 Go en
+	# parallèle se voleraient la bande passante, et le Conteur doit être prêt d'abord — c'est lui
+	# le repli de tout.
+	_monter_vif()
 
 
 # Pourquoi le moteur n'est pas la — chaine vide s'il va bien ou s'il charge encore.
@@ -248,6 +325,18 @@ func _reprise_necessaire() -> bool:
 # disponible sans recompiler l'extension. Lire une chaîne est fragile par nature, d'où les DEUX
 # formulations émises par merlin_llm.cpp (lignes 121 et 144) testées ici, à un seul endroit.
 func _noter_si_moteur_mort(err: String) -> void:
+	# La mort du VIF n'est pas celle du jeu : on le débranche (repli Conteur) sans reprise —
+	# perdre 20 s par issue vaut mieux qu'une reprise de 4 Go en pleine partie.
+	if _gen_cerveau == "vif":
+		if err.contains("stuck") or err.contains("LLM disabled"):
+			push_warning("[MerlinNative] Vif mort — repli mono-cerveau sur le Conteur")
+			_vif_ready = false
+			_llm_vif = null
+		return
+	_noter_si_moteur_mort_conteur(err)
+
+
+func _noter_si_moteur_mort_conteur(err: String) -> void:
 	if err.contains("stuck") or err.contains("LLM disabled"):
 		_moteur_mort = true
 
@@ -262,6 +351,9 @@ func is_busy() -> bool:
 
 func _process(_delta: float) -> void:
 	# v10.18 — fin du chargement THREADÉ détectée sur le thread principal → join + model_ready.
+	if _vif_done and _vif_thread != null:
+		_vif_done = false
+		_finish_load_vif()
 	if _load_done and _load_thread != null:
 		_load_done = false
 		_finish_load()
@@ -291,11 +383,12 @@ func build_prompt(system_text: String, user_text: String) -> String:
 ## Silencieux par construction : aucun signal, aucune erreur remontée. S'il échoue, la sélection
 ## paiera simplement la lecture complète, comme avant — un amorçage raté ne doit jamais devenir
 ## une panne visible.
-func amorcer_prefixe(system_text: String) -> void:
-	if not is_ready() or _busy or system_text == "":
+func amorcer_prefixe(system_text: String, cerveau: String = "conteur", user_text: String = "") -> void:
+	if not is_ready() or _busy or (system_text == "" and user_text == ""):
 		return
-	await generate(system_text, "", {"creative": false, "max_tokens": 1,
-			"plein_regime": true, "label": "amorçage du préfixe"})
+	await generate(system_text, user_text, {"creative": false, "max_tokens": 1,
+			"plein_regime": true, "cerveau": cerveau,
+			"label": "amorçage du préfixe (%s)" % cerveau})
 
 
 # Fils d'exécution de la GÉNÉRATION, choisis SELON LE MOMENT (mesuré 2026-08-15 : 2,93 tok/s
@@ -315,10 +408,10 @@ static func _fils_menage() -> int:
 	return maxi(2, int(OS.get_processor_count() / 2.0))
 
 
-func _apply_regime(creative: bool, max_tokens: int, plein_regime: bool = false) -> void:
+func _apply_regime(moteur: Variant, creative: bool, max_tokens: int, plein_regime: bool = false) -> void:
 	var temp: float = TEMP_CREATIVE if creative else TEMP_STRUCTURED
-	_llm.set_sampling_params(temp, TOP_P, max_tokens)
-	_llm.set_advanced_sampling(TOP_K, REPEAT_PENALTY)
+	moteur.set_sampling_params(temp, TOP_P, max_tokens)
+	moteur.set_advanced_sampling(TOP_K, REPEAT_PENALTY)
 	# `llama_set_n_threads` s'applique à chaud sur le contexte : le régime peut donc changer
 	# d'une génération à l'autre sans recharger quoi que ce soit.
 	#
@@ -327,9 +420,9 @@ func _apply_regime(creative: bool, max_tokens: int, plein_regime: bool = false) 
 	# ancienne que ce fichier — appeler un symbole absent ferait échouer TOUTES les générations,
 	# et le jeu retomberait silencieusement sur ses banques de secours. Sans le réglage, on garde
 	# simplement le défaut du natif (moitié des cœurs) : dégradé, jamais cassé.
-	if _llm.has_method("set_thread_count"):
+	if moteur.has_method("set_thread_count"):
 		var fils: int = _fils_plein() if plein_regime else _fils_menage()
-		_llm.set_thread_count(fils, _fils_plein())  # batch (évaluation du prompt) toujours à fond
+		moteur.set_thread_count(fils, _fils_plein())  # batch (évaluation du prompt) toujours à fond
 
 
 ## Génération principale (applique le template de chat). opts:
@@ -382,11 +475,27 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	var grammar_root: String = opts.get("grammar_root", "root")
 	var plein_regime: bool = opts.get("plein_regime", false)
 
-	_apply_regime(creative, max_tokens, plein_regime)
-	if grammar.is_empty():
-		_llm.clear_grammar()
+	# ROUTAGE PAR CERVEAU (architecture v31). "vif" (e2b) pour les tâches dont tout le contexte
+	# tient dans le prompt — issues, intro ; "conteur" (e4b, défaut) pour tout ce qui porte le
+	# fil. Le Vif absent ou en panne → repli silencieux sur le Conteur : rien ne casse, le
+	# journal des métriques dit toujours QUI a écrit.
+	_gen_cerveau = str(opts.get("cerveau", "conteur"))
+	var moteur: Variant = _llm
+	if _gen_cerveau == "vif" and est_vif_pret():
+		moteur = _llm_vif
 	else:
-		_llm.set_grammar(grammar, grammar_root)
+		_gen_cerveau = "conteur"
+	_gen_moteur = moteur
+
+	_apply_regime(moteur, creative, max_tokens, plein_regime)
+	if grammar.is_empty():
+		moteur.clear_grammar()
+	else:
+		moteur.set_grammar(grammar, grammar_root)
+	# Arrêt doux : opt-in par tâche (fin_phrase). Jamais pour du JSON — un point dans une chaîne
+	# tronquerait le tableau.
+	if moteur.has_method("set_soft_stop"):
+		moteur.set_soft_stop(bool(opts.get("fin_phrase", false)))
 
 	_busy = true
 	_current_label = str(opts.get("label", "génération"))
@@ -406,7 +515,7 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	var t0: int = Time.get_ticks_msec()
 	var cumul: String = ""
 	while true:
-		if _llm != null:
+		if _gen_moteur != null:
 			# AU FIL DE L'EAU : on vide le tampon du moteur à chaque image. Mesuré le 2026-08-18,
 			# l'écriture prend 38 s en jeu — attendre la fin pour montrer quoi que ce soit gâche
 			# le tiers du temps où le premier résultat est déjà écrit.
@@ -414,18 +523,18 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 			# rien à montrer. Le laisser passer polluait la mesure — le premier « texte reçu »
 			# datait de l'amorçage, pas de la vraie écriture, et donnait un chiffre faux de 13 s
 			# (constaté 2026-08-18 : « premier texte reçu en 15,7 s · debut=Ah » venait de là).
-			if max_tokens > 1 and _llm.has_method("poll_stream"):
-				var morceau: String = str(_llm.poll_stream())
+			if max_tokens > 1 and _gen_moteur.has_method("poll_stream"):
+				var morceau: String = str(_gen_moteur.poll_stream())
 				if morceau != "":
 					cumul += morceau
 					emit_signal("generation_chunk", cumul)
-			_llm.poll_result()  # fire _on_result quand le thread d'inférence a terminé
+			_gen_moteur.poll_result()  # fire _on_result quand le thread d'inférence a terminé
 		if _result_ready:
 			break
 		if Time.get_ticks_msec() - t0 > GEN_TIMEOUT_MS:
 			_gen_id += 1  # invalide tout callback tardif de CETTE génération (anti-corruption)
-			if _llm != null:
-				_llm.cancel_generation()
+			if _gen_moteur != null:
+				_gen_moteur.cancel_generation()
 			_busy = false
 			set_process(false)
 			push_warning("[MerlinNative] timeout génération (%d ms) — annulée" % GEN_TIMEOUT_MS)
@@ -437,10 +546,10 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 func _start_generation(gen_id: int) -> void:
 	if gen_id != _gen_id:
 		return  # génération invalidée (timeout) avant l'exécution différée
-	if _llm == null:
+	if _gen_moteur == null:
 		_on_result({"error": "moteur indisponible"}, gen_id)
 		return
-	_llm.generate_async(_pending_prompt, Callable(self, "_on_result").bind(gen_id))
+	_gen_moteur.generate_async(_pending_prompt, Callable(self, "_on_result").bind(gen_id))
 
 
 func _on_result(result: Dictionary, gen_id: int = 0) -> void:
@@ -473,6 +582,7 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 	elif elapsed_ms > 0:
 		tok_per_s = float(approx_tokens) * 1000.0 / float(elapsed_ms)
 	_last_metrics = {
+		"cerveau": _gen_cerveau,
 		"total_ms": elapsed_ms,
 		"approx_tokens": approx_tokens,
 		"tok_per_s": tok_per_s,
@@ -484,8 +594,8 @@ func _on_result(result: Dictionary, gen_id: int = 0) -> void:
 	}
 	if reels:
 		var vp: float = (float(n_prompt) * 1000.0 / p_eval_ms) if p_eval_ms > 0.0 else 0.0
-		print("[MerlinNative] %s : prompt %d tok en %.1f s (%.1f tok/s) · ecriture %d tok en %.1f s (%.1f tok/s) · total %.1f s"
-				% [_current_label, n_prompt, p_eval_ms / 1000.0, vp,
+		print("[MerlinNative] %s [%s] : prompt %d tok en %.1f s (%.1f tok/s) · ecriture %d tok en %.1f s (%.1f tok/s) · total %.1f s"
+				% [_current_label, _gen_cerveau, n_prompt, p_eval_ms / 1000.0, vp,
 					n_ecrits, eval_ms / 1000.0, tok_per_s, elapsed_ms / 1000.0])
 	_activity_log.append({
 		"label": _current_label, "ms": elapsed_ms, "chars": txt.length(),
@@ -516,14 +626,16 @@ func get_elapsed_ms() -> int:
 
 
 func model_info() -> Dictionary:
-	if is_ready():
-		return _llm.get_model_info()
-	return {}
+	if not is_ready():
+		return {}
+	var d: Dictionary = _llm.get_model_info()
+	d["vif"] = _llm_vif.get_model_info() if est_vif_pret() else {}
+	return d
 
 
 func cancel() -> void:
-	if _llm != null and _busy:
-		_llm.cancel_generation()
+	if _gen_moteur != null and _busy:
+		_gen_moteur.cancel_generation()
 
 
 func _notification(what: int) -> void:

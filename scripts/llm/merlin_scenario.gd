@@ -65,7 +65,9 @@ const ARC_TRANCHE: int = 4
 # 1 et non 2 : au palier 2 l'écriture passe à ~33 s et re-rate la fenêtre sous contention
 # (4 secours sur 6 à la validation). Le palier 1 fait déjà réagir la scène (le chevalier se
 # redresse) pour ~22 s d'écriture. Le 2 reste le preset « Riche » des Options.
-const RICHESSE_ISSUE: int = 1
+# 2 de nouveau : sur le Vif (e2b, ~7 tok/s d'écriture), les 7-9 phrases tiennent dans la
+# fenêtre — c'était l'écriture e4b qui la faisait déborder.
+const RICHESSE_ISSUE: int = 2
 const ARC_TRANCHE_BUDGET_S: float = 300.0
 const ARC_ECHECS_REELS_MAX: int = 2
 # Combien de temps on laisse le moteur finir ce qu'il fait avant de retenter. Une résolution
@@ -864,8 +866,20 @@ func _ready() -> void:
 # lecture complète, comme avant. Un préchauffage raté ne doit jamais devenir une panne visible.
 func _amorcer() -> void:
 	var mn: Node = _mn()
-	if mn != null and mn.has_method("amorcer_prefixe"):
-		mn.amorcer_prefixe(_voice_prefix())
+	if mn == null or not mn.has_method("amorcer_prefixe"):
+		return
+	await mn.amorcer_prefixe(_voice_prefix())
+	# Le VIF amorce la TÊTE D'ISSUE (~600 tokens de règles) : lue une fois ici, dans le temps du
+	# menu, elle reste chaude dans SON cache toute la session — chaque issue ne paiera plus que
+	# sa queue variable (~350 tokens, ~8 s au lieu de ~50 à froid).
+	if mn.has_method("est_vif_pret"):
+		if mn.est_vif_pret():
+			mn.amorcer_prefixe(MerlinPromptBuilder.SYSTEM_PREFIX, "vif",
+					MerlinPromptBuilder.tete_issue(RICHESSE_ISSUE))
+		elif mn.has_signal("vif_ready"):
+			mn.vif_ready.connect(func() -> void:
+				mn.amorcer_prefixe(MerlinPromptBuilder.SYSTEM_PREFIX, "vif",
+						MerlinPromptBuilder.tete_issue(RICHESSE_ISSUE)), CONNECT_ONE_SHOT)
 
 
 func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:
