@@ -258,7 +258,10 @@ func redraw_one(card_id: String) -> bool:
 
 
 func can_convert() -> bool:
-	return not convert_used_this_beat
+	# v34.1 — cap de FRÉQUENCE : 2 conversions par QUÊTE (mesuré journal v34 : un pacte par
+	# beat = 16/18 points de corruption — le prix était capé, pas le rythme). Le compteur
+	# conversions_this_quest se remet à zéro à chaque quête (advance_beat).
+	return not convert_used_this_beat and conversions_this_quest < 2
 
 
 # Décision coordinateur 2026-07-28 (calibration finale, alignée sur l'intention d'origine « pour

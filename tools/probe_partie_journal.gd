@@ -410,9 +410,9 @@ func _visiter_etal(game: Node, run: Node) -> void:
 	var achats: Array = []
 	for _essai in range(3):
 		var voulu: String = ""
-		if int(run.integrite) <= 6 and game._merchant_items.has("shop_heal"):
+		if int(run.integrite) <= 8 and game._merchant_items.has("shop_heal"):
 			voulu = "shop_heal"
-		elif int(run.corruption) >= 10 and game._merchant_items.has("shop_purge"):
+		elif int(run.corruption) >= 8 and game._merchant_items.has("shop_purge"):
 			voulu = "shop_purge"
 		if voulu == "":
 			break
