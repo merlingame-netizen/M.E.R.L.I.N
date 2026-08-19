@@ -2032,14 +2032,6 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 # à s'écrire. Le reste de l'arc continue en fond, où l'attente polie a du sens.
 func prepare_arc_ouverture(scenario: Dictionary) -> void:
 	await _prepare_arc(scenario, 1)
-	# LA TÊTE D'ISSUE DU VIF, amorcée SOUS LE VOILE (validation 6 beats du 2026-08-19 : seuls
-	# les beats 1 et 2 sont partis au secours — l'amorçage « quand le moteur sera libre »
-	# ne trouvait jamais de place avant la première pose. Ici la place est à nous, et ces
-	# ~30 s derrière le voile achètent des premières issues écrites par le modèle).
-	await _laisser_le_moteur_finir()
-	var mn_o: Node = _mn()
-	if mn_o != null and mn_o.has_method("est_vif_pret") and mn_o.est_vif_pret():
-		await _amorcer_vif(mn_o)
 	# LA LÉGENDE D'INTRO, dans la même phase attendue. Le pop-up d'intro n'affichait que deux
 	# phrases écrites en dur plus le pitch recopié : la fonction LLM existait (_bg_intro) mais
 	# n'était jamais appelée, et non-bloquante elle n'aurait jamais gagné la course de toute
@@ -2052,6 +2044,16 @@ func prepare_arc_ouverture(scenario: Dictionary) -> void:
 		print("[MerlinScenario] intro — légende écrite (%d car.)" % legende.length())
 	else:
 		push_warning("[MerlinScenario] intro — légende NON écrite : le pop-up servira le cadrage en dur")
+	# LA TÊTE D'ISSUE EN DERNIER (v31.2) : l'intro tourne sur le Vif et ÉVINCE la tête de son
+	# cache — mesuré : première issue à 1450 tok réévalués (104 s, secours) quand la deuxième,
+	# tête recachée, tombe à 414 tok (28 s, servie). On amène donc la tête APRÈS l'intro ;
+	# cache intact, le préfixe se réutilise et cet appel ne coûte presque rien.
+	await _laisser_le_moteur_finir()
+	var mn_v: Node = _mn()
+	if mn_v != null and mn_v.has_method("est_vif_pret") and mn_v.est_vif_pret() and not mn_v.is_busy():
+		await mn_v.amorcer_prefixe(MerlinPromptBuilder.SYSTEM_PREFIX, "vif",
+				MerlinPromptBuilder.tete_issue(RICHESSE_ISSUE))
+		_vif_amorce_fait = true
 
 
 func prepare_arc(scenario: Dictionary) -> void:
@@ -2102,10 +2104,10 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	# la place) ; une tranche d'arc se PRÉEMPTE — pour l'arc, une collision n'est pas un échec,
 	# son budget d'horloge la fera revenir quand le moteur sera libre.
 	if mn.is_busy():
-		var lab: String = str(mn.label_en_cours()) if mn.has_method("label_en_cours") else ""
-		if lab.begins_with("arc"):
-			_arc_cede_au_fil = true
-			mn.cancel()
+		# v31.2 — PLUS D'ANNULATION : la préemption produisait une tempête (six tranches
+		# cédées, zéro scène livrée, chaque annulation repayant l'éval de l'arc). On attend,
+		# borné ; si l'arc garde la place, il servira — sa continuité de cache vaut plus
+		# que notre priorité.
 		var dl_moteur: int = Time.get_ticks_msec() + 30000
 		while mn.is_busy() and Time.get_ticks_msec() < dl_moteur:
 			await get_tree().create_timer(0.5).timeout
