@@ -1,5 +1,5 @@
 # Patcheur du jeu — la session distante a perdu git local : les correctifs du jeu
-# passent par ce workflow (remplacements exacts + commit + push sur feat/practices-docs).
+# passent par ce workflow (remplacements exacts/spans + commit + push sur feat/practices-docs).
 # Déclenché par un push touchant infra/patches/** ; il exécute le script de patch COURANT.
 name: patch-v31-1
 on:
@@ -22,11 +22,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v31_2_tete_en_dernier.py
+        run: python3 outillage/infra/patches/v33_deux_mains.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_scenario.gd
-          git commit -m "feat(llm): v31.2 - la tete d'issue en dernier, fin de la tempete d'annulations" -m "Log de la partie 10 beats : l'amorcage du Vif reussissait (1055 tok, 16,7 s) mais l'intro, jouee ensuite sur le Vif, evincait la tete de son cache - premiere issue 1450 tok reevalues / 104 s (secours), deuxieme 414 tok / 28 s (servie). Et la preemption v31.1 a produit six cessions d'arc pour zero scene lookahead livree, chaque annulation repayant l'eval complete. v31.2 : re-amorcage de la tete APRES l'intro (quasi gratuit si le cache est intact), et le lookahead attend sans plus jamais annuler - la continuite de cache de l'arc vaut plus que sa priorite." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/llm/merlin_native.gd scripts/llm/merlin_scenario.gd scripts/game/merlin_game.gd
+          git commit -m "feat(llm): v33 Les Deux Mains - deux voies paralleles + issue streamee" -m "Tout l'etat de generation devient PAR VOIE (conteur/vif) : les deux moteurs ecrivent en meme temps (2+2 coeurs a chaud via set_thread_count, _partager_les_coeurs), cancel/quit par voie, signal generation_chunk_voie. Le scenario ne draine plus que SA voie (issues=vif, scenes/arc=conteur). Au resolve, l'issue se streame sous les yeux dans l'encart de situation - le banc en dur ne sert plus que si le moteur est mort, toujours marque. Decision Maxime 2026-08-19 : plus aucune issue du banc, l'IA partout." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
