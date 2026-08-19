@@ -1034,11 +1034,15 @@ func _stream_resolution(sc: Node, situ: Dictionary, played_cards: Array, res: Di
 	mn.connect("generation_chunk_voie", sur_flux)
 	var dl: int = Time.get_ticks_msec() + 180000
 	var finale: String = ""
+	# v34.2 — GRÂCE de démarrage : le prefetch relancé ci-dessus draine sa voie quelques
+	# secondes avant de poser « running » — conclure à la mort pendant cette fenêtre servait
+	# le banc à tort (démo v34 : l'unique secours de la partie, beat 3).
+	var grace: int = Time.get_ticks_msec() + 8000
 	while Time.get_ticks_msec() < dl:
 		if sc.is_resolution_ready(played_cards, res):
 			finale = str(sc.take_resolution(situ, played_cards, res))
 			break
-		if not sc.is_resolution_incoming(played_cards, res):
+		if not sc.is_resolution_incoming(played_cards, res) and Time.get_ticks_msec() > grace:
 			break  # la génération est morte (erreur moteur) et rien en cache → filet ultime
 		await get_tree().process_frame
 	mn.disconnect("generation_chunk_voie", sur_flux)
