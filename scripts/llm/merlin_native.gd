@@ -358,6 +358,12 @@ func is_busy() -> bool:
 	return _busy
 
 
+## L'étiquette de la génération EN COURS ("" si le moteur est libre). Le lookahead s'en sert
+## pour ne préempter QUE l'arc — jamais une issue, jamais l'intro (priorité du fil, v31.1).
+func label_en_cours() -> String:
+	return _current_label if _busy else ""
+
+
 func _process(_delta: float) -> void:
 	# v10.18 — fin du chargement THREADÉ détectée sur le thread principal → join + model_ready.
 	if _vif_done and _vif_thread != null:

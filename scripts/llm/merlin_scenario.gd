@@ -915,13 +915,23 @@ func _amorcer() -> void:
 # pendant qu'une génération occupe le moteur mono-place — amorcer_prefixe rendait alors la main
 # en silence, la connexion one-shot était consommée, et la tête d'issue n'était jamais mise en
 # cache : la première issue payait la lecture à froid. Ici on ATTEND la place, borné.
+# IDEMPOTENT (v31.1) : l'ouverture appelle aussi cet amorçage sous le voile — deux chemins,
+# une seule lecture de la tête.
+var _vif_amorce_fait: bool = false
+
+
 func _amorcer_vif(mn: Node) -> void:
+	if _vif_amorce_fait:
+		return
 	var dl: int = Time.get_ticks_msec() + 120000
 	while mn.is_busy() and Time.get_ticks_msec() < dl:
 		await get_tree().create_timer(0.5).timeout
-	if mn.est_vif_pret():
+	if _vif_amorce_fait:
+		return  # amorcé par l'autre chemin pendant notre attente
+	if mn.est_vif_pret() and not mn.is_busy():
 		await mn.amorcer_prefixe(MerlinPromptBuilder.SYSTEM_PREFIX, "vif",
 				MerlinPromptBuilder.tete_issue(RICHESSE_ISSUE))
+		_vif_amorce_fait = true
 
 
 func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:
@@ -2022,6 +2032,14 @@ func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 # à s'écrire. Le reste de l'arc continue en fond, où l'attente polie a du sens.
 func prepare_arc_ouverture(scenario: Dictionary) -> void:
 	await _prepare_arc(scenario, 1)
+	# LA TÊTE D'ISSUE DU VIF, amorcée SOUS LE VOILE (validation 6 beats du 2026-08-19 : seuls
+	# les beats 1 et 2 sont partis au secours — l'amorçage « quand le moteur sera libre »
+	# ne trouvait jamais de place avant la première pose. Ici la place est à nous, et ces
+	# ~30 s derrière le voile achètent des premières issues écrites par le modèle).
+	await _laisser_le_moteur_finir()
+	var mn_o: Node = _mn()
+	if mn_o != null and mn_o.has_method("est_vif_pret") and mn_o.est_vif_pret():
+		await _amorcer_vif(mn_o)
 	# LA LÉGENDE D'INTRO, dans la même phase attendue. Le pop-up d'intro n'affichait que deux
 	# phrases écrites en dur plus le pitch recopié : la fonction LLM existait (_bg_intro) mais
 	# n'était jamais appelée, et non-bloquante elle n'aurait jamais gagné la course de toute
@@ -2043,6 +2061,10 @@ func prepare_arc(scenario: Dictionary) -> void:
 # Garde anti-réentrance : un saut du voile d'ouverture laisse la première tranche en vol pendant
 # que la suite est demandée — deux chantiers concurrents écriraient les mêmes scènes deux fois.
 var _arc_chantier: bool = false
+
+# La tranche d'arc en vol vient d'être cédée au lookahead (préemption v31.1) : son retour vide
+# est une collision assumée, PAS un échec du modèle — le compteur d'échecs réels n'y touche pas.
+var _arc_cede_au_fil: bool = false
 
 # --- SCÈNES EN LOOKAHEAD (bible §« lookahead », /goal Maxime 2026-08-18) ---
 # La scène N+1 écrite APRÈS l'issue N, en la connaissant. L'arc pré-écrit par tranches ne peut
@@ -2071,9 +2093,25 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	if btype == "Climax":
 		return  # le climax garde la scène de clôture de l'arc — c'est elle qui referme l'histoire
 	var mn: Node = _mn()
-	if mn == null or not mn.is_ready() or mn.is_busy():
-		return  # le moteur travaille (issue en vol ?) : cette scène viendra de l'arc, tant pis
+	if mn == null or not mn.is_ready():
+		return
 	_scene_jit_qn = qn
+	# PRIORITÉ DU FIL (validation 6 beats du 2026-08-19 : 0 lookahead servie — l'arc écrivait
+	# ses tranches en continu et le `return` silencieux d'ici cédait à chaque fois). La règle
+	# décidée : issue > lookahead > arc. Une issue en vol se RESPECTE (on attend qu'elle rende
+	# la place) ; une tranche d'arc se PRÉEMPTE — pour l'arc, une collision n'est pas un échec,
+	# son budget d'horloge la fera revenir quand le moteur sera libre.
+	if mn.is_busy():
+		var lab: String = str(mn.label_en_cours()) if mn.has_method("label_en_cours") else ""
+		if lab.begins_with("arc"):
+			_arc_cede_au_fil = true
+			mn.cancel()
+		var dl_moteur: int = Time.get_ticks_msec() + 30000
+		while mn.is_busy() and Time.get_ticks_msec() < dl_moteur:
+			await get_tree().create_timer(0.5).timeout
+		if mn.is_busy():
+			_scene_jit_qn = -1
+			return  # la place n'a pas été rendue à temps : l'arc couvrira ce beat
 	var titre: String = str(_run_thread.get("title", ""))
 	# Les tags d'abord, la scène AUTOUR (même principe que l'arc : scène ⇄ tags alignés).
 	var pool_info: Dictionary = _live_pool_info()
@@ -2214,7 +2252,11 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 				continue  # toujours occupé : on repatiente, ce n'est PAS un échec
 			morceau = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
 					debut, total, precedent)
-			if morceau.is_empty():
+			if morceau.is_empty() and _arc_cede_au_fil:
+				_arc_cede_au_fil = false
+				print("[MerlinScenario] arc tranche %d-%d : cédée au lookahead (collision, pas un échec)"
+						% [debut + 1, fin])
+			elif morceau.is_empty():
 				echecs_reels += 1
 				print("[MerlinScenario] arc tranche %d-%d : échec réel %d/%d"
 						% [debut + 1, fin, echecs_reels, ARC_ECHECS_REELS_MAX])
