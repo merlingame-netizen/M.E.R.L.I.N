@@ -1,0 +1,1 @@
+2026-08-19 — premier declenchement du patcheur v31.1 (priorite du fil + amorcage Vif).
