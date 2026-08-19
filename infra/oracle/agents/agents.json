@@ -26,6 +26,14 @@
    "desc": "Détecte un nouveau commit sur la branche du jeu, le récupère, réimporte les assets et relance si le jeu tournait."
   },
   {
+   "id": "courrier",
+   "label": "Le Courrier",
+   "schedule": "*/2 * * * *",
+   "cmd": "a_courrier.sh",
+   "enabled": true,
+   "desc": "Exécute une fois chaque job-*.sh commité dans courrier/ et pousse le résultat dans courrier/resultats/ — canal de secours quand Run Command est indisponible (né du conteneur qui a emporté ~/.oci le 2026-08-19)."
+  },
+  {
    "id": "tools-autosync",
    "label": "Synchro de l'outillage",
    "schedule": "7,22,37,52 * * * *",
