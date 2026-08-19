@@ -22,11 +22,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v34_1_frequence_pactes.py
+        run: python3 outillage/infra/patches/v34_2_grace_stream.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/game/merlin_run.gd tools/probe_partie_journal.gd
-          git commit -m "feat(jeu): v34.1 - cap de frequence des pactes (2/quete) + sonde acheteuse" -m "Journal v34 : 16/18 points de corruption venaient des pactes, un par beat - le prix etait cape (+3), pas le rythme. can_convert exige desormais conversions_this_quest < 2 (l'esprit de la decision : une pente gerable, le compteur repart a chaque quete). Sonde : seuils d'achat 8 PV / 8 corruption pour exercer l'etal." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/game/merlin_game.gd
+          git commit -m "fix(jeu): v34.2 - grace de demarrage du stream d'issue" -m "L'unique banc de la demo 10 beats (beat 3, 30 s) : _stream_resolution testait is_resolution_incoming pendant le drain du prefetch relance et concluait a tort a la mort de la generation. Grace de 8 s avant cette sortie." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
