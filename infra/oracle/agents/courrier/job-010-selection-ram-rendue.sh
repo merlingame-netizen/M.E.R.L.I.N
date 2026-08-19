@@ -18,6 +18,7 @@ except Exception: pass"); do
     curl -fsS -m 60 "$OLLAMA/api/generate" -d "{\"model\":\"$m\",\"keep_alive\":0}" >/dev/null 2>&1
 done
 
+dispo=0
 dl=$(( $(date +%s) + 90 ))
 while :; do
     dispo=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
