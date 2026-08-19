@@ -428,8 +428,11 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 					// Arrêt doux : passé 85 % du budget, la première fin de phrase clôt la
 					// génération — le budget est une cible, plus un couperet.
 					if (soft_stop && i >= (max_tokens * 85) / 100 && _clot_une_phrase(output)) {
-						llama_sampler_accept(sampler, tok);
-						last_prompt_tokens.push_back(tok);
+						// SURTOUT PAS de push au traqueur ici : ce break saute le llama_decode
+						// du token final — le cache KV ne le contient donc PAS. L'y inscrire
+						// ferait croire au calcul de préfixe commun que le cache possède un
+						// token fantôme, et la génération suivante repartirait d'une position
+						// que l'attention n'a jamais vue. Le texte, lui, garde sa fin de phrase.
 						{
 							std::lock_guard<std::mutex> lock(stream_mutex);
 							stream_buffer.append(buf, n);
