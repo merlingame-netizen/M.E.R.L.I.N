@@ -54,12 +54,13 @@ func _gen(mn: Node, nom: String, p: Dictionary) -> Dictionary:
 	var d: Dictionary = {
 		"nom": nom, "mur_ms": Time.get_ticks_msec() - t0,
 		"erreur": str(r.get("error", "")),
+		"cerveau": str(m.get("cerveau", "?")),
 		"prompt_tokens": int(m.get("prompt_tokens", 0)), "prompt_ms": float(m.get("prompt_ms", 0.0)),
 		"tokens_ecrits": int(m.get("tokens_ecrits", 0)), "ecriture_ms": float(m.get("ecriture_ms", 0.0)),
 		"texte": str(r.get("text", "")),
 	}
-	print("[LABO] %-16s %6.1f s · prompt %d tok · écrit %d tok · %d car."
-			% [nom, d["mur_ms"] / 1000.0, d["prompt_tokens"], d["tokens_ecrits"], str(d["texte"]).length()])
+	print("[LABO] %-16s %6.1f s · [%s] · prompt %d tok · écrit %d tok · %d car."
+			% [nom, d["mur_ms"] / 1000.0, d["cerveau"], d["prompt_tokens"], d["tokens_ecrits"], str(d["texte"]).length()])
 	# Le moteur est mono-place : une courte respiration évite qu'un poll tardif ne télescope
 	# la génération suivante.
 	await create_timer(1.0).timeout
