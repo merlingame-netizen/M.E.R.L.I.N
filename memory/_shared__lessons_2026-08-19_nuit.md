@@ -1,0 +1,8 @@
+# Leçons — 2026-08-19 nuit, v34 (ANNEXE à fusionner dans _shared__lessons.md)
+
+| Date | Erreur | Correction | Source |
+|---|---|---|---|
+| 2026-08-19 | Équilibre : le cap de PRIX des pactes (+3) n'a rien changé — 16/18 points de corruption venaient de leur FRÉQUENCE (un pacte par beat, permis par le système). Diagnostiquer le prix quand le problème est le rythme = patch inutile | Ventiler TOUJOURS une jauge qui dérive par SOURCE (incidents du journal) avant de choisir le levier : prix, fréquence, ou assiette. Cap de fréquence 2 conversions/quête → pactes 16→4 points, première partie 10/10 accomplie | Session v34 |
+| 2026-08-19 | Le stream d'issue concluait « génération morte » pendant le drain du prefetch qu'il venait de relancer (is_resolution_incoming encore faux ~4 s) → l'unique banc de la démo, servi en 30 s | Tout test de vie d'une opération qu'on vient de LANCER exige une grâce de démarrage (8 s ici) — l'état « pas encore commencé » ressemble à « mort » | Session v34 |
+| 2026-08-19 | Deux boots morts en course avec la CI post-déploiement (deux Godot chargeant leurs cerveaux = OOM silencieux à +7 s) — diagnostiqués d'abord comme bug du patch | Après CHAQUE déploiement, attendre l'ACCALMIE mesurée (aucun godot vivant + MemAvailable > 14 Go, stable 30 s) avant de lancer une partie ; et lire err logs AVANT de soupçonner son propre code (zéro erreur script = environnement) | Session v34 |
+| 2026-08-19 | Le geste sûr (sceau sans dé) n'est jamais apparu en 15 résolutions : le harnais ne compose jamais couverture pleine + synergie | Une mécanique de récompense d'optimisation ne se valide pas avec un harnais glouton non optimisé — il faudra soit une politique de sonde « optimisatrice », soit une main humaine, avant de juger le sceau | Session v34 |
