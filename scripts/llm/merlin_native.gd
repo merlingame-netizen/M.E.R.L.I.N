@@ -27,10 +27,14 @@ const MODELES: Array = [MODEL_E4B, MODEL_E2B]
 # n_ctx 2048 (et NON 4096 R58) : perf-driven. Le C++ note un speedup 3-4x + KV cache /2
 # vs gros ctx, et les prompts MVP (system + résumé + situation) tiennent largement dans 2048.
 # Critique sur cette machine (RAM libre faible) pour éviter le swap → générations lentes.
-# 4096 — la valeur de la bible (R58). 2048 débordait dès que la queue du prompt d'issue
-# s'enrichissait (scène + forces + fil), et la troncature par la tête détruisait le cache de
-# préfixe — le pire des deux mondes.
-const N_CTX: int = 4096
+# 2048, et PAS 4096 malgré la bible (R58) — décision par la mesure, deux fois. Le passage à 4096
+# a fait s'effondrer llama_decode (segfault dans graph_compute, backtrace du 2026-08-19) :
+# l'attention à fenêtre glissante de Gemma 4 emprunte un autre chemin à cette taille sur ce
+# build. Et le « prompt de 2582 tokens » qui avait motivé l'agrandissement était un MENSONGE de
+# la course de compteurs (corrigée depuis) : les vrais prompts plafonnent à ~1450 tokens,
+# génération comprise — 2048 suffit. Si un jour 4096 redevient nécessaire, c'est llama.cpp qu'il
+# faudra monter de version, pas cette constante.
+const N_CTX: int = 2048
 
 # Régimes de sampling (R59)
 const TEMP_CREATIVE: float = 0.85
