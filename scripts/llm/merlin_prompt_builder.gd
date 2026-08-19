@@ -265,7 +265,7 @@ static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String
 static func opening(scenario: Dictionary, lieu: String = "Broceliande") -> Dictionary:
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var usr: String = ("Ouvre l'aventure « %s » a %s (accroche : %s). Conte 3 a 4 phrases qui LANCENT l'histoire, a la 2e PERSONNE (« Vous ») au PRESENT : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui vous pousse au premier pas. Images celtiques concretes, SANS remplissage, pas de 4e mur, JAMAIS « que faire ». Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, lieu, pitch]
+	var usr: String = ("Ouvre l'aventure « %s » a %s (accroche : %s). Conte 3 a 4 phrases qui LANCENT l'histoire, a la 2e PERSONNE (« Vous ») au PRESENT : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui vous pousse au premier pas. Phrases courtes et directes, images celtiques concretes (une au plus), SANS remplissage ni lyrisme, pas de 4e mur, JAMAIS « que faire ». Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, lieu, pitch]
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "ouverture (histoire)"}}
 
 
@@ -306,7 +306,7 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		pos + 1, total, title, pitch, lieu]) + fil \
 		+ "\nROLE de cette scene : %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [role, cue_txt] \
 		+ pool_line \
-		+ "\nLa scene = 3 a 5 phrases CONCRETES (qui, quoi, ou) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene."
+		+ "\nLa scene = 3 a 5 phrases COURTES et CONCRETES (qui, quoi, ou ; une image au plus, pas de lyrisme ni de comparaisons) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene."
 	return {"system": SYSTEM_PREFIX, "user": usr,
 			"opts": {"creative": true, "max_tokens": 150, "fin_phrase": true,
 			"label": "scène %d (lookahead)" % [pos + 1]}}
@@ -354,7 +354,7 @@ static func arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, deb
 			+ "chaque etape decoule de la precedente et rapproche du but de la quete.") % [
 		debut + 1, debut + n, total, title, pitch, lieu]
 	var usr: String = faction_block + entete + suite + steps + pool_line \
-		+ "\nChaque etape = 3 a 4 phrases CONCRETES (qui, quoi, ou) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez »." \
+		+ "\nChaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; une image au plus, pas de lyrisme ni de comparaisons) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez »." \
 		+ "\nFormat STRICT : une etape par ligne, prefixee « %d. » a « %d. », rien d'autre." % [debut + 1, debut + n]
 	return {"system": SYSTEM_PREFIX, "user": usr,
 			"opts": {"creative": true, "max_tokens": 90 * n, "label": "arc — etapes %d-%d" % [debut + 1, debut + n]}}
@@ -407,7 +407,7 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 		for t in pool_list:
 			pl.append(str(t))
 		pool_line = "\nFORCES AUTORISEES (liste FERMEE) : %s. Chaque scene ne doit exiger QUE des forces de cette liste, jamais d'autres." % ", ".join(pl)
-	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [title, pitch, lieu]) + steps + pool_line + "\nChaque etape = 3 a 4 phrases CONCRETES (qui, quoi, ou) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ».\nEXEMPLE de MANIERE (pas le contenu) :\n1. Vous vous enfoncez sous les fougeres ; le sous-bois s'obscurcit, et un pas leger vous suit a distance.\n2. Au detour d'un tronc, une vieille femme se dresse, une serpe a la main, et vous barre le chemin sans un mot.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
+	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [title, pitch, lieu]) + steps + pool_line + "\nChaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; une image au plus, pas de lyrisme ni de comparaisons) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ».\nEXEMPLE de MANIERE (pas le contenu) :\n1. Vous vous enfoncez sous les fougeres ; le sous-bois s'obscurcit, et un pas leger vous suit a distance.\n2. Au detour d'un tronc, une vieille femme se dresse, une serpe a la main, et vous barre le chemin sans un mot.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": 340, "label": "arc narratif (5 étapes)"}}
 
 
@@ -423,12 +423,14 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 # que sa queue variable.
 static func _tete_issue_interne(richesse: int) -> String:
 	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu). Situation: une dalle de pierre barre le gue, le courant pousse fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): [i]Vous calez vos pieds dans la vase et poussez la dalle sans jamais rompre l'effort.[/i] La pierre racle, bascule, et libere le passage ; sur l'autre rive, le vieux passeur relache sa gaffe et vous fait signe d'avancer."
-	var cible_phrases: String = "3 a 4 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante)"
+	# v34 (Maxime : « trop long, trop de figures imagées — style Hand of Fate 2 ») : paliers
+	# resserrés — 0 = sec (2-4), 1 = intermédiaire (3-5, DÉFAUT), 2 = riche (inchangé).
+	var cible_phrases: String = "2 a 4 phrases (4 a 5 si le moment est un Climax ou une reussite eclatante)"
 	if richesse == 1:
-		cible_phrases = "5 a 7 phrases (7 a 8 si le moment est un Climax ou une reussite eclatante)"
+		cible_phrases = "3 a 5 phrases (5 a 6 si le moment est un Climax ou une reussite eclatante)"
 	elif richesse >= 2:
 		cible_phrases = "7 a 9 phrases, amples et sensorielles (jusqu'a 10 si le moment est un Climax)"
-	return ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
+	return ex + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). TON DIRECT de conteur de jeu de cartes : phrases COURTES et DECLARATIVES, chaque phrase enonce un FAIT (quelqu'un agit, le monde repond). UNE image concrete AU PLUS par issue ; INTERDIT les metaphores filees, le lyrisme et les comparaisons ('comme si', 'tel un', 'pareil a') — sauf UNE, breve, si le moment est un Climax. Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
 	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
 	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
 	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.
@@ -544,9 +546,9 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	# La cible de phrases vit désormais dans la TÊTE STABLE du prompt (degré-neutre, pour le cache
 	# de préfixe) ; long_form ne pilote plus que le budget de tokens.
 	var long_form: bool = is_strong_moment(str(situation.get("type", "")), degree)
-	var tok_budget: int = 260 if long_form else 150
+	var tok_budget: int = 200 if long_form else 130
 	if richesse == 1:
-		tok_budget = 340 if long_form else 240
+		tok_budget = 280 if long_form else 200
 	elif richesse >= 2:
 		tok_budget = 420 if long_form else 340
 	# v10.17 (user 2026-06-07) : on PASSE la situation + un EXEMPLE gold (few-shot in-context) pour que

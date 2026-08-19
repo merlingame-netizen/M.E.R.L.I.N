@@ -67,7 +67,7 @@ const ARC_TRANCHE: int = 4
 # redresse) pour ~22 s d'écriture. Le 2 reste le preset « Riche » des Options.
 # 2 de nouveau : sur le Vif (e2b, ~7 tok/s d'écriture), les 7-9 phrases tiennent dans la
 # fenêtre — c'était l'écriture e4b qui la faisait déborder.
-const RICHESSE_ISSUE: int = 2
+const RICHESSE_ISSUE: int = 1  # v34 : intermédiaire 3-5 phrases directes (Maxime — style HoF2)
 const ARC_TRANCHE_BUDGET_S: float = 300.0
 const ARC_ECHECS_REELS_MAX: int = 2
 # Combien de temps on laisse le moteur finir ce qu'il fait avant de retenter. Une résolution

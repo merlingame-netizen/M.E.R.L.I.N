@@ -1487,7 +1487,16 @@ func _advance_to_next() -> void:
 	# de Promesse, deja tranchee en amont : un beat "Le creancier revient" n'est plus de type
 	# "Rencontre" ici). Une reclamation ne peut exister que si le marchand a deja ete vu (la dette se
 	# contracte chez lui) : elle ne peut donc jamais l'affamer.
-	var force_merchant: bool = rencontre_beat and run.rencontre_count_this_run >= 2 and not run.merchant_seen_this_run
+	# v34 (décision Maxime : étal aléatoire ~40 %/quête) — tirage DÉTERMINISTE par (titre du
+	# scénario, index de quête) : stable au resume, aucun état supplémentaire à persister. Quand
+	# le tirage sort, l'étal prend la priorité sur l'offrande à la PREMIÈRE Rencontre de la
+	# quête (marchand_vu_quete empêche la répétition). La garantie historique (2e Rencontre du
+	# run si jamais vu) reste en filet.
+	var q_marchand: int = int(run.current_beat().get("quest", 0))
+	var titre_m: String = str((run.scenario as Dictionary).get("title", (run.scenario as Dictionary).get("titre", "")))
+	var etal_tire: bool = (absi(hash("etal:%s:%d" % [titre_m, q_marchand])) % 100) < 40
+	var force_merchant: bool = rencontre_beat and ((run.rencontre_count_this_run >= 2 and not run.merchant_seen_this_run) \
+			or (etal_tire and run.marchand_vu_quete != q_marchand))
 	if rencontre_beat and not force_merchant and not run.pilier_offering_done and not run.ended and run.has_graftable_action():
 		var pk: String = _current_offer_pilier()
 		if pk != "":
@@ -1499,6 +1508,7 @@ func _advance_to_next() -> void:
 				return
 	if rencontre_beat and not rencontre_slot_used and not run.ended:
 		_scene_epoch += 1
+		run.marchand_vu_quete = q_marchand  # v34 : un seul étal par quête tirée
 		await _present_merchant_stall()
 		if not is_inside_tree():
 			return

@@ -245,7 +245,19 @@ func run() -> void:
 	var p4_fade: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	p4_fade.tween_property(glow, "color:a", 0.0, decrue)
 	p4_fade.tween_method(_set_vignette_intensity.bind(vig_mat), vig_alpha, 0.0, decrue)
-	if int(_res.get("die", 0)) >= 1:
+	if bool(_res.get("geste_sur", false)):
+		# v34 — GESTE SÛR : pas de dé, un SCEAU runique s'appose (même dramaturgie pose →
+		# pause → verdict, stinger via le même callback). Doré si le geste tient, sombre si
+		# un tag antagoniste l'a saboté — le sceau dit le verdict FINAL, jamais un mensonge.
+		var sceau_host: Control = self
+		var par_s: Node = get_parent()
+		if par_s is Control and is_instance_valid(par_s):
+			sceau_host = par_s
+		var sceau: MerlinDice = MerlinDice.sceau(sceau_host, bool(_res.get("success", false)), _verdict_cb)
+		await sceau.done
+		if not is_inside_tree():
+			return
+	elif int(_res.get("die", 0)) >= 1:
 		# N4-P1 (chantiers 2b/2c/7) : séquence pose → pause 0,35 s → verdict VIT dans MerlinDice.
 		# `_verdict_cb` (stinger de degré) est appelé PAR le dé à l'instant du halo, jamais avant.
 		# Le dé est parenté à l'HÔTE (pas à ce layer) : ses 2 pulses persistants et la célébration

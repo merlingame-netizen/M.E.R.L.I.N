@@ -178,7 +178,7 @@ func _phase_partie(sc: Node, run: Node, biome: String) -> void:
 		"t": Time.get_datetime_string_from_system(true), "biome": biome,
 		"sentiers": sentiers, "pick": _pick, "choisi": choisi,
 		"motif_du_choix": OS.get_environment("MERLIN_PICK_RAISON"),
-		"beats": [], "cliches": [], "incidents": [], "ok": false,
+		"beats": [], "cliches": [], "incidents": [], "etals": [], "ok": false,
 	}
 	_sauver()
 
@@ -291,6 +291,13 @@ func _boucle(game: Node, run: Node) -> void:
 					_incident("guide de Merlin refusé")
 			await process_frame
 			continue
+		if game._merchant_active:
+			# v34 — l'étal du colporteur : politique d'achat du harnais + journal (offres, bourse).
+			await create_timer(0.4).timeout
+			if is_instance_valid(game) and game._merchant_active:
+				await _visiter_etal(game, run)
+			await process_frame
+			continue
 		if game._draft_active:
 			await create_timer(0.4).timeout
 			if is_instance_valid(game) and game._draft_active:
@@ -374,6 +381,7 @@ func _noter_entree(game: Node, run: Node, idx: int) -> void:
 		tuiles.append({"nom": str(a.get("card_name")), "tags": a.get("tags")})
 	(_journal["beats"] as Array).append({
 		"index": idx + 1,
+		"t_pres_ms": Time.get_ticks_msec(),
 		"type": str(situ.get("type", "")),
 		"provenance": str(situ.get("provenance", "")),
 		"narration": str(situ.get("narration", "")),
@@ -389,6 +397,61 @@ func _noter_entree(game: Node, run: Node, idx: int) -> void:
 	# Un cliché au premier beat : il montre l'écran de jeu complet, ce qu'aucun texte ne remplace.
 	if idx == 0:
 		await _cliche("beat_01")
+
+
+# v34 — POLITIQUE D'ÉTAL du harnais : soigner si l'intégrité fatigue (≤6), purger si la
+# corruption monte (≥10), sinon repartir — et tout consigner (offres, bourse, achats).
+func _visiter_etal(game: Node, run: Node) -> void:
+	var avant: int = int(run.gwenneg)
+	var offres: Array = []
+	for k in game._merchant_items:
+		var it: Dictionary = game._merchant_items[k]
+		offres.append("%s:%d" % [str(it.get("kind", "?")), int(it.get("price", 0))])
+	var achats: Array = []
+	for _essai in range(3):
+		var voulu: String = ""
+		if int(run.integrite) <= 6 and game._merchant_items.has("shop_heal"):
+			voulu = "shop_heal"
+		elif int(run.corruption) >= 10 and game._merchant_items.has("shop_purge"):
+			voulu = "shop_purge"
+		if voulu == "":
+			break
+		var prix: int = int((game._merchant_items[voulu] as Dictionary).get("price", 0))
+		if int(run.gwenneg) < prix:
+			break
+		var cv: Node = _trouver_carte_id(game._hand_box, voulu)
+		if cv == null:
+			break
+		game._on_draft_card(cv.card)
+		achats.append("%s (%d gw)" % [voulu, prix])
+		await create_timer(0.3).timeout
+		if not is_instance_valid(game) or not game._merchant_active:
+			break
+	if is_instance_valid(game) and game._merchant_active:
+		game._on_draft_skip()
+	(_journal["etals"] as Array).append({"apres_beat": (_journal["beats"] as Array).size(),
+		"gwenneg_avant": avant, "gwenneg_apres": int(run.gwenneg),
+		"offres": offres, "achats": achats})
+	_sauver()
+	_incident("étal du colporteur : %d offre(s), achats %s, bourse %d→%d"
+			% [offres.size(), str(achats), avant, int(run.gwenneg)])
+
+
+# v34 — retrouve la VUE de carte dont l'id est exactement `id_voulu` (étal : shop_heal...).
+func _trouver_carte_id(box: Node, id_voulu: String) -> Node:
+	if box == null:
+		return null
+	for c in box.get_children():
+		if not ("card" in c) or c.card == null:
+			continue
+		var cid: String = ""
+		if c.card is Object and ("id" in c.card):
+			cid = str(c.card.id)
+		elif c.card is Dictionary:
+			cid = str((c.card as Dictionary).get("id", ""))
+		if cid == id_voulu:
+			return c
+	return null
 
 
 func _noter_geste(game: Node) -> void:
@@ -414,6 +477,19 @@ func _noter_sortie(run: Node) -> void:
 	if d.has("degre"):
 		return
 	d["degre"] = str(run.last_degree)
+	# v34 — le TEMPS de chaque beat (frise de la chronique) + les compteurs de la génération
+	# d'issue (cerveau, durées) et le verdict mécanique (geste sûr, total/DC).
+	d["t_res_ms"] = Time.get_ticks_msec()
+	d["duree_beat_s"] = float(int(d["t_res_ms"]) - int(d.get("t_pres_ms", d["t_res_ms"]))) / 1000.0
+	var mn_m: Node = root.get_node_or_null("/root/MerlinNative")
+	if mn_m != null and mn_m.has_method("last_metrics"):
+		d["gen"] = (mn_m.last_metrics() as Dictionary).duplicate()
+	var g_res: Node = current_scene
+	if g_res != null and ("_pending_res" in g_res) and g_res._pending_res is Dictionary:
+		var pres: Dictionary = g_res._pending_res
+		d["geste_sur"] = bool(pres.get("geste_sur", false))
+		d["total"] = int(pres.get("total", 0))
+		d["dc"] = int(pres.get("dc", 0))
 	d["resolution"] = str(run.summary)
 	# Le beat porte-t-il la marque du banc de secours ? La question décide de la valeur de tout le
 	# document : une issue écrite en dur ne dit rien de ce que Merlin sait raconter.

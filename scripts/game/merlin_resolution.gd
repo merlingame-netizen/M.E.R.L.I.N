@@ -85,13 +85,20 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	var synergy: int = _synergy(played_cards)
 
 	# === MOTEUR d20 (v2-W1) — un SEUL nombre décide, la marge donne le degré ===
-	var face: int = die if die >= 2 and die <= 12 else DIE_FALLBACK
 	var synergy_bonus: int = SYN if synergy > 0 else (-SYN if synergy < 0 else 0)
-	var total: int = face + skill_mod + graft_bonus + COVER_PER_TAG * covered_n + synergy_bonus
+	var mods: int = skill_mod + graft_bonus + COVER_PER_TAG * covered_n + synergy_bonus
 	var dc: int = int(DC_BY_DIFF.get(clampi(diff, 1, 3), DC_BY_DIFF[2])) + dc_bonus
+	# v34 — GESTE SÛR (Maxime 2026-08-19) : si la réussite est acquise MÊME au jet minimal (2),
+	# aucun dé — un sceau s'appose (merlin_fx). L'éclatante reste réservée aux VRAIS jets : le
+	# risque est le seul chemin vers l'éclat. Déterministe (mêmes entrées → même verdict) →
+	# R120 (preview = résolution) tient sans partager d'état. Le sabotage s'applique APRÈS,
+	# comme pour un jet : même un geste sûr se laisse polluer par un tag antagoniste.
+	var geste_sur: bool = (2 + mods) >= dc
+	var face: int = die if die >= 2 and die <= 12 else DIE_FALLBACK
+	var total: int = (2 + mods) if geste_sur else (face + mods)
 	var margin: int = total - dc
 
-	var degree: String = _degree_from_margin(margin, face)
+	var degree: String = REUSSITE if geste_sur else _degree_from_margin(margin, face)
 
 	# Sabotage par tag antagoniste (R66) : dégrade d'un cran — APRÈS le jet (garde son sens : même
 	# un jet éclatant est amorti par un tag qui sabote la situation). Ne peut PAS annuler un nat 20 ?
@@ -140,7 +147,8 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		"eclatante_bonus": degree == ECLATANTE,
 		"sabotaged": sabotaged,
 		"synergy": synergy,
-		"die": die,
+		"die": 0 if geste_sur else die,
+		"geste_sur": geste_sur,
 		"die_mod": die_mod,
 		"die_rarity": "",
 		"total": total,

@@ -163,6 +163,9 @@ var pilier_hostility: Dictionary = {}
 # DEJA rencontres (utilise par le garde de priorite : des la 2e Rencontre, si le marchand n'a
 # jamais ete vu, il devient prioritaire sur l'offrande de pilier). Additifs, R108-safe.
 var merchant_seen_this_run: bool = false
+# v34 : index de la dernière quête où l'étal tiré (~40 %) s'est montré — évite qu'il se répète
+# à chaque Rencontre de la même quête. Additif (R108, défaut sûr au load).
+var marchand_vu_quete: int = -1
 var rencontre_count_this_run: int = 0
 
 # Baremes GAINS (spec verrouillee) : echec 0, partiel 1, reussite 2, eclatante 4.
@@ -220,6 +223,9 @@ func consume_blessings(combo: Array) -> void:
 # uniquement à new_run) — alimente next_convert_cost() ET la politique par archétype du soak. Le cap
 # 1 conversion PAR BEAT reste (convert_used_this_beat, inchangé).
 var conversions_this_run: int = 0
+# v34 (Maxime : 3 runs sur 4 mouraient par l'escalade +1→+6) : le PRIX du pacte suit un compteur
+# PAR QUÊTE et plafonne à +3 — la corruption redevient une pente, plus un mur. Additif (R108).
+var conversions_this_quest: int = 0
 
 
 func can_redraw() -> bool:
@@ -281,7 +287,8 @@ func can_convert_tag(tag: String) -> bool:
 # Lu par l'UI (libellé du bouton, affiché AVANT le clic) ET par convert_card (même valeur — pas de
 # surprise entre le prix affiché et le prix payé).
 func next_convert_cost() -> int:
-	return conversions_this_run + 1
+	# v34 : min(compteur de la QUÊTE + 1, 3) — décision Maxime 2026-08-19 (cap +3, reset/quête).
+	return mini(conversions_this_quest + 1, 3)
 
 
 # Chantier 2 — CONVERSION : une carte JOUÉE compte comme une nature REQUISE non couverte, au prix
@@ -298,6 +305,7 @@ func convert_card(card_id: String, tag: String) -> bool:
 	blessed_tags[card_id] = tag
 	convert_used_this_beat = true
 	conversions_this_run += 1
+	conversions_this_quest += 1
 	add_corruption(cost)
 	return true
 
@@ -371,6 +379,8 @@ func new_run(p_scenario: Dictionary) -> void:
 	coup_de_pouce_used_this_quest = false
 	coup_de_pouce_armed = false
 	coup_de_pouce_exercised = 0
+	conversions_this_quest = 0
+	marchand_vu_quete = -1
 	pilier_favors = {}
 	pilier_hostility = {}
 	merchant_seen_this_run = false
@@ -1184,6 +1194,7 @@ func advance_beat() -> void:
 		# chaque nouvelle quete. Les caps PAR RUN (soins_achetes, purges_achetees) restent intacts.
 		info_achetee_this_quest = false
 		coup_de_pouce_used_this_quest = false
+		conversions_this_quest = 0  # v34 : le prix des pactes repart à +1 à chaque quête
 	# v10.14 — Ramification v1 : à l'ARRIVÉE sur un beat à variante (avant-climax des quêtes
 	# k>=4), si le degré précédent est échec/partiel, le beat BASCULE (Epreuve<->Dilemme),
 	# IN PLACE dans le scenario — le save de l'appelant (juste après) persiste le beat basculé

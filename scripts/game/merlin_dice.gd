@@ -38,6 +38,8 @@ var _squash: Vector2 = Vector2.ONE
 var _settled: bool = false
 var _halo: float = 0.0           # 0-1 : intensite du halo a la pose (pulse)
 var _static_mode: bool = false   # mode INDICE (pres du bouton Resoudre) : face « ? », aucun roll
+var _sceau_mode: bool = false    # v34 : SCEAU du geste sûr (aucun dé, anneau runique qui s'appose)
+var _sceau_t: float = 0.0        # 0-1 : déploiement de l'anneau du sceau
 
 
 static func rim_for_rarity(rarity: String) -> Color:
@@ -82,6 +84,60 @@ static func roll(parent: Control, final_face: int, success: bool,
 	d.pivot_offset = Vector2(SIZE_PX, SIZE_PX) * 0.5
 	d._run()
 	return d
+
+
+# v34 — LE SCEAU DU GESTE SÛR : quand la réussite est acquise sans jet (resolve.geste_sur),
+# aucun dé — un anneau runique s'appose (pose → micro-pause → verdict via le même callback
+# que le jet). Doré si le geste tient (`tenu`), sombre si le sabotage l'a dégradé : le sceau
+# dit le verdict FINAL. Même cycle de vie que roll() : `await sceau.done`, fondu auto.
+static func sceau(parent: Control, tenu: bool, on_verdict: Callable = Callable()) -> MerlinDice:
+	var d: MerlinDice = MerlinDice.new()
+	d._sceau_mode = true
+	d._success = tenu
+	d._on_verdict = on_verdict
+	d.custom_minimum_size = Vector2(SIZE_PX, SIZE_PX)
+	d.size = Vector2(SIZE_PX, SIZE_PX)
+	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	d.z_index = 30
+	parent.add_child(d)
+	var vp: Vector2 = parent.get_viewport_rect().size
+	d.position = Vector2(vp.x * 0.5 - SIZE_PX * 0.5, vp.y * 0.19 - SIZE_PX * 0.5)
+	d.pivot_offset = Vector2(SIZE_PX, SIZE_PX) * 0.5
+	d._run_sceau()
+	return d
+
+
+func _run_sceau() -> void:
+	var m: float = MerlinVisual.motion()
+	MerlinAudio.play_sfx("card_pick", 0.9)
+	_settled = true
+	modulate.a = 0.0
+	scale = Vector2(1.55, 1.55)
+	var ain: Tween = create_tween().set_parallel(true)
+	ain.tween_property(self, "modulate:a", 1.0, 0.22 * m)
+	ain.tween_property(self, "scale", Vector2.ONE, 0.30 * m).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var grow: Tween = create_tween()
+	grow.tween_method(func(v: float) -> void:
+		_sceau_t = v
+		queue_redraw(), 0.0, 1.0, 0.35 * m)
+	if grow.is_running():
+		await grow.finished
+	await get_tree().create_timer(PAUSE_READ_S * m).timeout
+	if not is_inside_tree():
+		done.emit()  # jamais de softlock amont (même garde que le jet, R148)
+		return
+	if _on_verdict.is_valid():
+		_on_verdict.call()
+	var halo_tw: Tween = create_tween()
+	halo_tw.tween_method(_set_halo, 0.0, 1.0, 0.18 * m)
+	halo_tw.tween_method(_set_halo, 1.0, 0.75, 0.30 * m)
+	await get_tree().create_timer(0.15 * m).timeout
+	done.emit()
+	if halo_tw.is_running():
+		await halo_tw.finished
+	if is_inside_tree():
+		await get_tree().create_timer(0.5 * m).timeout
+	_fade_out()
 
 
 # Mode INDICE statique (feedforward « ce choix jettera un de ») : petite face « ? » au lisere de rarete.
@@ -212,6 +268,25 @@ func _draw() -> void:
 	if _brilliant:
 		halo_col = MerlinVisual.GOLD
 
+	# v34 — SCEAU du geste sûr : anneau runique qui se déploie, huit crans gravés, halo au verdict.
+	if _sceau_mode:
+		var rs: float = s.x * 0.42
+		var scol: Color = MerlinVisual.GOLD if _success else Color(0.40, 0.29, 0.22)
+		if _halo > 0.0:
+			draw_circle(half, rs * (1.35 + 0.25 * _halo), Color(scol.r, scol.g, scol.b, 0.16 * _halo))
+			draw_circle(half, rs * (1.08 + 0.16 * _halo), Color(scol.r, scol.g, scol.b, 0.26 * _halo))
+		if _sceau_t > 0.02:
+			draw_arc(half, rs * _sceau_t, 0.0, TAU, 48, scol, 3.0, true)
+			draw_arc(half, rs * 0.78 * _sceau_t, 0.0, TAU, 40, Color(scol.r, scol.g, scol.b, 0.7), 1.5, true)
+			for i in range(8):
+				var a: float = TAU * float(i) / 8.0 - TAU * 0.25
+				var p1: Vector2 = half + Vector2(cos(a), sin(a)) * rs * 0.78 * _sceau_t
+				var p2: Vector2 = half + Vector2(cos(a), sin(a)) * rs * _sceau_t
+				draw_line(p1, p2, scol, 2.0, true)
+		if _sceau_t > 0.85:
+			draw_circle(half, rs * 0.15, Color(scol.r, scol.g, scol.b, 0.9))
+		return
+
 	# Mode INDICE : petite pastille « ? » au lisere de rarete (langage R133, inchange).
 	if _static_mode:
 		var r0: float = s.x * 0.46
@@ -263,7 +338,12 @@ func _draw_one_die(center: Vector2, face: int, col: Color, bc: Color) -> void:
 	var off: float = DIE_HALF * 0.44
 	var ink: Color = MerlinVisual.INK
 	for p in _pips(face):
-		draw_circle(center + Vector2(p.x * off, p.y * off), pr, ink)
+		var pc: Vector2 = center + Vector2(p.x * off, p.y * off)
+		draw_circle(pc, pr, ink)
+		# v34 — pip GRAVÉ : fin anneau autour du point, façon os travaillé.
+		draw_arc(pc, pr * 1.55, 0.0, TAU, 12, Color(ink.r, ink.g, ink.b, 0.30), 1.0, true)
+	# v34 — nervure intérieure discrète (gravure sobre, charte procédurale).
+	draw_arc(center, DIE_HALF * 0.86, 0.0, TAU, 24, Color(bc.r, bc.g, bc.b, 0.22), 1.0, true)
 
 
 # Offsets normalises (-1,0,1) des pips pour une face 1-6.
