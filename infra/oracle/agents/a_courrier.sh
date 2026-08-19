@@ -43,7 +43,25 @@ RES="$RES" REPO="$REPO" GAME_DIR="${GAME_DIR:-}" timeout 5400 bash "$JOB" > "$RE
 RC=$?
 echo "rc=$RC" >> "$RES/sortie.log"
 
-# ── retour du résultat : d'abord la branche de l'outillage… ────────────────
+# ── retour du résultat 1/2 : liaison montante ntfy (sans AUCUN identifiant) ──
+# Découverte du 2026-08-19 : la VM n'a JAMAIS poussé vers GitHub (aucun commit
+# d'auteur VM, pas de branche auto/nightly) — ses clones sont en lecture seule.
+# Le retour passe donc par ntfy.sh en pièces jointes : un PUT par fichier, le
+# poste de pilotage lit le flux JSON du sujet et télécharge les pièces.
+# Sujet public non devinable, commité en clair : n'y déposer QUE des résultats
+# de jeu — jamais un secret, jamais un fichier de configuration.
+NTFY_CR="merlin-courrier-vX9k2Qf7Lw3s"
+find "$RES" -type f -size -14M | while read -r f; do
+    rel="$(echo "${f#"$RES"/}" | tr '/' '_')"
+    curl -fsS -m 60 --retry 2 -T "$f" \
+        -H "Filename: $NOM--$rel" -H "Title: $NOM $rel" \
+        "https://ntfy.sh/$NTFY_CR" >/dev/null 2>&1
+    sleep 2
+done
+curl -fsS -m 15 -H "Title: $NOM fini" -d "rc=$RC $(date -u +%H:%M:%SZ)" \
+    "https://ntfy.sh/$NTFY_CR" >/dev/null 2>&1 || true
+
+# ── retour du résultat 2/2 : la branche de l'outillage (si un jour elle pousse) ─
 # Copie de sûreté hors dépôt AVANT tout geste git : quel que soit l'échec en
 # aval, le résultat existe encore sur la VM.
 cp -rf "$RES" "$ETAT/$NOM.res" 2>/dev/null || true
