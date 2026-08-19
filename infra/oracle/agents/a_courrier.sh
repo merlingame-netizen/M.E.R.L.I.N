@@ -13,8 +13,11 @@
 #   - un script bash `courrier/job-<nom>.sh`, exécuté le plus ancien d'abord, un par réveil
 #   - marqueur ~/.cache/merlin-agents/courrier/<nom>.fait posé AVANT l'exécution :
 #     un job qui plante ne boucle jamais
-#   - le job reçoit $RES (courrier/resultats/<nom>/ dans le dépôt) : tout ce qu'il y
-#     dépose part sur GitHub ; sa sortie texte y est toujours écrite (sortie.log)
+#   - le job reçoit $RES et $COURRIER_RES (courrier/resultats/<nom>/ dans le dépôt) :
+#     tout ce qu'il y dépose part ; sa sortie texte y est toujours écrite (sortie.log)
+#   - ATTENTION : game-stack lit la RÉSOLUTION d'écran dans la variable RES — tout job
+#     qui lance le jeu DOIT appeler le runner via `env -u RES` (vécu 2026-08-19 : Xvfb
+#     mort sur « Invalid screen configuration .../resultats/job-010-...x24 »)
 #   - budget 90 min ; verrou par agent-run.sh (pas de chevauchement)
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -39,15 +42,15 @@ RES="$BOITE/resultats/$NOM"
 mkdir -p "$RES"
 date -u +%Y-%m-%dT%H:%M:%SZ > "$ETAT/$NOM.fait"
 
-RES="$RES" REPO="$REPO" GAME_DIR="${GAME_DIR:-}" timeout 5400 bash "$JOB" > "$RES/sortie.log" 2>&1
+RES="$RES" COURRIER_RES="$RES" REPO="$REPO" GAME_DIR="${GAME_DIR:-}" \
+    timeout 5400 bash "$JOB" > "$RES/sortie.log" 2>&1
 RC=$?
 echo "rc=$RC" >> "$RES/sortie.log"
 
 # ── retour du résultat 1/2 : liaison montante ntfy (sans AUCUN identifiant) ──
-# Découverte du 2026-08-19 : la VM n'a JAMAIS poussé vers GitHub (aucun commit
-# d'auteur VM, pas de branche auto/nightly) — ses clones sont en lecture seule.
-# Le retour passe donc par ntfy.sh en pièces jointes : un PUT par fichier, le
-# poste de pilotage lit le flux JSON du sujet et télécharge les pièces.
+# La VM n'a JAMAIS poussé vers GitHub (aucun commit d'auteur VM, pas de branche
+# auto/nightly) — ses clones sont en lecture seule. Le retour passe par ntfy.sh :
+# un PUT par fichier, le poste de pilotage lit le flux JSON du sujet.
 # Sujet public non devinable, commité en clair : n'y déposer QUE des résultats
 # de jeu — jamais un secret, jamais un fichier de configuration.
 NTFY_CR="merlin-courrier-vX9k2Qf7Lw3s"
@@ -73,8 +76,6 @@ if git commit -q -m "courrier: résultat $NOM (rc=$RC)"; then
     if git push -q origin "$REF" >/dev/null 2>&1; then
         POUSSE=outillage
     else
-        # …sinon par le clone du JEU, qui pousse de façon prouvée (le codeur le fait).
-        # Une branche dédiée, jamais la branche du jeu — même discipline que le codeur.
         GD="${GAME_DIR:-}"
         if [ -n "$GD" ] && [ -d "$GD/.git" ]; then
             CUR="$(git -C "$GD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
