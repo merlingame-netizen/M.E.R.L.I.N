@@ -25,13 +25,18 @@ def game_running() -> bool:
             return True
     finally:
         s.close()
-    # Un Godot HEADLESS (laboratoire du récit, sondes) n'ouvre jamais le port
-    # VNC : le braséro de 08:00 a rechargé e4b dans Ollama en plein milieu
-    # d'une intro du labo — écriture mesurée à 1,77 tok/s au lieu de 9,5.
-    # Tout Godot headless qui exécute un script mérite donc les 4 cœurs.
+    # TOUT processus godot compte — pas seulement le headless. Le boot du jeu en
+    # rendu réel charge DEUX cerveaux (6,2 + 4,3 Go) : le braséro qui réchauffe
+    # e4b dans Ollama (6,1 Go) pendant ce boot l'a tué en OOM silencieux — mort
+    # au milieu du chargement du Vif, trois fois de suite sur 40cb5188. Et le
+    # laboratoire headless (2026-08-19 08:00) avait déjà subi le même piétinement
+    # (écriture à 1,77 tok/s au lieu de 9,5). Sur cette VM, un godot qui tourne —
+    # quel qu'il soit — mérite les 4 cœurs et la RAM.
     try:
-        r = subprocess.run(["pgrep", "-f", "godot.*--headless.*--script"],
-                           capture_output=True, timeout=3)
+        r = subprocess.run(["pgrep", "-x", "godot"], capture_output=True, timeout=3)
+        if r.returncode == 0:
+            return True
+        r = subprocess.run(["pgrep", "-f", "bin/godot"], capture_output=True, timeout=3)
         return r.returncode == 0
     except Exception:
         return False
