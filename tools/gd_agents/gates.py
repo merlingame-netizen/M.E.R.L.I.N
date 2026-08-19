@@ -9,6 +9,7 @@ tout agent gourmand. Stdlib seule, ne lève jamais.
 from __future__ import annotations
 
 import socket
+import subprocess
 import time
 from pathlib import Path
 
@@ -20,9 +21,20 @@ def game_running() -> bool:
     s = socket.socket()
     s.settimeout(0.4)
     try:
-        return s.connect_ex(("127.0.0.1", 5900)) == 0
+        if s.connect_ex(("127.0.0.1", 5900)) == 0:
+            return True
     finally:
         s.close()
+    # Un Godot HEADLESS (laboratoire du récit, sondes) n'ouvre jamais le port
+    # VNC : le braséro de 08:00 a rechargé e4b dans Ollama en plein milieu
+    # d'une intro du labo — écriture mesurée à 1,77 tok/s au lieu de 9,5.
+    # Tout Godot headless qui exécute un script mérite donc les 4 cœurs.
+    try:
+        r = subprocess.run(["pgrep", "-f", "godot.*--headless.*--script"],
+                           capture_output=True, timeout=3)
+        return r.returncode == 0
+    except Exception:
+        return False
 
 
 def chain_allowed() -> tuple[bool, str]:
