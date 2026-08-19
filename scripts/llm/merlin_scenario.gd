@@ -2434,6 +2434,14 @@ func invalidate_resolution() -> void:
 		var mn: Node = _mn()
 		if mn != null and mn.is_busy():
 			mn.cancel()
+	elif _scene_jit_qn != -1:
+		# UNE SCÈNE LOOKAHEAD EN VOL N'EST PAS ANNULÉE au changement de beat (2026-08-19).
+		# L'annulation générale tuait la scène N+1 en cours d'écriture À CHAQUE présentation :
+		# zéro scène lookahead servie sur deux validations entières, toutes écrites pour rien.
+		# La laisser vivre ne coûte rien au beat qui se présente (il a l'arc) ; elle servira au
+		# joueur qui lit à son rythme — le prefetch d'issue à la pose la coupera s'il le faut,
+		# c'est LUI le prioritaire, pas la présentation.
+		pass
 	_reso_cache.clear()
 	_reso_sig = ""
 	_reso_state = "idle"
