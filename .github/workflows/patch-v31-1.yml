@@ -22,11 +22,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v33_deux_mains.py
+        run: python3 outillage/infra/patches/v34_dealer_sceau_etal.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_native.gd scripts/llm/merlin_scenario.gd scripts/game/merlin_game.gd
-          git commit -m "feat(llm): v33 Les Deux Mains - deux voies paralleles + issue streamee" -m "Tout l'etat de generation devient PAR VOIE (conteur/vif) : les deux moteurs ecrivent en meme temps (2+2 coeurs a chaud via set_thread_count, _partager_les_coeurs), cancel/quit par voie, signal generation_chunk_voie. Le scenario ne draine plus que SA voie (issues=vif, scenes/arc=conteur). Au resolve, l'issue se streame sous les yeux dans l'encart de situation - le banc en dur ne sert plus que si le moteur est mort, toujours marque. Decision Maxime 2026-08-19 : plus aucune issue du banc, l'IA partout." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/llm/merlin_prompt_builder.gd scripts/llm/merlin_scenario.gd scripts/game/merlin_resolution.gd scripts/game/merlin_fx.gd scripts/game/merlin_dice.gd scripts/game/merlin_run.gd scripts/game/merlin_game.gd tools/probe_partie_journal.gd
+          git commit -m "feat(jeu): v34 - ton du dealer, sceau du geste sur, etal 40 %, pactes cap +3/quete" -m "Style direct HoF2 : issues 3-5 phrases declaratives (une image au plus, pas de lyrisme), budgets resserres, scenes/arc/ouverture au meme ton. Geste sur : quand couverture+synergie garantissent la reussite au jet minimal, aucun de - un sceau runique s appose (l eclatante reste reservee aux vrais jets) ; des a pips graves. Pactes : prix min(compteur de quete+1, 3), reset a chaque quete. Etal du colporteur : tirage deterministe ~40 %/quete (titre+index), prioritaire sur l offrande a la premiere Rencontre de la quete, garantie historique conservee en filet. Sonde : t_pres/t_res/duree par beat, metrics de generation, geste_sur/total/dc, politique d achat a l etal et journal des etals. Decisions Maxime 2026-08-19 soir." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
