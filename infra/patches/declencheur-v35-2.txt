@@ -1,0 +1,1 @@
+2026-08-20 — déclenchement du patcheur v35.2 (lecture réaliste de la sonde).

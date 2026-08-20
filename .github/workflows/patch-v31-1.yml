@@ -1,5 +1,4 @@
 # Patcheur du jeu — remplacements exacts + commit + push sur feat/practices-docs.
-# Déclenché par un push touchant infra/patches/** ; exécute le script de patch COURANT.
 name: patch-v31-1
 on:
   push:
@@ -21,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v35_1_scene_plein_regime.py
+        run: python3 outillage/infra/patches/v35_2_lecture_realiste.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_prompt_builder.gd
-          git commit -m "fix(jeu): v35.1 - la scene lookahead a plein regime" -m "Mesure lk31 : scenes lookahead ecrites en 92-97 s (Conteur a 1 fil) contre une fenetre de 58 s - toujours perdantes. La scene s'ecrit pendant la lecture, le Vif est libre, la voie est seule : plein_regime lui donne les 4 fils, ~30 s, dans la fenetre." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add tools/probe_partie_journal.gd
+          git commit -m "fix(sonde): v35.2 - la sonde lit comme un humain (35 s)" -m "La scene lookahead n'a pour elle que la fenetre de lecture (vif libre) : 18 s chez la sonde etait irrealiste - lecon v30, un harnais qui joue plus vite qu'un humain mesure un jeu que personne ne vit." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
