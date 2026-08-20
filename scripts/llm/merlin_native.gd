@@ -84,7 +84,12 @@ var _model_ready: bool = false
 # deux moteurs sont des instances séparées avec leurs propres fils d'inférence, et les deux
 # voies écrivent EN MÊME TEMPS (2+2 cœurs via set_thread_count à chaud — _partager_les_coeurs).
 # id = nonce anti-callback-tardif ; plein = régime demandé (restauré quand la voie redevient seule).
-const FILS_PARTAGE: int = 2
+const FILS_PARTAGE: int = 2  # (v33 — conservé pour référence des mesures)
+# v35 — asymétrie du duo : le Vif écrit ce que le joueur ATTEND (issues), 3 fils ; le
+# Conteur (scènes/arc, personne n'attend devant) continue sur 1. Bande passante mesurée
+# v33 : 3 fils ~ 90 % du débit solo — l'issue attendue passe de 40-80 s à ~25-35 s.
+const FILS_VIF_DUO: int = 3
+const FILS_CONTEUR_DUO: int = 1
 var _voies: Dictionary = {
 	"conteur": {"busy": false, "label": "", "t0": 0, "prompt": "", "ready": false,
 		"result": {}, "id": 0, "plein": false, "metrics": {}},
@@ -390,7 +395,7 @@ func _partager_les_coeurs() -> void:
 		if m == null or not _voies[c]["busy"] or not m.has_method("set_thread_count"):
 			continue
 		if deux:
-			m.set_thread_count(FILS_PARTAGE, _fils_plein())
+			m.set_thread_count(FILS_VIF_DUO if c == "vif" else FILS_CONTEUR_DUO, _fils_plein())
 		else:
 			m.set_thread_count(_fils_plein() if _voies[c]["plein"] else _fils_menage(), _fils_plein())
 

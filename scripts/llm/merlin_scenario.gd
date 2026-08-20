@@ -1751,8 +1751,14 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	var provenance: String = "secours"
 	# LOOKAHEAD D'ABORD : une scène écrite en connaissant l'issue précédente bat toujours une
 	# scène pré-écrite à l'aveugle — c'est elle qui fait s'enchaîner les beats.
+	# v35 — la scène lookahead se lit DANS le beat (fix racine : les clés de cache ne
+	# coïncidaient jamais). Le cache par qn reste en second regard (harnais hors-jeu).
 	var qn_beat: int = int(beat.get("qn", beat.get("n", 1)))
-	if _scene_cache.has(qn_beat):
+	if str(beat.get("scene_lookahead", "")) != "":
+		narration = str(beat.get("scene_lookahead", ""))
+		required = (beat.get("scene_lookahead_tags", []) as Array).duplicate()
+		provenance = "lookahead"
+	elif _scene_cache.has(qn_beat):
 		var entree: Dictionary = _scene_cache[qn_beat]
 		narration = str(entree.get("texte", ""))
 		required = (entree.get("tags", []) as Array).duplicate()
@@ -1823,7 +1829,9 @@ func build_situation(beat: Dictionary) -> Dictionary:
 			if quoted != "":
 				var qanchor: String = str(QUEST_TRANSITION_ANCHORS[_rng.randi_range(0, QUEST_TRANSITION_ANCHORS.size() - 1)]) % quoted
 				narration = qanchor + " " + narration
-		else:
+		elif provenance != "lookahead":
+			# v35 — une scène lookahead ENCHAÎNE d'elle-même (écrite en connaissant l'issue) :
+			# aucun pont ne s'y prépose (la suite logique, pas l'écho — Maxime 2026-08-20).
 			var bridge: String = str(_run_thread.get("bridge", "")).strip_edges()
 			if bridge != "":
 				# Le pont finit en virgule (amorce) → la situation en devient la suite : sa 1re lettre passe en
@@ -2089,7 +2097,7 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 		return  # pas de beat suivant : la quête se referme
 	var beat: Dictionary = beats[prochain]
 	var qn: int = int(beat.get("qn", prochain + 1))
-	if _scene_cache.has(qn) or _scene_jit_qn == qn:
+	if str(beat.get("scene_lookahead", "")) != "" or _scene_cache.has(qn) or _scene_jit_qn == qn:
 		return
 	var btype: String = str(beat.get("type", "Exploration"))
 	if btype == "Climax":
@@ -2148,6 +2156,12 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	if int(run_node.beat_index) >= qn - 1:
 		return
 	_scene_cache[qn] = {"texte": texte, "tags": tags}
+	# v35 — LA SCÈNE VIT DANS LE BEAT : le cache latéral par qn ne coïncidait JAMAIS avec la
+	# clé relue par build_situation (0 lookahead servie en 4 parties — le bug racine de
+	# « pourquoi une hutte ensuite ? »). Le beat est une RÉFÉRENCE du scénario de la run :
+	# ce qu'on y écrit, la présentation le retrouve — sans aucune clé à accorder.
+	beat["scene_lookahead"] = texte
+	beat["scene_lookahead_tags"] = (tags as Array).duplicate() if tags is Array else []
 	print("[MerlinScenario] lookahead — scène %d prête (%d car.)" % [qn, texte.length()])
 
 
@@ -2248,10 +2262,13 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 			if str(_run_thread.get("title", "")) != title:
 				return  # nouvelle partie pendant l'attente : cet arc n'a plus de destinataire
 			var mn_a: Node = _mn()
-			if mn_a == null or not mn_a.is_ready() \
+			# v35 — une scène lookahead qui attend d'écrire passe DEVANT l'arc (inversion de
+			# file, jamais d'annulation — leçon v31.1) : l'arc cède son tour, pas sa tranche.
+			if _scene_jit_qn != -1 \
+					or mn_a == null or not mn_a.is_ready() \
 					or (mn_a.est_occupe("conteur") if mn_a.has_method("est_occupe") else mn_a.is_busy()):
 				await get_tree().create_timer(1.0).timeout
-				continue  # voie conteur occupée : on repatiente, ce n'est PAS un échec
+				continue  # scène lookahead en attente ou voie occupée : on repatiente
 			morceau = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
 					debut, total, precedent)
 			if morceau.is_empty() and _arc_cede_au_fil:
@@ -2675,10 +2692,9 @@ func note_outcome(res: Dictionary, _situation: Dictionary = {}, played_cards: Ar
 	var result: String = str(result_map.get(degree, "et la voie s'est ouverte"))
 	# last_gist (ASCII) alimente le prompt du beat suivant (« Juste avant : … ») quand le LLM gagne la course.
 	_run_thread["last_gist"] = "vous %s, %s" % [action, result]
-	# N3-V1 (2026-07-06) : PONT VISIBLE. Le LLM perd la course >95% du temps, donc on RESTAURE un pont
-	# procédural (retiré en R140 car alors générique) mais désormais ANCRÉ (degré, biome, momentum). Posé
-	# ici : build_situation le prépose à la narration du beat n>1 (fallback presque toujours affiché).
-	_run_thread["bridge"] = _compose_bridge(degree, _run_biome())
+	# v35 — LE PONT DIT L'ACTION, jamais le degré (Maxime 2026-08-20 : « ne pas faire écho au
+	# degré de réussite mais une suite logique à l'action »). Geste réel + locomotion neutre.
+	_run_thread["bridge"] = _compose_pont_action(action, _run_biome())
 
 
 # N3-V1 (2026-07-06) : MOMENTUM courant lu depuis la run (source de vérité /root/MerlinRun.momentum),
@@ -2689,6 +2705,37 @@ func _run_momentum() -> int:
 		if run_m != null and (run_m.get("momentum") != null):
 			return int(run_m.get("momentum"))
 	return 0
+
+
+# v35 — locomotions de biome NEUTRES (aucun écho du degré) pour le pont d'action.
+const LOCOMOTION_BY_BIOME: Dictionary = {
+	"foret": [
+		"vous reprenez entre les troncs,",
+		"vous vous enfoncez plus avant sous le couvert,",
+		"vous suivez le sentier qui se poursuit sous les branches,",
+	],
+	"falaises": [
+		"vous longez la corniche,",
+		"vous reprenez le fil du bord,",
+		"vous gagnez la roche suivante,",
+	],
+}
+
+
+# v35 — le pont reconstruit sur l'ACTION réelle : « Vous avez trouvé les mots ; vous reprenez
+# entre les troncs, ». Le degré n'y apparaît jamais. Gist vide (1er beat) → ancien banc.
+func _compose_pont_action(action: String, biome: String) -> String:
+	if action.strip_edges() == "":
+		return _compose_bridge("reussite", biome)
+	var affichage: Dictionary = {
+		"avez trouve les mots": "avez trouvé les mots",
+		"avez tenu bon sans ceder": "avez tenu bon sans céder",
+		"avez appele l'ombre": "avez appelé l'ombre",
+	}
+	var act_aff: String = str(affichage.get(action, action))
+	var pool: Array = LOCOMOTION_BY_BIOME.get(biome, LOCOMOTION_BY_BIOME["foret"])
+	var loco: String = str(pool[_rng.randi_range(0, pool.size() - 1)])
+	return "Vous %s ; %s" % [act_aff, loco]
 
 
 # N3-V1 : TON du pont selon le momentum (bornes MerlinRun : sombre <= -2, élan >= +2, neutre entre).
