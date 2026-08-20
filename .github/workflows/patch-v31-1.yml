@@ -22,11 +22,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v34_2_grace_stream.py
+        run: python3 outillage/infra/patches/v35_enchainement.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/game/merlin_game.gd
-          git commit -m "fix(jeu): v34.2 - grace de demarrage du stream d'issue" -m "L'unique banc de la demo 10 beats (beat 3, 30 s) : _stream_resolution testait is_resolution_incoming pendant le drain du prefetch relance et concluait a tort a la mort de la generation. Grace de 8 s avant cette sortie." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/llm/merlin_scenario.gd scripts/llm/merlin_native.gd
+          git commit -m "feat(jeu): v35 - lookahead porte par le beat, pont d'action, coeurs 3+1" -m "Fix racine du lookahead (0 servie en 4 parties) : les cles de cache ne coincidaient jamais entre le prefetch (index global) et build_situation (beat.qn/n) - la scene vit desormais DANS le beat, aucune cle a accorder. Le pont ne fait plus jamais echo au degre : action reelle (gist) + locomotion de biome neutre ; aucun pont devant une scene lookahead (elle enchaine d'elle-meme). L'arc repatiente quand une scene lookahead attend d'ecrire (inversion de file, pas de preemption). Coeurs en duo : Vif 3 fils (les issues que le joueur attend), Conteur 1. Decisions Maxime 2026-08-20 matin." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
