@@ -20,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v35_2_lecture_realiste.py
+        run: python3 outillage/infra/patches/v35_3_garde_sentiers.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
           git add tools/probe_partie_journal.gd
-          git commit -m "fix(sonde): v35.2 - la sonde lit comme un humain (35 s)" -m "La scene lookahead n'a pour elle que la fenetre de lecture (vif libre) : 18 s chez la sonde etait irrealiste - lecon v30, un harnais qui joue plus vite qu'un humain mesure un jeu que personne ne vit." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "fix(sonde): v35.3 - garde sur les sentiers vides" -m "Crash p36 (probe:175) : sentiers[_pick] sur tableau vide - la phase A ecrit son JSON meme en echec (ok:false, sentiers vides). Sortie propre quit(2) au lieu du gel du harnais." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
