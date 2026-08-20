@@ -171,6 +171,12 @@ func _phase_partie(sc: Node, run: Node, biome: String) -> void:
 		quit(2)
 		return
 	var sentiers: Array = (sel as Dictionary)["sentiers"]
+	# v35.3 — la phase A écrit son JSON MÊME en échec (ok:false, sentiers:[]) : sans cette
+	# garde, sentiers[_pick] crashait (p36, Out of bounds probe:175) et le harnais se figeait.
+	if sentiers.is_empty() or not bool((sel as Dictionary).get("ok", false)):
+		print("[JOURNAL] sélection en échec (ok=false ou sentiers vides) — rejouer la phase A")
+		quit(2)
+		return
 	_pick = clampi(int(OS.get_environment("MERLIN_PICK")), 0, maxi(sentiers.size() - 1, 0))
 	var choisi: Dictionary = sentiers[_pick]
 
