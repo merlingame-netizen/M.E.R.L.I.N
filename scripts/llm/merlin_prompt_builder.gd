@@ -307,8 +307,10 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		+ "\nROLE de cette scene : %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [role, cue_txt] \
 		+ pool_line \
 		+ "\nLa scene = 3 a 5 phrases COURTES et CONCRETES (qui, quoi, ou ; une image au plus, pas de lyrisme ni de comparaisons) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene."
+	# v35.1 — plein_regime : la scène s'écrit pendant la LECTURE (le Vif est libre, la voie
+	# est seule) — à 4 fils elle tient dans la fenêtre (~30 s contre 92-97 s mesurés à 1 fil).
 	return {"system": SYSTEM_PREFIX, "user": usr,
-			"opts": {"creative": true, "max_tokens": 150, "fin_phrase": true,
+			"opts": {"creative": true, "max_tokens": 150, "fin_phrase": true, "plein_regime": true,
 			"label": "scène %d (lookahead)" % [pos + 1]}}
 
 
