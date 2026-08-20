@@ -54,15 +54,29 @@ echo "rc=$RC" >> "$RES/sortie.log"
 # Sujet public non devinable, commité en clair : n'y déposer QUE des résultats
 # de jeu — jamais un secret, jamais un fichier de configuration.
 NTFY_CR="merlin-courrier-vX9k2Qf7Lw3s"
+# Les quotas des instances publiques tombent EN SILENCE (vécu 2026-08-20 : p42 muette
+# de bout en bout, quota ntfy.sh par IP épuisé). Canari d'abord : la première instance
+# qui rend notre jeton est la bonne ; l'URL choisie est exportée pour les jobs futurs.
+NTFY_BASE=""
+for _b in https://ntfy.sh https://ntfy.adminforge.de https://ntfy.envs.net; do
+    _tok="canari-$NOM-$(date +%s)"
+    curl -fsS -m 15 -H "Title: canari" -d "$_tok" "$_b/$NTFY_CR" >/dev/null 2>&1
+    sleep 3
+    if curl -fsS -m 15 "$_b/$NTFY_CR/json?poll=1&since=1m" 2>/dev/null | grep -q "$_tok"; then
+        NTFY_BASE="$_b"
+        break
+    fi
+done
+[ -n "$NTFY_BASE" ] || NTFY_BASE="https://ntfy.sh"
 find "$RES" -type f -size -14M | while read -r f; do
     rel="$(echo "${f#"$RES"/}" | tr '/' '_')"
     curl -fsS -m 60 --retry 2 -T "$f" \
         -H "Filename: $NOM--$rel" -H "Title: $NOM $rel" \
-        "https://ntfy.sh/$NTFY_CR" >/dev/null 2>&1
+        "$NTFY_BASE/$NTFY_CR" >/dev/null 2>&1
     sleep 2
 done
-curl -fsS -m 15 -H "Title: $NOM fini" -d "rc=$RC $(date -u +%H:%M:%SZ)" \
-    "https://ntfy.sh/$NTFY_CR" >/dev/null 2>&1 || true
+curl -fsS -m 15 -H "Title: $NOM fini" -d "rc=$RC via=$NTFY_BASE $(date -u +%H:%M:%SZ)" \
+    "$NTFY_BASE/$NTFY_CR" >/dev/null 2>&1 || true
 
 # ── retour du résultat 2/2 : la branche de l'outillage (si un jour elle pousse) ─
 # Copie de sûreté hors dépôt AVANT tout geste git : quel que soit l'échec en
