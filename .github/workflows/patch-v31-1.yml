@@ -20,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v35_3_garde_sentiers.py
+        run: python3 outillage/infra/patches/v35_4_scene_au_resolve.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add tools/probe_partie_journal.gd
-          git commit -m "fix(sonde): v35.3 - garde sur les sentiers vides" -m "Crash p36 (probe:175) : sentiers[_pick] sur tableau vide - la phase A ecrit son JSON meme en echec (ok:false, sentiers vides). Sortie propre quit(2) au lieu du gel du harnais." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/game/merlin_game.gd scripts/llm/merlin_scenario.gd
+          git commit -m "feat(jeu): v35.4 - la scene suivante part au resolve, nourrie du gist" -m "course41 : scenes lookahead 91-118 s (ecriture 1,9-2,2 tok/s des que l'issue suivante retrograde le Conteur) contre ~35 s de fenetre vif-libre. La substance de l'issue (geste + degre + gist) est connue des le resolve : chainage deplace, prompt nourri du gist frais - fenetre reelle 90-120 s." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
