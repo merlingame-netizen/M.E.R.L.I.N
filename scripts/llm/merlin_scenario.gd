@@ -2135,7 +2135,11 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 		str(_run_thread.get("faction", "")), str(_run_thread.get("pilier", "")),
 		str(_run_thread.get("pilier2", "")), bool(_run_thread.get("pnj_recog", false)))
 	var precedent: String = str(_run_thread.get("last_scene", ""))
-	var issue_prec: String = str(_run_thread.get("last_issue", ""))
+	# v35.4 — au resolve, l'issue n'est pas encore écrite : sa SUBSTANCE (le gist — geste
+	# réel + résultat) vient d'être posée par note_outcome et suffit à enchaîner la scène.
+	var issue_prec: String = str(_run_thread.get("last_gist", ""))
+	if issue_prec.strip_edges() == "":
+		issue_prec = str(_run_thread.get("last_issue", ""))
 	var total: int = beats.size()
 	var pj: Dictionary = MerlinPromptBuilder.scene_jit(
 		{"title": titre, "pitch": str(_run_thread.get("pitch", ""))},
