@@ -33,7 +33,7 @@ const SHOTS_MAX: int = 12
 # harnais à 8 s jouait plus vite qu'aucun joueur réel.
 const POSE_S: float = 25.0
 # Temps de lecture de l'issue affichée, avant d'avancer au beat suivant.
-const LECTURE_S: float = 18.0
+const LECTURE_S: float = 35.0  # v35.2 : rythme de lecture HUMAIN (leçon v30) — la fenêtre du lookahead
 
 var _journal: Dictionary = {}
 var _shots_dir: String = ""
