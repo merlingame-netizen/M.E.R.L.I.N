@@ -100,8 +100,24 @@ CIBLE="$SEL"; [ "$PHASE" = "partie" ] && CIBLE="$JOURNAL"
 T0=$(date +%s)
 # On attend que le JEU s'arrête, pas que le fichier apparaisse : le journal est écrit au fil de
 # l'eau, donc sa seule présence ne dit pas que la partie est finie.
+# 2026-08-21 — GRÂCE DE DÉMARRAGE (p48 : « aucun résultat après 0s »). Au premier lancement à
+# froid après reboot, godot met plus de 10 s à apparaître : casser au premier pgrep manqué
+# faisait tuer le jeu par le stop de clôture EN PLEINE CHARGE des modèles. Tant que le jeu n'a
+# JAMAIS été vu, on ne casse pas : en sélection la cible écrite suffit à conclure, et un bail
+# franc à 300 s couvre le lancement réellement mort. Dès qu'il a été VU, sa disparition conclut
+# comme avant.
+VU=0
 while [ $(( $(date +%s) - T0 )) -lt "$BUDGET" ]; do
-    pgrep -f "godot.*probe_partie_journal" >/dev/null 2>&1 || break
+    if pgrep -f "godot.*probe_partie_journal" >/dev/null 2>&1; then
+        VU=1
+    elif [ "$VU" = 1 ]; then
+        break
+    elif [ "$PHASE" = "selection" ] && [ -s "$CIBLE" ]; then
+        sleep 2
+        break
+    elif [ $(( $(date +%s) - T0 )) -ge 300 ]; then
+        break  # jamais vu en 5 min et rien d'écrit : le lancement a réellement échoué
+    fi
     sleep 10
 done
 DUREE=$(( $(date +%s) - T0 ))
