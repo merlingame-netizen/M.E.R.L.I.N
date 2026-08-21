@@ -20,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v35_6_scene_courte_tete_stable.py
+        run: python3 outillage/infra/patches/v35_5_reessai_moteur_muet.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_prompt_builder.gd scripts/llm/merlin_scenario.gd
-          git commit -m "feat(jeu): v35.6 - scene lookahead courte, tete de prompt stable, gardes qui parlent" -m "course49 : 3 scenes generees et finies (94,7-107,8 s) mais pretes=0 - toutes jetees par le 'trop tard' silencieux (fenetre reelle 53-70 s entre resolve et presentation). Scene 2-3 phrases (90 tok, ecriture ~35-40 s) + tete stable (le cache de prefixe KV saute l'evaluation de l'identite de quete/regles/pool, identiques d'un beat a l'autre) : total vise ~45-60 s, dans la fenetre. Les trois gardes de prefetch_scene_suivante disent desormais ce qu'elles jettent." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/llm/merlin_scenario.gd
+          git commit -m "feat(jeu): v35.5 - re-essai unique quand le moteur est muet" -m "p40 beat 2 : le Vif a rendu 1 token / 0 caractere en 33,8 s, moteur vivant - premiere generation VIDE en 40 parties, banc servi a tort. Un re-essai immediat, une seule fois par signature, avant que le filet n'ait le droit de servir ; 'running' est repose dans le meme geste synchrone, le stream ne voit jamais passer l'idle." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
