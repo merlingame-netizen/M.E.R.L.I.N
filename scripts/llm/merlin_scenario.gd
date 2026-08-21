@@ -849,6 +849,7 @@ var _reso_cache: Dictionary = {}   # signature -> prose
 var _reso_sig: String = ""         # signature actuellement en génération
 var _reso_state: String = "idle"   # idle / running / ready
 var _reso_epoch: int = 0
+var _reso_retry_sig: String = ""  # v35.5 — signature déjà re-essayée après une gen VIDE (1 seul re-essai)
 # N4-BUG #2a (2026-07-11) : prefetch demandé AVANT que le modèle soit chargé (cold start) :
 # mémorisé ici puis RELANCÉ à model_ready. Sans ça, prefetch_resolution sortait en silence,
 # _reso_state restait « idle » pour toujours et le sustain de fusion attendait son cap ~12 s
@@ -2482,6 +2483,13 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	else:
 		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
 		print("[MerlinScenario] issue — génération VIDE pour %s" % sig)
+		# v35.5 — moteur MUET (vivant mais 0 texte — p40 : 1 token en 33,8 s) : UN re-essai
+		# immédiat avant que le banc n'ait le droit de servir. « running » est reposé dans le
+		# même geste synchrone : le stream du resolve ne voit jamais passer l'« idle ».
+		if _reso_retry_sig != sig and mn.is_ready():
+			_reso_retry_sig = sig
+			print("[MerlinScenario] issue — re-essai (moteur muet) pour %s" % sig)
+			prefetch_resolution(situation, played_cards, res)
 
 
 # N4-BUG #2a : relance le prefetch mémorisé quand le modèle vient de charger (one-shot, connecté
