@@ -2148,9 +2148,11 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	var r: Dictionary = await mn.generate(str(pj["system"]), str(pj["user"]), pj["opts"])
 	_scene_jit_qn = -1
 	if r.has("error"):
+		print("[MerlinScenario] lookahead — scène %d ANNULÉE (%s)" % [qn, str(r.get("error", "?"))])
 		return  # annulée par une pose (priorité correcte) ou moteur en défaut : l'arc couvrira
 	var texte: String = MerlinProse.clean_prose(str(r.get("text", "")).strip_edges())
 	if texte.length() < 30:
+		print("[MerlinScenario] lookahead — scène %d REJETÉE (trop courte : %d car.)" % [qn, texte.length()])
 		return
 	if str(_run_thread.get("title", "")) != titre:
 		return  # nouvelle partie pendant l'écriture
@@ -2158,6 +2160,7 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	# après l'avancée. Si le run l'a atteint ou dépassé pendant notre écriture, la scène ne sera
 	# jamais lue : on la jette plutôt que de laisser croire au cache qu'elle a servi.
 	if int(run_node.beat_index) >= qn - 1:
+		print("[MerlinScenario] lookahead — scène %d JETÉE (trop tard : beat_index=%d)" % [qn, int(run_node.beat_index)])
 		return
 	_scene_cache[qn] = {"texte": texte, "tags": tags}
 	# v35 — LA SCÈNE VIT DANS LE BEAT : le cache latéral par qn ne coïncidait JAMAIS avec la
