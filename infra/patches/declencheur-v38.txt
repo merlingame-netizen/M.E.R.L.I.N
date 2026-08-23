@@ -1,0 +1,1 @@
+v38 — retrait propre du chainage lookahead (2026-08-23)

@@ -20,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v37_1_scene_a_l_affichage.py
+        run: python3 outillage/infra/patches/v38_retrait_lookahead.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
           git add scripts/game/merlin_game.gd scripts/llm/merlin_scenario.gd
-          git commit -m "feat(jeu): v37.1 - la scene part a l'affichage de l'issue, Vif libre" -m "p54 : v37 (attente a la pose, chainage au resolve) a rate - 0 lookahead, issues ralenties. Au resolve, l'issue s'ecrit encore : la scene rampe a ~2 tok/s en duo. A l'affichage, le joueur lit 35 s et le Vif est libre : scene seule a plein regime ~20-25 s (65 tokens) - dans la fenetre. Le chainage revient a note_issue_affichee, le gist du resolve reste sa nourriture, la garde de pose passe a 25 s." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v38 - retrait propre du chainage lookahead, retour au rythme v36" -m "Bilan de 11 parties temoin : 1 scene servie (p50), 3 ordonnancements essayes (resolve v35.4, garde a la pose v37, affichage v37.1), scenes a 0,8-2,5 tok/s des que les deux moteurs ecrivent, gardes qui degradent les issues (46-60 s, 1 SECOURS a p55). Pas de fenetre fiable sur cette machine sans faire attendre le joueur. L'arc pre-ecrit + le pont d'action portent l'enchainement ; la machinerie (beat.scene_lookahead, provenance, gardes) reste dormante pour une reprise future avec un moteur plus rapide." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
