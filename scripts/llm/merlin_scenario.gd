@@ -2432,6 +2432,16 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	_pending_prefetch = {}  # modèle prêt : ce prefetch frais supersède toute demande mémorisée
 	_reso_epoch += 1
 	var epoch: int = _reso_epoch
+	# v37 — PRIORITÉ SCÈNE (bornée) : une scène lookahead en cours d'écriture garde la
+	# machine pour elle — seule, elle tourne à plein régime (~25-30 s au lieu de 45-90 s
+	# à ~2 tok/s en duo, p51 : 4 scènes jetées sur 4). L'issue est courte désormais : ce
+	# départ différé coûte 0-20 s au beat et rend l'enchaînement au joueur.
+	if _scene_jit_qn != -1:
+		var dl_scene: int = Time.get_ticks_msec() + 20000
+		while _scene_jit_qn != -1 and Time.get_ticks_msec() < dl_scene:
+			await get_tree().process_frame
+		if epoch != _reso_epoch:
+			return  # beat/combo changé pendant l'attente — un prefetch plus récent a la main
 	# v10.13 (Fix 3/8) : une gen PÉRIMÉE (combo abandonnée, arc, épilogue) qui occupe le moteur
 	# single-flight est annulée À LA POSE (take_resolution ne bloque plus jamais au resolve).
 	# Priorité moteur : la prose de résolution du beat courant passe devant tout le reste — c'est

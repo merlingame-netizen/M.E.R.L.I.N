@@ -308,7 +308,7 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 	# fenêtre de 53-70 s, toutes jetées « trop tard ». Une scène courte est une scène SERVIE.
 	var usr: String = faction_block + ("Conte une SCENE de la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [
 		title, pitch, lieu]) \
-		+ "\nLa scene = 2 a 3 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT ou une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene." \
+		+ "\nLa scene = 1 a 2 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT ou une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene." \
 		+ pool_line \
 		+ ("\nSCENE %d sur %d." % [pos + 1, total]) \
 		+ "\nROLE de cette scene : %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [role, cue_txt] \
@@ -316,7 +316,7 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 	# v35.1 — plein_regime : la scène s'écrit pendant la LECTURE (le Vif est libre, la voie
 	# est seule) — à 4 fils elle tient dans la fenêtre (~30 s contre 92-97 s mesurés à 1 fil).
 	return {"system": SYSTEM_PREFIX, "user": usr,
-			"opts": {"creative": true, "max_tokens": 90, "fin_phrase": true, "plein_regime": true,
+			"opts": {"creative": true, "max_tokens": 65, "fin_phrase": true, "plein_regime": true,
 			"label": "scène %d (lookahead)" % [pos + 1]}}
 
 
