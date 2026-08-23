@@ -1003,10 +1003,10 @@ func _on_resolve() -> void:
 	# s'y écrit, en CONNAISSANT cette issue. Fire-and-forget — si elle n'est pas prête à temps,
 	# l'arc pré-écrit couvre, et le journal dit la provenance.
 	sc.note_issue_affichee(prose)
-	# v37.1 — le chaînage revient ICI : l'issue est AFFICHÉE, le joueur lit (35 s), le Vif
-	# est libre — la scène s'écrit SEULE à plein régime (~20-25 s à 65 tokens), dans la
-	# fenêtre de lecture. Le gist posé au resolve reste sa nourriture (v35.4 S1).
-	sc.prefetch_scene_suivante(run)
+	# v38 — le chaînage lookahead est RETIRÉ : 11 parties témoin, 1 scène servie (p50),
+	# 0,8-2,5 tok/s dès que les deux moteurs écrivent — pas de fenêtre fiable sur cette
+	# machine sans faire attendre le joueur. L'arc pré-écrit + le pont d'action portent
+	# l'enchaînement. Chantier consigné, à reprendre avec un moteur plus rapide.
 	# v10.13 (Fix 6) : PLUS de save ici — il persistait les jauges post-résolution avec un beat_index
 	# non avancé → la reprise REJOUAIT le beat (coûts double-appliqués). Save unique dans _advance_to_next.
 

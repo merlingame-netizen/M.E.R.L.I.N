@@ -2432,16 +2432,8 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	_pending_prefetch = {}  # modèle prêt : ce prefetch frais supersède toute demande mémorisée
 	_reso_epoch += 1
 	var epoch: int = _reso_epoch
-	# v37 — PRIORITÉ SCÈNE (bornée) : une scène lookahead en cours d'écriture garde la
-	# machine pour elle — seule, elle tourne à plein régime (~25-30 s au lieu de 45-90 s
-	# à ~2 tok/s en duo, p51 : 4 scènes jetées sur 4). L'issue est courte désormais : ce
-	# départ différé coûte 0-20 s au beat et rend l'enchaînement au joueur.
-	if _scene_jit_qn != -1:
-		var dl_scene: int = Time.get_ticks_msec() + 25000  # v37.1 — couvre la scène entière (~20-25 s)
-		while _scene_jit_qn != -1 and Time.get_ticks_msec() < dl_scene:
-			await get_tree().process_frame
-		if epoch != _reso_epoch:
-			return  # beat/combo changé pendant l'attente — un prefetch plus récent a la main
+	# v38 — la garde de pose v37/v37.1 est retirée avec le chaînage lookahead : elle
+	# retardait les issues (46-60 s, 1 SECOURS à p55) sans jamais sauver une scène.
 	# v10.13 (Fix 3/8) : une gen PÉRIMÉE (combo abandonnée, arc, épilogue) qui occupe le moteur
 	# single-flight est annulée À LA POSE (take_resolution ne bloque plus jamais au resolve).
 	# Priorité moteur : la prose de résolution du beat courant passe devant tout le reste — c'est
@@ -2482,14 +2474,9 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		_reso_cache[sig] = prose
 		_reso_state = "ready"
 		print("[MerlinScenario] issue — prête au cache pour %s (%d car.)" % [sig, prose.length()])
-		# LE LOOKAHEAD S'ENCHAÎNE ICI, dès que l'issue est écrite — pas à son affichage. Lancé à
-		# l'affichage, il n'avait que le temps de lecture : la première scène complète (42,9 s)
-		# est arrivée APRÈS la présentation du beat suivant et a été jetée. Ici, il gagne tout le
-		# temps restant de pose + le sustain + la lecture : la fenêtre maximale possible.
+		# v38 — chaînage lookahead retiré (voir merlin_game) ; last_issue reste nourri
+		# pour les ponts d'action et le fil du récit.
 		_run_thread["last_issue"] = prose.strip_edges().substr(0, 420)
-		var run_n: Node = get_node_or_null("/root/MerlinRun")
-		if run_n != null and not run_n.ended:
-			prefetch_scene_suivante(run_n)
 	else:
 		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
 		print("[MerlinScenario] issue — génération VIDE pour %s" % sig)
