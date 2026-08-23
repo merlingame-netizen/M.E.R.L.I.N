@@ -2437,7 +2437,7 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 	# à ~2 tok/s en duo, p51 : 4 scènes jetées sur 4). L'issue est courte désormais : ce
 	# départ différé coûte 0-20 s au beat et rend l'enchaînement au joueur.
 	if _scene_jit_qn != -1:
-		var dl_scene: int = Time.get_ticks_msec() + 20000
+		var dl_scene: int = Time.get_ticks_msec() + 25000  # v37.1 — couvre la scène entière (~20-25 s)
 		while _scene_jit_qn != -1 and Time.get_ticks_msec() < dl_scene:
 			await get_tree().process_frame
 		if epoch != _reso_epoch:

@@ -980,12 +980,10 @@ func _on_resolve() -> void:
 	# l'attente animée (caption « Merlin tisse… » + glow + sparks) a remplacé « Merlin assemble ». (user 2026-06-07)
 	# v10.13 (Fix 3) : take_resolution ne bloque plus JAMAIS (cache-only) — toute l'attente appartient
 	# au sustain animé (cap + skip). Cache prêt → prose LLM instantanée ; sinon filet procédural.
-	# v35.4 — LA SCÈNE SUIVANTE PART ICI : le degré et le geste sont connus, note_outcome
-	# pose le gist à l'instant, et la scène N+1 dispose de TOUTE la fenêtre (écriture de
-	# l'issue + lecture + pose suivante ≈ 90-120 s) au lieu des ~35 s de lecture seule —
-	# course41 : à 2 tok/s en duo, 95 s de scène ne passaient jamais dans 35 s.
+	# v37.1 — note_outcome reste AU RESOLVE (le gist frais nourrit la scène), mais le
+	# CHAÎNAGE repart à l'affichage : au resolve l'issue s'écrit encore et la scène
+	# rampait à ~2 tok/s en duo (p51 : 4 jetées sur 4 ; p54 : pareil malgré v37).
 	sc.note_outcome(res, situ, played_cards)
-	sc.prefetch_scene_suivante(run)
 	var prose: String = str(sc.take_resolution(situ, played_cards, res))
 	if prose.length() < 10:
 		# v33 « Les Deux Mains » — le banc ne sert plus JAMAIS sur un délai : l'issue s'ÉCRIT
@@ -1005,7 +1003,10 @@ func _on_resolve() -> void:
 	# s'y écrit, en CONNAISSANT cette issue. Fire-and-forget — si elle n'est pas prête à temps,
 	# l'arc pré-écrit couvre, et le journal dit la provenance.
 	sc.note_issue_affichee(prose)
-	# v35.4 — le prefetch de scène est parti au resolve ; ici on ne fait plus que noter l'issue.
+	# v37.1 — le chaînage revient ICI : l'issue est AFFICHÉE, le joueur lit (35 s), le Vif
+	# est libre — la scène s'écrit SEULE à plein régime (~20-25 s à 65 tokens), dans la
+	# fenêtre de lecture. Le gist posé au resolve reste sa nourriture (v35.4 S1).
+	sc.prefetch_scene_suivante(run)
 	# v10.13 (Fix 6) : PLUS de save ici — il persistait les jauges post-résolution avec un beat_index
 	# non avancé → la reprise REJOUAIT le beat (coûts double-appliqués). Save unique dans _advance_to_next.
 
