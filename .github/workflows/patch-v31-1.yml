@@ -20,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v36_issue_directe.py
+        run: python3 outillage/infra/patches/v37_priorite_scene.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_prompt_builder.gd
-          git commit -m "feat(jeu): v36 - l'issue directe : 2-3 phrases, verbe joue, zero image" -m "Retour Maxime sur p50 : trop de texte, trop image, actions incoherentes avec le geste choisi, trop long a generer. Racine de l'incoherence : le VERBE de la tuile jouee (played_cards[0], contrat R20) n'entrait jamais dans le prompt d'issue - COMBATTRE donnait un fer plante en terre, PARLER une voix sans parole. v36 : verbe transmis + regle dure par verbe dans la tete stable, 2-3 phrases seches (budgets 140/105, r1 160/115), zero image/metaphore/comparaison partout (issues, scene lookahead, arc), Climax compris." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/llm/merlin_scenario.gd scripts/llm/merlin_prompt_builder.gd
+          git commit -m "feat(jeu): v37 - priorite scene bornee (20 s) + scene 65 tokens" -m "p51 : 4 scenes generees, 4 jetees trop tard (45-90 s) pour des fenetres de ~40-55 s - la fenetre s'est refermee (v36 : beats 29-46 s) et le plein regime ne s'enclenche jamais (la pose relance l'issue pendant la lecture, le Vif n'est presque jamais libre : scenes a 1,7-2,5 tok/s en duo permanent). v37 : au prefetch d'issue, si une scene lookahead ecrit, l'issue attend (borne 20 s) - seule, la scene tourne a plein regime (~25-30 s) ; scene 1-2 phrases, 65 tokens." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
