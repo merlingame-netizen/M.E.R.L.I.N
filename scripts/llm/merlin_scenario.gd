@@ -2258,6 +2258,20 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 			types_tranche.append(str((beats[i] as Dictionary).get("type", "Exploration")))
 			tags_tranche.append(picked[i] if i < picked.size() else [])
 		var precedent: String = _resume_arc(arc_complet)
+		# v41 — L'ARC SE TAIT PENDANT LE PREMIER BEAT. v39 empêche de LANCER une tranche
+		# pendant une issue, mais une tranche DÉJÀ EN VOL continue : au beat 1 elle démarre
+		# pendant la pose et l'issue tombe dedans (p58 : 70 tok en 38,2 s = 1,83 tok/s contre
+		# 8+ seule, beat 1 à 68 s contre 40 s de moyenne). L'ouverture garde sa priorité
+		# (debut == 0) ; ensuite l'arc attend la résolution du premier beat — aucune
+		# annulation (leçon v31.1), et il lui reste cinq beats pour rattraper.
+		if debut > 0:
+			var run_a: Node = get_node_or_null("/root/MerlinRun")
+			var dl_b1: int = Time.get_ticks_msec() + 180000
+			while run_a != null and is_instance_valid(run_a) and not run_a.ended \
+					and int(run_a.beat_index) <= 0 and Time.get_ticks_msec() < dl_b1:
+				await get_tree().create_timer(1.0).timeout
+			if str(_run_thread.get("title", "")) != title:
+				return  # nouvelle partie pendant l'attente du premier beat
 		# PATIENCE, ET NON ABANDON. Le moteur est mono-place et la résolution du beat courant passe
 		# toujours devant : elle peut annuler cette tranche à chaque pose de cartes. On retente
 		# donc dans un BUDGET d'horloge, et seul un moteur LIBRE qui rend vide compte comme un
