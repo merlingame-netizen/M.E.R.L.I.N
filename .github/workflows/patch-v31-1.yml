@@ -20,12 +20,12 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v42_1_canon_deborde.py
+        run: python3 outillage/infra/patches/v43_carnet_du_voyageur.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_prompt_builder.gd
+          git add scripts/game/merlin_chronicle.gd scripts/game/merlin_game.gd scripts/llm/merlin_prompt_builder.gd scripts/llm/merlin_scenario.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "fix(jeu): v42.1 - le canon a fait deborder le contexte de l'issue" -m "p61 : prompt_tokens=2045 sur les six beats (plafond n_ctx=2048 du Vif), tokens_ecrits=2, prompt_ms 56-138 s, SECOURS=4, duree_moy=133 s. Les deux blocs de canon (~450 tokens) ont pousse le prompt d'issue au-dela du contexte : plus de place pour ecrire. L'issue ne garde qu'une regle breve (~35 tokens) ; le canon complet reste dans selection, intro et scene, qui ont la marge. p61 valide en revanche les deux cibles : passe=0 et vous=6/6." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v43 - le carnet du Voyageur, et le re-essai qui ne jette plus rien" -m "Le Voyageur SE SOUVIENT (decision Maxime) mais uniquement de ce qui est ecrit : MerlinChronicle garde les trois dernieres traversees (titre, fin, integrite, corruption, PNJ croises, faits marquants), merlin_game ecrit la page a la fin de chaque partie, et bloc_carnet() remplace la regle 'aucun passe' dans la selection et l'intro - carnet vide = premiere venue. L'issue garde une ligne breve (contexte 2048, lecon v42.1). Et le re-essai ne jette plus sa premiere version : une prose valide part en reserve et ressort si la seconde ecriture echoue." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
