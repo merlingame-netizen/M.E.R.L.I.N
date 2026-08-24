@@ -20,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v40_voyageur_pnj_economie.py
+        run: python3 outillage/infra/patches/v41_arc_silencieux_beat1.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/game/merlin_game.gd scripts/llm/merlin_scenario.gd scripts/llm/merlin_prompt_builder.gd tools/probe_partie_journal.gd
-          git commit -m "feat(jeu): v40 - ecriture au Voyageur, colporteur narre, economie visible" -m "Retour Maxime : ecriture encore suggestive, PNJ de la bible absents du recit, compteur de monnaie invisible. Garde cote code : premiere phrase d'issue sans 'Vous' => UN re-essai (contrat v35.5) ; sujets abstraits bannis du prompt ; le colporteur ARRIVE dans le recit (banc de 3 arrivees, pattern R128) avant son etal ; bourse toujours visible (meme a 0) avec butin annonce '(+X)' ; gwenneg par beat dans le journal de sonde." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/llm/merlin_scenario.gd
+          git commit -m "feat(jeu): v41 - l'arc se tait pendant le premier beat" -m "p58 : issue du beat 1 a 1,83 tok/s (70 tok en 38,2 s) contre 8+ seule des le beat 2 - beat1=68 s contre 40 s de moyenne. v39 empeche de lancer une tranche pendant une issue, mais une tranche deja en vol continue : au beat 1 l'arc demarre pendant la pose et l'issue tombe dedans. Apres l'ouverture (debut > 0), l'arc attend la resolution du premier beat - aucune annulation (lecon v31.1), cinq beats pour rattraper." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
