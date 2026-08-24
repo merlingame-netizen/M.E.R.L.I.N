@@ -127,6 +127,7 @@ var _draft_title_base: String = ""       # titre de l'étape 1 (restauré à la 
 # {kind: info/heal/purge/graft/sell, price, ...} — jamais persisté (transient, R108).
 var _merchant_active: bool = false
 var _merchant_items: Dictionary = {}
+var _gain_gwenneg_recent: int = 0  # v40 — dernier butin, affiché « (+X) » à côté de la bourse
 # HUD bourse (sp_l, GOLD) / dette (sp_r, GOLD_DARK) — R136 : ZÉRO nouvelle zone, peuplées dans les
 # spacers existants du HUD. Cachées quand 0 Gwenneg / sans Promesse (spec).
 var _bourse_box: HBoxContainer = null
@@ -891,7 +892,11 @@ func _on_resolve() -> void:
 	var deg: String = str(res.get("degree", ""))
 	# Vague Economie V1 : gain de Gwenneg au degré (+ Butin d'Exploration 60%/1d4). Le modèle
 	# s'applique ICI (comme les jauges) ; le commit visuel HUD attend _flush_gauges (bug #1).
-	run.add_gwenneg(run.gwenneg_gain_for_degree(deg) + run.roll_loot(deg))
+	# v40 — le butin s'ANNONCE : le gain du beat s'affiche à côté de la bourse (+X),
+	# remplacé au butin suivant — l'économie se voit, elle ne se devine plus.
+	var _gain_g: int = run.gwenneg_gain_for_degree(deg) + run.roll_loot(deg)
+	run.add_gwenneg(_gain_g)
+	_gain_gwenneg_recent = _gain_g
 	# Si ce beat est la reclamation de la Promesse (« Le créancier revient », muté par
 	# merlin_run._tick_pending_debts), la résolution normale règle AUSSI la dette (le refus
 	# explicite est une voie ALTERNATIVE, cf. _offer_debt_refusal/_on_debt_refuse).
@@ -1923,6 +1928,17 @@ func _present_merchant_stall() -> void:
 			cards.append(s_view)
 	if cards.is_empty():
 		return  # rien a offrir, pas de vitrine vide
+	# v40 — LE COLPORTEUR EXISTE DANS LE RÉCIT (bible : des PNJ, pas des écrans) : une
+	# arrivée narrée, du banc — instantanée —, écrite à la suite du fil (pattern R128).
+	var _arrivees: Array = [
+		"Un grelot tinte entre les troncs. Le colporteur pousse sa carriole bâchée jusqu'à vous, rabat la toile et sourit : « Regarde avant de marcher, Voyageur. Tout se paie en gwenneg. »",
+		"Une silhouette voûtée attend au bord du sentier, assise sur une malle cerclée de fer. Le colporteur relève son capuchon et tapote le couvercle : « J'ai ce qu'il te faut, si ta bourse sait parler. »",
+		"Des sabots frappent la terre derrière vous. Le colporteur mène une mule chargée de sacoches, s'arrête, et déroule son tapis sans un mot de trop : « Choisis vite. La brume n'attend personne. »",
+	]
+	var _arr: String = str(_arrivees[absi(hash(str(run.get("gwenneg")) + ":" + str(run.beat_index))) % _arrivees.size()])
+	if _situation_text != null:
+		var _sc0: int = _situation_text.get_total_character_count()
+		_typewriter(_situation_text.text.replace("[/center]", "\n\n%s[/center]" % _arr), true, _situation_text, _sc0)
 	_merchant_active = true
 	_refresh_redraw_btn()  # R168 (chantier 1) — jamais disponible pendant la vitrine
 	run.merchant_seen_this_run = true  # chantier 2 : telemetrie + garde de priorite (_advance_to_next)
@@ -2688,9 +2704,10 @@ func _refresh_economy_hud() -> void:
 		return
 	var g: int = int(run.get("gwenneg"))
 	if _bourse_box != null:
-		_bourse_box.visible = g > 0
+		# v40 — la bourse se VOIT, même vide (Maxime : « il me manque le compteur de monnaie »).
+		_bourse_box.visible = true
 	if _bourse_lbl != null:
-		_bourse_lbl.text = str(g)
+		_bourse_lbl.text = (str(g) + " (+%d)" % _gain_gwenneg_recent) if _gain_gwenneg_recent > 0 else str(g)
 	var db: int = int(run.debt_beats_remaining())
 	if _dette_box != null:
 		_dette_box.visible = db >= 0

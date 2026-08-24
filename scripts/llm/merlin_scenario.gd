@@ -850,6 +850,7 @@ var _reso_sig: String = ""         # signature actuellement en génération
 var _reso_state: String = "idle"   # idle / running / ready
 var _reso_epoch: int = 0
 var _reso_retry_sig: String = ""  # v35.5 — signature déjà re-essayée après une gen VIDE (1 seul re-essai)
+var _reso_revous_sig: String = ""  # v40 — signature déjà re-essayée (première phrase sans « Vous »)
 # N4-BUG #2a (2026-07-11) : prefetch demandé AVANT que le modèle soit chargé (cold start) :
 # mémorisé ici puis RELANCÉ à model_ready. Sans ça, prefetch_resolution sortait en silence,
 # _reso_state restait « idle » pour toujours et le sustain de fusion attendait son cap ~12 s
@@ -2477,6 +2478,17 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 			_reso_state = "idle"
 		return
 	if prose.length() >= 10:
+		# v40 — LA PREMIÈRE PHRASE APPARTIENT AU VOYAGEUR : si elle ne commence pas par
+		# « Vous » (dérive ~1 beat/partie : scène recopiée ou PNJ en tête), UN re-essai —
+		# même contrat que le moteur muet (v35.5), jamais deux pour la même combinaison.
+		var _t0: String = prose.strip_edges().trim_prefix("[i]").strip_edges()
+		_t0 = _t0.trim_prefix("*").strip_edges()
+		if not _t0.begins_with("Vous") and _reso_revous_sig != sig and mn.is_ready():
+			_reso_revous_sig = sig
+			_reso_state = "idle"
+			print("[MerlinScenario] issue — re-essai (première phrase sans « Vous ») pour %s" % sig)
+			prefetch_resolution(situation, played_cards, res)
+			return
 		_reso_cache[sig] = prose
 		_reso_state = "ready"
 		print("[MerlinScenario] issue — prête au cache pour %s (%d car.)" % [sig, prose.length()])

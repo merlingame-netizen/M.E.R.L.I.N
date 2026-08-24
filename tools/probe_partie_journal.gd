@@ -504,6 +504,7 @@ func _noter_sortie(run: Node) -> void:
 		d["secours"] = int(sc.secours_consomme()) > 0
 	d["integrite_apres"] = int(run.integrite)
 	d["corruption_apres"] = int(run.corruption)
+	d["gwenneg_apres"] = int(run.get("gwenneg"))  # v40 — la bourse par beat (chroniques)
 	print("[JOURNAL]   → %s (PV %d→%d, Corr %d→%d)" % [str(run.last_degree),
 			int(d.get("integrite_avant", 0)), int(run.integrite),
 			int(d.get("corruption_avant", 0)), int(run.corruption)])
