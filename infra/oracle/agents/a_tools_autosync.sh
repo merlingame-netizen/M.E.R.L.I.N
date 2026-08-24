@@ -18,11 +18,18 @@ REPO="${MERLIN_REPO:-$HOME/workspace/M.E.R.L.I.N}"
 
 [ -d "$REPO/.git" ] || { echo "outillage pas un dépôt git — rien à faire"; exit 0; }
 
+# 2026-08-25 — UNE PANNE MUETTE DE CETTE BOUCLE COUPE LE SEUL CANAL VERS LA VM. Un job pousse
+# sur GitHub, la VM ne le tire jamais, et le poste de pilotage attend un verdict qui ne viendra
+# pas (job-066 : une heure et quart d'attente pour rien). Toute sortie anormale SONNE desormais
+# sur le telephone. Raison seule, jamais de chemin ni de configuration : c'est une alerte, pas
+# un journal.
+sonner() { bash "$HERE/notify.sh" urgent "Outillage bloqué" "$1 — la VM ne recevra plus rien tant que ce n'est pas leve." >/dev/null 2>&1 || true; }
+
 REF="$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null)"
-[ -n "$REF" ] && [ "$REF" != "HEAD" ] || { echo "outillage en HEAD détachée — synchro refusée"; exit 0; }
+[ -n "$REF" ] && [ "$REF" != "HEAD" ] || { echo "outillage en HEAD détachée — synchro refusée"; sonner "HEAD detachee"; exit 0; }
 
 git -C "$REPO" fetch origin "$REF" --quiet 2>/dev/null || {
-    echo "fetch impossible (réseau ?)"; exit 1; }
+    echo "fetch impossible (réseau ?)"; sonner "fetch impossible"; exit 1; }
 
 LOCAL="$(git -C "$REPO" rev-parse HEAD 2>/dev/null)"
 REMOTE="$(git -C "$REPO" rev-parse "origin/$REF" 2>/dev/null)"
@@ -42,6 +49,7 @@ fi
 if ! git -C "$REPO" -c core.fileMode=false diff --quiet \
 		|| ! git -C "$REPO" -c core.fileMode=false diff --cached --quiet; then
     echo "modifs locales non commitées sur $REF — synchro refusée (rien n'est écrasé)"
+    sonner "modifs locales non commitees"
     exit 1
 fi
 
@@ -51,8 +59,17 @@ fi
 exec /bin/bash -c '
 set -uo pipefail
 REPO="$1"; REF="$2"; HERE="$3"
+AVANT="$(git -C "$REPO" rev-parse HEAD)"
 git -C "$REPO" pull --ff-only origin "$REF" --quiet 2>&1 | tail -2
 NEW="$(git -C "$REPO" rev-parse --short HEAD)"
+# `| tail -2` avale le code de retour du pull : sans cette verification, un pull refuse
+# (commit local, ou fichier non suivi qui serait ecrase) laissait annoncer « mis a jour »
+# avec le sha PRECEDENT, et la panne restait invisible pour toujours.
+if [ "$AVANT" = "$(git -C "$REPO" rev-parse HEAD)" ]; then
+    echo "pull SANS EFFET — le depot n a pas bouge (reste a $NEW)"
+    bash "$HERE/notify.sh" urgent "Outillage bloque" "pull sans effet — la VM ne recevra plus rien tant que ce n est pas leve." >/dev/null 2>&1 || true
+    exit 1
+fi
 
 # Le crontab est GÉNÉRÉ depuis agents.json : sans ce rappel, un agent ajouté ou re-planifié
 # sur GitHub ne serait jamais programmé sur la VM.

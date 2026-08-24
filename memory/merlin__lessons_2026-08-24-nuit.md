@@ -20,3 +20,29 @@ Bash fonctionne de nouveau dans cette session : les clones locaux ont été resy
 `godot --headless --editor --quit` avant/après (jeux d'erreurs identiques), `--check-only` par
 fichier, et une sonde de logique sur les 80 fusions (5 verbes × 16 traits, 0 phrase vide).
 `tools/cli.py godot` reste inutilisable ici (chemin Godot codé pour la machine Windows).
+
+## 2026-08-25 00:30 — le canal vers la VM s'est tu, et la fuite trouvée en le cherchant
+
+**Le silence.** Dernier autosync outillage prouvé bon : **20:37 UTC** (job-065, commité 20:22 UTC,
+joué 20:39 UTC). Mes push de v46 : 21:04 et 21:08 UTC. À 22:21 UTC, **aucun canari066** sur ntfy —
+or job-066 en émet un avant toute autre chose. Le job n'a donc jamais démarré : cinq créneaux
+d'autosync (:07 :22 :37 :52) et ~38 réveils du Courrier manqués.
+
+Hypothèse la plus économique, **non vérifiée** : la VM a manqué de mémoire. Elle explique les deux
+faits d'un coup — le jeu de p65 mort ~10 s après le VNC, en pleine charge d'un modèle de 4,79 Gio,
+puis plus aucun signe de vie. À vérifier par Run Command (voir ci-dessous), pas à décréter.
+
+**La fuite (réelle, corrigée).** En cherchant un moyen d'atteindre la VM j'ai regardé la liaison
+montante du Courrier : elle expédie **tout** ce qui traîne dans `courrier/resultats/<job>/` vers un
+sujet ntfy **public** dont l'adresse est commitée en clair. `job-062` y a déposé un `lien.txt`
+contenant le lien magique du Studio — lisible par quiconque pendant ~3 h (l'attachement a expiré
+depuis : 404 vérifié). La règle « le lien du Studio ne circule que par canal privé » ne peut pas
+dépendre de la vigilance de l'auteur de chaque job : elle tient désormais **au dernier goulot**
+(`a_courrier.sh`), sur le nom ET sur des formes qui n'existent pas en prose de jeu. Vérifié sur
+neuf fichiers témoins : `lien.txt`, `.env`, `Bearer`, `ocid1.` retenus ; `journal.json` contenant
+« secret » et « clé » en prose, `passe66.txt`, `verdict`, `gestes`, `course` expédiés.
+
+**Leçon.** Un canal de commande qui échoue en silence n'est pas un canal. `a_tools_autosync.sh`
+renonçait sans rien dire (trois portes de sortie), et son `pull … | tail -2` avalait le code de
+retour — un pull refusé s'annonçait « mis à jour » avec le sha précédent. Les quatre cas sonnent
+maintenant sur le téléphone, et un pull sans effet est un échec déclaré.

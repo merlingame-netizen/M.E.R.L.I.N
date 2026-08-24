@@ -68,8 +68,36 @@ for _b in https://ntfy.sh https://ntfy.adminforge.de https://ntfy.envs.net; do
     fi
 done
 [ -n "$NTFY_BASE" ] || NTFY_BASE="https://ntfy.sh"
+# ── GARDE-FOU : le sujet ntfy est PUBLIC, et cette boucle expedie TOUT ce qui traine dans
+# le dossier de resultats. Le 2026-08-24, job-062 (« porte du Studio ») y a depose un
+# lien.txt contenant le lien magique du Studio : il est reste lisible par n'importe qui
+# pendant trois heures, sur un sujet dont l'adresse est commitee en clair. La regle de
+# Maxime — « le lien du Studio ne circule QUE par canal prive » — ne peut pas dependre de
+# la vigilance de l'auteur de chaque job : elle doit tenir ICI, au dernier goulot.
+#
+# Deux filtres, volontairement stricts sur la forme et non sur le vocabulaire : le NOM du
+# fichier (mots entiers — « oracle » ne doit pas declencher sur « cle »), et le CONTENU
+# reduit a des formes qui n'existent PAS en prose de jeu. Le vocabulaire des NOMS a ete
+# resserre sur des cas reels : « passe » collisionnait avec passe66.txt (les allusions au
+# PASSE, contenu de jeu legitime) et « env » avec des noms courants — .env passe par le
+# suffixe. Verifie sur neuf fichiers temoins avant livraison (cle=..., Bearer, ocid1., une
+# clef privee). Un journal de partie qui raconte un secret de Broceliande passe donc,
+# et un lien signe ne passe jamais.
+NOM_SENSIBLE='(^|[^a-z])(lien|liens|cle|clef|cles|token|jeton|secret|secrets|mdp|motdepasse|magic|mfa|credential|credentials|key|keys)([^a-z]|$)|\.env($|\.)'
+FORME_SENSIBLE='(\?|&|^|[[:space:]])(cle|clef|token|key|secret|password|pass)=[A-Za-z0-9_-]{6,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|BEGIN[[:space:]]+[A-Z ]*PRIVATE[[:space:]]+KEY|ocid1\.[a-z]+\.|ssh-(rsa|ed25519)[[:space:]]|AKIA[0-9A-Z]{16}'
+retenus=0
 find "$RES" -type f -size -14M | while read -r f; do
     rel="$(echo "${f#"$RES"/}" | tr '/' '_')"
+    base="$(basename "$f" | tr '[:upper:]' '[:lower:]')"
+    if echo "$base" | grep -qE "$NOM_SENSIBLE" || grep -qaE "$FORME_SENSIBLE" "$f" 2>/dev/null; then
+        # On dit QUE le fichier a ete retenu, jamais ce qu'il contient.
+        curl -fsS -m 15 -H "Title: $NOM retenu" \
+            -d "$rel retenu : contenu sensible — a recuperer par canal prive" \
+            "$NTFY_BASE/$NTFY_CR" >/dev/null 2>&1
+        retenus=$((retenus+1))
+        sleep 2
+        continue
+    fi
     curl -fsS -m 60 --retry 2 -T "$f" \
         -H "Filename: $NOM--$rel" -H "Title: $NOM $rel" \
         "$NTFY_BASE/$NTFY_CR" >/dev/null 2>&1
