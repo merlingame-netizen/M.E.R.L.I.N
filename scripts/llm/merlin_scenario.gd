@@ -2468,7 +2468,15 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 			mn.cancel("vif")
 		else:
 			mn.cancel()
-		var free_dl: int = Time.get_ticks_msec() + 4000
+		# v44 — VINGT SECONDES, PAS QUATRE. Ce drain sert surtout au cas du PACTE : la
+		# conversion acceptée change la couverture, donc le degré, donc la signature de
+		# l'issue — il faut annuler le texte en cours et réécrire. Or une annulation ne
+		# prend qu'entre deux tokens : en pleine évaluation de prompt (976 tokens, 94 s
+		# mesurés à p63) la voie reste occupée bien au-delà de 4 s, le drain expirait, et
+		# PLUS RIEN n'était relancé : le banc servait. Trois parties, trois bancs, toujours
+		# au beat du pacte (p40, p59, p63). Le prefetch est en fond : attendre ne coûte
+		# rien au joueur, le stream reste sa garantie d'affichage.
+		var free_dl: int = Time.get_ticks_msec() + 20000
 		while (mn.est_occupe("vif") if mn.has_method("est_occupe") else mn.is_busy()) and Time.get_ticks_msec() < free_dl:
 			await get_tree().process_frame
 		if epoch != _reso_epoch:
