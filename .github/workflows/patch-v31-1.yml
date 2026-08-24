@@ -20,11 +20,11 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v38_retrait_lookahead.py
+        run: python3 outillage/infra/patches/v39_arc_cede_aux_issues.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/game/merlin_game.gd scripts/llm/merlin_scenario.gd
-          git commit -m "feat(jeu): v38 - retrait propre du chainage lookahead, retour au rythme v36" -m "Bilan de 11 parties temoin : 1 scene servie (p50), 3 ordonnancements essayes (resolve v35.4, garde a la pose v37, affichage v37.1), scenes a 0,8-2,5 tok/s des que les deux moteurs ecrivent, gardes qui degradent les issues (46-60 s, 1 SECOURS a p55). Pas de fenetre fiable sur cette machine sans faire attendre le joueur. L'arc pre-ecrit + le pont d'action portent l'enchainement ; la machinerie (beat.scene_lookahead, provenance, gardes) reste dormante pour une reprise future avec un moteur plus rapide." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git add scripts/llm/merlin_scenario.gd
+          git commit -m "feat(jeu): v39 - l'arc s'efface devant toute issue en vol" -m "p56 : issue du beat 1 a 2,7 tok/s pendant que l'arc ecrit ses tranches (peage 73-148 s), 8-9 tok/s seule des le beat 2. La regle de repatience de l'arc (scene lookahead, voie occupee) s'etend aux issues : le joueur les attend, pas l'arc. L'arc rattrape pendant les lectures ; budget d'horloge et renoncements nommes inchanges." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
