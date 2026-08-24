@@ -73,12 +73,10 @@ done
 
 bash "$GS" stop >/dev/null 2>&1
 
-# 2026-08-24 (p65) — LE FANTOME DE LA PHASE PRECEDENTE. `stop` rend la main AVANT que Godot ne
-# soit vraiment mort. La boucle d'attente voyait ce mourant, posait VU=1, puis concluait dix
-# secondes plus tard « le jeu s'est arrete » — alors que la VRAIE partie n'avait pas encore
-# exec (Xvfb, x11vnc et l'import passent avant elle). La cloture tuait donc un jeu en pleine
-# charge des modeles : journal absent, rc=1, et un verdict qui n'accusait pas le bon coupable.
-# On draine : plus AUCUN godot de sonde ne doit tourner avant qu'on ne lance le suivant.
+# 2026-08-24 (p65) — DRAIN AVANT LANCEMENT. `stop` rend la main avant que Godot ne soit
+# vraiment mort : un mourant de la phase precedente peut encore tenir l'affichage :99 et la
+# memoire au moment ou le suivant charge 4,79 Gio de modele. On attend qu'il n'y ait plus
+# AUCUN godot de sonde avant de lancer — c'est gratuit, et ca supprime un chevauchement.
 fin_drain=$(( $(date +%s) + 90 ))
 while pgrep -f "godot.*probe_partie_journal" >/dev/null 2>&1; do
     [ "$(date +%s)" -ge "$fin_drain" ] && break
@@ -144,8 +142,22 @@ printf 'stopped' > "$HOME/.cache/merlin-game/desired"
 bash "$GS" stop >/dev/null 2>&1
 
 if [ ! -s "$CIBLE" ]; then
-    echo "aucun résultat après ${DUREE}s — dernières lignes du jeu :"
-    tail -12 "$HOME/.cache/merlin-game/godot.log" 2>/dev/null
+    # 2026-08-24 (p65) — UN ECHEC MUET COUTE UNE PARTIE ET UNE NUIT. Le jeu etait vivant a
+    # t=0 (`$GS start` ne rend la main qu'une fois le VNC ouvert) et mort dix secondes plus
+    # tard, en pleine charge des modeles : les douze dernieres lignes du journal ne
+    # montraient que llama_model_loader, et n'ont RIEN explique. On dit desormais l'etat de
+    # la memoire, le verdict du noyau (tue par l'OOM ?), et le journal de l'enveloppe.
+    echo "aucun résultat après ${DUREE}s (phase=$PHASE, vu=$VU, manques=$MANQUES)"
+    echo "-- memoire --"
+    awk '/MemTotal|MemAvailable|SwapFree/ {print $1, $2}' /proc/meminfo 2>/dev/null
+    echo "-- noyau (tue par le manque de memoire ?) --"
+    { dmesg -T 2>/dev/null || journalctl -k -n 200 --no-pager 2>/dev/null; } \
+        | grep -iE "out of memory|oom-kill|killed process" | tail -4
+    echo "-- enveloppe (inner.log) --"
+    tail -12 "$HOME/.cache/merlin-game/inner.log" 2>/dev/null
+    echo "-- jeu (godot.log, hors bruit llama) --"
+    grep -av "^llama_model_loader\|^print_info\|^load_tensors\|^llama_kv_cache\|^ggml_" \
+        "$HOME/.cache/merlin-game/godot.log" 2>/dev/null | tail -25
     exit 1
 fi
 echo "phase $PHASE terminée en ${DUREE}s → $CIBLE"

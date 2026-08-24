@@ -88,7 +88,12 @@ MERLIN_BEATS=6 env -u RES bash "$AGENTS/a_partie_journal.sh" partie 0 \
     "temoin v46 : le geste se dit" > "$COURRIER_RES/partie.log" 2>&1
 RCP=$?
 if [ ! -s "$B/journal.json" ]; then
-    dire "ko" "journal absent rc=$RCP : $(grep -a 'aucun résultat\|verrou\|phase ' "$COURRIER_RES/partie.log" | tail -3 | tr '\n' ' ' | tail -c 300)"
+    # p65 avait renvoye douze lignes de llama_model_loader : rien d'exploitable. Le harnais
+    # dit maintenant la memoire, le verdict du noyau et l'enveloppe — on remonte TOUT.
+    sed -n '/aucun résultat après/,$p' "$COURRIER_RES/partie.log" > "$COURRIER_RES/pourquoi66.txt" 2>/dev/null
+    [ -s "$COURRIER_RES/pourquoi66.txt" ] || tail -40 "$COURRIER_RES/partie.log" > "$COURRIER_RES/pourquoi66.txt"
+    dire "ko" "journal absent rc=$RCP — diagnostic en tranches pourquoi66"
+    tranches "pourquoi66" "$COURRIER_RES/pourquoi66.txt"
     exit 1
 fi
 
