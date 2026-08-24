@@ -73,6 +73,18 @@ done
 
 bash "$GS" stop >/dev/null 2>&1
 
+# 2026-08-24 (p65) — LE FANTOME DE LA PHASE PRECEDENTE. `stop` rend la main AVANT que Godot ne
+# soit vraiment mort. La boucle d'attente voyait ce mourant, posait VU=1, puis concluait dix
+# secondes plus tard « le jeu s'est arrete » — alors que la VRAIE partie n'avait pas encore
+# exec (Xvfb, x11vnc et l'import passent avant elle). La cloture tuait donc un jeu en pleine
+# charge des modeles : journal absent, rc=1, et un verdict qui n'accusait pas le bon coupable.
+# On draine : plus AUCUN godot de sonde ne doit tourner avant qu'on ne lance le suivant.
+fin_drain=$(( $(date +%s) + 90 ))
+while pgrep -f "godot.*probe_partie_journal" >/dev/null 2>&1; do
+    [ "$(date +%s)" -ge "$fin_drain" ] && break
+    sleep 3
+done
+
 if [ "$PHASE" = "selection" ]; then
     etape 2 4 "les trois sentiers (jusqu'à 5 min)"
     rm -f "$SEL"
@@ -107,11 +119,16 @@ T0=$(date +%s)
 # franc à 300 s couvre le lancement réellement mort. Dès qu'il a été VU, sa disparition conclut
 # comme avant.
 VU=0
+MANQUES=0
 while [ $(( $(date +%s) - T0 )) -lt "$BUDGET" ]; do
     if pgrep -f "godot.*probe_partie_journal" >/dev/null 2>&1; then
         VU=1
+        MANQUES=0
     elif [ "$VU" = 1 ]; then
-        break
+        # Un seul pgrep manque ne conclut plus une partie : sous forte charge (chargement des
+        # modeles, 4,79 Gio), un passage peut rater un processus bien vivant. Deux d'affilee.
+        MANQUES=$(( MANQUES + 1 ))
+        [ "$MANQUES" -ge 2 ] && break
     elif [ "$PHASE" = "selection" ] && [ -s "$CIBLE" ]; then
         sleep 2
         break
