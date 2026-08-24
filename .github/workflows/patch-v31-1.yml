@@ -20,12 +20,12 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v44_drain_du_pacte.py
+        run: python3 outillage/infra/patches/v45_trait_et_outro.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_scenario.gd
+          git add scripts/llm/merlin_prompt_builder.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "fix(jeu): v44 - le banc du pacte : l'annulation n'avait que 4 s pour prendre" -m "Autopsie : aucun moteur muet (vides=0). Le log dit 'cache VIDE pour ...::reussite (etat=running, vol pour ...::partiel)' - le pacte accepte change la couverture, donc le degre, donc la signature de l'issue. La relance doit annuler la generation en vol, mais une annulation ne prend qu'entre deux tokens : en pleine evaluation de prompt (976 tok, 94 s), la voie reste occupee au-dela des 4 s du drain, qui expire, et plus rien n'est relance. Trois parties, trois bancs, toujours au beat du pacte. Drain porte a 20 s." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v45 - le trait donne la maniere, et l'issue ouvre la suite" -m "OBSERVER + Le Pressentiment donnait 'en poussant vos mains sur leur pierre de basalte' : v36 avait impose une regle dure au VERBE, mais le TRAIT n'etait passe qu'en evocation libre. Regle du trait ajoutee en tete stable : un trait de perception ne touche RIEN, un trait de parole se prononce, un trait de force engage le corps ; interdiction d'inventer un geste que ni le verbe ni le trait ne portent. Et l'issue se termine desormais par une phrase qui OUVRE la suite (meme generation, zero attente ajoutee ; budgets +20 tokens pour la loger)." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
