@@ -1,0 +1,27 @@
+# Patcheur de l'OUTILLAGE (Studio, agents) — remplacements exacts sur la branche
+# outillage elle-même. Distinct du patcheur du jeu (patch-v31-1, infra/patches/**) :
+# celui-ci n'écoute que infra/studio/**, les deux ne se déclenchent jamais ensemble.
+name: patch-outillage
+on:
+  push:
+    branches: [claude/oracle-free-tier-access-IN1Wm]
+    paths: ["infra/studio/**"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/oracle-free-tier-access-IN1Wm
+      - name: Appliquer le patch
+        run: python3 infra/studio/patch_porte_appareil.py
+      - name: Commit et push
+        run: |
+          git config user.name "Claude"
+          git config user.email "noreply@anthropic.com"
+          git add tools/merlin_studio/app.py
+          git diff --cached --quiet && { echo "rien a committer (deja applique)"; exit 0; }
+          git commit -m "feat(studio): porte d'appareil - /entrer?cle=... au lieu du mot de passe" -m "Un lien prive, clique une fois, pose deux cookies signes HMAC (merlin_pass + merlin_mfa, 180 jours) : ce navigateur n'a plus jamais a taper ni mot de passe ni code TOTP. Basic auth et MFA restent la seule voie pour tout autre appareil ; la cle magique (STUDIO_MAGIC) est longue et ne circule que par canal prive." -m "Patch applique par le workflow patch-outillage (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git push origin HEAD:claude/oracle-free-tier-access-IN1Wm
