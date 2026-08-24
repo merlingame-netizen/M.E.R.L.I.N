@@ -2272,11 +2272,17 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 			var mn_a: Node = _mn()
 			# v35 — une scène lookahead qui attend d'écrire passe DEVANT l'arc (inversion de
 			# file, jamais d'annulation — leçon v31.1) : l'arc cède son tour, pas sa tranche.
+			# v39 — L'ARC S'EFFACE devant toute ISSUE en vol : le joueur attend l'issue, pas
+			# l'arc. En duo les deux voies rampent (p56 : issue du beat 1 à 2,7 tok/s pendant
+			# les tranches, 8-9 tok/s seule dès le beat 2) : l'arc repatiente aussi tant que
+			# le Vif écrit — il rattrape pendant les lectures, son budget d'horloge le couvre.
 			if _scene_jit_qn != -1 \
 					or mn_a == null or not mn_a.is_ready() \
-					or (mn_a.est_occupe("conteur") if mn_a.has_method("est_occupe") else mn_a.is_busy()):
+					or (mn_a.est_occupe("conteur") if mn_a.has_method("est_occupe") else mn_a.is_busy()) \
+					or _reso_state == "running" \
+					or (mn_a.has_method("est_occupe") and mn_a.est_occupe("vif")):
 				await get_tree().create_timer(1.0).timeout
-				continue  # scène lookahead en attente ou voie occupée : on repatiente
+				continue  # scène lookahead, issue en vol ou voie occupée : on repatiente
 			morceau = await narrate_arc_tranche(scenario, tags_tranche, types_tranche,
 					debut, total, precedent)
 			if morceau.is_empty() and _arc_cede_au_fil:
