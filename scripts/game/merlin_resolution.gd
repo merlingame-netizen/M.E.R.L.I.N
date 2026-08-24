@@ -50,6 +50,17 @@ const ECLAT_MARGIN: int = 8    # R158 (2d6) : marge >= 7 = eclatante (spec C).  
 # ~jet médian d'un d20 (ne plante pas, produit une base réaliste). Le jeu et le soak passent 2-12.
 const DIE_FALLBACK: int = 7   # R158 : moyenne de 2d6 (call-sites tools sans de)
 
+# === v46 (Maxime 2026-08-24) — LE DE SE DISPENSE : maitrise du verbe + rarete du trait ===
+# « des fois juste une difficulte qui demande un niveau de competence dans la competence action
+# ou en fonction de la rarete de la carte ». Un maitre ne se fait pas defaire par un mauvais de
+# sur un geste de routine, et une carte rare porte son propre poids : les deux achetent de la
+# MARGE sur le jet MINIMAL (2), JAMAIS sur le total d'un vrai jet. A talent 0 + trait Commune,
+# MARGE_SURE = 0 -> le comportement v34 est STRICTEMENT inchange (zero regression mesuree).
+# L'eclatante reste reservee aux VRAIS jets : dispenser le de ne peut JAMAIS produire un eclat.
+const SEUIL_MAITRISE: int = 2   # talent (skill_mod) a partir duquel le verbe est maitrise
+const MARGE_MAITRISE: int = 2   # ... vaut 2 points de de en moins a craindre
+const MARGE_RARETE: Dictionary = {"Commune": 0, "Rare": 1, "Épique": 2, "Mythique": 3}
+
 # Ordre croissant des degrés — sert à borner l'affinage par synergie (hybride, user 2026-05-28).
 const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
 
@@ -93,9 +104,13 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	# risque est le seul chemin vers l'éclat. Déterministe (mêmes entrées → même verdict) →
 	# R120 (preview = résolution) tient sans partager d'état. Le sabotage s'applique APRÈS,
 	# comme pour un jet : même un geste sûr se laisse polluer par un tag antagoniste.
-	var geste_sur: bool = (2 + mods) >= dc
+	# v46 : maitrise + rarete s'ajoutent au jet MINIMAL pour decider s'il faut encore jeter.
+	# JAMAIS au Climax : le pic de la quete se joue au de, sinon l'eclatante devient
+	# inatteignable la ou elle compte le plus (l'eclat n'existe que par le risque, v34).
+	var m_sure: int = 0 if beat_type == "Climax" else marge_sure(played_cards, skill_mod)
+	var geste_sur: bool = (2 + mods + m_sure) >= dc
 	var face: int = die if die >= 2 and die <= 12 else DIE_FALLBACK
-	var total: int = (2 + mods) if geste_sur else (face + mods)
+	var total: int = (2 + mods + m_sure) if geste_sur else (face + mods)
 	var margin: int = total - dc
 
 	var degree: String = REUSSITE if geste_sur else _degree_from_margin(margin, face)
@@ -149,6 +164,9 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		"synergy": synergy,
 		"die": 0 if geste_sur else die,
 		"geste_sur": geste_sur,
+		"marge_sure": m_sure,
+		"mise": _mise(geste_sur, m_sure, dc, mods, skill_mod),
+		"phrase_geste": phrase_du_geste(played_cards),
 		"die_mod": die_mod,
 		"die_rarity": "",
 		"total": total,
@@ -292,6 +310,119 @@ static func _is_dark_geste(played_cards: Array, tier: int) -> bool:
 			and _card_name(played_cards[0]) == "COMBATTRE" and tier <= 1:
 		return true
 	return false
+
+
+# v46 — MARGE SURE : ce que la maitrise du verbe et la rarete du trait retirent au risque du de.
+# Talent 0 + trait Commune -> 0 (identique a v34). Statique et pur -> preview = resolution (R120).
+static func marge_sure(played_cards: Array, skill_mod: int) -> int:
+	var marge: int = MARGE_MAITRISE if skill_mod >= SEUIL_MAITRISE else 0
+	var rare: int = 0
+	for i in range(1, played_cards.size()):
+		rare = maxi(rare, int(MARGE_RARETE.get(_card_rarity(played_cards[i]), 0)))
+	return marge + rare
+
+
+# Rarete d'une carte-like (duck-type), "Commune" si inconnue.
+static func _card_rarity(c: Variant) -> String:
+	if c is Object and "rarity" in c:
+		return str(c.rarity)
+	if c is Dictionary and c.has("rarity"):
+		return str(c["rarity"])
+	return "Commune"
+
+
+# v46 — LA MISE, annoncee AVANT le de (Hands of Fate 2 montre la cible, il ne la cache pas).
+# Dit l'ENJEU, jamais l'issue : un geste sans jet peut encore etre sabote par un tag antagoniste.
+static func _mise(geste_sur: bool, m_sure: int, dc: int, mods: int, skill_mod: int) -> String:
+	if not geste_sur:
+		var s: String = ("+%d" % mods) if mods >= 0 else str(mods)
+		return "Difficulté %d · vos atouts %s" % [dc, s]
+	if m_sure > 0 and skill_mod >= SEUIL_MAITRISE:
+		return "Sans jet · maîtrise du geste"
+	if m_sure > 0:
+		return "Sans jet · la carte porte le geste"
+	return "Sans jet · le geste est acquis"
+
+
+# === v46 — LA PHRASE DU GESTE, composee par le CODE (jamais par le modele) ===
+# Le modele avait ecrit « en poussant vos mains sur leur pierre de basalte » sur un OBSERVER +
+# Pressentiment. Le geste n'est pas une affaire de style : c'est le VERBE joue et la MANIERE du
+# trait. Le code le DIT, en clair, avant le de — le modele n'ecrit plus que la SUITE. Deterministe
+# (memes cartes -> meme phrase), zero generation, zero attente : c'est du temps DONNE au LLM.
+const GESTE_SOCLE: Dictionary = {
+	"OBSERVER": "Vous arrêtez votre regard sur ce qui vous fait face",
+	"AGIR": "Vous avancez la main et vous faites le geste",
+	"COMBATTRE": "Vous plantez vos appuis et vous frappez",
+	"RÉVÉLER": "Vous laissez remonter ce que le lieu retient",
+	"PARLER": "Vous parlez, la voix posée",
+}
+
+# La MANIERE : un tag canon (MerlinTags.to_canon, minuscule sans accent) -> une suite de phrase.
+# Les 25 concepts-coeur des 6 familles sont couverts : aucun trait ne tombe a vide.
+const GESTE_MANIERE: Dictionary = {
+	"sens": "et rien ne vous échappe",
+	"savoir": "avec ce que vous savez déjà de ces choses",
+	"memoire": "en recoupant ce que vous avez déjà vu",
+	"vigilance": "sans baisser la garde",
+	"force": "et rien ne vous fera reculer",
+	"agilite": "vite, avant qu'on ne vous arrête",
+	"endurance": "et vous tiendrez aussi longtemps qu'il faudra",
+	"finesse": "sans rien brusquer",
+	"empathie": "en cherchant d'abord ce que l'autre craint",
+	"verbe": "et vous trouvez les mots qu'il faut",
+	"ruse": "sans montrer ce que vous cherchez vraiment",
+	"autorite": "et personne ici ne vous contredira",
+	"franchise": "sans rien arranger",
+	"instinct": "et vous suivez ce que vous pressentez",
+	"nature": "comme la forêt vous l'a appris",
+	"vision": "et l'image vient avant les mots",
+	"rituel": "et le rite ancien vous guide",
+	"sacrifice": "en acceptant d'y laisser quelque chose",
+	"equilibre": "sans rien rompre",
+	"mystere": "sans chercher à tout comprendre",
+	"vide": "et quelque chose manque, en vous",
+	"glitch": "et le geste accroche, une fraction de seconde",
+	"dissolution": "pendant que quelque chose se défait en vous",
+	"murmure": "et une autre voix souffle en même temps",
+	"emprise": "et quelque chose d'autre décide avec vous",
+}
+
+
+# played_cards[0] = l'ACTION (verbe), le reste = le/les TRAIT(s). "" si le call-site n'a pas
+# d'action reconnue en [0] (harnais legacy) : MerlinFx saute alors la phrase, rythme inchange.
+static func phrase_du_geste(played_cards: Array) -> String:
+	if played_cards.is_empty():
+		return ""
+	var socle: String = str(GESTE_SOCLE.get(_card_name(played_cards[0]), ""))
+	if socle == "":
+		return ""
+	# La maniere vient du tag du TRAIT que l'action ne porte PAS deja : c'est lui qui ajoute.
+	var deja: Array = []
+	for t0 in _card_tags(played_cards[0]):
+		deja.append(MerlinTags.to_canon(str(t0)))
+	var fam: String = _card_family(played_cards[0])
+	# 1) le tag du trait qui NOURRIT le verbe (meme famille, non deja porte) : c'est la synergie.
+	var maniere: String = _maniere(played_cards, deja, fam)
+	if maniere == "":
+		maniere = _maniere(played_cards, deja, "")   # 2) a defaut, tout tag qui AJOUTE
+	if maniere == "":
+		maniere = _maniere(played_cards, [], "")     # 3) repli : meme un tag double donne une maniere
+	if maniere == "":
+		return socle + "."
+	return "%s, %s." % [socle, maniere]
+
+
+# `famille` non vide = on n'accepte QUE le tag de cette famille (celui qui nourrit le verbe).
+static func _maniere(played_cards: Array, exclus: Array, famille: String) -> String:
+	for i in range(1, played_cards.size()):
+		for tg in _card_tags(played_cards[i]):
+			var c: String = MerlinTags.to_canon(str(tg))
+			if not GESTE_MANIERE.has(c) or exclus.has(c):
+				continue
+			if famille != "" and MerlinTags.family_of(c) != famille:
+				continue
+			return str(GESTE_MANIERE[c])
+	return ""
 
 
 # Nom canonique d'une carte-like (duck-type). "" si inconnu.

@@ -494,6 +494,10 @@ func _noter_sortie(run: Node) -> void:
 	if g_res != null and ("_pending_res" in g_res) and g_res._pending_res is Dictionary:
 		var pres: Dictionary = g_res._pending_res
 		d["geste_sur"] = bool(pres.get("geste_sur", false))
+		# v46 : la phrase du geste (composee par le code) et la mise annoncee avant le de.
+		d["phrase_geste"] = str(pres.get("phrase_geste", ""))
+		d["mise"] = str(pres.get("mise", ""))
+		d["marge_sure"] = int(pres.get("marge_sure", 0))
 		d["total"] = int(pres.get("total", 0))
 		d["dc"] = int(pres.get("dc", 0))
 	d["resolution"] = str(run.summary)

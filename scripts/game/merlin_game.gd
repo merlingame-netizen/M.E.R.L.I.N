@@ -1689,7 +1689,14 @@ func _build_meca_line(res: Dictionary, degree: String) -> String:
 	var mods: int = total - face
 	var mods_str: String = ("+%d" % mods) if mods >= 0 else str(mods)
 	var deg_lbl: String = str(MerlinResolution.LABELS.get(degree, degree)).to_lower()
-	var line: String = "%s (%s) · 2d6 %d %s = %s" % [clause, reg, face, mods_str, deg_lbl]
+	# v46 : un GESTE SUR n'a JAMAIS jete de de — annoncer « 2d6 7 » (la face de repli) etait un
+	# mensonge a l'ecran, latent depuis v34 et rendu frequent par la dispense maitrise/rarete.
+	# On dit alors la MISE (« Sans jet · maitrise du geste »), la meme qu'a l'animation.
+	var line: String = ""
+	if bool(res.get("geste_sur", false)):
+		line = "%s (%s) · %s = %s" % [clause, reg, str(res.get("mise", "Sans jet")), deg_lbl]
+	else:
+		line = "%s (%s) · 2d6 %d %s = %s" % [clause, reg, face, mods_str, deg_lbl]
 	var di: int = int(res.get("integrite_delta", 0))
 	line += " · Intégrité %s%d" % ["+" if di >= 0 else "", di]
 	var dcorr: int = int(res.get("corruption_delta", 0))

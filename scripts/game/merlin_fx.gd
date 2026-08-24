@@ -57,6 +57,13 @@ const FUSION_SHAKE_PX: float = 12.0
 const FUSION_VIGNETTE_A: float = 0.42
 const FUSION_SPARK_COUNT: int = 32
 
+# v46 (Maxime 2026-08-24) — LE TEMPS DU GESTE, entre la fusion et le de. Le joueur LIT ce qu'il
+# vient de faire (phrase composee par MerlinResolution.phrase_du_geste) avant que le sort ne
+# tranche : plus aucune coupure entre la pose des cartes et l'issue. Et ces ~2 s sont DONNEES a
+# l'ecriture de l'issue, qui court deja en fond — l'animation paie le LLM au lieu de l'attendre.
+const GESTE_ECRITURE: float = 1.60   # frappe machine de la phrase
+const GESTE_TENUE: float = 0.35      # temps de lecture apres le dernier caractere
+
 # Vignette via shader canvas_item : sombre les coins selon `intensity`, teinte `tint` (selon degré).
 const VIGNETTE_SHADER_CODE: String = """
 shader_type canvas_item;
@@ -241,6 +248,14 @@ func run() -> void:
 	# B8 en doublon est supprimé (deux dés successifs = l'« animation bizarre » du feedback user). La
 	# face 1-20 est PRÉ-TIRÉE au beat (R120 preview = résolution) ; l'animation ne fait que révéler.
 	# `success` (§K, degré FINAL) → halo VERT/ROUGE : plus AUCUNE lecture de die_mod/die_rarity ici.
+	# v46 — LE GESTE SE DIT : une phrase composee par le code s'ecrit a la machine, la mise
+	# (difficulte, ou « sans jet ») s'allume dessous, PUIS le de part. Rien a ecrire (res legacy,
+	# debug F12) -> retour immediat, rythme d'avant strictement conserve.
+	await _ecrire_le_geste(str(_res.get("phrase_geste", "")), str(_res.get("mise", "")),
+		glow_col, screen_size)
+	if not is_inside_tree():
+		return
+
 	var decrue: float = FUSION_DECRUE * m
 	var p4_fade: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	p4_fade.tween_property(glow, "color:a", 0.0, decrue)
@@ -378,6 +393,57 @@ func run() -> void:
 
 # (v11-W1 : le disque B8 `_reveal_die` est supprimé — le dé unique est MerlinDice, lancé dans run()
 # en chevauchement sur la décrue. Monolocalité R112 restaurée : UN dé, UN lieu.)
+
+
+# v46 — ecrit la phrase du geste a la machine, allume la mise, puis rend la main au de. La phrase
+# RESTE a l'ecran pendant le de et le sustain : c'est elle qui tient la continuite entre le geste
+# et l'issue (elle meurt avec le layer). Vide -> retour immediat, zero frame perdue.
+func _ecrire_le_geste(phrase: String, mise: String, col: Color, screen_size: Vector2) -> void:
+	if phrase.strip_edges().is_empty():
+		return
+	var m: float = MerlinVisual.motion()
+	var lbl: Label = Label.new()
+	lbl.text = phrase
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_color_override("font_color", MerlinVisual.CREAM)
+	lbl.add_theme_font_size_override("font_size", 30)
+	lbl.size = Vector2(screen_size.x * 0.72, 104.0)
+	lbl.position = Vector2(screen_size.x * 0.14, screen_size.y * 0.42)
+	lbl.visible_ratio = 0.0
+	add_child(lbl)
+	var pill: Label = null
+	if not mise.strip_edges().is_empty():
+		pill = Label.new()
+		pill.text = mise
+		pill.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pill.add_theme_color_override("font_color", col)
+		pill.add_theme_font_size_override("font_size", 20)
+		pill.size = Vector2(screen_size.x, 28.0)
+		pill.position = Vector2(0.0, screen_size.y * 0.42 + 104.0)
+		pill.modulate.a = 0.0
+		add_child(pill)
+	if MerlinVisual.reduced_motion:
+		lbl.visible_ratio = 1.0
+		if pill != null:
+			pill.modulate.a = 0.90
+		await get_tree().create_timer(GESTE_TENUE * 2.0).timeout
+		return
+	MerlinAudio.play_sfx("quill_tick", 0.70)
+	var frappe: float = GESTE_ECRITURE * m
+	var tw: Tween = create_tween()
+	tw.tween_property(lbl, "visible_ratio", 1.0, frappe).set_trans(Tween.TRANS_LINEAR)
+	if pill != null:
+		tw.parallel().tween_property(pill, "modulate:a", 0.90, frappe * 0.40).set_delay(frappe * 0.60)
+	# Meme garde que p3_glow/p4_fade (N4-BUG) : awaiter un tween DEJA fini ne rend jamais la main.
+	if tw.is_running():
+		await tw.finished
+	if not is_inside_tree():
+		return
+	await get_tree().create_timer(GESTE_TENUE * m).timeout
 
 
 # Prédicat injecté « la prose est prête » — Callable invalide = prêt (pas de sustain), comme
