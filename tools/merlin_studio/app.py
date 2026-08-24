@@ -72,10 +72,34 @@ def _ticket_ok(t: str | None) -> bool:
     return exp is not None and exp >= now
 
 
+# ── PORTE D'APPAREIL (2026-08-24) — un lien privé au lieu du mot de passe ──
+# Le Studio demandait Basic auth PUIS un code TOTP. Cliquer une fois sur
+# /entrer?cle=<STUDIO_MAGIC> pose des cookies SIGNÉS : cet appareil est reconnu
+# 180 jours. Les cookies portent une signature HMAC (même mécanisme que le MFA) :
+# ils ne se forgent pas. Aucun autre appareil n'y gagne quoi que ce soit.
+def _cle_magique() -> str:
+    return os.environ.get("STUDIO_MAGIC", "")
+
+
+def _cle_de_signature() -> str:
+    # Celle du MFA si elle existe, sinon le mot de passe du Studio (toujours
+    # présent dès qu'on est derrière un tunnel).
+    return _mfa_conf().get("MFA_SIGN_KEY", "") or os.environ.get("STUDIO_TOKEN", "")
+
+
+def _cookie_appareil_ok(tok: str | None) -> bool:
+    key = _cle_de_signature()
+    return bool(key) and _mfa_token_ok(key, tok)
+
+
 def _auth_ok() -> bool:
     token = os.environ.get("STUDIO_TOKEN", "")
     if not token:
         return True  # local mode (loopback), no auth
+    # Appareil reconnu : le cookie signé vaut le mot de passe. Rien n'est retiré,
+    # Basic auth reste une voie valide (et la seule pour un appareil inconnu).
+    if _cookie_appareil_ok(request.cookies.get("merlin_pass")):
+        return True
     auth = request.authorization
     if not auth or auth.password is None:
         return False
@@ -190,6 +214,10 @@ def build_app() -> Flask:
     def _gate():
         if request.path == "/healthz":
             return None
+        # La porte d'appareil doit être atteignable SANS mot de passe : c'est
+        # elle qui en dispense. Elle vérifie sa propre clé, longue et privée.
+        if request.path == "/entrer":
+            return None
         # Handshake noVNC : un ticket frais (délivré derrière Basic auth) vaut auth.
         if request.path == "/websockify" and _ticket_ok(request.args.get("ticket")):
             return None
@@ -228,6 +256,24 @@ def build_app() -> Flask:
         # (on redémarre à chaque déploiement). Un service worker périmé ne peut
         # pas servir une URL qu'il n'a jamais vue — leçon du bug « Décider vide ».
         return render_template("index.html", asset_v=_ASSET_V)
+
+    # LA PORTE D'APPAREIL : un lien privé, cliqué UNE fois, et ce navigateur
+    # entre sans rien taper pendant 180 jours. Clé fausse ou absente : 403.
+    @app.route("/entrer")
+    def entrer():
+        magique = _cle_magique()
+        cle = request.args.get("cle", "")
+        if not magique or not hmac.compare_digest(cle, magique):
+            return Response("Lien invalide.\n", 403)
+        key = _cle_de_signature()
+        if not key:
+            return Response("Studio sans clé de signature.\n", 500)
+        jeton = _mfa_token(key, 180)
+        resp = Response("", 302, {"Location": "/"})
+        for nom in ("merlin_pass", "merlin_mfa"):
+            resp.set_cookie(nom, jeton, max_age=180 * 86400,
+                            httponly=True, secure=True, samesite="Lax")
+        return resp
 
     @app.route("/healthz")
     def healthz():
