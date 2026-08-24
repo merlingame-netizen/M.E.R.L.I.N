@@ -851,6 +851,7 @@ var _reso_state: String = "idle"   # idle / running / ready
 var _reso_epoch: int = 0
 var _reso_retry_sig: String = ""  # v35.5 — signature déjà re-essayée après une gen VIDE (1 seul re-essai)
 var _reso_revous_sig: String = ""  # v40 — signature déjà re-essayée (première phrase sans « Vous »)
+var _reso_reserve: Dictionary = {}  # v43 — prose valide mise de côté avant un re-essai
 # N4-BUG #2a (2026-07-11) : prefetch demandé AVANT que le modèle soit chargé (cold start) :
 # mémorisé ici puis RELANCÉ à model_ready. Sans ça, prefetch_resolution sortait en silence,
 # _reso_state restait « idle » pour toujours et le sustain de fusion attendait son cap ~12 s
@@ -2499,6 +2500,10 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		_t0 = _t0.trim_prefix("*").strip_edges()
 		if not _t0.begins_with("Vous") and _reso_revous_sig != sig and mn.is_ready():
 			_reso_revous_sig = sig
+			# v43 — ON NE JETTE JAMAIS UN TEXTE VALIDE : celui-ci n'est qu'imparfait. Il
+			# part en réserve et ressortira si la seconde écriture échoue (p59 : un raté
+			# est devenu un banc uniquement parce que la première version avait disparu).
+			_reso_reserve[sig] = prose
 			_reso_state = "idle"
 			print("[MerlinScenario] issue — re-essai (première phrase sans « Vous ») pour %s" % sig)
 			prefetch_resolution(situation, played_cards, res)
@@ -2509,6 +2514,11 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		# v38 — chaînage lookahead retiré (voir merlin_game) ; last_issue reste nourri
 		# pour les ponts d'action et le fil du récit.
 		_run_thread["last_issue"] = prose.strip_edges().substr(0, 420)
+	elif _reso_reserve.has(sig):
+		# v43 — la seconde écriture n'a rien donné : la réserve vaut mille fois le banc.
+		_reso_cache[sig] = _reso_reserve[sig]
+		_reso_state = "ready"
+		print("[MerlinScenario] issue — re-essai vide : la réserve est servie pour %s" % sig)
 	else:
 		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
 		print("[MerlinScenario] issue — génération VIDE pour %s" % sig)

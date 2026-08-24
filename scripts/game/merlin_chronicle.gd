@@ -27,11 +27,14 @@ const DEFAULTS: Dictionary = {
 	# jamais relancé seul ; rejouable via Options (tuto_rearmed). Additif : les cfg antérieurs
 	# lisent les défauts (aucune migration).
 	"tuto_proposed": false, "tuto_done": false, "tuto_rearmed": false,
+	# v43 — LE CARNET : les trois dernières traversées, en JSON. C'est la SEULE
+	# source d'un passé pour le récit (bible §6 R166 : « échos des anciens runs »).
+	"carnet": "",
 }
 
 
 # Enregistre la fin d'un run : +1 run, +1 au palmarès de l'issue, mémorise la dernière aventure + son PNJ.
-static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "", voie: String = "") -> void:
+static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "", voie: String = "", entree: Dictionary = {}) -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(PREFS_PATH)  # préserve les autres sections (audio/a11y)
 	cfg.set_value(SECTION, "runs_played", int(cfg.get_value(SECTION, "runs_played", 0)) + 1)
@@ -54,7 +57,27 @@ static func record_end(end_type: String, scenario_title: String, integrite: int,
 	if voie != "":
 		cfg.set_value(SECTION, "last_voie", voie)
 	cfg.set_value(SECTION, "last_run_iso", Time.get_datetime_string_from_system())
+	# v43 — LE CARNET : cette traversée rejoint les deux précédentes. Trois suffisent :
+	# le récit doit pouvoir s'y référer, pas réciter une biographie.
+	if not entree.is_empty():
+		var pages: Array = carnet_lire()
+		pages.push_front(entree)
+		while pages.size() > 3:
+			pages.pop_back()
+		cfg.set_value(SECTION, "carnet", JSON.stringify(pages))
 	cfg.save(PREFS_PATH)
+
+
+# v43 — Le carnet, relu par le récit. Jamais d'exception : un carnet illisible
+# vaut un carnet vide, et un carnet vide veut dire « première venue ».
+static func carnet_lire() -> Array:
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(PREFS_PATH)
+	var brut: String = str(cfg.get_value(SECTION, "carnet", ""))
+	if brut.strip_edges() == "":
+		return []
+	var v: Variant = JSON.parse_string(brut)
+	return (v as Array) if v is Array else []
 
 
 # Horodate la VISITE courante (« la dernière fois qu'il nous a vus »). À appeler APRÈS read().

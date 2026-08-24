@@ -2908,7 +2908,15 @@ func _on_run_ended(_end_type: String) -> void:
 	var voie_nom: String = ""
 	if run.has_method("destiny_snapshot"):
 		voie_nom = str(run.destiny_snapshot().get("nom", ""))  # P2 (chantier 4a) : Voie pour le palmarès CHRONIQUES
-	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier, voie_nom)
+	# v43 — LA PAGE DU CARNET : ce que le Voyageur a VRAIMENT vécu ici. C'est la seule
+	# matière dont le récit disposera pour évoquer un passé — court, factuel, vérifiable.
+	var page: Dictionary = {
+		"t": title, "f": _end_type,
+		"i": int(run.get("integrite")), "c": int(run.get("corruption")),
+		"p": (run.get("pnj_rencontres") as Array).slice(0, 3) if run.get("pnj_rencontres") is Array else [],
+		"a": (run.get("faits_marquants") as Array).slice(0, 3) if run.get("faits_marquants") is Array else [],
+	}
+	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier, voie_nom, page)
 	# Audit design P1 : une run TERMINÉE n'a pas de save de reprise — un save ici créait une
 	# « save zombie » (Continuer rechargerait une run finie) si on quittait avant MerlinEnd.
 	run.clear_save()

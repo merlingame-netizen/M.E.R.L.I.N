@@ -217,7 +217,7 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	# scénarios sont trop courtes et peu inspirées »). Trois phrases, trois rôles : l'action à
 	# accomplir, qui s'y oppose, ce qu'on risque. C'est ce trio qui rend une carte JOUABLE en
 	# profondeur — une carte qui ne nomme pas d'opposition n'annonce aucun jeu.
-	var usr: String = bloc + LORE_CANON + REGLE_PASSE + "\nUne quete ne REPARE JAMAIS une faute du Voyageur et ne lui RECLAME JAMAIS une dette : elle lui propose d'aller CHERCHER, APAISER ou AFFRONTER quelque chose qui existait AVANT lui et SANS lui." \
+	var usr: String = bloc + LORE_CANON + bloc_carnet() + "\nUne quete ne REPARE JAMAIS une faute du Voyageur et ne lui RECLAME JAMAIS une dette : elle lui propose d'aller CHERCHER, APAISER ou AFFRONTER quelque chose qui existait AVANT lui et SANS lui." \
 		+ "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = 2 a 3 phrases, imperatif tutoye SANS dire 'Voyageur' : d'abord l'ACTION concrete a accomplir, puis QUI ou QUOI s'y oppose (un etre, un serment, une force nommee), puis ce qui arrive SI TU ECHOUES. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
 	# La part variable EN AVANT-DERNIER, puis un RAPPEL DE FORMAT en toute fin.
 	#
@@ -255,7 +255,7 @@ static func intro(voice: String, scenario: Dictionary, mem: String, lieu: String
 	# courte »). Quatre choses à poser, dans l'ordre où un conteur les pose : le LIEU, l'ENJEU,
 	# QUI S'Y OPPOSE, ce que le Voyageur RISQUE. Une intro qui n'annonce pas d'opposition
 	# n'annonce aucun jeu.
-	var usr: String = LORE_CANON + REGLE_PASSE + "\nQuete proposee au Voyageur: \"%s\" -- %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 5 a 7 phrases la LEGENDE derriere cette quete a %s, dans cet ordre : (1) le LIEU et ce qu'on en raconte, (2) CE QUI EST EN JEU -- nomme clairement ce qui est cherche, menace ou promis, (3) QUI ou QUOI s'y OPPOSE -- un etre, un serment, une force, nomme-le, (4) ce que le Voyageur RISQUE s'il echoue. Le mystere reste dans l'AMBIANCE, jamais dans la comprehension du but. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
+	var usr: String = LORE_CANON + bloc_carnet() + "\nQuete proposee au Voyageur: \"%s\" -- %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 5 a 7 phrases la LEGENDE derriere cette quete a %s, dans cet ordre : (1) le LIEU et ce qu'on en raconte, (2) CE QUI EST EN JEU -- nomme clairement ce qui est cherche, menace ou promis, (3) QUI ou QUOI s'y OPPOSE -- un etre, un serment, une force, nomme-le, (4) ce que le Voyageur RISQUE s'il echoue. Le mystere reste dans l'AMBIANCE, jamais dans la comprehension du but. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line, lieu]
 	# 260 et non 220 : au laboratoire, la légende de 187 tokens s'est fait couper en pleine
 	# phrase (« sans la clé ») — le budget doit laisser au modèle la place de refermer.
 	return {"system": voice, "user": usr, "opts": {"creative": true, "max_tokens": 260,
@@ -295,6 +295,43 @@ const REGLE_PASSE: String = "\nLE VOYAGEUR N'A AUCUN PASSE ICI : il n'a jamais r
 const REGLE_PASSE_BREVE: String = "\nLE VOYAGEUR N'A AUCUN PASSE ICI : il n'a jamais rien jure, trahi ni laisse derriere lui, et PERSONNE ne le reconnait. Tout nait maintenant."
 
 const LORE_CANON: String = "\nCANON DE BROCELIANDE (le seul monde autorise) : une foret revee qui boucle sur elle-meme ; brume, dolmens, houx, fougeres, sources, pierres levees, huttes de chaume. FIGURES NOMMEES qui peuvent apparaitre : le Choeur des Druides (deux voix qui se repetent et se contredisent), l'Ankou (le passeur, pose, sans malice ni pitie), la Lavandiere de Nuit (elle lave des linceuls et reclame de l'aide, jamais sans prix), les korrigans (petit peuple moqueur, cornes rouges), Kado le Cordier (humain perdu, sans faction), le Chevalier a l'armure ternie (il rejoue sa defaite), l'Enfant (innocent perdu qu'on protege), le colporteur (il vend contre des gwenneg), Arthur (rare, paranoiaque). N'EXISTENT PAS : les dieux, les demons, les anges, la magie a incantations, les chevaliers de la Table Ronde autres qu'Arthur, les royaumes lointains, toute epoque autre que celtique, tout objet moderne. Jamais d'anglicisme, jamais le 4e mur."
+
+# v43 — LE CARNET, DIT AU MODELE. Le Voyageur SE SOUVIENT (décision Maxime), mais
+# uniquement de ces pages : elles sont écrites par le code à la fin de chaque partie,
+# jamais par le modèle. Carnet vide = première venue, et l'interdiction reprend.
+static func bloc_carnet() -> String:
+	var pages: Array = MerlinChronicle.carnet_lire()
+	if pages.is_empty():
+		return REGLE_PASSE
+	var fins: Dictionary = {"accomplissement": "menee au bout", "mort": "finie dans la mort", "corrompu": "finie dans la corruption"}
+	var lignes: PackedStringArray = []
+	for e in pages:
+		if not (e is Dictionary):
+			continue
+		var d: Dictionary = e
+		var bout: String = "- « %s », %s (integrite %d, corruption %d)" % [
+			str(d.get("t", "une quete")), str(fins.get(str(d.get("f", "")), "laissee en chemin")),
+			int(d.get("i", 0)), int(d.get("c", 0))]
+		var pnj: Array = (d.get("p", []) as Array) if d.get("p") is Array else []
+		if not pnj.is_empty():
+			bout += " ; croises : " + ", ".join(PackedStringArray(pnj))
+		var faits: Array = (d.get("a", []) as Array) if d.get("a") is Array else []
+		if not faits.is_empty():
+			bout += " ; " + ", ".join(PackedStringArray(faits))
+		lignes.append(bout)
+	if lignes.is_empty():
+		return REGLE_PASSE
+	return "\nCE QUE LE VOYAGEUR A DEJA VECU ICI (seule source autorisee d'un passe ; TOUT autre souvenir, dette, faute ou serment est INTERDIT, et personne ne le reconnait au-dela de ces lignes) :\n" + "\n".join(lignes)
+
+
+# La même vérité, en une ligne : l'issue vit dans 2048 tokens (leçon v42.1).
+static func _regle_passe_issue() -> String:
+	var pages: Array = MerlinChronicle.carnet_lire()
+	if pages.is_empty():
+		return REGLE_PASSE_BREVE
+	var d: Dictionary = (pages[0] as Dictionary) if pages[0] is Dictionary else {}
+	return "\nLe Voyageur a deja traverse ces bois une fois (« %s »). RIEN d'autre de son passe n'existe : aucun autre souvenir, aucune dette, aucun serment." % str(d.get("t", "une quete"))
+
 
 static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		req_tags: Array, precedent: String, issue_precedente: String,
@@ -455,7 +492,7 @@ static func _tete_issue_interne(richesse: int) -> String:
 		cible_phrases = "2 a 3 phrases (3 a 4 si le moment est un Climax ou une reussite eclatante)"
 	elif richesse >= 2:
 		cible_phrases = "7 a 9 phrases, amples et sensorielles (jusqu'a 10 si le moment est un Climax)"
-	return ex + REGLE_PASSE_BREVE + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. Le VERBE DU GESTE t'est donne en fin de prompt : ta premiere phrase l'ACCOMPLIT LITTERALEMENT — PARLER = au moins une parole PRONONCEE ; COMBATTRE = un coup ou un affrontement REEL contre un etre nomme ; OBSERVER = un examen precis qui APPREND quelque chose ; REVELER = un cache rendu VISIBLE ou nomme ; AGIR = un geste physique precis sur un objet nomme. Une premiere phrase qui ne joue pas ce verbe est HORS-SUJET. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). TON DIRECT de conteur de jeu de cartes : phrases COURTES et DECLARATIVES, chaque phrase enonce un FAIT (quelqu'un agit, le monde repond). AUCUNE image, AUCUNE metaphore, AUCUNE comparaison ('comme si', 'tel un', 'pareil a') — nulle part, Climax compris : du CONCRET sec, l'ambiance vient des FAITS. Phrases LIEES et CONCRETES. SUJETS INTERDITS : une abstraction ne fait JAMAIS l'action — 'la sensation', 'une forme', 'la presence', 'le silence', 'l'air', 'la brume' ne sont jamais sujets d'un verbe d'action ; chaque phrase a pour sujet le Voyageur, un personnage, une creature ou un objet NOMME (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
+	return ex + _regle_passe_issue() + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est l'ACTION du heros, ECRITE ENTRE [i] et [/i], commencant par « Vous », qui FOND les deux forces en UN geste concret du bon registre. (Sens des registres : PAROLE = vous parlez/convainquez/rusez/charmez ; FORCE = vous agissez physiquement, poussez/tenez bon ; PERCEPTION = vous voyez/ressentez/parlez aux choses ; PROTECTION = vous resistez/protegez ; OMBRE = vous appelez une force trouble a un prix.) Si c'est PAROLE, l'action est VERBALE, JAMAIS 'vous posez la main'. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. Le VERBE DU GESTE t'est donne en fin de prompt : ta premiere phrase l'ACCOMPLIT LITTERALEMENT — PARLER = au moins une parole PRONONCEE ; COMBATTRE = un coup ou un affrontement REEL contre un etre nomme ; OBSERVER = un examen precis qui APPREND quelque chose ; REVELER = un cache rendu VISIBLE ou nomme ; AGIR = un geste physique precis sur un objet nomme. Une premiere phrase qui ne joue pas ce verbe est HORS-SUJET. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence REPREND AU MOINS UN element NOMME de la situation (l'etre, l'objet ou le lieu precis) et le fait AGIR ou REAGIR -- c'est ce qui prouve que l'issue appartient a CETTE scene et a aucune autre. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). TON DIRECT de conteur de jeu de cartes : phrases COURTES et DECLARATIVES, chaque phrase enonce un FAIT (quelqu'un agit, le monde repond). AUCUNE image, AUCUNE metaphore, AUCUNE comparaison ('comme si', 'tel un', 'pareil a') — nulle part, Climax compris : du CONCRET sec, l'ambiance vient des FAITS. Phrases LIEES et CONCRETES. SUJETS INTERDITS : une abstraction ne fait JAMAIS l'action — 'la sensation', 'une forme', 'la presence', 'le silence', 'l'air', 'la brume' ne sont jamais sujets d'un verbe d'action ; chaque phrase a pour sujet le Voyageur, un personnage, une creature ou un objet NOMME (jamais 'le vide'/'le nom'). LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. Termine sur une phrase complete."
 	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
 	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
 	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.
