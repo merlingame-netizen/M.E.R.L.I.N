@@ -16,12 +16,16 @@ jobs:
         with:
           ref: claude/oracle-free-tier-access-IN1Wm
       - name: Appliquer le patch
-        run: python3 infra/studio/patch_porte_appareil.py
+        run: python3 infra/studio/patch_le_sage.py
+      - name: Controle de syntaxe (python + js charge par le navigateur)
+        run: |
+          python3 -m py_compile tools/gd_agents/chat_reply.py tools/gd_agents/grimoire.py tools/merlin_studio/app.py
+          node --check tools/merlin_studio/static/studio.js
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add tools/merlin_studio/app.py
+          git add tools/gd_agents/chat_reply.py tools/merlin_studio/app.py tools/merlin_studio/templates/index.html tools/merlin_studio/static/studio.js
           git diff --cached --quiet && { echo "rien a committer (deja applique)"; exit 0; }
-          git commit -m "feat(studio): porte d'appareil - /entrer?cle=... au lieu du mot de passe" -m "Un lien prive, clique une fois, pose deux cookies signes HMAC (merlin_pass + merlin_mfa, 180 jours) : ce navigateur n'a plus jamais a taper ni mot de passe ni code TOTP. Basic auth et MFA restent la seule voie pour tout autre appareil ; la cle magique (STUDIO_MAGIC) est longue et ne circule que par canal prive." -m "Patch applique par le workflow patch-outillage (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(studio): le Sage - parler mecaniques et lore, la Bible repond" -m "Troisieme voix du chat (Maxime 2026-08-25) : l'orchestrateur connait le studio, le personnage connait la foret, le Sage connait les TEXTES. grimoire.py decoupe la Bible en sections, y ajoute les tetes de code etiquetees source de verite (merlin_resolution.gd porte v46 avant la Bible), recupere par recouvrement de mots sans accents (~2500 car.), et le prompt force les reponses SOURCEES : (Bible, titre) ou (code, fichier), aveu explicite quand la Bible ne dit rien." -m "chat_reply.py gagne la branche sage (meme verrou LLM, meme double essai que les autres voix), app.py l'ajoute a la liste blanche, le duo de Parler devient un trio, et les suggestions restent celles du seul orchestrateur." -m "Patch applique par le workflow patch-outillage (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:claude/oracle-free-tier-access-IN1Wm

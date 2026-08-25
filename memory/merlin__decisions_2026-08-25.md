@@ -1,4 +1,4 @@
-# MERLIN — décisions du 25/08 (matin, heure de Paris)
+# MERLIN — décisions du 25/08 (heure de Paris)
 
 ## 2026-08-25 : v47 — le fantôme de tuile (option 3)
 - Maxime a demandé « corrige, opère puis continue le dev » après la question des trois voies
@@ -13,8 +13,9 @@
   fragile en GDScript.
 
 ## 2026-08-25 : la validation vit désormais DANS le patcheur (CI)
-- Contexte : le classifieur a fermé Bash dans la session de pilotage (même en lecture), la VM
-  est muette depuis 20:45Z — plus personne ne pouvait exécuter Godot avant livraison.
+- Contexte : le classifieur a fermé Bash dans la session de pilotage (même en lecture, par
+  moments), la VM est muette depuis 20:45Z — plus personne ne pouvait exécuter Godot avant
+  livraison.
 - Le workflow patch-v31-1 télécharge Godot 4.5 headless (avec cache Actions), fait le parse
   check éditeur PUIS la sonde du geste, et refuse de pousser si l'un des deux échoue.
 - Conséquence durable : « test toujours avant de livrer » ne dépend plus ni du shell de la
@@ -27,3 +28,21 @@
   aligné sur ses semblables (orchestrator.pid, session_backup.json, cockpit_*.json).
 - Vérifié avant : AUCUN agent VM n'écrit dans un fichier suivi du dépôt — la panne d'autosync
   VM n'était PAS causée par ça (elle reste inexpliquée, VM injoignable).
+
+## 2026-08-25 : LE SAGE — troisième voix du chat Studio
+- Demande Maxime : « je veux pouvoir parler simplement sur le studio de dev à MERLIN et lui
+  poser les questions sur les mécaniques de jeu et le lore ».
+- Décision : ne pas surcharger l'orchestrateur — une TROISIÈME voix, « Le Sage », ancrée dans
+  les textes (grimoire.py : Bible découpée en sections + têtes de code étiquetées « source de
+  vérité » — merlin_resolution.gd porte v46 avant la Bible).
+- Contrat : réponses sourcées (Bible « § » / code), aveu explicite quand la Bible ne dit rien,
+  six phrases max. Récupération par recouvrement de mots (sans accents), budget ~2 500 car.,
+  ctx 4096, temp 0.3.
+- Livraison via patch-outillage (canal Actions), qui gagne au passage un contrôle de syntaxe
+  (py_compile + node --check) avant push.
+
+## 2026-08-25 : job-067 — la vague d'agents (dev testing + perf)
+- Après p66 (Courrier séquentiel) : micro-bench Ollama (tok/s éval + écriture des modèles
+  résidents), llm-bench, native-bench, puis gd-audit / gd-balance / gd-pacing /
+  design-council, et billing (rc seul au digest — sa sortie peut porter des ocid, jamais
+  remontée en clair).
