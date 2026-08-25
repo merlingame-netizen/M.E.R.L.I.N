@@ -25,6 +25,19 @@ REPO="${MERLIN_REPO:-$HOME/workspace/M.E.R.L.I.N}"
 # un journal.
 sonner() { bash "$HERE/notify.sh" urgent "Outillage bloqué" "$1 — la VM ne recevra plus rien tant que ce n'est pas leve." >/dev/null 2>&1 || true; }
 
+# 2026-08-25, LA CAUSE DES 24 HEURES DE SILENCE. Le poste de pilotage pousse par l'API GitHub,
+# qui écrit les fichiers en mode 644 ; install-agents.sh les avait passés en 755 sur la VM.
+# Git voit ce seul écart de mode comme une modification locale et `git pull` REFUSE de tirer :
+#
+#   error: Your local changes to the following files would be overwritten by merge:
+#           infra/oracle/agents/a_courrier.sh
+#
+# Le garde-fou ci-dessous comparait déjà le CONTENU seul (-c core.fileMode=false), mais le pull
+# lui-même, non : il échouait donc à chaque passage, et son échec était avalé par `| tail -2`.
+# On grave le réglage DANS le dépôt : plus aucune commande git de cette machine ne verra les
+# bits d'exécution, y compris un `git pull` lancé à la main par Maxime.
+git -C "$REPO" config core.fileMode false 2>/dev/null || true
+
 REF="$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null)"
 [ -n "$REF" ] && [ "$REF" != "HEAD" ] || { echo "outillage en HEAD détachée — synchro refusée"; sonner "HEAD detachee"; exit 0; }
 
@@ -40,14 +53,8 @@ fi
 
 # Des modifs locales non commitées seraient écrasées par le pull : on préfère RENONCER et le
 # dire. Un agent qui détruit du travail humain pour « rester à jour » est pire que pas d'agent.
-#
-# `core.fileMode=false` n'est PAS une commodité : install-agents.sh fait `chmod +x` sur tous les
-# scripts d'agents, git enregistre le bit exécutable, et un script arrivé non exécutable depuis
-# GitHub apparaît donc modifié — sans une ligne de différence. Sans cette option, le premier
-# agent ajouté rendait la synchro définitivement bloquée, par sa propre installation. (Vécu ici
-# même : ce fichier s'est auto-condamné à sa première exécution.) On ne compare que le CONTENU.
-if ! git -C "$REPO" -c core.fileMode=false diff --quiet \
-		|| ! git -C "$REPO" -c core.fileMode=false diff --cached --quiet; then
+# (Le mode des fichiers ne compte pas : cf. core.fileMode posé plus haut.)
+if ! git -C "$REPO" diff --quiet || ! git -C "$REPO" diff --cached --quiet; then
     echo "modifs locales non commitées sur $REF — synchro refusée (rien n'est écrasé)"
     sonner "modifs locales non commitees"
     exit 1
@@ -60,13 +67,15 @@ exec /bin/bash -c '
 set -uo pipefail
 REPO="$1"; REF="$2"; HERE="$3"
 AVANT="$(git -C "$REPO" rev-parse HEAD)"
-git -C "$REPO" pull --ff-only origin "$REF" --quiet 2>&1 | tail -2
+ERR="$(git -C "$REPO" pull --ff-only origin "$REF" --quiet 2>&1 | tail -3)"
 NEW="$(git -C "$REPO" rev-parse --short HEAD)"
-# `| tail -2` avale le code de retour du pull : sans cette verification, un pull refuse
-# (commit local, ou fichier non suivi qui serait ecrase) laissait annoncer « mis a jour »
-# avec le sha PRECEDENT, et la panne restait invisible pour toujours.
+# `| tail` avale le code de retour du pull : sans cette verification, un pull refuse laissait
+# annoncer « mis a jour » avec le sha PRECEDENT, et la panne restait invisible pour toujours.
+# On imprime desormais AUSSI ce que git a dit : le 2026-08-25, ce message aurait nomme la
+# cause (ecart de mode 644/755) au lieu de nous couter vingt-quatre heures.
 if [ "$AVANT" = "$(git -C "$REPO" rev-parse HEAD)" ]; then
     echo "pull SANS EFFET — le depot n a pas bouge (reste a $NEW)"
+    [ -n "$ERR" ] && echo "git a dit : $ERR"
     bash "$HERE/notify.sh" urgent "Outillage bloque" "pull sans effet — la VM ne recevra plus rien tant que ce n est pas leve." >/dev/null 2>&1 || true
     exit 1
 fi
