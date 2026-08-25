@@ -4,6 +4,11 @@
 # est muette : plus personne ne pouvait executer Godot avant livraison. Le patcheur le fait donc
 # lui-meme — parse check editeur puis sonde du geste — et REFUSE de pousser si l'un des deux
 # echoue. Un patch casse ne peut plus atteindre la branche du jeu.
+#
+# GODOT 4.4.1, PAS 4.5 : le premier run (32824457718) a pendu 2 h 27 en parse check avec
+# 4.5-stable, sans conclure. Tout l'ecosysteme du projet tourne en 4.4.1 (la VM, la box de
+# pilotage) et c'est avec 4.4.1 que le pass editeur est PROUVE en moins de 400 s sur ce depot.
+# La CI valide donc avec le meme moteur que partout ailleurs — la parite avant la nouveaute.
 name: patch-v31-1
 on:
   push:
@@ -14,9 +19,7 @@ permissions:
 jobs:
   patch:
     runs-on: ubuntu-latest
-    # L'import a froid d'un projet Godot peut etre long, mais pas infini : sans borne, un
-    # editeur qui pend mangerait six heures de minutes Actions (observe : Validation 1 a
-    # 25 min sur le premier run, import complet du projet). 50 min = large, et fini.
+    # Sans borne, un editeur qui pend mange six heures de minutes Actions (vecu).
     timeout-minutes: 50
     steps:
       - name: Jeu (feat/practices-docs)
@@ -35,22 +38,28 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/godot-bin
-          key: godot-4.5-stable-linux-x86_64
+          key: godot-4.4.1-stable-linux-x86_64
       - name: Godot (telechargement si cache froid)
         if: steps.godot-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/godot-bin && cd ~/godot-bin
-          curl -fsSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.5-stable/Godot_v4.5-stable_linux.x86_64.zip
+          curl -fsSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip
           unzip -q godot.zip
-          mv Godot_v4.5-stable_linux.x86_64 godot
+          mv Godot_v4.4.1-stable_linux.x86_64 godot
           chmod +x godot
       - name: Validation 1 — parse check editeur
         run: |
-          timeout 2400 ~/godot-bin/godot --headless --editor --quit --path . 2>&1 | tee /tmp/parse.log || true
+          ~/godot-bin/godot --version
+          timeout 1800 ~/godot-bin/godot --headless --editor --quit --path . 2>&1 | tee /tmp/parse.log || true
           # Bruit tolere (absent du runner, sans rapport avec le patch) : gdextension ARM,
           # traductions non importees, police VT323. Toute erreur de SCRIPT est un refus.
           if grep -aE "SCRIPT ERROR|Compile Error" /tmp/parse.log; then
             echo "::error::le patch introduit des erreurs de script — rien n'est pousse"
+            exit 1
+          fi
+          # Un log de parse VIDE (timeout sans une ligne utile) n'est pas un succes.
+          if [ ! -s /tmp/parse.log ]; then
+            echo "::error::parse check muet — rien n'est pousse"
             exit 1
           fi
       - name: Validation 2 — sonde du geste (l'animation tourne vraiment)
@@ -67,5 +76,5 @@ jobs:
           git config user.email "noreply@anthropic.com"
           git add scripts/game/merlin_fx.gd scripts/game/merlin_game.gd tools/probe_fx_geste.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "feat(jeu): v47 - le fantome de tuile : les deux ensembles fusionnent enfin" -m "Maxime : une animation de fusion qui fusionne LES DEUX ensembles. Une seule carte volait : le trait etait aspire, l'action restait une tuile permanente qui pulse sur place (v11-W2). v47 fait voler une COPIE - un node neuf (doctrine ghost v10.13.1, jamais un reparent), detachee de la tuile, qui converge avec le trait, fusionne et eclate avec lui. La tuile reelle ne bouge pas d'un pixel : la regle v11-W2 tient, et la fusion se voit enfin." -m "La sonde du geste gagne un 4e controle (le fantome apparait dans le layer et porte le verbe joue), et le patcheur valide desormais lui-meme : parse check editeur + sonde complete sur un vrai Godot 4.5 headless AVANT le push - un patch casse ne peut plus atteindre cette branche." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v47 - le fantome de tuile : les deux ensembles fusionnent enfin" -m "Maxime : une animation de fusion qui fusionne LES DEUX ensembles. Une seule carte volait : le trait etait aspire, l'action restait une tuile permanente qui pulse sur place (v11-W2). v47 fait voler une COPIE - un node neuf (doctrine ghost v10.13.1, jamais un reparent), detachee de la tuile, qui converge avec le trait, fusionne et eclate avec lui. La tuile reelle ne bouge pas d'un pixel : la regle v11-W2 tient, et la fusion se voit enfin." -m "La sonde du geste gagne un 4e controle (le fantome apparait dans le layer et porte le verbe joue), et le patcheur valide desormais lui-meme : parse check editeur + sonde complete sur un vrai Godot 4.4.1 headless AVANT le push - un patch casse ne peut plus atteindre cette branche." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs

@@ -1,0 +1,9 @@
+Re-declenchement du patcheur du jeu pour v47 (2026-08-25).
+
+Run 1 (32824457718) : pendu 2 h 27 en Validation 1 avec Godot 4.5-stable, sans conclure ;
+annulation refusee au token (403), il mourra au plafond des 6 h sans rien pousser. La CI
+passe a Godot 4.4.1 (la parite : VM et box de pilotage tournent en 4.4.1, pass editeur
+prouve < 400 s sur ce depot), avec timeout-minutes: 50 et timeout 1800 sur le parse check.
+
+Ce fichier declenche le workflow (paths: infra/patches/**) sans toucher au patch v47
+lui-meme, deja pret et deja eprouve fichier par fichier.
