@@ -403,6 +403,10 @@ tools/asset-forge/
 tools/autodev/claude-agents-monitor/
 tools/autodev/status/portail_badge.json
 tools/autodev/status/session_backup.json
+# Journal de battements du veilleur autodev : le hook de demarrage y ecrit une ligne a CHAQUE
+# session. Suivi, il rendait le clone de la session cloud sale en permanence — or un clone sale
+# fait REFUSER a_tools_autosync, et l'outillage est le seul canal vers la VM.
+tools/autodev/status/watchdog.txt
 tools/autodev/vscode-monitor-v4/.vscodeignore
 tools/autodev/vscode-monitor-v4/README.md
 tools/autodev/vscode-monitor-v4/neural-renderer.js
