@@ -110,8 +110,8 @@
    "label": "Professeur du modèle",
    "schedule": "20 1,9,15,21 * * *",
    "cmd": "a_gd_content.sh",
-   "enabled": true,
-   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN (le jeu génère ses scénarios 100 % en direct — ces cartes ne sont pas du contenu de jeu). Quatre fois par jour."
+   "enabled": false,
+   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN (le jeu génère ses scénarios 100 % en direct — ces cartes ne sont pas du contenu de jeu). Quatre fois par jour. [PAUSE 2026-08-25 : entraine le futur modele sur un canon PERIME (dieux celtiques interdits par le jeu, format a branches d'avant le pivot v11). Le laisser tourner graverait le generique DANS le modele — l'inverse de l'empreinte visee (v48). A reactiver quand data/ai/lore_canon.json est refait, aligne sur v48 + format R166.]"
   },
   {
    "id": "gd-balance",
@@ -134,8 +134,8 @@
    "label": "Jeu d'entraînement (nuit)",
    "schedule": "10 0-6 * * *",
    "cmd": "a_corpus_night.sh",
-   "enabled": true,
-   "desc": "Produit en masse des exemples pour le fine-tune merlin-e4b, filtrés par le validateur. Ce n'est PAS du contenu de jeu : le jeu génère ses scénarios en direct."
+   "enabled": false,
+   "desc": "Produit en masse des exemples pour le fine-tune merlin-e4b, filtrés par le validateur. Ce n'est PAS du contenu de jeu : le jeu génère ses scénarios en direct. [PAUSE 2026-08-25 : entraine le futur modele sur un canon PERIME (dieux celtiques interdits par le jeu, format a branches d'avant le pivot v11). Le laisser tourner graverait le generique DANS le modele — l'inverse de l'empreinte visee (v48). A reactiver quand data/ai/lore_canon.json est refait, aligne sur v48 + format R166.]"
   },
   {
    "id": "playtest-bot",
