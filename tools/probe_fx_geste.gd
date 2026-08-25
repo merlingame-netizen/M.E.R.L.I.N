@@ -21,6 +21,7 @@ var _t0: int = 0
 var _fautes: Array = []
 var _reduit_vue: bool = false
 var _reduit_ratio_min: float = 2.0
+var _fantome_texte: String = ""
 
 
 func _ready() -> void:
@@ -70,6 +71,7 @@ func _go() -> void:
 
 	_verifier_ligne_meca(par_verbe, par_id)
 	await _verifier_mouvement_reduit(par_verbe, par_id)
+	await _verifier_fantome(par_verbe, par_id)
 
 	if _fautes.is_empty():
 		print("SONDE GESTE : OK")
@@ -141,6 +143,44 @@ func _suivre_reduit(fx: MerlinFx, phrase: String) -> void:
 			if n is Label and (n as Label).text == phrase:
 				_reduit_vue = true
 				_reduit_ratio_min = minf(_reduit_ratio_min, (n as Label).visible_ratio)
+		await get_tree().process_frame
+
+
+# v47 — LE FANTOME DE TUILE : quand la tuile d'action est passee a play(), une copie doit
+# apparaitre dans le layer (node « FantomeTuile ») et porter le VERBE joue. Un faux Control
+# tient lieu de tuile : la sonde n'a pas de HUD.
+func _verifier_fantome(par_verbe: Dictionary, par_id: Dictionary) -> void:
+	print("--- fantome de tuile ---")
+	var faux: Control = Control.new()
+	faux.size = Vector2(260.0, 116.0)
+	faux.position = Vector2(40.0, 500.0)
+	add_child(faux)
+	var combo: Array = [par_verbe["OBSERVER"], par_id["regard_percant"]]
+	var res: Dictionary = MerlinResolution.resolve(["Sens"], combo, [], 8, [], 2, 0, 0, "Exploration", 0)
+	res["meca_verb"] = "OBSERVER"
+	_fantome_texte = ""
+	var toujours_pret: Callable = func() -> bool: return true
+	var fx: MerlinFx = MerlinFx.play(self, res, combo, [], toujours_pret, Callable(), faux)
+	_suivre_fantome(fx)
+	await fx.run()
+	faux.queue_free()
+	if _fantome_texte == "":
+		_fautes.append("fantome : jamais apparu dans le layer")
+	elif _fantome_texte != "OBSERVER":
+		_fautes.append("fantome : porte « %s » au lieu du verbe joue" % _fantome_texte)
+	else:
+		print("  fantome vu, verbe « %s » — OK" % _fantome_texte)
+
+
+# Les compteurs sont des MEMBRES (jamais des locales fermees dans une lambda — capture par
+# valeur). Suit le node du fantome tant que le layer vit.
+func _suivre_fantome(fx: MerlinFx) -> void:
+	while is_instance_valid(fx) and fx.is_inside_tree():
+		var f: Node = fx.get_node_or_null("FantomeTuile")
+		if f != null:
+			for c in f.get_children():
+				if c is Label:
+					_fantome_texte = (c as Label).text
 		await get_tree().process_frame
 
 

@@ -83,6 +83,10 @@ var _played: Array = []
 var _card_views: Array = []   # MerlinCardView encore parentées chez l'appelant (reparentées dans run())
 var _ready_pred: Callable     # prédicat « la prose LLM est prête » (remplace /root/MerlinScenario)
 var _verdict_cb: Callable = Callable()  # N4-P1 (chantier 2b) : stinger de degré, joué PAR le dé au halo
+# v47 (Maxime 2026-08-24) — la TUILE D'ACTION d'origine. Elle ne vole JAMAIS (v11-W2 : tuile
+# permanente, elle pulse sur place) : si elle est fournie, une COPIE — un node NEUF, doctrine
+# ghost v10.13.1, jamais un reparent — se detache d'elle et converge avec le trait.
+var _tuile_origine: Control = null
 
 
 # Crée le layer de fusion, le configure plein écran et l'ajoute au host. NE lance PAS l'animation :
@@ -90,13 +94,14 @@ var _verdict_cb: Callable = Callable()  # N4-P1 (chantier 2b) : stinger de degr�
 # N4-P1 : `verdict` (optionnel) = Callable jouée à l'instant du halo du d20 (séquence pose → pause
 # → verdict, chantier 2b). Callable() invalide = aucun stinger déclenché par le dé (ex. debug F12).
 static func play(host: Control, res: Dictionary, played: Array, card_views: Array, ready: Callable,
-		verdict: Callable = Callable()) -> MerlinFx:
+		verdict: Callable = Callable(), tuile: Control = null) -> MerlinFx:
 	var fx: MerlinFx = MerlinFx.new()
 	fx._res = res
 	fx._played = played
 	fx._card_views = card_views
 	fx._ready_pred = ready
 	fx._verdict_cb = verdict
+	fx._tuile_origine = tuile
 	# Layer overlay au-dessus du plateau, plein écran. Absorbe les clics pendant la fusion.
 	fx.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fx.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -160,6 +165,36 @@ func run() -> void:
 		cv.position = orig
 		cv.z_index = 100 + i
 		cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# v47 — LE FANTOME DE TUILE : « une animation qui fusionne les deux ensembles » (Maxime).
+	# La tuile d'action reste a sa place et pulse (v11-W2) ; sa COPIE — un node neuf, jamais
+	# un reparent (doctrine ghost v10.13.1) — se detache et converge avec le trait.
+	if _tuile_origine != null and is_instance_valid(_tuile_origine) and _tuile_origine.is_inside_tree():
+		var fantome: Panel = Panel.new()
+		fantome.name = "FantomeTuile"
+		fantome.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		fantome.size = _tuile_origine.size
+		fantome.pivot_offset = _tuile_origine.size / 2.0
+		fantome.z_index = 99
+		var sb_f: StyleBoxFlat = StyleBoxFlat.new()
+		sb_f.bg_color = MerlinVisual.CREAM
+		sb_f.set_corner_radius_all(8)
+		sb_f.set_border_width_all(3)
+		sb_f.border_color = MerlinVisual.GOLD
+		fantome.add_theme_stylebox_override("panel", sb_f)
+		var verbe_lbl: Label = Label.new()
+		verbe_lbl.text = str(_res.get("meca_verb", ""))
+		verbe_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		verbe_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		verbe_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		verbe_lbl.add_theme_color_override("font_color", MerlinVisual.INK)
+		verbe_lbl.add_theme_font_size_override("font_size", 30)
+		verbe_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		fantome.add_child(verbe_lbl)
+		add_child(fantome)
+		fantome.position = _tuile_origine.global_position
+		# En TETE du rang : l'ACTION d'abord, le TRAIT ensuite — l'ordre du combo.
+		card_views.insert(0, fantome)
 
 	# === Phase 1 — Rassemblement === v11-W1 : gather+fuse FUSIONNÉS (spec panel — l'enchaînement en
 	# 3 temps « punissait » chaque geste par l'attente). Les cartes convergent DIRECTEMENT vers la pose

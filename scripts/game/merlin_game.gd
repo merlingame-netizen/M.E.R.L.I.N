@@ -945,12 +945,16 @@ func _on_resolve() -> void:
 	# N4-P1 (chantier 2b) : le stinger de degré (_play_seal_audio) est déclenché PAR le d20 à
 	# l'instant du halo (pose → pause 0,35 s → verdict), plus jamais avant. Sans dé sur ce beat,
 	# _show_resolution garde le stinger (repli inchangé).
-	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, func() -> bool:
+	# v47 : les deux callables sont hisses en variables — une lambda multiligne suivie d'un
+	# autre argument est un terrain de parse fragile, et la TUILE passe desormais derriere
+	# elles : sa copie-fantome vole dans la fusion, la tuile reelle continue de pulser sur place.
+	var fx_pret: Callable = func() -> bool:
 		return not wait_worth or sc.is_resolution_ready(played_cards, res) \
-			or not sc.is_resolution_incoming(played_cards, res),
-		func() -> void:
-			if is_instance_valid(self):  # review P1 HIGH-1 : le dé (hébergé hors layer) peut survivre à la scène
-				_play_seal_audio(deg))
+			or not sc.is_resolution_incoming(played_cards, res)
+	var fx_verdict: Callable = func() -> void:
+		if is_instance_valid(self):  # review P1 HIGH-1 : le dé (hébergé hors layer) peut survivre à la scène
+			_play_seal_audio(deg)
+	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, fx_pret, fx_verdict, tile)
 	await fx.run()
 	if tile != null and is_instance_valid(tile):
 		tile.fusion_pulse(false)
