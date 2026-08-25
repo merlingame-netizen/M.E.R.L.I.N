@@ -1,0 +1,8 @@
+Re-declenchement 2 du patcheur outillage (2026-08-25).
+
+Run 1 (32825776528) : emojis astraux en \uXXXX -> surrogates inencodables. Corrige.
+Run 2 (32825993476) : patch applique, py_compile OK, mais node --check lisait studio.js
+(module ES) en CommonJS. Le controle copie desormais en .mjs avant de verifier.
+
+Ce fichier ne sert qu'a declencher le workflow (paths: infra/studio/**) : le push
+d'un correctif du workflow seul ne le declenche pas.

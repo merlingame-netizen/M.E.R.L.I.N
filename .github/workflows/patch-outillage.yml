@@ -20,7 +20,10 @@ jobs:
       - name: Controle de syntaxe (python + js charge par le navigateur)
         run: |
           python3 -m py_compile tools/gd_agents/chat_reply.py tools/gd_agents/grimoire.py tools/merlin_studio/app.py
-          node --check tools/merlin_studio/static/studio.js
+          # studio.js est un module ES (import game.js en tete) : node --check le lit
+          # en CommonJS et refuse l'import. La copie .mjs force le bon mode de parse.
+          cp tools/merlin_studio/static/studio.js /tmp/studio-check.mjs
+          node --check /tmp/studio-check.mjs
       - name: Commit et push
         run: |
           git config user.name "Claude"
