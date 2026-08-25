@@ -1,0 +1,105 @@
+# LE RELAIS — ce que la VM dit sur ntfy est recopie DANS le depot, toutes les 10 minutes.
+#
+# POURQUOI. La VM parle deja (le Courrier poste ses verdicts sur ntfy) mais deux trous restent :
+#   1. ntfy.sh EFFACE tout au bout de ~12 h — un verdict tombe la nuit est perdu au matin ;
+#   2. le poste de pilotage ne lit ntfy que si Maxime le sollicite — rien n'est archive.
+# Le relais comble les deux : il tire le flux, ecrit les messages dans infra/courrier/recu/
+# (un fichier par jour), et les commite. Ils deviennent lisibles a tout moment par l'API
+# GitHub, indefiniment, sans que personne ait a coller quoi que ce soit.
+#
+# Aucun secret : le sujet ntfy est deja commite en clair, et la lecture est publique.
+# Gratuit : les workflows planifies sont illimites sur un depot public.
+name: courrier-recu
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: courrier-recu
+  cancel-in-progress: false
+jobs:
+  relais:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/oracle-free-tier-access-IN1Wm
+      - name: Tirer ntfy et archiver les messages neufs
+        run: |
+          set -u
+          mkdir -p infra/courrier/recu
+          : > /tmp/flux.ndjson
+          # Le Courrier tourne entre trois instances (les quotas publics tombent en silence) :
+          # on interroge les trois et on dedoublonne par identifiant de message.
+          for base in https://ntfy.sh https://ntfy.adminforge.de https://ntfy.envs.net; do
+            curl -fsS -m 25 "$base/merlin-courrier-vX9k2Qf7Lw3s/json?poll=1&since=12h" \
+              >> /tmp/flux.ndjson 2>/dev/null || true
+          done
+          python3 - <<'PY'
+          import json, os, time
+          RECU = "infra/courrier/recu"
+          # Ce qui est deja archive, tous fichiers confondus : la deduplication porte sur
+          # l'identifiant ntfy, jamais sur le texte (deux verdicts peuvent se ressembler).
+          vus = set()
+          for f in os.listdir(RECU) if os.path.isdir(RECU) else []:
+              if f.endswith(".md"):
+                  for l in open(os.path.join(RECU, f), encoding="utf-8"):
+                      if l.startswith("<!-- id:"):
+                          vus.add(l.split("id:", 1)[1].split("-->", 1)[0].strip())
+          neufs = {}
+          for ligne in open("/tmp/flux.ndjson", encoding="utf-8", errors="replace"):
+              ligne = ligne.strip()
+              if not ligne:
+                  continue
+              try:
+                  m = json.loads(ligne)
+              except Exception:
+                  continue
+              if m.get("event") != "message":
+                  continue
+              mid = str(m.get("id", ""))
+              if not mid or mid in vus or mid in neufs:
+                  continue
+              neufs[mid] = m
+          if not neufs:
+              print("aucun message neuf")
+              raise SystemExit(0)
+          # Heure de Paris (UTC+2) : c'est celle que Maxime lit.
+          for mid, m in sorted(neufs.items(), key=lambda kv: kv[1].get("time", 0)):
+              t = int(m.get("time", 0))
+              jour = time.strftime("%Y-%m-%d", time.gmtime(t + 7200))
+              hhmm = time.strftime("%H:%M", time.gmtime(t + 7200))
+              chemin = os.path.join(RECU, jour + ".md")
+              neuf = not os.path.exists(chemin)
+              with open(chemin, "a", encoding="utf-8") as f:
+                  if neuf:
+                      f.write("# Courrier recu — %s (heure de Paris)\n\n" % jour)
+                  f.write("<!-- id: %s -->\n" % mid)
+                  f.write("## %s — %s\n\n" % (hhmm, (m.get("title") or "(sans titre)")))
+                  corps = (m.get("message") or "").strip()
+                  if corps:
+                      f.write("```\n%s\n```\n" % corps)
+                  a = m.get("attachment") or {}
+                  if a.get("url"):
+                      # L'URL expire avec ntfy : elle sert dans les heures qui suivent, pas apres.
+                      f.write("\npiece jointe : %s (%s octets)\n" % (a.get("url"), a.get("size", "?")))
+                  f.write("\n")
+          print("%d message(s) neuf(s) archive(s)" % len(neufs))
+          PY
+          if [ -n "$(git status --porcelain infra/courrier/recu)" ]; then
+            git config user.name "Claude"
+            git config user.email "noreply@anthropic.com"
+            git add infra/courrier/recu
+            git commit -m "chore(courrier): $(git status --porcelain infra/courrier/recu | wc -l) fichier(s) de courrier recu" \
+              -m "Relais ntfy -> depot : les verdicts de la VM survivent a l'expiration de ntfy (12 h) et deviennent lisibles a tout moment par l'API GitHub." \
+              -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" \
+              -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+            git pull --rebase --quiet origin claude/oracle-free-tier-access-IN1Wm || true
+            git push origin HEAD:claude/oracle-free-tier-access-IN1Wm
+            echo "archive et pousse"
+          else
+            echo "rien de neuf"
+          fi
