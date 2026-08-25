@@ -70,4 +70,3 @@ rm -f "$COURRIER_RES/billing.log"
 
 dire "verdict" "$(head -c 900 "$DIG")"
 echo "v67 : vague terminee, digest envoye via $NT"
-""
