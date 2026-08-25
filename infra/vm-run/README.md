@@ -19,22 +19,33 @@ lire des résultats commités.
 
 ## Bootstrap (3 gestes, une seule fois — par Maxime)
 
-1. **Générer la paire dédiée** (sur ton poste ou dans Cloud Shell) :
+1. **Générer la paire dédiée**, dans Cloud Shell (icône `>_` de la console OCI) :
    ```bash
-   ssh-keygen -t ed25519 -f merlin-pont -N "" -C "pont-github-vm"
+   ssh-keygen -t rsa -b 4096 -f merlin-pont -N "" -C "pont-github-vm"
+   cat merlin-pont.pub
    ```
-2. **Autoriser la clé publique sur la VM** — une Run Command (console OCI, exécutée root) :
+   **RSA et pas ed25519** : Cloud Shell tourne en **mode FIPS**, qui refuse ed25519
+   (« ED25519 keys are not allowed in FIPS mode », vécu 2026-08-25). RSA-4096 est accepté et
+   convient parfaitement ici. La sortie de `cat` est UNE ligne `ssh-rsa AAAAB3Nza…` : c'est la
+   clé PUBLIQUE, elle n'est pas secrète.
+2. **Autoriser la clé publique sur la VM** — une Run Command (console OCI, exécutée root).
+   L'utilisateur du dépôt est détecté tout seul, et son nom est affiché en sortie :
    ```bash
-   install -d -m 700 -o ubuntu -g ubuntu /home/ubuntu/.ssh
-   echo 'COLLE_ICI_LE_CONTENU_DE_merlin-pont.pub' >> /home/ubuntu/.ssh/authorized_keys
-   chown ubuntu:ubuntu /home/ubuntu/.ssh/authorized_keys && chmod 600 /home/ubuntu/.ssh/authorized_keys
+   U="$(ls /home | head -1)"; [ -n "$U" ] || U=ubuntu
+   install -d -m 700 "/home/$U/.ssh"
+   echo 'ssh-rsa AAAA...COLLE_TA_CLE_PUBLIQUE_ICI... pont-github-vm' >> "/home/$U/.ssh/authorized_keys"
+   chown -R "$U:$U" "/home/$U/.ssh"
+   chmod 600 "/home/$U/.ssh/authorized_keys"
+   echo "cle posee pour l'utilisateur : $U"
    ```
-   (Si l'utilisateur du dépôt n'est pas `ubuntu`, remplace-le, et pose le secret `VM_USER`.)
 3. **Poser les secrets** — GitHub > dépôt M.E.R.L.I.N > Settings > Secrets and variables >
    Actions > New repository secret :
-   - `VM_SSH_KEY` = contenu du fichier **privé** `merlin-pont` (intégral, avec BEGIN/END)
+   - `VM_SSH_KEY` = contenu du fichier **privé** (`cat merlin-pont`), intégral, BEGIN/END inclus
+   - `VM_USER` = le nom affiché à l'étape 2, **seulement** s'il n'est pas `ubuntu`
    - `VM_HOST` = `141.253.124.75` (facultatif, c'est le défaut)
-   - `VM_USER` = `ubuntu` (facultatif, c'est le défaut)
+
+   Puis, dans Cloud Shell : `rm merlin-pont merlin-pont.pub` (la clé vit désormais dans le
+   coffre, plus besoin d'une copie qui traîne).
 
 Puis dis-le dans la conversation : la première commande (`cmd-001`, diagnostic + réveil du
 Courrier) part aussitôt, et la sortie complète revient commitée dans `resultats/`.
@@ -45,6 +56,12 @@ Courrier) part aussitôt, et la sortie complète revient commitée dans `resulta
 - Budget 80 min par commande (timeout SSH 4800 s), keepalive activé.
 - VM injoignable = résultat commité avec l'erreur SSH : le pont sert aussi de sonde de vie.
 - Le pont ne rallume PAS une instance éteinte — ça reste le bouton Start de la console.
+
+## Si l'étape 2 échoue (plan B)
+Depuis Cloud Shell, si tu peux déjà joindre la VM en SSH :
+```bash
+ssh ubuntu@141.253.124.75 "install -d -m 700 ~/.ssh && echo '$(cat merlin-pont.pub)' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && echo pose"
+```
 
 ## Variante écartée (pour mémoire)
 Un utilisateur IAM dédié + clé API + `oci instance-agent command create` ferait pareil côté
