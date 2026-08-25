@@ -708,7 +708,9 @@ Fenêtre ouverte encore {left} min.</p>
             pass
         # « jeu » = le personnage du jeu (merlin_jeu.py), pas un conseiller du
         # studio : il n'a pas de fiche .md, sa voix vit dans son propre fichier.
-        if to not in ("merlin", "jeu") \
+        # « sage » = l'esprit de la Bible (grimoire.py) : mécaniques + lore,
+        # réponses sourcées — la troisième voix, à côté du studio et du personnage.
+        if to not in ("merlin", "jeu", "sage") \
                 and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
             return jsonify({"error": "conseiller inconnu"}), 400
         M = _gd("memory")

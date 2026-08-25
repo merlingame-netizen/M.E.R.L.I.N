@@ -256,7 +256,7 @@ async function refreshCpu() {
 /* ── Agents : planification, dernier passage, santé, smoke ─────────────── */
 // ── Parler : conversations avec les 101 conseillers + mémoire absolue ────────
 let TALK_CONV = null, TALK_POLL = null;
-const AV = { merlin: '◈' };
+const AV = { merlin: '◈', 'le-sage': '✦' };
 function whoAva(who) { return AV[who] || (WHO_FR[who] ? '◆' : '◈'); }
 
 /* Rouvrir le dernier échange de CET interlocuteur.
@@ -325,14 +325,18 @@ async function initTalk() {
     sel.value = b.dataset.to;
     document.querySelectorAll('.duo-btn').forEach(x => x.classList.toggle('on', x === b));
     rouvrirDernierFil(b.dataset.to);
-    $('#talk-suggest').classList.toggle('gone', b.dataset.to === 'jeu');
+    // Les suggestions sont celles de l'ORCHESTRATEUR : ni le personnage ni le
+    // Sage n'ont à proposer de régler un agent.
+    $('#talk-suggest').classList.toggle('gone', b.dataset.to !== 'merlin');
     $('#talk-voix-panel').hidden = true;
     majVoixBouton();
     const ta = $('#talk-input');
     if (ta) {
       ta.placeholder = b.dataset.to === 'jeu'
         ? 'Parler à Merlin — il ne sait rien du studio, il est dans la forêt…'
-        : 'Parler au studio — poser une question, régler un agent, prévoir une tâche…';
+        : (b.dataset.to === 'sage'
+          ? 'Demander au Sage — une mécanique, une règle, le lore : la Bible répond…'
+          : 'Parler au studio — poser une question, régler un agent, prévoir une tâche…');
       ta.focus();
     }
   });
@@ -1009,7 +1013,7 @@ async function refreshMemory() {
 const WHO_FR = { 'gd-content-gap': 'Écrivain de cartes', 'gd-balance': 'Équilibreur',
   'gd-pacing': 'Rythmeur', 'gd-economy': 'Trésorier', 'gd-audit': 'Auditeur bible', 'gd-run': 'Arbitre de la run',
   'coder-local': 'Codeur', 'playtest-bot': 'Robot testeur', 'billing': 'Comptable',
-  'corpus-night': 'Atelier d’écriture', 'selftest': 'Test' };
+  'corpus-night': 'Atelier d’écriture', 'selftest': 'Test', 'le-sage': 'Le Sage' };
 const KIND_FR = { balance: 'équilibrage', content: 'nouvelle carte', design: 'game design',
   ux: 'ergonomie', bug: 'anomalie', infra: 'plateforme', merge: 'intégration' };
 // ── « Ce matin » : ce qu'on lit avant tout le reste ─────────────────────────

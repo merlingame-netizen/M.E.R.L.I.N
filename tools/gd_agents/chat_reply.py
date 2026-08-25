@@ -65,6 +65,53 @@ def main(conv: str, adviser: str) -> int:
     if not rows or rows[-1]["role"] != "user":
         print("rien à répondre")
         return 0
+    # ── LE SAGE — mécaniques + lore, réponses SOURCÉES (Maxime 2026-08-25) ──
+    # L'orchestrateur connaît le studio, le personnage connaît la forêt : le
+    # Sage répond DEPUIS LES TEXTES (grimoire.py : Bible + code source de
+    # vérité), cite sa source, et avoue quand la Bible ne dit rien.
+    if adviser == "sage":
+        import grimoire
+        question = str(rows[-1]["text"]).strip()
+        echange = "\n".join(
+            f"{'Maxime' if r['role'] == 'user' else 'Le Sage'} : {r['text'][:280]}"
+            for r in rows[-6:])
+        conf = Path.home() / ".config" / "merlin-llm.env"
+        model = "gemma4:e4b-it-qat"
+        try:
+            for line in conf.read_text().splitlines():
+                if "COPILOT_MODEL" in line:
+                    model = line.split("=", 1)[1].strip()
+        except Exception:
+            pass
+
+        def _sage(pr: str) -> str:
+            try:
+                r = subprocess.run(["bash", str(LLM_ASK), "--model", model,
+                                    "--predict", "380", "--timeout", "280",
+                                    "--ctx", "4096", "--temp", "0.3"],
+                                   input=pr, capture_output=True, text=True,
+                                   timeout=300)
+                return (r.stdout or "").strip()
+            except Exception:
+                return ""
+
+        # Même verrou et même double essai que les autres voix : la version
+        # sans historique est le repli quand le prompt complet fait rendre du
+        # vide au e4b.
+        with _verrou_llm():
+            texte = _sage(grimoire.prompt(question, echange))
+            if not texte:
+                texte = _sage(grimoire.prompt(question, ""))
+        if not texte:
+            texte = ("(le Sage n'a pas pu consulter la Bible — le modèle local "
+                     "était indisponible ; réessaie dans une minute)")
+        else:
+            refs = grimoire.references(question)
+            if refs:
+                texte += "\n\nSources : " + refs
+        memory.chat_append(conv, "assistant", "le-sage", texte, to="sage")
+        print(f"le Sage a répondu ({len(texte)} car.)")
+        return 0
     # ── LE MERLIN DU JEU ────────────────────────────────────────────────────
     # C'est le PERSONNAGE que rencontre le joueur, pas l'assistant du studio :
     # il ne sait rien des agents et ne parle que depuis le monde du jeu. On sort
