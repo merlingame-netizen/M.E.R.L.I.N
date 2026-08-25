@@ -1,4 +1,4 @@
-# BIBLE — Jeu de deck-building narratif (reconstruction 2026-05-25) — **v2.0**
+# BIBLE — Jeu de deck-building narratif (reconstruction 2026-05-25) — **v2.1** (R173, 2026-08-25)
 
 > **Bible reconstruite from scratch** via AskUserQuestion (objectif 200+ questions).
 > **TOUTE bible / contexte / mémoire antérieurs sont NON-AUTORITAIRES** (oublié sur décision
@@ -2100,6 +2100,46 @@ avant commit (cf. §9, §24). Vérifie :
   tout état créé (blessure, dette, bénédiction, apprentissage) a son point de suivi ou de paiement
   ultérieur dans le squelette (25.4bis).
 Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de changement »).
+
+- **R173 : LE TEMPS DU GESTE — resolution v34-v47 (2026-08-25, vagues d'aout, decisions Maxime
+  du 2026-08-19 au 2026-08-25)** : la resolution devient UN SEUL mouvement lisible :
+  fusion (les DEUX ensembles) -> LA PHRASE DU GESTE -> la mise -> de OU sceau -> issue ->
+  phrase de suite. Canon :
+  (1) GESTE SUR (v34) : si (2 + modificateurs) >= DC, aucun de — un sceau s'appose ;
+  l'eclatante reste reservee aux VRAIS jets (le risque est le seul chemin vers l'eclat).
+  Le sabotage par tag antagoniste s'applique MEME a un geste sur.
+  (2) LE DE SE DISPENSE (v46) : la MAITRISE du verbe (talent >= 2 donne +2) et la RARETE du
+  trait (Rare +1 / Epique +2 / Mythique +3) s'ajoutent au jet MINIMAL pour decider s'il faut
+  encore jeter — JAMAIS au Climax (le pic de quete se joue toujours au de). A talent 0 +
+  trait Commune, marge 0 : comportement v34 strictement inchange. La MISE est annoncee AVANT
+  le de (« Difficulte N - vos atouts +M », « Sans jet - maitrise du geste », « Sans jet - la
+  carte porte le geste ») — Hands of Fate montre la cible, il ne la cache pas. La ligne
+  mecanique n'annonce plus JAMAIS un 2d6 qui n'a pas roule.
+  (3) LA PHRASE DU GESTE EST COMPOSEE PAR LE CODE (v46 — supersede la voie prompt de
+  v36/v45 pour le geste lui-meme : « OBSERVER + Le Pressentiment » rendu par des mains qui
+  poussent une pierre a demontre qu'une regle de prompt ne tient pas un invariant) : socle du
+  verbe (5 verbes) + maniere du trait (les 25 concepts-coeur couverts ; le tag qui NOURRIT le
+  verbe est prioritaire), ecrite a la machine (~1,6 s + 0,35 s de tenue) entre la fusion et
+  le de. Deterministe, zero generation — ce temps est DONNE au LLM qui ecrit l'issue en fond.
+  Le modele n'ecrit plus que la SUITE du geste, jamais le geste.
+  (4) L'ISSUE OUVRE LA SUITE (v45) : sa derniere phrase RELANCE (ce que le Voyageur fait
+  maintenant, ou ce qui l'attend au pas suivant), meme generation, budgets +20 tokens ; et le
+  TRAIT donne la maniere dans le prompt d'issue (un trait de perception ne touche RIEN, un
+  trait de parole se prononce, un trait de force engage le corps).
+  (5) LE FANTOME DE TUILE (v47) : la fusion fusionne LES DEUX ensembles — une COPIE de la
+  tuile d'action (node NEUF, doctrine ghost v10.13.1, jamais un reparent) se detache d'elle,
+  converge avec le trait et eclate avec lui ; la tuile reelle pulse sur place (v11-W2 INTACT).
+  (6) MEMOIRE ET PASSE (v42-v44) : le canon du lore vit en tete STABLE des prompts (cache de
+  prefixe) ; le Voyageur est SANS passe — toute allusion a un passe doit venir de la CHRONIQUE
+  (carnet des 3 dernieres traversees, cross-run, [chronique] d'options.cfg) ; un pacte accepte
+  RE-ARME la pre-generation de l'issue (drain 20 s) — le banc de secours du beat du pacte est
+  clos par construction.
+  (7) GATE D'ANIMATION : la sonde du geste (tools/probe_fx_geste.tscn, 4 controles : sequence
+  complete, ligne mecanique sans de fantome, mouvement reduit, fantome de tuile) tourne dans
+  le patcheur CI sur Godot 4.4.1 AVANT tout push vers la branche du jeu — une animation livree
+  sans avoir jamais tourne, c'est termine.
+  Mesures de reference : phrase visible t+0,75-0,90 s, pleine t+2,35-2,50 s ; sequence
+  complete 3,7 s (sans jet) / 4,3 s (avec de) ; surcout net ~1,9 s, paye au LLM.
 
 - **R168bis : CONVERSION CALIBREE EN RECOURS D'URGENCE (addendum final, 2026-07-29, 4 iterations
   mesurees)** : la conversion de nature exige desormais qu'AUCUNE carte de la MAIN COMPLETE ne couvre
