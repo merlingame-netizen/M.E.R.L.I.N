@@ -7,6 +7,12 @@
 # infra/vm-run/resultats/ — lisible ensuite par l'API. Chaque commande est un fichier
 # commite : le pont est AUDITABLE (historique git complet) et REVOCABLE (supprimer le secret).
 #
+# L'UTILISATEUR SE DECOUVRE TOUT SEUL (cmd-001) : la VM est un Oracle Linux 9 ou les agents
+# tournent sous `ocarun` (Run Command s'execute sous ce compte, sans sudo — c'est donc le seul
+# que Run Command puisse auto-autoriser), avec `opc` comme compte d'administration. Coder
+# `ubuntu` en dur avait rendu la premiere tentative aveugle : on essaie desormais les
+# candidats dans l'ordre et on retient le premier qui s'authentifie.
+#
 # Si la VM est injoignable, le resultat commite porte l'erreur SSH : le pont sert aussi de
 # sonde de vie. Il ne peut PAS rallumer une instance eteinte — ca reste le bouton Start.
 name: vm-run
@@ -48,20 +54,41 @@ jobs:
           printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/id_vm
           chmod 600 ~/.ssh/id_vm
           H="${VM_HOST:-141.253.124.75}"
-          U="${VM_USER:-ubuntu}"
-          echo "== $N -> $U@$H =="
-          set +e
-          timeout 4800 ssh -i ~/.ssh/id_vm \
-            -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
-            -o ServerAliveInterval=30 -o ServerAliveCountMax=8 \
-            "$U@$H" 'bash -s' < "$CMD" > "infra/vm-run/resultats/$N.txt" 2>&1
-          RC=$?
-          set -e
-          {
-            echo ""
-            echo "== fin : rc=$RC $(date -u +%FT%TZ) hote=$H utilisateur=$U =="
-          } >> "infra/vm-run/resultats/$N.txt"
-          tail -30 "infra/vm-run/resultats/$N.txt"
+          SSHO="-i $HOME/.ssh/id_vm -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
+          # Qui repond ? Le premier candidat qui s'authentifie gagne. VM_USER passe devant
+          # s'il est defini ; sinon ocarun (les agents), puis opc (admin OL9), puis ubuntu.
+          UTIL=""
+          for U in ${VM_USER:-} ocarun opc ubuntu; do
+            [ -n "$U" ] || continue
+            if ssh $SSHO -o BatchMode=yes "$U@$H" true 2>/dev/null; then
+              UTIL="$U"
+              break
+            fi
+            echo "-- $U : refuse"
+          done
+          if [ -z "$UTIL" ]; then
+            {
+              echo "AUCUN utilisateur n'accepte la cle du pont sur $H."
+              echo "La VM REPOND (sshd actif) mais la cle publique n'est autorisee nulle part."
+              echo "Candidats essayes : ${VM_USER:-<non defini>} ocarun opc ubuntu"
+              echo "Remede : Run Command (elle s'execute sous ocarun) — voir infra/vm-run/README.md etape 2."
+              echo ""
+              echo "== fin : rc=255 $(date -u +%FT%TZ) hote=$H utilisateur=aucun =="
+            } > "infra/vm-run/resultats/$N.txt"
+            RC=255
+          else
+            echo "== $N -> $UTIL@$H =="
+            set +e
+            timeout 4800 ssh $SSHO -o ServerAliveInterval=30 -o ServerAliveCountMax=8 \
+              "$UTIL@$H" 'bash -s' < "$CMD" > "infra/vm-run/resultats/$N.txt" 2>&1
+            RC=$?
+            set -e
+            {
+              echo ""
+              echo "== fin : rc=$RC $(date -u +%FT%TZ) hote=$H utilisateur=$UTIL =="
+            } >> "infra/vm-run/resultats/$N.txt"
+          fi
+          tail -40 "infra/vm-run/resultats/$N.txt"
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
           git add "infra/vm-run/resultats/$N.txt"
