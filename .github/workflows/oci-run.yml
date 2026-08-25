@@ -35,6 +35,10 @@ jobs:
       - name: Configurer le client OCI
         env:
           K: ${{ secrets.OCI_PRIVATE_KEY }}
+          U: ${{ secrets.OCI_USER_OCID }}
+          T: ${{ secrets.OCI_TENANCY_OCID }}
+          F: ${{ secrets.OCI_FINGERPRINT }}
+          R: ${{ secrets.OCI_REGION }}
         run: |
           set -u
           if [ -z "${K:-}" ]; then echo "OCI_PRIVATE_KEY absent — pont inactif (infra/oci-run/README.md)"; exit 0; fi
@@ -42,16 +46,33 @@ jobs:
           mkdir -p ~/.oci
           printf '%s\n' "$K" > ~/.oci/key.pem
           chmod 600 ~/.oci/key.pem
+          # DIAGNOSTIC SANS FUITE : forme de chaque secret (jamais sa valeur). Le 2026-08-25,
+          # l'auth a echoue et le message d'Oracle etait avale par >/dev/null — impossible de
+          # savoir LEQUEL des cinq clochait. On verifie desormais la forme attendue de chacun.
+          echo "-- controle de forme des secrets (valeurs jamais affichees) --"
+          case "$U" in ocid1.user.*) echo "USER    : forme OK";; *) echo "USER    : MAUVAISE FORME (attendu ocid1.user.* — as-tu colle 'user=' par erreur ?)";; esac
+          case "$T" in ocid1.tenancy.*) echo "TENANCY : forme OK";; *) echo "TENANCY : MAUVAISE FORME (attendu ocid1.tenancy.*)";; esac
+          case "$F" in *:*:*) echo "FINGER  : forme OK ($(printf '%s' "$F" | tr -cd ':' | wc -c) deux-points)";; *) echo "FINGER  : MAUVAISE FORME (attendu aa:bb:cc:...)";; esac
+          echo "REGION  : longueur ${#R} (attendu ~10, ex: eu-paris-1)"
+          case "$(head -1 ~/.oci/key.pem)" in *PRIVATE\ KEY*) echo "KEY     : en-tete PRIVATE KEY present ($(wc -l < ~/.oci/key.pem) lignes)";; *) echo "KEY     : PAS d'en-tete -----BEGIN...PRIVATE KEY----- (collage incomplet ?)";; esac
           cat > ~/.oci/config <<EOF
           [DEFAULT]
-          user=${{ secrets.OCI_USER_OCID }}
-          tenancy=${{ secrets.OCI_TENANCY_OCID }}
-          fingerprint=${{ secrets.OCI_FINGERPRINT }}
-          region=${{ secrets.OCI_REGION }}
+          user=$U
+          tenancy=$T
+          fingerprint=$F
+          region=$R
           key_file=$HOME/.oci/key.pem
           EOF
           chmod 600 ~/.oci/config
-          oci iam region list --output table >/dev/null 2>&1 && echo "client OCI : OK" || { echo "client OCI : ECHEC d'authentification — verifier les 5 secrets"; exit 1; }
+          echo "-- test d'authentification (message d'Oracle en clair, sans secret) --"
+          if oci iam region list --output table >/tmp/ok.txt 2>/tmp/err.txt; then
+            echo "client OCI : OK"
+          else
+            echo "client OCI : ECHEC — ce que dit Oracle :"
+            grep -aiE 'error|not authenticate|NotAuthenticated|fingerprint|private key|signature|clock|region' /tmp/err.txt | head -8
+            echo "(codes frequents : NotAuthenticated = fingerprint ou cle qui ne correspondent pas ; region invalide = REGION mal copiee)"
+            exit 1
+          fi
       - name: Executer
         env:
           INSTANCE: ${{ secrets.OCI_INSTANCE_OCID }}
@@ -74,8 +95,6 @@ jobs:
           # ── Run Command ──
           if [ -n "$DERNIER_CMD" ] && [ ! -f "infra/oci-run/resultats/$(basename "$DERNIER_CMD" .sh).txt" ]; then
             N="$(basename "$DERNIER_CMD" .sh)"
-            # Le script du depot EST la charge : la commande envoyee a Oracle tient en une ligne
-            # (limite de taille du canal TEXT) et va le chercher sur le depot public.
             RAW="https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/claude/oracle-free-tier-access-IN1Wm/$DERNIER_CMD"
             BOOT="bash <(curl -fsSL '$RAW') 2>&1 | tail -c 1900"
             COMP="$(oci compute instance get --instance-id "$INSTANCE" --query 'data."compartment-id"' --raw-output)"
