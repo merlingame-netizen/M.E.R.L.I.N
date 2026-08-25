@@ -1,0 +1,22 @@
+AUCUN compte n'accepte la cle du pont sur 141.253.124.75 (sshd repond : la VM est vivante).
+Candidats essayes : <non defini> opc ocarun ubuntu
+
+===== LA CLE DU SECRET VM_SSH_KEY =====
+premiere ligne : -----BEGIN RSA PRIVATE KEY-----
+lignes         : 28 | octets : 1676
+-- type / taille / empreinte (ssh-keygen) --
+2048 SHA256:rveJrOlzmr6RI93jVd8t/hE647B7odw+XFvUEHP/WjY no comment (RSA)
+
+===== CLE PUBLIQUE CORRESPONDANTE (a installer telle quelle) =====
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6kORhP7OQgjHs9DUAp9ovsz7ONcSjZ4tJ03mjhDvdIvbYXbLwjhLJ+wZoXblFuo2aPYHhA1Rtciq+hKGal4smrdRU+h6z4wmGMQclf9E6orsc2T3mqSJV1cyH3havlyCEXQX7mWsnLlV0hOW04hq+yeR/HjqzcD0I/myS0LWy30PJasW12Ll9VR9Bd5PMKx/HdPotM76AGMDHApW97ohuex5+K97baOBhu3d5/2O63rrJuAe0aQf+pBsgSHwpNOXpp0Z+kgMJradYTsmYdwWE/PMvxKJa5h9uQx+NSPnatuYxQ2RnfIh0oPZAn0ZYhabCAYlmXNsOGDuv+htKZjHv
+
+===== CE QUE DIT SSHD (dialogue verbeux, compte opc) =====
+debug1: Connecting to 141.253.124.75 [141.253.124.75] port 22.
+debug1: Connection established.
+debug1: compat_banner: match: OpenSSH_9.9 pat OpenSSH* compat 0x04000000
+debug1: Authentications that can continue: publickey,gssapi-keyex,gssapi-with-mic
+debug1: Trying private key: /home/runner/.ssh/id_vm
+debug1: Authentications that can continue: publickey,gssapi-keyex,gssapi-with-mic
+opc@141.253.124.75: Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
+
+== fin : rc=255 2026-08-25T19:11:44Z hote=141.253.124.75 utilisateur=aucun ==
