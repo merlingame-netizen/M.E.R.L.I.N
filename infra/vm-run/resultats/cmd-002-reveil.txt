@@ -1,0 +1,6 @@
+AUCUN utilisateur n'accepte la cle du pont sur 141.253.124.75.
+La VM REPOND (sshd actif) mais la cle publique n'est autorisee nulle part.
+Candidats essayes : <non defini> ocarun opc ubuntu
+Remede : Run Command (elle s'execute sous ocarun) — voir infra/vm-run/README.md etape 2.
+
+== fin : rc=255 2026-08-25T18:32:12Z hote=141.253.124.75 utilisateur=aucun ==
