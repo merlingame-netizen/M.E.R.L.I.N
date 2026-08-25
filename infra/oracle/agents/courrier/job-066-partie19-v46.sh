@@ -3,8 +3,13 @@
 # (maitrise du verbe / rarete du trait). Elle doit aussi prouver le harnais repare (p65 : la
 # cloture tuait un jeu en pleine charge des modeles, journal absent).
 #
-# Cibles : SECOURS=0, journal present, incoherences=0 (aucun geste physique invente sur un verbe
-# qui ne touche rien), duree_moy <= 45 s, passe=0. Chaque cible manquee est dite avec son compte.
+# Elle doit clore TROIS versions d'un coup, parce que le temoin de v44 est brule (job-065 est
+# marque fait : il ne rejouera jamais) et que v45 n'a jamais ete regardee en partie :
+#   v44 — le banc du pacte : pactes >= 1 ET SECOURS=0 (sans pacte, le cas fautif n'est pas rejoue)
+#   v45 — l'issue ouvre la suite : lisible dans gestes66 (issue de chaque beat)
+#   v46 — le geste se dit : phrases = 6/6 et incoherences = 0
+# Cibles chiffrees : SECOURS=0, incoherences=0, pactes>=1, prompt_max<=1600, passe=0,
+# duree_moy <= 45 s. Chaque cible manquee est dite avec son compte exact.
 set -u
 AGENTS="${REPO:-$HOME/workspace/M.E.R.L.I.N}/infra/oracle/agents"
 GD="${GAME_DIR:-$HOME/workspace/merlin-game}"
@@ -141,6 +146,10 @@ for i, b in enumerate(bs, 1):
             incoh.append("beat%d %s : ...%s..." % (i, act, iss[a:z]))
 open(sys.argv[3], "w").write("\n".join(lignes))
 
+# v44 : le banc tombait au beat du PACTE (accepte apres le prefetch -> signature changee).
+# Sans pacte joue, la partie ne rejoue pas le cas fautif et ne prouve donc rien de v44.
+pactes = [i for i in (d.get("incidents") or []) if "pacte" in str(i.get("quoi", ""))]
+beats_pacte = sorted({int(i.get("beat", -1)) + 1 for i in pactes})
 sans_jet = [b.get("index", "?") for b in resolus if b.get("geste_sur")]
 sec_beats = [b.get("index", "?") for b in resolus if b.get("secours")]
 prov = {}
@@ -151,8 +160,9 @@ durees = [float(b.get("duree_beat_s", 0)) for b in resolus if b.get("duree_beat_
 prompts = [int((b.get("gen") or {}).get("prompt_tokens", 0)) for b in resolus if b.get("gen")]
 avec_phrase = sum(1 for b in resolus if str(b.get("phrase_geste", "")).strip())
 fin = d.get("fin") or {}
-print("beats=%d phrases=%d/%d incoherences=%d sansjet=%d(%s) SECOURS=%d(%s) prompt_max=%d passe=%d prov=%s beat1=%.0fs duree_moy=%.0fs fin=%s corr=%s titre=%s" % (
+print("beats=%d phrases=%d/%d incoherences=%d pactes=%d(beats %s) sansjet=%d(%s) SECOURS=%d(%s) prompt_max=%d passe=%d prov=%s beat1=%.0fs duree_moy=%.0fs fin=%s corr=%s titre=%s" % (
     len(bs), avec_phrase, len(resolus), len(incoh),
+    len(pactes), ",".join(str(x) for x in beats_pacte) or "-",
     len(sans_jet), ",".join(str(x) for x in sans_jet) or "-",
     len(sec_beats), ",".join(str(x) for x in sec_beats) or "-",
     max(prompts) if prompts else 0, len(fautes),
@@ -161,6 +171,11 @@ print("beats=%d phrases=%d/%d incoherences=%d sansjet=%d(%s) SECOURS=%d(%s) prom
     (sum(durees) / len(durees)) if durees else 0,
     fin.get("type", "?"), fin.get("corruption", "?"),
     ((d.get("choisi") or {}).get("titre", "?"))))
+if not pactes:
+    print("v44 NON PROUVEE : aucun pacte joue — le cas fautif n a pas ete rejoue.")
+elif not sec_beats:
+    print("v44 PROUVEE : %d pacte(s) aux beats %s, et zero banc de secours." % (
+        len(pactes), ",".join(str(x) for x in beats_pacte)))
 if incoh:
     print("INCOHERENCES :")
     for x in incoh:
