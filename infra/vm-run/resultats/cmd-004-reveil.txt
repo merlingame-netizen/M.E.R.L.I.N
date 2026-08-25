@@ -1,0 +1,23 @@
+AUCUN compte n'accepte la cle du pont sur 141.253.124.75 (sshd repond : la VM est vivante).
+Candidats essayes : <non defini> opc ocarun ubuntu
+
+===== LA CLE DU SECRET VM_SSH_KEY =====
+premiere ligne : MIIEogIBAAKCAQEAupDkYT+zkIIx7PQ1AKfaL7M+zjXEo2eLSdN5o4Q73SL22F2y
+lignes         : 25 | octets : 1613
+-- type / taille / empreinte (ssh-keygen) --
+/home/runner/.ssh/id_vm is not a public key file.
+ILLISIBLE : ce n'est pas une cle privee OpenSSH valide
+
+===== IMPOSSIBLE DE DERIVER LA CLE PUBLIQUE =====
+Motif : Load key "/home/runner/.ssh/id_vm": error in libcrypto 
+(cle protegee par passphrase, format PuTTY .ppk, ou collage incomplet)
+
+===== CE QUE DIT SSHD (dialogue verbeux, compte opc) =====
+debug1: Connecting to 141.253.124.75 [141.253.124.75] port 22.
+debug1: Connection established.
+debug1: compat_banner: match: OpenSSH_9.9 pat OpenSSH* compat 0x04000000
+debug1: Authentications that can continue: publickey,gssapi-keyex,gssapi-with-mic
+debug1: Trying private key: /home/runner/.ssh/id_vm
+opc@141.253.124.75: Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
+
+== fin : rc=255 2026-08-25T19:01:12Z hote=141.253.124.75 utilisateur=aucun ==
