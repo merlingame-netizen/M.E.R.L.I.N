@@ -1,0 +1,11 @@
+A qui=ocarun date=2026-08-25T21:10:54Z
+B sha=f5627f96
+C cron=33
+D courrier_faits=66 dernier=job-067-vague-agents.fait
+E jeu_en_vol=0
+0
+F propositions=54 (comptes: {'pending': 54, 'accepted': 505, 'rejected': 39}) fils=30
+G dump=ENVOYE via https://ntfy.sh taille=190756
+H fin
+
+== fin : etat=SUCCEEDED 2026-08-25T21:11:17Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
