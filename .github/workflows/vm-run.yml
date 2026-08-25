@@ -7,14 +7,14 @@
 # infra/vm-run/resultats/ — lisible ensuite par l'API. Chaque commande est un fichier
 # commite : le pont est AUDITABLE (historique git complet) et REVOCABLE (supprimer le secret).
 #
-# L'UTILISATEUR SE DECOUVRE TOUT SEUL (cmd-001) : la VM est un Oracle Linux 9 ou les agents
-# tournent sous `ocarun` (Run Command s'execute sous ce compte, sans sudo — c'est donc le seul
-# que Run Command puisse auto-autoriser), avec `opc` comme compte d'administration. Coder
-# `ubuntu` en dur avait rendu la premiere tentative aveugle : on essaie desormais les
-# candidats dans l'ordre et on retient le premier qui s'authentifie.
+# L'UTILISATEUR SE DECOUVRE TOUT SEUL : la VM est un Oracle Linux 9. `ocarun` (le compte de
+# Run Command, celui des agents) est en /usr/sbin/nologin — il ne recevra JAMAIS de SSH, quelle
+# que soit la cle. Le compte de connexion est `opc`.
 #
-# Si la VM est injoignable, le resultat commite porte l'erreur SSH : le pont sert aussi de
-# sonde de vie. Il ne peut PAS rallumer une instance eteinte — ca reste le bouton Start.
+# QUAND AUCUN COMPTE N'ACCEPTE LA CLE, on ne rend plus une erreur muette : on publie le type,
+# la taille et l'empreinte de la cle du secret, sa CLE PUBLIQUE derivee (celle qu'il faut
+# installer, a l'octet pres), et le dialogue verbeux de sshd. Une cle publique n'est pas un
+# secret ; c'est meme le seul moyen de sortir d'un refus sans deviner.
 name: vm-run
 on:
   push:
@@ -55,10 +55,8 @@ jobs:
           chmod 600 ~/.ssh/id_vm
           H="${VM_HOST:-141.253.124.75}"
           SSHO="-i $HOME/.ssh/id_vm -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
-          # Qui repond ? Le premier candidat qui s'authentifie gagne. VM_USER passe devant
-          # s'il est defini ; sinon ocarun (les agents), puis opc (admin OL9), puis ubuntu.
           UTIL=""
-          for U in ${VM_USER:-} ocarun opc ubuntu; do
+          for U in ${VM_USER:-} opc ocarun ubuntu; do
             [ -n "$U" ] || continue
             if ssh $SSHO -o BatchMode=yes "$U@$H" true 2>/dev/null; then
               UTIL="$U"
@@ -67,14 +65,42 @@ jobs:
             echo "-- $U : refuse"
           done
           if [ -z "$UTIL" ]; then
+            R="infra/vm-run/resultats/$N.txt"
             {
-              echo "AUCUN utilisateur n'accepte la cle du pont sur $H."
-              echo "La VM REPOND (sshd actif) mais la cle publique n'est autorisee nulle part."
-              echo "Candidats essayes : ${VM_USER:-<non defini>} ocarun opc ubuntu"
-              echo "Remede : Run Command (elle s'execute sous ocarun) — voir infra/vm-run/README.md etape 2."
+              echo "AUCUN compte n'accepte la cle du pont sur $H (sshd repond : la VM est vivante)."
+              echo "Candidats essayes : ${VM_USER:-<non defini>} opc ocarun ubuntu"
+              echo ""
+              echo "===== LA CLE DU SECRET VM_SSH_KEY ====="
+              echo "premiere ligne : $(head -1 ~/.ssh/id_vm)"
+              echo "lignes         : $(wc -l < ~/.ssh/id_vm) | octets : $(wc -c < ~/.ssh/id_vm)"
+              echo "-- type / taille / empreinte (ssh-keygen) --"
+              ssh-keygen -l -f ~/.ssh/id_vm 2>&1 || echo "ILLISIBLE : ce n'est pas une cle privee OpenSSH valide"
+            } > "$R"
+            # La cle PUBLIQUE derivee : ce n'est pas un secret, et c'est exactement la ligne
+            # a installer dans authorized_keys. Sans elle on devine ; avec elle on sait.
+            if ssh-keygen -y -f ~/.ssh/id_vm > /tmp/pub.txt 2>/tmp/puberr.txt; then
+              {
+                echo ""
+                echo "===== CLE PUBLIQUE CORRESPONDANTE (a installer telle quelle) ====="
+                cat /tmp/pub.txt
+              } >> "$R"
+            else
+              {
+                echo ""
+                echo "===== IMPOSSIBLE DE DERIVER LA CLE PUBLIQUE ====="
+                echo "Motif : $(head -2 /tmp/puberr.txt | tr '\n' ' ')"
+                echo "(cle protegee par passphrase, format PuTTY .ppk, ou collage incomplet)"
+              } >> "$R"
+            fi
+            {
+              echo ""
+              echo "===== CE QUE DIT SSHD (dialogue verbeux, compte opc) ====="
+              ssh -v $SSHO -o BatchMode=yes "opc@$H" true 2>&1 \
+                | grep -aE "Offering|Authentications that can continue|Server accepts key|denied|no mutual|banner|Connect|Trying private" \
+                | head -12
               echo ""
               echo "== fin : rc=255 $(date -u +%FT%TZ) hote=$H utilisateur=aucun =="
-            } > "infra/vm-run/resultats/$N.txt"
+            } >> "$R"
             RC=255
           else
             echo "== $N -> $UTIL@$H =="
