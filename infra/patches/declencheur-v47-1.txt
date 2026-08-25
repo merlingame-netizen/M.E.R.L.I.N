@@ -1,0 +1,3 @@
+Declenchement du patcheur pour v47.1 (2026-08-25) : la Bible rattrape le code.
+R173 (le temps du geste, v34-v47) en tete des decisions + bump v2.0 -> v2.1.
+Le pointeur du workflow passe sur v47_1_bible_temps_du_geste.py dans ce meme commit.
