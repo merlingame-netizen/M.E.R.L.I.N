@@ -1,4 +1,9 @@
-# Patcheur du jeu — remplacements exacts + commit + push sur feat/practices-docs.
+# Patcheur du jeu — remplacements exacts + VALIDATION GODOT + commit + push sur feat/practices-docs.
+#
+# v47 : la validation entre dans le patcheur. La session de pilotage a perdu son shell et la VM
+# est muette : plus personne ne pouvait executer Godot avant livraison. Le patcheur le fait donc
+# lui-meme — parse check editeur puis sonde du geste — et REFUSE de pousser si l'un des deux
+# echoue. Un patch casse ne peut plus atteindre la branche du jeu.
 name: patch-v31-1
 on:
   push:
@@ -20,12 +25,43 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v46_2_sonde_complete.py
+        run: python3 outillage/infra/patches/v47_fantome_de_tuile.py
+      - name: Godot en cache
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-4.5-stable-linux-x86_64
+      - name: Godot (telechargement si cache froid)
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot-bin && cd ~/godot-bin
+          curl -fsSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.5-stable/Godot_v4.5-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          mv Godot_v4.5-stable_linux.x86_64 godot
+          chmod +x godot
+      - name: Validation 1 — parse check editeur
+        run: |
+          ~/godot-bin/godot --headless --editor --quit --path . 2>&1 | tee /tmp/parse.log || true
+          # Bruit tolere (absent du runner, sans rapport avec le patch) : gdextension ARM,
+          # traductions non importees, police VT323. Toute erreur de SCRIPT est un refus.
+          if grep -aE "SCRIPT ERROR|Compile Error" /tmp/parse.log; then
+            echo "::error::le patch introduit des erreurs de script — rien n'est pousse"
+            exit 1
+          fi
+      - name: Validation 2 — sonde du geste (l'animation tourne vraiment)
+        run: |
+          timeout 900 ~/godot-bin/godot --headless --path . res://tools/probe_fx_geste.tscn 2>&1 | tee /tmp/sonde.log || true
+          grep -a "SONDE GESTE\|fantome\|ratio max" /tmp/sonde.log || true
+          grep -aq "SONDE GESTE : OK" /tmp/sonde.log || {
+            echo "::error::la sonde du geste n'a pas rendu OK — rien n'est pousse"
+            exit 1
+          }
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add tools/probe_fx_geste.gd tools/probe_fx_geste.tscn
+          git add scripts/game/merlin_fx.gd scripts/game/merlin_game.gd tools/probe_fx_geste.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "test(jeu): v46.2 - la sonde couvre tout ce que v46 a touche" -m "Restaient deux surfaces livrees sans avoir jamais tourne. LA LIGNE MECANIQUE : du texte LU par le joueur — un geste sans de ne doit plus annoncer 2d6 7, la face de repli (mensonge latent depuis v34, rendu frequent par la dispense). LE MOUVEMENT REDUIT : la phrase doit etre pleine d emblee, sans frappe." -m "Contre-epreuve faite sur chacune : ligne remise en 2d6 sur un geste sur -> rc=1 avec le motif exact ; mouvement reduit neutralise -> rc=1, ratio min 0.00. Piege note dans le code apres s y etre fait prendre : en GDScript une lambda capture les locales par VALEUR, un compteur ferme ne remonte jamais et la sonde se ment alors a elle-meme." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v47 - le fantome de tuile : les deux ensembles fusionnent enfin" -m "Maxime : une animation de fusion qui fusionne LES DEUX ensembles. Une seule carte volait : le trait etait aspire, l'action restait une tuile permanente qui pulse sur place (v11-W2). v47 fait voler une COPIE - un node neuf (doctrine ghost v10.13.1, jamais un reparent), detachee de la tuile, qui converge avec le trait, fusionne et eclate avec lui. La tuile reelle ne bouge pas d'un pixel : la regle v11-W2 tient, et la fusion se voit enfin." -m "La sonde du geste gagne un 4e controle (le fantome apparait dans le layer et porte le verbe joue), et le patcheur valide desormais lui-meme : parse check editeur + sonde complete sur un vrai Godot 4.5 headless AVANT le push - un patch casse ne peut plus atteindre cette branche." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
