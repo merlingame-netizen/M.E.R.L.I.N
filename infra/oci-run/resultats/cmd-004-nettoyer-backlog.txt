@@ -1,0 +1,6 @@
+A rejet_controle=7 rejet_balance=34 rejet_echec=2 gardes=11
+B apres: pending=11 accepted=506 rejected=82
+C restant par kind: content=10, design=1
+D fin cmd-004
+
+== fin : etat=SUCCEEDED 2026-08-25T21:51:14Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
