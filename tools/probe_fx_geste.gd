@@ -11,12 +11,16 @@ extends Control
 ## rend jamais la main. Il faut une scene. C'est pour ca que ce fichier a un .tscn a cote.
 ##
 ##   godot --headless --path . res://tools/probe_fx_geste.tscn
-##   rc=0 : la phrase s'affiche, se remplit entierement, la mise s'allume, la sequence se termine.
+##   rc=0 : la phrase s'affiche, se remplit entierement, la mise s'allume, la sequence se termine,
+##          la ligne mecanique n'annonce jamais un de qui n'a pas roule, et le mouvement reduit
+##          donne la phrase pleine d'emblee.
 
 const RATIO_PLEIN: float = 0.999
 
 var _t0: int = 0
 var _fautes: Array = []
+var _reduit_vue: bool = false
+var _reduit_ratio_min: float = 2.0
 
 
 func _ready() -> void:
@@ -64,6 +68,9 @@ func _go() -> void:
 		print("  sequence complete en %d ms" % (Time.get_ticks_msec() - _t0))
 		await get_tree().process_frame
 
+	_verifier_ligne_meca(par_verbe, par_id)
+	await _verifier_mouvement_reduit(par_verbe, par_id)
+
 	if _fautes.is_empty():
 		print("SONDE GESTE : OK")
 		get_tree().quit(0)
@@ -71,6 +78,70 @@ func _go() -> void:
 		for f in _fautes:
 			printerr("SONDE GESTE : ", f)
 		get_tree().quit(1)
+
+
+# v46 a change du TEXTE LU PAR LE JOUEUR : un geste sans de ne doit plus annoncer « 2d6 7 »
+# (la face de repli), mensonge latent depuis v34 et rendu frequent par la dispense. On appelle la
+# vraie methode du jeu sur une instance orpheline — elle ne lit que le dictionnaire de resolution.
+func _verifier_ligne_meca(par_verbe: Dictionary, par_id: Dictionary) -> void:
+	print("--- ligne mecanique ---")
+	var jeu: Node = load("res://scripts/game/merlin_game.gd").new()
+	if not jeu.has_method("_build_meca_line"):
+		_fautes.append("ligne mecanique : _build_meca_line introuvable")
+		jeu.free()
+		return
+	for cas in [
+		{"verbe": "OBSERVER", "trait": "pressentiment", "diff": 3, "talent": 0},
+		{"verbe": "COMBATTRE", "trait": "main_de_fer", "diff": 2, "talent": 2},
+	]:
+		var combo: Array = [par_verbe[cas["verbe"]], par_id[cas["trait"]]]
+		var res: Dictionary = MerlinResolution.resolve(["Force", "Instinct"], combo, [], 8,
+			[], int(cas["diff"]), int(cas["talent"]), 0, "Epreuve", 0)
+		res["meca_verb"] = str(cas["verbe"])
+		var ligne: String = str(jeu._build_meca_line(res, str(res["degree"])))
+		print("  %s" % ligne)
+		if bool(res["geste_sur"]):
+			if ligne.contains("2d6"):
+				_fautes.append("%s : la ligne annonce un 2d6 alors qu'aucun de n'a roule" % cas["verbe"])
+			if not ligne.contains("Sans jet"):
+				_fautes.append("%s : la ligne ne dit pas que le geste est sans jet" % cas["verbe"])
+		elif not ligne.contains("2d6"):
+			_fautes.append("%s : un vrai jet doit annoncer son 2d6" % cas["verbe"])
+	jeu.free()
+
+
+# Accessibilite : en mouvement reduit la phrase ne s'anime pas, elle est PLEINE d'emblee.
+# Branche ecrite en v46 et jamais executee jusqu'ici.
+func _verifier_mouvement_reduit(par_verbe: Dictionary, par_id: Dictionary) -> void:
+	print("--- mouvement reduit ---")
+	var avant: bool = MerlinVisual.reduced_motion
+	MerlinVisual.reduced_motion = true
+	var combo: Array = [par_verbe["PARLER"], par_id["langue_de_miel"]]
+	var res: Dictionary = MerlinResolution.resolve(["Empathie"], combo, [], 8, [], 2, 0, 0, "Rencontre", 0)
+	var phrase: String = str(res.get("phrase_geste", ""))
+	_reduit_vue = false
+	_reduit_ratio_min = 2.0
+	var fx: MerlinFx = MerlinFx.play(self, res, combo, [], func() -> bool: return true)
+	_suivre_reduit(fx, phrase)
+	await fx.run()
+	MerlinVisual.reduced_motion = avant
+	if not _reduit_vue:
+		_fautes.append("mouvement reduit : la phrase n'a jamais ete affichee")
+	elif _reduit_ratio_min < RATIO_PLEIN:
+		_fautes.append("mouvement reduit : la phrase s'anime encore (ratio min %.2f)" % _reduit_ratio_min)
+	else:
+		print("  phrase pleine des la premiere frame lue — OK")
+
+
+# ATTENTION : en GDScript une lambda capture les locales par VALEUR. Un compteur ferme dans une
+# lambda ne remonte JAMAIS — la sonde se mentirait a elle-meme. D'ou ces deux membres.
+func _suivre_reduit(fx: MerlinFx, phrase: String) -> void:
+	while is_instance_valid(fx) and fx.is_inside_tree():
+		for n in fx.get_children():
+			if n is Label and (n as Label).text == phrase:
+				_reduit_vue = true
+				_reduit_ratio_min = minf(_reduit_ratio_min, (n as Label).visible_ratio)
+		await get_tree().process_frame
 
 
 # Suit le Label de la phrase pendant toute la vie du layer : quand il apparait, jusqu'ou il se
