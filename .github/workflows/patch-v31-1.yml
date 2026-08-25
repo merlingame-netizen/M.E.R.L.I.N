@@ -31,7 +31,7 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v47_1_bible_temps_du_geste.py
+        run: python3 outillage/infra/patches/v48_empreinte_lore.py
       - name: Godot en cache
         id: godot-cache
         uses: actions/cache@v4
@@ -73,7 +73,7 @@ jobs:
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add docs/BIBLE.md
+          git add scripts/llm/merlin_prompt_builder.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "docs(bible): v2.1 - R173, le temps du geste (v34-v47)" -m "La Bible rattrape le code : la derniere decision datee etait R172 (31 juillet). R173 pose le canon complet du temps du geste : geste sur (v34), de dispense par maitrise + rarete avec mise annoncee (v46), phrase du geste composee par le CODE (v46), issue qui ouvre la suite et regle du trait (v45), fantome de tuile (v47), memoire et passe (v42-v44 : canon en tete stable, chronique seule source du passe, banc du pacte clos), et le gate d'animation (sonde du geste en CI). Mesures de reference incluses." -m "C'est la Bible que lit le Sage du studio : sans R173, il repondrait v33 a des questions v47." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v48 - l'empreinte du monde dans la generation, pas du generique celtique" -m "Maxime : ameliore drastiquement l'emprise du Lore. Le LORE_CANON listait des figures mais restait un decor celtique passe-partout. v48 y grave LA signature du monde : Broceliande est une foret-REVE qui BOUCLE sur elle-meme, ou les etres rejouent sans fin la meme scene (c'est pourquoi les druides glitchent et le chevalier rejoue sa defaite), et seul le Voyageur avance. Plus : des LIEUX NOMMES propres (Fontaine de Barenton, Val sans Retour, Pas de Nuit, Pierre Qui Oublie), les figures avec leur nom (Fanch le Trotteur, la Lavandiere de Nuit, le Passeur de Brumes), le gwenneg, et des INTERDITS ANTI-GENERIQUE durcis : aucun dieu nomme (ni Lugh ni Cernunnos), aucune magie a incantation, aucune prophetie, aucun objet enchante vague. Le merveilleux est CONCRET et INQUIETANT." -m "En tete stable du Conteur (scene/arc/intro) : le cache de prefixe amortit le cout des le 2e beat. L'issue (Vif, 2048) garde sa regle breve, non touchee." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
