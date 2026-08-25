@@ -7,7 +7,11 @@ le studio, le personnage connaît la forêt : aucun ne connaît la Bible. Le Sag
 livré dans le même commit) répond depuis les textes et cite sa source.
 
 Quatre fichiers : chat_reply.py (la branche du Sage), app.py (liste blanche), index.html
-(3e bouton du duo), studio.js (avatar, nom, placeholder, suggestions)."""
+(3e bouton du duo), studio.js (avatar, nom, placeholder, suggestions).
+
+Leçon de la première version : AUCUN caractère hors plan de base (emoji astral) dans un
+patch — un \\uXXXX de paire de substitution passe la compilation Python mais produit des
+surrogates inencodables au write_text (vecu : run 32825776528). Avatar en ✦ (BMP)."""
 import pathlib
 import sys
 
@@ -74,7 +78,7 @@ t = exact(t,
     '        else:\n'
     '            refs = grimoire.references(question)\n'
     '            if refs:\n'
-    '                texte += "\\n\\n\ud83d\udcd6 " + refs\n'
+    '                texte += "\\n\\nSources : " + refs\n'
     '        memory.chat_append(conv, "assistant", "le-sage", texte, to="sage")\n'
     '        print(f"le Sage a répondu ({len(texte)} car.)")\n'
     '        return 0\n',
@@ -94,21 +98,17 @@ t = exact(t,
     "A1-liste-blanche")
 p.write_text(t, encoding="utf-8")
 
-# ═══ 3) index.html — le troisième bouton du duo (qui devient un trio) ═══
+# ═══ 3) index.html — le troisième bouton (ancre SANS l'emoji astral de Merlin) ═══
 p = pathlib.Path("tools/merlin_studio/templates/index.html")
 t = p.read_text(encoding="utf-8")
 t = exact(t,
-    '     <button type="button" class="duo-btn" data-to="jeu" role="tab">\n'
-    '      <span class="duo-av merlin-av" id="merlin-av"><i class="rune">\ud83d\udf01</i></span>\n'
     '      <span class="duo-txt"><b>Merlin</b><i>le personnage du jeu</i></span>\n'
     '     </button>\n'
     '    </div>\n',
-    '     <button type="button" class="duo-btn" data-to="jeu" role="tab">\n'
-    '      <span class="duo-av merlin-av" id="merlin-av"><i class="rune">\ud83d\udf01</i></span>\n'
     '      <span class="duo-txt"><b>Merlin</b><i>le personnage du jeu</i></span>\n'
     '     </button>\n'
     '     <button type="button" class="duo-btn" data-to="sage" role="tab">\n'
-    '      <span class="duo-av">\ud83d\udcd6</span>\n'
+    '      <span class="duo-av">✦</span>\n'
     '      <span class="duo-txt"><b>Le Sage</b><i>mécaniques &amp; lore — la Bible répond</i></span>\n'
     '     </button>\n'
     '    </div>\n',
@@ -127,7 +127,7 @@ p = pathlib.Path("tools/merlin_studio/static/studio.js")
 t = p.read_text(encoding="utf-8")
 t = exact(t,
     "const AV = { merlin: '\u25c8' };",
-    "const AV = { merlin: '\u25c8', 'le-sage': '\ud83d\udcd6' };",
+    "const AV = { merlin: '\u25c8', 'le-sage': '\u2726' };",
     "J1-avatar")
 t = exact(t,
     "'selftest': 'Test' };",
