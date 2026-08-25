@@ -1,3 +1,8 @@
 Declenchement du patcheur pour v47.1 (2026-08-25) : la Bible rattrape le code.
 R173 (le temps du geste, v34-v47) en tete des decisions + bump v2.0 -> v2.1.
-Le pointeur du workflow passe sur v47_1_bible_temps_du_geste.py dans ce meme commit.
+
+Bump 2 : le premier declencheur est parti AVANT le pointeur du workflow (erreur de
+sequencement) — le run intermediaire a rejoue v47 deja appliquee et a echoue sans rien
+pousser (exact() = 0, le comportement voulu). Ce commit porte pointeur + declencheur
+ENSEMBLE, et ajoute concurrency: cancel-in-progress au workflow : deux pushes rapproches
+ne font plus deux runs.

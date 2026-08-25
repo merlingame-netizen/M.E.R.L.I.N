@@ -1,14 +1,8 @@
 # Patcheur du jeu — remplacements exacts + VALIDATION GODOT + commit + push sur feat/practices-docs.
 #
-# v47 : la validation entre dans le patcheur. La session de pilotage a perdu son shell et la VM
-# est muette : plus personne ne pouvait executer Godot avant livraison. Le patcheur le fait donc
-# lui-meme — parse check editeur puis sonde du geste — et REFUSE de pousser si l'un des deux
+# La validation vit dans le patcheur : parse check editeur puis sonde du geste, sur Godot 4.4.1
+# (parite VM/box — 4.5-stable a pendu 2 h 27 sur ce depot), et REFUS de pousser si l'un des deux
 # echoue. Un patch casse ne peut plus atteindre la branche du jeu.
-#
-# GODOT 4.4.1, PAS 4.5 : le premier run (32824457718) a pendu 2 h 27 en parse check avec
-# 4.5-stable, sans conclure. Tout l'ecosysteme du projet tourne en 4.4.1 (la VM, la box de
-# pilotage) et c'est avec 4.4.1 que le pass editeur est PROUVE en moins de 400 s sur ce depot.
-# La CI valide donc avec le meme moteur que partout ailleurs — la parite avant la nouveaute.
 name: patch-v31-1
 on:
   push:
@@ -16,6 +10,11 @@ on:
     paths: ["infra/patches/**"]
 permissions:
   contents: write
+# Deux pushes rapproches = deux runs sur la meme cible : l'ancien n'a plus de valeur, il est
+# annule (c'est aussi ce qui aurait coupe le run 4.5 pendu, que le token ne pouvait annuler).
+concurrency:
+  group: patch-v31-1
+  cancel-in-progress: true
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -32,7 +31,7 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v47_fantome_de_tuile.py
+        run: python3 outillage/infra/patches/v47_1_bible_temps_du_geste.py
       - name: Godot en cache
         id: godot-cache
         uses: actions/cache@v4
@@ -74,7 +73,7 @@ jobs:
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/game/merlin_fx.gd scripts/game/merlin_game.gd tools/probe_fx_geste.gd
+          git add docs/BIBLE.md
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "feat(jeu): v47 - le fantome de tuile : les deux ensembles fusionnent enfin" -m "Maxime : une animation de fusion qui fusionne LES DEUX ensembles. Une seule carte volait : le trait etait aspire, l'action restait une tuile permanente qui pulse sur place (v11-W2). v47 fait voler une COPIE - un node neuf (doctrine ghost v10.13.1, jamais un reparent), detachee de la tuile, qui converge avec le trait, fusionne et eclate avec lui. La tuile reelle ne bouge pas d'un pixel : la regle v11-W2 tient, et la fusion se voit enfin." -m "La sonde du geste gagne un 4e controle (le fantome apparait dans le layer et porte le verbe joue), et le patcheur valide desormais lui-meme : parse check editeur + sonde complete sur un vrai Godot 4.4.1 headless AVANT le push - un patch casse ne peut plus atteindre cette branche." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "docs(bible): v2.1 - R173, le temps du geste (v34-v47)" -m "La Bible rattrape le code : la derniere decision datee etait R172 (31 juillet). R173 pose le canon complet du temps du geste : geste sur (v34), de dispense par maitrise + rarete avec mise annoncee (v46), phrase du geste composee par le CODE (v46), issue qui ouvre la suite et regle du trait (v45), fantome de tuile (v47), memoire et passe (v42-v44 : canon en tete stable, chronique seule source du passe, banc du pacte clos), et le gate d'animation (sonde du geste en CI). Mesures de reference incluses." -m "C'est la Bible que lit le Sage du studio : sans R173, il repondrait v33 a des questions v47." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
