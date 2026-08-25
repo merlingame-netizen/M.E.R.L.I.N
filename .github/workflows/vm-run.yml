@@ -1,0 +1,69 @@
+# LE PONT VERS LA VM — executer une commande sur merlin-arm-a1 sans qu'aucun secret ne
+# transite par la conversation (regle absolue depuis l'incident de la cle API Oracle).
+#
+# Fonctionnement : un fichier infra/vm-run/cmd-NNN-nom.sh pousse sur cette branche declenche
+# ce workflow ; il execute le script sur la VM par SSH (cle = secret VM_SSH_KEY, pose par
+# Maxime dans Settings > Secrets, JAMAIS dans le chat) et commite la sortie complete dans
+# infra/vm-run/resultats/ — lisible ensuite par l'API. Chaque commande est un fichier
+# commite : le pont est AUDITABLE (historique git complet) et REVOCABLE (supprimer le secret).
+#
+# Si la VM est injoignable, le resultat commite porte l'erreur SSH : le pont sert aussi de
+# sonde de vie. Il ne peut PAS rallumer une instance eteinte — ca reste le bouton Start.
+name: vm-run
+on:
+  push:
+    branches: [claude/oracle-free-tier-access-IN1Wm]
+    paths: ["infra/vm-run/cmd-*.sh"]
+permissions:
+  contents: write
+concurrency:
+  group: vm-run
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/oracle-free-tier-access-IN1Wm
+      - name: Executer la derniere commande et committer la sortie
+        env:
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+        run: |
+          set -u
+          if [ -z "${VM_SSH_KEY:-}" ]; then
+            echo "secret VM_SSH_KEY absent — pont inactif. Bootstrap : infra/vm-run/README.md"
+            exit 0
+          fi
+          CMD="$(ls infra/vm-run/cmd-*.sh 2>/dev/null | sort | tail -1)"
+          [ -n "$CMD" ] || { echo "aucune commande en attente"; exit 0; }
+          N="$(basename "$CMD" .sh)"
+          if [ -f "infra/vm-run/resultats/$N.txt" ]; then
+            echo "deja executee ($N) — une commande = une execution"
+            exit 0
+          fi
+          mkdir -p ~/.ssh infra/vm-run/resultats
+          printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/id_vm
+          chmod 600 ~/.ssh/id_vm
+          H="${VM_HOST:-141.253.124.75}"
+          U="${VM_USER:-ubuntu}"
+          echo "== $N -> $U@$H =="
+          set +e
+          timeout 4800 ssh -i ~/.ssh/id_vm \
+            -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=8 \
+            "$U@$H" 'bash -s' < "$CMD" > "infra/vm-run/resultats/$N.txt" 2>&1
+          RC=$?
+          set -e
+          {
+            echo ""
+            echo "== fin : rc=$RC $(date -u +%FT%TZ) hote=$H utilisateur=$U =="
+          } >> "infra/vm-run/resultats/$N.txt"
+          tail -30 "infra/vm-run/resultats/$N.txt"
+          git config user.name "Claude"
+          git config user.email "noreply@anthropic.com"
+          git add "infra/vm-run/resultats/$N.txt"
+          git commit -m "chore(vm-run): resultat $N (rc=$RC)" -m "Sortie complete de la commande, executee par le pont vm-run (SSH via secret du depot)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git push origin HEAD:claude/oracle-free-tier-access-IN1Wm
