@@ -14,6 +14,10 @@ permissions:
 jobs:
   patch:
     runs-on: ubuntu-latest
+    # L'import a froid d'un projet Godot peut etre long, mais pas infini : sans borne, un
+    # editeur qui pend mangerait six heures de minutes Actions (observe : Validation 1 a
+    # 25 min sur le premier run, import complet du projet). 50 min = large, et fini.
+    timeout-minutes: 50
     steps:
       - name: Jeu (feat/practices-docs)
         uses: actions/checkout@v4
@@ -42,7 +46,7 @@ jobs:
           chmod +x godot
       - name: Validation 1 — parse check editeur
         run: |
-          ~/godot-bin/godot --headless --editor --quit --path . 2>&1 | tee /tmp/parse.log || true
+          timeout 2400 ~/godot-bin/godot --headless --editor --quit --path . 2>&1 | tee /tmp/parse.log || true
           # Bruit tolere (absent du runner, sans rapport avec le patch) : gdextension ARM,
           # traductions non importees, police VT323. Toute erreur de SCRIPT est un refus.
           if grep -aE "SCRIPT ERROR|Compile Error" /tmp/parse.log; then
