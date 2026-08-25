@@ -20,12 +20,12 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v46_geste_dit_et_de_dispense.py
+        run: python3 outillage/infra/patches/v46_1_sonde_du_geste.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/game/merlin_resolution.gd scripts/game/merlin_fx.gd scripts/game/merlin_game.gd tools/probe_partie_journal.gd
+          git add tools/probe_fx_geste.gd tools/probe_fx_geste.tscn
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "feat(jeu): v46 - le geste se dit, et le de se dispense" -m "Maxime : OBSERVER + Le Pressentiment rendu par des mains poussant une pierre de basalte. v45 avait donne une regle au modele ; v46 lui RETIRE la charge. La phrase du geste est composee par le CODE (socle du verbe + maniere du trait, 25 concepts couverts, deterministe) et s ecrit a la machine entre la fusion et le de - le modele n ecrit plus que la SUITE. Les ~2 s de frappe sont donnees a l ecriture de l issue qui court deja en fond : l animation paie le LLM au lieu de l attendre." -m "Et le de se dispense : la maitrise du verbe (talent >= 2) et la rarete du trait (Rare/Epique/Mythique) achetent de la marge sur le jet MINIMAL - un sceau s appose, la mise annonce pourquoi. Jamais au Climax (l eclat n existe que par le risque). A talent 0 + trait Commune la marge vaut 0 : comportement v34 strictement inchange. La ligne mecanique cesse d annoncer un 2d6 qui n a pas roule (mensonge latent depuis v34)." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "test(jeu): v46.1 - la sonde du geste, pour verifier une animation sans la VM" -m "La sequence v46 (fusion -> phrase du geste -> de/sceau) a ete ecrite, poussee et livree sans avoir jamais tourne : le parse check ne dit rien d une animation, et la partie temoin demande le moteur natif (absent hors ARM) plus une demi-heure de VM. Entre les deux, rien. Cette sonde joue les DEUX branches de la phase 3 dans une vraie scene (donc les autoloads), sans une ligne de LLM, en ~10 s." -m "Elle echoue avec une raison precise si la phrase ne s affiche pas, ne finit pas de s ecrire, ou si la mise ne s allume pas. Contre-epreuve faite : frappe bridee a 30 pour cent -> rc=1 et le motif exact. Mesures a la livraison : phrase a t+0,77 s, pleine a t+2,37 s, sequence complete en 4,3 s (avec de) et 3,7 s (sans jet). Note : --script ne suffit pas, les autoloads n y sont pas enregistres et la coroutine meurt en silence - d ou le .tscn." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs

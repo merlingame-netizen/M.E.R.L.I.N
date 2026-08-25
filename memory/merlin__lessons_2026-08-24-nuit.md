@@ -46,3 +46,33 @@ neuf fichiers témoins : `lien.txt`, `.env`, `Bearer`, `ocid1.` retenus ; `journ
 renonçait sans rien dire (trois portes de sortie), et son `pull … | tail -2` avalait le code de
 retour — un pull refusé s'annonçait « mis à jour » avec le sha précédent. Les quatre cas sonnent
 maintenant sur le téléphone, et un pull sans effet est un échec déclaré.
+
+## 2026-08-25 02:30 — l'animation v46 a enfin TOURNÉ (v46.1)
+
+v46 avait été livrée sans que sa séquence n'ait jamais tourné : le parse check ne dit rien d'une
+animation, et la partie témoin exige le moteur natif (absent hors ARM) plus une demi-heure de VM —
+qui est muette. Entre les deux, **rien**. C'est le trou qui a permis à v42 de partir avec un
+contexte débordé et à v46 de partir sur ma seule parole.
+
+**Piège trouvé** : `godot --headless --script res://…` **n'enregistre PAS les autoloads**
+(`MerlinAudio` vaut `null`). La coroutine de `MerlinFx` meurt en silence sur le premier appel et
+l'attente ne rend jamais la main — 2 min de blocage sans un message. Il faut une **vraie scène**
+(`.tscn`), d'où le couple `probe_fx_geste.gd` + `.tscn`.
+
+Mesures réelles (headless, `motion()` = 1.0) :
+
+| cas | phrase visible | phrase pleine | séquence complète |
+|-----|----------------|---------------|-------------------|
+| avec dé (OBSERVER + Pressentiment, diff 3) | t+0,75 s | t+2,35 s | **4,3 s** |
+| sans jet (COMBATTRE + Main de Fer, talent 2) | t+0,90 s | t+2,50 s | **3,7 s** |
+
+Soit ~1,9 s de plus qu'avant v46 (l'ancien surcoût de fusion était de 2,1-2,4 s) — et ces 1,9 s
+sont données à l'écriture de l'issue qui court en fond.
+
+**Contre-épreuve faite** : frappe bridée à 30 % → la sonde rend `rc=1` avec le motif exact
+(« la phrase n'a jamais fini de s'écrire (ratio max 0.30) »). Une sonde qu'on n'a pas vue échouer
+ne prouve rien.
+
+Bruit connu et sans effet : `Tween … started with no Tweeners` — la sonde passe `card_views` vide,
+donc la phase 2 (vol des cartes) crée un tween sans tweener. En partie réelle la vue du trait est
+toujours là. Préexistant à v46.
