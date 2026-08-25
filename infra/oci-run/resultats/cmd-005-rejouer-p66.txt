@@ -1,0 +1,9 @@
+A qui=ocarun date=2026-08-25T21:54:53Z sha=9bbc22ad
+B cartes_rejetees=10
+C pending=1 accepted=506 rejected=92
+D marqueur job-066 efface — le Courrier la rejouera au prochain passage (*/2 min)
+E jeu: local=6682d6fb (v47+Bible attendus)
+F gd-content-gap: prochaine execution laissee en place — son recadrage R166 arrive par l'outillage
+G fin cmd-005
+
+== fin : etat=SUCCEEDED 2026-08-25T21:55:33Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
