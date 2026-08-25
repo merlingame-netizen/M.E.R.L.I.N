@@ -20,12 +20,12 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v46_1_sonde_du_geste.py
+        run: python3 outillage/infra/patches/v46_2_sonde_complete.py
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
           git add tools/probe_fx_geste.gd tools/probe_fx_geste.tscn
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "test(jeu): v46.1 - la sonde du geste, pour verifier une animation sans la VM" -m "La sequence v46 (fusion -> phrase du geste -> de/sceau) a ete ecrite, poussee et livree sans avoir jamais tourne : le parse check ne dit rien d une animation, et la partie temoin demande le moteur natif (absent hors ARM) plus une demi-heure de VM. Entre les deux, rien. Cette sonde joue les DEUX branches de la phase 3 dans une vraie scene (donc les autoloads), sans une ligne de LLM, en ~10 s." -m "Elle echoue avec une raison precise si la phrase ne s affiche pas, ne finit pas de s ecrire, ou si la mise ne s allume pas. Contre-epreuve faite : frappe bridee a 30 pour cent -> rc=1 et le motif exact. Mesures a la livraison : phrase a t+0,77 s, pleine a t+2,37 s, sequence complete en 4,3 s (avec de) et 3,7 s (sans jet). Note : --script ne suffit pas, les autoloads n y sont pas enregistres et la coroutine meurt en silence - d ou le .tscn." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "test(jeu): v46.2 - la sonde couvre tout ce que v46 a touche" -m "Restaient deux surfaces livrees sans avoir jamais tourne. LA LIGNE MECANIQUE : du texte LU par le joueur — un geste sans de ne doit plus annoncer 2d6 7, la face de repli (mensonge latent depuis v34, rendu frequent par la dispense). LE MOUVEMENT REDUIT : la phrase doit etre pleine d emblee, sans frappe." -m "Contre-epreuve faite sur chacune : ligne remise en 2d6 sur un geste sur -> rc=1 avec le motif exact ; mouvement reduit neutralise -> rc=1, ratio min 0.00. Piege note dans le code apres s y etre fait prendre : en GDScript une lambda capture les locales par VALEUR, un compteur ferme ne remonte jamais et la sonde se ment alors a elle-meme." -m "Patch applique par le workflow patch-v31-1 (canal Actions)." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs

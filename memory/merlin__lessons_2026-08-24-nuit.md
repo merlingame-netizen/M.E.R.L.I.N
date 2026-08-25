@@ -76,3 +76,27 @@ ne prouve rien.
 Bruit connu et sans effet : `Tween … started with no Tweeners` — la sonde passe `card_views` vide,
 donc la phase 2 (vol des cartes) crée un tween sans tweener. En partie réelle la vue du trait est
 toujours là. Préexistant à v46.
+
+## 2026-08-25 04:00 — les deux dernières branches de v46 (v46.2)
+
+Encore deux surfaces livrées sans avoir jamais tourné, trouvées en relisant ce que j'avais écrit :
+
+- **La ligne mécanique** — du texte *lu par le joueur*. Vérifiée : `Vous engagez le fer (Force) ·
+  Sans jet · maîtrise du geste = réussite` sur un geste sûr, et `· 2d6 8 +3 = partiel` sur un vrai
+  jet. Plus aucun dé fantôme.
+- **Le mouvement réduit** — la phrase doit être pleine d'emblée. Vérifiée : `ratio min 1.00`.
+
+Contre-épreuve faite sur chacune (rc=1 avec le motif exact), puis retour au vert.
+
+**Piège GDScript, à retenir** : une lambda capture les locales **par valeur**. Mon premier test du
+mouvement réduit fermait `vue` et `ratio_min` dans une lambda : ils ne remontaient jamais, et la
+sonde a annoncé « la phrase n'a jamais été affichée » sur du code parfaitement sain. J'ai failli
+corriger un bug qui n'existait pas. Les compteurs d'une sonde doivent être des **membres**.
+
+**Deuxième piège, même famille** : `get_tree().quit(0)` ne sort pas immédiatement — sans `else`,
+le `quit(1)` qui suit écrase le code de sortie. Une sonde qui dit « OK » et rend `rc=1` est pire
+qu'une sonde absente.
+
+État de v46 : tout ce qui ne dépend pas du LLM est désormais **exécuté et contre-éprouvé**. Ce qui
+reste suspendu à la VM : la fidélité du texte écrit par le modèle (v45), le banc du pacte (v44),
+et les durées réelles en partie.
