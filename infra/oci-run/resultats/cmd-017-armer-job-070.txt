@@ -1,0 +1,11 @@
+A depart 15:34:38Z
+B M.E.R.L.I.N 2779dc7e -> 227e84ab
+B merlin-game 9037bc86 -> 091d5e02
+C garde070 sonde=1 place=1 annul=1 draft=1 env=1 (11111 = elle peut jouer)
+D courrier_en_cours=1 job069_en_cours=0
+0 godot=non
+D job070=present fait070=pose
+D en_attente=
+Z fin cmd-017
+
+== fin : etat=SUCCEEDED 2026-08-27T15:34:51Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
