@@ -84,13 +84,20 @@ while pgrep -f "godot.*probe_partie_journal" >/dev/null 2>&1; do
 done
 
 if [ "$PHASE" = "selection" ]; then
-    etape 2 4 "les trois sentiers (jusqu'à 5 min)"
+    # 2026-08-27 (p70) — QUINZE MINUTES, PAS SEPT. La partie temoin p70 est morte en annoncant
+    # « selection invalide » alors que le jeu avait REUSSI : selection.json portait ok=true et ses
+    # trois sentiers nommes, ecrit a 15:43:34 — quelques secondes APRES que le harnais eut
+    # renonce (BUDGET=430 s, atteint vers 15:43:20). Une partie temoin entiere perdue pour une
+    # poignee de secondes, et un diagnostic faux (« la selection a echoue ») pour la meme raison.
+    # Le cout d'un budget genereux est NUL : la boucle d'attente sort des que la cible est ecrite
+    # et que le jeu a disparu. Le cout d'un budget trop court est une partie.
+    etape 2 4 "les trois sentiers (jusqu'à 15 min)"
     rm -f "$SEL"
     MERLIN_SCRIPT="res://tools/probe_partie_journal.gd" MERLIN_PHASE=selection \
         MERLIN_BIOME="${MERLIN_BIOME:-foret}" MERLIN_SELECTION_OUT="$SEL" \
-        MERLIN_SHOTS_DIR="$SHOTS" MERLIN_QUIT_AFTER_S=420 \
+        MERLIN_SHOTS_DIR="$SHOTS" MERLIN_QUIT_AFTER_S=900 \
         bash "$GS" start >/dev/null 2>&1
-    BUDGET=430
+    BUDGET=950
 else
     etape 2 4 "la partie (jusqu'à 2 h)"
     [ -s "$SEL" ] || { echo "aucune sélection — lancer la phase 'selection' d'abord"; exit 1; }
