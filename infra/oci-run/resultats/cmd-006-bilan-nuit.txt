@@ -1,0 +1,21 @@
+A date=2026-08-27T07:10:52Z qui=ocarun
+B outillage=113710e9 cron=32
+C jeu=f066757b (v48=f066757 attendu)
+D content-gap+corpus dans cron ? 0 (attendu 0 = bien en pause)
+E == p66 rejouee ? ==
+2026-08-25 21:56:01.844598463 +0000 /var/lib/ocarun/.cache/merlin-agents/courrier/job-066-partie19-v46.fait
+F == derniers marqueurs Courrier (5) ==
+job-066-partie19-v46.fait
+job-067-vague-agents.fait
+job-065-partie18-v44.fait
+job-064-autopsie-muet.fait
+job-063-partie17-v43.fait
+G == journal du jour (chapitre) ==
+
+H == smoke nocturne (erreurs de scene ?) ==
+
+I == propositions en attente (apres nettoyage) ==
+pending=7 accepted=568 rejected=92
+Z fin cmd-006
+
+== fin : etat=SUCCEEDED 2026-08-27T07:11:14Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
