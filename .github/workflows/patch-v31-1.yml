@@ -69,6 +69,35 @@ jobs:
             echo "::error::la sonde du geste n'a pas rendu OK — rien n'est pousse"
             exit 1
           }
+      # Validation 3 — LES SCRIPTS DE tools/ TOUCHES PAR LE PATCH SONT VRAIMENT PARSES.
+      #
+      # Trou constate au run #37 (v48.1a) : la validation 1 (--editor --quit) a rendu en 10 s et
+      # la validation 2 charge une scene qui n'inclut aucun script de tools/. Le patch touchait
+      # probe_partie_journal.gd -- aucune des deux ne l'a donc lu. Pire, un Godot qui plante
+      # pendant l'import laisse un log non vide sans « SCRIPT ERROR » : la validation 1 passe.
+      #
+      # On ne controle QUE les fichiers que le patch vient de modifier. Un balayage de tout
+      # tools/ echouerait a tort : probe_fx_geste.gd reference l'autoload MerlinAudio, absent en
+      # mode --check-only --script, alors qu'il tourne parfaitement comme scene (c'est la
+      # validation 2). Seuls les scripts strictement duck-types passent ce mode -- ce qui est
+      # justement la regle du dossier tools/.
+      - name: Validation 3 — parse des scripts de tools/ touches par le patch
+        run: |
+          TOUCHES="$(git diff --name-only -- 'tools/*.gd')"
+          [ -n "$TOUCHES" ] || { echo "aucun script de tools/ touche — rien a controler"; exit 0; }
+          echec=0
+          for f in $TOUCHES; do
+            timeout 300 ~/godot-bin/godot --headless --path . --check-only \
+              --script "res://$f" > /tmp/chk.log 2>&1 || true
+            if grep -aE "SCRIPT ERROR|Parse Error:|Compile Error" /tmp/chk.log | grep -av "\.tres" | grep -aq .; then
+              echo "::error::$f ne parse pas"
+              grep -aE "SCRIPT ERROR|Parse Error:|Compile Error" /tmp/chk.log | grep -av "\.tres" | head -5
+              echec=1
+            else
+              echo "ok $f"
+            fi
+          done
+          [ "$echec" -eq 0 ] || { echo "::error::un script de tools/ ne parse pas — rien n'est pousse"; exit 1; }
       - name: Commit et push
         run: |
           git config user.name "Claude"
