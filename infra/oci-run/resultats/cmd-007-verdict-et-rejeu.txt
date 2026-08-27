@@ -1,0 +1,8 @@
+A jeu=f066757b (v48=f066757)
+B == verdict de la derniere partie temoin (journal sur disque) ==
+C pas de journal.json (partie jamais aboutie)
+G == relance d'une partie AVEC v48 ==
+H marqueur job-066 efface -> rejoue avec v48 (Courrier */2)
+Z fin cmd-007
+
+== fin : etat=SUCCEEDED 2026-08-27T11:46:40Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
