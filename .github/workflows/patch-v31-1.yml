@@ -31,7 +31,9 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v48_1b_rendre_la_place.py
+        run: |
+          python3 outillage/infra/patches/v48_1b_rendre_la_place.py
+          python3 outillage/infra/patches/v48_1c_annulation_pas_reussite.py
       - name: Godot en cache
         id: godot-cache
         uses: actions/cache@v4
@@ -49,7 +51,7 @@ jobs:
       - name: Validation 1 — parse check editeur
         run: |
           ~/godot-bin/godot --version
-          timeout 1800 ~/godot-bin/godot --headless --editor --quit --path . 2>&1 | tee /tmp/parse.log || true
+          timeout 600 ~/godot-bin/godot --headless --editor --quit --path . 2>&1 | tee /tmp/parse.log || true
           # Bruit tolere (absent du runner, sans rapport avec le patch) : gdextension ARM,
           # traductions non importees, police VT323. Toute erreur de SCRIPT est un refus.
           if grep -aE "SCRIPT ERROR|Compile Error" /tmp/parse.log; then
@@ -81,10 +83,10 @@ jobs:
       # mode --check-only --script, alors qu'il tourne parfaitement comme scene (c'est la
       # validation 2). Seuls les scripts strictement duck-types passent ce mode -- ce qui est
       # justement la regle du dossier tools/.
-      - name: Validation 3 — parse des scripts de tools/ touches par le patch
+      - name: Validation 3 — parse de TOUS les scripts touches par le patch
         run: |
-          TOUCHES="$(git diff --name-only -- 'tools/*.gd')"
-          [ -n "$TOUCHES" ] || { echo "aucun script de tools/ touche — rien a controler"; exit 0; }
+          TOUCHES="$(git diff --name-only -- '*.gd')"
+          [ -n "$TOUCHES" ] || { echo "aucun script .gd touche — rien a controler"; exit 0; }
           echec=0
           for f in $TOUCHES; do
             timeout 300 ~/godot-bin/godot --headless --path . --check-only \
@@ -97,12 +99,12 @@ jobs:
               echo "ok $f"
             fi
           done
-          [ "$echec" -eq 0 ] || { echo "::error::un script de tools/ ne parse pas — rien n'est pousse"; exit 1; }
+          [ "$echec" -eq 0 ] || { echo "::error::un script touche ne parse pas — rien n'est pousse"; exit 1; }
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_prompt_builder.gd
+          git add scripts/llm/merlin_prompt_builder.gd scripts/llm/merlin_native.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "feat(jeu): v48.1b - rendre la place d ecrire" -m "LE FAIT, mesure au journal de p68 et confirme dans le C++ : le nombre de tokens ecrits vaut EXACTEMENT n_ctx moins la longueur du prompt. Beat 1 : prompt 1964, 84 ecrits ; beat 2 : 2033, 15 ; beat 5 : 2022, 26 ; beats 3 et 4 : 2045, 2 ecrits -- « Vous calez », le mur, puis le secours. n_past demarre a la longueur TOTALE du prompt (merlin_llm.cpp:408), que le prefixe KV soit reutilise ou non, et la boucle s arrete a n_ctx - 1 (merlin_llm.cpp:414) : max_tokens ne veut plus rien dire, le budget d ecriture est ce qui RESTE du contexte. Au-dela de 2044 tokens le prompt est en plus tronque, ce qui DESACTIVE la reutilisation du prefixe -- d ou les 40 a 57 s passees a relire un prompt qui ne laissera rien ecrire." -m "Ce plafond est ANTERIEUR a v48 : LORE_CANON ne figure pas dans le prompt d issue, il ne sert qu au Conteur. Le poids est le prefixe fixe de l issue, ~1573 tokens soit 77 pour cent du contexte, dont le seul bloc de regles ~1005. Rien ne l avait revele parce qu aucune partie complete n avait tourne du 24 au 27 aout." -m "Le remede applique a l ECRITURE la doctrine deja actee pour l affichage en v46 : ce qui doit etre vrai a 100 pour cent ne se demande pas a un LLM. Le code compose deja la phrase du geste (phrase_du_geste : socle du verbe + maniere du trait, 25 concepts) ; elle ne servait qu a l ecran. On la donne desormais au modele en QUEUE de prompt comme ancrage de sa premiere phrase, et les quatre segments de regles qui cherchaient le meme invariant par la persuasion -- sens des cinq registres, gloses des cinq verbes, maniere du trait, interdit des gestes inventes, ~425 tokens -- disparaissent. Trois autres segments sont resserres sans perdre leur contrainte, et une reference devenue orpheline est nommee." -m "MESURE APRES PATCH : bloc de regles 3315 -> 1870 caracteres (~1005 -> ~566 tokens) ; prefixe fixe 5193 -> 3748 (~1573 -> ~1135) ; place d ecriture 2-84 -> ~412 tokens. max_tokens (125-160) redevient le vrai plafond. Le prefixe reste stable d un beat a l autre, donc le cache KV saute son evaluation des le 2e beat." -m "Ni le canon, ni le Conteur, ni l equilibrage, ni une seule regle du jeu ne sont touches. Le modele ecrit toujours sa premiere phrase lui-meme : on lui donne le geste a accomplir, pas la phrase a recopier. Un repli sur le verbe seul couvre les appelants sans phrase composee." -m "Patch applique par le workflow patch-v31-1, apres parse check editeur, sonde du geste et parse des scripts touches." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v48.1b+c - rendre la place d ecrire, et cesser de servir une annulation comme une reussite" -m "DEUX causes distinctes produisaient la meme issue coupee : un plafond de place, et un demi-texte pris pour une prose finie. Le premier diagnostic n avait vu que la premiere ; c est la revue adversariale qui a trouve la seconde." -m "v48.1b - LA PLACE. Le nombre de tokens ecrits vaut EXACTEMENT n_ctx moins la longueur du prompt : p68 le montre beat par beat (1964 donne 84 ; 2033 donne 15 ; 2022 donne 26 ; 2045 donne 2). n_past demarre a la longueur TOTALE du prompt (merlin_llm.cpp:408) et la boucle s arrete a n_ctx-1 (ligne 414) : max_tokens ne veut plus rien dire, le budget d ecriture est ce qui reste du contexte. Au-dela de 2044 tokens la troncature desactive en plus la reutilisation du prefixe KV, d ou 40 a 57 s de relecture pour rien. Le poids n est PAS le canon (LORE_CANON ne figure pas dans le prompt d issue, il ne sert qu au Conteur) mais le prefixe fixe de l issue, ~1573 tokens dont ~1005 pour le seul bloc de regles. Ce plafond est anterieur a v48." -m "Le remede etend a l ecriture la doctrine de v46 : ce qui doit etre vrai a 100 pour cent ne se demande pas a un LLM. Le code compose deja la phrase du geste ; on la donne au modele en QUEUE de prompt, et les 425 tokens de regles qui cherchaient le meme invariant par la persuasion disparaissent. Mesure : bloc de regles 3315 vers 1870 caracteres, prefixe fixe 5193 vers 3748, place d ecriture 2-84 vers ~412 tokens." -m "v48.1c - L ANNULATION. merlin_llm.cpp:410 casse la boucle sur !is_generating SANS poser d erreur : le texte partiel remonte comme un resultat normal. Et cancel() (merlin_native.gd:676) n incremente pas v[id], contrairement au timeout (l.567) — or c est v[id] qui perime un callback (_on_result l.593). Le demi-texte traversait donc tout le chemin nominal et ses compteurs entraient dans _last_metrics, donc dans le journal. Comme prefetch_resolution preempte le Vif a CHAQUE pose de cartes, le cas est frequent : c est la meilleure explication du beat 2 de p68, coupe au milieu du mot l etro." -m "Le correctif marque la voie dans cancel() et convertit le resultat en erreur annulee dans _on_result. Ni busy ni v[id] ne sont touches : le fil d inference C++ tourne encore, et liberer la voie trop tot lancerait une generation sur un moteur occupe. L erreur annulee est inoffensive pour la detection de moteur mort, qui ne reagit qu a stuck et LLM disabled." -m "Validation 1 ramenee de 30 a 10 minutes : elle a pendu au run #38 la ou elle rendait en 10 s au #37, et son verdict est faible par construction (un Godot qui plante a l import laisse un log non vide sans SCRIPT ERROR). La validation 3 controle desormais TOUS les .gd touches, pas seulement ceux de tools/." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
