@@ -1,0 +1,8 @@
+A depart 15:18:29Z
+A godot=non mem=14.6Go
+A marqueur069=2026-08-27T14:38:01Z marqueur070=non
+B log=ABSENT
+C verdict69 ABSENT
+Z fin cmd-016
+
+== fin : etat=SUCCEEDED 2026-08-27T15:18:38Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
