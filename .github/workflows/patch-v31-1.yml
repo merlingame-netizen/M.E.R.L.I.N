@@ -31,7 +31,22 @@ jobs:
           ref: claude/oracle-free-tier-access-IN1Wm
           path: outillage
       - name: Appliquer le patch
-        run: python3 outillage/infra/patches/v49_le_fil_concret.py
+        run: |
+          # Un patch DEJA applique sur la branche du jeu n'est pas une panne : c'est ce qui
+          # arrive des qu'on pousse un NOUVEAU fichier dans infra/patches/ pendant que le
+          # pointeur designe encore le precedent. Avant, le job echouait bruyamment et il
+          # fallait aller lire le log pour comprendre qu'il n'y avait rien a comprendre.
+          # Desormais on distingue les deux cas : motif absent = deja applique, on ne pousse
+          # rien ; toute autre erreur reste un refus.
+          set -o pipefail
+          if python3 outillage/infra/patches/v49_le_fil_concret.py 2>&1 | tee /tmp/patch.log; then
+            echo "patch applique"
+          elif grep -q "motif trouve 0 fois" /tmp/patch.log; then
+            echo "::notice::patch DEJA applique sur cette branche — rien a pousser"
+          else
+            echo "::error::le patch a echoue pour une autre raison que « deja applique »"
+            exit 1
+          fi
       - name: Godot en cache
         id: godot-cache
         uses: actions/cache@v4
