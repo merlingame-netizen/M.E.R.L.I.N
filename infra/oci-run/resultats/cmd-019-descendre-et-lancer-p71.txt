@@ -1,0 +1,12 @@
+A depart 15:54:57Z
+B M.E.R.L.I.N 49e2cad4 -> 49e2cad4
+B merlin-game 091d5e02 -> 190fa4e4
+C garde071 sonde=1 place=1 annul=1 draft=1 boucle=1 chars=1 env=1 (1111111 = elle peut jouer)
+C budget_selection=430s quit_after=900s
+D derniere selection : ok=True sentiers=3 mur=108s
+E job071=present fait=pose
+E en_attente=
+E godot=non mem=21.6Go
+Z fin cmd-019
+
+== fin : etat=SUCCEEDED 2026-08-27T15:55:03Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
