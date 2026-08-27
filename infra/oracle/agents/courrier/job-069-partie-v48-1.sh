@@ -38,10 +38,20 @@ PY
 
 deadline=$(( $(date +%s) + 2700 ))
 
-# --- PREREQUIS : v48.1 vraiment deploye. Marqueur FONCTIONNEL, jamais un commentaire.
-# (Lecon p66 : une garde ancree sur un texte de commentaire renomme n'est plus jamais satisfaite.)
-while ! grep -q "MERLIN_BOT_COUVRANT\|choix_couvrant" "$GD/tools/probe_partie_journal.gd" 2>/dev/null; do
-    [ "$(date +%s)" -ge "$deadline" ] && { dire "ko" "v48.1 jamais deploye (bot couvrant absent de la sonde)"; exit 1; }
+# --- PREREQUIS : LES DEUX MOITIES de v48.1 deployees. Marqueurs FONCTIONNELS, jamais un
+# commentaire (lecon p66 : une garde ancree sur du texte de commentaire renomme n'est plus
+# jamais satisfaite, et job-066 a repondu « ko » trois jours durant sans que rien ne le dise).
+#
+# Les deux comptent, et une partie jouee a moitie patchee ne prouverait rien :
+#   a) v48.1a — la sonde joue couvrant et mesure l'attente moteur ;
+#   b) v48.1b — le prompt d'issue a rendu la place d'ecrire (sans quoi les issues restent
+#      coupees et le secours revient, quelle que soit la qualite du jeu du bot).
+while true; do
+    A=0; B=0
+    grep -q "MERLIN_BOT_COUVRANT" "$GD/tools/probe_partie_journal.gd" 2>/dev/null && A=1
+    grep -q "LE GESTE T'EST DONNE EN FIN DE PROMPT" "$GD/scripts/llm/merlin_prompt_builder.gd" 2>/dev/null && B=1
+    [ "$A$B" = "11" ] && break
+    [ "$(date +%s)" -ge "$deadline" ] && { dire "ko" "v48.1 incomplet sur la VM : sonde=$A prompt=$B (sha=$(git -C "$GD" rev-parse --short HEAD 2>/dev/null))"; exit 1; }
     sleep 30
 done
 SHA="$(git -C "$GD" rev-parse --short HEAD)"
