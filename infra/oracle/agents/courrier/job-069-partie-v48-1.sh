@@ -85,6 +85,16 @@ while :; do
 done
 MERLIN_BEATS=6 MERLIN_BOT_COUVRANT=1 env -u RES bash "$AGENTS/a_partie_journal.sh" partie 0 \
     "partie temoin v48.1 : zero secours, reussite complete, 20 s par beat" > "$COURRIER_RES/partie.log" 2>&1
+# --- LE MODE COUVRANT S'EST-IL VRAIMENT ENGAGE ? On ne le suppose pas : la sonde l'imprime.
+# game-stack.sh transmet l'environnement a Godot par LISTE BLANCHE (unshare ne conserve rien
+# d'autre) — une variable oubliee la se perd SANS UN MOT, et la garde ci-dessus, qui ne lit que
+# le fichier source, serait satisfaite pendant que le bot cycle en aveugle. C'est exactement le
+# genre de panne muette qui a coute trois jours avec job-066.
+if ! grep -aq "choix des cartes : COUVRANT" "$COURRIER_RES/partie.log" 2>/dev/null; then
+    dire "ko" "mode couvrant JAMAIS engage — MERLIN_BOT_COUVRANT n'a pas atteint Godot : $(grep -a 'choix des cartes' "$COURRIER_RES/partie.log" 2>/dev/null | head -c 120)"
+    exit 1
+fi
+
 if [ ! -s "$B/journal.json" ]; then
     tail -40 "$COURRIER_RES/partie.log" > "$COURRIER_RES/pourquoi69.txt"
     dire "ko" "journal absent : $(tail -c 250 "$COURRIER_RES/partie.log" | tr '\n' ' ')"
