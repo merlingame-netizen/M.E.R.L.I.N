@@ -643,6 +643,13 @@ func _on_result(result: Dictionary, cerveau: String = "conteur", gen_id: int = 0
 		"compteurs_reels": reels,
 		"prompt_ms": p_eval_ms, "prompt_tokens": n_prompt,
 		"ecriture_ms": eval_ms, "tokens_ecrits": n_ecrits,
+		# v48.1g — LA TAILLE DU PROMPT, A COTE DU DELTA. `prompt_tokens` est le nombre de tokens
+		# REELLEMENT decodes (remis a zero a chaque generation) : 2 quand le cache a tout servi,
+		# 2045 quand tout a ete relu. Il ne dit donc rien de la LONGUEUR du prompt, donc rien de
+		# la place qui reste pour ecrire. Sans cette mesure, aucun ratio caracteres/token n'est
+		# etablissable sur cette machine (ni tokenizer Gemma, ni source llama.cpp) et tout calcul
+		# de budget reste une estimation.
+		"prompt_chars": str(v.get("prompt", "")).length(),
 	}
 	v["metrics"] = met
 	_last_metrics = met

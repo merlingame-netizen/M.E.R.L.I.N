@@ -361,7 +361,7 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 	var usr: String = faction_block + ("Conte une SCENE de la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [
 		title, pitch, lieu]) \
 		+ LORE_CANON + REGLE_PASSE \
-		+ "\nLa scene = 1 a 2 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT ou une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». Rien d'autre que la scene." \
+		+ "\nLa scene = 1 a 2 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT ou une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». UN DETAIL, UN SEUL, montre que ces bois REJOUENT : un etre qui refait un geste deja fait, une trace qui revient, une parole redite comme si c'etait la premiere fois. Montre-le, ne l'explique JAMAIS. Rien d'autre que la scene." \
 		+ pool_line \
 		+ ("\nSCENE %d sur %d." % [pos + 1, total]) \
 		+ "\nROLE de cette scene : %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [role, cue_txt] \
@@ -415,7 +415,7 @@ static func arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, deb
 			+ "chaque etape decoule de la precedente et rapproche du but de la quete.") % [
 		debut + 1, debut + n, total, title, pitch, lieu]
 	var usr: String = faction_block + entete + suite + steps + pool_line \
-		+ "\nChaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez »." \
+		+ "\nChaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ».\nDANS AU MOINS UNE etape de cette tranche,UN DETAIL, UN SEUL, montre que ces bois REJOUENT : un etre qui refait un geste deja fait, une trace qui revient, une parole redite comme si c'etait la premiere fois. Montre-le, ne l'explique JAMAIS." \
 		+ "\nFormat STRICT : une etape par ligne, prefixee « %d. » a « %d. », rien d'autre." % [debut + 1, debut + n]
 	return {"system": SYSTEM_PREFIX, "user": usr,
 			"opts": {"creative": true, "max_tokens": 90 * n, "label": "arc — etapes %d-%d" % [debut + 1, debut + n]}}
@@ -468,7 +468,7 @@ static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "
 		for t in pool_list:
 			pl.append(str(t))
 		pool_line = "\nFORCES AUTORISEES (liste FERMEE) : %s. Chaque scene ne doit exiger QUE des forces de cette liste, jamais d'autres." % ", ".join(pl)
-	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [title, pitch, lieu]) + steps + pool_line + "\nChaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ».\nEXEMPLE de MANIERE (pas le contenu) :\n1. Vous vous enfoncez sous les fougeres ; le sous-bois s'obscurcit, et un pas leger vous suit a distance.\n2. Au detour d'un tronc, une vieille femme se dresse, une serpe a la main, et vous barre le chemin sans un mot.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
+	var usr: String = faction_block + ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [title, pitch, lieu]) + steps + pool_line + "\nChaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ».\nDANS AU MOINS UNE etape de cette tranche,UN DETAIL, UN SEUL, montre que ces bois REJOUENT : un etre qui refait un geste deja fait, une trace qui revient, une parole redite comme si c'etait la premiere fois. Montre-le, ne l'explique JAMAIS.\nEXEMPLE de MANIERE (pas le contenu) :\n1. Vous vous enfoncez sous les fougeres ; le sous-bois s'obscurcit, et un pas leger vous suit a distance.\n2. Au detour d'un tronc, une vieille femme se dresse, une serpe a la main, et vous barre le chemin sans un mot.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": 340, "label": "arc narratif (5 étapes)"}}
 
 
@@ -619,6 +619,19 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	# l'issue RESOLVE la situation precise (pas un generique « le chemin s'ouvre ») en fondant les 2
 	# forces, calee sur la prose cible. MerlinProse.strip_scene_echo (côté scénario) reste le filet anti-recopiage.
 	var situ_txt: String = str(situation.get("narration", "")).strip_edges()
+	# v48.1g — LA QUEUE NE DOIT JAMAIS POUSSER LE PROMPT DANS LA FALAISE. Au-dela de
+	# n_ctx-4 = 2044 tokens, le natif tronque PAR L'AVANT (merlin_llm.cpp:243-249) : il jette le
+	# gabarit de chat, SYSTEM_PREFIX et le haut des regles, ET desactive la reutilisation du
+	# prefixe KV (:271) — 40 a 57 s de relecture pour ne plus rien pouvoir ecrire (p68).
+	# v48.1b a rendu ~450 tokens, ce qui ELOIGNE la falaise sans la supprimer : la narration
+	# injectee ici variait de 239 a 694 caracteres selon les beats, et rien ne la bornait.
+	# On garde la FIN : c'est la que vivent l'instant suspendu et les etres nommes que l'issue
+	# doit faire reagir, et on repart d'une frontiere de phrase pour ne pas commencer en plein mot.
+	const SITU_MAX: int = 480
+	if situ_txt.length() > SITU_MAX:
+		var _coupe: String = situ_txt.substr(situ_txt.length() - SITU_MAX)
+		var _p: int = maxi(_coupe.find(". "), _coupe.find("\n"))
+		situ_txt = _coupe.substr(_p + 1).strip_edges() if _p > 0 else _coupe
 	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu). Situation: une dalle de pierre barre le gue, le courant pousse fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): [i]Vous calez vos pieds dans la vase et poussez la dalle sans jamais rompre l'effort.[/i] La pierre racle, bascule, et libere le passage ; sur l'autre rive, le vieux passeur relache sa gaffe et vous fait signe d'avancer."
 	# TÊTE STABLE / QUEUE VARIABLE — une décision de PERFORMANCE mesurée (2026-08-18, VM) : le
 	# prompt d'issue pèse ~1000 tokens et son ÉVALUATION seule coûtait 52-53 s, plus que la
@@ -652,8 +665,17 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 		+ cover_hint + syn_hint + focus_hint \
 		+ " Fais clairement RESSENTIR le resultat (" + str(deg_fr.get(degree, "une reussite")) + ")."
 	var usr: String = tete + queue
+	# v48.1g — PLEIN REGIME. L'issue est la SEULE generation de la chaine chaude a ne pas le
+	# demander : la selection le pose, scene_jit le pose, l'amorcage le pose, elle non. Sans lui
+	# _apply_regime sert _fils_menage() = la moitie des coeurs (merlin_native.gd:468-482), soit
+	# 2 fils sur 4. Les 8,4-8,7 tok/s mesures a p68 sont donc un debit a DEMI-REGIME, et le
+	# debit plein du Vif n'a jamais ete mesure. Or l'issue est exactement le cas pour lequel le
+	# plein regime a ete ecrit : la generation que le joueur attend le plus activement.
+	# L'evaluation du prompt ne bouge pas (n_threads_batch est deja au plein dans les deux
+	# regimes) ; seule l'ECRITURE accelere.
 	return {"system": SYSTEM_PREFIX, "user": usr, "opts": {"creative": true, "max_tokens": tok_budget,
-			"cerveau": "vif", "fin_phrase": true, "label": "issue (combinaison)"}}
+			"cerveau": "vif", "fin_phrase": true, "plein_regime": true,
+			"label": "issue (combinaison)"}}
 
 
 # --- VOIX DU MENU : pensées COURTES de Merlin au-dessus de sa tête (100% LLM, user 2026-06-29) ---
