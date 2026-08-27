@@ -1,0 +1,9 @@
+A avant: outillage=d3120475
+B sync: [tools-autosync] rc=0 outillage mis à jour -> 6d37b86b · crontab régénéré · Studio relancé
+C apres: outillage=6d37b86b
+D job-068 present ? 1 | deja fait ? 0
+E courrier demarre : 
+F en vol : 2261583 bash /var/lib/ocarun/workspace/M.E.R.L.I.N/infra/oracle/agents/a_courrier.sh 2261663 timeout 5400 bash /var/lib/ocarun/workspace/M.E.R.L.I.N/infra/oracl
+Z fin cmd-009 (la partie ~20 min ; captures sur ntfy a la fin)
+
+== fin : etat=SUCCEEDED 2026-08-27T13:06:54Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
