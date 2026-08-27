@@ -1,0 +1,13 @@
+A studio_8790=200 pid=2275969 keepalive_cron=2
+B courrier_faits=67 dernier=job-068-chronique-v48.fait a=2026-08-27T13:06:08Z
+B jobs_en_attente=
+C socle : 2 passage(s) trouve(s)
+C   - [Bible] 2026-05-25 — Round 13 (Faction 2 : Créatures & Êtres) (567 car.)
+C   - [Bible] Brocéliande — Biome 1 (seul biome du MVP) (1100 car.)
+C sources : Bible « 2026-05-25 — Round 13 (Faction 2 : Créatures & Êtres) » · Bible « Brocéliande — Biome 1 (seul biome du MVP) »
+C prompt du Sage : 2604 car.
+C ollama=oui modele=gemma4:e4b-it-qat
+C sage dit: rien
+Z fin cmd-012
+
+== fin : etat=SUCCEEDED 2026-08-27T14:35:45Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
