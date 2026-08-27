@@ -90,11 +90,14 @@ const FILS_PARTAGE: int = 2  # (v33 — conservé pour référence des mesures)
 # v33 : 3 fils ~ 90 % du débit solo — l'issue attendue passe de 40-80 s à ~25-35 s.
 const FILS_VIF_DUO: int = 3
 const FILS_CONTEUR_DUO: int = 1
+# v48.1c — « annulee » : la voie a recu un cancel_generation() pendant que le moteur ecrivait.
+# Le C++ casse alors sa boucle SANS poser d'erreur (merlin_llm.cpp:410), si bien que le texte
+# partiel remontait comme une reussite. Le drapeau le dit ; _on_result en tire la consequence.
 var _voies: Dictionary = {
 	"conteur": {"busy": false, "label": "", "t0": 0, "prompt": "", "ready": false,
-		"result": {}, "id": 0, "plein": false, "metrics": {}},
+		"result": {}, "id": 0, "plein": false, "metrics": {}, "annulee": false},
 	"vif": {"busy": false, "label": "", "t0": 0, "prompt": "", "ready": false,
-		"result": {}, "id": 0, "plein": false, "metrics": {}},
+		"result": {}, "id": 0, "plein": false, "metrics": {}, "annulee": false},
 }
 var _last_metrics: Dictionary = {}
 var _quitting: bool = false  # v10.13 (Fix 7) : garde anti double-_graceful_quit
@@ -543,6 +546,7 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	v["prompt"] = full_prompt
 	v["ready"] = false
 	v["result"] = {}
+	v["annulee"] = false  # v48.1c — nouvelle generation : l'annulation precedente est soldee
 	v["id"] = int(v["id"]) + 1
 	var my_id: int = int(v["id"])
 	call_deferred("_start_generation", cerveau, my_id)
@@ -594,6 +598,14 @@ func _on_result(result: Dictionary, cerveau: String = "conteur", gen_id: int = 0
 		return  # callback périmé (annulé/remplacé) → ignore
 	if v["ready"]:
 		return  # double-poll → résultat déjà consommé
+	# v48.1c — UNE ANNULATION N'EST PAS UNE REUSSITE. Le texte partiel qui remonte apres un
+	# cancel_generation() n'a pas d'erreur attachee (le C++ casse sa boucle sans en poser) : sans
+	# cette conversion, un demi-mot etait servi au joueur comme une prose finie, et ses compteurs
+	# entraient dans _last_metrics — donc dans le journal, ou il ressemblait a une generation
+	# normale. Le reste du menage (busy, ready, partage des coeurs, metriques) suit son cours.
+	if bool(v.get("annulee", false)):
+		v["annulee"] = false
+		result = {"error": "annulee"}
 	var elapsed_ms: int = Time.get_ticks_msec() - int(v["t0"])
 	v["busy"] = false
 	_partager_les_coeurs()
@@ -680,6 +692,12 @@ func cancel(cerveau: String = "") -> void:
 			continue
 		var m: Variant = _moteur_de(c)
 		if m != null and _voies[c]["busy"]:
+			# v48.1c — MARQUER avant d'annuler. Le C++ casse sa boucle sans poser d'erreur
+			# (merlin_llm.cpp:410), et cancel() n'incremente pas v["id"] — contrairement au
+			# timeout (l.567) — donc le callback n'etait pas perime et le demi-texte etait
+			# servi comme une reussite. On ne touche ni a busy ni a l'id : le fil d'inference
+			# tourne encore, liberer la voie ici lancerait une gen sur un moteur occupe.
+			_voies[c]["annulee"] = true
 			m.cancel_generation()
 
 
