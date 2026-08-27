@@ -629,6 +629,11 @@ func _on_result(result: Dictionary, cerveau: String = "conteur", gen_id: int = 0
 	elif elapsed_ms > 0:
 		tok_per_s = float(approx_tokens) * 1000.0 / float(elapsed_ms)
 	var met: Dictionary = {
+		# v48.1e — LE NOM DE LA MESURE. _last_metrics est ecrase par chaque generation qui
+		# se termine, toutes voies confondues ; sans nom, un releve pris apres coup (le champ
+		# « gen » du journal de la sonde) pouvait decrire une scene du Conteur en croyant
+		# decrire l'issue du beat. La mesure se nomme, on ne devine plus.
+		"label": str(v["label"]),
 		"cerveau": cerveau,
 		"total_ms": elapsed_ms,
 		"approx_tokens": approx_tokens,

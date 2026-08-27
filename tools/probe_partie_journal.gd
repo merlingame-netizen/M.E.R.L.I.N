@@ -51,6 +51,10 @@ var _MR: GDScript = null
 # _on_typewriter_done AVANT que _noter_sortie ne s'execute, si bien que dc/total/geste_sur
 # etaient a zero dans TOUS les journaux depuis v34.
 var _meca: Dictionary = {}
+# v48.1d — LE VERBE DE PREDILECTION : celui sur lequel toutes les greffes s'empilent. Trois
+# greffes eparpillees sur trois verbes ne font basculer aucun seuil ; trois sur le meme font
+# passer la maitrise a 2 (geste sur hors Climax) et ajoutent les tags qui manquaient.
+var _verbe_prefere: Variant = null
 
 
 func _init() -> void:
@@ -327,16 +331,24 @@ func _boucle(game: Node, run: Node) -> void:
 		if game._draft_active:
 			await create_timer(0.4).timeout
 			if is_instance_valid(game) and game._draft_active:
-				var cv: Node = _trouver_carte(game._hand_box)
+				# v48.1d — on ne prend plus la premiere carte venue : on lit le kind de chaque
+				# greffe offerte et on choisit celle qui construit vraiment (talent > tag >
+				# roll > reste), puis on la pose sur LE MEME verbe que les precedentes.
+				var cv: Node = _meilleure_greffe(game) if _couvrant else _trouver_carte(game._hand_box)
 				if cv != null:
 					game._on_draft_card(cv.card)
 					if not (game._pending_graft as Dictionary).is_empty():
 						await create_timer(0.3).timeout
 						if is_instance_valid(game) and game._draft_active:
-							for a in run.actions:
+							var cible: Variant = _verbe_a_greffer(run)
+							for a in ([cible] + run.actions if cible != null else run.actions):
+								if a == null:
+									continue
 								if (a.get("grafts") as Array).size() < int(run.MAX_GRAFTS_PER_ACTION):
 									game._on_action_tile(a)
 									if game._draft_done_flag:
+										if _verbe_prefere == null:
+											_verbe_prefere = a
 										_incident("greffe « %s » posée sur %s"
 												% [str(cv.card.get("card_name")), str(a.get("card_name"))])
 									break
@@ -358,8 +370,20 @@ func _boucle(game: Node, run: Node) -> void:
 					if b is Button:
 						pb.append(b)
 				if not pb.is_empty():
-					(pb[0] as Button).pressed.emit()
-					_incident("pacte : « %s »" % str((pb[0] as Button).text))
+					# v48.1d — le bot cliquait « accepter » a l'aveugle, payant de la
+					# corruption pour des conversions inutiles. Il re-score maintenant avec
+					# le tag propose et n'accepte que si cela change vraiment le degre.
+					var utile: bool = true
+					var motif: String = ""
+					if _couvrant:
+						var j: Dictionary = _pacte_utile(game, run)
+						utile = bool(j.get("utile", true))
+						motif = str(j.get("motif", ""))
+					var idx: int = 0 if utile else mini(1, pb.size() - 1)
+					(pb[idx] as Button).pressed.emit()
+					_incident("pacte %s : « %s »%s"
+							% ["ACCEPTE" if utile else "refusé",
+								str((pb[idx] as Button).text), motif])
 			await process_frame
 			continue
 
@@ -557,7 +581,12 @@ func _choix_couvrant(game: Node, run: Node) -> Dictionary:
 			# ({covered, missing, extra}) — la lire ailleurs donnait un zero muet.
 			var cov: Dictionary = r.get("coverage", {}) as Dictionary
 			var couv: int = (cov.get("covered", []) as Array).size()
-			var note: int = rang * 1000 + int(r.get("margin", 0)) * 10 + couv
+			# v48.1d — a QUALITE EGALE seulement, on prefere le verbe qui porte les greffes :
+			# c'est ainsi que la maitrise monte (3 poses du meme verbe = +1, et a 2 le geste
+			# devient sur hors Climax). Le poids est de 1, sous la couverture : jamais au prix
+			# d'un degre ni d'une marge.
+			var fidele: int = 1 if (_verbe_prefere != null and a == _verbe_prefere) else 0
+			var note: int = rang * 10000 + int(r.get("margin", 0)) * 100 + couv * 10 + fidele
 			if note > meilleur:
 				meilleur = note
 				best = {"action": a, "trait": tr, "degre_prevu": deg,
@@ -567,6 +596,100 @@ func _choix_couvrant(game: Node, run: Node) -> Dictionary:
 					"examinees": examinees}
 	if not best.is_empty():
 		best["examinees"] = examinees
+	return best
+
+
+# v48.1d — LA MEILLEURE GREFFE DU DRAFT. On lit le `kind` dans game._graft_by_id (l'id de la
+# carte de presentation est celui de la greffe : merlin_game.gd:1607) et on classe par ce qui
+# fait REELLEMENT basculer un seuil :
+#   talent (+1 skill_mod : a 2, MARGE_MAITRISE rend le geste sur hors Climax)
+#   tag    (AJOUTE un tag a l'action — c'est le seul levier qui fabrique la couverture manquante
+#           quand la main ne porte pas les tags requis, ce qui arrive des la difficulte 2)
+#   roll   (+N au jet)
+#   le reste (charge, etc.) : mieux que rien.
+# Retourne null si rien n'est lisible — l'appelant retombe alors sur la premiere carte.
+func _meilleure_greffe(game: Node) -> Node:
+	if game._hand_box == null or not ("_graft_by_id" in game):
+		return _trouver_carte(game._hand_box)
+	var rang: Dictionary = {"talent": 4, "tag": 3, "roll": 2}
+	var best: Node = null
+	var best_n: int = -1
+	for c in game._hand_box.get_children():
+		if not ("card" in c) or c.card == null:
+			continue
+		var cid: String = ""
+		if c.card is Object and ("id" in c.card):
+			cid = str(c.card.id)
+		var g: Dictionary = (game._graft_by_id as Dictionary).get(cid, {}) as Dictionary
+		var n: int = int(rang.get(str(g.get("kind", "")), 1))
+		if n > best_n:
+			best_n = n
+			best = c
+	return best if best != null else _trouver_carte(game._hand_box)
+
+
+# Le verbe sur lequel empiler : celui deja choisi, tant qu'il a de la place. Un verbe qui a
+# atteint le cap rend la main au premier verbe libre (l'appelant balaie ensuite run.actions).
+func _verbe_a_greffer(run: Node) -> Variant:
+	if _verbe_prefere != null and (_verbe_prefere.get("grafts") as Array).size() \
+			< int(run.MAX_GRAFTS_PER_ACTION):
+		return _verbe_prefere
+	return null
+
+
+# v48.1d — LE PACTE VAUT-IL SA CORRUPTION ? On rejoue le score de TOUTES les paires avec le tag
+# propose ajoute aux bonus (c'est exactement ce que la conversion fait dans le jeu : elle etend
+# la couverture), et on ne l'accepte que si le meilleur degre atteignable s'ameliore, ou si le
+# geste devient sur. Sinon le tag ne sert a rien et la corruption est un pur prix.
+func _pacte_utile(game: Node, run: Node) -> Dictionary:
+	if _MR == null or not ("_convert_offer_tag" in game):
+		return {"utile": true, "motif": ""}
+	var tag: String = str(game._convert_offer_tag).strip_edges()
+	if tag == "":
+		return {"utile": true, "motif": ""}
+	var sans: Dictionary = _meilleur_score(game, run, [])
+	var avec: Dictionary = _meilleur_score(game, run, [tag])
+	if sans.is_empty() or avec.is_empty():
+		return {"utile": true, "motif": ""}
+	var mieux: bool = int(avec.get("rang", 0)) > int(sans.get("rang", 0)) \
+			or (bool(avec.get("geste_sur", false)) and not bool(sans.get("geste_sur", false)))
+	return {"utile": mieux,
+		"motif": " (%s → %s)" % [str(sans.get("degre", "?")), str(avec.get("degre", "?"))]}
+
+
+# Le meilleur (action, trait) atteignable, avec d'eventuels tags offerts en plus. Partage sa
+# mecanique avec _choix_couvrant : meme fonction du jeu, memes arguments (R120).
+func _meilleur_score(game: Node, run: Node, tags_en_plus: Array) -> Dictionary:
+	if _MR == null:
+		return {}
+	var situ: Dictionary = game._current_situation
+	if situ.is_empty() or (run.actions as Array).is_empty() or (run.hand as Array).is_empty():
+		return {}
+	var reqs: Array = situ.get("required_tags", [])
+	var diff: int = int(situ.get("difficulte", 2))
+	var btype: String = str(situ.get("type", ""))
+	var dcb: int = int(situ.get("dc_bonus", 0))
+	var de: int = int(situ.get("die", 0))
+	if run.has_method("has_coup_de_pouce_armed") and run.has_coup_de_pouce_armed():
+		de = maxi(de, int(situ.get("face_adv", 0)))
+	var best: Dictionary = {}
+	var meilleur: int = -99999
+	for a in run.actions:
+		var sm: int = int(run.skill_mod_for(a)) if run.has_method("skill_mod_for") else 0
+		var gb: int = int(run.graft_roll_bonus(a)) if run.has_method("graft_roll_bonus") else 0
+		for tr in run.hand:
+			var combo: Array = [a, tr]
+			var bonus: Array = (run.blessed_bonus(combo) if run.has_method("blessed_bonus") else []).duplicate()
+			for x in tags_en_plus:
+				bonus.append(str(x))
+			var r: Dictionary = _MR.resolve(reqs, combo, [], de, bonus, diff, sm, gb, btype, dcb)
+			var deg: String = str(r.get("degree", ""))
+			var rang: int = 3 if deg == "eclatante" else (2 if deg == "reussite" else (1 if deg == "partiel" else 0))
+			var note: int = rang * 1000 + int(r.get("margin", 0)) * 10
+			if note > meilleur:
+				meilleur = note
+				best = {"rang": rang, "degre": deg, "geste_sur": bool(r.get("geste_sur", false)),
+					"marge": int(r.get("margin", 0))}
 	return best
 
 
