@@ -331,27 +331,55 @@
   </section>
 
   <section>
-    <h2>L'autopsie — pourquoi ça traîne</h2>
-    <p>Le journal de la machine dit tout&nbsp;: aux beats&nbsp;3 et&nbsp;4, le prompt d'issue pèse
-    <strong>2&nbsp;045&nbsp;tokens</strong> — le plafond du Vif est à <strong>2&nbsp;048</strong>. Le cache de préfixe
-    saute, la machine passe 40 à 57&nbsp;secondes rien qu'à relire son propre prompt, et il ne reste plus de
-    temps pour écrire&nbsp;: les issues meurent tronquées («&nbsp;Vous calez&nbsp;», deux tokens) ou ne viennent
-    pas du tout (le secours du beat&nbsp;4). Le beat&nbsp;1, seul sous le plafond, a écrit ses 84&nbsp;tokens
-    proprement en 29&nbsp;secondes.</p>
-    <p>La cause directe est le canon v48 lui-même&nbsp;: <strong>588&nbsp;tokens</strong> de lore en tête de chaque
-    prompt. L'empreinte a pris — lieux, figures, interdits — mais elle a mangé tout le budget.</p>
+    <h2>L'autopsie — le contexte était plein</h2>
+    <p>Le journal de la machine donne un chiffre qui ne laisse pas de place au doute&nbsp;:
+    <strong>le nombre de tokens écrits vaut exactement 2&nbsp;048 moins la longueur du prompt</strong>.
+    Beat&nbsp;1&nbsp;: prompt de 1&nbsp;964 tokens, 84 écrits. Beat&nbsp;2&nbsp;: 2&nbsp;033, 15 écrits.
+    Beat&nbsp;5&nbsp;: 2&nbsp;022, 26 écrits. Beats&nbsp;3 et&nbsp;4&nbsp;: 2&nbsp;045 — deux tokens de
+    marge, «&nbsp;Vous calez&nbsp;», puis le mur.</p>
+    <p>Ce n'est donc pas une lenteur, c'est un <strong>plafond</strong>. Le Vif tourne avec une fenêtre de
+    2&nbsp;048&nbsp;tokens&nbsp;; le prompt d'issue la remplit entièrement, et le moteur s'arrête net dès
+    qu'il n'a plus une place où poser le token suivant. Quand le prompt dépasse le plafond, le cache de
+    préfixe est en plus désactivé — d'où les 40 à 57&nbsp;secondes passées à relire un prompt qui ne
+    laissera rien écrire.</p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Ce que contient le prompt d'issue</th><th>Caractères</th><th>≈ tokens</th></tr>
+        <tr><td class="cible">Consigne système (la voix du maître du jeu)</td><td>1&nbsp;296</td><td>393</td></tr>
+        <tr><td class="cible">Le bloc de règles d'écriture</td><td>3&nbsp;315</td><td>1&nbsp;005</td></tr>
+        <tr><td class="cible">L'exemple de prose à imiter</td><td>435</td><td>132</td></tr>
+        <tr><td class="cible">La règle du passé du Voyageur</td><td>147</td><td>45</td></tr>
+        <tr><td class="cible">La scène, les forces, le degré (variable)</td><td>~900</td><td>~273</td></tr>
+        <tr><td class="cible"><strong>Total</strong></td><td></td><td><strong>~1&nbsp;850 sur 2&nbsp;048</strong></td></tr>
+      </table>
+    </div>
+    <p>Le coupable est le <strong>bloc de règles</strong>&nbsp;: mille tokens d'instructions accumulées
+    version après version — le registre du geste, le verbe qui doit être accompli littéralement, la
+    manière portée par le trait, les sujets interdits, le ton sec, la phrase de relance. Chaque règle a
+    été ajoutée pour corriger une faute réelle, et aucune n'a jamais été retirée.</p>
+    <p><em>Une précision, parce qu'elle corrige ce que j'avais écrit d'abord&nbsp;:</em> le canon de
+    Brocéliande n'est pas en cause. Il ne vit que dans les prompts du Conteur — les scènes, l'arc, la
+    légende d'ouverture — et n'entre jamais dans le prompt d'issue. Ce plafond est donc antérieur à v48.
+    Il n'avait simplement jamais été vu&nbsp;: aucune partie complète n'avait tourné depuis le
+    24&nbsp;août, une garde de test s'étant accrochée à un commentaire de code renommé entre-temps.</p>
   </section>
 
   <section>
-    <h2>v48.1 — le remède</h2>
-    <p><strong>Un.</strong> Le canon passe de 588 à ~250&nbsp;tokens&nbsp;: on garde les lieux, les figures et la
-    loi de la boucle, on coupe la liste des interdits — les trois interdits tenus le prouvent, ils n'ont plus
-    besoin d'être répétés à chaque appel.</p>
-    <p><strong>Deux.</strong> La boucle devient une consigne d'écriture dans la commande («&nbsp;dis que la forêt
-    se referme&nbsp;»), pas un paragraphe de contexte — c'est le seul point d'empreinte manqué.</p>
-    <p><strong>Trois.</strong> Tête de prompt strictement stable d'un appel à l'autre, pour que le cache de préfixe
-    tienne toute la partie. Les trois cibles — zéro secours, réussite complète, ≤&nbsp;20&nbsp;s par beat —
-    deviennent les critères d'acceptation de la prochaine partie témoin.</p>
+    <h2>v48.1 — rendre la place</h2>
+    <p><strong>Un.</strong> Le bloc de règles se réduit à ce qui a encore un effet mesurable, et ce qui
+    peut être garanti par le code plutôt que demandé au modèle sort du prompt — la phrase du geste est
+    déjà composée par le code depuis v46, les règles qui la décrivent n'ont plus à être payées à chaque
+    beat. Cible&nbsp;: laisser au moins 200&nbsp;tokens d'écriture à chaque appel.</p>
+    <p><strong>Deux.</strong> La loi de la boucle devient une consigne d'écriture dans la commande du
+    Conteur («&nbsp;dis que la forêt se referme&nbsp;»), pas un paragraphe de contexte — c'est le seul
+    point d'empreinte manqué, et le contexte seul ne l'a jamais fait écrire.</p>
+    <p><strong>Trois.</strong> Le bot de la partie témoin cesse de choisir ses cartes en aveugle&nbsp;:
+    il lit les forces que le lieu réclame et joue la combinaison qui les couvre. Le jeu réel garde ses
+    dés, ses partiels et son équilibrage&nbsp;; c'est la chronique, et elle seule, qui doit montrer une
+    partie bien jouée.</p>
+    <p>Les trois cibles — zéro secours, réussite complète, ≤&nbsp;20&nbsp;s par beat — deviennent les
+    critères d'acceptation de la prochaine partie témoin, et le journal remontera désormais le budget de
+    contexte beat par beat, pour que ce plafond ne puisse plus jamais se cacher.</p>
   </section>
 
   <p class="note">Chronique composée depuis journal.json et trois clichés PNG (1280×720) pris par la sonde
