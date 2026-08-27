@@ -295,6 +295,18 @@ func _boucle(game: Node, run: Node) -> void:
 	var geste: int = 0
 	var dl: int = Time.get_ticks_msec() + int(RUN_DEADLINE_S * 1000.0)
 	while Time.get_ticks_msec() < dl:
+		# v49.1 — L'INSTANTANE DES MECANIQUES, TOUT EN HAUT. `_pending_res` est rempli par
+		# _show_resolution et vide par _on_typewriter_done (merlin_game.gd:2336). Or cette
+		# sonde SAUTE la machine a ecrire : la branche du typewriter, plus bas, appelle
+		# _skip_typewriter() puis `continue` — donc un instantane place APRES elle n'etait
+		# jamais atteint tant que la variable avait quelque chose dedans. C'etait le defaut de
+		# v48.1a, et c'est pourquoi dc, total, marge, geste_sur et phrase_geste sont encore
+		# vides dans le journal de la derniere partie : la partie ANNONCE ses reussites sans
+		# pouvoir les PROUVER. Ici, avant toute branche qui sort, on est certain de le voir.
+		if _meca.is_empty() and is_instance_valid(game) and ("_pending_res" in game) \
+				and game._pending_res is Dictionary \
+				and not (game._pending_res as Dictionary).is_empty():
+			_meca = (game._pending_res as Dictionary).duplicate()
 		if not is_instance_valid(game):
 			break
 		if run.ended:
@@ -386,15 +398,6 @@ func _boucle(game: Node, run: Node) -> void:
 								str((pb[idx] as Button).text), motif])
 			await process_frame
 			continue
-
-		# v48.1 — L'INSTANTANE DES MECANIQUES, pris ICI et pas a la sortie. _pending_res
-		# est efface dans _on_typewriter_done (merlin_game.gd:2336), qui court AVANT que
-		# `_can_advance` ne passe a vrai : _noter_sortie lisait donc un dictionnaire vide, et
-		# dc=0 / total=0 / geste_sur=false / phrase_geste="" dormaient dans TOUS les journaux
-		# depuis v34 — des valeurs impossibles (un DC vaut 6, 9 ou 12) que rien ne signalait.
-		if _meca.is_empty() and ("_pending_res" in game) and game._pending_res is Dictionary \
-				and not (game._pending_res as Dictionary).is_empty():
-			_meca = (game._pending_res as Dictionary).duplicate()
 
 		if game._state == 1:
 			# ENTRÉE DU BEAT : la situation vient d'être écrite, on la fige avant tout geste.

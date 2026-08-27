@@ -2834,8 +2834,19 @@ const FIL_ABSTRAIT: Array = ["silence", "brume", "presence", "présence", "lumie
 
 func _extraire_fil(prose: String) -> String:
 	var txt: String = prose.replace("[i]", "").replace("[/i]", "").strip_edges()
+	# v49.2 — LES SCORIES DE MISE EN FORME. Le modele seme des asterisques et des soulignes
+	# dans sa prose ; le fil les transportait tels quels en TETE de la scene suivante (p73,
+	# deux enchainements sur cinq : « * Le Chevalier tend sa main gantee vers vous. »).
+	for _sc in ["*", "_", "`", "#"]:
+		txt = txt.replace(str(_sc), "")
+	txt = txt.strip_edges()
 	var phrases: Array = MerlinProse.split_sentences(txt)
-	for i in range(phrases.size() - 1, -1, -1):
+	# v49.2 — JAMAIS LA PHRASE DU GESTE. La premiere phrase de l'issue est, par contrat, celle
+	# du geste (en italique) : elle dit ce que le Voyageur vient de FAIRE, pas ce qui l'attend.
+	# Transplantee en ouverture du beat suivant, elle rejoue le passe au lieu de l'ouvrir —
+	# p73 beat 2 : « Vous plantez vos appuis dans la terre molle et vous frappez... »
+	var _premiere: int = 1 if phrases.size() > 1 else 0
+	for i in range(phrases.size() - 1, _premiere - 1, -1):
 		var s: String = str(phrases[i]).strip_edges()
 		# Parole rapportee : on garde ce qui PRECEDE le deux-points. Le tutoiement d'un PNJ ne
 		# doit jamais devenir la voix du narrateur au beat suivant.
@@ -2847,6 +2858,11 @@ func _extraire_fil(prose: String) -> String:
 		var bas: String = s.to_lower()
 		if bas.begins_with("tu ") or bas.contains(" tu ") or bas.contains(" t'"):
 			continue  # voix cassee une fois transplantee
+		# v49.2 — LE FIL DIT LE MONDE, PAS LE VOYAGEUR. « Vous sentez l'humidite sur vos
+		# vetements. » ouvrait le Climax de p73 : c'est l'etat du heros, pas ce qui l'attend.
+		# Un fil doit NOMMER ce qui reagit — un etre, une bete, un objet.
+		if bas.begins_with("vous "):
+			continue
 		var amorce_pronom: bool = false
 		for pr in FIL_PRONOMS:
 			if bas.begins_with(str(pr)):
