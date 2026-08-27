@@ -1,0 +1,9 @@
+A depart 15:14:26Z
+A rp=/var/lib/ocarun/workspace/M.E.R.L.I.N gd=/var/lib/ocarun/workspace/merlin-game
+B M.E.R.L.I.N claude/oracle-free-tier-access-IN1Wm 2d17973a -> 029fcadc ::  create mode 100644 infra/oci-run/resultats/cmd-014-descendre-v48-1-et-sage.txt  create mode 100644 infra/patches/v48_1d_bot_qui_c
+B merlin-game feat/practices-docs 9037bc86 -> 9037bc86 ::    e116283e..029fcadc  claude/oracle-free-tier-access-IN1Wm -> origin/claude/oracle-free-tier-access-IN1Wm Already up to date. 
+C sonde=1 place=1 annulation=1 draft=0 (a b c d de v48.1)
+C job069=present fait=oui cron=30
+Z fin cmd-015
+
+== fin : etat=SUCCEEDED 2026-08-27T15:14:58Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
