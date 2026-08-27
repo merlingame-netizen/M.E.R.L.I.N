@@ -1,0 +1,14 @@
+A depart 15:46:49Z
+A selection.json=960 octets  mtime=2026-08-27 15:43:34
+B ok=True sentiers=3 cles=biome,mur_ms,ok,sentiers,t
+B   - L'Abri de la Mousse Secrète
+B   - Le Repos au Gué des Brumes
+B   - L'Accueil du Chemin Clos
+C log=ABSENT
+D godot.log (hors bruit llama) :
+[JOURNAL] choix des cartes : cyclage (historique)
+[JOURNAL] modèle prêt en 3.1 s
+[SELECTION_JSON] {"biome":"foret","mur_ms":107998,"ok":true,"sentiers":[{"pitch":"Vois si tu peux apaiser le murmure qui monte des pierres levées près
+Z fin cmd-018
+
+== fin : etat=SUCCEEDED 2026-08-27T15:47:25Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
