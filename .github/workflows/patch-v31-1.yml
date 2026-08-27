@@ -34,19 +34,21 @@ jobs:
         run: |
           # Un patch DEJA applique sur la branche du jeu n'est pas une panne : c'est ce qui
           # arrive des qu'on pousse un NOUVEAU fichier dans infra/patches/ pendant que le
-          # pointeur designe encore le precedent. Avant, le job echouait bruyamment et il
-          # fallait aller lire le log pour comprendre qu'il n'y avait rien a comprendre.
-          # Desormais on distingue les deux cas : motif absent = deja applique, on ne pousse
-          # rien ; toute autre erreur reste un refus.
+          # pointeur designe encore le precedent. On distingue les deux cas : motif absent =
+          # deja applique, on ne pousse rien ; toute autre erreur reste un refus.
           set -o pipefail
-          if python3 outillage/infra/patches/v49_le_fil_concret.py 2>&1 | tee /tmp/patch.log; then
-            echo "patch applique"
-          elif grep -q "motif trouve 0 fois" /tmp/patch.log; then
-            echo "::notice::patch DEJA applique sur cette branche — rien a pousser"
-          else
-            echo "::error::le patch a echoue pour une autre raison que « deja applique »"
-            exit 1
-          fi
+          echec=0
+          for patch in v49_1_instantane_a_temps v49_2_un_bon_fil_ou_rien; do
+            if python3 "outillage/infra/patches/$patch.py" 2>&1 | tee /tmp/patch.log; then
+              echo "$patch : applique"
+            elif grep -q "motif trouve 0 fois" /tmp/patch.log; then
+              echo "::notice::$patch DEJA applique — rien a faire"
+            else
+              echo "::error::$patch a echoue pour une autre raison que « deja applique »"
+              echec=1
+            fi
+          done
+          [ "$echec" -eq 0 ] || exit 1
       - name: Godot en cache
         id: godot-cache
         uses: actions/cache@v4
@@ -117,7 +119,7 @@ jobs:
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add scripts/llm/merlin_prompt_builder.gd scripts/llm/merlin_scenario.gd
+          git add scripts/llm/merlin_scenario.gd tools/probe_partie_journal.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "feat(jeu): v49 - le fil concret, la scene s ouvre sur ce qui vient de se passer" -m "Maxime : une fois un beat redige et resolu il ne rentre pas dans le contexte redactionnel du beat qui suit, on dirait des choix independants, je veux de la continuite." -m "DIAGNOSTIC. Les six scenes de la derniere partie portent provenance=arc : elles ont ete ecrites AVANT d etre jouees, a partir du seul titre et du pitch. La seule chose du beat N qui atteignait le beat N+1 etait un pont MECANIQUE — un registre de verbes plus une locomotion tiree au sort, sans un nom propre, sans un element du monde." -m "CE QUI REND LE CORRECTIF GRATUIT. La matiere de la continuite existait deja et le code la jetait. La tete du prompt d issue exige une derniere phrase qui ouvre la suite ; le modele obeit ; et note_issue_affichee tronquait l issue a ses 420 PREMIERS caracteres, ce qui perdait exactement cette phrase sur quatre issues sur six. Puis personne ne la lisait : last_issue n etait consomme que par le lookahead, debranche depuis v38. Il suffisait de garder la bonne moitie du texte et de la lire. Zero token de generation supplementaire." -m "SEPT CHANGEMENTS. P1 la derniere phrase doit NOMMER l etre ou l objet qui reagit (tete stable, cout nul par beat). P2 elle est gardee (troncature par la FIN) et devient le pont ; un extracteur la valide et REFUSE plutot que de servir une phrase fausse une fois transplantee — refuser rend simplement le pont mecanique, donc jamais pire qu avant. P3 le pont peut etre une phrase pleine, et le Climax y a droit : il ne portait AUCUNE trace du beat precedent, le pont l excluant et le lookahead retournant dessus. P4 le filet anti-echo compare a la scene SEULE, sans les coutures du code, sinon il supprimait en priorite les phrases qui reprennent ce qui precede — la continuite meme. P5 le fil entre aussi dans le prompt d issue par la QUEUE, ou SITU_MAX ne peut pas le tronquer : il passe de 25 a 100 pour cent de presence. P6 les exemples du prompt systeme sortent : un vieil homme sort de sa hutte se recopiait verbatim dans la prose et simulait une fausse memoire, rendant tout test de continuite ininterpretable. P7 le pont mecanique, qui reste le repli, cesse d afficher de l ASCII et de se repeter mot pour mot." -m "CE QUE LE PATCH NE FAIT PAS : ranimer le lookahead. L enquete a mesure que la fenetre n existe toujours pas (95 a 108 s pour une fenetre de 53 a 70 s) et surtout que, meme ranime, il ne recevrait PAS l issue : issue_prec prend last_gist en priorite et note_outcome, appele avant, le remplit toujours. Il recevrait le meme registre abstrait que le pont." -m "VERIFIE : l extracteur rend un fil sur les SIX issues reelles de la derniere partie. Le beat 2 se serait ouvert sur Le petit cerf arrete de boire et fixe la terre devant lui avant de s eloigner lentement, au lieu de Vous avez vu ce qui se cachait et avez trouve les mots." -m "Issu d une enquete adversariale a 13 agents. Parse check Godot 4.4.1 passe en local sur les deux fichiers." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "feat(jeu): v49.1+2 - la mesure prise a temps, et un bon fil ou pas de fil" -m "v49.1 — POURQUOI dc, total, marge, geste_sur et phrase_geste sont ENCORE vides dans le journal. v48.1a placait l instantane de _pending_res APRES la branche du typewriter dans la boucle de la sonde ; or cette branche appelle _skip_typewriter() puis un continue, et le skip declenche _on_typewriter_done qui vide _pending_res. L instantane n etait donc jamais atteint tant que la variable avait quelque chose dedans. Il remonte tout en haut du corps de la boucle, avant la moindre branche qui sort. Sans lui, une partie temoin ANNONCE ses reussites sans pouvoir les PROUVER." -m "v49.2 — v49 a fait passer la continuite de 0 a 5 sur 5 : chaque scene s ouvre desormais sur ce que l issue precedente a laisse. Mais p73 montre que le compteur ne dit pas tout, et trois defauts sautent aux yeux dans le texte. Des SCORIES : deux fils sur cinq commencent par une asterisque, que le modele seme et que le fil transporte en tete de la scene suivante. La PHRASE DU GESTE prise pour un crochet : le beat 2 s ouvrait sur Vous plantez vos appuis dans la terre molle — la premiere phrase de l issue, celle du geste, qui raconte ce que le Voyageur vient de faire et non ce qui l attend. Et le FIL QUI PARLE DU VOYAGEUR au lieu du monde : Vous sentez l humidite sur vos vetements ouvrait le Climax." -m "Trois regles de plus, gouvernees par un principe : mieux vaut PAS DE FIL qu un mauvais fil. Un refus rend simplement le pont mecanique d avant, qui n a jamais rien casse. Mesure sur les cinq enchainements reels de p73 : la regle actuelle rend 5 fils dont 3 fautifs, la regle stricte en rend 4 tous propres, et le cinquieme retombe sur le pont. Le beat 6 s ouvrirait sur Le sentier etroit sous la voute s impose comme seul passage." -m "Parse check Godot 4.4.1 passe en local sur les deux fichiers." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
