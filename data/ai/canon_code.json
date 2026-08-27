@@ -1,0 +1,267 @@
+{
+  "version": "2.0",
+  "source": "DERIVE DU CODE par tools/gd_agents/extraire_canon.py — ne pas editer a la main",
+  "loi_du_monde": "CANON DE BROCELIANDE (le seul monde autorise, et il a une LOI). Broceliande est une foret-REVE qui BOUCLE sur elle-meme : rien n'y finit ni n'y avance vraiment, les etres REJOUENT sans fin la meme scene (les druides repetent un rite dont le sens s'est efface ; le chevalier rejoue sa defaite ; les creatures rebouclent leurs pactes). SEUL le Voyageur avance -- c'est ce qui le rend etranger a ces bois.",
+  "verbes": [
+    {
+      "id": "action_observer",
+      "nom": "OBSERVER",
+      "famille": "Perception",
+      "tags": [
+        "Sens",
+        "Savoir"
+      ]
+    },
+    {
+      "id": "action_agir",
+      "nom": "AGIR",
+      "famille": "Corps",
+      "tags": [
+        "Agilité",
+        "Finesse"
+      ]
+    },
+    {
+      "id": "action_combattre",
+      "nom": "COMBATTRE",
+      "famille": "Corps",
+      "tags": [
+        "Force",
+        "Endurance"
+      ]
+    },
+    {
+      "id": "action_reveler",
+      "nom": "RÉVÉLER",
+      "famille": "Intuition",
+      "tags": [
+        "Mystère",
+        "Vision"
+      ]
+    },
+    {
+      "id": "action_parler",
+      "nom": "PARLER",
+      "famille": "Parole",
+      "tags": [
+        "Empathie",
+        "Verbe"
+      ]
+    }
+  ],
+  "traits_de_depart": [
+    {
+      "id": "regard_percant",
+      "nom": "Le Regard Perçant",
+      "tags": [
+        "Vigilance",
+        "Sens"
+      ]
+    },
+    {
+      "id": "ecoute_silence",
+      "nom": "L'Écoute du Silence",
+      "tags": [
+        "Vigilance",
+        "Mémoire"
+      ]
+    },
+    {
+      "id": "memoire_lieux",
+      "nom": "La Mémoire des Lieux",
+      "tags": [
+        "Mémoire",
+        "Savoir"
+      ]
+    },
+    {
+      "id": "main_de_fer",
+      "nom": "La Main de Fer",
+      "tags": [
+        "Force",
+        "Endurance"
+      ]
+    },
+    {
+      "id": "pas_leger",
+      "nom": "Le Pas Léger",
+      "tags": [
+        "Agilité",
+        "Finesse"
+      ]
+    },
+    {
+      "id": "souffle_tenace",
+      "nom": "Le Souffle Tenace",
+      "tags": [
+        "Endurance",
+        "Force"
+      ]
+    },
+    {
+      "id": "langue_de_miel",
+      "nom": "La Langue de Miel",
+      "tags": [
+        "Ruse",
+        "Empathie"
+      ]
+    },
+    {
+      "id": "mot_ruse",
+      "nom": "Le Mot Rusé",
+      "tags": [
+        "Ruse",
+        "Verbe"
+      ]
+    },
+    {
+      "id": "presence_calme",
+      "nom": "La Présence Calme",
+      "tags": [
+        "Autorité",
+        "Empathie"
+      ]
+    },
+    {
+      "id": "pressentiment",
+      "nom": "Le Pressentiment",
+      "tags": [
+        "Vision",
+        "Instinct"
+      ]
+    },
+    {
+      "id": "voix_foret",
+      "nom": "La Voix de la Forêt",
+      "tags": [
+        "Vision",
+        "Nature"
+      ]
+    },
+    {
+      "id": "appel_ombre",
+      "nom": "L'Appel de l'Ombre",
+      "tags": [
+        "Mystère",
+        "Nature"
+      ]
+    },
+    {
+      "id": "main_sure",
+      "nom": "La Main Sûre",
+      "tags": [
+        "Finesse",
+        "Agilité"
+      ]
+    },
+    {
+      "id": "verbe_haut",
+      "nom": "Le Verbe Haut",
+      "tags": [
+        "Autorité",
+        "Verbe"
+      ]
+    },
+    {
+      "id": "coeur_franc",
+      "nom": "Le Cœur Franc",
+      "tags": [
+        "Franchise",
+        "Empathie"
+      ]
+    },
+    {
+      "id": "geste_ancien",
+      "nom": "Le Geste Ancien",
+      "tags": [
+        "Rituel",
+        "Savoir"
+      ]
+    }
+  ],
+  "concepts_de_maniere": [
+    "sens",
+    "savoir",
+    "memoire",
+    "vigilance",
+    "force",
+    "agilite",
+    "endurance",
+    "finesse",
+    "empathie",
+    "verbe",
+    "ruse",
+    "autorite",
+    "franchise",
+    "instinct",
+    "nature",
+    "vision",
+    "rituel",
+    "sacrifice",
+    "equilibre",
+    "mystere",
+    "vide",
+    "glitch",
+    "dissolution",
+    "murmure",
+    "emprise"
+  ],
+  "tags": [
+    "Agilité",
+    "Autorité",
+    "Empathie",
+    "Endurance",
+    "Finesse",
+    "Force",
+    "Franchise",
+    "Instinct",
+    "Mystère",
+    "Mémoire",
+    "Nature",
+    "Rituel",
+    "Ruse",
+    "Savoir",
+    "Sens",
+    "Verbe",
+    "Vigilance",
+    "Vision"
+  ],
+  "lieux_nommes": [
+    "la Fontaine de Barenton",
+    "la Pierre Qui Oublie",
+    "le Chene Creux",
+    "le Gue des Brumes",
+    "le Pas de Nuit",
+    "le Tertre des Neuf",
+    "le Val sans Retour"
+  ],
+  "interdits": "(ce n'est PAS ce monde) : AUCUN dieu nomme (ni Lugh, ni Cernunnos, ni Dana, ni Brigid), AUCUNE magie a incantation ni sort qui brille, AUCUNE prophetie ni elu, AUCUNE fee ailee, AUCUN objet enchante vague, AUCUN 'ancien pouvoir' abstrait. Le merveilleux ici est CONCRET et INQUIETANT : une source qui bout froide, un linge lave la nuit, un rire mis en gage, un pas qu'on ne peut refaire. Aucun demon ni ange, aucun chevalier de la Table Ronde autre qu'Arthur, aucune epoque autre que celtique, aucun objet moderne, jamais d'anglicisme, jamais le 4e mur.",
+  "moteur": {
+    "dc_par_difficulte": {
+      "1": 6,
+      "2": 9,
+      "3": 12
+    },
+    "couverture_par_tag": 3,
+    "synergie": 1,
+    "plancher_partiel": 5,
+    "marge_eclatante": 8,
+    "marge_maitrise": 2,
+    "seuil_maitrise": 2,
+    "de": "2d6",
+    "geste_sur_desactive_au_climax": true
+  },
+  "composition_des_requis": {
+    "total_par_difficulte": {
+      "1": 2,
+      "2": 2,
+      "3": 3
+    },
+    "hors_tags_de_base_par_difficulte": {
+      "1": 1,
+      "2": 2,
+      "3": 2
+    },
+    "note": "des la difficulte 2, les DEUX tags requis sont tires HORS des tags de base des verbes : ils doivent venir de la main ou d'une greffe. C'est ce qui rend la couverture impossible a garantir par le seul choix des cartes."
+  }
+}
