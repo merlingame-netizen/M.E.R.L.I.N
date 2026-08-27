@@ -1807,6 +1807,11 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	]:
 		narration = narration.replace(str(_banned), "")
 	narration = narration.strip_edges()
+	# v49 — LA SCENE SEULE, sans pont ni ancrage : c'est elle, et elle seule, que le filet
+	# anti-echo doit comparer a l'issue. Les coutures posees par le CODE ne sont pas de la
+	# prose du modele, et les compter gonflait l'echo de TOUTES les phrases de l'issue —
+	# en frappant d'abord celles qui nomment ce qui precede, c'est-a-dire la continuite meme.
+	var narration_seule: String = narration
 	# N3-V1 (2026-07-06) : CLIMAX ANCRÉ SUR LE BUT. Le beat Climax NOMME ce que la quête promettait pour
 	# le refermer (quest_title tissé en ouverture), voix MJ 2e personne présent. C'est l'ouverture du climax
 	# (le pont porteur-de-résultat n'est PAS ajouté au climax, cf. plus bas). Titre vide (hors-jeu) : sauté.
@@ -1815,6 +1820,13 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		if qt != "":
 			var anchor: String = str(CLIMAX_ANCHORS[_rng.randi_range(0, CLIMAX_ANCHORS.size() - 1)]) % qt
 			narration = anchor + " " + narration
+		# v49 — LE CLIMAX PORTAIT ZERO TRACE de ce qui venait de se passer : le pont l'exclut
+		# explicitement (plus bas) et le lookahead retournait dessus. C'est pourtant le beat ou
+		# la continuite compte le plus. Le FIL CONCRET, lui, y entre — en tete, avant l'ancrage
+		# au but, parce qu'il raconte d'ou l'on vient et l'ancrage dit ou l'on arrive.
+		var fil_cl: String = str(_run_thread.get("last_fil", "")).strip_edges()
+		if fil_cl != "" and int(beat.get("n", 1)) > 1:
+			narration = fil_cl + " " + narration
 	# N3-V1 : PONT VISIBLE inter-beats. Pour tout beat n>1 NON-Climax (pont posé par note_outcome du beat
 	# précédent, traverse les quêtes comme last_gist), on prépose le pont ANCRÉ (degré, biome, momentum) à la
 	# narration : « pont + situation » coule en un paragraphe qui RÉFÉRENCE le beat précédent (playtest N3). Le
@@ -1840,12 +1852,18 @@ func build_situation(beat: Dictionary) -> Dictionary:
 				# Le pont finit en virgule (amorce) → la situation en devient la suite : sa 1re lettre passe en
 				# minuscule pour que « pont, situation » coule comme une phrase (évite « , Vous » bancal). On ne
 				# touche QUE le 1er caractère (le reste, majuscules propres incluses, est préservé).
-				if narration.length() > 0:
+				# v49 — le pont peut desormais etre une PHRASE PLEINE (le fil concret, qui finit
+				# par un point). On ne force la minuscule que pour l'amorce MECANIQUE, qui elle
+				# finit en virgule : « pont, situation » coule, « phrase. situation » aussi.
+				if bridge.ends_with(",") and narration.length() > 0:
 					narration = narration.substr(0, 1).to_lower() + narration.substr(1)
 				narration = bridge + " " + narration
 	return {
 		"provenance": provenance,
 		"narration": narration,
+		# v49 — la narration SANS les coutures du code (pont, ancrage de Climax, annonce de
+		# quete) : c'est la reference du filet anti-echo, voir narrate_resolution.
+		"narration_seule": narration_seule,
 		"required_tags": required,
 		"type": btype,
 		"difficulte": diff,
@@ -2341,7 +2359,18 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 # L'issue TELLE QU'AFFICHÉE (prose du modèle ou secours) : posée par le jeu après l'affichage,
 # consommée par le lookahead de la scène suivante.
 func note_issue_affichee(prose: String) -> void:
-	_run_thread["last_issue"] = prose.strip_edges().substr(0, 420)
+	var p_txt: String = prose.strip_edges()
+	# v49 — ON GARDE LA FIN, PAS LE DEBUT. La phrase-crochet vit a la FIN de l'issue : le
+	# couperet des 420 PREMIERS caracteres la perdait sur quatre issues sur six (501, 588,
+	# 539, 494 caracteres). C'etait exactement la phrase qui portait la continuite.
+	_run_thread["last_issue"] = p_txt.substr(maxi(0, p_txt.length() - 420))
+	# LE FIL CONCRET. On ne demande RIEN de plus au modele : la phrase existe deja (regle de
+	# la tete d'issue), le code cessait seulement de la lire. Fil vide -> le pont mecanique
+	# pose par note_outcome reste en place : ce chemin ne peut jamais regresser sous l'existant.
+	var fil: String = _extraire_fil(p_txt)
+	_run_thread["last_fil"] = fil
+	if fil != "":
+		_run_thread["bridge"] = fil
 
 
 func secours_consomme() -> int:
@@ -2414,7 +2443,11 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return ""
-	var s: String = MerlinProse.strip_scene_echo(MerlinProse.clean_prose(str(r.get("text", "")).strip_edges()), str(situation.get("narration", "")))
+	# v49 — le filet compare a la SCENE SEULE. Depuis P2 la narration COMMENCE par une vraie
+	# phrase de prose (le fil du beat precedent) : la laisser dans la reference gonflait
+	# mecaniquement le recouvrement de toutes les phrases de l'issue, et supprimait en
+	# priorite celles qui reprennent ce qui precede — exactement la continuite recherchee.
+	var s: String = MerlinProse.strip_scene_echo(MerlinProse.clean_prose(str(r.get("text", "")).strip_edges()), str(situation.get("narration_seule", situation.get("narration", ""))))
 	return s if s.length() >= 10 else ""
 
 
@@ -2786,6 +2819,47 @@ const LOCOMOTION_BY_BIOME: Dictionary = {
 
 # v35 — le pont reconstruit sur l'ACTION réelle : « Vous avez trouvé les mots ; vous reprenez
 # entre les troncs, ». Le degré n'y apparaît jamais. Gist vide (1er beat) → ancien banc.
+# === v49 — L'EXTRACTION DU FIL ==============================================================
+#
+# La derniere phrase de l'issue est, par construction (regle de la tete d'issue), celle qui
+# NOMME ce qui vient de reagir et ouvre la suite. C'est elle qui doit ouvrir le beat suivant.
+# On la prend, on la valide, et on refuse plutot que de servir une phrase qui deviendrait fausse
+# une fois transplantee ailleurs. Refuser rend simplement le pont mecanique : jamais pire
+# qu'avant.
+const FIL_PRONOMS: Array = ["il ", "elle ", "ils ", "elles ", "cela ", "ceci ", "celui ",
+	"celle ", "c'est ", "on "]
+const FIL_ABSTRAIT: Array = ["silence", "brume", "presence", "présence", "lumiere", "lumière",
+	"ombre", "air", "vent", "chaleur", "odeur", "surface", "forme", "masse", "obscurite"]
+
+
+func _extraire_fil(prose: String) -> String:
+	var txt: String = prose.replace("[i]", "").replace("[/i]", "").strip_edges()
+	var phrases: Array = MerlinProse.split_sentences(txt)
+	for i in range(phrases.size() - 1, -1, -1):
+		var s: String = str(phrases[i]).strip_edges()
+		# Parole rapportee : on garde ce qui PRECEDE le deux-points. Le tutoiement d'un PNJ ne
+		# doit jamais devenir la voix du narrateur au beat suivant.
+		var dp: int = s.find(" : ")
+		if dp > 20:
+			s = s.substr(0, dp).strip_edges() + "."
+		if s.length() < 20 or s.length() > 200:
+			continue
+		var bas: String = s.to_lower()
+		if bas.begins_with("tu ") or bas.contains(" tu ") or bas.contains(" t'"):
+			continue  # voix cassee une fois transplantee
+		var amorce_pronom: bool = false
+		for pr in FIL_PRONOMS:
+			if bas.begins_with(str(pr)):
+				amorce_pronom = true
+		if amorce_pronom:
+			continue  # un pronom sans antecedent ne veut plus rien dire au beat suivant
+		var mots: PackedStringArray = bas.split(" ", false)
+		if mots.size() > 1 and FIL_ABSTRAIT.has(str(mots[1]).trim_suffix(",")):
+			continue  # « La brume se retire » n'est pas un fil : rien n'y est nomme
+		return s
+	return ""
+
+
 func _compose_pont_action(action: String, biome: String) -> String:
 	if action.strip_edges() == "":
 		return _compose_bridge("reussite", biome)
@@ -2794,9 +2868,17 @@ func _compose_pont_action(action: String, biome: String) -> String:
 		"avez tenu bon sans ceder": "avez tenu bon sans céder",
 		"avez appele l'ombre": "avez appelé l'ombre",
 	}
-	var act_aff: String = str(affichage.get(action, action))
+	# v49 — l'accent PAR REGISTRE, avant la jointure. note_outcome joint d'abord les registres
+	# par « et », si bien que la cle composite ne matchait jamais la table et que l'ASCII
+	# passait a l'ecran (« avez trouve les mots »).
+	var parts: PackedStringArray = []
+	for _r in action.split(" et "):
+		parts.append(str(affichage.get(str(_r), str(_r))))
+	var act_aff: String = " et ".join(parts)
 	var pool: Array = LOCOMOTION_BY_BIOME.get(biome, LOCOMOTION_BY_BIOME["foret"])
-	var loco: String = str(pool[_rng.randi_range(0, pool.size() - 1)])
+	# v49 — anti-repetition : trois locomotions seulement pour la foret, et un tirage pur
+	# rendait deux ponts identiques mot pour mot dans la meme partie. _pick_served existe.
+	var loco: String = _pick_served(pool, "loco_%s" % biome)
 	return "Vous %s ; %s" % [act_aff, loco]
 
 
