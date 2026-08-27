@@ -39,6 +39,18 @@ var _journal: Dictionary = {}
 var _shots_dir: String = ""
 var _shots: int = 0
 var _pick: int = 0
+# v48.1 — LE BOT COUVRANT (MERLIN_BOT_COUVRANT=1). Le harnais choisissait ses cartes en cyclant
+# a l'aveugle, sans jamais lire les tags que le lieu reclamait : p68 a fini a 2 reussites pour
+# 3 partiels, et le beat 3 y jouait Force+Endurance contre un lieu qui demandait Ruse et Nature.
+# Une chronique doit montrer une partie BIEN JOUEE ; le jeu reel, lui, garde ses des et ses
+# partiels — ce drapeau ne vit que dans la sonde.
+var _couvrant: bool = false
+# Charge DYNAMIQUEMENT (jamais de class_name en mode --script : la regle du dossier tools/).
+var _MR: GDScript = null
+# Instantane des mecaniques, pris DANS la boucle : _pending_res est efface par
+# _on_typewriter_done AVANT que _noter_sortie ne s'execute, si bien que dc/total/geste_sur
+# etaient a zero dans TOUS les journaux depuis v34.
+var _meca: Dictionary = {}
 
 
 func _init() -> void:
@@ -121,6 +133,14 @@ func _main() -> void:
 	if biome == "":
 		biome = "foret"
 	run.biome = biome
+
+	_couvrant = OS.get_environment("MERLIN_BOT_COUVRANT") == "1"
+	if _couvrant:
+		_MR = load("res://scripts/game/merlin_resolution.gd")
+		if _MR == null or not _MR.has_method("resolve"):
+			_couvrant = false
+			print("[JOURNAL] bot couvrant DEMANDE mais merlin_resolution.gd illisible — cyclage conserve")
+	print("[JOURNAL] choix des cartes : %s" % ("COUVRANT (v48.1)" if _couvrant else "cyclage (historique)"))
 
 	if not await _attendre_moteur(mn):
 		quit(3)
@@ -343,6 +363,15 @@ func _boucle(game: Node, run: Node) -> void:
 			await process_frame
 			continue
 
+		# v48.1 — L'INSTANTANE DES MECANIQUES, pris ICI et pas a la sortie. _pending_res
+		# est efface dans _on_typewriter_done (merlin_game.gd:2336), qui court AVANT que
+		# `_can_advance` ne passe a vrai : _noter_sortie lisait donc un dictionnaire vide, et
+		# dc=0 / total=0 / geste_sur=false / phrase_geste="" dormaient dans TOUS les journaux
+		# depuis v34 — des valeurs impossibles (un DC vaut 6, 9 ou 12) que rien ne signalait.
+		if _meca.is_empty() and ("_pending_res" in game) and game._pending_res is Dictionary \
+				and not (game._pending_res as Dictionary).is_empty():
+			_meca = (game._pending_res as Dictionary).duplicate()
+
 		if game._state == 1:
 			# ENTRÉE DU BEAT : la situation vient d'être écrite, on la fige avant tout geste.
 			if int(run.beat_index) != beat_vu and not (game._current_situation as Dictionary).is_empty():
@@ -351,9 +380,18 @@ func _boucle(game: Node, run: Node) -> void:
 			if game._choice_open and (run.hand as Array).size() >= 1:
 				var acts: Array = run.actions
 				if game._selected_action == null and not acts.is_empty():
-					game._on_action_tile(acts[geste % acts.size()])
+					var vise: Dictionary = _choix_couvrant(game, run) if _couvrant else {}
+					if vise.has("action"):
+						game._on_action_tile(vise["action"])
+						_noter_choix(vise)
+					else:
+						game._on_action_tile(acts[geste % acts.size()])
 				elif game._selected_trait == null:
-					game._on_trait_card(run.hand[geste % (run.hand as Array).size()])
+					var vise2: Dictionary = _choix_couvrant(game, run) if _couvrant else {}
+					if vise2.has("trait"):
+						game._on_trait_card(vise2["trait"])
+					else:
+						game._on_trait_card(run.hand[geste % (run.hand as Array).size()])
 					geste += 1
 					# UNE POSE QUI DURE. La pré-génération de l'issue démarre quand les deux cartes
 					# sont posées ; un harnais qui enchaîne dans la frame suivante ne lui laisse
@@ -362,6 +400,13 @@ func _boucle(game: Node, run: Node) -> void:
 					await create_timer(POSE_S).timeout
 				else:
 					_noter_geste(game)
+					# v48.1 — L'HORLOGE DE L'ATTENTE. Ici commence le seul intervalle ou le
+					# joueur attend la MACHINE sans rien a faire : du clic Resoudre a l'issue
+					# affichee. `duree_beat_s` melangeait cela avec la pose de 25 s, l'etal et
+					# le draft — le beat 1 de p68 « durait » 29 s dont 25 s de pose deliberee.
+					var bb: Array = _journal["beats"]
+					if not bb.is_empty():
+						(bb[bb.size() - 1] as Dictionary)["t_geste_ms"] = Time.get_ticks_msec()
 					game._on_resolve()
 		elif game._state == 2 and game._can_advance:
 			_noter_sortie(run)
@@ -460,6 +505,86 @@ func _trouver_carte_id(box: Node, id_voulu: String) -> Node:
 	return null
 
 
+# === v48.1 — LE CHOIX COUVRANT ===============================================================
+#
+# Le harnais lit les forces que le lieu reclame et joue la paire (action, trait) qui les couvre.
+# Il SCORE avec la vraie fonction du jeu -- MerlinResolution.resolve, les memes arguments que
+# _update_preview (R120 : preview = resolution) -- pour que la paire jugee la meilleure ici soit
+# EXACTEMENT celle que le jeu resoudra.
+#
+# CE QU'IL NE FAIT PAS : il n'appelle jamais _update_preview, qui declencherait une
+# pre-generation de prose par candidat (guardrail du jeu : « jamais les 16 combos »). Le scoring
+# est purement arithmetique, zero LLM, zero attente. Et il ne truque rien : le de est celui du
+# beat, le DC celui de la difficulte. Au Climax le geste sur est desactive par regle (v34/v46),
+# donc meme une couverture parfaite n'y garantit pas la reussite -- le journal le dira.
+#
+# Retourne {} si le scoring est impossible (appelant : cyclage historique).
+func _choix_couvrant(game: Node, run: Node) -> Dictionary:
+	if _MR == null:
+		return {}
+	var acts: Array = run.actions
+	var main: Array = run.hand
+	if acts.is_empty() or main.is_empty():
+		return {}
+	var situ: Dictionary = game._current_situation
+	if situ.is_empty():
+		return {}
+	var reqs: Array = situ.get("required_tags", [])
+	var diff: int = int(situ.get("difficulte", 2))
+	var btype: String = str(situ.get("type", ""))
+	var dcb: int = int(situ.get("dc_bonus", 0))
+	# Face effective : identique au calcul du jeu (Coup de Pouce en lecture seule, jamais consomme).
+	var de: int = int(situ.get("die", 0))
+	if run.has_method("has_coup_de_pouce_armed") and run.has_coup_de_pouce_armed():
+		de = maxi(de, int(situ.get("face_adv", 0)))
+
+	var best: Dictionary = {}
+	var meilleur: int = -9999
+	var examinees: int = 0
+	for a in acts:
+		var sm: int = int(run.skill_mod_for(a)) if run.has_method("skill_mod_for") else 0
+		var gb: int = int(run.graft_roll_bonus(a)) if run.has_method("graft_roll_bonus") else 0
+		for tr in main:
+			var combo: Array = [a, tr]
+			var bonus: Array = run.blessed_bonus(combo) if run.has_method("blessed_bonus") else []
+			var r: Dictionary = _MR.resolve(reqs, combo, [], de, bonus, diff, sm, gb, btype, dcb)
+			examinees += 1
+			# Le classement : d'abord le DEGRE (une reussite bat toute marge d'un partiel), puis
+			# la marge, puis la couverture — a egalite, le geste le plus juste pour le lieu.
+			var deg: String = str(r.get("degree", ""))
+			var rang: int = 3 if deg == "eclatante" else (2 if deg == "reussite" else (1 if deg == "partiel" else 0))
+			# La couverture n'est PAS un entier du retour : elle vit sous « coverage »
+			# ({covered, missing, extra}) — la lire ailleurs donnait un zero muet.
+			var cov: Dictionary = r.get("coverage", {}) as Dictionary
+			var couv: int = (cov.get("covered", []) as Array).size()
+			var note: int = rang * 1000 + int(r.get("margin", 0)) * 10 + couv
+			if note > meilleur:
+				meilleur = note
+				best = {"action": a, "trait": tr, "degre_prevu": deg,
+					"marge_prevue": int(r.get("margin", 0)),
+					"couverture": couv,
+					"geste_sur": bool(r.get("geste_sur", false)),
+					"examinees": examinees}
+	if not best.is_empty():
+		best["examinees"] = examinees
+	return best
+
+
+# Consigne POURQUOI le bot a joue cette paire — une chronique doit pouvoir le montrer.
+func _noter_choix(vise: Dictionary) -> void:
+	var b: Array = _journal["beats"]
+	if b.is_empty() or vise.is_empty():
+		return
+	var d: Dictionary = b[b.size() - 1]
+	d["choix_du_bot"] = {
+		"degre_prevu": str(vise.get("degre_prevu", "")),
+		"marge_prevue": int(vise.get("marge_prevue", 0)),
+		"couverture": int(vise.get("couverture", 0)),
+		"geste_sur": bool(vise.get("geste_sur", false)),
+		"paires_examinees": int(vise.get("examinees", 0)),
+	}
+
+
 func _noter_geste(game: Node) -> void:
 	var b: Array = _journal["beats"]
 	if b.is_empty():
@@ -490,9 +615,18 @@ func _noter_sortie(run: Node) -> void:
 	var mn_m: Node = root.get_node_or_null("/root/MerlinNative")
 	if mn_m != null and mn_m.has_method("last_metrics"):
 		d["gen"] = (mn_m.last_metrics() as Dictionary).duplicate()
-	var g_res: Node = current_scene
-	if g_res != null and ("_pending_res" in g_res) and g_res._pending_res is Dictionary:
-		var pres: Dictionary = g_res._pending_res
+	# v48.1 — L'ATTENTE MACHINE, distincte de la duree du beat. `duree_beat_s` ci-dessus compte
+	# tout (pose de 25 s, etal, draft, guide) ; celle-ci ne compte que ce que le joueur SUBIT.
+	if d.has("t_geste_ms"):
+		d["attente_moteur_s"] = float(int(d["t_res_ms"]) - int(d["t_geste_ms"])) / 1000.0
+	# v48.1 — les mecaniques viennent de l'instantane pris dans la boucle, plus de _pending_res
+	# (efface trop tot : voir le commentaire de la boucle).
+	var pres: Dictionary = _meca
+	if pres.is_empty():
+		var g_res: Node = current_scene
+		if g_res != null and ("_pending_res" in g_res) and g_res._pending_res is Dictionary:
+			pres = g_res._pending_res
+	if not pres.is_empty():
 		d["geste_sur"] = bool(pres.get("geste_sur", false))
 		# v46 : la phrase du geste (composee par le code) et la mise annoncee avant le de.
 		d["phrase_geste"] = str(pres.get("phrase_geste", ""))
@@ -500,6 +634,8 @@ func _noter_sortie(run: Node) -> void:
 		d["marge_sure"] = int(pres.get("marge_sure", 0))
 		d["total"] = int(pres.get("total", 0))
 		d["dc"] = int(pres.get("dc", 0))
+		d["marge"] = int(pres.get("total", 0)) - int(pres.get("dc", 0))
+	_meca = {}
 	d["resolution"] = str(run.summary)
 	# Le beat porte-t-il la marque du banc de secours ? La question décide de la valeur de tout le
 	# document : une issue écrite en dur ne dit rien de ce que Merlin sait raconter.
