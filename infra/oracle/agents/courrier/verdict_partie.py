@@ -102,6 +102,35 @@ def main(chemin: str) -> int:
     else:
         print("BOT AUCUN choix justifie — le mode couvrant n'a PAS tourne")
 
+    # --- LA CONTINUITE (v49) : la scene du beat N+1 s'ouvre-t-elle sur ce que l'issue N a laisse ?
+    # On ne demande rien au jeu : on compare les textes du journal. Le fil est la DERNIERE phrase
+    # de l'issue ; s'il a servi, la narration suivante COMMENCE par elle.
+    def _phrases(s):
+        return [x.strip() for x in re.split(r"(?<=[.!?…])\s+", str(s).strip()) if x.strip()]
+
+    def _norm(s):
+        return re.sub(r"[^a-z0-9]+", " ", str(s).lower()).strip()
+
+    tenus, total_ch, details = 0, 0, []
+    for a, b in zip(res, res[1:]):
+        iss = re.sub(r"\[/?i\]", "", str(a.get("resolution", "")))
+        ph = _phrases(iss)
+        if not ph:
+            continue
+        total_ch += 1
+        fil = _norm(ph[-1])[:60]
+        suite = _norm(b.get("narration", ""))
+        if fil and fil[:40] and suite.startswith(fil[:40]):
+            tenus += 1
+            details.append("b%s:oui" % b["index"])
+        else:
+            details.append("b%s:non" % b["index"])
+    if total_ch:
+        print("CONTINUITE %d/%d enchainements portent le fil du beat precedent (%s)" % (
+            tenus, total_ch, " ".join(details)))
+    else:
+        print("CONTINUITE non mesurable (moins de deux beats resolus)")
+
     # --- l'empreinte du monde
     blob = " ".join(str(b.get("narration", "")) + " " + str(b.get("resolution", "")) for b in bs)
     blob += " " + str(d.get("intro", ""))
