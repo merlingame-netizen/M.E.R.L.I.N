@@ -1,0 +1,21 @@
+A depart 16:18:13Z
+A journal=19930o mtime=2026-08-27 16:13:25 png=3
+B mode=[JOURNAL] choix des cartes : COUVRANT (v48.1)
+B beats=6 fin=
+C verdict :
+CIBLE1 secours: TENUE
+CIBLE2 reussite: TENUE (6/6)
+CIBLE3 attente: MANQUEE (2 beats > 20s : b1=26s b2=61s ; moy 23s)
+INFO duree_beat (pose du bot incluse, ne juge PAS) : b1=51s b2=87s b3=38s b4=38s b5=37s b6=41s ; moy 49s
+BUDGET b1:p1/e125[issue (combina] b2:p483/e158[issue (combina] b3:p452/e134[issue (combina] b4:p368/e134[issue (combina] b5:p443/e120[issue (combina] b6:p428/e158[issue (combina]
+COUPEES aucune
+BOT 6/6 beats justifies ; couverture 1,0,1,0,1,1 ; gestes surs 2
+EMPREINTE lieux=[Tertre] figures=[Ankou,Choeur] boucle=1
+FIN accomplissement beats=6 integrite=10 corruption=1
+D journal -> https://ntfy.adminforge.de/file/jb746XMscueL.json
+D 01_intro.png -> https://ntfy.adminforge.de/file/exlMLJgTlN6Y.png
+D 02_beat_01.png -> https://ntfy.adminforge.de/file/bTvTVsBMVkaq.png
+D 03_fin.png -> https://ntfy.adminforge.de/file/qvjpEFgHEQ3z.png
+Z fin cmd-020
+
+== fin : etat=SUCCEEDED 2026-08-27T16:18:37Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
