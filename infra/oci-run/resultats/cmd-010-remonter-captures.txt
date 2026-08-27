@@ -1,0 +1,8 @@
+A ntfy=https://ntfy.sh journal=oui png=3
+B journal -> https://ntfy.sh/file/TzLZvWw8CB1K.json
+C 01_intro.png 50Ko -> https://ntfy.sh/file/xzJquL0nNGvp.png
+C 02_beat_01.png 96Ko -> https://ntfy.sh/file/pfh5oaDEd7DD.png
+C 03_fin.png 59Ko -> https://ntfy.sh/file/vJj5DK0c8wjf.png
+Z fin cmd-010
+
+== fin : etat=SUCCEEDED 2026-08-27T13:54:41Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
