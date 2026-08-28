@@ -23,6 +23,17 @@ jamais avoir a le calculer.
 Les captures portent desormais leur NUMERO DE BEAT (beat_04, beat_07...) au lieu du seul
 « beat_01 » : dans une chronique de vingt beats, une image qui ne dit pas d'ou elle vient ne
 sert a rien.
+
+LES LIGNES DE BASE A COMPARER, pour que le verdict de la premiere quete longue se lise :
+  CONTINUITE ... 0 sur 5 avant v49 (p71), 5 sur 5 apres (p73) — mais sur SIX beats seulement.
+                 La question qu'une quete longue seule peut trancher : un fil qui tient sur cinq
+                 enchainements tient-il sur vingt, ou derive-t-il ?
+  ATTENTE ....... 23 s de moyenne a p71, 21 s a p73, pour une cible de 20. Les deux pics (61 s
+                 et 55 s) tombent au beat ou une tranche d'arc s'ecrit en fond. Une quete de 25
+                 beats en demande six au lieu de deux : la cible va probablement souffrir, et il
+                 faudra le dire avec le compte exact plutot qu'avec une excuse.
+  EMPREINTE ..... boucle=1 a p71, 0 a p73. La consigne de v48.1f ne produit pas de facon fiable ;
+                 vingt beats donneront enfin un echantillon ou le chiffre veut dire quelque chose.
 """
 import pathlib
 import sys
