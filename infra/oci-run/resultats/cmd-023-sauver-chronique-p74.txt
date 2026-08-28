@@ -1,0 +1,9 @@
+A depart 14:20:44Z
+B source : partie.log sel1.log sortie.log 
+B cliches : 0 fichier(s)
+C poids=12Ko
+D verse : 0 capture(s), journal=NON
+E rien de neuf a committer
+Z fin cmd-023
+
+== fin : etat=SUCCEEDED 2026-08-28T14:21:01Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
