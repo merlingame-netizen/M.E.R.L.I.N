@@ -65,6 +65,44 @@ def main(chemin: str) -> int:
     else:
         print("CIBLE3 attente: NON MESUREE (attente_moteur_s absent — sonde anterieure a v48.1a)")
 
+    # --- A QUOI L'ATTENTE EST DUE : relecture de prefixe, ou ecriture ?
+    #
+    # Constater « moy 40 s » ne dit pas s'il faut corriger le modele ou l'ordonnancement. La
+    # reponse est deja dans le journal et n'etait pas lue. `prompt_tokens` est le nombre de tokens
+    # REELLEMENT decodes : ~2 quand le cache a tout servi, ~2000 quand le prefixe a ete relu. Or
+    # merlin_scenario dit lui-meme qu'« une resolution coute jusqu'a ~86 s quand son prefixe a ete
+    # EVINCE PAR UN PROMPT D'ARC ». Un beat lent avec prompt_tokens eleve accuse donc l'arc ; un
+    # beat lent avec prompt_tokens a 2 accuse l'ecriture, et les deux se corrigent a l'oppose.
+    #
+    # Cela devient decisif sur une quete longue : l'arc s'ecrit par tranches de 4, soit 6 tranches
+    # sur 25 beats au lieu de 2 sur 6 — six occasions d'evincer au lieu de deux.
+    #
+    # `label` (v48.1e) garde la mesure honnete : sans lui, un releve pris apres coup pouvait
+    # decrire une scene du Conteur en croyant decrire l'issue du beat.
+    lents = []
+    for b in res:
+        g = b.get("gen") or {}
+        a = float(b.get("attente_moteur_s") or 0)
+        if a <= CIBLE_S or not g.get("compteurs_reels"):
+            continue
+        lents.append((b["index"], a, int(g.get("prompt_tokens") or 0),
+                      float(g.get("prompt_ms") or 0) / 1000.0,
+                      float(g.get("ecriture_ms") or 0) / 1000.0, str(g.get("label") or "?")))
+    if lents:
+        relus = [x for x in lents if x[2] > 200]
+        print("CAUSE attente: %d beat(s) au-dessus de la cible — %d par RELECTURE DE PREFIXE "
+              "(l'arc a evince le cache), %d par ECRITURE seule"
+              % (len(lents), len(relus), len(lents) - len(relus)))
+        for i, a, ptok, pms, ems, lab in lents:
+            print("  b%-3d %5.0fs = prefixe %4.0fs (%5d tok relus) + ecriture %4.0fs   [%s]"
+                  % (i, a, pms, ptok, ems, lab[:28]))
+        if relus:
+            gagne = sum(x[3] for x in relus)
+            print("  => %.0fs perdues en relecture : c'est l'ORDONNANCEMENT de l'arc qu'il faut "
+                  "corriger, pas le modele." % gagne)
+    elif att:
+        print("CAUSE attente: aucun beat au-dessus de la cible — rien a attribuer.")
+
     # la duree de beat reste dite, mais elle ne juge plus : elle contient les poses du bot.
     dur = [(b["index"], float(b.get("duree_beat_s", 0))) for b in res if b.get("duree_beat_s")]
     if dur:
