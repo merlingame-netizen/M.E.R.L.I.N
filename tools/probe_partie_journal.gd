@@ -22,7 +22,9 @@ const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 const NODE_TIMEOUT_MS: int = 15000
 const LOAD_TIMEOUT_MS: int = 300000
 const SEL_TIMEOUT_MS: int = 300000
-const RUN_DEADLINE_S: float = 3000.0   # 12-15 beats, une narration écrite par beat sur CPU
+const RUN_DEADLINE_S: float = 5400.0   # v50 — une QUETE COMPLETE : jusqu'a 25 beats, chacun
+                                       # portant ses poses deliberees (25 s + 35 s) en plus de
+                                       # la generation. L'ancienne borne visait 12-15 beats.
 const END_DEADLINE_S: float = 40.0
 const SHOTS_MAX: int = 12
 # Temps de « réflexion » du joueur entre la pose des cartes et le clic Résoudre. 25 s et non 8
@@ -472,9 +474,15 @@ func _noter_entree(game: Node, run: Node, idx: int) -> void:
 	print("[JOURNAL] beat %d (%s) — %s" % [idx + 1, str(situ.get("type", "")),
 			str(situ.get("narration", "")).substr(0, 90)])
 	_sauver()
-	# Un cliché au premier beat : il montre l'écran de jeu complet, ce qu'aucun texte ne remplace.
-	if idx == 0:
-		await _cliche("beat_01")
+	# v50 — DES CLICHES ETALES SUR TOUTE LA QUETE. Le beat 1, puis un beat sur trois. La sonde
+	# n'en prenait qu'UN (le premier) : sur une quete de vingt beats, une chronique n'avait rien
+	# a montrer entre le debut et la fin. Le plafond SHOTS_MAX=12 existait deja pour cela et
+	# n'etait jamais atteint, faute de declencheur au-dela du premier beat — 8 beats rendent 3
+	# images de jeu, 25 en rendent 9, on reste sous le plafond sans avoir a le calculer.
+	# Le NUMERO est dans le nom : dans une chronique longue, une image qui ne dit pas d'ou elle
+	# vient ne sert a rien.
+	if idx == 0 or (idx + 1) % 3 == 0:
+		await _cliche("beat_%02d" % (idx + 1))
 
 
 # v34 — POLITIQUE D'ÉTAL du harnais : soigner si l'intégrité fatigue (≤6), purger si la
