@@ -38,6 +38,23 @@ def main(chemin: str) -> int:
         print("VERDICT impossible : aucun beat resolu dans le journal")
         return 1
 
+    # --- LES TROUS D'INDEX, avant toute statistique.
+    #
+    # v50.3 — p74 portait 20 entrees d'index [1..14, 16..20, 22] pour 22 beats declares joues : les
+    # index 15 et 21 manquaient. Le verdict a donc annonce « reussite 20/20 », « continuite 15/19 »
+    # et « attente moyenne 33 s » sur un echantillon incomplet SANS LE DIRE. Un chiffre dont on
+    # ignore le denominateur ne vaut rien. Les index sont deja dans le journal : il suffisait de
+    # les lire. Le correctif du jeu (v53) devrait supprimer la cause ; cette ligne-ci garantit que
+    # si elle revient, elle ne passera plus inapercue.
+    idx = [int(b["index"]) for b in res if b.get("index") is not None]
+    if idx:
+        trous = [i for i in range(min(idx), max(idx) + 1) if i not in idx]
+        joues = int((fin or {}).get("beats_joues") or 0)
+        if trous or (joues and joues != len(idx)):
+            print("TROUS index absents=%s ; %d entree(s) pour %s beat(s) declares joues — "
+                  "TOUTES les statistiques ci-dessous portent sur un echantillon INCOMPLET."
+                  % (",".join(map(str, trous)) or "aucun", len(idx), joues or "?"))
+
     # --- cible 1 : SECOURS = 0
     #
     # v50.2 — DEUX TEMOINS, ET ILS NE DISENT PAS LA MEME CHOSE. Le drapeau `secours` vient de

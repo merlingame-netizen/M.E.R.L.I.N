@@ -38,7 +38,7 @@ jobs:
           # deja applique, on ne pousse rien ; toute autre erreur reste un refus.
           set -o pipefail
           echec=0
-          for patch in v51_timeout_ne_brique_plus_le_moteur v52_le_lore_entre_dans_la_chaine_chaude; do
+          for patch in v52_le_lore_entre_dans_la_chaine_chaude v53_une_seule_avance_par_beat; do
             if python3 "outillage/infra/patches/$patch.py" 2>&1 | tee /tmp/patch.log; then
               echo "$patch : applique"
             elif grep -q "motif trouve 0 fois" /tmp/patch.log; then
@@ -98,28 +98,48 @@ jobs:
       # mode --check-only --script, alors qu'il tourne parfaitement comme scene (c'est la
       # validation 2). Seuls les scripts strictement duck-types passent ce mode -- ce qui est
       # justement la regle du dossier tools/.
-      - name: Validation 3 — parse de TOUS les scripts touches par le patch
+      # Validation 3 — DIFFERENTIELLE, et c'est ce qui a change.
+      #
+      # Elle comparait chaque fichier touche a l'absolu : toute ligne « SCRIPT ERROR » le refusait.
+      # Or `--check-only --script` NE RESOUT PAS LES AUTOLOADS. Un script du jeu qui en utilise un
+      # (scripts/game/merlin_game.gd et MerlinAudio) produit donc « Identifier not found » AVANT
+      # tout patch : la validation aurait rejete un correctif parfaitement sain, et le commentaire
+      # d'origine le pressentait deja en restreignant l'usage aux scripts duck-types de tools/.
+      #
+      # On compare desormais le fichier PATCHE a sa version PRISTINE, mesuree sur la meme machine
+      # dans le meme mode. Seule une erreur QUE LE PATCH A INTRODUITE fait echouer. Le bruit
+      # structurel est donc neutralise sans etre masque — s'il grandit, la difference le dit.
+      - name: Validation 3 — parse differentiel des scripts touches
         run: |
           TOUCHES="$(git diff --name-only -- '*.gd')"
-          [ -n "$TOUCHES" ] || { echo "aucun script .gd touche — rien a controler"; exit 0; }
+          [ -n "$TOUCHES" ] || { echo "aucun script .gd touche"; exit 0; }
+          erreurs() {
+            timeout 300 ~/godot-bin/godot --headless --path . --check-only --script "res://$1" 2>&1 \
+              | grep -aE "SCRIPT ERROR|Parse Error:|Compile Error" | grep -av "\.tres" | sort -u
+          }
           echec=0
           for f in $TOUCHES; do
-            timeout 300 ~/godot-bin/godot --headless --path . --check-only \
-              --script "res://$f" > /tmp/chk.log 2>&1 || true
-            if grep -aE "SCRIPT ERROR|Parse Error:|Compile Error" /tmp/chk.log | grep -av "\.tres" | grep -aq .; then
-              echo "::error::$f ne parse pas"
-              grep -aE "SCRIPT ERROR|Parse Error:|Compile Error" /tmp/chk.log | grep -av "\.tres" | head -5
+            cp "$f" /tmp/patche.gd
+            git checkout -- "$f"
+            erreurs "$f" > /tmp/avant.txt
+            cp /tmp/patche.gd "$f"
+            erreurs "$f" > /tmp/apres.txt
+            NEUVES="$(comm -13 /tmp/avant.txt /tmp/apres.txt)"
+            if [ -n "$NEUVES" ]; then
+              echo "::error::$f — le patch INTRODUIT des erreurs :"
+              echo "$NEUVES" | head -5
               echec=1
             else
-              echo "ok $f"
+              PRE=$(wc -l < /tmp/avant.txt)
+              echo "ok $f (bruit structurel prealable : $PRE ligne(s), inchange)"
             fi
           done
-          [ "$echec" -eq 0 ] || { echo "::error::un script touche ne parse pas — rien n'est pousse"; exit 1; }
+          [ "$echec" -eq 0 ] || { echo "::error::un patch introduit une erreur — rien n'est pousse"; exit 1; }
       - name: Commit et push
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
           git add scripts/llm/merlin_scenario.gd tools/probe_partie_journal.gd scripts/llm/merlin_prompt_builder.gd scripts/llm/merlin_native.gd scripts/game/merlin_game.gd
           git diff --cached --quiet && { echo "rien a committer"; exit 0; }
-          git commit -m "feat(lore): v52 - le canon entre dans la chaine chaude" -m "MESURE : sur les 17 249 caracteres de narration de p74, ZERO figure du canon. Un seul lieu, Gue des Brumes, qui est le nom du biome insere mecaniquement. Verifie que ce n est PAS un defaut de mesure : neutraliser les accents des deux cotes ne change rien." -m "CE QUE L ENQUETE A ETABLI, ET QUI N EST PAS CE QUE JE CROYAIS. Le canon n est pas mort, il travaille tres bien la ou il est injecte. Les trois sentiers proposes au depart de p74 le prouvent : le sentier 1 portait FANCH et GWENNEG, le sentier 2 LE TERTRE DES NEUF, et le sentier 0 aucun nom. Le harnais prend toujours sentiers[0]. Le canon avait fait son travail ; on a jete le resultat." -m "DEUXIEME FAIT, DECISIF. LORE_CANON n est injecte qu en selection, en intro et dans scene_jit. Or scene_jit n a produit AUCUN beat de p74 (16 arc, 4 secours). La fabrique qui a ecrit seize beats sur vingt, arc_tranche, ne porte pas le canon du tout. Le modele ne nomme que ce que son prompt lui donne, et son prompt ne lui donnait rien." -m "CORRECTIF 1 : chaque pitch doit nommer une figure ou un lieu du canon, differente d un pitch a l autre. Quel que soit le sentier tire, le lore monte a bord. Le pitch retenu est reinjecte dans chaque prompt d arc, donc un nom canonique dans le pitch est un nom canonique sous les yeux du modele a chaque tranche. Cout : ~55 tokens, une fois par partie." -m "CORRECTIF 2 : la liste des noms entre dans arc_tranche. Pas LORE_CANON entier, qui pese ~561 tokens au ratio 3,46 car/token MESURE sur p74 (b12 : 6025 caracteres relus = 1741 tokens, cache vide) : a six tranches par quete longue il ajouterait ~60 s a une attente deja hors cible, dans un n_ctx de 2048. La liste seule coute 123 tokens." -m "CE QUE CE PATCH NE FAIT PAS : il ne touche pas au banc de secours, qui a ecrit les quatre derniers beats de p74 sans porter ni lore ni continuite. Un beat de banc restera muet sur le canon quoi qu on fasse ici — c est le chantier de v51." -m "Parse Godot 4.4.1 verifie." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
+          git commit -m "fix(jeu): v53 - une seule avance par beat" -m "MESURE : le journal de p74 porte 20 beats d index 1-14, 16-20, 22. Les index 15 et 21 MANQUENT, alors que le bloc fin declare beats_joues=22. Deux beats ont ete joues sans jamais etre ouverts a la sonde." -m "POURQUOI CELA COMPTE PLUS QU UN COMPTAGE : le verdict juge la partie sur ces entrees. Il a donc annonce reussite 20/20, continuite 15/19 et attente moyenne 33 s sur un echantillon incomplet, sans le dire. Un chiffre dont on ignore le denominateur ne vaut rien." -m "LA FENETRE COUPABLE, verifiee ligne a ligne : _present_current_beat pose _beat_transition a true (302) et efface _can_advance (354) ; le callback de swap_zone ne relache _beat_transition qu en 401, une ligne avant _state = 1 (403). Entre les deux, _state vaut ENCORE 2. Sur un beat Rencontre, le typewriter d arrivee du colporteur survit a la fermeture de sa vitrine ; s il finit dans cette fenetre, _on_typewriter_done rearmait _can_advance sur un beat DEJA avance. La sonde, qui attend exactement _state == 2 and _can_advance, tirait une seconde fois." -m "LE RISQUE, ET POURQUOI IL NE TIENT PAS : si _beat_transition restait bloque a true, le caret ne reviendrait jamais, soit un softlock, pire que le beat saute. Verifie plutot que suppose : MerlinVisual.swap_zone porte une garantie EXACTEMENT-UNE-FOIS explicite, ajoutee par R159 contre ce risque precis, ou le kill-handler joue lui-meme le build en attente avant de le remplacer." -m "CE QUE CE PATCH NE COUVRE PAS : ce mecanisme explique le trou du beat 15, precede d un etal de colporteur. Le second trou, apres l entree 20, n a ni etal ni incident dans le journal, et je n ai pas etabli ce qui a re-arme _can_advance la. Le verdict declare desormais les trous d index plutot que de les taire." -m "Parse editeur complet verifie ; le bruit d autoload du mode --check-only est identique avant et apres patch." -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_0157gQr3LaN14SCz5LWYrKPq"
           git push origin HEAD:feat/practices-docs
