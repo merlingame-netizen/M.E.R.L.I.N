@@ -55,6 +55,14 @@ const REPEAT_PENALTY: float = 1.1
 # le joueur ne subit pas ce délai (l'écran de sélection renonce de lui-même à 120 s et le lui
 # dit) — il ne sert qu'à éviter qu'une génération un peu longue ne brique le moteur.
 const GEN_TIMEOUT_MS: int = 150000
+# v51 — SOUPAPE. Depuis v51 le timeout ne rend plus la voie : il attend le fil natif, qui
+# revient au pire apres l'evaluation de prompt en cours (~90 s au pire mesure sur p74). Mais
+# si ce fil ne revenait JAMAIS — vrai blocage dans llama_decode — la voie resterait occupee
+# toute la session et ce cerveau serait mort EN SILENCE, ce qui est pire que la panne bruyante
+# qu'on vient de supprimer. Passe ce delai, on libere de force et on le DIT. La soupape ne
+# retablit l'ancien comportement que dans le cas ou le fil est reellement bloque — le seul ou
+# remonter le moteur est la bonne reponse.
+const ABANDON_MS: int = 300000
 
 # Marqueurs de template/tokens spéciaux que gemma4 émet parfois en TEXTE (pas comme token EOT).
 # On TRONQUE la sortie au 1er marqueur (tout ce qui suit = divagation) puis on nettoie les résidus.
@@ -417,6 +425,20 @@ func _process(_delta: float) -> void:
 		_llm.poll_result()
 	if _llm_vif != null and _voies["vif"]["busy"]:
 		_llm_vif.poll_result()
+	# v51 — LA SOUPAPE. Une voie annulee qu'aucun _on_result n'a rendue passe ce delai signale
+	# un fil natif reellement bloque, et non lent. On la libere de force, bruyamment : un
+	# cerveau muet pour le reste de la partie serait pire que le remontage qu'on subissait.
+	for c in ["conteur", "vif"]:
+		var vv: Dictionary = _voies[c]
+		if not bool(vv["busy"]) or not bool(vv.get("annulee", false)):
+			continue
+		if Time.get_ticks_msec() - int(vv["t0"]) <= ABANDON_MS:
+			continue
+		push_error("[MerlinNative] fil natif [%s] muet depuis %d ms apres annulation — voie liberee de force" % [c, ABANDON_MS])
+		vv["id"] = int(vv["id"]) + 1
+		vv["annulee"] = false
+		vv["busy"] = false
+		_partager_les_coeurs()
 
 
 ## Construit le template de chat Gemma (appliqué côté GDScript — le natif tokenise brut).
@@ -568,14 +590,24 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 		if v["ready"]:
 			break
 		if Time.get_ticks_msec() - t0 > GEN_TIMEOUT_MS:
-			v["id"] = int(v["id"]) + 1
+			# v51 — LE TIMEOUT NE REND PLUS LA VOIE AVANT LE FIL NATIF.
+			# C'etait le SEUL endroit du fichier a poser busy=false pendant que le fil
+			# d'inference tournait encore (l'autre, _on_result, ne s'execute qu'apres sa fin).
+			# La generation suivante appelait alors generate_async sur un moteur dont le fil
+			# vivait toujours, le C++ posait engine_dead (merlin_llm.cpp:164-176, « Previous
+			# generation stuck »), et la reprise REMONTAIT les deux moteurs a cache KV VIDE.
+			# Mesure p74 : beat 11 en timeout, puis beats 12 et 13 a 1741 et 1728 tokens de
+			# prompt INTEGRALEMENT redecodes (85,1 s et 47,1 s) la ou une tete chaude n'en
+			# relit que 414-540 (14-16 s) — et le beat 12 bascule sur le Conteur, ce qui signe
+			# un moteur declare mort et non un cache bouscule.
+			# On applique donc le protocole que cancel() s'impose deja et pour la raison qu'il
+			# ecrit (l.707-713) : « liberer la voie ici lancerait une gen sur un moteur occupe ».
+			# L'appelant recoit son timeout tout de suite ; _process continue de pomper la voie
+			# et _on_result la rendra — en erreur « annulee » — quand le natif aura fini.
+			v["annulee"] = true
 			if moteur != null:
 				moteur.cancel_generation()
-			v["busy"] = false
-			_partager_les_coeurs()
-			if _peut_dormir():
-				set_process(false)
-			push_warning("[MerlinNative] timeout génération (%d ms) [%s] — annulée" % [GEN_TIMEOUT_MS, cerveau])
+			push_warning("[MerlinNative] timeout génération (%d ms) [%s] — annulée, voie tenue jusqu'au retour du fil natif" % [GEN_TIMEOUT_MS, cerveau])
 			return {"error": "timeout"}
 		await get_tree().process_frame
 	return v["result"]
