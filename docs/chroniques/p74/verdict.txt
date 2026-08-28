@@ -1,0 +1,20 @@
+CIBLE1 secours: MANQUEE (1 : beats 11)
+CIBLE2 reussite: TENUE (20/20)
+CIBLE3 attente: MANQUEE (8 beats > 20s : b2=65s b3=53s b7=21s b10=68s b11=108s b12=101s b13=48s b22=25s ; moy 33s)
+REFERENCE prefixe median=482 tok relus/beat · debit median=3.8 tok/s (la ligne de base de CETTE partie)
+CAUSE attente: 7 beat(s) au-dessus de la cible — 2 PREFIXE RELU, 2 ECRITURE ETRANGLEE, 3 fond de quete
+  b2      65s = prefixe   34s (  482 tok) + ecriture   57s ( 2.2 tok/s)  ECRITURE ETRANGLEE
+  b3      53s = prefixe   30s (  431 tok) + ecriture   48s ( 2.8 tok/s)  fond de quete
+  b7      21s = prefixe   27s (  459 tok) + ecriture   19s ( 6.8 tok/s)  fond de quete
+  b10     68s = prefixe   34s (  492 tok) + ecriture   81s ( 1.6 tok/s)  ECRITURE ETRANGLEE
+  b12    101s = prefixe   85s ( 1741 tok) + ecriture   46s ( 2.7 tok/s)  PREFIXE RELU
+  b13     48s = prefixe   47s ( 1728 tok) + ecriture   34s ( 3.6 tok/s)  PREFIXE RELU
+  b22     25s = prefixe   89s (  540 tok) + ecriture   42s ( 3.7 tok/s)  fond de quete
+  => ~96s perdues par eviction de cache + ~71s par contention : les deux accusent l'ORDONNANCEMENT de l'arc, pas le modele.
+  => les 3 beat(s) « fond de quete » ne sont imputables a rien : le contexte grandit, le debit baisse. C'est le prix d'une quete longue.
+BUDGET b1:p414/e124[issue (combina] b2:p482/e127[issue (combina] b3:p431/e134[issue (combina] b4:p441/e120[issue (combina] b5:p488/e118[issue (combina] b6:p442/e115[issue (combina] b7:p459/e126[issue (combina] b8:p427/e114[issue (combina] b9:p506/e124[issue (combina] b10:p492/e128[issue (combina] b11:p0/e0[issue (combina] b12:p1741/e123[issue (combina] b13:p1728/e123[issue (combina] b14:p500/e102[issue (combina] b16:p478/e134[issue (combina] b17:p509/e128[issue (combina] b18:p461/e128[issue (combina] b19:p482/e125[issue (combina] b20:p463/e134[issue (combina] b22:p540/e157[issue (combina]
+COUPEES aucune
+BOT 20/20 beats justifies ; couverture 1,1,1,1,1,0,1,2,1,1,1,1,0,1,1,1,1,1,1,2 ; gestes surs 15
+CONTINUITE 15/19 enchainements portent le fil du beat precedent (b2:oui b3:non b4:oui b5:oui b6:oui b7:oui b8:oui b9:oui b10:non b11:oui b12:oui b13:oui b14:oui b16:oui b17:oui b18:oui b19:non b20:non b22:oui)
+EMPREINTE lieux=[Gue des Brumes] figures=[] boucle=5
+FIN accomplissement beats=20 integrite=10 corruption=8
