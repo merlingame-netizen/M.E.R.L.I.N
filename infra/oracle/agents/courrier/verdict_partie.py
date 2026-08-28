@@ -39,9 +39,31 @@ def main(chemin: str) -> int:
         return 1
 
     # --- cible 1 : SECOURS = 0
+    #
+    # v50.2 — DEUX TEMOINS, ET ILS NE DISENT PAS LA MEME CHOSE. Le drapeau `secours` vient de
+    # `secours_consomme()` cote scenario ; `provenance` dit quelle fabrique a REELLEMENT ecrit le
+    # beat. Sur p74 les deux ensembles sont DISJOINTS : le drapeau marque le seul beat 11, quand la
+    # provenance marque les beats 17, 18, 19 et 20. Le verdict annoncait donc « 1 recours au banc »
+    # pour une quete dont les QUATRE DERNIERS beats etaient procéduraux — et cela expliquait, sans
+    # que personne ne le voie, les deux decrochages de continuite en b19 et b20 : le banc ne porte
+    # pas le fil du beat precedent.
+    # Un beat servi par le banc n'est pas ecrit par le modele : le compter comme une reussite
+    # revient a se feliciter d'un texte que le jeu aurait produit sans aucune IA. On compte donc
+    # les DEUX, et on le dit quand ils divergent.
     sec = [b["index"] for b in res if b.get("secours")]
+    prov = [b["index"] for b in res if str(b.get("provenance")) == "secours"]
+    tous = sorted(set(sec) | set(prov))
     print("CIBLE1 secours: %s" % (
-        "TENUE" if not sec else "MANQUEE (%d : beats %s)" % (len(sec), ",".join(map(str, sec)))))
+        "TENUE" if not tous else "MANQUEE (%d beat(s) au banc : %s)" % (
+            len(tous), ",".join(map(str, tous)))))
+    if sec != prov:
+        print("  ATTENTION les deux temoins divergent — drapeau=%s ; provenance=%s. "
+              "Le drapeau seul sous-compte le banc." % (
+                  ",".join(map(str, sec)) or "aucun", ",".join(map(str, prov)) or "aucun"))
+    if prov:
+        print("  Les beats %s n'ont PAS ete ecrits par le modele : ni leur prose, ni leur "
+              "continuite, ni leur empreinte du Lore ne mesurent quoi que ce soit du LLM."
+              % ",".join(map(str, prov)))
 
     # --- cible 2 : reussite complete a chaque geste
     manques = [(b["index"], b.get("degre"), b.get("difficulte"), b.get("de"),
