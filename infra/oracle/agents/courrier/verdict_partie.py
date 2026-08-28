@@ -65,49 +65,71 @@ def main(chemin: str) -> int:
     else:
         print("CIBLE3 attente: NON MESUREE (attente_moteur_s absent — sonde anterieure a v48.1a)")
 
-    # --- A QUOI L'ATTENTE EST DUE : relecture de prefixe, ou ecriture ?
+    # --- A QUOI L'ATTENTE EST DUE : prefixe relu, ecriture etranglee, ou fond de quete ?
     #
-    # Constater « moy 40 s » ne dit pas s'il faut corriger le modele ou l'ordonnancement. La
-    # reponse est deja dans le journal et n'etait pas lue. `prompt_tokens` est le nombre de tokens
-    # REELLEMENT decodes : ~2 quand le cache a tout servi, ~2000 quand le prefixe a ete relu. Or
-    # merlin_scenario dit lui-meme qu'« une resolution coute jusqu'a ~86 s quand son prefixe a ete
-    # EVINCE PAR UN PROMPT D'ARC ». Un beat lent avec prompt_tokens eleve accuse donc l'arc ; un
-    # beat lent avec prompt_tokens a 2 accuse l'ecriture, et les deux se corrigent a l'oppose.
+    # v50.1 — LA REFERENCE EST MESUREE SUR LA PARTIE, PAS SUPPOSEE. La premiere version de cette
+    # section utilisait un seuil absolu (prompt_tokens > 200) parce que merlin_native.gd donne
+    # « ~2 quand le cache a tout servi, 2045 quand tout a ete relu ». En partie reelle la ligne de
+    # base est ~480 tokens relus a CHAQUE beat — la part variable du prompt, jamais en cache. Le
+    # seuil absolu classait donc 7 beats sur 7 en « relecture » ; il y en avait deux. On compare
+    # desormais a la MEDIANE de la partie.
     #
-    # Cela devient decisif sur une quete longue : l'arc s'ecrit par tranches de 4, soit 6 tranches
-    # sur 25 beats au lieu de 2 sur 6 — six occasions d'evincer au lieu de deux.
-    #
-    # `label` (v48.1e) garde la mesure honnete : sans lui, un releve pris apres coup pouvait
-    # decrire une scene du Conteur en croyant decrire l'issue du beat.
-    lents = []
-    for b in res:
-        g = b.get("gen") or {}
-        a = float(b.get("attente_moteur_s") or 0)
-        if a <= CIBLE_S or not g.get("compteurs_reels"):
-            continue
-        lents.append((b["index"], a, int(g.get("prompt_tokens") or 0),
-                      float(g.get("prompt_ms") or 0) / 1000.0,
-                      float(g.get("ecriture_ms") or 0) / 1000.0, str(g.get("label") or "?")))
-    if lents:
-        relus = [x for x in lents if x[2] > 200]
-        print("CAUSE attente: %d beat(s) au-dessus de la cible — %d par RELECTURE DE PREFIXE "
-              "(l'arc a evince le cache), %d par ECRITURE seule"
-              % (len(lents), len(relus), len(lents) - len(relus)))
-        for i, a, ptok, pms, ems, lab in lents:
-            print("  b%-3d %5.0fs = prefixe %4.0fs (%5d tok relus) + ecriture %4.0fs   [%s]"
-                  % (i, a, pms, ptok, ems, lab[:28]))
-        if relus:
-            gagne = sum(x[3] for x in relus)
-            print("  => %.0fs perdues en relecture : c'est l'ORDONNANCEMENT de l'arc qu'il faut "
-                  "corriger, pas le modele." % gagne)
-    elif att:
-        print("CAUSE attente: aucun beat au-dessus de la cible — rien a attribuer.")
-
-    # la duree de beat reste dite, mais elle ne juge plus : elle contient les poses du bot.
-    dur = [(b["index"], float(b.get("duree_beat_s", 0))) for b in res if b.get("duree_beat_s")]
-    if dur:
-        print("INFO duree_beat (pose du bot incluse, ne juge PAS) : %s ; moy %.0fs" % (
-            " ".join("b%d=%.0fs" % t for t in dur), sum(s for _, s in dur) / len(dur)))
+    # Trois causes distinctes, qui ne se corrigent pas au meme endroit :
+    #   PREFIXE RELU ...... prompt_tokens >> mediane : un prompt d'arc a evince le cache.
+    #                       -> ordonnancement de l'arc.
+    #   ECRITURE ETRANGLEE  debit d'ecriture effondre a prompt normal : le moteur ecrit pendant
+    #                       qu'autre chose tourne. -> contention CPU, l'arc en fond.
+    #   FOND DE QUETE ..... ni l'un ni l'autre : le contexte grandit, tout ralentit doucement.
+    #                       -> rien a corriger, c'est le prix d'une quete longue.
+    mesures = [(b["index"], float(b.get("attente_moteur_s") or 0), b.get("gen") or {})
+               for b in res if (b.get("gen") or {}).get("compteurs_reels")]
+    ptoks = [int(g.get("prompt_tokens") or 0) for _, _, g in mesures if int(g.get("prompt_tokens") or 0) > 0]
+    debits = []
+    for _, _, g in mesures:
+        e = float(g.get("ecriture_ms") or 0) / 1000.0
+        n = int(g.get("tokens_ecrits") or 0)
+        if e > 0 and n > 0:
+            debits.append(n / e)
+    if mesures and ptoks and debits:
+        ptoks.sort(); debits.sort()
+        med_p = ptoks[len(ptoks) // 2]
+        med_d = debits[len(debits) // 2]
+        print("REFERENCE prefixe median=%d tok relus/beat · debit median=%.1f tok/s "
+              "(la ligne de base de CETTE partie)" % (med_p, med_d))
+        lignes, n_evic, n_etr, n_fond, perdu_evic, perdu_etr = [], 0, 0, 0, 0.0, 0.0
+        for i, a, g in mesures:
+            if a <= CIBLE_S:
+                continue
+            pt = int(g.get("prompt_tokens") or 0)
+            pms = float(g.get("prompt_ms") or 0) / 1000.0
+            ems = float(g.get("ecriture_ms") or 0) / 1000.0
+            ne = int(g.get("tokens_ecrits") or 0)
+            deb = (ne / ems) if ems > 0 else 0.0
+            if pt > 2.5 * med_p:
+                cause, n_evic = "PREFIXE RELU", n_evic + 1
+                perdu_evic += max(0.0, pms - (float(med_p) / max(pt, 1)) * pms)
+            elif deb > 0 and deb < 0.6 * med_d:
+                cause, n_etr = "ECRITURE ETRANGLEE", n_etr + 1
+                perdu_etr += max(0.0, ems - ne / med_d)
+            else:
+                cause, n_fond = "fond de quete", n_fond + 1
+            lignes.append("  b%-3d %5.0fs = prefixe %4.0fs (%5d tok) + ecriture %4.0fs "
+                          "(%4.1f tok/s)  %s" % (i, a, pms, pt, ems, deb, cause))
+        if lignes:
+            print("CAUSE attente: %d beat(s) au-dessus de la cible — %d PREFIXE RELU, "
+                  "%d ECRITURE ETRANGLEE, %d fond de quete"
+                  % (len(lignes), n_evic, n_etr, n_fond))
+            print("\n".join(lignes))
+            if n_evic or n_etr:
+                print("  => ~%.0fs perdues par eviction de cache + ~%.0fs par contention : "
+                      "les deux accusent l'ORDONNANCEMENT de l'arc, pas le modele."
+                      % (perdu_evic, perdu_etr))
+            if n_fond:
+                print("  => les %d beat(s) « fond de quete » ne sont imputables a rien : "
+                      "le contexte grandit, le debit baisse. C'est le prix d'une quete longue."
+                      % n_fond)
+        elif att:
+            print("CAUSE attente: aucun beat au-dessus de la cible — rien a attribuer.")
 
     # --- le budget de contexte, et A QUOI il se rapporte
     lignes, suspects = [], 0
