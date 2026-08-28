@@ -1,0 +1,14 @@
+A depart 09:05:19Z
+B M.E.R.L.I.N a88ba87e -> 74fe7fbd
+B merlin-game c6cb4c45 -> 6efa0441
+C garde074 sonde=1 place=1 annul=1 draft=1 boucle=1 chars=1 env=1 fil=1 queue=1 meca=1 cliches=1
+C (11111111111 = elle peut jouer)
+D longueur=- beats
+D job074_force_la_longueur=2 (0 = libre)
+D deadline_sonde=s
+E job074=present fait=non
+E en_attente=job-074-quete-complete 
+E godot=non mem=14.9Go
+Z fin cmd-022
+
+== fin : etat=SUCCEEDED 2026-08-28T09:05:40Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
