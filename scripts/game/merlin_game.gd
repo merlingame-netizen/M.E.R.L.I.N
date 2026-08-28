@@ -2327,7 +2327,15 @@ func _on_typewriter_done() -> void:
 			_caret.text = "▮ cliquer pour continuer"
 		_set_caret(true)
 		return
-	if _state == 2:
+	# v53 — PAS DE REARMEMENT PENDANT UNE TRANSITION DE BEAT. `_state` vaut ENCORE 2 pendant tout
+	# `_present_current_beat` : le drapeau `_beat_transition` est pose en tete (:302) et n'est
+	# relache qu'au callback de `swap_zone` (:401), une ligne avant `_state = 1` (:403). Sur un
+	# beat « Rencontre », le typewriter d'arrivee du colporteur survit a la fermeture de sa
+	# vitrine ; s'il finit dans cette fenetre, ce handler rearmait `_can_advance` sur un beat
+	# DEJA avance. La sonde, qui attend exactement `_state == 2 and _can_advance`, tirait alors
+	# une seconde fois et un beat etait consomme sans jamais lui etre presente — d'ou les index
+	# 15 et 21 absents du journal de p74, pour 22 beats declares joues.
+	if _state == 2 and not _beat_transition:
 		# Issue entièrement écrite → la VIGNETTE d'effet (degré + Δ jauges + effets) apparaît en Z4
 		# (R128 : compacte, après coup, sans casser la prose), puis avance au clic + caret « continuer ».
 		if not _pending_res.is_empty():

@@ -218,7 +218,7 @@ static func selection(voice: String, biome: String = "foret_broceliande",
 	# accomplir, qui s'y oppose, ce qu'on risque. C'est ce trio qui rend une carte JOUABLE en
 	# profondeur — une carte qui ne nomme pas d'opposition n'annonce aucun jeu.
 	var usr: String = bloc + LORE_CANON + bloc_carnet() + "\nUne quete ne REPARE JAMAIS une faute du Voyageur et ne lui RECLAME JAMAIS une dette : elle lui propose d'aller CHERCHER, APAISER ou AFFRONTER quelque chose qui existait AVANT lui et SANS lui." \
-		+ "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = 2 a 3 phrases, imperatif tutoye SANS dire 'Voyageur' : d'abord l'ACTION concrete a accomplir, puis QUI ou QUOI s'y oppose (un etre, un serment, une force nommee), puis ce qui arrive SI TU ECHOUES. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
+		+ "\nEn tant que MERLIN, propose 3 aventures au Voyageur dans %s. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur, ANCRE dans ce lieu, en FRANCAIS NATUREL (garde les articles : « Le Souffle de la Pierre », jamais « Souffle Pierre »). pitch = 2 a 3 phrases, imperatif tutoye SANS dire 'Voyageur' : d'abord l'ACTION concrete a accomplir, puis QUI ou QUOI s'y oppose : OBLIGATOIREMENT une FIGURE ou un LIEU du CANON ci-dessus, NOMME (l'Ankou, la Lavandiere de Nuit, les korrigans, Fanch le Trotteur, le Choeur des Druides, le Chevalier a l'armure ternie, le Val sans Retour, la Fontaine de Barenton, le Tertre des Neuf, le Chene Creux...), et JAMAIS le meme dans deux pitchs, puis ce qui arrive SI TU ECHOUES. Mysterieux dans l'AMBIANCE, jamais dans le SENS. Varie les tons (enigmatique, taquin, sombre) sans sacrifier la clarte." % lieu
 	# La part variable EN AVANT-DERNIER, puis un RAPPEL DE FORMAT en toute fin.
 	#
 	# CORRECTION D'UNE RÉGRESSION QUE J'AI CAUSÉE (2026-08-18). En repoussant la part variable en
@@ -414,7 +414,23 @@ static func arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, deb
 			+ "« %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT. Une seule histoire suivie : "
 			+ "chaque etape decoule de la precedente et rapproche du but de la quete.") % [
 		debut + 1, debut + n, total, title, pitch, lieu]
-	var usr: String = faction_block + entete + suite + steps + pool_line \
+	# v52 — LES NOMS DU CANON, LA OU LES BEATS S'ECRIVENT. Mesure p74 : sur les 16 beats de
+	# provenance « arc », le seul nom canonique qui ressort est celui que le prompt fournit
+	# lui-meme via faction_block. Ankou, Lavandiere, korrigans, Fanch, Barenton, Val sans
+	# Retour : ZERO occurrence. LORE_CANON n'est injecte qu'en selection (:220), intro (:258)
+	# et scene_jit (:363) — et scene_jit n'a ecrit aucun beat. Le modele ne nomme que ce que
+	# son prompt lui donne ; celui-ci ne lui donnait rien.
+	# LA LISTE SEULE, PAS LE CANON ENTIER : LORE_CANON pese ~561 tokens au ratio 3,46
+	# car/token mesure sur p74 (b12 : 6025 car. relus = 1741 tok, cache vide). A six tranches
+	# par quete longue, l'injecter en entier ajouterait ~60 s a une attente deja hors cible,
+	# dans un n_ctx de 2048. Cette ligne-ci en coute 123 (427 caracteres).
+	var noms_canon: String = ("\nNOMME au moins UN de ces etres ou lieux, tels quels : "
+		+ "l'Ankou le Passeur de Brumes, la Lavandiere de Nuit, les korrigans, Fanch le "
+		+ "Trotteur, Kado le Cordier, le Chevalier a l'armure ternie, le Choeur des Druides ; "
+		+ "la Fontaine de Barenton, le Val sans Retour, le Pas de Nuit, le Gue des Brumes, "
+		+ "la Pierre Qui Oublie, le Chene Creux, le Tertre des Neuf. La monnaie est le gwenneg. "
+		+ "Aucun autre nom propre n'existe dans ces bois.")
+	var usr: String = faction_block + entete + noms_canon + suite + steps + pool_line \
 		+ "\nChaque etape = 3 a 4 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT et PARLE, une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ».\nDANS AU MOINS UNE etape de cette tranche,UN DETAIL, UN SEUL, montre que ces bois REJOUENT : un etre qui refait un geste deja fait, une trace qui revient, une parole redite comme si c'etait la premiere fois. Montre-le, ne l'explique JAMAIS." \
 		+ "\nFormat STRICT : une etape par ligne, prefixee « %d. » a « %d. », rien d'autre." % [debut + 1, debut + n]
 	return {"system": SYSTEM_PREFIX, "user": usr,
