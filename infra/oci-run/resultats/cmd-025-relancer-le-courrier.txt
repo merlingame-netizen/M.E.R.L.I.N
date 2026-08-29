@@ -1,0 +1,15 @@
+A depart 10:04:52Z
+B M.E.R.L.I.N 8f0fbc8f -> c5f2ae21
+B merlin-game 286e5d74 -> 286e5d74
+C memoire dispo : 15263 Mo
+C godot en vol  : 0
+0 processus
+D unites systemd --user portant 'merlin' :
+D crontab : 1 ligne(s) courrier
+E en attente : job-079-quete-generee-diagnostic 
+E job-079 present=oui
+E diagnostic dans le generateur=1
+F un tour de Courrier lance en tache de fond (pid 2854614)
+Z fin cmd-025
+
+== fin : etat=SUCCEEDED 2026-08-29T10:05:20Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
