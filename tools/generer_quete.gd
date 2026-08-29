@@ -49,6 +49,8 @@ const GEN_OPTS: Dictionary = {"creative": true, "max_tokens": 260, "label": "que
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _mn: Node = null
+var _erreurs: Array = []
+var _compte_erreurs: Dictionary = {}
 
 
 func _init() -> void:
@@ -114,9 +116,14 @@ func _go() -> void:
 		print("écriture impossible : %s" % sortie)
 		quit(1)
 		return
+	q["_erreurs_moteur"] = _compte_erreurs
 	f.store_string(JSON.stringify(q, " "))
 	f.close()
 	print("\nécrit : %s (%d beats)" % [sortie, (q["beats"] as Array).size()])
+	if not _compte_erreurs.is_empty():
+		print("ERREURS DU MOTEUR — la prose est vide a cause de ceci :")
+		for k in _compte_erreurs.keys():
+			print("  %4d × %s" % [int(_compte_erreurs[k]), str(k)])
 	quit(0)
 
 
@@ -327,12 +334,29 @@ func _issue_choix(sp: Dictionary, precedent: String) -> String:
 
 # ── outillage ──────────────────────────────────────────────────────────────────────────────────
 
+## LA QUETE PORTE SES PROPRES ERREURS. Au premier essai reel, les huit beats sont revenus vides :
+## chaque appel avait echoue, et le fichier produit ne disait pas pourquoi — il fallait aller
+## chercher un log sur la VM pour apprendre laquelle des six erreurs du moteur s'etait produite.
+## Une sortie qui ne sait pas dire ce qui lui est arrive coute un aller-retour a chaque diagnostic.
 func _generer(sys: String, usr: String) -> String:
+	if _mn == null or not _mn.is_ready():
+		_noter_erreur("moteur non pret au moment de l'appel")
+		return ""
 	var r: Dictionary = await _mn.generate(sys, usr, GEN_OPTS)
 	if r.has("error"):
+		_noter_erreur(str(r["error"]))
 		push_warning("[generer_quete] %s" % str(r["error"]))
 		return ""
-	return str(r.get("text", "")).strip_edges()
+	var txt: String = str(r.get("text", "")).strip_edges()
+	if txt == "":
+		_noter_erreur("le moteur a rendu un texte vide sans erreur")
+	return txt
+
+
+func _noter_erreur(quoi: String) -> void:
+	_erreurs.append(quoi)
+	var n: int = int(_compte_erreurs.get(quoi, 0))
+	_compte_erreurs[quoi] = n + 1
 
 
 ## Retire ce qui n'a rien a faire dans la prose : numeros d'etape (defaut mesure sur p74),
