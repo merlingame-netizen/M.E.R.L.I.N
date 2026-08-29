@@ -125,6 +125,19 @@ def valider(q, nom=""):
                 e.append("beat %s : champ %s manquant" % (n, cle))
         if b.get("t") not in TYPES:
             e.append("beat %s : type %r inconnu" % (n, b.get("t")))
+        # UN BEAT MAIGRE. Sur une quete ecrite a la main, le cas ne se pose pas. Sur une quete
+        # GENEREE, un appel au modele qui rend une phrase tronquee — ou rien — produit un beat
+        # techniquement present et narrativement vide, que rien d'autre n'attrape : `scene` non
+        # vide suffisait au controle precedent.
+        # LES SEUILS SONT MESURES SUR LE CORPUS ECRIT A LA MAIN, pas choisis : la scene la plus
+        # courte y fait 46 signes (une mise en place de beat special), l'issue la plus courte 108.
+        # Un premier essai a 90 refusait trois de mes propres quetes — c'etait le controle qui
+        # avait tort, pas les textes.
+        for cle, mini in (("scene", 40), ("issue", 80)):
+            v_ = str(b.get(cle, "")).strip()
+            if 0 < len(v_) < mini:
+                e.append("beat %s : %s trop courte (%d signes) — le modele a rendu un fragment"
+                         % (n, cle, len(v_)))
         sp = b.get("special")
         if sp:
             g = sp.get("genre", "")
