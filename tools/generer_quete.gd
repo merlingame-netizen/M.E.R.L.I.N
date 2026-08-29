@@ -48,7 +48,7 @@ const NODE_TIMEOUT_MS: int = 180000
 # Une generation d'amorce de MerlinScenario dure une minute environ ; une generation de beat
 # jusqu'a deux. Trois minutes couvrent les deux sans masquer un vrai blocage.
 const VOIE_TIMEOUT_MS: int = 180000
-const GEN_OPTS: Dictionary = {"creative": true, "max_tokens": 260, "label": "quete"}
+const GEN_OPTS: Dictionary = {"creative": true, "max_tokens": 400, "label": "quete"}
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _mn: Node = null
@@ -83,6 +83,17 @@ func _go() -> void:
 		print("moteur indisponible")
 		quit(1)
 		return
+	# FAIRE TAIRE LE SCENARIO. q80 a genere six beats en cinquante-cinq minutes — neuf minutes
+	# par beat, dont huit d'ATTENTE. Le moteur est mono-place par voie, et MerlinScenario ne
+	# s'arrete jamais : il amorce au chargement puis continue en fond. Chacun de mes appels
+	# attendait donc qu'il ait fini le sien.
+	# Ce harnais n'utilise pas le scenario — MerlinQuete est statique — donc on peut le mettre
+	# au repos sans rien casser. C'est la difference entre neuf minutes par beat et une.
+	var sc: Node = root.get_node_or_null("/root/MerlinScenario")
+	if sc != null:
+		sc.set_process(false)
+		sc.set_physics_process(false)
+		print("  MerlinScenario mis au repos (il se disputait la voie du moteur)")
 	# L'amorce de MerlinScenario part des que le modele est charge. On la laisse finir avant de
 	# demander quoi que ce soit : sinon le premier appel est refuse et le rythme ne se rattrape pas.
 	print("  attente de la voie (amorce du scenario en cours)...")
@@ -231,21 +242,81 @@ func _beat(ch: Dictionary, lieu: Dictionary, figures: Array, forme: Dictionary, 
 			b["bascule"] = ["choisie", str((b["special"]["options"] as Array)[0][0]).to_lower()]
 		return b
 
+	# UN SEUL APPEL POUR TOUT LE BEAT. Deux appels par beat doublaient l'attente de voie sans
+	# rien apporter : le modele ecrit mieux l'issue quand il vient d'ecrire la scene, puisqu'il
+	# l'a encore sous les yeux au lieu de la relire dans un prompt.
 	var tuile: String = str(forme.get("tuile_imposee", ""))
-	var couple: Dictionary = await _choisir_geste(ch, lieu, figures, main, precedent, k, n, tuile)
-	b["action"] = str(couple["tuile"])
-	b["rune"] = str(couple["rune"])
+	var marge: int = int(forme["de"]) + int(forme["at"]) - int(forme["dc"])
+	var tout: Dictionary = await _beat_entier(ch, lieu, figures, main, precedent, k, n, tuile, marge)
+	b["action"] = str(tout["tuile"])
+	b["rune"] = str(tout["rune"])
 	b["dc"] = int(forme["dc"])
 	b["at"] = int(forme["at"])
 	b["de"] = int(forme["de"])
-	var marge: int = b["de"] + b["at"] - b["dc"]
-	b["scene"] = str(couple["scene"])
-	b["issue"] = await _issue(b, precedent, marge)
+	b["scene"] = str(tout["scene"])
+	b["issue"] = str(tout["issue"])
 	b["note"] = ("%s avec %s. Marge %+d — %s. La tuile dit ce qu'on fait, la rune dit avec quoi ; "
 		+ "c'est le modele qui a lu la paire.") % [b["action"], b["rune"], marge, _degre(marge)]
 	if b.has("bascule"):
 		b["bascule"] = ["subie", "ce que le lieu impose"]
 	return b
+
+
+func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
+		precedent: String, k: int, n: int, tuile_imposee: String, marge: int) -> Dictionary:
+	var noms: String = ""
+	for f in figures:
+		noms += "%s (%s) ; " % [str((f as Dictionary).get("nom", "")), str((f as Dictionary).get("resume", ""))]
+	var sys: String = "Tu ecris un jeu narratif celtique. Francais simple, present, deuxieme personne (« Vous »)."
+	var usr: String = ("%s\n\nLIEU : %s. %s\nFIGURES D'ICI : %s\nCE QUI S'Y JOUE : %s\n%s\n\n"
+		+ "Ecris le beat %d sur %d, EXACTEMENT dans cette forme et rien d'autre :\n"
+		+ "SCENE: trois phrases courtes. Elle decoule de ce qui precede et finit sur un instant "
+		+ "suspendu, sans poser de question.\n"
+		+ "GESTE: <TUILE> | <RUNE>\n"
+		+ "ISSUE: trois phrases courtes — ce que le Voyageur fait, et ce que ca change. "
+		+ "L'issue ne redit pas la scene, elle la deplace. Le geste doit s'y LIRE.\n\n"
+		+ "TUILE %s\nRUNE, une seule de cette main : %s\n"
+		+ "CE QUE DONNE LE GESTE : %s") % [
+			REGLES, str(lieu.get("nom", "")), str(lieu.get("resume", "")), noms,
+			str(ch.get("sujet", "")),
+			("CE QUI PRECEDE : " + precedent) if precedent != "" else "C'est le premier beat.",
+			k, n,
+			("imposee : " + tuile_imposee) if tuile_imposee != "" else ("au choix : " + ", ".join(TUILES)),
+			", ".join(main), _resultat_en_clair(marge)]
+	var txt: String = await _generer(sys, usr)
+	var scene: String = ""
+	var issue: String = ""
+	var tuile: String = tuile_imposee
+	var rune: String = ""
+	var ou: int = 0   # 0 = rien, 1 = scene, 2 = issue
+	for l in txt.split("\n"):
+		var s: String = str(l).strip_edges()
+		if s == "":
+			continue
+		var haut: String = s.to_upper()
+		if haut.begins_with("SCENE"):
+			ou = 1
+			scene = _nettoyer(s.substr(s.find(":") + 1))
+		elif haut.begins_with("ISSUE"):
+			ou = 2
+			issue = _nettoyer(s.substr(s.find(":") + 1))
+		elif haut.begins_with("GESTE"):
+			ou = 0
+			var bouts: PackedStringArray = s.substr(s.find(":") + 1).split("|")
+			if bouts.size() >= 2:
+				if tuile_imposee == "":
+					tuile = _plus_proche(str(bouts[0]).strip_edges(), TUILES)
+				rune = _plus_proche(str(bouts[1]).strip_edges(), main)
+		elif ou == 1:
+			scene += " " + _nettoyer(s)
+		elif ou == 2:
+			issue += " " + _nettoyer(s)
+	if tuile == "":
+		tuile = TUILES[_rng.randi_range(0, TUILES.size() - 1)]
+	if rune == "":
+		rune = str(main[_rng.randi_range(0, main.size() - 1)])
+	return {"scene": scene.strip_edges(), "issue": issue.strip_edges(),
+			"tuile": tuile, "rune": rune}
 
 
 func _choisir_geste(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
