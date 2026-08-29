@@ -40,7 +40,7 @@ const DEFAULTS: Dictionary = {
 # v54 — `chapitre` : quel chapitre de la quete principale cette fin acheve. VIDE par defaut,
 # et c'est le cas de tous les appelants actuels : une traversee libre n'acheve aucun chapitre
 # et ne doit donc plus donner d'eclat (R180).
-static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "", voie: String = "", entree: Dictionary = {}, chapitre: String = "") -> void:
+static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "", voie: String = "", entree: Dictionary = {}, chapitre: String = "", corruption_max: int = -1) -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(PREFS_PATH)  # préserve les autres sections (audio/a11y)
 	cfg.set_value(SECTION, "runs_played", int(cfg.get_value(SECTION, "runs_played", 0)) + 1)
@@ -73,6 +73,13 @@ static func record_end(end_type: String, scenario_title: String, integrite: int,
 	if voie != "":
 		cfg.set_value(SECTION, "last_voie", voie)
 	cfg.set_value(SECTION, "last_run_iso", Time.get_datetime_string_from_system())
+	# v55 — LE REGISTRE DES HAUTS FAITS SE REMPLIT ICI, et nulle part ailleurs : c'est le seul
+	# point du code ou une traversee se termine quelle qu'en soit l'issue. Un haut fait oublie
+	# est perdu pour de bon, la run n'existant plus apres.
+	# La sauvegarde de cfg intervient plus bas ; MerlinHautsFaits.noter() ecrit de son cote sur
+	# le meme fichier, donc on note APRES avoir pose les valeurs mais l'ordre est sans effet :
+	# les cles sont disjointes et chaque ecriture recharge le fichier.
+	_noter_hauts_faits(end_type, corruption, corruption_max, voie)
 	# v43 — LE CARNET : cette traversée rejoint les deux précédentes. Trois suffisent :
 	# le récit doit pouvoir s'y référer, pas réciter une biographie.
 	if not entree.is_empty():
@@ -86,6 +93,21 @@ static func record_end(end_type: String, scenario_title: String, integrite: int,
 
 # v43 — Le carnet, relu par le récit. Jamais d'exception : un carnet illisible
 # vaut un carnet vide, et un carnet vide veut dire « première venue ».
+## v55 — Les hauts faits qu'une fin de traversee peut etablir. Chaque condition reprend la
+## prose du canon, et rien de plus : ce qui n'est pas nommable ici n'est pas note.
+## `corruption_max` est le PIC atteint sur la traversee (il peut retomber via PURGE) — c'est
+## lui qu'exige « avoir atteint Corruption 10 ET EN ETRE REVENU », la corruption finale
+## serait deja retombee. Un appelant qui ne le passe pas (-1) laisse ce fait de cote plutot
+## que de le deduire faussement de la valeur finale.
+static func _noter_hauts_faits(end_type: String, corruption: int, corruption_max: int, voie: String) -> void:
+	if end_type != "mort" and corruption >= 5:
+		MerlinHautsFaits.noter("traversee_corruption_5")
+	if end_type != "corrompu" and corruption_max >= 10:
+		MerlinHautsFaits.noter("corruption_10_survecue")
+	if voie != "" and ["Rare", "Épique", "Mythique"].has(voie):
+		MerlinHautsFaits.noter("voie_rare")
+
+
 static func carnet_lire() -> Array:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(PREFS_PATH)

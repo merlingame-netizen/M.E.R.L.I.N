@@ -2935,7 +2935,11 @@ func _on_run_ended(_end_type: String) -> void:
 		"p": (run.get("pnj_rencontres") as Array).slice(0, 3) if run.get("pnj_rencontres") is Array else [],
 		"a": (run.get("faits_marquants") as Array).slice(0, 3) if run.get("faits_marquants") is Array else [],
 	}
-	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier, voie_nom, page)
+	# v55 — le PIC de corruption part avec le reste : il existait deja (merlin_run.gd:127) et
+	# n'etait lu que par le recap de fin. Sans lui, « avoir atteint Corruption 10 et en etre
+	# revenu » serait indecidable, la corruption finale etant retombee.
+	var corr_max: int = int(run.get("corruption_max")) if run.get("corruption_max") != null else -1
+	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier, voie_nom, page, "", corr_max)
 	# Audit design P1 : une run TERMINÉE n'a pas de save de reprise — un save ici créait une
 	# « save zombie » (Continuer rechargerait une run finie) si on quittait avant MerlinEnd.
 	run.clear_save()

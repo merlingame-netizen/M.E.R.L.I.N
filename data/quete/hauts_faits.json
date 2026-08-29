@@ -76,7 +76,8 @@
    "prose_canon": "Être mort une fois, et avoir gagné ton épitaphe.",
    "source": "registre",
    "note_a": "la fin de traversee de type mort, quand l'epitaphe a ete accordee",
-   "implemente": true
+   "implemente": false,
+   "pourquoi_pas": "aucune notion d'epitaphe n'existe dans scripts/ — rien ne l'accorde ni ne la nomme."
   },
   {
    "cle": "rep_druides_favorable",
