@@ -1,0 +1,112 @@
+{
+ "_pourquoi": "Les chapitres de la quete principale posent leurs verrous EN PROSE (« Avoir survecu a une traversee a Corruption 5 ou plus »). Rien ne peut verifier une phrase. Ce fichier traduit chaque verrou en CLE stable, et dit d'ou la reponse vient. Sans lui, aucune condition de chapitre n'est verifiable — c'est le manque nomme en §26.6 du canon.",
+ "_sources": {
+  "derive": "calcule a la volee depuis la chronique. Rien a enregistrer, donc rien qui puisse diverger.",
+  "registre": "un evenement qui arrive PENDANT une traversee et qu'il faut noter au moment ou il arrive, via MerlinHautsFaits.noter()."
+ },
+ "hauts_faits": [
+  {
+   "cle": "premier_eclat",
+   "libelle": "Avoir rapporte le premier eclat",
+   "prose_canon": "Avoir rapporté le premier éclat.",
+   "source": "derive",
+   "derive_de": "graal_fragments >= 1",
+   "implemente": true
+  },
+  {
+   "cle": "traversee_corruption_5",
+   "libelle": "Avoir survecu a une traversee a Corruption 5 ou plus",
+   "prose_canon": "Avoir survécu à une traversée à Corruption 5 ou plus.",
+   "source": "registre",
+   "note_a": "la fin de traversee, si la corruption finale atteint 5 et que la fin n'est pas une mort",
+   "implemente": true
+  },
+  {
+   "cle": "promesse_tenue",
+   "libelle": "Avoir tenu une promesse envers une figure nommee",
+   "prose_canon": "Avoir tenu une promesse envers une figure nommée.",
+   "source": "registre",
+   "note_a": "la resolution du beat qui acquitte une promesse contractee plus tot dans la meme traversee",
+   "implemente": false,
+   "pourquoi_pas": "le systeme de promesses existe cote effets (PROMISE) mais rien ne signale son ACQUITTEMENT."
+  },
+  {
+   "cle": "rep_creatures_favorable",
+   "libelle": "Reputation Favorable avec les Creatures et Etres",
+   "prose_canon": "Réputation Favorable avec les Créatures et Êtres.",
+   "source": "registre",
+   "implemente": false,
+   "pourquoi_pas": "aucun systeme de reputation n'existe dans scripts/ aujourd'hui."
+  },
+  {
+   "cle": "corruption_10_survecue",
+   "libelle": "Avoir atteint Corruption 10 et en etre revenu",
+   "prose_canon": "Avoir atteint Corruption 10 et en être revenu.",
+   "source": "registre",
+   "note_a": "la fin de traversee, si la corruption a touche 10 en cours de route et que la fin n'est pas une corruption totale",
+   "implemente": true
+  },
+  {
+   "cle": "voie_rare",
+   "libelle": "Avoir accompli une traversee en Voie Rare ou mieux",
+   "prose_canon": "Avoir accompli une traversée en Voie Rare ou mieux.",
+   "source": "registre",
+   "note_a": "la fin de traversee, si la voie atteinte est Rare, Epique ou Mythique",
+   "implemente": true
+  },
+  {
+   "cle": "rep_chevalerie_favorable",
+   "libelle": "Reputation Favorable avec la Chevalerie dechue",
+   "prose_canon": "Réputation Favorable avec la Chevalerie déchue.",
+   "source": "registre",
+   "implemente": false,
+   "pourquoi_pas": "aucun systeme de reputation n'existe dans scripts/ aujourd'hui."
+  },
+  {
+   "cle": "meta_deux_branches",
+   "libelle": "Avoir investi dans deux branches de l'arbre meta",
+   "prose_canon": "Avoir investi dans deux branches de l'arbre méta.",
+   "source": "registre",
+   "implemente": false,
+   "pourquoi_pas": "l'arbre meta n'expose pas ses branches investies."
+  },
+  {
+   "cle": "epitaphe_gagnee",
+   "libelle": "Etre mort une fois, et avoir gagne son epitaphe",
+   "prose_canon": "Être mort une fois, et avoir gagné ton épitaphe.",
+   "source": "registre",
+   "note_a": "la fin de traversee de type mort, quand l'epitaphe a ete accordee",
+   "implemente": true
+  },
+  {
+   "cle": "rep_druides_favorable",
+   "libelle": "Reputation Favorable avec les Druides",
+   "prose_canon": "Réputation Favorable avec les Druides.",
+   "source": "registre",
+   "implemente": false,
+   "pourquoi_pas": "aucun systeme de reputation n'existe dans scripts/ aujourd'hui."
+  },
+  {
+   "cle": "deux_souvenirs",
+   "libelle": "Avoir debloque les deux premiers Souvenirs de Merlin",
+   "prose_canon": "Avoir débloqué les deux premiers Souvenirs de Merlin.",
+   "source": "derive",
+   "derive_de": "au moins 2 des seuils de paliers.souvenirs_merlin sont atteints par graal_fragments",
+   "implemente": true
+  }
+ ],
+ "verrous_par_chapitre": {
+  "1": [],
+  "2": ["premier_eclat"],
+  "3": ["traversee_corruption_5"],
+  "4": ["promesse_tenue"],
+  "5": ["rep_creatures_favorable"],
+  "6": ["corruption_10_survecue"],
+  "7": ["voie_rare"],
+  "8": ["rep_chevalerie_favorable"],
+  "9": ["meta_deux_branches"],
+  "10": ["epitaphe_gagnee"],
+  "11": ["rep_druides_favorable"],
+  "12": ["deux_souvenirs"]
+ }
+}
