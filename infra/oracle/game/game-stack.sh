@@ -115,6 +115,8 @@ start_native() {
         MERLIN_SELECTION_OUT="${MERLIN_SELECTION_OUT:-}" MERLIN_SELECTION_IN="${MERLIN_SELECTION_IN:-}" \
         MERLIN_JOURNAL_OUT="${MERLIN_JOURNAL_OUT:-}" MERLIN_SHOTS_DIR="${MERLIN_SHOTS_DIR:-}" \
         MERLIN_BEATS="${MERLIN_BEATS:-}" MERLIN_MODELE="${MERLIN_MODELE:-}" \
+        MERLIN_CHAPITRE="${MERLIN_CHAPITRE:-}" MERLIN_BEATS_Q="${MERLIN_BEATS_Q:-}" \
+        MERLIN_QUETE_OUT="${MERLIN_QUETE_OUT:-}" \
         MERLIN_BOT_COUVRANT="${MERLIN_BOT_COUVRANT:-}" \
         unshare --user --map-root-user --mount \
         bash "$SCRIPT_DIR/native-inner.sh" "$RES" > "$RUNDIR/inner.log" 2>&1 &
