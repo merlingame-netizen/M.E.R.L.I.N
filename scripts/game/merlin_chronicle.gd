@@ -23,6 +23,9 @@ const DEFAULTS: Dictionary = {
 	# ramenes (+1 par fin accomplissement, cumule cross-run) ; last_voie = derniere Voie de la Carte
 	# Destin (palmares CHRONIQUES). Additifs : les cfg anterieurs lisent les defauts (aucune migration).
 	"graal_fragments": 0, "last_voie": "",
+	# v54 — les chapitres de la quete principale deja recompenses. Sans ce defaut, la premiere
+	# lecture d'une chronique ancienne rendrait null la ou le code attend un Array.
+	"chapitres_acquis": [],
 	# N4-TUTO (2026-07-11) : le GUIDE de première traversée. Proposé UNE fois (chronique vierge),
 	# jamais relancé seul ; rejouable via Options (tuto_rearmed). Additif : les cfg antérieurs
 	# lisent les défauts (aucune migration).
@@ -34,7 +37,10 @@ const DEFAULTS: Dictionary = {
 
 
 # Enregistre la fin d'un run : +1 run, +1 au palmarès de l'issue, mémorise la dernière aventure + son PNJ.
-static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "", voie: String = "", entree: Dictionary = {}) -> void:
+# v54 — `chapitre` : quel chapitre de la quete principale cette fin acheve. VIDE par defaut,
+# et c'est le cas de tous les appelants actuels : une traversee libre n'acheve aucun chapitre
+# et ne doit donc plus donner d'eclat (R180).
+static func record_end(end_type: String, scenario_title: String, integrite: int, corruption: int, faction: String = "", pilier: String = "", voie: String = "", entree: Dictionary = {}, chapitre: String = "") -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(PREFS_PATH)  # préserve les autres sections (audio/a11y)
 	cfg.set_value(SECTION, "runs_played", int(cfg.get_value(SECTION, "runs_played", 0)) + 1)
@@ -51,9 +57,19 @@ static func record_end(end_type: String, scenario_title: String, integrite: int,
 	cfg.set_value(SECTION, "last_corruption", corruption)
 	cfg.set_value(SECTION, "last_faction", faction)
 	cfg.set_value(SECTION, "last_pilier", pilier)
-	# P2 (chantier 4a) : 1 eclat du Graal par fin accomplissement (cumul cross-run, additif).
-	if end_type == "accomplissement":
-		cfg.set_value(SECTION, "graal_fragments", int(cfg.get_value(SECTION, "graal_fragments", 0)) + 1)
+	# v54 — L'ECLAT VIENT DU CHAPITRE, PAS DE LA VICTOIRE (R180).
+	# Avant : toute fin « accomplissement » donnait un eclat, donc douze traversees libres
+	# suffisaient a finir la quete principale et les verrous de chapitre ne servaient a rien.
+	# Desormais il faut ET une fin accomplie ET un chapitre nomme. Aucun appelant n'en passe
+	# encore : c'est voulu, aucune fin d'aujourd'hui n'acheve un chapitre.
+	# Un chapitre deja recompense ne redonne rien, meme rejoue — sans cette liste, rejouer le
+	# chapitre 1 douze fois rouvrait exactement le trou qu'on vient de fermer.
+	if end_type == "accomplissement" and chapitre != "":
+		var acquis: Array = cfg.get_value(SECTION, "chapitres_acquis", [])
+		if not acquis.has(chapitre):
+			acquis.append(chapitre)
+			cfg.set_value(SECTION, "chapitres_acquis", acquis)
+			cfg.set_value(SECTION, "graal_fragments", int(cfg.get_value(SECTION, "graal_fragments", 0)) + 1)
 	if voie != "":
 		cfg.set_value(SECTION, "last_voie", voie)
 	cfg.set_value(SECTION, "last_run_iso", Time.get_datetime_string_from_system())

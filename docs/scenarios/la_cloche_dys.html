@@ -1,0 +1,323 @@
+<title>La Cloche d'Ys</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@600;700&family=Spectral:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --lin:#e9e4d7; --lin-creux:#ded8c8; --lin-panneau:#e2dccc;
+  --encre:#2b2c26; --encre-pale:#6d6f63; --encre-fantome:#918f80;
+  --or:#8a6a24; --or-vif:#b08a33; --voix:#35617f; --rouille:#9c4a26; --vert:#4a6b3d;
+  --trait:rgba(43,44,38,.14); --trait-fort:rgba(43,44,38,.3);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}}
+:root[data-theme="dark"]{
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--lin);color:var(--encre);margin:0;
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.72}
+h1,h2{font-family:Vollkorn,Georgia,serif;text-wrap:balance;margin:0}
+:focus-visible{outline:2px solid var(--or-vif);outline-offset:3px}
+.page{max-width:46rem;margin:0 auto;padding:3.6rem 1.5rem 7rem}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .9rem}
+h1{font-size:clamp(2rem,5.5vw,2.9rem);font-weight:700;color:var(--or);line-height:1.1;margin:0 0 1.2rem}
+.preambule{border-left:2px solid color-mix(in srgb,var(--or) 45%,transparent);
+  padding-left:1.2rem;margin:0 0 2.2rem;max-width:36rem;color:var(--encre)}
+.preambule p{margin:0 0 .7rem}
+.preambule p:last-child{margin:0;color:var(--or);font-style:italic}
+.regle{font-family:"IBM Plex Mono",monospace;font-size:.76rem;line-height:1.85;
+  color:var(--encre-pale);background:var(--lin-creux);border-radius:2px;
+  padding:.9rem 1.05rem;margin:0 0 1.6rem}
+.regle b{color:var(--encre);font-weight:500}
+.legende{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 2.4rem}
+.legende.gestes .rl{border-color:color-mix(in srgb,var(--or) 45%,transparent)}
+.legende.gestes .rl b{color:var(--or);letter-spacing:.06em}
+.rl{display:inline-flex;flex-direction:column;border:1px solid var(--trait);border-radius:2px;
+  padding:.3rem .55rem;font-family:"IBM Plex Mono",monospace;font-size:.7rem;line-height:1.4}
+.rl b{color:var(--encre);font-weight:500}
+.rl i{font-style:normal;color:var(--encre-fantome);font-size:.63rem}
+h2{font-size:1.3rem;font-weight:700;margin:3.2rem 0 1.2rem}
+.beat{padding:2rem 0;border-top:1px solid var(--trait)}
+.bt{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.75rem;flex-wrap:wrap}
+.bn{font-family:Vollkorn,serif;font-size:1.3rem;font-weight:700;color:var(--or);line-height:1}
+.btype{font-family:"IBM Plex Mono",monospace;font-size:.67rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--encre-fantome)}
+.blieu{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--voix);margin-left:auto}
+.beat p{margin:0 0 .75rem}
+.dial{color:var(--voix)}
+.issue{border-left:2px solid color-mix(in srgb,var(--or) 40%,transparent);padding-left:1rem}
+.effet{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--rouille);margin:.2rem 0 .75rem}
+.note{font-size:.9rem;color:var(--encre-pale);margin:1rem 0 0}
+.note b{color:var(--encre);font-weight:500}
+.table{font-family:"IBM Plex Mono",monospace;font-size:.75rem;line-height:1.6;
+  background:var(--lin-panneau);border-radius:2px;padding:.85rem .95rem;margin:1.1rem 0;
+  display:grid;gap:.45rem;overflow-x:auto}
+.tr{display:grid;grid-template-columns:7rem 1fr;gap:.85rem;align-items:baseline}
+.lb{color:var(--encre-fantome);letter-spacing:.05em;font-size:.68rem;text-transform:uppercase}
+.vl{color:var(--encre-pale);min-width:0}
+.vl b{color:var(--encre);font-weight:600}
+.vl b.act{color:var(--or)}
+.plus{color:var(--encre-fantome);padding:0 .25rem}
+.runes{display:flex;flex-wrap:wrap;gap:.3rem}
+.rune{padding:.2rem .5rem;border:1px solid var(--trait);border-radius:2px;
+  font-size:.71rem;color:var(--encre-fantome)}
+.rune.sel{border-color:var(--or);color:var(--encre);
+  background:color-mix(in srgb,var(--or) 13%,transparent)}
+.geste b{font-size:.82rem}
+.jet b.mpos{color:var(--vert)} .jet b.mneg{color:var(--rouille)}
+.dg{display:inline-block;margin-left:.5rem;padding:.02rem .4rem;border-radius:2px;
+  font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;
+  border:1px solid var(--trait-fort);color:var(--encre-pale)}
+.dg.reussite{border-color:color-mix(in srgb,var(--vert) 55%,transparent);color:var(--vert)}
+.dg.eclatante{border-color:var(--or);color:var(--or-vif);
+  background:color-mix(in srgb,var(--or) 15%,transparent)}
+.dg.partiel{border-color:color-mix(in srgb,var(--rouille) 60%,transparent);color:var(--rouille)}
+.retour{background:var(--lin-creux);border-radius:2px;padding:1.4rem 1.3rem;margin-top:3.4rem}
+.retour h2{font-size:1.05rem;margin:0 0 .8rem;color:var(--or)}
+.retour ul{margin:0;padding-left:1.1rem;color:var(--encre-pale);font-size:.95rem}
+.retour li{margin:.5rem 0}
+.retour b{color:var(--encre);font-weight:500}
+
+.rune.neuve{border-color:var(--voix);color:var(--voix);
+  background:color-mix(in srgb,var(--voix) 12%,transparent)}
+.etat b{font-variant-numeric:tabular-nums}
+.etat .sep{color:var(--encre-fantome);padding:0 .35rem}
+.dp{color:var(--vert);font-size:.68rem;margin-left:.15rem}
+.dn{color:var(--rouille);font-size:.68rem;margin-left:.15rem}
+.etat .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.beat.spe{background:linear-gradient(90deg,color-mix(in srgb,var(--voix) 6%,transparent),transparent 70%)}
+.table.special{border-left:2px solid var(--voix)}
+.table.special .vl b.act{color:var(--voix);text-transform:uppercase;letter-spacing:.08em}
+.opts{display:flex;flex-direction:column;gap:.3rem}
+.opt{display:block;border:1px solid var(--trait);border-radius:2px;padding:.35rem .55rem;
+  line-height:1.5}
+.opt b{display:block;color:var(--encre-pale);font-weight:500;font-size:.74rem}
+.opt i{font-style:normal;color:var(--encre-fantome);font-size:.69rem}
+.opt.pris{border-color:var(--voix);background:color-mix(in srgb,var(--voix) 10%,transparent)}
+.opt.pris b{color:var(--encre)}
+.etatligne{font-family:"IBM Plex Mono",monospace;font-size:.73rem;color:var(--encre-pale);
+  margin:.7rem 0 1rem;padding-left:.1rem}
+.etatligne b{color:var(--encre);font-variant-numeric:tabular-nums}
+.etatligne .sep{color:var(--encre-fantome);padding:0 .3rem}
+.etatligne .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.meca{border-top:1px solid var(--trait);padding:1.5rem 0}
+.meca h3{font-family:Vollkorn,serif;font-size:1.08rem;font-weight:700;margin:0 0 .1rem;
+  color:var(--encre)}
+.meca .etat-usage{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .7rem}
+.meca .etat-usage.vu{color:var(--voix)}
+.meca dl{display:grid;grid-template-columns:7.5rem 1fr;gap:.28rem .9rem;margin:0 0 .7rem;
+  font-size:.9rem}
+.meca dt{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--encre-fantome);padding-top:.2rem}
+.meca dd{margin:0;color:var(--encre-pale)}
+.meca .ex{font-size:.88rem;color:var(--encre-pale);border-left:2px solid var(--trait-fort);
+  padding-left:.9rem;margin:.5rem 0 0}
+.meca .ex b{color:var(--encre);font-weight:500}
+@media(max-width:600px){.meca dl{grid-template-columns:1fr;gap:.05rem}}
+
+.bas{display:block;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.04em;
+  margin:-.35rem 0 .85rem;padding-left:.7rem;border-left:2px solid var(--trait-fort)}
+.bas.choisie{color:var(--or);border-left-color:var(--or)}
+.bas.subie{color:var(--rouille);border-left-color:var(--rouille)}
+.forme{margin:0 0 3rem}
+.forme .rangee{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;margin:.5rem 0 .6rem}
+.forme .c{height:2.1rem;border:1px solid var(--trait);border-radius:2px;
+  font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--encre-fantome);
+  display:grid;place-items:center}
+.forme .c.choisie{border-color:var(--or);color:var(--or);
+  background:color-mix(in srgb,var(--or) 18%,transparent)}
+.forme .c.subie{border-color:var(--rouille);color:var(--rouille);
+  background:color-mix(in srgb,var(--rouille) 14%,transparent)}
+.forme p{font-size:.93rem;color:var(--encre-pale);margin:.2rem 0 .5rem}
+.forme .lg{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--encre-fantome)}
+.forme .lg b.o{color:var(--or)} .forme .lg b.r{color:var(--rouille)}
+@media(max-width:640px){
+  .page{padding:2.2rem 1.1rem 4rem}
+  .tr{grid-template-columns:1fr;gap:.15rem}
+  .blieu{margin-left:0;width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.note-tete{color:var(--encre-pale);font-size:.97rem;margin:0 0 2rem;max-width:34rem}
+.meca h3 a{color:var(--or);text-decoration:none}
+.meca h3 a:hover{text-decoration:underline}
+code{font-family:"IBM Plex Mono",monospace;font-size:.85em;color:var(--encre)}
+</style>
+<div class="page">
+<p class="eyebrow">Scénario de référence · penn_ar_bed · 10 beats</p>
+<h1>La Cloche d'Ys</h1>
+<div class="preambule"><p>La marée descend depuis une heure. Le sable est dur, strié, et il tient sous la botte.</p><p>Devant vous, l'eau s'est retirée sur trois cents pas et a découvert ce qu'elle couvre d'habitude : des pierres taillées, alignées, qui furent des rues.</p><p>C'est Ys. On n'y va pas, on la regarde depuis la grève.</p><p>Une cloche sonne sous l'eau, quelque part au large. Vous l'entendez pour la première fois.</p></div>
+<div class="regle"><b>Un beat ordinaire.</b> Vous posez une tuile d'action et une rune de votre main. Les cinq tuiles sont le socle et ne changent jamais ; les runes tournent. La tuile dit ce que vous faites, la rune dit avec quoi. C'est le modèle qui lit la paire et écrit ce qui arrive.<br>Le jeu annonce la mise avant le dé, jamais l'issue. On lance <b>2d6</b>. La rune posée <b>quitte la main</b> et on en repioche une.<br><br><b>Un beat spécial</b> a sa propre mécanique — ni tuile, ni rune, ni dé. On y sélectionne parmi <b>2 à 4 propositions</b> quand c'est un choix ; d'autres formes existent (marchand, boss, énigme écrite). La main ne bouge pas.<br>Rien ne s'accumule parce qu'on a réussi : les <b>gwenneg</b> ne viennent que d'un événement qui en donne.</div>
+<h2>Les cinq gestes</h2>
+<div class="legende gestes"><span class="rl"><b>OBSERVER</b><i>lire une scène avant d'y toucher</i></span><span class="rl"><b>AGIR</b><i>faire de ses mains, avec adresse</i></span><span class="rl"><b>COMBATTRE</b><i>y mettre le corps et tenir</i></span><span class="rl"><b>RÉVÉLER</b><i>faire venir au jour ce qui se cache</i></span><span class="rl"><b>PARLER</b><i>s'adresser à quelqu'un</i></span></div>
+<h2>Les runes de la quête</h2>
+<div class="legende runes-leg"><span class="rl"><b>La Patience</b><i>laisser venir plutôt qu'aller chercher</i></span><span class="rl"><b>La Méfiance</b><i>supposer le pire et se garder</i></span><span class="rl"><b>La Franchise</b><i>dire ce qui est, sans arranger</i></span><span class="rl"><b>L'Élan</b><i>partir avant d'être sûr</i></span><span class="rl"><b>La Pitié</b><i>s'arrêter pour ce qui souffre</i></span><span class="rl"><b>L'Entêtement</b><i>recommencer sans changer d'avis</i></span><span class="rl"><b>Le Silence</b><i>ne rien dire et laisser le vide travailler</i></span><span class="rl"><b>La Ruse</b><i>prendre par un autre bord</i></span><span class="rl"><b>L'Aplomb</b><i>tenir sa place devant plus grand que soi</i></span><span class="rl"><b>Le Deuil</b><i>accepter ce qui ne reviendra pas</i></span></div>
+<h2>La forme de la quête</h2>
+<div class="forme"><p>Une décision ne se pose pas au métronome : elle se pose quand le sol vient de bouger, et seulement quand le Voyageur a de quoi décider.</p><div class="rangee"><div class="c subie">1</div><div class="c ">2</div><div class="c ">3</div><div class="c subie">4</div><div class="c ">5</div><div class="c ">6</div><div class="c ">7</div><div class="c ">8</div><div class="c choisie">9</div><div class="c ">10</div></div><p class="lg"><b class="r">■</b> bascule subie : le monde décide &nbsp;·&nbsp; <b class="o">■</b> bascule choisie : vous décidez</p></div>
+<h2>La quête</h2>
+<article class="beat">
+<div class="bt"><span class="bn">1</span><span class="btype">Exploration</span><span class="blieu">La grève de Kerlan</span></div>
+<span class="bas subie">bascule subie — un enfant a entendu la cloche deux fois</span>
+<p>Sur la grève, un garçon d'une dizaine d'années se tient face à la mer, les pieds dans l'eau jusqu'aux chevilles. Il ne joue pas. Il écoute.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Patience</span><span class="rune">La Méfiance</span><span class="rune">La Franchise</span><span class="rune">L'Élan</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>8</b> <span class="plus">→</span> <b>14</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+5</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Pitié</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous attendez qu'il se retourne de lui-même. Il met longtemps. Quand il le fait, il dit qu'il l'a déjà entendue deux fois : avant-hier et hier.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> OBSERVER avec La Patience : on ne l'arrache pas à l'eau, on attend qu'il vienne. Le modèle en a tiré un enfant qui parle le premier, ce qui vaut mieux qu'un interrogatoire.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">2</span><span class="btype">Rencontre</span><span class="blieu">Erwan Veilleur</span></div>
+<p>Erwan garde un phare qui n'éclaire plus personne depuis douze ans. Il descend sur la grève quand il vous voit avec le garçon.</p>
+<p class="dial">« Trois fois, il entre dans l'eau et il ne ressort pas. C'est comme ça depuis toujours. Deux fois, on peut encore le tenir. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Méfiance</span><span class="rune sel">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>La Franchise</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>5</b> <span class="plus">→</span> <b>11</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Aplomb</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous lui demandez sans détour ce qu'il a déjà tenté. Il répond qu'il a bouché les oreilles d'un enfant avec de la cire, une fois, et que ça n'a rien changé : ce n'est pas par les oreilles que ça entre.</p>
+<p class="effet">vous savez que boucher les oreilles ne sert à rien</p>
+<p class="note"><b>Ce que le modèle a lu.</b> La Franchise ouvre une réponse utile là où la politesse aurait eu droit à une phrase de gardien de phare.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">3</span><span class="btype">Épreuve</span><span class="blieu">Les rues découvertes</span></div>
+<p>Pour approcher de la cloche il faut marcher sur les pierres découvertes. La marée remonte dans deux heures et le sable entre les dalles est mou par endroits.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Méfiance</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune">L'Aplomb</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">AGIR</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>9</b> <span class="plus">→</span> <b>12</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+3</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Entêtement</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous éprouvez chaque dalle avant d'y porter le poids, et vous contournez celles qui sonnent creux. Vous avancez lentement. Le garçon suit dans vos pas exacts.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> +3 seulement : rien dans la main ne couvre vraiment la fermeté du sol. On avance quand même, et le dé fait le reste.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">4</span><span class="btype">Rencontre</span><span class="blieu">Marc'harit la Noyée</span></div>
+<span class="bas subie">bascule subie — elle rejoue sa noyade, et l'enfant l'entend</span>
+<p>Elle se tient debout dans l'eau jusqu'à la taille, à côté d'un beffroi dont il ne reste que l'arc. Elle tire une corde vers le bas, la lâche, la reprend. La cloche sonne à chaque fois.</p>
+<p class="dial">« Je sonne pour qu'on vienne m'ouvrir. Personne ne vient jamais assez vite. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">L'Élan</span><span class="rune sel">La Pitié</span><span class="rune">L'Aplomb</span><span class="rune">L'Entêtement</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Pitié</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>4</b> <span class="plus">→</span> <b>10</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+1</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>1</b><span class="dp">+1</span> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous la regardez tirer sans l'interrompre. Elle recommence exactement de la même façon : trois tractions, une pause, une main qui remonte le long de la corde. Toujours dans cet ordre.</p>
+<p class="effet">+1 corruption</p>
+<p class="note"><b>Ce que le modèle a lu.</b> C'est le beat qui prépare le suivant : on ne peut pas agir sur une boucle qu'on n'a pas encore vue tourner. La Pitié empêche le Voyageur de la traiter comme un obstacle.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">5</span><span class="btype">Épreuve</span><span class="blieu">Le beffroi</span></div>
+<p>Il faut lui prendre la corde. Elle ne la lâche jamais — sauf sur un temps de son cycle, et il faut avoir regardé pour savoir lequel.</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">boss</b></span></div>
+<div class="tr"><span class="lb">Sa boucle</span><span class="vl opts">
+<span class="opt"><b>Tour 1 — Elle tire une première fois. La corde est tendue, ses deux mains dessus.</b><i>attendre</i></span>
+<span class="opt"><b>Tour 2 — Elle tire une deuxième fois. Même prise, même appui.</b><i>attendre</i></span>
+<span class="opt pris"><b>Tour 3 — Elle tire une troisième fois, puis s'arrête et souffle. Une main quitte la corde.</b><i>AGIR — c'est le seul temps où la corde n'est tenue que d'une main</i></span>
+<span class="opt"><b>Tour 4 — Elle remonte la main le long de la corde et reprend au début.</b><i>trop tard, le cycle recommence</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous agissez</span><span class="vl">au <b>tour 3</b>, le seul où il est découvert</span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous laissez passer deux tractions. À la troisième, quand elle souffle et qu'une main quitte le chanvre, vous prenez la corde au-dessus de sa prise. Elle ne résiste pas. Elle a l'air surprise qu'on ait attendu.</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Un boss ne se bat pas, il s'observe : sa boucle EST sa faiblesse, et c'est la loi de ces bois retournée en mécanique. Frapper aux tours 1 ou 2 coûtait deux points de santé et relançait le cycle.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">6</span><span class="btype">Épreuve</span><span class="blieu">Le beffroi</span></div>
+<p>La corde est à vous, mais le battant est pris dans le vase et la cloche continue de résonner d'elle-même à chaque vague.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">L'Élan</span><span class="rune">L'Aplomb</span><span class="rune sel">L'Entêtement</span><span class="rune">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">COMBATTRE</b> <span class="plus">avec</span> <b>L'Entêtement</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>3</b> <span class="plus">→</span> <b>9</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+0</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Deuil</span></span></div>
+</div>
+<div class="etatligne">santé <b>8</b><span class="dn">-2</span> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous tirez, la vase cède d'un coup et vous partez en arrière dans l'eau froide. Vous vous relevez avec le battant. La cloche ne sonne plus.</p>
+<p class="effet">−2 santé · vous tenez le battant</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Marge 0 : la réussite tient à un point. Le prix est déjà payé — deux points de santé, dans l'eau, en novembre.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">7</span><span class="btype">Rencontre</span><span class="blieu">Marc'harit la Noyée</span></div>
+<p>Elle regarde le beffroi silencieux. Elle ne pleure pas et ne vous en veut pas. Elle demande ce qu'elle est censée faire, maintenant.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">L'Élan</span><span class="rune">L'Aplomb</span><span class="rune">La Patience</span><span class="rune sel">Le Deuil</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>Le Deuil</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>11</b> <span class="plus">→</span> <b>17</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+8</b><span class="dg eclatante">éclatante</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Méfiance</span></span></div>
+</div>
+<div class="etatligne">santé <b>8</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous lui dites que personne ne viendra, que ça fait longtemps, et que ce n'est pas parce qu'on l'a oubliée. Elle écoute jusqu'au bout. Puis elle s'assied sur une dalle, dans l'eau, et arrête de bouger.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Marge +8, l'éclatante de la quête. Le Deuil et non La Pitié : la plaindre l'aurait laissée à sa corde. Lui dire que personne ne vient, c'est ce que mille nuits de sonnerie n'avaient pas obtenu.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">8</span><span class="btype">Exploration</span><span class="blieu">La marée</span></div>
+<p>L'eau est revenue à mi-mollet sans que vous vous en aperceviez. Les dalles par où vous êtes venu sont déjà sous vingt centimètres.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">L'Élan</span><span class="rune">L'Aplomb</span><span class="rune">La Patience</span><span class="rune sel">La Méfiance</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>7</b> <span class="plus">→</span> <b>13</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+4</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Ruse</span></span></div>
+</div>
+<div class="etatligne">santé <b>8</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous repérez la ligne des pierres hautes avant de bouger, et vous la suivez au lieu de reprendre le chemin de l'aller. Le garçon vous tient par la manche.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> La bonne lecture ne donne pas d'avantage ici : elle évite seulement une perte. C'est le cas le plus fréquent d'OBSERVER, et il faut qu'il existe.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">9</span><span class="btype">Dilemme</span><span class="blieu">La grève</span></div>
+<span class="bas choisie">bascule choisie — ce que l'enfant saura</span>
+<p>Le garçon veut savoir ce qui se serait passé la troisième fois. Il a dix ans et il a marché derrière vous dans l'eau toute la soirée.</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">choix de dialogue</b></span></div>
+<div class="tr"><span class="lb">On vous propose</span><span class="vl opts">
+<span class="opt"><b>Lui dire qu'il a entendu la cloche pour la dernière fois</b><i>il vous croira. Il ne saura jamais qu'il est passé à une nuit de l'eau, et il dormira.</i></span>
+<span class="opt pris"><b>Lui dire ce qui se serait passé la troisième fois</b><i>il aura peur toute sa vie de la marée basse, et il ne s'approchera plus jamais seul. +1 corruption.</i></span>
+<span class="opt"><b>Ne rien dire du tout</b><i>il rentrera en croyant qu'il ne s'est rien passé, et il redescendra demain.</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous choisissez</span><span class="vl"><b>Lui dire ce qui se serait passé la troisième fois</b></span></div>
+</div>
+<div class="etatligne">santé <b>8</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous le lui dites. Il ne pleure pas, il hoche la tête comme un adulte, et il remonte vers Kerlan sans regarder la mer. Erwan vous dit merci d'une voix qui n'en pense pas moins.</p>
+<p class="effet">+1 corruption</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Trois propositions et aucune n'est propre : le mensonge le laisse dormir, la vérité le protège en l'abîmant, le silence le renvoie sur la grève demain.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">10</span><span class="btype">Climax</span><span class="blieu">Le phare</span></div>
+<p>Erwan vous fait monter au phare. La lanterne est démontée depuis douze ans, les pièces rangées par terre dans l'ordre. Il dit qu'il n'a jamais su par quoi commencer.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">L'Élan</span><span class="rune sel">L'Aplomb</span><span class="rune">La Patience</span><span class="rune">La Ruse</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">RÉVÉLER</b> <span class="plus">avec</span> <b>L'Aplomb</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 12 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>9</b> <span class="plus">→</span> <b>15</b> contre 12 <span class="plus">→</span> marge <b class="mpos">+3</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Deuil</span></span></div>
+</div>
+<div class="etatligne">santé <b>8</b> <span class="sep">·</span> corruption <b>2</b><span class="dp">+1</span> <span class="sep">·</span> bourse <b>11</b> gwenneg</div>
+<p class="issue">Vous sortez les pièces une par une et vous les posez dans l'ordre où elles vont, sans rien monter. Vous lui montrez seulement qu'il n'en manque aucune. Il reste longtemps devant, puis il prend la première.</p>
+<p class="effet">Ys se tait · l'enfant sait · Erwan a recommencé</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Difficulté 12, le seul beat de la quête à monter le seuil. RÉVÉLER ne sert pas ici à trouver un objet caché mais à rendre visible qu'une chose est possible.</p>
+</article>
+</div>

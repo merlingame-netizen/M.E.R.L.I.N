@@ -1,0 +1,452 @@
+<title>Le Linceul de Kado</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@600;700&family=Spectral:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --lin:#e9e4d7; --lin-creux:#ded8c8; --lin-panneau:#e2dccc;
+  --encre:#2b2c26; --encre-pale:#6d6f63; --encre-fantome:#918f80;
+  --or:#8a6a24; --or-vif:#b08a33; --voix:#35617f; --rouille:#9c4a26; --vert:#4a6b3d;
+  --trait:rgba(43,44,38,.14); --trait-fort:rgba(43,44,38,.3);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}}
+:root[data-theme="dark"]{
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--lin);color:var(--encre);margin:0;
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.72}
+h1,h2{font-family:Vollkorn,Georgia,serif;text-wrap:balance;margin:0}
+:focus-visible{outline:2px solid var(--or-vif);outline-offset:3px}
+.page{max-width:46rem;margin:0 auto;padding:3.6rem 1.5rem 7rem}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .9rem}
+h1{font-size:clamp(2rem,5.5vw,2.9rem);font-weight:700;color:var(--or);line-height:1.1;margin:0 0 1.2rem}
+.preambule{border-left:2px solid color-mix(in srgb,var(--or) 45%,transparent);
+  padding-left:1.2rem;margin:0 0 2.2rem;max-width:36rem;color:var(--encre)}
+.preambule p{margin:0 0 .7rem}
+.preambule p:last-child{margin:0;color:var(--or);font-style:italic}
+.regle{font-family:"IBM Plex Mono",monospace;font-size:.76rem;line-height:1.85;
+  color:var(--encre-pale);background:var(--lin-creux);border-radius:2px;
+  padding:.9rem 1.05rem;margin:0 0 1.6rem}
+.regle b{color:var(--encre);font-weight:500}
+.legende{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 2.4rem}
+.legende.gestes .rl{border-color:color-mix(in srgb,var(--or) 45%,transparent)}
+.legende.gestes .rl b{color:var(--or);letter-spacing:.06em}
+.rl{display:inline-flex;flex-direction:column;border:1px solid var(--trait);border-radius:2px;
+  padding:.3rem .55rem;font-family:"IBM Plex Mono",monospace;font-size:.7rem;line-height:1.4}
+.rl b{color:var(--encre);font-weight:500}
+.rl i{font-style:normal;color:var(--encre-fantome);font-size:.63rem}
+h2{font-size:1.3rem;font-weight:700;margin:3.2rem 0 1.2rem}
+.beat{padding:2rem 0;border-top:1px solid var(--trait)}
+.bt{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.75rem;flex-wrap:wrap}
+.bn{font-family:Vollkorn,serif;font-size:1.3rem;font-weight:700;color:var(--or);line-height:1}
+.btype{font-family:"IBM Plex Mono",monospace;font-size:.67rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--encre-fantome)}
+.blieu{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--voix);margin-left:auto}
+.beat p{margin:0 0 .75rem}
+.dial{color:var(--voix)}
+.issue{border-left:2px solid color-mix(in srgb,var(--or) 40%,transparent);padding-left:1rem}
+.effet{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--rouille);margin:.2rem 0 .75rem}
+.note{font-size:.9rem;color:var(--encre-pale);margin:1rem 0 0}
+.note b{color:var(--encre);font-weight:500}
+.table{font-family:"IBM Plex Mono",monospace;font-size:.75rem;line-height:1.6;
+  background:var(--lin-panneau);border-radius:2px;padding:.85rem .95rem;margin:1.1rem 0;
+  display:grid;gap:.45rem;overflow-x:auto}
+.tr{display:grid;grid-template-columns:7rem 1fr;gap:.85rem;align-items:baseline}
+.lb{color:var(--encre-fantome);letter-spacing:.05em;font-size:.68rem;text-transform:uppercase}
+.vl{color:var(--encre-pale);min-width:0}
+.vl b{color:var(--encre);font-weight:600}
+.vl b.act{color:var(--or)}
+.plus{color:var(--encre-fantome);padding:0 .25rem}
+.runes{display:flex;flex-wrap:wrap;gap:.3rem}
+.rune{padding:.2rem .5rem;border:1px solid var(--trait);border-radius:2px;
+  font-size:.71rem;color:var(--encre-fantome)}
+.rune.sel{border-color:var(--or);color:var(--encre);
+  background:color-mix(in srgb,var(--or) 13%,transparent)}
+.geste b{font-size:.82rem}
+.jet b.mpos{color:var(--vert)} .jet b.mneg{color:var(--rouille)}
+.dg{display:inline-block;margin-left:.5rem;padding:.02rem .4rem;border-radius:2px;
+  font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;
+  border:1px solid var(--trait-fort);color:var(--encre-pale)}
+.dg.reussite{border-color:color-mix(in srgb,var(--vert) 55%,transparent);color:var(--vert)}
+.dg.eclatante{border-color:var(--or);color:var(--or-vif);
+  background:color-mix(in srgb,var(--or) 15%,transparent)}
+.dg.partiel{border-color:color-mix(in srgb,var(--rouille) 60%,transparent);color:var(--rouille)}
+.retour{background:var(--lin-creux);border-radius:2px;padding:1.4rem 1.3rem;margin-top:3.4rem}
+.retour h2{font-size:1.05rem;margin:0 0 .8rem;color:var(--or)}
+.retour ul{margin:0;padding-left:1.1rem;color:var(--encre-pale);font-size:.95rem}
+.retour li{margin:.5rem 0}
+.retour b{color:var(--encre);font-weight:500}
+
+.rune.neuve{border-color:var(--voix);color:var(--voix);
+  background:color-mix(in srgb,var(--voix) 12%,transparent)}
+.etat b{font-variant-numeric:tabular-nums}
+.etat .sep{color:var(--encre-fantome);padding:0 .35rem}
+.dp{color:var(--vert);font-size:.68rem;margin-left:.15rem}
+.dn{color:var(--rouille);font-size:.68rem;margin-left:.15rem}
+.etat .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.beat.spe{background:linear-gradient(90deg,color-mix(in srgb,var(--voix) 6%,transparent),transparent 70%)}
+.table.special{border-left:2px solid var(--voix)}
+.table.special .vl b.act{color:var(--voix);text-transform:uppercase;letter-spacing:.08em}
+.opts{display:flex;flex-direction:column;gap:.3rem}
+.opt{display:block;border:1px solid var(--trait);border-radius:2px;padding:.35rem .55rem;
+  line-height:1.5}
+.opt b{display:block;color:var(--encre-pale);font-weight:500;font-size:.74rem}
+.opt i{font-style:normal;color:var(--encre-fantome);font-size:.69rem}
+.opt.pris{border-color:var(--voix);background:color-mix(in srgb,var(--voix) 10%,transparent)}
+.opt.pris b{color:var(--encre)}
+.etatligne{font-family:"IBM Plex Mono",monospace;font-size:.73rem;color:var(--encre-pale);
+  margin:.7rem 0 1rem;padding-left:.1rem}
+.etatligne b{color:var(--encre);font-variant-numeric:tabular-nums}
+.etatligne .sep{color:var(--encre-fantome);padding:0 .3rem}
+.etatligne .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.meca{border-top:1px solid var(--trait);padding:1.5rem 0}
+.meca h3{font-family:Vollkorn,serif;font-size:1.08rem;font-weight:700;margin:0 0 .1rem;
+  color:var(--encre)}
+.meca .etat-usage{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .7rem}
+.meca .etat-usage.vu{color:var(--voix)}
+.meca dl{display:grid;grid-template-columns:7.5rem 1fr;gap:.28rem .9rem;margin:0 0 .7rem;
+  font-size:.9rem}
+.meca dt{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--encre-fantome);padding-top:.2rem}
+.meca dd{margin:0;color:var(--encre-pale)}
+.meca .ex{font-size:.88rem;color:var(--encre-pale);border-left:2px solid var(--trait-fort);
+  padding-left:.9rem;margin:.5rem 0 0}
+.meca .ex b{color:var(--encre);font-weight:500}
+@media(max-width:600px){.meca dl{grid-template-columns:1fr;gap:.05rem}}
+
+.bas{display:block;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.04em;
+  margin:-.35rem 0 .85rem;padding-left:.7rem;border-left:2px solid var(--trait-fort)}
+.bas.choisie{color:var(--or);border-left-color:var(--or)}
+.bas.subie{color:var(--rouille);border-left-color:var(--rouille)}
+.forme{margin:0 0 3rem}
+.forme .rangee{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;margin:.5rem 0 .6rem}
+.forme .c{height:2.1rem;border:1px solid var(--trait);border-radius:2px;
+  font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--encre-fantome);
+  display:grid;place-items:center}
+.forme .c.choisie{border-color:var(--or);color:var(--or);
+  background:color-mix(in srgb,var(--or) 18%,transparent)}
+.forme .c.subie{border-color:var(--rouille);color:var(--rouille);
+  background:color-mix(in srgb,var(--rouille) 14%,transparent)}
+.forme p{font-size:.93rem;color:var(--encre-pale);margin:.2rem 0 .5rem}
+.forme .lg{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--encre-fantome)}
+.forme .lg b.o{color:var(--or)} .forme .lg b.r{color:var(--rouille)}
+@media(max-width:640px){
+  .page{padding:2.2rem 1.1rem 4rem}
+  .tr{grid-template-columns:1fr;gap:.15rem}
+  .blieu{margin-left:0;width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.note-tete{color:var(--encre-pale);font-size:.97rem;margin:0 0 2rem;max-width:34rem}
+.meca h3 a{color:var(--or);text-decoration:none}
+.meca h3 a:hover{text-decoration:underline}
+code{font-family:"IBM Plex Mono",monospace;font-size:.85em;color:var(--encre)}
+</style>
+<div class="page">
+<p class="eyebrow">Scénario de référence · broceliande · 18 beats</p>
+<h1>Le Linceul de Kado</h1>
+<div class="preambule"><p>La nuit est tombée il y a deux heures. Vous suivez la crête au nord, entre les aulnes, et l'air se refroidit d'un coup comme il le fait toujours quand on approche de l'eau.</p><p>En bas, c'est le Gué des Brumes. On le traverse à gué sur des pierres plates, à condition de savoir lesquelles tiennent.</p><p>Vous entendez des coups réguliers avant de voir la rivière. Quelqu'un bat du linge, en pleine nuit, sans lampe.</p><p>Ici, Voyageur, tout recommence. Sauf toi.</p></div>
+<div class="regle"><b>Un beat ordinaire.</b> Vous posez une tuile d'action et une rune de votre main. Les cinq tuiles sont le socle et ne changent jamais ; les runes tournent. La tuile dit ce que vous faites, la rune dit avec quoi. C'est le modèle qui lit la paire et écrit ce qui arrive.<br>Le jeu annonce la mise avant le dé, jamais l'issue. On lance <b>2d6</b>. La rune posée <b>quitte la main</b> et on en repioche une.<br><br><b>Un beat spécial</b> a sa propre mécanique — ni tuile, ni rune, ni dé. On y sélectionne parmi <b>2 à 4 propositions</b> quand c'est un choix ; d'autres formes existent (marchand, boss, énigme écrite). La main ne bouge pas.<br>Rien ne s'accumule parce qu'on a réussi : les <b>gwenneg</b> ne viennent que d'un événement qui en donne.</div>
+<h2>Les cinq gestes</h2>
+<div class="legende gestes"><span class="rl"><b>OBSERVER</b><i>lire une scène avant d'y toucher</i></span><span class="rl"><b>AGIR</b><i>faire de ses mains, avec adresse</i></span><span class="rl"><b>COMBATTRE</b><i>y mettre le corps et tenir</i></span><span class="rl"><b>RÉVÉLER</b><i>faire venir au jour ce qui se cache</i></span><span class="rl"><b>PARLER</b><i>s'adresser à quelqu'un</i></span></div>
+<h2>Les runes de la quête</h2>
+<div class="legende runes-leg"><span class="rl"><b>La Patience</b><i>laisser venir plutôt qu'aller chercher</i></span><span class="rl"><b>La Méfiance</b><i>supposer le pire et se garder</i></span><span class="rl"><b>La Franchise</b><i>dire ce qui est, sans arranger</i></span><span class="rl"><b>L'Élan</b><i>partir avant d'être sûr</i></span><span class="rl"><b>La Pitié</b><i>s'arrêter pour ce qui souffre</i></span><span class="rl"><b>L'Entêtement</b><i>recommencer sans changer d'avis</i></span><span class="rl"><b>Le Silence</b><i>ne rien dire et laisser le vide travailler</i></span><span class="rl"><b>La Ruse</b><i>prendre par un autre bord</i></span><span class="rl"><b>L'Aplomb</b><i>tenir sa place devant plus grand que soi</i></span><span class="rl"><b>Le Deuil</b><i>accepter ce qui ne reviendra pas</i></span></div>
+<h2>La forme de la quête</h2>
+<div class="forme"><p>Une décision ne se pose pas au métronome : elle se pose quand le sol vient de bouger, et seulement quand le Voyageur a de quoi décider.</p><div class="rangee"><div class="c ">1</div><div class="c ">2</div><div class="c ">3</div><div class="c subie">4</div><div class="c choisie">5</div><div class="c ">6</div><div class="c choisie">7</div><div class="c subie">8</div><div class="c subie">9</div><div class="c ">10</div><div class="c ">11</div><div class="c ">12</div><div class="c choisie">13</div><div class="c ">14</div><div class="c ">15</div><div class="c ">16</div><div class="c subie">17</div><div class="c choisie">18</div></div><p class="lg"><b class="r">■</b> bascule subie : le monde décide &nbsp;·&nbsp; <b class="o">■</b> bascule choisie : vous décidez</p></div>
+<h2>La quête</h2>
+<article class="beat">
+<div class="bt"><span class="bn">1</span><span class="btype">Exploration</span><span class="blieu">Le Gué des Brumes</span></div>
+<p>On entend des coups réguliers avant de voir le gué. De la berge haute, une femme est agenouillée sur une pierre plate au milieu du courant. Elle bat quelque chose de blanc avec un battoir. Elle ne vous a pas vu.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Patience</span><span class="rune">La Méfiance</span><span class="rune">La Franchise</span><span class="rune">L'Élan</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>7</b> <span class="plus">→</span> <b>13</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+4</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Pitié</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous restez où vous êtes et vous laissez le bruit se répéter. Au bout d'un moment vous distinguez le geste : elle plie le tissu, elle frappe, elle rince. Toujours dans le même ordre. Le tissu est trop grand pour un drap.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> OBSERVER dit ce que vous faites, La Patience dit comment. Le modèle en a tiré un Voyageur qui ne bouge pas et qui laisse la scène se répéter devant lui — c'est ce qui lui fait remarquer la boucle.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">2</span><span class="btype">Épreuve</span><span class="blieu">La traversée</span></div>
+<p>Pour l'atteindre il faut descendre la berge et traverser sur les pierres. Elles sont couvertes de mousse et l'eau passe par-dessus les deux dernières.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Méfiance</span><span class="rune">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">AGIR</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>6</b> <span class="plus">→</span> <b>9</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+0</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous testez chaque pierre du pied avant d'y porter le poids. La quatrième bouge, vous la laissez. Vous arrivez en face d'elle avec les bottes pleines mais debout. Elle lève la tête pour la première fois.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> AGIR + La Méfiance : on avance, mais en supposant que ça cède. Sans ce beat, elle vous parlait depuis l'autre rive — le geste manquait et la scène suivante n'était pas gagnée.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">3</span><span class="btype">Rencontre</span><span class="blieu">La Lavandière de Nuit</span></div>
+<p>Elle vous regarde arriver, puis revient à son tissu. Elle essaie de le tordre seule, une extrémité coincée sous son genou. Le tissu est trop long, il se déroule à chaque tour. Elle vous regarde et vous tend l'autre bout.</p>
+<p class="dial">« Tenez ça. À deux ça se fait. Je lave celui-là depuis mille nuits et il ne sèche pas. Ce n'est pas du linge, c'est un linceul. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune sel">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">COMBATTRE</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>5</b> <span class="plus">→</span> <b>11</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Méfiance</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous tenez, elle tourne. L'eau continue de sortir tant qu'elle tord, et elle sort encore quand vous lâchez. En reprenant le tissu pour le replier, elle le retourne. Il y a du fil noir cousu dans un coin.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> COMBATTRE n'est pas se battre : c'est l'effort du corps. Le beat sert à deux choses — elle a besoin de vos bras, et en approchant assez pour tenir le tissu vous voyez le fil noir. Sans ce geste, le beat 4 n'a aucune raison de commencer.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">4</span><span class="btype">Épreuve</span><span class="blieu">Le nom</span></div>
+<span class="bas subie">bascule subie — le nom cousu est celui d'un vivant que vous connaissez</span>
+<p>Le fil noir forme des lettres. Le tissu est replié dessus et le courant tire dessus dès que vous le sortez de l'eau.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune sel">La Méfiance</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">RÉVÉLER</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>4</b> <span class="plus">→</span> <b>10</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+1</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous étalez le coin sur la pierre en le tenant des deux mains, et vous lisez avant de lâcher. Les lettres forment un nom : Kado. C'est le cordier. Vous lui avez acheté de la corde avant-hier.</p>
+<p>Elle vous dit que l'Ankou vient cette nuit chercher celui dont le nom est cousu.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> RÉVÉLER, et non OBSERVER : il ne s'agit pas de regarder mais de faire venir au jour un nom cousu dans une trame mouillée. Avec La Méfiance, le modèle a écrit quelqu'un qui tient le tissu des deux mains et lit avant de lâcher. Marge +1 — un point de moins et c'était un partiel, la moitié du nom.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">5</span><span class="btype">Dilemme</span><span class="blieu">La pierre plate</span></div>
+<span class="bas choisie">bascule choisie — la règle, ou l'homme</span>
+<p>Elle a dit cette nuit. Vous pouvez rester et lui demander tout ce qu'elle sait — comment on retire un nom, ce que ça coûte, ce qu'elle a déjà vu. Ou monter tout de suite prévenir Kado. Le temps de faire l'un, l'autre est passé.</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">choix de route</b></span></div>
+<div class="tr"><span class="lb">On vous propose</span><span class="vl opts">
+<span class="opt"><b>Rester et l'interroger</b><i>vous apprenez tout de suite ce qu'il faut pour retirer un nom. Pendant ce temps Kado tresse, et la nuit avance.</i></span>
+<span class="opt pris"><b>Monter le prévenir, sans rien dire d'autre</b><i>il vous suivra. Mais vous partez sans savoir ce que coûte un nom retiré.</i></span>
+<span class="opt"><b>Monter, et lui demander sa corde avant de parler</b><i>vous repartez avec une corde de ses mains. Il vous faudra revenir lui dire.</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous choisissez</span><span class="vl"><b>Monter le prévenir, sans rien dire d'autre</b></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous montez sans rien lui demander. Elle ne vous retient pas et se remet à battre le linge. Vous arrivez à l'atelier plus vite que prévu, et vous ne savez toujours pas ce que coûte un nom retiré.</p>
+<p class="effet">vous ignorez encore ce qu'il faut pour retirer un nom</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Aucune tuile, aucune rune, aucun dé : on choisit parmi trois routes et on vit avec. Les deux premières sont défendables et s'excluent — le temps de faire l'une, l'autre est passée. Le prix de celle qu'on prend ici ne se voit qu'au beat 8, quand la règle du linceul arrive cinq beats plus tard qu'elle n'aurait pu.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">6</span><span class="btype">Rencontre</span><span class="blieu">Kado le Cordier</span></div>
+<p>Kado tresse une corde, assis sur un tabouret. Il vous reconnaît et vous salue. Contre le mur il y a dix-sept cordes finies, toutes de la même longueur.</p>
+<p class="dial">« Je vous en ai déjà vendu une. Je ne sais plus quel jour. Je m'embrouille en ce moment. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune sel">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Sans jet · le geste est acquis</span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Méfiance</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous vous asseyez en face de lui et vous le laissez parler de la pluie. Il continue de tresser. Il ne sait pas qu'il doit mourir cette nuit.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Sans jet. Le jeu ne fait pas lancer les dés pour s'asseoir en face de quelqu'un et l'écouter.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">7</span><span class="btype">Dilemme</span><span class="blieu">L'atelier</span></div>
+<span class="bas choisie">bascule choisie — il saura, ou il ne saura pas</span>
+<p>Vous pouvez le lui dire ou vous taire. S'il sait, il arrête de tresser et il vous suit. S'il ne sait pas, il finit sa corde et vous partez seul.</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">choix de dialogue</b></span></div>
+<div class="tr"><span class="lb">On vous propose</span><span class="vl opts">
+<span class="opt pris"><b>Lui dire</b><i>il pose sa corde et vous suit. Il sera là quand l'Ankou viendra, et il pourra dire son nom lui-même. +1 corruption.</i></span>
+<span class="opt"><b>Se taire</b><i>il finit sa corde et ne saura rien. Vous ferez le reste de la nuit sans lui, et personne ne parlera à votre place.</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous choisissez</span><span class="vl"><b>Lui dire</b></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>1</b><span class="dp">+1</span> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous le lui dites d'un trait, sans préparer le terrain. Il rit, puis il s'arrête de rire et demande qui vous a dit ça. Vous répondez : la lavandière du gué. Il pose sa corde, se rassoit, et reste un moment sans rien dire. Puis il dit que ça fait une semaine qu'il refait la même corde sans s'en rendre compte, et qu'il s'était dit que c'était l'âge. Il demande si ça fait mal. Vous ne savez pas. Il se lève et prend son manteau.</p>
+<p class="effet">+1 corruption · Kado vous suit</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Deux propositions, et le choix ne se paie pas une fois mais SIX. Kado vous suit : il ralentit la course au beat 9, il reconnaît sa corde sur l'étal au 9, le chevalier le regarde LUI au 12 et ne fait son offre qu'à cause de lui au 13, il regarde défaire son nom au 16 et le dit à voix haute au 17. Un compagnon qu'on n'aurait vu nulle part n'aurait pas été une conséquence, seulement une ligne d'état.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">8</span><span class="btype">Exploration</span><span class="blieu">Retour au gué</span></div>
+<span class="bas subie">bascule subie — sauver Kado veut dire condamner quelqu'un d'autre</span>
+<p>Vous redescendez au gué, Kado derrière vous. La Lavandière lève les yeux, le regarde un long moment, puis se remet à sa pierre. Elle explique ce qu'il faut faire sans baisser la voix, alors qu'il est à trois pas.</p>
+<p class="dial">« Découdre le nom, puis en coudre un autre avant le matin. Il faut que celui-là vous le donne lui-même, et un fil pris sur son vêtement. Si vous ne recousez rien, le linceul se remplit tout seul au lever du jour, avec le nom de qui se tient le plus près. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune sel">La Méfiance</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>8</b> <span class="plus">→</span> <b>11</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Aplomb</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous répétez après elle pour être sûr. Vous dites « prêté », elle dit « donné », et elle attend que vous le redisiez correctement. Puis elle sort une alène de son panier et vous la met dans la main : c'est le seul outil qui sorte un point sans couper le fil. Kado a tout entendu. Il ne demande pas qui donnera son nom.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> OBSERVER avec La Méfiance : on répète après elle parce qu'on ne se fie pas à sa propre mémoire, et elle attend qu'on ait le mot exact. La règle arrive dite par quelqu'un, pas lâchée comme une énigme — et elle arrive TARD parce que vous avez choisi de vous taire au beat 5. C'est ce qu'on veut d'une décision : qu'on en paie le prix cinq beats plus loin, sans qu'on vous l'ait annoncé.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">9</span><span class="btype">Épreuve</span><span class="blieu">Les korrigans</span></div>
+<span class="bas subie">bascule subie — l'alène est perdue</span>
+<p>Vous remontez chercher quelqu'un qui donnerait son nom, l'alène passée à la ceinture. Kado suit ; il marche lentement, il a soixante ans et des mains de cordier. Quatre korrigans sortent des fougères. L'un prend l'alène et ils s'écartent de quelques pas, en riant.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune sel">L'Élan</span><span class="rune">La Pitié</span><span class="rune">L'Aplomb</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">AGIR</b> <span class="plus">avec</span> <b>L'Élan</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>2</b> <span class="plus">→</span> <b>8</b> contre 9 <span class="plus">→</span> marge <b class="mneg">-1</b><span class="dg partiel">partiel</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Entêtement</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b><span class="dn">-1</span> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>24</b> gwenneg</div>
+<p class="issue">Vous partez à droite pour les couper sans réfléchir. Ils sont déjà passés à gauche. Vous vous retournez pour appeler Kado : il est resté vingt pas en arrière, à souffler. Le rire s'éloigne dans les fougères et vous n'avez plus l'alène.</p>
+<p class="effet">−1 intégrité · plus d'alène</p>
+<p class="note"><b>Ce que le modèle a lu.</b> 2 sur 2d6. Le geste n'était pas mauvais — c'est le dé qui tranche. Ce vol n'existe que parce que vous avez dû redescendre chercher la règle : en restant au beat 5, vous auriez eu l'alène cinq beats plus tôt et vous ne seriez jamais repassé par ces fougères. Kado ralentit, aussi : c'est le prix du beat 7, payé en scène et non en chiffre.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">10</span><span class="btype">Rencontre</span><span class="blieu">Fanch le Trotteur</span></div>
+<p>Fanch a posé son étal sur une souche. L'alène de la Lavandière est dessus, avec un prix — il ne l'a pas volée, il l'a échangée aux korrigans contre un rire, et l'échange est fait. À côté, une corde. Kado la reconnaît : c'est une des siennes, vendue ce matin. Il ne dit rien.</p>
+<p class="dial">« Neuf gwenneg. Je sais que c'est la vôtre. Ça ne change rien, un troc ne s'annule pas. » Puis, sans se tourner vers Kado : « Il a l'air fatigué, votre ami. »</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">marchand</b></span></div>
+<div class="tr"><span class="lb">L'étal</span><span class="vl opts">
+<span class="opt pris"><b>L'alène de la Lavandière</b><i>9 gwenneg</i></span>
+<span class="opt"><b>Une bobine de fil noir</b><i>3 gwenneg</i></span>
+<span class="opt"><b>Un onguent de gué — rend 2 de santé</b><i>6 gwenneg</i></span>
+<span class="opt"><b>Une corde de Kado, achetée ce matin</b><i>4 gwenneg</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous prenez</span><span class="vl"><b>L'alène de la Lavandière</b> — 9 gwenneg</span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>15</b> gwenneg<span class="dn">-9</span> <i class="motif">chez le marchand : l'alène de la lavandière</i></div>
+<p class="issue">Vous payez les neuf gwenneg et vous reprenez l'alène. Vous regardez la corde, puis Kado, et vous ne l'achetez pas — il la lui faudrait vivant, et c'est justement ce qui n'est pas acquis. Fanch remet le reste en place sans commenter.</p>
+<p class="effet">−9 gwenneg (24 → 15) · alène récupérée</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Un marchand n'est pas une conversation : c'est un étal, des prix, et une bourse qui ne se remplit pas toute seule. Quatre articles, un seul acheté. L'onguent aurait rendu deux points de santé — vous êtes à dix, vous passez ; au beat 15 vous serez à neuf et vous y repenserez.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">11</span><span class="btype">Exploration</span><span class="blieu">La route du Val</span></div>
+<p>La route monte, tourne, redescend, et vous ramène devant un houx fendu par la foudre. Vous êtes déjà passé là. Vous recommencez, et vous y revenez encore. Trois fois.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">La Pitié</span><span class="rune">L'Aplomb</span><span class="rune sel">L'Entêtement</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">AGIR</b> <span class="plus">avec</span> <b>L'Entêtement</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>8</b> <span class="plus">→</span> <b>11</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Silence</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Kado dit que les gens d'ici ne cherchent pas d'autre chemin : ils refont le même jusqu'à ce qu'il se lasse. Vous repartez donc à l'identique, sans rien changer, lui derrière vous. Au bout du quatrième tour la route ne revient plus au houx : elle continue.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> L'Entêtement contre une boucle : refaire le même chemin sans rien changer, jusqu'à ce qu'il cède. Ce n'est pas une trouvaille du Voyageur — c'est Kado qui le lui dit, parce que c'est ce que font les gens d'ici. Aucune décision à ce beat : le sol ne bouge pas, on avance.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">12</span><span class="btype">Rencontre</span><span class="blieu">Le Chevalier à l'armure ternie</span></div>
+<p>Un chevalier en armure ternie fait trois pas, s'arrête, revient s'asseoir contre un arbre. Puis il recommence. Vous le regardez faire quatre fois. À la quatrième, il ne vous regarde pas vous : il regarde Kado.</p>
+<p class="dial">« Je perds la même bataille tous les soirs. Je sais où je tombe. J'ai essayé de changer, ça ne change pas. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune sel">La Pitié</span><span class="rune">L'Aplomb</span><span class="rune">Le Silence</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Pitié</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>11</b> <span class="plus">→</span> <b>17</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+8</b><span class="dg eclatante">éclatante</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>1</b> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Vous ne lui demandez rien et vous ne détournez pas les yeux. Il finit par s'arrêter de lui-même. Il montre Kado et demande depuis quand cet homme-là sait. Vous répondez : depuis ce soir. Il se rassoit sans rien ajouter.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Marge +8 : l'éclatante de la quête, sur le seul beat où l'on ne fait rien d'autre que regarder. Et ce n'est pas vous qu'il regarde, c'est Kado. Sans le beat 7, il n'y aurait eu personne à côté de vous, et la scène suivante n'existerait pas.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">13</span><span class="btype">Dilemme</span><span class="blieu">L'offre</span></div>
+<span class="bas choisie">bascule choisie — quelqu'un se propose</span>
+<p>Il regarde Kado encore un moment, puis il tire un fil de son surcot et vous le tend. Il dit qu'il donne son nom. Il ne demande rien en échange.</p>
+<p class="dial">« Je ne veux pas qu'on me sauve. Je veux que ça s'arrête. Ce n'est pas pareil. »</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">choix de dialogue</b></span></div>
+<div class="tr"><span class="lb">On vous propose</span><span class="vl opts">
+<span class="opt pris"><b>Accepter son nom</b><i>Kado vit. Le chevalier s'arrête. +2 corruption.</i></span>
+<span class="opt"><b>Refuser</b><i>il continue de rejouer sa défaite. Il vous faudra un autre nom avant le matin, et il n'en reste que deux : celui de Kado, et le vôtre.</i></span>
+<span class="opt"><b>Lui demander pourquoi, d'abord</b><i>il vous dit ce qu'il a essayé pendant tous ces soirs. Son offre ne change pas, et la nuit avance.</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous choisissez</span><span class="vl"><b>Accepter son nom</b></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>3</b><span class="dp">+2</span> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Il dit son nom. Vous le répétez à voix haute pour être sûr de l'avoir, et vous le remerciez. Il se rassoit contre l'arbre et ne se relève pas : pour la première fois du soir, il ne recommence pas.</p>
+<p class="effet">+2 corruption · fil du surcot</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Trois propositions, et la troisième n'est pas une échappatoire : demander pourquoi ne change pas l'offre, mais ça vous apprend quelque chose et ça coûte du temps. Surtout : cette scène n'existe que parce que vous avez parlé au beat 7. Si Kado tressait encore sa corde à l'atelier, le chevalier ne verrait qu'un inconnu pressé, et il ne donnerait rien.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">14</span><span class="btype">Épreuve</span><span class="blieu">Le Chœur des Druides</span></div>
+<p>Deux druides vous barrent le sentier. Le premier dit que le rite interdit de défaire un nom. Le second dit que le rite l'ordonne quand l'homme est vivant — et en disant cela il montre Kado, qui s'est arrêté derrière vous. Ils répètent chacun leur phrase sans écouter l'autre.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">L'Aplomb</span><span class="rune sel">Le Silence</span><span class="rune">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>Le Silence</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>6</b> <span class="plus">→</span> <b>12</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+3</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Méfiance</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>3</b> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Vous ne répondez ni à l'un ni à l'autre. Ils répètent leurs phrases deux fois encore, puis s'arrêtent et se tournent l'un vers l'autre. Vous passez pendant qu'ils discutent.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> PARLER + Le Silence est une paire contradictoire, et c'est là que la combinaison devient intéressante : le modèle en a fait une prise de parole qui consiste à ne rien dire.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">15</span><span class="btype">Exploration</span><span class="blieu">Le Pas de Nuit</span></div>
+<p>Au Pas de Nuit, une empreinte dans la tourbe, profonde, tournée vers le gué. La tourbe est encore en train de se refermer dessus : elle date de quelques minutes.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">L'Aplomb</span><span class="rune">La Patience</span><span class="rune sel">La Méfiance</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>5</b> <span class="plus">→</span> <b>11</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Pitié</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>3</b> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Vous posez votre botte à côté : la sienne est plus grande d'une main. Il est passé il y a quelques minutes, et il va au gué. Vous n'y serez pas avant lui. Kado regarde l'empreinte, puis le chemin, et se met à marcher plus vite qu'il ne l'a fait de la nuit.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Bien jouer ne donne pas toujours un avantage : ici cela donne une mauvaise nouvelle exacte, au lieu d'une inquiétude vague.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">16</span><span class="btype">Épreuve</span><span class="blieu">Découdre</span></div>
+<p>Le fil noir est pris dans la trame et non posé dessus. Il faut le sortir point par point. Le tissu est trempé. La Lavandière se pousse pour vous faire de la place mais elle ne vous aide pas. Kado s'est accroupi de l'autre côté de la pierre et regarde défaire son nom, lettre après lettre.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune">L'Aplomb</span><span class="rune sel">La Patience</span><span class="rune">La Pitié</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">AGIR</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>4</b> <span class="plus">→</span> <b>10</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+1</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Deuil</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>3</b> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Vous sortez les points un par un et vous vous arrêtez chaque fois que le tissu tire. Le nom s'en va lettre par lettre. Le linceul est intact.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Marge +1, comme au beat 4. Un partiel ici abîmait le linceul — et un linceul abîmé ne sert plus à personne, ni à Kado ni au chevalier.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">17</span><span class="btype">Rencontre</span><span class="blieu">L'Ankou</span></div>
+<span class="bas subie">bascule subie — l'Ankou est là et il attend</span>
+<p>L'Ankou arrive par la berge et s'arrête à trois pas. Il regarde le linceul à moitié décousu, puis vous. Il ne dit pas de continuer et il ne dit pas d'arrêter.</p>
+<p class="dial">« Je viens chercher celui dont le nom est écrit. Je ne décide pas qui c'est. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Franchise</span><span class="rune sel">L'Aplomb</span><span class="rune">La Pitié</span><span class="rune">Le Deuil</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>L'Aplomb</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>3</b> <span class="plus">→</span> <b>9</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+0</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Entêtement</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>3</b> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Vous ne baissez pas les yeux et vous ne vous justifiez pas. Derrière vous, Kado dit son nom à voix haute — pour qu'on voie qu'il y a un vivant qui le porte encore. L'Ankou tourne la tête vers lui, puis revient au linceul. Il attend.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Marge 0, la deuxième de la partie. Et si vous vous étiez tu au beat 7, Kado ne serait pas là pour parler.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">18</span><span class="btype">Climax</span><span class="blieu">La pierre plate</span></div>
+<span class="bas choisie">bascule choisie — quel nom</span>
+<p>Le nom de Kado est sorti. Le linceul est vide, et elle a dit ce qui arrive à un linceul vide au lever du jour : il prend celui qui se tient le plus près. Le plus près, c'est vous. Vous avez l'alène, le fil du surcot, et trois noms possibles.</p>
+<p class="dial">« Revenez demain si vous voulez. Moi je serai là. »</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">choix — le dernier</b></span></div>
+<div class="tr"><span class="lb">On vous propose</span><span class="vl opts">
+<span class="opt pris"><b>Coudre le nom du chevalier</b><i>il l'a donné lui-même, avec un fil de son surcot. Kado rentre chez lui vivant. Le chevalier ne se relèvera plus.</i></span>
+<span class="opt"><b>Recoudre le nom de Kado</b><i>vous remettez les choses où elles étaient. L'Ankou l'emmène ce matin, et rien de cette nuit n'aura servi.</i></span>
+<span class="opt"><b>Coudre le vôtre</b><i>Kado tresse demain matin, le chevalier rejoue demain soir, et l'Ankou repart avec votre nom.</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous choisissez</span><span class="vl"><b>Coudre le nom du chevalier</b></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>5</b><span class="dp">+2</span> <span class="sep">·</span> bourse <b>15</b> gwenneg</div>
+<p class="issue">Vous prenez le fil du surcot. Vous dites le nom du chevalier à voix haute avant de piquer, comme il vous l'a dit, et vous cousez. L'Ankou attend le dernier point. Il prend le linceul plié sur son bras et remonte la berge sans se retourner. Kado reste assis sur la pierre, il ne dit rien. La Lavandière rince, sort une autre pièce de tissu blanc de son panier et la met à tremper.</p>
+<p class="effet">Kado vit · le chevalier s'arrête · santé 9 · corruption 5 · 15 gwenneg</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Le climax n'est pas un jet : c'est un choix à trois branches dont aucune n'est propre. Le troisième nom possible est le vôtre, et il est là pour de bon — c'est ce qui empêche les deux autres d'être des formalités.</p>
+</article>
+</div>

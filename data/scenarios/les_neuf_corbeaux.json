@@ -1,0 +1,213 @@
+{
+ "main_depart": [
+  "La Patience",
+  "La Méfiance",
+  "La Franchise",
+  "L'Élan"
+ ],
+ "runes": {
+  "La Patience": "laisser venir plutôt qu'aller chercher",
+  "La Méfiance": "supposer le pire et se garder",
+  "La Franchise": "dire ce qui est, sans arranger",
+  "L'Élan": "partir avant d'être sûr",
+  "La Pitié": "s'arrêter pour ce qui souffre",
+  "L'Entêtement": "recommencer sans changer d'avis",
+  "Le Silence": "ne rien dire et laisser le vide travailler",
+  "La Ruse": "prendre par un autre bord",
+  "L'Aplomb": "tenir sa place devant plus grand que soi",
+  "Le Deuil": "accepter ce qui ne reviendra pas"
+ },
+ "gestes": {
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "RÉVÉLER": "faire venir au jour ce qui se cache",
+  "PARLER": "s'adresser à quelqu'un"
+ },
+ "id": "les_neuf_corbeaux",
+ "titre": "Les Neuf Corbeaux",
+ "monde": "penn_ar_bed",
+ "figures": [
+  "aveline",
+  "ordalch",
+  "choeur"
+ ],
+ "bourse_depart": 16,
+ "integrite": {
+  "7": -1
+ },
+ "corruption": {
+  "9": 2
+ },
+ "preambule": [
+  "Le vent vient de l'est et il est sec, ce qui n'arrive pas souvent ici.",
+  "Devant vous, neuf menhirs en cercle sur un tertre pelé. Le plus vieux est au nord, penché, et il porte des traits gravés que la mousse n'a jamais recouverts.",
+  "Sur huit d'entre eux, un corbeau. Le neuvième est vide.",
+  "Ils ne s'envolent pas quand vous approchez. Ils tournent la tête, tous ensemble."
+ ],
+ "beats": [
+  {
+   "n": 1,
+   "t": "Exploration",
+   "lieu": "Ar C'hairn",
+   "dc": 9,
+   "at": 6,
+   "de": 7,
+   "action": "OBSERVER",
+   "rune": "La Méfiance",
+   "scene": "Le cercle fait vingt pas de large. L'herbe est rase à l'intérieur et haute dehors, comme si on la tondait. Personne ne vit à une heure de marche.",
+   "issue": "Vous faites le tour par l'extérieur avant d'entrer. L'herbe rase s'arrête net sur une ligne parfaite. Vous ne trouvez ni trace de bête ni trace d'outil.",
+   "note": "OBSERVER avec La Méfiance : on fait le tour avant d'entrer. Le modèle en a tiré une observation utile — la ligne est trop nette pour être naturelle — sans avoir à l'expliquer."
+  },
+  {
+   "n": 2,
+   "t": "Rencontre",
+   "lieu": "Dame Aveline aux Corbeaux",
+   "dc": 9,
+   "at": 6,
+   "de": 6,
+   "action": "PARLER",
+   "rune": "La Franchise",
+   "scene": "Elle est assise contre le menhir penché, un neuvième corbeau sur le poignet. Elle ne se lève pas.",
+   "dial": "« Le neuvième ne veut plus se poser. Depuis trois jours il revient sur ma main. Une pierre a changé et je ne vois pas laquelle. »",
+   "issue": "Vous lui dites que vous n'y connaissez rien et que vous regarderez quand même. Elle répond que c'est exactement ce qu'il faut, parce qu'elle, elle les connaît trop.",
+   "note": "La Franchise, ici, c'est admettre son incompétence — et c'est précisément ce qui ouvre la porte. Avec L'Aplomb, le modèle aurait écrit un Voyageur qui prétend savoir, et elle l'aurait renvoyé.",
+   "bascule": [
+    "subie",
+    "une pierre du cercle a changé"
+   ]
+  },
+  {
+   "n": 3,
+   "t": "Épreuve",
+   "lieu": "Le cercle",
+   "dc": 9,
+   "at": 3,
+   "de": 10,
+   "action": "AGIR",
+   "rune": "La Patience",
+   "scene": "Les neuf pierres se ressemblent. Il faut trouver celle qui a bougé, et le sol est sec depuis des semaines : aucune trace de terre remuée.",
+   "issue": "Vous passez la main au pied de chacune, à hauteur d'herbe. Sur la sixième, la mousse du socle est côté sud alors qu'elle est côté nord partout ailleurs. La pierre a été tournée.",
+   "note": "AGIR et non RÉVÉLER : on ne devine pas la pierre tournée, on la trouve en passant la main au pied de chacune. +3 seulement, rien dans la main ne couvre l'examen minutieux ; le 10 sauve le geste, et la mousse donne une réponse vérifiable au lieu d'une intuition."
+  },
+  {
+   "n": 4,
+   "t": "Rencontre",
+   "lieu": "Ordalc'h",
+   "dc": 9,
+   "at": 6,
+   "de": 5,
+   "action": "OBSERVER",
+   "rune": "Le Silence",
+   "scene": "Une silhouette se tient contre le menhir tourné, immobile, depuis plus longtemps que vous n'êtes là. C'est Ordalc'h. Il ne parle pas et n'a jamais parlé.",
+   "issue": "Vous ne lui demandez rien. Vous vous adossez à la même pierre, du même côté, et vous attendez. Au bout d'un moment il lève la main et pose un doigt sur trois traits gravés, puis il laisse retomber le bras.",
+   "note": "OBSERVER avec Le Silence face à une sentinelle muette : le seul geste qui pouvait obtenir quelque chose. PARLER n'aurait rien donné, et le modèle l'aurait écrit ainsi."
+  },
+  {
+   "n": 5,
+   "t": "Épreuve",
+   "lieu": "Le menhir tourné",
+   "special": {
+    "genre": "énigme écrite",
+    "question": "Les trois traits gravés se lisent : « QUI ME TOURNE ME PERD, QUI ME RENDÔ MON NORD ME GARDE. » Sous les traits, une rainure de la largeur d'une main.",
+    "essais": 3,
+    "reponses_valides": "toute réponse qui revient à remettre la pierre dans son orientation d'origine — la mousse au nord",
+    "donnee": "vous avez vu au beat 3 que la mousse du socle est au sud alors qu'elle est au nord partout ailleurs",
+    "pris": "« Il faut la retourner pour que la mousse revienne au nord. »"
+   },
+   "scene": "Il faut répondre, et la réponse s'écrit. Le cercle attend.",
+   "issue": "Vous écrivez qu'il faut la retourner pour remettre la mousse au nord. Les traits ne changent pas, mais la rainure s'élargit assez pour y passer la main.",
+   "note": "Le seul beat de la quête où le joueur écrit vraiment. Le modèle juge le SENS et non l'orthographe : « la remettre comme avant », « mousse vers le nord » ou « la tourner dans l'autre sens » passent toutes. La réponse était donnée au beat 3 — une énigme qui n'a pas posé son indice avant n'est pas une énigme, c'est une devinette.",
+   "bascule": [
+    "choisie",
+    "ce qu'on répond au cercle"
+   ]
+  },
+  {
+   "n": 6,
+   "t": "Rencontre",
+   "lieu": "Le Chœur des Druides",
+   "dc": 9,
+   "at": 6,
+   "de": 4,
+   "action": "PARLER",
+   "rune": "L'Aplomb",
+   "scene": "Deux druides arrivent par le sentier de l'est. Ils disent que le cercle n'appartient à personne et que le tourner est un rite qui se paie.",
+   "dial": "« Ce n'est pas à vous de le remettre. Ce n'est pas à vous de l'avoir tourné non plus. Les deux se valent devant la pierre. »",
+   "issue": "Vous répondez que vous ne l'avez pas tourné et que vous allez le remettre, et vous ne baissez pas la voix en le disant. Ils s'écartent d'un pas sans reconnaître que vous avez raison.",
+   "note": "Marge +1 : ça passe de justesse. L'Aplomb tient la place, il ne convainc pas — et c'est ce que le modèle a écrit : ils s'écartent sans céder."
+  },
+  {
+   "n": 7,
+   "t": "Épreuve",
+   "lieu": "Le menhir tourné",
+   "dc": 9,
+   "at": 6,
+   "de": 3,
+   "action": "COMBATTRE",
+   "rune": "L'Entêtement",
+   "scene": "La pierre pèse ce que pèse une pierre. Il faut la faire pivoter d'un quart de tour sans la coucher, avec pour seul appui la rainure élargie.",
+   "issue": "Vous poussez, elle ne bouge pas, vous recommencez. Au sixième essai elle cède de deux doigts, puis d'un pouce. Vous vous ouvrez la paume sur l'arête. La mousse revient au nord.",
+   "note": "Marge 0 : la réussite tient à un point, et elle coûte quand même. L'Entêtement est la rune de ceux qui recommencent — ici elle se paie en peau.",
+   "effet": "−1 santé"
+  },
+  {
+   "n": 8,
+   "t": "Exploration",
+   "lieu": "Le cercle",
+   "dc": 9,
+   "at": 6,
+   "de": 8,
+   "action": "OBSERVER",
+   "rune": "La Patience",
+   "scene": "Rien ne se passe. Les huit corbeaux ne bougent pas. Le neuvième est toujours sur le poignet d'Aveline.",
+   "issue": "Vous attendez sans rien faire. Au bout d'un long moment le neuvième quitte la main, fait un tour du cercle et se pose sur la pierre remise. Les huit autres tournent la tête vers lui, tous ensemble.",
+   "note": "Un beat où l'on ne fait rien, et il en faut. La Patience est la seule rune qui pouvait le remplir : agir aurait cassé l'attente."
+  },
+  {
+   "n": 9,
+   "t": "Dilemme",
+   "lieu": "Ar C'hairn",
+   "special": {
+    "genre": "choix de dialogue",
+    "pris": 2,
+    "options": [
+     [
+      "Lui dire que vous ne savez pas qui a tourné la pierre",
+      "c'est vrai. Elle passera l'hiver à se demander lequel de ses voisins."
+     ],
+     [
+      "Accuser les druides",
+      "ils étaient là, ils avaient un motif, et elle vous croira. +3 corruption."
+     ],
+     [
+      "Lui dire que c'était peut-être elle",
+      "elle a tourné dans ce cercle mille nuits. Elle ne s'en souviendrait pas. +2 corruption."
+     ]
+    ]
+   },
+   "scene": "Aveline demande qui a tourné la pierre. Vous n'en savez rien. Mais vous avez vu l'herbe rase s'arrêter sur une ligne parfaite, et vous avez vu qu'elle vit ici depuis trop longtemps.",
+   "issue": "Vous lui dites que c'était peut-être elle, sans en être sûr, et vous lui expliquez pourquoi vous le pensez. Elle ne se fâche pas. Elle regarde ses mains un long moment.",
+   "note": "La proposition choisie n'est pas la plus gentille, et c'est ce qui la rend intéressante : elle est probablement vraie. Ces bois font rejouer les êtres sans qu'ils le sachent — Aveline n'y échappe pas.",
+   "effet": "+2 corruption",
+   "bascule": [
+    "choisie",
+    "ce qu'on dit à Aveline"
+   ]
+  },
+  {
+   "n": 10,
+   "t": "Climax",
+   "lieu": "Le menhir penché",
+   "dc": 12,
+   "at": 6,
+   "de": 10,
+   "action": "RÉVÉLER",
+   "rune": "Le Deuil",
+   "scene": "Ordalc'h n'a pas bougé. Sous les trois traits qu'il vous a montrés, il y en a d'autres, plus bas, sous la terre.",
+   "issue": "Vous dégagez le pied du menhir à mains nues. Les traits continuent : c'est une même phrase répétée neuf fois, du même outil, à neuf profondeurs différentes. Quelqu'un a écrit ça neuf fois sans jamais se rappeler l'avoir déjà fait. Ordalc'h vous regarde faire, puis s'assied pour la première fois.",
+   "note": "Difficulté 12. RÉVÉLER met au jour la boucle elle-même : le gardien du cercle est celui qui le déréglait, une fois par an, sans le savoir. Rien ne le dit — on le lit dans neuf profondeurs de gravure.",
+   "effet": "le cercle est remis · Aveline sait · Ordalc'h s'est assis"
+  }
+ ]
+}
