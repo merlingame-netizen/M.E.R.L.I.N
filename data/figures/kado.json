@@ -1,0 +1,28 @@
+{
+  "id": "kado",
+  "nom": "Kado le Cordier",
+  "faction": "humains",
+  "pool": "humain",
+  "role": "Répare des filets qui ne prennent plus rien",
+  "voix": "Bourrue mais honnête. Du sel dans chaque mot.",
+  "replique_etalon": "Raconte-moi le large. Vrai, hein. Je saurai.",
+  "sait": "Il sait lire le vent et les navires.",
+  "veut": "Qu'on lui rapporte des nouvelles du large.",
+  "secret": "Il ne se souvient plus d'être arrivé ici, ni d'en être jamais reparti.",
+  "mecanique": "Chaleureux avec qui rapporte une nouvelle, froid avec qui ment. Une nouvelle vraie vaut une carte, une fausse vaut une porte fermée.",
+  "tags": [
+    "Endurance",
+    "Franchise",
+    "Vision"
+  ],
+  "lieux": [
+    "falaises",
+    "marche"
+  ],
+  "chapitres": [
+    2,
+    5
+  ],
+  "memoire_cross_run": "Il retient qui lui a menti, et le dit devant les autres.",
+  "regle_ecriture": "L'indice de la simulation reste ténu, jamais frontal. Il ne s'en inquiète pas : ça le traverse et repart."
+}

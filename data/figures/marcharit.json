@@ -1,0 +1,27 @@
+{
+  "id": "marcharit",
+  "nom": "Marc'harit la Noyée",
+  "faction": "corrompus",
+  "pool": "petit_peuple",
+  "role": "Silhouette qui chante depuis le ressac",
+  "voix": "Douce, mélodique, adoucie par l'eau. La tentation faite chant.",
+  "replique_etalon": "L'eau est tiède, en bas. Personne ne t'y demandera rien.",
+  "sait": "Elle sait ce qu'elle fut, par bribes.",
+  "veut": "Que tu la rejoignes dans les vagues.",
+  "secret": "Une étincelle d'elle-même résiste encore sous le chant, comme chez le Compagnon.",
+  "mecanique": "Tentatrice dans la détresse, jamais agressive, toujours patiente. Écho local du Compagnon Perdu.",
+  "tags": [
+    "Dissolution",
+    "Murmure",
+    "Vide"
+  ],
+  "lieux": [
+    "falaises",
+    "ys"
+  ],
+  "chapitres": [
+    3
+  ],
+  "memoire_cross_run": "Elle se souvient de toi à partir du chapitre des cloches, et t'appelle par ton nom ensuite.",
+  "regle_ecriture": "Le chant porte le sens, jamais la menace. Elle croit sincèrement offrir le repos."
+}

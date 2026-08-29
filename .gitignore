@@ -341,8 +341,10 @@ DATE_SUB*
 # 3D assets (large, not tracked)
 Assets/3d_models/
 
-# Biome data (generated)
-data/biomes/
+# Biome data — PLUS generee depuis Penn ar Bed (2026-08-29). Aucun script du depot ne
+# produit ce dossier ; les douze fiches de lieu sont du canon ecrit, et §26 exige qu'elles
+# soient presentes (« Tout chapitre.lieu existe dans data/biomes/ »). Exclues, elles
+# n'atteignaient jamais la VM.
 
 # Translation binaries (generated from CSV)
 data/i18n/*.translation

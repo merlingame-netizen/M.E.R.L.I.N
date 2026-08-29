@@ -1,0 +1,26 @@
+{
+  "id": "aveline",
+  "nom": "Dame Aveline aux Corbeaux",
+  "faction": "druides",
+  "pool": "petit_peuple",
+  "role": "Druidesse solitaire, cercle de corbeaux apprivoisés",
+  "voix": "Mesurée, savante, mais trouée. Elle comble ses trous de mémoire par des improvisations assurées.",
+  "replique_etalon": "Le rite se fait en trois temps. En quatre. En trois. Peu importe, fais-le.",
+  "sait": "Elle connaît les rites d'équilibre.",
+  "veut": "Sauver son bosquet avant qu'il ne cède.",
+  "secret": "Elle a déjà accepté un pacte pour le retarder. Elle glisse elle-même vers la Voie corrompue.",
+  "mecanique": "Aide contre son bosquet : franchement reconnaissante, elle ouvre des cartes d'Équilibre. Méfiante comme tout Druide au premier contact.",
+  "tags": [
+    "Rituel",
+    "Équilibre",
+    "Sacrifice"
+  ],
+  "lieux": [
+    "foret"
+  ],
+  "chapitres": [
+    1
+  ],
+  "memoire_cross_run": "Reconnaissante durablement si tu as aidé le bosquet ; plus corrompue à chaque run où tu ne l'as pas fait.",
+  "regle_ecriture": "Le glitch de mémoire est audible : elle se corrige avec aplomb, jamais avec doute."
+}

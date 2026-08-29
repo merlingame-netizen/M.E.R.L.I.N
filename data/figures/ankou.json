@@ -1,0 +1,30 @@
+{
+  "id": "ankou",
+  "nom": "L'Ankou",
+  "faction": "humains",
+  "pool": "transversal",
+  "role": "Le passeur, hors faction, transversal à tous les lieux",
+  "voix": "Posée, sans malice ni pitié. Factuelle, comme on relève un compte.",
+  "replique_etalon": "Ce n'est pas encore toi. Je repasserai.",
+  "sait": "Il sait tout ce qui va mourir.",
+  "veut": "Rien. Il recueille.",
+  "secret": "C'est lui qui inscrit ton épitaphe dans la Chronique, et qui rend un peu d'Essence au voyageur fauché.",
+  "mecanique": "Apparaît quand une mort se profile ou se raconte. Ni ami ni ennemi. Annoncé parfois avant un Climax dangereux.",
+  "tags": [
+    "Mémoire",
+    "Mystère",
+    "Sacrifice"
+  ],
+  "lieux": [
+    "ile",
+    "archipel",
+    "mont"
+  ],
+  "chapitres": [
+    4,
+    6,
+    9
+  ],
+  "memoire_cross_run": "Il évoque tes morts passées, nommément, sans jugement.",
+  "regle_ecriture": "Aucune menace dans le ton. La neutralité est ce qui fait peur."
+}

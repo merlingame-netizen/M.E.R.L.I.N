@@ -1,0 +1,28 @@
+{
+  "id": "mont",
+  "nom": "Menez Hom",
+  "sous_titre": "Le Mont du Serment",
+  "archetype": "mont",
+  "ambiance": "amb_collines",
+  "deja_code": false,
+  "faction": "chevalerie",
+  "tags": [
+    "Autorité",
+    "Franchise",
+    "Sacrifice"
+  ],
+  "corruption": 1,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 2,
+    "eclats_requis": 3
+  },
+  "relique_trouvee": "Le Serment Recousu",
+  "chapitre": 4,
+  "figures": [
+    "ankou",
+    "chevalier"
+  ],
+  "ambiance_texte": "Un mont chauve d'où l'on voit les deux mers à la fois. On y prête serment parce qu'on y est vu de partout, et que rien n'y peut être dit à moitié.",
+  "secret": "Les serments prêtés au sommet sont les seuls que la Chronique retient mot pour mot. Y compris ceux qu'on ne comptait pas tenir."
+}

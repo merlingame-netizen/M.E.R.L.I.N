@@ -1,0 +1,26 @@
+{
+  "id": "compagnon",
+  "nom": "Le Compagnon Perdu",
+  "faction": "corrompus",
+  "pool": "pilier",
+  "role": "Pilier des Corrompus, le tentateur du cœur",
+  "voix": "Douce et aimante. Promet la paix de la reddition, avec une sérénité fausse.",
+  "replique_etalon": "Arrête de lutter. Viens. Tu as le droit d'être fatigué.",
+  "sait": "Il te connaît, parce qu'il t'a connu avant.",
+  "veut": "Te sauver, sincèrement, en t'invitant à céder.",
+  "secret": "Il croit vraiment te sauver : la Corruption lui ment que la reddition est la paix. Une étincelle de l'ancien subsiste, et elle est atteignable.",
+  "mecanique": "Tente dans la détresse, jamais dans la force : offre un gros soulagement immédiat, soin puissant ou mort évitée, contre une forte Corruption ou une promesse engageante. Son arc ultime est la bascule corrompue volontaire.",
+  "tags": [
+    "Dissolution",
+    "Murmure",
+    "Vide"
+  ],
+  "lieux": [
+    "ys"
+  ],
+  "chapitres": [
+    3
+  ],
+  "memoire_cross_run": "Il se souvient de ce que vous étiez. Par instants une bribe de l'ancien perce, un geste, un mot.",
+  "regle_ecriture": "Reconnaissable par bribes seulement. Jamais agressif. La tendresse est l'arme."
+}

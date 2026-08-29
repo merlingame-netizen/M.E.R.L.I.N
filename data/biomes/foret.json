@@ -1,0 +1,31 @@
+{
+  "id": "foret",
+  "nom": "Ar C'hoad Kozh",
+  "sous_titre": "La Forêt qui rêve",
+  "archetype": "forêt",
+  "ambiance": "amb_broceliande",
+  "deja_code": true,
+  "faction": "druides",
+  "tags": [
+    "Nature",
+    "Rituel",
+    "Vision"
+  ],
+  "corruption": 2,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 1,
+    "eclats_requis": 0
+  },
+  "relique_trouvee": "Le Rameau Fendu",
+  "chapitre": 1,
+  "figures": [
+    "choeur",
+    "lavandiere",
+    "fanch",
+    "aveline",
+    "ordalch"
+  ],
+  "ambiance_texte": "Un sous-bois sans vent où la lumière tombe à la verticale. Les fougères se referment derrière toi, et le sentier n'est jamais tout à fait celui de l'aller.",
+  "secret": "Le rite du Chœur maintient réellement une part de la forêt stable. L'arrêter la libère, et déchaîne ce qu'elle retenait."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "cairn",
+  "nom": "Ar C'hairn",
+  "sous_titre": "Le Cairn des Âges",
+  "archetype": "sanctuaire de pierres",
+  "ambiance": "amb_cercles",
+  "deja_code": false,
+  "faction": "druides",
+  "tags": [
+    "Mémoire",
+    "Rituel",
+    "Mystère"
+  ],
+  "corruption": 1,
+  "seuil_annwn": true,
+  "acces": {
+    "palier": 5,
+    "eclats_requis": 10
+  },
+  "relique_trouvee": null,
+  "chapitre": 12,
+  "figures": [
+    "choeur",
+    "ordalch"
+  ],
+  "ambiance_texte": "Un tumulus plus vieux que la mémoire qu'on en a. Le temps y hésite : les pas résonnent une fraction avant d'être posés.",
+  "secret": "Ordalc'h fut le premier gardien, avant même le Chœur. Et le premier à avoir glitché, en silence, ce qui explique le silence."
+}

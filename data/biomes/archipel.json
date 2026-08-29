@@ -1,0 +1,27 @@
+{
+  "id": "archipel",
+  "nom": "Enez Glenn",
+  "sous_titre": "L'Archipel Pâle",
+  "archetype": "archipel",
+  "ambiance": "amb_broc_ankou",
+  "deja_code": false,
+  "faction": "corrompus",
+  "tags": [
+    "Vide",
+    "Glitch",
+    "Vision"
+  ],
+  "corruption": 3,
+  "seuil_annwn": true,
+  "acces": {
+    "relique": "L'Œil du Phare",
+    "trouvee_a": "marche"
+  },
+  "relique_trouvee": null,
+  "chapitre": 6,
+  "figures": [
+    "ankou"
+  ],
+  "ambiance_texte": "Neuf îles, un sable trop blanc, une eau qui ne reflète pas le ciel qu'on a au-dessus de la tête.",
+  "secret": "L'archipel compte neuf îles. On n'en a jamais recompté que huit au retour, et jamais la même qui manque."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "landes",
+  "nom": "Menez Du",
+  "sous_titre": "Les Landes Brûlées",
+  "archetype": "landes",
+  "ambiance": "amb_landes",
+  "deja_code": false,
+  "faction": "druides",
+  "tags": [
+    "Endurance",
+    "Vigilance",
+    "Équilibre"
+  ],
+  "corruption": 2,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 4,
+    "eclats_requis": 7
+  },
+  "relique_trouvee": null,
+  "chapitre": 11,
+  "figures": [
+    "choeur",
+    "chevalier"
+  ],
+  "ambiance_texte": "De la bruyère à perte de vue, brûlée chaque année par personne. L'horizon y ment sur les distances : ce qu'on croit à une heure demande la journée.",
+  "secret": "La lande brûle d'elle-même quand le rite manque. C'est ainsi qu'on apprend que le Chœur a sauté un tour."
+}

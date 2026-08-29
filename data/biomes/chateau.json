@@ -1,0 +1,28 @@
+{
+  "id": "chateau",
+  "nom": "Kastell Skeud",
+  "sous_titre": "Le Château d'Ombre",
+  "archetype": "château",
+  "ambiance": "amb_broc_anciens",
+  "deja_code": false,
+  "faction": "chevalerie",
+  "tags": [
+    "Autorité",
+    "Force",
+    "Mémoire"
+  ],
+  "corruption": 1,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 3,
+    "eclats_requis": 4
+  },
+  "relique_trouvee": "La Clef de Rouille",
+  "chapitre": 8,
+  "figures": [
+    "arthur",
+    "chevalier"
+  ],
+  "ambiance_texte": "Une forteresse dont les bannières ont perdu leur blason. On y relève la garde toutes les nuits pour un roi qui n'est pas revenu, et personne n'ose être celui qui arrête.",
+  "secret": "La salle du serment est murée depuis le jour où le nom du Chevalier a été effacé. Personne ne se souvient de l'avoir murée."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "erwan",
+  "nom": "Erwan Veilleur",
+  "faction": "chevalerie",
+  "pool": "humain",
+  "role": "Ancien chevalier de mer, gardien d'un phare qui n'éclaire plus personne",
+  "voix": "Lente. Répète des comptes : navires, marées, jours. Sa propre boucle.",
+  "replique_etalon": "Douze. Il en manque un. J'ai recompté. Douze.",
+  "sait": "Il croit encore veiller sur un convoi sombré il y a longtemps.",
+  "veut": "Qu'on lui confirme que son compte est juste.",
+  "secret": "Le vrai naufrage, c'est le sien.",
+  "mecanique": "Confirmer son compte le calme et ouvre l'accès. Le démentir le brise, et ouvre autre chose.",
+  "tags": [
+    "Vigilance",
+    "Endurance",
+    "Mémoire"
+  ],
+  "lieux": [
+    "falaises",
+    "ile"
+  ],
+  "chapitres": [
+    2,
+    9
+  ],
+  "memoire_cross_run": "Il te reconnaît, ou refuse de te reconnaître, selon ce que tu lui as répondu la première fois.",
+  "regle_ecriture": "Distant, hébété. S'anime uniquement quand on parle de son convoi."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "fanch",
+  "nom": "Fañch le Trotteur",
+  "faction": "creatures",
+  "pool": "petit_peuple",
+  "role": "Korrigan marchand ambulant, toujours entre deux menhirs",
+  "voix": "Rapide, gouailleuse, coupe la parole. Ne finit pas ses phrases parce qu'il en a déjà commencé une autre.",
+  "replique_etalon": "Trois pour deux, deux pour un, un pour rien, rien pour toi, alors ?",
+  "sait": "Il connaît le prix de tout.",
+  "veut": "Troquer. Jamais donner.",
+  "secret": "C'est souvent lui qui tient le comptoir du marchand quand le lieu le pose sur ton sentier.",
+  "mecanique": "Marchandage : le prix baisse à la faveur, monte à la dette. Une dette envers un korrigan ne s'oublie jamais.",
+  "tags": [
+    "Ruse",
+    "Verbe",
+    "Instinct"
+  ],
+  "lieux": [
+    "foret",
+    "marche"
+  ],
+  "chapitres": [
+    5
+  ],
+  "memoire_cross_run": "Mémoire ciblée : il retient chaque dette, au centime.",
+  "regle_ecriture": "Il ignore la valeur de ce qu'il vend. Jovial par défaut, jamais menaçant, toujours pressé."
+}

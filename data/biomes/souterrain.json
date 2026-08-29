@@ -1,0 +1,28 @@
+{
+  "id": "souterrain",
+  "nom": "Yeun Elez",
+  "sous_titre": "La Porte Basse",
+  "archetype": "souterrain",
+  "ambiance": "amb_marais",
+  "deja_code": false,
+  "faction": "creatures",
+  "tags": [
+    "Instinct",
+    "Mystère",
+    "Vide"
+  ],
+  "corruption": 3,
+  "seuil_annwn": true,
+  "acces": {
+    "relique": "La Clef de Rouille",
+    "trouvee_a": "chateau"
+  },
+  "relique_trouvee": null,
+  "chapitre": 10,
+  "figures": [
+    "etre",
+    "passeur"
+  ],
+  "ambiance_texte": "Une tourbière qui respire. Ce qu'on y jette remonte ailleurs, plus tard, et pas toujours entier.",
+  "secret": "Le Passeur ne collectionne pas des biens, il collectionne des dettes. Chaque passage impayé arme une Promesse qui reviendra."
+}

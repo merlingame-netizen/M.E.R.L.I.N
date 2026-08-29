@@ -1,0 +1,57 @@
+{
+  "paquet": "penn_ar_bed_v1",
+  "canon_source": "docs/BIBLE.md section 26 (R174 a R191)",
+  "biomes": [
+    "foret",
+    "falaises",
+    "ys",
+    "mont",
+    "marche",
+    "archipel",
+    "village",
+    "chateau",
+    "ile",
+    "souterrain",
+    "landes",
+    "cairn"
+  ],
+  "figures": [
+    "merlin",
+    "choeur",
+    "etre",
+    "compagnon",
+    "enfant",
+    "arthur",
+    "ankou",
+    "lavandiere",
+    "fanch",
+    "passeur",
+    "erwan",
+    "chevalier",
+    "aveline",
+    "ordalch",
+    "marcharit",
+    "kado"
+  ],
+  "quete": [
+    "chapitres",
+    "paliers",
+    "reliques",
+    "traversees"
+  ],
+  "rebind_ambiances": {
+    "foret": "amb_broceliande",
+    "falaises": "amb_cotes",
+    "landes": "amb_landes",
+    "village": "amb_villages",
+    "cairn": "amb_cercles",
+    "souterrain": "amb_marais",
+    "mont": "amb_collines",
+    "marche": "amb_broc_korrigans",
+    "ys": "amb_broc_niamh",
+    "chateau": "amb_broc_anciens",
+    "archipel": "amb_broc_ankou",
+    "ile": "amb_broc_druides"
+  },
+  "avertissement": "Le rebind des ambiances est une HYPOTHESE non validee. Voir README, section 3."
+}

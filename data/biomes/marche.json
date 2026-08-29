@@ -1,0 +1,29 @@
+{
+  "id": "marche",
+  "nom": "Marc'had an Deur",
+  "sous_titre": "Le Marché des Marées",
+  "archetype": "marché",
+  "ambiance": "amb_broc_korrigans",
+  "deja_code": false,
+  "faction": "creatures",
+  "tags": [
+    "Ruse",
+    "Verbe",
+    "Mystère"
+  ],
+  "corruption": 2,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 3,
+    "eclats_requis": 4
+  },
+  "relique_trouvee": "L'Œil du Phare",
+  "chapitre": 5,
+  "figures": [
+    "etre",
+    "fanch",
+    "kado"
+  ],
+  "ambiance_texte": "Un marché qui n'ouvre qu'entre deux marées. On y troque des mémoires, des noms, des promesses, et les prix ne sont jamais affichés dans la monnaie qu'on croit.",
+  "secret": "Le comptoir change de tenancier à chaque marée. Jamais de créancier."
+}

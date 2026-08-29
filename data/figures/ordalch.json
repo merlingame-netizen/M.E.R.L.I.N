@@ -1,0 +1,27 @@
+{
+  "id": "ordalch",
+  "nom": "Ordalc'h",
+  "faction": "druides",
+  "pool": "petit_peuple",
+  "role": "Sentinelle muette du plus vieux menhir",
+  "voix": "Rare, brève. Chaque mot pèse. Contraste voulu avec le Chœur bavard.",
+  "replique_etalon": "Salue. Puis tais-toi.",
+  "sait": "Il garde une mémoire des rites plus ancienne que celle du Chœur.",
+  "veut": "Qu'on n'oublie pas de saluer la pierre.",
+  "secret": "Il fut le premier gardien, avant même le Chœur. Et le premier à avoir glitché, en silence.",
+  "mecanique": "Hostile au bruit, favorable au respect silencieux. Le seul PNJ que se taire récompense.",
+  "tags": [
+    "Mémoire",
+    "Vigilance",
+    "Nature"
+  ],
+  "lieux": [
+    "cairn",
+    "foret"
+  ],
+  "chapitres": [
+    12
+  ],
+  "memoire_cross_run": "Il retient si tu as salué, et si tu l'as fait sans rien demander.",
+  "regle_ecriture": "Trois mots maximum par réplique. Le silence est une réponse, pas une absence de réponse."
+}

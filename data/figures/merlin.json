@@ -1,0 +1,22 @@
+{
+  "id": "merlin",
+  "nom": "Merlin",
+  "faction": "humains",
+  "pool": "narrateur",
+  "role": "Le narrateur, la seule présence constante",
+  "voix": "Voix bleutée, à part du récit. Cadre le monde, commente, ne raconte jamais la scène à ta place.",
+  "replique_etalon": "Je raconte pour que le monde dure un peu plus longtemps.",
+  "sait": "Il sait que le monde s'épuise, et il le sait depuis toujours.",
+  "veut": "Que tu ailles au bout, sans jamais te dire exactement pourquoi.",
+  "secret": "Atteindre le Graal, c'est devenir lui. Le rêveur suivant hérite de la prison, pas de la sortie.",
+  "mecanique": "Deux interventions scriptées par run au plus (transition de quête, veille de climax) plus une voix événementielle aux seuils. Cap global de 2 à 3 par run. Réaction courte d'une ligne après chaque résolution marquante.",
+  "tags": [
+    "Mémoire",
+    "Vision",
+    "Mystère"
+  ],
+  "lieux": [],
+  "chapitres": [],
+  "memoire_cross_run": "Se souvient de la dernière fois qu'il t'a vu, de ta dernière Voie et de ton palmarès.",
+  "regle_ecriture": "Ne décrit jamais la scène en cours, ne joue jamais à ta place, ne brise jamais le quatrième mur."
+}

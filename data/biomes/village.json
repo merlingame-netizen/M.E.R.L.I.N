@@ -1,0 +1,27 @@
+{
+  "id": "village",
+  "nom": "Kerlan",
+  "sous_titre": "Le Village des Veilleurs",
+  "archetype": "village",
+  "ambiance": "amb_villages",
+  "deja_code": false,
+  "faction": "humains",
+  "tags": [
+    "Empathie",
+    "Franchise",
+    "Rituel"
+  ],
+  "corruption": 1,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 2,
+    "eclats_requis": 3
+  },
+  "relique_trouvee": null,
+  "chapitre": 7,
+  "figures": [
+    "enfant"
+  ],
+  "ambiance_texte": "La dernière chaleur. On y allume les feux à l'heure dite, chaque soir, parce que personne n'ose voir ce qui arrive le soir où l'on oublie.",
+  "secret": "Le feu du village est un rite dont plus personne ne connaît le sens. L'Enfant, lui, sait très bien pourquoi il faut le nourrir."
+}

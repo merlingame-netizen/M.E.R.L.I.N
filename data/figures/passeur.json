@@ -1,0 +1,26 @@
+{
+  "id": "passeur",
+  "nom": "Le Passeur de Brumes",
+  "faction": "creatures",
+  "pool": "petit_peuple",
+  "role": "Fait traverser la tourbière contre un prix jamais annoncé",
+  "voix": "Chuchotée, sous-entendus, phrases inachevées.",
+  "replique_etalon": "Monte. On verra après ce que tu me dois.",
+  "sait": "Il connaît tous les chemins sûrs.",
+  "veut": "Collectionner les dettes, plus que les biens.",
+  "secret": "Chaque passage impayé arme une Promesse qui reviendra te réclamer.",
+  "mecanique": "Ouvre un passage autrement fermé, contre une dette différée. Le créancier qui revient plus tard dans le run, c'est lui.",
+  "tags": [
+    "Instinct",
+    "Mystère",
+    "Vide"
+  ],
+  "lieux": [
+    "souterrain"
+  ],
+  "chapitres": [
+    10
+  ],
+  "memoire_cross_run": "Créancier patient : la dette traverse les runs et se présente au pire moment.",
+  "regle_ecriture": "Obligeant en apparence. Le prix n'est jamais dit avant, jamais celui qu'on croyait après."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "enfant",
+  "nom": "L'Enfant",
+  "faction": "corrompus",
+  "pool": "pilier",
+  "role": "Hors faction en apparence, Corrompus en vérité",
+  "voix": "Simple, directe, désarmante. Pose les questions que personne n'ose poser.",
+  "replique_etalon": "Pourquoi tu continues, si ça te fait mal ?",
+  "sait": "Il sait pourquoi il faut nourrir le feu. Il ne dit pas comment il le sait.",
+  "veut": "Ta protection. Toujours ta protection.",
+  "secret": "C'est une nouvelle intelligence que la Corruption tente d'enfanter, un cycle rival de Merlin. Le sauver, c'est l'aider à naître.",
+  "mecanique": "Piège par compassion : chaque geste de protection nourrit la Corruption en sous-main et réduit ta vigilance ou tes ressources. Le joueur croit bien faire. Révélation tardive par indices, jamais frontale.",
+  "tags": [
+    "Empathie",
+    "Murmure",
+    "Dissolution"
+  ],
+  "lieux": [
+    "village"
+  ],
+  "chapitres": [
+    7
+  ],
+  "memoire_cross_run": "Si tu l'as protégé une fois, il commence à te suivre d'une traversée à l'autre.",
+  "regle_ecriture": "L'innocence doit être crédible longtemps. Les indices troublants sont rares et jamais soulignés."
+}

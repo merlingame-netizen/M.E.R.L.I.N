@@ -1,0 +1,58 @@
+{
+  "plafond_eclats": 12,
+  "paliers": [
+    {
+      "n": 1,
+      "nom": "Le Seuil",
+      "eclats_requis": 0,
+      "ouvre": [
+        "foret",
+        "falaises"
+      ]
+    },
+    {
+      "n": 2,
+      "nom": "La Rumeur",
+      "eclats_requis": 3,
+      "ouvre": [
+        "mont",
+        "village"
+      ]
+    },
+    {
+      "n": 3,
+      "nom": "Le Serment",
+      "eclats_requis": 4,
+      "ouvre": [
+        "marche",
+        "chateau"
+      ]
+    },
+    {
+      "n": 4,
+      "nom": "La Marée",
+      "eclats_requis": 7,
+      "ouvre": [
+        "ile",
+        "landes"
+      ]
+    },
+    {
+      "n": 5,
+      "nom": "L'Amincissement",
+      "eclats_requis": 10,
+      "ouvre": [
+        "cairn"
+      ]
+    }
+  ],
+  "souvenirs_merlin": [
+    4,
+    8,
+    12
+  ],
+  "run_final": {
+    "a_eclats": 12,
+    "nom": "La Fusion"
+  }
+}

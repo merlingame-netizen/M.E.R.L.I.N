@@ -1,0 +1,26 @@
+{
+  "id": "lavandiere",
+  "nom": "La Lavandière de Nuit",
+  "faction": "creatures",
+  "pool": "petit_peuple",
+  "role": "Lave d'invisibles linceuls à la fontaine, la nuit venue",
+  "voix": "Chantonnante, répétitive. Le motif de la boucle, en musique.",
+  "replique_etalon": "Tords avec moi. Tords, tords, et ne regarde pas ce que tu tords.",
+  "sait": "Elle sait qui va mourir bientôt.",
+  "veut": "De l'aide pour tordre son linge, jamais sans prix.",
+  "secret": "Aider vaut bénédiction, une carte de soin. Refuser ou tricher vaut malédiction discrète, de la Corruption qu'on ne voit pas arriver.",
+  "mecanique": "Rencontre à choix binaire au coût asymétrique : l'aide coûte du temps, le refus coûte plus tard.",
+  "tags": [
+    "Nature",
+    "Rituel",
+    "Vigilance"
+  ],
+  "lieux": [
+    "foret"
+  ],
+  "chapitres": [
+    1
+  ],
+  "memoire_cross_run": "Neutre à l'arrivée, sensible à la politesse rituelle.",
+  "regle_ecriture": "Elle chantonne pendant qu'elle parle. La phrase se répète avec une syllabe en moins à chaque fois."
+}

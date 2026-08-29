@@ -1,0 +1,29 @@
+{
+  "id": "chevalier",
+  "nom": "Le Chevalier Sans Nom",
+  "faction": "chevalerie",
+  "pool": "transversal",
+  "role": "Armure cabossée sans blason, errant depuis toujours",
+  "voix": "Formelle. Des serments récités par cœur. Jamais un prénom donné.",
+  "replique_etalon": "Je jure. Je jure de. Je jure de tenir ce que j'ai. Ce que j'ai juré.",
+  "sait": "Il a oublié sa quête d'origine.",
+  "veut": "Qu'on l'aide à s'en souvenir.",
+  "secret": "Son nom fut effacé le jour où il a failli à son serment. C'est un indice discret sur ce qui guette au bout d'un Graal mal atteint.",
+  "mecanique": "S'illumine un instant si tu tiens une promesse devant lui : petit gain, grande information.",
+  "tags": [
+    "Autorité",
+    "Franchise",
+    "Force"
+  ],
+  "lieux": [
+    "chateau",
+    "mont",
+    "landes"
+  ],
+  "chapitres": [
+    4,
+    8
+  ],
+  "memoire_cross_run": "Il ne retient pas les noms, mais il retient les serments tenus devant lui.",
+  "regle_ecriture": "Hébété, formel, jamais héroïque. La récitation se coupe et reprend au début."
+}

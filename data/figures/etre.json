@@ -1,0 +1,28 @@
+{
+  "id": "etre",
+  "nom": "L'Être Indéfinissable",
+  "faction": "creatures",
+  "pool": "pilier",
+  "role": "Pilier des Créatures et Êtres, le tentateur du pouvoir",
+  "voix": "Joueuse, malicieuse, à double sens. Rit, taquine, parle par énigmes et demi-vérités.",
+  "replique_etalon": "Prends. Tu me rendras plus tard, ou tu ne me rendras pas. Les deux me vont.",
+  "sait": "Il devine beaucoup : il perçoit la nature d'un lieu. Il joue, et il ment.",
+  "veut": "Que tu acceptes. N'importe quoi, pourvu que tu acceptes.",
+  "secret": "Sa mue EST la Corruption en germe. Chaque pacte vous rapproche : tu glisses vers lui, ou lui vers toi.",
+  "mecanique": "Offre des cartes puissantes, tags forts ou rares, contre 2 à 3 de Corruption. Source des cartes corruptrices. Cœur du dilemme risque contre récompense.",
+  "tags": [
+    "Ruse",
+    "Mystère",
+    "Vide"
+  ],
+  "lieux": [
+    "marche",
+    "souterrain"
+  ],
+  "chapitres": [
+    5,
+    10
+  ],
+  "memoire_cross_run": "Un pacte accepté ne s'oublie jamais ; un refus non plus, mais il revient quand même.",
+  "regle_ecriture": "Il mue entre des formes familières toujours incomplètes : un visage, une bête, un arbre, jamais achevés. Il ignore qu'il ne peut plus se fixer."
+}

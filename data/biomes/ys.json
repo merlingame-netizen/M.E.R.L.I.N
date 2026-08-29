@@ -1,0 +1,28 @@
+{
+  "id": "ys",
+  "nom": "Ys",
+  "sous_titre": "La Cité Noyée",
+  "archetype": "ruine noyée",
+  "ambiance": "amb_broc_niamh",
+  "deja_code": false,
+  "faction": "corrompus",
+  "tags": [
+    "Dissolution",
+    "Murmure",
+    "Mémoire"
+  ],
+  "corruption": 3,
+  "seuil_annwn": true,
+  "acces": {
+    "relique": "La Cloche Muette",
+    "trouvee_a": "falaises"
+  },
+  "relique_trouvee": null,
+  "chapitre": 3,
+  "figures": [
+    "compagnon",
+    "marcharit"
+  ],
+  "ambiance_texte": "À marée basse, des toits. Les cloches sonnent sous l'eau à contretemps, et l'on jurerait qu'elles répondent à quelque chose plutôt qu'elles ne sonnent.",
+  "secret": "La ville n'a pas été engloutie : elle a été oubliée. Chaque cloche est un nom que plus personne ne prononce."
+}

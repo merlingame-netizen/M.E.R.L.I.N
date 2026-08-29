@@ -1,0 +1,34 @@
+{
+  "reliques": [
+    {
+      "nom": "La Cloche Muette",
+      "trouvee_a": "falaises",
+      "ouvre": "ys",
+      "type": "chapitre"
+    },
+    {
+      "nom": "L'Œil du Phare",
+      "trouvee_a": "marche",
+      "ouvre": "archipel",
+      "type": "chapitre"
+    },
+    {
+      "nom": "La Clef de Rouille",
+      "trouvee_a": "chateau",
+      "ouvre": "souterrain",
+      "type": "chapitre"
+    },
+    {
+      "nom": "Le Rameau Fendu",
+      "trouvee_a": "foret",
+      "ouvre": "cairn",
+      "type": "raccourci"
+    },
+    {
+      "nom": "Le Serment Recousu",
+      "trouvee_a": "mont",
+      "ouvre": "chateau",
+      "type": "raccourci"
+    }
+  ]
+}

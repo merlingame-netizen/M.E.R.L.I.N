@@ -1,0 +1,26 @@
+{
+  "id": "arthur",
+  "nom": "Arthur",
+  "faction": "chevalerie",
+  "pool": "transversal",
+  "role": "Figure périphérique, aperçue plus que rencontrée",
+  "voix": "Fragmentée, inquiète. Se reprend, se contredit, regarde derrière lui.",
+  "replique_etalon": "Ne fais pas de bruit. Il y a quelque chose qui m'en veut.",
+  "sait": "Rien de sûr. Il a tout oublié sauf la peur.",
+  "veut": "Qu'on le laisse tranquille, et qu'on ne parte pas.",
+  "secret": "Il n'est plus que l'ombre de lui-même, et c'est le Graal qui l'a fait, pas la défaite.",
+  "mecanique": "Ne donne pas de carte, ne pose pas de dilemme mécanique. Il préfigure ce qui guette au bout d'un Graal mal atteint.",
+  "tags": [
+    "Mémoire",
+    "Autorité",
+    "Vide"
+  ],
+  "lieux": [
+    "chateau"
+  ],
+  "chapitres": [
+    8
+  ],
+  "memoire_cross_run": "Ne se souvient pas de toi, jamais, et c'est le pire.",
+  "regle_ecriture": "Constamment perdu et apeuré, convaincu que quelque chose lui veut du mal. Jamais héroïque, jamais ironique."
+}

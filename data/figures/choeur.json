@@ -1,0 +1,32 @@
+{
+  "id": "choeur",
+  "nom": "Le Chœur des Druides",
+  "faction": "druides",
+  "pool": "pilier",
+  "role": "Pilier des Druides, un collectif et non une figure",
+  "voix": "Collective, à l'unisson. Psalmodie solennelle et archaïque qui boucle : des phrases rituelles reviennent.",
+  "replique_etalon": "Le rite tient. Le rite a toujours tenu. Le rite tient.",
+  "sait": "Ils savent les rites anciens, d'un savoir réel mais fragmentaire.",
+  "veut": "Que le rite continue, et que tu le serves.",
+  "secret": "Le rite maintient réellement une part du monde stable. L'arrêter libère, et déchaîne ce qu'il retenait.",
+  "mecanique": "Seule source fiable d'anti-Corruption : cartes d'Équilibre et de soin si tu sers le rite, purification des cartes corrompues contre un sacrifice. Contrepoids aux deux tentateurs.",
+  "tags": [
+    "Nature",
+    "Rituel",
+    "Mémoire",
+    "Équilibre",
+    "Sacrifice"
+  ],
+  "lieux": [
+    "foret",
+    "cairn",
+    "landes"
+  ],
+  "chapitres": [
+    1,
+    11,
+    12
+  ],
+  "memoire_cross_run": "Faveur de faction Druides ; le Chœur se tait à ton entrée quand tu as remonté le tour manquant.",
+  "regle_ecriture": "La boucle est audible : une phrase du début revient à la fin, mot pour mot. Ils ignorent qu'ils bouclent."
+}

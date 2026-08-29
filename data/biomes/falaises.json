@@ -1,0 +1,29 @@
+{
+  "id": "falaises",
+  "nom": "Ar Vevenn",
+  "sous_titre": "Les Falaises du Bout-du-Monde",
+  "archetype": "falaises",
+  "ambiance": "amb_cotes",
+  "deja_code": true,
+  "faction": "chevalerie",
+  "tags": [
+    "Vigilance",
+    "Endurance",
+    "Mémoire"
+  ],
+  "corruption": 2,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 1,
+    "eclats_requis": 0
+  },
+  "relique_trouvee": "La Cloche Muette",
+  "chapitre": 2,
+  "figures": [
+    "erwan",
+    "marcharit",
+    "kado"
+  ],
+  "ambiance_texte": "La terre s'achève en à-pic. Le vent y use les serments plus vite que la pierre, et la mer, en bas, ne rend rien de ce qu'on lui donne.",
+  "secret": "Erwan compte les navires d'un convoi sombré il y a longtemps. Le vrai naufrage, c'est le sien."
+}

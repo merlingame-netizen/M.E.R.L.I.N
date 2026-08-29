@@ -1,0 +1,28 @@
+{
+  "id": "ile",
+  "nom": "Enez Gouel",
+  "sous_titre": "L'Île du Gardien",
+  "archetype": "île",
+  "ambiance": "amb_broc_druides",
+  "deja_code": false,
+  "faction": "chevalerie",
+  "tags": [
+    "Vigilance",
+    "Vision",
+    "Endurance"
+  ],
+  "corruption": 2,
+  "seuil_annwn": false,
+  "acces": {
+    "palier": 4,
+    "eclats_requis": 7
+  },
+  "relique_trouvee": null,
+  "chapitre": 9,
+  "figures": [
+    "ankou",
+    "erwan"
+  ],
+  "ambiance_texte": "Une île où le phare tourne encore alors qu'il n'éclaire plus personne. Qui y passe une nuit compte les tours sans s'en rendre compte, et n'arrive jamais au même chiffre.",
+  "secret": "La lentille du phare a été vendue au Marché des Marées. Depuis, le phare tourne sur une orbite vide."
+}

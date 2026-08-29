@@ -1,4 +1,4 @@
-# BIBLE — Jeu de deck-building narratif (reconstruction 2026-05-25) — **v2.1** (R173, 2026-08-25)
+# BIBLE — Jeu de deck-building narratif (reconstruction 2026-05-25) — **v2.2** (R191, 2026-08-29)
 
 > **Bible reconstruite from scratch** via AskUserQuestion (objectif 200+ questions).
 > **TOUTE bible / contexte / mémoire antérieurs sont NON-AUTORITAIRES** (oublié sur décision
@@ -2805,3 +2805,220 @@ Gate : échec = commit bloqué (gate dur, cohérent §24, « Gates par type de c
     = saut de phase → fréquence fixe, amplitude seule +30 % hov², lune/menhir/herbe divisés par ~2) ;
     cartes de sélection à la charte (hauteur au contenu, ornement triskèle, typo menu).
 
+
+
+---
+
+## §26 · R174 a R191 · Penn ar Bed : le monde et la quête principale (canon)
+
+> Section à concaténer dans `docs/BIBLE.md` après §25. Étend §5 (scénarios), §6 (biomes, roster),
+> §8 (méta-progression), §13 (lore) et §25 (charte des scénarios). Rien ici ne contredit R1 à R173 ;
+> les points où le canon antérieur est amendé sont signalés explicitement.
+>
+> **Statut : chantier de design.** Aucune ligne de code du jeu n'a été modifiée au moment où cette
+> section est écrite. L'implémentation suit la roadmap §19.
+
+---
+
+### 26.1 Le territoire
+
+**R174 : Penn ar Bed, territoire unique et nommé.**
+Le monde du jeu s'appelle **Penn ar Bed** (breton, « la tête du monde », « le bout du monde »).
+Sa forme est le contour réel du département du Finistère, îles comprises (Ouessant, Molène, Sein,
+l'archipel des Glénan), mais **aucun toponyme réel n'apparaît jamais devant le joueur** : ni
+« Finistère », ni « Bretagne », ni le nom d'une commune existante. La géographie est empruntée,
+la nomenclature est entièrement fictive. Cette règle est absolue et vaut pour la prose LLM comme
+pour l'UI.
+
+**R175 : douze lieux, une seule nomenclature.**
+Le monde compte **douze lieux**, et un seul jeu de noms fait foi :
+
+| id | nom | sous-titre | archétype | force |
+|---|---|---|---|---|
+| `foret` | Ar C'hoad Kozh | La Forêt qui rêve | forêt | Druides |
+| `falaises` | Ar Vevenn | Les Falaises du Bout-du-Monde | falaises | Chevalerie déchue |
+| `ys` | Ys | La Cité Noyée | ruine noyée | Corrompus |
+| `mont` | Menez Hom | Le Mont du Serment | mont | Chevalerie déchue |
+| `marche` | Marc'had an Deur | Le Marché des Marées | marché | Créatures et Êtres |
+| `archipel` | Enez Glenn | L'Archipel Pâle | archipel | Corrompus |
+| `village` | Kerlan | Le Village des Veilleurs | village | Humains perdus |
+| `chateau` | Kastell Skeud | Le Château d'Ombre | château | Chevalerie déchue |
+| `ile` | Enez Gouel | L'Île du Gardien | île | Chevalerie déchue |
+| `souterrain` | Yeun Elez | La Porte Basse | souterrain | Créatures et Êtres |
+| `landes` | Menez Du | Les Landes Brûlées | landes | Druides |
+| `cairn` | Ar C'hairn | Le Cairn des Âges | sanctuaire de pierres | Druides |
+
+`foret` et `falaises` sont les deux biomes **déjà implémentés** (`merlin_scene_art.gd`,
+`merlin_menu.gd`, `merlin_run.biome`) : leurs clés ne changent pas. Les dix autres sont neufs.
+
+**R176 : amendement de R97 et fin de la dette legacy.**
+R97 visait « environ 8 biomes ». Le nombre canon devient **12**. Corollaire obligatoire : les
+nomenclatures antérieures (`foret_broceliande`, `landes_bruyere`, `marais_korrigans`, `cotes_sauvages`,
+`villages_celtes`, `cercles_pierres`, `collines_dolmens` de `docs/40_world_rules/BIOMES_SYSTEM.md` et
+de `data/ai/scenarios/faction_encounters/*.json`) sont **périmées**. Elles doivent être migrées vers
+les douze `id` ci-dessus, ou le contenu qui les porte doit être retiré. Deux nomenclatures vivantes
+en même temps est un bug de données, pas une dette acceptable.
+
+**R177 : chaque lieu garde son ambiance sonore existante.**
+Les douze fichiers `audio/sfx/amb_*.wav` existants sont **conservés et rebindés** sur les douze lieux,
+un pour un, sans en créer ni en supprimer. Le binding air traditionnel et instrument lead
+(`tools/breton_tunes.py`) suit l'ambiance, pas le nom du lieu : il n'est donc pas affecté.
+Le rebind fait foi dans `data/_index.json` (`rebind_ambiances`).
+
+**R178 : les quatre seuils d'Annwn.**
+L'Autre Monde affleure en **quatre lieux seulement** : `cairn`, `ys`, `souterrain`, `archipel`.
+Là et nulle part ailleurs, les morts parlent et les échos des runs passées prennent forme.
+La Membrane (le halo côtier) et le Vide (`Y Gwagedd`, qui entre par l'ouest, par la mer) se rendent
+visuellement mais ne sont **jamais nommés en jeu** : le joueur les déduit du décor et du glitch (R75),
+jamais d'une ligne de dialogue. Le quatrième mur reste intact (R44, R89).
+
+---
+
+### 26.2 La quête principale
+
+**R179 : douze chapitres, douze éclats, un lieu chacun.**
+La quête principale est une **chaîne de douze chapitres**. Le chapitre N se joue dans un lieu précis
+et rapporte l'**éclat N** du Graal. L'ordre est fixe et forme un voyage : `foret`, `falaises`, `ys`,
+`mont`, `marche`, `archipel`, `village`, `chateau`, `ile`, `souterrain`, `landes`, `cairn`.
+
+**R180 : l'éclat vient du chapitre, jamais de la victoire.**
+**Amende le comportement actuel du code.** `MerlinChronicle.record_end` incrémente aujourd'hui
+`graal_fragments` sur **toute** fin d'accomplissement. Désormais l'incrément est conditionné au fait
+que la run était un chapitre de la quête principale. Une traversée libre réussie ne donne pas d'éclat.
+`GRAAL_TOTAL = 12` est inchangé, et R80 (« environ 20 à 30 fragments ») reste abrogé par R166.5.
+
+**R181 : les deux régimes.**
+Le jeu alterne deux régimes, et cette alternance EST la boucle méta.
+- **Régime A, traversées libres** : runs ordinaires dans les lieux ouverts. Donnent l'Essence, les
+  cartes, la réputation de faction, les promesses tenues ou trahies. Ne donnent **aucun** éclat.
+- **Régime B, chapitre** : donne l'éclat, fait avancer la quête, et sur trois d'entre eux la relique
+  qui ouvre le chapitre suivant.
+Le régime A n'est pas du remplissage : c'est lui qui produit les conditions du régime B.
+
+**R182 : le parchemin doré à la sélection.**
+Quand les conditions d'un chapitre sont réunies, il apparaît **sur l'écran de sélection**, à la place
+d'un des trois scénarios, dans un traitement visuel distinct (or au lieu du crème, sceau
+« LA QUÊTE DU GRAAL · CHAPITRE N »). Règles fermes :
+1. Il **remplace** le scénario de même envergure. Jamais un quatrième emplacement : la promesse des
+   trois choix (§5 R56) est tenue sans exception.
+2. Il est **refusable**. Le refuser ne le perd pas : il revient à la sélection suivante, indéfiniment.
+3. Tant qu'une seule condition manque, il est **invisible**. Aucun teasing, aucun emplacement grisé,
+   aucune mention de ce qui manque. Le joueur découvre qu'il est prêt en le voyant apparaître.
+4. Un seul chapitre peut être offert à la fois.
+
+**R183 : conditions d'ouverture, quatre verrous.**
+Un chapitre s'ouvre quand **les quatre** verrous suivants sont levés :
+palier d'éclats atteint · relique possédée si le chapitre en exige une · **haut fait** accompli ·
+**objectif secondaire** accompli. Les hauts faits et objectifs canon sont listés dans
+`data/quete/chapitres.json` ; ils portent toujours sur des mécaniques qui existent déjà (réputation,
+promesse, Corruption franchie, Voie de la Carte Destin, arbre méta, mort-légende, purification).
+Aucune condition ne doit exiger un système non implémenté.
+
+**R184 : les cinq paliers.**
+Les paliers ouvrent les lieux et se comptent en éclats : **I Le Seuil (0)** ouvre `foret` et
+`falaises` · **II La Rumeur (3)** ouvre `mont` et `village` · **III Le Serment (4)** ouvre `marche`
+et `chateau` · **IV La Marée (7)** ouvre `ile` et `landes` · **V L'Amincissement (10)** ouvre `cairn`.
+Neuf lieux au total ; les trois autres sont ouverts par relique. Tout tient sous le plafond de douze,
+et le douzième éclat est réservé à la fin.
+
+**R185 : les cinq reliques.**
+Trois reliques sont des **passages** : la relique trouvée au chapitre N ouvre le chapitre N+1.
+La Cloche Muette (`falaises`) ouvre `ys` · L'Œil du Phare (`marche`) ouvre `archipel` ·
+La Clef de Rouille (`chateau`) ouvre `souterrain`. Deux sont des **raccourcis** entre lieux déjà
+connus, jamais nécessaires pour finir : Le Rameau Fendu (`foret`) et Le Serment Recousu (`mont`).
+Une relique ne s'achète pas, ne se compte pas, et ne se perd pas.
+
+**R186 : la dorsale et les grandes marches.**
+Les onze traversées de la dorsale portent chacune un nom et une raison narrative. Trois sont des
+**grandes marches** assumées (1 vers 2, 6 vers 7, 9 vers 10) : elles traversent le monde de part en
+part et donnent son échelle au territoire. Elles ne sont pas une erreur de placement, elles sont un
+effet voulu, et la mise en scène doit les traiter comme telles.
+
+**R187 : le douzième éclat et la fin.**
+Au douzième éclat, un **run spécial** s'ouvre au menu : la Fusion (capstone R44). Les Souvenirs de
+Merlin restent aux éclats **4, 8 et 12** (R166.5, inchangé). Le type de fin croise l'issue, la Voie
+(`destiny_tier`) et la faction du run (R166.3).
+
+---
+
+### 26.3 Les figures
+
+**R188 : seize fiches canon, source unique.**
+Le roster canon compte **seize figures** : Merlin, Arthur, les quatre piliers (Chœur des Druides,
+Être Indéfinissable, Compagnon Perdu, Enfant) et les dix du roster nommé R166.12. Chaque fiche
+(`data/figures/<id>.json`) porte : rôle, voix, réplique étalon, ce que la figure sait, ce qu'elle veut,
+son secret, sa mécanique de jeu, ses tags, ses lieux, ses chapitres, sa mémoire cross-run et sa règle
+d'écriture. **Cette fiche est la seule source** injectée dans les prompts : aucun autre fichier ne
+redéfinit une figure.
+
+**R189 : incarnation, trois interdits.**
+1. Le LLM invente **les mots**, jamais **les faits** : ni le secret, ni ce que la figure ignore.
+2. Une figure ne révèle **jamais** son secret d'elle-même. Il se déduit, il ne se dit pas.
+3. La **voix** est une contrainte de forme (rythme, tics, longueur) et prime sur le contenu : une
+   réplique juste sur le fond mais fausse de voix est un défaut à corriger.
+
+**R190 : casting lié au lieu.**
+Une figure ne peut être castée que dans un lieu de sa liste. Chaque quête porte au moins un beat
+avec une figure identifiée (§25.2). Pas de répétition d'une figure dans un run, sauf le pilier et le
+créancier. Le tirage utilise le RNG de run, jamais un RNG parallèle.
+
+**R191 : la mémoire porte le nom.**
+Une promesse tenue envers une figure nommée vaut faveur persistante (prix plus bas, option ouverte) ;
+trahie, elle vaut hostilité persistante (prix plus hauts, portes fermées). La mémoire porte sur le
+**nom**, pas seulement sur la faction (R166.7). Une mort passée peut être évoquée par une figure :
+c'est la mort-légende (R166.1), pas un game over effacé.
+
+---
+
+### 26.4 Écran carte (spécification)
+
+L'écran carte (`MerlinMap`, scène à créer) affiche Penn ar Bed et sert de **suivi de quête**.
+Il doit respecter les quatre piliers UX (§23 R118) :
+
+- **FACILE** : ouvrir la carte et lire son avancement en deux gestes au plus.
+- **ÉVIDENT** : la dorsale numérotée dit l'ordre sans tutoriel ; un lieu fermé est visiblement fermé
+  (contour pointillé), et le lieu du prochain chapitre est le seul à pulser.
+- **MINIMAL** : les sentiers secondaires sont **masqués par défaut**. L'information ne vit qu'à un
+  endroit : le compte d'éclats est déjà à MerlinEnd, au menu et en pause, la carte ne le duplique pas,
+  elle le situe.
+- **TACTILE ET DESKTOP** : cibles de 44 px au minimum, aucun survol obligatoire, retour visuel
+  sous 100 ms.
+
+Palette et typographie : miroir strict de `merlin_visual.gd` (§20 R115). Zéro hex hors palette.
+La terre est le parchemin (`CREAM`), la mer est le fond profond (`BG_DEEP`), la dorsale est l'or
+(`GOLD` faite, `GOLD_DARK` à venir), la dissolution est le violet (`VIOLET`).
+
+---
+
+### 26.5 Contrat de données
+
+```
+data/biomes/<id>.json      12 fiches de lieu (ambiance, faction, tags, corruption, accès, secret)
+data/quete/chapitres.json  les 12 chapitres, leurs verrous et ce qu'ils rapportent
+data/quete/paliers.json    les 5 paliers, les souvenirs, le run final
+data/quete/reliques.json   les 5 reliques, leur source et ce qu'elles ouvrent
+data/quete/traversees.json la dorsale (11) et les sentiers secondaires (9)
+data/figures/<id>.json     16 fiches de figure
+data/_index.json           manifeste et table de rebind des ambiances
+```
+
+Invariants vérifiables par test, à écrire avant l'implémentation :
+1. Tout `chapitre.lieu` existe dans `data/biomes/`.
+2. Tout `figure.lieux[]` et tout `figure.chapitres[]` existent.
+3. Pour chaque chapitre N, le verrou est franchissable avec exactement **N-1** éclats.
+4. Toute relique de type `chapitre` est trouvée à un chapitre strictement antérieur à celui qu'elle ouvre.
+5. La somme des lieux ouverts par palier plus ceux ouverts par relique fait exactement 12, sans doublon.
+6. Chaque `ambiance` est unique et correspond à un fichier `audio/sfx/amb_*.wav` existant.
+
+---
+
+### 26.6 Ce qui reste ouvert
+
+- **Le coût réel est le décor** : dix lieux sur douze n'ont pas de rendu. Chacun demande la même passe
+  que les falaises dans `merlin_scene_art.gd`. C'est le poste dominant, pas la donnée.
+- **Migration legacy (R176)** : les cinq fichiers de `data/ai/scenarios/faction_encounters/` et
+  `BIOMES_SYSTEM.md` portent encore l'ancienne nomenclature. À migrer ou à retirer.
+- **Registre des hauts faits** : R183 suppose un registre cross-run des accomplissements et des
+  objectifs. Il n'existe pas encore ; sans lui aucune condition n'est vérifiable.
+- **Écran carte** : nouvelle scène, donc un smoke runtime de plus au gate R109, et un soak si le
+  flow de run est touché.
