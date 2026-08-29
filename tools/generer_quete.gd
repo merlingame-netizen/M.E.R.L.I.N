@@ -54,6 +54,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _mn: Node = null
 var _erreurs: Array = []
 var _compte_erreurs: Dictionary = {}
+var _t0: int = 0
 
 
 func _init() -> void:
@@ -75,6 +76,7 @@ func _go() -> void:
 	var n_beats: int = int(OS.get_environment("MERLIN_BEATS_Q")) if OS.has_environment("MERLIN_BEATS_Q") else 8
 	n_beats = clampi(n_beats, 8, 25)
 
+	_t0 = Time.get_ticks_msec()
 	print("=== GÉNÉRATION — chapitre %d : %s (%s) · %d beats ===" % [
 		n_ch, str(ch.get("titre", "")), str(ch.get("lieu", "")), n_beats])
 
@@ -125,18 +127,31 @@ func _go() -> void:
 		if not b.has("special"):
 			main.erase(str(b["rune"]))
 			main.append(_repiocher(main))
-		print("  beat %2d/%d  %-11s %s" % [i + 1, n_beats, str(forme.get("t")),
+		print("  beat %2d/%d  %4ds  %-11s %s" % [i + 1, n_beats,
+			int((Time.get_ticks_msec() - _t0) / 1000), str(forme.get("t")),
 			("SPÉCIAL " + str((b.get("special") as Dictionary).get("genre", ""))) if b.has("special")
 			else "%s avec %s" % [str(b.get("action")), str(b.get("rune"))]])
 
+	# L'ECRITURE DIT OU ELLE VA, ET SE RABAT SI ELLE NE PEUT PAS. q81 a genere sept beats sur huit
+	# puis s'est arretee sans fichier : le message « ecriture impossible » existait deja, mais le
+	# filtre de log du job ne le cherchait pas — j'ai filtre la reponse. Desormais le chemin est
+	# annonce AVANT d'ecrire, et un echec se rabat sur user:// plutot que de tout perdre : sept
+	# beats generes valent mieux qu'un fichier absent, meme ranges ailleurs que prevu.
 	var sortie: String = OS.get_environment("MERLIN_QUETE_OUT")
 	if sortie == "":
 		sortie = "user://quete_generee.json"
+	print("écriture vers : %s (absolu : %s)" % [sortie, ProjectSettings.globalize_path(sortie)])
 	var f: FileAccess = FileAccess.open(sortie, FileAccess.WRITE)
 	if f == null:
-		print("écriture impossible : %s" % sortie)
-		quit(1)
-		return
+		var err: int = FileAccess.get_open_error()
+		print("ÉCRITURE IMPOSSIBLE vers %s (erreur %d) — repli sur user://" % [sortie, err])
+		sortie = "user://quete_generee.json"
+		f = FileAccess.open(sortie, FileAccess.WRITE)
+		if f == null:
+			print("ÉCRITURE IMPOSSIBLE même sur user:// — la quête est perdue")
+			quit(1)
+			return
+		print("replié sur : %s" % ProjectSettings.globalize_path(sortie))
 	q["_erreurs_moteur"] = _compte_erreurs
 	f.store_string(JSON.stringify(q, " "))
 	f.close()
