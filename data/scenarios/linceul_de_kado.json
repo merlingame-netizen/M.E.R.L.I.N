@@ -139,12 +139,7 @@
    "bascule": [
     "choisie",
     "la règle, ou l'homme"
-   ],
-   "action": "PARLER",
-   "rune": "Le Silence",
-   "dc": 9,
-   "at": 3,
-   "de": 8
+   ]
   },
   {
    "n": 6,
@@ -185,12 +180,7 @@
    "bascule": [
     "choisie",
     "il saura, ou il ne saura pas"
-   ],
-   "action": "PARLER",
-   "rune": "La Franchise",
-   "dc": 9,
-   "at": 6,
-   "de": 3
+   ]
   },
   {
    "n": 8,
@@ -261,12 +251,7 @@
       false
      ]
     ]
-   },
-   "action": "PARLER",
-   "rune": "La Ruse",
-   "dc": 9,
-   "at": 6,
-   "de": 10
+   }
   },
   {
    "n": 11,
@@ -414,12 +399,7 @@
    "bascule": [
     "choisie",
     "quel nom"
-   ],
-   "action": "AGIR",
-   "rune": "Le Deuil",
-   "dc": 12,
-   "at": 6,
-   "de": 9
+   ]
   }
  ]
 }

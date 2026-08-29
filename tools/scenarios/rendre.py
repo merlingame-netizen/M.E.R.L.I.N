@@ -26,6 +26,9 @@ import json
 import pathlib
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from valider import valider  # noqa: E402 — le juge unique du contrat
+
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 SRC = RACINE / "data" / "scenarios"
 DST = RACINE / "docs" / "scenarios"
@@ -284,6 +287,14 @@ def bloc(b, i, mains, tirages, etats):
 
 
 def rendre(q):
+    # LE CONTRAT PASSE AVANT LE RENDU. valider.py est le juge unique : si le rendu portait ses
+    # propres regles, les deux divergeraient au premier ajout. Une quete refusee n'est pas
+    # rendue — une page fausse est pire qu'une page absente.
+    erreurs, avertissements = valider(q, q.get("id", "?"))
+    if erreurs:
+        for x in erreurs:
+            print("    REFUSE %s : %s" % (q.get("id", "?"), x))
+        sys.exit("%s ne respecte pas le contrat — rien n'est rendu." % q.get("id", "?"))
     mains, tirages = simuler_deck(q)
     etats = simuler_etat(q)
     orphelins = controler(q, mains, tirages)

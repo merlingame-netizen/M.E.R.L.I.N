@@ -133,11 +133,11 @@
    "dc": 9,
    "at": 0,
    "de": 2,
-   "action": "OBSERVER",
+   "action": "AGIR",
    "rune": "La Méfiance",
-   "scene": "Le korrigan dort sous le menhir couché, à cent pas du marché. Le registre est sous sa tête. Il fait noir et vous distinguez mal combien ils sont couchés autour.",
-   "issue": "Vous comptez trois dormeurs et une sortie entre deux corps. Vous vous trompez sur les deux : ils sont sept, et ce que vous prenez pour une sortie est l'espace qu'un huitième a laissé en se levant pour pisser.",
-   "note": "2 sur 2d6, aucun tag couvert, marge −7 : ECHEC. Le premier du corpus, et il ne bloque rien — il rend la suite plus chere. Bien lire une scene de nuit demandait mieux que La Mefiance seule, et le de n'a rien rattrape.",
+   "scene": "Le korrigan dort sous le menhir couche, a cent pas du marche. Le registre est sous sa tete. Il fait noir et il faut approcher sans reveiller ce qui dort autour.",
+   "issue": "Vous avancez a pas comptes jusqu'au bord du cercle. Vous arrivez plus pres que vous ne l'aviez prevu, et de la vous ne voyez plus l'ensemble : vous croyez qu'ils sont trois et qu'un espace entre deux corps est une sortie. Ils sont sept, et cet espace est la place d'un huitieme parti pisser.",
+   "note": "2 sur 2d6, aucun tag couvert, marge -7 : ECHEC, le seul du corpus. AGIR et non OBSERVER — on ne rate pas une lecture, on rate une approche : arriver trop pres empeche de voir l'ensemble. L'echec ne bloque rien, il rend la suite plus chere.",
    "effet": "échec : vous croyez qu'ils sont trois et qu'il y a une sortie"
   },
   {
