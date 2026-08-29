@@ -1,0 +1,20 @@
+A depart 09:01:13Z
+B M.E.R.L.I.N 50dbe4cd -> 193bd9cc
+B merlin-game 431f06a9 -> 431f06a9
+C job-078 present=oui fait=non
+C en attente : job-078-quete-generee 
+D correctifs de rig : listeblanche=1 gardefou=1
+D outils du jeu : generateur=oui contrat=oui
+E godot en vol : 
+awk: cmd. line:1: /MemAvailable/ {printf \"%.1f\", $2/1048576}
+awk: cmd. line:1:                        ^ backslash not last character on line
+awk: cmd. line:1: /MemAvailable/ {printf \"%.1f\", $2/1048576}
+awk: cmd. line:1:                        ^ syntax error
+E memoire dispo : Go
+E agent courrier : inactive
+? / inactive
+?
+E derniere sortie de job : rc=1 
+Z fin cmd-024
+
+== fin : etat=SUCCEEDED 2026-08-29T09:01:43Z · sortie Oracle tronquee ~2 Ko — gros retours via ntfy ==
