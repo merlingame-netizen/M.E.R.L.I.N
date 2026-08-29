@@ -12,7 +12,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GODOT_BIN="${GODOT_BIN:-$HOME/bin/godot}"
 IMAGE="localhost/merlin-game"
 NAME="merlin-game"
+# RES = la RESOLUTION de l'ecran Xvfb, « LARGEURxHAUTEUR ».
+#
+# PIEGE, paye deux fois. Le Courrier exporte lui aussi une variable RES — le DOSSIER DE
+# RESULTATS du job (a_courrier.sh:41). Un job qui appelle ce script sans neutraliser cette
+# variable passe donc un chemin a Xvfb, qui meurt sur « Invalid screen configuration
+# /.../resultats/job-076-...x24 ». Le jeu ne demarre jamais, et le log de Godot montre un
+# chargement de modele parfaitement normal : la vraie cause est vingt lignes plus haut, dans
+# un autre fichier de log. Les jobs qui marchent ecrivent tous `env -u RES` ; ceux qui
+# l'oublient perdent une heure.
+#
+# On ne compte plus sur la discipline de l'appelant : une valeur qui n'a pas la forme d'une
+# resolution est refusee, dite, et remplacee par le defaut.
 RES="${RES:-1280x720}"
+case "$RES" in
+    [0-9]*x[0-9]*) : ;;
+    *) echo "[game-stack] RES=$RES n'est pas une resolution — 1280x720 par defaut."
+       echo "[game-stack] (le Courrier exporte RES comme dossier de resultats : env -u RES)"
+       RES="1280x720" ;;
+esac
 SYSROOT="$HOME/opt/gamestack/sysroot"
 RUNDIR="$HOME/.cache/merlin-game"
 USERNS_FLAG="${USERNS_FLAG:---userns=keep-id}"
