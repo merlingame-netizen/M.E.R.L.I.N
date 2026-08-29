@@ -1,6 +1,6 @@
 # BIBLE DES RÈGLES — comment on joue à M.E.R.L.I.N.
 
-> **v1.0 — 2026-08-29.** Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
+> **v1.1 — 2026-08-29.** Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
 > contient (`docs/BIBLE.md`, canon R1 à R191) ni à quoi ressemblent les écrans
 > (`docs/70_graphic/UI_UX_BIBLE.md`).
 >
@@ -53,6 +53,10 @@ Ruse, l'Aplomb, le Deuil s'y ajoutent en cours de partie.
 **La rune posée quitte la main, et on en repioche une.** La main de la fin n'est donc pas celle du
 début : elle est le produit de ce qui a été joué.
 
+**La main persiste d'une quête à l'autre.** Elle n'est pas remise à zéro : *La Course des Korrigans*
+s'ouvre avec La Ruse, La Méfiance, La Franchise et La Patience — l'Élan est parti dans une partie
+antérieure, La Ruse y est arrivée, et c'est elle qui ouvre la quête.
+
 > **Décidé, non construit.** La pioche est aujourd'hui *dirigée* dans les scénarios de référence :
 > la quête donne les runes dont ses beats auront besoin. Le tirage réellement aléatoire reste à
 > trancher.
@@ -94,8 +98,9 @@ La difficulté vaut 9 dans le cas courant et monte au climax.
 Un beat spécial **n'a ni tuile, ni rune, ni dé**, et la main ne bouge pas : rien n'est posé, rien
 n'est repioché. Il a sa propre mécanique.
 
-> **Décidé, non construit.** Aucune de ces mécaniques n'existe dans le code aujourd'hui. Elles sont
-> spécifiées ici et jouées dans les scénarios de référence.
+> **Décidé, non construit.** Aucune de ces mécaniques n'existe dans le code aujourd'hui. Les neuf
+> sont spécifiées ici et **toutes jouées au moins une fois** dans les six scénarios de référence —
+> `tools/scenarios/rendre.py` le vérifie et nomme celles qui manqueraient.
 
 ### 3.1 Le choix
 
@@ -126,12 +131,30 @@ la nuit ; trois ratés ferment le passage et il faut contourner.
 **L'indice doit avoir été posé dans un beat antérieur.** Une énigme dont la réponse n'était nulle
 part n'est pas une énigme, c'est une devinette.
 
-### 3.5 Les autres formes
+### 3.5 La veille
 
-Spécifiées dans `docs/scenarios/index.html` et non encore jouées : la **veille** (rester coûte, on
-décide quand s'arrêter), le **partage** (moins de choses que de mains tendues, et chacun se souvient
-de ce qu'il n'a pas reçu), la **poursuite** (trois embranchements enchaînés sans temps mort), le
-**rituel** (refaire des gestes dans un ordre vu plus tôt, sans rappel).
+Un compteur qui descend, et une décision répétée : rester ou partir. Rester encore coûte un peu plus
+à chaque tour, et rien ne dit combien de tours il faudra. Dans *Le Prix du Passeur*, il arrive au
+tour juste après celui où partir devient impossible — et le joueur ne pouvait pas le savoir.
+
+### 3.6 Le partage
+
+Moins de choses que de mains tendues. Chaque attribution est définitive et aucun dé n'intervient.
+**Ça ne punit pas sur le moment** : chacun se souvient de ce qu'il n'a pas reçu, et on repasse.
+C'est la mécanique qui convient aux campagnes longues, où l'on a le temps de revenir.
+
+### 3.7 La poursuite
+
+Trois embranchements qui défilent sans temps mort. On tranche vite, chaque virage coûte, bon ou
+mauvais. Bien trancher ne suffit pas : dans *La Course des Korrigans*, Fañch avait prévenu qu'il
+connaît le marché et que le Voyageur non — l'avertissement était la solution, et il n'a pas servi.
+
+### 3.8 Le rituel
+
+Refaire des gestes dans un ordre vu plus tôt dans la quête, **sans aucun rappel à l'écran**. Ni
+chance ni adresse : de l'attention payée avant. C'est un contrat entre deux beats éloignés — dans
+*Trois Pains à Kerlan*, la frise est au beat 5 et le rite au beat 9, et rien ne signale le beat 5
+comme important.
 
 ---
 
@@ -210,3 +233,25 @@ Mesurés sur la partie témoin p74 (`docs/chroniques/p74/`), et à corriger.
 
 *Sources : `scripts/game/merlin_resolution.gd`, `scripts/llm/merlin_scenario.gd`,
 `scripts/llm/merlin_prompt_builder.gd`, `tools/scenarios/rendre.py`, journal de p74.*
+
+---
+
+## 7. Le corpus de référence
+
+Six quêtes, 67 beats, sous `data/scenarios/` et rendues dans `docs/scenarios/`. Elles servent à
+deux choses : montrer le rendu qu'on vise, et donner au modèle des exemples de ce qu'on attend.
+
+| Quête | Beats | Ce qu'elle exerce |
+|---|---|---|
+| Le Linceul de Kado | 18 | la référence Brocéliande — choix, marchand, compagnon qui pèse |
+| La Cloche d'Ys | 10 | le **boss** : la boucle d'une figure est sa faiblesse |
+| Les Neuf Corbeaux | 10 | l'**énigme écrite**, dont l'indice est posé sept beats avant |
+| Le Prix du Passeur | 10 | la **veille**, et un prix qu'on ne connaît qu'au milieu |
+| Trois Pains à Kerlan | 10 | le **partage** et le **rituel** |
+| La Course des Korrigans | 9 | la **poursuite**, et le seul **échec** du corpus |
+
+`tools/scenarios/rendre.py` rend les pages et publie un **rapport de corpus** : mécaniques
+couvertes, tuiles jouées, degrés obtenus, runes jamais posées. Ce rapport a déjà attrapé quatre
+défauts réels — une quête qui ne jouait jamais `AGIR`, une autre `COMBATTRE`, la rune `La Ruse`
+jamais posée, et **43 réussites pour zéro échec** : un corpus qui ne rate jamais apprendrait au
+modèle que tout réussit.

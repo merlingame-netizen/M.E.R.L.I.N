@@ -1,0 +1,232 @@
+{
+ "main_depart": [
+  "La Patience",
+  "La Méfiance",
+  "La Franchise",
+  "L'Élan"
+ ],
+ "runes": {
+  "La Patience": "laisser venir plutôt qu'aller chercher",
+  "La Méfiance": "supposer le pire et se garder",
+  "La Franchise": "dire ce qui est, sans arranger",
+  "L'Élan": "partir avant d'être sûr",
+  "La Pitié": "s'arrêter pour ce qui souffre",
+  "L'Entêtement": "recommencer sans changer d'avis",
+  "Le Silence": "ne rien dire et laisser le vide travailler",
+  "La Ruse": "prendre par un autre bord",
+  "L'Aplomb": "tenir sa place devant plus grand que soi",
+  "Le Deuil": "accepter ce qui ne reviendra pas"
+ },
+ "gestes": {
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "RÉVÉLER": "faire venir au jour ce qui se cache",
+  "PARLER": "s'adresser à quelqu'un"
+ },
+ "id": "trois_pains_a_kerlan",
+ "titre": "Trois Pains à Kerlan",
+ "monde": "penn_ar_bed",
+ "figures": [
+  "choeur",
+  "enfant",
+  "kado",
+  "etre"
+ ],
+ "bourse_depart": 31,
+ "integrite": {
+  "8": -1
+ },
+ "corruption": {
+  "4": 2,
+  "9": 1
+ },
+ "preambule": [
+  "Le vent est tombé et il fait plus froid que la veille. La route descend vers Kerlan entre deux talus de pierre sèche.",
+  "Le village a une place, un four, une chapelle sans toit. Le four est éteint.",
+  "Il l'est depuis onze jours, et personne n'a envoyé chercher de l'aide : ici on ne demande pas.",
+  "Vous arrivez avec trois pains dans votre sac, achetés ce matin à deux heures de marche."
+ ],
+ "beats": [
+  {
+   "n": 1,
+   "t": "Exploration",
+   "lieu": "Kerlan",
+   "dc": 9,
+   "at": 6,
+   "de": 7,
+   "action": "OBSERVER",
+   "rune": "La Patience",
+   "scene": "Il n'y a personne sur la place. Les volets sont clos en plein jour et de la fumée sort de trois cheminées sur douze.",
+   "issue": "Vous restez sur la place sans frapper nulle part. Au bout d'un moment un volet s'entrouvre, puis deux. On vous regarde et on ne sort pas.",
+   "note": "La Patience contre un village qui se cache : frapper aux portes n'aurait ouvert aucune. Le modèle a écrit des volets qui s'entrouvrent, ce qui est le maximum obtenable ici."
+  },
+  {
+   "n": 2,
+   "t": "Rencontre",
+   "lieu": "Le four éteint",
+   "dc": 9,
+   "at": 6,
+   "de": 5,
+   "action": "RÉVÉLER",
+   "rune": "La Méfiance",
+   "scene": "Le four du village est froid. La porte de fonte est fermée et le cendrier n'a pas été vidé.",
+   "issue": "Vous ouvrez le cendrier. Il est plein de cendres blanches, tassées, et d'un morceau de tissu à moitié brûlé qui n'est pas du bois. Quelqu'un a brûlé autre chose que du pain dans ce four.",
+   "note": "RÉVÉLER ouvre le cendrier que personne ne regarde. Avec La Méfiance, le modèle a écrit un Voyageur qui suppose qu'on lui cache quelque chose — et il a raison.",
+   "bascule": [
+    "subie",
+    "on a brûlé autre chose que du bois"
+   ]
+  },
+  {
+   "n": 3,
+   "t": "Rencontre",
+   "lieu": "Le Chœur des Druides",
+   "dc": 9,
+   "at": 6,
+   "de": 6,
+   "action": "PARLER",
+   "rune": "La Franchise",
+   "scene": "Deux druides sortent de la chapelle sans toit. Ils disent que le four s'est éteint parce que le village a manqué à un rite, et qu'il se rallumera quand le rite sera refait.",
+   "dial": "« Trois gestes, dans l'ordre. Ceux qui les connaissaient sont morts l'hiver dernier. Nous savons qu'il y en a trois. Nous ne savons plus lesquels. »",
+   "issue": "Vous leur demandez s'ils croient vraiment que c'est le rite, ou s'ils le disent parce qu'ils n'ont rien d'autre. Le premier se tait. Le second répond qu'il n'y a pas de différence quand le four est froid depuis onze jours.",
+   "note": "La Franchise pose la question impolie. La réponse — « il n'y a pas de différence » — en dit plus sur le village que trois beats d'ambiance."
+  },
+  {
+   "n": 4,
+   "t": "Dilemme",
+   "lieu": "La place",
+   "special": {
+    "genre": "partage",
+    "avoir": "trois pains",
+    "demandeurs": [
+     [
+      "Une femme et son nourrisson",
+      "elle n'a rien mangé depuis deux jours pour qu'il tète encore.",
+      true
+     ],
+     [
+      "Kado le Cordier, de passage",
+      "il est vieux, il repart demain, il ne demande rien mais il regarde.",
+      true
+     ],
+     [
+      "Un homme de trente ans",
+      "il est le seul à pouvoir couper du bois pour rallumer le four.",
+      true
+     ],
+     [
+      "Deux garçons de dix ans",
+      "ils demandent en riant, comme si c'était un jeu. Ils ont faim quand même.",
+      false
+     ],
+     [
+      "Un vieux qui ne dit rien",
+      "il tend la main et il attend. Il attendait déjà quand vous êtes arrivé.",
+      false
+     ]
+    ]
+   },
+   "scene": "Vous sortez les pains. En moins d'une minute il y a cinq personnes devant vous, et il n'y a pas cinq pains.",
+   "issue": "Vous donnez à la mère, à Kado et au bûcheron. Les deux garçons s'en vont sans insister. Le vieux garde la main tendue encore un moment, puis il la baisse et retourne s'asseoir contre le mur du four.",
+   "note": "Aucun dé, aucune bonne réponse. Le partage ne punit pas sur le moment — c'est ce qui le rend dur : chacun se souvient de ce qu'il n'a pas reçu, et on repasse par Kerlan.",
+   "effet": "+2 corruption · le vieux et les deux garçons repartent sans rien",
+   "bascule": [
+    "choisie",
+    "qui mange et qui ne mange pas"
+   ]
+  },
+  {
+   "n": 5,
+   "t": "Exploration",
+   "lieu": "La chapelle sans toit",
+   "dc": 9,
+   "at": 3,
+   "de": 10,
+   "action": "OBSERVER",
+   "rune": "La Patience",
+   "scene": "La chapelle n'a plus de toit depuis longtemps. Sur le mur nord, une frise usée montre des silhouettes qui font des gestes.",
+   "issue": "Vous restez à la regarder pendant que la lumière tourne. Trois silhouettes se détachent quand le soleil vient de biais : une qui verse, une qui casse, une qui tourne le dos.",
+   "note": "Le beat qui donne la séquence, et il faut l'avoir regardé pour tenir le rituel du beat 9. Rien ne le signale comme important — c'est le contrat entre deux beats éloignés.",
+   "effet": "vous avez vu trois gestes : verser, casser, tourner le dos"
+  },
+  {
+   "n": 6,
+   "t": "Rencontre",
+   "lieu": "L'Être Indéfinissable",
+   "dc": 9,
+   "at": 6,
+   "de": 12,
+   "action": "OBSERVER",
+   "rune": "L'Aplomb",
+   "scene": "Quelque chose se tient au fond de la chapelle, à l'endroit où le mur est le plus sombre. Ça n'a pas de contour fixe. Ça propose de rallumer le four tout de suite.",
+   "dial": "« Je peux le faire chauffer ce soir. Vous n'aurez pas besoin du rite, et personne ne saura que c'est moi. Le village mange demain matin. »",
+   "issue": "Vous ne bougez pas et vous ne détournez pas les yeux. Vous dites que vous préférez le rite. Ça ne s'énerve pas, ça ne disparaît pas non plus : ça reste au fond, et ça attend que vous échouiez.",
+   "note": "Marge +9, l'éclatante. L'Aplomb tient devant un tentateur qui n'a rien d'effrayant et tout de raisonnable. Le refus ne le chasse pas — c'est ce qui rend le beat 9 tendu."
+  },
+  {
+   "n": 7,
+   "t": "Épreuve",
+   "lieu": "Le bois",
+   "dc": 9,
+   "at": 6,
+   "de": 8,
+   "action": "AGIR",
+   "rune": "L'Élan",
+   "scene": "Le bûcheron a mangé et il coupe, mais il faut deux hommes pour porter et il fait déjà sombre.",
+   "issue": "Vous prenez l'autre bout sans qu'il ait à le demander. Vous faites quatre voyages avant la nuit complète. Le tas devant le four est maigre mais il brûlera.",
+   "note": "Le pain donné au beat 4 revient ici : le bûcheron coupe parce qu'il a mangé. Une conséquence à trois beats de distance, sans qu'on l'annonce."
+  },
+  {
+   "n": 8,
+   "t": "Épreuve",
+   "lieu": "Le four",
+   "dc": 9,
+   "at": 6,
+   "de": 3,
+   "action": "COMBATTRE",
+   "rune": "L'Entêtement",
+   "scene": "Le bois est humide. Il fume, il siffle, il ne prend pas. Vous recommencez pour la sixième fois.",
+   "issue": "Vous refaites exactement le même geste, sans chercher mieux, jusqu'à ce que la flamme tienne. Vous vous brûlez le dos de la main sur la fonte. Le tirage part enfin.",
+   "note": "Marge 0 : ça tient à un point. L'Entêtement se paie toujours en peau dans ces bois — c'est sa cohérence.",
+   "effet": "−1 santé"
+  },
+  {
+   "n": 9,
+   "t": "Épreuve",
+   "lieu": "Devant le four",
+   "special": {
+    "genre": "rituel",
+    "vu_au_beat": "5",
+    "source": "la frise du mur nord, quand la lumière vient de biais : une silhouette qui verse, une qui casse, une qui tourne le dos",
+    "sequence": [
+     "Verser l'eau sur la pierre du seuil",
+     "Casser le premier pain sur la fonte",
+     "Tourner le dos au four et ne pas se retourner"
+    ]
+   },
+   "scene": "Les druides attendent que vous fassiez les trois gestes. Ils ne les connaissent pas. Vous, vous les avez vus sur un mur, quatre beats plus tôt.",
+   "issue": "Vous versez, vous cassez, et vous tournez le dos. Derrière vous le tirage change de bruit. Vous ne vous retournez pas, ce qui est le troisième geste et le plus difficile.",
+   "note": "Ni chance ni adresse : de l'attention payée plus tôt. Le rituel n'a pas de dé et aucun rappel à l'écran — qui n'a pas regardé la frise au beat 5 ne peut pas le tenir, et doit accepter l'offre de l'Être.",
+   "effet": "+1 corruption",
+   "bascule": [
+    "choisie",
+    "refaire le rite plutôt qu'accepter l'offre"
+   ]
+  },
+  {
+   "n": 10,
+   "t": "Climax",
+   "lieu": "Kerlan",
+   "dc": 12,
+   "at": 6,
+   "de": 9,
+   "action": "PARLER",
+   "rune": "Le Deuil",
+   "scene": "Le four tire. Les volets s'ouvrent un à un et la place se remplit pour la première fois depuis onze jours. Contre le mur, le vieux n'a pas bougé.",
+   "issue": "Vous allez vous asseoir à côté de lui et vous lui dites que vous n'aviez que trois pains. Il répond qu'il sait, qu'il comptait, et qu'il aurait fait pareil. Ça ne le console pas et vous ne cherchez pas à le consoler. Au fond de la chapelle, la chose s'en va.",
+   "note": "Difficulté 12. Le Deuil et non La Pitié : on ne répare pas le beat 4, on le regarde en face. Le village mange ; le vieux a passé la journée sans manger, et les deux sont vrais en même temps.",
+   "effet": "le four brûle · trois personnes n'ont pas mangé · l'Être est parti sans rien obtenir"
+  }
+ ]
+}

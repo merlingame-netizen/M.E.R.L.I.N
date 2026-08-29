@@ -1,0 +1,218 @@
+{
+ "main_depart": [
+  "La Ruse",
+  "La Méfiance",
+  "La Franchise",
+  "La Patience"
+ ],
+ "runes": {
+  "La Patience": "laisser venir plutôt qu'aller chercher",
+  "La Méfiance": "supposer le pire et se garder",
+  "La Franchise": "dire ce qui est, sans arranger",
+  "L'Élan": "partir avant d'être sûr",
+  "La Pitié": "s'arrêter pour ce qui souffre",
+  "L'Entêtement": "recommencer sans changer d'avis",
+  "Le Silence": "ne rien dire et laisser le vide travailler",
+  "La Ruse": "prendre par un autre bord",
+  "L'Aplomb": "tenir sa place devant plus grand que soi",
+  "Le Deuil": "accepter ce qui ne reviendra pas"
+ },
+ "gestes": {
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "RÉVÉLER": "faire venir au jour ce qui se cache",
+  "PARLER": "s'adresser à quelqu'un"
+ },
+ "id": "la_course_des_korrigans",
+ "titre": "La Course des Korrigans",
+ "monde": "penn_ar_bed",
+ "figures": [
+  "fanch",
+  "enfant",
+  "choeur"
+ ],
+ "bourse_depart": 19,
+ "integrite": {
+  "3": -2,
+  "6": -3
+ },
+ "corruption": {
+  "8": 1
+ },
+ "preambule": [
+  "Le marché de Marc'had an Deur se tient entre deux menhirs, quatre jours par lune, et il n'a pas d'heure.",
+  "On y vend des choses qui ne se vendent nulle part ailleurs, et personne n'y compte en monnaie du dehors.",
+  "Vous y êtes venu pour une chose précise : le registre du village, qu'un korrigan a pris chez le recteur et qui doit être là.",
+  "Sans ce registre, douze familles ne peuvent pas prouver que leurs terres sont à elles."
+ ],
+ "beats": [
+  {
+   "n": 1,
+   "t": "Exploration",
+   "lieu": "Marc'had an Deur",
+   "dc": 9,
+   "at": 6,
+   "de": 8,
+   "action": "OBSERVER",
+   "rune": "La Ruse",
+   "scene": "Trente étals, aucun ordre. Les korrigans vendent en criant et changent de place entre deux clients.",
+   "issue": "Vous ne cherchez pas le registre : vous cherchez qui regarde ailleurs quand vous approchez. Trois étals sur trente. Le troisième a un coin de cuir qui dépasse sous une toile.",
+   "note": "OBSERVER avec La Ruse : prendre par un autre bord. On ne fouille pas trente étals, on lit trente regards. C'est la première fois que cette rune sort du corpus."
+  },
+  {
+   "n": 2,
+   "t": "Rencontre",
+   "lieu": "Fañch le Trotteur",
+   "dc": 9,
+   "at": 6,
+   "de": 4,
+   "action": "PARLER",
+   "rune": "La Franchise",
+   "scene": "Fañch tient l'étal d'à côté. Il a vu ce que vous avez vu et il attend de savoir ce que vous en ferez.",
+   "dial": "« Il ne vous le vendra pas. Ce n'est pas qu'il y tient : c'est qu'il aime mieux courir. Si vous le prenez, il court, et ici tout le monde le laisse passer. »",
+   "issue": "Vous lui demandez droit s'il court vite. Fañch répond que non, mais qu'il connaît le marché et que vous non.",
+   "note": "Marge +1, ça passe de justesse. La Franchise obtient un avertissement précis au lieu d'un conseil vague — et cet avertissement est la règle du beat 3."
+  },
+  {
+   "n": 3,
+   "t": "Épreuve",
+   "lieu": "Entre les étals",
+   "special": {
+    "genre": "poursuite",
+    "fourches": [
+     [
+      "Il file entre deux rangées d'étals",
+      "à gauche, la rangée des tanneurs, encombrée",
+      "à droite, l'allée du fond, libre mais longue",
+      "gauche"
+     ],
+     [
+      "Un attelage barre l'allée",
+      "passer dessous, à quatre pattes",
+      "contourner par l'étal, en bousculant",
+      "dessous"
+     ],
+     [
+      "Il sort du marché vers les menhirs",
+      "couper par la lande, terrain mou",
+      "rester sur le chemin, plus long",
+      "lande"
+     ]
+    ],
+    "issue_course": "vous le perdez de vue au troisième virage — la lande était molle et il la connaît"
+   },
+   "scene": "Il prend le registre sous le bras et il part. Le marché ne s'écarte pas devant vous.",
+   "issue": "Vous tranchez vite trois fois de suite et deux fois sur trois vous choisissez bien. La troisième vous coûte : la lande est molle, vous enfoncez jusqu'au mollet, et il disparaît derrière les menhirs. Vous ressortez sans registre et sans souffle.",
+   "note": "Une poursuite n'a pas de dé : elle a trois décisions rapides et pas de temps mort. Bien tranché ne suffit pas — Fañch vous avait prévenu qu'il connaît le marché et que vous non. L'avertissement du beat 2 était la solution, et vous ne l'avez pas utilisé.",
+   "effet": "−2 santé · le registre est perdu",
+   "bascule": [
+    "subie",
+    "le registre part avec lui"
+   ]
+  },
+  {
+   "n": 4,
+   "t": "Rencontre",
+   "lieu": "Fañch le Trotteur",
+   "dc": 9,
+   "at": 3,
+   "de": 5,
+   "action": "PARLER",
+   "rune": "La Pitié",
+   "scene": "Vous revenez à l'étal, couvert de tourbe. Fañch n'a pas bougé et ne se moque pas.",
+   "dial": "« Je vous avais dit. Maintenant vous savez ce que vous ne savez pas : le marché. Ça se loue. »",
+   "issue": "Vous ne discutez pas le prix et vous ne faites pas semblant d'avoir failli réussir. Il apprécie assez pour dire où le korrigan dort.",
+   "note": "Marge −1 : PARTIEL. Vous obtenez l'information mais pas la bienveillance — Fañch vous la vend au lieu de la donner, et la suite s'en ressentira.",
+   "effet": "partiel : vous savez où il dort, mais Fañch attend un retour"
+  },
+  {
+   "n": 5,
+   "t": "Exploration",
+   "lieu": "Sous le menhir couché",
+   "dc": 9,
+   "at": 0,
+   "de": 2,
+   "action": "OBSERVER",
+   "rune": "La Méfiance",
+   "scene": "Le korrigan dort sous le menhir couché, à cent pas du marché. Le registre est sous sa tête. Il fait noir et vous distinguez mal combien ils sont couchés autour.",
+   "issue": "Vous comptez trois dormeurs et une sortie entre deux corps. Vous vous trompez sur les deux : ils sont sept, et ce que vous prenez pour une sortie est l'espace qu'un huitième a laissé en se levant pour pisser.",
+   "note": "2 sur 2d6, aucun tag couvert, marge −7 : ECHEC. Le premier du corpus, et il ne bloque rien — il rend la suite plus chere. Bien lire une scene de nuit demandait mieux que La Mefiance seule, et le de n'a rien rattrape.",
+   "effet": "échec : vous croyez qu'ils sont trois et qu'il y a une sortie"
+  },
+  {
+   "n": 6,
+   "t": "Épreuve",
+   "lieu": "Le cercle endormi",
+   "dc": 9,
+   "at": 6,
+   "de": 3,
+   "action": "COMBATTRE",
+   "rune": "L'Entêtement",
+   "scene": "Vous tirez le registre de sous sa tête. Le cuir grince. Sept korrigans se lèvent d'un coup, et la sortie que vous aviez repérée n'existe pas.",
+   "issue": "Vous passez en force par où il n'y a pas de passage. Vous encaissez, vous poussez, vous recommencez, et vous sortez du cercle avec le registre et trois coups de bâton dans le dos.",
+   "note": "Marge 0 : ça tient à un point. COMBATTRE avec L'Entêtement parce que l'echec du beat 5 a supprime l'option discrete — c'est la lecture ratee qui impose la force, et elle coute trois points de sante.",
+   "effet": "−3 santé · vous avez le registre"
+  },
+  {
+   "n": 7,
+   "t": "Rencontre",
+   "lieu": "Le Chœur des Druides",
+   "dc": 9,
+   "at": 6,
+   "de": 11,
+   "action": "OBSERVER",
+   "rune": "La Patience",
+   "scene": "Deux druides attendent sur le chemin du retour. Ils savent déjà pour le registre — le marché parle vite.",
+   "dial": "« Un registre pris à un voleur reste un registre pris. Le recteur voudra savoir par quelles mains il est passé. »",
+   "issue": "Vous les laissez finir sans vous défendre. Ils attendent une réponse qui ne vient pas, se regardent, et finissent par s'écarter. L'un dit qu'il ne dira rien ; l'autre ne dit rien du tout.",
+   "note": "Marge +8, l'éclatante. La Patience contre deux druides qui cherchent la contradiction : ne pas répondre les prive de la moitié de leur rite."
+  },
+  {
+   "n": 8,
+   "t": "Dilemme",
+   "lieu": "L'étal de Fañch",
+   "special": {
+    "genre": "choix de dialogue",
+    "pris": 0,
+    "options": [
+     [
+      "Payer Fañch ce qu'il attend",
+      "douze gwenneg, la moitié de la bourse. Il vous devra quelque chose la prochaine fois. +1 corruption."
+     ],
+     [
+      "Lui donner une page du registre",
+      "il en fera ce qu'il voudra. Une famille sur douze ne pourra rien prouver."
+     ],
+     [
+      "Repartir sans rien lui donner",
+      "il ne vous vendra plus jamais rien, et il tient le seul étal fiable de la région."
+     ]
+    ]
+   },
+   "scene": "Fañch n'a rien demandé et il attend quand même. Vous avez le registre parce qu'il vous a dit où dormait le voleur.",
+   "issue": "Vous payez les douze gwenneg sans marchander. Il les compte, en remet deux dans votre main sans explication, et range le reste.",
+   "note": "Le partiel du beat 4 se paie ici : l'information vendue au lieu d'être donnée devient une dette. Les deux gwenneg rendus ne sont pas de la bonté — c'est Fañch qui fixe lui-même le prix qu'il jugeait juste.",
+   "effet": "+1 corruption",
+   "bascule": [
+    "choisie",
+    "ce qu'on doit à Fañch"
+   ]
+  },
+  {
+   "n": 9,
+   "t": "Climax",
+   "lieu": "Kerlan",
+   "dc": 12,
+   "at": 6,
+   "de": 9,
+   "action": "RÉVÉLER",
+   "rune": "L'Aplomb",
+   "scene": "Le recteur ouvre le registre devant les douze familles. Il tourne les pages, s'arrête, et recommence depuis le début.",
+   "issue": "Vous lui prenez le livre des mains et vous montrez la page vous-même : elle a été arrachée puis recousue, il y a des années, bien avant le vol de cette semaine. Le korrigan n'a pas pris le registre pour le voler. Il l'a pris parce que quelqu'un du village l'avait déjà falsifié, et qu'il le savait.",
+   "note": "Difficulté 12. RÉVÉLER met au jour ce que la poursuite du beat 3 empêchait de voir : on courait après le mauvais coupable depuis le début. L'échec du beat 3 était nécessaire — en rattrapant le korrigan tout de suite, on rendait le registre sans jamais l'ouvrir.",
+   "effet": "le registre est rendu · une page a été recousue · santé 5 · 9 gwenneg"
+  }
+ ],
+ "note_main": "La main de depart n'est PAS celle du premier jour : le Voyageur arrive au marche avec ce que les quetes precedentes lui ont laisse. L'Elan est parti, La Ruse est arrivee — et c'est elle qui ouvre celle-ci."
+}

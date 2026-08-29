@@ -1,0 +1,326 @@
+<title>Trois Pains à Kerlan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@600;700&family=Spectral:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --lin:#e9e4d7; --lin-creux:#ded8c8; --lin-panneau:#e2dccc;
+  --encre:#2b2c26; --encre-pale:#6d6f63; --encre-fantome:#918f80;
+  --or:#8a6a24; --or-vif:#b08a33; --voix:#35617f; --rouille:#9c4a26; --vert:#4a6b3d;
+  --trait:rgba(43,44,38,.14); --trait-fort:rgba(43,44,38,.3);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}}
+:root[data-theme="dark"]{
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--lin);color:var(--encre);margin:0;
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.72}
+h1,h2{font-family:Vollkorn,Georgia,serif;text-wrap:balance;margin:0}
+:focus-visible{outline:2px solid var(--or-vif);outline-offset:3px}
+.page{max-width:46rem;margin:0 auto;padding:3.6rem 1.5rem 7rem}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .9rem}
+h1{font-size:clamp(2rem,5.5vw,2.9rem);font-weight:700;color:var(--or);line-height:1.1;margin:0 0 1.2rem}
+.preambule{border-left:2px solid color-mix(in srgb,var(--or) 45%,transparent);
+  padding-left:1.2rem;margin:0 0 2.2rem;max-width:36rem;color:var(--encre)}
+.preambule p{margin:0 0 .7rem}
+.preambule p:last-child{margin:0;color:var(--or);font-style:italic}
+.regle{font-family:"IBM Plex Mono",monospace;font-size:.76rem;line-height:1.85;
+  color:var(--encre-pale);background:var(--lin-creux);border-radius:2px;
+  padding:.9rem 1.05rem;margin:0 0 1.6rem}
+.regle b{color:var(--encre);font-weight:500}
+.legende{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 2.4rem}
+.legende.gestes .rl{border-color:color-mix(in srgb,var(--or) 45%,transparent)}
+.legende.gestes .rl b{color:var(--or);letter-spacing:.06em}
+.rl{display:inline-flex;flex-direction:column;border:1px solid var(--trait);border-radius:2px;
+  padding:.3rem .55rem;font-family:"IBM Plex Mono",monospace;font-size:.7rem;line-height:1.4}
+.rl b{color:var(--encre);font-weight:500}
+.rl i{font-style:normal;color:var(--encre-fantome);font-size:.63rem}
+h2{font-size:1.3rem;font-weight:700;margin:3.2rem 0 1.2rem}
+.beat{padding:2rem 0;border-top:1px solid var(--trait)}
+.bt{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.75rem;flex-wrap:wrap}
+.bn{font-family:Vollkorn,serif;font-size:1.3rem;font-weight:700;color:var(--or);line-height:1}
+.btype{font-family:"IBM Plex Mono",monospace;font-size:.67rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--encre-fantome)}
+.blieu{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--voix);margin-left:auto}
+.beat p{margin:0 0 .75rem}
+.dial{color:var(--voix)}
+.issue{border-left:2px solid color-mix(in srgb,var(--or) 40%,transparent);padding-left:1rem}
+.effet{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--rouille);margin:.2rem 0 .75rem}
+.note{font-size:.9rem;color:var(--encre-pale);margin:1rem 0 0}
+.note b{color:var(--encre);font-weight:500}
+.table{font-family:"IBM Plex Mono",monospace;font-size:.75rem;line-height:1.6;
+  background:var(--lin-panneau);border-radius:2px;padding:.85rem .95rem;margin:1.1rem 0;
+  display:grid;gap:.45rem;overflow-x:auto}
+.tr{display:grid;grid-template-columns:7rem 1fr;gap:.85rem;align-items:baseline}
+.lb{color:var(--encre-fantome);letter-spacing:.05em;font-size:.68rem;text-transform:uppercase}
+.vl{color:var(--encre-pale);min-width:0}
+.vl b{color:var(--encre);font-weight:600}
+.vl b.act{color:var(--or)}
+.plus{color:var(--encre-fantome);padding:0 .25rem}
+.runes{display:flex;flex-wrap:wrap;gap:.3rem}
+.rune{padding:.2rem .5rem;border:1px solid var(--trait);border-radius:2px;
+  font-size:.71rem;color:var(--encre-fantome)}
+.rune.sel{border-color:var(--or);color:var(--encre);
+  background:color-mix(in srgb,var(--or) 13%,transparent)}
+.geste b{font-size:.82rem}
+.jet b.mpos{color:var(--vert)} .jet b.mneg{color:var(--rouille)}
+.dg{display:inline-block;margin-left:.5rem;padding:.02rem .4rem;border-radius:2px;
+  font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;
+  border:1px solid var(--trait-fort);color:var(--encre-pale)}
+.dg.reussite{border-color:color-mix(in srgb,var(--vert) 55%,transparent);color:var(--vert)}
+.dg.eclatante{border-color:var(--or);color:var(--or-vif);
+  background:color-mix(in srgb,var(--or) 15%,transparent)}
+.dg.partiel{border-color:color-mix(in srgb,var(--rouille) 60%,transparent);color:var(--rouille)}
+.retour{background:var(--lin-creux);border-radius:2px;padding:1.4rem 1.3rem;margin-top:3.4rem}
+.retour h2{font-size:1.05rem;margin:0 0 .8rem;color:var(--or)}
+.retour ul{margin:0;padding-left:1.1rem;color:var(--encre-pale);font-size:.95rem}
+.retour li{margin:.5rem 0}
+.retour b{color:var(--encre);font-weight:500}
+
+.rune.neuve{border-color:var(--voix);color:var(--voix);
+  background:color-mix(in srgb,var(--voix) 12%,transparent)}
+.etat b{font-variant-numeric:tabular-nums}
+.etat .sep{color:var(--encre-fantome);padding:0 .35rem}
+.dp{color:var(--vert);font-size:.68rem;margin-left:.15rem}
+.dn{color:var(--rouille);font-size:.68rem;margin-left:.15rem}
+.etat .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.beat.spe{background:linear-gradient(90deg,color-mix(in srgb,var(--voix) 6%,transparent),transparent 70%)}
+.table.special{border-left:2px solid var(--voix)}
+.table.special .vl b.act{color:var(--voix);text-transform:uppercase;letter-spacing:.08em}
+.opts{display:flex;flex-direction:column;gap:.3rem}
+.opt{display:block;border:1px solid var(--trait);border-radius:2px;padding:.35rem .55rem;
+  line-height:1.5}
+.opt b{display:block;color:var(--encre-pale);font-weight:500;font-size:.74rem}
+.opt i{font-style:normal;color:var(--encre-fantome);font-size:.69rem}
+.opt.pris{border-color:var(--voix);background:color-mix(in srgb,var(--voix) 10%,transparent)}
+.opt.pris b{color:var(--encre)}
+.etatligne{font-family:"IBM Plex Mono",monospace;font-size:.73rem;color:var(--encre-pale);
+  margin:.7rem 0 1rem;padding-left:.1rem}
+.etatligne b{color:var(--encre);font-variant-numeric:tabular-nums}
+.etatligne .sep{color:var(--encre-fantome);padding:0 .3rem}
+.etatligne .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.meca{border-top:1px solid var(--trait);padding:1.5rem 0}
+.meca h3{font-family:Vollkorn,serif;font-size:1.08rem;font-weight:700;margin:0 0 .1rem;
+  color:var(--encre)}
+.meca .etat-usage{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .7rem}
+.meca .etat-usage.vu{color:var(--voix)}
+.meca dl{display:grid;grid-template-columns:7.5rem 1fr;gap:.28rem .9rem;margin:0 0 .7rem;
+  font-size:.9rem}
+.meca dt{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--encre-fantome);padding-top:.2rem}
+.meca dd{margin:0;color:var(--encre-pale)}
+.meca .ex{font-size:.88rem;color:var(--encre-pale);border-left:2px solid var(--trait-fort);
+  padding-left:.9rem;margin:.5rem 0 0}
+.meca .ex b{color:var(--encre);font-weight:500}
+@media(max-width:600px){.meca dl{grid-template-columns:1fr;gap:.05rem}}
+
+.bas{display:block;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.04em;
+  margin:-.35rem 0 .85rem;padding-left:.7rem;border-left:2px solid var(--trait-fort)}
+.bas.choisie{color:var(--or);border-left-color:var(--or)}
+.bas.subie{color:var(--rouille);border-left-color:var(--rouille)}
+.forme{margin:0 0 3rem}
+.forme .rangee{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;margin:.5rem 0 .6rem}
+.forme .c{height:2.1rem;border:1px solid var(--trait);border-radius:2px;
+  font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--encre-fantome);
+  display:grid;place-items:center}
+.forme .c.choisie{border-color:var(--or);color:var(--or);
+  background:color-mix(in srgb,var(--or) 18%,transparent)}
+.forme .c.subie{border-color:var(--rouille);color:var(--rouille);
+  background:color-mix(in srgb,var(--rouille) 14%,transparent)}
+.forme p{font-size:.93rem;color:var(--encre-pale);margin:.2rem 0 .5rem}
+.forme .lg{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--encre-fantome)}
+.forme .lg b.o{color:var(--or)} .forme .lg b.r{color:var(--rouille)}
+@media(max-width:640px){
+  .page{padding:2.2rem 1.1rem 4rem}
+  .tr{grid-template-columns:1fr;gap:.15rem}
+  .blieu{margin-left:0;width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.note-tete{color:var(--encre-pale);font-size:.97rem;margin:0 0 2rem;max-width:34rem}
+.meca h3 a{color:var(--or);text-decoration:none}
+.meca h3 a:hover{text-decoration:underline}
+code{font-family:"IBM Plex Mono",monospace;font-size:.85em;color:var(--encre)}
+</style>
+<div class="page">
+<p class="eyebrow">Scénario de référence · penn_ar_bed · 10 beats</p>
+<h1>Trois Pains à Kerlan</h1>
+<div class="preambule"><p>Le vent est tombé et il fait plus froid que la veille. La route descend vers Kerlan entre deux talus de pierre sèche.</p><p>Le village a une place, un four, une chapelle sans toit. Le four est éteint.</p><p>Il l'est depuis onze jours, et personne n'a envoyé chercher de l'aide : ici on ne demande pas.</p><p>Vous arrivez avec trois pains dans votre sac, achetés ce matin à deux heures de marche.</p></div>
+<div class="regle"><b>Un beat ordinaire.</b> Vous posez une tuile d'action et une rune de votre main. Les cinq tuiles sont le socle et ne changent jamais ; les runes tournent. La tuile dit ce que vous faites, la rune dit avec quoi. C'est le modèle qui lit la paire et écrit ce qui arrive.<br>Le jeu annonce la mise avant le dé, jamais l'issue. On lance <b>2d6</b>. La rune posée <b>quitte la main</b> et on en repioche une.<br><br><b>Un beat spécial</b> a sa propre mécanique — ni tuile, ni rune, ni dé. On y sélectionne parmi <b>2 à 4 propositions</b> quand c'est un choix ; d'autres formes existent (marchand, boss, énigme écrite). La main ne bouge pas.<br>Rien ne s'accumule parce qu'on a réussi : les <b>gwenneg</b> ne viennent que d'un événement qui en donne.</div>
+<h2>Les cinq gestes</h2>
+<div class="legende gestes"><span class="rl"><b>OBSERVER</b><i>lire une scène avant d'y toucher</i></span><span class="rl"><b>AGIR</b><i>faire de ses mains, avec adresse</i></span><span class="rl"><b>COMBATTRE</b><i>y mettre le corps et tenir</i></span><span class="rl"><b>RÉVÉLER</b><i>faire venir au jour ce qui se cache</i></span><span class="rl"><b>PARLER</b><i>s'adresser à quelqu'un</i></span></div>
+<h2>Les runes de la quête</h2>
+<div class="legende runes-leg"><span class="rl"><b>La Patience</b><i>laisser venir plutôt qu'aller chercher</i></span><span class="rl"><b>La Méfiance</b><i>supposer le pire et se garder</i></span><span class="rl"><b>La Franchise</b><i>dire ce qui est, sans arranger</i></span><span class="rl"><b>L'Élan</b><i>partir avant d'être sûr</i></span><span class="rl"><b>La Pitié</b><i>s'arrêter pour ce qui souffre</i></span><span class="rl"><b>L'Entêtement</b><i>recommencer sans changer d'avis</i></span><span class="rl"><b>Le Silence</b><i>ne rien dire et laisser le vide travailler</i></span><span class="rl"><b>La Ruse</b><i>prendre par un autre bord</i></span><span class="rl"><b>L'Aplomb</b><i>tenir sa place devant plus grand que soi</i></span><span class="rl"><b>Le Deuil</b><i>accepter ce qui ne reviendra pas</i></span></div>
+<h2>La forme de la quête</h2>
+<div class="forme"><p>Une décision ne se pose pas au métronome : elle se pose quand le sol vient de bouger, et seulement quand le Voyageur a de quoi décider.</p><div class="rangee"><div class="c ">1</div><div class="c subie">2</div><div class="c ">3</div><div class="c choisie">4</div><div class="c ">5</div><div class="c ">6</div><div class="c ">7</div><div class="c ">8</div><div class="c choisie">9</div><div class="c ">10</div></div><p class="lg"><b class="r">■</b> bascule subie : le monde décide &nbsp;·&nbsp; <b class="o">■</b> bascule choisie : vous décidez</p></div>
+<h2>La quête</h2>
+<article class="beat">
+<div class="bt"><span class="bn">1</span><span class="btype">Exploration</span><span class="blieu">Kerlan</span></div>
+<p>Il n'y a personne sur la place. Les volets sont clos en plein jour et de la fumée sort de trois cheminées sur douze.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Patience</span><span class="rune">La Méfiance</span><span class="rune">La Franchise</span><span class="rune">L'Élan</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>7</b> <span class="plus">→</span> <b>13</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+4</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Pitié</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous restez sur la place sans frapper nulle part. Au bout d'un moment un volet s'entrouvre, puis deux. On vous regarde et on ne sort pas.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> La Patience contre un village qui se cache : frapper aux portes n'aurait ouvert aucune. Le modèle a écrit des volets qui s'entrouvrent, ce qui est le maximum obtenable ici.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">2</span><span class="btype">Rencontre</span><span class="blieu">Le four éteint</span></div>
+<span class="bas subie">bascule subie — on a brûlé autre chose que du bois</span>
+<p>Le four du village est froid. La porte de fonte est fermée et le cendrier n'a pas été vidé.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Méfiance</span><span class="rune">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">RÉVÉLER</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>5</b> <span class="plus">→</span> <b>11</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Aplomb</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous ouvrez le cendrier. Il est plein de cendres blanches, tassées, et d'un morceau de tissu à moitié brûlé qui n'est pas du bois. Quelqu'un a brûlé autre chose que du pain dans ce four.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> RÉVÉLER ouvre le cendrier que personne ne regarde. Avec La Méfiance, le modèle a écrit un Voyageur qui suppose qu'on lui cache quelque chose — et il a raison.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">3</span><span class="btype">Rencontre</span><span class="blieu">Le Chœur des Druides</span></div>
+<p>Deux druides sortent de la chapelle sans toit. Ils disent que le four s'est éteint parce que le village a manqué à un rite, et qu'il se rallumera quand le rite sera refait.</p>
+<p class="dial">« Trois gestes, dans l'ordre. Ceux qui les connaissaient sont morts l'hiver dernier. Nous savons qu'il y en a trois. Nous ne savons plus lesquels. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Franchise</span><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune">L'Aplomb</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>La Franchise</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>6</b> <span class="plus">→</span> <b>12</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+3</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous leur demandez s'ils croient vraiment que c'est le rite, ou s'ils le disent parce qu'ils n'ont rien d'autre. Le premier se tait. Le second répond qu'il n'y a pas de différence quand le four est froid depuis onze jours.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> La Franchise pose la question impolie. La réponse — « il n'y a pas de différence » — en dit plus sur le village que trois beats d'ambiance.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">4</span><span class="btype">Dilemme</span><span class="blieu">La place</span></div>
+<span class="bas choisie">bascule choisie — qui mange et qui ne mange pas</span>
+<p>Vous sortez les pains. En moins d'une minute il y a cinq personnes devant vous, et il n'y a pas cinq pains.</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">partage</b></span></div>
+<div class="tr"><span class="lb">À partager</span><span class="vl"><b>trois pains</b></span></div>
+<div class="tr"><span class="lb">Qui demande</span><span class="vl opts">
+<span class="opt pris"><b>Une femme et son nourrisson</b><i>elle n'a rien mangé depuis deux jours pour qu'il tète encore.</i></span>
+<span class="opt pris"><b>Kado le Cordier, de passage</b><i>il est vieux, il repart demain, il ne demande rien mais il regarde.</i></span>
+<span class="opt pris"><b>Un homme de trente ans</b><i>il est le seul à pouvoir couper du bois pour rallumer le four.</i></span>
+<span class="opt"><b>Deux garçons de dix ans</b><i>ils demandent en riant, comme si c'était un jeu. Ils ont faim quand même.</i></span>
+<span class="opt"><b>Un vieux qui ne dit rien</b><i>il tend la main et il attend. Il attendait déjà quand vous êtes arrivé.</i></span>
+</span></div>
+<div class="tr"><span class="lb">Repartent sans rien</span><span class="vl"><b>Deux garçons de dix ans, Un vieux qui ne dit rien</b></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>2</b><span class="dp">+2</span> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous donnez à la mère, à Kado et au bûcheron. Les deux garçons s'en vont sans insister. Le vieux garde la main tendue encore un moment, puis il la baisse et retourne s'asseoir contre le mur du four.</p>
+<p class="effet">+2 corruption · le vieux et les deux garçons repartent sans rien</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Aucun dé, aucune bonne réponse. Le partage ne punit pas sur le moment — c'est ce qui le rend dur : chacun se souvient de ce qu'il n'a pas reçu, et on repasse par Kerlan.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">5</span><span class="btype">Exploration</span><span class="blieu">La chapelle sans toit</span></div>
+<p>La chapelle n'a plus de toit depuis longtemps. Sur le mur nord, une frise usée montre des silhouettes qui font des gestes.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune">L'Aplomb</span><span class="rune sel">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>10</b> <span class="plus">→</span> <b>13</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+4</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Entêtement</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>2</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous restez à la regarder pendant que la lumière tourne. Trois silhouettes se détachent quand le soleil vient de biais : une qui verse, une qui casse, une qui tourne le dos.</p>
+<p class="effet">vous avez vu trois gestes : verser, casser, tourner le dos</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Le beat qui donne la séquence, et il faut l'avoir regardé pour tenir le rituel du beat 9. Rien ne le signale comme important — c'est le contrat entre deux beats éloignés.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">6</span><span class="btype">Rencontre</span><span class="blieu">L'Être Indéfinissable</span></div>
+<p>Quelque chose se tient au fond de la chapelle, à l'endroit où le mur est le plus sombre. Ça n'a pas de contour fixe. Ça propose de rallumer le four tout de suite.</p>
+<p class="dial">« Je peux le faire chauffer ce soir. Vous n'aurez pas besoin du rite, et personne ne saura que c'est moi. Le village mange demain matin. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">L'Élan</span><span class="rune">La Pitié</span><span class="rune sel">L'Aplomb</span><span class="rune">L'Entêtement</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>L'Aplomb</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>12</b> <span class="plus">→</span> <b>18</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+9</b><span class="dg eclatante">éclatante</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>2</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous ne bougez pas et vous ne détournez pas les yeux. Vous dites que vous préférez le rite. Ça ne s'énerve pas, ça ne disparaît pas non plus : ça reste au fond, et ça attend que vous échouiez.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Marge +9, l'éclatante. L'Aplomb tient devant un tentateur qui n'a rien d'effrayant et tout de raisonnable. Le refus ne le chasse pas — c'est ce qui rend le beat 9 tendu.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">7</span><span class="btype">Épreuve</span><span class="blieu">Le bois</span></div>
+<p>Le bûcheron a mangé et il coupe, mais il faut deux hommes pour porter et il fait déjà sombre.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">L'Élan</span><span class="rune">La Pitié</span><span class="rune">L'Entêtement</span><span class="rune">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">AGIR</b> <span class="plus">avec</span> <b>L'Élan</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>8</b> <span class="plus">→</span> <b>14</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+5</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Silence</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>2</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous prenez l'autre bout sans qu'il ait à le demander. Vous faites quatre voyages avant la nuit complète. Le tas devant le four est maigre mais il brûlera.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Le pain donné au beat 4 revient ici : le bûcheron coupe parce qu'il a mangé. Une conséquence à trois beats de distance, sans qu'on l'annonce.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">8</span><span class="btype">Épreuve</span><span class="blieu">Le four</span></div>
+<p>Le bois est humide. Il fume, il siffle, il ne prend pas. Vous recommencez pour la sixième fois.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Pitié</span><span class="rune sel">L'Entêtement</span><span class="rune">La Patience</span><span class="rune">Le Silence</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">COMBATTRE</b> <span class="plus">avec</span> <b>L'Entêtement</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>3</b> <span class="plus">→</span> <b>9</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+0</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Deuil</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b><span class="dn">-1</span> <span class="sep">·</span> corruption <b>2</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous refaites exactement le même geste, sans chercher mieux, jusqu'à ce que la flamme tienne. Vous vous brûlez le dos de la main sur la fonte. Le tirage part enfin.</p>
+<p class="effet">−1 santé</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Marge 0 : ça tient à un point. L'Entêtement se paie toujours en peau dans ces bois — c'est sa cohérence.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">9</span><span class="btype">Épreuve</span><span class="blieu">Devant le four</span></div>
+<span class="bas choisie">bascule choisie — refaire le rite plutôt qu'accepter l'offre</span>
+<p>Les druides attendent que vous fassiez les trois gestes. Ils ne les connaissent pas. Vous, vous les avez vus sur un mur, quatre beats plus tôt.</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">rituel</b></span></div>
+<div class="tr"><span class="lb">Vu au beat 5</span><span class="vl">la frise du mur nord, quand la lumière vient de biais : une silhouette qui verse, une qui casse, une qui tourne le dos</span></div>
+<div class="tr"><span class="lb">Vous reposez</span><span class="vl opts">
+<span class="opt pris"><b>1. Verser l'eau sur la pierre du seuil</b></span>
+<span class="opt pris"><b>2. Casser le premier pain sur la fonte</b></span>
+<span class="opt pris"><b>3. Tourner le dos au four et ne pas se retourner</b></span>
+</span></div>
+<div class="tr"><span class="lb">Aucun rappel</span><span class="vl">la séquence n'est répétée nulle part à l'écran</span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>3</b><span class="dp">+1</span> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous versez, vous cassez, et vous tournez le dos. Derrière vous le tirage change de bruit. Vous ne vous retournez pas, ce qui est le troisième geste et le plus difficile.</p>
+<p class="effet">+1 corruption</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Ni chance ni adresse : de l'attention payée plus tôt. Le rituel n'a pas de dé et aucun rappel à l'écran — qui n'a pas regardé la frise au beat 5 ne peut pas le tenir, et doit accepter l'offre de l'Être.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">10</span><span class="btype">Climax</span><span class="blieu">Kerlan</span></div>
+<p>Le four tire. Les volets s'ouvrent un à un et la place se remplit pour la première fois depuis onze jours. Contre le mur, le vieux n'a pas bougé.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Pitié</span><span class="rune">La Patience</span><span class="rune">Le Silence</span><span class="rune sel">Le Deuil</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>Le Deuil</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 12 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>9</b> <span class="plus">→</span> <b>15</b> contre 12 <span class="plus">→</span> marge <b class="mpos">+3</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Méfiance</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>3</b> <span class="sep">·</span> bourse <b>31</b> gwenneg</div>
+<p class="issue">Vous allez vous asseoir à côté de lui et vous lui dites que vous n'aviez que trois pains. Il répond qu'il sait, qu'il comptait, et qu'il aurait fait pareil. Ça ne le console pas et vous ne cherchez pas à le consoler. Au fond de la chapelle, la chose s'en va.</p>
+<p class="effet">le four brûle · trois personnes n'ont pas mangé · l'Être est parti sans rien obtenir</p>
+<p class="note"><b>Ce que le modèle a lu.</b> Difficulté 12. Le Deuil et non La Pitié : on ne répare pas le beat 4, on le regarde en face. Le village mange ; le vieux a passé la journée sans manger, et les deux sont vrais en même temps.</p>
+</article>
+</div>

@@ -1,0 +1,227 @@
+{
+ "main_depart": [
+  "La Patience",
+  "La Méfiance",
+  "La Franchise",
+  "L'Élan"
+ ],
+ "runes": {
+  "La Patience": "laisser venir plutôt qu'aller chercher",
+  "La Méfiance": "supposer le pire et se garder",
+  "La Franchise": "dire ce qui est, sans arranger",
+  "L'Élan": "partir avant d'être sûr",
+  "La Pitié": "s'arrêter pour ce qui souffre",
+  "L'Entêtement": "recommencer sans changer d'avis",
+  "Le Silence": "ne rien dire et laisser le vide travailler",
+  "La Ruse": "prendre par un autre bord",
+  "L'Aplomb": "tenir sa place devant plus grand que soi",
+  "Le Deuil": "accepter ce qui ne reviendra pas"
+ },
+ "gestes": {
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "RÉVÉLER": "faire venir au jour ce qui se cache",
+  "PARLER": "s'adresser à quelqu'un"
+ },
+ "id": "le_prix_du_passeur",
+ "titre": "Le Prix du Passeur",
+ "monde": "penn_ar_bed",
+ "figures": [
+  "passeur",
+  "compagnon",
+  "ankou"
+ ],
+ "bourse_depart": 8,
+ "integrite": {
+  "5": -1
+ },
+ "corruption": {
+  "7": 2,
+  "9": 1
+ },
+ "preambule": [
+  "Il a plu trois jours et la tourbière a monté. L'eau brune affleure entre les touffes et on ne voit plus où finit le sol.",
+  "De l'autre côté, à six cents pas, la lumière d'une ferme. En contournant, c'est deux jours de marche.",
+  "Un poteau planté au bord porte une lanterne éteinte. C'est là qu'on attend le Passeur.",
+  "Personne ne sait à quelle heure il vient. Personne ne sait ce qu'il demande avant de l'avoir payé."
+ ],
+ "beats": [
+  {
+   "n": 1,
+   "t": "Exploration",
+   "lieu": "Yeun Elez",
+   "dc": 9,
+   "at": 6,
+   "de": 6,
+   "action": "OBSERVER",
+   "rune": "La Méfiance",
+   "scene": "Le bord de la tourbière est piétiné sur dix pas, puis plus rien. Des gens ont attendu ici, souvent, et longtemps.",
+   "issue": "Vous cherchez des traces de départ autant que d'arrivée. Il y a beaucoup d'empreintes qui viennent, peu qui repartent, et aucune qui fasse demi-tour.",
+   "note": "OBSERVER avec La Méfiance : on compte ce qui manque, pas ce qui est là. Le modèle en a tiré une inquiétude fondée plutôt qu'une ambiance."
+  },
+  {
+   "n": 2,
+   "t": "Épreuve",
+   "lieu": "Le poteau",
+   "special": {
+    "genre": "veille",
+    "attend": "le Passeur de Brumes, qui vient à son heure",
+    "tours": [
+     [
+      "La nuit tombe. Rien ne bouge sur l'eau.",
+      "gratuit — vous pouvez encore contourner"
+     ],
+     [
+      "Le froid s'installe. Vous avez fini votre pain.",
+      "le contournement est encore possible, d'un jour de plus"
+     ],
+     [
+      "Il est trop tard pour partir : vous ne retrouveriez pas le sentier dans le noir.",
+      "vous êtes engagé, quoi qu'il arrive"
+     ],
+     [
+      "Une perche touche le fond quelque part devant. Il vient.",
+      "il arrive au tour où vous ne pouviez plus reculer"
+     ]
+    ],
+    "pris": 3
+   },
+   "scene": "Il faut attendre. Rester encore coûte un peu plus à chaque tour, et rien ne dit combien de tours il faudra.",
+   "issue": "Vous restez jusqu'au bout. Quand la perche touche le fond, vous ne pouvez plus rien faire d'autre que monter dans la barque.",
+   "note": "La veille n'a pas de dé : elle a un compteur et une décision répétée. Le piège est écrit dans la mécanique elle-même — il arrive juste après le tour où partir devient impossible, et vous ne pouviez pas le savoir.",
+   "bascule": [
+    "subie",
+    "il vient quand on ne peut plus reculer"
+   ]
+  },
+  {
+   "n": 3,
+   "t": "Rencontre",
+   "lieu": "Le Passeur de Brumes",
+   "dc": 9,
+   "at": 6,
+   "de": 7,
+   "action": "PARLER",
+   "rune": "La Franchise",
+   "scene": "Il tient la perche debout à l'arrière d'une barque à fond plat. Il ne salue pas et ne demande rien.",
+   "dial": "« Montez. Le prix se dit au milieu, pas au bord. C'est comme ça et ce n'est pas moi qui l'ai fait. »",
+   "issue": "Vous lui demandez droit s'il est déjà arrivé qu'on refuse au milieu. Il répond que oui, deux fois, et que les deux sont restés au milieu.",
+   "note": "La Franchise obtient une réponse qui glace mais qui sert : vous savez maintenant que refuser n'est pas une option gratuite."
+  },
+  {
+   "n": 4,
+   "t": "Exploration",
+   "lieu": "La tourbière",
+   "dc": 9,
+   "at": 3,
+   "de": 9,
+   "action": "OBSERVER",
+   "rune": "La Patience",
+   "scene": "La barque avance à la perche, sans bruit. Des formes passent sous l'eau brune, à un pied de la surface, et ne remontent pas.",
+   "issue": "Vous les regardez longtemps avant d'y voir autre chose que des ombres. Ce sont des troncs debout, plantés dans la tourbe, une forêt entière noyée et conservée.",
+   "note": "+3 seulement, et le 9 rattrape. La Patience transforme une image en information : ce ne sont pas des créatures, c'est une forêt."
+  },
+  {
+   "n": 5,
+   "t": "Épreuve",
+   "lieu": "Le milieu",
+   "dc": 9,
+   "at": 6,
+   "de": 3,
+   "action": "COMBATTRE",
+   "rune": "L'Aplomb",
+   "scene": "Il plante la perche et arrête la barque. On ne voit plus aucun bord. Il dit le prix.",
+   "dial": "« Un souvenir. N'importe lequel, vous le choisissez. Je le prends et vous ne saurez plus que vous l'aviez. »",
+   "issue": "Vous vous levez dans la barque, ce qui ne se fait pas, et vous tenez debout le temps de dire que vous choisirez lequel vous-même. Il attend, puis il hoche la tête. La barque repart.",
+   "note": "Marge 0 : ça passe à un point près, et debout dans une barque à fond plat sur une tourbière. COMBATTRE n'est pas frapper — c'est tenir sa position quand céder serait plus simple.",
+   "effet": "−1 santé"
+  },
+  {
+   "n": 6,
+   "t": "Rencontre",
+   "lieu": "Le Compagnon Perdu",
+   "dc": 9,
+   "at": 6,
+   "de": 11,
+   "action": "OBSERVER",
+   "rune": "Le Silence",
+   "scene": "Un homme est assis à l'avant de la barque. Il n'y était pas au départ. Il vous appelle par un surnom que personne n'utilise depuis votre enfance.",
+   "dial": "« Donne-lui le souvenir de moi. Tu ne perdras rien : je suis déjà parti. »",
+   "issue": "Vous ne répondez pas et vous ne le regardez pas. Il parle encore un moment, change de ton deux fois, puis se tait. Le Passeur n'a pas tourné la tête une seule fois.",
+   "note": "Marge +8, l'éclatante. Face à un tentateur, Le Silence est la seule rune qui ne lui donne pas de prise : PARLER lui aurait ouvert une conversation qu'il sait mieux mener que vous."
+  },
+  {
+   "n": 7,
+   "t": "Dilemme",
+   "lieu": "Le milieu",
+   "special": {
+    "genre": "choix de dialogue",
+    "pris": 1,
+    "options": [
+     [
+      "Le souvenir du Compagnon",
+      "il vous quitte en même temps que le souvenir. Vous ne saurez jamais qui il était ni pourquoi il vous suivait."
+     ],
+     [
+      "Le souvenir du premier hiver au village",
+      "une année entière de votre enfance. Vous saurez qu'elle a existé, sans rien pouvoir en dire. +2 corruption."
+     ],
+     [
+      "Refuser de choisir",
+      "il attend. La barque n'avance plus, et le bord est à trois cents pas dans les deux sens."
+     ]
+    ]
+   },
+   "scene": "Il faut donner un souvenir, et c'est vous qui décidez lequel.",
+   "issue": "Vous donnez l'hiver. Il pose la main sur la perche, ne dit rien, et la barque repart. Vous savez qu'il vous manque quelque chose sans pouvoir dire quoi.",
+   "note": "La première proposition est la moins chère et c'est un piège : le Compagnon reviendra, et vous ne saurez plus qu'il est déjà venu. Une option bon marché doit toujours coûter ailleurs.",
+   "effet": "+2 corruption · vous avez perdu un hiver",
+   "bascule": [
+    "choisie",
+    "quel souvenir on donne"
+   ]
+  },
+  {
+   "n": 8,
+   "t": "Exploration",
+   "lieu": "L'autre bord",
+   "dc": 9,
+   "at": 6,
+   "de": 8,
+   "action": "AGIR",
+   "rune": "L'Élan",
+   "scene": "La barque touche. La ferme est à deux cents pas, éclairée. Le Passeur ne descend pas.",
+   "issue": "Vous sautez sans attendre qu'il amarre et vous remontez le talus d'un trait. Derrière vous, la perche repart déjà vers le milieu.",
+   "note": "AGIR avec L'Élan pour quitter une barque : le modèle a écrit quelqu'un qui ne demande pas la permission de descendre. C'est exactement ce qu'on veut après le beat 7."
+  },
+  {
+   "n": 9,
+   "t": "Rencontre",
+   "lieu": "La ferme",
+   "dc": 9,
+   "at": 6,
+   "de": 4,
+   "action": "PARLER",
+   "rune": "La Pitié",
+   "scene": "La fermière ouvre avant que vous ayez frappé. Elle regarde derrière vous, vers l'eau, et demande combien vous étiez dans la barque.",
+   "issue": "Vous répondez deux, et vous voyez à son visage que ce n'est pas la réponse qu'elle attendait. Elle vous fait entrer sans insister. Sur la table, il y a trois bols.",
+   "note": "Marge +1. La Pitié empêche le Voyageur de la presser de questions : ce qu'elle sait, elle le dira ou ne le dira pas, et les trois bols en disent assez.",
+   "effet": "+1 corruption"
+  },
+  {
+   "n": 10,
+   "t": "Climax",
+   "lieu": "La ferme",
+   "dc": 12,
+   "at": 6,
+   "de": 10,
+   "action": "RÉVÉLER",
+   "rune": "Le Deuil",
+   "scene": "Elle a mis trois bols. Vous êtes deux à table.",
+   "issue": "Vous lui demandez pour qui est le troisième. Elle dit : pour celui qui traverse avec eux, il descend toujours. Vous répondez qu'il n'est pas descendu ce soir. Elle regarde la porte un long moment, puis elle retire le bol et s'assied.",
+   "note": "Difficulté 12. RÉVÉLER ne sort rien d'un trou : il rend visible que le Compagnon n'a pas débarqué, donc qu'il est resté dans la barque, donc qu'il y était déjà avant vous. Rien n'est expliqué — la fermière retire un bol, et ça suffit.",
+   "effet": "vous avez traversé · un hiver en moins · le troisième bol est retiré"
+  }
+ ]
+}

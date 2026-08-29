@@ -151,6 +151,51 @@ def panneau_special(sp):
         o.append('<div class="tr"><span class="lb">Vous agissez</span>'
                  '<span class="vl">au <b>tour %d</b>, le seul où il est découvert</span></div>'
                  % (sp["pris"] + 1))
+    elif sp["genre"] == "poursuite":
+        # Trois embranchements qui defilent sans temps mort. On tranche vite, chaque virage coute.
+        o.append('<div class="tr"><span class="lb">Sans temps mort</span><span class="vl opts">')
+        for k, (fourche, gauche, droite, pris) in enumerate(sp["fourches"]):
+            o.append('<span class="opt"><b>%d. %s</b><i>%s &nbsp;|&nbsp; %s</i></span>'
+                     % (k + 1, esc(fourche), esc(gauche), esc(droite)))
+        o.append('</span></div>')
+        o.append('<div class="tr"><span class="lb">Vous prenez</span><span class="vl">%s</span></div>'
+                 % " <span class=\"plus\">→</span> ".join(
+                     "<b>%s</b>" % esc(f[3]) for f in sp["fourches"]))
+        o.append('<div class="tr"><span class="lb">Au bout</span><span class="vl">%s</span></div>'
+                 % esc(sp["issue_course"]))
+    elif sp["genre"] == "veille":
+        # On decide, tour apres tour, de rester ou de partir. Rester encore coute un peu plus.
+        o.append('<div class="tr"><span class="lb">Ce qu\'on attend</span><span class="vl">%s</span></div>'
+                 % esc(sp["attend"]))
+        o.append('<div class="tr"><span class="lb">Les tours</span><span class="vl opts">')
+        for k, (ce_qui_passe, prix) in enumerate(sp["tours"]):
+            o.append('<span class="opt%s"><b>Tour %d — %s</b><i>%s</i></span>'
+                     % (" pris" if k == sp["pris"] else "", k + 1, esc(ce_qui_passe), esc(prix)))
+        o.append('</span></div>')
+        o.append('<div class="tr"><span class="lb">Vous restez</span>'
+                 '<span class="vl">jusqu\'au <b>tour %d</b></span></div>' % (sp["pris"] + 1))
+    elif sp["genre"] == "partage":
+        # Moins de choses que de mains tendues. Chacun se souvient de ce qu'il n'a PAS recu.
+        o.append('<div class="tr"><span class="lb">À partager</span><span class="vl"><b>%s</b></span></div>'
+                 % esc(sp["avoir"]))
+        o.append('<div class="tr"><span class="lb">Qui demande</span><span class="vl opts">')
+        for nom, motif, servi in sp["demandeurs"]:
+            o.append('<span class="opt%s"><b>%s</b><i>%s</i></span>'
+                     % (" pris" if servi else "", esc(nom), esc(motif)))
+        o.append('</span></div>')
+        laisses = [n for n, _, s in sp["demandeurs"] if not s]
+        o.append('<div class="tr"><span class="lb">Repartent sans rien</span>'
+                 '<span class="vl"><b>%s</b></span></div>' % esc(", ".join(laisses) or "personne"))
+    elif sp["genre"] == "rituel":
+        # L'ordre est bon ou il ne l'est pas. Ni chance ni adresse : de l'attention payee plus tot.
+        o.append('<div class="tr"><span class="lb">Vu au beat %s</span><span class="vl">%s</span></div>'
+                 % (sp["vu_au_beat"], esc(sp["source"])))
+        o.append('<div class="tr"><span class="lb">Vous reposez</span><span class="vl opts">')
+        for k, g in enumerate(sp["sequence"]):
+            o.append('<span class="opt pris"><b>%d. %s</b></span>' % (k + 1, esc(g)))
+        o.append('</span></div>')
+        o.append('<div class="tr"><span class="lb">Aucun rappel</span>'
+                 '<span class="vl">la séquence n\'est répétée nulle part à l\'écran</span></div>')
     elif sp["genre"] == "énigme écrite":
         # Le seul endroit ou le joueur ECRIT. Le modele juge le sens, pas l'orthographe.
         o.append('<div class="tr"><span class="lb">La question</span><span class="vl">%s</span></div>'
@@ -299,6 +344,38 @@ def main():
         print("  %-24s %2d beats · %d spéciaux · %s"
               % (cle, len(q["beats"]), sum(1 for b in q["beats"] if b.get("special")),
                  ("tuiles orphelines : " + ", ".join(orph)) if orph else "socle complet"))
+    # ── LE RAPPORT DE CORPUS. Les scenarios servent a montrer le rendu vise ET a donner au modele
+    #    des exemples. Un corpus qui n'exerce que deux mecaniques sur huit apprend deux mecaniques :
+    #    on compte donc ce qui est couvert, et surtout ce qui ne l'est pas.
+    if len(faits) > 1:
+        from collections import Counter
+        genres, runes, tuiles, degres, beats = Counter(), Counter(), Counter(), Counter(), 0
+        for q, _, _ in faits:
+            for b in q["beats"]:
+                beats += 1
+                sp = b.get("special")
+                if sp:
+                    genres[sp["genre"]] += 1
+                    continue
+                tuiles[b["action"]] += 1
+                runes[b["rune"]] += 1
+                if b.get("sans_jet"):
+                    degres["sans jet"] += 1
+                else:
+                    degres[degre(b["de"] + b["at"] - b["dc"])] += 1
+        print("\n  CORPUS : %d quêtes, %d beats" % (len(faits), beats))
+        print("    mécaniques  : %s" % ", ".join("%s ×%d" % kv for kv in genres.most_common()))
+        print("    tuiles      : %s" % ", ".join("%s ×%d" % kv for kv in tuiles.most_common()))
+        print("    degrés      : %s" % ", ".join("%s ×%d" % kv for kv in degres.most_common()))
+        for d in ("réussite", "éclatante", "partiel", "échec"):
+            degres.setdefault(d, 0)
+        jamais = [r for r in faits[0][0]["runes"] if r not in runes]
+        print("    runes jamais posées : %s" % (", ".join(jamais) if jamais else "aucune"))
+        CATALOGUE = ["choix de route", "choix de dialogue", "marchand", "boss",
+                     "énigme écrite", "veille", "partage", "rituel", "poursuite"]
+        absents = [g for g in CATALOGUE if not any(g in k for k in genres)]
+        print("    mécaniques jamais jouées : %s" % (", ".join(absents) if absents else "aucune"))
+
     if len(faits) > 1:
         idx = ['<title>Scénarios de référence</title>',
                '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@600;700'
