@@ -45,6 +45,9 @@ const RUNES: Dictionary = {
 }
 const MAIN_DEPART: Array = ["La Patience", "La Méfiance", "La Franchise", "L'Élan"]
 const NODE_TIMEOUT_MS: int = 180000
+# Une generation d'amorce de MerlinScenario dure une minute environ ; une generation de beat
+# jusqu'a deux. Trois minutes couvrent les deux sans masquer un vrai blocage.
+const VOIE_TIMEOUT_MS: int = 180000
 const GEN_OPTS: Dictionary = {"creative": true, "max_tokens": 260, "label": "quete"}
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -80,6 +83,13 @@ func _go() -> void:
 		print("moteur indisponible")
 		quit(1)
 		return
+	# L'amorce de MerlinScenario part des que le modele est charge. On la laisse finir avant de
+	# demander quoi que ce soit : sinon le premier appel est refuse et le rythme ne se rattrape pas.
+	print("  attente de la voie (amorce du scenario en cours)...")
+	if not await _attendre_voie("conteur", VOIE_TIMEOUT_MS):
+		print("  la voie conteur ne se libere pas — on tente quand meme")
+	else:
+		print("  voie libre")
 
 	var lieu: Dictionary = _lire_json("res://data/biomes/%s.json" % str(ch.get("lieu", "")))
 	var figures: Array = _figures_du_lieu(str(ch.get("lieu", "")))
@@ -338,9 +348,29 @@ func _issue_choix(sp: Dictionary, precedent: String) -> String:
 ## chaque appel avait echoue, et le fichier produit ne disait pas pourquoi — il fallait aller
 ## chercher un log sur la VM pour apprendre laquelle des six erreurs du moteur s'etait produite.
 ## Une sortie qui ne sait pas dire ce qui lui est arrive coute un aller-retour a chaque diagnostic.
+## ATTENDRE LA VOIE, PAS SEULEMENT LE MODELE. q79 a rendu dix-sept fois « generation deja en
+## cours » : le moteur etait pret, mais MerlinScenario._ready() branche model_ready sur _amorcer,
+## qui lance une generation de selection DES QUE le modele est charge. Mon premier appel tombait
+## donc systematiquement sur une voie occupee, et tous les suivants aussi — la quete sortait avec
+## une mecanique parfaite et huit proses vides.
+## Le moteur est mono-place par voie : on attend qu'elle se libere au lieu de se faire refuser.
+func _attendre_voie(cerveau: String, budget_ms: int) -> bool:
+	if _mn == null or not _mn.has_method("est_occupe"):
+		return true
+	var t0: int = Time.get_ticks_msec()
+	while _mn.est_occupe(cerveau):
+		if Time.get_ticks_msec() - t0 > budget_ms:
+			return false
+		await create_timer(1.0).timeout
+	return true
+
+
 func _generer(sys: String, usr: String) -> String:
 	if _mn == null or not _mn.is_ready():
 		_noter_erreur("moteur non pret au moment de l'appel")
+		return ""
+	if not await _attendre_voie("conteur", VOIE_TIMEOUT_MS):
+		_noter_erreur("la voie conteur est restee occupee %d s" % int(VOIE_TIMEOUT_MS / 1000))
 		return ""
 	var r: Dictionary = await _mn.generate(sys, usr, GEN_OPTS)
 	if r.has("error"):
