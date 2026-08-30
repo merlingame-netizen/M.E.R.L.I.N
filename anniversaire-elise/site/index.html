@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#1c1714">
+<title>Les 30 ans d'Elise — 3 & 4 octobre 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Karla:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🎂</text></svg>">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   LES 30 ANS D'ELISE — palette des ocres de Roussillon
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  --paper:#f2e7d5;      --paper-2:#e8d9c0;    --paper-3:#dcc7a8;
+  --ink:#241d17;        --ink-soft:#4e4038;   --ink-faint:#8a7869;
+  --ocre:#c8791f;       --ocre-deep:#a35a15;  --sienna:#9e3b21;
+  --rouge:#7d2417;      --olive:#66714a;      --lavande:#75658f;
+  --night:#1c1714;      --night-2:#2a221c;
+  --rule:#c3ac8c;
+  --display:'Fraunces',Georgia,'Times New Roman',serif;
+  --body:'Karla',-apple-system,'Segoe UI',sans-serif;
+  --pad:clamp(1.15rem,4.5vw,4rem);
+  --maxw:1180px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:clamp(1rem,.96rem + .2vw,1.09rem);
+  line-height:1.65;font-weight:400;
+  overflow-x:hidden;
+}
+/* grain */
+body::before{
+  content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+.wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--pad)}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.02;margin:0;
+  font-variation-settings:'SOFT' 22,'WONK' 1;letter-spacing:-.02em}
+p{margin:0 0 1em}
+a{color:var(--sienna);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{color:var(--rouge)}
+
+/* ══ HERO ══════════════════════════════════════════════════════ */
+.hero{
+  position:relative;min-height:100svh;display:flex;flex-direction:column;
+  justify-content:center;overflow:hidden;background:var(--night);color:var(--paper);
+  padding-block:clamp(4rem,12vh,8rem);
+}
+/* strates d'ocre — les carrières de Roussillon */
+.strata{position:absolute;inset:0;z-index:0;opacity:1}
+.strata::before{
+  content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(179.5deg,transparent 0 74%,#8f4a16 74% 80%,transparent 80%),
+    linear-gradient(180.6deg,transparent 0 79%,#c8791f 79% 85%,transparent 85%),
+    linear-gradient(179.3deg,transparent 0 84%,#9e3b21 84% 90%,transparent 90%),
+    linear-gradient(180.5deg,transparent 0 89%,#d99a3d 89% 95%,transparent 95%),
+    linear-gradient(179.6deg,transparent 0 94%,#7d2417 94% 100%);
+  filter:blur(1.5px);opacity:.9;
+  -webkit-mask-image:linear-gradient(180deg,transparent 66%,#000 78%,#000 100%);
+  mask-image:linear-gradient(180deg,transparent 66%,#000 78%,#000 100%);
+}
+.strata::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,var(--night) 0%,rgba(28,23,20,.96) 60%,rgba(28,23,20,.82) 74%,rgba(28,23,20,.26) 86%,rgba(28,23,20,.18) 95%,rgba(28,23,20,.55) 100%);
+}
+.hero>.wrap{position:relative;z-index:1}
+.hero .wrap{width:100%}
+.kicker{
+  font-family:var(--body);font-size:.74rem;font-weight:700;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--ocre);margin:0 0 1.6rem;
+  display:flex;align-items:center;gap:.9rem;
+}
+.kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--ocre),transparent);max-width:230px}
+.hero h1{
+  font-size:clamp(3.6rem,15.5vw,10.5rem);line-height:.82;color:var(--paper);
+  font-weight:400;font-variation-settings:'SOFT' 48,'WONK' 1;
+}
+.hero h1 em{
+  display:block;font-style:italic;font-weight:300;
+  color:var(--ocre);font-size:.42em;line-height:1;margin-top:.32em;letter-spacing:-.01em;
+}
+.hero-meta{
+  margin-top:clamp(2rem,5vh,3.4rem);display:flex;flex-wrap:wrap;gap:.9rem 2.6rem;
+  align-items:baseline;font-size:1.02rem;color:var(--paper-3);
+}
+.hero-meta b{color:var(--paper);font-weight:700}
+.hero-meta span{display:block}
+/* countdown */
+.count{margin-top:clamp(2.2rem,6vh,3.6rem);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(.45rem,2vw,1.6rem);max-width:560px}
+.count div{
+  background:rgba(242,231,213,.07);border:1px solid rgba(200,121,31,.36);
+  padding:.75rem clamp(.3rem,1.6vw,1.5rem);text-align:center;
+  backdrop-filter:blur(3px);
+}
+.count b{display:block;font-family:var(--display);font-size:clamp(1.7rem,5.5vw,2.5rem);
+  font-weight:500;color:var(--paper);line-height:1;font-variant-numeric:tabular-nums}
+.count small{display:block;font-size:clamp(.55rem,1.7vw,.62rem);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ocre);margin-top:.42rem;font-weight:700}
+.scroll-hint{
+  position:absolute;bottom:1.7rem;left:50%;transform:translateX(-50%);z-index:2;
+  font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;color:rgba(242,231,213,.82);
+  text-shadow:0 1px 6px rgba(28,23,20,.7);
+  animation:bob 2.6s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,7px)}}
+
+/* ══ NAV ═══════════════════════════════════════════════════════ */
+nav{
+  position:sticky;top:0;z-index:50;background:rgba(242,231,213,.93);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--rule);
+}
+nav ul{display:flex;gap:.2rem;list-style:none;margin:0;padding:0 var(--pad);
+  max-width:var(--maxw);margin-inline:auto;overflow-x:auto;scrollbar-width:none}
+nav ul::-webkit-scrollbar{display:none}
+nav a{
+  display:block;padding:.85rem .82rem;font-size:.75rem;font-weight:700;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-soft);
+  text-decoration:none;white-space:nowrap;border-bottom:2px solid transparent;
+  transition:color .18s,border-color .18s;
+}
+nav a:hover{color:var(--sienna);border-bottom-color:var(--ocre)}
+
+/* ══ SECTIONS ══════════════════════════════════════════════════ */
+section{padding-block:clamp(3.4rem,9vh,6.5rem);position:relative}
+.sec-head{margin-bottom:clamp(2rem,5vh,3.2rem)}
+.sec-num{
+  font-family:var(--body);font-size:.7rem;font-weight:800;letter-spacing:.3em;
+  color:var(--ocre-deep);text-transform:uppercase;display:block;margin-bottom:.85rem;
+}
+.sec-head h2{font-size:clamp(2rem,6vw,3.4rem);max-width:16ch}
+.sec-head p{margin-top:1rem;max-width:62ch;color:var(--ink-soft);font-size:1.05rem}
+.alt{background:var(--paper-2)}
+.dark{background:var(--night);color:var(--paper-3)}
+.dark h2,.dark h3{color:var(--paper)}
+.dark .sec-num{color:var(--ocre)}
+.dark .sec-head p{color:var(--paper-3)}
+
+/* ══ RÈGLES DU SECRET ══════════════════════════════════════════ */
+.secret{background:var(--rouge);color:#f7ece0;padding-block:clamp(2.6rem,7vh,4.4rem)}
+.secret .sec-num{color:#eec9a8}
+.secret h2{color:#fff;font-size:clamp(1.7rem,5vw,2.7rem)}
+.rules{display:grid;gap:1.4rem;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));margin-top:2.2rem}
+.rule{border-top:2px solid rgba(247,236,224,.4);padding-top:1.1rem}
+.rule b{display:block;font-family:var(--display);font-size:1.9rem;font-weight:400;
+  color:#eec9a8;line-height:1;margin-bottom:.55rem}
+.rule p{margin:0;font-size:.97rem;line-height:1.55;color:#f3e2d2}
+
+/* ══ LA CONVERGENCE — pièce maîtresse ══════════════════════════ */
+.tracks{display:grid;grid-template-columns:1fr 3px 1fr;gap:0;margin-top:1rem}
+.spine{background:linear-gradient(180deg,transparent,var(--rule) 8%,var(--rule) 82%,var(--ocre) 92%,var(--ocre));position:relative}
+.track{padding:0 clamp(.7rem,2.6vw,2rem)}
+.track h3{
+  font-size:.72rem;font-family:var(--body);font-weight:800;letter-spacing:.24em;
+  text-transform:uppercase;padding-bottom:.9rem;margin-bottom:1.6rem;
+  border-bottom:2px solid currentColor;
+}
+.track.elise h3{color:var(--lavande)}
+.track.guests h3{color:var(--olive)}
+.stop{margin-bottom:1.5rem;position:relative}
+.stop time{
+  display:block;font-family:var(--display);font-size:1.5rem;font-weight:500;
+  line-height:1;margin-bottom:.3rem;font-variant-numeric:tabular-nums;
+}
+.track.elise time{color:var(--lavande)}
+.track.guests time{color:var(--olive)}
+.stop p{margin:0;font-size:.95rem;line-height:1.5;color:var(--ink-soft)}
+.stop.warn p{color:var(--rouge);font-weight:600}
+.converge{
+  grid-column:1/-1;margin-top:1.6rem;background:var(--night);color:var(--paper);
+  padding:clamp(1.6rem,5vw,2.8rem);text-align:center;position:relative;overflow:hidden;
+}
+.converge::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(70% 130% at 50% 0%,rgba(200,121,31,.5),transparent 68%);
+}
+.converge>*{position:relative}
+.converge time{
+  display:block;font-family:var(--display);font-size:clamp(3rem,13vw,6.2rem);
+  font-weight:400;line-height:.9;color:var(--ocre);font-variant-numeric:tabular-nums;
+  font-variation-settings:'SOFT' 40,'WONK' 1;
+}
+.converge strong{
+  display:block;margin-top:.6rem;font-size:clamp(1.05rem,3.4vw,1.5rem);
+  font-family:var(--display);font-weight:500;color:var(--paper);letter-spacing:.01em;
+}
+.converge span{display:block;margin-top:.55rem;font-size:.86rem;color:var(--paper-3);
+  letter-spacing:.13em;text-transform:uppercase}
+@media (max-width:720px){
+  .tracks{grid-template-columns:1fr}
+  .spine{display:none}
+  .track{padding:0;margin-bottom:2.2rem}
+}
+
+/* ══ PROGRAMME ═════════════════════════════════════════════════ */
+.prog{display:grid;gap:0;margin-top:.5rem}
+.slot{
+  display:grid;grid-template-columns:clamp(70px,13vw,110px) 1fr;gap:clamp(.9rem,3vw,2rem);
+  padding:1.15rem 0;border-top:1px solid var(--rule);align-items:start;
+}
+.slot:last-child{border-bottom:1px solid var(--rule)}
+.slot time{
+  font-family:var(--display);font-size:clamp(1.05rem,3.2vw,1.4rem);font-weight:500;
+  color:var(--ocre-deep);line-height:1.2;font-variant-numeric:tabular-nums;
+}
+.slot h4{font-size:1.12rem;font-weight:600;margin-bottom:.28rem}
+.slot p{margin:0;font-size:.95rem;color:var(--ink-soft);line-height:1.55}
+.slot.hot{background:linear-gradient(90deg,rgba(200,121,31,.16),transparent 72%);
+  margin-inline:calc(var(--pad) * -.4);padding-inline:calc(var(--pad) * .4)}
+.slot.hot h4{color:var(--rouge)}
+.dark .slot{border-color:rgba(195,172,140,.24)}
+.dark .slot p{color:var(--paper-3)}
+.dark .slot time{color:var(--ocre)}
+.tag{
+  display:inline-block;font-size:.63rem;font-weight:800;letter-spacing:.15em;
+  text-transform:uppercase;padding:.22rem .55rem;margin-left:.5rem;vertical-align:2px;
+  background:var(--rouge);color:#f7ece0;
+}
+
+/* ══ CARDS ═════════════════════════════════════════════════════ */
+.cards{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(265px,1fr))}
+.card{background:var(--paper);border:1px solid var(--rule);padding:1.5rem;position:relative}
+.alt .card{background:var(--paper)}
+.dark .card{background:var(--night-2);border-color:rgba(195,172,140,.24)}
+.card h3{font-size:1.28rem;margin-bottom:.6rem}
+.card p:last-child{margin-bottom:0}
+.card p{font-size:.95rem;color:var(--ink-soft)}
+.dark .card p{color:var(--paper-3)}
+.card .price{
+  font-family:var(--display);font-size:1.9rem;color:var(--ocre-deep);
+  font-weight:500;display:block;margin-bottom:.3rem;
+}
+
+/* ══ CHECKLIST ═════════════════════════════════════════════════ */
+.check{display:grid;gap:.1rem;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));margin-top:1.4rem}
+.check label{
+  display:flex;gap:.85rem;align-items:flex-start;padding:.72rem .85rem;cursor:pointer;
+  border:1px solid transparent;transition:background .16s,border-color .16s;
+  font-size:.97rem;min-height:44px;
+}
+.check label:hover{background:rgba(200,121,31,.09);border-color:var(--rule)}
+.check input{
+  appearance:none;width:20px;height:20px;flex:0 0 20px;margin-top:2px;
+  border:2px solid var(--ocre-deep);background:transparent;cursor:pointer;position:relative;
+}
+.check input:checked{background:var(--ocre-deep)}
+.check input:checked::after{
+  content:"";position:absolute;left:5px;top:1px;width:5px;height:11px;
+  border:solid var(--paper);border-width:0 2.5px 2.5px 0;transform:rotate(43deg);
+}
+.check input:focus-visible{outline:2px solid var(--sienna);outline-offset:2px}
+.check input:checked+span{text-decoration:line-through;color:var(--ink-faint)}
+.check-bar{margin-top:1.3rem;height:5px;background:var(--paper-3);overflow:hidden}
+.check-bar i{display:block;height:100%;width:0;background:var(--ocre);transition:width .3s ease}
+.check-count{font-size:.8rem;color:var(--ink-faint);margin-top:.55rem;letter-spacing:.06em}
+
+/* ══ TABLE ═════════════════════════════════════════════════════ */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:1.4rem}
+table{border-collapse:collapse;width:100%;min-width:430px;font-size:.94rem}
+th,td{text-align:left;padding:.72rem .9rem;border-bottom:1px solid var(--rule)}
+th{font-family:var(--body);font-size:.68rem;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ocre-deep)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:none;font-size:1rem}
+
+/* ══ CTA / FOOT ════════════════════════════════════════════════ */
+.cta{
+  display:inline-flex;align-items:center;gap:.65rem;background:var(--rouge);color:#f7ece0;
+  padding:.95rem 1.7rem;font-weight:700;font-size:.88rem;letter-spacing:.13em;
+  text-transform:uppercase;text-decoration:none;transition:background .2s,transform .2s;
+  min-height:44px;
+}
+.cta:hover{background:var(--sienna);color:#fff;transform:translateY(-2px)}
+.cta.ghost{background:transparent;border:2px solid var(--ocre);color:var(--ocre)}
+.cta.ghost:hover{background:var(--ocre);color:var(--night)}
+.faq{border-top:1px solid var(--rule)}
+.faq details{border-bottom:1px solid var(--rule)}
+.faq summary{
+  padding:1.05rem 0;cursor:pointer;font-weight:700;font-size:1.02rem;list-style:none;
+  display:flex;justify-content:space-between;gap:1rem;align-items:center;min-height:44px;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--display);font-size:1.5rem;color:var(--ocre);
+  transition:transform .22s;line-height:1}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq p{padding:0 0 1.1rem;margin:0;color:var(--ink-soft);max-width:70ch;font-size:.97rem}
+footer{background:var(--night);color:var(--ink-faint);padding-block:3rem;font-size:.86rem}
+footer strong{color:var(--paper-3)}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .65s ease,transform .65s ease}
+.reveal.in{opacity:1;transform:none}
+@media print{
+  body::before,nav,.scroll-hint,.cta{display:none}
+  .hero,.dark,.secret{background:#fff!important;color:#000!important}
+  .hero h1,.dark h2,.secret h2{color:#000!important}
+  section{padding-block:1.2rem;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<header class="hero">
+  <div class="strata"></div>
+  <div class="wrap">
+    <p class="kicker">Samedi 3 &amp; dimanche 4 octobre 2026 · Luberon</p>
+    <h1>Elise<em>a trente ans</em></h1>
+    <div class="hero-meta">
+      <span>🤫&nbsp; <b>Elle ne sait rien</b></span>
+      <span>📍&nbsp; <b>Luberon</b>, 50 min au nord d'Aix</span>
+      <span>🎯&nbsp; <b>H = samedi 17h00</b></span>
+    </div>
+    <div class="count" id="count" aria-live="polite" aria-label="Compte à rebours">
+      <div><b id="cd">—</b><small>jours</small></div>
+      <div><b id="ch">—</b><small>heures</small></div>
+      <div><b id="cm">—</b><small>minutes</small></div>
+      <div><b id="cs">—</b><small>secondes</small></div>
+    </div>
+  </div>
+  <p class="scroll-hint">↓ le plan</p>
+</header>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav>
+  <ul>
+    <li><a href="#secret">Le secret</a></li>
+    <li><a href="#plan">Le plan</a></li>
+    <li><a href="#samedi">Samedi</a></li>
+    <li><a href="#dimanche">Dimanche</a></li>
+    <li><a href="#lieu">Le lieu</a></li>
+    <li><a href="#sac">Dans le sac</a></li>
+    <li><a href="#budget">Budget</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════ LE SECRET ═══════════ -->
+<section id="secret" class="secret">
+  <div class="wrap">
+    <span class="sec-num">01 — La seule chose qui compte</span>
+    <h2>Cinq semaines de silence. Ne craquez pas maintenant.</h2>
+    <div class="rules">
+      <div class="rule">
+        <b>01</b>
+        <p><strong>Rien en ligne avant dimanche soir.</strong> Pas de story, pas de post, pas de tag, pas de photo du gîte. Instagram a tué plus d'anniversaires surprise que les bavards.</p>
+      </div>
+      <div class="rule">
+        <b>02</b>
+        <p><strong>Vérifiez le destinataire.</strong> Avant chaque message. Un « hâte d'être à samedi&nbsp;! » envoyé dans la mauvaise fenêtre, et cinq semaines tombent.</p>
+      </div>
+      <div class="rule">
+        <b>03</b>
+        <p><strong>Vous ne savez rien.</strong> Si vous croisez Elise d'ici le 3&nbsp;octobre&nbsp;: groupe en sourdine, visage impassible, sujet changé.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ LE PLAN ═══════════ -->
+<section id="plan" class="reveal">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">02 — La mécanique</span>
+      <h2>Deux trajectoires, un seul point de rencontre</h2>
+      <p>Pour Elise, c'est un week-end en amoureux dans le Luberon. Le prétexte tient parce qu'il est vrai à 90&nbsp;%&nbsp;: le marché et les ocres, on les fait réellement tous les deux. Elle passera la porte du gîte en pensant venir chercher les clés.</p>
+    </div>
+    <div class="tracks">
+      <div class="track elise">
+        <h3>Elise &amp; Max</h3>
+        <div class="stop"><time>09h30</time><p>Départ d'Aix, en amoureux</p></div>
+        <div class="stop"><time>10h30</time><p>Marché d'Apt — le samedi matin uniquement, le plus grand marché provençal du Luberon</p></div>
+        <div class="stop"><time>13h00</time><p>Déjeuner en terrasse à Apt</p></div>
+        <div class="stop"><time>14h00</time><p>Sentier des Ocres à Roussillon — les anciennes carrières, deux boucles au choix</p></div>
+        <div class="stop warn"><time>16h40</time><p>⚠️ Confirmation SMS du co-admin avant de reprendre la route. Pas de feu vert, on fait traîner.</p></div>
+        <div class="stop"><time>16h45</time><p>« On passe prendre les clés du gîte » — le dernier mensonge du week-end</p></div>
+      </div>
+      <div class="spine" aria-hidden="true"></div>
+      <div class="track guests">
+        <h3>Les invités</h3>
+        <div class="stop warn"><time>14h30</time><p>⚠️ Arrivée au gîte. Voiture <strong>derrière la maison</strong>, hors de vue de l'allée.</p></div>
+        <div class="stop"><time>15h00</time><p>Déco, courses au frais, table dressée</p></div>
+        <div class="stop"><time>15h30</time><p>Enceinte branchée et <em>testée</em> — pas à 17h01</p></div>
+        <div class="stop warn"><time>16h30</time><p>⚠️ Silence radio. Tout le monde à l'intérieur. Personne dans le jardin.</p></div>
+        <div class="stop"><time>16h40</time><p>Le co-admin envoie « on est prêts »</p></div>
+      </div>
+      <div class="converge">
+        <time>17h00</time>
+        <strong>Elle ouvre la porte</strong>
+        <span>Bon anniversaire Elise</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SAMEDI ═══════════ -->
+<section id="samedi" class="alt reveal">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">03 — Samedi 3 octobre</span>
+      <h2>Votre journée, heure par heure</h2>
+      <p>Le timing du bas de tableau est indicatif. Celui du haut ne l'est pas.</p>
+    </div>
+    <div class="prog">
+      <div class="slot hot"><time>14h30</time><div><h4>Arrivée au gîte <span class="tag">critique</span></h4><p>Garez-vous derrière la maison. Une voiture connue dans l'allée et la surprise est morte avant d'avoir commencé.</p></div></div>
+      <div class="slot"><time>15h00</time><div><h4>Installation</h4><p>Déco et banderole, courses au frais, table dressée pour douze, chambres attribuées.</p></div></div>
+      <div class="slot hot"><time>16h30</time><div><h4>Silence radio <span class="tag">critique</span></h4><p>Tout le monde à l'intérieur. Pas de fumeur dans le jardin, pas de conversation qui porte. Ils sont à dix minutes.</p></div></div>
+      <div class="slot hot"><time>17h00</time><div><h4>🎉 Elle entre</h4><p>Le moment pour lequel vous avez tenu cinq semaines.</p></div></div>
+      <div class="slot"><time>17h30</time><div><h4>Apéro provençal &amp; pétanque</h4><p>Le soleil se couche vers 19h15 — profitez du jardin tant qu'il fait jour. Prévoyez une petite laine, il fera 11&nbsp;°C à la nuit.</p></div></div>
+      <div class="slot"><time>20h00</time><div><h4>Dîner</h4><p>Cuisiné sur place, chacun son poste. La répartition est dans le groupe WhatsApp.</p></div></div>
+      <div class="slot"><time>22h30</time><div><h4>Gâteau, 30 bougies, discours</h4><p>Le gâteau est géré — n'en apportez pas. Quelqu'un a pensé aux allumettes&nbsp;: vérifiez-le, personne n'y pense jamais.</p></div></div>
+      <div class="slot"><time>23h30</time><div><h4>« 30 ans en 30 titres »</h4><p>Playlist collaborative. Le lien est dans le groupe — remplissez-la avant, pas le soir même.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ DIMANCHE ═══════════ -->
+<section id="dimanche" class="dark reveal">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">04 — Dimanche 4 octobre</span>
+      <h2>Doucement, mais pas au lit</h2>
+      <p>Deux activités, aucune obligation. Un sondage tranche à J-3, quand la météo devient fiable.</p>
+    </div>
+    <div class="prog">
+      <div class="slot"><time>09h30</time><div><h4>Petit-déjeuner en terrasse</h4><p>Viennoiseries prises la veille au marché d'Apt.</p></div></div>
+      <div class="slot"><time>11h00</time><div><h4>Forêt des Cèdres, Bonnieux</h4><p>Boucle facile d'environ une heure sous les cèdres de l'Atlas, panorama sur tout le Luberon. Accessible à tous, y compris après une nuit courte.</p></div></div>
+      <div class="slot"><time>13h00</time><div><h4>Déjeuner</h4><p>Les restes du samedi, ou une terrasse à Lourmarin — quinze minutes de route.</p></div></div>
+      <div class="slot"><time>15h00</time><div><h4>Dégustation aux caves</h4><p>Caves Louérion, Cucuron ou Lourmarin. Ouvert 10h-12h30 et 14h30-19h. AOP Luberon, cuvées bio et médaillées. Groupe annoncé à l'avance.</p></div></div>
+      <div class="slot"><time>17h00</time><div><h4>Rangement et état des lieux</h4><p>Comptez 45 minutes. À douze, un gîte se salit vite — et la caution s'en souvient.</p></div></div>
+      <div class="slot"><time>17h45</time><div><h4>Retour sur Aix</h4><p>Environ 50 minutes.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ LE LIEU ═══════════ -->
+<section id="lieu" class="reveal">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">05 — Le lieu</span>
+      <h2>Où on dort, comment on y va</h2>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <h3>Le gîte</h3>
+        <p><strong>[NOM DU GÎTE]</strong><br>[ADRESSE COMPLÈTE]<br>[CODE POSTAL] [COMMUNE]</p>
+        <p>Check-in dès 14h30 · Check-out dimanche 11h</p>
+        <p><a class="cta ghost" href="[LIEN GOOGLE MAPS]" target="_blank" rel="noopener">Itinéraire →</a></p>
+      </div>
+      <div class="card">
+        <h3>Le parking</h3>
+        <p>Derrière la maison, hors de vue de l'allée d'accès. C'est la consigne qui rend la surprise possible.</p>
+        <p>Si tout est plein, garez-vous [PLAN B PARKING] — jamais dans l'allée.</p>
+      </div>
+      <div class="card">
+        <h3>Covoiturage</h3>
+        <p>Départ groupé d'Aix-en-Provence. Les équipages sont formés à partir du sondage transport et diffusés dans le groupe à J-7.</p>
+        <p>Environ 50 minutes de route, 50 km.</p>
+      </div>
+      <div class="card">
+        <h3>En cas de pépin</h3>
+        <p>Retard, panne, galère de GPS&nbsp;: appelez <strong>[CO-ADMIN]</strong> au <a href="tel:[TEL]">[TÉLÉPHONE]</a>.</p>
+        <p>Max sera avec Elise et ne pourra pas décrocher.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ DANS LE SAC ═══════════ -->
+<section id="sac" class="alt reveal">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">06 — Dans le sac</span>
+      <h2>La liste qu'on oublie</h2>
+      <p>Cochez au fur et à mesure — c'est enregistré dans votre navigateur.</p>
+    </div>
+    <div class="check" id="check">
+      <label><input type="checkbox" data-k="1"><span>Drap housse + taie d'oreiller</span></label>
+      <label><input type="checkbox" data-k="2"><span>Serviette de toilette</span></label>
+      <label><input type="checkbox" data-k="3"><span>Chaussures de marche (dimanche)</span></label>
+      <label><input type="checkbox" data-k="4"><span>Une petite laine — 11 °C la nuit</span></label>
+      <label><input type="checkbox" data-k="5"><span>Trousse de toilette</span></label>
+      <label><input type="checkbox" data-k="6"><span>Chargeur de téléphone</span></label>
+      <label><input type="checkbox" data-k="7"><span>Maillot de bain (les courageux)</span></label>
+      <label><input type="checkbox" data-k="8"><span>Votre poste du dîner</span></label>
+      <label><input type="checkbox" data-k="9"><span>Votre part réglée avant samedi</span></label>
+      <label><input type="checkbox" data-k="10"><span>Un jeu de société (plan B pluie)</span></label>
+      <label><input type="checkbox" data-k="11"><span>Rien posté en ligne 🤐</span></label>
+    </div>
+    <div class="check-bar"><i id="bar"></i></div>
+    <p class="check-count" id="ccount">0 sur 11</p>
+  </div>
+</section>
+
+<!-- ═══════════ BUDGET ═══════════ -->
+<section id="budget" class="reveal">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">07 — Budget</span>
+      <h2>120 € par personne, tout compris</h2>
+      <p>Base 12 personnes. Le cadeau commun est à part — un sondage dédié fixe le montant.</p>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Poste</th><th class="n">Total</th><th class="n">Par pers.</th></tr></thead>
+        <tbody>
+          <tr><td>Gîte 12 personnes, 1 nuit</td><td class="n">750 €</td><td class="n">62,50 €</td></tr>
+          <tr><td>Taxe de séjour</td><td class="n">25 €</td><td class="n">2,10 €</td></tr>
+          <tr><td>Ménage de fin de séjour</td><td class="n">80 €</td><td class="n">6,70 €</td></tr>
+          <tr><td>Courses — apéro, dîner, petit-déj</td><td class="n">300 €</td><td class="n">25,00 €</td></tr>
+          <tr><td>Vin et boissons</td><td class="n">90 €</td><td class="n">7,50 €</td></tr>
+          <tr><td>Sentier des Ocres</td><td class="n">42 €</td><td class="n">3,50 €</td></tr>
+          <tr><td>Dégustation dimanche</td><td class="n">gratuit</td><td class="n">—</td></tr>
+          <tr><td>Gâteau et bougies</td><td class="n">45 €</td><td class="n">3,75 €</td></tr>
+          <tr><td>Décoration</td><td class="n">40 €</td><td class="n">3,35 €</td></tr>
+          <tr><td>Essence et péages</td><td class="n">60 €</td><td class="n">5,00 €</td></tr>
+        </tbody>
+        <tfoot><tr><td>Total</td><td class="n">1 432 €</td><td class="n">120 €</td></tr></tfoot>
+      </table>
+    </div>
+    <p style="margin-top:1.6rem;max-width:64ch;color:var(--ink-soft)">
+      Elise ne paie rien&nbsp;: sa part est répartie sur le groupe. Le règlement se fait
+      <strong>avant samedi</strong> — sur place, personne n'a la tête à ça.
+    </p>
+    <p><a class="cta" href="[LIEN CAGNOTTE]" target="_blank" rel="noopener">Régler ma part →</a></p>
+  </div>
+</section>
+
+<!-- ═══════════ FAQ ═══════════ -->
+<section id="faq" class="alt reveal">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">08 — Questions</span>
+      <h2>Ce qu'on va vous demander</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Je ne peux pas être là à 14h30, c'est grave ?</summary><p>Arrivez avant 16h15 et tout va bien. Après 16h30, non&nbsp;: le silence radio est commencé, une voiture qui remonte l'allée à 16h50 se croise avec la leur. Dans ce cas, prévenez le co-admin et attendez à l'écart qu'on vous fasse signe.</p></details>
+      <details><summary>Je ne dors pas sur place, je paie quand même ?</summary><p>Une part réduite, sans l'hébergement — environ 55 €. Dites-le dans le sondage présence pour qu'on ajuste.</p></details>
+      <details><summary>Je peux venir avec mon conjoint / mes enfants ?</summary><p>Oui, un sondage dédié est là pour ça. Répondez-y vite&nbsp;: c'est le nombre exact qui détermine le gîte, et le gîte se réserve à J-28.</p></details>
+      <details><summary>Draps et serviettes, fournis ou pas ?</summary><p>À confirmer selon le gîte retenu. Par défaut, considérez que <strong>non</strong> et mettez drap housse, taie et serviette dans le sac. C'est le supplément surprise le plus fréquent en location.</p></details>
+      <details><summary>Et s'il pleut ?</summary><p>La pétanque devient jeux de société au coin du feu, la rando du dimanche devient une dégustation avancée au matin. Le gîte est choisi pour avoir un grand séjour couvert — c'est le premier critère de la sélection.</p></details>
+      <details><summary>Vraiment aucune photo en ligne ?</summary><p>Aucune, jusqu'à dimanche soir. Prenez-en autant que vous voulez, gardez-les. L'album partagé est ouvert le dimanche soir et l'embargo est levé à ce moment-là.</p></details>
+      <details><summary>Elise se doute de quelque chose. Qu'est-ce que je fais ?</summary><p>Vous n'improvisez pas, et vous ne confirmez rien. Vous prévenez Max en privé — jamais dans le groupe, et jamais depuis un téléphone qu'elle peut voir. C'est lui qui ajuste le prétexte.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Les 30 ans d'Elise</strong> — samedi 3 &amp; dimanche 4 octobre 2026, Luberon.</p>
+    <p>Page privée. Ne la partagez pas, ne l'indexez pas, ne l'envoyez pas dans une conversation où Elise pourrait la voir.</p>
+    <p>Une question&nbsp;: le groupe WhatsApp. Une urgence le jour J&nbsp;: <strong>[CO-ADMIN]</strong>, <a href="tel:[TEL]" style="color:var(--ocre)">[TÉLÉPHONE]</a>.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ── Compte à rebours jusqu'au samedi 3 octobre 2026, 17h00 (CEST) ── */
+  var TARGET = new Date("2026-10-03T17:00:00+02:00").getTime();
+  var f = ["cd","ch","cm","cs"].map(function(id){ return document.getElementById(id); });
+
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+
+  function tick(){
+    var left = TARGET - Date.now();
+    if (left <= 0){
+      var box = document.getElementById("count");
+      if (box) box.innerHTML = '<div style="min-width:auto"><b>🎉</b><small>elle est entrée</small></div>';
+      return;
+    }
+    var s = Math.floor(left / 1000);
+    var v = [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60];
+    for (var i = 0; i < 4; i++){
+      if (f[i]) f[i].textContent = i === 0 ? v[i] : pad(v[i]);
+    }
+    setTimeout(tick, 1000);
+  }
+  tick();
+
+  /* ── Checklist persistée (localStorage peut lever : navigation privée) ── */
+  var KEY = "anniv-elise-sac";
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("#check input"));
+  var bar = document.getElementById("bar");
+  var count = document.getElementById("ccount");
+
+  function read(){
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); }
+    catch (e) { return {}; }
+  }
+  function write(state){
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { /* quota, navigation privée, cookies bloqués : on continue */ }
+  }
+  function paint(){
+    var done = boxes.filter(function(b){ return b.checked; }).length;
+    if (bar) bar.style.width = (boxes.length ? done / boxes.length * 100 : 0) + "%";
+    if (count) count.textContent = done + " sur " + boxes.length;
+  }
+
+  var saved = read();
+  boxes.forEach(function(b){
+    if (saved[b.dataset.k]) b.checked = true;
+    b.addEventListener("change", function(){
+      var state = read();
+      if (b.checked) state[b.dataset.k] = 1; else delete state[b.dataset.k];
+      write(state);
+      paint();
+    });
+  });
+  paint();
+
+  /* ── Apparition au défilement ── */
+  if ("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
+    document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll(".reveal").forEach(function(el){ el.classList.add("in"); });
+  }
+})();
+</script>
+</body>
+</html>

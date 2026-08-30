@@ -1,0 +1,6 @@
+# Données personnelles des invités — JAMAIS commitées.
+# Régénérables via `python3 whatsapp/build_contacts.py` (le fichier source
+# reste en local, hors dépôt).
+whatsapp/contacts.vcf
+whatsapp/contacts.csv
+whatsapp/contacts_source.txt
