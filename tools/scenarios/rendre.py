@@ -344,10 +344,16 @@ REGLE = ("<b>Un beat ordinaire.</b> Vous posez une tuile d'action et une rune de
 
 def main():
     DST.mkdir(parents=True, exist_ok=True)
-    cibles = sys.argv[1:] or [p.stem for p in sorted(SRC.glob("*.json"))]
+    # UN CHEMIN OU UNE CLE. Le corpus vit dans data/scenarios/, mais une quete GENEREE arrive
+    # d'ailleurs — de la VM, d'un dossier de travail — et la copier dans le corpus pour la lire
+    # la ferait entrer dans les exemples d'entrainement avant d'avoir ete relue. On accepte donc
+    # un chemin tel quel.
+    cibles = [pathlib.Path(a) for a in sys.argv[1:]] or sorted(SRC.glob("*.json"))
     faits = []
-    for cle in cibles:
-        q = json.loads((SRC / (cle + ".json")).read_text(encoding="utf-8"))
+    for c in cibles:
+        src = c if c.suffix == ".json" else (SRC / (str(c) + ".json"))
+        cle = src.stem
+        q = json.loads(src.read_text(encoding="utf-8"))
         page, orph = rendre(q)
         out = DST / (cle + ".html")
         out.write_text(page, encoding="utf-8")
