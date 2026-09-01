@@ -28,9 +28,16 @@ NOM = re.compile(r"(?<=[a-zéèêàç,] )([A-ZÉÈÀÇ][a-zéèêàçâîôûï�
 FAUX_NOMS = {"Vous", "Votre", "Vos", "Elle", "Elles", "Ils", "Cela", "Merlin"}
 # Les figures de style que les regles d'ecriture interdisent, et que le modele remet toujours.
 IMAGES = re.compile(r"\b(?:comme si|comme un|comme une|tel un|telle une|on dirait|pareil à)\b", re.I)
-# Le decor d'interieur : le defaut mesure sur q82, ou le beat 3 ouvrait une porte en chene dans
-# une foret. On ne peut pas savoir si le lieu a un interieur — donc on COMPTE, on ne juge pas.
-DEDANS = re.compile(r"\b(?:porte|pièce|chambre|couloir|escalier|plafond|cheminée|fenêtre)\b", re.I)
+# LE BATIMENT INVENTE : q82 ouvrait une porte en chene dans une foret, q86 y a construit une
+# « petite hutte en pierre ». Mon premier detecteur ratait la hutte — je l'avais ecrit a partir
+# des mots de q82 au lieu de la classe entiere, et un garde-fou taille sur un seul cas ne protege
+# que de ce cas. On ne peut pas savoir si le lieu a un abri : on COMPTE, on ne juge pas.
+DEDANS = re.compile(r"\b(?:porte|pièce|chambre|couloir|escalier|plafond|cheminée|fenêtre"
+                    r"|hutte|maison|cabane|toit|mur|seuil|abri|bâtisse)\b", re.I)
+# LA FIGURE QUI NE FAIT QUE REGARDER. q86 donne seize noms et pas un desir : Aveline regarde,
+# fixe, incline la tete, baisse les yeux, et rien n'en decoule. C'est le defaut que Maxime a nomme
+# sur p74 — « Kado nous suit mais aucune consequence ». Repere du corpus ecrit a la main plus bas.
+REGARDS = re.compile(r"\b(?:regarde|fixe|observe|incline|baisse les yeux|contemple)\w*", re.I)
 
 
 def hors_dialogue(t):
@@ -48,6 +55,7 @@ def lire(q, nom):
     images = IMAGES.findall(nu)
     dedans = sorted({b["n"] for b in B if DEDANS.search(str(b.get("scene", "")))})
     dialogues = txt.count("«")
+    regards = REGARDS.findall(txt)
     longueurs = [len(str(b.get("scene", ""))) + len(str(b.get("issue", ""))) for b in B]
 
     print("\n%s — %d beats" % (nom, len(B)))
@@ -58,6 +66,8 @@ def lire(q, nom):
           (" : " + ", ".join(sorted(set(x.lower() for x in images)))) if images else ""))
     print("  interieurs  beats citant porte/pièce/cheminée : %s" % (dedans or "aucun"))
     print("  dialogue    %d replique(s) entre guillemets" % dialogues)
+    print("  regards     %d verbe(s) de simple regard (%.1f par beat) — les figures agissent-elles ?"
+          % (len(regards), len(regards) / max(1, len(B))))
     print("  longueurs   %d car. au total · %d le beat le plus court · %d le plus long"
           % (sum(longueurs), min(longueurs), max(longueurs)))
     return {"tu": tu, "vous": vs, "noms": len(noms), "images": len(images)}

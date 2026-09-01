@@ -228,6 +228,21 @@ func _marche(k: int, n: int) -> String:
 	return "DERNIER OBSTACLE. Un empechement concret, juste avant la fin."
 
 
+## CE QUI EST EN JEU, DIT AUTREMENT SELON L'ENDROIT DE LA QUETE. q86 a donne le Rameau Fendu au
+## beat 1 et l'Eclat au beat 2 : chaque prompt lui annoncait ce que la quete devait rapporter, il
+## a lu une liste de courses et l'a faite immediatement. Il ne restait rien a jouer sur six beats.
+## Le but est donc un ENJEU tant qu'on n'est pas au bout, et une ACQUISITION seulement au dernier
+## beat — ou il est enfin question de repartir avec quelque chose.
+func _enjeu(ch: Dictionary, k: int, n: int) -> String:
+	var quoi: String = str(ch.get("ramene", ""))
+	if quoi == "":
+		return ""
+	if k == n:
+		return "CE QUE LE VOYAGEUR REPART AVEC, ET C'EST MAINTENANT QUE CA SE JOUE : " + quoi
+	return ("CE QUI EST EN JEU, ET QUE LE VOYAGEUR N'OBTIENT PAS ENCORE : %s. "
+		+ "Ne le lui accorde pas dans ce beat, et ne le lui fais pas tenir en main.") % quoi
+
+
 func _repiocher(main: Array) -> String:
 	var libres: Array = []
 	for r in RUNES.keys():
@@ -244,7 +259,9 @@ const REGLES: String = """REGLES D'ECRITURE, sans exception :
 - VOUVOIEMENT toujours : « Vous voyez », jamais « Tu vois ». Seule une figure qui parle peut tutoyer, et seulement entre guillemets.
 - Langue simple. Aucune metaphore, aucune comparaison, aucune phrase retournee. Jamais « comme si », « tel un », « on dirait ». On dit ce qui se passe, dans l'ordre.
 - Chaque figure a un NOM et veut quelque chose. Jamais « une femme au visage fatigue ».
-- On reste dans le lieu nomme. N'invente ni piece, ni porte, ni maison, ni feu qui ne s'y trouve pas.
+- On reste dans le lieu nomme. N'invente AUCUN batiment : ni hutte, ni maison, ni toit, ni piece, ni porte, ni feu. Si le lieu est un bois, on reste sous les arbres.
+- Un objet est a UN SEUL endroit. S'il change de main, dis-le au moment ou ca arrive ; sinon il reste ou il etait.
+- Une figure presente AGIT et VEUT quelque chose. Elle ne se contente jamais de regarder, de fixer ou d'incliner la tete.
 - Aucune question posee au lecteur.
 - Le mystere est dans l'ambiance, jamais dans le sens. Une phrase qui sonne profonde et ne veut rien dire est interdite.
 - L'issue ne redit pas la scene : elle la deplace. Si la derniere phrase pouvait etre la premiere, recommence.
@@ -315,7 +332,7 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
 		+ "(« Vous voyez », jamais « Tu vois »).")
 	var usr: String = ("%s\n\nTOUTE LA SCENE SE PASSE ICI, ET NULLE PART AILLEURS : %s. %s\n"
-		+ "FIGURES D'ICI : %s\nCE QUI S'Y JOUE : %s\nCE QUE LA QUETE DOIT RAPPORTER : %s\n%s\n\n"
+		+ "FIGURES D'ICI : %s\nCE QUI S'Y JOUE : %s\n%s\n%s\n\n"
 		+ "CE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n"
 		+ "Ecris le beat %d sur %d, EXACTEMENT dans cette forme et rien d'autre :\n"
 		+ "SCENE: trois phrases courtes. Elle decoule de ce qui precede et finit sur un instant "
@@ -329,7 +346,7 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 		+ "TUILE %s\nRUNE, une seule de cette main : %s\n"
 		+ "CE QUE DONNE LE GESTE : %s") % [
 			REGLES, str(lieu.get("nom", "")), str(lieu.get("resume", "")), noms,
-			str(ch.get("sujet", "")), str(ch.get("ramene", "")),
+			str(ch.get("sujet", "")), _enjeu(ch, k, n),
 			("CE QUI PRECEDE : " + precedent) if precedent != "" else "C'est le premier beat.",
 			_marche(k, n), k, n,
 			("imposee : " + tuile_imposee) if tuile_imposee != "" else ("au choix : " + ", ".join(TUILES)),
@@ -374,7 +391,7 @@ func _beat_choix(ch: Dictionary, forme: Dictionary, precedent: String, k: int, n
 	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
 		+ "(« Vous voyez », jamais « Tu vois »).")
 	var usr: String = ("%s\n\nCE QUI PRECEDE : %s\nCE QUI S'Y JOUE : %s\n"
-		+ "CE QUE LA QUETE DOIT RAPPORTER : %s\nCE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n"
+		+ "%s\nCE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n"
 		+ "Ecris un beat de DECISION (%s), ainsi :\n"
 		+ "SCENE: deux phrases qui posent le choix, sans le resoudre.\n"
 		+ "OPTION: <ce qu'on fait> || <ce que ca entraine>\n"
@@ -383,7 +400,7 @@ func _beat_choix(ch: Dictionary, forme: Dictionary, precedent: String, k: int, n
 		+ "TROIS options, et AUCUNE ne doit etre gratuite : chacune coute quelque chose de "
 		+ "nommable. Si l'une est manifestement la bonne, recommence.") % [
 			REGLES, precedent if precedent != "" else "rien", str(ch.get("sujet", "")),
-			str(ch.get("ramene", "")), _marche(k, n), str(forme["special"])]
+			_enjeu(ch, k, n), _marche(k, n), str(forme["special"])]
 	var txt: String = await _generer(sys, usr)
 	var scene: String = ""
 	var options: Array = []
