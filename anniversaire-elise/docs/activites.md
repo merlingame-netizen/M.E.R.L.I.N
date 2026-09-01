@@ -44,18 +44,23 @@ le Luberon. **Le meilleur choix après une nuit courte** : accessible à tous,
 aucun dénivelé sérieux, et à quinze minutes de Lourmarin pour le déjeuner.
 Parking payant en haute saison, généralement libre en octobre.
 
-### Dégustation · Caves Louérion, Cucuron ou Lourmarin · gratuit
+### Dégustation · Caves Louérion, Cucuron · gratuit · **samedi après-midi**
 Ouvert **10h-12h30 et 14h30-19h**. AOP Luberon, IGP Méditerranée, cuvées bio et
 médaillées. Dégustation offerte, achat libre — c'est aussi le meilleur endroit
 pour acheter le vin du dîner, moins cher et bien meilleur qu'en grande surface.
-**Appelle au J-14** pour annoncer quinze personnes un dimanche après-midi.
+**Appelle au J-14** pour annoncer quinze personnes un samedi après-midi.
 
-### Colorado Provençal · Rustrel · 6 à 9 € par voiture
+> **Passée du dimanche au samedi** depuis le passage au créneau midi-midi : on
+> repart dimanche à midi, avant la réouverture des caves à 14h30. Le changement
+> est un gain — on rentre au gîte avec le vin du dîner.
+
+### Colorado Provençal · Rustrel · 6 à 9 € par voiture · ⚠️ ne rentre plus
 Ouvert **tous les jours 9h30-17h30 en octobre**, dernière entrée 17h30. Le tarif
 est au véhicule, pas à la personne : à quatre voitures, comptez 24 à 36 € pour
 tout le groupe, parking et application de découverte compris. Cheminées de fées
 et falaises d'ocre sur un site bien plus vaste que Roussillon.
-**Le rapport spectacle/prix le plus élevé du week-end.**
+**Écarté par le créneau raccourci** : la matinée du dimanche finit à 11h30,
+c'est trop court pour Rustrel. À garder pour une autre fois.
 Renseignements groupes : 04 90 75 04 87 · asso.colorado@orange.fr
 
 > ⚠️ Roussillon **et** Rustrel le même week-end, c'est deux fois de l'ocre.

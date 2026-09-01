@@ -1,4 +1,4 @@
-# Budget — 120 à 128 € par personne
+# Budget — 128 à 137 € réellement versés
 
 Hypothèse de calcul : **15 personnes** (Elise + toi + 13). Ajuste avec le
 résultat du sondage de présence.
@@ -23,7 +23,9 @@ ne servira début octobre, et ce n'est plus un critère de sélection.
 | Essence et péages (4 voitures) | 80 € | 80 € |
 | Taxe de séjour | 25 € | 25 € |
 | **Total** | **1 801 €** | **1 923 €** |
-| **Par personne** | **120 €** | **128 €** |
+| **Coût brut par personne** | **120 €** | **128 €** |
+| Part d'Elise répartie sur les autres | +9 € | +9 € |
+| **Montant réellement versé** | **128 €** | **137 €** |
 
 Pierre-Étoile est le troisième candidat, **sur devis** : c'est le seul à loger
 quinze personnes sous un seul toit sans être d'office le plus cher. Son devis

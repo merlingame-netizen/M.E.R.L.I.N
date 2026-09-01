@@ -1,82 +1,53 @@
-# Programme — samedi 3 & dimanche 4 octobre 2026
+# Programme — samedi 3 midi → dimanche 4 octobre 2026 midi
 
 **Où** : Luberon, 45-55 min au nord d'Aix-en-Provence.
 **Qui** : Elise, toi et les invités — **15 personnes au maximum**.
-**Format** : surprise totale. Elise croit partir en week-end en amoureux.
+**Format** : 24 heures, une seule nuit sur place. Assez pour une vraie fête,
+assez court pour que personne n'ait à poser un jour.
 
 ---
 
-## La mécanique de la surprise
+## La contrainte qui structure tout le samedi
 
-Deux trajectoires parallèles le samedi, qui se rejoignent à **17h00 précises**.
+**Aucun des trois gîtes n'ouvre avant 16h.** C'est la norme en location, et ça
+règle la question du samedi après-midi : on ne peut pas s'installer en arrivant.
 
-Le prétexte donné à Elise : *un week-end en amoureux dans le Luberon pour ses
-30 ans*. Il est solide parce qu'il est vrai à 90 % — vous faites réellement le
-marché et le Sentier des Ocres tous les deux. Elle n'a aucune raison de flairer
-quoi que ce soit avant de passer la porte du gîte.
+D'où le découpage retenu — on se retrouve à midi ailleurs qu'au gîte, on déjeune,
+on enchaîne sur une activité, et on arrive au gîte quand il ouvre. La soirée
+commence alors directement, sans temps mort.
 
-```
-TRAJECTOIRE ELISE (toi + elle)        TRAJECTOIRE INVITÉS (les 9)
-──────────────────────────────        ─────────────────────────────
-09h30  départ d'Aix
-10h30  marché d'Apt
-13h00  déjeuner à Apt
-14h00  Sentier des Ocres              14h30  arrivée au gîte
-       (Roussillon)                          voitures DERRIÈRE la maison
-                                      15h00  déco, courses, playlist
-16h45  « on passe prendre             16h30  SILENCE RADIO
-        les clés du gîte »                   tout le monde à l'intérieur
-                          ↘                ↙
-                    17h00  ELLE OUVRE LA PORTE 🎉
-```
+## Samedi 3 octobre
 
----
-
-## Samedi 3 octobre — trajectoire Elise
-
-| Heure | Quoi | Pourquoi ça marche |
-|-------|------|--------------------|
-| 09h30 | Départ d'Aix, en amoureux | Rien de suspect : c'est le week-end promis |
-| 10h30 | **Marché d'Apt** | Le samedi matin uniquement, et c'est le plus grand marché provençal du Luberon. Une raison parfaite d'être là ce jour-là |
-| 13h00 | Déjeuner en terrasse à Apt | — |
-| 14h00 | **Sentier des Ocres**, Roussillon | Ouvert 10h-17h30 en octobre, 3,50 €/pers. Deux boucles au choix (30 ou 50 min) dans les anciennes carrières d'ocre. Spectaculaire, et ça occupe l'après-midi pile au bon créneau |
-| 16h45 | « On passe prendre les clés » | Le dernier mensonge du week-end |
-| **17h00** | **Elle ouvre la porte** | 🎉 |
-
-> **Le seul vrai risque du plan** : arriver en avance. Si le Sentier des Ocres
-> se fait plus vite que prévu, fais traîner — un café sur la place de
-> Roussillon, un détour par Bonnieux. Arriver à 16h35 dans une maison encore en
-> chantier, c'est perdre cinq semaines de préparation en trente secondes.
-> **Cale une confirmation SMS du co-admin à 16h40** avant de prendre la route
-> du gîte.
-
-## Samedi 3 octobre — trajectoire invités
-
-| Heure | Quoi | Point de vigilance |
-|-------|------|--------------------|
-| 14h30 | Arrivée échelonnée au gîte | **Se garer hors de vue de l'allée.** C'est la consigne n°1 |
-| 15h00 | Déco, courses au frais, table dressée | Le chef déco pilote |
-| 15h30 | Playlist branchée, enceinte testée | Tester **avant**, pas à 17h01 |
-| 16h30 | **Silence radio** | Tout le monde à l'intérieur. Pas de fumeur dans le jardin, pas de conversation qui porte |
-| 16h40 | Le co-admin confirme « on est prêts » | Feu vert pour la trajectoire Elise |
-| **17h00** | **Elle entre** | 🎉 |
-| 17h30 | Apéro provençal + pétanque | Le soleil se couche vers 19h15 début octobre — profitez du jardin tant qu'il fait jour |
-| 20h00 | Dîner | Répartition dans le message D |
-| 22h30 | Gâteau, 30 bougies, discours | Le chef gâteau a pensé aux **allumettes**. Vérifie-le |
-| 23h30 | Playlist « 30 ans en 30 titres » | Collaborative, remplie par le groupe dès septembre |
-
----
+| Heure | Quoi | Pourquoi |
+|-------|------|----------|
+| 10h30 | **Marché d'Apt** *(optionnel)* | Le samedi matin uniquement. Pour ceux qui montent tôt — c'est là que se font les courses du dîner |
+| **12h00** | **Rendez-vous, déjeuner ensemble** | Terrasse ou pique-nique. Le point de ralliement du week-end |
+| 14h00 | **L'activité de l'après-midi** | Sentier des Ocres, dégustation à Cucuron, ou village de Lourmarin. Le vote tranche |
+| 16h30 | **Arrivée au gîte** | Dès l'ouverture. Installation, chambres, courses au frais |
+| 18h00 | Pétanque, puis apéro | Coucher du soleil vers 19h15. Petite laine : 11 °C à la nuit |
+| 20h00 | Dîner | Cuisiné sur place, chacun son poste |
+| 22h30 | Gâteau et 30 bougies | Le gâteau est géré. Vérifier les allumettes |
+| 23h30 | « 30 ans en 30 titres » | Playlist collaborative, remplie en amont |
 
 ## Dimanche 4 octobre
 
-| Heure | Quoi | Détail |
-|-------|------|--------|
-| 09h30 | Petit-déjeuner en terrasse | Viennoiseries prises la veille au marché |
-| 11h00 | **Forêt des Cèdres**, Bonnieux | Boucle facile, ~1h, sous-bois de cèdres de l'Atlas et panorama sur le Luberon. Accessible à tous, y compris après une courte nuit |
-| 13h00 | Déjeuner — restes, ou terrasse à Lourmarin | Lourmarin est à 15 min |
-| 15h00 | **Dégustation** aux caves de Cucuron ou Lourmarin | Les caves Louérion (Terres d'Alliance) ouvrent 10h-12h30 et 14h30-19h. AOP Luberon, cuvées bio et médaillées. **Appelle au J-14** pour annoncer un groupe de 12 |
-| 17h00 | Rangement, état des lieux, check-out | Prévois 45 min : à 12, un gîte se salit vite |
-| 17h45 | Retour sur Aix | ~50 min |
+| Heure | Quoi | Pourquoi |
+|-------|------|----------|
+| 09h00 | Petit-déjeuner en terrasse | Viennoiseries prises la veille au marché |
+| 10h00 | **Balade, ou pas** | Forêt des Cèdres (1h, facile) pour les courageux ; café sur la terrasse pour les autres |
+| 11h30 | Rangement et état des lieux | 45 minutes à quinze. C'est le prix de la caution |
+| 12h00 | Déjeuner rapide, puis départ | Les restes du samedi. Aix est à 50 minutes |
+
+---
+
+## Ce que le créneau raccourci a changé
+
+| Avant (sam. après-midi → dim. soir) | Maintenant (sam. midi → dim. midi) |
+|---|---|
+| Dégustation le **dimanche à 15h** | **Déplacée au samedi** — on repart avant l'ouverture de l'après-midi. Et c'est mieux : on rentre avec le vin du dîner |
+| Colorado Provençal le dimanche matin | **Écarté** — trop long pour une matinée qui finit à 11h30 |
+| Arrivée au gîte à 14h30 | **Impossible** : aucun des trois n'ouvre avant 16h |
+| Rando du dimanche sans contrainte | **1h maximum**, retour impératif à 11h30 |
 
 ---
 
