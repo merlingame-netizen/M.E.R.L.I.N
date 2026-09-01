@@ -1,0 +1,275 @@
+{
+ "id": "la_fin_du_rite",
+ "titre": "La fin du rite",
+ "monde": "penn_ar_bed",
+ "figures": [
+  "Le Chœur des Druides",
+  "Dame Aveline aux Corbeaux",
+  "Ordalc'h",
+  "Fañch le Trotteur",
+  "La Lavandière de Nuit"
+ ],
+ "main_depart": [
+  "La Patience",
+  "La Méfiance",
+  "La Franchise",
+  "L'Élan"
+ ],
+ "runes": {
+  "La Patience": "laisser venir plutôt qu'aller chercher",
+  "La Méfiance": "supposer le pire et se garder",
+  "La Franchise": "dire ce qui est, sans arranger",
+  "L'Élan": "partir avant d'être sûr",
+  "La Pitié": "s'arrêter pour ce qui souffre",
+  "L'Entêtement": "recommencer sans changer d'avis",
+  "Le Silence": "ne rien dire et laisser le vide travailler",
+  "La Ruse": "prendre par un autre bord",
+  "L'Aplomb": "tenir sa place devant plus grand que soi",
+  "Le Deuil": "accepter ce qui ne reviendra pas"
+ },
+ "gestes": {
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "RÉVÉLER": "faire venir au jour ce qui se cache",
+  "PARLER": "s'adresser à quelqu'un"
+ },
+ "bourse_depart": 14,
+ "integrite": {
+  "8": -2
+ },
+ "corruption": {
+  "11": 1
+ },
+ "preambule": [
+  "Vous êtes couché dans les fougères et vous ne vous rappelez pas vous être couché.",
+  "Autour de vous, douze menhirs forment un cercle qui n'est fermé nulle part.",
+  "Des voix chantent quelque part derrière les arbres, toujours les mêmes trois phrases.",
+  "Ici, Voyageur, tout recommence. Sauf vous."
+ ],
+ "beats": [
+  {
+   "n": 1,
+   "t": "Exploration",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le Chœur des Druides chante à vingt pas, sans vous avoir vu. Ils disent : « Le rite tient. Le rite a toujours tenu. Le rite tient. » Puis ils recommencent la première phrase.",
+   "issue": "Vous restez couché dans les fougères et vous comptez. Ils reprennent onze fois, et onze fois ils s'arrêtent au même mot. Il manque la fin, et ils ne le savent pas.",
+   "note": "OBSERVER avec La Patience : se lever tout de suite aurait interrompu la boucle avant qu'elle se répète assez pour être comptée. Marge +1, réussite sans plus.",
+   "dc": 9,
+   "at": 3,
+   "de": 7,
+   "action": "OBSERVER",
+   "rune": "La Patience"
+  },
+  {
+   "n": 2,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Une femme sort du cercle avec trois corbeaux qui la suivent à pied. Elle vous regarde vous relever et ne s'étonne pas. « Le rite se fait en trois temps », dit-elle. « En quatre. En trois. Peu importe, fais-le. »",
+   "issue": "Vous lui dites que vous les avez comptés, et qu'ils s'arrêtent toujours au même endroit. Dame Aveline aux Corbeaux ne le nie pas et ne le confirme pas. Elle vous demande de dégager l'entrée du bosquet avant d'en parler davantage, parce que c'est là que le rite se termine et qu'on n'y accède plus.",
+   "note": "PARLER avec La Franchise : lui cacher qu'on a compté aurait laissé son improvisation tenir. Dite en face, elle donne une tâche au lieu d'une réponse. Marge +3.",
+   "dc": 9,
+   "at": 3,
+   "de": 9,
+   "action": "PARLER",
+   "rune": "La Franchise",
+   "bascule": [
+    "subie",
+    "elle veut sauver son bosquet, pas vous instruire"
+   ]
+  },
+  {
+   "n": 3,
+   "t": "Épreuve",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Un frêne est tombé en travers de l'entrée du bosquet. Il est trop gros pour être roulé et ses branches sont prises dans les fougères.",
+   "issue": "Vous cassez les branches une à une et vous dégagez un passage à hauteur d'homme. Le tronc, lui, ne bouge pas. On entre maintenant dans le bosquet, mais on n'en sortira pas en courant.",
+   "note": "AGIR avec L'Élan contre un tronc trop lourd : le passage est ouvert, la sortie ne l'est pas. Marge −2, partiel — le prix est nommé et il servira au beat 11.",
+   "dc": 9,
+   "at": 0,
+   "de": 7,
+   "action": "AGIR",
+   "rune": "L'Élan"
+  },
+  {
+   "n": 4,
+   "t": "Dilemme",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Dame Aveline vous attend à l'entrée dégagée. Derrière elle, le bosquet. À votre droite, un menhir plus vieux que les autres, avec quelqu'un d'assis contre.",
+   "issue": "Vous laissez Dame Aveline devant son bosquet et vous marchez vers le vieux menhir. Elle ne vous rappelle pas. Les trois corbeaux, eux, vous suivent.",
+   "note": "Beat spécial : ni tuile, ni rune, ni dé. On choisit parmi trois propositions, et aucune n'est gratuite.",
+   "special": {
+    "genre": "choix de route",
+    "pris": 1,
+    "options": [
+     [
+      "Entrer dans le bosquet avec Dame Aveline",
+      "vous verrez la fin du rite par ses yeux, et par les siens seulement."
+     ],
+     [
+      "Aller vers le vieux menhir et celui qui est assis contre",
+      "vous laissez Dame Aveline seule devant ce qu'elle veut sauver."
+     ],
+     [
+      "Retourner écouter le Chœur compter",
+      "vous perdez le jour, et le bosquet cède un peu plus."
+     ]
+    ]
+   },
+   "bascule": [
+    "choisie",
+    "aller vers le vieux menhir"
+   ]
+  },
+  {
+   "n": 5,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Ordalc'h est assis contre le menhir et ne se lève pas. Un corbeau se pose sur la pierre au-dessus de lui. Il ne le chasse pas et il ne vous regarde pas.",
+   "issue": "Vous vous taisez, vous posez la main à plat sur la pierre et vous attendez. Au bout d'un long moment, il dit : « Salue. Puis tais-toi. » Vous l'aviez déjà fait, et c'est pour ça qu'il parle.",
+   "note": "COMBATTRE avec Le Silence : tenir sans rien dire devant quelqu'un qui ne répond pas est un effort de corps. Marge +4, réussite — le Deuil ou la Franchise auraient parlé, et il se serait tu.",
+   "dc": 9,
+   "at": 6,
+   "de": 7,
+   "action": "COMBATTRE",
+   "rune": "Le Silence"
+  },
+  {
+   "n": 6,
+   "t": "Épreuve",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le vieux menhir porte des marques sous la mousse, plus anciennes que celles des autres pierres. Ordalc'h ne les montre pas et ne les cache pas.",
+   "issue": "Vous grattez la mousse à l'ongle sur toute la hauteur. Les marques forment une suite, et la dernière est un nom : Kerdiwal. Ordalc'h dit trois mots : « C'est la fin. »",
+   "note": "RÉVÉLER avec L'Entêtement : la mousse ne part pas d'un coup, elle part en recommençant. Marge +4, réussite. Le nom est le seul objet neuf de la quête, et il ne quitte plus votre mémoire.",
+   "dc": 9,
+   "at": 3,
+   "de": 10,
+   "action": "RÉVÉLER",
+   "rune": "L'Entêtement"
+  },
+  {
+   "n": 7,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Un korrigan a posé une planche sur deux souches entre les menhirs, avec quatre choses dessus. « Trois pour deux, deux pour un, un pour rien, rien pour toi, alors ? »",
+   "issue": "Vous demandez ce qu'il a qui tienne le chant. Fañch le Trotteur vous vend une corde tressée à trois brins pour huit gwenneg, et il vous la met dans la main avant que vous ayez dit oui. Vous repartez avec la corde et six gwenneg.",
+   "note": "Beat spécial : un marchand. L'argent ne bouge que là — huit gwenneg sortent de la bourse contre un objet nommé, qui sert au beat 10.",
+   "special": {
+    "genre": "marchand",
+    "etal": [
+     [
+      "Une corde tressée à trois brins",
+      8,
+      "achetée"
+     ],
+     [
+      "Un bâton de coudrier fendu",
+      5,
+      "laissé"
+     ],
+     [
+      "Une plume de corbeau, noire",
+      2,
+      "laissée"
+     ],
+     [
+      "Un morceau de pain de la veille",
+      1,
+      "laissé"
+     ]
+    ],
+    "pris": 0
+   }
+  },
+  {
+   "n": 8,
+   "t": "Épreuve",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Vous revenez vers le Chœur avec le nom. Ils sont en train de reprendre la première phrase pour la douzième fois.",
+   "issue": "Vous dites Kerdiwal à voix haute au milieu de leur chant. Ils ne s'arrêtent pas, ils ne vous entendent pas, ils passent par-dessus votre voix et recommencent. On ne coupe pas une boucle en criant dedans.",
+   "note": "PARLER avec L'Aplomb contre un collectif qui boucle : marge −7, échec. Le geste est tenté et il rate — c'est le beat qui apprend qu'il faudra un autre bord.",
+   "dc": 9,
+   "at": 0,
+   "de": 2,
+   "action": "PARLER",
+   "rune": "L'Aplomb"
+  },
+  {
+   "n": 9,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "À la fontaine du bosquet, une femme tord un linge blanc qui n'en finit pas. Elle chantonne : « Tords avec moi. Tords, tords, et ne regarde pas ce que tu tords. »",
+   "issue": "Vous prenez l'autre bout et vous tordez avec elle sans regarder. Elle vous dit alors qui meurt si le rite s'arrête : Dame Aveline, parce qu'elle a déjà payé d'avance pour le retarder. La Lavandière de Nuit le dit comme on donne l'heure.",
+   "note": "AGIR avec La Pitié : elle demande de l'aide, jamais sans prix, et le prix ici est ce qu'on apprend. Marge +4, réussite.",
+   "dc": 9,
+   "at": 3,
+   "de": 10,
+   "action": "AGIR",
+   "rune": "La Pitié",
+   "bascule": [
+    "subie",
+    "ce que le lieu apprend sans qu'on l'ait demandé"
+   ]
+  },
+  {
+   "n": 10,
+   "t": "Dilemme",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Vous avez le nom, la corde à trois brins, et ce que la Lavandière vient de dire. Le Chœur reprend. Dame Aveline se tient à l'entrée de son bosquet et regarde ailleurs.",
+   "issue": "Vous nouez la corde aux trois brins autour du menhir de Kerdiwal et vous dites le nom en la serrant. Le Chœur s'arrête au milieu d'une phrase. Dame Aveline se retourne vers vous, et elle a compris avant vous ce que ça lui coûte.",
+   "note": "Beat spécial : un choix de dialogue. Trois propositions, aucune gratuite, et celle qu'on prend décide qui paie.",
+   "special": {
+    "genre": "choix de dialogue",
+    "pris": 0,
+    "options": [
+     [
+      "Finir le rite avec le nom et la corde",
+      "le rite s'achève, et Dame Aveline perd ce qu'elle avait payé d'avance."
+     ],
+     [
+      "Dire à Aveline ce que vous savez et la laisser choisir",
+      "elle choisira de continuer, et le bosquet cédera pendant que vous discutez."
+     ],
+     [
+      "Ne rien dire et rendre le nom à Ordalc'h",
+      "le Chœur boucle encore un siècle, et vous repartez les mains vides."
+     ]
+    ]
+   },
+   "bascule": [
+    "choisie",
+    "finir le rite avec le nom et la corde"
+   ]
+  },
+  {
+   "n": 11,
+   "t": "Épreuve",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le bosquet cède d'un coup, en commençant par le fond. Le frêne tombé bloque toujours la sortie à hauteur d'homme, et Dame Aveline est du mauvais côté.",
+   "issue": "Vous passez sous le tronc et vous la tirez par le bras jusqu'au passage. Elle se déchire l'épaule contre les branches cassées et vous sortez tous les deux. Les trois corbeaux ne sortent pas.",
+   "note": "COMBATTRE avec La Ruse : le tronc n'a pas bougé au beat 3, il ne bougera pas plus maintenant — on passe dessous. Marge −1, partiel : elle est dehors, elle est blessée, et le prix du beat 3 est payé ici.",
+   "dc": 12,
+   "at": 3,
+   "de": 8,
+   "action": "COMBATTRE",
+   "rune": "La Ruse"
+  },
+  {
+   "n": 12,
+   "t": "Climax",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le cercle est silencieux pour la première fois. Ordalc'h est debout contre son menhir. Dame Aveline tient son épaule et regarde le bosquet qui n'est plus là.",
+   "issue": "Vous ramassez au pied du menhir de Kerdiwal l'éclat que le silence a découvert, et la branche fendue qui tenait la corde. Dame Aveline vous dit : « Je le savais. Depuis le premier jour, je le savais. » Vous quittez Ar C'hoad Kozh avec le premier éclat et le Rameau Fendu.",
+   "note": "AGIR avec Le Deuil : accepter ce qui ne reviendra pas est le seul geste qui reste quand le rite est fini. Marge +2, réussite — la quête se ferme sur ce qu'elle avait annoncé, et pas sur autre chose.",
+   "dc": 12,
+   "at": 6,
+   "de": 8,
+   "action": "AGIR",
+   "rune": "Le Deuil",
+   "bascule": [
+    "subie",
+    "le rite est fini, et ce qu'il tenait est libre"
+   ]
+  }
+ ]
+}

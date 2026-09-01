@@ -32,8 +32,13 @@ IMAGES = re.compile(r"\b(?:comme si|comme un|comme une|tel un|telle une|on dirai
 # « petite hutte en pierre ». Mon premier detecteur ratait la hutte — je l'avais ecrit a partir
 # des mots de q82 au lieu de la classe entiere, et un garde-fou taille sur un seul cas ne protege
 # que de ce cas. On ne peut pas savoir si le lieu a un abri : on COMPTE, on ne juge pas.
-DEDANS = re.compile(r"\b(?:porte|pièce|chambre|couloir|escalier|plafond|cheminée|fenêtre"
-                    r"|hutte|maison|cabane|toit|mur|seuil|abri|bâtisse)\b", re.I)
+# « porte » et « mur » sont aussi des VERBES et des mots courants : « le menhir porte des
+# marques » n'est pas un batiment. Un detecteur qui crie au loup se fait ignorer, donc ceux-la
+# exigent un determinant devant. Les autres sont sans ambiguite.
+DEDANS = re.compile(r"\b(?:pièce|chambre|couloir|escalier|plafond|cheminée|fenêtre"
+                    r"|hutte|maison|cabane|bâtisse)\b"
+                    r"|\b(?:un|une|le|la|les|des|du|cette|ce|sa|son|leur)\s"
+                    r"(?:porte|murs?|seuils?|toits?|abris?)\b", re.I)
 # LA FIGURE QUI NE FAIT QUE REGARDER. q86 donne seize noms et pas un desir : Aveline regarde,
 # fixe, incline la tete, baisse les yeux, et rien n'en decoule. C'est le defaut que Maxime a nomme
 # sur p74 — « Kado nous suit mais aucune consequence ». Repere du corpus ecrit a la main plus bas.
