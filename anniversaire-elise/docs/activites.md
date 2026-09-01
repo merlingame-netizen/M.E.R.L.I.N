@@ -31,8 +31,8 @@ du dîner. Viennoiseries du dimanche à prendre au passage.
 ### Sentier des Ocres · Roussillon · 3,50 €/pers
 Ouvert **10h-17h30 en octobre**. Deux boucles au choix, environ 30 ou 50 minutes,
 dans les anciennes carrières d'ocre : falaises flamboyantes, escaliers,
-passerelles, points de vue. Gratuit pour les moins de 10 ans, **2,50 € à partir
-de 15 personnes**. Prévoir des chaussures qu'on accepte de voir devenir orange.
+passerelles, points de vue. Gratuit pour les moins de 10 ans, et **2,50 € à partir de 15 personnes — donc
+le tarif groupe s'applique si tout le monde vient**. Pense à le demander. Prévoir des chaussures qu'on accepte de voir devenir orange.
 
 ---
 
@@ -48,11 +48,11 @@ Parking payant en haute saison, généralement libre en octobre.
 Ouvert **10h-12h30 et 14h30-19h**. AOP Luberon, IGP Méditerranée, cuvées bio et
 médaillées. Dégustation offerte, achat libre — c'est aussi le meilleur endroit
 pour acheter le vin du dîner, moins cher et bien meilleur qu'en grande surface.
-**Appelle au J-14** pour annoncer douze personnes un dimanche après-midi.
+**Appelle au J-14** pour annoncer quinze personnes un dimanche après-midi.
 
 ### Colorado Provençal · Rustrel · 6 à 9 € par voiture
 Ouvert **tous les jours 9h30-17h30 en octobre**, dernière entrée 17h30. Le tarif
-est au véhicule, pas à la personne : à trois voitures, comptez 18 à 27 € pour
+est au véhicule, pas à la personne : à quatre voitures, comptez 24 à 36 € pour
 tout le groupe, parking et application de découverte compris. Cheminées de fées
 et falaises d'ocre sur un site bien plus vaste que Roussillon.
 **Le rapport spectacle/prix le plus élevé du week-end.**
@@ -102,14 +102,14 @@ qui finit à 2h : personne ne se lève. Hors sujet pour ce week-end.
 
 ## Récapitulatif budget des activités
 
-| Activité | Quand | Coût pour 12 |
+| Activité | Quand | Coût pour 15 |
 |----------|-------|--------------|
 | Marché d'Apt | sam. matin | 0 € |
-| Sentier des Ocres | sam. après-midi | 42 € |
+| Sentier des Ocres *(tarif groupe)* | sam. après-midi | 38 € |
 | Forêt des Cèdres | dim. matin | 0 € |
 | Dégustation Louérion | dim. après-midi | 0 € |
 | *ou* Colorado Provençal | dim. matin | 18-27 € (3 voitures) |
-| **Total du programme retenu** | | **42 €**, soit 3,50 €/pers |
+| **Total du programme retenu** | | **38 €**, soit 2,50 €/pers |
 
 C'est la beauté du Luberon en arrière-saison : **le budget part dans le gîte et
 la table, pas dans les activités.** Les plus belles choses à faire y sont

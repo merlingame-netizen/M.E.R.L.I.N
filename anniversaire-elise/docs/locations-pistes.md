@@ -6,8 +6,9 @@
 > la liste de ce qu'il faut vérifier avant de payer — pour que la réservation te
 > prenne une soirée au lieu d'une semaine.
 
-**Ce que tu cherches** : 12 couchages · 1 nuit (sam. 3 → dim. 4 octobre 2026) ·
-Luberon · grand séjour couvert · extérieur · 650-900 €.
+**Ce que tu cherches** : **15 couchages** · 1 nuit (sam. 3 → dim. 4 octobre 2026) ·
+Luberon · grand séjour couvert · extérieur. **La piscine n'est pas un critère** — en
+octobre elle ne sert pas.
 
 ---
 
@@ -55,26 +56,32 @@ consultent pas à distance. Ce sont les trois soumis au vote sur `site/public.ht
 Maison Jordane ou Maison Peupliers, deux maisons jumelles.
 04 90 74 40 50 · peyroliere@orange.fr · gite-en-luberon.com
 
-- 12 personnes, 4 chambres, piscine privée 4,5 × 10,5 m, climatisée
-- 160 €/nuit hors saison, **minimum 2 nuits**
-- Ménage 140-150 € · draps 14 € la paire · à 3 km du centre d'Apt
+- ⚠️ **12 personnes par maison** — à quinze, il faut Jordane (12) + Amandier (10)
+- 4 chambres, climatisée, ouverte toute l'année
+- 160 €/nuit (Jordane) + 129 €/nuit (Amandier) → **578 € les 2 nuits pour les deux**
+- **Minimum 2 nuits**
+- **Deux ménages** (~290 €) · draps 14 € la paire (210 € à quinze) · à 3 km du centre d'Apt
 
-> **Le meilleur rapport qualité-prix, et de loin.** C'est aussi le seul des trois
-> à mettre le marché d'Apt du samedi matin à 3 km — le marché qui structure toute
-> la journée. Si le vote hésite, c'est l'argument à sortir.
+> **Son avantage s'effondre à quinze.** À douze il était imbattable (320 € contre
+> 1 200 €). À quinze il faut deux maisons, deux ménages et les draps : le total
+> logement monte à 1 078 €, soit **122 € d'écart avec l'Orangerie — 8 € par
+> personne.** Reste son vrai atout : le marché d'Apt du samedi matin à 3 km.
+> Le contre-argument : le groupe dort séparé en deux maisons.
 
 ### 2. Pierre-Étoile — près de Lourmarin · **sur devis**
 
 Agathe Forest · +33 6 64 61 83 51 · agathe.provence@gmail.com · pierreetoileluberon.com
 
 - 12 à 15 personnes, 6 chambres, 5 salles de bain, autour d'une cour centrale
-- Piscine privée sécurisée, billard, ping-pong, babyfoot, terrain de pétanque
+- Billard, ping-pong, babyfoot, terrain de pétanque, cour centrale abritée
 - Accessible PMR · **week-end 2 nuits accepté** (vendredi après-midi → dimanche soir)
 - ⚠️ **Arrivée 16h-17h seulement.** Départ le dimanche jusqu'à 20h sur les week-ends
 
-> Le seul à annoncer explicitement un départ dimanche 20h : la journée du dimanche
-> n'est pas amputée. En revanche l'arrivée tardive interdit toute installation
-> en début d'après-midi.
+> **Le candidat pivot à quinze personnes.** C'est le seul à loger quinze sous un
+> seul toit sans être d'office le plus cher — tout dépend du devis, à demander
+> en premier. Il annonce aussi le seul départ dimanche 20h des trois : la journée
+> du dimanche n'est pas amputée. En revanche l'arrivée tardive (16h) interdit
+> toute installation en début d'après-midi.
 
 ### 3. Gîte de l'Orangerie — Cadenet · **1 200 € le week-end**
 
@@ -82,19 +89,37 @@ Clotilde Borgarino · 04 90 68 24 45 · latuiliere.eu · 490 chemin de la Tuili�
 Fiche : grandsgites.com/gite-84-tuiliere-2070.htm
 
 - 15 personnes, 6 chambres, **6 salles d'eau, 6 WC**, accès indépendant par chambre
-- Piscine privée 12 × 6 × 1,5 m, cuisine en orangerie de pierre 45 m²
+- Cuisine en orangerie de pierre 45 m², pétanque, ping-pong, pergola
 - Domaine viticole et oléicole · draps et ménage inclus · 600 €/nuit, min. 2 nuits
 - ⚠️ **15 lits simples, aucun lit double** — rédhibitoire pour des couples
 - Animaux non admis
 
-> Le plus confortable : une salle d'eau par chambre à douze, c'est un luxe réel.
-> Mais 1 200 € contre 320 €, réparti sur douze, c'est **73 € de plus par personne**.
+> **Le plus confortable, et désormais compétitif.** Une salle d'eau par chambre à
+> quinze, c'est un luxe réel, et draps comme ménage sont inclus. Face à la
+> Peyrolière dédoublée, l'écart réel n'est que de **8 € par personne** — pour tout
+> le monde sous un seul toit. Le seul vrai défaut reste les 15 lits simples.
 
 ### Ce qu'ils ont en commun
 
 **Les trois imposent deux nuits minimum.** Pour une seule nuit sur place, on paie
-le vendredi ou le dimanche en plus. C'est intégré dans les prix ci-dessus — ne
-va pas croire que 320 € couvre une nuit.
+le vendredi ou le dimanche en plus. C'est intégré dans les prix ci-dessus.
+
+**Aucun n'est écarté pour la piscine** : les trois en ont une, et en octobre
+aucune ne servira. Ce n'est plus un critère de choix — ni en positif, ni en négatif.
+
+**Le classement change avec l'effectif.** À douze, la Peyrolière gagnait à plat.
+À quinze, elle passe à deux maisons et l'écart se referme :
+
+| Logement à 15 | Peyrolière ×2 | Pierre-Étoile | Orangerie |
+|---|---|---|---|
+| Gîte 2 nuits | 578 € | devis | 1 200 € |
+| Ménage | ~290 € | à confirmer | inclus |
+| Draps | 210 € | à confirmer | inclus |
+| **Total logement** | **1 078 €** | **?** | **1 200 €** |
+| Sous un seul toit | non, 2 maisons | oui | oui |
+
+Le devis de Pierre-Étoile est donc le premier appel à passer : c'est lui qui
+tranche le classement.
 
 ### Prochain appel — à passer dès le vote clos (15 septembre)
 
@@ -107,19 +132,19 @@ va pas croire que 320 € couvre une nuit.
 
 ## Les 8 critères de tri, par ordre d'importance
 
-1. **12 couchages réels.** Un « 12 personnes » qui compte deux canapés-lits et
-   un matelas d'appoint n'est pas un 12 personnes. Compte les **lits** dans le
+1. **15 couchages réels.** Un « 15 personnes » qui compte deux canapés-lits et
+   un matelas d'appoint n'est pas un 15 personnes. Compte les **lits** dans le
    descriptif, pas la capacité annoncée.
 2. **Un grand séjour couvert.** Le critère qui décide de tout si la pluie
-   s'invite. À douze, un salon de 20 m² est invivable ; il en faut 40.
+   s'invite. À quinze, un salon de 20 m² est invivable ; il en faut 45.
 3. **Une nuit acceptée.** À demander dès le premier message, ça élimine la
    moitié des candidats en une question.
-4. **Cuisine équipée pour 12.** Grand four, lave-vaisselle, assez d'assiettes.
-   Un dîner à douze dans une cuisine de studio, c'est trois heures de service.
+4. **Cuisine équipée pour 15.** Grand four, lave-vaisselle, assez d'assiettes.
+   Un dîner à quinze dans une cuisine de studio, c'est trois heures de service.
 5. **Parking hors de vue de l'entrée.** Spécifique à ton cas, et non négociable :
    c'est ce qui rend la surprise possible. **Demande une photo de l'allée.**
 6. **Extérieur** — terrasse, jardin, si possible un terrain de pétanque.
-   La piscine est un bonus : en octobre elle est belle, pas baignable.
+   **La piscine ne compte pas** : en octobre elle est belle, pas baignable.
 7. **Draps et serviettes.** Inclus, ou 10-15 €/pers. Voir `budget.md`.
 8. **Ménage.** Inclus, en option, ou à faire soi-même.
 
@@ -134,7 +159,7 @@ c'est le taux normal, et ça te fait un choix réel plutôt qu'un pis-aller.
 Bonjour,
 
 Je cherche à louer votre gîte pour la nuit du samedi 3 au dimanche 4
-octobre 2026, pour 12 personnes — un anniversaire en famille et entre amis,
+octobre 2026, pour 15 personnes — un anniversaire en famille et entre amis,
 groupe calme et soigneux, non fumeur.
 
 Trois questions avant d'aller plus loin :
@@ -172,6 +197,6 @@ Merci beaucoup,
 ## À l'arrivée, cinq minutes qui valent 500 €
 
 **Fais le tour de la maison en photo, horodatée, avant que qui que ce soit ne
-pose un sac.** Vaisselle, murs, mobilier de jardin, état de la piscine. À douze
+pose un sac.** Vaisselle, murs, mobilier de jardin, extérieurs. À quinze
 personnes sur une soirée d'anniversaire, une caution contestée est un vrai
 risque, et un état des lieux photo le désamorce entièrement.

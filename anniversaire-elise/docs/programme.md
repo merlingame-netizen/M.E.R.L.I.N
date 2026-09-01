@@ -1,7 +1,7 @@
 # Programme — samedi 3 & dimanche 4 octobre 2026
 
 **Où** : Luberon, 45-55 min au nord d'Aix-en-Provence.
-**Qui** : Elise, toi, 9 invités (12 à 14 avec les conjoints).
+**Qui** : Elise, toi et les invités — **15 personnes au maximum**.
 **Format** : surprise totale. Elise croit partir en week-end en amoureux.
 
 ---
@@ -95,7 +95,7 @@ TRAJECTOIRE ELISE (toi + elle)        TRAJECTOIRE INVITÉS (les 9)
 ## Le détail qu'on oublie tous
 
 **Les draps.** La grande majorité des gîtes ne fournissent ni draps ni
-serviettes, ou les facturent 10-15 € par personne. À douze, c'est 150 € qui
+serviettes, ou les facturent 10-15 € par personne. À quinze, c'est 210 € qui
 tombent du ciel le jour de l'arrivée. Vérifie-le **avant** de réserver, et si
 ce n'est pas inclus, mets-le dans le message E : *drap housse + taie + serviette
 dans le sac*.

@@ -1,38 +1,47 @@
-# Budget — cible 80 à 120 € par personne
+# Budget — 120 à 128 € par personne
 
-Hypothèse de calcul : **12 personnes** (Elise + toi + 10). Ajuste avec le
-résultat du sondage 1.
+Hypothèse de calcul : **15 personnes** (Elise + toi + 13). Ajuste avec le
+résultat du sondage de présence.
+
+**La piscine n'entre pas dans le calcul** : les trois maisons en ont une, aucune
+ne servira début octobre, et ce n'est plus un critère de sélection.
 
 ---
 
-## Le scénario retenu
+## Deux scénarios, selon la maison retenue
 
-| Poste | Total | Par personne | Notes |
-|-------|-------|--------------|-------|
-| **Gîte 12 pers., 1 nuit** | 750 € | 62,50 € | Arrière-saison en Luberon. Fourchette réelle 650-1 100 € selon le standing |
-| Taxe de séjour | 25 € | 2,10 € | ~1 à 2 €/adulte/nuit, souvent oubliée |
-| Ménage de fin de séjour | 80 € | 6,70 € | Presque toujours en supplément. **À vérifier avant de réserver** |
-| **Courses** apéro + dîner + petit-déj | 300 € | 25 € | 25 €/pers pour un repas cuisiné à 12, c'est confortable |
-| Vin et boissons | 90 € | 7,50 € | Achat direct au caveau : meilleur et moins cher qu'en grande surface |
-| Sentier des Ocres | 42 € | 3,50 € | 3,50 €/pers ; 2,50 € à partir de 15 personnes |
-| Dégustation dimanche | 0 € | 0 € | Gratuite dans la plupart des caveaux, achat libre ensuite |
-| Gâteau 12 parts + bougies | 45 € | 3,75 € | — |
-| Déco (banderole, ballons, nappes) | 40 € | 3,35 € | — |
-| Essence + péages (covoiturage) | 60 € | 5 € | ~100 km A/R depuis Aix, 3 voitures |
-| **Sous-total logistique** | **1 432 €** | **119,40 €** | |
-| Cadeau commun | 30 €/pers | *à part* | Sondage 7, hors cagnotte |
+| Poste | Peyrolière ×2 | Orangerie |
+|-------|--------------:|----------:|
+| Gîte, 2 nuits (minimum imposé) | 578 € | 1 200 € |
+| Ménage de fin de séjour | 290 € | inclus |
+| Draps et linge | 210 € | inclus |
+| **Sous-total logement** | **1 078 €** | **1 200 €** |
+| Courses — apéro, dîner, petit-déj | 375 € | 375 € |
+| Vin et boissons | 110 € | 110 € |
+| Sentier des Ocres *(2,50 € dès 15 pers.)* | 38 € | 38 € |
+| Gâteau, bougies, décoration | 95 € | 95 € |
+| Essence et péages (4 voitures) | 80 € | 80 € |
+| Taxe de séjour | 25 € | 25 € |
+| **Total** | **1 801 €** | **1 923 €** |
+| **Par personne** | **120 €** | **128 €** |
 
-**Le compte, tel quel, sort à 119 € — le haut de la fourchette.** Trois leviers
-pour redescendre vers 95-100 € :
+Pierre-Étoile est le troisième candidat, **sur devis** : c'est le seul à loger
+quinze personnes sous un seul toit sans être d'office le plus cher. Son devis
+est le premier appel à passer, parce que c'est lui qui tranche le classement.
 
-1. **Le gîte est la seule variable qui compte.** 750 € → 600 € et tu gagnes
-   12,50 € par personne d'un coup. Vise les maisons hors des villages classés :
-   Cadenet, La Tour-d'Aigues, Ansouis, Villelaure sont 20 à 30 % moins chers que
-   Lourmarin ou Bonnieux, pour 15 minutes de route en plus.
-2. **Le ménage.** Le faire vous-mêmes le dimanche matin, c'est 80 € et 45 min à
-   douze. Négocie-le à la réservation.
-3. **Les courses au marché d'Apt** plutôt qu'en supermarché : c'est plus beau,
-   plus local, et sur les légumes et le fromage souvent moins cher.
+## Ce que quinze personnes changent
+
+**L'écart de prix s'est refermé.** À douze, la Peyrolière écrasait la
+concurrence : 320 € contre 1 200 €, soit 73 € d'écart par personne. À quinze
+elle passe à deux maisons — deux ménages, les draps en supplément — et l'écart
+tombe à **8 € par personne**. Le choix ne se joue plus sur le prix.
+
+**Un seuil joue en votre faveur** : le Sentier des Ocres passe de 3,50 € à
+**2,50 € par personne à partir de 15**. C'est anecdotique en valeur (15 €), mais
+c'est le genre de seuil qu'il faut penser à réclamer sur place.
+
+**Trois postes montent mécaniquement** : les courses (+75 €), les boissons
+(+20 €) et une quatrième voiture (+20 €).
 
 ---
 
