@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
-# job-087 — LE BUT DEVIENT UN ENJEU : la meme quete, une fois de plus.
+# job-087 — TROIS CHANGEMENTS, ET IL FAUT LE DIRE.
+#
+# Ce tour ne mesure pas une variable mais trois. Deux forment UNE correction, la troisieme est sur
+# un autre axe et s'est retrouvee ici par ma faute — elle etait commitee sous la suivante et je
+# l'ai poussee avec, apres avoir ecrit dans son propre message qu'elle attendrait. Autant le dire
+# ici plutot que de laisser croire a un tour propre.
+#
+#   1. LE BUT DEVIENT UN ENJEU. q86 remettait le Rameau Fendu au beat 1 et l'Eclat au beat 2 :
+#      chaque prompt annoncait ce que la quete devait rapporter, le modele a fait la liste de
+#      courses tout de suite et il ne restait rien a jouer.
+#   2. LES FIGURES ET LE LIEU ARRIVENT ENTIERS. Le harnais demandait un champ `resume` que ni les
+#      fiches de figures ni celles des biomes ne possedent : le modele recevait « Dame Aveline aux
+#      Corbeaux () » et « Ar C'hoad Kozh. ». D'ou seize noms sans un desir, et une hutte en pierre
+#      batie dans un cercle de menhirs. C'est la MEME correction que 1 : interdire a une figure de
+#      se contenter de regarder ne sert a rien tant qu'on ne dit pas ce qu'elle veut.
+#   3. L'AMORCE DU SCENARIO EST COUPEE AVANT L'ATTENTE DU MOTEUR — axe different : le temps. Si la
+#      duree tombe de ~420 s a ~200 s, c'est ca. La prose ne peut pas en dependre.
+#
+# A relire dans la quete : les objets restent a un seul endroit, rien n'est acquis avant le beat
+# final, moins de 0,6 verbe de simple regard par beat (repere du corpus ; q86 etait a 1,25), aucun
+# batiment dans un bois.
 #
 # q85 a donne la cause, et elle explique aussi q83. Le journal de q85 commence par un demarrage
 # NEUF de Godot, sa derniere ligne est une pensee de menu, et la ligne de commande n'a AUCUN
@@ -79,11 +99,13 @@ git -C "$GD" pull --ff-only >/dev/null 2>&1
 
 deadline=$(( $(date +%s) + 5400 ))
 while true; do
-    A=0; B=0
+    A=0; B=0; C=0; D=0
     grep -q 'func _enjeu' "$GD/tools/generer_quete.gd" 2>/dev/null && A=1
     grep -q 'verbe(s) de simple regard' "$GD/tools/scenarios/relire.py" 2>/dev/null && B=1
-    [ "$A$B" = "11" ] && break
-    [ "$(date +%s)" -ge "$deadline" ] && { dire "ko" "incomplet : enjeu=$A grille=$B"; exit 1; }
+    grep -q 'func _figures_en_clair' "$GD/tools/generer_quete.gd" 2>/dev/null && C=1
+    grep -q 'func _couper_amorce' "$GD/tools/generer_quete.gd" 2>/dev/null && D=1
+    [ "$A$B$C$D" = "1111" ] && break
+    [ "$(date +%s)" -ge "$deadline" ] && { dire "ko" "incomplet : enjeu=$A grille=$B figures=$C amorce=$D"; exit 1; }
     sleep 30
 done
 SHA="$(git -C "$GD" rev-parse --short HEAD)"
