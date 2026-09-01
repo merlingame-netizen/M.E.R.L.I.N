@@ -1,0 +1,314 @@
+<title>La pierre couchée</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@600;700&family=Spectral:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --lin:#e9e4d7; --lin-creux:#ded8c8; --lin-panneau:#e2dccc;
+  --encre:#2b2c26; --encre-pale:#6d6f63; --encre-fantome:#918f80;
+  --or:#8a6a24; --or-vif:#b08a33; --voix:#35617f; --rouille:#9c4a26; --vert:#4a6b3d;
+  --trait:rgba(43,44,38,.14); --trait-fort:rgba(43,44,38,.3);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}}
+:root[data-theme="dark"]{
+  --lin:#141715; --lin-creux:#0f1211; --lin-panneau:#1b201d;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f; --vert:#8fb07a;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--lin);color:var(--encre);margin:0;
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17.5px;line-height:1.72}
+h1,h2{font-family:Vollkorn,Georgia,serif;text-wrap:balance;margin:0}
+:focus-visible{outline:2px solid var(--or-vif);outline-offset:3px}
+.page{max-width:46rem;margin:0 auto;padding:3.6rem 1.5rem 7rem}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .9rem}
+h1{font-size:clamp(2rem,5.5vw,2.9rem);font-weight:700;color:var(--or);line-height:1.1;margin:0 0 1.2rem}
+.preambule{border-left:2px solid color-mix(in srgb,var(--or) 45%,transparent);
+  padding-left:1.2rem;margin:0 0 2.2rem;max-width:36rem;color:var(--encre)}
+.preambule p{margin:0 0 .7rem}
+.preambule p:last-child{margin:0;color:var(--or);font-style:italic}
+.regle{font-family:"IBM Plex Mono",monospace;font-size:.76rem;line-height:1.85;
+  color:var(--encre-pale);background:var(--lin-creux);border-radius:2px;
+  padding:.9rem 1.05rem;margin:0 0 1.6rem}
+.regle b{color:var(--encre);font-weight:500}
+.legende{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 2.4rem}
+.legende.gestes .rl{border-color:color-mix(in srgb,var(--or) 45%,transparent)}
+.legende.gestes .rl b{color:var(--or);letter-spacing:.06em}
+.rl{display:inline-flex;flex-direction:column;border:1px solid var(--trait);border-radius:2px;
+  padding:.3rem .55rem;font-family:"IBM Plex Mono",monospace;font-size:.7rem;line-height:1.4}
+.rl b{color:var(--encre);font-weight:500}
+.rl i{font-style:normal;color:var(--encre-fantome);font-size:.63rem}
+h2{font-size:1.3rem;font-weight:700;margin:3.2rem 0 1.2rem}
+.beat{padding:2rem 0;border-top:1px solid var(--trait)}
+.bt{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.75rem;flex-wrap:wrap}
+.bn{font-family:Vollkorn,serif;font-size:1.3rem;font-weight:700;color:var(--or);line-height:1}
+.btype{font-family:"IBM Plex Mono",monospace;font-size:.67rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--encre-fantome)}
+.blieu{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--voix);margin-left:auto}
+.beat p{margin:0 0 .75rem}
+.dial{color:var(--voix)}
+.issue{border-left:2px solid color-mix(in srgb,var(--or) 40%,transparent);padding-left:1rem}
+.effet{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--rouille);margin:.2rem 0 .75rem}
+.note{font-size:.9rem;color:var(--encre-pale);margin:1rem 0 0}
+.note b{color:var(--encre);font-weight:500}
+.table{font-family:"IBM Plex Mono",monospace;font-size:.75rem;line-height:1.6;
+  background:var(--lin-panneau);border-radius:2px;padding:.85rem .95rem;margin:1.1rem 0;
+  display:grid;gap:.45rem;overflow-x:auto}
+.tr{display:grid;grid-template-columns:7rem 1fr;gap:.85rem;align-items:baseline}
+.lb{color:var(--encre-fantome);letter-spacing:.05em;font-size:.68rem;text-transform:uppercase}
+.vl{color:var(--encre-pale);min-width:0}
+.vl b{color:var(--encre);font-weight:600}
+.vl b.act{color:var(--or)}
+.plus{color:var(--encre-fantome);padding:0 .25rem}
+.runes{display:flex;flex-wrap:wrap;gap:.3rem}
+.rune{padding:.2rem .5rem;border:1px solid var(--trait);border-radius:2px;
+  font-size:.71rem;color:var(--encre-fantome)}
+.rune.sel{border-color:var(--or);color:var(--encre);
+  background:color-mix(in srgb,var(--or) 13%,transparent)}
+.geste b{font-size:.82rem}
+.jet b.mpos{color:var(--vert)} .jet b.mneg{color:var(--rouille)}
+.dg{display:inline-block;margin-left:.5rem;padding:.02rem .4rem;border-radius:2px;
+  font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;
+  border:1px solid var(--trait-fort);color:var(--encre-pale)}
+.dg.reussite{border-color:color-mix(in srgb,var(--vert) 55%,transparent);color:var(--vert)}
+.dg.eclatante{border-color:var(--or);color:var(--or-vif);
+  background:color-mix(in srgb,var(--or) 15%,transparent)}
+.dg.partiel{border-color:color-mix(in srgb,var(--rouille) 60%,transparent);color:var(--rouille)}
+.retour{background:var(--lin-creux);border-radius:2px;padding:1.4rem 1.3rem;margin-top:3.4rem}
+.retour h2{font-size:1.05rem;margin:0 0 .8rem;color:var(--or)}
+.retour ul{margin:0;padding-left:1.1rem;color:var(--encre-pale);font-size:.95rem}
+.retour li{margin:.5rem 0}
+.retour b{color:var(--encre);font-weight:500}
+
+.rune.neuve{border-color:var(--voix);color:var(--voix);
+  background:color-mix(in srgb,var(--voix) 12%,transparent)}
+.etat b{font-variant-numeric:tabular-nums}
+.etat .sep{color:var(--encre-fantome);padding:0 .35rem}
+.dp{color:var(--vert);font-size:.68rem;margin-left:.15rem}
+.dn{color:var(--rouille);font-size:.68rem;margin-left:.15rem}
+.etat .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.beat.spe{background:linear-gradient(90deg,color-mix(in srgb,var(--voix) 6%,transparent),transparent 70%)}
+.table.special{border-left:2px solid var(--voix)}
+.table.special .vl b.act{color:var(--voix);text-transform:uppercase;letter-spacing:.08em}
+.opts{display:flex;flex-direction:column;gap:.3rem}
+.opt{display:block;border:1px solid var(--trait);border-radius:2px;padding:.35rem .55rem;
+  line-height:1.5}
+.opt b{display:block;color:var(--encre-pale);font-weight:500;font-size:.74rem}
+.opt i{font-style:normal;color:var(--encre-fantome);font-size:.69rem}
+.opt.pris{border-color:var(--voix);background:color-mix(in srgb,var(--voix) 10%,transparent)}
+.opt.pris b{color:var(--encre)}
+.etatligne{font-family:"IBM Plex Mono",monospace;font-size:.73rem;color:var(--encre-pale);
+  margin:.7rem 0 1rem;padding-left:.1rem}
+.etatligne b{color:var(--encre);font-variant-numeric:tabular-nums}
+.etatligne .sep{color:var(--encre-fantome);padding:0 .3rem}
+.etatligne .motif{font-style:normal;color:var(--encre-fantome);font-size:.68rem;margin-left:.3rem}
+
+.meca{border-top:1px solid var(--trait);padding:1.5rem 0}
+.meca h3{font-family:Vollkorn,serif;font-size:1.08rem;font-weight:700;margin:0 0 .1rem;
+  color:var(--encre)}
+.meca .etat-usage{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .7rem}
+.meca .etat-usage.vu{color:var(--voix)}
+.meca dl{display:grid;grid-template-columns:7.5rem 1fr;gap:.28rem .9rem;margin:0 0 .7rem;
+  font-size:.9rem}
+.meca dt{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--encre-fantome);padding-top:.2rem}
+.meca dd{margin:0;color:var(--encre-pale)}
+.meca .ex{font-size:.88rem;color:var(--encre-pale);border-left:2px solid var(--trait-fort);
+  padding-left:.9rem;margin:.5rem 0 0}
+.meca .ex b{color:var(--encre);font-weight:500}
+@media(max-width:600px){.meca dl{grid-template-columns:1fr;gap:.05rem}}
+
+.bas{display:block;font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.04em;
+  margin:-.35rem 0 .85rem;padding-left:.7rem;border-left:2px solid var(--trait-fort)}
+.bas.choisie{color:var(--or);border-left-color:var(--or)}
+.bas.subie{color:var(--rouille);border-left-color:var(--rouille)}
+.forme{margin:0 0 3rem}
+.forme .rangee{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;margin:.5rem 0 .6rem}
+.forme .c{height:2.1rem;border:1px solid var(--trait);border-radius:2px;
+  font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--encre-fantome);
+  display:grid;place-items:center}
+.forme .c.choisie{border-color:var(--or);color:var(--or);
+  background:color-mix(in srgb,var(--or) 18%,transparent)}
+.forme .c.subie{border-color:var(--rouille);color:var(--rouille);
+  background:color-mix(in srgb,var(--rouille) 14%,transparent)}
+.forme p{font-size:.93rem;color:var(--encre-pale);margin:.2rem 0 .5rem}
+.forme .lg{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--encre-fantome)}
+.forme .lg b.o{color:var(--or)} .forme .lg b.r{color:var(--rouille)}
+@media(max-width:640px){
+  .page{padding:2.2rem 1.1rem 4rem}
+  .tr{grid-template-columns:1fr;gap:.15rem}
+  .blieu{margin-left:0;width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.note-tete{color:var(--encre-pale);font-size:.97rem;margin:0 0 2rem;max-width:34rem}
+.meca h3 a{color:var(--or);text-decoration:none}
+.meca h3 a:hover{text-decoration:underline}
+code{font-family:"IBM Plex Mono",monospace;font-size:.85em;color:var(--encre)}
+</style>
+<div class="page">
+<p class="eyebrow">Scénario de référence · penn_ar_bed · 10 beats</p>
+<h1>La pierre couchée</h1>
+<div class="preambule"><p>Le douzième menhir du cercle est couché dans les fougères.</p><p>Il tenait debout hier, et personne dans ce bois ne dit le contraire.</p><p>La terre au pied du trou est encore humide, retournée depuis peu.</p><p>Ici, Voyageur, tout recommence. Sauf vous.</p></div>
+<div class="regle"><b>Un beat ordinaire.</b> Vous posez une tuile d'action et une rune de votre main. Les cinq tuiles sont le socle et ne changent jamais ; les runes tournent. La tuile dit ce que vous faites, la rune dit avec quoi. C'est le modèle qui lit la paire et écrit ce qui arrive.<br>Le jeu annonce la mise avant le dé, jamais l'issue. On lance <b>2d6</b>. La rune posée <b>quitte la main</b> et on en repioche une.<br><br><b>Un beat spécial</b> a sa propre mécanique — ni tuile, ni rune, ni dé. On y sélectionne parmi <b>2 à 4 propositions</b> quand c'est un choix ; d'autres formes existent (marchand, boss, énigme écrite). La main ne bouge pas.<br>Rien ne s'accumule parce qu'on a réussi : les <b>gwenneg</b> ne viennent que d'un événement qui en donne.</div>
+<h2>Les cinq gestes</h2>
+<div class="legende gestes"><span class="rl"><b>OBSERVER</b><i>lire une scène avant d'y toucher</i></span><span class="rl"><b>AGIR</b><i>faire de ses mains, avec adresse</i></span><span class="rl"><b>COMBATTRE</b><i>y mettre le corps et tenir</i></span><span class="rl"><b>RÉVÉLER</b><i>faire venir au jour ce qui se cache</i></span><span class="rl"><b>PARLER</b><i>s'adresser à quelqu'un</i></span></div>
+<h2>Les runes de la quête</h2>
+<div class="legende runes-leg"><span class="rl"><b>La Patience</b><i>laisser venir plutôt qu'aller chercher</i></span><span class="rl"><b>La Méfiance</b><i>supposer le pire et se garder</i></span><span class="rl"><b>La Franchise</b><i>dire ce qui est, sans arranger</i></span><span class="rl"><b>L'Élan</b><i>partir avant d'être sûr</i></span><span class="rl"><b>La Pitié</b><i>s'arrêter pour ce qui souffre</i></span><span class="rl"><b>L'Entêtement</b><i>recommencer sans changer d'avis</i></span><span class="rl"><b>Le Silence</b><i>ne rien dire et laisser le vide travailler</i></span><span class="rl"><b>La Ruse</b><i>prendre par un autre bord</i></span><span class="rl"><b>L'Aplomb</b><i>tenir sa place devant plus grand que soi</i></span><span class="rl"><b>Le Deuil</b><i>accepter ce qui ne reviendra pas</i></span></div>
+<h2>La forme de la quête</h2>
+<div class="forme"><p>Une décision ne se pose pas au métronome : elle se pose quand le sol vient de bouger, et seulement quand le Voyageur a de quoi décider.</p><div class="rangee"><div class="c ">1</div><div class="c subie">2</div><div class="c ">3</div><div class="c ">4</div><div class="c choisie">5</div><div class="c ">6</div><div class="c ">7</div><div class="c ">8</div><div class="c subie">9</div><div class="c subie">10</div></div><p class="lg"><b class="r">■</b> bascule subie : le monde décide &nbsp;·&nbsp; <b class="o">■</b> bascule choisie : vous décidez</p></div>
+<h2>La quête</h2>
+<article class="beat">
+<div class="bt"><span class="bn">1</span><span class="btype">Exploration</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<p>Le menhir couché fait deux fois votre longueur. Le trou d'où il sort est net sur trois bords et défoncé sur le quatrième. Des éclats de granit sont éparpillés dans les fougères, et il en manque.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Méfiance</span><span class="rune">L'Aplomb</span><span class="rune">La Ruse</span><span class="rune">Le Deuil</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>La Méfiance</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>11</b> <span class="plus">→</span> <b>17</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+8</b><span class="dg eclatante">éclatante</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous comptez les éclats et vous les rangez par taille sur la mousse. Il y en a onze, et la cassure en réclame douze. Quelqu'un est passé avant vous et il n'a pris que le plus gros.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> OBSERVER avec La Méfiance : supposer le vol avant l'accident fait compter les morceaux au lieu d'admirer la chute. Marge +8, éclatante — le manque est vu tout de suite, et c'est lui qui tient la quête.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">2</span><span class="btype">Rencontre</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<span class="bas subie">bascule subie — il l'a trouvé par terre, et c'est vrai</span>
+<p>Un korrigan a monté son étal entre deux menhirs debout. Sur la planche, un morceau de granit gris avec une arête fraîche. « Trois pour deux, deux pour un, un pour rien, rien pour toi, alors ? »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">L'Aplomb</span><span class="rune">La Ruse</span><span class="rune">Le Deuil</span><span class="rune">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>L'Aplomb</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>7</b> <span class="plus">→</span> <b>10</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+1</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Entêtement</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous lui dites que ce morceau vient du menhir couché et qu'il le sait. Fañch le Trotteur ne se démonte pas et vous répond qu'il l'a trouvé par terre, ce qui est vrai. Il vous en demande vingt gwenneg, et vous n'en avez que vingt-deux.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> PARLER avec L'Aplomb devant quelqu'un qui a le droit pour lui : le prix ne baisse pas, mais il est dit. Marge +1, réussite sans plus.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">3</span><span class="btype">Épreuve</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<p>Le menhir doit se relever avant que la terre du trou sèche et se referme. Il pèse ce que pèse une pierre de deux fois votre longueur.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Ruse</span><span class="rune">Le Deuil</span><span class="rune">La Patience</span><span class="rune sel">L'Entêtement</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">AGIR</b> <span class="plus">avec</span> <b>L'Entêtement</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +0</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>2</b> <span class="plus">→</span> <b>2</b> contre 9 <span class="plus">→</span> marge <b class="mneg">-7</b><span class="dg echec">échec</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Franchise</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous glissez un tronc mort sous l'extrémité et vous pesez dessus de tout votre poids. La pierre décolle d'un pouce et retombe. Vous recommencez trois fois et elle retombe trois fois. Le tronc, lui, casse.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> AGIR avec L'Entêtement seul contre une pierre : marge −7, échec franc. Recommencer sans changer d'avis est précisément ce qui ne marche pas ici, et c'est ce qui envoie chercher du monde.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">4</span><span class="btype">Rencontre</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<p>Le Chœur des Druides psalmodie à l'autre bout du cercle, dos au menhir couché. « Le rite tient. Le rite a toujours tenu. Le rite tient. »</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Ruse</span><span class="rune">Le Deuil</span><span class="rune">La Patience</span><span class="rune">La Franchise</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">COMBATTRE</b> <span class="plus">avec</span> <b>La Ruse</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>3</b> <span class="plus">→</span> <b>6</b> contre 9 <span class="plus">→</span> marge <b class="mneg">-3</b><span class="dg partiel">partiel</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Silence</span></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous vous mettez dans leur rang et vous chantez avec eux, sans savoir les mots, en retard d'une syllabe. Au bout de trois tours ils se déplacent vers la pierre couchée sans cesser de chanter, et ils poussent avec vous. La pierre se lève à moitié et cale sur son bord.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> COMBATTRE avec La Ruse : les prendre par le chant plutôt que par la demande. Marge −3, partiel — ils poussent, mais ils ne s'arrêtent pas de chanter pour ajuster, et la pierre reste de travers.</p>
+</article>
+<article class="beat spe">
+<div class="bt"><span class="bn">5</span><span class="btype">Dilemme</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<span class="bas choisie">bascule choisie — payer les vingt gwenneg sans marchander</span>
+<p>La pierre tient de travers. Il manque le douzième éclat pour caler le pied, et ce morceau est sur l'étal de Fañch à vingt gwenneg. Vous en avez vingt-deux.</p>
+<div class="table special">
+<div class="tr"><span class="lb">Beat spécial</span><span class="vl"><b class="act">choix de dialogue</b></span></div>
+<div class="tr"><span class="lb">On vous propose</span><span class="vl opts">
+<span class="opt pris"><b>Payer les vingt gwenneg sans marchander</b><i>il vous reste deux gwenneg, et rien pour la suite.</i></span>
+<span class="opt"><b>Le prendre pendant qu'il compte sa monnaie</b><i>une dette envers un korrigan ne s'oublie jamais, et il retient au centime.</i></span>
+<span class="opt"><b>Renoncer au morceau et caler avec du bois</b><i>le bois pourrit en un hiver, et la pierre retombera sans vous.</i></span>
+</span></div>
+<div class="tr"><span class="lb">Vous choisissez</span><span class="vl"><b>Payer les vingt gwenneg sans marchander</b></span></div>
+</div>
+<div class="etatligne">santé <b>10</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous payez les vingt gwenneg sans marchander et vous emportez le morceau. Fañch note quelque chose sur son avant-bras avec l'ongle. Il vous reste deux gwenneg et le pied de la pierre a de quoi caler.</p>
+<p class="note"><b>Pourquoi ce beat est spécial.</b> Beat spécial : un choix de dialogue. L'argent ne bouge qu'ici, et il ne revient pas.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">6</span><span class="btype">Épreuve</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<p>Le morceau de granit porte une arête fraîche d'un côté et, de l'autre, quelque chose sous la crasse.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">Le Deuil</span><span class="rune">La Patience</span><span class="rune">La Franchise</span><span class="rune">Le Silence</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">RÉVÉLER</b> <span class="plus">avec</span> <b>Le Deuil</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +3</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>7</b> <span class="plus">→</span> <b>10</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+1</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Méfiance</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b><span class="dn">-1</span> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous frottez la face sale contre votre manche jusqu'à ce qu'elle rende. Il y a une marque gravée, mangée aux trois quarts : il reste un K, un e, et une hampe cassée. C'était un nom, et il n'en reste pas assez.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> RÉVÉLER avec Le Deuil : accepter que la marque soit perdue est ce qui permet de la lire jusqu'au bout au lieu d'inventer la suite. Marge +1, réussite — et ce qu'on obtient est une perte.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">7</span><span class="btype">Rencontre</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<p>Ordalc'h est venu. Il regarde le pied de la pierre, pas vous. Un corbeau de Dame Aveline s'est posé sur la partie relevée.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Patience</span><span class="rune">La Franchise</span><span class="rune sel">Le Silence</span><span class="rune">La Méfiance</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>Le Silence</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>7</b> <span class="plus">→</span> <b>13</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+4</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Élan</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous lui tendez le morceau avec la marque tournée vers lui. Il le prend, il le retourne une fois, et il dit : « Trop tard. Toujours. » Puis il le glisse lui-même sous le pied de la pierre, la face gravée contre la terre.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> PARLER avec Le Silence : lui tendre l'objet sans expliquer. Marge +4, réussite — il répond en trois mots parce qu'on ne lui en a demandé aucun.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">8</span><span class="btype">Épreuve</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<p>La pierre est calée mais penchée. Il faut la pousser des deux mains pendant qu'Ordalc'h tasse la terre au pied, et il n'y a pas de troisième personne.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Patience</span><span class="rune">La Franchise</span><span class="rune">La Méfiance</span><span class="rune">L'Élan</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">COMBATTRE</b> <span class="plus">avec</span> <b>La Patience</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 12 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>5</b> <span class="plus">→</span> <b>11</b> contre 12 <span class="plus">→</span> marge <b class="mneg">-1</b><span class="dg partiel">partiel</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">L'Aplomb</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>0</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous poussez et vous tenez pendant qu'il tasse. Vos bras lâchent avant qu'il ait fini et la pierre gagne encore un doigt de travers. Elle est debout, elle le restera, et elle ne sera plus jamais droite.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> COMBATTRE avec La Patience contre le temps qu'il faut : marge −1, partiel. Le résultat tient, et le défaut se voit de loin.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">9</span><span class="btype">Rencontre</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<span class="bas subie">bascule subie — elle ne demande pas, et vous ne dites pas</span>
+<p>Dame Aveline arrive quand tout est fini. Elle fait le tour de la pierre relevée, elle voit le travers, et elle voit la terre fraîche au pied.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune sel">La Franchise</span><span class="rune">La Méfiance</span><span class="rune">L'Élan</span><span class="rune">L'Aplomb</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">PARLER</b> <span class="plus">avec</span> <b>La Franchise</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 9 · vos atouts +0</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>11</b> <span class="plus">→</span> <b>11</b> contre 9 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">La Patience</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>2</b><span class="dp">+2</span> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous lui dites qu'il manquait un morceau et que vous l'avez racheté vingt gwenneg à un korrigan. « Alors c'est réglé », dit-elle, et elle repart vers son bosquet sans demander de qui venait le morceau. Ordalc'h vous regarde ne pas le lui dire.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> PARLER avec La Franchise, à moitié : ce qui est dit est vrai, ce qui manque l'est aussi. Marge +2, réussite — et la corruption du beat 9 vient de là, pas d'un mensonge.</p>
+</article>
+<article class="beat">
+<div class="bt"><span class="bn">10</span><span class="btype">Climax</span><span class="blieu">Ar C'hoad Kozh</span></div>
+<span class="bas subie">bascule subie — la pierre tient, le nom est perdu</span>
+<p>Le cercle compte de nouveau douze pierres debout. La douzième penche, et le nom qu'elle portait est contre la terre.</p>
+<div class="table">
+<div class="tr"><span class="lb">Votre main</span><span class="vl runes"><span class="rune">La Méfiance</span><span class="rune sel">L'Élan</span><span class="rune">L'Aplomb</span><span class="rune">La Patience</span></span></div>
+<div class="tr"><span class="lb">Le geste</span><span class="vl geste"><b class="act">OBSERVER</b> <span class="plus">avec</span> <b>L'Élan</b></span></div>
+<div class="tr"><span class="lb">La mise</span><span class="vl">Difficulté 12 · vos atouts +6</span></div>
+<div class="tr"><span class="lb">Le jet</span><span class="vl jet">2d6 = <b>8</b> <span class="plus">→</span> <b>14</b> contre 12 <span class="plus">→</span> marge <b class="mpos">+2</b><span class="dg reussite">réussite</span></span></div>
+<div class="tr"><span class="lb">Vous repiochez</span><span class="vl"><span class="rune neuve">Le Silence</span></span></div>
+</div>
+<div class="etatligne">santé <b>9</b> <span class="sep">·</span> corruption <b>2</b> <span class="sep">·</span> bourse <b>22</b> gwenneg</div>
+<p class="issue">Vous repartez avec deux gwenneg et onze éclats de granit rangés par taille dans votre poche, qui ne servent à rien. Le nom, lui, reste sous la pierre. Personne dans ce bois ne le prononcera plus, et le cercle tient quand même.</p>
+<p class="note"><b>Ce que le modèle a lu.</b> OBSERVER avec L'Élan : partir avant d'être sûr est le seul geste possible quand ce qu'on cherchait est enterré sous ce qu'on a réparé. Marge +2, réussite — la quête se ferme sur ce qu'elle a perdu, pas sur ce qu'elle rapporte.</p>
+</article>
+</div>

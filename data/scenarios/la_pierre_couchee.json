@@ -1,0 +1,210 @@
+{
+ "id": "la_pierre_couchee",
+ "titre": "La pierre couchée",
+ "monde": "penn_ar_bed",
+ "figures": [
+  "Fañch le Trotteur",
+  "Ordalc'h",
+  "Le Chœur des Druides",
+  "Dame Aveline aux Corbeaux"
+ ],
+ "main_depart": [
+  "La Méfiance",
+  "L'Aplomb",
+  "La Ruse",
+  "Le Deuil"
+ ],
+ "runes": {
+  "La Patience": "laisser venir plutôt qu'aller chercher",
+  "La Méfiance": "supposer le pire et se garder",
+  "La Franchise": "dire ce qui est, sans arranger",
+  "L'Élan": "partir avant d'être sûr",
+  "La Pitié": "s'arrêter pour ce qui souffre",
+  "L'Entêtement": "recommencer sans changer d'avis",
+  "Le Silence": "ne rien dire et laisser le vide travailler",
+  "La Ruse": "prendre par un autre bord",
+  "L'Aplomb": "tenir sa place devant plus grand que soi",
+  "Le Deuil": "accepter ce qui ne reviendra pas"
+ },
+ "gestes": {
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "RÉVÉLER": "faire venir au jour ce qui se cache",
+  "PARLER": "s'adresser à quelqu'un"
+ },
+ "bourse_depart": 22,
+ "integrite": {
+  "6": -1
+ },
+ "corruption": {
+  "9": 2
+ },
+ "preambule": [
+  "Le douzième menhir du cercle est couché dans les fougères.",
+  "Il tenait debout hier, et personne dans ce bois ne dit le contraire.",
+  "La terre au pied du trou est encore humide, retournée depuis peu.",
+  "Ici, Voyageur, tout recommence. Sauf vous."
+ ],
+ "beats": [
+  {
+   "n": 1,
+   "t": "Exploration",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le menhir couché fait deux fois votre longueur. Le trou d'où il sort est net sur trois bords et défoncé sur le quatrième. Des éclats de granit sont éparpillés dans les fougères, et il en manque.",
+   "issue": "Vous comptez les éclats et vous les rangez par taille sur la mousse. Il y en a onze, et la cassure en réclame douze. Quelqu'un est passé avant vous et il n'a pris que le plus gros.",
+   "note": "OBSERVER avec La Méfiance : supposer le vol avant l'accident fait compter les morceaux au lieu d'admirer la chute. Marge +8, éclatante — le manque est vu tout de suite, et c'est lui qui tient la quête.",
+   "dc": 9,
+   "at": 6,
+   "de": 11,
+   "action": "OBSERVER",
+   "rune": "La Méfiance"
+  },
+  {
+   "n": 2,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Un korrigan a monté son étal entre deux menhirs debout. Sur la planche, un morceau de granit gris avec une arête fraîche. « Trois pour deux, deux pour un, un pour rien, rien pour toi, alors ? »",
+   "issue": "Vous lui dites que ce morceau vient du menhir couché et qu'il le sait. Fañch le Trotteur ne se démonte pas et vous répond qu'il l'a trouvé par terre, ce qui est vrai. Il vous en demande vingt gwenneg, et vous n'en avez que vingt-deux.",
+   "note": "PARLER avec L'Aplomb devant quelqu'un qui a le droit pour lui : le prix ne baisse pas, mais il est dit. Marge +1, réussite sans plus.",
+   "dc": 9,
+   "at": 3,
+   "de": 7,
+   "action": "PARLER",
+   "rune": "L'Aplomb",
+   "bascule": [
+    "subie",
+    "il l'a trouvé par terre, et c'est vrai"
+   ]
+  },
+  {
+   "n": 3,
+   "t": "Épreuve",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le menhir doit se relever avant que la terre du trou sèche et se referme. Il pèse ce que pèse une pierre de deux fois votre longueur.",
+   "issue": "Vous glissez un tronc mort sous l'extrémité et vous pesez dessus de tout votre poids. La pierre décolle d'un pouce et retombe. Vous recommencez trois fois et elle retombe trois fois. Le tronc, lui, casse.",
+   "note": "AGIR avec L'Entêtement seul contre une pierre : marge −7, échec franc. Recommencer sans changer d'avis est précisément ce qui ne marche pas ici, et c'est ce qui envoie chercher du monde.",
+   "dc": 9,
+   "at": 0,
+   "de": 2,
+   "action": "AGIR",
+   "rune": "L'Entêtement"
+  },
+  {
+   "n": 4,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le Chœur des Druides psalmodie à l'autre bout du cercle, dos au menhir couché. « Le rite tient. Le rite a toujours tenu. Le rite tient. »",
+   "issue": "Vous vous mettez dans leur rang et vous chantez avec eux, sans savoir les mots, en retard d'une syllabe. Au bout de trois tours ils se déplacent vers la pierre couchée sans cesser de chanter, et ils poussent avec vous. La pierre se lève à moitié et cale sur son bord.",
+   "note": "COMBATTRE avec La Ruse : les prendre par le chant plutôt que par la demande. Marge −3, partiel — ils poussent, mais ils ne s'arrêtent pas de chanter pour ajuster, et la pierre reste de travers.",
+   "dc": 9,
+   "at": 3,
+   "de": 3,
+   "action": "COMBATTRE",
+   "rune": "La Ruse"
+  },
+  {
+   "n": 5,
+   "t": "Dilemme",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "La pierre tient de travers. Il manque le douzième éclat pour caler le pied, et ce morceau est sur l'étal de Fañch à vingt gwenneg. Vous en avez vingt-deux.",
+   "issue": "Vous payez les vingt gwenneg sans marchander et vous emportez le morceau. Fañch note quelque chose sur son avant-bras avec l'ongle. Il vous reste deux gwenneg et le pied de la pierre a de quoi caler.",
+   "note": "Beat spécial : un choix de dialogue. L'argent ne bouge qu'ici, et il ne revient pas.",
+   "special": {
+    "genre": "choix de dialogue",
+    "pris": 0,
+    "options": [
+     [
+      "Payer les vingt gwenneg sans marchander",
+      "il vous reste deux gwenneg, et rien pour la suite."
+     ],
+     [
+      "Le prendre pendant qu'il compte sa monnaie",
+      "une dette envers un korrigan ne s'oublie jamais, et il retient au centime."
+     ],
+     [
+      "Renoncer au morceau et caler avec du bois",
+      "le bois pourrit en un hiver, et la pierre retombera sans vous."
+     ]
+    ]
+   },
+   "bascule": [
+    "choisie",
+    "payer les vingt gwenneg sans marchander"
+   ]
+  },
+  {
+   "n": 6,
+   "t": "Épreuve",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le morceau de granit porte une arête fraîche d'un côté et, de l'autre, quelque chose sous la crasse.",
+   "issue": "Vous frottez la face sale contre votre manche jusqu'à ce qu'elle rende. Il y a une marque gravée, mangée aux trois quarts : il reste un K, un e, et une hampe cassée. C'était un nom, et il n'en reste pas assez.",
+   "note": "RÉVÉLER avec Le Deuil : accepter que la marque soit perdue est ce qui permet de la lire jusqu'au bout au lieu d'inventer la suite. Marge +1, réussite — et ce qu'on obtient est une perte.",
+   "dc": 9,
+   "at": 3,
+   "de": 7,
+   "action": "RÉVÉLER",
+   "rune": "Le Deuil"
+  },
+  {
+   "n": 7,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Ordalc'h est venu. Il regarde le pied de la pierre, pas vous. Un corbeau de Dame Aveline s'est posé sur la partie relevée.",
+   "issue": "Vous lui tendez le morceau avec la marque tournée vers lui. Il le prend, il le retourne une fois, et il dit : « Trop tard. Toujours. » Puis il le glisse lui-même sous le pied de la pierre, la face gravée contre la terre.",
+   "note": "PARLER avec Le Silence : lui tendre l'objet sans expliquer. Marge +4, réussite — il répond en trois mots parce qu'on ne lui en a demandé aucun.",
+   "dc": 9,
+   "at": 6,
+   "de": 7,
+   "action": "PARLER",
+   "rune": "Le Silence"
+  },
+  {
+   "n": 8,
+   "t": "Épreuve",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "La pierre est calée mais penchée. Il faut la pousser des deux mains pendant qu'Ordalc'h tasse la terre au pied, et il n'y a pas de troisième personne.",
+   "issue": "Vous poussez et vous tenez pendant qu'il tasse. Vos bras lâchent avant qu'il ait fini et la pierre gagne encore un doigt de travers. Elle est debout, elle le restera, et elle ne sera plus jamais droite.",
+   "note": "COMBATTRE avec La Patience contre le temps qu'il faut : marge −1, partiel. Le résultat tient, et le défaut se voit de loin.",
+   "dc": 12,
+   "at": 6,
+   "de": 5,
+   "action": "COMBATTRE",
+   "rune": "La Patience"
+  },
+  {
+   "n": 9,
+   "t": "Rencontre",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Dame Aveline arrive quand tout est fini. Elle fait le tour de la pierre relevée, elle voit le travers, et elle voit la terre fraîche au pied.",
+   "issue": "Vous lui dites qu'il manquait un morceau et que vous l'avez racheté vingt gwenneg à un korrigan. « Alors c'est réglé », dit-elle, et elle repart vers son bosquet sans demander de qui venait le morceau. Ordalc'h vous regarde ne pas le lui dire.",
+   "note": "PARLER avec La Franchise, à moitié : ce qui est dit est vrai, ce qui manque l'est aussi. Marge +2, réussite — et la corruption du beat 9 vient de là, pas d'un mensonge.",
+   "dc": 9,
+   "at": 0,
+   "de": 11,
+   "action": "PARLER",
+   "rune": "La Franchise",
+   "bascule": [
+    "subie",
+    "elle ne demande pas, et vous ne dites pas"
+   ]
+  },
+  {
+   "n": 10,
+   "t": "Climax",
+   "lieu": "Ar C'hoad Kozh",
+   "scene": "Le cercle compte de nouveau douze pierres debout. La douzième penche, et le nom qu'elle portait est contre la terre.",
+   "issue": "Vous repartez avec deux gwenneg et onze éclats de granit rangés par taille dans votre poche, qui ne servent à rien. Le nom, lui, reste sous la pierre. Personne dans ce bois ne le prononcera plus, et le cercle tient quand même.",
+   "note": "OBSERVER avec L'Élan : partir avant d'être sûr est le seul geste possible quand ce qu'on cherchait est enterré sous ce qu'on a réparé. Marge +2, réussite — la quête se ferme sur ce qu'elle a perdu, pas sur ce qu'elle rapporte.",
+   "dc": 12,
+   "at": 6,
+   "de": 8,
+   "action": "OBSERVER",
+   "rune": "L'Élan",
+   "bascule": [
+    "subie",
+    "la pierre tient, le nom est perdu"
+   ]
+  }
+ ]
+}
