@@ -443,6 +443,13 @@ func _generer(sys: String, usr: String) -> String:
 	if not await _attendre_voie("conteur", VOIE_TIMEOUT_MS):
 		_noter_erreur("la voie conteur est restee occupee %d s" % int(VOIE_TIMEOUT_MS / 1000))
 		return ""
+	# LA TAILLE DU PROMPT SE DIT. Le moteur tourne a n_ctx=2048 : prompt + reponse doivent y tenir.
+	# Les consignes ont grossi (regles d'ecriture, marche du beat, but, DEUX issues de contexte) et
+	# je n'ai aucun moyen de savoir si je viens de depasser la fenetre — sauf en le comptant ici.
+	# Le rapport signe/jeton est d'environ 3,5 en francais ; l'estimation suffit a voir un depassement.
+	var _n: int = sys.length() + usr.length()
+	print("    prompt=%d car. ~%d jetons (+%d de reponse, fenetre 2048)" % [
+		_n, int(_n / 3.5), int(GEN_OPTS.get("max_tokens", 0))])
 	var r: Dictionary = await _mn.generate(sys, usr, GEN_OPTS)
 	if r.has("error"):
 		_noter_erreur(str(r["error"]))
