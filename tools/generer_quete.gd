@@ -48,7 +48,12 @@ const NODE_TIMEOUT_MS: int = 180000
 # Une generation d'amorce de MerlinScenario dure une minute environ ; une generation de beat
 # jusqu'a deux. Trois minutes couvrent les deux sans masquer un vrai blocage.
 const VOIE_TIMEOUT_MS: int = 180000
-const GEN_OPTS: Dictionary = {"creative": true, "max_tokens": 400, "label": "quete"}
+const GEN_OPTS: Dictionary = {"creative": true, "max_tokens": 280, "label": "quete"}
+## COMBIEN DE SIGNES DE CONTEXTE PRECEDENT ON GARDE PAR ISSUE. q89 a mesure le prompt d'un beat a
+## 1500 jetons, plus 400 de reponse : 1900 sur une fenetre de 2048. C'est au bord, et j'avais
+## annonce 96 jetons pour l'exemple en ne comptant que sa scene et son issue — le reste avait
+## grossi sans que je le recompte. Deux issues completes pesent ~800 signes ; ecourtees, ~500.
+const ECOURTER_ISSUE: int = 250
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _mn: Node = null
@@ -134,7 +139,7 @@ func _go() -> void:
 	for i in range(n_beats):
 		var forme: Dictionary = squelette[i]
 		var b: Dictionary = await _beat(ch, lieu, figures, forme, main,
-			" ".join(issues.slice(maxi(0, issues.size() - 2))), i + 1, n_beats)
+			_contexte(issues), i + 1, n_beats)
 		q["beats"].append(b)
 		issues.append(str(b.get("issue", "")))
 		if not b.has("special"):
@@ -290,8 +295,6 @@ func _figures_en_clair(figures: Array) -> String:
 			bout += ". VEUT : %s" % str(d.get("veut", ""))
 		if str(d.get("replique_etalon", "")) != "":
 			bout += " PARLE AINSI : « %s »" % str(d.get("replique_etalon", ""))
-		if str(d.get("regle_ecriture", "")) != "":
-			bout += " (%s)" % str(d.get("regle_ecriture", "")).substr(0, 90)
 		out += bout
 	return out
 
@@ -342,6 +345,20 @@ func _exemple_de_beat(lieu_nom: String, type_voulu: String) -> String:
 			str(meilleur.get("scene", "")), str(meilleur.get("issue", ""))]
 
 
+## LES DEUX DERNIERES ISSUES, ECOURTEES. La plus recente compte le plus : on la garde entiere et
+## on ne rogne que l'avant-derniere, dont seule la fin sert a enchainer.
+func _contexte(issues: Array) -> String:
+	if issues.is_empty():
+		return ""
+	var derniere: String = str(issues[issues.size() - 1])
+	if issues.size() == 1:
+		return derniere
+	var avant: String = str(issues[issues.size() - 2])
+	if avant.length() > ECOURTER_ISSUE:
+		avant = "..." + avant.substr(avant.length() - ECOURTER_ISSUE)
+	return avant + " " + derniere
+
+
 func _repiocher(main: Array) -> String:
 	var libres: Array = []
 	for r in RUNES.keys():
@@ -355,15 +372,13 @@ func _repiocher(main: Array) -> String:
 # ── LA PROSE, écrite par le modèle ─────────────────────────────────────────────────────────────
 
 const REGLES: String = """REGLES D'ECRITURE, sans exception :
-- VOUVOIEMENT toujours : « Vous voyez », jamais « Tu vois ». Seule une figure qui parle peut tutoyer, et seulement entre guillemets.
-- Le joueur est « Vous ». N'ecris JAMAIS « le Voyageur », ni « il » pour le designer. Chaque phrase qui parle de lui commence par « Vous ».
+- Le joueur est « Vous ». Jamais « Tu vois », jamais « le Voyageur », jamais « il » pour le designer. Seule une figure qui parle peut tutoyer, entre guillemets.
 - Tu ne peux nommer QUE les figures de la liste donnee. N'en invente aucune autre, sous aucun nom.
 - N'invente aucun objet. N'emploie que ceux qui sont nommes dans la consigne ou deja apparus.
 - Langue simple. Aucune metaphore, aucune comparaison, aucune phrase retournee. Jamais « comme si », « tel un », « on dirait ». On dit ce qui se passe, dans l'ordre.
-- Chaque figure a un NOM et veut quelque chose. Jamais « une femme au visage fatigue ».
 - On reste dans le lieu nomme. N'invente AUCUN batiment : ni hutte, ni maison, ni toit, ni piece, ni porte, ni feu. Si le lieu est un bois, on reste sous les arbres.
 - Un objet est a UN SEUL endroit. S'il change de main, dis-le au moment ou ca arrive ; sinon il reste ou il etait.
-- Une figure presente AGIT et VEUT quelque chose. Elle ne regarde pas, n'observe pas, ne fixe pas, ne maintient pas sa position, n'incline pas la tete : elle fait, elle prend, elle donne, elle refuse, elle parle.
+- Chaque figure a un NOM — jamais « une femme au visage fatigue » — et une figure presente AGIT et VEUT quelque chose. Elle ne regarde pas, n'observe pas, ne fixe pas, ne maintient pas sa position, n'incline pas la tete : elle fait, elle prend, elle donne, elle refuse, elle parle.
 - Aucune question posee au lecteur.
 - Le mystere est dans l'ambiance, jamais dans le sens. Une phrase qui sonne profonde et ne veut rien dire est interdite.
 - L'issue ne redit pas la scene : elle la deplace. Si la derniere phrase pouvait etre la premiere, recommence.
