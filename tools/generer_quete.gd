@@ -296,6 +296,52 @@ func _figures_en_clair(figures: Array) -> String:
 	return out
 
 
+## UN BEAT ECRIT A LA MAIN, DONNE COMME MODELE. C'est le seul levier que je n'avais pas tire, et
+## je l'avais ecarte sur une estimation fausse : « ca coute du contexte qu'on n'a pas ». Mesure
+## faite, un beat pese ~115 jetons quand il en reste ~900 de libres dans la fenetre.
+##
+## Quatre tours ont regle le REGISTRE — l'adresse, les figures inventees, le lieu, les batiments —
+## et pas un n'a bouge la NARRATION : q88 ecrit huit beats ou personne ne fait rien. On ne decrit
+## pas un ton par des regles, on le montre. On prend donc un beat du corpus, du meme lieu quand il
+## en existe un, et du meme type quand c'est possible.
+##
+## IL EST DONNE COMME TON, PAS COMME MATIERE : le modele qui recopierait la scene produirait une
+## quete hors sujet, et c'est dit dans la consigne.
+func _exemple_de_beat(lieu_nom: String, type_voulu: String) -> String:
+	var meilleur: Dictionary = {}
+	var score_max: int = -1
+	var d: DirAccess = DirAccess.open("res://data/scenarios")
+	if d == null:
+		return ""
+	d.list_dir_begin()
+	var nom: String = d.get_next()
+	while nom != "":
+		if nom.ends_with(".json") or nom.ends_with(".json.remap"):
+			var cle: String = nom.get_basename()
+			if cle.ends_with(".json"):
+				cle = cle.get_basename()
+			var q: Dictionary = _lire_json("res://data/scenarios/%s.json" % cle)
+			for b in (q.get("beats", []) as Array):
+				var bb: Dictionary = b as Dictionary
+				if bb.has("special"):
+					continue
+				var sc: int = 0
+				if str(bb.get("lieu", "")) == lieu_nom:
+					sc += 2
+				if str(bb.get("t", "")) == type_voulu:
+					sc += 1
+				if sc > score_max:
+					score_max = sc
+					meilleur = bb
+		nom = d.get_next()
+	d.list_dir_end()
+	if meilleur.is_empty():
+		return ""
+	return ("VOICI UN BEAT BIEN ECRIT, POUR LE TON SEULEMENT. Ne reprends ni son histoire, ni ses "
+		+ "personnages, ni ses objets — seulement sa facon de dire.\nSCENE: %s\nISSUE: %s\n") % [
+			str(meilleur.get("scene", "")), str(meilleur.get("issue", ""))]
+
+
 func _repiocher(main: Array) -> String:
 	var libres: Array = []
 	for r in RUNES.keys():
@@ -317,7 +363,7 @@ const REGLES: String = """REGLES D'ECRITURE, sans exception :
 - Chaque figure a un NOM et veut quelque chose. Jamais « une femme au visage fatigue ».
 - On reste dans le lieu nomme. N'invente AUCUN batiment : ni hutte, ni maison, ni toit, ni piece, ni porte, ni feu. Si le lieu est un bois, on reste sous les arbres.
 - Un objet est a UN SEUL endroit. S'il change de main, dis-le au moment ou ca arrive ; sinon il reste ou il etait.
-- Une figure presente AGIT et VEUT quelque chose. Elle ne se contente jamais de regarder, de fixer ou d'incliner la tete.
+- Une figure presente AGIT et VEUT quelque chose. Elle ne regarde pas, n'observe pas, ne fixe pas, ne maintient pas sa position, n'incline pas la tete : elle fait, elle prend, elle donne, elle refuse, elle parle.
 - Aucune question posee au lecteur.
 - Le mystere est dans l'ambiance, jamais dans le sens. Une phrase qui sonne profonde et ne veut rien dire est interdite.
 - L'issue ne redit pas la scene : elle la deplace. Si la derniere phrase pouvait etre la premiere, recommence.
@@ -365,7 +411,8 @@ func _beat(ch: Dictionary, lieu: Dictionary, figures: Array, forme: Dictionary, 
 	# l'a encore sous les yeux au lieu de la relire dans un prompt.
 	var tuile: String = str(forme.get("tuile_imposee", ""))
 	var marge: int = int(forme["de"]) + int(forme["at"]) - int(forme["dc"])
-	var tout: Dictionary = await _beat_entier(ch, lieu, figures, main, precedent, k, n, tuile, marge)
+	var tout: Dictionary = await _beat_entier(ch, lieu, figures, main, precedent, k, n, tuile, marge,
+		str(forme["t"]))
 	b["action"] = str(tout["tuile"])
 	b["rune"] = str(tout["rune"])
 	b["dc"] = int(forme["dc"])
@@ -381,13 +428,14 @@ func _beat(ch: Dictionary, lieu: Dictionary, figures: Array, forme: Dictionary, 
 
 
 func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
-		precedent: String, k: int, n: int, tuile_imposee: String, marge: int) -> Dictionary:
+		precedent: String, k: int, n: int, tuile_imposee: String, marge: int,
+		type_beat: String) -> Dictionary:
 	var noms: String = _figures_en_clair(figures)
 	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
 		+ "(« Vous voyez », jamais « Tu vois »).")
 	var usr: String = ("%s\n\nTOUTE LA SCENE SE PASSE ICI, ET NULLE PART AILLEURS : %s. %s\n"
 		+ "QUI VIT ICI, ET CE QUE CHACUN VEUT : %s\n\nCE QUI S'Y JOUE : %s\n%s\n%s\n\n"
-		+ "CE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n"
+		+ "CE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n%s\n"
 		+ "Ecris le beat %d sur %d, EXACTEMENT dans cette forme et rien d'autre :\n"
 		+ "SCENE: trois phrases courtes. Elle decoule de ce qui precede et finit sur un instant "
 		+ "suspendu, sans poser de question.\n"
@@ -402,7 +450,7 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 			REGLES, str(lieu.get("nom", "")), _lieu_en_clair(lieu), noms,
 			str(ch.get("sujet", "")), _enjeu(ch, k, n),
 			("CE QUI PRECEDE : " + precedent) if precedent != "" else "C'est le premier beat.",
-			_marche(k, n), k, n,
+			_marche(k, n), _exemple_de_beat(str(lieu.get("nom", "")), type_beat), k, n,
 			("imposee : " + tuile_imposee) if tuile_imposee != "" else ("au choix : " + ", ".join(TUILES)),
 			", ".join(main), _resultat_en_clair(marge)]
 	var txt: String = await _generer(sys, usr)
