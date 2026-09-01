@@ -44,6 +44,67 @@ le prix reste raisonnable.
 
 ---
 
+## Les trois candidats retenus (septembre 2026)
+
+Trois biens réels, contactés directement sur leurs sites. **Aucun n'est réservé,
+et leur disponibilité au 3 octobre n'est pas vérifiée** — les plateformes ne se
+consultent pas à distance. Ce sont les trois soumis au vote sur `site/public.html`.
+
+### 1. Bastide de la Peyrolière — Apt · **320 € les 2 nuits**
+
+Maison Jordane ou Maison Peupliers, deux maisons jumelles.
+04 90 74 40 50 · peyroliere@orange.fr · gite-en-luberon.com
+
+- 12 personnes, 4 chambres, piscine privée 4,5 × 10,5 m, climatisée
+- 160 €/nuit hors saison, **minimum 2 nuits**
+- Ménage 140-150 € · draps 14 € la paire · à 3 km du centre d'Apt
+
+> **Le meilleur rapport qualité-prix, et de loin.** C'est aussi le seul des trois
+> à mettre le marché d'Apt du samedi matin à 3 km — le marché qui structure toute
+> la journée. Si le vote hésite, c'est l'argument à sortir.
+
+### 2. Pierre-Étoile — près de Lourmarin · **sur devis**
+
+Agathe Forest · +33 6 64 61 83 51 · agathe.provence@gmail.com · pierreetoileluberon.com
+
+- 12 à 15 personnes, 6 chambres, 5 salles de bain, autour d'une cour centrale
+- Piscine privée sécurisée, billard, ping-pong, babyfoot, terrain de pétanque
+- Accessible PMR · **week-end 2 nuits accepté** (vendredi après-midi → dimanche soir)
+- ⚠️ **Arrivée 16h-17h seulement.** Départ le dimanche jusqu'à 20h sur les week-ends
+
+> Le seul à annoncer explicitement un départ dimanche 20h : la journée du dimanche
+> n'est pas amputée. En revanche l'arrivée tardive interdit toute installation
+> en début d'après-midi.
+
+### 3. Gîte de l'Orangerie — Cadenet · **1 200 € le week-end**
+
+Clotilde Borgarino · 04 90 68 24 45 · latuiliere.eu · 490 chemin de la Tuilière
+Fiche : grandsgites.com/gite-84-tuiliere-2070.htm
+
+- 15 personnes, 6 chambres, **6 salles d'eau, 6 WC**, accès indépendant par chambre
+- Piscine privée 12 × 6 × 1,5 m, cuisine en orangerie de pierre 45 m²
+- Domaine viticole et oléicole · draps et ménage inclus · 600 €/nuit, min. 2 nuits
+- ⚠️ **15 lits simples, aucun lit double** — rédhibitoire pour des couples
+- Animaux non admis
+
+> Le plus confortable : une salle d'eau par chambre à douze, c'est un luxe réel.
+> Mais 1 200 € contre 320 €, réparti sur douze, c'est **73 € de plus par personne**.
+
+### Ce qu'ils ont en commun
+
+**Les trois imposent deux nuits minimum.** Pour une seule nuit sur place, on paie
+le vendredi ou le dimanche en plus. C'est intégré dans les prix ci-dessus — ne
+va pas croire que 320 € couvre une nuit.
+
+### Prochain appel — à passer dès le vote clos (15 septembre)
+
+1. Disponibilité ferme au **samedi 3 → dimanche 4 octobre 2026**
+2. Le tarif **tout compris** : ménage, draps, taxe de séjour, caution
+3. **L'heure de check-in** — critère décisif, voir les horaires ci-dessus
+4. Une **photo du parking et de l'allée**
+
+---
+
 ## Les 8 critères de tri, par ordre d'importance
 
 1. **12 couchages réels.** Un « 12 personnes » qui compte deux canapés-lits et
