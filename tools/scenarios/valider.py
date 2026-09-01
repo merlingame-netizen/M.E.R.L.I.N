@@ -209,6 +209,14 @@ def valider(q, nom=""):
     if tu >= 3:
         e.append("l'adresse au joueur change en cours de quete : %d marques de tutoiement hors "
                  "dialogue — le defaut mesure sur q82" % tu)
+    # LA TROISIEME PERSONNE EST LE MEME DEFAUT SOUS UN AUTRE VISAGE, et mon premier controle ne
+    # cherchait que le tutoiement : q87 est passee avec « le Voyageur » dans six beats sur huit
+    # et onze « vous » seulement. Le corpus ecrit a la main n'emploie JAMAIS « le Voyageur » dans
+    # le corps d'un beat — zero sur soixante-sept — donc le seuil vaut trois comme l'autre.
+    il = len(re.findall(r"\b[Ll]e Voyageur\b", hors_dialogue))
+    if il >= 3:
+        e.append("le joueur est raconte a la troisieme personne %d fois (« le Voyageur ») — "
+                 "le corpus dit « Vous » ; defaut mesure sur q87" % il)
 
     ouvertures = collections.Counter(
         " ".join(str(b.get("issue", "")).split()[:5]).lower() for b in B)

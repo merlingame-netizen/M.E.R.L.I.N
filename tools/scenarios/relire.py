@@ -49,6 +49,9 @@ def lire(q, nom):
     txt = " ".join(str(b.get("scene", "")) + " " + str(b.get("issue", "")) for b in B)
     nu = hors_dialogue(txt)
     tu, vs = len(TU.findall(nu)), len(VOUS.findall(nu))
+    il = len(re.findall(r"\b[Ll]e Voyageur\b", nu))
+    il_beats = [b["n"] for b in B
+                if re.search(r"[Ll]e Voyageur", str(b.get("scene", "")) + str(b.get("issue", "")))]
     tu_beats = [b["n"] for b in B
                 if TU.search(hors_dialogue(str(b.get("scene", "")) + " " + str(b.get("issue", ""))))]
     noms = sorted(set(NOM.findall(txt)) - FAUX_NOMS)
@@ -59,8 +62,11 @@ def lire(q, nom):
     longueurs = [len(str(b.get("scene", ""))) + len(str(b.get("issue", ""))) for b in B]
 
     print("\n%s — %d beats" % (nom, len(B)))
-    print("  adresse     tu=%-3d vous=%-3d %s" % (tu, vs,
+    print("  adresse     tu=%-3d vous=%-3d 3e pers.=%-3d %s" % (tu, vs, il,
           ("· beats qui tutoient : %s" % tu_beats) if tu_beats else "· repere corpus : tu≤1"))
+    if il_beats:
+        print("              beats racontes a la 3e personne (« le Voyageur ») : %s — le corpus : aucun"
+              % il_beats)
     print("  figures     %d nommee(s) : %s" % (len(noms), ", ".join(noms[:10]) or "AUCUNE"))
     print("  images      %d interdite(s)%s" % (len(images),
           (" : " + ", ".join(sorted(set(x.lower() for x in images)))) if images else ""))

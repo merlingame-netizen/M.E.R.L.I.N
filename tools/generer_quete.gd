@@ -224,10 +224,10 @@ func _squelette(n: int) -> Array:
 func _marche(k: int, n: int) -> String:
 	if k == 1:
 		return ("ON ARRIVE. Poser le lieu, puis montrer UNE chose qui ne va pas. A la fin du beat "
-			+ "le Voyageur a vu l'anomalie sans la comprendre.")
+			+ "a la fin du beat, l'anomalie a ete vue sans etre comprise.")
 	if k == n:
 		return ("ON TRANCHE. Ce qui a ete pose au premier beat se regle — bien ou mal, mais ne reste "
-			+ "pas ouvert. Dire ce que le Voyageur emporte en partant.")
+			+ "pas ouvert. Dire ce qui est emporte en partant.")
 	var p: float = float(k - 1) / float(n - 1)
 	if p <= 0.3:
 		return "ON S'APPROCHE. Apprendre A QUI ou A QUOI on a affaire, et le NOMMER."
@@ -236,7 +236,7 @@ func _marche(k: int, n: int) -> String:
 	if p <= 0.7:
 		return "CA SE COMPLIQUE. Un fait nouveau rend impossible la solution qui semblait evidente."
 	if p <= 0.85:
-		return "ON PAIE. Le Voyageur perd quelque chose, ou lache une chose pour en garder une autre."
+		return "ON PAIE. Quelque chose est perdu, ou lache pour en garder une autre."
 	return "DERNIER OBSTACLE. Un empechement concret, juste avant la fin."
 
 
@@ -250,9 +250,9 @@ func _enjeu(ch: Dictionary, k: int, n: int) -> String:
 	if quoi == "":
 		return ""
 	if k == n:
-		return "CE QUE LE VOYAGEUR REPART AVEC, ET C'EST MAINTENANT QUE CA SE JOUE : " + quoi
-	return ("CE QUI EST EN JEU, ET QUE LE VOYAGEUR N'OBTIENT PAS ENCORE : %s. "
-		+ "Ne le lui accorde pas dans ce beat, et ne le lui fais pas tenir en main.") % quoi
+		return "CE QU'ON REPART AVEC, ET C'EST MAINTENANT QUE CA SE JOUE : " + quoi
+	return ("CE QUI EST EN JEU, ET QUI N'EST PAS ENCORE OBTENU : %s. "
+		+ "Ne l'accorde pas dans ce beat, et ne le fais pas tenir en main.") % quoi
 
 
 ## CE QUE LE MODELE SAIT DES FIGURES. Le harnais leur demandait « nom (resume) » — or ces fiches
@@ -310,6 +310,9 @@ func _repiocher(main: Array) -> String:
 
 const REGLES: String = """REGLES D'ECRITURE, sans exception :
 - VOUVOIEMENT toujours : « Vous voyez », jamais « Tu vois ». Seule une figure qui parle peut tutoyer, et seulement entre guillemets.
+- Le joueur est « Vous ». N'ecris JAMAIS « le Voyageur », ni « il » pour le designer. Chaque phrase qui parle de lui commence par « Vous ».
+- Tu ne peux nommer QUE les figures de la liste donnee. N'en invente aucune autre, sous aucun nom.
+- N'invente aucun objet. N'emploie que ceux qui sont nommes dans la consigne ou deja apparus.
 - Langue simple. Aucune metaphore, aucune comparaison, aucune phrase retournee. Jamais « comme si », « tel un », « on dirait ». On dit ce qui se passe, dans l'ordre.
 - Chaque figure a un NOM et veut quelque chose. Jamais « une femme au visage fatigue ».
 - On reste dans le lieu nomme. N'invente AUCUN batiment : ni hutte, ni maison, ni toit, ni piece, ni porte, ni feu. Si le lieu est un bois, on reste sous les arbres.
@@ -329,7 +332,7 @@ func _preambule(ch: Dictionary, lieu: Dictionary) -> Array:
 		+ "Ecris le PREAMBULE de cette quete en QUATRE phrases courtes, une par ligne. "
 		+ "Il installe la scene du premier beat : ou l'on est, ce qu'on voit, ce qu'on entend. "
 		+ "Il n'annonce NI le but, NI ce qu'il faudra faire. La quatrieme phrase rappelle que dans "
-		+ "ces bois tout recommence, sauf le Voyageur.\nQuatre lignes, rien d'autre.") % [
+		+ "ces bois tout recommence, sauf vous.\nQuatre lignes, rien d'autre.") % [
 			REGLES, str(lieu.get("nom", "")), _lieu_en_clair(lieu), str(ch.get("sujet", ""))]
 	var txt: String = await _generer(sys, usr)
 	var out: Array = []
@@ -389,10 +392,10 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 		+ "SCENE: trois phrases courtes. Elle decoule de ce qui precede et finit sur un instant "
 		+ "suspendu, sans poser de question.\n"
 		+ "GESTE: <TUILE> | <RUNE>\n"
-		+ "ISSUE: trois phrases courtes — ce que le Voyageur fait, et ce que ca change. "
+		+ "ISSUE: trois phrases courtes — ce qui est fait, et ce que ca change. "
 		+ "L'issue ne redit pas la scene, elle la deplace. Le geste doit s'y LIRE : on doit retrouver "
 		+ "la tuile et la rune en lisant, sans qu'elles soient nommees.\n"
-		+ "A la fin du beat, le Voyageur SAIT ou POSSEDE une chose qu'il n'avait pas en y entrant, "
+		+ "A la fin du beat, une chose est SUE ou OBTENUE qu'on n'avait pas en y entrant, "
 		+ "et cette chose est NOMMEE dans l'issue.\n\n"
 		+ "TUILE %s\nRUNE, une seule de cette main : %s\n"
 		+ "CE QUE DONNE LE GESTE : %s") % [
@@ -474,7 +477,7 @@ func _issue_choix(sp: Dictionary, precedent: String) -> String:
 	var pris: Array = (sp["options"] as Array)[int(sp["pris"])]
 	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
 		+ "(« Vous voyez », jamais « Tu vois »).")
-	var usr: String = ("%s\n\nLE VOYAGEUR CHOISIT : %s\nCE QUE CA ENTRAINE : %s\n\n"
+	var usr: String = ("%s\n\nCE QUI EST CHOISI : %s\nCE QUE CA ENTRAINE : %s\n\n"
 		+ "Ecris en TROIS phrases courtes ce qui se passe une fois ce choix fait. "
 		+ "Pas de commentaire, pas de morale. Trois phrases, rien d'autre.") % [
 			REGLES, str(pris[0]), str(pris[1])]
@@ -596,7 +599,7 @@ func _resultat_en_clair(m: int) -> String:
 		"reussite":
 			return "une REUSSITE, sans plus : ca marche, ca ne triomphe pas"
 		"partiel":
-			return "un PARTIEL — le Voyageur obtient ce qu'il voulait mais le paie"
+			return "un PARTIEL — on obtient ce qu'on voulait mais on le paie"
 		_:
 			return "un ECHEC — le geste rate, et la suite en sera plus chere"
 
