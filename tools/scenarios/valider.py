@@ -198,6 +198,18 @@ def valider(q, nom=""):
     fuite = [b["n"] for b in B if re.search(r"(?:^|\s)\d+\.\s", str(b.get("scene", "")))]
     if fuite:
         e.append("la numerotation d'etape fuit dans la prose des beats %s" % fuite)
+    # L'ADRESSE AU JOUEUR NE CHANGE PAS EN COURS DE QUETE. Mesure sur q82, premiere quete
+    # generee : 23 marques de tutoiement et 8 de vouvoiement dans le MEME texte, les beats 1-2
+    # vouvoyant et les beats 3-8 tutoyant. Le modele recopiait le registre du canon qu'on lui
+    # injectait. Le corpus ecrit a la main vouvoie a 258 marques contre 2 — d'ou le seuil : une
+    # figure peut tutoyer entre guillemets, trois marques nues sont un glissement de registre.
+    hors_dialogue = re.sub(r"«[^»]*»", " ", " ".join(
+        str(b.get("scene", "")) + " " + str(b.get("issue", "")) for b in B))
+    tu = len(re.findall(r"\b(?:[Tt]u|[Tt]on|[Tt]a|[Tt]es|[Tt]oi)\b", hors_dialogue))
+    if tu >= 3:
+        e.append("l'adresse au joueur change en cours de quete : %d marques de tutoiement hors "
+                 "dialogue — le defaut mesure sur q82" % tu)
+
     ouvertures = collections.Counter(
         " ".join(str(b.get("issue", "")).split()[:5]).lower() for b in B)
     if ouvertures:

@@ -1,138 +1,138 @@
 {
-  "total": 12,
-  "graal_total": 12,
-  "chapitres": [
-    {
-      "n": 1,
-      "lieu": "foret",
-      "titre": "L'Appel sous les Fougères",
-      "eclat": 1,
-      "envergure": "breve",
-      "sujet": "Merlin te réveille dans un lieu qui te connaît déjà. Le Chœur psalmodie un rite dont il a oublié la fin.",
-      "haut_fait": "Aucun. C'est l'ouverture du monde.",
-      "objectif_secondaire": "Aucun.",
-      "ramene": "Le premier éclat, et le Rameau Fendu."
-    },
-    {
-      "n": 2,
-      "lieu": "falaises",
-      "titre": "Le Compte d'Erwan",
-      "eclat": 2,
-      "envergure": "breve",
-      "sujet": "Un veilleur compte un convoi qui n'arrive pas. Confirmer son compte, ou lui apprendre qu'il est le naufragé.",
-      "haut_fait": "Avoir rapporté le premier éclat.",
-      "objectif_secondaire": "Avoir croisé le pilier de ta première traversée.",
-      "ramene": "L'éclat, et La Cloche Muette rejetée par le ressac."
-    },
-    {
-      "n": 3,
-      "lieu": "ys",
-      "titre": "Les Cloches à Contretemps",
-      "eclat": 3,
-      "envergure": "periple",
-      "sujet": "Descendre aux toits à marée basse. Les cloches répondent à des noms que plus personne ne prononce.",
-      "haut_fait": "Avoir survécu à une traversée à Corruption 5 ou plus.",
-      "objectif_secondaire": "Avoir refusé une fois un pacte de l'Être Indéfinissable.",
-      "ramene": "L'éclat. Marc'harit se souvient de toi à partir d'ici."
-    },
-    {
-      "n": 4,
-      "lieu": "mont",
-      "titre": "Le Serment devant les Deux Mers",
-      "eclat": 4,
-      "envergure": "periple",
-      "sujet": "Au sommet, rien ne peut être dit à moitié. Ce que tu jures là, la Chronique le retient mot pour mot.",
-      "haut_fait": "Avoir tenu une promesse envers une figure nommée.",
-      "objectif_secondaire": "Avoir terminé une traversée avec Intégrité 8 ou plus.",
-      "ramene": "L'éclat, le Serment Recousu, et le premier Souvenir de Merlin."
-    },
-    {
-      "n": 5,
-      "lieu": "marche",
-      "titre": "Ce qui se Troque entre Deux Marées",
-      "eclat": 5,
-      "envergure": "periple",
-      "sujet": "Quelqu'un a vendu la lentille d'un phare. Retrouver qui, et à quel prix elle a changé de main.",
-      "haut_fait": "Réputation Favorable avec les Créatures et Êtres.",
-      "objectif_secondaire": "Avoir payé une dette au Passeur de Brumes.",
-      "ramene": "L'éclat, et L'Œil du Phare racheté au comptoir."
-    },
-    {
-      "n": 6,
-      "lieu": "archipel",
-      "titre": "La Neuvième Île",
-      "eclat": 6,
-      "envergure": "breve",
-      "sujet": "Compter les îles à l'aller. En recompter huit au retour, et chercher laquelle manque cette fois.",
-      "haut_fait": "Avoir atteint Corruption 10 et en être revenu.",
-      "objectif_secondaire": "Avoir marchandé trois fois au comptoir des marées.",
-      "ramene": "L'éclat. Les échos de tes anciennes traversées prennent forme ici."
-    },
-    {
-      "n": 7,
-      "lieu": "village",
-      "titre": "Le Feu qu'on n'a pas le Droit d'Éteindre",
-      "eclat": 7,
-      "envergure": "periple",
-      "sujet": "Le village nourrit un feu dont plus personne ne connaît le sens. L'Enfant, lui, sait pourquoi.",
-      "haut_fait": "Avoir accompli une traversée en Voie Rare ou mieux.",
-      "objectif_secondaire": "Avoir protégé l'Enfant une fois, et en avoir payé le prix.",
-      "ramene": "L'éclat. L'Enfant commence à te suivre d'une traversée à l'autre."
-    },
-    {
-      "n": 8,
-      "lieu": "chateau",
-      "titre": "La Salle Murée",
-      "eclat": 8,
-      "envergure": "odyssee",
-      "sujet": "On relève la garde pour un roi qui n'est pas revenu. Derrière le mur, le nom qu'on a effacé.",
-      "haut_fait": "Réputation Favorable avec la Chevalerie déchue.",
-      "objectif_secondaire": "Avoir entendu le Chevalier Sans Nom réciter son serment en entier.",
-      "ramene": "L'éclat, La Clef de Rouille, et le deuxième Souvenir de Merlin."
-    },
-    {
-      "n": 9,
-      "lieu": "ile",
-      "titre": "L'Œil qui Montre la Mer d'Avant",
-      "eclat": 9,
-      "envergure": "periple",
-      "sujet": "Rendre au phare son œil. Il montre la mer telle qu'elle était, et le convoi y est toujours.",
-      "haut_fait": "Avoir investi dans deux branches de l'arbre méta.",
-      "objectif_secondaire": "Avoir confirmé, ou démenti, le compte d'Erwan.",
-      "ramene": "L'éclat. Erwan te reconnaît, ou refuse de te reconnaître."
-    },
-    {
-      "n": 10,
-      "lieu": "souterrain",
-      "titre": "La Porte Basse",
-      "eclat": 10,
-      "envergure": "odyssee",
-      "sujet": "La tourbière respire. Le Passeur ouvre, mais il ouvre toujours sur le prix qu'on n'avait pas annoncé.",
-      "haut_fait": "Être mort une fois, et avoir gagné ton épitaphe.",
-      "objectif_secondaire": "Avoir purifié une carte corrompue chez le Chœur.",
-      "ramene": "L'éclat. Toutes tes dettes impayées se présentent au passage."
-    },
-    {
-      "n": 11,
-      "lieu": "landes",
-      "titre": "Le Tour que le Chœur a Sauté",
-      "eclat": 11,
-      "envergure": "periple",
-      "sujet": "La lande brûle d'elle-même quand le rite manque. Remonter la fumée jusqu'au tour manquant.",
-      "haut_fait": "Réputation Favorable avec les Druides.",
-      "objectif_secondaire": "Avoir vu la lande brûler au moins une fois.",
-      "ramene": "L'éclat. Le Chœur cesse de psalmodier quand tu entres."
-    },
-    {
-      "n": 12,
-      "lieu": "cairn",
-      "titre": "Ce qu'Ordalc'h n'a jamais Dit",
-      "eclat": 12,
-      "envergure": "odyssee",
-      "sujet": "Le premier gardien, avant même le Chœur. Et le premier à avoir glitché, en silence.",
-      "haut_fait": "Avoir débloqué les deux premiers Souvenirs de Merlin.",
-      "objectif_secondaire": "Avoir salué la pierre en silence, sans rien demander.",
-      "ramene": "Le douzième éclat, le dernier Souvenir, et l'accès au run de la Fusion."
-    }
-  ]
+ "total": 12,
+ "graal_total": 12,
+ "chapitres": [
+  {
+   "n": 1,
+   "lieu": "foret",
+   "titre": "L'Appel sous les Fougères",
+   "eclat": 1,
+   "envergure": "breve",
+   "sujet": "Merlin vous réveille dans un lieu qui vous connaît déjà. Le Chœur psalmodie un rite dont il a oublié la fin.",
+   "haut_fait": "Aucun. C'est l'ouverture du monde.",
+   "objectif_secondaire": "Aucun.",
+   "ramene": "Le premier éclat, et le Rameau Fendu."
+  },
+  {
+   "n": 2,
+   "lieu": "falaises",
+   "titre": "Le Compte d'Erwan",
+   "eclat": 2,
+   "envergure": "breve",
+   "sujet": "Un veilleur compte un convoi qui n'arrive pas. Confirmer son compte, ou lui apprendre qu'il est le naufragé.",
+   "haut_fait": "Avoir rapporté le premier éclat.",
+   "objectif_secondaire": "Avoir croisé le pilier de ta première traversée.",
+   "ramene": "L'éclat, et La Cloche Muette rejetée par le ressac."
+  },
+  {
+   "n": 3,
+   "lieu": "ys",
+   "titre": "Les Cloches à Contretemps",
+   "eclat": 3,
+   "envergure": "periple",
+   "sujet": "Descendre aux toits à marée basse. Les cloches répondent à des noms que plus personne ne prononce.",
+   "haut_fait": "Avoir survécu à une traversée à Corruption 5 ou plus.",
+   "objectif_secondaire": "Avoir refusé une fois un pacte de l'Être Indéfinissable.",
+   "ramene": "L'éclat. Marc'harit se souvient de vous à partir d'ici."
+  },
+  {
+   "n": 4,
+   "lieu": "mont",
+   "titre": "Le Serment devant les Deux Mers",
+   "eclat": 4,
+   "envergure": "periple",
+   "sujet": "Au sommet, rien ne peut être dit à moitié. Ce que vous jurez là, la Chronique le retient mot pour mot.",
+   "haut_fait": "Avoir tenu une promesse envers une figure nommée.",
+   "objectif_secondaire": "Avoir terminé une traversée avec Intégrité 8 ou plus.",
+   "ramene": "L'éclat, le Serment Recousu, et le premier Souvenir de Merlin."
+  },
+  {
+   "n": 5,
+   "lieu": "marche",
+   "titre": "Ce qui se Troque entre Deux Marées",
+   "eclat": 5,
+   "envergure": "periple",
+   "sujet": "Quelqu'un a vendu la lentille d'un phare. Retrouver qui, et à quel prix elle a changé de main.",
+   "haut_fait": "Réputation Favorable avec les Créatures et Êtres.",
+   "objectif_secondaire": "Avoir payé une dette au Passeur de Brumes.",
+   "ramene": "L'éclat, et L'Œil du Phare racheté au comptoir."
+  },
+  {
+   "n": 6,
+   "lieu": "archipel",
+   "titre": "La Neuvième Île",
+   "eclat": 6,
+   "envergure": "breve",
+   "sujet": "Compter les îles à l'aller. En recompter huit au retour, et chercher laquelle manque cette fois.",
+   "haut_fait": "Avoir atteint Corruption 10 et en être revenu.",
+   "objectif_secondaire": "Avoir marchandé trois fois au comptoir des marées.",
+   "ramene": "L'éclat. Les échos de vos anciennes traversées prennent forme ici."
+  },
+  {
+   "n": 7,
+   "lieu": "village",
+   "titre": "Le Feu qu'on n'a pas le Droit d'Éteindre",
+   "eclat": 7,
+   "envergure": "periple",
+   "sujet": "Le village nourrit un feu dont plus personne ne connaît le sens. L'Enfant, lui, sait pourquoi.",
+   "haut_fait": "Avoir accompli une traversée en Voie Rare ou mieux.",
+   "objectif_secondaire": "Avoir protégé l'Enfant une fois, et en avoir payé le prix.",
+   "ramene": "L'éclat. L'Enfant commence à vous suivre d'une traversée à l'autre."
+  },
+  {
+   "n": 8,
+   "lieu": "chateau",
+   "titre": "La Salle Murée",
+   "eclat": 8,
+   "envergure": "odyssee",
+   "sujet": "On relève la garde pour un roi qui n'est pas revenu. Derrière le mur, le nom qu'on a effacé.",
+   "haut_fait": "Réputation Favorable avec la Chevalerie déchue.",
+   "objectif_secondaire": "Avoir entendu le Chevalier Sans Nom réciter son serment en entier.",
+   "ramene": "L'éclat, La Clef de Rouille, et le deuxième Souvenir de Merlin."
+  },
+  {
+   "n": 9,
+   "lieu": "ile",
+   "titre": "L'Œil qui Montre la Mer d'Avant",
+   "eclat": 9,
+   "envergure": "periple",
+   "sujet": "Rendre au phare son œil. Il montre la mer telle qu'elle était, et le convoi y est toujours.",
+   "haut_fait": "Avoir investi dans deux branches de l'arbre méta.",
+   "objectif_secondaire": "Avoir confirmé, ou démenti, le compte d'Erwan.",
+   "ramene": "L'éclat. Erwan vous reconnaît, ou refuse de vous reconnaître."
+  },
+  {
+   "n": 10,
+   "lieu": "souterrain",
+   "titre": "La Porte Basse",
+   "eclat": 10,
+   "envergure": "odyssee",
+   "sujet": "La tourbière respire. Le Passeur ouvre, mais il ouvre toujours sur le prix qu'on n'avait pas annoncé.",
+   "haut_fait": "Être mort une fois, et avoir gagné ton épitaphe.",
+   "objectif_secondaire": "Avoir purifié une carte corrompue chez le Chœur.",
+   "ramene": "L'éclat. Toutes vos dettes impayées se présentent au passage."
+  },
+  {
+   "n": 11,
+   "lieu": "landes",
+   "titre": "Le Tour que le Chœur a Sauté",
+   "eclat": 11,
+   "envergure": "periple",
+   "sujet": "La lande brûle d'elle-même quand le rite manque. Remonter la fumée jusqu'au tour manquant.",
+   "haut_fait": "Réputation Favorable avec les Druides.",
+   "objectif_secondaire": "Avoir vu la lande brûler au moins une fois.",
+   "ramene": "L'éclat. Le Chœur cesse de psalmodier quand vous entrez."
+  },
+  {
+   "n": 12,
+   "lieu": "cairn",
+   "titre": "Ce qu'Ordalc'h n'a jamais Dit",
+   "eclat": 12,
+   "envergure": "odyssee",
+   "sujet": "Le premier gardien, avant même le Chœur. Et le premier à avoir glitché, en silence.",
+   "haut_fait": "Avoir débloqué les deux premiers Souvenirs de Merlin.",
+   "objectif_secondaire": "Avoir salué la pierre en silence, sans rien demander.",
+   "ramene": "Le douzième éclat, le dernier Souvenir, et l'accès au run de la Fusion."
+  }
+ ]
 }

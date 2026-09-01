@@ -118,12 +118,13 @@ func _go() -> void:
 	print("  préambule : %d phrase(s)" % (q["preambule"] as Array).size())
 
 	var main: Array = MAIN_DEPART.duplicate()
-	var precedent: String = ""
+	var issues: Array = []
 	for i in range(n_beats):
 		var forme: Dictionary = squelette[i]
-		var b: Dictionary = await _beat(ch, lieu, figures, forme, main, precedent, i + 1, n_beats)
+		var b: Dictionary = await _beat(ch, lieu, figures, forme, main,
+			" ".join(issues.slice(maxi(0, issues.size() - 2))), i + 1, n_beats)
 		q["beats"].append(b)
-		precedent = str(b.get("issue", ""))
+		issues.append(str(b.get("issue", "")))
 		if not b.has("special"):
 			main.erase(str(b["rune"]))
 			main.append(_repiocher(main))
@@ -202,6 +203,31 @@ func _squelette(n: int) -> Array:
 	return out
 
 
+## LA MARCHE DE CE BEAT. q82 avait une mecanique parfaite et une histoire ou rien n'arrivait :
+## huit beats interchangeables, chacun juste apres le precedent et avant rien. Le modele n'a pas
+## d'arc en tete — il n'ecrit qu'un beat a la fois et ne voit que la derniere issue. L'arc est donc
+## calcule ici, comme la longueur et les des, et chaque appel recoit SA MARCHE : ce que ce beat-la
+## doit avoir accompli quand il se termine. Meme decision que pour la mecanique — ce que le modele
+## ne sait pas tenir, le harnais le tient a sa place.
+func _marche(k: int, n: int) -> String:
+	if k == 1:
+		return ("ON ARRIVE. Poser le lieu, puis montrer UNE chose qui ne va pas. A la fin du beat "
+			+ "le Voyageur a vu l'anomalie sans la comprendre.")
+	if k == n:
+		return ("ON TRANCHE. Ce qui a ete pose au premier beat se regle — bien ou mal, mais ne reste "
+			+ "pas ouvert. Dire ce que le Voyageur emporte en partant.")
+	var p: float = float(k - 1) / float(n - 1)
+	if p <= 0.3:
+		return "ON S'APPROCHE. Apprendre A QUI ou A QUOI on a affaire, et le NOMMER."
+	if p <= 0.5:
+		return "ON COMPREND. Dire ce qui est en jeu, et qui va perdre quoi si personne ne bouge."
+	if p <= 0.7:
+		return "CA SE COMPLIQUE. Un fait nouveau rend impossible la solution qui semblait evidente."
+	if p <= 0.85:
+		return "ON PAIE. Le Voyageur perd quelque chose, ou lache une chose pour en garder une autre."
+	return "DERNIER OBSTACLE. Un empechement concret, juste avant la fin."
+
+
 func _repiocher(main: Array) -> String:
 	var libres: Array = []
 	for r in RUNES.keys():
@@ -215,8 +241,11 @@ func _repiocher(main: Array) -> String:
 # ── LA PROSE, écrite par le modèle ─────────────────────────────────────────────────────────────
 
 const REGLES: String = """REGLES D'ECRITURE, sans exception :
-- Langue simple. Aucune metaphore, aucune comparaison, aucune phrase retournee. On dit ce qui se passe, dans l'ordre.
+- VOUVOIEMENT toujours : « Vous voyez », jamais « Tu vois ». Seule une figure qui parle peut tutoyer, et seulement entre guillemets.
+- Langue simple. Aucune metaphore, aucune comparaison, aucune phrase retournee. Jamais « comme si », « tel un », « on dirait ». On dit ce qui se passe, dans l'ordre.
 - Chaque figure a un NOM et veut quelque chose. Jamais « une femme au visage fatigue ».
+- On reste dans le lieu nomme. N'invente ni piece, ni porte, ni maison, ni feu qui ne s'y trouve pas.
+- Aucune question posee au lecteur.
 - Le mystere est dans l'ambiance, jamais dans le sens. Une phrase qui sonne profonde et ne veut rien dire est interdite.
 - L'issue ne redit pas la scene : elle la deplace. Si la derniere phrase pouvait etre la premiere, recommence.
 - Ce qui apparait revient. Pas d'objet ni d'animal qui traverse une scene et disparait.
@@ -224,7 +253,8 @@ const REGLES: String = """REGLES D'ECRITURE, sans exception :
 
 
 func _preambule(ch: Dictionary, lieu: Dictionary) -> Array:
-	var sys: String = "Tu es MERLIN et tu paries au Voyageur. Francais simple, present, deuxieme personne."
+	var sys: String = ("Tu es MERLIN et tu parles au Voyageur. Francais simple, present, VOUVOIEMENT "
+		+ "(« Vous voyez », jamais « Tu vois »).")
 	var usr: String = ("%s\n\nLIEU : %s. %s\nCE QUI S'Y JOUE : %s\n\n"
 		+ "Ecris le PREAMBULE de cette quete en QUATRE phrases courtes, une par ligne. "
 		+ "Il installe la scene du premier beat : ou l'on est, ce qu'on voit, ce qu'on entend. "
@@ -247,7 +277,7 @@ func _beat(ch: Dictionary, lieu: Dictionary, figures: Array, forme: Dictionary, 
 		b["bascule"] = forme["bascule"]
 
 	if forme.has("special"):
-		b["special"] = await _beat_choix(ch, forme, precedent, k)
+		b["special"] = await _beat_choix(ch, forme, precedent, k, n)
 		b["scene"] = str(b["special"]["_scene"])
 		b["special"].erase("_scene")
 		b["issue"] = await _issue_choix(b["special"], precedent)
@@ -282,20 +312,26 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 	var noms: String = ""
 	for f in figures:
 		noms += "%s (%s) ; " % [str((f as Dictionary).get("nom", "")), str((f as Dictionary).get("resume", ""))]
-	var sys: String = "Tu ecris un jeu narratif celtique. Francais simple, present, deuxieme personne (« Vous »)."
-	var usr: String = ("%s\n\nLIEU : %s. %s\nFIGURES D'ICI : %s\nCE QUI S'Y JOUE : %s\n%s\n\n"
+	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
+		+ "(« Vous voyez », jamais « Tu vois »).")
+	var usr: String = ("%s\n\nTOUTE LA SCENE SE PASSE ICI, ET NULLE PART AILLEURS : %s. %s\n"
+		+ "FIGURES D'ICI : %s\nCE QUI S'Y JOUE : %s\nCE QUE LA QUETE DOIT RAPPORTER : %s\n%s\n\n"
+		+ "CE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n"
 		+ "Ecris le beat %d sur %d, EXACTEMENT dans cette forme et rien d'autre :\n"
 		+ "SCENE: trois phrases courtes. Elle decoule de ce qui precede et finit sur un instant "
 		+ "suspendu, sans poser de question.\n"
 		+ "GESTE: <TUILE> | <RUNE>\n"
 		+ "ISSUE: trois phrases courtes — ce que le Voyageur fait, et ce que ca change. "
-		+ "L'issue ne redit pas la scene, elle la deplace. Le geste doit s'y LIRE.\n\n"
+		+ "L'issue ne redit pas la scene, elle la deplace. Le geste doit s'y LIRE : on doit retrouver "
+		+ "la tuile et la rune en lisant, sans qu'elles soient nommees.\n"
+		+ "A la fin du beat, le Voyageur SAIT ou POSSEDE une chose qu'il n'avait pas en y entrant, "
+		+ "et cette chose est NOMMEE dans l'issue.\n\n"
 		+ "TUILE %s\nRUNE, une seule de cette main : %s\n"
 		+ "CE QUE DONNE LE GESTE : %s") % [
 			REGLES, str(lieu.get("nom", "")), str(lieu.get("resume", "")), noms,
-			str(ch.get("sujet", "")),
+			str(ch.get("sujet", "")), str(ch.get("ramene", "")),
 			("CE QUI PRECEDE : " + precedent) if precedent != "" else "C'est le premier beat.",
-			k, n,
+			_marche(k, n), k, n,
 			("imposee : " + tuile_imposee) if tuile_imposee != "" else ("au choix : " + ", ".join(TUILES)),
 			", ".join(main), _resultat_en_clair(marge)]
 	var txt: String = await _generer(sys, usr)
@@ -334,63 +370,11 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 			"tuile": tuile, "rune": rune}
 
 
-func _choisir_geste(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
-		precedent: String, k: int, n: int, tuile_imposee: String) -> Dictionary:
-	var noms: String = ""
-	for f in figures:
-		noms += "%s (%s) ; " % [str((f as Dictionary).get("nom", "")), str((f as Dictionary).get("resume", ""))]
-	var sys: String = "Tu ecris un jeu narratif celtique. Francais simple, present, deuxieme personne (« Vous »)."
-	var usr: String = ("%s\n\nLIEU : %s. %s\nFIGURES QU'ON PEUT RENCONTRER ICI : %s\n"
-		+ "CE QUI S'Y JOUE : %s\n%s\n\n"
-		+ "Ecris la SCENE du beat %d sur %d (type : %s), en TROIS phrases courtes. "
-		+ "Elle decoule de ce qui precede. Elle finit sur un instant suspendu, sans poser de question.\n"
-		+ "Puis, sur une derniere ligne, ecris exactement : GESTE: <TUILE> | <RUNE>\n"
-		+ "TUILE %s\nRUNE, une seule de cette main : %s\n"
-		+ "Choisis la paire qui rend la scene la plus juste.") % [
-			REGLES, str(lieu.get("nom", "")), str(lieu.get("resume", "")), noms,
-			str(ch.get("sujet", "")),
-			("CE QUI PRECEDE : " + precedent) if precedent != "" else "C'est le premier beat.",
-			k, n, str(_type_court(str(ch.get("lieu", "")))),
-			("imposee : " + tuile_imposee) if tuile_imposee != "" else ("au choix : " + ", ".join(TUILES)),
-			", ".join(main)]
-	var txt: String = await _generer(sys, usr)
-	var scene: String = ""
-	var tuile: String = tuile_imposee
-	var rune: String = ""
-	for l in txt.split("\n"):
-		var s: String = str(l).strip_edges()
-		if s == "":
-			continue
-		if s.to_upper().begins_with("GESTE"):
-			var apres: String = s.substr(s.find(":") + 1)
-			var bouts: PackedStringArray = apres.split("|")
-			if bouts.size() >= 2:
-				if tuile_imposee == "":
-					tuile = _plus_proche(str(bouts[0]).strip_edges(), TUILES)
-				rune = _plus_proche(str(bouts[1]).strip_edges(), main)
-		else:
-			scene += ("" if scene == "" else " ") + _nettoyer(s)
-	if tuile == "":
-		tuile = TUILES[_rng.randi_range(0, TUILES.size() - 1)]
-	if rune == "":
-		rune = str(main[_rng.randi_range(0, main.size() - 1)])
-	return {"scene": scene, "tuile": tuile, "rune": rune}
-
-
-func _issue(b: Dictionary, precedent: String, marge: int) -> String:
-	var sys: String = "Tu ecris un jeu narratif celtique. Francais simple, present, deuxieme personne."
-	var usr: String = ("%s\n\nLA SCENE : %s\nLE GESTE POSE : %s (%s) avec %s (%s)\n"
-		+ "LE RESULTAT : %s\n\nEcris l'ISSUE en TROIS phrases courtes : ce que le Voyageur fait, "
-		+ "et ce que ca change. Elle ne redit pas la scene, elle la deplace. "
-		+ "Le geste pose doit se LIRE dans ce qui est ecrit.\nTrois phrases, rien d'autre.") % [
-			REGLES, str(b["scene"]), str(b["action"]), str(TUILES_SENS.get(b["action"], "")),
-			str(b["rune"]), str(RUNES.get(b["rune"], "")), _resultat_en_clair(marge)]
-	return _nettoyer(await _generer(sys, usr))
-
-
-func _beat_choix(ch: Dictionary, forme: Dictionary, precedent: String, k: int) -> Dictionary:
-	var sys: String = "Tu ecris un jeu narratif celtique. Francais simple, present, deuxieme personne."
-	var usr: String = ("%s\n\nCE QUI PRECEDE : %s\nCE QUI S'Y JOUE : %s\n\n"
+func _beat_choix(ch: Dictionary, forme: Dictionary, precedent: String, k: int, n: int) -> Dictionary:
+	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
+		+ "(« Vous voyez », jamais « Tu vois »).")
+	var usr: String = ("%s\n\nCE QUI PRECEDE : %s\nCE QUI S'Y JOUE : %s\n"
+		+ "CE QUE LA QUETE DOIT RAPPORTER : %s\nCE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n"
 		+ "Ecris un beat de DECISION (%s), ainsi :\n"
 		+ "SCENE: deux phrases qui posent le choix, sans le resoudre.\n"
 		+ "OPTION: <ce qu'on fait> || <ce que ca entraine>\n"
@@ -399,7 +383,7 @@ func _beat_choix(ch: Dictionary, forme: Dictionary, precedent: String, k: int) -
 		+ "TROIS options, et AUCUNE ne doit etre gratuite : chacune coute quelque chose de "
 		+ "nommable. Si l'une est manifestement la bonne, recommence.") % [
 			REGLES, precedent if precedent != "" else "rien", str(ch.get("sujet", "")),
-			str(forme["special"])]
+			str(ch.get("ramene", "")), _marche(k, n), str(forme["special"])]
 	var txt: String = await _generer(sys, usr)
 	var scene: String = ""
 	var options: Array = []
@@ -420,7 +404,8 @@ func _beat_choix(ch: Dictionary, forme: Dictionary, precedent: String, k: int) -
 
 func _issue_choix(sp: Dictionary, precedent: String) -> String:
 	var pris: Array = (sp["options"] as Array)[int(sp["pris"])]
-	var sys: String = "Tu ecris un jeu narratif celtique. Francais simple, present, deuxieme personne."
+	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
+		+ "(« Vous voyez », jamais « Tu vois »).")
 	var usr: String = ("%s\n\nLE VOYAGEUR CHOISIT : %s\nCE QUE CA ENTRAINE : %s\n\n"
 		+ "Ecris en TROIS phrases courtes ce qui se passe une fois ce choix fait. "
 		+ "Pas de commentaire, pas de morale. Trois phrases, rien d'autre.") % [
