@@ -58,6 +58,21 @@ if [ -e "$HOME/.cache/merlin-agents/e2e.lock" ] \
     exit 0
 fi
 
+# TOUT HARNAIS, PAS SEULEMENT CEUX QUI ONT PENSE A POSER UN VERROU. Les deux portes ci-dessus
+# demandent au travail de se declarer ; celui qui ne connait pas la regle se fait couper. C'est ce
+# qui est arrive a la generation de quetes : q83, q84, q89 et q90 sont mortes ici meme, apres
+# sept beats sur huit, parce qu'une generation dure ~500 s et que personne ne regarde un harnais.
+# q85 est allee plus loin : coupee ici, l'etat desire valait toujours « running », et le veilleur
+# a relance le JEU NORMAL a sa place — la mesure a tourne dix minutes sur un menu.
+# Trois courses seulement ont abouti, et seulement parce qu'elles finissaient en 420-430 s, juste
+# sous le seuil. Le marqueur pose par game-stack dit ce que la course EST, sans qu'elle ait a le
+# demander : on ne coupe pas ce qui n'est pas une partie.
+HARNAIS="$(cat "$RUNDIR/harness" 2>/dev/null || echo "")"
+if [ -n "$HARNAIS" ]; then
+    echo "harnais en cours ($HARNAIS) — on ne coupe pas ce qui n'est pas une partie"
+    exit 0
+fi
+
 etape 2 3 "compter les spectateurs"
 
 # La comptabilité de x11vnc lui-même, et non un comptage de sockets : c'est lui qui sert les
