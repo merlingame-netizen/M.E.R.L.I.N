@@ -4,3 +4,7 @@
 whatsapp/contacts.vcf
 whatsapp/contacts.csv
 whatsapp/contacts_source.txt
+
+# RIB : coordonnees bancaires reelles, injectees au deploiement.
+# Le depot part sur GitHub — l'IBAN n'y a pas sa place.
+deploy/rib.env

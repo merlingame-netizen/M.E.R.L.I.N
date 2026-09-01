@@ -83,11 +83,45 @@ ANNIV_HASH="$(sudo sed -n 's/^ANNIV_HASH=//p' "$CRED_FILE")"
 # ── 4. Publication des fichiers ─────────────────────────────────────────────
 say "Publication du site"
 sudo mkdir -p "$DEST/site" /var/log/caddy /var/lib/anniv-elise
-sudo cp "$SITE_SRC/index.html" "$DEST/site/index.html"
+
+# Le RIB n'est pas dans le dépôt Git : il vit dans deploy/rib.env (gitignoré)
+# et n'est injecté dans la page qu'ici, au moment de la publication.
+RIB_ENV="$SRC_DIR/rib.env"
+if [ -f "$RIB_ENV" ]; then
+  # shellcheck disable=SC1090
+  . "$RIB_ENV"
+  echo "    RIB chargé depuis rib.env (titulaire : ${RIB_TITULAIRE:-?})"
+else
+  RIB_TITULAIRE="RIB à venir"; RIB_IBAN="communiqué dans le groupe"
+  RIB_BIC="—"; RIB_BANQUE="—"
+  echo "    ⚠️  rib.env absent — la page affichera « RIB à venir »"
+  echo "       cp $SRC_DIR/rib.env.example $SRC_DIR/rib.env puis remplis-le"
+fi
+
+# Substitution par python3 plutôt que sed : les valeurs peuvent contenir des
+# caractères que sed interpréterait (&, /, accents selon la locale).
+RIB_TITULAIRE="$RIB_TITULAIRE" RIB_IBAN="$RIB_IBAN" \
+RIB_BIC="$RIB_BIC" RIB_BANQUE="$RIB_BANQUE" \
+python3 - "$SITE_SRC/index.html" /tmp/anniv-index.html <<'PYSUB'
+import os, sys
+src, dst = sys.argv[1], sys.argv[2]
+html = open(src, encoding='utf-8').read()
+for key in ("RIB_TITULAIRE", "RIB_IBAN", "RIB_BIC", "RIB_BANQUE"):
+    html = html.replace(f"__{key}__", os.environ[key])
+open(dst, 'w', encoding='utf-8').write(html)
+PYSUB
+
+sudo cp /tmp/anniv-index.html "$DEST/site/index.html"
+rm -f /tmp/anniv-index.html
+[ -f "$SITE_SRC/kit.html" ] && sudo cp "$SITE_SRC/kit.html" "$DEST/site/kit.html"
 [ -d "$SITE_SRC/assets" ] && sudo cp -r "$SITE_SRC/assets" "$DEST/site/"
 sudo chown -R caddy:caddy "$DEST" /var/log/caddy 2>/dev/null || sudo chown -R root:root "$DEST"
 sudo chmod -R a+rX "$DEST"
-echo "    $DEST/site/index.html ($(stat -c%s "$SITE_SRC/index.html") octets)"
+
+if sudo grep -q '__RIB_' "$DEST/site/index.html"; then
+  die "des placeholders __RIB_*__ subsistent dans la page publiée"
+fi
+echo "    index.html + kit.html publiés dans $DEST/site"
 
 # ── 5. Configuration Caddy ──────────────────────────────────────────────────
 say "Configuration Caddy"
@@ -193,8 +227,12 @@ cat <<RECAP
   Identifiant invite
   Mot de passe $ANNIV_PASS
 
-  Colle ces trois lignes dans le message d'accueil du groupe WhatsApp
-  (whatsapp/02_messages_prets.md, message A).
+  Colle ces trois lignes dans le message d'accueil du groupe WhatsApp.
+
+  Kit de copie (pour toi, non listé dans le menu des invités) :
+      ${PUBLIC_URL:-<URL>}/kit.html
+  Ouvre-le sur ton téléphone : chaque message a un bouton « Envoyer sur
+  WhatsApp » qui ouvre l'appli avec le texte déjà écrit.
 
   ⚠️  L'URL en *.trycloudflare.com est éphémère : elle change à chaque
       redémarrage du tunnel. Pour une URL stable jusqu'au 3 octobre,
