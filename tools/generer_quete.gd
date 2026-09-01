@@ -80,29 +80,41 @@ func _go() -> void:
 	print("=== GÉNÉRATION — chapitre %d : %s (%s) · %d beats ===" % [
 		n_ch, str(ch.get("titre", "")), str(ch.get("lieu", "")), n_beats])
 
-	_mn = await _attendre_moteur()
-	if _mn == null:
-		print("moteur indisponible")
-		quit(1)
-		return
-	# FAIRE TAIRE LE SCENARIO. q80 a genere six beats en cinquante-cinq minutes — neuf minutes
-	# par beat, dont huit d'ATTENTE. Le moteur est mono-place par voie, et MerlinScenario ne
-	# s'arrete jamais : il amorce au chargement puis continue en fond. Chacun de mes appels
-	# attendait donc qu'il ait fini le sien.
-	# Ce harnais n'utilise pas le scenario — MerlinQuete est statique — donc on peut le mettre
-	# au repos sans rien casser. C'est la difference entre neuf minutes par beat et une.
+	# FAIRE TAIRE LE SCENARIO — ET AVANT D'ATTENDRE LE MOTEUR, PAS APRES.
+	#
+	# q80 a genere six beats en cinquante-cinq minutes, dont huit d'attente par beat : le moteur est
+	# mono-place par voie, et MerlinScenario amorce sa voix des que le modele est charge. Mettre le
+	# scenario au repos reglait la suite, mais pas l'amorce elle-meme — q84 et q86 ont encore paye
+	# 227 secondes AVANT le premier beat, soit 45 % du budget d'une generation.
+	#
+	# La raison est un ordre : `_attendre_moteur()` rend la main quand `is_ready()` est vrai, donc
+	# APRES que `model_ready` soit tombe — et l'amorce, branchee dessus en one-shot, est deja partie.
+	# Couper le signal ensuite ne sert a rien. On le coupe donc AVANT d'attendre : le modele met une
+	# trentaine de secondes a charger, ce qui laisse tout le temps de defaire la connexion.
+	#
+	# Ce harnais n'utilise pas le scenario — MerlinQuete est statique — donc rien ne casse. L'amorce
+	# n'est de toute facon qu'un prechauffage : « un prechauffage rate ne doit jamais devenir une
+	# panne visible », dit son propre commentaire.
 	var sc: Node = root.get_node_or_null("/root/MerlinScenario")
 	if sc != null:
 		sc.set_process(false)
 		sc.set_physics_process(false)
 		print("  MerlinScenario mis au repos (il se disputait la voie du moteur)")
-	# L'amorce de MerlinScenario part des que le modele est charge. On la laisse finir avant de
-	# demander quoi que ce soit : sinon le premier appel est refuse et le rythme ne se rattrape pas.
-	print("  attente de la voie (amorce du scenario en cours)...")
-	if not await _attendre_voie("conteur", VOIE_TIMEOUT_MS):
-		print("  la voie conteur ne se libere pas — on tente quand meme")
+		print("  amorce du scenario coupee : %d connexion(s) defaite(s)" % _couper_amorce(sc))
+
+	_mn = await _attendre_moteur()
+	if _mn == null:
+		print("moteur indisponible")
+		quit(1)
+		return
+	# Si l'amorce est partie malgre tout (moteur deja pret au demarrage du harnais), on la laisse
+	# finir plutot que de se faire refuser a chaque appel.
+	if _mn.has_method("est_occupe") and _mn.est_occupe("conteur"):
+		print("  la voie est prise malgre la coupure — on attend qu'elle se libere")
+		if not await _attendre_voie("conteur", VOIE_TIMEOUT_MS):
+			print("  la voie conteur ne se libere pas — on tente quand meme")
 	else:
-		print("  voie libre")
+		print("  voie libre d'entree")
 
 	var lieu: Dictionary = _lire_json("res://data/biomes/%s.json" % str(ch.get("lieu", "")))
 	var figures: Array = _figures_du_lieu(str(ch.get("lieu", "")))
@@ -442,6 +454,26 @@ func _issue_choix(sp: Dictionary, precedent: String) -> String:
 ## donc systematiquement sur une voie occupee, et tous les suivants aussi — la quete sortait avec
 ## une mecanique parfaite et huit proses vides.
 ## Le moteur est mono-place par voie : on attend qu'elle se libere au lieu de se faire refuser.
+## Defait les connexions que MerlinScenario a posees sur les signaux du moteur. On passe par la
+## liste reelle des connexions plutot que par un Callable reconstruit : le nom de la methode peut
+## changer, l'objet connecte non — et une deconnexion qui echoue en silence redonnerait les 227
+## secondes sans que rien ne le dise.
+func _couper_amorce(sc: Node) -> int:
+	var n: int = 0
+	var mn0: Node = root.get_node_or_null("/root/MerlinNative")
+	if mn0 == null:
+		return 0
+	for sig in ["model_ready", "vif_ready"]:
+		if not mn0.has_signal(sig):
+			continue
+		for c in mn0.get_signal_connection_list(sig):
+			var cb: Callable = (c as Dictionary).get("callable") as Callable
+			if cb.get_object() == sc:
+				mn0.disconnect(sig, cb)
+				n += 1
+	return n
+
+
 func _attendre_voie(cerveau: String, budget_ms: int) -> bool:
 	if _mn == null or not _mn.has_method("est_occupe"):
 		return true
