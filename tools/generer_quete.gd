@@ -255,6 +255,47 @@ func _enjeu(ch: Dictionary, k: int, n: int) -> String:
 		+ "Ne le lui accorde pas dans ce beat, et ne le lui fais pas tenir en main.") % quoi
 
 
+## CE QUE LE MODELE SAIT DES FIGURES. Le harnais leur demandait « nom (resume) » — or ces fiches
+## n'ont PAS de champ `resume`, et le modele recevait « Dame Aveline aux Corbeaux () ». Il avait
+## donc des noms et rien d'autre. q86 en a nomme seize et pas un n'a voulu quoi que ce soit :
+## Aveline regarde, fixe, incline la tete. Lui interdire de se contenter de regarder ne sert a rien
+## tant qu'il ignore ce qu'elle veut — la regle sans la donnee est une demi-correction.
+##
+## Le canon, lui, sait tout ca : `role`, `veut`, `replique_etalon` (un echantillon de voix), et
+## parfois `regle_ecriture` (« Trois mots maximum par replique », pour Ordalc'h). On le lui donne.
+## MEME DEFAUT POUR LE LIEU, et meme cause. Le harnais demandait `resume` a la fiche du biome, qui
+## n'a pas ce champ : le modele recevait « Ar C'hoad Kozh. » et rien de plus. Il ne savait donc pas
+## qu'il ecrivait dans une foret — d'ou la « petite hutte en pierre » de q86, batie au milieu d'un
+## cercle de menhirs. La fiche sait pourtant dire ce que c'est : `sous_titre`, `archetype`, `tags`.
+func _lieu_en_clair(lieu: Dictionary) -> String:
+	var bouts: Array = []
+	if str(lieu.get("sous_titre", "")) != "":
+		bouts.append(str(lieu.get("sous_titre", "")))
+	if str(lieu.get("archetype", "")) != "":
+		bouts.append("c'est %s, en plein air" % str(lieu.get("archetype", "")))
+	var tg: Variant = lieu.get("tags", [])
+	if typeof(tg) == TYPE_ARRAY and not (tg as Array).is_empty():
+		bouts.append("on y trouve : " + ", ".join(tg as Array))
+	return ". ".join(bouts)
+
+
+func _figures_en_clair(figures: Array) -> String:
+	var out: String = ""
+	for f in figures:
+		var d: Dictionary = f as Dictionary
+		var bout: String = "\n- %s" % str(d.get("nom", ""))
+		if str(d.get("role", "")) != "":
+			bout += ", %s" % str(d.get("role", ""))
+		if str(d.get("veut", "")) != "":
+			bout += ". VEUT : %s" % str(d.get("veut", ""))
+		if str(d.get("replique_etalon", "")) != "":
+			bout += " PARLE AINSI : « %s »" % str(d.get("replique_etalon", ""))
+		if str(d.get("regle_ecriture", "")) != "":
+			bout += " (%s)" % str(d.get("regle_ecriture", "")).substr(0, 90)
+		out += bout
+	return out
+
+
 func _repiocher(main: Array) -> String:
 	var libres: Array = []
 	for r in RUNES.keys():
@@ -289,7 +330,7 @@ func _preambule(ch: Dictionary, lieu: Dictionary) -> Array:
 		+ "Il installe la scene du premier beat : ou l'on est, ce qu'on voit, ce qu'on entend. "
 		+ "Il n'annonce NI le but, NI ce qu'il faudra faire. La quatrieme phrase rappelle que dans "
 		+ "ces bois tout recommence, sauf le Voyageur.\nQuatre lignes, rien d'autre.") % [
-			REGLES, str(lieu.get("nom", "")), str(lieu.get("resume", "")), str(ch.get("sujet", ""))]
+			REGLES, str(lieu.get("nom", "")), _lieu_en_clair(lieu), str(ch.get("sujet", ""))]
 	var txt: String = await _generer(sys, usr)
 	var out: Array = []
 	for l in txt.split("\n"):
@@ -338,13 +379,11 @@ func _beat(ch: Dictionary, lieu: Dictionary, figures: Array, forme: Dictionary, 
 
 func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 		precedent: String, k: int, n: int, tuile_imposee: String, marge: int) -> Dictionary:
-	var noms: String = ""
-	for f in figures:
-		noms += "%s (%s) ; " % [str((f as Dictionary).get("nom", "")), str((f as Dictionary).get("resume", ""))]
+	var noms: String = _figures_en_clair(figures)
 	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
 		+ "(« Vous voyez », jamais « Tu vois »).")
 	var usr: String = ("%s\n\nTOUTE LA SCENE SE PASSE ICI, ET NULLE PART AILLEURS : %s. %s\n"
-		+ "FIGURES D'ICI : %s\nCE QUI S'Y JOUE : %s\n%s\n%s\n\n"
+		+ "QUI VIT ICI, ET CE QUE CHACUN VEUT : %s\n\nCE QUI S'Y JOUE : %s\n%s\n%s\n\n"
 		+ "CE QUE CE BEAT DOIT ACCOMPLIR — %s\n\n"
 		+ "Ecris le beat %d sur %d, EXACTEMENT dans cette forme et rien d'autre :\n"
 		+ "SCENE: trois phrases courtes. Elle decoule de ce qui precede et finit sur un instant "
@@ -357,7 +396,7 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 		+ "et cette chose est NOMMEE dans l'issue.\n\n"
 		+ "TUILE %s\nRUNE, une seule de cette main : %s\n"
 		+ "CE QUE DONNE LE GESTE : %s") % [
-			REGLES, str(lieu.get("nom", "")), str(lieu.get("resume", "")), noms,
+			REGLES, str(lieu.get("nom", "")), _lieu_en_clair(lieu), noms,
 			str(ch.get("sujet", "")), _enjeu(ch, k, n),
 			("CE QUI PRECEDE : " + precedent) if precedent != "" else "C'est le premier beat.",
 			_marche(k, n), k, n,
