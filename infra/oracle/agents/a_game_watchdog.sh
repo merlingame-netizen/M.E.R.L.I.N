@@ -19,6 +19,13 @@ fi
 if [ "$VNC" = "true" ]; then
     echo "jeu en cours — OK"; exit 0
 fi
+# UN HARNAIS N'EST PAS UNE PARTIE TOMBEE. Un lancement avec MERLIN_SCRIPT fait tourner un
+# SceneTree qui peut ne jamais ouvrir de fenetre, et qui se termine tout seul. Le relancer, c'est
+# le tuer et repartir sur le jeu normal — sans le script, donc sans ce qu'on mesurait.
+HARNESS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || echo "")"
+if [ -n "$HARNESS" ]; then
+    echo "harnais en cours ($HARNESS) — on ne relance pas ce qu'on ne sait pas relancer"; exit 0
+fi
 
 RES="$(cat "$HOME/.cache/merlin-game/last-res" 2>/dev/null || echo 960x540)"
 echo "jeu mort alors qu'il devait tourner — relance en $RES" >&2

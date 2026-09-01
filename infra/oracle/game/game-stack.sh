@@ -121,6 +121,13 @@ start_native() {
         echo "FATAL: sysroot absent — lancer provision-game-user.sh" >&2; exit 1; }
     stop_native
     mkdir -p "$RUNDIR"
+    # LA COURSE DIT CE QU'ELLE EST. Un lancement avec MERLIN_SCRIPT n'est pas une partie : c'est un
+    # harnais, qui n'ouvre pas forcement de fenetre et que PERSONNE ne doit relancer a sa place.
+    # Sans cette trace, le veilleur voit « desire=running, vnc absent » et relance le jeu NORMAL,
+    # ce qui tue le harnais ET ecrase son journal (godot.log est reouvert en ecriture). Vecu trois
+    # fois : q83 morte a 352 s, q85 remplacee par le menu, et q84 achevee par ma propre veille qui
+    # reagissait a la meme relance.
+    printf '%s' "${MERLIN_SCRIPT:-}" > "$RUNDIR/harness"
     # native-inner.sh vit avec l'OUTILLAGE (SCRIPT_DIR), pas dans le dépôt du jeu.
     # MERLIN_SCENE / MERLIN_QUIT_AFTER_S / MERLIN_E2E* transmis explicitement : `unshare` ne conserve que
     # l'environnement passé ici, donc une variable exportée par l'appelant se perdrait
@@ -144,6 +151,9 @@ start_native() {
 }
 
 stop_native() {
+    # La marque de harnais ne survit pas a l'arret : sans ca, une partie normale lancee ensuite
+    # heriterait de la protection et ne serait plus jamais relancee par le veilleur.
+    : > "$RUNDIR/harness" 2>/dev/null || true
     local pid; pid="$(cat "$RUNDIR/inner.pid" 2>/dev/null || true)"
     if pid_alive "$pid"; then
         kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
