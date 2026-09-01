@@ -32,7 +32,8 @@
       "Bash(npm run build)",
       "Bash(npx vercel --prod)",
       "Bash(mkdir -p evg-alexandre)",
-      "Bash(cp \"/root/.claude/uploads/afaf5e08-17c6-563f-b4fa-d52c18ebc6a7/fa943a79-CPT82166334195.pdf\" \"evg-alexandre/rib-maxime-babonneau.pdf\")"
+      "Bash(cp \"/root/.claude/uploads/afaf5e08-17c6-563f-b4fa-d52c18ebc6a7/fa943a79-CPT82166334195.pdf\" \"evg-alexandre/rib-maxime-babonneau.pdf\")",
+      "Bash(git push:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2"
