@@ -38,6 +38,12 @@ relancer_la_file() {
 }
 trap relancer_la_file EXIT
 
+# LE COURRIER NE TIRE PAS LE DEPOT DU JEU — il ne tire que le sien. job-082 a franchi sa garde
+# parce qu'un autre mecanisme avait deja mis merlin-game a jour ; compter dessus, c'est attendre
+# 90 minutes pour apprendre qu'on mesurait l'ancienne version. On tire soi-meme, en avance rapide
+# seulement : le clone de la VM est en lecture, il n'a rien a fusionner.
+git -C "$GD" pull --ff-only >/dev/null 2>&1
+
 deadline=$(( $(date +%s) + 5400 ))
 while true; do
     A=0; B=0; C=0
