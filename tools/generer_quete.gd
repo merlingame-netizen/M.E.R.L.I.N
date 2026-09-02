@@ -68,6 +68,12 @@ func _init() -> void:
 
 
 func _go() -> void:
+	# LE JEU DE DONNEES N'A PAS BESOIN DU MODELE : il ne fait qu'assembler des prompts et leur
+	# reponse deja ecrite. On sort avant toute attente de moteur, donc en quelques secondes.
+	if OS.has_environment("MERLIN_JEU_DE_DONNEES"):
+		_ecrire_jeu_de_donnees(OS.get_environment("MERLIN_JEU_DE_DONNEES"))
+		quit(0)
+		return
 	var n_ch: int = int(OS.get_environment("MERLIN_CHAPITRE")) if OS.has_environment("MERLIN_CHAPITRE") else 0
 	if n_ch <= 0:
 		n_ch = MerlinQuete.chapitre_courant()
@@ -278,10 +284,19 @@ func _lieu_en_clair(lieu: Dictionary) -> String:
 		bouts.append(str(lieu.get("sous_titre", "")))
 	if str(lieu.get("archetype", "")) != "":
 		bouts.append("c'est %s, en plein air" % str(lieu.get("archetype", "")))
-	var tg: Variant = lieu.get("tags", [])
-	if typeof(tg) == TYPE_ARRAY and not (tg as Array).is_empty():
-		bouts.append("on y trouve : " + ", ".join(tg as Array))
 	return ". ".join(bouts)
+
+
+## Retire du role la clause de tete qui ne fait que repeter le nom du pool interne. Rien d'autre
+## n'est touche : ce qui reste dit ce que la figure EST, et c'est ce qu'on veut donner.
+func _role_sans_jargon(role: String, pool: String) -> String:
+	if role == "" or pool == "":
+		return role
+	var tete: String = role.split(",")[0].strip_edges().to_lower()
+	if not tete.begins_with(pool.to_lower()):
+		return role
+	var reste: String = role.substr(role.find(",") + 1).strip_edges() if role.contains(",") else ""
+	return reste
 
 
 func _figures_en_clair(figures: Array) -> String:
@@ -289,8 +304,9 @@ func _figures_en_clair(figures: Array) -> String:
 	for f in figures:
 		var d: Dictionary = f as Dictionary
 		var bout: String = "\n- %s" % str(d.get("nom", ""))
-		if str(d.get("role", "")) != "":
-			bout += ", %s" % str(d.get("role", ""))
+		var role: String = _role_sans_jargon(str(d.get("role", "")), str(d.get("pool", "")))
+		if role != "":
+			bout += ", %s" % role
 		if str(d.get("veut", "")) != "":
 			bout += ". VEUT : %s" % str(d.get("veut", ""))
 		if str(d.get("replique_etalon", "")) != "":
@@ -310,7 +326,13 @@ func _figures_en_clair(figures: Array) -> String:
 ##
 ## IL EST DONNE COMME TON, PAS COMME MATIERE : le modele qui recopierait la scene produirait une
 ## quete hors sujet, et c'est dit dans la consigne.
-func _exemple_de_beat(lieu_nom: String, type_voulu: String) -> String:
+## `exclure` nomme une quete dont AUCUN beat ne peut servir d'exemple. En production elle est
+## vide. En jeu de donnees elle vaut la quete qu'on est en train d'apprendre : sans elle, l'exemple
+## choisi pour « foret / Exploration » etait le beat 1 de « La fin du rite » — c'est-a-dire la
+## reponse attendue, recopiee dans sa propre question. Neuf exemples sur soixante-dix etaient dans
+## ce cas. Un affinage nourri comme ca apprend a recopier ce qu'on lui montre, brille a
+## l'entrainement, et ne sait rien faire en production.
+func _exemple_de_beat(lieu_nom: String, type_voulu: String, exclure: String = "") -> String:
 	var meilleur: Dictionary = {}
 	var score_max: int = -1
 	var d: DirAccess = DirAccess.open("res://data/scenarios")
@@ -323,6 +345,9 @@ func _exemple_de_beat(lieu_nom: String, type_voulu: String) -> String:
 			var cle: String = nom.get_basename()
 			if cle.ends_with(".json"):
 				cle = cle.get_basename()
+			if exclure != "" and cle == exclure:
+				nom = d.get_next()
+				continue
 			var q: Dictionary = _lire_json("res://data/scenarios/%s.json" % cle)
 			for b in (q.get("beats", []) as Array):
 				var bb: Dictionary = b as Dictionary
@@ -445,6 +470,17 @@ func _beat(ch: Dictionary, lieu: Dictionary, figures: Array, forme: Dictionary, 
 func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 		precedent: String, k: int, n: int, tuile_imposee: String, marge: int,
 		type_beat: String) -> Dictionary:
+	var p: Dictionary = _prompt_beat(ch, lieu, figures, main, precedent, k, n, tuile_imposee,
+		marge, type_beat)
+	var txt: String = await _generer(str(p["sys"]), str(p["usr"]))
+	return _lire_beat(txt, tuile_imposee, main)
+
+
+## Le prompt d'un beat ordinaire, seul et entier. Appele par la generation et par le jeu de
+## donnees : c'est la garantie que l'un apprend ce que l'autre demandera.
+func _prompt_beat(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
+		precedent: String, k: int, n: int, tuile_imposee: String, marge: int,
+		type_beat: String, exclure: String = "") -> Dictionary:
 	var noms: String = _figures_en_clair(figures)
 	var sys: String = ("Tu ecris un jeu narratif celtique. Francais simple, present, VOUVOIEMENT "
 		+ "(« Vous voyez », jamais « Tu vois »).")
@@ -465,10 +501,16 @@ func _beat_entier(ch: Dictionary, lieu: Dictionary, figures: Array, main: Array,
 			REGLES, str(lieu.get("nom", "")), _lieu_en_clair(lieu), noms,
 			str(ch.get("sujet", "")), _enjeu(ch, k, n),
 			("CE QUI PRECEDE : " + precedent) if precedent != "" else "C'est le premier beat.",
-			_marche(k, n), _exemple_de_beat(str(lieu.get("nom", "")), type_beat), k, n,
+			_marche(k, n), _exemple_de_beat(str(lieu.get("nom", "")), type_beat, exclure), k, n,
 			("imposee : " + tuile_imposee) if tuile_imposee != "" else ("au choix : " + ", ".join(TUILES)),
 			", ".join(main), _resultat_en_clair(marge)]
-	var txt: String = await _generer(sys, usr)
+	return {"sys": sys, "usr": usr}
+
+
+## Relit ce que le modele a rendu. Separe de l'appel pour que le jeu de donnees puisse verifier
+## qu'une reponse ATTENDUE se relit bien — un exemple d'entrainement que le lecteur refuserait
+## apprendrait au modele une forme que la generation jetterait ensuite.
+func _lire_beat(txt: String, tuile_imposee: String, main: Array) -> Dictionary:
 	var scene: String = ""
 	var issue: String = ""
 	var tuile: String = tuile_imposee
@@ -545,6 +587,123 @@ func _issue_choix(sp: Dictionary, precedent: String) -> String:
 		+ "Pas de commentaire, pas de morale. Trois phrases, rien d'autre.") % [
 			REGLES, str(pris[0]), str(pris[1])]
 	return _nettoyer(await _generer(sys, usr))
+
+
+# ── LE JEU DE DONNEES D'AFFINAGE ────────────────────────────────────────────────────────────────
+##
+##     MERLIN_JEU_DE_DONNEES=/chemin/corpus.jsonl godot --headless --path . \
+##         --script res://tools/generer_quete.gd
+##
+## POURQUOI ICI ET PAS DANS UN OUTIL A PART. Un jeu de donnees d'affinage n'apprend au modele que
+## ce qu'on lui MONTRE. Si le prompt d'entrainement differe d'une ligne de celui de production, on
+## affine sur une question qu'on ne posera jamais. `_prompt_beat` est donc appele par les deux, et
+## la seule facon d'etre sur qu'ils ne divergent pas est qu'il n'existe qu'une fois.
+##
+## LA REPONSE ATTENDUE EST RELUE PAR LE LECTEUR DE PRODUCTION avant d'entrer dans le jeu. Un
+## exemple que `_lire_beat` n'arriverait pas a relire apprendrait au modele une forme que la
+## generation jetterait ensuite — on compte ces cas et on les refuse.
+func _ecrire_jeu_de_donnees(sortie: String) -> void:
+	var f: FileAccess = FileAccess.open(sortie, FileAccess.WRITE)
+	if f == null:
+		print("ECRITURE IMPOSSIBLE : %s (erreur %d)" % [sortie, FileAccess.get_open_error()])
+		return
+	var chapitres: Dictionary = _lire_json("res://data/quete/chapitres.json")
+	var n_ex: int = 0
+	var n_refuses: int = 0
+	var par_quete: Array = []
+	for cle in _quetes_du_corpus():
+		var q: Dictionary = _lire_json("res://data/scenarios/%s.json" % cle)
+		var biome: String = str(q.get("biome", ""))
+		if biome == "":
+			print("  %-26s SANS BIOME — ignoree (le prompt n'aurait pas de lieu)" % cle)
+			continue
+		var lieu: Dictionary = _lire_json("res://data/biomes/%s.json" % biome)
+		var figures: Array = _figures_du_lieu(biome)
+		var ch: Dictionary = _chapitre_du_biome(chapitres, biome)
+		var beats: Array = q.get("beats", []) as Array
+		var issues: Array = []
+		var ordinaires: int = 0
+		var pris: int = 0
+		for b in beats:
+			var bb: Dictionary = b as Dictionary
+			if bb.has("special"):
+				issues.append(str(bb.get("issue", "")))
+				continue
+			ordinaires += 1
+			# LA TUILE IMPOSEE, COMME EN PRODUCTION : le harnais impose les cinq tuiles du socle sur
+			# les cinq premiers beats ordinaires. L'entrainement doit voir les deux formes de consigne.
+			var tuile_imposee: String = str(bb.get("action", "")) if ordinaires <= 5 else ""
+			var marge: int = int(bb.get("de", 0)) + int(bb.get("at", 0)) - int(bb.get("dc", 0))
+			var pr: Dictionary = _prompt_beat(ch, lieu, figures,
+				_main_plausible(str(bb.get("rune", "")), q.get("runes", {}) as Dictionary),
+				_contexte(issues), int(bb.get("n", 0)), beats.size(), tuile_imposee, marge,
+				str(bb.get("t", "")), cle)
+			var reponse: String = "SCENE: %s\nGESTE: %s | %s\nISSUE: %s" % [
+				str(bb.get("scene", "")), str(bb.get("action", "")), str(bb.get("rune", "")),
+				str(bb.get("issue", ""))]
+			# Le lecteur de production doit savoir relire cette reponse, sinon elle n'a rien a
+			# apprendre a personne.
+			var relu: Dictionary = _lire_beat(reponse, tuile_imposee,
+				[str(bb.get("rune", ""))])
+			if str(relu.get("scene", "")) == "" or str(relu.get("issue", "")) == "":
+				n_refuses += 1
+				continue
+			f.store_line(JSON.stringify({
+				"source": "%s#%d" % [cle, int(bb.get("n", 0))],
+				"sys": str(pr["sys"]), "usr": str(pr["usr"]), "reponse": reponse}))
+			n_ex += 1
+			pris += 1
+			issues.append(str(bb.get("issue", "")))
+		par_quete.append("  %-26s %2d exemple(s) · biome %s" % [cle, pris, biome])
+	f.close()
+	print("=== JEU DE DONNEES D'AFFINAGE ===")
+	for l in par_quete:
+		print(l)
+	print("\n%d exemple(s) ecrits dans %s" % [n_ex, sortie])
+	if n_refuses > 0:
+		print("%d exemple(s) REFUSES : le lecteur de production ne savait pas les relire" % n_refuses)
+
+
+## Le chapitre qui se joue dans ce biome, pour que `sujet` et `ramene` du prompt soient ceux du
+## canon et non une invention. Le premier trouve suffit : plusieurs chapitres peuvent partager un
+## lieu, et ce qu'on veut ici est la FORME du prompt, pas l'intrigue exacte.
+func _chapitre_du_biome(chapitres: Dictionary, biome: String) -> Dictionary:
+	for c in (chapitres.get("chapitres", []) as Array):
+		if str((c as Dictionary).get("lieu", "")) == biome:
+			return c as Dictionary
+	return {}
+
+
+## Une main de quatre runes qui CONTIENT celle qui est posee — c'est l'invariant que la pioche
+## garantit en jeu. On ne rejoue pas le solveur de deck ici : ce qu'il faut reproduire est la
+## forme de la consigne, et la seule chose qui compte est que la rune jouee y figure.
+func _main_plausible(rune: String, runes: Dictionary) -> Array:
+	var main: Array = [rune]
+	for r in runes.keys():
+		if main.size() >= 4:
+			break
+		if not main.has(r):
+			main.append(str(r))
+	return main
+
+
+func _quetes_du_corpus() -> Array:
+	var out: Array = []
+	var d: DirAccess = DirAccess.open("res://data/scenarios")
+	if d == null:
+		return out
+	d.list_dir_begin()
+	var nom: String = d.get_next()
+	while nom != "":
+		if nom.ends_with(".json") or nom.ends_with(".json.remap"):
+			var cle: String = nom.get_basename()
+			if cle.ends_with(".json"):
+				cle = cle.get_basename()
+			out.append(cle)
+		nom = d.get_next()
+	d.list_dir_end()
+	out.sort()
+	return out
 
 
 # ── outillage ──────────────────────────────────────────────────────────────────────────────────

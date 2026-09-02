@@ -27,6 +27,7 @@
  "id": "trois_pains_a_kerlan",
  "titre": "Trois Pains à Kerlan",
  "monde": "penn_ar_bed",
+ "biome": "village",
  "figures": [
   "choeur",
   "enfant",

@@ -2,6 +2,7 @@
  "id": "la_pierre_couchee",
  "titre": "La pierre couchée",
  "monde": "penn_ar_bed",
+ "biome": "foret",
  "figures": [
   "Fañch le Trotteur",
   "Ordalc'h",

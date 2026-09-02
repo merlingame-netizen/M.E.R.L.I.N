@@ -27,6 +27,7 @@
  "id": "les_neuf_corbeaux",
  "titre": "Les Neuf Corbeaux",
  "monde": "penn_ar_bed",
+ "biome": "cairn",
  "figures": [
   "aveline",
   "ordalch",

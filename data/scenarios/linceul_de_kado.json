@@ -2,6 +2,7 @@
  "id": "linceul_de_kado",
  "titre": "Le Linceul de Kado",
  "monde": "broceliande",
+ "biome": "foret",
  "reference": true,
  "preambule": [
   "La nuit est tombée il y a deux heures. Vous suivez la crête au nord, entre les aulnes, et l'air se refroidit d'un coup comme il le fait toujours quand on approche de l'eau.",

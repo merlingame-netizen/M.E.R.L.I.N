@@ -27,6 +27,7 @@
  "id": "le_prix_du_passeur",
  "titre": "Le Prix du Passeur",
  "monde": "penn_ar_bed",
+ "biome": "souterrain",
  "figures": [
   "passeur",
   "compagnon",

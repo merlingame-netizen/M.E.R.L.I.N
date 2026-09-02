@@ -27,6 +27,7 @@
  "id": "la_cloche_dys",
  "titre": "La Cloche d'Ys",
  "monde": "penn_ar_bed",
+ "biome": "village",
  "figures": [
   "marcharit",
   "enfant",
