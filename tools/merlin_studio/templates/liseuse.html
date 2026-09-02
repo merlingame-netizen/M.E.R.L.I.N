@@ -1,0 +1,332 @@
+<title>Chroniques de Brocéliande</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@600;700&family=Spectral:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --lin:#e9e4d7; --lin-haut:#f2eee3; --lin-creux:#ded8c8;
+  --encre:#2b2c26; --encre-pale:#6d6f63; --encre-fantome:#918f80;
+  --or:#8a6a24; --or-vif:#b08a33; --voix:#35617f; --rouille:#9c4a26;
+  --trait:rgba(43,44,38,.14); --trait-fort:rgba(43,44,38,.28);
+  --ombre:rgba(43,44,38,.07);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --lin:#141715; --lin-haut:#1c201d; --lin-creux:#0f1211;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+  --ombre:rgba(0,0,0,.3);
+}}
+:root[data-theme="dark"]{
+  --lin:#141715; --lin-haut:#1c201d; --lin-creux:#0f1211;
+  --encre:#ddd9cc; --encre-pale:#8e9184; --encre-fantome:#6a6d62;
+  --or:#c9a24b; --or-vif:#dcb965; --voix:#a6cff0; --rouille:#c8703f;
+  --trait:rgba(221,217,204,.14); --trait-fort:rgba(221,217,204,.3);
+  --ombre:rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--lin);color:var(--encre);
+  font-family:Spectral,Georgia,"Times New Roman",serif;font-size:17px;line-height:1.7;margin:0}
+h1,h2,h3,.dpl{font-family:Vollkorn,Georgia,serif;text-wrap:balance}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  font-variant-numeric:tabular-nums}
+a{color:var(--voix)}
+:focus-visible{outline:2px solid var(--or-vif);outline-offset:2px;border-radius:2px}
+
+/* ---- bandeau ---- */
+.tete{position:sticky;top:0;z-index:20;background:var(--lin-haut);
+  border-bottom:1px solid var(--trait);padding:.7rem 1.4rem;
+  display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap}
+.marque{font-family:Vollkorn,serif;font-weight:700;font-size:1.02rem;letter-spacing:.01em}
+.marque span{color:var(--or)}
+.parties{display:flex;gap:.4rem}
+.pbtn{font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.06em;
+  padding:.34rem .68rem;border:1px solid var(--trait-fort);background:transparent;
+  color:var(--encre-pale);cursor:pointer;border-radius:2px;transition:.15s}
+.pbtn:hover{color:var(--encre);border-color:var(--or)}
+.pbtn[aria-pressed="true"]{background:var(--or);border-color:var(--or);color:var(--lin-haut);font-weight:500}
+.bascules{margin-left:auto;display:flex;gap:.4rem;align-items:center}
+
+/* ---- ossature ---- */
+.corps{display:grid;grid-template-columns:210px minmax(0,1fr);gap:0;align-items:start}
+.epine{position:sticky;top:56px;max-height:calc(100vh - 56px);overflow-y:auto;
+  border-right:1px solid var(--trait);padding:1.1rem .8rem 3rem}
+.eptitre{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--encre-fantome);margin:0 0 .7rem .35rem}
+.eprow{display:grid;grid-template-columns:1.9rem 1fr;gap:.45rem;align-items:baseline;
+  width:100%;text-align:left;background:none;border:0;padding:.3rem .35rem;cursor:pointer;
+  color:var(--encre-pale);border-radius:2px;font-size:.8rem;transition:.12s;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.eprow:hover{background:var(--lin-creux);color:var(--encre)}
+.eprow.actif{color:var(--encre);background:var(--lin-creux);
+  box-shadow:inset 2px 0 0 var(--or)}
+.eprow .num{color:var(--encre-fantome)}
+.eprow.banc .num,.eprow.banc .typ{color:var(--rouille)}
+.jauge{grid-column:2;height:2px;background:var(--trait);border-radius:1px;margin-top:.15rem}
+.jauge i{display:block;height:100%;background:var(--or);border-radius:1px}
+.jauge i.long{background:var(--rouille)}
+.trou{display:grid;grid-template-columns:1.9rem 1fr;gap:.45rem;padding:.3rem .35rem;
+  font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--rouille);opacity:.85}
+
+/* ---- chronique ---- */
+.chronique{padding:2.2rem 1.6rem 6rem;min-width:0}
+.enveloppe{max-width:74rem;margin:0 auto}
+.titre-quete{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:700;color:var(--or);
+  margin:0 0 .3rem;line-height:1.15}
+.sous{color:var(--encre-pale);font-size:.9rem;margin:0 0 1.4rem}
+.constats{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 2.4rem}
+.puce{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.03em;
+  padding:.28rem .6rem;border:1px solid var(--trait-fort);border-radius:2px;
+  color:var(--encre-pale);display:inline-flex;gap:.4rem;align-items:baseline}
+.puce b{color:var(--encre);font-weight:500}
+.puce.bon{border-color:color-mix(in srgb,var(--or) 55%,transparent);color:var(--or)}
+.puce.bon b{color:var(--or-vif)}
+.puce.mal{border-color:color-mix(in srgb,var(--rouille) 55%,transparent);color:var(--rouille)}
+.puce.mal b{color:var(--rouille)}
+
+.intro{border-left:2px solid var(--trait-fort);padding:.2rem 0 .2rem 1.3rem;
+  margin:0 0 3rem;max-width:60ch;color:var(--encre)}
+.intro p{margin:0 0 .8rem}
+
+/* le beat : prose + marge de copiste */
+.beat{display:grid;grid-template-columns:minmax(0,64ch) 15rem;gap:2.4rem;
+  padding:2rem 0 2.2rem;border-top:1px solid var(--trait);scroll-margin-top:70px}
+.beat.banc{background:linear-gradient(90deg,color-mix(in srgb,var(--rouille) 7%,transparent),transparent 60%)}
+.bentete{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.9rem;flex-wrap:wrap}
+.bnum{font-family:Vollkorn,serif;font-size:1.5rem;font-weight:700;color:var(--or);line-height:1}
+.btype{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--encre-fantome)}
+.bbanc{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.06em;
+  color:var(--rouille);border:1px solid color-mix(in srgb,var(--rouille) 45%,transparent);
+  padding:.12rem .45rem;border-radius:2px}
+.prose p{margin:0 0 .9rem}
+.geste{color:var(--voix);font-style:italic;margin:0 0 .9rem}
+.issue{border-left:2px solid color-mix(in srgb,var(--or) 40%,transparent);
+  padding-left:1.1rem;margin-top:1.2rem}
+.issue em{color:var(--encre-pale)}
+.brut{margin-top:1rem}
+.brut summary{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--encre-fantome);
+  cursor:pointer;letter-spacing:.04em}
+.brut summary:hover{color:var(--encre-pale)}
+.brut pre{white-space:pre-wrap;word-break:break-word;font-family:"IBM Plex Mono",monospace;
+  font-size:.73rem;line-height:1.6;color:var(--encre-pale);background:var(--lin-creux);
+  padding:.8rem .9rem;border-radius:2px;margin:.6rem 0 0;overflow-x:auto}
+
+/* marge */
+.marge{font-family:"IBM Plex Mono",monospace;font-size:.72rem;line-height:1.75;
+  color:var(--encre-pale);border-left:1px solid var(--trait);padding-left:1rem;
+  position:sticky;top:70px}
+.marge dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.05rem .7rem}
+.marge dt{color:var(--encre-fantome)}
+.marge dd{margin:0;color:var(--encre);text-align:right;font-variant-numeric:tabular-nums}
+.marge dd.chaud{color:var(--rouille)}
+.marge .sep{grid-column:1/-1;height:1px;background:var(--trait);margin:.5rem 0}
+body.nu .marge{display:none}
+body.nu .beat{grid-template-columns:minmax(0,64ch)}
+body.nu .brut{display:none}
+
+@media(max-width:1000px){
+  .beat{grid-template-columns:minmax(0,1fr)}
+  .marge{position:static;border-left:0;border-top:1px solid var(--trait);
+    padding:.9rem 0 0;margin-top:1.2rem}
+  .marge dl{max-width:22rem}
+}
+@media(max-width:760px){
+  .corps{grid-template-columns:1fr}
+  .epine{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--trait)}
+  .chronique{padding:1.6rem 1.1rem 4rem}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<header class="tete">
+  <div class="marque">Chroniques de <span>Brocéliande</span></div>
+  <div class="parties" id="parties"></div>
+  <div class="bascules">
+    <button class="pbtn" id="bnu" aria-pressed="false">marge</button>
+    <button class="pbtn" id="bth" aria-pressed="false">thème</button>
+  </div>
+</header>
+
+<div class="corps">
+  <nav class="epine"><p class="eptitre">La quête</p><div id="epine"></div></nav>
+  <main class="chronique"><div class="enveloppe" id="chronique"></div></main>
+</div>
+
+<script>
+const PARTIES = /*@@PARTIES@@*/{};
+const ORDRE = Object.keys(PARTIES);
+let courante = ORDRE[0];
+
+/* --- BBCode du jeu -> HTML. Les asterisques sont du bruit de modele (0, 1 ou 2 par
+   beat, sans convention) : on les retire a la lecture, le texte brut reste dépliable. --- */
+function ech(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function bb(txt){
+  let t = ech(txt||"");
+  t = t.replace(/\[color=(#[0-9a-fA-F]{3,8}|\w+)\]/g,'<span style="color:$1">')
+       .replace(/\[\/color\]/g,"</span>")
+       .replace(/\[font_size=(\d+)\]/g,'<span style="font-size:$1px">')
+       .replace(/\[\/font_size\]/g,"</span>")
+       .replace(/\[center\]/g,'<span style="display:block;text-align:center">')
+       .replace(/\[\/center\]/g,"</span>")
+       .replace(/\[i\]/g,"<em>").replace(/\[\/i\]/g,"</em>")
+       .replace(/\[b\]/g,"<strong>").replace(/\[\/b\]/g,"</strong>")
+       .replace(/\[kw\]/g,"<strong>").replace(/\[\/kw\]/g,"</strong>")
+       .replace(/\*/g,"");
+  return t.split(/\n{2,}/).map(p=>"<p>"+p.replace(/\n/g,"<br>")+"</p>").join("");
+}
+const n1=(v,d)=> (v===undefined||v===null||v==="")?(d??"—"):v;
+
+function stats(J){
+  const B=(J.beats||[]).filter(b=>"degre" in b);
+  const idx=B.map(b=>+b.index);
+  const trous=idx.length?[...Array(Math.max(...idx)-Math.min(...idx)+1).keys()]
+      .map(i=>i+Math.min(...idx)).filter(i=>!idx.includes(i)):[];
+  const banc=B.filter(b=>b.provenance==="secours"||b.secours).map(b=>+b.index);
+  const att=B.map(b=>+b.attente_moteur_s).filter(v=>v>0);
+  const pleins=B.filter(b=>["reussite","eclatante"].includes(String(b.degre))).length;
+  /* LE FIL — portage exact du verdict (verdict_partie.py) : le fil est la DERNIERE
+     PHRASE de l'issue, et il n'est tenu que si la narration suivante COMMENCE par elle.
+     Une premiere version comptait tout mot de 6 lettres repete : elle rendait 100 %
+     partout. Celle-ci retombe sur les 15/19, 0/5 et 0/4 de l'outil. */
+  const phr=s=>String(s||"").trim().split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean);
+  const norm=s=>String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  let fil=0,pos=0; const parBeat={};
+  for(let i=1;i<B.length;i++){
+    const ph=phr(String(B[i-1].resolution||"").replace(/\[\/?i\]/g,""));
+    if(!ph.length)continue;
+    pos++;
+    const f=norm(ph[ph.length-1]).slice(0,60);
+    const ok=!!(f&&f.slice(0,40)&&norm(B[i].narration).startsWith(f.slice(0,40)));
+    if(ok)fil++; parBeat[B[i].index]=ok;
+  }
+  /* L'EMPREINTE : les noms du canon reellement ecrits. C'est ce que v52 doit changer. */
+  const FIG=["Lavandière","Lavandiere","Passeur","Ankou","korrigan","Fanch","Kado","Chœur",
+             "Choeur","Chevalier","Arthur"];
+  const LIEUX=["Barenton","Val sans Retour","Pas de Nuit","Gué des Brumes","Gue des Brumes",
+               "Pierre Qui Oublie","Chêne Creux","Chene Creux","Tertre"];
+  const texte=B.map(b=>(b.narration||"")+" "+(b.resolution||"")).join(" ").toLowerCase();
+  const vus=[...new Set([...FIG,...LIEUX].filter(x=>texte.includes(x.toLowerCase()))
+    .map(x=>x.replace("Lavandiere","Lavandière").replace("Choeur","Chœur")
+             .replace("Gue des Brumes","Gué des Brumes").replace("Chene Creux","Chêne Creux")))];
+  return {B,trous,banc,pleins,parBeat,vus,
+    joues:(J.fin||{}).beats_joues,
+    attMoy:att.length?att.reduce((a,b)=>a+b,0)/att.length:null,
+    attMax:att.length?Math.max(...att):null, fil, pos};
+}
+
+function rendre(){
+  const J=PARTIES[courante];
+  if(!J){document.getElementById("chronique").innerHTML='<p class="sous">Aucune partie journalisée pour l\'instant — la prochaine partie jouée par la machine apparaîtra ici.</p>';return;}
+  const S=stats(J);
+  document.querySelectorAll("#parties .pbtn").forEach(b=>
+    b.setAttribute("aria-pressed", b.dataset.p===courante));
+
+  /* épine */
+  const ep=document.getElementById("epine"); ep.innerHTML="";
+  const bornes=S.B.map(b=>+b.attente_moteur_s||0), pire=Math.max(20,...bornes);
+  let attendu=null;
+  S.B.forEach(b=>{
+    if(attendu!==null){for(let k=attendu;k<+b.index;k++){
+      const t=document.createElement("div"); t.className="trou";
+      t.innerHTML='<span>'+k+'</span><span>jamais journalisé</span>'; ep.appendChild(t);}}
+    attendu=+b.index+1;
+    const est=b.provenance==="secours"||b.secours;
+    const r=document.createElement("button");
+    r.className="eprow"+(est?" banc":""); r.dataset.i=b.index;
+    const a=+b.attente_moteur_s||0;
+    r.innerHTML='<span class="num">'+b.index+'</span><span class="typ">'+ech(b.type||"")+'</span>'
+      +(a?'<span class="jauge"><i class="'+(a>20?"long":"")+'" style="width:'
+        +Math.max(3,Math.round(a/pire*100))+'%"></i></span>':'');
+    r.onclick=()=>{const el=document.getElementById("beat"+b.index);
+      if(el)el.scrollIntoView({behavior:"smooth",block:"start"});};
+    ep.appendChild(r);
+  });
+
+  /* chronique */
+  const c=document.getElementById("chronique");
+  const titre=(J.sentiers&&J.sentiers[J.pick||0]&&(J.sentiers[J.pick||0].titre||J.sentiers[J.pick||0].title))||"Quête sans titre";
+  const p=[];
+  p.push('<h1 class="titre-quete">'+ech(titre)+'</h1>');
+  p.push('<p class="sous">'+courante+' — '+ech(J._note||"")+' · '+S.B.length+' beats journalisés'
+    +(S.joues?' pour '+S.joues+' joués':'')+'</p>');
+
+  const puces=[];
+  puces.push('<span class="puce '+(S.pleins===S.B.length?'bon':'')+'"><b>'+S.pleins+'/'+S.B.length+'</b> pleins</span>');
+  puces.push('<span class="puce '+(S.banc.length?'mal':'bon')+'"><b>'+S.banc.length+'</b> au banc'
+    +(S.banc.length?' ('+S.banc.join(', ')+')':'')+'</span>');
+  if(S.trous.length)puces.push('<span class="puce mal"><b>'+S.trous.length+'</b> beat(s) jamais journalisés : '+S.trous.join(', ')+'</span>');
+  if(S.attMoy!==null)puces.push('<span class="puce '+(S.attMoy>20?'mal':'bon')+'">attente <b>'
+    +S.attMoy.toFixed(0)+'s</b> moy · <b>'+S.attMax.toFixed(0)+'s</b> max</span>');
+  else puces.push('<span class="puce">attente non mesurée</span>');
+  puces.push('<span class="puce '+(S.fil===S.pos&&S.pos?'bon':(S.fil?'':'mal'))
+    +'">fil repris <b>'+S.fil+'/'+S.pos+'</b></span>');
+  puces.push('<span class="puce '+(S.vus.length?'bon':'mal')+'">canon nommé : <b>'
+    +(S.vus.length?ech(S.vus.join(', ')):'aucun')+'</b></span>');
+  p.push('<div class="constats">'+puces.join("")+'</div>');
+
+  if(J.intro)p.push('<div class="intro">'+bb(J.intro)+'</div>');
+
+  S.B.forEach(b=>{
+    const est=b.provenance==="secours"||b.secours;
+    const g=b.gen||{}, cb=b.choix_du_bot||{};
+    const a=+b.attente_moteur_s||0;
+    let m='<dl>';
+    m+='<dt>type</dt><dd>'+ech(b.type||"—")+'</dd>';
+    m+='<dt>issue</dt><dd>'+ech(b.degre||"—")+'</dd>';
+    if(b.dc!==undefined)m+='<dt>seuil</dt><dd>'+b.dc+'</dd>';
+    if(b.total!==undefined)m+='<dt>total</dt><dd>'+b.total+'</dd>';
+    if(b.marge!==undefined)m+='<dt>marge</dt><dd>'+b.marge+'</dd>';
+    m+='<div class="sep"></div>';
+    m+='<dt>écrit par</dt><dd'+(est?' class="chaud"':'')+'>'+(est?'le banc':ech(g.cerveau||b.provenance||"—"))+'</dd>';
+    if(a)m+='<dt>attente</dt><dd'+(a>20?' class="chaud"':'')+'>'+a.toFixed(0)+' s</dd>';
+    if(g.prompt_tokens!==undefined)m+='<dt>prompt relu</dt><dd'+(g.prompt_tokens>1000?' class="chaud"':'')
+      +'>'+g.prompt_tokens+' tok</dd>';
+    if(g.tokens_ecrits)m+='<dt>écrit</dt><dd>'+g.tokens_ecrits+' tok</dd>';
+    if(g.ecriture_ms&&g.tokens_ecrits)m+='<dt>débit</dt><dd>'
+      +(g.tokens_ecrits/(g.ecriture_ms/1000)).toFixed(1)+' t/s</dd>';
+    if(b.integrite_apres!==undefined){m+='<div class="sep"></div>';
+      m+='<dt>intégrité</dt><dd>'+b.integrite_apres+'</dd>';
+      m+='<dt>corruption</dt><dd>'+n1(b.corruption_apres)+'</dd>';}
+    if(b.gwenneg_apres!==undefined)m+='<dt>gwenneg</dt><dd>'+b.gwenneg_apres+'</dd>';
+    if(S.parBeat[b.index]!==undefined){m+='<div class="sep"></div>';
+      m+='<dt>fil du beat</dt><dd'+(S.parBeat[b.index]?'':' class="chaud"')+'>'
+        +(S.parBeat[b.index]?'repris':'rompu')+'</dd>';}
+    m+='</dl>';
+
+    let corps='';
+    if(b.narration)corps+='<div class="prose">'+bb(b.narration)+'</div>';
+    if(b.phrase_geste)corps+='<p class="geste">'+ech(b.phrase_geste)+'</p>';
+    if(b.resolution)corps+='<div class="issue">'+bb(b.resolution)+'</div>';
+    corps+='<details class="brut"><summary>texte brut, tel que le modèle l\'a rendu</summary><pre>'
+      +ech([b.narration,b.phrase_geste,b.resolution].filter(Boolean).join("\n\n---\n\n"))+'</pre></details>';
+
+    p.push('<article class="beat'+(est?' banc':'')+'" id="beat'+b.index+'">'
+      +'<div><div class="bentete"><span class="bnum">'+b.index+'</span>'
+      +'<span class="btype">'+ech(b.type||"")+'</span>'
+      +(est?'<span class="bbanc">écrit par le banc, pas par le modèle</span>':'')
+      +'</div>'+corps+'</div>'
+      +'<aside class="marge">'+m+'</aside></article>');
+  });
+  c.innerHTML=p.join("");
+  document.querySelector(".chronique").scrollIntoView({block:"start"});
+}
+
+/* sélecteur de parties */
+const pz=document.getElementById("parties");
+ORDRE.forEach(k=>{const b=document.createElement("button");
+  b.className="pbtn"; b.dataset.p=k; b.textContent=k;
+  b.onclick=()=>{courante=k;rendre();}; pz.appendChild(b);});
+
+/* bascules */
+const bnu=document.getElementById("bnu");
+bnu.onclick=()=>{const on=document.body.classList.toggle("nu");
+  bnu.setAttribute("aria-pressed",String(!on));};
+bnu.setAttribute("aria-pressed","true");
+const bth=document.getElementById("bth");
+bth.onclick=()=>{const r=document.documentElement;
+  const noir=r.getAttribute("data-theme")==="dark"
+    || (!r.getAttribute("data-theme") && matchMedia("(prefers-color-scheme:dark)").matches);
+  r.setAttribute("data-theme",noir?"light":"dark");
+  bth.setAttribute("aria-pressed",String(!noir));};
+
+rendre();
+</script>

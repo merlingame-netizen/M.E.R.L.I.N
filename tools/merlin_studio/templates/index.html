@@ -39,6 +39,10 @@
  <nav class="dock">
   <button data-tab="play" class="on"><span class="g">▶</span>Jouer</button>
   <button data-tab="journal"><span class="g">📖</span>Journal</button>
+  <!-- Chronique : les parties jouées par la machine, lues dans la page normée (la liseuse).
+       Journal reste le récit du DÉVELOPPEMENT ; Chronique est celui du JEU. Deux choses, deux
+       boutons — le dock passe à sept, et c'est dit plutôt que caché. -->
+  <button data-tab="chronique"><span class="g">📜</span>Chronique</button>
   <!-- La pastille des non-lus est passée de Parler à Décider : c'est là que le
        courrier des agents arrive désormais. -->
   <button data-tab="ideas"><span class="g">💡</span>Décider<span class="pill" id="dock-pending" hidden></span><span class="pill" id="dock-unread" hidden></span></button>
@@ -79,6 +83,20 @@
       <option value="net">Net</option>
      </select>
     </div>
+   </div>
+  </div>
+ </section>
+
+ <!-- ══ CHRONIQUE ══ les parties jouées par la machine, données à lire telles quelles.
+      Le volet n'est qu'un CADRE sur /chroniques/liseuse : la page normée vit seule, s'exporte
+      seule (docs/chroniques), et le Studio ne la réécrit pas — il l'encadre. Le cadre ne se
+      charge qu'à l'ouverture de l'onglet, comme tout le reste ici : rien en arrière-plan. -->
+ <section class="pane" id="pane-chronique">
+  <div class="win">
+   <div class="win-bar"><span class="t">📜 Chroniques des parties</span><span class="hatch"></span>
+    <span class="meta" id="chro-meta">…</span></div>
+   <div class="win-body chro-body">
+    <iframe id="chro-cadre" class="chro-cadre" title="Liseuse des chroniques"></iframe>
    </div>
   </div>
  </section>

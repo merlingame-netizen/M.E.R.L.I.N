@@ -543,3 +543,12 @@ code { color: var(--blue); }
 .route-quoi { font-weight: 600; margin-bottom: 2px; }
 .route-pourquoi { font-size: .9rem; line-height: 1.35; }
 .route-preuve, .route-note { font-size: .82rem; margin-top: 4px; opacity: .75; }
+
+/* ── Chronique : la liseuse dans son cadre ──
+   Le corps du panneau perd sa marge et le cadre prend toute la hauteur restante : la liseuse a
+   son propre défilement (épine + chronique), un second défilement autour l'aurait rendue
+   inutilisable au doigt. Le fond reprend la nuit de la liseuse pour que le chargement ne
+   flashe pas en blanc. */
+.chro-body { padding: 0; }
+.chro-cadre { display: block; width: 100%; border: 0; background: #14110b;
+  height: calc(100vh - var(--topbar-h, 132px) - 64px); min-height: 480px; }

@@ -37,9 +37,9 @@ except Exception:
 # Allow both `python3 tools/merlin_studio/app.py` and `python3 -m tools.merlin_studio.app`.
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from merlin_studio import actions, probes  # type: ignore
+    from merlin_studio import actions, chroniques, probes  # type: ignore
 else:
-    from . import actions, probes
+    from . import actions, chroniques, probes
 
 _HERE = Path(__file__).resolve().parent
 
@@ -822,6 +822,27 @@ Fenêtre ouverte encore {left} min.</p>
             return Response("bad name\n", 400)
         return send_from_directory(
             str(Path.home() / "merlin-memory" / "journal" / "vues"), name, max_age=86400)
+
+    # ── chroniques des parties jouées par la machine ─────────────────────────
+    # La liseuse (page normée) est REMPLIE À LA DEMANDE avec tout ce que la VM a joué : copies
+    # de sûreté du Courrier, résultats commités, chroniques sauvées, et celles que le jeu écrit
+    # lui-même. Servie sans cache : une partie qui vient de finir doit y être au prochain clic.
+    @app.route("/api/chroniques")
+    def api_chroniques():
+        try:
+            return jsonify({"parties": chroniques.liste()})
+        except Exception as exc:
+            return jsonify({"parties": [], "error": str(exc)[:200]})
+
+    @app.route("/chroniques/liseuse")
+    def chroniques_liseuse():
+        try:
+            page = chroniques.rendre(chroniques.parties())
+        except Exception as exc:
+            return Response("liseuse indisponible : %s\n" % str(exc)[:200], 500,
+                            {"content-type": "text/plain; charset=utf-8"})
+        return Response(page, 200, {"content-type": "text/html; charset=utf-8",
+                                    "cache-control": "no-store"})
 
     # Vignettes CI (sha court hexa uniquement — pas de traversée possible).
     @app.route("/api/ci/shot/<sha>")

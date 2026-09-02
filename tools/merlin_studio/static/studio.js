@@ -838,6 +838,23 @@ async function refreshJournal() {
     </div>`).join('');
 }
 
+/* ── Chronique : les parties de la machine, dans la liseuse ────────────────
+   Le cadre ne reçoit son adresse qu'à la première ouverture de l'onglet (rien ne se
+   charge pour un écran qu'on ne regarde pas), puis se recharge à chaque retour :
+   une partie qui vient de finir doit y être sans rafraîchir tout le Studio. */
+async function refreshChroniques() {
+  let d = { parties: [] };
+  try { d = await j('/api/chroniques'); } catch { /* le cadre dira lui-même s'il est vide */ }
+  const n = (d.parties || []).length;
+  $('#chro-meta').textContent = n ? `${n} partie(s)` : 'aucune partie encore';
+  const f = $('#chro-cadre');
+  if (!f) return;
+  const src = '/chroniques/liseuse';
+  if (!f.getAttribute('src')) f.setAttribute('src', src);
+  else if (f.dataset.parties !== String(n)) { f.setAttribute('src', src + '?n=' + n); }
+  f.dataset.parties = String(n);
+}
+
 /* ── Le récit gravé : chapitres + fils en cours ─────────────────────────────
    Le journal ne se recalculait qu'à la volée sur 48 h : dès qu'une source était
    purgée, l'événement disparaissait pour toujours. Ici on lit le registre. */
@@ -1348,6 +1365,7 @@ const BARRE = () => { refreshClock(); refreshSum(); refreshProposals(); refreshB
 const PAR_ONGLET = {
   play:    () => { refreshPlay(); refreshRun(); },
   journal: () => { refreshSequence(); refreshRoute(); refreshChapitres(); refreshJournal(); },
+  chronique: () => refreshChroniques(),
   ideas:   () => refreshProposals(),
   talk:   () => {},                       // talkPoll a sa propre minuterie
   health: () => { refreshHealth(); refreshCpu(); refreshHost(); },
