@@ -966,13 +966,19 @@ func _on_quit() -> void:
 	get_tree().quit()
 
 
-# P2 (chantier 4b) : ÉCRAN CHRONIQUES v1 (lecture seule). Palmarès cross-run (MerlinChronicle) : nb de
-# traversées, issues, dernière fin + dernière Voie, fragments du Graal (N/12). Overlay sobre, clic =
-# fermer (même grammaire que _show_about). Remplace l'ancien bouton grisé sans fonction.
+# ÉCRAN CHRONIQUES — LE PALMARÈS, PUIS CHAQUE TRAVERSÉE.
+#
+# v1 ne montrait que des compteurs : combien de traversées, combien accomplies, la dernière fin.
+# On ne pouvait donc PAS répondre à la question qui compte — « est-ce que le jeu s'améliore ? » —
+# puisque rien ne gardait ce qu'une traversée avait donné à lire. `MerlinJournal` le garde
+# désormais ; cet écran le donne à lire, sans rien changer au palmarès qui reste en tête.
+#
+# DEUX VUES, UN SEUL VOILE. La liste, puis le détail d'une traversée, se remplacent dans le même
+# panneau : un second voile empilé demanderait deux clics pour revenir, et le pilier FACILE
+# (bible §21.1) tient l'action à deux gestes au plus.
 func _on_chronicles() -> void:
 	if get_node_or_null("ChroniclesOverlay") != null:
-		return  # P2 (review M1) : garde de ré-entrance (pas d'empilement de voiles)
-	var c: Dictionary = MerlinChronicle.read()
+		return  # garde de ré-entrance (pas d'empilement de voiles)
 	var layer: Control = Control.new()
 	layer.name = "ChroniclesOverlay"
 	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -981,57 +987,179 @@ func _on_chronicles() -> void:
 	var dim: ColorRect = ColorRect.new()
 	dim.color = MerlinVisual.DIM_MODAL
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	layer.add_child(dim)
+	# SEUL LE FOND FERME. Le panneau contient des lignes cliquables : fermer sur n'importe quel
+	# clic renverrait au menu chaque fois qu'on veut ouvrir une chronique.
+	dim.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed:
+			layer.queue_free())
 	var panel: PanelContainer = PanelContainer.new()
+	panel.name = "Panneau"
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(520, 0)
+	panel.custom_minimum_size = Vector2(720, 520)
 	var psb: StyleBoxFlat = StyleBoxFlat.new()
 	psb.bg_color = MerlinVisual.SURFACE
 	psb.set_corner_radius_all(10)
 	psb.set_border_width_all(2)
 	psb.border_color = COL_GOLD
-	psb.set_content_margin_all(30)
+	psb.set_content_margin_all(26)
 	panel.add_theme_stylebox_override("panel", psb)
 	layer.add_child(panel)
-	var v: VBoxContainer = VBoxContainer.new()
-	v.add_theme_constant_override("separation", 12)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(v)
-	var runs: int = int(c.get("runs_played", 0))
-	var lines: Array = [["CHRONIQUES", 36, COL_GOLD]]
-	if runs <= 0:
-		lines.append(["Aucune traversée encore. La brume garde ta place.", 18, COL_CREAM])
-	else:
-		lines.append(["Traversées : %d" % runs, 22, COL_CREAM])
-		lines.append(["Accomplies %d  ·  Perdues %d  ·  Corrompues %d" % [int(c.get("wins", 0)), int(c.get("deaths", 0)), int(c.get("corrupted", 0))], 18, COL_DIM])
-		var el: Dictionary = {"accomplissement": "Accomplissement", "mort": "Mort narrative", "corrompu": "Bascule corrompue"}
-		var last_end: String = str(c.get("last_end_type", ""))
-		if last_end != "":
-			var lt: String = str(c.get("last_scenario_title", ""))
-			var suffix: String = (" : %s" % lt) if lt != "" else ""
-			lines.append(["Dernière traversée : %s%s" % [str(el.get(last_end, "Fin")), suffix], 18, COL_DIM])
-		var lv: String = str(c.get("last_voie", ""))
-		if lv != "":
-			lines.append(["Dernière Voie : %s" % lv, 18, COL_CREAM])
-	lines.append(["✦ Fragments du Graal : %d / %d" % [int(c.get("graal_fragments", 0)), MerlinChronicle.GRAAL_TOTAL], 20, COL_GOLD])
-	lines.append(["", 6, COL_DIM])
-	lines.append(["cliquer pour fermer", 14, COL_DIM])
-	for ln in lines:
-		var l: Label = Label.new()
-		l.text = str(ln[0])
-		l.add_theme_font_size_override("font_size", int(ln[1]))
-		l.add_theme_color_override("font_color", ln[2] as Color)
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(l)
+	_chroniques_liste(panel)
 	layer.modulate.a = 0.0
 	var tw: Tween = layer.create_tween()
 	tw.tween_property(layer, "modulate:a", 1.0, MerlinVisual.DUR_VEIL_IN * MerlinVisual.motion())
-	layer.gui_input.connect(func(e: InputEvent) -> void:
-		if e is InputEventMouseButton and e.pressed:
-			layer.queue_free())
+
+
+## Vue 1 : le palmarès, puis une ligne par traversée, la plus récente en haut.
+func _chroniques_liste(panel: PanelContainer) -> void:
+	_vider(panel)
+	var c: Dictionary = MerlinChronicle.read()
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	panel.add_child(v)
+	v.add_child(_chro_ligne("CHRONIQUES", 34, COL_GOLD))
+	var runs: int = int(c.get("runs_played", 0))
+	if runs > 0:
+		v.add_child(_chro_ligne("Traversées : %d  ·  Accomplies %d  ·  Perdues %d  ·  Corrompues %d"
+			% [runs, int(c.get("wins", 0)), int(c.get("deaths", 0)), int(c.get("corrupted", 0))],
+			17, COL_DIM))
+	v.add_child(_chro_ligne("✦ Fragments du Graal : %d / %d"
+		% [int(c.get("graal_fragments", 0)), MerlinChronicle.GRAAL_TOTAL], 19, COL_GOLD))
+	v.add_child(HSeparator.new())
+
+	var pages: Array = MerlinJournal.liste()
+	if pages.is_empty():
+		# UNE LISTE VIDE DIT POURQUOI. Les traversées jouées AVANT que le journal existe n'y sont
+		# pas : sans cette phrase, un palmarès à douze traversées face à une liste vide se lit
+		# comme une panne.
+		v.add_child(_chro_ligne("Aucune traversée enregistrée pour l'instant.", 18, COL_CREAM))
+		v.add_child(_chro_ligne("Le journal note chaque traversée à partir de maintenant ; "
+			+ "celles d'avant n'ont pas été gardées.", 15, COL_DIM))
+	else:
+		v.add_child(_chro_ligne("%d traversée(s) gardée(s) — la plus récente en tête."
+			% pages.size(), 15, COL_DIM))
+		var scroll: ScrollContainer = ScrollContainer.new()
+		scroll.custom_minimum_size = Vector2(660, 330)
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		v.add_child(scroll)
+		var col: VBoxContainer = VBoxContainer.new()
+		col.add_theme_constant_override("separation", 4)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(col)
+		for pg in pages:
+			col.add_child(_chro_rangee(pg as Dictionary, panel))
+	v.add_child(_chro_ligne("cliquer hors du cadre pour fermer", 13, COL_DIM))
+
+
+## Une ligne de la liste : de quoi choisir sans avoir à ouvrir. Le nombre de signes de prose est
+## là parce que c'est la mesure la plus simple de « le jeu écrit-il plus qu'avant ».
+func _chro_rangee(pg: Dictionary, panel: PanelContainer) -> Control:
+	var b: Button = Button.new()
+	b.custom_minimum_size = Vector2(0, 46)   # cible tactile ≥ 44 px (bible §21.1)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.flat = true
+	b.add_theme_color_override("font_color", COL_CREAM)
+	b.add_theme_color_override("font_hover_color", COL_GOLD)
+	b.add_theme_font_size_override("font_size", 16)
+	var titre: String = str(pg.get("titre", ""))
+	if titre == "":
+		titre = "Traversée sans titre"
+	b.text = "%s   %s   ·   %d beats · %s · %d signes" % [
+		_chro_date(str(pg.get("iso", ""))), titre.substr(0, 34),
+		int(pg.get("beats", 0)), _chro_fin(str(pg.get("fin", ""))), int(pg.get("signes", 0))]
+	var id: String = str(pg.get("id", ""))
+	b.pressed.connect(func() -> void: _chroniques_detail(panel, id))
+	return b
+
+
+## Vue 2 : une traversée, beat par beat, telle qu'elle s'est lue.
+func _chroniques_detail(panel: PanelContainer, id: String) -> void:
+	var q: Dictionary = MerlinJournal.lire(id)
+	_vider(panel)
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	panel.add_child(v)
+	if q.is_empty():
+		v.add_child(_chro_ligne("Cette chronique est illisible.", 20, COL_GOLD))
+		v.add_child(_chro_bouton("← retour", func() -> void: _chroniques_liste(panel)))
+		return
+	var fin: Dictionary = q.get("fin", {}) as Dictionary
+	var titre: String = str(q.get("titre", ""))
+	v.add_child(_chro_ligne(titre if titre != "" else "Traversée", 26, COL_GOLD))
+	v.add_child(_chro_ligne("%s  ·  %s  ·  intégrité %d  ·  corruption %d" % [
+		_chro_date(str(q.get("debut_iso", ""))), _chro_fin(str(fin.get("type", ""))),
+		int(fin.get("integrite", 0)), int(fin.get("corruption", 0))], 15, COL_DIM))
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(660, 360)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(scroll)
+	var col: VBoxContainer = VBoxContainer.new()
+	col.add_theme_constant_override("separation", 14)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(col)
+	for bt in (q.get("beats", []) as Array):
+		var d: Dictionary = bt as Dictionary
+		var tete: String = "beat %d · %s" % [int(d.get("n", 0)), str(d.get("type", ""))]
+		if str(d.get("degre", "")) != "":
+			tete += " · %s" % str(d.get("degre", ""))
+		if str(d.get("action", "")) != "":
+			tete += " · %s avec %s" % [str(d.get("action", "")), str(d.get("trait", ""))]
+		col.add_child(_chro_ligne(tete, 14, COL_GOLD))
+		col.add_child(_chro_ligne(str(d.get("scene", "")), 16, COL_CREAM))
+		if str(d.get("issue", "")) != "":
+			col.add_child(_chro_ligne(str(d.get("issue", "")), 16, COL_DIM))
+	v.add_child(_chro_bouton("← retour à la liste", func() -> void: _chroniques_liste(panel)))
+
+
+func _chro_ligne(txt: String, taille: int, coul: Color) -> Label:
+	var l: Label = Label.new()
+	l.text = txt
+	l.add_theme_font_size_override("font_size", taille)
+	l.add_theme_color_override("font_color", coul)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return l
+
+
+func _chro_bouton(txt: String, quoi: Callable) -> Button:
+	var b: Button = Button.new()
+	b.text = txt
+	b.custom_minimum_size = Vector2(0, 44)
+	b.flat = true
+	b.add_theme_color_override("font_color", COL_GOLD)
+	b.add_theme_font_size_override("font_size", 16)
+	b.pressed.connect(quoi)
+	return b
+
+
+func _vider(n: Node) -> void:
+	for e in n.get_children():
+		n.remove_child(e)
+		e.queue_free()
+
+
+## « 2026-09-01T15:04:12 » se lit mal dans une liste ; « 01/09 15:04 » se compare d'un coup d'œil.
+func _chro_date(iso: String) -> String:
+	if iso.length() < 16:
+		return iso
+	return "%s/%s %s" % [iso.substr(8, 2), iso.substr(5, 2), iso.substr(11, 5)]
+
+
+func _chro_fin(t: String) -> String:
+	match t:
+		"accomplissement":
+			return "accomplie"
+		"mort":
+			return "perdue"
+		"corrompu":
+			return "corrompue"
+		"":
+			return "interrompue"
+		_:
+			return t
 
 
 # P2 (chantier 4a) : phrase de préambule (menu) qui fait allusion aux fragments déjà ramenés. Nombre

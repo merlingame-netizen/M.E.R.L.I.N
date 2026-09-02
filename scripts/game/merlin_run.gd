@@ -351,6 +351,10 @@ func new_run(p_scenario: Dictionary) -> void:
 	integrite = _start_integrite()
 	corruption = 0
 	scenario = p_scenario.duplicate(true)
+	# LA CHRONIQUE S'OUVRE ICI, et nulle part ailleurs : `new_run` est le seul endroit du code ou
+	# une traversee COMMENCE. L'ouvrir depuis l'interface la ferait manquer a chaque chemin qui ne
+	# passe pas par le menu — harnais, reprise, relance apres une fin.
+	MerlinJournal.ouvrir(str(scenario.get("title", scenario.get("titre", ""))), str(biome))
 	beat_index = 0
 	summary = ""
 	faits_marquants = []
@@ -1572,6 +1576,10 @@ func load_run() -> bool:
 	integrite = int(data.get("integrite", START_INTEGRITE))
 	corruption = int(data.get("corruption", 0))
 	scenario = data.get("scenario", {})
+	# UNE PARTIE REPRISE EST QUAND MEME CHRONIQUEE. Les beats deja joues avant la sauvegarde sont
+	# perdus pour la chronique — ils n'ont jamais ete ecrits — mais la suite se lit, et une reprise
+	# muette laisserait un trou qu'on prendrait plus tard pour une partie qui n'a pas eu lieu.
+	MerlinJournal.ouvrir(str(scenario.get("title", scenario.get("titre", ""))), str(biome), "reprise")
 	beat_index = int(data.get("beat_index", 0))
 	summary = str(data.get("summary", ""))
 	faits_marquants = data.get("faits_marquants", [])

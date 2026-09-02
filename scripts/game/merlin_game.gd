@@ -365,6 +365,12 @@ func _present_current_beat() -> void:
 	# swap de texte en cours de lecture viole le pilier ÉVIDENT (bible §21.1). Le budget LLM
 	# (moteur single-flight) est réservé à l'ISSUE — l'« effet des choix » que le joueur attend.
 	_current_situation = get_node("/root/MerlinScenario").build_situation(beat)
+	# LA CHRONIQUE NOTE CE QUI EST AFFICHE, pas ce qui etait prevu : c'est le texte que le joueur
+	# a sous les yeux qui doit pouvoir etre relu plus tard.
+	MerlinJournal.beat_pose(int(run.beat_index) + 1, str(_current_situation.get("type", "")),
+		str(_current_situation.get("narration", "")), str(_current_situation.get("provenance", "")),
+		int(_current_situation.get("difficulte", 0)), int(_current_situation.get("die", 0)),
+		int(run.get("integrite")), int(run.get("corruption")))
 	# v10.14 (ramification v1) — découverte AU beat : le chemin a basculé suite au revers
 	# précédent. Indice micro-narratif d'UNE phrase (Wave2 : jamais d'explication mécanique)
 	# + déviation marquée sur la map. Le beat basculé est déjà persisté (swap avant save, R108).
@@ -1072,6 +1078,15 @@ func _stream_resolution(sc: Node, situ: Dictionary, played_cards: Array, res: Di
 
 func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:
 	var degree: String = str(res["degree"])
+	# ICI ET PAS AILLEURS. Deux chemins mènent à une issue (résolution normale et résolution de
+	# beat spécial) : les instrumenter tous les deux, c'est en oublier un le jour où il en naît un
+	# troisième. `_show_resolution` est le passage obligé.
+	var _rn: Node = get_node_or_null("/root/MerlinRun")
+	if _rn != null:
+		MerlinJournal.beat_resolu(degree, narration,
+			str(_selected_action.get("card_name")) if _selected_action != null else "",
+			str(_selected_trait.get("card_name")) if _selected_trait != null else "",
+			int(_rn.get("integrite")), int(_rn.get("corruption")))
 	var deg_col: Color = _degree_color(degree)
 	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)
 	# v10.21 (user 2026-06-30, R128) : l'issue s'écrit À LA SUITE de la situation, dans le MÊME fil de prose —
@@ -2940,6 +2955,12 @@ func _on_run_ended(_end_type: String) -> void:
 	# revenu » serait indecidable, la corruption finale etant retombee.
 	var corr_max: int = int(run.get("corruption_max")) if run.get("corruption_max") != null else -1
 	MerlinChronicle.record_end(_end_type, title, int(run.get("integrite")), int(run.get("corruption")), faction, pilier, voie_nom, page, "", corr_max)
+	# La chronique detaillee se clot au meme endroit que la chronique agregee : deux registres,
+	# une seule fin, donc aucun risque qu'ils racontent des issues differentes.
+	MerlinJournal.clore(_end_type, int(run.get("integrite")), int(run.get("corruption")),
+		str(run.get("summary")),
+		(run.get("faits_marquants") as Array) if run.get("faits_marquants") is Array else [],
+		(run.get("pnj_rencontres") as Array) if run.get("pnj_rencontres") is Array else [])
 	# Audit design P1 : une run TERMINÉE n'a pas de save de reprise — un save ici créait une
 	# « save zombie » (Continuer rechargerait une run finie) si on quittait avant MerlinEnd.
 	run.clear_save()
