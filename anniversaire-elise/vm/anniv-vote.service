@@ -1,0 +1,23 @@
+[Unit]
+Description=Vote anniversaire Elise (Flask, 127.0.0.1:8792)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__APP_DIR__
+EnvironmentFile=/etc/anniv-vote.env
+ExecStart=__VENV__/bin/gunicorn --bind 127.0.0.1:8792 --workers 2 --timeout 30 app:app
+Restart=on-failure
+RestartSec=5s
+
+# Durcissement : le service n'a besoin que de son dossier de données.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=__DATA_DIR__
+
+[Install]
+WantedBy=multi-user.target

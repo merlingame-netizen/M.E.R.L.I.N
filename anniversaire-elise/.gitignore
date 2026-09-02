@@ -8,3 +8,7 @@ whatsapp/contacts_source.txt
 # RIB : coordonnees bancaires reelles, injectees au deploiement.
 # Le depot part sur GitHub — l'IBAN n'y a pas sa place.
 deploy/rib.env
+
+# Base des reponses au vote : donnees personnelles des invites.
+vm/reponses.db
+vm/__pycache__/
