@@ -33,8 +33,8 @@ func _go() -> void:
 
 	MerlinJournal.ouvrir("La fin du rite", "foret")
 	MerlinJournal.beat_pose(1, "Exploration", "Le Chœur chante à vingt pas.", "arc", 9, 7, 20, 0)
-	MerlinJournal.beat_resolu("reussite", "Vous restez dans les fougères et vous comptez.",
-		"OBSERVER", "La Patience", 20, 0)
+	MerlinJournal.beat_geste("OBSERVER", "La Patience")
+	MerlinJournal.beat_resolu("reussite", "[i]Vous restez dans les fougères.[/i] Vous comptez.", 20, 0)
 	MerlinJournal.clore("accomplissement", 20, 0, "Le rite s'achève.")
 	MerlinJournal.ouvrir("La pierre couchée", "foret")
 	MerlinJournal.beat_pose(1, "Exploration", "Le douzième menhir est couché.", "arc", 9, 11, 20, 0)
@@ -127,6 +127,8 @@ func _tout_le_texte(n: Node) -> String:
 	for e in n.get_children():
 		if e is Label:
 			s += str((e as Label).text) + " "
+		elif e is RichTextLabel:
+			s += str((e as RichTextLabel).text) + " "   # la prose vit ici depuis p93
 		elif e is Button:
 			s += str((e as Button).text) + " "
 		s += _tout_le_texte(e)

@@ -62,8 +62,7 @@ static func beat_pose(n: int, type_beat: String, narration: String, provenance: 
 
 ## Le beat est résolu : on complète la MÊME entrée. Un beat résolu sans avoir été posé n'existe
 ## pas — on ne fabrique pas d'entrée ici, sinon un décalage d'un beat passerait inaperçu.
-static func beat_resolu(degre: String, issue: String, action: String, trait_: String,
-		integrite: int, corruption: int) -> void:
+static func beat_resolu(degre: String, issue: String, integrite: int, corruption: int) -> void:
 	if _courante.is_empty():
 		return
 	var b: Array = _courante["beats"]
@@ -74,10 +73,25 @@ static func beat_resolu(degre: String, issue: String, action: String, trait_: St
 		return  # déjà résolu : une seconde résolution du même beat serait une anomalie, pas une mise à jour
 	d["degre"] = degre
 	d["issue"] = issue
-	d["action"] = action
-	d["trait"] = trait_
 	d["integrite_apres"] = integrite
 	d["corruption_apres"] = corruption
+	_ecrire()
+
+
+## Le geste posé, noté au moment où il l'est. Séparé de la résolution parce que la sélection est
+## vidée AVANT l'affichage de l'issue : la lire là-bas rendait deux chaînes vides, et une chaîne
+## vide se lit comme une donnée, pas comme une erreur.
+static func beat_geste(action: String, trait_: String) -> void:
+	if _courante.is_empty():
+		return
+	var b: Array = _courante["beats"]
+	if b.is_empty():
+		return
+	var d: Dictionary = b[b.size() - 1]
+	if d.has("action"):
+		return
+	d["action"] = action
+	d["trait"] = trait_
 	_ecrire()
 
 

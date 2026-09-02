@@ -1107,9 +1107,9 @@ func _chroniques_detail(panel: PanelContainer, id: String) -> void:
 		if str(d.get("action", "")) != "":
 			tete += " · %s avec %s" % [str(d.get("action", "")), str(d.get("trait", ""))]
 		col.add_child(_chro_ligne(tete, 14, COL_GOLD))
-		col.add_child(_chro_ligne(str(d.get("scene", "")), 16, COL_CREAM))
+		col.add_child(_chro_prose(str(d.get("scene", "")), COL_CREAM))
 		if str(d.get("issue", "")) != "":
-			col.add_child(_chro_ligne(str(d.get("issue", "")), 16, COL_DIM))
+			col.add_child(_chro_prose(str(d.get("issue", "")), COL_DIM))
 	v.add_child(_chro_bouton("← retour à la liste", func() -> void: _chroniques_liste(panel)))
 
 
@@ -1122,6 +1122,23 @@ func _chro_ligne(txt: String, taille: int, coul: Color) -> Label:
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l
+
+
+## LA PROSE SE LIT COMME EN PARTIE. Le jeu l'écrit en BBCode et l'affiche dans un RichTextLabel
+## (le geste en [i]…[/i]) : un Label ordinaire montrerait les balises en clair, et la chronique se
+## lirait moins bien que la traversée qu'elle raconte. Mesuré sur p93, dont les neuf issues
+## commencent toutes par une balise d'italique.
+func _chro_prose(txt: String, coul: Color) -> RichTextLabel:
+	var r: RichTextLabel = RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.text = txt
+	r.fit_content = true
+	r.scroll_active = false
+	r.add_theme_font_size_override("normal_font_size", 16)
+	r.add_theme_color_override("default_color", coul)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return r
 
 
 func _chro_bouton(txt: String, quoi: Callable) -> Button:

@@ -834,6 +834,14 @@ func _on_resolve() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
+	# LE GESTE SE NOTE ICI, AU MOMENT OU IL EST POSE. La chronique le lisait dans
+	# `_show_resolution`, où `_selected_action` et `_selected_trait` valent DEJA null : ils sont
+	# vidés une centaine de lignes plus haut, avant l'affichage. p93 l'a montré — neuf beats
+	# chroniqués avec « avec » et rien derrière. Une accroche placée au bon endroit logique et au
+	# mauvais moment ne rend pas une erreur : elle rend du vide, ce qui se lit comme une donnée.
+	MerlinJournal.beat_geste(
+		str(_selected_action.get("card_name")) if _selected_action != null else "",
+		str(_selected_trait.get("card_name")) if _selected_trait != null else "")
 	var reqs: Array = _current_situation.get("required_tags", [])
 	# v2-W2/W3 — mêmes arguments que la preview (die, diff, skill_mod=talent du verbe, graft_bonus=greffes roll) → R120.
 	var skill_mod_r: int = run.skill_mod_for(_selected_action)
@@ -1084,8 +1092,6 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	var _rn: Node = get_node_or_null("/root/MerlinRun")
 	if _rn != null:
 		MerlinJournal.beat_resolu(degree, narration,
-			str(_selected_action.get("card_name")) if _selected_action != null else "",
-			str(_selected_trait.get("card_name")) if _selected_trait != null else "",
 			int(_rn.get("integrite")), int(_rn.get("corruption")))
 	var deg_col: Color = _degree_color(degree)
 	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)

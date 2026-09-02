@@ -35,11 +35,11 @@ func _init() -> void:
 	# ── UNE TRAVERSÉE COMPLÈTE
 	MerlinJournal.ouvrir("La fin du rite", "foret")
 	MerlinJournal.beat_pose(1, "Exploration", "Le Chœur chante à vingt pas.", "arc", 9, 7, 20, 0)
-	MerlinJournal.beat_resolu("reussite", "Vous restez dans les fougères et vous comptez.",
-		"OBSERVER", "La Patience", 20, 0)
+	MerlinJournal.beat_geste("OBSERVER", "La Patience")
+	MerlinJournal.beat_resolu("reussite", "Vous restez dans les fougères et vous comptez.", 20, 0)
 	MerlinJournal.beat_pose(2, "Rencontre", "Une femme sort du cercle.", "arc", 9, 9, 20, 1)
-	MerlinJournal.beat_resolu("partiel", "Elle vous demande de dégager l'entrée.",
-		"PARLER", "La Franchise", 18, 2)
+	MerlinJournal.beat_geste("PARLER", "La Franchise")
+	MerlinJournal.beat_resolu("partiel", "Elle vous demande de dégager l'entrée.", 18, 2)
 	var ouverte: Array = MerlinJournal.liste()
 	# UNE TRAVERSÉE EN COURS EST DÉJÀ LISIBLE. C'est le contraire du premier jet : une partie
 	# interrompue restait invisible dans la liste alors que son fichier existait, donc « tout
@@ -88,6 +88,13 @@ func _init() -> void:
 			and str(b2.get("scene", "")).begins_with("Une femme"))
 		_verifier("le geste posé est gardé", str(b1.get("action", "")) == "OBSERVER"
 			and str(b1.get("trait", "")) == "La Patience")
+		_verifier("AUCUN beat n'a de geste vide",
+			(func() -> bool:
+				for x in beats:
+					if str((x as Dictionary).get("action", "")) == "":
+						return false
+				return true).call(),
+			"p93 en a chroniqué neuf de suite sans que l'épreuve le voie")
 		_verifier("les jauges avant et après sont gardées",
 			int(b2.get("integrite_avant", -1)) == 20 and int(b2.get("integrite_apres", -1)) == 18)
 	_verifier("la fin est gardée",
@@ -106,9 +113,9 @@ func _init() -> void:
 	_crees.append(str((apres_interrompue[0] as Dictionary).get("id", "")))
 
 	# ── DOUBLE RÉSOLUTION : la seconde ne doit rien écraser.
-	MerlinJournal.beat_resolu("reussite", "PREMIÈRE issue.", "AGIR", "L'Élan", 20, 0)
-	MerlinJournal.beat_resolu("echec", "SECONDE issue, qui ne doit pas passer.", "AGIR",
-		"L'Élan", 5, 9)
+	MerlinJournal.beat_geste("AGIR", "L'Élan")
+	MerlinJournal.beat_resolu("reussite", "PREMIÈRE issue.", 20, 0)
+	MerlinJournal.beat_resolu("echec", "SECONDE issue, qui ne doit pas passer.", 5, 9)
 	MerlinJournal.clore("mort", 0, 9)
 	var l2: Array = MerlinJournal.liste()
 	var q2: Dictionary = MerlinJournal.lire(str((l2[0] as Dictionary).get("id", "")))
@@ -121,7 +128,8 @@ func _init() -> void:
 	_verifier("une clé inconnue rend un vide", MerlinJournal.lire("clé_qui_n_existe_pas").is_empty())
 	_verifier("un identifiant qui remonte les dossiers est refusé",
 		MerlinJournal.lire("../options").is_empty())
-	MerlinJournal.beat_resolu("reussite", "hors traversée", "AGIR", "L'Élan", 1, 1)
+	MerlinJournal.beat_geste("AGIR", "L'Élan")
+	MerlinJournal.beat_resolu("reussite", "hors traversée", 1, 1)
 	MerlinJournal.clore("mort", 0, 0)
 	_verifier("noter hors traversée ne plante pas et n'indexe rien",
 		MerlinJournal.liste().size() == avant + 2, "%d" % MerlinJournal.liste().size())
