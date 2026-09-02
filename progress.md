@@ -3714,3 +3714,46 @@ variété vient aujourd'hui du prompt, pas du tirage. Correction = recompilation
   J'avais regardé entre deux passages du quart d'heure.
 - Le vrai manque était ailleurs : **l'outillage n'avait aucune synchro**. Corrigé
   (`a_tools_autosync.sh`), donc la VM redevient la référence sans geste humain.
+
+---
+
+## 2026-09-02 — Les chroniques de traversée, et la fin du levier prompt
+
+### Livré : chaque traversée se garde et se relit (Menu → CHRONIQUES)
+`MerlinJournal` — un fichier par traversée plus un index léger dans `user://chroniques/`, écrit
+au fil de l'eau. Mécanique ET prose beat par beat : la scène telle qu'elle s'est affichée,
+l'issue telle qu'elle a été écrite, le geste, le dé, le degré, les jauges avant/après.
+
+Trois accroches, chacune au seul endroit obligé : `new_run` (seul point où une traversée
+commence), `_present_current_beat` (on note ce que le joueur LIT), `_show_resolution` (passage
+obligé des deux chemins de résolution), clôture à côté de `record_end`.
+
+Le carnet de `MerlinChronicle` reste plafonné à trois pages : ce plafond sert le récit, il est
+bon pour ce qu'il fait. Lire l'historique demandait un autre objet, pas un carnet plus gros.
+
+Épreuves : `test_journal` 20/20 (écrit vraiment sur le disque puis nettoie ce qu'il a créé),
+`test_ecran_chroniques` 9/9 (monte le menu, ouvre, entre, revient — une faute dans un `Callable`
+de bouton n'apparaît dans aucun parse check).
+
+### Ce que l'épreuve a corrigé
+Au premier jet, une partie INTERROMPUE était enregistrée mais invisible dans la liste. « Tout
+garder » aurait voulu dire « tout sauf les parties qu'on voudrait justement comprendre ».
+
+### Génération de quêtes : cinq tours, cinq défauts de registre, zéro progrès narratif
+q86 → q92. Corrigés et mesurés : le tutoiement (venait du canon `chapitres.json`), la troisième
+personne (venait de MES consignes, qui disaient « le Voyageur » partout), les figures sans désir
+et le lieu sans description (le champ `resume` demandé n'existe dans AUCUNE des deux fiches), les
+bâtiments hallucinés, le vocabulaire moteur qui fuit (`tags` du biome, nom de pool en tête de
+rôle). La narration, elle, n'a jamais bougé.
+
+**Une seule cause d'infrastructure explique six échecs** : `a_game_idle` coupait le jeu à cinq
+minutes sans spectateur, et une génération en dure huit. Les trois courses qui ont abouti
+finissaient en 420-430 s, juste sous le seuil. J'ai passé la journée à corriger ma veille, mon
+grep et mon estimation de contexte pendant que le vrai coupeur coupait à heure fixe.
+
+### Décision : le levier du prompt est épuisé
+Le conteur tourne déjà sur le plus gros des deux modèles présents (e4b). La suite est l'affinage
+sur le corpus. Le jeu de données est prêt : 70 exemples produits par `_prompt_beat`, le code qui
+pose les questions en production — donc aucune divergence possible entre entraînement et usage.
+Corpus passé de 6 à 8 quêtes et de 67 à 89 beats, dont deux quêtes en forêt là où il n'y en
+avait aucune.
