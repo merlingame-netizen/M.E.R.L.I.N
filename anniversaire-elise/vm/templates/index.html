@@ -8,314 +8,163 @@
 <title>Les 30 ans d'Elise</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Karla:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Karla:wght@300..800&display=swap" rel="stylesheet">
 <style>
-/* ═══ Les 30 ans d'Elise — ocres de Roussillon, parti pris mono-thème ═══ */
 :root{
-  --paper:#f4ebdb;      --paper-2:#ecdfc8;    --paper-3:#dcc7a8;
-  --ink:#241d17;        --ink-soft:#4e4038;   --ink-faint:#8a7869;
-  --ocre:#c8791f;       --ocre-deep:#a35a15;  --sienna:#9e3b21;
-  --rouge:#7d2417;      --olive:#66714a;      --lavande:#75658f;
-  --night:#1c1714;      --night-2:#2a221c;    --rule:#c3ac8c;
-  --wa:#25d366;
+  --paper:#f4ebdb; --paper-2:#ecdfc8; --paper-3:#dcc7a8;
+  --ink:#241d17;   --ink-soft:#4e4038; --ink-faint:#8a7869;
+  --ocre:#c8791f;  --ocre-deep:#a35a15; --sienna:#9e3b21; --rouge:#7d2417;
+  --olive:#66714a; --night:#1c1714;     --rule:#c3ac8c;   --wa:#25d366;
   --display:'Fraunces',Georgia,serif;
   --body:'Karla',-apple-system,'Segoe UI',sans-serif;
-  --pad:clamp(1.15rem,4.5vw,4rem);
-  --maxw:1120px;
+  --pad:clamp(1.15rem,5vw,3.5rem);
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
-}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition-duration:.01ms!important}}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
-  font-size:clamp(1rem,.96rem + .2vw,1.09rem);line-height:1.65;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.45;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E");
-  mix-blend-mode:multiply}
-.wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--pad)}
-h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.04;margin:0;
+  font-size:clamp(1rem,.96rem + .2vw,1.08rem);line-height:1.65;overflow-x:hidden}
+.wrap{max-width:760px;margin-inline:auto;padding-inline:var(--pad)}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.05;margin:0;
   font-variation-settings:'SOFT' 22,'WONK' 1;letter-spacing:-.02em;text-wrap:balance}
 p{margin:0 0 1em}
-a{color:var(--sienna);text-underline-offset:3px}
-a:hover{color:var(--rouge)}
+a{color:var(--sienna)}
 :focus-visible{outline:2px solid var(--sienna);outline-offset:3px}
 
-/* ══ HERO ══ */
-.hero{position:relative;min-height:94svh;display:flex;flex-direction:column;
-  justify-content:center;overflow:hidden;background:var(--night);color:var(--paper);
-  padding-block:clamp(3.5rem,10vh,6rem)}
-.strata{position:absolute;inset:0;z-index:0}
-.strata::before{content:"";position:absolute;inset:0;
+/* ── Hero ── */
+.hero{position:relative;overflow:hidden;background:var(--night);color:var(--paper);
+  padding-block:clamp(3.5rem,13vh,6.5rem)}
+.hero::before{content:"";position:absolute;inset:0;
   background:
-    linear-gradient(179.5deg,transparent 0 72%,#8f4a16 72% 78%,transparent 78%),
-    linear-gradient(180.6deg,transparent 0 77%,#c8791f 77% 83%,transparent 83%),
-    linear-gradient(179.3deg,transparent 0 82%,#9e3b21 82% 88%,transparent 88%),
-    linear-gradient(180.5deg,transparent 0 87%,#d99a3d 87% 93%,transparent 93%),
-    linear-gradient(179.6deg,transparent 0 92%,#7d2417 92% 100%);
+    linear-gradient(179.5deg,transparent 0 74%,#8f4a16 74% 80%,transparent 80%),
+    linear-gradient(180.6deg,transparent 0 79%,#c8791f 79% 85%,transparent 85%),
+    linear-gradient(179.3deg,transparent 0 84%,#9e3b21 84% 90%,transparent 90%),
+    linear-gradient(180.5deg,transparent 0 89%,#d99a3d 89% 95%,transparent 95%),
+    linear-gradient(179.6deg,transparent 0 94%,#7d2417 94% 100%);
   filter:blur(1.5px);opacity:.9;
-  -webkit-mask-image:linear-gradient(180deg,transparent 64%,#000 77%,#000 100%);
-  mask-image:linear-gradient(180deg,transparent 64%,#000 77%,#000 100%)}
-.strata::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,var(--night) 0%,rgba(28,23,20,.96) 58%,
-    rgba(28,23,20,.8) 73%,rgba(28,23,20,.24) 86%,rgba(28,23,20,.16) 95%,rgba(28,23,20,.5) 100%)}
-.hero>.wrap{position:relative;z-index:1;width:100%}
-.kicker{font-size:.73rem;font-weight:800;letter-spacing:.3em;text-transform:uppercase;
-  color:var(--ocre);margin:0 0 1.4rem;display:flex;align-items:center;gap:.9rem}
-.kicker::after{content:"";flex:1;height:1px;
-  background:linear-gradient(90deg,var(--ocre),transparent);max-width:210px}
-.hero h1{font-size:clamp(3.2rem,13.5vw,9rem);line-height:.85;color:var(--paper);
-  font-weight:400;font-variation-settings:'SOFT' 48,'WONK' 1}
+  -webkit-mask-image:linear-gradient(180deg,transparent 62%,#000 76%,#000 100%);
+  mask-image:linear-gradient(180deg,transparent 62%,#000 76%,#000 100%)}
+.hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,var(--night) 0%,rgba(28,23,20,.95) 56%,
+    rgba(28,23,20,.75) 72%,rgba(28,23,20,.2) 87%,rgba(28,23,20,.45) 100%)}
+.hero .wrap{position:relative;z-index:1}
+.kicker{font-size:.72rem;font-weight:800;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--ocre);margin:0 0 1.2rem}
+.hero h1{font-size:clamp(3rem,13vw,6.5rem);line-height:.86;color:var(--paper);font-weight:400;
+  font-variation-settings:'SOFT' 48,'WONK' 1}
 .hero h1 em{display:block;font-style:italic;font-weight:300;color:var(--ocre);
   font-size:.4em;line-height:1;margin-top:.3em}
-.hero-meta{margin-top:clamp(1.6rem,4vh,2.6rem);display:grid;gap:.5rem;
-  font-size:1.02rem;color:var(--paper-3)}
-.hero-meta b{color:var(--paper);font-weight:700}
-.count{margin-top:clamp(1.8rem,4.5vh,2.8rem);display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(.45rem,2vw,1.4rem);max-width:520px}
-.count div{background:rgba(244,235,219,.07);border:1px solid rgba(200,121,31,.36);
-  padding:.7rem clamp(.3rem,1.6vw,1.3rem);text-align:center}
-.count b{display:block;font-family:var(--display);font-size:clamp(1.55rem,5vw,2.3rem);
-  font-weight:500;color:var(--paper);line-height:1;font-variant-numeric:tabular-nums}
-.count small{display:block;font-size:clamp(.54rem,1.7vw,.61rem);letter-spacing:.13em;
-  text-transform:uppercase;color:var(--ocre);margin-top:.38rem;font-weight:700}
-.hero-cta{margin-top:2rem;display:flex;gap:.8rem;flex-wrap:wrap}
+.facts{margin-top:2rem;display:grid;gap:.55rem;font-size:1.04rem;color:var(--paper-3)}
+.facts b{color:var(--paper)}
+.jauge{margin-top:2rem;display:flex;align-items:baseline;gap:.7rem;color:var(--paper-3);
+  font-size:.92rem}
+.jauge b{font-family:var(--display);font-size:2.1rem;font-weight:500;color:var(--ocre);
+  line-height:1;font-variant-numeric:tabular-nums}
+.hero .go{display:inline-flex;align-items:center;gap:.6rem;margin-top:2rem;
+  background:var(--ocre);color:var(--night);padding:1rem 1.9rem;font-weight:800;
+  font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;
+  min-height:44px;transition:background .2s,transform .2s}
+.hero .go:hover{background:#e08f2c;transform:translateY(-2px)}
 
-/* ══ NAV + PROGRESSION ══ */
-nav{position:sticky;top:0;z-index:50;background:rgba(244,235,219,.95);
-  backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
-.nav-bar{height:3px;background:var(--paper-3)}
-.nav-bar i{display:block;height:100%;width:0;background:var(--ocre);transition:width .4s ease}
-nav ul{display:flex;gap:.2rem;list-style:none;margin:0;padding:0 var(--pad);
-  max-width:var(--maxw);margin-inline:auto;overflow-x:auto;scrollbar-width:none}
-nav ul::-webkit-scrollbar{display:none}
-nav a{display:block;padding:.8rem .78rem;font-size:.74rem;font-weight:700;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
-  text-decoration:none;white-space:nowrap;border-bottom:2px solid transparent;
-  transition:color .18s,border-color .18s}
-nav a:hover{color:var(--sienna);border-bottom-color:var(--ocre)}
-
-/* ══ SECTIONS ══ */
-section{padding-block:clamp(3rem,7.5vh,5.4rem);position:relative}
-.sec-head{margin-bottom:clamp(1.7rem,4vh,2.8rem)}
-.sec-num{font-size:.69rem;font-weight:800;letter-spacing:.26em;color:var(--ocre-deep);
-  text-transform:uppercase;display:block;margin-bottom:.75rem}
-.sec-head h2{font-size:clamp(1.9rem,5.4vw,3.1rem);max-width:18ch}
-.sec-head p{margin-top:1rem;max-width:64ch;color:var(--ink-soft);font-size:1.05rem}
+/* ── Sections ── */
+section{padding-block:clamp(2.6rem,7vh,4.2rem)}
 .alt{background:var(--paper-2)}
-.dark{background:var(--night);color:var(--paper-3)}
-.dark h2,.dark h3,.dark h4{color:var(--paper)}
-.dark .sec-num{color:var(--ocre)}
-.dark .sec-head p{color:var(--paper-3)}
+h2{font-size:clamp(1.6rem,5vw,2.3rem);margin-bottom:.5rem}
+.lede{color:var(--ink-soft);margin-bottom:1.8rem;max-width:56ch}
 
-/* ══ EN BREF ══ */
-.brief{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.brief div{border-left:3px solid var(--ocre);padding:.3rem 0 .3rem 1.1rem}
-.brief dt{font-size:.66rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--ocre-deep);margin-bottom:.3rem}
-.brief dd{margin:0;font-family:var(--display);font-size:1.35rem;font-weight:600;line-height:1.2}
-.brief dd span{display:block;font-family:var(--body);font-size:.88rem;font-weight:400;
-  color:var(--ink-faint);margin-top:.2rem;line-height:1.5}
+/* ── Programme ── */
+.day{font-family:var(--display);font-size:1.15rem;font-weight:700;color:var(--ocre-deep);
+  margin:1.8rem 0 .2rem;letter-spacing:.01em}
+.day:first-of-type{margin-top:0}
+.slot{display:grid;grid-template-columns:62px 1fr;gap:1rem;padding:.7rem 0;
+  border-top:1px solid var(--rule);align-items:baseline}
+.slot:last-of-type{border-bottom:1px solid var(--rule)}
+.slot time{font-family:var(--display);font-size:1.02rem;font-weight:600;color:var(--ocre-deep);
+  font-variant-numeric:tabular-nums}
+.slot span{font-size:.98rem}
+.slot small{display:block;color:var(--ink-faint);font-size:.86rem;margin-top:.1rem}
 
-/* ══ BOUTONS ══ */
-.btn{display:inline-flex;align-items:center;gap:.6rem;background:var(--rouge);color:#f7ece0;
-  padding:.95rem 1.7rem;font-family:var(--body);font-weight:800;font-size:.82rem;
-  letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border:none;
-  cursor:pointer;min-height:44px;transition:background .2s,transform .2s}
-.btn:hover{background:var(--sienna);color:#fff;transform:translateY(-2px)}
-.btn.ghost{background:transparent;border:2px solid var(--ocre);color:var(--ocre)}
-.btn.ghost:hover{background:var(--ocre);color:var(--night)}
-.btn.wa{background:var(--wa);color:#053b1c}
-.btn.wa:hover{background:#1fbb59;color:#032}
-
-/* ══ CHOIX (RSVP / gîtes / activités) ══ */
-.opts{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(225px,1fr))}
+/* ── Choix ── */
+.opts{display:grid;gap:.7rem}
+.opts.two{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .pick{position:relative;display:flex}
 .pick input{position:absolute;opacity:0;width:0;height:0}
-.pick>span{display:flex;flex-direction:column;width:100%;border:2px solid var(--rule);
-  background:var(--paper);cursor:pointer;padding:1.15rem 1.25rem;min-height:44px;
-  transition:border-color .18s,background .18s,transform .18s,box-shadow .18s}
-.pick input:checked+span{border-color:var(--ocre);background:rgba(200,121,31,.12);
-  box-shadow:5px 5px 0 rgba(200,121,31,.22)}
+.pick>span{display:block;width:100%;border:2px solid var(--rule);background:var(--paper);
+  cursor:pointer;padding:.95rem 1.15rem;min-height:44px;font-size:.98rem;
+  transition:border-color .16s,background .16s}
+.alt .pick>span{background:var(--paper)}
+.pick input:checked+span{border-color:var(--ocre);background:rgba(200,121,31,.13)}
 .pick input:focus-visible+span{outline:2px solid var(--sienna);outline-offset:3px}
-.pick>span:hover{transform:translateY(-2px)}
-.pick b{font-family:var(--display);font-size:1.18rem;font-weight:600;margin-bottom:.22rem}
-.pick em{font-style:normal;color:var(--ink-faint);font-size:.9rem}
-.field{margin-top:1.5rem;max-width:400px}
-.field label{display:block;font-size:.68rem;font-weight:800;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--ocre-deep);margin-bottom:.5rem}
-.field input{width:100%;font-family:var(--body);font-size:1.05rem;padding:.85rem 1rem;
+.pick b{display:block;font-family:var(--display);font-size:1.08rem;font-weight:600}
+.pick em{font-style:normal;color:var(--ink-faint);font-size:.88rem}
+.pick .prix{float:right;font-family:var(--display);font-weight:600;color:var(--ocre-deep);
+  font-size:1rem;margin-left:1rem}
+.field{margin-top:1.3rem;max-width:360px}
+.field label{display:block;font-size:.67rem;font-weight:800;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ocre-deep);margin-bottom:.45rem}
+.field input{width:100%;font-family:var(--body);font-size:1.05rem;padding:.8rem 1rem;
   border:2px solid var(--rule);background:var(--paper);color:var(--ink);min-height:44px}
 .field input:focus{border-color:var(--ocre);outline:none}
+.hint{font-size:.88rem;color:var(--ink-faint);margin-top:1.1rem}
 
-/* ══ GÎTES ══ */
-.gites{display:grid;gap:1.4rem;grid-template-columns:repeat(auto-fit,minmax(295px,1fr))}
-.gite{position:relative;display:flex}
-.gite input{position:absolute;opacity:0;width:0;height:0}
-.gite>span{display:flex;flex-direction:column;width:100%;border:2px solid var(--rule);
-  background:var(--paper);cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .18s}
-.gite input:checked+span{border-color:var(--ocre);box-shadow:6px 6px 0 rgba(200,121,31,.22)}
-.gite input:focus-visible+span{outline:2px solid var(--sienna);outline-offset:3px}
-.gite>span:hover{transform:translateY(-3px)}
-.g-top{padding:1.25rem 1.35rem .85rem;border-bottom:1px solid var(--rule)}
-.g-top h3{font-size:1.28rem;margin-bottom:.28rem}
-.g-where{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ink-faint)}
-.g-body{padding:1.05rem 1.35rem;flex:1;font-size:.93rem;color:var(--ink-soft)}
-.g-body p{margin-bottom:.65rem}
-.g-body p:last-child{margin-bottom:0}
-.g-specs{list-style:none;margin:0 0 .85rem;padding:0;display:grid;gap:.32rem;font-size:.89rem}
-.g-specs li{display:flex;gap:.5rem}
-.g-specs li::before{content:"·";color:var(--ocre);font-weight:800}
-.g-foot{padding:.95rem 1.35rem;background:var(--paper-2);border-top:1px solid var(--rule);
-  display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}
-.g-price{font-family:var(--display);font-size:1.32rem;font-weight:600;color:var(--ocre-deep)}
-.g-price small{display:block;font-family:var(--body);font-size:.66rem;font-weight:700;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:.14rem}
-.g-pick{font-size:.66rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
-  color:var(--ink-faint)}
-.gite input:checked+span .g-pick{color:var(--ocre-deep)}
-.gite input:checked+span .g-pick::before{content:"✓ "}
+/* ── Envoi ── */
+.envoi{background:var(--night);color:var(--paper-3);padding:clamp(1.5rem,5vw,2.4rem)}
+.envoi h2{color:var(--paper)}
+.envoi dl{display:grid;gap:.7rem;margin:1.3rem 0 1.6rem}
+.envoi dt{font-size:.64rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ocre)}
+.envoi dd{margin:.1rem 0 0;color:var(--paper);font-size:1.02rem}
+.envoi dd.todo{color:var(--ink-faint);font-style:italic}
+.wa{display:inline-flex;align-items:center;gap:.6rem;background:var(--wa);color:#053b1c;
+  padding:1rem 1.9rem;font-weight:800;font-size:.85rem;letter-spacing:.12em;
+  text-transform:uppercase;text-decoration:none;min-height:44px;
+  transition:background .2s,transform .2s}
+.wa:hover{background:#1fbb59;transform:translateY(-2px)}
+.deadline{display:inline-block;background:var(--rouge);color:#f7ece0;padding:.42rem .9rem;
+  font-size:.7rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
 
-/* ══ ACTIVITÉS ══ */
-.acts{display:grid;gap:.95rem;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
-.act{position:relative;display:flex}
-.act input{position:absolute;opacity:0;width:0;height:0}
-.act>span{display:flex;flex-direction:column;width:100%;border:2px solid var(--rule);
-  background:var(--paper);padding:1.15rem 1.25rem;cursor:pointer;
-  transition:border-color .18s,background .18s,transform .18s}
-.act input:checked+span{border-color:var(--olive);background:rgba(102,113,74,.12)}
-.act input:focus-visible+span{outline:2px solid var(--sienna);outline-offset:3px}
-.act>span:hover{transform:translateY(-2px)}
-.a-top{display:flex;justify-content:space-between;gap:.8rem;align-items:flex-start;margin-bottom:.3rem}
-.act h4{font-size:1.1rem}
-.a-cost{font-family:var(--display);font-size:.98rem;font-weight:600;color:var(--ocre-deep);white-space:nowrap}
-.a-cost.free{color:var(--olive)}
-.a-when{font-size:.63rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
-  color:var(--ink-faint);margin-bottom:.55rem}
-.act p{font-size:.9rem;color:var(--ink-soft);margin:0 0 .55rem}
-.a-info{margin-top:auto;padding-top:.65rem;border-top:1px solid var(--rule);
-  font-size:.81rem;color:var(--ink-faint);line-height:1.55}
-
-/* ══ TIMELINE PERSONNALISÉE ══ */
-.day-h{font-family:var(--display);font-size:1.5rem;font-weight:600;margin:2.4rem 0 .3rem}
-.day-h:first-of-type{margin-top:.4rem}
-.prog{display:grid}
-.slot{display:grid;grid-template-columns:clamp(64px,11vw,98px) 1fr;gap:clamp(.85rem,3vw,1.9rem);
-  padding:1.05rem 0;border-top:1px solid rgba(195,172,140,.28);align-items:start;
-  transition:background .25s,padding .25s}
-.slot:last-child{border-bottom:1px solid rgba(195,172,140,.28)}
-.slot time{font-family:var(--display);font-size:clamp(1rem,2.9vw,1.3rem);font-weight:500;
-  color:var(--ocre);line-height:1.25;font-variant-numeric:tabular-nums}
-.slot h4{font-size:1.08rem;margin-bottom:.22rem}
-.slot p{margin:0;font-size:.93rem;color:var(--paper-3);line-height:1.55}
-.slot.mine{background:linear-gradient(90deg,rgba(200,121,31,.2),transparent 78%);
-  margin-inline:calc(var(--pad) * -.35);padding-inline:calc(var(--pad) * .35)}
-.slot.mine h4::after{content:" ✓";color:var(--ocre)}
-.slot.off{opacity:.4}
-.slot.off h4::after{content:" — pas coché";font-family:var(--body);font-size:.7rem;
-  font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
-.tl-hint{font-size:.88rem;color:var(--paper-3);font-style:italic;margin-top:1.3rem}
-
-/* ══ BUDGET VIVANT ══ */
-.calc{background:var(--paper);border:2px solid var(--ocre);padding:clamp(1.4rem,4vw,2.2rem);
-  display:grid;gap:1.6rem;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));align-items:center}
-.calc-out{text-align:center}
-.calc-out b{display:block;font-family:var(--display);font-size:clamp(3rem,10vw,4.6rem);
-  font-weight:400;color:var(--ocre-deep);line-height:.95;font-variation-settings:'SOFT' 40,'WONK' 1;
-  font-variant-numeric:tabular-nums}
-.calc-out small{display:block;font-size:.7rem;font-weight:800;letter-spacing:.19em;
-  text-transform:uppercase;color:var(--ink-faint);margin-top:.55rem}
-.calc-ctl label{display:block;font-size:.67rem;font-weight:800;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--ocre-deep);margin-bottom:.55rem}
-.calc-ctl output{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--ink)}
-input[type=range]{width:100%;accent-color:var(--ocre);min-height:44px}
-.calc-note{font-size:.88rem;color:var(--ink-soft);margin:1.4rem 0 0;max-width:62ch}
-.calc-break{margin-top:1.1rem;font-size:.9rem;color:var(--ink-faint);
-  display:flex;gap:1.4rem;flex-wrap:wrap}
-.calc-break span b{color:var(--ink);font-weight:700}
-
-/* ══ RÉCAP ══ */
-.recap{background:var(--night-2);border:1px solid rgba(200,121,31,.4);
-  padding:clamp(1.4rem,4vw,2.2rem);margin-top:1.4rem}
-.recap dl{display:grid;gap:.85rem;margin:0 0 1.5rem}
-.recap dt{font-size:.65rem;font-weight:800;letter-spacing:.19em;text-transform:uppercase;
-  color:var(--ocre);margin-bottom:.14rem}
-.recap dd{margin:0;font-size:1.03rem;color:var(--paper)}
-.recap dd.todo{color:var(--ink-faint);font-style:italic}
-.deadline{display:inline-flex;align-items:center;gap:.6rem;background:rgba(125,36,23,.92);
-  color:#f7ece0;padding:.5rem 1rem;font-size:.71rem;font-weight:800;letter-spacing:.13em;
-  text-transform:uppercase;margin-bottom:1.3rem}
-.saved{font-size:.84rem;color:var(--olive);font-weight:700;margin-top:1.2rem;
-  opacity:0;transition:opacity .3s}
-.saved.on{opacity:1}
-
-/* ══ DIVERS ══ */
-.note{border-left:4px solid var(--rouge);background:rgba(125,36,23,.08);
-  padding:1.05rem 1.3rem;margin-top:1.5rem;font-size:.94rem}
-.note b{color:var(--rouge)}
-.note p:last-child{margin-bottom:0}
-.cards{display:grid;gap:1.3rem;grid-template-columns:repeat(auto-fit,minmax(255px,1fr))}
-.card{background:var(--paper);border:1px solid var(--rule);padding:1.45rem}
-.card h3{font-size:1.2rem;margin-bottom:.5rem}
-.card p{font-size:.93rem;color:var(--ink-soft)}
-.card p:last-child{margin-bottom:0}
-.check{display:grid;gap:.1rem;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));margin-top:1.2rem}
-.check label{display:flex;gap:.8rem;align-items:flex-start;padding:.68rem .8rem;cursor:pointer;
-  transition:background .16s;font-size:.95rem;min-height:44px}
-.check label:hover{background:rgba(200,121,31,.1)}
-.check input{appearance:none;width:20px;height:20px;flex:0 0 20px;margin-top:2px;
-  border:2px solid var(--ocre-deep);background:transparent;cursor:pointer;position:relative}
-.check input:checked{background:var(--ocre-deep)}
-.check input:checked::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:11px;
-  border:solid var(--paper);border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
-.check input:checked+span{text-decoration:line-through;color:var(--ink-faint)}
-.faq{border-top:1px solid var(--rule)}
-.faq details{border-bottom:1px solid var(--rule)}
-.faq summary{padding:1.02rem 0;cursor:pointer;font-weight:700;font-size:1rem;list-style:none;
+/* ── FAQ ── */
+details{border-bottom:1px solid var(--rule)}
+details:first-of-type{border-top:1px solid var(--rule)}
+summary{padding:.95rem 0;cursor:pointer;font-weight:700;font-size:.99rem;list-style:none;
   display:flex;justify-content:space-between;gap:1rem;align-items:center;min-height:44px}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";font-family:var(--display);font-size:1.45rem;color:var(--ocre);
-  transition:transform .22s;line-height:1}
-.faq details[open] summary::after{transform:rotate(45deg)}
-.faq p{padding:0 0 1.05rem;margin:0;color:var(--ink-soft);max-width:70ch;font-size:.95rem}
-footer{background:var(--night);color:var(--ink-faint);padding-block:2.8rem;font-size:.85rem}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--display);font-size:1.4rem;color:var(--ocre);
+  transition:transform .2s;line-height:1}
+details[open] summary::after{transform:rotate(45deg)}
+details p{padding:0 0 1rem;margin:0;color:var(--ink-soft);font-size:.94rem;max-width:62ch}
+footer{background:var(--night);color:var(--ink-faint);padding-block:2.2rem;font-size:.84rem}
 footer strong{color:var(--paper-3)}
-#toast{position:fixed;left:50%;bottom:1.6rem;transform:translate(-50%,150%);
-  background:var(--night);color:var(--paper);padding:.85rem 1.5rem;font-weight:700;
-  font-size:.87rem;z-index:99;transition:transform .28s ease;pointer-events:none;
+#toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,150%);
+  background:var(--night);color:var(--paper);padding:.8rem 1.4rem;font-weight:700;
+  font-size:.87rem;z-index:99;transition:transform .28s;pointer-events:none;
   border:1px solid var(--ocre);max-width:92vw;text-align:center}
 #toast.on{transform:translate(-50%,0)}
-@media print{
-  body::before,nav,.btn,#toast,.calc-ctl{display:none}
-  .hero,.dark{background:#fff!important;color:#000!important}
-  .hero h1,.dark h2,.dark h4{color:#000!important}
-  .slot p{color:#333!important}
-  section{padding-block:1.1rem;break-inside:avoid}
-}
+@media print{.hero{background:#fff!important;color:#000!important}
+  .hero h1,.hero h1 em{color:#000!important}.envoi{background:#fff!important;color:#000!important}
+  .wa,.go,#toast{display:none}}
 
 /* ══ VOTES EN DIRECT (ajouté par build_template.py) ══ */
-.live{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.live-card{background:var(--paper);border:2px solid var(--rule);padding:1.4rem}
-.live-card h3{font-size:1.15rem;margin-bottom:1rem}
-.tally{display:grid;gap:.75rem}
-.tally-row{display:grid;gap:.3rem}
-.tally-top{display:flex;justify-content:space-between;gap:1rem;font-size:.92rem}
+.live{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:1.5rem}
+.live-card{background:var(--paper);border:2px solid var(--rule);padding:1.2rem}
+.live-card h3{font-size:1.05rem;margin-bottom:.9rem}
+.tally{display:grid;gap:.65rem}
+.tally-row{display:grid;gap:.28rem}
+.tally-top{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem}
 .tally-top b{font-variant-numeric:tabular-nums;color:var(--ocre-deep)}
-.bar{height:8px;background:var(--paper-3);overflow:hidden}
+.bar{height:7px;background:var(--paper-3);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--ocre);width:0;transition:width .5s ease}
 .tally-row.lead .bar i{background:var(--rouge)}
 .tally-row.lead .tally-top b::after{content:" ★";color:var(--rouge)}
-.live-big{font-family:var(--display);font-size:clamp(2.4rem,7vw,3.4rem);font-weight:400;
-  color:var(--ocre-deep);line-height:1;font-variant-numeric:tabular-nums}
-.live-big small{display:block;font-family:var(--body);font-size:.68rem;font-weight:800;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-top:.5rem}
-.prenoms{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem}
-.prenoms span{background:rgba(102,113,74,.16);color:var(--olive);padding:.28rem .7rem;
-  font-size:.85rem;font-weight:700}
-.live-empty{color:var(--ink-faint);font-style:italic;font-size:.93rem}
-.sync{font-size:.83rem;font-weight:700;margin-top:1rem;min-height:1.2em}
+.live-big{font-family:var(--display);font-size:2.6rem;font-weight:400;color:var(--ocre-deep);
+  line-height:1;font-variant-numeric:tabular-nums;margin:0}
+.live-big small{display:block;font-family:var(--body);font-size:.65rem;font-weight:800;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:.45rem}
+.prenoms{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.9rem}
+.prenoms span{background:rgba(102,113,74,.16);color:var(--olive);padding:.25rem .6rem;
+  font-size:.83rem;font-weight:700}
+.live-empty{color:var(--ink-faint);font-style:italic;font-size:.9rem}
+.sync{font-size:.85rem;font-weight:700;margin-top:1.1rem;min-height:1.2em}
 .sync.ok{color:var(--olive)}
 .sync.ko{color:var(--rouge)}
 </style>
@@ -323,73 +172,53 @@ footer strong{color:var(--paper-3)}
 </head>
 <body>
 <header class="hero">
-  <div class="strata"></div>
   <div class="wrap">
-    <p class="kicker">Samedi 3 &amp; dimanche 4 octobre 2026 · Luberon</p>
+    <p class="kicker">Samedi 3 &amp; dimanche 4 octobre 2026</p>
     <h1>Elise<em>a trente ans</em></h1>
-    <div class="hero-meta">
-      <span>🕛 <b>Samedi midi → dimanche midi.</b> Vingt-quatre heures, une nuit sur place</span>
+    <div class="facts">
+      <span>🕛 <b>Samedi midi → dimanche midi.</b> Une nuit sur place</span>
       <span>📍 Un grand gîte du <b>Luberon</b>, 50 min au nord d'Aix</span>
-      <span>🗳️ <b>Réponds avant le lundi 15 septembre</b> — après, on réserve sans toi</span>
+      <span>💶 <b>Environ 130 €</b> par personne, tout compris</span>
     </div>
-    <div class="count" id="count" aria-live="polite" aria-label="Compte à rebours">
-      <div><b id="cd">—</b><small>jours</small></div>
-      <div><b id="ch">—</b><small>heures</small></div>
-      <div><b id="cm">—</b><small>minutes</small></div>
-      <div><b id="cs">—</b><small>secondes</small></div>
-    </div>
-    <div class="hero-cta"><a class="btn ghost" href="#reponse">Je réponds →</a></div>
+    <p class="jauge"><b id="cd">—</b> jours avant le grand jour</p>
+    <a class="go" href="#reponse">Je réponds →</a>
   </div>
 </header>
 
-<nav>
-  <div class="nav-bar"><i id="progress"></i></div>
-  <ul>
-    <li><a href="#reponse">Ma réponse</a></li>
-    <li><a href="#gites">Où on dort</a></li>
-    <li><a href="#activites">Activités</a></li>
-    <li><a href="#weekend">Mon week-end</a></li>
-    <li><a href="#budget">Budget</a></li>
-    <li><a href="#live">Votes en direct</a></li>
-    <li><a href="#envoi">Envoyer</a></li>
-    <li><a href="#sac">Dans le sac</a></li>
-    <li><a href="#faq">Questions</a></li>
-  </ul>
-</nav>
-
-<!-- 01 · EN BREF -->
+<!-- LE PROGRAMME -->
 <section>
   <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">01 — En bref</span>
-      <h2>Vingt-quatre heures dans le Luberon</h2>
-      <p>On se retrouve samedi à midi, on dort sur place, on repart dimanche après le déjeuner. Court, mais assez pour une vraie fête — et assez court pour que personne n'ait à poser un jour.</p>
-    </div>
-    <dl class="brief">
-      <div><dt>Rendez-vous</dt><dd>Samedi 12h<span>Déjeuner tous ensemble, avant même d'avoir les clés du gîte</span></dd></div>
-      <div><dt>Retour</dt><dd>Dimanche 12h<span>Après le rangement, chacun repart quand il veut</span></dd></div>
-      <div><dt>On sera</dt><dd>15 maximum<span>C'est ce chiffre qui décide de la maison</span></dd></div>
-      <div><dt>Ta part</dt><dd id="brief-prix">≈ 120 €<span>Tout compris sauf le cadeau — le calcul est plus bas</span></dd></div>
-    </dl>
+    <h2>Le programme</h2>
+    <p class="lede">Vingt-quatre heures. Assez pour une vraie fête, assez court pour que personne n'ait à poser un jour.</p>
+
+    <p class="day">Samedi</p>
+    <div class="slot"><time>12h</time><span>Rendez-vous, déjeuner tous ensemble<small>Les gîtes n'ouvrent qu'à 16h — on déjeune ailleurs</small></span></div>
+    <div class="slot"><time>14h</time><span>L'activité de l'après-midi<small>Ocres de Roussillon, dégustation à Cucuron, ou village de Lourmarin</small></span></div>
+    <div class="slot"><time>16h30</time><span>Arrivée au gîte<small>Installation, chambres, courses au frais</small></span></div>
+    <div class="slot"><time>18h</time><span>Pétanque, puis apéro<small>Prends une petite laine : 11 °C à la nuit</small></span></div>
+    <div class="slot"><time>20h</time><span>Dîner cuisiné sur place</span></div>
+    <div class="slot"><time>22h30</time><span>Gâteau et trente bougies<small>Le gâteau est géré — n'en apporte pas</small></span></div>
+
+    <p class="day">Dimanche</p>
+    <div class="slot"><time>9h</time><span>Petit-déjeuner en terrasse</span></div>
+    <div class="slot"><time>10h</time><span>Balade dans la forêt des Cèdres, ou grasse matinée</span></div>
+    <div class="slot"><time>12h</time><span>Déjeuner rapide, puis départ<small>Aix est à 50 minutes</small></span></div>
   </div>
 </section>
 
-<!-- 02 · RSVP -->
+<!-- TA RÉPONSE -->
 <section id="reponse" class="alt">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">02 — Ta réponse</span>
-      <h2>Tu viens&nbsp;?</h2>
-      <p>Quatre questions, deux minutes. Tout ce que tu coches reste enregistré dans ton téléphone — tu peux fermer la page et revenir, rien n'est perdu.</p>
-    </div>
+    <h2>Ta réponse</h2>
+    <p class="lede">Tout est gardé dans ton téléphone — tu peux fermer la page et revenir, rien n'est perdu.</p>
 
-    <div class="opts">
+    <div class="opts two">
       <label class="pick"><input type="radio" name="rsvp" value="Je viens, samedi midi au dimanche midi">
-        <span><b>Je viens</b><em>Samedi midi → dimanche midi, je dors sur place</em></span></label>
+        <span><b>Je viens</b><em>Et je dors sur place</em></span></label>
       <label class="pick"><input type="radio" name="rsvp" value="Je viens samedi, je ne dors pas">
         <span><b>Samedi seulement</b><em>Je repars dans la soirée</em></span></label>
       <label class="pick"><input type="radio" name="rsvp" value="Je vous rejoins dimanche matin">
-        <span><b>Dimanche</b><em>Je vous rejoins pour la matinée</em></span></label>
+        <span><b>Dimanche</b><em>Je vous rejoins le matin</em></span></label>
       <label class="pick"><input type="radio" name="rsvp" value="Je ne peux pas venir">
         <span><b>Je ne peux pas</b><em>Une autre fois, promis</em></span></label>
     </div>
@@ -399,226 +228,62 @@ footer strong{color:var(--paper-3)}
       <input type="text" id="nom" autocomplete="name" placeholder="Pour qu'on sache qui a répondu">
     </div>
     <div class="field">
-      <label for="nb">Vous serez combien en tout&nbsp;?</label>
+      <label for="nb">Vous serez combien&nbsp;?</label>
       <input type="text" id="nb" inputmode="numeric" placeholder="1, ou 2 si tu viens accompagné·e">
     </div>
   </div>
 </section>
 
-<!-- 03 · GÎTES -->
-<section id="gites">
+<!-- LE VOTE -->
+<section id="vote">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">03 — Où on dort</span>
-      <h2>Trois maisons, une seule à choisir</h2>
-      <p>Trois grands gîtes du Luberon dimensionnés pour quinze personnes. Vote pour celle que tu préfères — c'est le total des voix qui tranchera, et le budget en bas se recalcule selon ton choix.</p>
+    <h2>Ton vote</h2>
+    <p class="lede">Deux questions. C'est le total des voix qui décidera.</p>
+
+    <p class="day">Quelle maison&nbsp;?</p>
+    <div class="opts">
+      <label class="pick"><input type="radio" name="gite" value="Bastide de la Peyrolière (Apt)">
+        <span><span class="prix">1 078 €</span><b>Bastide de la Peyrolière</b>
+        <em>Apt, à 3 km du marché. Deux maisons voisines — le groupe dort séparé.</em></span></label>
+      <label class="pick"><input type="radio" name="gite" value="Pierre-Étoile (près de Lourmarin)">
+        <span><span class="prix">~1 100 €</span><b>Pierre-Étoile</b>
+        <em>Près de Lourmarin. Quinze sous un seul toit, billard et pétanque. Prix à confirmer.</em></span></label>
+      <label class="pick"><input type="radio" name="gite" value="Gîte de l'Orangerie (Cadenet)">
+        <span><span class="prix">1 200 €</span><b>Gîte de l'Orangerie</b>
+        <em>Cadenet, domaine viticole. Une salle d'eau par chambre, mais que des lits simples.</em></span></label>
     </div>
+    <p class="hint">Aucune n'est encore réservée — on appelle dès que le vote a tranché. Les prix sont pour tout le groupe, deux nuits, draps et ménage compris.</p>
 
-    <div class="gites">
-      <label class="gite"><input type="radio" name="gite" value="Bastide de la Peyrolière (Apt)" data-fixe="1078">
-        <span>
-          <div class="g-top"><h3>Bastide de la Peyrolière</h3><p class="g-where">Apt · 3 km du centre</p></div>
-          <div class="g-body">
-            <p>Deux maisons jumelles de douze couchages, sur la même propriété. À quinze, il en faut deux.</p>
-            <ul class="g-specs">
-              <li>⚠️ <strong>12 personnes par maison</strong> — à quinze, il en faut deux</li>
-              <li>Maison Jordane (12) + Maison Amandier (10), voisines</li>
-              <li>4 chambres chacune, climatisées</li>
-              <li>À 3 km du marché d'Apt du samedi matin</li>
-            </ul>
-            <p><strong>Le groupe dort séparé.</strong> Deux ménages et les draps en supplément : l'écart de prix avec l'Orangerie tombe à 8 € par personne.</p>
-          </div>
-          <div class="g-foot"><span class="g-price">1 078 €<small>tout compris, 2 nuits</small></span><span class="g-pick">Voter</span></div>
-        </span></label>
-
-      <label class="gite"><input type="radio" name="gite" value="Pierre-Étoile (près de Lourmarin)" data-fixe="1100">
-        <span>
-          <div class="g-top"><h3>Pierre-Étoile</h3><p class="g-where">Près de Lourmarin</p></div>
-          <div class="g-body">
-            <p>Un mas provençal organisé autour d'une cour centrale, à quelques kilomètres de Lourmarin, Vaugines, Cucuron et Ansouis.</p>
-            <ul class="g-specs">
-              <li>12 à 15 personnes, 6 chambres, 5 salles de bain</li>
-              <li>Grand séjour, cour centrale abritée</li>
-              <li>Billard, ping-pong, babyfoot, terrain de pétanque</li>
-              <li>Accessible aux personnes à mobilité réduite</li>
-            </ul>
-            <p><strong>Quinze personnes sous un seul toit.</strong> Mais l'arrivée n'est possible qu'à partir de 16h — on déjeunera ailleurs samedi midi.</p>
-          </div>
-          <div class="g-foot"><span class="g-price">~1 100 €<small>estimation, devis à demander</small></span><span class="g-pick">Voter</span></div>
-        </span></label>
-
-      <label class="gite"><input type="radio" name="gite" value="Gîte de l'Orangerie (Cadenet)" data-fixe="1200">
-        <span>
-          <div class="g-top"><h3>Gîte de l'Orangerie</h3><p class="g-where">Cadenet · domaine viticole</p></div>
-          <div class="g-body">
-            <p>Sur un domaine viticole et oléicole du Sud Luberon. Chaque chambre a son accès indépendant. La seule des trois à loger quinze personnes sans supplément.</p>
-            <ul class="g-specs">
-              <li>15 personnes, 6 chambres, 6 salles d'eau, 6 WC</li>
-              <li>Cuisine en orangerie de pierre, 45 m²</li>
-              <li>Pétanque, ping-pong, pergola, salon de jardin</li>
-              <li>⚠️ 15 lits <em>simples</em> — aucun lit double</li>
-            </ul>
-            <p><strong>Draps et ménage inclus.</strong> Une salle d'eau par chambre à quinze, c'est un luxe réel.</p>
-          </div>
-          <div class="g-foot"><span class="g-price">1 200 €<small>tout compris, 2 nuits</small></span><span class="g-pick">Voter</span></div>
-        </span></label>
-    </div>
-
-    <div class="note">
-      <p><b>Trois choses à savoir avant de voter.</b></p>
-      <p><strong>Aucune n'est réservée</strong> et leur disponibilité au 3 octobre n'est pas confirmée. On appelle dès que le vote a tranché, et on prend la suivante si la première est prise.</p>
-      <p><strong>Les trois imposent deux nuits minimum</strong> — on paiera le vendredi ou le dimanche en plus même en n'y dormant qu'une nuit. C'est déjà compris dans les prix affichés, qui incluent aussi ménage et draps.</p>
-      <p><strong>Aucune n'ouvre avant 16h.</strong> C'est pour ça que le samedi commence par un déjeuner et une activité, et pas par l'installation.</p>
+    <p class="day">Quelles activités&nbsp;?</p>
+    <div class="opts two">
+      <label class="pick"><input type="checkbox" name="act" value="Marché d'Apt">
+        <span><b>Marché d'Apt</b><em>Samedi matin, pour les lève-tôt</em></span></label>
+      <label class="pick"><input type="checkbox" name="act" value="Sentier des Ocres">
+        <span><b>Sentier des Ocres</b><em>Samedi après-midi · 2,50 €</em></span></label>
+      <label class="pick"><input type="checkbox" name="act" value="Dégustation aux caves">
+        <span><b>Dégustation aux caves</b><em>Samedi après-midi · gratuit</em></span></label>
+      <label class="pick"><input type="checkbox" name="act" value="Village de Lourmarin">
+        <span><b>Village de Lourmarin</b><em>Samedi après-midi · gratuit</em></span></label>
+      <label class="pick"><input type="checkbox" name="act" value="Pétanque au gîte">
+        <span><b>Pétanque au gîte</b><em>Samedi, avant l'apéro</em></span></label>
+      <label class="pick"><input type="checkbox" name="act" value="Forêt des Cèdres">
+        <span><b>Forêt des Cèdres</b><em>Dimanche matin · 1h de balade facile</em></span></label>
     </div>
   </div>
 </section>
 
-<!-- 04 · ACTIVITÉS -->
-<section id="activites" class="alt">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">04 — Les activités</span>
-      <h2>Coche ce qui te tente</h2>
-      <p>Plusieurs choix possibles. Tes réponses construisent ton programme personnalisé, juste en dessous.</p>
-    </div>
-
-    <div class="acts">
-      <label class="act"><input type="checkbox" name="act" value="Marché d'Apt" data-slot="sam-1030">
-        <span><div class="a-top"><h4>Marché d'Apt</h4><span class="a-cost free">gratuit</span></div>
-        <p class="a-when">Samedi matin · pour les lève-tôt</p>
-        <p>Le plus grand marché provençal du Luberon, classé parmi les plus beaux de France.</p>
-        <div class="a-info">8h – 13h, le samedi uniquement<br>Il faut monter avant midi — c'est là qu'on fait les courses du dîner.</div></span></label>
-
-      <label class="act"><input type="checkbox" name="act" value="Sentier des Ocres (Roussillon)" data-slot="sam-1400">
-        <span><div class="a-top"><h4>Sentier des Ocres</h4><span class="a-cost">2,50 €</span></div>
-        <p class="a-when">Samedi après-midi · Roussillon</p>
-        <p>Deux boucles au choix, 30 ou 50 minutes, dans les anciennes carrières : falaises flamboyantes, passerelles, points de vue.</p>
-        <div class="a-info">10h – 17h30 en octobre · <strong>2,50 € à partir de 15 personnes</strong><br>Chaussures qu'on accepte de voir devenir orange.</div></span></label>
-
-      <label class="act"><input type="checkbox" name="act" value="Dégustation aux caves Louérion" data-slot="sam-1400">
-        <span><div class="a-top"><h4>Dégustation Louérion</h4><span class="a-cost free">gratuit</span></div>
-        <p class="a-when">Samedi après-midi · Cucuron</p>
-        <p>AOP Luberon, cuvées bio et médaillées. Dégustation offerte, achat libre — et le meilleur endroit pour acheter le vin du dîner.</p>
-        <div class="a-info">10h – 12h30 et 14h30 – 19h<br>Passée au samedi : dimanche on repart à midi.</div></span></label>
-
-      <label class="act"><input type="checkbox" name="act" value="Village de Lourmarin" data-slot="sam-1400">
-        <span><div class="a-top"><h4>Village de Lourmarin</h4><span class="a-cost free">gratuit</span></div>
-        <p class="a-when">Samedi après-midi</p>
-        <p>Parmi les plus beaux villages de France : château Renaissance, ruelles, terrasses. L'option pour qui ne veut pas marcher.</p>
-        <div class="a-info">Le repli naturel s'il pleut.</div></span></label>
-
-      <label class="act"><input type="checkbox" name="act" value="Pétanque au gîte" data-slot="sam-1800">
-        <span><div class="a-top"><h4>Tournoi de pétanque</h4><span class="a-cost free">gratuit</span></div>
-        <p class="a-when">Samedi, avant l'apéro</p>
-        <p>Les trois maisons ont un terrain. Doublettes tirées au sort, et le perdant fait la vaisselle.</p>
-        <div class="a-info">Le soleil se couche vers 19h15 — on a juste le temps.</div></span></label>
-
-      <label class="act"><input type="checkbox" name="act" value="Forêt des Cèdres (Bonnieux)" data-slot="dim-1000">
-        <span><div class="a-top"><h4>Forêt des Cèdres</h4><span class="a-cost free">gratuit</span></div>
-        <p class="a-when">Dimanche matin · Bonnieux</p>
-        <p>Boucle facile d'une heure sous les cèdres de l'Atlas, panorama sur tout le Luberon. Le bon choix après une nuit courte.</p>
-        <div class="a-info">Aucun dénivelé sérieux · 15 min de Lourmarin<br>Il faut être rentré pour 11h30.</div></span></label>
-
-      <label class="act"><input type="checkbox" name="act" value="Grasse matinée" data-slot="dim-1000">
-        <span><div class="a-top"><h4>Grasse matinée</h4><span class="a-cost free">gratuit</span></div>
-        <p class="a-when">Dimanche matin · au gîte</p>
-        <p>Personne ne t'en voudra. Café sur la terrasse, les autres reviennent de balade vers 11h30.</p>
-        <div class="a-info">L'option la plus honnête après une soirée qui finit tard.</div></span></label>
-
-      <label class="act"><input type="checkbox" name="act" value="Chef privé le samedi soir">
-        <span><div class="a-top"><h4>Chef privé au gîte</h4><span class="a-cost">60-90 €</span></div>
-        <p class="a-when">Option samedi soir</p>
-        <p>Un chef vient cuisiner sur place. Personne en cuisine, personne à la vaisselle — mais ça remplace les 25 € de courses par personne.</p>
-        <div class="a-info">Sur devis. Retenu seulement si une majorité le veut.</div></span></label>
-    </div>
-  </div>
-</section>
-
-<!-- 05 · MON WEEK-END -->
-<section id="weekend" class="dark">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">05 — Mon week-end</span>
-      <h2>Ton programme, tel que tu l'as coché</h2>
-      <p>Les moments que tu as choisis sont mis en avant. Les autres restent visibles en gris — le groupe y sera peut-être sans toi.</p>
-    </div>
-
-    <h3 class="day-h">Samedi 3 octobre</h3>
-    <div class="prog">
-      <div class="slot" data-slot="sam-1030"><time>10h30</time><div><h4>Marché d'Apt</h4><p>Pour ceux qui montent tôt. C'est là qu'on fait les courses du dîner.</p></div></div>
-      <div class="slot" data-fixed><time>12h00</time><div><h4>Rendez-vous, déjeuner ensemble</h4><p>On se retrouve tous. Terrasse ou pique-nique selon la météo — le gîte n'ouvre pas avant 16h, on a le temps.</p></div></div>
-      <div class="slot" data-slot="sam-1400"><time>14h00</time><div><h4>L'activité de l'après-midi</h4><p>Ocres de Roussillon, dégustation à Cucuron ou flânerie à Lourmarin. Le vote tranche.</p></div></div>
-      <div class="slot" data-fixed><time>16h30</time><div><h4>Arrivée au gîte</h4><p>Installation, chambres, courses au frais. L'adresse exacte arrive dans le groupe dès la réservation faite.</p></div></div>
-      <div class="slot" data-slot="sam-1800"><time>18h00</time><div><h4>Pétanque, puis apéro</h4><p>Prévois une petite laine : il fera 11 °C à la nuit tombée.</p></div></div>
-      <div class="slot" data-fixed><time>20h00</time><div><h4>Dîner</h4><p>Cuisiné sur place, chacun son poste. La répartition se fera dans le groupe une fois les présences connues.</p></div></div>
-      <div class="slot" data-fixed><time>22h30</time><div><h4>Gâteau et trente bougies</h4><p>Le gâteau est géré — n'en apporte pas. Et quelqu'un a pensé aux allumettes.</p></div></div>
-      <div class="slot" data-fixed><time>23h30</time><div><h4>« 30 ans en 30 titres »</h4><p>Playlist collaborative. Le lien arrive dans le groupe — remplis-la avant, pas le soir même.</p></div></div>
-    </div>
-
-    <h3 class="day-h">Dimanche 4 octobre</h3>
-    <div class="prog">
-      <div class="slot" data-fixed><time>09h00</time><div><h4>Petit-déjeuner en terrasse</h4><p>Viennoiseries prises la veille au marché.</p></div></div>
-      <div class="slot" data-slot="dim-1000"><time>10h00</time><div><h4>Balade, ou pas</h4><p>Forêt des Cèdres pour les courageux, terrasse et café pour les autres.</p></div></div>
-      <div class="slot" data-fixed><time>11h30</time><div><h4>Rangement et état des lieux</h4><p>Quarante-cinq minutes à quinze. C'est le prix de la caution.</p></div></div>
-      <div class="slot" data-fixed><time>12h00</time><div><h4>Déjeuner rapide, puis départ</h4><p>Les restes du samedi. Chacun repart quand il veut — Aix est à 50 minutes.</p></div></div>
-    </div>
-    <p class="tl-hint" id="tl-hint">Coche des activités plus haut pour voir ton programme se personnaliser.</p>
-  </div>
-</section>
-
-<!-- 06 · BUDGET -->
-<section id="budget">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">06 — Budget</span>
-      <h2>Combien ça te coûte</h2>
-      <p>Le prix bouge avec deux choses seulement : la maison retenue, et le nombre de personnes qui viennent. Fais glisser pour voir.</p>
-    </div>
-
-    <div class="calc">
-      <div class="calc-out">
-        <b id="calc-eur">120 €</b>
-        <small>par personne, tout compris</small>
-      </div>
-      <div class="calc-ctl">
-        <label for="range">Nous serons <output id="calc-n">15</output> personnes</label>
-        <input type="range" id="range" min="8" max="15" value="15" step="1">
-        <p style="margin:.9rem 0 0;font-size:.88rem;color:var(--ink-faint)" id="calc-gite">
-          Maison retenue&nbsp;: <strong>aucune encore votée</strong> — calcul sur la moyenne des trois.
-        </p>
-      </div>
-    </div>
-
-    <div class="calc-break">
-      <span>Logement&nbsp;: <b id="br-log">—</b></span>
-      <span>Courses, vin, gâteau, essence&nbsp;: <b>48 €</b></span>
-      <span>Part d'Elise répartie&nbsp;: <b id="br-elise">—</b></span>
-    </div>
-
-    <p class="calc-note">
-      <strong>Moins on est, plus c'est cher</strong> — le gîte est un coût fixe qui se divise. C'est la raison pour laquelle on a besoin de ta réponse avant le 15 septembre : à trois personnes près, la maison change.
-    </p>
-    <p class="calc-note">
-      Elise ne paie rien : sa part est répartie sur le groupe. Le cadeau commun est à part, un sondage fixera le montant. Le RIB pour le virement est dans le groupe WhatsApp — mets ton prénom en référence.
-    </p>
-  </div>
-</section>
-
-<!-- ═══ VOTES EN DIRECT ═══ -->
+<!-- VOTES EN DIRECT -->
 <section id="live">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">06 — Les votes en direct</span>
-      <h2>Où en est le groupe</h2>
-      <p>Mis à jour à chaque réponse. Renseigne ton nom et ta présence plus haut&nbsp;: ton vote est enregistré tout seul, et compté ici avec ceux des autres.</p>
-    </div>
+    <h2>Où en est le groupe</h2>
+    <p class="lede">Mis à jour à chaque réponse. Renseigne ton nom et ta présence plus haut&nbsp;: ton vote part tout seul et se compte ici.</p>
 
     <div class="live">
       <div class="live-card">
         <h3>Qui vient</h3>
         <p class="live-big" id="lv-personnes">{{ etat.personnes }}<small>personnes attendues</small></p>
-        <p style="margin:.9rem 0 0;font-size:.9rem;color:var(--ink-faint)">
-          <span id="lv-reponses">{{ etat.reponses }}</span> réponse(s) reçue(s) ·
+        <p style="margin:.8rem 0 0;font-size:.88rem;color:var(--ink-faint)">
+          <span id="lv-reponses">{{ etat.reponses }}</span> réponse(s) ·
           <span id="lv-presents">{{ etat.presents }}</span> qui viennent
         </p>
         <div class="prenoms" id="lv-prenoms">
@@ -628,7 +293,7 @@ footer strong{color:var(--paper-3)}
       </div>
 
       <div class="live-card">
-        <h3>Le vote sur la maison</h3>
+        <h3>La maison</h3>
         <div class="tally" id="lv-gites">
           {% for nom, n in etat.gites.items() %}
           <div class="tally-row{% if nom == etat.gite_tete and n > 0 %} lead{% endif %}" data-cle="{{ nom }}">
@@ -640,7 +305,7 @@ footer strong{color:var(--paper-3)}
       </div>
 
       <div class="live-card">
-        <h3>Les activités les plus demandées</h3>
+        <h3>Les activités</h3>
         <div class="tally" id="lv-activites">
           {% for nom, n in etat.activites.items() %}
           <div class="tally-row" data-cle="{{ nom }}">
@@ -656,82 +321,41 @@ footer strong{color:var(--paper-3)}
   </div>
 </section>
 
-<!-- 07 · ENVOI -->
-<section id="envoi" class="alt">
+<!-- ENVOYER -->
+<section class="alt">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">08 — Envoyer</span>
-      <h2>Ton récapitulatif</h2>
-      <p>Vérifie, puis envoie. Le bouton ouvre WhatsApp avec le message déjà écrit&nbsp;: tu choisis la conversation, tu relis, tu envoies.</p>
-    </div>
-
-    <p class="deadline">⏳ Réponses attendues avant le lundi 15 septembre</p>
-
-    <div class="recap">
+    <div class="envoi">
+      <p class="deadline">⏳ Avant le lundi 15 septembre</p>
+      <h2 style="margin-top:1.1rem">Envoie ta réponse</h2>
       <dl>
-        <div><dt>Qui</dt><dd class="todo" id="r-nom">— ton nom n'est pas encore renseigné</dd></div>
-        <div><dt>Présence</dt><dd class="todo" id="r-rsvp">— pas encore de réponse</dd></div>
-        <div><dt>Nombre de personnes</dt><dd class="todo" id="r-nb">— non précisé</dd></div>
-        <div><dt>Gîte préféré</dt><dd class="todo" id="r-gite">— pas encore de vote</dd></div>
-        <div><dt>Activités</dt><dd class="todo" id="r-act">— rien de coché</dd></div>
+        <div><dt>Qui</dt><dd class="todo" id="r-nom">à compléter</dd></div>
+        <div><dt>Présence</dt><dd class="todo" id="r-rsvp">à compléter</dd></div>
+        <div><dt>Vote</dt><dd class="todo" id="r-gite">pas encore voté</dd></div>
+        <div><dt>Activités</dt><dd class="todo" id="r-act">rien de coché</dd></div>
       </dl>
-      <div style="display:flex;gap:.8rem;flex-wrap:wrap">
-        <a class="btn wa" id="send" href="#" target="_blank" rel="noopener">💬 Envoyer sur WhatsApp</a>
-        <button class="btn ghost" type="button" id="copy">📋 Copier le texte</button>
-      </div>
-      <p class="saved" id="saved">✓ Enregistré dans ce navigateur</p>
-      <p style="margin:1rem 0 0;font-size:.87rem;color:var(--ink-faint)">
-        Rien n'est transmis avant que tu appuies sur le bouton. Tu peux revenir modifier tes réponses autant de fois que tu veux.
-      </p>
+      <a class="wa" id="send" href="#" target="_blank" rel="noopener">💬 Envoyer sur WhatsApp</a>
+      <p style="margin:1.2rem 0 0;font-size:.87rem">Le bouton ouvre WhatsApp avec le message déjà écrit. Tu choisis la conversation, tu relis, tu envoies.</p>
     </div>
   </div>
 </section>
 
-<!-- 08 · SAC -->
-<section id="sac">
+<!-- QUESTIONS -->
+<section>
   <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">09 — Dans le sac</span>
-      <h2>La liste qu'on oublie</h2>
-      <p>Coche au fur et à mesure — c'est gardé dans ton navigateur, comme le reste.</p>
-    </div>
-    <div class="check" id="check">
-      <label><input type="checkbox" data-k="1"><span>Drap housse + taie d'oreiller</span></label>
-      <label><input type="checkbox" data-k="2"><span>Serviette de toilette</span></label>
-      <label><input type="checkbox" data-k="3"><span>Chaussures de marche</span></label>
-      <label><input type="checkbox" data-k="4"><span>Une petite laine — 11 °C la nuit</span></label>
-      <label><input type="checkbox" data-k="5"><span>Trousse de toilette</span></label>
-      <label><input type="checkbox" data-k="6"><span>Chargeur de téléphone</span></label>
-      <label><input type="checkbox" data-k="7"><span>Ton poste du dîner</span></label>
-      <label><input type="checkbox" data-k="8"><span>Ta part réglée avant le départ</span></label>
-      <label><input type="checkbox" data-k="9"><span>Un jeu de société (plan B pluie)</span></label>
-      <label><input type="checkbox" data-k="10"><span>De quoi déjeuner samedi midi</span></label>
-    </div>
-  </div>
-</section>
-
-<!-- 09 · FAQ -->
-<section id="faq" class="alt">
-  <div class="wrap">
-    <div class="sec-head"><span class="sec-num">10 — Questions</span><h2>Ce qu'on va nous demander</h2></div>
-    <div class="faq">
-      <details><summary>Pourquoi on se retrouve à midi si le gîte n'ouvre qu'à 16h&nbsp;?</summary><p>Parce qu'aucune des trois maisons n'ouvre avant 16h — c'est la norme en location. Plutôt que de perdre l'après-midi à attendre, on déjeune ensemble quelque part et on enchaîne sur une activité. On arrive au gîte quand il ouvre, et la soirée commence directement.</p></details>
-      <details><summary>Je ne peux pas être là dès midi</summary><p>Aucun problème, rejoins-nous au gîte à partir de 16h30. Préviens juste dans le groupe pour qu'on ne t'attende pas au déjeuner.</p></details>
-      <details><summary>Je ne dors pas sur place, je paie quand même&nbsp;?</summary><p>Une part réduite, sans l'hébergement — autour de 48 €. Coche « Samedi seulement » dans ta réponse et on ajustera.</p></details>
-      <details><summary>Je viens accompagné·e, comment je le signale&nbsp;?</summary><p>Le champ « vous serez combien en tout » est là pour ça. Mets 2, ou 3 avec un enfant. C'est ce chiffre qui détermine la taille du gîte, donc sois précis — et tu peux voir dans le budget à quel point il change le prix.</p></details>
-      <details><summary>Pourquoi la dégustation est passée au samedi&nbsp;?</summary><p>Parce qu'on repart dimanche à midi. Les caves ouvrent à 14h30 l'après-midi : ça ne rentrait plus. Elle se fait donc samedi, et c'est aussi mieux — on repart avec le vin du dîner.</p></details>
-      <details><summary>Draps et serviettes, fournis ou pas&nbsp;?</summary><p>Ça dépend de la maison retenue : inclus à l'Orangerie, en supplément à la Peyrolière. Les prix affichés les incluent déjà. Par défaut, prends les tiens — c'est le supplément surprise le plus fréquent en location.</p></details>
-      <details><summary>Et s'il pleut&nbsp;?</summary><p>La pétanque devient jeux de société, la balade du dimanche devient un brunch qui traîne. Les trois maisons ont un grand séjour couvert — c'était un critère de sélection.</p></details>
-      <details><summary>J'ai un régime particulier ou une allergie</summary><p>Écris-le dans le groupe WhatsApp dès maintenant, pas la veille. À quinze couverts, une allergie non signalée, c'est quelqu'un devant une assiette vide.</p></details>
-      <details><summary>Je réponds après le 15 septembre, c'est mort&nbsp;?</summary><p>Pour le vote sur la maison, oui — elle sera réservée. Pour ta présence, écris quand même : on ajoute un couvert bien plus facilement qu'on ne change de gîte.</p></details>
-    </div>
+    <h2>Questions</h2>
+    <p class="lede">Le reste passe par le groupe WhatsApp.</p>
+    <details><summary>Pourquoi midi si le gîte n'ouvre qu'à 16h&nbsp;?</summary><p>Aucune des trois maisons n'ouvre avant 16h, c'est la norme en location. Plutôt que d'attendre, on déjeune ensemble quelque part et on enchaîne sur une activité. On arrive au gîte quand il ouvre, et la soirée commence directement.</p></details>
+    <details><summary>Je ne peux pas être là dès midi</summary><p>Rejoins-nous au gîte à partir de 16h30. Préviens juste dans le groupe pour qu'on ne t'attende pas au déjeuner.</p></details>
+    <details><summary>Je ne dors pas sur place, je paie quand même&nbsp;?</summary><p>Une part réduite, autour de 50 €. Coche « Samedi seulement » et on ajustera.</p></details>
+    <details><summary>Qu'est-ce que je dois apporter&nbsp;?</summary><p>Drap housse, taie et serviette — la plupart des gîtes ne les fournissent pas. Plus des chaussures de marche, une petite laine pour la soirée, et de quoi déjeuner samedi midi si on pique-nique.</p></details>
+    <details><summary>Et s'il pleut&nbsp;?</summary><p>La pétanque devient jeux de société, la balade du dimanche devient un brunch qui traîne. Les trois maisons ont un grand séjour couvert — c'était un critère de choix.</p></details>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <p><strong>Les 30 ans d'Elise</strong> — samedi 3 midi au dimanche 4 octobre 2026 midi, Luberon.</p>
-    <p>Réponses avant le <strong>lundi 15 septembre</strong>. Toute question passe par le groupe WhatsApp.</p>
+    <p><strong>Les 30 ans d'Elise</strong> — samedi 3 midi au dimanche 4 octobre midi, Luberon.</p>
+    <p>Réponses avant le <strong>lundi 15 septembre</strong>.</p>
   </div>
 </footer>
 
@@ -741,198 +365,78 @@ footer strong{color:var(--paper-3)}
 (function(){
   "use strict";
 
-  /* ── Compte à rebours jusqu'au samedi 3 octobre 2026, 12h00 (CEST) ── */
-  var TARGET = new Date("2026-10-03T12:00:00+02:00").getTime();
-  var cells = ["cd","ch","cm","cs"].map(function(id){ return document.getElementById(id); });
-  function pad(n){ return n < 10 ? "0" + n : "" + n; }
-  function tick(){
-    var left = TARGET - Date.now();
-    if (left <= 0){
-      var box = document.getElementById("count");
-      if (box) box.innerHTML = '<div style="grid-column:1/-1"><b>🎉</b><small>c\'est aujourd\'hui</small></div>';
-      return;
-    }
-    var s = Math.floor(left / 1000);
-    var v = [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60];
-    for (var i = 0; i < 4; i++){ if (cells[i]) cells[i].textContent = i === 0 ? v[i] : pad(v[i]); }
-    setTimeout(tick, 1000);
-  }
-  tick();
+  /* Jours restants jusqu'au samedi 3 octobre 2026, midi (CEST) */
+  var jours = Math.ceil((new Date("2026-10-03T12:00:00+02:00") - Date.now()) / 86400000);
+  document.getElementById("cd").textContent = jours > 0 ? jours : 0;
 
-  /* ── Stockage local (peut lever : navigation privée, cookies bloqués) ── */
-  var KEY = "anniv-elise-reponses";
-  function read(){ try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } }
-  function write(s){ try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* on continue */ } }
+  var KEY = "anniv-elise";
+  function lire(){ try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } }
+  function ecrire(s){ try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* on continue */ } }
 
   var toast = document.getElementById("toast"), tmr;
-  function say(msg){
-    toast.textContent = msg; toast.classList.add("on");
-    clearTimeout(tmr); tmr = setTimeout(function(){ toast.classList.remove("on"); }, 2600);
+  function dire(m){
+    toast.textContent = m; toast.classList.add("on");
+    clearTimeout(tmr); tmr = setTimeout(function(){ toast.classList.remove("on"); }, 2500);
   }
 
   var nom = document.getElementById("nom"), nb = document.getElementById("nb");
-  var range = document.getElementById("range");
-  var outs = { nom: document.getElementById("r-nom"), rsvp: document.getElementById("r-rsvp"),
-               nb: document.getElementById("r-nb"), gite: document.getElementById("r-gite"),
-               act: document.getElementById("r-act") };
-
-  function picked(name){
-    var el = document.querySelector('input[name="' + name + '"]:checked');
-    return el ? el.value : "";
+  function coche(n){ var e = document.querySelector('input[name="' + n + '"]:checked'); return e ? e.value : ""; }
+  function etat(){
+    return {
+      nom: nom.value.trim(), nb: nb.value.trim(),
+      rsvp: coche("rsvp"), gite: coche("gite"),
+      act: Array.prototype.map.call(document.querySelectorAll('input[name="act"]:checked'),
+                                    function(e){ return e.value; })
+    };
   }
-  function pickedAll(name){
-    return Array.prototype.map.call(
-      document.querySelectorAll('input[name="' + name + '"]:checked'),
-      function(el){ return el.value; });
+  function pose(id, valeur, defaut){
+    var el = document.getElementById(id);
+    el.textContent = valeur || defaut;
+    el.classList.toggle("todo", !valeur);
   }
-  function current(){
-    return { nom: nom.value.trim(), nb: nb.value.trim(), rsvp: picked("rsvp"),
-             gite: picked("gite"), act: pickedAll("act"), n: +range.value };
-  }
-  function setOut(el, value, fallback){
-    el.textContent = value || fallback;
-    el.classList.toggle("todo", !value);
-  }
-
-  /* ── Budget : coût fixe du gîte divisé par la tête, plus 48 € de variable ── */
-  var VARIABLE = 48;                       // courses, vin, gâteau, déco, essence, taxe
-  var FIXE_MOYEN = (1078 + 1100 + 1200) / 3;
-  function budget(s){
-    var el = document.querySelector('input[name="gite"]:checked');
-    var fixe = el ? +el.dataset.fixe : FIXE_MOYEN;
-    var n = Math.max(1, s.n);
-    var log = fixe / n;
-    // Elise ne paie pas : sa part est répartie sur les autres.
-    var brut = log + VARIABLE;
-    var partElise = n > 1 ? brut / (n - 1) : 0;
-    return { log: log, elise: partElise, total: brut + partElise, connu: !!el };
-  }
-
-  function renderBudget(s){
-    var b = budget(s);
-    document.getElementById("calc-eur").textContent = Math.round(b.total) + " €";
-    document.getElementById("calc-n").textContent = s.n;
-    document.getElementById("br-log").textContent = Math.round(b.log) + " €";
-    document.getElementById("br-elise").textContent = "+" + Math.round(b.elise) + " €";
-    document.getElementById("brief-prix").firstChild.nodeValue = "≈ " + Math.round(b.total) + " €";
-    document.getElementById("calc-gite").innerHTML = b.connu
-      ? "Maison retenue&nbsp;: <strong>" + s.gite + "</strong>"
-      : "Maison retenue&nbsp;: <strong>aucune encore votée</strong> — calcul sur la moyenne des trois.";
-  }
-
-  /* ── Timeline personnalisée ── */
-  function renderTimeline(s){
-    var slots = {};
-    Array.prototype.forEach.call(document.querySelectorAll('input[name="act"]:checked'), function(el){
-      if (el.dataset.slot) slots[el.dataset.slot] = true;
-    });
-    var anyPicked = Object.keys(slots).length > 0;
-    Array.prototype.forEach.call(document.querySelectorAll(".slot[data-slot]"), function(row){
-      var mine = !!slots[row.dataset.slot];
-      row.classList.toggle("mine", mine);
-      row.classList.toggle("off", anyPicked && !mine);
-    });
-    document.getElementById("tl-hint").textContent = anyPicked
-      ? "Les moments en surbrillance sont ceux que tu as cochés. Tu peux changer d'avis autant que tu veux."
-      : "Coche des activités plus haut pour voir ton programme se personnaliser.";
-  }
-
-  /* ── Progression de la réponse ── */
-  function renderProgress(s){
-    var done = [s.nom, s.rsvp, s.nb, s.gite].filter(Boolean).length + (s.act.length ? 1 : 0);
-    document.getElementById("progress").style.width = (done / 5 * 100) + "%";
-  }
-
   function message(s){
-    var L = ["🎂 Les 30 ans d'Elise — samedi 3 midi au dimanche 4 octobre midi, Luberon", ""];
+    var L = ["🎂 Les 30 ans d'Elise — samedi 3 midi → dimanche 4 octobre midi", ""];
     L.push("Nom : " + (s.nom || "(à compléter)"));
     L.push("Présence : " + (s.rsvp || "(à compléter)"));
     if (s.nb) L.push("Nous serons : " + s.nb);
-    if (s.gite) L.push("Mon vote gîte : " + s.gite);
-    if (s.act.length) L.push("Activités qui me tentent : " + s.act.join(", "));
+    if (s.gite) L.push("Mon vote : " + s.gite);
+    if (s.act.length) L.push("Activités : " + s.act.join(", "));
     return L.join("\n");
   }
-
-  var savedEl = document.getElementById("saved"), savedTmr;
-  function render(){
-    var s = current();
-    setOut(outs.nom,  s.nom,  "— ton nom n'est pas encore renseigné");
-    setOut(outs.rsvp, s.rsvp, "— pas encore de réponse");
-    setOut(outs.nb,   s.nb,   "— non précisé");
-    setOut(outs.gite, s.gite, "— pas encore de vote");
-    setOut(outs.act,  s.act.join(" · "), "— rien de coché");
-    renderBudget(s); renderTimeline(s); renderProgress(s);
-    write(s);
+  function rendre(){
+    var s = etat();
+    pose("r-nom",  s.nom + (s.nb ? " · " + s.nb + " pers." : ""), "à compléter");
+    pose("r-rsvp", s.rsvp, "à compléter");
+    pose("r-gite", s.gite, "pas encore voté");
+    pose("r-act",  s.act.join(" · "), "rien de coché");
+    ecrire(s);
     document.getElementById("send").href = "https://wa.me/?text=" + encodeURIComponent(message(s));
-    if (s.nom || s.rsvp || s.gite || s.act.length){
-      savedEl.classList.add("on");
-      clearTimeout(savedTmr);
-      savedTmr = setTimeout(function(){ savedEl.classList.remove("on"); }, 2000);
-    }
   }
 
-  /* ── Restauration ── */
-  var saved = read();
-  if (saved.nom) nom.value = saved.nom;
-  if (saved.nb)  nb.value  = saved.nb;
-  if (saved.n)   range.value = saved.n;
-  ["rsvp","gite"].forEach(function(name){
-    if (!saved[name]) return;
-    var el = document.querySelector('input[name="' + name + '"][value="' + CSS.escape(saved[name]) + '"]');
-    if (el) el.checked = true;
+  var s = lire();
+  if (s.nom) nom.value = s.nom;
+  if (s.nb)  nb.value  = s.nb;
+  ["rsvp","gite"].forEach(function(n){
+    if (!s[n]) return;
+    var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
+    if (e) e.checked = true;
   });
-  (saved.act || []).forEach(function(v){
-    var el = document.querySelector('input[name="act"][value="' + CSS.escape(v) + '"]');
-    if (el) el.checked = true;
-  });
-  // Le nombre saisi pilote le curseur, tant qu'il reste dans sa plage.
-  nb.addEventListener("input", function(){
-    var v = parseInt(nb.value, 10);
-    if (v >= 8 && v <= 15) range.value = v;
+  (s.act || []).forEach(function(v){
+    var e = document.querySelector('input[name="act"][value="' + CSS.escape(v) + '"]');
+    if (e) e.checked = true;
   });
 
-  document.addEventListener("input", render);
-  document.addEventListener("change", render);
-  render();
+  document.addEventListener("input", rendre);
+  document.addEventListener("change", rendre);
+  rendre();
 
   document.getElementById("send").addEventListener("click", function(e){
-    var s = current();
+    var s = etat();
     if (!s.nom || !s.rsvp){
       e.preventDefault();
-      say("Mets au moins ton nom et ta présence avant d'envoyer");
+      dire("Mets au moins ton nom et ta présence");
       (s.nom ? document.querySelector('input[name="rsvp"]') : nom).focus();
     }
-  });
-
-  document.getElementById("copy").addEventListener("click", function(){
-    var text = message(current());
-    var ok = function(){ say("Récapitulatif copié"); };
-    var ko = function(){ say("Copie refusée par le navigateur — sélectionne le texte à la main"); };
-    if (navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(text).then(ok).catch(ko); return;
-    }
-    var ta = document.createElement("textarea");
-    ta.value = text; ta.setAttribute("readonly", "");
-    ta.style.cssText = "position:fixed;top:-9999px;opacity:0";
-    document.body.appendChild(ta);
-    ta.select(); ta.setSelectionRange(0, ta.value.length);
-    var done = false;
-    try { done = document.execCommand("copy"); } catch (e) { done = false; }
-    document.body.removeChild(ta);
-    done ? ok() : ko();
-  });
-
-  /* ── Checklist du sac ── */
-  var CKEY = "anniv-elise-sac";
-  function readCk(){ try { return JSON.parse(localStorage.getItem(CKEY) || "{}"); } catch (e) { return {}; } }
-  var ck = readCk();
-  Array.prototype.forEach.call(document.querySelectorAll("#check input"), function(b){
-    if (ck[b.dataset.k]) b.checked = true;
-    b.addEventListener("change", function(){
-      var st = readCk();
-      if (b.checked) st[b.dataset.k] = 1; else delete st[b.dataset.k];
-      try { localStorage.setItem(CKEY, JSON.stringify(st)); } catch (e) { /* on continue */ }
-    });
   });
 })();
 </script>

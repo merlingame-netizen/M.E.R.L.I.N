@@ -22,46 +22,43 @@ OUT = HERE / "templates" / "index.html"
 
 CSS_LIVE = """
 /* ══ VOTES EN DIRECT (ajouté par build_template.py) ══ */
-.live{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.live-card{background:var(--paper);border:2px solid var(--rule);padding:1.4rem}
-.live-card h3{font-size:1.15rem;margin-bottom:1rem}
-.tally{display:grid;gap:.75rem}
-.tally-row{display:grid;gap:.3rem}
-.tally-top{display:flex;justify-content:space-between;gap:1rem;font-size:.92rem}
+.live{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:1.5rem}
+.live-card{background:var(--paper);border:2px solid var(--rule);padding:1.2rem}
+.live-card h3{font-size:1.05rem;margin-bottom:.9rem}
+.tally{display:grid;gap:.65rem}
+.tally-row{display:grid;gap:.28rem}
+.tally-top{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem}
 .tally-top b{font-variant-numeric:tabular-nums;color:var(--ocre-deep)}
-.bar{height:8px;background:var(--paper-3);overflow:hidden}
+.bar{height:7px;background:var(--paper-3);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--ocre);width:0;transition:width .5s ease}
 .tally-row.lead .bar i{background:var(--rouge)}
 .tally-row.lead .tally-top b::after{content:" ★";color:var(--rouge)}
-.live-big{font-family:var(--display);font-size:clamp(2.4rem,7vw,3.4rem);font-weight:400;
-  color:var(--ocre-deep);line-height:1;font-variant-numeric:tabular-nums}
-.live-big small{display:block;font-family:var(--body);font-size:.68rem;font-weight:800;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-top:.5rem}
-.prenoms{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem}
-.prenoms span{background:rgba(102,113,74,.16);color:var(--olive);padding:.28rem .7rem;
-  font-size:.85rem;font-weight:700}
-.live-empty{color:var(--ink-faint);font-style:italic;font-size:.93rem}
-.sync{font-size:.83rem;font-weight:700;margin-top:1rem;min-height:1.2em}
+.live-big{font-family:var(--display);font-size:2.6rem;font-weight:400;color:var(--ocre-deep);
+  line-height:1;font-variant-numeric:tabular-nums;margin:0}
+.live-big small{display:block;font-family:var(--body);font-size:.65rem;font-weight:800;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:.45rem}
+.prenoms{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.9rem}
+.prenoms span{background:rgba(102,113,74,.16);color:var(--olive);padding:.25rem .6rem;
+  font-size:.83rem;font-weight:700}
+.live-empty{color:var(--ink-faint);font-style:italic;font-size:.9rem}
+.sync{font-size:.85rem;font-weight:700;margin-top:1.1rem;min-height:1.2em}
 .sync.ok{color:var(--olive)}
 .sync.ko{color:var(--rouge)}
 """
 
 SECTION_LIVE = """
-<!-- ═══ VOTES EN DIRECT ═══ -->
+<!-- VOTES EN DIRECT -->
 <section id="live">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="sec-num">06 — Les votes en direct</span>
-      <h2>Où en est le groupe</h2>
-      <p>Mis à jour à chaque réponse. Renseigne ton nom et ta présence plus haut&nbsp;: ton vote est enregistré tout seul, et compté ici avec ceux des autres.</p>
-    </div>
+    <h2>Où en est le groupe</h2>
+    <p class="lede">Mis à jour à chaque réponse. Renseigne ton nom et ta présence plus haut&nbsp;: ton vote part tout seul et se compte ici.</p>
 
     <div class="live">
       <div class="live-card">
         <h3>Qui vient</h3>
         <p class="live-big" id="lv-personnes">{{ etat.personnes }}<small>personnes attendues</small></p>
-        <p style="margin:.9rem 0 0;font-size:.9rem;color:var(--ink-faint)">
-          <span id="lv-reponses">{{ etat.reponses }}</span> réponse(s) reçue(s) ·
+        <p style="margin:.8rem 0 0;font-size:.88rem;color:var(--ink-faint)">
+          <span id="lv-reponses">{{ etat.reponses }}</span> réponse(s) ·
           <span id="lv-presents">{{ etat.presents }}</span> qui viennent
         </p>
         <div class="prenoms" id="lv-prenoms">
@@ -71,7 +68,7 @@ SECTION_LIVE = """
       </div>
 
       <div class="live-card">
-        <h3>Le vote sur la maison</h3>
+        <h3>La maison</h3>
         <div class="tally" id="lv-gites">
           {% for nom, n in etat.gites.items() %}
           <div class="tally-row{% if nom == etat.gite_tete and n > 0 %} lead{% endif %}" data-cle="{{ nom }}">
@@ -83,7 +80,7 @@ SECTION_LIVE = """
       </div>
 
       <div class="live-card">
-        <h3>Les activités les plus demandées</h3>
+        <h3>Les activités</h3>
         <div class="tally" id="lv-activites">
           {% for nom, n in etat.activites.items() %}
           <div class="tally-row" data-cle="{{ nom }}">
@@ -208,22 +205,12 @@ def main() -> None:
     src = src.replace("</style>", CSS_LIVE + "</style>", 1)
 
     # 2. Section live, avant la section « Envoyer »
-    ancre = "<!-- 07 · ENVOI -->"
+    ancre = "<!-- ENVOYER -->"
     if ancre not in src:
-        raise SystemExit("Ancre de la section Envoyer introuvable dans site/public.html")
+        raise SystemExit("Ancre <!-- ENVOYER --> introuvable dans site/public.html")
     src = src.replace(ancre, SECTION_LIVE.strip() + "\n\n" + ancre, 1)
 
-    # 3. Entrée de menu
-    src = src.replace('<li><a href="#budget">Budget</a></li>',
-                      '<li><a href="#budget">Budget</a></li>\n'
-                      '    <li><a href="#live">Votes en direct</a></li>', 1)
-
-    # Renumérotation : la section live prend le 06, tout ce qui suit décale.
-    for vieux, neuf in [("07 — Envoyer", "08 — Envoyer"), ("08 — Dans le sac", "09 — Dans le sac"),
-                        ("09 — Questions", "10 — Questions")]:
-        src = src.replace(vieux, neuf, 1)
-
-    # 4. Script serveur, après le script d'origine
+    # 3. Script serveur, après le script d'origine
     src = src.rstrip() + "\n" + SCRIPT_API
 
     doc = ("<!doctype html>\n<html lang=\"fr\">\n<head>\n"
