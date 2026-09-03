@@ -3757,3 +3757,24 @@ sur le corpus. Le jeu de données est prêt : 70 exemples produits par `_prompt_
 pose les questions en production — donc aucune divergence possible entre entraînement et usage.
 Corpus passé de 6 à 8 quêtes et de 67 à 89 beats, dont deux quêtes en forêt là où il n'y en
 avait aucune.
+
+## 2026-09-03 — p93 lu en entier : trois mesures qui attendaient depuis v51
+
+Le verdict complet de p93 est rapatrié depuis la copie de sûreté du Courrier (ntfy avait déjà
+purgé le journal en moins d'une journée, comme pour p74). Il ferme trois chantiers laissés
+« corrigés, non vérifiés » :
+
+- **Attente (v51)** : préfixe médian 455 jetons relus par beat, 0 s perdue par éviction de
+  cache. Les beats à 1700 jetons ont disparu. Moyenne 21 s ; un seul beat à 83 s, et c'est une
+  écriture étranglée à 1,8 tok/s (contention entre cerveaux, 52 s), pas une éviction.
+- **Empreinte du lore (v52)** : cinq lieux et quatre figures du canon nommés dans la prose,
+  contre zéro avant.
+- **Trous du journal (v53)** : 9 beats joués, 9 journalisés. p74 en manquait deux.
+
+Reste ouvert : **deux beats au banc** (4 et 5), non écrits par le modèle — la cible « zéro
+secours » est manquée, et ces beats-là ne mesurent rien du LLM.
+
+L'onglet Chronique du Studio est vérifié sur la VM : 11 parties listées, dont p93 vue par la
+sonde ET par le jeu, côte à côte. Quatre des cinq chroniques écrites par le jeu sont des
+lancements sans partie (0 beat, 191 octets), dont un à 03:00 par un agent de nuit : la
+conséquence de « tout garder », maintenant visible.
