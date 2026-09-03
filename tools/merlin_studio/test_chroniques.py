@@ -66,11 +66,19 @@ def main() -> int:
         "fin": {"type": "accomplissement", "integrite": 10, "corruption": 1},
     }), encoding="utf-8")
     (jeu / "index.json").write_text("[]", encoding="utf-8")
+    # Un lancement sans partie, comme les quatre trouvés sur la VM le 03/09 : 0 beat.
+    (jeu / "2026-09-03T03-00-05-5440.json").write_text(json.dumps({
+        "version": 1, "id": "2026-09-03T03-00-05-5440", "titre": "Le Sentier des Murmures",
+        "biome": "foret", "debut_iso": "2026-09-03T03:00:05", "fin": {},
+        # le beat 1 est PRÉSENTÉ par le jeu lui-même, personne ne l'a joué : ni geste, ni degré
+        "beats": [{"n": 1, "type": "Exploration", "scene": "Le jeu affiche sa première scène.",
+                   "provenance": "arc", "difficulte": 1, "de": 5, "integrite_avant": 10, "corruption_avant": 0}]}),
+        encoding="utf-8")
 
     # ── LE COLLECTEUR
     srcs = chroniques.sources(home, repo)
     ids = [s["id"] for s in srcs]
-    verifier("trois sources trouvées", len(srcs) == 3, str(ids))
+    verifier("quatre fichiers trouvés, dont le lancement vide", len(srcs) == 4, str(ids))
     verifier("le job du Courrier est nommé comme partout ailleurs (p93)", "p93" in ids, str(ids))
     verifier("la chronique sauvée garde son nom de dossier (p74)", "p74" in ids, str(ids))
     verifier("la chronique du jeu est datée court", any(i.startswith("jeu 02/09 16:12") for i in ids), str(ids))
@@ -78,7 +86,8 @@ def main() -> int:
 
     # ── LE FORMAT
     P = chroniques.parties(home, repo)
-    verifier("chaque source donne une partie", len(P) == 3, str(list(P)))
+    verifier("le lancement où personne n'a joué n'est pas une partie : trois sur quatre", len(P) == 3, str(list(P)))
+    verifier("il est absent de la liste aussi", not any(l["id"].startswith("jeu 03/09") for l in chroniques.liste(home, repo)))
     j93 = P.get("p93", {})
     verifier("les chemins de la VM ne sortent pas de la machine",
              all("/" not in str(c.get("fichier", "")) for c in j93.get("cliches", [])),

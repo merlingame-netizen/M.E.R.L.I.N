@@ -151,9 +151,17 @@ def parties(home: Path | None = None, repo: Path | None = None) -> dict[str, dic
     out: dict[str, dict] = {}
     for src in sources(home, repo):
         j = charger(src)
-        if j is not None:
+        if j is not None and _a_joue(j):
             out[src["id"]] = j
     return out
+
+
+def _a_joue(j: dict) -> bool:
+    """Un lancement sans partie n'est pas une traversée (décision du 03/09). Le jeu n'en écrit plus ;
+    ceux d'avant la règle existent encore sur la VM — quatre sur cinq le premier jour — et ne
+    doivent pas s'afficher comme des parties. Le critère est un beat JOUÉ (un geste ou un degré),
+    pas un beat affiché : lancé sans personne, le jeu présente le beat 1 de lui-même."""
+    return any(isinstance(b, dict) and ("degre" in b or b.get("geste")) for b in (j.get("beats") or []))
 
 
 def liste(home: Path | None = None, repo: Path | None = None) -> list[dict]:
@@ -161,7 +169,7 @@ def liste(home: Path | None = None, repo: Path | None = None) -> list[dict]:
     out = []
     for src in sources(home, repo):
         j = charger(src)
-        if j is None:
+        if j is None or not _a_joue(j):
             continue
         beats = [b for b in j.get("beats", []) if isinstance(b, dict)]
         sentier = (j.get("sentiers") or [{}])[j.get("pick") or 0] if j.get("sentiers") else {}
