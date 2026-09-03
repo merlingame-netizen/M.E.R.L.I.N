@@ -32,6 +32,19 @@ func _init() -> void:
 	var avant: int = MerlinJournal.liste().size()
 	print("chroniques déjà présentes : %d\n" % avant)
 
+	# ── UN LANCEMENT SANS PARTIE N'EXISTE PAS. Décidé le 03/09 : quatre chroniques sur cinq de
+	# la VM étaient des lancements à 0 beat, dont un à 03:00 par un agent de nuit.
+	MerlinJournal.ouvrir("Lancement sans partie", "foret")
+	_verifier("ouvrir n'écrit rien", MerlinJournal.liste().size() == avant,
+		"index à %d" % MerlinJournal.liste().size())
+	# Le jeu présente le beat 1 tout seul, joueur ou pas : un beat POSÉ n'est pas encore une partie.
+	MerlinJournal.beat_pose(1, "Exploration", "Le jeu affiche sa première scène.", "arc", 9, 7, 20, 0)
+	_verifier("un beat présenté sans être joué n'écrit rien", MerlinJournal.liste().size() == avant,
+		"index à %d — le smoke de 100 s en écrivait une" % MerlinJournal.liste().size())
+	MerlinJournal.clore("mort", 0, 0)
+	_verifier("clore sans geste n'écrit rien non plus", MerlinJournal.liste().size() == avant,
+		"index à %d" % MerlinJournal.liste().size())
+
 	# ── UNE TRAVERSÉE COMPLÈTE
 	MerlinJournal.ouvrir("La fin du rite", "foret")
 	MerlinJournal.beat_pose(1, "Exploration", "Le Chœur chante à vingt pas.", "arc", 9, 7, 20, 0)
@@ -44,7 +57,7 @@ func _init() -> void:
 	# UNE TRAVERSÉE EN COURS EST DÉJÀ LISIBLE. C'est le contraire du premier jet : une partie
 	# interrompue restait invisible dans la liste alors que son fichier existait, donc « tout
 	# garder » excluait justement les parties qu'on voudrait comprendre.
-	_verifier("une traversée EN COURS est déjà à l'index", ouverte.size() == avant + 1,
+	_verifier("une traversée EN COURS, dès son premier geste, est déjà à l'index", ouverte.size() == avant + 1,
 		"index à %d au lieu de %d" % [ouverte.size(), avant + 1])
 	_verifier("une traversée en cours se lit comme interrompue",
 		not ouverte.is_empty() and str((ouverte[0] as Dictionary).get("fin", "")) == "",
@@ -103,6 +116,7 @@ func _init() -> void:
 	# ── UNE TRAVERSÉE INTERROMPUE : jamais close, mais lisible — c'est tout l'intérêt.
 	MerlinJournal.ouvrir("Traversée interrompue", "cairn")
 	MerlinJournal.beat_pose(1, "Exploration", "Le cairn se tait.", "arc", 9, 6, 20, 0)
+	MerlinJournal.beat_geste("AGIR", "L'Élan")
 	var apres_interrompue: Array = MerlinJournal.liste()
 	_verifier("une traversée interrompue EST lisible dans la liste",
 		apres_interrompue.size() == avant + 2, "%d" % apres_interrompue.size())
@@ -113,7 +127,6 @@ func _init() -> void:
 	_crees.append(str((apres_interrompue[0] as Dictionary).get("id", "")))
 
 	# ── DOUBLE RÉSOLUTION : la seconde ne doit rien écraser.
-	MerlinJournal.beat_geste("AGIR", "L'Élan")
 	MerlinJournal.beat_resolu("reussite", "PREMIÈRE issue.", 20, 0)
 	MerlinJournal.beat_resolu("echec", "SECONDE issue, qui ne doit pas passer.", 5, 9)
 	MerlinJournal.clore("mort", 0, 9)

@@ -38,6 +38,7 @@ func _go() -> void:
 	MerlinJournal.clore("accomplissement", 20, 0, "Le rite s'achève.")
 	MerlinJournal.ouvrir("La pierre couchée", "foret")
 	MerlinJournal.beat_pose(1, "Exploration", "Le douzième menhir est couché.", "arc", 9, 11, 20, 0)
+	MerlinJournal.beat_geste("OBSERVER", "La Méfiance")   # jouée : sans geste, elle n'existerait pas
 	MerlinJournal.clore("mort", 0, 6)
 	for l in MerlinJournal.liste().slice(0, 2):
 		_crees.append(str((l as Dictionary).get("id", "")))

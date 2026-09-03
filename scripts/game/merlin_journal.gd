@@ -23,6 +23,15 @@ extends RefCounted
 ## ÉCRIT AU FIL DE L'EAU, pas à la fin. Une partie interrompue — fermeture, plantage, coupure —
 ## laisse quand même sa chronique lisible jusqu'au dernier beat joué. C'est le comportement de la
 ## sonde des parties témoins, éprouvé, et la seule façon qu'un incident reste consultable.
+##
+## MAIS RIEN NE S'ÉCRIT AVANT LE PREMIER BEAT JOUÉ. Décidé par Maxime le 03/09, sur preuve : après
+## un jour, quatre des cinq chroniques de la VM étaient des lancements sans partie — 0 beat, 191
+## octets — dont un à 03:00 par un agent de nuit. Un lancement sans partie n'est pas une traversée.
+## « Joué » et non « posé » : lancé sans personne, le jeu PRÉSENTE le beat 1 de lui-même — un smoke
+## de cent secondes l'a montré en écrivant une chronique à un beat et zéro geste. Ce qui fait une
+## traversée, c'est qu'un joueur ou un bot ait posé un geste. La règle vit ICI et non dans une
+## variable d'environnement de harnais : un smoke lancé à la main n'en porte aucune, et c'est lui
+## qui avait écrit celle de 03:00. Les parties témoins, elles, jouent — elles restent.
 
 const DOSSIER: String = "user://chroniques"
 const INDEX: String = "user://chroniques/index.json"
@@ -34,8 +43,9 @@ static var _courante: Dictionary = {}
 static var _id: String = ""
 
 
-## Ouvre une chronique. Toute chronique restée ouverte est abandonnée ici — une traversée
-## commencée en remplace une autre, et la précédente a déjà son fichier sur le disque.
+## Ouvre une chronique EN ATTENTE : rien n'est écrit tant qu'aucun beat n'est joué. Toute
+## chronique restée ouverte est abandonnée ici — une traversée commencée en remplace une autre,
+## et la précédente, si elle a joué, a déjà son fichier sur le disque.
 static func ouvrir(titre: String, biome: String, chapitre: String = "") -> void:
 	_id = _nouvel_id()
 	_courante = {
@@ -44,7 +54,6 @@ static func ouvrir(titre: String, biome: String, chapitre: String = "") -> void:
 		"titre": titre, "biome": biome, "chapitre": chapitre,
 		"beats": [], "fin": {},
 	}
-	_ecrire()
 
 
 ## Le beat est présenté : on note ce que le joueur LIT, avant qu'il touche à quoi que ce soit.
@@ -106,8 +115,10 @@ static func clore(fin_type: String, integrite: int, corruption: int, resume: Str
 		"resume": resume, "faits_marquants": faits, "pnj_rencontres": pnj,
 		"iso": Time.get_datetime_string_from_system(),
 	}
-	_ecrire()
-	_indexer()
+	# Une traversée close sans un seul beat joué n'a jamais existé : ni fichier, ni ligne d'index.
+	if _a_joue():
+		_ecrire()
+		_indexer()
 	_courante = {}
 	_id = ""
 
@@ -121,7 +132,10 @@ static func liste() -> Array:
 	f.close()
 	if typeof(brut) != TYPE_ARRAY:
 		return []
-	var out: Array = brut
+	var out: Array = []
+	for l in (brut as Array):
+		if int((l as Dictionary).get("beats", 0)) > 0:
+			out.append(l)
 	out.reverse()
 	return out
 
@@ -159,8 +173,19 @@ static func _dossier_pret() -> bool:
 	return DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(DOSSIER)) == OK
 
 
+## Une traversée existe à partir du premier geste posé — pas du premier beat affiché, que le jeu
+## présente de lui-même, ni de l'ouverture, qui n'est qu'une intention.
+static func _a_joue() -> bool:
+	if _courante.is_empty():
+		return false
+	for b in (_courante["beats"] as Array):
+		if (b as Dictionary).has("action") or (b as Dictionary).has("degre"):
+			return true
+	return false
+
+
 static func _ecrire() -> void:
-	if _courante.is_empty() or not _dossier_pret():
+	if not _a_joue() or not _dossier_pret():
 		return
 	var f: FileAccess = FileAccess.open("%s/%s.json" % [DOSSIER, _id], FileAccess.WRITE)
 	if f == null:
