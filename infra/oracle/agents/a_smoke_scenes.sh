@@ -31,7 +31,7 @@ done
 # une épreuve dit qu'un mécanisme répond — le squelette de quête, le journal des chroniques,
 # l'écran qui les donne à lire. Elles écrivent dans user:// puis nettoient ce qu'elles ont créé.
 EPREUVES=""; EP_BAD=0
-for ep in test_quete test_journal test_ecran_chroniques; do
+for ep in test_quete test_journal test_ecran_chroniques test_economie; do
     [ -f "$GAME_DIR/tools/tests/$ep.gd" ] || continue
     EPLOG="$(timeout 240 "$GODOT_BIN" --headless --path "$GAME_DIR" --script "res://tools/tests/$ep.gd" 2>&1 || true)"
     if printf '%s' "$EPLOG" | grep -q "ÉPREUVE PASSÉE"; then ETAT=passee

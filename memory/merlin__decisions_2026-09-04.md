@@ -49,3 +49,16 @@
   corpus entraîne donc le futur modèle sur une unité de contenu que la production n'emploie plus.
   Le rendre utile demande de retarger analyseur + prompt + validateur sur le beat — un chantier,
   pas un réglage. Décision non prise.
+
+## 2026-09-04 : l'argent ne vient que d'un événement (décision ancienne, enfin codée)
+- Règle de Maxime : « Pas de gwenneg gagné si rien en terme de transaction, trésor etc. L'argent
+  s'amasse sur un monstre, une transaction, un trésor, une situation qui donne de l'argent. »
+- Mesure qui l'a déclenchée (p74) : 2 → 65 gwenneg en vingt beats, aucun événement, zéro achat sur
+  onze étals. Deux gwenneg par réussite, quatre par éclatante, plus un butin aléatoire sur 60 %
+  des réussites — la moitié du total venait du seul hasard.
+- Codé : le degré rend 0, le butin aléatoire rend 0, et un beat déclare son `butin` qui ne tombe
+  que sur une réussite. Les deux fonctions restent pour leurs appelants (dont la sonde de soak) —
+  les supprimer forcerait un appelant à deviner.
+- Conséquence assumée, et Maxime l'avait acceptée d'avance : aucun scénario ne pose `butin`
+  aujourd'hui, donc une quête sans argent est possible. Restent la vente à l'étal et le
+  remboursement d'une greffe.
