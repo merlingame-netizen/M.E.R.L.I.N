@@ -15,7 +15,9 @@ D'OÙ VIENNENT LES PARTIES, dans l'ordre où on les cherche :
      quelques heures (vécu sur p74).
   2. les résultats commités dans le dépôt   infra/oracle/agents/courrier/resultats/<job>/
   3. les chroniques sauvées à la main       docs/chroniques/<nom>/journal.json
-  4. les chroniques ÉCRITES PAR LE JEU      <user://>/chroniques/*.json — un autre format, celui
+  4. les parties de la nuit                ~/.cache/merlin-partie/nuit/<date>/journal.json
+     — une par nuit depuis le régime du 04/09, datée parce que le journal courant est écrasé.
+  5. les chroniques ÉCRITES PAR LE JEU      <user://>/chroniques/*.json — un autre format, celui
      de MerlinJournal, adapté ici pour se lire dans la même page. Deux témoins, une liseuse.
 
 Un identifiant par partie : « p93 » pour job-093, le nom du dossier pour docs/, « jeu 02/09 16:12 »
@@ -56,6 +58,10 @@ def sources(home: Path | None = None, repo: Path | None = None) -> list[dict]:
         garder(_etiquette(p.parent.name), p, "resultats")
     for p in sorted((repo / "docs" / "chroniques").glob("*/journal.json")):
         garder(p.parent.name, p, "docs")
+    # Les parties de la nuit (a_partie_nuit.sh, régime du 04/09) : une par jour, datée, parce
+    # que ~/.cache/merlin-partie/journal.json est écrasé à chaque partie.
+    for p in sorted((home / ".cache" / "merlin-partie" / "nuit").glob("*/journal.json")):
+        garder("nuit " + p.parent.name, p, "nuit")
     for p in sorted(_dossier_jeu(home).glob("*.json")):
         if p.name == "index.json":
             continue
@@ -144,7 +150,8 @@ def adapter_jeu(c: dict) -> dict:
 
 def _provenance_en_clair(p: str) -> str:
     return {"courrier": "partie témoin (Courrier)", "resultats": "partie témoin (dépôt)",
-            "docs": "chronique sauvée", "jeu": "écrite par le jeu"}.get(p, p)
+            "docs": "chronique sauvée", "jeu": "écrite par le jeu",
+            "nuit": "partie de la nuit"}.get(p, p)
 
 
 def parties(home: Path | None = None, repo: Path | None = None) -> dict[str, dict]:

@@ -4,18 +4,18 @@
   {
    "id": "game-watchdog",
    "label": "Veilleur du jeu",
-   "schedule": "*/2 * * * *",
+   "schedule": "*/5 * * * *",
    "cmd": "a_game_watchdog.sh",
    "enabled": true,
-   "desc": "Relance le jeu s'il est mort alors qu'il devait tourner (état désiré posé par PLAY/STOP)."
+   "desc": "Relance le jeu s'il est mort alors qu'il devait tourner (état désiré posé par PLAY/STOP). [Régime du 04/09 : */2 * * * * → */5 * * * *.]"
   },
   {
    "id": "game-idle",
    "label": "Veille du jeu",
-   "schedule": "1-59/2 * * * *",
+   "schedule": "3-59/5 * * * *",
    "cmd": "a_game_idle.sh",
    "enabled": true,
-   "desc": "Coupe le jeu apres 5 min sans spectateur, pour rendre les 4 coeurs au developpement."
+   "desc": "Coupe le jeu apres 5 min sans spectateur, pour rendre les 4 coeurs au developpement. [Régime du 04/09 : 1-59/2 * * * * → 3-59/5 * * * *.]"
   },
   {
    "id": "game-autosync",
@@ -44,10 +44,10 @@
   {
    "id": "health",
    "label": "Santé machine",
-   "schedule": "*/5 * * * *",
+   "schedule": "*/15 * * * *",
    "cmd": "a_health.sh",
    "enabled": true,
-   "desc": "Relevé CPU / RAM / disque / charge, historisé pour repérer les dérives."
+   "desc": "Relevé CPU / RAM / disque / charge, historisé pour repérer les dérives. [Régime du 04/09 : */5 * * * * → */15 * * * *.]"
   },
   {
    "id": "disk-guard",
@@ -148,18 +148,18 @@
   {
    "id": "billing",
    "label": "Facturation Oracle",
-   "schedule": "17 * * * *",
+   "schedule": "17 7 * * *",
    "cmd": "a_billing.sh",
    "enabled": true,
-   "desc": "Relève le coût du mois (Usage API). La VM est sur l'offre Always Free : tout montant non nul déclenche une alerte urgente."
+   "desc": "Relève le coût du mois (Usage API). La VM est sur l'offre Always Free : tout montant non nul déclenche une alerte urgente. [Régime du 04/09 : 17 * * * * → 17 7 * * *.]"
   },
   {
    "id": "ollama-serve",
    "label": "Serveur LLM local",
-   "schedule": "*/2 * * * *",
+   "schedule": "*/5 * * * *",
    "cmd": "a_ollama_serve.sh",
    "enabled": true,
-   "desc": "Garantit qu'Ollama tourne (userland) et que le modèle copilote reste résident en RAM."
+   "desc": "Garantit qu'Ollama tourne (userland) et que le modèle copilote reste résident en RAM. [Régime du 04/09 : */2 * * * * → */5 * * * *.]"
   },
   {
    "id": "llm-bench",
@@ -221,17 +221,17 @@
    "id": "brasero",
    "label": "Le Braséro",
    "cmd": "a_brasero.sh",
-   "schedule": "*/20 * * * *",
+   "schedule": "*/20 7-23 * * *",
    "enabled": true,
-   "desc": "Garde le modèle de conversation chaud en RAM : sans lui, le premier message après une heure de silence paie 40 s de chargement avant même de commencer à répondre. Un seul token demandé toutes les 20 min, zéro euro, et rien du tout quand tu joues."
+   "desc": "Garde le modèle de conversation chaud en RAM : sans lui, le premier message après une heure de silence paie 40 s de chargement avant même de commencer à répondre. Un seul token demandé toutes les 20 min, zéro euro, et rien du tout quand tu joues. [Régime du 04/09 : chauffe seulement de 7 h à 23 h (horloge de la VM) — personne ne parle au Studio la nuit, et 6 Go de modèle tenus chauds pour rien coûtaient un réveil toutes les 20 min.]"
   },
   {
    "id": "relance",
    "label": "Le Facteur",
    "cmd": "a_relance.sh",
-   "schedule": "*/10 * * * *",
+   "schedule": "*/30 * * * *",
    "enabled": true,
-   "desc": "Rattrape les messages que tu as envoyés et auxquels aucun agent n'a répondu — le cas où le modèle était occupé au moment de l'envoi."
+   "desc": "Rattrape les messages que tu as envoyés et auxquels aucun agent n'a répondu — le cas où le modèle était occupé au moment de l'envoi. [Régime du 04/09 : */10 * * * * → */30 * * * *.]"
   },
   {
    "id": "parole",
@@ -276,10 +276,10 @@
   {
    "id": "sequence",
    "label": "Le Séquenceur",
-   "schedule": "3,13,23,33,43,53 * * * *",
+   "schedule": "3,33 * * * *",
    "cmd": "a_sequence.sh",
    "enabled": true,
-   "desc": "Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi."
+   "desc": "Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi. [Régime du 04/09 : 3,13,23,33,43,53 * * * * → 3,33 * * * *.]"
   },
   {
    "id": "llm-decompose",
@@ -304,6 +304,22 @@
    "cmd": "a_labo_recit.sh",
    "enabled": true,
    "desc": "Batterie de mini-tests du récit : richesse des issues, enchaînement lookahead, comparaison e2b/e4b."
+  },
+  {
+   "id": "partie-nuit",
+   "label": "La partie de la nuit",
+   "schedule": "5 4 * * *",
+   "cmd": "a_partie_nuit.sh",
+   "enabled": true,
+   "desc": "Joue chaque nuit UNE partie entière avec le bot et la garde datée : sa chronique apparaît au réveil dans l'onglet Chronique du Studio, vue par la sonde ET par le jeu. C'est le point de mesure quotidien de « le jeu s'améliore-t-il ». Ne tourne pas si quelqu'un joue."
+  },
+  {
+   "id": "quete-nuit",
+   "label": "La quête de la nuit",
+   "schedule": "40 4 * * *",
+   "cmd": "a_quete_nuit.sh",
+   "enabled": true,
+   "desc": "Génère chaque nuit UNE quête du chapitre courant avec le vrai moteur, la passe au contrat et à la grille de lecture, et la garde datée. Un point par jour sur la prose. ~8 minutes, après la partie de la nuit."
   }
  ]
 }

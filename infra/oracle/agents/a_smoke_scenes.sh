@@ -27,10 +27,23 @@ for scene in "$GAME_DIR"/scenes/*.tscn; do
     RESULTS="$RESULTS{\"scene\":\"$NAME\",\"script_errors\":$ERRS},"
 done
 
-printf '{"t":"%s","ref":"%s","commit":"%s","total":%s,"failing":%s,"scenes":[%s]}\n' \
+# LES ÉPREUVES EN MOTEUR, à côté du smoke (régime du 04/09). Un smoke dit qu'une scène démarre ;
+# une épreuve dit qu'un mécanisme répond — le squelette de quête, le journal des chroniques,
+# l'écran qui les donne à lire. Elles écrivent dans user:// puis nettoient ce qu'elles ont créé.
+EPREUVES=""; EP_BAD=0
+for ep in test_quete test_journal test_ecran_chroniques; do
+    [ -f "$GAME_DIR/tools/tests/$ep.gd" ] || continue
+    EPLOG="$(timeout 240 "$GODOT_BIN" --headless --path "$GAME_DIR" --script "res://tools/tests/$ep.gd" 2>&1 || true)"
+    if printf '%s' "$EPLOG" | grep -q "ÉPREUVE PASSÉE"; then ETAT=passee
+    else ETAT=echouee; EP_BAD=$((EP_BAD + 1)); fi
+    RATES="$(printf '%s' "$EPLOG" | grep -c '^  RATE' || true)"
+    EPREUVES="$EPREUVES{\"epreuve\":\"$ep\",\"etat\":\"$ETAT\",\"rates\":$RATES},"
+done
+
+printf '{"t":"%s","ref":"%s","commit":"%s","total":%s,"failing":%s,"scenes":[%s],"epreuves":[%s],"epreuves_echouees":%s}\n' \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$GAME_REF" \
     "$(git -C "$GAME_DIR" rev-parse --short HEAD 2>/dev/null || echo '?')" \
-    "$TOTAL" "$BAD" "${RESULTS%,}" > "$OUT"
+    "$TOTAL" "$BAD" "${RESULTS%,}" "${EPREUVES%,}" "$EP_BAD" > "$OUT"
 
-echo "$TOTAL scènes testées · $BAD en erreur"
-[ "$BAD" -eq 0 ]
+echo "$TOTAL scènes testées · $BAD en erreur · épreuves échouées : $EP_BAD"
+[ "$BAD" -eq 0 ] && [ "$EP_BAD" -eq 0 ]

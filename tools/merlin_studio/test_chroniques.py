@@ -75,10 +75,16 @@ def main() -> int:
                    "provenance": "arc", "difficulte": 1, "de": 5, "integrite_avant": 10, "corruption_avant": 0}]}),
         encoding="utf-8")
 
+    # 5. une partie de la nuit, gardée datée
+    nuit = home / ".cache" / "merlin-partie" / "nuit" / "2026-09-04"
+    nuit.mkdir(parents=True)
+    shutil.copy(p74, nuit / "journal.json")
+
     # ── LE COLLECTEUR
     srcs = chroniques.sources(home, repo)
     ids = [s["id"] for s in srcs]
-    verifier("quatre fichiers trouvés, dont le lancement vide", len(srcs) == 4, str(ids))
+    verifier("cinq fichiers trouvés, dont le lancement vide", len(srcs) == 5, str(ids))
+    verifier("la partie de la nuit est datée", "nuit 2026-09-04" in ids, str(ids))
     verifier("le job du Courrier est nommé comme partout ailleurs (p93)", "p93" in ids, str(ids))
     verifier("la chronique sauvée garde son nom de dossier (p74)", "p74" in ids, str(ids))
     verifier("la chronique du jeu est datée court", any(i.startswith("jeu 02/09 16:12") for i in ids), str(ids))
@@ -86,7 +92,7 @@ def main() -> int:
 
     # ── LE FORMAT
     P = chroniques.parties(home, repo)
-    verifier("le lancement où personne n'a joué n'est pas une partie : trois sur quatre", len(P) == 3, str(list(P)))
+    verifier("le lancement où personne n'a joué n'est pas une partie : quatre sur cinq", len(P) == 4, str(list(P)))
     verifier("il est absent de la liste aussi", not any(l["id"].startswith("jeu 03/09") for l in chroniques.liste(home, repo)))
     j93 = P.get("p93", {})
     verifier("les chemins de la VM ne sortent pas de la machine",
@@ -108,12 +114,14 @@ def main() -> int:
     L = {l["id"]: l for l in chroniques.liste(home, repo)}
     verifier("la liste compte les beats de p74", L.get("p74", {}).get("beats") == 20, str(L.get("p74")))
     verifier("la liste compte le banc du jeu", L.get(jeu_id, {}).get("banc") == 1, str(L.get(jeu_id)))
-    verifier("la plus récente est en tête", list(L)[0] == jeu_id or list(L)[0] == "p93", str(list(L)))
+    # La partie de la nuit est écrite en dernier par l'épreuve : c'est donc elle qui doit ouvrir
+    # la liste. L'attente précédente nommait p93 et le jeu — elle datait d'avant cette source.
+    verifier("la plus récente est en tête", list(L)[0] == "nuit 2026-09-04", str(list(L)))
 
     # ── LA PAGE
     page = chroniques.rendre(P)
     verifier("la marque est remplacée", chroniques.MARQUE not in page)
-    verifier("les trois parties sont embarquées", '"p93"' in page and '"p74"' in page and '"%s"' % jeu_id in page)
+    verifier("les quatre parties sont embarquées", '"p93"' in page and '"p74"' in page and '"%s"' % jeu_id in page and '"nuit 2026-09-04"' in page)
     verifier("un </script> dans la prose ne peut pas fermer la page",
              chroniques.rendre({"x": {"beats": [{"narration": "a</script>b"}]}}).count("</script>") == page.count("</script>") - 0
              and "a<\\/script>b" in chroniques.rendre({"x": {"beats": [{"narration": "a</script>b"}]}}))
