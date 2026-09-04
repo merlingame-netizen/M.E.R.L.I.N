@@ -1229,18 +1229,47 @@ func _maybe_swap_variant() -> void:
 # === Vague Economie V1 (in-run) — Gwenneg : gains, depenses, achats plafonnes ===
 
 # Gain de Gwenneg pour un degre resolu (echec 0 / partiel 1 / reussite 2 / eclatante 4).
-func gwenneg_gain_for_degree(degree: String) -> int:
-	return int(GWENNEG_BY_DEGREE.get(degree, 0))
+## LE DEGRE NE PAIE PLUS. Decision de Maxime : « Pas de gwenneg gagne si rien en terme de
+## transaction, tresor etc. L'argent s'amasse sur un monstre, une transaction, un tresor, une
+## situation qui donne de l'argent. »
+##
+## Mesure qui l'a declenchee (p74) : la bourse est passee de 2 a 65 gwenneg en vingt beats sans
+## qu'un seul evenement en donne, et le Voyageur n'a rien achete sur onze etals. L'argent
+## s'accumulait parce qu'on REUSSISSAIT, pas parce qu'il se passait quelque chose.
+##
+## La fonction reste — deux appelants la nomment, dont la sonde de soak — et rend zero. La
+## supprimer forcerait un appelant a deviner ; la laisser mentir serait pire.
+func gwenneg_gain_for_degree(_degree: String) -> int:
+	return 0
 
 
-# Butin d'Exploration : 60% de chance sur un beat resolu en reussite ou mieux, valeur 1d4 (0 sinon).
-# Utilise le RNG de la run (meme source que draft/pilier_offering — jamais un RNG parallele).
-func roll_loot(degree: String) -> int:
-	if degree != MerlinResolution.REUSSITE and degree != MerlinResolution.ECLATANTE:
+## LE HASARD NE PAIE PLUS NON PLUS. Le « Butin d'Exploration » tombait sur 60 % des reussites,
+## sans qu'aucun evenement ne le justifie : c'est la moitie des 63 gwenneg de p74. Meme raison,
+## meme sort. Zero, et la fonction reste pour ses deux appelants.
+func roll_loot(_degree: String) -> int:
+	return 0
+
+
+## L'ARGENT VIENT D'UN EVENEMENT QUI EN DONNE, ET DE LUI SEUL.
+##
+## Un beat DECLARE son butin (`butin`), et il ne tombe que si le geste reussit : rater le coffre
+## ne le vide pas. Rien d'autre ne paie — ni le degre, ni la chance.
+##
+## CE QUI DONNE DE L'ARGENT AUJOURD'HUI, et c'est peu : la vente d'une carte a l'etal
+## (`_sell_reserve_card`) et le remboursement d'une greffe desengagee. Le monstre et le tresor de
+## la regle de Maxime n'ont AUCUNE representation dans le code — aucun beat ne porte `butin`, et
+## aucun scenario n'en pose. Une quete sans argent est donc possible, ce que Maxime a explicitement
+## accepte (« quete sans argent possible, sans marchand possible, tout depend du contexte »).
+##
+## Le champ existe pour que le jour ou un scenario declare un coffre ou une prime, il n'y ait
+## qu'un endroit a remplir — et pour qu'on voie tout de suite qu'il est vide aujourd'hui.
+func butin_du_beat(beat: Dictionary, degre: String) -> int:
+	var butin: int = int(beat.get("butin", 0))
+	if butin <= 0:
 		return 0
-	if _rng.randf() > LOOT_CHANCE:
+	if degre != MerlinResolution.REUSSITE and degre != MerlinResolution.ECLATANTE:
 		return 0
-	return _rng.randi_range(LOOT_MIN, LOOT_MAX)
+	return butin
 
 
 func add_gwenneg(n: int) -> void:

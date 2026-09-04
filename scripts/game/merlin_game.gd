@@ -904,11 +904,12 @@ func _on_resolve() -> void:
 	res["fx_effects"] = fx_effects
 	# Draft « 1 carte sur 3 » armé : SEULEMENT aux beats clés (réussite/éclatante) tant qu'il reste des beats.
 	var deg: String = str(res.get("degree", ""))
-	# Vague Economie V1 : gain de Gwenneg au degré (+ Butin d'Exploration 60%/1d4). Le modèle
-	# s'applique ICI (comme les jauges) ; le commit visuel HUD attend _flush_gauges (bug #1).
-	# v40 — le butin s'ANNONCE : le gain du beat s'affiche à côté de la bourse (+X),
-	# remplacé au butin suivant — l'économie se voit, elle ne se devine plus.
-	var _gain_g: int = run.gwenneg_gain_for_degree(deg) + run.roll_loot(deg)
+	# L'ARGENT NE VIENT QUE D'UN ÉVÉNEMENT QUI EN DONNE (décision de Maxime, mesurée sur p74 :
+	# 2 → 65 gwenneg en vingt beats, aucun événement, zéro achat sur onze étals). Le degré et le
+	# hasard ne paient plus ; seul un beat qui DÉCLARE son butin paie, et seulement s'il réussit.
+	# Le commit visuel HUD attend toujours _flush_gauges (bug #1), et v40 tient : quand il y a un
+	# gain, il s'annonce à côté de la bourse.
+	var _gain_g: int = run.butin_du_beat(run.current_beat(), deg)
 	run.add_gwenneg(_gain_g)
 	_gain_gwenneg_recent = _gain_g
 	# Si ce beat est la reclamation de la Promesse (« Le créancier revient », muté par
