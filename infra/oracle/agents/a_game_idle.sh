@@ -52,10 +52,20 @@ fi
 # spectateur ne se connecte, donc le compte de x11vnc est à ZÉRO alors que la machine travaille.
 # Sans cette porte, une mesure de plus de cinq minutes serait coupée en plein milieu — et le
 # résultat, une fois de plus, ne prouverait rien.
-if [ -e "$HOME/.cache/merlin-agents/e2e.lock" ] \
-   && ! flock -n "$HOME/.cache/merlin-agents/e2e.lock" true 2>/dev/null; then
-    echo "test e2e en cours — on ne coupe pas"
-    exit 0
+# UN VERROU N'EST PAS ETERNEL. Le 04/09, un harnais tue par un `timeout` a laisse son
+# grand-parent vivant : le verrou e2e est reste pris, le coupeur a dit « on ne coupe pas » a
+# chaque passage, et le jeu a tourne sans personne devant jusqu'a ce qu'on l'arrete a la main.
+# Une porte qui ne se referme jamais n'est plus une porte. Au-dela de deux heures — le double du
+# budget d'un job du Courrier, et bien au-dela de la plus longue partie mesuree (30 min) — le
+# verrou ne protege plus rien : il signale un travail perdu, et on coupe en le disant.
+E2E_LOCK="$HOME/.cache/merlin-agents/e2e.lock"
+if [ -e "$E2E_LOCK" ] && ! flock -n "$E2E_LOCK" true 2>/dev/null; then
+    AGE_VERROU=$(( $(date -u +%s) - $(stat -c %Y "$E2E_LOCK" 2>/dev/null || date -u +%s) ))
+    if [ "$AGE_VERROU" -lt 7200 ]; then
+        echo "test e2e en cours depuis ${AGE_VERROU}s — on ne coupe pas"
+        exit 0
+    fi
+    echo "verrou e2e pris depuis ${AGE_VERROU}s (plus de 2 h) — travail perdu, on coupe quand meme" >&2
 fi
 
 # TOUT HARNAIS, PAS SEULEMENT CEUX QUI ONT PENSE A POSER UN VERROU. Les deux portes ci-dessus
