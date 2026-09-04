@@ -3,8 +3,21 @@
 
 Le canon (`data/ai/lore_canon.json`) liste lui-même ses lacunes dans `gaps`.
 Cet analyseur n'invente rien : il choisit une lacune, rassemble le contexte
-canonique nécessaire (biome, faction, PNJ, verbes autorisés du champ lexical
-tiré), et rend des PREUVES chiffrées. Le LLM ne fera que rédiger la carte.
+canonique nécessaire (biome, faction, PNJ, verbes autorisés), et rend des PREUVES
+chiffrées. Le LLM ne fera que rédiger la carte.
+
+DEUX SOURCES, ET C'EST VOULU (04/09). Le canon dit ce que le MONDE est — biomes, figures,
+factions, interdits — et il est désormais dérivé du jeu, donc juste. Le FORMAT produit, lui,
+est porté ici : une carte à trois options avec des effets plafonnés. Ce format a été abandonné
+par le jeu au pivot v11, mais c'est le seul que `scenario_validator.validate_card` sache juger,
+et une proposition non validée est refusée. Les constantes du format vivent donc dans cet
+analyseur, avec leur date de péremption écrite noir sur blanc, plutôt que dans un canon qui
+mentirait sur le jeu pour arranger un outil.
+
+CE QUI RESTE FAUX, ET QU'AUCUN RÉGLAGE NE CORRIGE : le jeu écrit des BEATS (scène, geste, issue)
+et cet atelier écrit des CARTES. Le corpus qu'il alimente entraîne donc le futur modèle sur une
+unité de contenu que la production n'emploie plus. Le rendre utile demande de retarger la chaîne
+entière — analyseur, prompt, validateur — sur le beat, ce qui est un chantier et pas un réglage.
 
 Sortie : dict d'évidences consommé par runner.py. Ne lève jamais.
 """
@@ -17,6 +30,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 CANON = ROOT / "data" / "ai" / "lore_canon.json"
+
+# LE FORMAT DE CARTE, ET SA DATE DE PÉREMPTION. Ces valeurs décrivaient le jeu d'avant le pivot
+# v11 ; elles restent parce que `scenario_validator.validate_card` ne sait juger que cette forme.
+# Elles ne viennent plus du canon : celui-ci, dérivé du jeu depuis le 04/09, dit franchement que
+# l'unité de contenu est le beat et que la carte à options n'existe plus.
+FORMAT_CARTE = {
+    "options": 3,
+    "texte": {"phrases": [2, 4], "mots": [40, 120]},
+    "caps": {"ADD_REPUTATION": {"max": 20, "min": -20}, "HEAL_LIFE": {"max": 18},
+             "DAMAGE_LIFE": {"max": 15}, "ADD_BIOME_CURRENCY": {"max": 10},
+             "effects_per_option": 3},
+}
 CORPUS = ROOT / "data" / "ai" / "training" / "auto_corpus.jsonl"
 CURATED = ROOT / "data" / "ai" / "training" / "curated_corpus.jsonl"
 
@@ -65,9 +90,13 @@ def analyze(seed: int | None = None) -> dict:
         lo = min(counts.get(b, 0) for b in biomes)
         target = rng.choice([b for b in biomes if counts.get(b, 0) == lo])
 
-    field = rng.choice(list(fields)) if fields else "esprit"
-    verbs = fields.get(field, [])[:8]
-    faction = rng.choice(factions) if factions else "Les Druides de Bretagne"
+    # LES CINQ TUILES, TOUTES. `verbs_by_field` groupe désormais les tuiles par famille, et une
+    # famille n'en compte souvent qu'une : tirer une famille puis en demander trois verbes
+    # produisait « choisis-en 3 parmi : OBSERVER ». On donne les cinq, et la famille tirée n'est
+    # plus qu'une couleur d'ambiance.
+    field = rng.choice(list(fields)) if fields else "Perception"
+    verbs = sorted({v for vs in fields.values() for v in vs}) or ["OBSERVER"]
+    faction = rng.choice(factions) if factions else "druides"
     npcs = [n.get("name", "?") for n in canon.get("npcs", [])
             if target and target.lower() in json.dumps(n, ensure_ascii=False).lower()][:3]
 
@@ -80,10 +109,14 @@ def analyze(seed: int | None = None) -> dict:
         "npcs": npcs,
         "cards_for_biome": counts.get(target or "", 0),
         "cards_total": sum(counts.values()),
-        "text_rule": cons.get("card_text", {}),
-        "options_rule": cons.get("options_per_card", 3),
-        "effect_caps": cons.get("effect_caps", {}),
+        "text_rule": FORMAT_CARTE["texte"],
+        "options_rule": FORMAT_CARTE["options"],
+        "effect_caps": FORMAT_CARTE["caps"],
         "forbidden": (cons.get("forbidden_words") or [])[:12],
+        # La prose des interdits dit ce qu'aucune liste de mots ne peut dire : le merveilleux
+        # doit être concret, pas de magie qui brille, pas de prophétie. C'est elle qui tient.
+        "forbidden_prose": str(cons.get("forbidden_prose", ""))[:400],
+        "factions_valides": factions,
     }
 
 
@@ -123,8 +156,11 @@ def brief(a: dict) -> str:
         f"Contraintes : exactement {a['options_rule']} options ; texte de 2 à 4 phrases "
         f"françaises (60 à 100 mots — vise 80, un texte trop court est refusé) ; "
         f"effets plafonnés ({caps}) ; "
-        f"factions valides : druides, anciens, korrigans, niamh, ankou.\n"
-        f"Mots interdits : {', '.join(a['forbidden'][:8])}."
+        # Les factions viennent du canon depuis le 04/09. Elles étaient écrites en dur et
+        # nommaient « niamh » et « anciens », qui n'existent dans aucune donnée du jeu.
+        f"factions valides : {', '.join(a['factions_valides'])}.\n"
+        f"Mots interdits : {', '.join(a['forbidden'][:8])}.\n"
+        f"Interdit aussi, et ça compte plus que la liste : {a['forbidden_prose']}"
     )
 
 

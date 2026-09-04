@@ -29,3 +29,23 @@
   (aucun GPU), ni faire tourner plus gros que le gemma4 e4b à une vitesse jouable. Le moteur est
   mono-place : deux travaux LLM simultanés se ralentissent l'un l'autre (mesuré sur p93, un beat
   à 83 s). D'où l'étalement 3 h 00 / 3 h 30 / 4 h 05 / 4 h 40.
+
+## 2026-09-04 : le canon est refait, dérivé du jeu (choix 2 de Maxime)
+- Devant le constat que gd-content-gap tourne 48 fois par jour sur un canon périmé, Maxime a
+  choisi de NE PAS couper l'agent mais de refaire `lore_canon.json` d'abord.
+- Le canon écrit à la main le 19/06 décrivait un autre jeu : huit biomes inventés là où il y en a
+  douze aux noms bretons, douze PNJ dont aucun n'existe (Maelgwn, Keridwen, Niamh, Manannan,
+  Brigid — ces trois derniers étant nommément INTERDITS par le canon que le jeu applique), neuf
+  champs lexicaux et des cartes à trois options, système abandonné au pivot v11.
+- `refaire_lore_canon.py` le régénère depuis data/biomes, data/figures, data/quete et
+  canon_code.json. Les CLÉS ne changent pas — quatre outils les lisent — seul le fond est refait.
+  `--verifier` rend 1 si le fichier a dérivé : la dérive se voit le jour même.
+- Les figures arrivent avec ce qu'elles VEULENT et leur voix : c'est la leçon de q86, qui avait
+  nommé seize figures sans qu'aucune ne veuille quoi que ce soit.
+- Séparation posée : le CANON dit ce que le monde est ; le FORMAT produit (carte à trois options,
+  effets plafonnés) est porté par `content_gap.py`, avec sa date de péremption écrite. Un canon
+  ne doit pas mentir sur le jeu pour arranger un outil.
+- CE QUI RESTE FAUX ET QUI EST DIT : le jeu écrit des BEATS, cet atelier écrit des CARTES. Le
+  corpus entraîne donc le futur modèle sur une unité de contenu que la production n'emploie plus.
+  Le rendre utile demande de retarger analyseur + prompt + validateur sur le beat — un chantier,
+  pas un réglage. Décision non prise.
