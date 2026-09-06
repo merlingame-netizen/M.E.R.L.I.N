@@ -30,31 +30,31 @@ ADMIN_TOKEN = os.environ.get("ANNIV_ADMIN_TOKEN", "")
 # Valeurs acceptées — toute réponse hors de ces listes est refusée.
 # Elles doivent rester alignées avec les `value=` de la page.
 PRESENCES = {
-    "Je viens, samedi midi au dimanche midi",
-    "Je viens samedi, je ne dors pas",
-    "Je vous rejoins dimanche matin",
+    "Je viens tout le week-end",
+    "Samedi seulement, je ne dors pas",
+    "Je vous rejoins dimanche",
     "Je ne peux pas venir",
 }
-GITES = {
-    "Bastide de la Peyrolière (Apt)",
-    "Pierre-Étoile (près de Lourmarin)",
-    "Gîte de l'Orangerie (Cadenet)",
+LIEUX = {
+    "Le Catalan (Jouques)",
+    "Le Loubatas (Peyrolles)",
+    "Belvédère Sainte-Victoire (Saint-Marc-Jaumegarde)",
+}
+TRAITEURS = {
+    "Oui, traiteur pour les deux repas",
+    "Traiteur samedi soir seulement",
+    "On cuisine nous-mêmes",
+    "Peu importe",
 }
 ACTIVITES = {
-    "Marché d'Apt",
-    "Sentier des Ocres (Roussillon)",
-    "Dégustation aux caves Louérion",
-    "Village de Lourmarin",
-    "Pétanque au gîte",
-    "Forêt des Cèdres (Bonnieux)",
-    "Grasse matinée",
-    "Chef privé le samedi soir",
+    "Randonnée Sainte-Victoire",
+    "Accrobranche Indian Forest",
+    "Via ferrata / escalade",
+    "Canoë sur la Durance",
+    "Balade au barrage de Bimont",
+    "Apéro, pétanque et rien d'autre",
 }
-VIENT = {
-    "Je viens, samedi midi au dimanche midi",
-    "Je viens samedi, je ne dors pas",
-    "Je vous rejoins dimanche matin",
-}
+VIENT = PRESENCES - {"Je ne peux pas venir"}
 
 app = Flask(__name__)
 
@@ -82,7 +82,8 @@ def init_db() -> None:
                 nom       TEXT NOT NULL,
                 presence  TEXT NOT NULL,
                 nb        INTEGER NOT NULL DEFAULT 1,
-                gite      TEXT,
+                lieu      TEXT,
+                traiteur  TEXT,
                 activites TEXT NOT NULL DEFAULT '[]',
                 maj       REAL NOT NULL
             )
@@ -135,30 +136,37 @@ def valider(payload: dict) -> tuple[dict | None, str]:
     if not 1 <= nb <= 10:
         return None, "Le nombre de personnes doit être entre 1 et 10."
 
-    gite = str(payload.get("gite", "")).strip()
-    if gite and gite not in GITES:
-        return None, "Gîte inconnu."
+    lieu = str(payload.get("lieu", "")).strip()
+    if lieu and lieu not in LIEUX:
+        return None, "Lieu inconnu."
+
+    traiteur = str(payload.get("traiteur", "")).strip()
+    if traiteur and traiteur not in TRAITEURS:
+        return None, "Choix de repas inconnu."
 
     brut = payload.get("activites") or []
     if not isinstance(brut, list) or len(brut) > len(ACTIVITES):
         return None, "Liste d'activités invalide."
     activites = [a for a in brut if a in ACTIVITES]
 
-    return {"nom": nom, "presence": presence, "nb": nb,
-            "gite": gite, "activites": activites}, ""
+    return {"nom": nom, "presence": presence, "nb": nb, "lieu": lieu,
+            "traiteur": traiteur, "activites": activites}, ""
 
 
 # ── Compteurs ───────────────────────────────────────────────────────────────
 def etat() -> dict:
     rows = db().execute("SELECT * FROM reponses ORDER BY maj").fetchall()
 
-    gites = {g: 0 for g in GITES}
+    lieux = {x: 0 for x in LIEUX}
+    traiteurs = {t: 0 for t in TRAITEURS}
     activites = {a: 0 for a in ACTIVITES}
     presents, personnes, prenoms = 0, 0, []
 
     for r in rows:
-        if r["gite"] in gites:
-            gites[r["gite"]] += 1
+        if r["lieu"] in lieux:
+            lieux[r["lieu"]] += 1
+        if r["traiteur"] in traiteurs:
+            traiteurs[r["traiteur"]] += 1
         for a in json.loads(r["activites"]):
             if a in activites:
                 activites[a] += 1
@@ -173,9 +181,11 @@ def etat() -> dict:
         "presents": presents,
         "personnes": personnes,
         "prenoms": prenoms,
-        "gites": gites,
+        "lieux": lieux,
+        "traiteurs": traiteurs,
         "activites": activites,
-        "gite_tete": max(gites, key=gites.get) if any(gites.values()) else "",
+        "lieu_tete": max(lieux, key=lieux.get) if any(lieux.values()) else "",
+        "traiteur_tete": max(traiteurs, key=traiteurs.get) if any(traiteurs.values()) else "",
     }
 
 
@@ -206,13 +216,14 @@ def api_reponse():
     pid = request.cookies.get("anniv_id") or secrets.token_urlsafe(16)
     conn = db()
     conn.execute("""
-        INSERT INTO reponses (id, nom, presence, nb, gite, activites, maj)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO reponses (id, nom, presence, nb, lieu, traiteur, activites, maj)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             nom=excluded.nom, presence=excluded.presence, nb=excluded.nb,
-            gite=excluded.gite, activites=excluded.activites, maj=excluded.maj
-    """, (pid, data["nom"], data["presence"], data["nb"], data["gite"],
-          json.dumps(data["activites"], ensure_ascii=False), time.time()))
+            lieu=excluded.lieu, traiteur=excluded.traiteur,
+            activites=excluded.activites, maj=excluded.maj
+    """, (pid, data["nom"], data["presence"], data["nb"], data["lieu"],
+          data["traiteur"], json.dumps(data["activites"], ensure_ascii=False), time.time()))
     conn.commit()
 
     resp = make_response(jsonify(ok=True, etat=etat()))
@@ -234,10 +245,10 @@ def admin():
                 v = "'" + v
             return '"' + v.replace('"', '""') + '"'
 
-        lignes = ["nom,presence,personnes,gite,activites,maj"]
+        lignes = ["nom,presence,personnes,lieu,traiteur,activites,maj"]
         for r in rows:
-            champs = [r["nom"], r["presence"], str(r["nb"]), r["gite"] or "",
-                      " | ".join(json.loads(r["activites"])),
+            champs = [r["nom"], r["presence"], str(r["nb"]), r["lieu"] or "",
+                      r["traiteur"] or "", " | ".join(json.loads(r["activites"])),
                       time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"]))]
             lignes.append(",".join(cellule(c) for c in champs))
         out = make_response("\n".join(lignes))
@@ -247,7 +258,8 @@ def admin():
 
     return jsonify(etat=etat(), reponses=[{
         "nom": r["nom"], "presence": r["presence"], "nb": r["nb"],
-        "gite": r["gite"], "activites": json.loads(r["activites"]),
+        "lieu": r["lieu"], "traiteur": r["traiteur"],
+        "activites": json.loads(r["activites"]),
         "maj": time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"])),
     } for r in rows])
 

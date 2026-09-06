@@ -47,40 +47,42 @@ CSS_LIVE = """
 """
 
 SECTION_LIVE = """
-<!-- VOTES EN DIRECT -->
-<section id="live">
-  <div class="wrap">
-    <h2>Où en est le groupe</h2>
-    <p class="lede">Mis à jour à chaque réponse. Renseigne ton nom et ta présence plus haut&nbsp;: ton vote part tout seul et se compte ici.</p>
-
-    <div class="live">
+      <h3 style="font-family:var(--display);font-size:1.15rem;font-weight:700;color:var(--ocre-deep);margin:2rem 0 .3rem">Où en est le groupe</h3>
+      <p style="font-size:.9rem;color:var(--ink-faint);margin-bottom:1rem">Mis à jour à chaque réponse. Ton vote est déjà compté.</p>
       <div class="live-card">
-        <h3>Qui vient</h3>
         <p class="live-big" id="lv-personnes">{{ etat.personnes }}<small>personnes attendues</small></p>
-        <p style="margin:.8rem 0 0;font-size:.88rem;color:var(--ink-faint)">
+        <p style="margin:.7rem 0 0;font-size:.87rem;color:var(--ink-faint)">
           <span id="lv-reponses">{{ etat.reponses }}</span> réponse(s) ·
           <span id="lv-presents">{{ etat.presents }}</span> qui viennent
         </p>
         <div class="prenoms" id="lv-prenoms">
           {% for p in etat.prenoms %}<span>{{ p }}</span>{% endfor %}
         </div>
-        {% if not etat.prenoms %}<p class="live-empty" id="lv-vide">Personne n'a encore répondu. Sois le premier.</p>{% endif %}
       </div>
-
-      <div class="live-card">
-        <h3>La maison</h3>
-        <div class="tally" id="lv-gites">
-          {% for nom, n in etat.gites.items() %}
-          <div class="tally-row{% if nom == etat.gite_tete and n > 0 %} lead{% endif %}" data-cle="{{ nom }}">
+      <div class="live-card" style="margin-top:.8rem">
+        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Le lieu</h4>
+        <div class="tally" id="lv-lieux">
+          {% for nom, n in etat.lieux.items() %}
+          <div class="tally-row{% if nom == etat.lieu_tete and n > 0 %} lead{% endif %}" data-cle="{{ nom }}">
             <div class="tally-top"><span>{{ nom }}</span><b>{{ n }}</b></div>
             <div class="bar"><i style="width:{{ (n * 100 // (etat.presents or 1)) if etat.presents else 0 }}%"></i></div>
           </div>
           {% endfor %}
         </div>
       </div>
-
-      <div class="live-card">
-        <h3>Les activités</h3>
+      <div class="live-card" style="margin-top:.8rem">
+        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les repas</h4>
+        <div class="tally" id="lv-traiteurs">
+          {% for nom, n in etat.traiteurs.items() %}
+          <div class="tally-row{% if nom == etat.traiteur_tete and n > 0 %} lead{% endif %}" data-cle="{{ nom }}">
+            <div class="tally-top"><span>{{ nom }}</span><b>{{ n }}</b></div>
+            <div class="bar"><i style="width:{{ (n * 100 // (etat.presents or 1)) if etat.presents else 0 }}%"></i></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="live-card" style="margin-top:.8rem">
+        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les activités</h4>
         <div class="tally" id="lv-activites">
           {% for nom, n in etat.activites.items() %}
           <div class="tally-row" data-cle="{{ nom }}">
@@ -90,11 +92,7 @@ SECTION_LIVE = """
           {% endfor %}
         </div>
       </div>
-    </div>
-
-    <p class="sync" id="sync"></p>
-  </div>
-</section>
+      <p class="sync" id="sync"></p>
 """
 
 SCRIPT_API = """
@@ -117,7 +115,8 @@ SCRIPT_API = """
       nom: document.getElementById("nom").value.trim(),
       presence: coche("rsvp"),
       nb: parseInt(document.getElementById("nb").value, 10) || 1,
-      gite: coche("gite"),
+      lieu: coche("lieu"),
+      traiteur: coche("traiteur"),
       activites: Array.prototype.map.call(
         document.querySelectorAll('input[name="act"]:checked'),
         function(e){ return e.value; })
@@ -143,16 +142,16 @@ SCRIPT_API = """
       s.textContent = p;              // textContent : jamais d'injection HTML
       box.appendChild(s);
     });
-    var vide = document.getElementById("lv-vide");
-    if (vide) vide.style.display = etat.prenoms.length ? "none" : "";
 
-    [["lv-gites", etat.gites], ["lv-activites", etat.activites]].forEach(function(pair){
+    [["lv-lieux", etat.lieux, etat.lieu_tete],
+     ["lv-traiteurs", etat.traiteurs, etat.traiteur_tete],
+     ["lv-activites", etat.activites, null]].forEach(function(pair){
       var racine = document.getElementById(pair[0]), compte = pair[1];
       Array.prototype.forEach.call(racine.querySelectorAll(".tally-row"), function(row){
         var n = compte[row.dataset.cle] || 0;
         row.querySelector("b").textContent = n;
         row.querySelector(".bar i").style.width = pourcent(n, etat.presents) + "%";
-        row.classList.toggle("lead", pair[0] === "lv-gites" && n > 0 && etat.gite_tete === row.dataset.cle);
+        row.classList.toggle("lead", !!pair[2] && n > 0 && pair[2] === row.dataset.cle);
       });
     });
   }
@@ -201,16 +200,15 @@ SCRIPT_API = """
 def main() -> None:
     src = SOURCE.read_text(encoding="utf-8")
 
-    # 1. CSS de la section live, juste avant la fermeture du <style>
     src = src.replace("</style>", CSS_LIVE + "</style>", 1)
 
-    # 2. Section live, avant la section « Envoyer »
-    ancre = "<!-- ENVOYER -->"
+    # Les compteurs vont dans l'étape 3, sous le récapitulatif : c'est là que
+    # l'invité arrive une fois son vote posé.
+    ancre = '      <p style="margin-top:1.2rem;font-size:.87rem;color:var(--ink-faint)">'
     if ancre not in src:
-        raise SystemExit("Ancre <!-- ENVOYER --> introuvable dans site/public.html")
-    src = src.replace(ancre, SECTION_LIVE.strip() + "\n\n" + ancre, 1)
+        raise SystemExit("Ancre de fin d'étape 3 introuvable dans site/public.html")
+    src = src.replace(ancre, SECTION_LIVE.strip() + "\n" + ancre, 1)
 
-    # 3. Script serveur, après le script d'origine
     src = src.rstrip() + "\n" + SCRIPT_API
 
     doc = ("<!doctype html>\n<html lang=\"fr\">\n<head>\n"
