@@ -60,10 +60,10 @@ SECTION_LIVE = """
         </div>
       </div>
       <div class="live-card" style="margin-top:.8rem">
-        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Le lieu</h4>
-        <div class="tally" id="lv-lieux">
-          {% for nom, n in etat.lieux.items() %}
-          <div class="tally-row{% if nom == etat.lieu_tete and n > 0 %} lead{% endif %}" data-cle="{{ nom }}">
+        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les couchages — <b style="color:var(--rouge)">{{ etat.lits_a_sortir }}</b> lit(s) à sortir</h4>
+        <div class="tally" id="lv-couchages">
+          {% for nom, n in etat.couchages.items() %}
+          <div class="tally-row" data-cle="{{ nom }}">
             <div class="tally-top"><span>{{ nom }}</span><b>{{ n }}</b></div>
             <div class="bar"><i style="width:{{ (n * 100 // (etat.presents or 1)) if etat.presents else 0 }}%"></i></div>
           </div>
@@ -114,7 +114,7 @@ SCRIPT_API = """
       nom: document.getElementById("nom").value.trim(),
       presence: coche("rsvp"),
       nb: parseInt(document.getElementById("nb").value, 10) || 1,
-      lieu: coche("lieu"),
+      couchage: coche("couchage"),
       transport: coche("transport"),
       train: document.getElementById("train").value.trim(),
       activites: Array.prototype.map.call(
@@ -143,7 +143,7 @@ SCRIPT_API = """
       box.appendChild(s);
     });
 
-    [["lv-lieux", etat.lieux, etat.lieu_tete],
+    [["lv-couchages", etat.couchages, null],
      ["lv-activites", etat.activites, null]].forEach(function(pair){
       var racine = document.getElementById(pair[0]), compte = pair[1];
       Array.prototype.forEach.call(racine.querySelectorAll(".tally-row"), function(row){
@@ -196,8 +196,36 @@ SCRIPT_API = """
 """
 
 
+RIB_ENV = HERE.parent / "deploy" / "rib.env"
+
+
+def injecter_rib(html: str) -> str:
+    """Remplace les placeholders __RIB_*__ par les vraies coordonnées.
+
+    Elles vivent dans deploy/rib.env, gitignoré : la page versionnée ne contient
+    jamais l'IBAN. Sans ce fichier, la page reste servie mais la cagnotte affiche
+    un texte d'attente plutôt qu'un placeholder brut.
+    """
+    import re
+
+    defauts = {"RIB_TITULAIRE": "coordonnées à venir", "RIB_IBAN": "communiqué dans le groupe",
+               "RIB_BIC": "—", "RIB_BANQUE": "—"}
+    valeurs = dict(defauts)
+    if RIB_ENV.exists():
+        valeurs.update(dict(re.findall(r'^(\w+)="(.*)"$', RIB_ENV.read_text(encoding="utf-8"), re.M)))
+    else:
+        print(f"  ⚠️  {RIB_ENV} absent — la cagnotte affichera un texte d'attente")
+
+    for cle, val in valeurs.items():
+        html = html.replace(f"__{cle}__", val)
+    restants = re.findall(r"__RIB_\w+__", html)
+    if restants:
+        raise SystemExit(f"Placeholders non résolus : {sorted(set(restants))}")
+    return html
+
+
 def main() -> None:
-    src = SOURCE.read_text(encoding="utf-8")
+    src = injecter_rib(SOURCE.read_text(encoding="utf-8"))
 
     src = src.replace("</style>", CSS_LIVE + "</style>", 1)
 

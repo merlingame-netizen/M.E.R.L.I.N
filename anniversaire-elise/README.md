@@ -1,10 +1,12 @@
-# Les 30 ans d'Elise — 3 & 4 octobre 2026, Luberon
+# Les 30 ans d'Elise — 10 & 11 octobre 2026, à Aix
 
-Kit complet : groupe WhatsApp, programme, budget, et le site à déployer sur la
-VM Oracle.
+**Chez Max et Elise, à Aix-en-Provence.** Les invités ne paient rien et dorment
+sur place. La seule participation est la cagnotte cadeau.
 
-**Paramètres retenus** — surprise totale · Luberon · 80-120 €/pers · 12 personnes
-· samedi 3 (17h00) → dimanche 4 octobre 2026.
+> **Le dossier a beaucoup bougé.** Il a commencé en week-end surprise dans le
+> Luberon, est passé par le Beaujolais quand le train est devenu le critère, et
+> a fini chez vous. Les fichiers ci-dessous reflètent l'état final — les
+> versions intermédiaires sont dans l'historique Git.
 
 ---
 
@@ -12,44 +14,53 @@ VM Oracle.
 
 | Ordre | Fichier | Ce que tu y fais |
 |-------|---------|------------------|
-| 1 | `whatsapp/01_creation_groupe.md` | Créer le groupe. **10 minutes, et ça bloque tout le reste** |
-| 2 | `whatsapp/02_messages_prets.md` | Copier-coller le message d'accueil (A) |
-| 3 | `whatsapp/03_sondages.md` | Poster les sondages 1 et 2 |
-| 4 | `docs/locations-pistes.md` | Chercher le gîte, contacter 5-6 propriétaires |
-| 5 | `deploy/deploy-anniv.sh` | Déployer le site **et le kit de copie** sur la VM |
-| 6 | `site/kit.html` | Depuis ton téléphone : envoyer chaque message en 2 gestes |
-| 7 | `whatsapp/04_retroplanning.md` | Suivre le calendrier jusqu'au 3 octobre |
+| 1 | `whatsapp/05_post_aix.md` | Créer le groupe, coller le message d'annonce |
+| 2 | *(le lien du site)* | Le partager dans le groupe |
+| 3 | `docs/aix-10-octobre.md` | Appeler le traiteur, commander le gâteau |
+| 4 | — | Compter les couchages dès que les réponses arrivent |
 
-**Aujourd'hui (dim. 30 août), il reste 34 jours.** La seule chose vraiment
-urgente : le gîte. Tout le reste peut attendre une semaine sans dommage.
+**Deux appels suffisent** : un traiteur, un pâtissier. C'est tout ce que la
+simplification a laissé.
 
 ---
 
-## Le contenu
+## Le site
 
-```
-anniversaire-elise/
-├── whatsapp/
-│   ├── 01_creation_groupe.md   nom du groupe, réglages, pièges de la surprise
-│   ├── 02_messages_prets.md    7 messages à copier-coller (A → G)
-│   ├── 03_sondages.md          8 sondages, questions et options rédigées
-│   ├── 04_retroplanning.md     qui poste quoi, quel jour, jusqu'au 3 octobre
-│   ├── contacts.md             les 9 invités + les rôles à distribuer
-│   ├── build_contacts.py       normalise les numéros → contacts.vcf
-│   └── build_kit.py            génère site/kit.html depuis les 2 md ci-dessus
-├── docs/
-│   ├── programme.md            samedi/dimanche heure par heure, les 2 trajectoires
-│   ├── activites.md            catalogue vérifié : tarifs, horaires, téléphones
-│   ├── budget.md               1 432 € / 120 € par personne, détaillé
-│   └── locations-pistes.md     où chercher le gîte, critères, message type
-├── site/
-│   ├── index.html              le site des invités
-│   └── kit.html                page-outil : copier/envoyer sur WhatsApp (généré)
-└── deploy/
-    ├── deploy-anniv.sh         déploiement complet sur la VM Oracle
-    ├── Caddyfile               Caddy + basic auth sur 127.0.0.1:8791
-    └── rib.env.example         gabarit des coordonnées bancaires
-```
+`site/public.html` — une page, trois onglets, un parcours en entonnoir.
+
+- **Ma réponse** : trois étapes. 1. dispo, nom, effectif. 2. couchage, arrivée,
+  activités. 3. récapitulatif, cagnotte cadeau et envoi WhatsApp.
+- **Programme** : samedi et dimanche.
+- **Venir à Aix** : les deux gares, avec les temps de trajet réels.
+
+Qui répond « je ne peux pas » saute l'étape 2 : il n'a pas à dire où il dort.
+Le champ « d'où arrives-tu » n'apparaît que si on a coché le train.
+
+Tout est retenu dans le navigateur du visiteur. Publié en artifact : le lien
+marche immédiatement, sans compte ni mot de passe.
+
+## Le couchage est le seul chiffre qui compte
+
+Plus de gîte à réserver, donc plus de date butoir de réservation. Mais la
+maison a une capacité, elle. La page demande explicitement à chacun s'il lui
+faut un lit, et le serveur de vote (`vm/`) en fait un compteur direct :
+**« N lits à sortir »**.
+
+C'est le seul point sur lequel on ne peut pas improviser la veille.
+
+## L'IBAN
+
+Il est **sur la page publiée, mais pas dans le dépôt**. `site/public.html`
+garde les placeholders `__RIB_*__` ; l'injection ne se fait qu'à la publication,
+depuis `deploy/rib.env` qui est gitignoré. Ton IBAN ne part pas sur GitHub.
+
+Il est en revanche visible par toute personne ayant le lien — c'est voulu, la
+cagnotte est centralisée sur ton compte.
+
+## L'adresse
+
+Elle n'est **pas** sur le site, et la FAQ le dit explicitement : la page circule,
+votre adresse non. Elle vit dans le message épinglé du groupe WhatsApp.
 
 ---
 

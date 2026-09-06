@@ -31,26 +31,28 @@ ADMIN_TOKEN = os.environ.get("ANNIV_ADMIN_TOKEN", "")
 # Elles doivent rester alignées avec les `value=` de la page.
 PRESENCES = {
     "Je viens tout le week-end",
-    "Samedi seulement, je ne dors pas",
-    "Je vous rejoins dimanche",
+    "Samedi seulement",
+    "Je passe dimanche",
     "Je ne peux pas venir",
 }
-LIEUX = {
-    "Château Thivin (Odenas)",
-    "Gîte du Clair de Nety (Saint-Étienne-des-Oullières)",
-    "La Glycine (Vaux-en-Beaujolais)",
+COUCHAGES = {
+    "Oui, il me faut un couchage",
+    "J'apporte mon matelas ou mon duvet",
+    "Je me loge ailleurs",
+    "Je ne dors pas sur place",
 }
 TRANSPORTS = {
-    "En train, venez me chercher à la gare",
+    "En train, venez me chercher",
     "En voiture, je peux prendre des gens",
     "En voiture, seul",
+    "J'habite Aix, je viens à pied",
 }
 ACTIVITES = {
-    "Dégustation dans un domaine",
-    "Montée au mont Brouilly",
-    "Village d'Oingt et Pierres Dorées",
-    "Balade dans les vignes",
-    "Pétanque et apéro, rien d'autre",
+    "Randonnée Sainte-Victoire",
+    "Balade au barrage de Bimont",
+    "Vieil Aix et terrasses",
+    "Accrobranche Indian Forest",
+    "Apéro et pétanque à la maison",
 }
 VIENT = PRESENCES - {"Je ne peux pas venir"}
 
@@ -80,7 +82,7 @@ def init_db() -> None:
                 nom       TEXT NOT NULL,
                 presence  TEXT NOT NULL,
                 nb        INTEGER NOT NULL DEFAULT 1,
-                lieu      TEXT,
+                couchage  TEXT,
                 transport TEXT,
                 train     TEXT,
                 activites TEXT NOT NULL DEFAULT '[]',
@@ -135,9 +137,9 @@ def valider(payload: dict) -> tuple[dict | None, str]:
     if not 1 <= nb <= 10:
         return None, "Le nombre de personnes doit être entre 1 et 10."
 
-    lieu = str(payload.get("lieu", "")).strip()
-    if lieu and lieu not in LIEUX:
-        return None, "Lieu inconnu."
+    couchage = str(payload.get("couchage", "")).strip()
+    if couchage and couchage not in COUCHAGES:
+        return None, "Choix de couchage inconnu."
 
     transport = str(payload.get("transport", "")).strip()
     if transport and transport not in TRANSPORTS:
@@ -150,7 +152,7 @@ def valider(payload: dict) -> tuple[dict | None, str]:
         return None, "Liste d'activités invalide."
     activites = [a for a in brut if a in ACTIVITES]
 
-    return {"nom": nom, "presence": presence, "nb": nb, "lieu": lieu,
+    return {"nom": nom, "presence": presence, "nb": nb, "couchage": couchage,
             "transport": transport, "train": train, "activites": activites}, ""
 
 
@@ -158,15 +160,15 @@ def valider(payload: dict) -> tuple[dict | None, str]:
 def etat() -> dict:
     rows = db().execute("SELECT * FROM reponses ORDER BY maj").fetchall()
 
-    lieux = {x: 0 for x in LIEUX}
+    couchages = {c: 0 for c in COUCHAGES}
     transports = {t: 0 for t in TRANSPORTS}
     trains = []
     activites = {a: 0 for a in ACTIVITES}
     presents, personnes, prenoms = 0, 0, []
 
     for r in rows:
-        if r["lieu"] in lieux:
-            lieux[r["lieu"]] += 1
+        if r["couchage"] in couchages:
+            couchages[r["couchage"]] += 1
         if r["transport"] in transports:
             transports[r["transport"]] += 1
         # Les arrivées en train pilotent les navettes : prénom + horaire annoncé.
@@ -186,11 +188,14 @@ def etat() -> dict:
         "presents": presents,
         "personnes": personnes,
         "prenoms": prenoms,
-        "lieux": lieux,
+        "couchages": couchages,
         "transports": transports,
         "trains": trains,
         "activites": activites,
-        "lieu_tete": max(lieux, key=lieux.get) if any(lieux.values()) else "",
+        # Le seul chiffre sur lequel on ne peut pas improviser la veille.
+        "lits_a_sortir": sum(r["nb"] for r in rows
+                             if r["couchage"] == "Oui, il me faut un couchage"
+                             and r["presence"] in VIENT),
 
     }
 
@@ -222,13 +227,13 @@ def api_reponse():
     pid = request.cookies.get("anniv_id") or secrets.token_urlsafe(16)
     conn = db()
     conn.execute("""
-        INSERT INTO reponses (id, nom, presence, nb, lieu, transport, train, activites, maj)
+        INSERT INTO reponses (id, nom, presence, nb, couchage, transport, train, activites, maj)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             nom=excluded.nom, presence=excluded.presence, nb=excluded.nb,
-            lieu=excluded.lieu, transport=excluded.transport, train=excluded.train,
+            couchage=excluded.couchage, transport=excluded.transport, train=excluded.train,
             activites=excluded.activites, maj=excluded.maj
-    """, (pid, data["nom"], data["presence"], data["nb"], data["lieu"],
+    """, (pid, data["nom"], data["presence"], data["nb"], data["couchage"],
           data["transport"], data["train"],
           json.dumps(data["activites"], ensure_ascii=False), time.time()))
     conn.commit()
@@ -254,7 +259,7 @@ def admin():
 
         lignes = ["nom,presence,personnes,lieu,transport,train,activites,maj"]
         for r in rows:
-            champs = [r["nom"], r["presence"], str(r["nb"]), r["lieu"] or "",
+            champs = [r["nom"], r["presence"], str(r["nb"]), r["couchage"] or "",
                       r["transport"] or "", r["train"] or "",
                       " | ".join(json.loads(r["activites"])),
                       time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"]))]
@@ -266,7 +271,7 @@ def admin():
 
     return jsonify(etat=etat(), reponses=[{
         "nom": r["nom"], "presence": r["presence"], "nb": r["nb"],
-        "lieu": r["lieu"], "transport": r["transport"], "train": r["train"],
+        "couchage": r["couchage"], "transport": r["transport"], "train": r["train"],
         "activites": json.loads(r["activites"]),
         "maj": time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"])),
     } for r in rows])

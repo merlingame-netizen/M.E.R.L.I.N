@@ -12,3 +12,7 @@ deploy/rib.env
 # Base des reponses au vote : donnees personnelles des invites.
 vm/reponses.db
 vm/__pycache__/
+
+# Template genere par vm/build_template.py : contient l'IBAN injecte depuis
+# rib.env. Il se regenere au deploiement, il n'a rien a faire dans le depot.
+vm/templates/index.html
