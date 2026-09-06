@@ -51,6 +51,16 @@ def hors_dialogue(t):
 
 def lire(q, nom):
     B = q["beats"]
+    # UN JOURNAL DE PARTIE SE LIT AUSSI. La sonde et MerlinJournal ecrivent `narration`/`resolution`
+    # et `index` la ou une quete ecrit `scene`/`issue` et `n` : la grille attendait les seconds et
+    # n'a jamais lu une partie jouee (crible du 06/09). Meme texte, memes reperes.
+    for i, b in enumerate(B):
+        if "scene" not in b and "narration" in b:
+            b["scene"] = b.get("narration", "")
+        if "issue" not in b and "resolution" in b:
+            b["issue"] = b.get("resolution", "")
+        if "n" not in b:
+            b["n"] = b.get("index", i + 1)
     txt = " ".join(str(b.get("scene", "")) + " " + str(b.get("issue", "")) for b in B)
     nu = hors_dialogue(txt)
     tu, vs = len(TU.findall(nu)), len(VOUS.findall(nu))
