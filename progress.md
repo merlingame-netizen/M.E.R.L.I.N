@@ -3778,3 +3778,16 @@ L'onglet Chronique du Studio est vérifié sur la VM : 11 parties listées, dont
 sonde ET par le jeu, côte à côte. Quatre des cinq chroniques écrites par le jeu sont des
 lancements sans partie (0 beat, 191 octets), dont un à 03:00 par un agent de nuit : la
 conséquence de « tout garder », maintenant visible.
+
+## 2026-09-06 — Le smoke de la VM était rouge à cause d'une épreuve qui lisait la veille
+
+Deux nuits de suite, `test_ecran_chroniques` échouait sur la VM (1 raté) tout en passant ici.
+La vérification « sans aucune chronique, l'écran explique » supposait un index vide après
+nettoyage ; sur la VM, huit vraies traversées y restaient. Pire : `test_journal` et
+`test_ecran_chroniques` écrivaient leurs chroniques fabriquées dans le vrai dossier, à 03:00,
+à côté des parties de la nuit.
+
+Le dossier de `MerlinJournal` devient une variable statique (`dossier`, défaut inchangé) avec
+`deplacer()` réservé aux épreuves ; chacune pointe sur `user://chroniques_epreuve_<pid>` et
+l'efface en entier à la fin, avec un garde-fou qui refuse d'effacer le dossier du jeu. Les
+quatre épreuves passent (0 raté) sur une machine où un vrai `index.json` existe.

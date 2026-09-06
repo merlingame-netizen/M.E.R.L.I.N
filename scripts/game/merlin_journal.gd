@@ -33,8 +33,28 @@ extends RefCounted
 ## variable d'environnement de harnais : un smoke lancé à la main n'en porte aucune, et c'est lui
 ## qui avait écrit celle de 03:00. Les parties témoins, elles, jouent — elles restent.
 
-const DOSSIER: String = "user://chroniques"
-const INDEX: String = "user://chroniques/index.json"
+const DOSSIER_DU_JEU: String = "user://chroniques"
+
+## LE DOSSIER EST UNE VARIABLE, PAS UNE CONSTANTE — pour les épreuves, et pour rien d'autre.
+## Le smoke de 3 h écrivait ses chroniques fabriquées dans le VRAI dossier, à côté des parties de
+## la nuit, puis en retirait ce qu'il croyait avoir créé. Sur la VM, où huit vraies traversées
+## existaient, l'écran n'était donc jamais vide et l'épreuve « sans aucune chronique » a échoué
+## deux nuits de suite alors qu'elle passait ici, sur un dossier vierge. Un test qui dépend de ce
+## que la machine a joué la veille ne teste pas le jeu. Les épreuves appellent `deplacer()` vers
+## un dossier jetable, qu'elles effacent en entier à la fin.
+static var dossier: String = DOSSIER_DU_JEU
+
+
+static func index_chemin() -> String:
+	return dossier + "/index.json"
+
+
+## Déplace toutes les écritures et lectures vers un autre dossier. Réservé aux épreuves : le jeu
+## n'appelle jamais ceci, et la traversée en cours est abandonnée pour ne pas écrire à cheval.
+static func deplacer(vers: String) -> void:
+	dossier = vers
+	_courante = {}
+	_id = ""
 const VERSION: int = 1
 
 # La traversée en cours. Statique : elle doit survivre aux changements de scène, et il n'y a
@@ -125,7 +145,7 @@ static func clore(fin_type: String, integrite: int, corruption: int, resume: Str
 
 ## L'index, la plus récente d'abord. C'est tout ce que l'écran de liste a besoin de lire.
 static func liste() -> Array:
-	var f: FileAccess = FileAccess.open(INDEX, FileAccess.READ)
+	var f: FileAccess = FileAccess.open(index_chemin(), FileAccess.READ)
 	if f == null:
 		return []
 	var brut: Variant = JSON.parse_string(f.get_as_text())
@@ -144,7 +164,7 @@ static func liste() -> Array:
 static func lire(id: String) -> Dictionary:
 	if id == "" or id.contains("/") or id.contains(".."):
 		return {}   # un identifiant vient de l'index, jamais d'une saisie : on le vérifie quand même
-	var f: FileAccess = FileAccess.open("%s/%s.json" % [DOSSIER, id], FileAccess.READ)
+	var f: FileAccess = FileAccess.open("%s/%s.json" % [dossier, id], FileAccess.READ)
 	if f == null:
 		return {}
 	var brut: Variant = JSON.parse_string(f.get_as_text())
@@ -168,9 +188,9 @@ static func _nouvel_id() -> String:
 
 
 static func _dossier_pret() -> bool:
-	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(DOSSIER)):
+	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(dossier)):
 		return true
-	return DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(DOSSIER)) == OK
+	return DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dossier)) == OK
 
 
 ## Une traversée existe à partir du premier geste posé — pas du premier beat affiché, que le jeu
@@ -187,7 +207,7 @@ static func _a_joue() -> bool:
 static func _ecrire() -> void:
 	if not _a_joue() or not _dossier_pret():
 		return
-	var f: FileAccess = FileAccess.open("%s/%s.json" % [DOSSIER, _id], FileAccess.WRITE)
+	var f: FileAccess = FileAccess.open("%s/%s.json" % [dossier, _id], FileAccess.WRITE)
 	if f == null:
 		push_warning("[MerlinJournal] chronique non écrite : %s" % _id)
 		return
@@ -208,7 +228,7 @@ static func _indexer() -> void:
 	if not _dossier_pret():
 		return
 	var lignes: Array = []
-	var f: FileAccess = FileAccess.open(INDEX, FileAccess.READ)
+	var f: FileAccess = FileAccess.open(index_chemin(), FileAccess.READ)
 	if f != null:
 		var brut: Variant = JSON.parse_string(f.get_as_text())
 		f.close()
@@ -236,7 +256,7 @@ static func _indexer() -> void:
 			break
 	if not trouve:
 		lignes.append(ligne)
-	var g: FileAccess = FileAccess.open(INDEX, FileAccess.WRITE)
+	var g: FileAccess = FileAccess.open(index_chemin(), FileAccess.WRITE)
 	if g == null:
 		push_warning("[MerlinJournal] index non écrit")
 		return

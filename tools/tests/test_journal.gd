@@ -3,9 +3,10 @@ extends SceneTree
 ##
 ##     godot --headless --path . --script res://tools/tests/test_journal.gd
 ##
-## Elle ÉCRIT VRAIMENT sur le disque, dans `user://chroniques`, puis nettoie ce qu'elle a créé —
-## un test de stockage qui n'écrit pas ne prouve rien du stockage. Elle laisse intactes les
-## chroniques qui existaient avant : elle ne supprime que les identifiants qu'elle a fabriqués.
+## Elle ÉCRIT VRAIMENT sur le disque — un test de stockage qui n'écrit pas ne prouve rien du
+## stockage — mais dans un DOSSIER JETABLE, jamais dans `user://chroniques` : le smoke de 3 h
+## posait ses chroniques fabriquées à côté des parties de la nuit, et l'index de départ n'était
+## jamais le même d'une machine à l'autre. Le dossier est effacé en entier à la fin.
 ##
 ## CE QU'ELLE VÉRIFIE, et pourquoi chacun compte :
 ##   ÉCRITURE AU FIL DE L'EAU  une partie interrompue doit rester lisible jusqu'au dernier beat.
@@ -29,6 +30,7 @@ func _verifier(nom: String, condition: bool, detail: String = "") -> void:
 
 func _init() -> void:
 	print("=== ÉPREUVE DU JOURNAL DES CHRONIQUES ===\n")
+	MerlinJournal.deplacer("user://chroniques_epreuve_%d" % OS.get_process_id())
 	var avant: int = MerlinJournal.liste().size()
 	print("chroniques déjà présentes : %d\n" % avant)
 
@@ -153,29 +155,18 @@ func _init() -> void:
 	quit(1 if _rates > 0 else 0)
 
 
-## Retire UNIQUEMENT ce que l'épreuve a créé. Effacer le dossier entier détruirait les chroniques
-## de vraies parties — un test qui abîme les données qu'il vérifie n'a pas sa place dans un dépôt.
+## Efface le dossier jetable EN ENTIER — et refuse de toucher au dossier du jeu, quoi qu'il
+## arrive : un test qui abîme les données qu'il vérifie n'a pas sa place dans un dépôt.
 func _nettoyer(avant: int) -> void:
-	var d: DirAccess = DirAccess.open(MerlinJournal.DOSSIER)
+	if MerlinJournal.dossier == MerlinJournal.DOSSIER_DU_JEU:
+		print("  ATTENTION : l'épreuve pointe sur le vrai dossier, rien n'est effacé")
+		return
+	var d: DirAccess = DirAccess.open(MerlinJournal.dossier)
 	if d == null:
 		return
-	for id in _crees:
-		if id != "":
-			d.remove("%s.json" % id)
-	var lignes: Array = []
-	var f: FileAccess = FileAccess.open(MerlinJournal.INDEX, FileAccess.READ)
-	if f != null:
-		var brut: Variant = JSON.parse_string(f.get_as_text())
-		f.close()
-		if typeof(brut) == TYPE_ARRAY:
-			for l in (brut as Array):
-				if not _crees.has(str((l as Dictionary).get("id", ""))):
-					lignes.append(l)
-	var g: FileAccess = FileAccess.open(MerlinJournal.INDEX, FileAccess.WRITE)
-	if g != null:
-		g.store_string(JSON.stringify(lignes, " "))
-		g.close()
-	print("\nnettoyage : %d chronique(s) de test retirée(s), index remis à %d"
-		% [_crees.size(), MerlinJournal.liste().size()])
-	if MerlinJournal.liste().size() != avant:
-		print("  ATTENTION : l'index ne revient pas à son compte de départ (%d attendu)" % avant)
+	for nom in d.get_files():
+		d.remove(nom)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(MerlinJournal.dossier))
+	print("\nnettoyage : dossier jetable effacé (%d chronique(s) de test), index de départ %d"
+		% [_crees.size(), avant])
+

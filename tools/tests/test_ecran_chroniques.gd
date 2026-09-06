@@ -8,8 +8,10 @@ extends SceneTree
 ## un journal parfait et illisible — et le parse check ne le verrait pas, puisque la faute serait
 ## dans un `Callable` déclenché par un bouton.
 ##
-## Elle fabrique deux chroniques, monte le menu, ouvre l'écran, entre dans une chronique, revient
-## à la liste, puis nettoie exactement ce qu'elle a créé.
+## Elle fabrique deux chroniques DANS UN DOSSIER JETABLE (jamais dans user://chroniques : sur la
+## VM, huit vraies traversées y rendaient l'écran toujours plein, et l'épreuve « sans aucune
+## chronique » échouait deux nuits de suite), monte le menu, ouvre l'écran, entre dans une
+## chronique, revient à la liste, puis efface le dossier jetable.
 
 var _rates: int = 0
 var _crees: Array = []
@@ -29,6 +31,7 @@ func _init() -> void:
 
 func _go() -> void:
 	print("=== ÉPREUVE DE L'ÉCRAN DES CHRONIQUES ===\n")
+	MerlinJournal.deplacer("user://chroniques_epreuve_%d" % OS.get_process_id())
 	var avant: int = MerlinJournal.liste().size()
 
 	MerlinJournal.ouvrir("La fin du rite", "foret")
@@ -142,25 +145,16 @@ func _texte_contient(n: Node, quoi: String) -> bool:
 
 ## Retire UNIQUEMENT les chroniques fabriquées ici — les vraies parties ne sont pas des déchets
 ## de test. Sûr à appeler deux fois.
+## Efface le dossier jetable EN ENTIER — et refuse de toucher au dossier du jeu, quoi qu'il
+## arrive : un test qui abîme les données qu'il vérifie n'a pas sa place dans un dépôt.
 func _nettoyer() -> void:
-	if _crees.is_empty():
+	if MerlinJournal.dossier == MerlinJournal.DOSSIER_DU_JEU:
+		print("  ATTENTION : l'épreuve pointe sur le vrai dossier, rien n'est effacé")
 		return
-	var d: DirAccess = DirAccess.open(MerlinJournal.DOSSIER)
-	if d != null:
-		for id in _crees:
-			if id != "":
-				d.remove("%s.json" % id)
-	var lignes: Array = []
-	var f: FileAccess = FileAccess.open(MerlinJournal.INDEX, FileAccess.READ)
-	if f != null:
-		var brut: Variant = JSON.parse_string(f.get_as_text())
-		f.close()
-		if typeof(brut) == TYPE_ARRAY:
-			for l in (brut as Array):
-				if not _crees.has(str((l as Dictionary).get("id", ""))):
-					lignes.append(l)
-	var g: FileAccess = FileAccess.open(MerlinJournal.INDEX, FileAccess.WRITE)
-	if g != null:
-		g.store_string(JSON.stringify(lignes, " "))
-		g.close()
-	_crees.clear()
+	var d: DirAccess = DirAccess.open(MerlinJournal.dossier)
+	if d == null:
+		return
+	for nom in d.get_files():
+		d.remove(nom)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(MerlinJournal.dossier))
+
