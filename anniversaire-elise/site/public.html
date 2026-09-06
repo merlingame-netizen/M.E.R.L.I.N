@@ -85,9 +85,9 @@ p{margin:0 0 .85em}
   flex:1;background:none;border:none;border-bottom:2px solid transparent;
   font-family:var(--texte);font-weight:700;font-size:.71rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--encre-pale);padding:1.05rem .2rem;cursor:pointer;
-  min-height:52px;transition:color .2s,border-color .2s;white-space:nowrap;
+  min-height:52px;transition:color .2s,border-color .2s;line-height:1.35;
 }
-@media (max-width:420px){.rubans button{font-size:.63rem;letter-spacing:.04em;padding-inline:.1rem}}
+@media (max-width:520px){.rubans button{font-size:.62rem;letter-spacing:.03em;padding:.9rem .18rem}}
 .rubans button[aria-selected="true"]{color:var(--encre);border-bottom-color:var(--terre)}
 
 main{padding-block:2.2rem 3.5rem}
@@ -367,7 +367,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 <nav class="rubans" role="tablist"><div>
   <button role="tab" id="o-rep" aria-selected="true" aria-controls="v-rep">Répondre</button>
   <button role="tab" id="o-we" aria-selected="false" aria-controls="v-we">Le week-end</button>
-  <button role="tab" id="o-prat" aria-selected="false" aria-controls="v-prat">Pratique</button>
+  <button role="tab" id="o-prat" aria-selected="false" aria-controls="v-prat">Comment venir + cagnotte</button>
 </div></nav>
 
 <!-- ═══ RÉPONDRE ═══ -->
@@ -490,7 +490,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
     <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-cadeau"></use></svg> Le jour J, on ne te demandera rien&nbsp;: si tu veux
       participer, c'est <button type="button" class="lien" id="vers-cag">la cagnotte, dans
-      l'onglet Pratique</button>.</p>
+      l'onglet Comment venir</button>.</p>
 
     <div class="barre">
       <button class="bt retour" id="r3">Retour</button>

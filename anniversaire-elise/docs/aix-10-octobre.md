@@ -163,7 +163,7 @@ Depuis la refonte, la page ne pose plus tout au même endroit :
 | **Onglet Répondre, étape 2** | Couchage, lieu et heure d'arrivée, jour et heure de départ |
 | **Onglet Le week-end** | Tous les votes — déjeuner de midi, escape game, soirée, activités du dimanche, idée libre — chacun dans une « urne » posée sous la photo de ce qu'il décide |
 | **Onglet Répondre, étape 3** | Le récapitulatif, puis l'envoi WhatsApp |
-| **Onglet Pratique** | Les gares, puis la cagnotte et son IBAN |
+| **Onglet Comment venir + cagnotte** | Les gares, puis la cagnotte et son IBAN |
 
 On vote là où on voit la chose : c'est plus juste qu'une longue liste de
 cases hors contexte, et ça rend l'étape 2 respirable.

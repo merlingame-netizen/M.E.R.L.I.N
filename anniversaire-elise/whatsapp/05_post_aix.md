@@ -27,7 +27,7 @@ Anniv Elise — 10/11 oct à Aix
 Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
 Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
 Le jour J on ne demande rien : cagnotte ou paquet, comme vous préférez,
-et seulement si vous voulez. Onglet « Pratique » sur la page.
+et seulement si vous voulez. Onglet « Comment venir + cagnotte » sur la page.
 
 Répondez ici : VOTRE-URL-ICI
 Deadline : samedi 19 septembre.
@@ -53,7 +53,7 @@ Ni pour les repas, ni pour l'escape game, ni pour rien : tout est réglé d'avan
 Si vous voulez participer, c'est maintenant et à un seul endroit : la cagnotte.
 Elle sert aux cadeaux et aux activités du week-end.
 Sinon, apportez votre propre cadeau. Ou les deux. Ou ni l'un ni l'autre.
-Ouverte jusqu'au 8 octobre — onglet « Pratique » sur la page, prénom en
+Ouverte jusqu'au 8 octobre — onglet « Comment venir + cagnotte », prénom en
 référence du virement.
 
 🤫 Et n'écrivez rien de précis sur les cadeaux ici : la page circule.
