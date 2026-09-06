@@ -415,6 +415,18 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
         <span><b>Je ne sais pas encore</b><em>Ça dépend de mon train</em></span></label>
     </div>
 
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-cadenas"></use></svg> L'escape game de 17h</p>
+    <p class="glose">C'est nous qui l'offrons, comme les repas. On a juste besoin du
+      nombre exact&nbsp;: quatre salles se réservent à l'avance.</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="escape" value="J'en suis">
+        <span><b>J'en suis</b><em>Réserve-moi une place</em></span></label>
+      <label class="opt"><input type="radio" name="escape" value="Je passe mon tour">
+        <span><b>Je passe mon tour</b><em>Je vous retrouve après</em></span></label>
+      <label class="opt"><input type="radio" name="escape" value="Je ne sais pas encore">
+        <span><b>Je ne sais pas encore</b><em>Je confirmerai avant le 19 septembre</em></span></label>
+    </div>
+
     <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-verre"></use></svg> La soirée de samedi</p>
     <p class="glose">Après l'escape game, on reste sur place ou on rentre. La majorité tranche.</p>
     <div class="choix">
@@ -429,8 +441,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg> Ce qui te tente <span id="cpt-act">0 choisi</span></p>
     <p class="glose">Coche ce qui te tente. Les choix les plus demandés seront retenus.</p>
     <div class="choix">
-      <label class="opt"><input type="checkbox" name="act" value="Escape game à 17h">
-        <span><span class="note">samedi 17h</span><b>L'escape game</b><em>Quatre salles en parallèle chez Move To Aixit, aux Milles. À réserver, donc dis-le maintenant</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Mölkky et pétanque">
         <span><span class="note">samedi 14h30</span><b>Mölkky et pétanque</b><em>Au jardin, en équipes de trois</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Soirée jeux de société">
@@ -468,6 +478,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <dt id="l-lit">Couchage</dt><dd class="vide" id="f-lit">—</dd>
       <dt id="l-venue">Arrivée</dt><dd class="vide" id="f-venue">—</dd>
       <dt id="l-midi">Samedi midi</dt><dd class="vide" id="f-midi">—</dd>
+      <dt id="l-escape">Escape game</dt><dd class="vide" id="f-escape">—</dd>
       <dt id="l-soiree">Samedi soir</dt><dd class="vide" id="f-soiree">—</dd>
       <dt id="l-act">Envies</dt><dd class="vide" id="f-act">—</dd>
     </dl></div>
@@ -511,7 +522,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-cadenas"></use></svg><span>17h00</span>L'escape game</p>
   <figure class="vue large">
     <img src="photos/escape-game.jpg" alt="Une salle d'escape game : un joueur examine une carte éclairée sur un mur de bois" width="640" height="427">
-    <figcaption><b>Move To Aixit, quatre salles en parallèle</b><small>Aux Milles, à vingt minutes de la maison. On se répartit en équipes de quatre ou cinq&nbsp;: Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN. Retour vers 18h30</small></figcaption>
+    <figcaption><b>Move To Aixit, quatre salles en parallèle</b><small>Aux Milles, à vingt minutes de la maison. On se répartit en équipes de quatre ou cinq&nbsp;: Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN. Retour vers 18h30. <strong>C'est nous qui l'offrons, comme les repas</strong> — il nous faut juste le nombre à réserver</small></figcaption>
   </figure>
 
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-verre"></use></svg><span>19h00</span>La suite, au vote</p>
@@ -615,9 +626,12 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
 <div id="v-cag" role="tabpanel" aria-labelledby="o-cag" class="cache"><main><div class="col">
   <p class="oeil">Le cadeau</p>
-  <h2>Une cagnotte, un seul cadeau</h2>
-  <p class="chapo">Plutôt que dix paquets, on met en commun. La cagnotte est centralisée
-    sur notre compte et reste ouverte jusqu'au <strong>jeudi 8 octobre</strong>.</p>
+  <h2>La cagnotte, ou votre cadeau</h2>
+  <p class="chapo">C'est la seule chose qu'on vous laisse. Le reste du week-end — les repas,
+    l'escape game, le couchage — c'est nous. Occupez-vous de la cagnotte, ou apportez votre
+    propre cadeau, ou les deux&nbsp;: à vous de voir.</p>
+  <p class="chapo">La cagnotte est centralisée sur notre compte et reste ouverte jusqu'au
+    <strong>jeudi 8 octobre</strong>.</p>
 
   <div class="cadeau">
     <h3><svg class="picto" aria-hidden="true"><use href="#i-cadeau"></use></svg> Le virement</h3>
@@ -635,9 +649,10 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
   <h2 style="margin-top:2.4rem">Questions</h2>
   <details><summary>Combien&nbsp;?</summary><p>Ce que tu veux. On ne tiendra pas de compte, et personne ne saura ce qu'ont mis les autres.</p></details>
-  <details><summary>Je peux ne rien mettre&nbsp;?</summary><p>Oui. Ta présence est ce qui compte, et c'est déjà un train à payer pour beaucoup d'entre vous.</p></details>
-  <details><summary>Je préfère offrir quelque chose moi-même&nbsp;?</summary><p>Fais-le. La cagnotte est une facilité, pas une obligation&nbsp;: elle existe pour ceux qui n'ont ni le temps ni l'idée.</p></details>
-  <details><summary>C'est pour offrir quoi&nbsp;?</summary><p>Un seul cadeau, choisi par nous, dans ce qu'elle repousse depuis un moment. Elle le découvrira samedi soir, après le gâteau.</p></details>
+  <details><summary>Je peux ne rien mettre&nbsp;?</summary><p>Oui. Ta présence est ce qui compte, et c'est déjà un train pour beaucoup d'entre vous.</p></details>
+  <details><summary>Je préfère apporter mon propre cadeau&nbsp;?</summary><p>Fais-le, c'est même mieux si tu as l'idée. La cagnotte existe pour ceux qui n'ont ni le temps ni l'inspiration — pas pour remplacer un cadeau choisi.</p></details>
+  <details><summary>Les deux&nbsp;?</summary><p>Les deux marchent aussi. Personne ne tient de comptes.</p></details>
+  <details><summary>La cagnotte, c'est pour offrir quoi&nbsp;?</summary><p>Un seul cadeau commun, choisi par nous, dans ce qu'elle repousse depuis un moment. Elle le découvrira samedi soir, après le gâteau.</p></details>
   <details><summary>Le virement n'est pas passé, ou j'ai un doute&nbsp;?</summary><p>Écris-le dans le groupe WhatsApp&nbsp;: on vérifie et on te répond.</p></details>
 </div></main></div>
 
@@ -696,7 +711,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   function etat(){
     return { nom: $("nom").value.trim(), nb: $("nb").value.trim(), rsvp: une("rsvp"),
              lit: une("lit"), venue: une("venue"), train: $("train").value.trim(),
-             midi: une("midi"), soiree: une("soiree"),
+             midi: une("midi"), escape: une("escape"), soiree: une("soiree"),
              act: plusieurs("act"), idee: $("idee").value.trim() };
   }
   function present(){ var r = etat().rsvp; return !!r && r !== "Je ne peux pas venir"; }
@@ -720,6 +735,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     if (s.venue) L.push("Arrivée : " + s.venue);
     if (s.train) L.push("Train : " + s.train);
     if (s.midi) L.push("Déjeuner de samedi : " + s.midi);
+    if (s.escape) L.push("Escape game de 17h : " + s.escape);
     if (s.soiree) L.push("Soirée de samedi : " + s.soiree);
     if (s.act.length) L.push("Envies : " + s.act.join(", "));
     if (s.idee) L.push("Autre idée : " + s.idee);
@@ -739,9 +755,10 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     pose("f-lit", s.lit);
     pose("f-venue", s.venue + (s.train ? " — " + s.train : ""));
     pose("f-midi", s.midi);
+    pose("f-escape", s.escape);
     pose("f-soiree", s.soiree);
     pose("f-act", s.act.concat(s.idee ? ["« " + s.idee + " »"] : []).join(" · "));
-    ["lit","venue","midi","soiree","act"].forEach(function(k){
+    ["lit","venue","midi","escape","soiree","act"].forEach(function(k){
       $("l-" + k).classList.toggle("cache", !present());
       $("f-" + k).classList.toggle("cache", !present());
     });
@@ -790,7 +807,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   if (s.nb) $("nb").value = s.nb;
   if (s.train) $("train").value = s.train;
   if (s.idee) $("idee").value = s.idee;
-  ["rsvp","lit","venue","midi","soiree"].forEach(function(n){
+  ["rsvp","lit","venue","midi","escape","soiree"].forEach(function(n){
     if (!s[n]) return;
     var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
     if (e) e.checked = true;

@@ -26,7 +26,8 @@ Anniv Elise — 10/11 oct à Aix
 ```
 Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
 Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
-Une cagnotte est ouverte pour son cadeau, onglet « Cagnotte » sur la page.
+Le cadeau est la seule chose qu'on vous laisse : cagnotte ou paquet, comme
+vous préférez. Onglet « Cagnotte » sur la page.
 
 Répondez ici : VOTRE-URL-ICI
 Deadline : samedi 19 septembre.
@@ -47,15 +48,18 @@ Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
 🏡 Chez nous, à Aix-en-Provence
 🛏️ Lits, canapés et matelas d'appoint — dites-nous s'il vous en faut un
 
-🎁 Une cagnotte est ouverte pour son cadeau commun, jusqu'au 8 octobre.
-Onglet « Cagnotte » sur la page, mettez votre prénom en référence du virement.
+🎁 LA SEULE CHOSE QU'ON VOUS LAISSE, C'EST LE CADEAU.
+Occupez-vous de la cagnotte, ou apportez le vôtre, ou les deux — à vous de voir.
+La cagnotte est ouverte jusqu'au 8 octobre : onglet « Cagnotte » sur la page,
+prénom en référence du virement.
 
 👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
 
 Trois choses, dans l'ordre :
 1️⃣ Vous dites si vous êtes dispo
-2️⃣ Vous dites s'il vous faut un couchage, comment vous arrivez,
-    si vous êtes là pour le déjeuner et ce que vous votez pour le soir
+2️⃣ Vous dites s'il vous faut un couchage, comment vous arrivez, si vous
+    êtes là pour le déjeuner, si vous faites l'escape game, et ce que
+    vous votez pour le soir
 3️⃣ Vous relisez, et vous m'envoyez tout d'un tap
 
 🎲 LE PROGRAMME, EN PHOTOS SUR LA PAGE (onglet « Le week-end ») :
@@ -64,7 +68,8 @@ SAMEDI
 12h — déjeuner, pour ceux qui sont déjà là
 14h30 — mölkky et pétanque au jardin
 17h — ESCAPE GAME chez Move To Aixit, quatre salles en parallèle.
-       Ça se réserve : dites-nous vite si vous en êtes.
+       C'est nous qui l'offrons, comme les repas. Ça se réserve à l'avance :
+       il y a une question dédiée sur la page, répondez-y.
 19h — AU VOTE : soit on reste sur place, au bar à jeux (300 jeux,
        planches et tapas jusqu'à 22h), soit on rentre pour l'apéro dînatoire.
 22h — le gâteau et les trente bougies

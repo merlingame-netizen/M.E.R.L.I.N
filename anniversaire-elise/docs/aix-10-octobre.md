@@ -97,6 +97,10 @@ absorbe le groupe d'un coup. À vingt minutes de la maison en voiture, donc
 il faut organiser les véhicules.
 
 > **C'est la seule dépense réelle du week-end, et elle est pour vous.**
+> La page l'annonce désormais franchement — « c'est nous qui l'offrons, comme
+> les repas » — parce que sans ça, personne n'ose voter oui à une activité
+> payante. La contrepartie : le vote devient un engagement, et le nombre qui
+> en sort est celui que tu réserves.
 > Comptez de l'ordre de 25 à 32 € par personne selon la salle et l'horaire,
 > soit **350 à 480 € pour quinze**. La page n'affiche aucun prix, c'est
 > délibéré : les invités ne paient rien. **À réserver dès que le vote est
