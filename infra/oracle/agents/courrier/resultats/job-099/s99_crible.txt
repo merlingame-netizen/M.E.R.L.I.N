@@ -1,0 +1,85 @@
+== MACHINE ==
+date=2026-09-06T13:24Z coeurs=4 charge=0.10 0.09 0.09 up 2 weeks, 2 days, 10 minutes
+MemTotal: 22945 Mo  MemAvailable: 15223 Mo  SwapFree: 4533 Mo  
+disque : 42G sur 83G (51%)
+modeles ollama charges : gemma4:e4b-it-qat
+
+== L'ATELIER DE NUIT : ce qui est garde ==
+partie 2026-09-05 : 14 beats · fin mort · 6 au banc · 10233 signes
+     CIBLE1 secours: MANQUEE (5 beat(s) au banc : 5,8,11,12,13)
+     CIBLE2 reussite: MANQUEE (8/13 ; b3=partiel(diff2,de4,covNone) b4=partiel(diff2,de4,covNone) b8=partiel(diff2,de5,covNone) b12=partiel(diff2,de4,covNone) b13=partiel(diff2,de4,covNone))
+     CIBLE3 attente: MANQUEE (6 beats > 20s : b2=71s b6=34s b7=42s b9=61s b11=98s b12=103s ; moy 39s)
+partie 2026-09-06 : 22 beats · fin accomplissement · 8 au banc · 16217 signes
+     CIBLE1 secours: MANQUEE (8 beat(s) au banc : 12,13,16,17,18,19,20,21)
+     CIBLE2 reussite: MANQUEE (16/22 ; b3=partiel(diff2,de8,covNone) b4=partiel(diff2,de6,covNone) b8=partiel(diff2,de4,covNone) b9=partiel(diff2,de5,covNone) b20=partiel(diff2,de7,covNone) b22=partiel(diff3,de3,covNone))
+     CIBLE3 attente: MANQUEE (7 beats > 20s : b2=68s b5=55s b6=26s b9=32s b12=125s b13=128s b14=36s ; moy 30s)
+  AUCUNE quete de nuit gardee
+
+== LE SMOKE ET SES EPREUVES (dernier rapport) ==
+  2026-09-06T03:00:16Z · commit bc108016 · scenes 7 (0 en erreur) · epreuves : test_quete=passee(0 rates), test_journal=passee(0 rates), test_ecran_chroniques=echouee(1 rates), test_economie=passee(0 rates) · echouees=1
+
+== CHAQUE AGENT : derniere course, duree, rc, resume ==
+  courrier                              0s rc=None 
+
+== REVEILS PAR AGENT DEPUIS 24 H (apres le regime) et ECHECS ==
+   1702 [courrier] rc=0
+    722 [game-watchdog] rc=0
+    722 [game-idle] rc=0
+    341 [tunnel-watch] rc=0
+    245 [health] rc=0
+    227 [tools-autosync] rc=0
+    227 [ollama-idle] rc=0
+    227 [game-autosync] rc=0
+    129 [brasero] rc=0
+    123 [relance] rc=0
+    122 [sequence] rc=0
+    114 [controle] rc=0
+    113 [gd-content-gap] rc=0
+    113 [coder-local] rc=0
+     57 [disk-guard] rc=0
+     56 [parole] rc=0
+      5 [gd-balance] rc=0
+      5 [billing] rc=0
+      3 [parcours] rc=0
+      3 [mesures] rc=0
+      3 [journal] rc=0
+      3 [design-council] rc=0
+      3 [daily-report] rc=0
+      2 [smoke-scenes] rc=1
+      2 [quete-nuit] rc=0
+      2 [playtest-bot] rc=0
+      2 [partie-nuit] rc=0
+      2 [native-bench] rc=0
+      2 [gd-run] rc=0
+-- rc non nuls (24 h) --
+[smoke-scenes] rc=1 7 scènes testées · 0 en erreur · épreuves échouées : 1
+[smoke-scenes] rc=1 7 scènes testées · 0 en erreur · épreuves échouées : 1
+
+== SURCHARGES HORS DEPOT ==
+{
+ "playtest-bot": {
+  "schedule": "20 2 * * *",
+  "enabled": true
+ },
+ "gd-content-gap": {
+  "schedule": "*/30 * * * *",
+  "enabled": true
+ }
+}
+== LE CORPUS ET L'ATELIER DE CONTENU ==
+  auto_corpus.jsonl : 2226 exemples · dernier 08-25T04:26
+  curated_corpus.jsonl : 908 exemples · dernier 09-06T04:00
+  propositions gd-content-gap (48 h) : 16
+  propositions en attente (toutes) : 0 · acceptees : 919 · refusees : 92
+
+== LE STUDIO ==
+  healthz : 200
+  /api/chroniques : 11 parties · nuit 2026-09-06, jeu 06/09 04:10, nuit 2026-09-05, jeu 05/09 04:10, p93, jeu 02/09 16:12, p74, p73
+  tunnel : https://journalist-requirement-sixth-swimming.trycloudflare.com
+
+== LE JEU ==
+  desire=stopped harness= godot=0
+0
+  chroniques du jeu : 8 fichiers
+  jeu : bc108016 fix(economie): l'argent ne vient que d'un evenement qui en donne
+  outillage : 48c2d999 feat(courrier): job-099 — le crible de la VM, deux nuits apres le regime
