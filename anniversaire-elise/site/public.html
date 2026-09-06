@@ -236,6 +236,14 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
   padding-top:.85rem;margin:0}
 .verdict.vide{color:var(--encre-pale);font-weight:400}
 .verdict.doute{color:var(--terre);font-size:.92rem;font-family:var(--texte);padding-top:1rem}
+
+/* ══ ADRESSES : chaque lieu nommé, situé, et ouvrable dans une carte ══ */
+.adresse{display:flex;gap:.45rem;align-items:flex-start;margin-top:.6rem;
+  font-size:.83rem;line-height:1.45;color:var(--encre-doux)}
+.adresse .picto{width:1rem;height:1rem;margin-top:.12rem;color:var(--terre)}
+.adresse a{color:var(--terre-fonce);text-decoration:underline;text-underline-offset:2px;
+  font-weight:600;white-space:nowrap}
+.adresse a:hover{color:var(--terre)}
 .couture{border:none;border-top:1px solid var(--craie-3);margin:3.2rem 0 2.4rem}
 
 /* ══ MOUVEMENT ══════════════════════════════════════════════════
@@ -336,6 +344,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <symbol id="i-lit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
     <path d="M2.6 19.6v-13"/><path d="M2.6 11.6h18.8v8"/><path d="M2.6 15.8h18.8"/>
     <circle cx="7.4" cy="8.6" r="1.9"/><path d="M11 11.6V9.4a1.8 1.8 0 0 1 1.8-1.8h6a2.6 2.6 0 0 1 2.6 2.6v1.4"/></g></symbol>
+  <symbol id="i-epingle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 21.4s7-5.9 7-11.2a7 7 0 1 0-14 0c0 5.3 7 11.2 7 11.2z"/><circle cx="12" cy="10" r="2.6"/></g></symbol>
   <symbol id="i-depart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
     <path d="M13.6 3.6h4.8a2 2 0 0 1 2 2v12.8a2 2 0 0 1-2 2h-4.8"/>
     <path d="M9.4 7.8 13.6 12l-4.2 4.2"/><path d="M13.2 12H3.4"/></g></symbol>
@@ -414,32 +424,30 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <!-- 2 -->
   <section id="e2" class="cache">
     <h2>Quelques détails</h2>
-    <p class="chapo">De quoi sortir le bon nombre de lits et caler les allers-retours
-      à la gare. Les votes, eux, sont dans l'onglet <em>Le week-end</em>, chacun sous
-      la photo de ce qu'il décide.</p>
-
-    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-lit"></use></svg> Le couchage</p>
-    <div class="choix">
-      <label class="opt"><input type="radio" name="lit" value="Il me faut un couchage">
-        <span><b>Il me faut un lit</b><em>Lit ou canapé, peu importe</em></span></label>
-      <label class="opt"><input type="radio" name="lit" value="J'apporte mon matelas">
-        <span><b>J'apporte mon matelas</b><em>Duvet ou matelas gonflable</em></span></label>
-      <label class="opt"><input type="radio" name="lit" value="Je me loge ailleurs">
-        <span><b>Je me loge ailleurs</b><em>Hôtel, famille, amis</em></span></label>
-      <label class="opt"><input type="radio" name="lit" value="Je ne dors pas sur place">
-        <span><b>Je ne dors pas sur place</b><em>Je rentre le soir même</em></span></label>
-    </div>
+    <p class="chapo">Juste de quoi caler les allers-retours à la gare. Les lits, on en a
+      pour tout le monde — n'y pense pas. Les votes, eux, sont dans l'onglet
+      <em>Le week-end</em>, chacun sous la photo de ce qu'il décide.</p>
 
     <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-train"></use></svg> Comment tu viens</p>
     <div class="choix">
-      <label class="opt"><input type="radio" name="venue" value="En train, venez me chercher">
-        <span><span class="note">on vient</span><b>En train</b><em>Gare TGV ou Aix-centre</em></span></label>
+      <label class="opt"><input type="radio" name="venue" value="Train, gare d'Aix TGV">
+        <span><span class="note">18 km</span><b>Train — Aix-en-Provence TGV</b><em>Paris 2 h 55, Lyon 1 h 07. En rase campagne, à vingt minutes de la maison</em></span></label>
+      <label class="opt"><input type="radio" name="venue" value="Train, gare d'Aix centre">
+        <span><span class="note">en ville</span><b>Train — Aix-en-Provence centre</b><em>TER depuis Marseille, un par heure. À dix minutes de la maison</em></span></label>
       <label class="opt"><input type="radio" name="venue" value="En voiture, avec des places libres">
         <span><span class="note">covoit</span><b>En voiture, avec des places</b><em>Je peux embarquer du monde</em></span></label>
       <label class="opt"><input type="radio" name="venue" value="En voiture, complet">
         <span><b>En voiture, complet</b><em>Aucune place à proposer</em></span></label>
       <label class="opt"><input type="radio" name="venue" value="J'habite Aix">
         <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
+    </div>
+    <div class="cache" id="c-nav">
+      <p class="glose">On fait les allers-retours en voiture toute la journée. Dis-nous si
+        tu veux qu'on passe&nbsp;: ça ne dérange pas, c'est prévu.</p>
+      <div class="pilules" role="group" aria-label="Navette depuis la gare">
+        <label><input type="radio" name="nav" value="Oui, venez me chercher"><span>Oui, venez me chercher</span></label>
+        <label><input type="radio" name="nav" value="Non, je me débrouille"><span>Non, je me débrouille</span></label>
+      </div>
     </div>
     <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton arrivée</p>
     <div class="pilules" role="group" aria-label="Jour d'arrivée">
@@ -448,18 +456,12 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     </div>
     <div class="champs-2">
       <div class="champ">
-        <label for="lieu">Où&nbsp;?</label>
-        <input type="text" id="lieu" list="gares" placeholder="Aix TGV, Aix-centre…">
-        <datalist id="gares">
-          <option value="Aix-en-Provence TGV"></option>
-          <option value="Aix-en-Provence centre"></option>
-          <option value="Marseille Saint-Charles"></option>
-          <option value="Directement à la maison"></option>
-        </datalist>
-      </div>
-      <div class="champ">
         <label for="h-arr">À quelle heure&nbsp;?</label>
         <input type="time" id="h-arr">
+      </div>
+      <div class="champ">
+        <label for="num-arr">Numéro du train, si tu l'as</label>
+        <input type="text" id="num-arr" placeholder="TGV 6173">
       </div>
     </div>
 
@@ -493,17 +495,19 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <!-- 3 -->
   <section id="e3" class="cache">
     <h2>C'est envoyé&nbsp;?</h2>
-    <p class="chapo">Relis, puis envoie. WhatsApp s'ouvre avec le message déjà écrit&nbsp;:
-      tu choisis la conversation, tu vérifies, tu envoies.</p>
+    <p class="chapo">Cette page garde tes choix dans ton téléphone, mais elle ne les
+      transmet à personne toute seule. Le bouton du bas ouvre WhatsApp avec ce récapitulatif
+      déjà écrit&nbsp;: <strong>tu l'envoies à Maxime</strong>, et c'est comme ça que ta
+      réponse arrive. Relis d'abord.</p>
     <div class="fiche"><dl>
       <dt>Qui</dt><dd class="vide" id="f-nom">—</dd>
       <dt>Présence</dt><dd class="vide" id="f-rsvp">—</dd>
-      <dt id="l-lit">Couchage</dt><dd class="vide" id="f-lit">—</dd>
       <dt id="l-venue">Arrivée</dt><dd class="vide" id="f-venue">—</dd>
       <dt id="l-dep">Départ</dt><dd class="vide" id="f-dep">—</dd>
       <dt id="l-midi">Samedi midi</dt><dd class="vide" id="f-midi">—</dd>
       <dt id="l-escape">Escape game</dt><dd class="vide" id="f-escape">—</dd>
       <dt id="l-soiree">Samedi soir</dt><dd class="vide" id="f-soiree">—</dd>
+      <dt id="l-fin">Après le gâteau</dt><dd class="vide" id="f-fin">—</dd>
       <dt id="l-act">Envies</dt><dd class="vide" id="f-act">—</dd>
     </dl></div>
 
@@ -516,7 +520,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <a class="bt envoi" id="envoi" href="#" target="_blank" rel="noopener">Envoyer sur WhatsApp</a>
     </div>
     <p style="margin-top:1.1rem;font-size:.86rem;color:var(--encre-pale)">
-      Tes réponses restent dans ce téléphone. Rien n'est transmis avant que tu appuies.
+      Tes réponses sont enregistrées dans ce navigateur&nbsp;: tu peux fermer la page,
+      revenir plus tard, tout sera encore là. Rien ne part avant que tu appuies.
     </p>
   </section>
 </div></main></div>
@@ -568,7 +573,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-cadenas"></use></svg><span>17h00</span>L'escape game</p>
   <figure class="vue large">
     <img src="photos/escape-game.jpg" alt="Une salle d'escape game : un joueur examine une carte éclairée sur un mur de bois" width="640" height="427">
-    <figcaption><b>Move To Aixit, quatre salles en parallèle</b><small>Aux Milles, à vingt minutes de la maison. On se répartit en équipes de quatre ou cinq&nbsp;: Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN. Retour vers 18h30. <strong>Rien à sortir sur place</strong>&nbsp;: c'est réglé d'avance, comme les repas</small></figcaption>
+    <figcaption><b>Move To Aixit, quatre salles en parallèle</b><small>Aux Milles, à vingt minutes de la maison. On se répartit en équipes de quatre ou cinq&nbsp;: Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN. Retour vers 18h30. <strong>Rien à sortir sur place</strong>&nbsp;: c'est réglé d'avance, comme les repas</small>
+      <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>378 rue Bastide de Verdaches, ZAC des Milles, 13290 Aix-en-Provence — <a href="https://www.google.com/maps/search/?api=1&amp;query=Move%20To%20Aixit%2C%20378%20Rue%20Bastide%20de%20Verdaches%2C%2013290%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></span></p></figcaption>
   </figure>
   <div class="urne">
     <p class="demande">Tu en es&nbsp;?</p>
@@ -588,11 +594,12 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <div class="duo">
     <figure class="vue">
       <img src="photos/bar-a-jeux.jpg" alt="Des joueurs attablés autour de plusieurs jeux de société" width="640" height="427">
-      <figcaption><b>On reste sur place</b><small>Le bar à jeux de Move To Aixit&nbsp;: trois cents jeux, des planches et des tapas, ouvert jusqu'à 22h. Aucun trajet de plus</small></figcaption>
+      <figcaption><b>Le bar à jeux</b><small>Le bar à jeux de Move To Aixit&nbsp;: trois cents jeux, des planches et des tapas, ouvert jusqu'à 22h. Aucun trajet de plus</small>
+      <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Move To Aixit, aux Milles — ouvert le samedi jusqu'à 22h — <a href="https://www.google.com/maps/search/?api=1&amp;query=Move%20To%20Aixit%2C%20378%20Rue%20Bastide%20de%20Verdaches%2C%2013290%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></span></p></figcaption>
     </figure>
     <figure class="vue">
       <img src="photos/apero.jpg" alt="Assiette d'apéritif : fromages, fruits et pain dressés sur une table" width="640" height="427">
-      <figcaption><b>On rentre</b><small>Apéro dînatoire à la maison, servi en continu par le traiteur. C'est le repas du soir</small></figcaption>
+      <figcaption><b>À la maison</b><small>Apéro dînatoire servi en continu par le traiteur. C'est le repas du soir, et on est déjà chez nous pour la suite</small></figcaption>
     </figure>
   </div>
   <div class="urne">
@@ -600,9 +607,9 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <p class="glose">Après l'escape game, on reste sur place ou on rentre. La majorité tranche.</p>
 <div class="choix">
       <label class="opt"><input type="radio" name="soiree" value="Bar à jeux sur place">
-        <span><span class="note">sur place</span><b>Le bar à jeux</b><em>Trois cents jeux, planches et tapas aux Milles, jusqu'à 22h. Zéro trajet de plus</em></span></label>
+        <span><span class="note">aux Milles</span><b>Le bar à jeux</b><em>Trois cents jeux, planches et tapas sur place, jusqu'à 22h. Zéro trajet de plus</em></span></label>
       <label class="opt"><input type="radio" name="soiree" value="Retour à la maison">
-        <span><span class="note">à la maison</span><b>On rentre</b><em>Apéro dînatoire servi en continu, puis la soirée jeux de société</em></span></label>
+        <span><span class="note">chez nous</span><b>À la maison</b><em>Apéro dînatoire servi en continu, puis la soirée à la maison</em></span></label>
       <label class="opt"><input type="radio" name="soiree" value="Peu importe">
         <span><b>Peu importe</b><em>Je suis les autres</em></span></label>
     </div>
@@ -621,12 +628,16 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <figcaption><b>La grande table, débarrassée</b><small>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Et le blind test des trente ans&nbsp;: trente titres, un par année d'Elise</small></figcaption>
   </figure>
   <div class="urne">
-    <p class="demande">Tu tiens jusque-là&nbsp;?</p>
+    <p class="demande">Tu votes quoi&nbsp;?</p>
+    <p class="glose">À 22h30 on est forcément à la maison — le bar à jeux ferme à 22h.
+      Reste à savoir ce qu'on sort de l'armoire.</p>
     <div class="choix">
-      <label class="opt"><input type="checkbox" name="act" value="Soirée jeux de société">
-        <span><b>La soirée jeux de société</b><em>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou</em></span></label>
-      <label class="opt"><input type="checkbox" name="act" value="Blind test des trente ans">
-        <span><b>Le blind test</b><em>Trente titres, un par année d'Elise. Équipes tirées au sort</em></span></label>
+      <label class="opt"><input type="radio" name="fin" value="Jeux de société">
+        <span><span class="note">la table</span><b>Les jeux de société</b><em>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Ça tourne par tablées</em></span></label>
+      <label class="opt"><input type="radio" name="fin" value="Blind test des trente ans">
+        <span><span class="note">le salon</span><b>Le blind test</b><em>Trente titres, un par année d'Elise. Équipes tirées au sort, tout le monde joue en même temps</em></span></label>
+      <label class="opt"><input type="radio" name="fin" value="Les deux, dans cet ordre">
+        <span><b>Les deux</b><em>Le blind test d'abord, les jeux ensuite pour ceux qui tiennent</em></span></label>
     </div>
   </div>
 
@@ -644,19 +655,23 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <div class="quatuor">
     <figure class="vue">
       <img src="photos/sainte-victoire.jpg" alt="La montagne Sainte-Victoire, longue crête calcaire au-dessus de la garrigue" width="640" height="427">
-      <figcaption><b>Vallon de Saint-Ser</b><small>1 h 30 aller-retour sur le versant sud, sous la crête que Cézanne a peinte quatre-vingts fois</small></figcaption>
+      <figcaption><b>Vallon de Saint-Ser</b><small>1 h 30 aller-retour sur le versant sud, sous la crête que Cézanne a peinte quatre-vingts fois</small>
+      <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Parking du vallon de Saint-Ser, D17, 13114 Puyloubier — <a href="https://www.google.com/maps/search/?api=1&amp;query=Parking%20du%20Vallon%20de%20Saint-Ser%2C%20D17%2C%2013114%20Puyloubier" target="_blank" rel="noopener">voir sur la carte</a></span></p></figcaption>
     </figure>
     <figure class="vue">
       <img src="photos/bimont.jpg" alt="Le lac du barrage de Bimont, eau turquoise encaissée dans les collines boisées" width="640" height="427">
-      <figcaption><b>Barrage de Bimont</b><small>1 h de balade plate au-dessus du lac, avec la montagne en face</small></figcaption>
+      <figcaption><b>Barrage de Bimont</b><small>1 h de balade plate au-dessus du lac, avec la montagne en face</small>
+      <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Barrage de Bimont, 13100 Saint-Marc-Jaumegarde — <a href="https://www.google.com/maps/search/?api=1&amp;query=Barrage%20de%20Bimont%2C%20Saint-Marc-Jaumegarde" target="_blank" rel="noopener">voir sur la carte</a></span></p></figcaption>
     </figure>
     <figure class="vue">
       <img src="photos/cours-mirabeau.jpg" alt="Le cours Mirabeau à Aix-en-Provence, allée de platanes, fontaine et terrasses" width="640" height="427">
-      <figcaption><b>Le vieil Aix</b><small>Cours Mirabeau, les ruelles et les fontaines. C'est aussi le programme s'il pleut</small></figcaption>
+      <figcaption><b>Le vieil Aix</b><small>Cours Mirabeau, les ruelles et les fontaines. C'est aussi le programme s'il pleut</small>
+      <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Cours Mirabeau, 13100 Aix-en-Provence — <a href="https://www.google.com/maps/search/?api=1&amp;query=Cours%20Mirabeau%2C%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></span></p></figcaption>
     </figure>
     <figure class="vue">
       <img src="photos/marche.jpg" alt="Le marché de la place Richelme à Aix, étals de fruits et légumes sous les platanes" width="640" height="427">
-      <figcaption><b>Le marché, avant le brunch</b><small>Place Richelme dès 8h, à dix minutes à pied. Fromages, olives, calissons</small></figcaption>
+      <figcaption><b>Le marché, avant le brunch</b><small>Place Richelme dès 8h, à dix minutes à pied. Fromages, olives, calissons</small>
+      <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Place Richelme, 13100 Aix-en-Provence — <a href="https://www.google.com/maps/search/?api=1&amp;query=Place%20Richelme%2C%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></span></p></figcaption>
     </figure>
   </div>
   <div class="urne">
@@ -690,7 +705,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
   <div class="quai">
     <h3>Aix-en-Provence TGV</h3>
-    <p class="sous">à 18 km du centre, en rase campagne</p>
+    <p class="sous">à 18 km du centre, en rase campagne — <a href="https://www.google.com/maps/search/?api=1&amp;query=Gare%20d%27Aix-en-Provence%20TGV%2C%2013290%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></p>
     <table>
       <tr><td>Paris Gare de Lyon</td><td>2 h 55</td></tr>
       <tr><td>Lyon Part-Dieu</td><td>1 h 07</td></tr>
@@ -702,7 +717,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
   <div class="quai vert">
     <h3>Aix-en-Provence centre</h3>
-    <p class="sous">en ville, à dix minutes de chez nous</p>
+    <p class="sous">en ville, à dix minutes de chez nous — <a href="https://www.google.com/maps/search/?api=1&amp;query=Gare%20d%27Aix-en-Provence%20Centre%2C%20Avenue%20Victor%20Hugo%2C%2013100%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></p>
     <table>
       <tr><td>Marseille Saint-Charles</td><td>45 min</td></tr>
       <tr><td>Pertuis, Manosque, Gap</td><td>TER direct</td></tr>
@@ -718,7 +733,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <details><summary>À quelle heure faut-il arriver&nbsp;?</summary><p>Le samedi à partir de midi. Le déjeuner est à 12h30, et l'après-midi part vers 15h. Si ton train arrive plus tard, ce n'est pas un problème&nbsp;: indique ton horaire, on s'organise.</p></details>
   <details><summary>C'est quoi, le bar à jeux&nbsp;?</summary><p>La grande table de la maison, débarrassée et couverte de jeux de société pour la soirée&nbsp;: Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Si tu as un jeu auquel tu tiens, apporte-le.</p></details>
   <details><summary>Et mon train&nbsp;?</summary><p>Réserve tôt, les rames d'octobre se remplissent vite. Indique ton horaire à la deuxième étape&nbsp;: on vient te chercher à la gare.</p></details>
-  <details><summary>Vous avez la place pour tout le monde&nbsp;?</summary><p>Lits, canapés et matelas d'appoint. C'est pour ça qu'on demande, à la deuxième étape, s'il te faut un couchage&nbsp;: c'est le seul chiffre qu'on ne peut pas ajuster la veille.</p></details>
+  <details><summary>Où est-ce que je dors&nbsp;?</summary><p>Chez nous. Lits, canapés et matelas d'appoint&nbsp;: on a de quoi loger tout le monde, tu n'as rien à demander ni à apporter. Une trousse de toilette et une serviette suffisent.</p></details>
   <details><summary>Quelle est l'adresse&nbsp;?</summary><p>Elle est dans le groupe WhatsApp, pas ici&nbsp;: cette page circule, notre adresse non. Si tu n'es pas dans le groupe, dis-le et on t'ajoute.</p></details>
   <details><summary>Et s'il pleut&nbsp;?</summary><p>L'après-midi devient un tour du vieil Aix, ou reste à la maison. Le reste du programme ne bouge pas.</p></details>
   <hr class="couture">
@@ -760,7 +775,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
 <footer class="pied"><div class="col">
   <p><strong>Elise, trente ans</strong> — samedi 10 &amp; dimanche 11 octobre 2026, Aix-en-Provence.</p>
-  <p>Réponse souhaitée avant le <strong>samedi 19 septembre</strong>, pour le compte des couchages.</p>
+  <p>Réponse souhaitée avant le <strong>samedi 19 septembre</strong>, pour réserver l'escape game.</p>
   <p class="credits">Photos&nbsp;: Sten van Houwelingen, FrogsLegs71, Ladislaus Hoffner, François de Dijon, Ermell, Hudson Bloom, Matěj Baťha, Ewan Munro, James Petts, Mshuang2, Missvain, mwanasimba —
     Wikimedia Commons, licences CC BY-SA, CC BY et CC0.</p>
 </div></footer>
@@ -847,10 +862,11 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   }
   function etat(){
     return { nom: $("nom").value.trim(), nb: $("nb").value.trim(), rsvp: une("rsvp"),
-             lit: une("lit"), venue: une("venue"),
-             jarr: une("jarr"), lieu: $("lieu").value.trim(), harr: $("h-arr").value,
+             venue: une("venue"), nav: une("nav"),
+             jarr: une("jarr"), harr: $("h-arr").value, num: $("num-arr").value.trim(),
              jdep: une("jdep"), hdep: $("h-dep").value,
-             midi: une("midi"), escape: une("escape"), soiree: une("soiree"),
+             midi: une("midi"), escape: une("escape"),
+             soiree: une("soiree"), fin: une("fin"),
              act: plusieurs("act"), idee: $("idee").value.trim() };
   }
   function present(){ var r = etat().rsvp; return !!r && r !== "Je ne peux pas venir"; }
@@ -884,15 +900,17 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     L.push("Présence : " + (present() ? (sejour(s) === "?" ? "Je viens" : sejour(s) || "Je viens")
                                         : (s.rsvp || "?")));
     if (s.nb && present()) L.push("Nous serons : " + s.nb);
-    if (s.lit) L.push("Couchage : " + s.lit);
     if (s.venue) L.push("Comment : " + s.venue);
-    if (s.jarr || s.lieu || s.harr)
-      L.push("J'arrive : " + [s.jarr, s.lieu, s.harr && "à " + s.harr].filter(Boolean).join(" "));
+    if (s.nav) L.push("Navette gare : " + s.nav);
+    if (s.jarr || s.harr || s.num)
+      L.push("J'arrive : " + [s.jarr, s.harr && "à " + s.harr, s.num && "(" + s.num + ")"]
+             .filter(Boolean).join(" "));
     if (s.jdep || s.hdep)
       L.push("Je repars : " + [s.jdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
     if (s.midi) L.push("Déjeuner de samedi : " + s.midi);
     if (s.escape) L.push("Escape game de 17h : " + s.escape);
     if (s.soiree) L.push("Soirée de samedi : " + s.soiree);
+    if (s.fin) L.push("Après le gâteau : " + s.fin);
     if (s.act.length) L.push("Envies : " + s.act.join(", "));
     if (s.idee) L.push("Autre idée : " + s.idee);
     return L.join("\n");
@@ -908,20 +926,21 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     var sej = sejour(s);
     pose("f-nom", s.nom + (s.nb && present() ? " · " + s.nb + " pers." : ""));
     pose("f-rsvp", present() ? (sej && sej !== "?" ? sej : "Je viens") : s.rsvp);
-    pose("f-lit", s.lit);
     var el = $("sejour");
     el.textContent = !present() ? "—" : (sej === "?" ? "Arrivée dimanche et départ samedi : à revoir"
                                                      : (sej || "—"));
     el.className = "verdict" + (sej === "?" ? " doute" : (sej ? "" : " vide"));
 
-    var arr = [s.jarr, s.lieu, s.harr && "à " + s.harr].filter(Boolean).join(" ");
-    pose("f-venue", [arr, s.venue].filter(Boolean).join(" — "));
+    $("c-nav").classList.toggle("cache", s.venue.indexOf("Train") !== 0);
+    var arr = [s.jarr, s.harr && "à " + s.harr, s.num && "(" + s.num + ")"].filter(Boolean).join(" ");
+    pose("f-venue", [s.venue, arr, s.nav].filter(Boolean).join(" — "));
     pose("f-dep", [s.jdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
     pose("f-midi", s.midi);
     pose("f-escape", s.escape);
     pose("f-soiree", s.soiree);
+    pose("f-fin", s.fin);
     pose("f-act", s.act.concat(s.idee ? ["« " + s.idee + " »"] : []).join(" · "));
-    ["lit","venue","dep","midi","escape","soiree","act"].forEach(function(k){
+    ["venue","dep","midi","escape","soiree","fin","act"].forEach(function(k){
       $("l-" + k).classList.toggle("cache", !present());
       $("f-" + k).classList.toggle("cache", !present());
     });
@@ -968,11 +987,11 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   var s = lu();
   if (s.nom) $("nom").value = s.nom;
   if (s.nb) $("nb").value = s.nb;
-  if (s.lieu) $("lieu").value = s.lieu;
   if (s.harr) $("h-arr").value = s.harr;
+  if (s.num) $("num-arr").value = s.num;
   if (s.hdep) $("h-dep").value = s.hdep;
   if (s.idee) $("idee").value = s.idee;
-  ["rsvp","lit","venue","jarr","jdep","midi","escape","soiree"].forEach(function(n){
+  ["rsvp","venue","nav","jarr","jdep","midi","escape","soiree","fin"].forEach(function(n){
     if (!s[n]) return;
     var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
     if (e) e.checked = true;

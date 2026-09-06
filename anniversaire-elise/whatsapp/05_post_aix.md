@@ -62,9 +62,11 @@ référence du virement.
 
 Trois choses, dans l'ordre :
 1️⃣ Vous dites juste oui ou non
-2️⃣ Vous dites s'il vous faut un couchage, quel jour et à quelle heure
-    vous arrivez, et quand vous repartez. Pas besoin de choisir entre
-    « tout le week-end » et « samedi seulement » : vos horaires le disent.
+2️⃣ Vous dites comment, quel jour et à quelle heure vous arrivez, si on
+    vient vous chercher à la gare, et quand vous repartez. Pas besoin de
+    choisir entre « tout le week-end » et « samedi seulement » : vos
+    horaires le disent. Le couchage, n'y pensez pas : on a de quoi loger
+    tout le monde.
 3️⃣ Vous votez dans l'onglet « Le week-end », chaque vote est sous la
     photo de ce qu'il décide
 4️⃣ Vous relisez, et vous m'envoyez tout d'un tap
@@ -98,7 +100,7 @@ puis prendre le TER jusqu'à Aix-centre est souvent plus simple que la gare
 TGV d'Aix, qui est à 18 km en pleine campagne.
 Dans tous les cas, DITES-NOUS VOTRE GARE ET VOTRE HEURE, on vient vous chercher.
 
-⏳ RÉPONSE AVANT LE SAMEDI 19 SEPTEMBRE, pour le compte des couchages.
+⏳ RÉPONSE AVANT LE SAMEDI 19 SEPTEMBRE, pour réserver l'escape game.
 
 Réservez vos trains tôt, les rames d'octobre se remplissent vite.
 ```
@@ -110,7 +112,7 @@ Hey [PRÉNOM] ! Il me manque ta réponse pour les 30 ans d'Elise
 (10-11 octobre, chez nous à Aix). Deux minutes : VOTRE-URL-ICI
 
 Le programme est en photos sur la page. J'ai surtout besoin de savoir
-s'il te faut un couchage 🙏
+si tu fais l'escape game, et quand tu arrives 🙏
 ```
 
 ## Message C — le récapitulatif ⏱ vers le 20 septembre
@@ -118,8 +120,7 @@ s'il te faut un couchage 🙏
 ```
 📋 ON SERA [N] !
 
-🛏️ Couchages : [X] personnes dorment à la maison,
-   [X] apportent leur matelas, [X] se logent ailleurs.
+🎯 Escape game : [X] participants, [X] salles réservées.
 
 🚆 Les arrivées du samedi :
 [HEURE] — [PRÉNOMS] — Aix TGV
