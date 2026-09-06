@@ -26,10 +26,11 @@ mkdir -p "$(dirname "$OUT")"
 if bash "$HERE/../game/game-stack.sh" status 2>/dev/null | grep -q '"vnc_open":true'; then
     echo "jeu en cours d'utilisation — mesure reportée"; exit 75
 fi
-# NI SOUS UN HARNAIS. `vnc_open` ne dit que si quelqu'un REGARDE : la partie de la nuit n'a pas de
-# spectateur, et ce banc lançait à 4 h 25 un second Godot avec un second e4b de 6 Go pendant
-# qu'elle jouait — les beats 11 à 13 des deux premières nuits (98 à 128 s) tombent exactement là,
-# et la mesure du banc, prise à deux moteurs sur quatre cœurs, ne valait rien non plus.
+# NI SOUS UN HARNAIS. s100 (06/09) a montré que la garde `vnc_open` tenait en pratique : le harnais
+# ouvre x11vnc, donc le banc de 4 h 25 s'est bien reporté pendant la partie de la nuit (j'avais
+# écrit le contraire avant de lire l'état). Cette garde-ci reste : un harnais qui n'ouvrirait pas
+# de VNC, ou un `desired=running` sans fenêtre, ne doivent pas non plus voir deux moteurs sur
+# quatre cœurs — la mesure ne vaudrait rien.
 HARNAIS="$(merlin_harnais)"
 DESIRE="$(cat "$HOME/.cache/merlin-game/desired" 2>/dev/null || echo stopped)"
 if [ -n "$HARNAIS" ] || [ "$DESIRE" = "running" ]; then

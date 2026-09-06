@@ -1,0 +1,25 @@
+== 0. L'OUTILLAGE EST-IL A JOUR ? ==
+outillage : c6d457ad docs(memory): leçon — un agent qui publie ne publie que depuis la VM
+agent-run ferme le verrou pour l'enfant : 1 (attendu 1)
+a_crible.sh present : oui
+
+== 1. LE VERROU D'OLLAMA-SERVE ==
+porteurs : llama-server(1147837) ollama(4144) 
+etat avant : {"id": "ollama-serve", "last_run": "2026-08-21T13:14:02Z", "duration_s": 61, "rc": 0, "ok": true, "summary": "serveur OK (relance=oui) · copilote gemma4:e4b-it-
+verrou retire
+derniers [ollama-serve] dans cron.log : [ollama-serve] déjà en cours, on passe|[ollama-serve] déjà en cours, on passe|
+
+== 2. LA SURCHARGE gd-content-gap ==
+avant : {"playtest-bot": {"schedule": "20 2 * * *", "enabled": true}, "gd-content-gap": {"schedule": "*/30 * * * *", "enabled": true}}
+retiree — la cadence */30 vit dans agents.json, sous gates.py
+apres : {"playtest-bot": {"schedule": "20 2 * * *", "enabled": true}}
+
+== 3. LA CRONTAB ==
+crontab regeneree
+  7,37 * * * * /bin/bash /var/lib/ocarun/workspace/M.E.R.L.I.N/infra/oracle/agents/agent-run.sh gd-content-gap 
+  5 6 * * * /bin/bash /var/lib/ocarun/workspace/M.E.R.L.I.N/infra/oracle/agents/agent-run.sh native-bench 
+  5 4 * * * /bin/bash /var/lib/ocarun/workspace/M.E.R.L.I.N/infra/oracle/agents/agent-run.sh partie-nuit 
+  40 7 * * * /bin/bash /var/lib/ocarun/workspace/M.E.R.L.I.N/infra/oracle/agents/agent-run.sh crible 
+
+== 4. LE CRIBLE (a_crible.sh) ==
+2026-09-06T16:08:05Z [crible] rc=0 crible 2026-09-06 : 130 lignes · 1 agent(s) en echec · 0 reporte(s) · 0 verrou(s) herite(s) · partie 2026-09-05 : 14 beats · fin mort · 6 au banc · bot AVEUGLE

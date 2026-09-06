@@ -4,9 +4,11 @@
 - `partie-nuit` (4 h 05) devient l'atelier de nuit : la partie avec le bot COUVRANT, puis la quête,
   dans cet ordre, par le même script ; `quete-nuit` passe « à la demande ». native-bench va à 6 h
   et refuse de tourner sous un harnais.
-- Pourquoi : les deux premières nuits, la partie tenait encore le jeu à 4 h 40, la quête sortait en 0
-  sans rien écrire, et le banc chargeait un second e4b à 4 h 25 pendant la partie (beats 11-13 à
-  98-128 s). Le moteur est mono-place : l'ordre se garantit en enchaînant, pas en espaçant.
+- Pourquoi : les deux premières nuits, la partie tenait encore le jeu à 4 h 40 et la quête sortait
+  en 0 sans rien écrire. Le moteur est mono-place : l'ordre se garantit en enchaînant, pas en
+  espaçant. CORRIGÉ PAR s100 : le banc de 4 h 25 se reportait bien (le harnais ouvre x11vnc, donc
+  vnc_open était vrai) ; j'avais affirmé le contraire sans lire l'état. Les beats 11-13 lents
+  (98-128 s) restent à dater — gd-content-gap à 4 h 30 est le suspect qui reste.
 - Sans bot couvrant, la cible « réussite » mesure les dés (28 % sans tag, 72 % avec un, DC 9) :
   le verdict dit désormais NON MESURÉE quand `choix_du_bot` est absent.
 

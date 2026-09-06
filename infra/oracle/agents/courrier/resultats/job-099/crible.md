@@ -33,7 +33,10 @@ Confirmé sur pièces :
 - `merlin_native.gd:23` : « le PC livre le e2b » ; la nuit mesure le e4b.
 
 Corrigé ou nuancé :
-- **native-bench (4 h 25) tourne PENDANT la partie de nuit.** Sa seule garde est `vnc_open`
+- **[Rectifié par s100 le soir même : FAUX.] native-bench (4 h 25) tourne PENDANT la partie de nuit.**
+  L'état réel de l'agent dit « jeu en cours d'utilisation — mesure reportée » à 4 h 25 : le
+  harnais ouvre x11vnc, donc `vnc_open` était vrai et la garde tenait. La synthèse avait raison,
+  ma contre-vérification avait tort. Le paragraphe d'origine est gardé ci-dessous pour mémoire. Sa seule garde est `vnc_open`
   (`a_llm_native_bench.sh:26-27`), vrai seulement si quelqu'un regarde ; il lance un second Godot
   headless qui charge le e4b (6,1 Go) et génère jusqu'à 12 minutes (`:44-45`). Les beats 11-13
   lents des deux nuits (98-128 s) tombent à ce moment-là, avec gd-content-gap à 4 h 30 en plus.

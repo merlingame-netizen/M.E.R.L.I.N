@@ -3,8 +3,8 @@
 #
 # POURQUOI UN SEUL AGENT. Les deux premières nuits (05 et 06/09), la partie de 4 h 05 tenait
 # encore le jeu à 4 h 40 : la quête voyait « occupé » et sortait en 0 sans rien écrire, deux nuits
-# de suite, sans qu'aucun compte le dise. Et à 4 h 25 le banc du moteur chargeait un second e4b
-# pendant la partie. Le moteur est mono-place : l'ordre se garantit en ENCHAÎNANT, pas en espaçant.
+# de suite, sans qu'aucun compte le dise. Le moteur est mono-place : l'ordre se garantit en
+# ENCHAÎNANT, pas en espaçant. (Le banc de 4 h 25, lui, se reportait bien : x11vnc du harnais.)
 #
 # CE QU'IL PRODUIT, daté sous ~/.cache/merlin-partie/nuit/<date>/ :
 #   journal.json, selection.json, cliches/, verdict.txt, partie.log   (la partie, vue du dehors)

@@ -175,7 +175,7 @@
    "schedule": "5 6 * * *",
    "cmd": "a_llm_native_bench.sh",
    "enabled": true,
-   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 6h05 (hors des minutes 0/30 des agents de corpus), après l'atelier de nuit, et jamais sous un harnais (06/09 : à 4h25 il chargeait un second e4b pendant la partie)."
+   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 6h05 (hors des minutes 0/30 des agents de corpus), après l'atelier de nuit, et jamais sous un harnais ni sous desired=running (06/09 : sa garde vnc_open tenait déjà, le harnais ouvrant x11vnc ; celle-ci couvre le reste)."
   },
   {
    "id": "ollama-idle",

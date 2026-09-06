@@ -1,0 +1,130 @@
+== MACHINE ==
+date=2026-09-06T16:08Z coeurs=4 charge=0.04 0.24 0.23 up 2 weeks, 2 days, 2 hours, 54 minutes
+MemTotal: 22945 Mo  MemAvailable: 15229 Mo  SwapFree: 4532 Mo  
+disque : 42G sur 83G (51%)
+modeles ollama charges : gemma4:e4b-it-qat
+jeu : desire=stopped harnais=«  » godot=0
+
+== L'ATELIER DE NUIT : ce qui est garde (7 dernieres) ==
+partie 2026-09-05 : 14 beats · fin mort · 6 au banc · bot AVEUGLE
+     CIBLE1 secours: MANQUEE (5 beat(s) au banc : 5,8,11,12,13)
+     CIBLE2 reussite: MANQUEE (8/13 ; b3=partiel(diff2,de4,covNone) b4=partiel(diff2,de4,covNone) b8=partiel(diff2,de5,covNone) b12=partiel(diff2,de4,covNo
+     CIBLE3 attente: MANQUEE (6 beats > 20s : b2=71s b6=34s b7=42s b9=61s b11=98s b12=103s ; moy 39s)
+     BOT AUCUN choix justifie — le mode couvrant n'a PAS tourne
+partie 2026-09-06 : 22 beats · fin accomplissement · 8 au banc · bot AVEUGLE
+     CIBLE1 secours: MANQUEE (8 beat(s) au banc : 12,13,16,17,18,19,20,21)
+     CIBLE2 reussite: MANQUEE (16/22 ; b3=partiel(diff2,de8,covNone) b4=partiel(diff2,de6,covNone) b8=partiel(diff2,de4,covNone) b9=partiel(diff2,de5,covNo
+     CIBLE3 attente: MANQUEE (7 beats > 20s : b2=68s b5=55s b6=26s b9=32s b12=125s b13=128s b14=36s ; moy 30s)
+     BOT AUCUN choix justifie — le mode couvrant n'a PAS tourne
+  AUCUNE quete de nuit gardee
+-- la courbe (nuits.jsonl, 7 dernieres) --
+  (pas encore de ligne)
+
+== LE SMOKE ET SES EPREUVES (dernier rapport) ==
+  2026-09-06T03:00:16Z · commit bc108016 · scenes 7 (0 en erreur) · epreuves : test_quete=passee(0 rates), test_journal=passee(0 rates), test_ecran_chroniques=echouee(1 rates), test_economie=passee(0 rates) · echouees=1
+
+== CHAQUE AGENT : derniere course (etat final), duree, rc, resume ==
+  billing          17 7 * * *     il y a 8h      1s ok          0.0 EUR ce mois (source=snapshot, 0 service(s) facturé(s))
+  brasero          */20 7-23 * *  il y a 0h      0s ok          modèle occupé par un agent — rien à faire, il est déjà chaud
+  ci-commit        webhook/push   il y a 0h     31s ok          CI 720a54fe : VERT — 7 scènes saines, boot rendu OK
+  coder            à la demande   desactive
+  coder-local      */30 * * * *   il y a 0h      0s ok          rien d'applicable — 0 mission(s) en file, 0 sans patch (décisions d'architecture
+  controle         11,41 * * * *  il y a 0h      0s ok          1 écart(s) entre ce qui est déclaré et ce qui est vérifiable · 0 déposé(s) dans 
+  corpus-night     10 0-6 * * *   il y a 12j     0s ok          {"loop": "gen", "skipped": "RAM insuffisante (7667 Mo)"}
+  courrier         */2 * * * *    il y a 0h      1s ok          aucun courrier en attente
+  crible           40 7 * * *     JAMAIS COURU (aucun etat)
+  daily-report     0 7 * * *      il y a 9h      0s ok          rapport écrit (27 lignes) · 0 CI rouge(s) · 1 agent(s) en échec
+  design-council   40 6 * * *     il y a 9h    214s ok          conseil ouvert (conseil-20260906, conseiller balance_tuner, 605 car.)
+  disk-guard       17 * * * *     il y a 0h      0s ok          disque 51% — sous le seuil de 80%, rien à purger
+  game-autosync    */15 * * * *   il y a 0h      0s ok          à jour (feat/practices-docs @ 720a54fe)
+  game-idle        3-59/5 * * * * il y a 0h      0s ok          jeu non demandé (désiré=stopped) — rien à surveiller
+  game-watchdog    */5 * * * *    il y a 0h      0s ok          état désiré=stopped — rien à faire
+  gd-audit         10 3 * * *     il y a 11j    21s ok          proposition 20260825-2052-gd-audit-a169d1 écrite (palier LEGER, 20s, confiance 0
+  gd-balance       50 7,19 * * *  il y a 8h     33s ok          proposition 20260906-0750-gd-balance-34b656 écrite (palier MOYEN, 32s, confiance
+  gd-content-gap   7,37 * * * *   il y a 0h     59s ok          carte non écrite pour « Ar C'hairn » (2 erreur(s) de validation) — rien mis dans
+  gd-economy       50 2 * * *     desactive
+  gd-pacing        40 2 * * *     il y a 11j    21s ok          proposition 20260825-2053-gd-pacing-4659b8 écrite (palier MOYEN, 20s, confiance 
+  gd-run           35 2 * * *     il y a 13h    25s ok          proposition 20260906-0235-gd-run-37d316 écrite (palier MOYEN, 25s, confiance 0.6
+  health           */15 * * * *   il y a 0h      0s ok          charge 0.00/4 · RAM 34% · disque 51%
+  journal          50 5 * * *     il y a 10h   375s ok          chapitre 27 — la plume (4/4 scènes) · 4 appel(s), 374.8 s, 0 rejet(s)
+  labo-recit       à la demande   JAMAIS COURU (aucun etat)
+  llm-bench        à la demande   il y a 11j   362s ok          champion: gemma4:12b-it-qat · TRIAGE_MODEL inchangé
+  llm-decompose    à la demande   JAMAIS COURU (aucun etat)
+  mesures          5 5 * * *      il y a 11h     0s ok          23 mesure(s) relevée(s)
+  native-bench     5 6 * * *      il y a 11h     0s ok          jeu en cours d'utilisation — mesure reportée
+  ollama-idle      */15 * * * *   il y a 0h      0s ok          un agent utilise le modèle — rien déchargé
+  ollama-serve     */5 * * * *    il y a 16j    61s ok          serveur OK (relance=oui) · copilote gemma4:e4b-it-qat: échec
+  parcours         15 5 * * *     il y a 10h     0s ok          7 écran(s) cartographié(s) → /var/lib/ocarun/merlin-memory/parcours.json
+  parole           25 * * * *     il y a 0h      0s ok          quota du jour atteint (2) — 0 signal(aux) reporté(s)
+  partie-journal   à la demande   JAMAIS COURU (aucun etat)
+  partie-nuit      5 4 * * *      il y a 12h  2722s ok          22 beats · fin accomplissement · 8 au banc · 16217 signes de prose
+  playtest-bot     20 2 * * *     il y a 13h    69s ok          17 écrans joués · aucune anomalie (pellicule 20260906-0220)
+  quete-nuit       à la demande   il y a 11h     0s ok          le jeu est occupé — quête de la nuit annulée
+  relance          */30 * * * *   il y a 0h      0s ok          aucun fil en attente
+  sequence         3,33 * * * *   il y a 0h      1s ok          3/6 — Le codeur applique · rien d'applicable — 0 mission(s) en file, 0 sans patc
+  smoke-scenes     0 3 * * *      il y a 13h    15s ECHEC rc=1  7 scènes testées · 0 en erreur · épreuves échouées : 1
+  tools-autosync   7,22,37,52 * * il y a 0h      1s ok          outillage mis à jour -> c6d457ad · crontab régénéré · Studio relancé
+  tunnel-watch     */10 * * * *   il y a 0h      0s ok          portail OK · public 200 · <retiré>
+
+== REVEILS PAR AGENT et ECHECS, sur la fenetre REELLEMENT lue dans cron.log ==
+  fenetre datee : 2026-09-06T16:08:01Z → 2026-09-06T16:08:01Z (1 lignes datees, 6948 anterieures non datees)
+   2079 courrier         reportes=0
+   1051 game-idle        reportes=0
+   1050 game-watchdog    reportes=0
+    416 tunnel-watch     reportes=0
+    374 health           reportes=0
+    278 tools-autosync   reportes=0
+    277 ollama-idle      reportes=0
+    277 game-autosync    reportes=0
+    188 relance          reportes=0
+    187 sequence         reportes=0
+    166 brasero          reportes=0
+    139 coder-local      reportes=0
+    139 gd-content-gap   reportes=0
+    138 controle         reportes=0
+     69 disk-guard       reportes=0
+     69 parole           reportes=0
+     15 billing          reportes=0
+      6 gd-balance       reportes=0
+      3 playtest-bot     reportes=0
+      3 gd-run           reportes=0
+      3 smoke-scenes     reportes=0
+      3 native-bench     reportes=0
+      3 mesures          reportes=0
+      3 parcours         reportes=0
+      3 journal          reportes=0
+      3 design-council   reportes=0
+      3 daily-report     reportes=0
+      2 quete-nuit       reportes=0
+      2 partie-nuit      reportes=0
+-- rc non nuls, hors reportes (12 derniers) --
+  [smoke-scenes] rc=1 7 scènes testées · 0 en erreur · épreuves échouées : 1
+  [smoke-scenes] rc=1 7 scènes testées · 0 en erreur · épreuves échouées : 1
+
+== VERROUS TENUS (lus dans /proc/locks, sans en prendre aucun) ==
+  courrier.lock            en cours (une course d'agent-run) : bash(1149596), bash(1149629), tail(1149631)
+  crible.lock              en cours (une course d'agent-run) : bash(1150137), bash(1150148), tail(1150150)
+  0 verrou(s) herite(s)
+
+== SURCHARGES HORS DEPOT ==
+{
+ "playtest-bot": {
+  "schedule": "20 2 * * *",
+  "enabled": true
+ }
+}
+== LE CORPUS ET L'ATELIER DE CONTENU ==
+  auto_corpus.jsonl : 2226 exemples · dernier 08-25T04:26
+  curated_corpus.jsonl : 908 exemples · dernier 09-06T04:00
+  propositions : inbox 70 · acceptees 919 · refusees 92
+
+== LE STUDIO ==
+  healthz : 200
+  /api/chroniques : 11 parties · Le Murmure du Tertre d, Le Murmure du Tertre d, L'Ombre au Chene Creux, L'Ombre au Chene Creux, Le Repos sous la Brume
+  /api/nuits : 0 nuit(s)
+  tunnel : 2 url(s) dans l'historique (jamais imprimees ici)
+
+== LES DEPOTS ==
+  jeu : 720a54fe feat(scenarios): la grille de lecture lit aussi les journaux de partie
+  outillage : c6d457ad docs(memory): leçon — un agent qui publie ne publie que depuis la VM
+  chroniques du jeu : 8
