@@ -21,9 +21,11 @@ if [ -n "$URL" ] && [ "$URL" != "$LAST_URL" ]; then
 fi
 
 if [ "$LOCAL_OK" = yes ] && [ "$PUB_CODE" = "200" ]; then
-    echo "portail OK · public 200 · $URL"
+    # Le résumé ne porte PAS l'URL : il part dans cron.log, l'état JSON et, en cas d'échec, dans le
+    # rapport du matin sur ntfy (sujet public). L'URL vit dans tunnel-history.jsonl, en local.
+    echo "portail OK · public 200 · url dans tunnel-history.jsonl"
 elif [ "$LOCAL_OK" = yes ]; then
-    echo "portail OK en local mais tunnel KO (code $PUB_CODE) · $URL"; exit 1
+    echo "portail OK en local mais tunnel KO (code $PUB_CODE)"; exit 1
 else
     echo "PORTAIL INJOIGNABLE en local (le keepalive devrait le relancer)"; exit 1
 fi

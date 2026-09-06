@@ -16,12 +16,21 @@ ID="${1:-}"
 STATE="$HOME/.cache/merlin-agents"
 mkdir -p "$STATE"
 
+# LA PORTE DU JEU, AVANT LE VERROU. gates.py existait depuis août et personne ne l'appelait ici :
+# gd-content-gap tournait à 4 h 30 avec quatre fils pendant la partie de la nuit (crible du 06/09,
+# beats 11-13 à 98-128 s). Un godot qui tourne, quel qu'il soit, a les quatre cœurs.
+PORTE="$(cd "$TOOLS_REPO" && python3 tools/gd_agents/gates.py 2>/dev/null)"
+case "$PORTE" in
+    OK*) : ;;
+    *)   echo "$ID reporté : ${PORTE#STOP }"; exit 75 ;;
+esac
+
 # Verrou LLM PARTAGÉ entre tous les agents de game design (celui d'agent-run.sh
 # est par-id : il n'empêche pas deux agents différents de charger deux modèles).
 exec 8>"$STATE/llm.lock"
 if ! flock -w 1800 8; then
     echo "LLM occupé plus de 30 min — on passe ce tour"
-    exit 0
+    exit 75
 fi
 
 OUT="$(cd "$TOOLS_REPO" && nice -n 10 python3 tools/gd_agents/runner.py "$ID" 2>&1 | tail -1)"

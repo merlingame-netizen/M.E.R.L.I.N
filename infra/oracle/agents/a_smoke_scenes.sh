@@ -11,8 +11,10 @@ OUT="$HOME/.cache/merlin-agents/smoke-scenes.json"
 DUR="${SMOKE_DURATION:-6}"
 
 if bash "$HERE/../game/game-stack.sh" status 2>/dev/null | grep -q '"vnc_open":true'; then
-    echo "jeu en cours d'utilisation — smoke reporté"; exit 0
+    echo "jeu en cours d'utilisation — smoke reporté"; exit 75
 fi
+HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+[ -z "$HARNAIS" ] || { echo "un harnais tient le jeu ($HARNAIS) — smoke reporté"; exit 75; }
 [ -d "$GAME_DIR/scenes" ] || { echo "pas de dossier scenes/ dans $GAME_DIR"; exit 0; }
 
 TOTAL=0; BAD=0; RESULTS=""
@@ -31,8 +33,11 @@ done
 # une épreuve dit qu'un mécanisme répond — le squelette de quête, le journal des chroniques,
 # l'écran qui les donne à lire. Elles écrivent dans user:// puis nettoient ce qu'elles ont créé.
 EPREUVES=""; EP_BAD=0
-for ep in test_quete test_journal test_ecran_chroniques test_economie; do
-    [ -f "$GAME_DIR/tools/tests/$ep.gd" ] || continue
+# Toutes les épreuves du dossier, pas une liste en dur : une épreuve ajoutée au jeu doit tourner
+# la nuit même, sans qu'on pense à l'inscrire ici.
+for chemin in "$GAME_DIR"/tools/tests/test_*.gd; do
+    [ -f "$chemin" ] || continue
+    ep="$(basename "$chemin" .gd)"
     EPLOG="$(timeout 240 "$GODOT_BIN" --headless --path "$GAME_DIR" --script "res://tools/tests/$ep.gd" 2>&1 || true)"
     if printf '%s' "$EPLOG" | grep -q "ÉPREUVE PASSÉE"; then ETAT=passee
     else ETAT=echouee; EP_BAD=$((EP_BAD + 1)); fi

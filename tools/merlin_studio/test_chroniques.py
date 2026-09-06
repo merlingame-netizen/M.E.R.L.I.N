@@ -129,6 +129,18 @@ def main() -> int:
     verifier("sans partie, la page dit pourquoi au lieu de planter",
              "Aucune partie journalisée" in vide and "const PARTIES = {}" in vide)
 
+    # ── LA COURBE DES NUITS (nuits.jsonl) : absente, tronquée, puis triée
+    verifier("sans nuits.jsonl, la courbe est vide et ne plante pas", chroniques.nuits(home=tmp) == [])
+    nj = tmp / ".cache" / "merlin-partie" / "nuits.jsonl"
+    nj.parent.mkdir(parents=True, exist_ok=True)
+    nj.write_text('{"nuit":"2026-09-06","partie":{"beats":22,"banc":8},"quete":null}\n'
+                  '{"nuit":"2026-09-05","partie":{"beats":14,"banc":6}}\n'
+                  '{"nuit":"2026-09-07","partie":{"beats"\n'   # une ligne coupée en deux
+                  '{"pas":"une nuit"}\n', encoding="utf-8")
+    ns = chroniques.nuits(home=tmp)
+    verifier("les lignes lisibles sont gardées, la coupée et l'étrangère sautées", len(ns) == 2, str(ns))
+    verifier("la courbe est triée par nuit", [n["nuit"] for n in ns] == ["2026-09-05", "2026-09-06"])
+
     # ── L'APPLI FLASK, en mode local (sans STUDIO_TOKEN, la porte est ouverte)
     try:
         import os
@@ -138,6 +150,9 @@ def main() -> int:
         c = app.test_client()
         r = c.get("/api/chroniques")
         verifier("/api/chroniques répond en JSON", r.status_code == 200 and "parties" in r.get_json(),
+                 "%s %s" % (r.status_code, r.data[:80]))
+        r = c.get("/api/nuits")
+        verifier("/api/nuits répond en JSON", r.status_code == 200 and "nuits" in r.get_json(),
                  "%s %s" % (r.status_code, r.data[:80]))
         r = c.get("/chroniques/liseuse")
         verifier("/chroniques/liseuse sert la page", r.status_code == 200 and b"const PARTIES = " in r.data

@@ -29,6 +29,62 @@ CIBLE_S = 20.0
 PLEIN = ("reussite", "eclatante")
 
 
+def _continuite(res: list) -> tuple[int, int, list]:
+    """(tenus, total, details) : la scene N+1 s'ouvre-t-elle sur la derniere phrase de l'issue N ?"""
+    def _phrases(s):
+        return [x.strip() for x in re.split(r"(?<=[.!?…])\s+", str(s).strip()) if x.strip()]
+
+    def _norm(s):
+        return re.sub(r"[^a-z0-9]+", " ", str(s).lower()).strip()
+
+    tenus, total, details = 0, 0, []
+    for a, b in zip(res, res[1:]):
+        ph = _phrases(re.sub(r"\[/?i\]", "", str(a.get("resolution", ""))))
+        if not ph:
+            continue
+        total += 1
+        fil = _norm(ph[-1])[:60]
+        if fil and fil[:40] and _norm(b.get("narration", "")).startswith(fil[:40]):
+            tenus += 1
+            details.append("b%s:oui" % b["index"])
+        else:
+            details.append("b%s:non" % b["index"])
+    return tenus, total, details
+
+
+def mesures(d: dict) -> dict:
+    """La partie en UNE ligne de nombres — ce que nuits.jsonl accumule et que le Studio trace.
+
+    Une mesure par nuit, comparable a la precedente : c'est ce qui manquait aux trois CIBLES, qui
+    disaient MANQUEE a chaque nuit sans jamais dire « pire », « pareil » ou « mieux »."""
+    bs = d.get("beats") or []
+    res = [b for b in bs if "degre" in b]
+    fin = d.get("fin") or {}
+    sec = {b["index"] for b in res if b.get("secours")}
+    prov = {b["index"] for b in res if str(b.get("provenance")) == "secours"}
+    degres = [str(b.get("degre")) for b in res]
+    pleins = sum(1 for x in degres if x in PLEIN)
+    att = sorted(float(b["attente_moteur_s"]) for b in res if b.get("attente_moteur_s"))
+
+    def q(p):
+        return round(att[min(len(att) - 1, int(round((len(att) - 1) * p)))], 1) if att else None
+
+    tenus, total, _ = _continuite(res)
+    return {
+        "beats": len(bs), "resolus": len(res),
+        "banc": len(sec | prov), "banc_scenes": len(prov), "banc_issues": len(sec),
+        "pleins": pleins, "partiels": degres.count("partiel"), "echecs": degres.count("echec"),
+        "reussite_pct": round(100.0 * pleins / len(res)) if res else None,
+        "bot_couvrant": any(b.get("choix_du_bot") for b in res),
+        "attente_med_s": q(0.5), "attente_p90_s": q(0.9),
+        "attente_moy_s": round(sum(att) / len(att), 1) if att else None,
+        "attente_max_s": round(att[-1], 1) if att else None,
+        "continuite": [tenus, total],
+        "fin": fin.get("type"), "integrite": fin.get("integrite"), "corruption": fin.get("corruption"),
+        "signes": sum(len(str(b.get("narration", "")) + str(b.get("resolution", ""))) for b in bs),
+    }
+
+
 def main(chemin: str) -> int:
     d = json.load(open(chemin, encoding="utf-8"))
     bs = d.get("beats") or []
@@ -87,10 +143,17 @@ def main(chemin: str) -> int:
                 (b.get("choix_du_bot") or {}).get("couverture"))
                for b in res if str(b.get("degre")) not in PLEIN]
     pleins = len(res) - len(manques)
-    print("CIBLE2 reussite: %s" % (
-        "TENUE (%d/%d)" % (pleins, len(res)) if not manques else
-        "MANQUEE (%d/%d ; %s)" % (pleins, len(res),
-            " ".join("b%s=%s(diff%s,de%s,cov%s)" % m for m in manques))))
+    # SANS BOT COUVRANT, LA CIBLE NE MESURE PAS LE JEU. Le bot cycle ses cartes a l'aveugle : avec
+    # un DC de 9, 28 % de reussite sans tag couvert contre 72 % avec un seul. Les deux premieres
+    # nuits ont dit MANQUEE sur les des (crible du 06/09). On le dit, on ne juge pas.
+    if not any(b.get("choix_du_bot") for b in res):
+        print("CIBLE2 reussite: NON MESUREE (bot NON couvrant — %d/%d pleins jugent les des, pas le jeu ; %s)"
+              % (pleins, len(res), " ".join("b%s=%s(diff%s,de%s)" % m[:4] for m in manques) or "aucun manque"))
+    else:
+        print("CIBLE2 reussite: %s" % (
+            "TENUE (%d/%d)" % (pleins, len(res)) if not manques else
+            "MANQUEE (%d/%d ; %s)" % (pleins, len(res),
+                " ".join("b%s=%s(diff%s,de%s,cov%s)" % m for m in manques))))
 
     # --- cible 3 : <= 20 s D'ATTENTE MACHINE (pas de duree de beat)
     att = [(b["index"], float(b["attente_moteur_s"])) for b in res if b.get("attente_moteur_s")]
@@ -204,26 +267,7 @@ def main(chemin: str) -> int:
     # --- LA CONTINUITE (v49) : la scene du beat N+1 s'ouvre-t-elle sur ce que l'issue N a laisse ?
     # On ne demande rien au jeu : on compare les textes du journal. Le fil est la DERNIERE phrase
     # de l'issue ; s'il a servi, la narration suivante COMMENCE par elle.
-    def _phrases(s):
-        return [x.strip() for x in re.split(r"(?<=[.!?…])\s+", str(s).strip()) if x.strip()]
-
-    def _norm(s):
-        return re.sub(r"[^a-z0-9]+", " ", str(s).lower()).strip()
-
-    tenus, total_ch, details = 0, 0, []
-    for a, b in zip(res, res[1:]):
-        iss = re.sub(r"\[/?i\]", "", str(a.get("resolution", "")))
-        ph = _phrases(iss)
-        if not ph:
-            continue
-        total_ch += 1
-        fil = _norm(ph[-1])[:60]
-        suite = _norm(b.get("narration", ""))
-        if fil and fil[:40] and suite.startswith(fil[:40]):
-            tenus += 1
-            details.append("b%s:oui" % b["index"])
-        else:
-            details.append("b%s:non" % b["index"])
+    tenus, total_ch, details = _continuite(res)
     if total_ch:
         print("CONTINUITE %d/%d enchainements portent le fil du beat precedent (%s)" % (
             tenus, total_ch, " ".join(details)))
@@ -246,4 +290,9 @@ def main(chemin: str) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "journal.json"))
+    args = [a for a in sys.argv[1:] if a != "--json"]
+    if "--json" in sys.argv:
+        print(json.dumps(mesures(json.load(open(args[0] if args else "journal.json", encoding="utf-8"))),
+                         ensure_ascii=False))
+        sys.exit(0)
+    sys.exit(main(args[0] if args else "journal.json"))

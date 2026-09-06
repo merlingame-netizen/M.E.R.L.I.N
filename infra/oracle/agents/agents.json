@@ -108,10 +108,10 @@
   {
    "id": "gd-content-gap",
    "label": "Professeur du modèle",
-   "schedule": "20 1,9,15,21 * * *",
+   "schedule": "*/30 * * * *",
    "cmd": "a_gd_content.sh",
-   "enabled": false,
-   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN (le jeu génère ses scénarios 100 % en direct — ces cartes ne sont pas du contenu de jeu). Quatre fois par jour. [PAUSE 2026-08-25 : entraine le futur modele sur un canon PERIME (dieux celtiques interdits par le jeu, format a branches d'avant le pivot v11). Le laisser tourner graverait le generique DANS le modele — l'inverse de l'empreinte visee (v48). A reactiver quand data/ai/lore_canon.json est refait, aligne sur v48 + format R166.]"
+   "enabled": true,
+   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN. PAUSE du 25/08 levée le 06/09 : le canon (data/ai/lore_canon.json v2.0) est dérivé du jeu depuis le 05/09. Cadence choisie par Maxime (toutes les 30 min, qui vivait dans une surcharge hors dépôt) et désormais SOUS PORTE : run-gd-agent.sh interroge gates.py et cède les quatre cœurs à tout godot qui tourne, harnais compris. Reste à recibler sur le beat (tâche #29 : il produit encore des cartes à trois options)."
   },
   {
    "id": "gd-balance",
@@ -172,10 +172,10 @@
   {
    "id": "native-bench",
    "label": "Vitesse du moteur du jeu",
-   "schedule": "25 4 * * *",
+   "schedule": "0 6 * * *",
    "cmd": "a_llm_native_bench.sh",
    "enabled": true,
-   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 4h25 : après le playtest, hors des créneaux du corpus."
+   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 6h00, après l'atelier de nuit, et jamais sous un harnais (06/09 : à 4h25 il chargeait un second e4b pendant la partie)."
   },
   {
    "id": "ollama-idle",
@@ -307,19 +307,27 @@
   },
   {
    "id": "partie-nuit",
-   "label": "La partie de la nuit",
+   "label": "L'atelier de nuit",
    "schedule": "5 4 * * *",
    "cmd": "a_partie_nuit.sh",
    "enabled": true,
-   "desc": "Joue chaque nuit UNE partie entière avec le bot et la garde datée : sa chronique apparaît au réveil dans l'onglet Chronique du Studio, vue par la sonde ET par le jeu. C'est le point de mesure quotidien de « le jeu s'améliore-t-il ». Ne tourne pas si quelqu'un joue."
+   "desc": "Joue chaque nuit UNE partie entière avec le bot COUVRANT, puis génère UNE quête avec le vrai moteur, dans cet ordre et sans personne d'autre sur le moteur ; garde tout daté (30 nuits) et écrit une ligne par nuit dans nuits.jsonl, la courbe que le Studio trace. Ne tourne pas si quelqu'un joue ou si un autre harnais tient le jeu (rc=75 : reporté). [06/09 : remplace le couple partie-nuit 4h05 / quete-nuit 4h40, dont la quête n'a jamais tourné.]"
   },
   {
    "id": "quete-nuit",
    "label": "La quête de la nuit",
-   "schedule": "40 4 * * *",
+   "schedule": "à la demande",
    "cmd": "a_quete_nuit.sh",
    "enabled": true,
-   "desc": "Génère chaque nuit UNE quête du chapitre courant avec le vrai moteur, la passe au contrat et à la grille de lecture, et la garde datée. Un point par jour sur la prose. ~8 minutes, après la partie de la nuit."
+   "desc": "Génère UNE quête du chapitre courant avec le vrai moteur, la passe au contrat et à la grille de lecture, et la garde datée. Appelée par l'atelier de nuit APRÈS la partie (06/09) : à heure fixe, elle trouvait le jeu occupé par la partie et sortait en 0 sans rien écrire."
+  },
+  {
+   "id": "crible",
+   "label": "Le crible",
+   "schedule": "40 7 * * *",
+   "cmd": "a_crible.sh",
+   "enabled": true,
+   "desc": "Chaque matin, l'état RÉEL de la VM en un texte : nuits gardées et leurs verdicts, courbe des nuits, smoke et épreuves, dernière course de CHAQUE agent (last_run, durée, rc, résumé, reportés), réveils et échecs sur la fenêtre réellement lue dans cron.log, surcharges, corpus, Studio, verrous suspects. Gardé 30 jours sous ~/.cache/merlin-agents/crible/ et envoyé sur ntfy. Jamais d'URL ni de secret dedans."
   }
  ]
 }

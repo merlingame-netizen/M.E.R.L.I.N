@@ -194,6 +194,28 @@ def liste(home: Path | None = None, repo: Path | None = None) -> list[dict]:
 
 # ── la page ─────────────────────────────────────────────────────────────────────────────────────
 
+def nuits(home: Path | None = None, limite: int = 60) -> list[dict]:
+    """La courbe : une ligne par nuit, écrite par a_partie_nuit.sh dans nuits.jsonl.
+
+    Chaque ligne porte `nuit` (date), `partie` (les mesures de verdict_partie.py --json, ou null
+    si rien n'a été joué) et `quete` (beats, contrat, adresse). Une ligne illisible est sautée, pas
+    fatale : la courbe d'hier ne doit pas disparaître parce que celle de ce matin est tronquée."""
+    home = home or Path.home()
+    chemin = home / ".cache" / "merlin-partie" / "nuits.jsonl"
+    if not chemin.is_file():
+        return []
+    out: list[dict] = []
+    for ligne in chemin.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            d = json.loads(ligne)
+        except Exception:
+            continue
+        if isinstance(d, dict) and d.get("nuit"):
+            out.append(d)
+    out.sort(key=lambda d: str(d.get("nuit")))
+    return out[-limite:]
+
+
 def rendre(parties_: dict[str, dict]) -> str:
     gabarit = GABARIT.read_text(encoding="utf-8")
     if MARQUE not in gabarit:

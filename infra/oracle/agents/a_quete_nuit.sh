@@ -25,9 +25,13 @@ OUT="$BASE/quete_generee.json"
 LOG="$HOME/.cache/merlin-game/godot.log"
 mkdir -p "$BASE"
 
+# Depuis le 06/09 cet agent est appelé par a_partie_nuit.sh APRÈS la partie (« à la demande » dans
+# le manifeste) : lancé à heure fixe, il trouvait le jeu occupé par la partie et sortait en 0 sans
+# rien écrire. Un renoncement sort désormais en 75, et le dit.
 DESIRED="$(cat "$HOME/.cache/merlin-game/desired" 2>/dev/null || echo stopped)"
-if [ "$DESIRED" = "running" ] || bash "$GS" status 2>/dev/null | grep -q '"vnc_open":true'; then
-    echo "le jeu est occupé — quête de la nuit annulée"; exit 0
+HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+if [ -n "$HARNAIS" ] || [ "$DESIRED" = "running" ] || bash "$GS" status 2>/dev/null | grep -q '"vnc_open":true'; then
+    echo "le jeu est occupé (harnais « $HARNAIS », desire=$DESIRED) — quête de la nuit reportée"; exit 75
 fi
 if [ -s "$GARDE/quete.json" ]; then
     echo "la quête de cette nuit est déjà écrite ($GARDE)"; exit 0
@@ -42,7 +46,7 @@ except Exception: pass"); do
 done
 DISPO=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
 if [ "${DISPO:-0}" -lt 12000000 ]; then
-    echo "mémoire insuffisante (${DISPO} ko) — quête de la nuit reportée"; exit 0
+    echo "mémoire insuffisante (${DISPO} ko) — quête de la nuit reportée"; exit 75
 fi
 
 env -u RES bash "$GS" stop >/dev/null 2>&1

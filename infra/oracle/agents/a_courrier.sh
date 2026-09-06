@@ -84,7 +84,7 @@ done
 # clef privee). Un journal de partie qui raconte un secret de Broceliande passe donc,
 # et un lien signe ne passe jamais.
 NOM_SENSIBLE='(^|[^a-z])(lien|liens|cle|clef|cles|token|jeton|secret|secrets|mdp|motdepasse|magic|mfa|credential|credentials|key|keys)([^a-z]|$)|\.env($|\.)'
-FORME_SENSIBLE='(\?|&|^|[[:space:]])(cle|clef|token|key|secret|password|pass)=[A-Za-z0-9_-]{6,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|BEGIN[[:space:]]+[A-Z ]*PRIVATE[[:space:]]+KEY|ocid1\.[a-z]+\.|ssh-(rsa|ed25519)[[:space:]]|AKIA[0-9A-Z]{16}'
+FORME_SENSIBLE='(\?|&|^|[[:space:]])(cle|clef|token|key|secret|password|pass)=[A-Za-z0-9_-]{6,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|BEGIN[[:space:]]+[A-Z ]*PRIVATE[[:space:]]+KEY|ocid1\.[a-z]+\.|ssh-(rsa|ed25519)[[:space:]]|AKIA[0-9A-Z]{16}|[a-z0-9-]+\.trycloudflare\.com'
 retenus=0
 find "$RES" -type f -size -14M | while read -r f; do
     rel="$(echo "${f#"$RES"/}" | tr '/' '_')"

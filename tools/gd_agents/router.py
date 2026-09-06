@@ -81,13 +81,20 @@ def disk_free_gb(path: Path | None = None) -> float:
 
 
 def game_running() -> bool:
-    """Le jeu occupe le VNC : ses 4 cœurs ne doivent pas partir dans le LLM."""
-    s = socket.socket()
-    s.settimeout(0.4)
+    """Le jeu tourne (VNC, tout godot, ou un harnais) : ses 4 cœurs ne partent pas dans le LLM.
+
+    Le port 5900 seul ne voyait ni les sondes headless ni la partie de la nuit ; gates.py sait,
+    lui, et il est la seule définition (crible du 06/09)."""
     try:
-        return s.connect_ex(("127.0.0.1", 5900)) == 0
-    finally:
-        s.close()
+        from gates import game_running as _gr  # même dossier
+        return bool(_gr())
+    except Exception:
+        s = socket.socket()
+        s.settimeout(0.4)
+        try:
+            return s.connect_ex(("127.0.0.1", 5900)) == 0
+        finally:
+            s.close()
 
 
 def measured_speeds() -> dict:
@@ -125,14 +132,16 @@ def choose(shape: str, out_tokens: int, deadline_s: int,
     prompt_eval = speeds.get("_prompt_eval", cfg["prompt_eval_tok_s_fallback"])
     mem, free_gb, playing = mem_available_mb(), disk_free_gb(), game_running()
     night = _is_night(gates)
-    num_thread = gates["night_num_thread"] if (night or not playing) else gates["day_num_thread"]
+    # LE JEU PRIME, JOUR COMME NUIT. L'ancienne règle donnait les fils de nuit dès que c'était la
+    # nuit, jeu ou pas : la partie de la nuit (4 h) se faisait piétiner à quatre fils (crible 06/09).
+    num_thread = gates["day_num_thread"] if playing else gates["night_num_thread"]
 
     # Plancher de capacité : la forme de la sortie décide du palier minimal.
     floor = next((i for i, t in enumerate(tiers) if shape in t["shapes_ok"]), 0)
     idx = min(len(tiers) - 1, floor + max(0, escalate))       # G5
 
-    # G3 — plafond diurne : le jeu prime le jour.
-    if playing and not night:
+    # G3 — plafond quand le jeu tourne, de jour comme de nuit.
+    if playing:
         cap = next((i for i, t in enumerate(tiers)
                     if t["name"] == gates["day_ceiling_tier"]), 0)
         if idx > cap and shape in tiers[cap]["shapes_ok"]:

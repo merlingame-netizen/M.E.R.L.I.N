@@ -847,12 +847,56 @@ async function refreshChroniques() {
   try { d = await j('/api/chroniques'); } catch { /* le cadre dira lui-même s'il est vide */ }
   const n = (d.parties || []).length;
   $('#chro-meta').textContent = n ? `${n} partie(s)` : 'aucune partie encore';
+  renderNuits();
   const f = $('#chro-cadre');
   if (!f) return;
   const src = '/chroniques/liseuse';
   if (!f.getAttribute('src')) f.setAttribute('src', src);
   else if (f.dataset.parties !== String(n)) { f.setAttribute('src', src + '?n=' + n); }
   f.dataset.parties = String(n);
+}
+
+/* ── La courbe des nuits : trois mesures, trois petites séries ──────────────
+   Une série par mesure (au banc, réussite, attente médiane) et JAMAIS deux échelles
+   sur un même axe : elles n'ont rien à voir entre elles. Un point par nuit, le dernier
+   écrit en clair, le survol dit la date et la valeur. Sans deux points, pas de courbe :
+   la bande reste cachée plutôt que de montrer un point isolé comme une tendance. */
+function _serie(nuits, cle, unite) {
+  return nuits.map(d => ({ nuit: d.nuit, v: (d.partie && d.partie[cle] != null) ? Number(d.partie[cle]) : null, unite }));
+}
+function _sparkline(pts, w, h) {
+  const vals = pts.filter(p => p.v != null).map(p => p.v);
+  if (vals.length < 2) return '';
+  const lo = Math.min(0, ...vals), hi = Math.max(...vals) || 1;
+  const x = i => 4 + (w - 8) * (pts.length === 1 ? 0 : i / (pts.length - 1));
+  const y = v => h - 4 - (h - 8) * ((v - lo) / ((hi - lo) || 1));
+  let d = '', segs = [], seg = [];
+  pts.forEach((p, i) => { if (p.v == null) { if (seg.length) segs.push(seg); seg = []; } else seg.push([x(i), y(p.v)]); });
+  if (seg.length) segs.push(seg);
+  for (const s of segs) d += s.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' ') + ' ';
+  const marks = pts.map((p, i) => p.v == null ? '' :
+    `<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="4"><title>${esc(p.nuit)} · ${p.v}${esc(p.unite)}</title></circle>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><path d="${d.trim()}" fill="none" stroke="currentColor" stroke-width="2"/>${marks}</svg>`;
+}
+async function renderNuits() {
+  const box = $('#nuits');
+  if (!box) return;
+  let nuits = [];
+  try { nuits = (await j('/api/nuits')).nuits || []; } catch { nuits = []; }
+  const jouees = nuits.filter(d => d.partie && d.partie.beats);
+  if (jouees.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
+  const derniere = jouees[jouees.length - 1];
+  const mesures = [
+    { titre: 'au banc', cle: 'banc', unite: ' beats', fmt: v => `${v}/${derniere.partie.beats}` },
+    { titre: 'réussite', cle: 'reussite_pct', unite: ' %', fmt: v => `${v} %` },
+    { titre: 'attente médiane', cle: 'attente_med_s', unite: ' s', fmt: v => `${v} s` },
+  ];
+  box.innerHTML = mesures.map(m => {
+    const pts = _serie(jouees, m.cle, m.unite);
+    const v = derniere.partie[m.cle];
+    return `<figure class="nuit"><figcaption>${esc(m.titre)}<b>${v == null ? '—' : esc(m.fmt(v))}</b></figcaption>${_sparkline(pts, 140, 36)}</figure>`;
+  }).join('') + `<div class="nuit-legende">${jouees.length} nuits · dernière ${esc(derniere.nuit)}${derniere.partie.bot_couvrant ? '' : ' · bot aveugle'}</div>`;
+  box.hidden = false;
 }
 
 /* ── Le récit gravé : chapitres + fils en cours ─────────────────────────────

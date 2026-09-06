@@ -24,8 +24,16 @@ else
 fi
 
 # Copilote résident : réchauffé si déchargé (keep_alive long, prompt vide = load pur).
+# JAMAIS sous un harnais, ni entre 2 h et 6 h : la partie de la nuit décharge Ollama pour rendre
+# la RAM et les cœurs au moteur du jeu (a_partie_journal.sh), et ce veilleur la rechargeait cinq
+# minutes plus tard, à 6 Go et pour deux heures. Un serveur vivant suffit ; le copilote se
+# rechargera à la première demande du jour.
+HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+HEURE="$((10#$(date -u +%H)))"
 LOADED="$(curl -fsS -m 5 "http://$OLLAMA_HOST/api/ps" 2>/dev/null | grep -c "${COPILOT_MODEL:-none}" || true)"
-if [ "$LOADED" = "0" ] && [ -n "${COPILOT_MODEL:-}" ]; then
+if [ -n "$HARNAIS" ] || { [ "$HEURE" -ge 2 ] && [ "$HEURE" -lt 6 ]; }; then
+    WARM="non réchauffé (harnais « ${HARNAIS} » / nuit)"
+elif [ "$LOADED" = "0" ] && [ -n "${COPILOT_MODEL:-}" ]; then
     curl -fsS -m 60 "http://$OLLAMA_HOST/api/generate" \
         -d "{\"model\":\"$COPILOT_MODEL\",\"prompt\":\"\",\"keep_alive\":\"2h\"}" >/dev/null 2>&1 \
         && WARM=rechargé || WARM=échec

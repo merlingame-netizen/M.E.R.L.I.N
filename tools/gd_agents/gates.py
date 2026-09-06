@@ -14,10 +14,18 @@ import time
 from pathlib import Path
 
 WITNESS = Path.home() / ".cache" / "merlin-game" / "last-seen-playing"
+HARNESS = Path.home() / ".cache" / "merlin-game" / "harness"
 GRACE_S = 600
 
 
 def game_running() -> bool:
+    # Un harnais (partie de la nuit, quête, sonde) tient le jeu même sans fenêtre ni port VNC :
+    # game-stack.sh le note dans `harness` au lancement et l'efface à l'arrêt.
+    try:
+        if HARNESS.is_file() and HARNESS.read_text().strip():
+            return True
+    except Exception:
+        pass
     s = socket.socket()
     s.settimeout(0.4)
     try:

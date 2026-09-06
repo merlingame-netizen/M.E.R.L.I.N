@@ -834,6 +834,14 @@ Fenêtre ouverte encore {left} min.</p>
         except Exception as exc:
             return jsonify({"parties": [], "error": str(exc)[:200]})
 
+    @app.route("/api/nuits")
+    def api_nuits():
+        # La courbe nuit après nuit : « le jeu s'améliore-t-il ? » a besoin de points, pas d'instantanés.
+        try:
+            return jsonify({"nuits": chroniques.nuits()})
+        except Exception as exc:  # pragma: no cover
+            return jsonify({"nuits": [], "erreur": str(exc)[:200]})
+
     @app.route("/chroniques/liseuse")
     def chroniques_liseuse():
         try:

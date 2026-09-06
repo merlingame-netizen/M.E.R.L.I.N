@@ -24,7 +24,16 @@ mkdir -p "$(dirname "$OUT")"
 # Jamais pendant que Maxime joue : on lui volerait le CPU, ET la mesure serait
 # fausse (le jeu tient déjà le modèle). Deux raisons, un seul test.
 if bash "$HERE/../game/game-stack.sh" status 2>/dev/null | grep -q '"vnc_open":true'; then
-    echo "jeu en cours d'utilisation — mesure reportée"; exit 0
+    echo "jeu en cours d'utilisation — mesure reportée"; exit 75
+fi
+# NI SOUS UN HARNAIS. `vnc_open` ne dit que si quelqu'un REGARDE : la partie de la nuit n'a pas de
+# spectateur, et ce banc lançait à 4 h 25 un second Godot avec un second e4b de 6 Go pendant
+# qu'elle jouait — les beats 11 à 13 des deux premières nuits (98 à 128 s) tombent exactement là,
+# et la mesure du banc, prise à deux moteurs sur quatre cœurs, ne valait rien non plus.
+HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+DESIRE="$(cat "$HOME/.cache/merlin-game/desired" 2>/dev/null || echo stopped)"
+if [ -n "$HARNAIS" ] || [ "$DESIRE" = "running" ]; then
+    echo "le jeu est tenu (harnais « $HARNAIS », desire=$DESIRE) — mesure reportée"; exit 75
 fi
 
 etape 1 3 "vérification de la sonde"
