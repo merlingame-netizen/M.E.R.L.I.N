@@ -74,3 +74,9 @@
 - La mort : une menace réelle et rare, environ une traversée sur dix pour un joueur attentif.
   Cible mesurable sur la nuit avec le bot couvrant : au plus une nuit sur dix finit en mort.
 - Le rythme : une nuit par jour, la machine libre le jour. La courbe parle après une semaine.
+
+## 2026-09-06 (soir) : le filon, troisième tour
+- Le corpus élargi : Claude écrit dans la voix du corpus existant, une quête par biome ; Maxime
+  relit et corrige (chaque correction devient une règle d'écriture).
+- L'ordre : la mort et la progression d'abord (une session, effet dès la nuit suivante), puis le
+  corpus quête par quête, le LoRA quand il y a ~200 exemples.
