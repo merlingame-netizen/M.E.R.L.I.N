@@ -1,485 +1,596 @@
-<title>Les 30 ans d'Elise</title>
+<title>Elise, trente ans</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Karla:wght@300..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..800;1,6..96,400..700&family=Schibsted+Grotesk:ital,wght@0,400..800;1,400..700&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   ELISE, TRENTE ANS — Aix-en-Provence, 10 & 11 octobre 2026.
+   Palette : les Sainte-Victoire tardives de Cézanne. Parti pris
+   mono-thème assumé (une invitation peinte) : la page peint son
+   fond et chacune de ses couleurs, elle tient sur n'importe quel
+   ground hôte.
+   ═══════════════════════════════════════════════════════════════ */
 :root{
-  --paper:#f4ebdb; --paper-2:#ecdfc8; --paper-3:#dcc7a8;
-  --ink:#241d17;   --ink-soft:#4e4038; --ink-faint:#8a7869;
-  --ocre:#c8791f;  --ocre-deep:#a35a15; --sienna:#9e3b21; --rouge:#7d2417;
-  --olive:#66714a; --night:#1c1714;     --rule:#c3ac8c;   --wa:#25d366;
-  --rail:#3f6b8a;
-  --display:'Fraunces',Georgia,serif;
-  --body:'Karla',-apple-system,'Segoe UI',sans-serif;
-  --pad:clamp(1.1rem,5vw,2.5rem);
+  --ciel:#6e96b8;      --ciel-clair:#a8c2d6;  --ciel-fonce:#4a6f92;
+  --roche:#d9a441;     --roche-clair:#e8c47e; --roche-fonce:#a97c26;
+  --pin:#4f6b4a;       --pin-fonce:#39503a;
+  --terre:#b4562f;     --terre-fonce:#8c3d1f;
+  --craie:#ede6d8;     --craie-2:#e3d9c6;     --craie-3:#d3c6ad;
+  --encre:#1f2833;     --encre-doux:#43505e;  --encre-pale:#7c8794;
+  --blanc:#faf7f0;
+  --display:'Bodoni Moda',Didot,'Times New Roman',serif;
+  --texte:'Schibsted Grotesk',-apple-system,'Segoe UI',sans-serif;
+  --pad:clamp(1.15rem,5vw,2.75rem);
+  --col:640px;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
-  font-size:1.02rem;line-height:1.6;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
-.wrap{max-width:560px;margin-inline:auto;padding-inline:var(--pad)}
-h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.08;margin:0;
-  font-variation-settings:'SOFT' 22,'WONK' 1;letter-spacing:-.02em;text-wrap:balance}
-p{margin:0 0 .9em}
-:focus-visible{outline:3px solid var(--sienna);outline-offset:2px}
+body{
+  margin:0;background:var(--craie);color:var(--encre);
+  font-family:var(--texte);font-size:1.03rem;line-height:1.62;
+  overflow-x:hidden;-webkit-tap-highlight-color:transparent;
+  font-feature-settings:"ss01";
+}
+.col{max-width:var(--col);margin-inline:auto;padding-inline:var(--pad)}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;line-height:1.06;
+  letter-spacing:-.012em;text-wrap:balance}
+p{margin:0 0 .85em}
+:focus-visible{outline:3px solid var(--terre);outline-offset:3px;border-radius:2px}
+.oeil{font-size:.68rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--terre);margin:0 0 .7rem}
 
-.top{background:var(--night);color:var(--paper);padding-block:clamp(2rem,7vh,3.2rem) 1.4rem;
-  position:relative;overflow:hidden}
-.top::before{content:"";position:absolute;inset:0;
-  background:linear-gradient(179.4deg,transparent 0 70%,#8f4a16 70% 78%,transparent 78%),
-    linear-gradient(180.6deg,transparent 0 77%,#c8791f 77% 85%,transparent 85%),
-    linear-gradient(179.3deg,transparent 0 84%,#9e3b21 84% 92%,transparent 92%),
-    linear-gradient(180.4deg,transparent 0 91%,#d99a3d 91% 100%);
-  filter:blur(1.5px);opacity:.85;
-  -webkit-mask-image:linear-gradient(180deg,transparent 58%,#000 74%);
-  mask-image:linear-gradient(180deg,transparent 58%,#000 74%)}
-.top::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,var(--night) 0 52%,rgba(28,23,20,.7) 74%,rgba(28,23,20,.35) 100%)}
-.top .wrap{position:relative;z-index:1}
-.top h1{font-size:clamp(2.4rem,11vw,3.6rem);color:var(--paper);font-weight:400;line-height:.9;
-  font-variation-settings:'SOFT' 48,'WONK' 1}
-.top h1 em{display:block;font-style:italic;font-weight:300;color:var(--ocre);
-  font-size:.42em;margin-top:.35em}
-.top .quand{margin-top:1.3rem;font-size:1rem;color:var(--paper-3)}
-.top .quand b{color:var(--paper)}
-.offert{display:inline-block;margin-top:1.1rem;background:var(--olive);color:#f2f4ec;
-  padding:.5rem 1rem;font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+/* ══ LA MONTAGNE ══════════════════════════════════════════════ */
+.tableau{position:relative;background:#39503a;line-height:0;
+  padding-bottom:clamp(1.6rem,6vw,2.6rem)}
+.tableau svg{display:block;width:100%;height:auto}
+.tableau::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:66%;z-index:1;
+  background:linear-gradient(180deg,rgba(31,40,51,0) 0%,rgba(31,40,51,.30) 42%,
+    rgba(31,40,51,.74) 78%,rgba(31,40,51,.86) 100%);
+}
+.facette{transform-origin:center;animation:poser .8s cubic-bezier(.22,.8,.3,1) both}
+@keyframes poser{from{opacity:.5;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.facette{animation:none}}
 
-.tabs{display:flex;background:var(--night);position:sticky;top:0;z-index:40;
-  border-bottom:1px solid rgba(200,121,31,.4)}
-.tabs button{flex:1;background:none;border:none;border-bottom:3px solid transparent;
-  color:var(--paper-3);font-family:var(--body);font-weight:800;font-size:.76rem;
-  letter-spacing:.09em;text-transform:uppercase;padding:1rem .4rem;cursor:pointer;
-  min-height:52px;transition:color .18s,border-color .18s}
-.tabs button[aria-selected="true"]{color:var(--paper);border-bottom-color:var(--ocre)}
+.titre{
+  position:absolute;left:0;right:0;bottom:clamp(1rem,4vw,2.4rem);z-index:2;
+  line-height:1.6;
+}
+.titre h1{
+  font-size:clamp(3.1rem,15vw,7rem);color:var(--blanc);font-weight:500;
+  line-height:.86;letter-spacing:-.03em;
+  text-shadow:0 2px 24px rgba(31,40,51,.42);
+}
+.titre h1 em{
+  display:block;font-style:italic;font-weight:400;font-size:.42em;
+  color:var(--roche-clair);margin-top:.22em;letter-spacing:0;
+}
+.legende{
+  background:var(--encre);color:var(--craie);padding-block:1.5rem 1.7rem;
+}
+.legende .quand{font-family:var(--display);font-size:clamp(1.3rem,5vw,1.75rem);
+  color:var(--blanc);font-weight:500;margin-bottom:.35rem}
+.legende .ou{color:var(--ciel-clair);font-size:1rem;margin:0}
+.jauge{display:flex;gap:1.6rem;margin-top:1.3rem;flex-wrap:wrap}
+.jauge div b{display:block;font-family:var(--display);font-size:1.9rem;font-weight:500;
+  color:var(--roche);line-height:1;font-variant-numeric:tabular-nums}
+.jauge div span{display:block;font-size:.63rem;font-weight:700;letter-spacing:.17em;
+  text-transform:uppercase;color:var(--encre-pale);margin-top:.35rem}
+.sceau{
+  display:inline-block;margin-top:1.4rem;border:1.5px solid var(--roche);
+  color:var(--roche-clair);padding:.5rem .95rem;font-size:.7rem;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;
+}
 
-.steps{display:flex;gap:.5rem;padding:1.3rem var(--pad) 0;max-width:560px;margin-inline:auto}
-.steps div{flex:1;height:5px;background:var(--paper-3)}
-.steps div.on{background:var(--ocre)}
-.steps div.done{background:var(--olive)}
-.step-label{max-width:560px;margin:.7rem auto 0;padding-inline:var(--pad);
-  font-size:.7rem;font-weight:800;letter-spacing:.17em;text-transform:uppercase;color:var(--ocre-deep)}
+/* ══ ONGLETS ══════════════════════════════════════════════════ */
+.rubans{position:sticky;top:0;z-index:40;background:var(--craie-2);
+  border-bottom:1px solid var(--craie-3)}
+.rubans div{display:flex;max-width:var(--col);margin-inline:auto;padding-inline:var(--pad)}
+.rubans button{
+  flex:1;background:none;border:none;border-bottom:2px solid transparent;
+  font-family:var(--texte);font-weight:700;font-size:.73rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--encre-pale);padding:1.05rem .3rem;cursor:pointer;
+  min-height:52px;transition:color .2s,border-color .2s;
+}
+.rubans button[aria-selected="true"]{color:var(--encre);border-bottom-color:var(--terre)}
 
-main{padding-block:1.6rem 3rem}
-h2{font-size:clamp(1.55rem,6vw,2rem);margin-bottom:.45rem}
-.lede{color:var(--ink-soft);margin-bottom:1.4rem;font-size:.97rem}
+main{padding-block:2.2rem 3.5rem}
+h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
+.chapo{color:var(--encre-doux);margin-bottom:1.7rem;font-size:1rem;max-width:58ch}
 
-.opts{display:grid;gap:.65rem;margin-bottom:1.4rem}
-.pick{position:relative;display:block}
-.pick input{position:absolute;opacity:0;width:0;height:0}
-.pick>span{display:block;border:2px solid var(--rule);background:#fff;cursor:pointer;
-  padding:1rem 1.1rem;min-height:56px;transition:border-color .15s,background .15s}
-.pick input:checked+span{border-color:var(--ocre);background:rgba(200,121,31,.14)}
-.pick input:focus-visible+span{outline:3px solid var(--sienna);outline-offset:2px}
-.pick b{display:block;font-family:var(--display);font-size:1.1rem;font-weight:600}
-.pick em{font-style:normal;color:var(--ink-faint);font-size:.9rem;display:block;margin-top:.15rem}
-.pick .tag{float:right;font-size:.71rem;font-weight:800;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--rail);margin-left:.8rem}
-.sub{font-family:var(--display);font-size:1.1rem;font-weight:700;color:var(--ocre-deep);
-  margin:1.7rem 0 .7rem}
-.sub:first-of-type{margin-top:0}
-.field{margin-bottom:1.1rem}
-.field label{display:block;font-size:.7rem;font-weight:800;letter-spacing:.15em;
-  text-transform:uppercase;color:var(--ocre-deep);margin-bottom:.45rem}
-.field input{width:100%;font-family:var(--body);font-size:1.05rem;padding:.9rem 1rem;
-  border:2px solid var(--rule);background:#fff;color:var(--ink);min-height:52px}
-.field input:focus{border-color:var(--ocre);outline:none}
+/* ══ ENTONNOIR ════════════════════════════════════════════════ */
+.marches{display:flex;gap:.45rem;margin-bottom:.85rem}
+.marches i{flex:1;height:3px;background:var(--craie-3);transition:background .3s}
+.marches i.ici{background:var(--terre)}
+.marches i.faite{background:var(--pin)}
 
-.rail{background:var(--rail);color:#eef4f8;padding:1.1rem 1.2rem;margin-bottom:1.4rem}
-.rail h3{font-size:1.04rem;color:#fff;margin-bottom:.7rem}
-.rail table{width:100%;border-collapse:collapse;font-size:.91rem}
-.rail td{padding:.32rem 0;border-bottom:1px solid rgba(255,255,255,.18)}
-.rail tr:last-child td{border-bottom:none}
-.rail td:last-child{text-align:right;font-weight:700;color:#fff;white-space:nowrap}
+.choix{display:grid;gap:.6rem;margin-bottom:1.6rem}
+.opt{position:relative;display:block}
+.opt input{position:absolute;opacity:0;width:0;height:0}
+.opt>span{
+  display:block;width:100%;background:var(--blanc);border:1px solid var(--craie-3);
+  border-left:3px solid var(--craie-3);cursor:pointer;padding:.95rem 1.1rem;
+  min-height:56px;transition:border-color .16s,background .16s,transform .16s;
+}
+.opt>span:hover{transform:translateX(2px)}
+.opt input:checked+span{border-color:var(--terre);border-left-color:var(--terre);
+  background:#fdf6ec}
+.opt input:focus-visible+span{outline:3px solid var(--terre);outline-offset:3px}
+.opt b{display:block;font-family:var(--display);font-size:1.14rem;font-weight:600;
+  letter-spacing:-.01em}
+.opt em{font-style:normal;color:var(--encre-pale);font-size:.9rem;display:block;margin-top:.1rem}
+.opt .note{float:right;font-size:.66rem;font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ciel-fonce);margin-left:.9rem;padding-top:.25rem}
+.opt input:checked+span .note{color:var(--terre)}
 
-.nav-b{display:flex;gap:.7rem;margin-top:1.7rem}
-.btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
-  background:var(--rouge);color:#f7ece0;border:none;padding:1.05rem 1.2rem;
-  font-family:var(--body);font-weight:800;font-size:.86rem;letter-spacing:.1em;
+.groupe{font-family:var(--display);font-size:1.18rem;font-weight:600;color:var(--encre);
+  margin:1.9rem 0 .3rem;padding-bottom:.4rem;border-bottom:1px solid var(--craie-3)}
+.groupe:first-of-type{margin-top:0}
+.groupe span{float:right;font-family:var(--texte);font-size:.66rem;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--encre-pale);padding-top:.55rem}
+.champ{margin-bottom:1rem}
+.champ label{display:block;font-size:.67rem;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--encre-pale);margin-bottom:.4rem}
+.champ input{width:100%;font-family:var(--texte);font-size:1.04rem;padding:.85rem .95rem;
+  border:1px solid var(--craie-3);background:var(--blanc);color:var(--encre);min-height:52px}
+.champ input:focus{border-color:var(--terre);outline:none}
+.champ input::placeholder{color:var(--encre-pale)}
+
+.barre{display:flex;gap:.7rem;margin-top:1.9rem}
+.bt{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  background:var(--encre);color:var(--craie);border:none;padding:1rem 1.2rem;
+  font-family:var(--texte);font-weight:700;font-size:.79rem;letter-spacing:.13em;
   text-transform:uppercase;cursor:pointer;min-height:54px;text-decoration:none;
   transition:background .18s,transform .12s}
-.btn:active{transform:scale(.98)}
-.btn:hover{background:var(--sienna)}
-.btn.back{flex:0 0 auto;background:transparent;border:2px solid var(--rule);color:var(--ink-soft)}
-.btn.wa{background:var(--wa);color:#053b1c}
-.btn.wa:hover{background:#1fbb59}
-.btn[disabled]{opacity:.4;cursor:not-allowed}
+.bt:hover{background:var(--encre-doux)}
+.bt:active{transform:scale(.985)}
+.bt.retour{flex:0 0 auto;background:transparent;border:1px solid var(--craie-3);
+  color:var(--encre-doux)}
+.bt.retour:hover{background:var(--craie-2)}
+.bt.envoi{background:var(--terre)}
+.bt.envoi:hover{background:var(--terre-fonce)}
+.bt[disabled]{opacity:.35;cursor:not-allowed}
 
-.recap{background:var(--night);color:var(--paper-3);padding:1.3rem;margin-bottom:1.5rem}
-.recap dt{font-size:.63rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--ocre);margin-top:.85rem}
-.recap dt:first-child{margin-top:0}
-.recap dd{margin:.15rem 0 0;color:var(--paper);font-size:1rem}
-.recap dd.todo{color:var(--ink-faint);font-style:italic}
+/* ══ RÉCAPITULATIF ════════════════════════════════════════════ */
+.fiche{background:var(--encre);color:var(--craie);padding:1.4rem;margin-bottom:1.5rem}
+.fiche dt{font-size:.62rem;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--roche);margin-top:1rem}
+.fiche dt:first-of-type{margin-top:0}
+.fiche dd{margin:.15rem 0 0;color:var(--blanc);font-size:1.02rem}
+.fiche dd.vide{color:var(--encre-pale);font-style:italic}
 
-.cagnotte{border:2px solid var(--ocre);background:#fff;padding:1.2rem;margin-bottom:1.4rem}
-.cagnotte h3{font-size:1.15rem;margin-bottom:.5rem}
-.cagnotte .lbl{font-size:.62rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--ocre-deep);margin:.9rem 0 .15rem}
-.cagnotte .val{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:1.02rem;
-  word-break:break-all;font-variant-numeric:tabular-nums;margin:0}
-.cagnotte .val.nom{font-family:var(--body);font-size:1rem}
-.copy{margin-top:1rem;width:100%;background:var(--ocre);color:var(--night);border:none;
-  padding:.95rem;font-family:var(--body);font-weight:800;font-size:.82rem;letter-spacing:.1em;
+.cadeau{border:1px solid var(--roche);background:var(--blanc);padding:1.3rem;margin-bottom:1.5rem}
+.cadeau h3{font-size:1.22rem;margin-bottom:.45rem}
+.cadeau .et{font-size:.61rem;font-weight:700;letter-spacing:.19em;text-transform:uppercase;
+  color:var(--roche-fonce);margin:1rem 0 .1rem}
+.cadeau .val{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:1rem;
+  word-break:break-all;font-variant-numeric:tabular-nums;margin:0;color:var(--encre)}
+.cadeau .val.nom{font-family:var(--texte)}
+.copier{margin-top:1.1rem;width:100%;background:var(--roche);color:var(--encre);border:none;
+  padding:.9rem;font-family:var(--texte);font-weight:700;font-size:.78rem;letter-spacing:.13em;
   text-transform:uppercase;cursor:pointer;min-height:52px;transition:background .18s}
-.copy:hover{background:#e08f2c}
-.copy.ok{background:var(--olive);color:#f2f4ec}
+.copier:hover{background:var(--roche-clair)}
+.copier.fait{background:var(--pin);color:var(--craie)}
 
-.day{font-family:var(--display);font-size:1.2rem;font-weight:700;color:var(--ocre-deep);
-  margin:1.7rem 0 .3rem}
-.day:first-of-type{margin-top:0}
-.slot{display:grid;grid-template-columns:58px 1fr;gap:.9rem;padding:.75rem 0;
-  border-top:1px solid var(--rule);align-items:baseline}
-.slot:last-of-type{border-bottom:1px solid var(--rule)}
-.slot time{font-family:var(--display);font-size:1rem;font-weight:600;color:var(--ocre-deep);
+/* ══ PROGRAMME ════════════════════════════════════════════════ */
+.jour{font-family:var(--display);font-size:1.35rem;font-weight:600;margin:2rem 0 .6rem;
+  color:var(--encre)}
+.jour:first-of-type{margin-top:.3rem}
+.jour small{display:block;font-family:var(--texte);font-size:.65rem;font-weight:700;
+  letter-spacing:.17em;text-transform:uppercase;color:var(--terre);margin-bottom:.2rem}
+.heure{display:grid;grid-template-columns:56px 1fr;gap:1rem;padding:.7rem 0;
+  border-top:1px solid var(--craie-3);align-items:baseline}
+.heure:last-of-type{border-bottom:1px solid var(--craie-3)}
+.heure time{font-family:var(--display);font-size:1.02rem;font-weight:600;color:var(--terre);
   font-variant-numeric:tabular-nums}
-.slot span{font-size:.97rem}
-.slot small{display:block;color:var(--ink-faint);font-size:.85rem;margin-top:.1rem}
-details{border-bottom:1px solid var(--rule)}
-details:first-of-type{border-top:1px solid var(--rule)}
-summary{padding:.95rem 0;cursor:pointer;font-weight:700;font-size:.97rem;list-style:none;
+.heure b{font-weight:600;font-size:.99rem}
+.heure small{display:block;color:var(--encre-pale);font-size:.86rem;margin-top:.1rem}
+
+/* ══ TRAINS ═══════════════════════════════════════════════════ */
+.quai{background:var(--ciel-fonce);color:#e8f0f6;padding:1.2rem 1.3rem;margin-bottom:1.1rem}
+.quai.vert{background:var(--pin)}
+.quai h3{font-size:1.1rem;color:#fff;margin-bottom:.15rem}
+.quai .sous{font-size:.64rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.62);margin-bottom:.85rem}
+.quai table{width:100%;border-collapse:collapse;font-size:.93rem}
+.quai td{padding:.36rem 0;border-bottom:1px solid rgba(255,255,255,.16)}
+.quai tr:last-child td{border-bottom:none}
+.quai td:last-child{text-align:right;font-weight:700;color:#fff;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.quai p{margin:.85rem 0 0;font-size:.88rem;color:rgba(255,255,255,.85)}
+
+details{border-bottom:1px solid var(--craie-3)}
+details:first-of-type{border-top:1px solid var(--craie-3)}
+summary{padding:.95rem 0;cursor:pointer;font-weight:600;font-size:.97rem;list-style:none;
   display:flex;justify-content:space-between;gap:1rem;align-items:center;min-height:50px}
 summary::-webkit-details-marker{display:none}
-summary::after{content:"+";font-family:var(--display);font-size:1.4rem;color:var(--ocre);
-  transition:transform .2s}
+summary::after{content:"+";font-family:var(--display);font-size:1.35rem;color:var(--terre);
+  transition:transform .2s;line-height:1}
 details[open] summary::after{transform:rotate(45deg)}
-details p{padding:0 0 1rem;margin:0;color:var(--ink-soft);font-size:.93rem}
-.hidden{display:none}
-footer{background:var(--night);color:var(--ink-faint);padding-block:2rem;font-size:.83rem}
-footer strong{color:var(--paper-3)}
-#toast{position:fixed;left:50%;bottom:1.3rem;transform:translate(-50%,150%);
-  background:var(--night);color:var(--paper);padding:.85rem 1.3rem;font-weight:700;
-  font-size:.88rem;z-index:99;transition:transform .28s;pointer-events:none;
-  border:1px solid var(--ocre);max-width:90vw;text-align:center}
-#toast.on{transform:translate(-50%,0)}
+details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max-width:60ch}
+
+.pied{background:var(--encre);color:var(--encre-pale);padding-block:2.2rem;font-size:.84rem}
+.pied strong{color:var(--craie)}
+.cache{display:none}
+#mot{position:fixed;left:50%;bottom:1.4rem;transform:translate(-50%,150%);
+  background:var(--encre);color:var(--craie);padding:.8rem 1.3rem;font-weight:600;
+  font-size:.88rem;z-index:99;transition:transform .3s cubic-bezier(.22,.8,.3,1);
+  pointer-events:none;border-left:3px solid var(--roche);max-width:90vw;text-align:center}
+#mot.vu{transform:translate(-50%,0)}
 </style>
 
-<header class="top">
-  <div class="wrap">
-    <h1>Elise<em>a trente ans</em></h1>
-    <p class="quand">🥂 <b>Samedi 10 → dimanche 11 octobre</b><br>
-      <b>Chez nous, à Aix-en-Provence.</b> On vous loge, on vous nourrit.</p>
-    <span class="offert">Tout est offert — sauf le cadeau</span>
+<div class="tableau">
+  <svg viewBox="0 0 1200 430" role="img" aria-label="La montagne Sainte-Victoire en plans peints, au-dessus de la campagne d'Aix">
+    <rect width="1200" height="430" fill="#a8c2d6"/>
+    <polygon class="facette" style="animation-delay:0ms"   points="0,0 1200,0 1200,150 0,196" fill="#8fb0ca"/>
+    <polygon class="facette" style="animation-delay:40ms"  points="0,196 1200,150 1200,232 0,258" fill="#7ba3c2"/>
+    <!-- le massif, en facettes : lumière au sud, ombre au nord -->
+    <polygon class="facette" style="animation-delay:120ms" points="110,258 430,96 430,262 110,262" fill="#5f7f9e"/>
+    <polygon class="facette" style="animation-delay:180ms" points="430,96 600,152 600,262 430,262" fill="#d9a441"/>
+    <polygon class="facette" style="animation-delay:240ms" points="600,152 870,200 870,262 600,262" fill="#bd8a3a"/>
+    <polygon class="facette" style="animation-delay:300ms" points="870,200 1200,234 1200,262 870,262" fill="#8ea7ba"/>
+    <polygon class="facette" style="animation-delay:360ms" points="386,124 430,96 474,122 430,168" fill="#f0dcae"/>
+    <!-- la vallée -->
+    <polygon class="facette" style="animation-delay:420ms" points="0,258 1200,262 1200,302 0,310" fill="#c7a86a"/>
+    <polygon class="facette" style="animation-delay:470ms" points="0,310 1200,302 1200,346 0,356" fill="#4f6b4a"/>
+    <polygon class="facette" style="animation-delay:520ms" points="0,356 1200,346 1200,392 0,398" fill="#b08e4e"/>
+    <polygon class="facette" style="animation-delay:570ms" points="0,398 1200,392 1200,430 0,430" fill="#39503a"/>
+    <!-- les toits -->
+    <polygon class="facette" style="animation-delay:620ms" points="212,330 262,330 262,352 212,352" fill="#b4562f"/>
+    <polygon class="facette" style="animation-delay:650ms" points="266,336 300,336 300,352 266,352" fill="#8c3d1f"/>
+    <polygon class="facette" style="animation-delay:680ms" points="890,322 946,322 946,348 890,348" fill="#b4562f"/>
+  </svg>
+  <div class="titre"><div class="col">
+    <h1>Elise<em>trente ans</em></h1>
+  </div></div>
+</div>
+
+<div class="legende"><div class="col">
+  <p class="quand">Samedi 10 &amp; dimanche 11 octobre 2026</p>
+  <p class="ou">Chez nous, à Aix-en-Provence. On vous loge, on vous nourrit.</p>
+  <div class="jauge">
+    <div><b id="j-jours">—</b><span>jours</span></div>
+    <div><b id="j-rep">19 sept.</b><span>réponse avant</span></div>
+    <div><b id="j-prix">0 €</b><span>à votre charge</span></div>
   </div>
-</header>
+  <span class="sceau">Tout est offert — sauf le cadeau</span>
+</div></div>
 
-<div class="tabs" role="tablist">
-  <button role="tab" id="t-rep" aria-selected="true" aria-controls="p-rep">Ma réponse</button>
-  <button role="tab" id="t-prog" aria-selected="false" aria-controls="p-prog">Programme</button>
-  <button role="tab" id="t-venir" aria-selected="false" aria-controls="p-venir">Venir à Aix</button>
-</div>
+<nav class="rubans" role="tablist"><div>
+  <button role="tab" id="o-rep" aria-selected="true" aria-controls="v-rep">Répondre</button>
+  <button role="tab" id="o-we" aria-selected="false" aria-controls="v-we">Le week-end</button>
+  <button role="tab" id="o-train" aria-selected="false" aria-controls="v-train">Venir à Aix</button>
+</div></nav>
 
-<div id="p-rep" role="tabpanel" aria-labelledby="t-rep">
-  <div class="steps" id="steps"><div class="on"></div><div></div><div></div></div>
-  <p class="step-label" id="step-label">Étape 1 sur 3 · Ta disponibilité</p>
+<!-- ═══ RÉPONDRE ═══ -->
+<div id="v-rep" role="tabpanel" aria-labelledby="o-rep"><main><div class="col">
+  <div class="marches" id="marches"><i class="ici"></i><i></i><i></i></div>
+  <p class="oeil" id="etiquette">Première question</p>
 
-  <main><div class="wrap">
+  <!-- 1 -->
+  <section id="e1">
+    <h2>Tu viens&nbsp;?</h2>
+    <p class="chapo">Samedi 10 octobre, on démarre en début d'après-midi. Tu dors sur place,
+      tu ne paies rien. La seule chose qui reste à ta charge, c'est ton billet de train.</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="rsvp" value="Tout le week-end">
+        <span><b>Oui, tout le week-end</b><em>Samedi après-midi jusqu'au dimanche</em></span></label>
+      <label class="opt"><input type="radio" name="rsvp" value="Samedi seulement">
+        <span><b>Samedi seulement</b><em>Je repars dans la soirée</em></span></label>
+      <label class="opt"><input type="radio" name="rsvp" value="Dimanche seulement">
+        <span><b>Dimanche</b><em>Je vous rejoins le matin</em></span></label>
+      <label class="opt"><input type="radio" name="rsvp" value="Je ne peux pas venir">
+        <span><b>Non, je ne peux pas</b><em>Une autre fois, promis</em></span></label>
+    </div>
+    <div class="champ">
+      <label for="nom">Ton prénom et ton nom</label>
+      <input type="text" id="nom" autocomplete="name" placeholder="Pour qu'on sache qui a répondu">
+    </div>
+    <div class="champ" id="c-nb">
+      <label for="nb">Vous serez combien&nbsp;?</label>
+      <input type="text" id="nb" inputmode="numeric" placeholder="1, ou 2 si accompagné·e">
+    </div>
+    <div class="barre"><button class="bt" id="v1" disabled>Continuer</button></div>
+  </section>
 
-    <!-- ÉTAPE 1 -->
-    <section id="s1">
-      <h2>Tu es dispo&nbsp;?</h2>
-      <p class="lede">Samedi 10 octobre, on démarre en début d'après-midi, chez nous à Aix.
-        <strong>Tu n'as rien à payer et tu dors sur place</strong> — on a de la place.</p>
-      <div class="opts">
-        <label class="pick"><input type="radio" name="rsvp" value="Je viens tout le week-end">
-          <span><b>Oui, tout le week-end</b><em>Samedi après-midi → dimanche</em></span></label>
-        <label class="pick"><input type="radio" name="rsvp" value="Samedi seulement">
-          <span><b>Samedi seulement</b><em>Je repars dans la soirée</em></span></label>
-        <label class="pick"><input type="radio" name="rsvp" value="Je passe dimanche">
-          <span><b>Dimanche</b><em>Je vous rejoins le matin</em></span></label>
-        <label class="pick"><input type="radio" name="rsvp" value="Je ne peux pas venir">
-          <span><b>Non, je ne peux pas</b><em>Une autre fois, promis</em></span></label>
-      </div>
-      <div class="field">
-        <label for="nom">Ton prénom et ton nom</label>
-        <input type="text" id="nom" autocomplete="name" placeholder="Pour qu'on sache qui a répondu">
-      </div>
-      <div class="field" id="f-nb">
-        <label for="nb">Vous serez combien&nbsp;?</label>
-        <input type="text" id="nb" inputmode="numeric" placeholder="1, ou 2 si accompagné·e">
-      </div>
-      <div class="nav-b"><button class="btn" id="go1" disabled>Suivant →</button></div>
-    </section>
+  <!-- 2 -->
+  <section id="e2" class="cache">
+    <h2>Trois détails</h2>
+    <p class="chapo">De quoi sortir le bon nombre de lits et venir te chercher à la gare.</p>
 
-    <!-- ÉTAPE 2 -->
-    <section id="s2" class="hidden">
-      <h2>Deux ou trois détails</h2>
-      <p class="lede">De quoi organiser les couchages et venir te chercher à la gare.</p>
-
-      <p class="sub">Tu dors à la maison&nbsp;?</p>
-      <div class="opts">
-        <label class="pick"><input type="radio" name="couchage" value="Oui, il me faut un couchage">
-          <span><b>Oui, avec plaisir</b><em>Il me faut un lit ou un canapé</em></span></label>
-        <label class="pick"><input type="radio" name="couchage" value="J'apporte mon matelas ou mon duvet">
-          <span><b>J'apporte mon matelas</b><em>Duvet, matelas gonflable — je suis autonome</em></span></label>
-        <label class="pick"><input type="radio" name="couchage" value="Je me loge ailleurs">
-          <span><b>Je me loge ailleurs</b><em>Hôtel, famille, amis</em></span></label>
-        <label class="pick"><input type="radio" name="couchage" value="Je ne dors pas sur place">
-          <span><b>Je ne dors pas</b><em>Je rentre dans la soirée</em></span></label>
-      </div>
-
-      <p class="sub">Comment tu arrives&nbsp;?</p>
-      <div class="opts">
-        <label class="pick"><input type="radio" name="transport" value="En train, venez me chercher">
-          <span><span class="tag">on vient</span><b>En train</b><em>Gare TGV ou gare d'Aix-centre</em></span></label>
-        <label class="pick"><input type="radio" name="transport" value="En voiture, je peux prendre des gens">
-          <span><b>En voiture, avec des places</b><em>Je peux embarquer du monde</em></span></label>
-        <label class="pick"><input type="radio" name="transport" value="En voiture, seul">
-          <span><b>En voiture, voiture pleine</b><em>Je me débrouille</em></span></label>
-        <label class="pick"><input type="radio" name="transport" value="J'habite Aix, je viens à pied">
-          <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
-      </div>
-      <div class="field" id="f-train">
-        <label for="train">Tu arrives d'où, et à quelle heure&nbsp;?</label>
-        <input type="text" id="train" placeholder="Ex : Paris, Aix TGV à 13h40">
-      </div>
-
-      <p class="sub">Quelles activités te tentent&nbsp;?</p>
-      <div class="opts">
-        <label class="pick"><input type="checkbox" name="act" value="Randonnée Sainte-Victoire">
-          <span><b>Randonnée Sainte-Victoire</b><em>Vallon de Saint-Ser, 1h30, accessible à tous</em></span></label>
-        <label class="pick"><input type="checkbox" name="act" value="Balade au barrage de Bimont">
-          <span><b>Barrage de Bimont</b><em>Balade facile, vue sur la montagne</em></span></label>
-        <label class="pick"><input type="checkbox" name="act" value="Vieil Aix et terrasses">
-          <span><b>Vieil Aix et terrasses</b><em>Cours Mirabeau, les ruelles, un verre au soleil</em></span></label>
-        <label class="pick"><input type="checkbox" name="act" value="Accrobranche Indian Forest">
-          <span><b>Accrobranche</b><em>Indian Forest, au bord de l'Arc · 135 ateliers</em></span></label>
-        <label class="pick"><input type="checkbox" name="act" value="Apéro et pétanque à la maison">
-          <span><b>Apéro et pétanque</b><em>Sans bouger de la maison — l'option honnête</em></span></label>
-      </div>
-
-      <div class="nav-b">
-        <button class="btn back" id="back2">←</button>
-        <button class="btn" id="go2">Suivant →</button>
-      </div>
-    </section>
-
-    <!-- ÉTAPE 3 -->
-    <section id="s3" class="hidden">
-      <h2>C'est tout bon</h2>
-      <p class="lede">Vérifie, puis envoie. WhatsApp s'ouvre avec le message déjà écrit.</p>
-      <div class="recap">
-        <dl>
-          <dt>Qui</dt><dd class="todo" id="r-nom">—</dd>
-          <dt>Présence</dt><dd class="todo" id="r-rsvp">—</dd>
-          <dt id="d-couch">Couchage</dt><dd class="todo" id="r-couch">—</dd>
-          <dt id="d-tr">Arrivée</dt><dd class="todo" id="r-tr">—</dd>
-          <dt id="d-act">Activités</dt><dd class="todo" id="r-act">—</dd>
-        </dl>
-      </div>
-
-      <div class="cagnotte">
-        <h3>🎁 La cagnotte cadeau</h3>
-        <p style="font-size:.94rem;color:var(--ink-soft);margin-bottom:.2rem">
-          La seule chose à laquelle tu participes. Montant libre — et surtout
-          <strong>ton prénom en référence</strong> du virement.
-        </p>
-        <p class="lbl">Bénéficiaire</p>
-        <p class="val nom">__RIB_TITULAIRE__</p>
-        <p class="lbl">IBAN</p>
-        <p class="val" id="iban">__RIB_IBAN__</p>
-        <p class="lbl">BIC</p>
-        <p class="val">__RIB_BIC__</p>
-        <button class="copy" type="button" id="copy-iban">📋 Copier l'IBAN</button>
-      </div>
-
-      <div class="nav-b">
-        <button class="btn back" id="back3">←</button>
-        <a class="btn wa" id="send" href="#" target="_blank" rel="noopener">💬 Envoyer</a>
-      </div>
-      <p style="margin-top:1.2rem;font-size:.87rem;color:var(--ink-faint)">
-        Tes réponses restent dans ce téléphone. Tu peux revenir les modifier quand tu veux.
-      </p>
-    </section>
-
-  </div></main>
-</div>
-
-<!-- PROGRAMME -->
-<div id="p-prog" role="tabpanel" aria-labelledby="t-prog" class="hidden">
-  <main><div class="wrap">
-    <h2>Le programme</h2>
-    <p class="lede">Détendu. On est à la maison, personne ne court après un check-in.</p>
-
-    <p class="day">Samedi 10 octobre</p>
-    <div class="slot"><time>13h30</time><span>Arrivées<small>On récupère à la gare ceux qui viennent en train</small></span></div>
-    <div class="slot"><time>14h30</time><span>Café d'accueil à la maison<small>On pose les affaires, on se retrouve</small></span></div>
-    <div class="slot"><time>15h30</time><span>L'activité de l'après-midi<small>Sainte-Victoire, Bimont ou le vieil Aix — le vote décide</small></span></div>
-    <div class="slot"><time>19h</time><span>Apéro et pétanque<small>Prends une petite laine : 12 °C à la nuit</small></span></div>
-    <div class="slot"><time>20h30</time><span>Dîner<small>Traiteur — rien à préparer, rien à ranger</small></span></div>
-    <div class="slot"><time>22h30</time><span>Gâteau et trente bougies<small>Le gâteau est géré — n'en apporte pas</small></span></div>
-
-    <p class="day">Dimanche 11 octobre</p>
-    <div class="slot"><time>10h</time><span>Petit-déjeuner qui traîne</span></div>
-    <div class="slot"><time>11h30</time><span>Marché ou balade, selon l'envie</span></div>
-    <div class="slot"><time>13h</time><span>Déjeuner<small>Dernier repas ensemble</small></span></div>
-    <div class="slot"><time>15h</time><span>Départs<small>On raccompagne à la gare, dis-nous ton train</small></span></div>
-  </div></main>
-</div>
-
-<!-- VENIR À AIX -->
-<div id="p-venir" role="tabpanel" aria-labelledby="t-venir" class="hidden">
-  <main><div class="wrap">
-    <h2>Venir à Aix</h2>
-    <p class="lede">Deux gares, et on vient te chercher à l'une comme à l'autre.</p>
-
-    <div class="rail">
-      <h3>🚄 Gare d'Aix-en-Provence TGV</h3>
-      <table>
-        <tr><td>Paris Gare de Lyon</td><td>2h55 · direct</td></tr>
-        <tr><td>Lyon Part-Dieu</td><td>1h07 · direct</td></tr>
-        <tr><td>Montpellier, Nice, Toulouse</td><td>direct ou 1 corresp.</td></tr>
-      </table>
-      <p style="margin:.8rem 0 0;font-size:.88rem;color:#dce8f0">
-        Elle est à 18 km du centre. La navette A2 relie la gare TGV au centre-ville
-        toutes les 20 minutes — mais préviens-nous, on préfère venir te chercher.
-      </p>
+    <p class="groupe">Le couchage</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="lit" value="Il me faut un couchage">
+        <span><b>Il me faut un lit</b><em>Un vrai, ou un canapé, peu importe</em></span></label>
+      <label class="opt"><input type="radio" name="lit" value="J'apporte mon matelas">
+        <span><b>J'apporte mon matelas</b><em>Duvet, matelas gonflable — je suis autonome</em></span></label>
+      <label class="opt"><input type="radio" name="lit" value="Je me loge ailleurs">
+        <span><b>Je me loge ailleurs</b><em>Hôtel, famille, amis</em></span></label>
+      <label class="opt"><input type="radio" name="lit" value="Je ne dors pas sur place">
+        <span><b>Je ne dors pas</b><em>Je rentre dans la soirée</em></span></label>
     </div>
 
-    <div class="rail" style="background:#4a7a5c">
-      <h3>🚃 Gare d'Aix-en-Provence centre</h3>
-      <table>
-        <tr><td>Marseille Saint-Charles</td><td>~45 min · TER</td></tr>
-        <tr><td>Pertuis, Manosque, Gap</td><td>TER direct</td></tr>
-      </table>
-      <p style="margin:.8rem 0 0;font-size:.88rem;color:#dff0e4">
-        Un TER toutes les heures depuis Marseille, de 6h à minuit. Si tu arrives
-        en TGV à Marseille, c'est souvent plus simple que la gare TGV d'Aix.
-      </p>
+    <p class="groupe">L'arrivée</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="venue" value="En train, venez me chercher">
+        <span><span class="note">on vient</span><b>En train</b><em>Gare TGV ou Aix-centre</em></span></label>
+      <label class="opt"><input type="radio" name="venue" value="En voiture, avec des places libres">
+        <span><span class="note">covoit</span><b>En voiture, avec des places</b><em>Je peux embarquer du monde</em></span></label>
+      <label class="opt"><input type="radio" name="venue" value="En voiture, complet">
+        <span><b>En voiture, complet</b><em>Je me débrouille</em></span></label>
+      <label class="opt"><input type="radio" name="venue" value="J'habite Aix">
+        <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
+    </div>
+    <div class="champ cache" id="c-train">
+      <label for="train">Tu arrives d'où, et à quelle heure&nbsp;?</label>
+      <input type="text" id="train" placeholder="Paris, Aix TGV à 13h40">
     </div>
 
-    <p><strong>Dans les deux cas, on vient te chercher.</strong> Indique juste ta gare
-      et ton heure d'arrivée dans ta réponse. Pareil pour le retour dimanche.</p>
+    <p class="groupe">L'après-midi du samedi <span id="cpt-act">0 choisi</span></p>
+    <div class="choix">
+      <label class="opt"><input type="checkbox" name="act" value="Vallon de Saint-Ser, Sainte-Victoire">
+        <span><span class="note">1h30</span><b>Vallon de Saint-Ser</b><em>Le versant sud de la Sainte-Victoire, celle que Cézanne peignait</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Barrage de Bimont">
+        <span><span class="note">1h</span><b>Barrage de Bimont</b><em>Balade plate, l'eau turquoise et la montagne en face</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Le vieil Aix et ses terrasses">
+        <span><b>Le vieil Aix</b><em>Cours Mirabeau, les ruelles, un verre au soleil</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Accrobranche Indian Forest">
+        <span><span class="note">25 €</span><b>Accrobranche</b><em>Indian Forest, au bord de l'Arc — 135 ateliers</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Apéro et pétanque à la maison">
+        <span><b>Apéro et pétanque</b><em>Sans bouger. Après trois heures de train, c'est défendable</em></span></label>
+    </div>
 
-    <h2 style="margin-top:2.2rem">Questions</h2>
-    <details><summary>Je paie vraiment rien&nbsp;?</summary><p>Vraiment rien. Le logement, les repas et les activités sont chez nous et à notre charge. La seule chose à laquelle tu participes, si tu veux, c'est la cagnotte cadeau — montant libre, à l'étape 3 de ta réponse.</p></details>
-    <details><summary>Et mon billet de train&nbsp;?</summary><p>C'est la seule dépense qui reste à ta charge. Réserve tôt, les prix montent vite sur octobre.</p></details>
-    <details><summary>Vous avez vraiment de la place pour tout le monde&nbsp;?</summary><p>On a des lits, des canapés et de quoi improviser. Dis-nous simplement à l'étape 2 s'il te faut un couchage ou si tu apportes ton matelas — c'est exactement ce qui nous permet de nous organiser.</p></details>
-    <details><summary>Quelle est l'adresse&nbsp;?</summary><p>Elle est dans le groupe WhatsApp, pas ici — cette page circule, notre adresse non. Si tu n'es pas dans le groupe, dis-le et on t'ajoute.</p></details>
-    <details><summary>Qu'est-ce que j'apporte&nbsp;?</summary><p>Ta trousse de toilette et de quoi marcher si tu votes pour la Sainte-Victoire. Une serviette si tu en as une facile à glisser dans le sac, ça nous arrange. Et rien d'autre.</p></details>
-    <details><summary>Et s'il pleut&nbsp;?</summary><p>La rando devient un tour du vieil Aix, ou rien du tout. On est à la maison : c'est tout l'intérêt.</p></details>
-  </div></main>
-</div>
+    <div class="barre">
+      <button class="bt retour" id="r2">Retour</button>
+      <button class="bt" id="v2">Continuer</button>
+    </div>
+  </section>
 
-<footer><div class="wrap">
-  <p><strong>Les 30 ans d'Elise</strong> — samedi 10 &amp; dimanche 11 octobre 2026, à Aix-en-Provence.</p>
-  <p>Réponds avant le <strong>samedi 19 septembre</strong>, qu'on cale les couchages.</p>
+  <!-- 3 -->
+  <section id="e3" class="cache">
+    <h2>C'est envoyé&nbsp;?</h2>
+    <p class="chapo">Relis, puis envoie. WhatsApp s'ouvre avec le message déjà écrit&nbsp;:
+      tu choisis la conversation, tu vérifies, tu envoies.</p>
+    <div class="fiche"><dl>
+      <dt>Qui</dt><dd class="vide" id="f-nom">—</dd>
+      <dt>Présence</dt><dd class="vide" id="f-rsvp">—</dd>
+      <dt id="l-lit">Couchage</dt><dd class="vide" id="f-lit">—</dd>
+      <dt id="l-venue">Arrivée</dt><dd class="vide" id="f-venue">—</dd>
+      <dt id="l-act">Samedi après-midi</dt><dd class="vide" id="f-act">—</dd>
+    </dl></div>
+
+    <div class="cadeau">
+      <h3>Le cadeau</h3>
+      <p style="font-size:.93rem;color:var(--encre-doux);margin-bottom:0">
+        La seule chose à laquelle tu participes, et seulement si tu veux. Montant libre,
+        cagnotte commune — mets <strong>ton prénom en référence</strong> du virement.</p>
+      <p class="et">Bénéficiaire</p>
+      <p class="val nom">__RIB_TITULAIRE__</p>
+      <p class="et">IBAN</p>
+      <p class="val" id="iban">__RIB_IBAN__</p>
+      <p class="et">BIC</p>
+      <p class="val">__RIB_BIC__</p>
+      <button class="copier" type="button" id="cop">Copier l'IBAN</button>
+    </div>
+
+    <div class="barre">
+      <button class="bt retour" id="r3">Retour</button>
+      <a class="bt envoi" id="envoi" href="#" target="_blank" rel="noopener">Envoyer sur WhatsApp</a>
+    </div>
+    <p style="margin-top:1.1rem;font-size:.86rem;color:var(--encre-pale)">
+      Tes réponses restent dans ce téléphone. Rien n'est transmis avant que tu appuies.
+    </p>
+  </section>
+</div></main></div>
+
+<!-- ═══ LE WEEK-END ═══ -->
+<div id="v-we" role="tabpanel" aria-labelledby="o-we" class="cache"><main><div class="col">
+  <p class="oeil">Le déroulé</p>
+  <h2>Vingt-quatre heures, sans montre</h2>
+  <p class="chapo">On est à la maison : personne ne court après un check-in, et rien n'est
+    verrouillé. Le seul horaire qui compte est celui de ton train.</p>
+
+  <p class="jour"><small>Samedi 10 octobre</small>Le jour</p>
+  <div class="heure"><time>13h30</time><div><b>Les arrivées</b><small>On récupère à la gare ceux qui viennent en train</small></div></div>
+  <div class="heure"><time>14h30</time><div><b>Café d'accueil</b><small>On pose les affaires, on se retrouve</small></div></div>
+  <div class="heure"><time>15h30</time><div><b>L'après-midi</b><small>Sainte-Victoire, Bimont ou le vieil Aix — vos votes tranchent</small></div></div>
+  <div class="heure"><time>19h00</time><div><b>Apéro et pétanque</b><small>Prends une petite laine : 12 °C à la nuit tombée</small></div></div>
+  <div class="heure"><time>20h30</time><div><b>Dîner</b><small>Traiteur — rien à préparer, rien à ranger</small></div></div>
+  <div class="heure"><time>22h30</time><div><b>Le gâteau, trente bougies</b><small>Il est commandé. N'en apporte pas</small></div></div>
+
+  <p class="jour"><small>Dimanche 11 octobre</small>Le lendemain</p>
+  <div class="heure"><time>10h00</time><div><b>Petit-déjeuner qui traîne</b></div></div>
+  <div class="heure"><time>11h30</time><div><b>Marché ou balade</b><small>Selon l'envie et la gueule de bois</small></div></div>
+  <div class="heure"><time>13h00</time><div><b>Déjeuner</b><small>Le dernier repas ensemble</small></div></div>
+  <div class="heure"><time>15h00</time><div><b>Les départs</b><small>On raccompagne à la gare — dis-nous ton train de retour</small></div></div>
+
+  <h2 style="margin-top:2.6rem">Ce qu'il faut apporter</h2>
+  <p class="chapo">Très peu.</p>
+  <div class="heure"><time>①</time><div><b>Ta trousse de toilette</b></div></div>
+  <div class="heure"><time>②</time><div><b>Une serviette</b><small>Si tu en as une facile à glisser dans le sac, ça nous arrange</small></div></div>
+  <div class="heure"><time>③</time><div><b>Des chaussures pour marcher</b><small>Seulement si tu votes la Sainte-Victoire</small></div></div>
+  <div class="heure"><time>④</time><div><b>Une petite laine</b><small>Les soirées d'octobre à Aix descendent à 12 °C</small></div></div>
+</div></main></div>
+
+<!-- ═══ VENIR À AIX ═══ -->
+<div id="v-train" role="tabpanel" aria-labelledby="o-train" class="cache"><main><div class="col">
+  <p class="oeil">Le trajet</p>
+  <h2>Deux gares, et on vient te chercher</h2>
+  <p class="chapo">Aix a deux gares qui n'ont rien à voir l'une avec l'autre. Le choix change
+    beaucoup selon d'où tu pars.</p>
+
+  <div class="quai">
+    <h3>Aix-en-Provence TGV</h3>
+    <p class="sous">à 18 km du centre, en rase campagne</p>
+    <table>
+      <tr><td>Paris Gare de Lyon</td><td>2 h 55</td></tr>
+      <tr><td>Lyon Part-Dieu</td><td>1 h 07</td></tr>
+      <tr><td>Montpellier, Nice, Toulouse</td><td>direct ou 1 corresp.</td></tr>
+    </table>
+    <p>La navette A2 rejoint le centre-ville toutes les 20 minutes. Mais préviens-nous&nbsp;:
+      on préfère largement venir te chercher.</p>
+  </div>
+
+  <div class="quai vert">
+    <h3>Aix-en-Provence centre</h3>
+    <p class="sous">en ville, à dix minutes de chez nous</p>
+    <table>
+      <tr><td>Marseille Saint-Charles</td><td>45 min</td></tr>
+      <tr><td>Pertuis, Manosque, Gap</td><td>TER direct</td></tr>
+    </table>
+    <p>Un TER toutes les heures depuis Marseille, de 6 h à minuit.</p>
+  </div>
+
+  <p><strong>Le conseil qui compte&nbsp;:</strong> si tu viens de loin, descendre en TGV à
+    <strong>Marseille Saint-Charles</strong> puis prendre le TER jusqu'à Aix-centre est
+    souvent plus simple que la gare TGV d'Aix. Plus de trains, et la gare est en ville.</p>
+
+  <h2 style="margin-top:2.4rem">Questions</h2>
+  <details><summary>Je paie vraiment rien&nbsp;?</summary><p>Vraiment rien. Le logement, les repas et les activités sont chez nous et à notre charge. La seule participation, facultative, c'est la cagnotte cadeau à la fin de ta réponse.</p></details>
+  <details><summary>Et mon billet de train&nbsp;?</summary><p>C'est la seule dépense qui reste à ta charge. Réserve tôt&nbsp;: les prix d'octobre montent vite à mesure qu'on approche.</p></details>
+  <details><summary>Vous avez la place pour tout le monde&nbsp;?</summary><p>On a des lits, des canapés et de quoi improviser. C'est exactement pour ça qu'on te demande, à la deuxième étape, s'il te faut un couchage&nbsp;: c'est le seul chiffre sur lequel on ne peut pas improviser la veille.</p></details>
+  <details><summary>Quelle est l'adresse&nbsp;?</summary><p>Elle est dans le groupe WhatsApp, pas ici&nbsp;: cette page circule, notre adresse non. Si tu n'es pas dans le groupe, dis-le et on t'ajoute.</p></details>
+  <details><summary>Et s'il pleut&nbsp;?</summary><p>La randonnée devient un tour du vieil Aix, ou rien du tout. On est à la maison — c'est tout l'intérêt.</p></details>
+</div></main></div>
+
+<footer class="pied"><div class="col">
+  <p><strong>Elise, trente ans</strong> — samedi 10 &amp; dimanche 11 octobre 2026, Aix-en-Provence.</p>
+  <p>Réponds avant le <strong>samedi 19 septembre</strong>, qu'on sache combien de lits sortir.</p>
 </div></footer>
 
-<div id="toast" role="status" aria-live="polite"></div>
+<div id="mot" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
   "use strict";
   var $ = function(id){ return document.getElementById(id); };
-  var KEY = "anniv-elise-aix";
-  function lire(){ try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){ return {}; } }
-  function ecrire(s){ try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e){ /* on continue */ } }
 
-  var toast = $("toast"), tmr;
-  function dire(m){
-    toast.textContent = m; toast.classList.add("on");
-    clearTimeout(tmr); tmr = setTimeout(function(){ toast.classList.remove("on"); }, 2400);
+  /* ── Jours restants jusqu'au samedi 10 octobre 2026, 13 h 30 (CEST) ── */
+  var reste = Math.ceil((new Date("2026-10-10T13:30:00+02:00") - Date.now()) / 86400000);
+  $("j-jours").textContent = reste > 0 ? reste : 0;
+
+  /* ── Mémoire locale : peut lever en navigation privée ── */
+  var CLE = "elise-trente-ans";
+  function lu(){ try { return JSON.parse(localStorage.getItem(CLE) || "{}"); } catch(e){ return {}; } }
+  function ecrit(o){ try { localStorage.setItem(CLE, JSON.stringify(o)); } catch(e){ /* on continue */ } }
+
+  var mot = $("mot"), minuteur;
+  function dire(t){
+    mot.textContent = t; mot.classList.add("vu");
+    clearTimeout(minuteur); minuteur = setTimeout(function(){ mot.classList.remove("vu"); }, 2600);
   }
 
-  var onglets = [[$("t-rep"), $("p-rep")], [$("t-prog"), $("p-prog")], [$("t-venir"), $("p-venir")]];
-  onglets.forEach(function(paire){
+  /* ── Onglets ── */
+  var vues = [[$("o-rep"), $("v-rep")], [$("o-we"), $("v-we")], [$("o-train"), $("v-train")]];
+  vues.forEach(function(paire){
     paire[0].addEventListener("click", function(){
-      onglets.forEach(function(o){
-        var actif = o === paire;
-        o[0].setAttribute("aria-selected", actif ? "true" : "false");
-        o[1].classList.toggle("hidden", !actif);
+      vues.forEach(function(v){
+        var actif = v === paire;
+        v[0].setAttribute("aria-selected", actif ? "true" : "false");
+        v[1].classList.toggle("cache", !actif);
       });
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   });
 
-  var LABELS = ["Étape 1 sur 3 · Ta disponibilité",
-                "Étape 2 sur 3 · Couchage, arrivée, activités",
-                "Étape 3 sur 3 · Envoi et cadeau"];
-  function coche(n){ var e = document.querySelector('input[name="' + n + '"]:checked'); return e ? e.value : ""; }
-  function coches(n){
+  /* ── Entonnoir ── */
+  var TITRES = ["Première question", "Trois détails", "Dernière étape"];
+  function une(n){ var e = document.querySelector('input[name="' + n + '"]:checked'); return e ? e.value : ""; }
+  function plusieurs(n){
     return Array.prototype.map.call(document.querySelectorAll('input[name="' + n + '"]:checked'),
                                     function(e){ return e.value; });
   }
   function etat(){
-    return { nom: $("nom").value.trim(), nb: $("nb").value.trim(), rsvp: coche("rsvp"),
-             couchage: coche("couchage"), transport: coche("transport"),
-             train: $("train").value.trim(), act: coches("act") };
+    return { nom: $("nom").value.trim(), nb: $("nb").value.trim(), rsvp: une("rsvp"),
+             lit: une("lit"), venue: une("venue"), train: $("train").value.trim(),
+             act: plusieurs("act") };
   }
-  function vient(){ var r = etat().rsvp; return r && r !== "Je ne peux pas venir"; }
+  function present(){ var r = etat().rsvp; return !!r && r !== "Je ne peux pas venir"; }
 
-  function afficher(n){
-    [1,2,3].forEach(function(i){ $("s" + i).classList.toggle("hidden", i !== n); });
-    Array.prototype.forEach.call($("steps").children, function(bar, i){
-      bar.className = i + 1 === n ? "on" : (i + 1 < n ? "done" : "");
+  function marche(n){
+    [1,2,3].forEach(function(i){ $("e" + i).classList.toggle("cache", i !== n); });
+    Array.prototype.forEach.call($("marches").children, function(b, i){
+      b.className = i + 1 === n ? "ici" : (i + 1 < n ? "faite" : "");
     });
-    $("step-label").textContent = LABELS[n - 1];
+    $("etiquette").textContent = TITRES[n - 1];
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function pose(id, v){ var el = $(id); el.textContent = v || "—"; el.classList.toggle("todo", !v); }
-  function message(s){
-    var L = ["🎂 Les 30 ans d'Elise — samedi 10 & dimanche 11 octobre, à Aix", ""];
+  function pose(id, v){ var e = $(id); e.textContent = v || "—"; e.classList.toggle("vide", !v); }
+
+  function texte(s){
+    var L = ["Elise, trente ans — samedi 10 & dimanche 11 octobre, à Aix", ""];
     L.push("Nom : " + (s.nom || "?"));
     L.push("Présence : " + (s.rsvp || "?"));
-    if (s.nb && vient()) L.push("Nous serons : " + s.nb);
-    if (s.couchage) L.push("Couchage : " + s.couchage);
-    if (s.transport) L.push("Arrivée : " + s.transport);
-    if (s.train) L.push("Détail : " + s.train);
-    if (s.act.length) L.push("Activités : " + s.act.join(", "));
+    if (s.nb && present()) L.push("Nous serons : " + s.nb);
+    if (s.lit) L.push("Couchage : " + s.lit);
+    if (s.venue) L.push("Arrivée : " + s.venue);
+    if (s.train) L.push("Train : " + s.train);
+    if (s.act.length) L.push("Samedi après-midi : " + s.act.join(", "));
     return L.join("\n");
   }
+
   function rendre(){
     var s = etat();
-    $("f-nb").classList.toggle("hidden", !!s.rsvp && !vient());
-    $("f-train").classList.toggle("hidden", s.transport.indexOf("train") === -1);
-    $("go1").disabled = !(s.nom && s.rsvp);
+    // Le nombre de personnes et les votes n'ont pas de sens si on ne vient pas.
+    $("c-nb").classList.toggle("cache", !!s.rsvp && !present());
+    $("c-train").classList.toggle("cache", s.venue.indexOf("train") === -1);
+    $("v1").disabled = !(s.nom && s.rsvp);
+    $("cpt-act").textContent = s.act.length + (s.act.length > 1 ? " choisis" : " choisi");
 
-    pose("r-nom", s.nom + (s.nb && vient() ? " · " + s.nb + " pers." : ""));
-    pose("r-rsvp", s.rsvp);
-    pose("r-couch", s.couchage);
-    pose("r-tr", s.transport + (s.train ? " — " + s.train : ""));
-    pose("r-act", s.act.join(" · "));
-    ["couch","tr","act"].forEach(function(k){
-      $("d-" + k).classList.toggle("hidden", !vient());
-      $("r-" + k).classList.toggle("hidden", !vient());
+    pose("f-nom", s.nom + (s.nb && present() ? " · " + s.nb + " pers." : ""));
+    pose("f-rsvp", s.rsvp);
+    pose("f-lit", s.lit);
+    pose("f-venue", s.venue + (s.train ? " — " + s.train : ""));
+    pose("f-act", s.act.join(" · "));
+    ["lit","venue","act"].forEach(function(k){
+      $("l-" + k).classList.toggle("cache", !present());
+      $("f-" + k).classList.toggle("cache", !present());
     });
-    ecrire(s);
-    $("send").href = "https://wa.me/?text=" + encodeURIComponent(message(s));
+
+    ecrit(s);
+    $("envoi").href = "https://wa.me/?text=" + encodeURIComponent(texte(s));
   }
 
-  $("go1").addEventListener("click", function(){ if (!$("go1").disabled) afficher(vient() ? 2 : 3); });
-  $("go2").addEventListener("click", function(){ afficher(3); });
-  $("back2").addEventListener("click", function(){ afficher(1); });
-  $("back3").addEventListener("click", function(){ afficher(vient() ? 2 : 1); });
-  $("send").addEventListener("click", function(e){
-    if (!etat().nom || !etat().rsvp){ e.preventDefault(); dire("Il manque ton nom ou ta présence"); afficher(1); }
+  $("v1").addEventListener("click", function(){ if (!$("v1").disabled) marche(present() ? 2 : 3); });
+  $("v2").addEventListener("click", function(){ marche(3); });
+  $("r2").addEventListener("click", function(){ marche(1); });
+  $("r3").addEventListener("click", function(){ marche(present() ? 2 : 1); });
+  $("envoi").addEventListener("click", function(e){
+    var s = etat();
+    if (!s.nom || !s.rsvp){
+      e.preventDefault();
+      dire("Il manque ton nom ou ta réponse");
+      marche(1);
+    }
   });
 
-  $("copy-iban").addEventListener("click", function(){
-    var b = $("copy-iban"), texte = $("iban").textContent.trim();
-    var ok = function(){ b.textContent = "✓ IBAN copié"; b.classList.add("ok");
-      setTimeout(function(){ b.textContent = "📋 Copier l'IBAN"; b.classList.remove("ok"); }, 2400); };
+  /* ── Copie de l'IBAN, avec repli hors contexte sécurisé ── */
+  $("cop").addEventListener("click", function(){
+    var b = $("cop"), v = $("iban").textContent.trim();
+    var ok = function(){
+      b.textContent = "IBAN copié"; b.classList.add("fait");
+      setTimeout(function(){ b.textContent = "Copier l'IBAN"; b.classList.remove("fait"); }, 2400);
+    };
     var ko = function(){ dire("Copie refusée — sélectionne l'IBAN à la main"); };
     if (navigator.clipboard && window.isSecureContext){
-      navigator.clipboard.writeText(texte).then(ok).catch(ko); return;
+      navigator.clipboard.writeText(v).then(ok).catch(ko); return;
     }
-    var ta = document.createElement("textarea");
-    ta.value = texte; ta.setAttribute("readonly", "");
-    ta.style.cssText = "position:fixed;top:-9999px;opacity:0";
-    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, texte.length);
+    var z = document.createElement("textarea");
+    z.value = v; z.setAttribute("readonly", "");
+    z.style.cssText = "position:fixed;top:-9999px;opacity:0";
+    document.body.appendChild(z); z.select(); z.setSelectionRange(0, v.length);
     var fait = false;
     try { fait = document.execCommand("copy"); } catch(e){ fait = false; }
-    document.body.removeChild(ta);
+    document.body.removeChild(z);
     fait ? ok() : ko();
   });
 
-  var s = lire();
+  /* ── Restauration ── */
+  var s = lu();
   if (s.nom) $("nom").value = s.nom;
-  if (s.nb)  $("nb").value  = s.nb;
+  if (s.nb) $("nb").value = s.nb;
   if (s.train) $("train").value = s.train;
-  ["rsvp","couchage","transport"].forEach(function(n){
+  ["rsvp","lit","venue"].forEach(function(n){
     if (!s[n]) return;
     var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
     if (e) e.checked = true;
@@ -491,6 +602,6 @@ footer strong{color:var(--paper-3)}
 
   document.addEventListener("input", rendre);
   document.addEventListener("change", rendre);
-  rendre(); afficher(1);
+  rendre();
 })();
 </script>
