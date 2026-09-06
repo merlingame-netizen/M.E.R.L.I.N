@@ -60,6 +60,7 @@ L.append("")
 # racine pour les etats historiques — meme logique que probes.agents().
 L += ["## Agents", ""]
 bad = []
+reportes = []   # rc=75 : ils ont renoncé en le disant — ni vert, ni rouge
 seen = set()
 for d_dir in (os.path.join(state, "state"), state):
     if not os.path.isdir(d_dir):
@@ -75,7 +76,11 @@ for d_dir in (os.path.join(state, "state"), state):
         if d.get("ok") is False:
             bad.append(f"- ÉCHEC `{d.get('id', f[:-5])}` ({d.get('last_run','?')}) : "
                        f"{str(d.get('summary',''))[:100]}")
+        elif d.get("reporte") or d.get("rc") == 75:
+            reportes.append(f"- reporté `{d.get('id', f[:-5])}` ({d.get('last_run','?')}) : "
+                            f"{str(d.get('summary',''))[:100]}")
 L += bad or ["- tous les agents au vert"]
+L += reportes
 L.append("")
 
 # Santé min/max sur 24 h

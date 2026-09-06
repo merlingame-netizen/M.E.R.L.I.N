@@ -12,6 +12,8 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HERE/../game/game-env.sh"
 cd "$TOOLS_REPO" || { echo "dépôt d'outillage introuvable"; exit 1; }
+# Répondre recharge un modèle de 6 Go : pas pendant qu'un jeu ou une sonde tient les cœurs.
+python3 tools/gd_agents/gates.py >/dev/null 2>&1 || { echo "jeu en cours — les fils attendront (gates)"; exit 75; }
 
 FILS="$(python3 -c "
 import sys; sys.path.insert(0, 'tools/gd_agents')

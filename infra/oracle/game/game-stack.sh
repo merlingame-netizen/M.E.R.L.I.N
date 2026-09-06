@@ -119,15 +119,18 @@ stop_container() {
 start_native() {
     [ -f "$SYSROOT/.merlin-ready" ] || {
         echo "FATAL: sysroot absent — lancer provision-game-user.sh" >&2; exit 1; }
-    stop_native
     mkdir -p "$RUNDIR"
+    # LE MARQUEUR D'ABORD, L'ARRÊT ENSUITE. do_start a déjà écrit desired=running ; si l'arrêt de
+    # l'ancien jeu (jusqu'à 3,5 s) vidait le marqueur avant qu'on le réécrive, le veilleur pouvait
+    # voir « running, pas de VNC, pas de harnais » et lancer un second jeu par-dessus la sonde.
+    printf '%s' "${MERLIN_SCRIPT:-}" > "$RUNDIR/harness"
+    stop_native garder_le_marqueur
     # LA COURSE DIT CE QU'ELLE EST. Un lancement avec MERLIN_SCRIPT n'est pas une partie : c'est un
     # harnais, qui n'ouvre pas forcement de fenetre et que PERSONNE ne doit relancer a sa place.
     # Sans cette trace, le veilleur voit « desire=running, vnc absent » et relance le jeu NORMAL,
     # ce qui tue le harnais ET ecrase son journal (godot.log est reouvert en ecriture). Vecu trois
     # fois : q83 morte a 352 s, q85 remplacee par le menu, et q84 achevee par ma propre veille qui
-    # reagissait a la meme relance.
-    printf '%s' "${MERLIN_SCRIPT:-}" > "$RUNDIR/harness"
+    # reagissait a la meme relance. (Le marqueur est écrit plus haut, avant l'arrêt du précédent.)
     # native-inner.sh vit avec l'OUTILLAGE (SCRIPT_DIR), pas dans le dépôt du jeu.
     # MERLIN_SCENE / MERLIN_QUIT_AFTER_S / MERLIN_E2E* transmis explicitement : `unshare` ne conserve que
     # l'environnement passé ici, donc une variable exportée par l'appelant se perdrait
@@ -152,8 +155,9 @@ start_native() {
 
 stop_native() {
     # La marque de harnais ne survit pas a l'arret : sans ca, une partie normale lancee ensuite
-    # heriterait de la protection et ne serait plus jamais relancee par le veilleur.
-    : > "$RUNDIR/harness" 2>/dev/null || true
+    # heriterait de la protection et ne serait plus jamais relancee par le veilleur. Sauf quand
+    # c'est start_native qui arrête le précédent : il vient d'écrire le marqueur du suivant.
+    [ "${1:-}" = "garder_le_marqueur" ] || : > "$RUNDIR/harness" 2>/dev/null || true
     local pid; pid="$(cat "$RUNDIR/inner.pid" 2>/dev/null || true)"
     if pid_alive "$pid"; then
         kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null

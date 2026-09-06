@@ -83,9 +83,14 @@ for f in sorted(etats.glob("*.run.json")):
         continue
     aid = course.get("id", f.stem.replace(".run", ""))
     depuis = maintenant - int(course.get("debut", maintenant))
-    habituel = int(lire(etats / f"{aid}.json").get("duration_s", 0) or 0)
-    # 3× la durée habituelle, plancher à 20 min pour ne pas harceler les agents rapides.
-    seuil = max(1200, habituel * 3)
+    dernier = lire(etats / f"{aid}.json")
+    # Un passage REPORTÉ (rc=75, quelques secondes) n'est pas une durée de référence : sans ce
+    # garde, la nuit qui suit une nuit reportée serait « bloquée » dès 20 min.
+    habituel = 0 if dernier.get("reporte") else int(dernier.get("duration_s", 0) or 0)
+    # 3× la durée habituelle, plancher à 20 min pour ne pas harceler les agents rapides — et
+    # deux heures pour ce qui joue une partie ou génère une quête.
+    longs = 7200 if aid in ("partie-nuit", "quete-nuit", "partie-journal", "playtest-bot", "labo-recit") else 0
+    seuil = max(1200, habituel * 3, longs)
     if depuis > seuil:
         ecarts.append({
             "titre": f"{aid} : bloqué depuis {depuis // 60} min",

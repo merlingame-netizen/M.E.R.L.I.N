@@ -77,7 +77,7 @@ fi
 # Trois courses seulement ont abouti, et seulement parce qu'elles finissaient en 420-430 s, juste
 # sous le seuil. Le marqueur pose par game-stack dit ce que la course EST, sans qu'elle ait a le
 # demander : on ne coupe pas ce qui n'est pas une partie.
-HARNAIS="$(cat "$RUNDIR/harness" 2>/dev/null || echo "")"
+HARNAIS="$(merlin_harnais)"   # vivant seulement : un marqueur rassis ne protège plus rien
 if [ -n "$HARNAIS" ]; then
     echo "harnais en cours ($HARNAIS) — on ne coupe pas ce qui n'est pas une partie"
     exit 0

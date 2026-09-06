@@ -19,11 +19,17 @@ mkdir -p "$STATE"
 # LA PORTE DU JEU, AVANT LE VERROU. gates.py existait depuis août et personne ne l'appelait ici :
 # gd-content-gap tournait à 4 h 30 avec quatre fils pendant la partie de la nuit (crible du 06/09,
 # beats 11-13 à 98-128 s). Un godot qui tourne, quel qu'il soit, a les quatre cœurs.
-PORTE="$(cd "$TOOLS_REPO" && python3 tools/gd_agents/gates.py 2>/dev/null)"
-case "$PORTE" in
-    OK*) : ;;
-    *)   echo "$ID reporté : ${PORTE#STOP }"; exit 75 ;;
-esac
+porte() {
+    # Une porte MUETTE est une panne d'outillage, pas un renoncement : on ne cède pas à un silence.
+    local p
+    p="$(cd "$TOOLS_REPO" && python3 tools/gd_agents/gates.py 2>&1 | tail -1)"
+    case "$p" in
+        OK*)   return 0 ;;
+        STOP*) echo "$ID reporté : ${p#STOP }"; exit 75 ;;
+        *)     echo "$ID : la porte (gates.py) n'a rien répondu — ${p:-muette, TOOLS_REPO=$TOOLS_REPO}"; exit 1 ;;
+    esac
+}
+porte
 
 # Verrou LLM PARTAGÉ entre tous les agents de game design (celui d'agent-run.sh
 # est par-id : il n'empêche pas deux agents différents de charger deux modèles).
@@ -32,6 +38,8 @@ if ! flock -w 1800 8; then
     echo "LLM occupé plus de 30 min — on passe ce tour"
     exit 75
 fi
+# Le jeu a pu démarrer pendant l'attente du verrou (jusqu'à 30 min) : on redemande.
+porte
 
 OUT="$(cd "$TOOLS_REPO" && nice -n 10 python3 tools/gd_agents/runner.py "$ID" 2>&1 | tail -1)"
 RC=$?

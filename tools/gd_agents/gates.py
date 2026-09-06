@@ -8,6 +8,7 @@ tout agent gourmand. Stdlib seule, ne lève jamais.
 """
 from __future__ import annotations
 
+import os
 import socket
 import subprocess
 import time
@@ -15,14 +16,24 @@ from pathlib import Path
 
 WITNESS = Path.home() / ".cache" / "merlin-game" / "last-seen-playing"
 HARNESS = Path.home() / ".cache" / "merlin-game" / "harness"
+INNER_PID = Path.home() / ".cache" / "merlin-game" / "inner.pid"
 GRACE_S = 600
+
+
+def _inner_alive() -> bool:
+    try:
+        os.kill(int(INNER_PID.read_text().strip()), 0)
+        return True
+    except Exception:
+        return False
 
 
 def game_running() -> bool:
     # Un harnais (partie de la nuit, quête, sonde) tient le jeu même sans fenêtre ni port VNC :
-    # game-stack.sh le note dans `harness` au lancement et l'efface à l'arrêt.
+    # game-stack.sh le note dans `harness` au lancement et l'efface à l'arrêt. On ne le croit que
+    # si son processus VIT : un marqueur rassis (arrêt hors game-stack) bloquerait tout, sans fin.
     try:
-        if HARNESS.is_file() and HARNESS.read_text().strip():
+        if HARNESS.is_file() and HARNESS.read_text().strip() and _inner_alive():
             return True
     except Exception:
         pass

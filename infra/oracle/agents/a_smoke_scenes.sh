@@ -13,7 +13,7 @@ DUR="${SMOKE_DURATION:-6}"
 if bash "$HERE/../game/game-stack.sh" status 2>/dev/null | grep -q '"vnc_open":true'; then
     echo "jeu en cours d'utilisation — smoke reporté"; exit 75
 fi
-HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+HARNAIS="$(merlin_harnais)"
 [ -z "$HARNAIS" ] || { echo "un harnais tient le jeu ($HARNAIS) — smoke reporté"; exit 75; }
 [ -d "$GAME_DIR/scenes" ] || { echo "pas de dossier scenes/ dans $GAME_DIR"; exit 0; }
 

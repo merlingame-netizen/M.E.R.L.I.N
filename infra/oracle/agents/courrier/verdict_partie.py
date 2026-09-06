@@ -46,9 +46,9 @@ def _continuite(res: list) -> tuple[int, int, list]:
         fil = _norm(ph[-1])[:60]
         if fil and fil[:40] and _norm(b.get("narration", "")).startswith(fil[:40]):
             tenus += 1
-            details.append("b%s:oui" % b["index"])
+            details.append("b%s:oui" % b.get("index", "?"))
         else:
-            details.append("b%s:non" % b["index"])
+            details.append("b%s:non" % b.get("index", "?"))
     return tenus, total, details
 
 
@@ -60,11 +60,16 @@ def mesures(d: dict) -> dict:
     bs = d.get("beats") or []
     res = [b for b in bs if "degre" in b]
     fin = d.get("fin") or {}
-    sec = {b["index"] for b in res if b.get("secours")}
-    prov = {b["index"] for b in res if str(b.get("provenance")) == "secours"}
+    sec = {b.get("index") for b in res if b.get("secours")}
+    prov = {b.get("index") for b in res if str(b.get("provenance")) == "secours"}
     degres = [str(b.get("degre")) for b in res]
     pleins = sum(1 for x in degres if x in PLEIN)
     att = sorted(float(b["attente_moteur_s"]) for b in res if b.get("attente_moteur_s"))
+    # LES TROUS D'INDEX, comme dans le texte : un JSON qui dit « 20 beats » pour 22 joues
+    # rendrait deux nuits comparables alors qu'elles ne le sont pas (v50.3).
+    idx = [int(b["index"]) for b in res if b.get("index") is not None]
+    trous = [i for i in range(min(idx), max(idx) + 1) if i not in idx] if idx else []
+    joues = int(fin.get("beats_joues") or 0)
 
     def q(p):
         return round(att[min(len(att) - 1, int(round((len(att) - 1) * p)))], 1) if att else None
@@ -80,6 +85,8 @@ def mesures(d: dict) -> dict:
         "attente_moy_s": round(sum(att) / len(att), 1) if att else None,
         "attente_max_s": round(att[-1], 1) if att else None,
         "continuite": [tenus, total],
+        "beats_joues": joues or None, "trous": trous, "sans_index": len(res) - len(idx),
+        "incomplet": bool(trous or (joues and joues != len(idx)) or len(res) != len(idx)),
         "fin": fin.get("type"), "integrite": fin.get("integrite"), "corruption": fin.get("corruption"),
         "signes": sum(len(str(b.get("narration", "")) + str(b.get("resolution", ""))) for b in bs),
     }

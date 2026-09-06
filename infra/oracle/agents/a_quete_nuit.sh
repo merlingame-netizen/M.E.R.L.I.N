@@ -28,8 +28,9 @@ mkdir -p "$BASE"
 # Depuis le 06/09 cet agent est appelé par a_partie_nuit.sh APRÈS la partie (« à la demande » dans
 # le manifeste) : lancé à heure fixe, il trouvait le jeu occupé par la partie et sortait en 0 sans
 # rien écrire. Un renoncement sort désormais en 75, et le dit.
+trap 'printf stopped > "$HOME/.cache/merlin-game/desired"; env -u RES bash "$GS" stop >/dev/null 2>&1; exit 143' TERM INT
 DESIRED="$(cat "$HOME/.cache/merlin-game/desired" 2>/dev/null || echo stopped)"
-HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+HARNAIS="$(merlin_harnais)"
 if [ -n "$HARNAIS" ] || [ "$DESIRED" = "running" ] || bash "$GS" status 2>/dev/null | grep -q '"vnc_open":true'; then
     echo "le jeu est occupé (harnais « $HARNAIS », desire=$DESIRED) — quête de la nuit reportée"; exit 75
 fi

@@ -108,10 +108,10 @@
   {
    "id": "gd-content-gap",
    "label": "Professeur du modèle",
-   "schedule": "*/30 * * * *",
+   "schedule": "7,37 * * * *",
    "cmd": "a_gd_content.sh",
    "enabled": true,
-   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN. PAUSE du 25/08 levée le 06/09 : le canon (data/ai/lore_canon.json v2.0) est dérivé du jeu depuis le 05/09. Cadence choisie par Maxime (toutes les 30 min, qui vivait dans une surcharge hors dépôt) et désormais SOUS PORTE : run-gd-agent.sh interroge gates.py et cède les quatre cœurs à tout godot qui tourne, harnais compris. Reste à recibler sur le beat (tâche #29 : il produit encore des cartes à trois options)."
+   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN. PAUSE du 25/08 levée le 06/09 : le canon (data/ai/lore_canon.json v2.0) est dérivé du jeu depuis le 05/09. Cadence choisie par Maxime (toutes les 30 min, à 7 et 37 pour ne pas partir dans la même seconde que la partie de 4h05 ou le banc de 6h05 ; elle vivait dans une surcharge hors dépôt) et désormais SOUS PORTE : run-gd-agent.sh interroge gates.py et cède les quatre cœurs à tout godot qui tourne, harnais compris. Reste à recibler sur le beat (tâche #29 : il produit encore des cartes à trois options)."
   },
   {
    "id": "gd-balance",
@@ -172,10 +172,10 @@
   {
    "id": "native-bench",
    "label": "Vitesse du moteur du jeu",
-   "schedule": "0 6 * * *",
+   "schedule": "5 6 * * *",
    "cmd": "a_llm_native_bench.sh",
    "enabled": true,
-   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 6h00, après l'atelier de nuit, et jamais sous un harnais (06/09 : à 4h25 il chargeait un second e4b pendant la partie)."
+   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 6h05 (hors des minutes 0/30 des agents de corpus), après l'atelier de nuit, et jamais sous un harnais (06/09 : à 4h25 il chargeait un second e4b pendant la partie)."
   },
   {
    "id": "ollama-idle",

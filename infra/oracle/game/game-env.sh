@@ -23,6 +23,25 @@ if [ -z "${GAME_REPO_URL:-}" ]; then
     GAME_REPO_URL="$(git -C "$TOOLS_REPO" remote get-url origin 2>/dev/null || echo '')"
 fi
 
+# LE HARNAIS VIVANT. game-stack écrit $RUNDIR/harness au lancement d'une sonde et l'efface à
+# l'arrêt — mais un arrêt qui ne passe pas par game-stack (bouton Stop du Studio qui tue le
+# groupe, reboot, kill) laisse le fichier plein pour toujours : chaque agent qui le lit renonce
+# alors chaque nuit, sans fin (relecture du 06/09). Ici, un harnais ne compte que si un jeu VIT
+# (inner.pid vivant, ou un godot) ; sinon le fichier est vidé, et on le dit sur stderr.
+merlin_harnais() {
+    local d="$HOME/.cache/merlin-game" h pid
+    h="$(cat "$d/harness" 2>/dev/null || true)"
+    [ -n "$h" ] || return 0
+    pid="$(cat "$d/inner.pid" 2>/dev/null || true)"
+    if { [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; } \
+       || pgrep -x godot >/dev/null 2>&1 || pgrep -f 'bin/godot' >/dev/null 2>&1; then
+        printf '%s' "$h"
+        return 0
+    fi
+    : > "$d/harness" 2>/dev/null || true
+    echo "harnais rassis « $h » effacé : aucun jeu vivant" >&2
+}
+
 # GAME_DIR = le projet effectivement lancé. Repli sur l'outillage tant que le
 # dépôt du jeu n'est pas cloné (rétrocompatibilité avec l'installation d'origine).
 if [ -f "$GAME_REPO_DIR/project.godot" ]; then

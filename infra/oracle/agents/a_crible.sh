@@ -26,10 +26,12 @@ echo "modeles ollama charges : $(curl -fsS -m 5 "${OLLAMA_URL:-http://127.0.0.1:
 try: print(', '.join(m.get('name','?') for m in json.load(sys.stdin).get('models') or []) or 'aucun')
 except Exception: print('injoignable')")"
 G="$(pgrep -c -x godot 2>/dev/null)"   # pgrep -c imprime 0 ET sort en 1 : pas de « || echo 0 », il doublerait le zéro
-echo "jeu : desire=$(cat "$HOME/.cache/merlin-game/desired" 2>/dev/null || echo ?) harnais=« $(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null) » godot=${G:-0}"
+echo "jeu : desire=$(cat "$HOME/.cache/merlin-game/desired" 2>/dev/null || echo ?) harnais=« $(merlin_harnais 2>/dev/null) » godot=${G:-0}"
 echo
 echo "== L'ATELIER DE NUIT : ce qui est garde (7 dernieres) =="
-for d in $(ls -d "$HOME/.cache/merlin-partie/nuit"/*/ 2>/dev/null | sort | tail -7); do
+N7="$(ls -d "$HOME/.cache/merlin-partie/nuit"/*/ 2>/dev/null | sort | tail -7)"
+[ -n "$N7" ] || echo "  AUCUNE partie de nuit gardee"
+for d in $N7; do
     n="$(basename "$d")"
     echo "partie $n : $(python3 - "$d/journal.json" <<'PYX'
 import json, sys
@@ -44,11 +46,11 @@ PYX
 )"
     [ -f "$d/verdict.txt" ] && grep -aE "^CIBLE[0-9]|^BOT" "$d/verdict.txt" | cut -c1-150 | sed 's/^/     /'
 done
-[ -d "$HOME/.cache/merlin-partie/nuit" ] || echo "  AUCUNE partie de nuit gardee"
-for d in $(ls -d "$HOME/.cache/merlin-quete/nuit"/*/ 2>/dev/null | sort | tail -7); do
+Q7="$(ls -d "$HOME/.cache/merlin-quete/nuit"/*/ 2>/dev/null | sort | tail -7)"
+[ -n "$Q7" ] || echo "  AUCUNE quete de nuit gardee"
+for d in $Q7; do
     echo "quete  $(basename "$d") : $(head -1 "$d/verdict.txt" 2>/dev/null | tr -s ' ' | cut -c1-100) · $(grep -a 'adresse' "$d/grille.txt" 2>/dev/null | head -1 | tr -s ' ')"
 done
-[ -d "$HOME/.cache/merlin-quete/nuit" ] || echo "  AUCUNE quete de nuit gardee"
 echo "-- la courbe (nuits.jsonl, 7 dernieres) --"
 tail -7 "$HOME/.cache/merlin-partie/nuits.jsonl" 2>/dev/null | python3 -c "
 import json, sys
@@ -72,8 +74,13 @@ echo
 echo "== CHAQUE AGENT : derniere course (etat final), duree, rc, resume =="
 python3 - "$HERE" "$ST" <<'PYX'
 import json, os, sys, time, datetime
+import re
 here, st = sys.argv[1], sys.argv[2]
 sys.path.insert(0, here)
+# MASQUER AVANT DE COUPER : une URL tronquée à 80 caractères ne matche plus aucun filtre
+# (relecture du 06/09 : « …hampton-visiting.trycl » passait la garde et le Courrier).
+def masque(s):
+    return re.sub(r"https?://\S+|[A-Za-z0-9-]+\.trycloud\S*|ocid1\.\S+|Bearer\s+\S+", "<retiré>", str(s))
 try:
     from overrides import agents as _agents
     agents = _agents()
@@ -99,7 +106,7 @@ for a in sorted(agents, key=lambda x: x["id"]):
     rc = d.get("rc")
     etat = "reporte" if d.get("reporte") or rc == 75 else ("ok" if rc == 0 else "ECHEC rc=%s" % rc)
     print("  %-16s %-14s il y a %-4s %4ss %-11s %s" % (aid, a.get("schedule", "?")[:14], age(d.get("last_run", "")),
-          d.get("duration_s", "?"), etat, str(d.get("summary", ""))[:80]))
+          d.get("duration_s", "?"), etat, masque(d.get("summary", ""))[:80]))
 PYX
 echo
 echo "== REVEILS PAR AGENT et ECHECS, sur la fenetre REELLEMENT lue dans cron.log =="
@@ -129,7 +136,7 @@ for l in lignes:
     if rc == 75:
         rep[aid] += 1
     elif rc != 0:
-        echecs.append(l.strip()[:150])
+        echecs.append(re.sub(r"https?://\S+|[A-Za-z0-9-]+\.trycloud\S*|ocid1\.\S+", "<retiré>", l.strip())[:150])
 if premiere:
     print("  fenetre datee : %s → %s (%d lignes datees, %d anterieures non datees)" % (premiere, derniere, n_dated, n_undated))
 else:
@@ -143,37 +150,63 @@ if not echecs:
     print("  aucun")
 PYX
 echo
-echo "== VERROUS TENUS (qui, et par quel processus) =="
+echo "== VERROUS TENUS (lus dans /proc/locks, sans en prendre aucun) =="
 python3 - "$ST" <<'PYX'
-import fcntl, glob, os, sys
+import glob, os, sys
 st = sys.argv[1]
-for lock in sorted(glob.glob(os.path.join(st, "*.lock"))):
+# Les ancêtres de cette course (agent-run → bash → python) tiennent légitimement crible.lock, et
+# courrier.lock quand job-100 nous lance : on ne s'accuse pas soi-même.
+anc, p = set(), os.getpid()
+while p > 1:
     try:
-        fd = os.open(lock, os.O_RDWR | os.O_CREAT)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.flock(fd, fcntl.LOCK_UN)
-            tenu = False
-        except OSError:
-            tenu = True
-        finally:
-            os.close(fd)
+        p = int(open("/proc/%d/stat" % p).read().rsplit(")", 1)[1].split()[1]); anc.add(p)
     except Exception:
-        continue
-    if not tenu:
-        continue
-    ino = os.stat(lock).st_ino
-    porteurs = []
+        break
+tenus = {}
+try:
+    for l in open("/proc/locks"):
+        f = l.split()
+        if len(f) >= 6 and f[1] == "FLOCK":
+            maj, mi, ino = f[5].split(":")
+            tenus.setdefault((int(maj, 16), int(mi, 16), int(ino)), []).append(int(f[4]))
+except Exception as exc:
+    print("  (/proc/locks illisible : %s)" % exc)
+def comm(pid):
+    try:
+        return open("/proc/%d/comm" % pid).read().strip()
+    except Exception:
+        return "?"
+def porteurs_par_fd(ino):
+    out = set()
     for fdp in glob.glob("/proc/[0-9]*/fd/*"):
         try:
             if os.stat(fdp).st_ino == ino:
-                pid = fdp.split("/")[2]
-                cmd = open("/proc/%s/comm" % pid).read().strip()
-                porteurs.append("%s(%s)" % (cmd, pid))
+                pid = int(fdp.split("/")[2]); out.add(pid)
         except Exception:
             pass
-    print("  %-24s tenu par %s" % (os.path.basename(lock), ", ".join(sorted(set(porteurs))) or "un processus non identifie"))
-print("  (un verrou tenu par ollama, godot ou cloudflared est un descripteur herite : l'agent ne tournera plus jamais)")
+    return out
+n = 0
+for lock in sorted(glob.glob(os.path.join(st, "*.lock"))):
+    try:
+        sb = os.stat(lock)
+    except Exception:
+        continue
+    pids = set(tenus.get((os.major(sb.st_dev), os.minor(sb.st_dev), sb.st_ino), []))
+    if not pids:
+        continue
+    # Le pid de /proc/locks est celui qui a POSÉ le verrou ; s'il est mort, le verrou vit dans un
+    # descendant qui a hérité du descripteur : on le cherche par les fd.
+    vivants = {q for q in pids if comm(q) != "?"} or porteurs_par_fd(sb.st_ino)
+    if vivants and vivants <= anc:
+        continue   # cette course même
+    noms = sorted("%s(%d)" % (comm(q), q) for q in vivants) or ["porteur disparu"]
+    outils = {"bash", "python3", "sh", "tail"}
+    if vivants and all(comm(q) in outils for q in vivants):
+        genre = "en cours (une course d'agent-run)"
+    else:
+        genre = "HERITE — l'agent ne tournera plus tant que ce processus vit"; n += 1
+    print("  %-24s %s : %s" % (os.path.basename(lock), genre, ", ".join(noms)))
+print("  %d verrou(s) herite(s)" % n)
 PYX
 echo
 echo "== SURCHARGES HORS DEPOT =="
@@ -181,8 +214,9 @@ cat "$HOME/.config/merlin-agent-overrides.json" 2>/dev/null || echo "  aucune"
 echo
 echo "== LE CORPUS ET L'ATELIER DE CONTENU =="
 for f in auto_corpus.jsonl curated_corpus.jsonl; do
-    p="$TOOLS_REPO/data/ai/$f"
-    [ -f "$p" ] && echo "  $f : $(wc -l < "$p") exemples · dernier $(date -u -r "$p" +%m-%dT%H:%M)"
+    p="$TOOLS_REPO/data/ai/training/$f"
+    if [ -f "$p" ]; then echo "  $f : $(wc -l < "$p") exemples · dernier $(date -u -r "$p" +%m-%dT%H:%M)"
+    else echo "  $f : ABSENT ($p)"; fi
 done
 P="$HOME/.cache/merlin-proposals"
 echo "  propositions : inbox $(ls "$P/inbox" 2>/dev/null | wc -l) · acceptees $(ls "$P/accepted" 2>/dev/null | wc -l) · refusees $(ls "$P/rejected" 2>/dev/null | wc -l)"
@@ -197,7 +231,7 @@ except Exception as e: print('illisible (%s)' % e)")"
 try: print('%d nuit(s)' % len(json.load(sys.stdin).get('nuits') or []))
 except Exception as e: print('illisible (%s)' % e)")"
 fi
-echo "  tunnel : $(wc -l < "$ST/tunnel-history.jsonl" 2>/dev/null || echo 0) url(s) dans l'historique (jamais imprimees ici)"
+echo "  tunnel : $( [ -f "$ST/tunnel-history.jsonl" ] && wc -l < "$ST/tunnel-history.jsonl" || echo 0 ) url(s) dans l'historique (jamais imprimees ici)"
 echo
 echo "== LES DEPOTS =="
 echo "  jeu : $(cd "$GAME_DIR" 2>/dev/null && git log --oneline -1 2>/dev/null | cut -c1-90)"
@@ -207,7 +241,7 @@ echo "  chroniques du jeu : $(ls "$HOME/.local/share/godot/app_userdata"/*/chron
 
 # Garder trente jours, envoyer le texte (ntfy plafonne le corps : on coupe, le fichier reste entier).
 ls -1t "$OUTD"/*.txt 2>/dev/null | tail -n +31 | xargs -r rm -f
-if grep -qE '[a-z0-9-]+\.trycloudflare\.com|STUDIO_TOKEN=|Bearer ' "$OUT"; then
+if grep -qE 'https?://|trycloud|STUDIO_TOKEN=|Bearer |ocid1\.' "$OUT"; then
     echo "crible $JOUR : RETENU, il contenait une forme sensible — voir $OUT"; exit 1
 fi
 # SUR LE SUJET DU COURRIER, pas sur celui du téléphone : notify.sh pousse vers le téléphone de Maxime
@@ -217,5 +251,5 @@ for base in https://ntfy.adminforge.de https://ntfy.sh https://ntfy.envs.net; do
     curl -fsS -m 20 -H "Title: crible $JOUR" --data-binary "$(head -c 3600 "$OUT")" \
         "$base/merlin-courrier-vX9k2Qf7Lw3s" >/dev/null 2>&1 && break
 done
-REP="$(grep -c 'reporte ' "$OUT" || true)"; ECH="$(grep -c 'ECHEC rc=' "$OUT" || true)"
-echo "crible $JOUR : $(wc -l < "$OUT") lignes · $ECH agent(s) en echec · $REP reporte(s) · $(grep -m1 '^partie ' "$OUT" | cut -c1-70)"
+REP="$(grep -c ' reporte ' "$OUT" || true)"; ECH="$(grep -c 'ECHEC rc=' "$OUT" || true)"; HER="$(grep -c 'HERITE' "$OUT" || true)"
+echo "crible $JOUR : $(wc -l < "$OUT") lignes · $ECH agent(s) en echec · $REP reporte(s) · $HER verrou(s) herite(s) · $(grep -m1 '^partie ' "$OUT" | cut -c1-70)"

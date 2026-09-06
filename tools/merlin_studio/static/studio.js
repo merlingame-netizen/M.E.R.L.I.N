@@ -886,16 +886,17 @@ async function renderNuits() {
   const jouees = nuits.filter(d => d.partie && d.partie.beats);
   if (jouees.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
   const derniere = jouees[jouees.length - 1];
+  const denom = derniere.partie.beats_joues || derniere.partie.beats;
   const mesures = [
-    { titre: 'au banc', cle: 'banc', unite: ' beats', fmt: v => `${v}/${derniere.partie.beats}` },
+    { titre: 'au banc', cle: 'banc', unite: ' beats', fmt: v => `${v}/${denom}` },
     { titre: 'réussite', cle: 'reussite_pct', unite: ' %', fmt: v => `${v} %` },
     { titre: 'attente médiane', cle: 'attente_med_s', unite: ' s', fmt: v => `${v} s` },
   ];
   box.innerHTML = mesures.map(m => {
-    const pts = _serie(jouees, m.cle, m.unite);
+    const pts = _serie(nuits, m.cle, m.unite);   // TOUTES les nuits : une nuit reportée est un trou visible
     const v = derniere.partie[m.cle];
     return `<figure class="nuit"><figcaption>${esc(m.titre)}<b>${v == null ? '—' : esc(m.fmt(v))}</b></figcaption>${_sparkline(pts, 140, 36)}</figure>`;
-  }).join('') + `<div class="nuit-legende">${jouees.length} nuits · dernière ${esc(derniere.nuit)}${derniere.partie.bot_couvrant ? '' : ' · bot aveugle'}</div>`;
+  }).join('') + `<div class="nuit-legende">${nuits.length} nuits · ${jouees.length} jouées · dernière ${esc(derniere.nuit)}${derniere.partie.bot_couvrant ? '' : ' · bot aveugle'}${derniere.partie.incomplet ? ' · échantillon incomplet' : ''}</div>`;
   box.hidden = false;
 }
 
@@ -996,7 +997,7 @@ async function refreshCrew() {
     ? `${busy} au travail en ce moment`
     : (ko ? `${ko} en difficulté` : `${ags.filter(a => a.enabled).length} en veille`);
   list.innerHTML = ags.map(a => {
-    const cls = a.running ? 'run' : !a.enabled ? 'off' : a.ok === false ? 'ko' : a.ok ? 'ok' : '';
+    const cls = a.running ? 'run' : !a.enabled ? 'off' : a.ok === false ? 'ko' : a.reporte ? 'pending' : a.ok ? 'ok' : '';
     const quand = a.running ? 'maintenant'
       : a.ago_min == null ? 'jamais lancé'
       : a.ago_min < 60 ? `il y a ${a.ago_min} min`
@@ -1017,7 +1018,7 @@ async function refreshCrew() {
           ? `${c.etapes_total ? c.etape + '/' + c.etapes_total + ' — ' : ''}${c.libelle}${dep ? ' · depuis ' + dep : ''}`
           : 'travaille en ce moment…')
       : (a.summary || CREW_ROLE[a.id] || a.desc || '').slice(0, 140);
-    const muet = !a.running && a.enabled && (a.ok === false ||
+    const muet = !a.running && a.enabled && (a.ok === false || a.reporte ||
       /suspendu|rien d'applicable|indisponible|absent|sauté|vide|aucun/i.test(a.summary || ''));
     return `<div class="crew-row" data-row="${esc(a.id)}">
       <span class="crew-dot ${cls}"></span>
@@ -1274,9 +1275,9 @@ async function refreshAgents() {
   if (hint) hint.textContent = d.installed ? '' : 'Aucune tâche planifiée sur la VM — cliquer pour installer.';
 
   $('#agentlist').innerHTML = list.map(a => {
-    const cls = !a.enabled ? 'off' : a.ok === true ? 'ok' : a.ok === false ? 'ko' : 'never';
-    const st = !a.enabled ? 'DÉSACTIVÉ' : a.ok === true ? 'OK' : a.ok === false ? 'ÉCHEC' : 'JAMAIS';
-    const bcl = !a.enabled ? 'idle' : a.ok === true ? 'up' : a.ok === false ? 'down' : 'pending';
+    const cls = !a.enabled ? 'off' : a.ok === false ? 'ko' : a.reporte ? 'never' : a.ok === true ? 'ok' : 'never';
+    const st = !a.enabled ? 'DÉSACTIVÉ' : a.ok === false ? 'ÉCHEC' : a.reporte ? 'REPORTÉ' : a.ok === true ? 'OK' : 'JAMAIS';
+    const bcl = !a.enabled ? 'idle' : a.ok === false ? 'down' : a.reporte ? 'pending' : a.ok === true ? 'up' : 'pending';
     return `<div class="agent ${cls}">
       <div class="row"><span class="name">${esc(a.label)}</span><span class="badge ${bcl}">${st}</span></div>
       <div class="mut" style="margin-top:3px">${esc(a.desc)}</div>

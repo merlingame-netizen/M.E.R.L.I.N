@@ -152,7 +152,8 @@ def main() -> int:
         verifier("/api/chroniques répond en JSON", r.status_code == 200 and "parties" in r.get_json(),
                  "%s %s" % (r.status_code, r.data[:80]))
         r = c.get("/api/nuits")
-        verifier("/api/nuits répond en JSON", r.status_code == 200 and "nuits" in r.get_json(),
+        verifier("/api/nuits répond en JSON", r.status_code == 200 and "nuits" in r.get_json()
+                 and "erreur" not in r.get_json(),
                  "%s %s" % (r.status_code, r.data[:80]))
         r = c.get("/chroniques/liseuse")
         verifier("/chroniques/liseuse sert la page", r.status_code == 200 and b"const PARTIES = " in r.data

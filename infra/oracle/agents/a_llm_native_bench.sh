@@ -30,11 +30,15 @@ fi
 # spectateur, et ce banc lançait à 4 h 25 un second Godot avec un second e4b de 6 Go pendant
 # qu'elle jouait — les beats 11 à 13 des deux premières nuits (98 à 128 s) tombent exactement là,
 # et la mesure du banc, prise à deux moteurs sur quatre cœurs, ne valait rien non plus.
-HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+HARNAIS="$(merlin_harnais)"
 DESIRE="$(cat "$HOME/.cache/merlin-game/desired" 2>/dev/null || echo stopped)"
 if [ -n "$HARNAIS" ] || [ "$DESIRE" = "running" ]; then
     echo "le jeu est tenu (harnais « $HARNAIS », desire=$DESIRE) — mesure reportée"; exit 75
 fi
+# ET LE VERROU LLM : un agent Ollama qui charge un modèle pendant le banc fausse la mesure autant
+# qu'une partie. On le prend pour toute la durée ; les agents gd attendront ou sortiront en 75.
+exec 8>"$HOME/.cache/merlin-agents/llm.lock"
+flock -w 60 8 || { echo "LLM occupé — banc reporté"; exit 75; }
 
 etape 1 3 "vérification de la sonde"
 PROBE="$GAME_DIR/tools/probe_native_bench.gd"

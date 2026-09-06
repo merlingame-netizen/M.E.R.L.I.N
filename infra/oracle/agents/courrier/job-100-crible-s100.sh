@@ -25,7 +25,7 @@ OUT="$COURRIER_RES/s100_application.txt"
 {
 echo "== 0. L'OUTILLAGE EST-IL A JOUR ? =="
 echo "outillage : $(cd "$RP" && git log --oneline -1 | cut -c1-80)"
-echo "agent-run ferme le verrou pour l'enfant : $(grep -c '9>&-' "$AG/agent-run.sh") (attendu 1)"
+echo "agent-run ferme le verrou pour l'enfant : $(grep -v '^ *#' "$AG/agent-run.sh" | grep -c '9>&-') (attendu 1)"
 echo "a_crible.sh present : $([ -x "$AG/a_crible.sh" ] && echo oui || echo NON)"
 echo
 echo "== 1. LE VERROU D'OLLAMA-SERVE =="
@@ -64,8 +64,16 @@ echo "== 4. LE CRIBLE (a_crible.sh) =="
 bash "$AG/agent-run.sh" crible 2>&1 | tail -3
 } > "$OUT" 2>&1
 
+# RIEN NE PART SANS LE FILTRE DU COURRIER : le crible se contrôle lui-même, mais on refait le
+# test ici avec la même forme que a_courrier.sh, et on ne copie que ce qui le passe.
+FORME='(\?|&|^|[[:space:]])(cle|clef|token|key|secret|password|pass)=[A-Za-z0-9_-]{6,}|Bearer[[:space:]]+[A-Za-z0-9._-]{12,}|BEGIN[[:space:]]+[A-Z ]*PRIVATE[[:space:]]+KEY|ocid1\.[a-z]+\.|ssh-(rsa|ed25519)[[:space:]]|AKIA[0-9A-Z]{16}|[a-z0-9-]+\.trycloud|https?://'
 C="$(ls -1t "$HOME/.cache/merlin-agents/crible"/*.txt 2>/dev/null | head -1)"
-[ -n "$C" ] && cp "$C" "$COURRIER_RES/s100_crible.txt"
+if [ -n "$C" ] && ! grep -qE "$FORME" "$C"; then
+    cp "$C" "$COURRIER_RES/s100_crible.txt"
+else
+    echo "crible non joint : absent ou forme sensible" >> "$OUT"; C=""
+fi
+grep -qE "$FORME" "$OUT" && { echo "rapport d'application retenu : forme sensible"; exit 1; }
 dire "application" "$(cat "$OUT")"
 [ -n "$C" ] && dire "crible" "$(head -c 3800 "$C")"
 echo "s100 : application faite, crible $(basename "${C:-aucun}")"

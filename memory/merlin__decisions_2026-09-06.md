@@ -34,3 +34,21 @@
   séparées (banc, réussite, attente médiane), jamais deux échelles sur un axe.
 - L'URL du tunnel est une forme sensible pour le Courrier ; a_tunnel_watch ne la met plus dans ses
   résumés (elle vit dans tunnel-history.jsonl, en local).
+
+## 2026-09-06 : ce que la relecture contradictoire a ajouté (34 défauts, 2 bloquants)
+- Un harnais ne compte que s'il VIT : `merlin_harnais` (game-env.sh) et gates.py exigent inner.pid
+  vivant ou un godot ; un marqueur rassis (Stop du Studio, reboot) est effacé au passage. Sans
+  cela, une seule nuit tuée bloquait toutes les suivantes, pour toujours, en « reporté ».
+- La CI de commit (game-autosync → ci-commit) ne relance plus le jeu par-dessus une sonde :
+  garde harnais + gates, rc=75. Un commit poussé entre 4 h et 5 h 30 aurait tué la partie.
+- Le crible masque les URL AVANT de tronquer (une URL coupée à 80 caractères passait tous les
+  filtres) ; job-100 refait le test du Courrier avant de joindre quoi que ce soit ; le filtre
+  du Courrier matche `trycloud` même tronqué.
+- L'atelier tient le verrou LLM du début à la fin, écrit sa ligne de nuit même quand il renonce,
+  lit le contrat de la quête dans verdict.txt (pas dans un code de retour), et son code de retour
+  porte la quête (refusée = 1, reportée = 75). relance, journal, conseil et les agents gd passent
+  par gates ; native-bench à 6 h 05 et gd-content-gap à 7/37 : jamais dans la même seconde.
+- « Reporté » existe pour le Studio (pastille, badge, bloqués), le rapport du matin et le
+  Contrôleur (qui ne prend plus une durée de report pour une durée de référence).
+- La courbe garde les nuits reportées comme des trous visibles ; les mesures disent quand
+  l'échantillon est incomplet (trous d'index, beats_joues).

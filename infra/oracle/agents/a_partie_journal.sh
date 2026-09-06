@@ -15,6 +15,10 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HERE/../game/game-env.sh"
+# TUÉ, ON RANGE QUAND MÊME. Le bouton Stop du Studio tue le groupe entier ; sans ce piège,
+# desired=running et le marqueur de harnais restaient sur disque, et chaque agent de nuit y
+# renonçait ensuite pour toujours (relecture du 06/09).
+trap 'printf stopped > "$HOME/.cache/merlin-game/desired"; bash "$HERE/../game/game-stack.sh" stop >/dev/null 2>&1; exit 143' TERM INT
 type -t etape >/dev/null 2>&1 || etape() { :; }
 
 PHASE="${1:-selection}"

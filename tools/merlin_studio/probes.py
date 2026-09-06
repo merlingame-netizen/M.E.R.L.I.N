@@ -247,6 +247,8 @@ def agents() -> dict:
             "desc": a.get("desc", ""), "schedule": a.get("schedule", ""),
             "enabled": bool(a.get("enabled")),
             "last_run": last, "ago_min": ago, "ok": st.get("ok"),
+            # rc=75 : l'agent a renoncé en le disant (occupé, mémoire, harnais). Ni vert ni rouge.
+            "reporte": bool(st.get("reporte")) or st.get("rc") == 75,
             "rc": st.get("rc"), "duration_s": st.get("duration_s"),
             "summary": st.get("summary", ""),
             # Vue « en direct » : qui travaille maintenant, où il en est, qui passe ensuite.
@@ -587,6 +589,8 @@ def briefing() -> dict:
             why = str(a.get("summary") or "")
             if a.get("ok") is False:
                 out["bloque"].append(f"{a['label']} : {why[:110] or 'échec sans message'}")
+            elif a.get("reporte"):
+                out["bloque"].append(f"{a['label']} : reporté — {why[:100]}")
             elif any(k in why for k in ("suspendu", "rien d'applicable", "indisponible",
                                         "absent", "sauté", "vide")):
                 out["bloque"].append(f"{a['label']} : {why[:110]}")

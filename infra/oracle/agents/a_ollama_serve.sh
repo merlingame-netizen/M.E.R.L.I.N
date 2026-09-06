@@ -2,6 +2,7 @@
 # Veilleur Ollama : garantit que le serveur LLM local tourne (userland, pas de
 # systemd) et que le modèle copilote reste résident en RAM (réponse immédiate).
 set -uo pipefail
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../game/game-env.sh"
 CONF="$HOME/.config/merlin-llm.env"
 [ -f "$CONF" ] || { echo "pas encore installé (lancer llm/ollama-setup.sh)"; exit 0; }
 . "$CONF"
@@ -28,7 +29,7 @@ fi
 # la RAM et les cœurs au moteur du jeu (a_partie_journal.sh), et ce veilleur la rechargeait cinq
 # minutes plus tard, à 6 Go et pour deux heures. Un serveur vivant suffit ; le copilote se
 # rechargera à la première demande du jour.
-HARNAIS="$(cat "$HOME/.cache/merlin-game/harness" 2>/dev/null || true)"
+HARNAIS="$(merlin_harnais)"
 HEURE="$((10#$(date -u +%H)))"
 LOADED="$(curl -fsS -m 5 "http://$OLLAMA_HOST/api/ps" 2>/dev/null | grep -c "${COPILOT_MODEL:-none}" || true)"
 if [ -n "$HARNAIS" ] || { [ "$HEURE" -ge 2 ] && [ "$HEURE" -lt 6 ]; }; then

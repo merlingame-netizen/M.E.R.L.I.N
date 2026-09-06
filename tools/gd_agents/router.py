@@ -86,7 +86,11 @@ def game_running() -> bool:
     Le port 5900 seul ne voyait ni les sondes headless ni la partie de la nuit ; gates.py sait,
     lui, et il est la seule définition (crible du 06/09)."""
     try:
-        from gates import game_running as _gr  # même dossier
+        import sys as _sys
+        _ici = str(Path(__file__).resolve().parent)
+        if _ici not in _sys.path:
+            _sys.path.insert(0, _ici)
+        from gates import game_running as _gr  # même dossier, quel que soit le cwd
         return bool(_gr())
     except Exception:
         s = socket.socket()

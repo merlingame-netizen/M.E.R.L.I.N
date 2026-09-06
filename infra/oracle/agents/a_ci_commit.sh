@@ -15,6 +15,13 @@ SYSROOT="$HOME/opt/gamestack/sysroot"
 mkdir -p "$CI_DIR"
 
 [ -d "$GAME_DIR/.git" ] || { echo "jeu pas encore cloné — rien à tester"; exit 0; }
+# JAMAIS PAR-DESSUS UNE SONDE. La CI finit par `game-stack restart`, qui tue ce qui tourne et
+# relance le jeu NORMAL : un commit poussé entre 4 h et 5 h 30 aurait tué la partie de la nuit
+# (relecture du 06/09). Le commit attend le prochain passage ; la sonde, elle, ne se rejoue pas.
+HARNAIS="$(merlin_harnais)"
+if [ -n "$HARNAIS" ] || ! (cd "$TOOLS_REPO" && python3 tools/gd_agents/gates.py >/dev/null 2>&1); then
+    echo "nouveau commit, mais le jeu est tenu (harnais « $HARNAIS ») — CI reportée"; exit 75
+fi
 
 # ── 1. y a-t-il du nouveau ? ────────────────────────────────────────────────
 git -C "$GAME_DIR" fetch origin "$GAME_REF" --quiet 2>/dev/null || { echo "fetch KO (réseau ?)"; exit 1; }
