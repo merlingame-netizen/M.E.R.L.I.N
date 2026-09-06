@@ -126,13 +126,54 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now anniv-vote-tunnel.service >/dev/null 2>&1 || true
 sudo systemctl restart anniv-vote-tunnel.service
 
+# cloudflared écrit l'URL dans son journal AVANT d'avoir réussi à joindre le
+# réseau Cloudflare : une URL présente ne prouve donc rien. On attend la
+# connexion enregistrée, puis on vérifie la page de bout en bout. Sans ça, le
+# script annonce fièrement un lien qui répond 530 à tout le monde.
 echo "    attente de l'URL publique…"
-URL=""
-for _ in $(seq 1 30); do
+URL="" ; RELIE=0
+for _ in $(seq 1 40); do
   sleep 2
   URL="$(sudo grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" 2>/dev/null | head -1 || true)"
-  [ -n "$URL" ] && break
+  if sudo grep -q 'Registered tunnel connection' "$LOG" 2>/dev/null; then RELIE=1; fi
+  [ -n "$URL" ] && [ "$RELIE" = 1 ] && break
 done
+
+SANTE=""
+if [ -n "$URL" ] && [ "$RELIE" = 1 ]; then
+  for _ in $(seq 1 8); do
+    SANTE="$(curl -fsS --max-time 15 "$URL/healthz" 2>/dev/null || true)"
+    [ -n "$SANTE" ] && break
+    sleep 3
+  done
+fi
+
+if [ -z "$SANTE" ]; then
+  cat <<ECHEC
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  LE SERVICE TOURNE, MAIS LE TUNNEL N'EST PAS JOIGNABLE               ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+  En local, ça répond :   curl http://127.0.0.1:$PORT/healthz
+  ${URL:+URL annoncée par cloudflared : $URL (elle renvoie une erreur 530)}
+
+  cloudflared a besoin de sortir en **TCP 7844** vers le réseau Cloudflare,
+  en plus du 443. C'est la cause la plus fréquente : un pare-feu sortant,
+  ou un réseau qui ne laisse passer que le proxy HTTP.
+
+      # vérifier la sortie 7844
+      timeout 8 bash -c 'cat < /dev/null > /dev/tcp/198.41.200.193/7844' \
+        && echo ouvert || echo bloqué
+
+  Si le QUIC (UDP) est filtré mais le TCP passe, force le repli :
+      sudo systemctl edit anniv-vote-tunnel     # ajoute --protocol http2
+
+  Journal du tunnel :  sudo tail -40 $LOG
+
+ECHEC
+  exit 1
+fi
 
 # ── 8. Les messages WhatsApp, avec la vraie URL dedans ──────────────────────
 if [ -n "$URL" ] && [ -f "$SRC/../whatsapp/build_messages.py" ]; then
@@ -146,7 +187,8 @@ cat <<RECAP
 ║  LE SITE EST EN LIGNE                                                ║
 ╚══════════════════════════════════════════════════════════════════════╝
 
-  URL publique   ${URL:-<voir $LOG>}
+  URL publique   $URL
+  Vérifiée       $SANTE
   Aucun mot de passe : les invités répondent sans compte, et leurs
   réponses sont gardées sur le serveur — chacun voit les compteurs.
 
@@ -156,13 +198,14 @@ cat <<RECAP
       anniversaire-elise/whatsapp/contacts.vcf
 
   Suivi des réponses (garde ce lien pour toi) :
-      ${URL:-<URL>}/admin?token=$ADMIN_TOKEN
+      $URL/admin?token=$ADMIN_TOKEN
   Export CSV :
-      ${URL:-<URL>}/admin?token=$ADMIN_TOKEN&format=csv
+      $URL/admin?token=$ADMIN_TOKEN&format=csv
 
   ⚠️  L'URL en *.trycloudflare.com change à chaque redémarrage du tunnel.
-      Ne redémarre pas le service jusqu'au 15 septembre, ou passe en
-      tunnel nommé (voir vm/README.md).
+      Une fois le lien collé dans le groupe WhatsApp, ne redémarre plus
+      anniv-vote-tunnel — ou passe en tunnel nommé (voir vm/README.md),
+      qui donne une URL stable.
 
   Les réponses sont dans $DATA_DIR/reponses.db — sauvegarde-le avant tout
   redéploiement. Mettre à jour après modification de la page :
