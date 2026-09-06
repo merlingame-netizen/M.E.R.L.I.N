@@ -2,6 +2,17 @@
 
 Remplace `VOTRE-URL-ICI` par le lien du site.
 
+> ⚠️ **`[ADRESSE]` reste un placeholder ici, et c'est volontaire.**
+> Le dépôt `merlingame-netizen/M.E.R.L.I.N` est **public** : l'adresse du
+> domicile n'y a pas sa place, pas plus que l'IBAN. Elle est stockée dans
+> `deploy/rib.env`, gitignoré.
+>
+> Pour obtenir ces messages tout remplis, sans rien recopier à la main :
+> ```bash
+> python3 anniversaire-elise/whatsapp/build_messages.py
+> ```
+> Le fichier produit (`messages_prets.md`) est lui aussi gitignoré.
+
 ---
 
 ## Nom du groupe
