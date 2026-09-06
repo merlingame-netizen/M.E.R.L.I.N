@@ -73,7 +73,7 @@ le planning des allers-retours.
 Tout est soumis au vote sur la page. Les activités payantes ont été retirées de
 la liste : la page ne parle plus d'argent nulle part, sauf de la cagnotte.
 
-### Dehors, samedi 15h → 17h30
+### Dimanche après-midi, selon les départs
 
 | Activité | À savoir |
 |----------|----------|
@@ -84,22 +84,63 @@ la liste : la page ne parle plus d'argent nulle part, sauf de la cagnotte.
 > **La Croix de Provence est toujours écartée** : 3h de marche, ça ne rentre pas
 > dans le créneau, et personne n'en a envie après un trajet.
 
-### À la maison, samedi 18h → tard
+### Samedi 17h — l'escape game
+
+**Move To Aixit** — 378 rue Bastide de Verdaches, 13290 Aix-en-Provence
+(ZAC des Milles, près de la MACIF). **06 59 15 19 98**,
+contact@movetoaixit.fr. Ouvert le samedi de 11h à 22h.
+
+Quatre salles : Pandora, Chasseurs de trésor, Les Explorateurs urbains,
+Le GIGN. Une salle prend 2 à 6 personnes, donc **les quatre salles tournent
+en parallèle** pour un groupe de quinze — c'est le seul endroit d'Aix qui
+absorbe le groupe d'un coup. À vingt minutes de la maison en voiture, donc
+il faut organiser les véhicules.
+
+> **C'est la seule dépense réelle du week-end, et elle est pour vous.**
+> Comptez de l'ordre de 25 à 32 € par personne selon la salle et l'horaire,
+> soit **350 à 480 € pour quinze**. La page n'affiche aucun prix, c'est
+> délibéré : les invités ne paient rien. **À réserver dès que le vote est
+> tombé** — un samedi soir d'octobre, quatre salles d'un coup, ça ne se
+> trouve pas la veille.
+
+### Samedi 19h — le vote de la soirée
+
+Deux branches, soumises au vote sur la page :
+
+| Branche | Ce que ça implique |
+|---------|--------------------|
+| **On reste sur place** | Le bar à jeux de Move To Aixit, dans le même bâtiment : ~300 jeux de société, fléchettes, planches et tapas, licence restaurant. Ouvert jusqu'à 22h. Aucun trajet supplémentaire, mais il faut prévenir pour une tablée de quinze |
+| **On rentre** | Apéro dînatoire à la maison, traiteur, puis la soirée jeux de société |
+
+> **Il n'y a plus de bar à jeux dans le centre d'Aix.** Le PlatÔbar, 40 rue
+> des Tanneurs, était *le* lieu — 600 jeux, licence restaurant. Son nom de
+> domaine `platobar-aix.com` redirige aujourd'hui vers un site publicitaire
+> sans rapport, ce qui signale un domaine expiré et une activité arrêtée.
+> Ne l'annonce à personne sans avoir appelé. Les autres adresses qui
+> remontent dans les recherches (Les Baratineurs, place des Cardeurs) sont
+> des brasseries à tapas : rien ne confirme un vrai fonds de jeux.
+
+### À la maison, samedi 20h → tard
 
 | Moment | Ce qu'il faut prévoir |
 |--------|-----------------------|
-| **Mölkky et pétanque**, 18h | Un jeu de mölkky (12 quilles + le lanceur) et deux triplettes de boules. Le jardin suffit, on joue jusqu'à la nuit |
-| **Apéro dînatoire**, 19h30 | C'est le repas du soir : planches et petits plats chauds du traiteur, servis en continu. Pas de service à table, pas de vaisselle assise |
+| **Apéro dînatoire** | C'est le repas du soir : planches et petits plats chauds du traiteur, servis en continu. Pas de service à table, pas de vaisselle assise. **Ne le commande qu'une fois le vote de la soirée tombé** — si le groupe reste au bar à jeux, il tombe à l'eau |
 | **Gâteau, 30 bougies**, 22h | Commandé. Prévoir les bougies et les allumettes à part |
 | **Bar à jeux**, 22h30 | La grande table débarrassée, couverte de jeux : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Sortir aussi de quoi noter les scores |
 | **Blind test des 30 ans**, 23h | Trente titres, un par année d'Elise. À préparer en playlist avant le jour J |
+
+### Samedi 14h30 — mölkky et pétanque
+
+Un jeu de mölkky (12 quilles + le lanceur) et deux triplettes de boules. Le
+jardin suffit. Il faut que ça se termine à 16h30 pour partir aux Milles.
 
 ### Dimanche
 
 | Moment | À savoir |
 |--------|----------|
-| **Marché d'Aix**, 11h30 | Place Richelme, tous les matins, à dix minutes à pied. Fromages, olives, calissons |
-| **Déjeuner**, 13h | Traiteur également, ou les restes de la veille selon l'appétit du groupe |
+| **Marché d'Aix**, 9h30 | Place Richelme, tous les matins dès 8h, à dix minutes à pied. Pour les lève-tôt, avant le brunch |
+| **Brunch**, 11h | À la maison. Salé et sucré, et beaucoup de café. C'est le seul repas du dimanche : plus de déjeuner à prévoir |
+| **Après-midi** | Libre, calé sur les trains de chacun. Les trois balades ci-dessus sont là pour ça |
 
 Le formulaire propose aussi un champ libre **« une autre idée ? »** : ce que les
 invités y écrivent remonte dans le message WhatsApp qu'ils t'envoient.
@@ -121,5 +162,11 @@ invités y écrivent remonte dans le message WhatsApp qu'ils t'envoient.
 5. **Le mölkky** — à acheter ou à emprunter si tu n'en as pas.
 6. **Le déjeuner du samedi** — le week-end commence à midi, il faut de quoi
    nourrir tout le monde dès l'arrivée.
+7. **L'escape game** — appeler Move To Aixit au 06 59 15 19 98 dès que le
+   nombre de participants est connu, et réserver les quatre salles.
+8. **Le brunch du dimanche** — il remplace le déjeuner : viennoiseries,
+   œufs, fruits, et du café en quantité.
+9. **Les voitures** — quinze personnes à emmener aux Milles à 16h30 puis à
+   ramener. La question des places libres est posée à l'étape 2 de la page.
 
 Deux appels au lieu de quatre. C'est tout l'intérêt de la simplification.

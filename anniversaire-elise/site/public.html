@@ -83,10 +83,11 @@ p{margin:0 0 .85em}
 .rubans div{display:flex;max-width:var(--col);margin-inline:auto;padding-inline:var(--pad)}
 .rubans button{
   flex:1;background:none;border:none;border-bottom:2px solid transparent;
-  font-family:var(--texte);font-weight:700;font-size:.73rem;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--encre-pale);padding:1.05rem .3rem;cursor:pointer;
-  min-height:52px;transition:color .2s,border-color .2s;
+  font-family:var(--texte);font-weight:700;font-size:.71rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--encre-pale);padding:1.05rem .2rem;cursor:pointer;
+  min-height:52px;transition:color .2s,border-color .2s;white-space:nowrap;
 }
+@media (max-width:420px){.rubans button{font-size:.63rem;letter-spacing:.04em;padding-inline:.1rem}}
 .rubans button[aria-selected="true"]{color:var(--encre);border-bottom-color:var(--terre)}
 
 main{padding-block:2.2rem 3.5rem}
@@ -186,10 +187,11 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
   font-size:1.35rem;font-weight:600;color:var(--encre);margin:1.9rem 0 .75rem}
 .acte span{font-family:var(--texte);font-size:.68rem;font-weight:700;letter-spacing:.15em;
   color:var(--terre);font-variant-numeric:tabular-nums;flex:none}
-.trio,.duo{display:grid;gap:1rem;margin-bottom:.4rem}
+.trio,.duo,.quatuor{display:grid;gap:1rem;margin-bottom:.4rem}
 .trio{grid-template-columns:repeat(3,1fr)}
-.duo{grid-template-columns:repeat(2,1fr)}
-@media (max-width:720px){.trio,.duo{grid-template-columns:1fr}}
+.duo,.quatuor{grid-template-columns:repeat(2,1fr)}
+@media (max-width:720px){.trio,.duo,.quatuor{grid-template-columns:1fr}}
+.acte+.glose{margin-top:-.35rem}
 .vue{margin:0;background:var(--blanc);border:1px solid var(--craie-3)}
 .vue img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
 .vue figcaption{padding:.75rem .9rem .85rem}
@@ -197,6 +199,19 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 .vue small{display:block;color:var(--encre-pale);font-size:.86rem;margin-top:.2rem}
 .vue.large img{aspect-ratio:2/1}
 @media (max-width:720px){.vue.large img{aspect-ratio:3/2}}
+
+.picto{width:1.15em;height:1.15em;flex:none;color:var(--terre);vertical-align:-.18em}
+.acte .picto{width:1.5rem;height:1.5rem}
+.heure .picto{width:1.25rem;height:1.25rem;color:var(--roche-fonce)}
+.groupe .picto{margin-right:.4rem}
+
+.renvoi{display:flex;gap:.55rem;align-items:flex-start;background:var(--blanc);
+  border:1px solid var(--craie-3);padding:.85rem .95rem;margin-bottom:1.5rem;
+  font-size:.9rem;color:var(--encre-doux);line-height:1.5}
+.renvoi .picto{margin-top:.12rem}
+.lien{background:none;border:none;padding:0;font:inherit;color:var(--terre-fonce);
+  font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.lien:hover{color:var(--terre)}
 
 /* ══ TRAINS ═══════════════════════════════════════════════════ */
 .quai{background:var(--ciel-fonce);color:#e8f0f6;padding:1.2rem 1.3rem;margin-bottom:1.1rem}
@@ -231,6 +246,55 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   pointer-events:none;border-left:3px solid var(--roche);max-width:90vw;text-align:center}
 #mot.vu{transform:translate(-50%,0)}
 </style>
+
+<!-- Pictos : un jeu de traits, dessinés à la même grille de 24, épaisseur 1.6.
+     Ils ne portent pas d'information seuls — chaque libellé reste écrit à côté. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <g id="g-tr" fill="none" stroke="currentColor" stroke-width="1.6"
+       stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+  <symbol id="i-assiette" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.6"/></g></symbol>
+  <symbol id="i-quilles" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.2 20V9.4l1.8-2.6h2.2l1.8 2.6V20z"/><path d="M13.9 20V9.4l1.8-2.6h2.2l1.8 2.6V20z"/>
+    <path d="M2.6 20h18.8"/></g></symbol>
+  <symbol id="i-boules" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="7.6" cy="14.8" r="4.3"/><circle cx="16.6" cy="16.2" r="3.2"/><circle cx="14.4" cy="7.6" r="1.9"/></g></symbol>
+  <symbol id="i-cadenas" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4.4" y="10.4" width="15.2" height="10.2" rx="1.8"/><path d="M8 10.4V7.3a4 4 0 0 1 8 0v3.1"/>
+    <path d="M12 14.3v2.6"/></g></symbol>
+  <symbol id="i-des" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.6" y="3.6" width="16.8" height="16.8" rx="3"/><circle cx="8.4" cy="8.4" r="1.15"/>
+    <circle cx="15.6" cy="15.6" r="1.15"/><circle cx="12" cy="12" r="1.15"/></g></symbol>
+  <symbol id="i-verre" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.6 3.6h14.8L12 12.4z"/><path d="M12 12.4v7.2"/><path d="M8.2 19.6h7.6"/></g></symbol>
+  <symbol id="i-gateau" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 20.4v-6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v6z"/><path d="M2.6 20.4h18.8"/>
+    <path d="M8.4 12.4V9.6M12 12.4V9.6M15.6 12.4V9.6"/><path d="M8.4 7.4v-.9M12 7.4v-.9M15.6 7.4v-.9"/></g></symbol>
+  <symbol id="i-cafe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.8 8.6h13v6.2a4.2 4.2 0 0 1-4.2 4.2H8a4.2 4.2 0 0 1-4.2-4.2z"/>
+    <path d="M16.8 10.4h1.9a2.4 2.4 0 0 1 0 4.8h-1.9"/><path d="M6.6 5.4V3.6M10.4 5.4V3.6M14.2 5.4V3.6"/></g></symbol>
+  <symbol id="i-montagne" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.4 19.4 9.2 7.2l4.2 7.1 2.2-3.3 5.9 8.4z"/><path d="M7.4 10.6h3.4"/></g></symbol>
+  <symbol id="i-panier" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 8.8h18l-1.9 10.4a1.8 1.8 0 0 1-1.8 1.4H6.7a1.8 1.8 0 0 1-1.8-1.4z"/>
+    <path d="M8.2 8.8 10.6 3.4M15.8 8.8 13.4 3.4"/><path d="M9.4 12.8v4M14.6 12.8v4"/></g></symbol>
+  <symbol id="i-cadeau" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.2" y="9.4" width="17.6" height="11.2" rx="1.6"/><path d="M2.4 9.4h19.2"/>
+    <path d="M12 9.4v11.2"/><path d="M12 9.4C10.4 6.2 9 4.6 7.4 4.6a2.4 2.4 0 0 0 0 4.8"/>
+    <path d="M12 9.4c1.6-3.2 3-4.8 4.6-4.8a2.4 2.4 0 0 1 0 4.8"/></g></symbol>
+  <symbol id="i-train" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="3.4" width="14" height="13.2" rx="3"/><path d="M5.6 10.4h12.8"/>
+    <circle cx="8.8" cy="13.6" r="1.05"/><circle cx="15.2" cy="13.6" r="1.05"/>
+    <path d="M7.6 16.6 5.4 20.6M16.4 16.6l2.2 4"/></g></symbol>
+  <symbol id="i-lit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.6 19.6v-13"/><path d="M2.6 11.6h18.8v8"/><path d="M2.6 15.8h18.8"/>
+    <circle cx="7.4" cy="8.6" r="1.9"/><path d="M11 11.6V9.4a1.8 1.8 0 0 1 1.8-1.8h6a2.6 2.6 0 0 1 2.6 2.6v1.4"/></g></symbol>
+  <symbol id="i-depart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13.6 3.6h4.8a2 2 0 0 1 2 2v12.8a2 2 0 0 1-2 2h-4.8"/>
+    <path d="M9.4 7.8 13.6 12l-4.2 4.2"/><path d="M13.2 12H3.4"/></g></symbol>
+</svg>
 
 <div class="tableau">
   <svg viewBox="0 0 1200 430" role="img" aria-label="La montagne Sainte-Victoire en plans peints, au-dessus de la campagne d'Aix">
@@ -271,7 +335,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 <nav class="rubans" role="tablist"><div>
   <button role="tab" id="o-rep" aria-selected="true" aria-controls="v-rep">Répondre</button>
   <button role="tab" id="o-we" aria-selected="false" aria-controls="v-we">Le week-end</button>
-  <button role="tab" id="o-train" aria-selected="false" aria-controls="v-train">Venir à Aix</button>
+  <button role="tab" id="o-train" aria-selected="false" aria-controls="v-train">Venir</button>
+  <button role="tab" id="o-cag" aria-selected="false" aria-controls="v-cag">Cagnotte</button>
 </div></nav>
 
 <!-- ═══ RÉPONDRE ═══ -->
@@ -309,9 +374,9 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <section id="e2" class="cache">
     <h2>Quelques détails</h2>
     <p class="chapo">De quoi sortir le bon nombre de lits, venir te chercher à la gare,
-      et savoir ce qu'on prévoit pour le week-end.</p>
+      réserver l'escape game et trancher la soirée.</p>
 
-    <p class="groupe">Le couchage</p>
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-lit"></use></svg> Le couchage</p>
     <div class="choix">
       <label class="opt"><input type="radio" name="lit" value="Il me faut un couchage">
         <span><b>Il me faut un lit</b><em>Lit ou canapé, peu importe</em></span></label>
@@ -323,7 +388,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
         <span><b>Je ne dors pas sur place</b><em>Je rentre le soir même</em></span></label>
     </div>
 
-    <p class="groupe">L'arrivée</p>
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-train"></use></svg> L'arrivée</p>
     <div class="choix">
       <label class="opt"><input type="radio" name="venue" value="En train, venez me chercher">
         <span><span class="note">on vient</span><b>En train</b><em>Gare TGV ou Aix-centre</em></span></label>
@@ -339,25 +404,47 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <input type="text" id="train" placeholder="Paris, Aix TGV à 13h40">
     </div>
 
-    <p class="groupe">Ce qui te tente <span id="cpt-act">0 choisi</span></p>
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-assiette"></use></svg> Le déjeuner de samedi</p>
+    <p class="glose">On mange à midi. Ça ne conditionne rien d'autre que les quantités.</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="midi" value="Je serai là pour le déjeuner">
+        <span><b>J'y serai</b><em>À table à midi</em></span></label>
+      <label class="opt"><input type="radio" name="midi" value="J'arrive dans l'après-midi">
+        <span><b>J'arrive après</b><em>Je vous rejoins dans l'après-midi</em></span></label>
+      <label class="opt"><input type="radio" name="midi" value="Je ne sais pas encore">
+        <span><b>Je ne sais pas encore</b><em>Ça dépend de mon train</em></span></label>
+    </div>
+
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-verre"></use></svg> La soirée de samedi</p>
+    <p class="glose">Après l'escape game, on reste sur place ou on rentre. La majorité tranche.</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="soiree" value="Bar à jeux sur place">
+        <span><span class="note">sur place</span><b>Le bar à jeux</b><em>Trois cents jeux, planches et tapas aux Milles, jusqu'à 22h. Zéro trajet de plus</em></span></label>
+      <label class="opt"><input type="radio" name="soiree" value="Retour à la maison">
+        <span><span class="note">à la maison</span><b>On rentre</b><em>Apéro dînatoire servi en continu, puis la soirée jeux de société</em></span></label>
+      <label class="opt"><input type="radio" name="soiree" value="Peu importe">
+        <span><b>Peu importe</b><em>Je suis les autres</em></span></label>
+    </div>
+
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg> Ce qui te tente <span id="cpt-act">0 choisi</span></p>
     <p class="glose">Coche ce qui te tente. Les choix les plus demandés seront retenus.</p>
     <div class="choix">
-      <label class="opt"><input type="checkbox" name="act" value="Vallon de Saint-Ser, Sainte-Victoire">
-        <span><span class="note">15h</span><b>Vallon de Saint-Ser</b><em>1 h 30 aller-retour sur le versant sud de la Sainte-Victoire, celle que Cézanne peignait</em></span></label>
-      <label class="opt"><input type="checkbox" name="act" value="Barrage de Bimont">
-        <span><span class="note">15h</span><b>Barrage de Bimont</b><em>1 h de balade plate au-dessus du lac, avec la montagne en face</em></span></label>
-      <label class="opt"><input type="checkbox" name="act" value="Le vieil Aix et ses terrasses">
-        <span><span class="note">15h</span><b>Le vieil Aix</b><em>Cours Mirabeau, les ruelles et les fontaines, un verre en terrasse</em></span></label>
-      <label class="opt"><input type="checkbox" name="act" value="Mölkky et pétanque au jardin">
-        <span><span class="note">18h</span><b>Mölkky et pétanque</b><em>Au jardin, en équipes de trois, jusqu'à la nuit tombée</em></span></label>
-      <label class="opt"><input type="checkbox" name="act" value="Apéro dînatoire, à rallonge">
-        <span><span class="note">19h30</span><b>Apéro dînatoire</b><em>Planches et petits plats chauds servis en continu — c'est le repas du soir</em></span></label>
-      <label class="opt"><input type="checkbox" name="act" value="Bar à jeux à la maison">
-        <span><span class="note">22h30</span><b>Le bar à jeux</b><em>La grande table couverte de jeux de société : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Escape game à 17h">
+        <span><span class="note">samedi 17h</span><b>L'escape game</b><em>Quatre salles en parallèle chez Move To Aixit, aux Milles. À réserver, donc dis-le maintenant</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Mölkky et pétanque">
+        <span><span class="note">samedi 14h30</span><b>Mölkky et pétanque</b><em>Au jardin, en équipes de trois</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Soirée jeux de société">
+        <span><span class="note">samedi 22h30</span><b>Soirée jeux de société</b><em>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Blind test des trente ans">
-        <span><span class="note">23h</span><b>Blind test</b><em>Trente titres, un par année d'Elise. Équipes tirées au sort</em></span></label>
+        <span><span class="note">samedi 23h</span><b>Le blind test</b><em>Trente titres, un par année d'Elise. Équipes tirées au sort</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Marché d'Aix, place Richelme">
-        <span><span class="note">dimanche</span><b>Le marché d'Aix</b><em>Place Richelme, à dix minutes à pied : fromages, olives, calissons</em></span></label>
+        <span><span class="note">dimanche 9h30</span><b>Le marché d'Aix</b><em>Place Richelme avant le brunch, à dix minutes à pied</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Vallon de Saint-Ser, Sainte-Victoire">
+        <span><span class="note">dimanche</span><b>Vallon de Saint-Ser</b><em>1 h 30 aller-retour sur le versant sud de la Sainte-Victoire</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Barrage de Bimont">
+        <span><span class="note">dimanche</span><b>Barrage de Bimont</b><em>1 h de balade plate au-dessus du lac</em></span></label>
+      <label class="opt"><input type="checkbox" name="act" value="Le vieil Aix">
+        <span><span class="note">dimanche</span><b>Le vieil Aix</b><em>Cours Mirabeau, les ruelles et les fontaines</em></span></label>
     </div>
     <div class="champ" id="c-idee">
       <label for="idee">Une autre idée&nbsp;?</label>
@@ -380,22 +467,13 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <dt>Présence</dt><dd class="vide" id="f-rsvp">—</dd>
       <dt id="l-lit">Couchage</dt><dd class="vide" id="f-lit">—</dd>
       <dt id="l-venue">Arrivée</dt><dd class="vide" id="f-venue">—</dd>
+      <dt id="l-midi">Samedi midi</dt><dd class="vide" id="f-midi">—</dd>
+      <dt id="l-soiree">Samedi soir</dt><dd class="vide" id="f-soiree">—</dd>
       <dt id="l-act">Envies</dt><dd class="vide" id="f-act">—</dd>
     </dl></div>
 
-    <div class="cadeau">
-      <h3>La cagnotte</h3>
-      <p style="font-size:.93rem;color:var(--encre-doux);margin-bottom:0">
-        Une cagnotte est ouverte pour son cadeau commun, jusqu'au 8 octobre. Mets
-        <strong>ton prénom en référence</strong> du virement.</p>
-      <p class="et">Bénéficiaire</p>
-      <p class="val nom">__RIB_TITULAIRE__</p>
-      <p class="et">IBAN</p>
-      <p class="val" id="iban">__RIB_IBAN__</p>
-      <p class="et">BIC</p>
-      <p class="val">__RIB_BIC__</p>
-      <button class="copier" type="button" id="cop">Copier l'IBAN</button>
-    </div>
+    <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-cadeau"></use></svg> Une cagnotte est ouverte pour son cadeau commun&nbsp;:
+      <button type="button" class="lien" id="vers-cag">l'IBAN est dans l'onglet Cagnotte</button>.</p>
 
     <div class="barre">
       <button class="bt retour" id="r3">Retour</button>
@@ -411,68 +489,86 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 <div id="v-we" role="tabpanel" aria-labelledby="o-we" class="cache"><main><div class="col">
   <p class="oeil">Le déroulé</p>
   <h2>De samedi midi à dimanche après-midi</h2>
-  <p class="chapo">Le seul horaire ferme est celui de ton train. Les trois options de
-    l'après-midi sont soumises au vote&nbsp;: c'est l'étape 2 de ta réponse.</p>
+  <p class="chapo">Deux moments sont soumis au vote&nbsp;: l'escape game de 17h et la suite
+    de la soirée. Ça se règle à l'étape&nbsp;2 de ta réponse.</p>
 
   <p class="jour"><small>Samedi 10 octobre</small>Le jour</p>
 
-  <div class="heure"><time>12h00</time><div><b>Les arrivées</b><small>On récupère à la gare celles et ceux qui viennent en train</small></div></div>
-  <div class="heure"><time>12h30</time><div><b>Déjeuner</b><small>À la maison, sans façon</small></div></div>
+  <div class="heure"><time>12h00</time><div><b><svg class="picto" aria-hidden="true"><use href="#i-assiette"></use></svg> Le déjeuner</b><small>Pour celles et ceux qui sont déjà là. Les autres nous rejoignent dans l'après-midi</small></div></div>
 
-  <p class="acte"><span>15h00</span>L'après-midi, au choix</p>
-  <div class="trio">
-    <figure class="vue">
-      <img src="photos/sainte-victoire.jpg" alt="La montagne Sainte-Victoire, longue crête calcaire au-dessus de la garrigue" width="760" height="428">
-      <figcaption><b>Vallon de Saint-Ser</b><small>1 h 30 aller-retour sur le versant sud, sous la crête que Cézanne a peinte quatre-vingts fois</small></figcaption>
-    </figure>
-    <figure class="vue">
-      <img src="photos/bimont.jpg" alt="Le lac du barrage de Bimont, eau turquoise encaissée dans les collines boisées" width="760" height="428">
-      <figcaption><b>Barrage de Bimont</b><small>1 h de balade plate au-dessus du lac, avec la montagne en face</small></figcaption>
-    </figure>
-    <figure class="vue">
-      <img src="photos/cours-mirabeau.jpg" alt="Le cours Mirabeau à Aix-en-Provence, allée de platanes, fontaine et terrasses" width="760" height="428">
-      <figcaption><b>Le vieil Aix</b><small>Cours Mirabeau, les ruelles et les fontaines, un verre en terrasse. C'est aussi le programme s'il pleut</small></figcaption>
-    </figure>
-  </div>
-
-  <p class="acte"><span>18h00</span>Mölkky et pétanque</p>
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-quilles"></use></svg><span>14h30</span>Mölkky et pétanque</p>
   <div class="duo">
     <figure class="vue">
-      <img src="photos/molkky.jpg" alt="Partie de mölkky en extérieur, quilles de bois dressées sur le gravier" width="760" height="507">
-      <figcaption><b>Mölkky</b><small>Douze quilles numérotées, un lanceur, des équipes de trois</small></figcaption>
+      <img src="photos/molkky.jpg" alt="Partie de mölkky en extérieur, quilles de bois numérotées dressées au sol" width="640" height="427">
+      <figcaption><b>Mölkky</b><small>Douze quilles, un lanceur, des équipes de trois</small></figcaption>
     </figure>
     <figure class="vue">
-      <img src="photos/petanque.jpg" alt="Boules de pétanque posées dans l'herbe, ramassées par un enfant" width="760" height="507">
-      <figcaption><b>Pétanque</b><small>Au jardin, jusqu'à la nuit tombée</small></figcaption>
+      <img src="photos/petanque.jpg" alt="Boules de pétanque posées dans l'herbe" width="640" height="427">
+      <figcaption><b>Pétanque</b><small>Au jardin, jusqu'à ce qu'on parte</small></figcaption>
     </figure>
   </div>
 
-  <p class="acte"><span>19h30</span>L'apéro dînatoire</p>
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-cadenas"></use></svg><span>17h00</span>L'escape game</p>
   <figure class="vue large">
-    <img src="photos/apero.jpg" alt="Assiette d'apéritif : fromages, fruits et pain dressés sur une table" width="760" height="507">
-    <figcaption><b>C'est le repas du soir</b><small>Planches et petits plats chauds servis en continu par le traiteur. On s'assoit où on veut, et on y reste</small></figcaption>
+    <img src="photos/escape-game.jpg" alt="Une salle d'escape game : un joueur examine une carte éclairée sur un mur de bois" width="640" height="427">
+    <figcaption><b>Move To Aixit, quatre salles en parallèle</b><small>Aux Milles, à vingt minutes de la maison. On se répartit en équipes de quatre ou cinq&nbsp;: Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN. Retour vers 18h30</small></figcaption>
   </figure>
 
-  <div class="heure"><time>22h00</time><div><b>Le gâteau, trente bougies</b><small>Il est commandé. N'en apporte pas</small></div></div>
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-verre"></use></svg><span>19h00</span>La suite, au vote</p>
+  <div class="duo">
+    <figure class="vue">
+      <img src="photos/bar-a-jeux.jpg" alt="Des joueurs attablés autour de plusieurs jeux de société" width="640" height="427">
+      <figcaption><b>On reste sur place</b><small>Le bar à jeux de Move To Aixit&nbsp;: trois cents jeux, des planches et des tapas, ouvert jusqu'à 22h. Aucun trajet de plus</small></figcaption>
+    </figure>
+    <figure class="vue">
+      <img src="photos/apero.jpg" alt="Assiette d'apéritif : fromages, fruits et pain dressés sur une table" width="640" height="427">
+      <figcaption><b>On rentre</b><small>Apéro dînatoire à la maison, servi en continu par le traiteur. C'est le repas du soir</small></figcaption>
+    </figure>
+  </div>
 
-  <p class="acte"><span>22h30</span>Le bar à jeux</p>
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-gateau"></use></svg><span>22h00</span>Le gâteau, trente bougies</p>
   <figure class="vue large">
-    <img src="photos/bar-a-jeux.jpg" alt="Une tablée de joueurs autour de plusieurs jeux de société" width="760" height="507">
-    <figcaption><b>La grande table, débarrassée et couverte de jeux</b><small>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. À 23h, le blind test des trente ans&nbsp;: trente titres, un par année d'Elise</small></figcaption>
+    <img src="photos/gateau.jpg" alt="Un gâteau d'anniversaire couvert de bougies allumées" width="640" height="427">
+    <figcaption><b>Il est commandé</b><small>N'en apporte pas</small></figcaption>
+  </figure>
+
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg><span>22h30</span>La soirée jeux de société</p>
+  <figure class="vue large">
+    <img src="photos/jeux-societe.jpg" alt="Un plateau de jeu de société en cours de partie, tuiles et dés colorés" width="640" height="427">
+    <figcaption><b>La grande table, débarrassée</b><small>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Et le blind test des trente ans&nbsp;: trente titres, un par année d'Elise</small></figcaption>
   </figure>
 
   <p class="jour"><small>Dimanche 11 octobre</small>Le lendemain</p>
 
-  <div class="heure"><time>10h00</time><div><b>Petit-déjeuner</b><small>Il traîne, c'est prévu</small></div></div>
-
-  <p class="acte"><span>11h30</span>Le marché d'Aix</p>
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-cafe"></use></svg><span>11h00</span>Le brunch</p>
   <figure class="vue large">
-    <img src="photos/marche.jpg" alt="Le marché de la place Richelme à Aix, étals de fruits et légumes sous les platanes" width="760" height="507">
-    <figcaption><b>Place Richelme, à dix minutes à pied</b><small>Fromages, olives, calissons. Tous les matins de l'année</small></figcaption>
+    <img src="photos/brunch.jpg" alt="Une table de brunch : viennoiseries, fruits frais et gaufres" width="640" height="427">
+    <figcaption><b>À la maison</b><small>Salé, sucré, du café en quantité. Il n'y a pas d'heure de fin</small></figcaption>
   </figure>
 
-  <div class="heure"><time>13h00</time><div><b>Déjeuner</b><small>Le dernier repas ensemble</small></div></div>
-  <div class="heure"><time>15h00</time><div><b>Les départs</b><small>On raccompagne à la gare — indique ton train de retour</small></div></div>
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-montagne"></use></svg><span>ensuite</span>Activité libre, selon les départs</p>
+  <p class="glose">Rien d'imposé l'après-midi&nbsp;: chacun cale sa fin de week-end sur son train.
+    Ces quatre-là sont à portée, et c'est vous qui dites lesquelles vous tentent.</p>
+  <div class="quatuor">
+    <figure class="vue">
+      <img src="photos/sainte-victoire.jpg" alt="La montagne Sainte-Victoire, longue crête calcaire au-dessus de la garrigue" width="640" height="427">
+      <figcaption><b>Vallon de Saint-Ser</b><small>1 h 30 aller-retour sur le versant sud, sous la crête que Cézanne a peinte quatre-vingts fois</small></figcaption>
+    </figure>
+    <figure class="vue">
+      <img src="photos/bimont.jpg" alt="Le lac du barrage de Bimont, eau turquoise encaissée dans les collines boisées" width="640" height="427">
+      <figcaption><b>Barrage de Bimont</b><small>1 h de balade plate au-dessus du lac, avec la montagne en face</small></figcaption>
+    </figure>
+    <figure class="vue">
+      <img src="photos/cours-mirabeau.jpg" alt="Le cours Mirabeau à Aix-en-Provence, allée de platanes, fontaine et terrasses" width="640" height="427">
+      <figcaption><b>Le vieil Aix</b><small>Cours Mirabeau, les ruelles et les fontaines. C'est aussi le programme s'il pleut</small></figcaption>
+    </figure>
+    <figure class="vue">
+      <img src="photos/marche.jpg" alt="Le marché de la place Richelme à Aix, étals de fruits et légumes sous les platanes" width="640" height="427">
+      <figcaption><b>Le marché, avant le brunch</b><small>Place Richelme dès 8h, à dix minutes à pied. Fromages, olives, calissons</small></figcaption>
+    </figure>
+  </div>
+
+  <div class="heure"><time>15h00</time><div><b><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Les départs</b><small>On raccompagne à la gare — indique ton train de retour</small></div></div>
 </div></main></div>
 
 <!-- ═══ VENIR À AIX ═══ -->
@@ -517,12 +613,39 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <details><summary>Et s'il pleut&nbsp;?</summary><p>L'après-midi devient un tour du vieil Aix, ou reste à la maison. Le reste du programme ne bouge pas.</p></details>
 </div></main></div>
 
+<div id="v-cag" role="tabpanel" aria-labelledby="o-cag" class="cache"><main><div class="col">
+  <p class="oeil">Le cadeau</p>
+  <h2>Une cagnotte, un seul cadeau</h2>
+  <p class="chapo">Plutôt que dix paquets, on met en commun. La cagnotte est centralisée
+    sur notre compte et reste ouverte jusqu'au <strong>jeudi 8 octobre</strong>.</p>
+
+  <div class="cadeau">
+    <h3><svg class="picto" aria-hidden="true"><use href="#i-cadeau"></use></svg> Le virement</h3>
+    <p style="font-size:.93rem;color:var(--encre-doux);margin-bottom:0">
+      Mets <strong>ton prénom en référence</strong> — c'est comme ça qu'on saura qui
+      remercier, et qui signer sur la carte.</p>
+    <p class="et">Bénéficiaire</p>
+    <p class="val nom">__RIB_TITULAIRE__</p>
+    <p class="et">IBAN</p>
+    <p class="val" id="iban">__RIB_IBAN__</p>
+    <p class="et">BIC</p>
+    <p class="val">__RIB_BIC__</p>
+    <button class="copier" type="button" id="cop">Copier l'IBAN</button>
+  </div>
+
+  <h2 style="margin-top:2.4rem">Questions</h2>
+  <details><summary>Combien&nbsp;?</summary><p>Ce que tu veux. On ne tiendra pas de compte, et personne ne saura ce qu'ont mis les autres.</p></details>
+  <details><summary>Je peux ne rien mettre&nbsp;?</summary><p>Oui. Ta présence est ce qui compte, et c'est déjà un train à payer pour beaucoup d'entre vous.</p></details>
+  <details><summary>Je préfère offrir quelque chose moi-même&nbsp;?</summary><p>Fais-le. La cagnotte est une facilité, pas une obligation&nbsp;: elle existe pour ceux qui n'ont ni le temps ni l'idée.</p></details>
+  <details><summary>C'est pour offrir quoi&nbsp;?</summary><p>Un seul cadeau, choisi par nous, dans ce qu'elle repousse depuis un moment. Elle le découvrira samedi soir, après le gâteau.</p></details>
+  <details><summary>Le virement n'est pas passé, ou j'ai un doute&nbsp;?</summary><p>Écris-le dans le groupe WhatsApp&nbsp;: on vérifie et on te répond.</p></details>
+</div></main></div>
+
 <footer class="pied"><div class="col">
   <p><strong>Elise, trente ans</strong> — samedi 10 &amp; dimanche 11 octobre 2026, Aix-en-Provence.</p>
   <p>Réponse souhaitée avant le <strong>samedi 19 septembre</strong>, pour le compte des couchages.</p>
-  <p class="credits">Photos&nbsp;: Sten van Houwelingen, FrogsLegs71, Ladislaus Hoffner,
-    François de Dijon, Ermell, Ewan Munro, Matěj Baťha, mwanasimba — Wikimedia Commons,
-    licences CC BY-SA.</p>
+  <p class="credits">Photos&nbsp;: Sten van Houwelingen, FrogsLegs71, Ladislaus Hoffner, François de Dijon, Ermell, Hudson Bloom, Matěj Baťha, Ewan Munro, James Petts, Mshuang2, Missvain, mwanasimba —
+    Wikimedia Commons, licences CC BY-SA, CC BY et CC0.</p>
 </div></footer>
 
 <div id="mot" role="status" aria-live="polite"></div>
@@ -548,17 +671,20 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   }
 
   /* ── Onglets ── */
-  var vues = [[$("o-rep"), $("v-rep")], [$("o-we"), $("v-we")], [$("o-train"), $("v-train")]];
-  vues.forEach(function(paire){
-    paire[0].addEventListener("click", function(){
-      vues.forEach(function(v){
-        var actif = v === paire;
-        v[0].setAttribute("aria-selected", actif ? "true" : "false");
-        v[1].classList.toggle("cache", !actif);
-      });
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  var vues = [[$("o-rep"), $("v-rep")], [$("o-we"), $("v-we")],
+              [$("o-train"), $("v-train")], [$("o-cag"), $("v-cag")]];
+  function ouvrir(onglet){
+    vues.forEach(function(v){
+      var actif = v[0] === onglet;
+      v[0].setAttribute("aria-selected", actif ? "true" : "false");
+      v[1].classList.toggle("cache", !actif);
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  vues.forEach(function(paire){
+    paire[0].addEventListener("click", function(){ ouvrir(paire[0]); });
   });
+  $("vers-cag").addEventListener("click", function(){ ouvrir($("o-cag")); });
 
   /* ── Entonnoir ── */
   var TITRES = ["Première question", "Quelques détails", "Dernière étape"];
@@ -570,6 +696,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   function etat(){
     return { nom: $("nom").value.trim(), nb: $("nb").value.trim(), rsvp: une("rsvp"),
              lit: une("lit"), venue: une("venue"), train: $("train").value.trim(),
+             midi: une("midi"), soiree: une("soiree"),
              act: plusieurs("act"), idee: $("idee").value.trim() };
   }
   function present(){ var r = etat().rsvp; return !!r && r !== "Je ne peux pas venir"; }
@@ -592,6 +719,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     if (s.lit) L.push("Couchage : " + s.lit);
     if (s.venue) L.push("Arrivée : " + s.venue);
     if (s.train) L.push("Train : " + s.train);
+    if (s.midi) L.push("Déjeuner de samedi : " + s.midi);
+    if (s.soiree) L.push("Soirée de samedi : " + s.soiree);
     if (s.act.length) L.push("Envies : " + s.act.join(", "));
     if (s.idee) L.push("Autre idée : " + s.idee);
     return L.join("\n");
@@ -609,8 +738,10 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     pose("f-rsvp", s.rsvp);
     pose("f-lit", s.lit);
     pose("f-venue", s.venue + (s.train ? " — " + s.train : ""));
+    pose("f-midi", s.midi);
+    pose("f-soiree", s.soiree);
     pose("f-act", s.act.concat(s.idee ? ["« " + s.idee + " »"] : []).join(" · "));
-    ["lit","venue","act"].forEach(function(k){
+    ["lit","venue","midi","soiree","act"].forEach(function(k){
       $("l-" + k).classList.toggle("cache", !present());
       $("f-" + k).classList.toggle("cache", !present());
     });
@@ -659,7 +790,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   if (s.nb) $("nb").value = s.nb;
   if (s.train) $("train").value = s.train;
   if (s.idee) $("idee").value = s.idee;
-  ["rsvp","lit","venue"].forEach(function(n){
+  ["rsvp","lit","venue","midi","soiree"].forEach(function(n){
     if (!s[n]) return;
     var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
     if (e) e.checked = true;

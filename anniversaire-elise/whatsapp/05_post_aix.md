@@ -26,7 +26,7 @@ Anniv Elise — 10/11 oct à Aix
 ```
 Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
 Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
-Une cagnotte est ouverte pour son cadeau, l'IBAN est sur la page.
+Une cagnotte est ouverte pour son cadeau, onglet « Cagnotte » sur la page.
 
 Répondez ici : VOTRE-URL-ICI
 Deadline : samedi 19 septembre.
@@ -48,25 +48,33 @@ Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
 🛏️ Lits, canapés et matelas d'appoint — dites-nous s'il vous en faut un
 
 🎁 Une cagnotte est ouverte pour son cadeau commun, jusqu'au 8 octobre.
-L'IBAN est sur la page, mettez votre prénom en référence du virement.
+Onglet « Cagnotte » sur la page, mettez votre prénom en référence du virement.
 
 👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
 
 Trois choses, dans l'ordre :
 1️⃣ Vous dites si vous êtes dispo
-2️⃣ Vous dites s'il vous faut un couchage, et comment vous arrivez
-3️⃣ Vous votez les activités, et vous m'envoyez tout d'un tap
+2️⃣ Vous dites s'il vous faut un couchage, comment vous arrivez,
+    si vous êtes là pour le déjeuner et ce que vous votez pour le soir
+3️⃣ Vous relisez, et vous m'envoyez tout d'un tap
 
 🎲 LE PROGRAMME, EN PHOTOS SUR LA PAGE (onglet « Le week-end ») :
-12h — arrivées et déjeuner
-15h — au choix, et c'est vous qui votez : vallon de Saint-Ser sur la
-      Sainte-Victoire, barrage de Bimont, ou le vieil Aix
-18h — mölkky et pétanque au jardin
-19h30 — apéro dînatoire, c'est le repas du soir
+
+SAMEDI
+12h — déjeuner, pour ceux qui sont déjà là
+14h30 — mölkky et pétanque au jardin
+17h — ESCAPE GAME chez Move To Aixit, quatre salles en parallèle.
+       Ça se réserve : dites-nous vite si vous en êtes.
+19h — AU VOTE : soit on reste sur place, au bar à jeux (300 jeux,
+       planches et tapas jusqu'à 22h), soit on rentre pour l'apéro dînatoire.
 22h — le gâteau et les trente bougies
-22h30 — le bar à jeux : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou
-23h — blind test des trente ans, trente titres, un par année d'Elise
-Dimanche — marché place Richelme, déjeuner, puis les départs
+22h30 — soirée jeux de société, puis le blind test des trente ans
+
+DIMANCHE
+9h30 — le marché place Richelme, pour les lève-tôt
+11h — brunch à la maison
+Ensuite — activité libre selon vos trains : Sainte-Victoire, Bimont
+       ou le vieil Aix. On raccompagne à la gare.
 
 🚄 POUR CEUX QUI VIENNENT DE LOIN :
 Paris → Aix TGV en 2h55 direct
