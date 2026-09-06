@@ -68,21 +68,41 @@ le planning des allers-retours.
 
 ---
 
-## Les activités du samedi après-midi
+## Les activités
 
-Créneau réel : **15h30 → 18h30**, sans contrainte de route puisqu'on part de
-chez vous.
+Tout est soumis au vote sur la page. Les activités payantes ont été retirées de
+la liste : la page ne parle plus d'argent nulle part, sauf de la cagnotte.
 
-| Activité | Prix | À savoir |
-|----------|------|----------|
-| **Vallon de Saint-Ser** (Sainte-Victoire) | gratuit | 1h30 aller-retour, accessible à tous. Le meilleur compromis effort/panorama |
-| **Barrage de Bimont** | gratuit | Balade facile, vue sur la montagne. Le repli si le groupe est mixte |
-| **Vieil Aix et terrasses** | gratuit | Cours Mirabeau, les ruelles, un verre. L'option sans effort |
-| **Accrobranche Indian Forest** | ~25 €/pers | Au bord de l'Arc. Réservation groupe dès 5 personnes — à appeler si le vote sort |
-| **Apéro et pétanque à la maison** | gratuit | Sans bouger. Ne la sous-estime pas : après trois heures de train, beaucoup voteront ça |
+### Dehors, samedi 15h30 → 17h30
+
+| Activité | À savoir |
+|----------|----------|
+| **Vallon de Saint-Ser** (Sainte-Victoire) | 1h30 aller-retour, accessible à tous. Le meilleur compromis effort/panorama |
+| **Barrage de Bimont** | Balade plate, vue sur la montagne. Le repli si le groupe est mixte |
+| **Vieil Aix et terrasses** | Cours Mirabeau, les ruelles, un verre. L'option sans effort, et le plan s'il pleut |
 
 > **La Croix de Provence est toujours écartée** : 3h de marche, ça ne rentre pas
 > dans le créneau, et personne n'en a envie après un trajet.
+
+### À la maison, samedi 18h → tard
+
+| Moment | Ce qu'il faut prévoir |
+|--------|-----------------------|
+| **Mölkky et pétanque**, 18h | Un jeu de mölkky (12 quilles + le lanceur) et deux triplettes de boules. Le jardin suffit, on joue jusqu'à la nuit |
+| **Apéro dînatoire**, 19h30 | C'est le repas du soir : planches et petits plats chauds du traiteur, servis en continu. Pas de service à table, pas de vaisselle assise |
+| **Gâteau, 30 bougies**, 22h | Commandé. Prévoir les bougies et les allumettes à part |
+| **Bar à jeux**, 22h30 | La grande table débarrassée, couverte de jeux : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Sortir aussi de quoi noter les scores |
+| **Blind test des 30 ans**, 23h | Trente titres, un par année d'Elise. À préparer en playlist avant le jour J |
+
+### Dimanche
+
+| Moment | À savoir |
+|--------|----------|
+| **Marché d'Aix**, 11h30 | Place Richelme, tous les matins, à dix minutes à pied. Fromages, olives, calissons |
+| **Déjeuner**, 13h | Traiteur également, ou les restes de la veille selon l'appétit du groupe |
+
+Le formulaire propose aussi un champ libre **« une autre idée ? »** : ce que les
+invités y écrivent remonte dans le message WhatsApp qu'ils t'envoient.
 
 ---
 
@@ -93,6 +113,7 @@ chez vous.
    55 € par personne et par repas.
 2. **Le gâteau** — douze parts, plus les bougies et les allumettes.
 3. **Compter les couchages** dès que les réponses arrivent.
-4. **Indian Forest** seulement si le vote le fait sortir en tête.
+4. **La playlist du blind test** — trente titres, un par année d'Elise.
+5. **Le mölkky** — à acheter ou à emprunter si tu n'en as pas.
 
 Deux appels au lieu de quatre. C'est tout l'intérêt de la simplification.

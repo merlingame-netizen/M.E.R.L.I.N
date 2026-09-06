@@ -25,7 +25,8 @@ Anniv Elise — 10/11 oct à Aix
 
 ```
 Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
-On vous loge, on vous nourrit. Vous n'avez rien à payer.
+On vous loge, on vous nourrit, on vous occupe : mölkky, apéro dînatoire,
+bar à jeux. Vous n'avez rien à prévoir, juste la cagnotte du cadeau si vous voulez.
 
 Répondez ici : VOTRE-URL-ICI
 Deadline : samedi 19 septembre.
@@ -46,10 +47,10 @@ Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
 🏡 Chez nous, à Aix-en-Provence
 🛏️ On vous loge — il y a des lits, des canapés, et de quoi improviser
 
-💛 VOUS N'AVEZ RIEN À PAYER.
-Le logement, les repas, les activités : c'est pour nous.
-La seule chose à laquelle vous participez, c'est le cadeau — montant libre,
-l'IBAN est sur la page.
+💛 VOUS N'AVEZ RIEN À PRÉVOIR.
+Le couchage, les repas, les activités : c'est chez nous et c'est pour nous.
+🎁 Il y a juste une cagnotte pour le cadeau commun, si le cœur vous en dit —
+l'IBAN est sur la page, mettez votre prénom en référence.
 
 👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
 
@@ -57,6 +58,15 @@ Trois choses, dans l'ordre :
 1️⃣ Vous dites si vous êtes dispo
 2️⃣ Vous dites s'il vous faut un couchage, et comment vous arrivez
 3️⃣ Vous votez les activités, et vous m'envoyez tout d'un tap
+
+🎲 AU PROGRAMME, ET C'EST VOUS QUI VOTEZ :
+Sainte-Victoire, barrage de Bimont ou le vieil Aix l'après-midi
+Mölkky et pétanque au jardin en fin de journée
+Apéro dînatoire toute la soirée (traiteur, rien à préparer)
+Le gâteau et les trente bougies
+Puis le bar à jeux : la grande table couverte de jeux de société,
+et le blind test des trente ans
+Dimanche, marché d'Aix place Richelme et déjeuner ensemble
 
 🚄 POUR CEUX QUI VIENNENT DE LOIN :
 Paris → Aix TGV en 2h55 direct
@@ -71,8 +81,7 @@ Dans tous les cas, DITES-NOUS VOTRE GARE ET VOTRE HEURE, on vient vous chercher.
 ⏳ RÉPONDEZ AVANT LE SAMEDI 19 SEPTEMBRE.
 Pas pour réserver quoi que ce soit — juste pour savoir combien de lits sortir 😄
 
-Votre billet de train est la seule dépense qui reste à votre charge.
-Réservez tôt, les prix montent vite sur octobre.
+Réservez vos trains tôt, les rames d'octobre se remplissent vite.
 ```
 
 ## Message B — relance ⏱ J-7, **en privé**
@@ -81,8 +90,8 @@ Réservez tôt, les prix montent vite sur octobre.
 Hey [PRÉNOM] ! Il me manque ta réponse pour les 30 ans d'Elise
 (10-11 octobre, chez nous à Aix). Deux minutes : VOTRE-URL-ICI
 
-Rappel : tu ne paies rien et on te loge. J'ai juste besoin de savoir
-s'il te faut un couchage 🙏
+Rappel : on te loge et on s'occupe de tout — mölkky, apéro dînatoire,
+bar à jeux, gâteau. J'ai juste besoin de savoir s'il te faut un couchage 🙏
 ```
 
 ## Message C — le récapitulatif ⏱ vers le 20 septembre
