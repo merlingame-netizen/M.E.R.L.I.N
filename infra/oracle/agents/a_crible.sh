@@ -247,9 +247,16 @@ fi
 # SUR LE SUJET DU COURRIER, pas sur celui du téléphone : notify.sh pousse vers le téléphone de Maxime
 # (NTFY_TOPIC) et 3 600 caractères chaque matin y seraient un réveil de trop. Le sujet du Courrier est
 # celui que Claude lit ; Maxime peut l'ouvrir quand il veut. Trois miroirs, le premier qui répond.
-for base in https://ntfy.adminforge.de https://ntfy.sh https://ntfy.envs.net; do
-    curl -fsS -m 20 -H "Title: crible $JOUR" --data-binary "$(head -c 3600 "$OUT")" \
-        "$base/merlin-courrier-vX9k2Qf7Lw3s" >/dev/null 2>&1 && break
-done
+# ET SEULEMENT DEPUIS LA VM : un essai local (06/09, 15h59) a posté le crible d'un bac à sable sur le
+# sujet public. La configuration du jeu n'existe que sur la VM ; sans elle, on garde le fichier et
+# on ne dit rien à personne. MERLIN_CRIBLE_SANS_ENVOI=1 force le silence même là-bas.
+if [ -f "$HOME/.config/merlin-game.env" ] && [ "${MERLIN_CRIBLE_SANS_ENVOI:-0}" != "1" ]; then
+    for base in https://ntfy.adminforge.de https://ntfy.sh https://ntfy.envs.net; do
+        curl -fsS -m 20 -H "Title: crible $JOUR" --data-binary "$(head -c 3600 "$OUT")" \
+            "$base/merlin-courrier-vX9k2Qf7Lw3s" >/dev/null 2>&1 && break
+    done
+else
+    echo "(pas d'envoi : configuration de la VM absente ou envoi désactivé)" >&2
+fi
 REP="$(grep -c ' reporte ' "$OUT" || true)"; ECH="$(grep -c 'ECHEC rc=' "$OUT" || true)"; HER="$(grep -c 'HERITE' "$OUT" || true)"
 echo "crible $JOUR : $(wc -l < "$OUT") lignes · $ECH agent(s) en echec · $REP reporte(s) · $HER verrou(s) herite(s) · $(grep -m1 '^partie ' "$OUT" | cut -c1-70)"
