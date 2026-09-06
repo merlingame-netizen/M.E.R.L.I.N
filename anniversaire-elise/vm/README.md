@@ -106,8 +106,27 @@ Elles sont dans `/var/lib/anniv-vote/reponses.db`. **Sauvegarde-le avant tout
 redéploiement** — le script ne l'écrase pas, mais un `rm -rf` malheureux, si.
 
 ```bash
-sudo sqlite3 /var/lib/anniv-vote/reponses.db "SELECT nom, presence, gite FROM reponses;"
+sudo sqlite3 /var/lib/anniv-vote/reponses.db \
+  "SELECT nom, nb, vient, json_extract(donnees,'$.escape') FROM reponses ORDER BY maj;"
+
+# Le detail complet d'une reponse, lisible :
+sudo sqlite3 /var/lib/anniv-vote/reponses.db \
+  "SELECT json_pretty(donnees) FROM reponses ORDER BY maj DESC LIMIT 1;"
 ```
+
+### Pourquoi une colonne `donnees` en JSON
+
+La page a été refondue une demi-douzaine de fois, et chaque refonte ajoutait
+ou retirait une question. Un schéma à une colonne par question aurait demandé
+une migration à chaque fois. Ici seules les colonnes sur lesquelles on compte
+ou on trie sont sorties du JSON — `nom`, `nb`, `vient`, `maj` — et le reste
+suit la page sans migration.
+
+La contrepartie serait de laisser entrer n'importe quoi : c'est pourquoi
+`build_template.py` relève dans la page toutes les paires `name`/`value` des
+boutons radio et des cases à cocher, les écrit dans `valeurs.json`, et le
+serveur refuse toute réponse hors de ces listes. Le formulaire et sa
+validation ne peuvent plus diverger.
 
 ## URL stable
 

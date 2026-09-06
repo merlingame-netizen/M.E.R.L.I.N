@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
-"""Serveur de vote pour l'anniversaire d'Elise.
+# -*- coding: utf-8 -*-
+"""Serveur de réponses pour l'anniversaire d'Elise.
 
-Ce que l'artifact claude.ai ne peut pas faire : un vote réellement partagé sur
-une URL publique. Ici les réponses vivent dans un SQLite sur la VM, et chaque
-visiteur voit les compteurs des autres en direct.
+Ce que la page publiée sur claude.ai ne peut pas faire : garder les réponses
+ailleurs que dans le navigateur de celui qui répond. Ici elles vivent dans un
+SQLite sur la VM, chacun voit les compteurs des autres, et l'organisateur a un
+export CSV.
 
-    python3 app.py                 # dev, http://127.0.0.1:8792
-    gunicorn -b 127.0.0.1:8792 app:app
+    python3 app.py                          # dev, http://127.0.0.1:8792
+    gunicorn -b 127.0.0.1:8792 app:app      # service
 
-Écoute sur 127.0.0.1 uniquement : c'est cloudflared qui expose le service.
+Écoute sur 127.0.0.1 uniquement : c'est cloudflared qui expose le service, donc
+aucun port n'est ouvert sur la machine.
+
+Les réponses acceptées ne sont pas recopiées ici : elles sont relevées dans la
+page par `build_template.py` et lues dans `valeurs.json`. Le serveur ne peut
+donc pas dériver du formulaire.
 """
 from __future__ import annotations
 
@@ -27,34 +34,11 @@ APP_DIR = Path(__file__).parent
 DB_PATH = Path(os.environ.get("ANNIV_DB", APP_DIR / "reponses.db"))
 ADMIN_TOKEN = os.environ.get("ANNIV_ADMIN_TOKEN", "")
 
-# Valeurs acceptées — toute réponse hors de ces listes est refusée.
-# Elles doivent rester alignées avec les `value=` de la page.
-PRESENCES = {
-    "Je viens tout le week-end",
-    "Samedi seulement",
-    "Je passe dimanche",
-    "Je ne peux pas venir",
-}
-COUCHAGES = {
-    "Oui, il me faut un couchage",
-    "J'apporte mon matelas ou mon duvet",
-    "Je me loge ailleurs",
-    "Je ne dors pas sur place",
-}
-TRANSPORTS = {
-    "En train, venez me chercher",
-    "En voiture, je peux prendre des gens",
-    "En voiture, seul",
-    "J'habite Aix, je viens à pied",
-}
-ACTIVITES = {
-    "Randonnée Sainte-Victoire",
-    "Balade au barrage de Bimont",
-    "Vieil Aix et terrasses",
-    "Accrobranche Indian Forest",
-    "Apéro et pétanque à la maison",
-}
-VIENT = PRESENCES - {"Je ne peux pas venir"}
+_valeurs = json.loads((APP_DIR / "valeurs.json").read_text(encoding="utf-8"))
+CHOIX: dict[str, list[str]] = _valeurs["choix"]      # champ -> valeurs admises
+LIBRES: dict[str, int] = _valeurs["libres"]          # champ -> longueur max
+MULTIPLES = {"act"}                                  # les seules cases à cocher
+NE_VIENT_PAS = "Je ne peux pas venir"
 
 app = Flask(__name__)
 
@@ -75,18 +59,18 @@ def close_db(_exc):
 
 
 def init_db() -> None:
+    """Un enregistrement = une personne, plus le détail en JSON. Les colonnes
+    sorties du JSON sont celles sur lesquelles on compte ou on trie ; le reste
+    suit la page, qui bouge trop pour mériter un schéma."""
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS reponses (
-                id        TEXT PRIMARY KEY,
-                nom       TEXT NOT NULL,
-                presence  TEXT NOT NULL,
-                nb        INTEGER NOT NULL DEFAULT 1,
-                couchage  TEXT,
-                transport TEXT,
-                train     TEXT,
-                activites TEXT NOT NULL DEFAULT '[]',
-                maj       REAL NOT NULL
+                id       TEXT PRIMARY KEY,
+                nom      TEXT NOT NULL,
+                nb       INTEGER NOT NULL DEFAULT 1,
+                vient    INTEGER NOT NULL DEFAULT 1,
+                donnees  TEXT NOT NULL DEFAULT '{}',
+                maj      REAL NOT NULL
             )
         """)
         conn.commit()
@@ -120,90 +104,98 @@ NOM_RE = re.compile(r"^[^\x00-\x1f]{1,60}$")
 
 def valider(payload: dict) -> tuple[dict | None, str]:
     if not isinstance(payload, dict):
-        return None, "corps de requête invalide"
+        return None, "Corps de requête invalide."
 
     nom = str(payload.get("nom", "")).strip()
     if not NOM_RE.match(nom):
         return None, "Le nom doit faire entre 1 et 60 caractères."
 
-    presence = str(payload.get("presence", "")).strip()
-    if presence not in PRESENCES:
+    if payload.get("rsvp") not in CHOIX["rsvp"]:
         return None, "Réponse de présence inconnue."
 
-    try:
-        nb = int(payload.get("nb") or 1)
-    except (TypeError, ValueError):
-        return None, "Le nombre de personnes doit être un entier."
+    # « 2 » ou « 2 personnes » : on ne retient que le nombre.
+    chiffres = re.sub(r"\D", "", str(payload.get("nb", "")) or "")
+    nb = int(chiffres) if chiffres else 1
     if not 1 <= nb <= 10:
         return None, "Le nombre de personnes doit être entre 1 et 10."
 
-    couchage = str(payload.get("couchage", "")).strip()
-    if couchage and couchage not in COUCHAGES:
-        return None, "Choix de couchage inconnu."
+    propre: dict = {"nom": nom, "nb": nb, "rsvp": payload["rsvp"]}
 
-    transport = str(payload.get("transport", "")).strip()
-    if transport and transport not in TRANSPORTS:
-        return None, "Moyen de transport inconnu."
+    for champ, admises in CHOIX.items():
+        if champ == "rsvp":
+            continue
+        brut = payload.get(champ)
+        if champ in MULTIPLES:
+            if brut is None:
+                brut = []
+            if not isinstance(brut, list) or len(brut) > len(admises):
+                return None, "Liste de choix invalide pour « %s »." % champ
+            propre[champ] = [v for v in brut if v in admises]
+        else:
+            v = str(brut or "").strip()
+            if v and v not in admises:
+                return None, "Choix inconnu pour « %s »." % champ
+            propre[champ] = v
 
-    train = str(payload.get("train", "")).strip()[:120]
+    for champ, taille in LIBRES.items():
+        if champ in ("nom", "nb"):
+            continue
+        propre[champ] = str(payload.get(champ) or "").strip()[:taille]
 
-    brut = payload.get("activites") or []
-    if not isinstance(brut, list) or len(brut) > len(ACTIVITES):
-        return None, "Liste d'activités invalide."
-    activites = [a for a in brut if a in ACTIVITES]
-
-    return {"nom": nom, "presence": presence, "nb": nb, "couchage": couchage,
-            "transport": transport, "train": train, "activites": activites}, ""
+    return propre, ""
 
 
 # ── Compteurs ───────────────────────────────────────────────────────────────
 def etat() -> dict:
     rows = db().execute("SELECT * FROM reponses ORDER BY maj").fetchall()
 
-    couchages = {c: 0 for c in COUCHAGES}
-    transports = {t: 0 for t in TRANSPORTS}
-    trains = []
-    activites = {a: 0 for a in ACTIVITES}
-    presents, personnes, prenoms = 0, 0, []
+    choix = {champ: {v: 0 for v in vals} for champ, vals in CHOIX.items()}
+    presents = personnes = 0
+    prenoms: list[str] = []
+    arrivees: list[dict] = []
 
     for r in rows:
-        if r["couchage"] in couchages:
-            couchages[r["couchage"]] += 1
-        if r["transport"] in transports:
-            transports[r["transport"]] += 1
-        # Les arrivées en train pilotent les navettes : prénom + horaire annoncé.
-        if r["train"] and r["presence"] in VIENT:
-            trains.append({"qui": r["nom"].split()[0][:20], "quand": r["train"]})
-        for a in json.loads(r["activites"]):
-            if a in activites:
-                activites[a] += 1
-        if r["presence"] in VIENT:
-            presents += 1
-            personnes += r["nb"]
-            # Prénom seul : la page est publique, le nom complet reste en admin.
-            prenoms.append(r["nom"].split()[0][:20])
+        d = json.loads(r["donnees"])
+        vient = bool(r["vient"])
+        for champ, totaux in choix.items():
+            valeur = d.get(champ)
+            if champ in MULTIPLES:
+                for v in valeur or []:
+                    if v in totaux:
+                        totaux[v] += 1
+            elif valeur in totaux:
+                totaux[valeur] += 1
+        if not vient:
+            continue
+        presents += 1
+        personnes += r["nb"]
+        # Prénom seul : la page est publique, le nom complet reste en admin.
+        prenoms.append(r["nom"].split()[0][:20])
+        if d.get("nav") == "Oui, venez me chercher":
+            arrivees.append({"qui": r["nom"].split()[0][:20],
+                             "ou": d.get("venue", ""),
+                             "jour": d.get("jarr", ""),
+                             "heure": d.get("harr", ""),
+                             "train": d.get("num", "")})
 
+    arrivees.sort(key=lambda a: (a["jour"] != "Samedi", a["heure"] or "99:99"))
     return {
         "reponses": len(rows),
         "presents": presents,
         "personnes": personnes,
         "prenoms": prenoms,
-        "couchages": couchages,
-        "transports": transports,
-        "trains": trains,
-        "activites": activites,
-        # Le seul chiffre sur lequel on ne peut pas improviser la veille.
-        "lits_a_sortir": sum(r["nb"] for r in rows
-                             if r["couchage"] == "Oui, il me faut un couchage"
-                             and r["presence"] in VIENT),
-
+        "choix": choix,
+        # Le chiffre qui commande une réservation, et donc la seule vraie échéance.
+        "escape_oui": choix.get("escape", {}).get("J'en suis", 0),
+        # Les navettes à monter : qui, où, quand.
+        "arrivees": arrivees,
     }
 
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 @app.get("/")
 def index():
-    resp = make_response(render_template("index.html", etat=etat()))
+    resp = make_response(render_template("index.html"))
     if not request.cookies.get("anniv_id"):
         resp.set_cookie("anniv_id", secrets.token_urlsafe(16),
                         max_age=90 * 86400, samesite="Lax", httponly=False)
@@ -227,15 +219,13 @@ def api_reponse():
     pid = request.cookies.get("anniv_id") or secrets.token_urlsafe(16)
     conn = db()
     conn.execute("""
-        INSERT INTO reponses (id, nom, presence, nb, couchage, transport, train, activites, maj)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO reponses (id, nom, nb, vient, donnees, maj)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
-            nom=excluded.nom, presence=excluded.presence, nb=excluded.nb,
-            couchage=excluded.couchage, transport=excluded.transport, train=excluded.train,
-            activites=excluded.activites, maj=excluded.maj
-    """, (pid, data["nom"], data["presence"], data["nb"], data["couchage"],
-          data["transport"], data["train"],
-          json.dumps(data["activites"], ensure_ascii=False), time.time()))
+            nom=excluded.nom, nb=excluded.nb, vient=excluded.vient,
+            donnees=excluded.donnees, maj=excluded.maj
+    """, (pid, data["nom"], data["nb"], int(data["rsvp"] != NE_VIENT_PAS),
+          json.dumps(data, ensure_ascii=False), time.time()))
     conn.commit()
 
     resp = make_response(jsonify(ok=True, etat=etat()))
@@ -243,38 +233,40 @@ def api_reponse():
     return resp
 
 
+COLONNES_CSV = ["nom", "nb", "rsvp", "venue", "nav", "jarr", "harr", "num",
+                "jdep", "hdep", "midi", "escape", "soiree", "fin", "act", "idee"]
+
+
 @app.get("/admin")
 def admin():
-    if not ADMIN_TOKEN or request.args.get("token") != ADMIN_TOKEN:
+    if not ADMIN_TOKEN or not secrets.compare_digest(request.args.get("token", ""), ADMIN_TOKEN):
         return jsonify(error="Jeton d'administration invalide."), 403
 
     rows = db().execute("SELECT * FROM reponses ORDER BY maj DESC").fetchall()
+    detail = []
+    for r in rows:
+        d = json.loads(r["donnees"])
+        d["maj"] = time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"]))
+        detail.append(d)
+
     if request.args.get("format") == "csv":
-        def cellule(v: str) -> str:
-            # Un nom commençant par = + - @ serait interprété comme une formule
-            # par Excel ou LibreOffice : on le neutralise avec une apostrophe.
+        def cellule(v) -> str:
+            # Un champ commençant par = + - @ serait interprété comme une
+            # formule par Excel ou LibreOffice : on le neutralise.
+            v = " | ".join(v) if isinstance(v, list) else str(v if v is not None else "")
             if v[:1] in ("=", "+", "-", "@"):
                 v = "'" + v
             return '"' + v.replace('"', '""') + '"'
 
-        lignes = ["nom,presence,personnes,lieu,transport,train,activites,maj"]
-        for r in rows:
-            champs = [r["nom"], r["presence"], str(r["nb"]), r["couchage"] or "",
-                      r["transport"] or "", r["train"] or "",
-                      " | ".join(json.loads(r["activites"])),
-                      time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"]))]
-            lignes.append(",".join(cellule(c) for c in champs))
+        lignes = [",".join(COLONNES_CSV + ["maj"])]
+        for d in detail:
+            lignes.append(",".join(cellule(d.get(c)) for c in COLONNES_CSV + ["maj"]))
         out = make_response("\n".join(lignes))
         out.headers["Content-Type"] = "text/csv; charset=utf-8"
         out.headers["Content-Disposition"] = 'attachment; filename="reponses-anniv-elise.csv"'
         return out
 
-    return jsonify(etat=etat(), reponses=[{
-        "nom": r["nom"], "presence": r["presence"], "nb": r["nb"],
-        "couchage": r["couchage"], "transport": r["transport"], "train": r["train"],
-        "activites": json.loads(r["activites"]),
-        "maj": time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"])),
-    } for r in rows])
+    return jsonify(etat=etat(), reponses=detail)
 
 
 @app.get("/healthz")

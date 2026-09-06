@@ -41,7 +41,9 @@ python3 "$SRC/build_template.py" || die "build_template.py a échoué"
 # ── 2. Fichiers ─────────────────────────────────────────────────────────────
 say "Installation dans $APP_DIR"
 sudo mkdir -p "$APP_DIR/templates" "$DATA_DIR"
-sudo cp "$SRC/app.py" "$SRC/requirements.txt" "$APP_DIR/"
+# valeurs.json est la liste des reponses acceptees, relevee dans la page :
+# sans lui le serveur refuse de demarrer, et c'est voulu.
+sudo cp "$SRC/app.py" "$SRC/requirements.txt" "$SRC/valeurs.json" "$APP_DIR/"
 sudo cp "$SRC/templates/index.html" "$APP_DIR/templates/"
 sudo chown -R "$RUN_USER:$RUN_USER" "$APP_DIR" "$DATA_DIR"
 
@@ -132,14 +134,26 @@ for _ in $(seq 1 30); do
   [ -n "$URL" ] && break
 done
 
+# ── 8. Les messages WhatsApp, avec la vraie URL dedans ──────────────────────
+if [ -n "$URL" ] && [ -f "$SRC/../whatsapp/build_messages.py" ]; then
+  say "Messages WhatsApp"
+  python3 "$SRC/../whatsapp/build_messages.py" --url "$URL" || true
+fi
+
 cat <<RECAP
 
 ╔══════════════════════════════════════════════════════════════════════╗
-║  LE VOTE EST EN LIGNE                                                ║
+║  LE SITE EST EN LIGNE                                                ║
 ╚══════════════════════════════════════════════════════════════════════╝
 
   URL publique   ${URL:-<voir $LOG>}
-  Aucun mot de passe : les invités votent sans compte.
+  Aucun mot de passe : les invités répondent sans compte, et leurs
+  réponses sont gardées sur le serveur — chacun voit les compteurs.
+
+  Le bloc WhatsApp prêt à coller, avec cette URL dedans :
+      anniversaire-elise/whatsapp/messages_prets.md
+  Les contacts à importer sur iPhone :
+      anniversaire-elise/whatsapp/contacts.vcf
 
   Suivi des réponses (garde ce lien pour toi) :
       ${URL:-<URL>}/admin?token=$ADMIN_TOKEN

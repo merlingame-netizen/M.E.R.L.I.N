@@ -1,0 +1,64 @@
+{
+ "choix": {
+  "rsvp": [
+   "Je viens",
+   "Je ne peux pas venir"
+  ],
+  "venue": [
+   "Train, gare d'Aix TGV",
+   "Train, gare d'Aix centre",
+   "En voiture, avec des places libres",
+   "En voiture, complet",
+   "J'habite Aix"
+  ],
+  "nav": [
+   "Oui, venez me chercher",
+   "Non, je me débrouille"
+  ],
+  "jarr": [
+   "Samedi",
+   "Dimanche"
+  ],
+  "jdep": [
+   "Samedi soir",
+   "Dimanche matin",
+   "Dimanche après-midi",
+   "Lundi"
+  ],
+  "midi": [
+   "Je serai là pour le déjeuner",
+   "J'arrive dans l'après-midi",
+   "Je ne sais pas encore"
+  ],
+  "act": [
+   "Mölkky et pétanque",
+   "Marché d'Aix, place Richelme",
+   "Vallon de Saint-Ser, Sainte-Victoire",
+   "Barrage de Bimont",
+   "Le vieil Aix"
+  ],
+  "escape": [
+   "J'en suis",
+   "Je passe mon tour",
+   "Je ne sais pas encore"
+  ],
+  "soiree": [
+   "Bar à jeux sur place",
+   "Retour à la maison",
+   "Peu importe"
+  ],
+  "fin": [
+   "Jeux de société",
+   "Blind test des trente ans",
+   "Les deux, dans cet ordre"
+  ]
+ },
+ "libres": {
+  "nom": 60,
+  "nb": 4,
+  "harr": 5,
+  "num": 24,
+  "hdep": 5,
+  "idee": 140
+ }
+}

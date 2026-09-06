@@ -15,6 +15,57 @@ Remplace `VOTRE-URL-ICI` par le lien du site.
 
 ---
 
+## Créer le groupe depuis un iPhone
+
+Trois étapes, dix minutes. Tout est déjà produit, il n'y a rien à recopier.
+
+### 1. Importer les neuf contacts
+
+`whatsapp/contacts.vcf` est une carte de visite multiple au format vCard 3.0,
+avec les numéros normalisés en `+33` et le type `CELL` — c'est ce format que
+WhatsApp utilise pour reconnaître un contact.
+
+Régénère-la si besoin&nbsp;:
+
+```bash
+python3 anniversaire-elise/whatsapp/build_contacts.py
+```
+
+Puis, sur l'iPhone, au choix&nbsp;:
+
+- **AirDrop** depuis le Mac → l'iPhone propose « Ajouter les 9 contacts ».
+- **Fichiers** : dépose `contacts.vcf` dans iCloud Drive, ouvre-le depuis
+  l'app Fichiers, puis *Ajouter tous les contacts*.
+- **Mail** : envoie-toi le fichier, touche la pièce jointe, *Ajouter tous
+  les contacts*.
+
+Tous portent le libellé `Anniv Elise 30` : dans Contacts, un groupe
+« Anniv Elise 30 » apparaît, ce qui évite de les chercher un par un.
+
+> Si un contact existe déjà avec un autre format de numéro, iOS propose de
+> fusionner. Accepte&nbsp;: WhatsApp se cale sur le numéro E.164.
+
+### 2. Créer le groupe WhatsApp
+
+WhatsApp → **Discussions** → ✏️ en haut à droite → **Nouveau groupe**.
+Les neuf contacts remontent en tapant leur prénom. Nom du groupe et
+description ci-dessous — les deux se collent tels quels.
+
+### 3. Coller, puis épingler
+
+Colle le **message A** dans le groupe, puis maintiens-le appuyé →
+**Épingler**. C'est lui qui porte le lien du site et l'adresse.
+
+> Les messages avec l'URL, l'adresse et l'IBAN déjà dedans sont dans
+> `whatsapp/messages_prets.md`, produit par&nbsp;:
+> ```bash
+> python3 anniversaire-elise/whatsapp/build_messages.py --url "https://…"
+> ```
+> `deploy-vote.sh` le lance tout seul en fin de déploiement, avec l'URL du
+> tunnel — tu n'as normalement rien à faire.
+
+---
+
 ## Nom du groupe
 
 ```

@@ -1,257 +1,246 @@
 #!/usr/bin/env python3
-"""Génère vm/templates/index.html à partir de ../site/public.html.
+# -*- coding: utf-8 -*-
+"""Fabrique la version hébergée de la page, pour le serveur de `vm/app.py`.
 
-La page n'existe qu'une fois : site/public.html est la source, ici on l'habille
-pour Flask. Trois greffes, toutes additives — le JS d'origine (localStorage,
-budget vivant, timeline) continue de tourner tel quel :
+La page publiée sur claude.ai garde les réponses dans le navigateur de chaque
+invité : c'est tout ce qu'un artifact public peut faire. Ici, on ajoute ce qui
+manque — les réponses partent sur le serveur, et chacun voit les compteurs des
+autres.
 
-  1. le squelette HTML complet, que la publication d'artifact ajoutait ;
-  2. une section « Les votes en direct » alimentée par Jinja au premier rendu ;
-  3. un script qui envoie la réponse au serveur et rafraîchit les compteurs.
+Le principe est délibérément non invasif. On ne greffe rien au milieu du
+document : `site/public.html` est repris tel quel, RIB et photos incrustés par
+`site/build_public.py`, puis **un seul bloc est ajouté à la fin**. Les refontes
+successives de la page ont cassé trois générations d'ancres au milieu du
+HTML ; celle-ci n'en a aucune.
 
-    python3 build_template.py
+Le script ajouté lit l'état que la page écrit déjà dans `localStorage`, ce qui
+lui évite de connaître quoi que ce soit de la logique interne du formulaire.
+
+    python3 vm/build_template.py
+
+Écrit `vm/templates/index.html` (gitignoré, il contient l'IBAN) et
+`vm/valeurs.json`, la liste des réponses acceptées, extraite de la page
+elle-même pour que le serveur ne puisse pas dériver du formulaire.
 """
 from __future__ import annotations
 
+import html
+import json
+import pathlib
 import re
-from pathlib import Path
+import sys
 
-HERE = Path(__file__).parent
-SOURCE = HERE.parent / "site" / "public.html"
-OUT = HERE / "templates" / "index.html"
+RACINE = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(RACINE / "site"))
+import build_public  # noqa: E402  (le chemin doit être posé avant l'import)
 
-CSS_LIVE = """
-/* ══ VOTES EN DIRECT (ajouté par build_template.py) ══ */
-.live{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:1.5rem}
-.live-card{background:var(--paper);border:2px solid var(--rule);padding:1.2rem}
-.live-card h3{font-size:1.05rem;margin-bottom:.9rem}
-.tally{display:grid;gap:.65rem}
-.tally-row{display:grid;gap:.28rem}
-.tally-top{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem}
-.tally-top b{font-variant-numeric:tabular-nums;color:var(--ocre-deep)}
-.bar{height:7px;background:var(--paper-3);overflow:hidden}
-.bar i{display:block;height:100%;background:var(--ocre);width:0;transition:width .5s ease}
-.tally-row.lead .bar i{background:var(--rouge)}
-.tally-row.lead .tally-top b::after{content:" ★";color:var(--rouge)}
-.live-big{font-family:var(--display);font-size:2.6rem;font-weight:400;color:var(--ocre-deep);
-  line-height:1;font-variant-numeric:tabular-nums;margin:0}
-.live-big small{display:block;font-family:var(--body);font-size:.65rem;font-weight:800;
-  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:.45rem}
-.prenoms{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.9rem}
-.prenoms span{background:rgba(102,113,74,.16);color:var(--olive);padding:.25rem .6rem;
-  font-size:.83rem;font-weight:700}
-.live-empty{color:var(--ink-faint);font-style:italic;font-size:.9rem}
-.sync{font-size:.85rem;font-weight:700;margin-top:1.1rem;min-height:1.2em}
-.sync.ok{color:var(--olive)}
-.sync.ko{color:var(--rouge)}
+SORTIE_HTML = RACINE / "vm" / "templates" / "index.html"
+SORTIE_VALEURS = RACINE / "vm" / "valeurs.json"
+
+# Champs texte que le serveur accepte, avec leur longueur maximale.
+CHAMPS_LIBRES = {"nom": 60, "nb": 4, "harr": 5, "num": 24, "hdep": 5, "idee": 140}
+
+CSS = """
+/* ── Compteurs en direct, ajoutés par la version hébergée ── */
+.tally{display:inline-block;margin-left:.45rem;padding:.1rem .42rem;border-radius:2px;
+  background:var(--craie-3);color:var(--encre);font-family:var(--texte);font-size:.68rem;
+  font-weight:700;letter-spacing:.04em;vertical-align:.06em;font-variant-numeric:tabular-nums}
+.opt input:checked+span .tally{background:var(--terre);color:var(--blanc)}
+.pilules input:checked+span .tally{background:var(--blanc);color:var(--terre-fonce)}
+.serveur{border:1px solid var(--craie-3);border-left:3px solid var(--pin);
+  background:var(--blanc);padding:1rem 1.05rem;margin-bottom:1.4rem;font-size:.9rem;
+  color:var(--encre-doux);line-height:1.5}
+.serveur b{display:block;font-family:var(--display);font-size:1.05rem;color:var(--encre);
+  margin-bottom:.3rem}
+.serveur .chiffres{margin-top:.55rem;font-weight:600;color:var(--pin-fonce)}
+.barre{flex-wrap:wrap}
+.barre .bt{flex:1 1 10rem}
+.bt.garder{background:var(--pin);border-color:var(--pin)}
+.bt.garder:hover{background:var(--pin-fonce);border-color:var(--pin-fonce)}
+.bt.garder[disabled]{opacity:.5}
 """
 
-SECTION_LIVE = """
-      <h3 style="font-family:var(--display);font-size:1.15rem;font-weight:700;color:var(--ocre-deep);margin:2rem 0 .3rem">Où en est le groupe</h3>
-      <p style="font-size:.9rem;color:var(--ink-faint);margin-bottom:1rem">Mis à jour à chaque réponse. Ton vote est déjà compté.</p>
-      <div class="live-card">
-        <p class="live-big" id="lv-personnes">{{ etat.personnes }}<small>personnes attendues</small></p>
-        <p style="margin:.7rem 0 0;font-size:.87rem;color:var(--ink-faint)">
-          <span id="lv-reponses">{{ etat.reponses }}</span> réponse(s) ·
-          <span id="lv-presents">{{ etat.presents }}</span> qui viennent
-        </p>
-        <div class="prenoms" id="lv-prenoms">
-          {% for p in etat.prenoms %}<span>{{ p }}</span>{% endfor %}
-        </div>
-      </div>
-      <div class="live-card" style="margin-top:.8rem">
-        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les couchages — <b style="color:var(--rouge)">{{ etat.lits_a_sortir }}</b> lit(s) à sortir</h4>
-        <div class="tally" id="lv-couchages">
-          {% for nom, n in etat.couchages.items() %}
-          <div class="tally-row" data-cle="{{ nom }}">
-            <div class="tally-top"><span>{{ nom }}</span><b>{{ n }}</b></div>
-            <div class="bar"><i style="width:{{ (n * 100 // (etat.presents or 1)) if etat.presents else 0 }}%"></i></div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      <div class="live-card" style="margin-top:.8rem">
-        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les arrivées en train</h4>
-        {% if etat.trains %}
-        <div class="tally">
-          {% for t in etat.trains %}
-          <div class="tally-top"><span>{{ t.qui }}</span><b style="font-weight:600">{{ t.quand }}</b></div>
-          {% endfor %}
-        </div>
-        {% else %}<p class="live-empty">Personne n'a encore annoncé son train.</p>{% endif %}
-      </div>
-      <div class="live-card" style="margin-top:.8rem">
-        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les activités</h4>
-        <div class="tally" id="lv-activites">
-          {% for nom, n in etat.activites.items() %}
-          <div class="tally-row" data-cle="{{ nom }}">
-            <div class="tally-top"><span>{{ nom }}</span><b>{{ n }}</b></div>
-            <div class="bar"><i style="width:{{ (n * 100 // (etat.presents or 1)) if etat.presents else 0 }}%"></i></div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      <p class="sync" id="sync"></p>
-"""
+SCRIPT = r"""
+/* ══════════════════════════════════════════════════════════════════
+   Version hébergée : les réponses partent sur le serveur.
 
-SCRIPT_API = """
-<script>
-/* ── Synchronisation serveur (ajouté par build_template.py) ────────────────
-   Greffe additive : le script d'origine garde localStorage, le budget vivant
-   et la timeline. On ajoute l'envoi au serveur et les compteurs partagés. */
+   Ce bloc ne connaît rien de la logique du formulaire. Il lit l'état
+   que la page écrit déjà dans localStorage à chaque changement, et
+   repose entièrement sur le DOM pour afficher les compteurs. C'est ce
+   qui lui permet de survivre aux refontes de la page.
+   ══════════════════════════════════════════════════════════════════ */
 (function(){
   "use strict";
+  var CLE = "elise-trente-ans";
+  var etape3 = document.getElementById("e3");
+  if (!etape3) return;
 
-  var sync = document.getElementById("sync");
-  var timer = null, dernierEnvoi = "";
-
-  function etatLocal(){
-    var coche = function(n){
-      var e = document.querySelector('input[name="' + n + '"]:checked');
-      return e ? e.value : "";
-    };
-    return {
-      nom: document.getElementById("nom").value.trim(),
-      presence: coche("rsvp"),
-      nb: parseInt(document.getElementById("nb").value, 10) || 1,
-      couchage: coche("couchage"),
-      transport: coche("transport"),
-      train: document.getElementById("train").value.trim(),
-      activites: Array.prototype.map.call(
-        document.querySelectorAll('input[name="act"]:checked'),
-        function(e){ return e.value; })
-    };
+  function lu(){
+    try { return JSON.parse(localStorage.getItem(CLE) || "{}"); } catch(e){ return {}; }
   }
 
-  function dire(msg, ok){
-    sync.textContent = msg;
-    sync.className = "sync " + (ok ? "ok" : "ko");
+  /* Le bandeau d'état, posé en tête de l'étape 3. */
+  var bandeau = document.createElement("div");
+  bandeau.className = "serveur";
+  bandeau.innerHTML = '<b id="srv-titre">Enregistre ta réponse sur le site</b>' +
+    '<span id="srv-mot">Elle rejoint celles des autres, et tu pourras la modifier ' +
+    'quand tu veux depuis ce navigateur.</span>' +
+    '<p class="chiffres" id="srv-chiffres"></p>';
+  var fiche = etape3.querySelector(".fiche");
+  etape3.insertBefore(bandeau, fiche ? fiche.nextSibling : etape3.firstChild);
+
+  /* Le bouton d'enregistrement, devant l'envoi WhatsApp qui devient secondaire. */
+  var barre = etape3.querySelector(".barre");
+  var envoi = document.getElementById("envoi");
+  var garder = document.createElement("button");
+  garder.type = "button";
+  garder.className = "bt garder";
+  garder.id = "srv-garder";
+  garder.textContent = "Enregistrer ma réponse";
+  if (barre && envoi) barre.insertBefore(garder, envoi);
+  if (envoi) envoi.textContent = "Envoyer aussi sur WhatsApp";
+
+  function dire(t, titre){
+    document.getElementById("srv-mot").textContent = t;
+    if (titre) document.getElementById("srv-titre").textContent = titre;
   }
 
-  function pourcent(n, total){ return total > 0 ? Math.round(n / total * 100) : 0; }
+  /* Sur la version hébergée, le chemin principal n'est plus WhatsApp : la
+     chapô de l'étape 3 le disait, elle ne le dit plus. */
+  /* Le dernier paragraphe promettait que rien ne quittait le téléphone :
+     sur cette version, si, et c'est tout l'intérêt. */
+  var pieds = etape3.querySelectorAll("p");
+  var pied = pieds[pieds.length - 1];
+  if (pied && pied.textContent.indexOf("navigateur") !== -1){
+    pied.textContent = "Ta réponse est gardée sur le site, et ce navigateur te " +
+      "reconnaît : reviens quand tu veux la corriger, rien ne sera perdu.";
+  }
 
-  function peindre(etat){
-    document.getElementById("lv-personnes").firstChild.nodeValue = etat.personnes;
-    document.getElementById("lv-reponses").textContent = etat.reponses;
-    document.getElementById("lv-presents").textContent = etat.presents;
+  var chapo = etape3.querySelector(".chapo");
+  if (chapo){
+    chapo.innerHTML = "Relis, puis enregistre. Ta réponse part sur le site et rejoint " +
+      "celles des autres — <strong>tu n'as rien d'autre à faire</strong>. Le bouton " +
+      "WhatsApp reste là si tu préfères aussi nous l'écrire.";
+  }
 
-    var box = document.getElementById("lv-prenoms");
-    box.textContent = "";
-    etat.prenoms.forEach(function(p){
-      var s = document.createElement("span");
-      s.textContent = p;              // textContent : jamais d'injection HTML
-      box.appendChild(s);
-    });
-
-    [["lv-couchages", etat.couchages, null],
-     ["lv-activites", etat.activites, null]].forEach(function(pair){
-      var racine = document.getElementById(pair[0]), compte = pair[1];
-      Array.prototype.forEach.call(racine.querySelectorAll(".tally-row"), function(row){
-        var n = compte[row.dataset.cle] || 0;
-        row.querySelector("b").textContent = n;
-        row.querySelector(".bar i").style.width = pourcent(n, etat.presents) + "%";
-        row.classList.toggle("lead", !!pair[2] && n > 0 && pair[2] === row.dataset.cle);
+  /* Les compteurs : un badge par option, posé sur le <span> visible. */
+  function compteurs(etat){
+    var totaux = etat.choix || {};
+    Object.keys(totaux).forEach(function(champ){
+      Object.keys(totaux[champ]).forEach(function(valeur){
+        var e = document.querySelector('input[name="' + champ + '"][value="' +
+                                       (window.CSS && CSS.escape ? CSS.escape(valeur) : valeur) + '"]');
+        if (!e || !e.nextElementSibling) return;
+        var badge = e.nextElementSibling.querySelector(".tally");
+        if (!badge){
+          badge = document.createElement("b");
+          badge.className = "tally";
+          var cible = e.nextElementSibling.querySelector("b") || e.nextElementSibling;
+          cible.appendChild(badge);
+        }
+        badge.textContent = totaux[champ][valeur];
+        badge.title = totaux[champ][valeur] + " réponse(s)";
       });
     });
+    var c = document.getElementById("srv-chiffres");
+    var pl = function(n, un, plusieurs){ return n + " " + (n > 1 ? plusieurs : un); };
+    c.textContent = etat.reponses
+      ? pl(etat.presents, "oui", "oui") + ", " +
+        pl(etat.personnes, "personne attendue", "personnes attendues") + ", " +
+        pl(etat.escape_oui, "inscrit à l'escape game", "inscrits à l'escape game")
+      : "Personne n'a encore répondu — sois le premier.";
   }
 
-  function envoyer(){
-    var s = etatLocal();
-    if (!s.nom || !s.presence) return;          // rien à envoyer tant que c'est incomplet
-    var signature = JSON.stringify(s);
-    if (signature === dernierEnvoi) return;     // pas de POST si rien n'a bougé
+  function rafraichir(){
+    fetch("/api/etat", { headers: { "Accept": "application/json" } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(e){ if (e) compteurs(e); })
+      .catch(function(){ /* hors ligne : la page reste utilisable */ });
+  }
 
+  garder.addEventListener("click", function(){
+    var s = lu();
+    if (!s.nom || !s.rsvp){
+      dire("Il manque ton nom ou ta réponse — reviens à la première étape.");
+      return;
+    }
+    garder.disabled = true;
+    garder.textContent = "Enregistrement…";
     fetch("/api/reponse", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: signature
+      body: JSON.stringify(s)
     }).then(function(r){
-      return r.json().then(function(j){ return { ok: r.ok, j: j }; });
+      return r.json().then(function(j){ return { ok: r.ok, corps: j }; });
     }).then(function(res){
-      if (!res.ok) { dire(res.j.error || "Enregistrement refusé.", false); return; }
-      dernierEnvoi = signature;
-      peindre(res.j.etat);
-      dire("✓ Ta réponse est enregistrée et comptée ci-dessus.", true);
+      if (!res.ok){
+        dire(res.corps.error || "Le serveur a refusé la réponse.");
+        garder.textContent = "Réessayer";
+        garder.disabled = false;
+        return;
+      }
+      dire("Reviens quand tu veux la modifier : ce navigateur te reconnaît.",
+           "C'est enregistré, merci");
+      garder.textContent = "Mettre à jour ma réponse";
+      garder.disabled = false;
+      compteurs(res.corps.etat);
     }).catch(function(){
-      dire("Pas de connexion — ta réponse est gardée ici, elle repartira toute seule.", false);
+      dire("Pas de réseau. Réessaie, ou envoie le message WhatsApp.");
+      garder.textContent = "Réessayer";
+      garder.disabled = false;
     });
-  }
-
-  function planifier(){ clearTimeout(timer); timer = setTimeout(envoyer, 900); }
-  document.addEventListener("input", planifier);
-  document.addEventListener("change", planifier);
-
-  // Rafraîchissement des compteurs des autres, sans écraser la saisie en cours.
-  function rafraichir(){
-    fetch("/api/etat").then(function(r){ return r.json(); }).then(peindre).catch(function(){});
-  }
-  setInterval(rafraichir, 30000);
-  document.addEventListener("visibilitychange", function(){
-    if (!document.hidden) rafraichir();
   });
 
-  envoyer();
+  rafraichir();
+  document.addEventListener("change", function(){ /* rien : on n'écrit qu'au clic */ });
 })();
-</script>
 """
 
 
-RIB_ENV = HERE.parent / "deploy" / "rib.env"
-
-
-def injecter_rib(html: str) -> str:
-    """Remplace les placeholders __RIB_*__ par les vraies coordonnées.
-
-    Elles vivent dans deploy/rib.env, gitignoré : la page versionnée ne contient
-    jamais l'IBAN. Sans ce fichier, la page reste servie mais la cagnotte affiche
-    un texte d'attente plutôt qu'un placeholder brut.
-    """
-    import re
-
-    defauts = {"RIB_TITULAIRE": "coordonnées à venir", "RIB_IBAN": "communiqué dans le groupe",
-               "RIB_BIC": "—", "RIB_BANQUE": "—"}
-    valeurs = dict(defauts)
-    if RIB_ENV.exists():
-        valeurs.update(dict(re.findall(r'^(\w+)="(.*)"$', RIB_ENV.read_text(encoding="utf-8"), re.M)))
-    else:
-        print(f"  ⚠️  {RIB_ENV} absent — la cagnotte affichera un texte d'attente")
-
-    for cle, val in valeurs.items():
-        html = html.replace(f"__{cle}__", val)
-    restants = re.findall(r"__RIB_\w+__", html)
-    if restants:
-        raise SystemExit(f"Placeholders non résolus : {sorted(set(restants))}")
-    return html
+def valeurs_acceptees(page: str) -> dict:
+    """Relève dans la page toutes les paires name/value des boutons radio et
+    des cases à cocher. C'est la page qui fait foi, pas une liste recopiée à
+    la main dans le serveur — trois refontes ont montré ce que valait la
+    recopie."""
+    listes: dict[str, list] = {}
+    motif = re.compile(
+        r'<input\s+type="(radio|checkbox)"\s+name="([^"]+)"\s+value="([^"]+)"')
+    for _genre, champ, valeur in motif.findall(page):
+        listes.setdefault(champ, [])
+        v = html.unescape(valeur)
+        if v not in listes[champ]:
+            listes[champ].append(v)
+    if not listes:
+        sys.exit("aucune valeur relevée : la page a-t-elle changé de forme ?")
+    return listes
 
 
 def main() -> None:
-    src = injecter_rib(SOURCE.read_text(encoding="utf-8"))
+    page = build_public.SOURCE.read_text(encoding="utf-8")
+    env = build_public.lire_env()
+    for cle in build_public.DEFAUTS:
+        page = page.replace("__%s__" % cle, env.get(cle, build_public.DEFAUTS[cle]))
+    restants = re.findall(r"__RIB_\w+__", page)
+    if restants:
+        sys.exit("marqueurs non substitués : " + ", ".join(sorted(set(restants))))
 
-    src = src.replace("</style>", CSS_LIVE + "</style>", 1)
+    listes = valeurs_acceptees(page)
+    SORTIE_VALEURS.write_text(
+        json.dumps({"choix": listes, "libres": CHAMPS_LIBRES},
+                   ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
-    # Les compteurs vont dans l'étape 3, sous le récapitulatif : c'est là que
-    # l'invité arrive une fois son vote posé.
-    ancre = '      <p style="margin-top:1.2rem;font-size:.87rem;color:var(--ink-faint)">'
-    if ancre not in src:
-        raise SystemExit("Ancre de fin d'étape 3 introuvable dans site/public.html")
-    src = src.replace(ancre, SECTION_LIVE.strip() + "\n" + ancre, 1)
+    page, combien, _ = build_public.incruster_photos(page)
+    if 'src="photos/' in page:
+        sys.exit("une photo n'a pas été incrustée")
 
-    src = src.rstrip() + "\n" + SCRIPT_API
+    # Le seul ajout : une feuille de style et un script, à la fin du document.
+    page += "\n<style>%s</style>\n<script>%s</script>\n" % (CSS, SCRIPT)
 
-    doc = ("<!doctype html>\n<html lang=\"fr\">\n<head>\n"
-           "<meta charset=\"utf-8\">\n"
-           "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-           "<meta name=\"theme-color\" content=\"#1c1714\">\n"
-           "<link rel=\"icon\" href=\"data:image/svg+xml,"
-           "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E"
-           "%3Ctext y='26' font-size='26'%3E%F0%9F%8E%82%3C/text%3E%3C/svg%3E\">\n"
-           + src + "\n</body>\n</html>\n")
-    # <title>, <link> et <style> appartiennent au <head>.
-    doc = doc.replace("<header class=\"hero\">", "</head>\n<body>\n<header class=\"hero\">", 1)
-
-    OUT.parent.mkdir(exist_ok=True)
-    OUT.write_text(doc, encoding="utf-8")
-    print(f"{OUT.relative_to(HERE.parent.parent)} — {len(doc)} octets")
+    SORTIE_HTML.parent.mkdir(parents=True, exist_ok=True)
+    SORTIE_HTML.write_text(page, encoding="utf-8")
+    print("%s — %.1f Mo (%d photos)" % (SORTIE_HTML, len(page.encode()) / 1e6, combien))
+    print("%s — %d champs à liste fermée : %s"
+          % (SORTIE_VALEURS, len(listes), ", ".join(sorted(listes))))
 
 
 if __name__ == "__main__":
