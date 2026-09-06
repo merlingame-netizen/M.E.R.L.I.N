@@ -19,3 +19,7 @@ vm/templates/index.html
 
 # Messages WhatsApp avec adresse et IBAN injectes : ne quitte jamais la machine.
 whatsapp/messages_prets.md
+
+# Page publiable fabriquee par site/build_public.py : elle porte l'IBAN en
+# clair et 1,8 Mo de photos encodees. Elle se refabrique en une commande.
+site/public.build.html

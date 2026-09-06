@@ -25,8 +25,8 @@ Anniv Elise — 10/11 oct à Aix
 
 ```
 Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
-On vous loge, on vous nourrit, on vous occupe : mölkky, apéro dînatoire,
-bar à jeux. Vous n'avez rien à prévoir, juste la cagnotte du cadeau si vous voulez.
+Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
+Une cagnotte est ouverte pour son cadeau, l'IBAN est sur la page.
 
 Répondez ici : VOTRE-URL-ICI
 Deadline : samedi 19 septembre.
@@ -43,14 +43,12 @@ Salut tout le monde 👋
 
 Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
 
-📅 Samedi 10 → dimanche 11 octobre
+📅 Samedi 10 octobre à partir de midi → dimanche 11 en milieu d'après-midi
 🏡 Chez nous, à Aix-en-Provence
-🛏️ On vous loge — il y a des lits, des canapés, et de quoi improviser
+🛏️ Lits, canapés et matelas d'appoint — dites-nous s'il vous en faut un
 
-💛 VOUS N'AVEZ RIEN À PRÉVOIR.
-Le couchage, les repas, les activités : c'est chez nous et c'est pour nous.
-🎁 Il y a juste une cagnotte pour le cadeau commun, si le cœur vous en dit —
-l'IBAN est sur la page, mettez votre prénom en référence.
+🎁 Une cagnotte est ouverte pour son cadeau commun, jusqu'au 8 octobre.
+L'IBAN est sur la page, mettez votre prénom en référence du virement.
 
 👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
 
@@ -59,14 +57,16 @@ Trois choses, dans l'ordre :
 2️⃣ Vous dites s'il vous faut un couchage, et comment vous arrivez
 3️⃣ Vous votez les activités, et vous m'envoyez tout d'un tap
 
-🎲 AU PROGRAMME, ET C'EST VOUS QUI VOTEZ :
-Sainte-Victoire, barrage de Bimont ou le vieil Aix l'après-midi
-Mölkky et pétanque au jardin en fin de journée
-Apéro dînatoire toute la soirée (traiteur, rien à préparer)
-Le gâteau et les trente bougies
-Puis le bar à jeux : la grande table couverte de jeux de société,
-et le blind test des trente ans
-Dimanche, marché d'Aix place Richelme et déjeuner ensemble
+🎲 LE PROGRAMME, EN PHOTOS SUR LA PAGE (onglet « Le week-end ») :
+12h — arrivées et déjeuner
+15h — au choix, et c'est vous qui votez : vallon de Saint-Ser sur la
+      Sainte-Victoire, barrage de Bimont, ou le vieil Aix
+18h — mölkky et pétanque au jardin
+19h30 — apéro dînatoire, c'est le repas du soir
+22h — le gâteau et les trente bougies
+22h30 — le bar à jeux : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou
+23h — blind test des trente ans, trente titres, un par année d'Elise
+Dimanche — marché place Richelme, déjeuner, puis les départs
 
 🚄 POUR CEUX QUI VIENNENT DE LOIN :
 Paris → Aix TGV en 2h55 direct
@@ -78,8 +78,7 @@ puis prendre le TER jusqu'à Aix-centre est souvent plus simple que la gare
 TGV d'Aix, qui est à 18 km en pleine campagne.
 Dans tous les cas, DITES-NOUS VOTRE GARE ET VOTRE HEURE, on vient vous chercher.
 
-⏳ RÉPONDEZ AVANT LE SAMEDI 19 SEPTEMBRE.
-Pas pour réserver quoi que ce soit — juste pour savoir combien de lits sortir 😄
+⏳ RÉPONSE AVANT LE SAMEDI 19 SEPTEMBRE, pour le compte des couchages.
 
 Réservez vos trains tôt, les rames d'octobre se remplissent vite.
 ```
@@ -90,8 +89,8 @@ Réservez vos trains tôt, les rames d'octobre se remplissent vite.
 Hey [PRÉNOM] ! Il me manque ta réponse pour les 30 ans d'Elise
 (10-11 octobre, chez nous à Aix). Deux minutes : VOTRE-URL-ICI
 
-Rappel : on te loge et on s'occupe de tout — mölkky, apéro dînatoire,
-bar à jeux, gâteau. J'ai juste besoin de savoir s'il te faut un couchage 🙏
+Le programme est en photos sur la page. J'ai surtout besoin de savoir
+s'il te faut un couchage 🙏
 ```
 
 ## Message C — le récapitulatif ⏱ vers le 20 septembre

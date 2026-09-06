@@ -73,7 +73,7 @@ le planning des allers-retours.
 Tout est soumis au vote sur la page. Les activités payantes ont été retirées de
 la liste : la page ne parle plus d'argent nulle part, sauf de la cagnotte.
 
-### Dehors, samedi 15h30 → 17h30
+### Dehors, samedi 15h → 17h30
 
 | Activité | À savoir |
 |----------|----------|
@@ -109,11 +109,17 @@ invités y écrivent remonte dans le message WhatsApp qu'ils t'envoient.
 ## Ce qu'il reste à faire
 
 1. **Un traiteur**, samedi soir et dimanche midi, dix couverts, livré chez vous.
+   Le samedi soir prend la forme d'un **apéro dînatoire** servi en continu, pas
+   d'un dîner assis : planches et petits plats chauds. Le **déjeuner du samedi
+   midi** est à faire vous-mêmes — le week-end démarre désormais à 12h et non
+   plus en début d'après-midi.
    Pierre Scherer, chef à domicile à Aix : **06 70 45 03 34**. Compter 30 à
    55 € par personne et par repas.
 2. **Le gâteau** — douze parts, plus les bougies et les allumettes.
 3. **Compter les couchages** dès que les réponses arrivent.
 4. **La playlist du blind test** — trente titres, un par année d'Elise.
 5. **Le mölkky** — à acheter ou à emprunter si tu n'en as pas.
+6. **Le déjeuner du samedi** — le week-end commence à midi, il faut de quoi
+   nourrir tout le monde dès l'arrivée.
 
 Deux appels au lieu de quatre. C'est tout l'intérêt de la simplification.

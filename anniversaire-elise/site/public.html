@@ -76,11 +76,6 @@ p{margin:0 0 .85em}
   color:var(--roche);line-height:1;font-variant-numeric:tabular-nums}
 .jauge div span{display:block;font-size:.63rem;font-weight:700;letter-spacing:.17em;
   text-transform:uppercase;color:var(--encre-pale);margin-top:.35rem}
-.sceau{
-  display:inline-block;margin-top:1.4rem;border:1.5px solid var(--roche);
-  color:var(--roche-clair);padding:.5rem .95rem;font-size:.7rem;font-weight:700;
-  letter-spacing:.16em;text-transform:uppercase;
-}
 
 /* ══ ONGLETS ══════════════════════════════════════════════════ */
 .rubans{position:sticky;top:0;z-index:40;background:var(--craie-2);
@@ -187,6 +182,22 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 .heure b{font-weight:600;font-size:.99rem}
 .heure small{display:block;color:var(--encre-pale);font-size:.86rem;margin-top:.1rem}
 
+.acte{display:flex;align-items:baseline;gap:.85rem;font-family:var(--display);
+  font-size:1.35rem;font-weight:600;color:var(--encre);margin:1.9rem 0 .75rem}
+.acte span{font-family:var(--texte);font-size:.68rem;font-weight:700;letter-spacing:.15em;
+  color:var(--terre);font-variant-numeric:tabular-nums;flex:none}
+.trio,.duo{display:grid;gap:1rem;margin-bottom:.4rem}
+.trio{grid-template-columns:repeat(3,1fr)}
+.duo{grid-template-columns:repeat(2,1fr)}
+@media (max-width:720px){.trio,.duo{grid-template-columns:1fr}}
+.vue{margin:0;background:var(--blanc);border:1px solid var(--craie-3)}
+.vue img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
+.vue figcaption{padding:.75rem .9rem .85rem}
+.vue b{display:block;font-weight:600;font-size:.99rem;color:var(--encre)}
+.vue small{display:block;color:var(--encre-pale);font-size:.86rem;margin-top:.2rem}
+.vue.large img{aspect-ratio:2/1}
+@media (max-width:720px){.vue.large img{aspect-ratio:3/2}}
+
 /* ══ TRAINS ═══════════════════════════════════════════════════ */
 .quai{background:var(--ciel-fonce);color:#e8f0f6;padding:1.2rem 1.3rem;margin-bottom:1.1rem}
 .quai.vert{background:var(--pin)}
@@ -212,6 +223,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
 .pied{background:var(--encre);color:var(--encre-pale);padding-block:2.2rem;font-size:.84rem}
 .pied strong{color:var(--craie)}
+.pied .credits{margin-top:.9rem;font-size:.72rem;line-height:1.5;color:#5d6874}
 .cache{display:none}
 #mot{position:fixed;left:50%;bottom:1.4rem;transform:translate(-50%,150%);
   background:var(--encre);color:var(--craie);padding:.8rem 1.3rem;font-weight:600;
@@ -248,13 +260,12 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
 <div class="legende"><div class="col">
   <p class="quand">Samedi 10 &amp; dimanche 11 octobre 2026</p>
-  <p class="ou">Chez nous, à Aix-en-Provence. On vous loge, on vous nourrit.</p>
+  <p class="ou">Chez nous, à Aix-en-Provence, à partir de midi.</p>
   <div class="jauge">
     <div><b id="j-jours">—</b><span>jours</span></div>
     <div><b id="j-rep">19 sept.</b><span>réponse avant</span></div>
-    <div><b id="j-nuits">1</b><span>nuit sur place</span></div>
+    <div><b>12h</b><span>samedi, on démarre</span></div>
   </div>
-  <span class="sceau">Rien à prévoir — juste la cagnotte</span>
 </div></div>
 
 <nav class="rubans" role="tablist"><div>
@@ -271,17 +282,17 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <!-- 1 -->
   <section id="e1">
     <h2>Tu viens&nbsp;?</h2>
-    <p class="chapo">Samedi 10 octobre, on démarre en début d'après-midi. Tu dors sur place,
-      on s'occupe des repas et du reste. Toi, tu poses ton sac et tu joues au mölkky.</p>
+    <p class="chapo">Samedi 10 octobre à partir de midi, dimanche 11 jusqu'au milieu
+      de l'après-midi. Le programme complet est dans l'onglet <em>Le week-end</em>.</p>
     <div class="choix">
       <label class="opt"><input type="radio" name="rsvp" value="Tout le week-end">
-        <span><b>Oui, tout le week-end</b><em>Samedi après-midi jusqu'au dimanche</em></span></label>
+        <span><b>Oui, tout le week-end</b><em>De samedi midi au dimanche après-midi</em></span></label>
       <label class="opt"><input type="radio" name="rsvp" value="Samedi seulement">
-        <span><b>Samedi seulement</b><em>Je repars dans la soirée</em></span></label>
+        <span><b>Samedi seulement</b><em>Je repars en fin de soirée</em></span></label>
       <label class="opt"><input type="radio" name="rsvp" value="Dimanche seulement">
         <span><b>Dimanche</b><em>Je vous rejoins le matin</em></span></label>
       <label class="opt"><input type="radio" name="rsvp" value="Je ne peux pas venir">
-        <span><b>Non, je ne peux pas</b><em>Une autre fois, promis</em></span></label>
+        <span><b>Non, je ne peux pas</b><em>Je ne serai pas là ce week-end</em></span></label>
     </div>
     <div class="champ">
       <label for="nom">Ton prénom et ton nom</label>
@@ -303,13 +314,13 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <p class="groupe">Le couchage</p>
     <div class="choix">
       <label class="opt"><input type="radio" name="lit" value="Il me faut un couchage">
-        <span><b>Il me faut un lit</b><em>Un vrai, ou un canapé, peu importe</em></span></label>
+        <span><b>Il me faut un lit</b><em>Lit ou canapé, peu importe</em></span></label>
       <label class="opt"><input type="radio" name="lit" value="J'apporte mon matelas">
-        <span><b>J'apporte mon matelas</b><em>Duvet, matelas gonflable — je suis autonome</em></span></label>
+        <span><b>J'apporte mon matelas</b><em>Duvet ou matelas gonflable</em></span></label>
       <label class="opt"><input type="radio" name="lit" value="Je me loge ailleurs">
         <span><b>Je me loge ailleurs</b><em>Hôtel, famille, amis</em></span></label>
       <label class="opt"><input type="radio" name="lit" value="Je ne dors pas sur place">
-        <span><b>Je ne dors pas</b><em>Je rentre dans la soirée</em></span></label>
+        <span><b>Je ne dors pas sur place</b><em>Je rentre le soir même</em></span></label>
     </div>
 
     <p class="groupe">L'arrivée</p>
@@ -319,7 +330,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <label class="opt"><input type="radio" name="venue" value="En voiture, avec des places libres">
         <span><span class="note">covoit</span><b>En voiture, avec des places</b><em>Je peux embarquer du monde</em></span></label>
       <label class="opt"><input type="radio" name="venue" value="En voiture, complet">
-        <span><b>En voiture, complet</b><em>Je me débrouille</em></span></label>
+        <span><b>En voiture, complet</b><em>Aucune place à proposer</em></span></label>
       <label class="opt"><input type="radio" name="venue" value="J'habite Aix">
         <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
     </div>
@@ -329,28 +340,28 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     </div>
 
     <p class="groupe">Ce qui te tente <span id="cpt-act">0 choisi</span></p>
-    <p class="glose">Coche tout ce qui te dit — on garde ce qui revient le plus.</p>
+    <p class="glose">Coche ce qui te tente. Les choix les plus demandés seront retenus.</p>
     <div class="choix">
       <label class="opt"><input type="checkbox" name="act" value="Vallon de Saint-Ser, Sainte-Victoire">
-        <span><span class="note">15h30</span><b>Vallon de Saint-Ser</b><em>1 h 30 de montée douce sur le versant sud de la Sainte-Victoire, celle que Cézanne peignait</em></span></label>
+        <span><span class="note">15h</span><b>Vallon de Saint-Ser</b><em>1 h 30 aller-retour sur le versant sud de la Sainte-Victoire, celle que Cézanne peignait</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Barrage de Bimont">
-        <span><span class="note">15h30</span><b>Barrage de Bimont</b><em>1 h de balade plate, l'eau turquoise et la montagne en face. Tongs acceptées</em></span></label>
+        <span><span class="note">15h</span><b>Barrage de Bimont</b><em>1 h de balade plate au-dessus du lac, avec la montagne en face</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Le vieil Aix et ses terrasses">
-        <span><span class="note">15h30</span><b>Le vieil Aix</b><em>Cours Mirabeau, les ruelles, un verre en terrasse. C'est aussi le plan s'il pleut</em></span></label>
+        <span><span class="note">15h</span><b>Le vieil Aix</b><em>Cours Mirabeau, les ruelles et les fontaines, un verre en terrasse</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Mölkky et pétanque au jardin">
-        <span><span class="note">18h</span><b>Mölkky et pétanque</b><em>Quilles finlandaises au jardin, en équipes de trois. Le titre se joue avant l'apéro</em></span></label>
+        <span><span class="note">18h</span><b>Mölkky et pétanque</b><em>Au jardin, en équipes de trois, jusqu'à la nuit tombée</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Apéro dînatoire, à rallonge">
-        <span><span class="note">19h30</span><b>Apéro dînatoire</b><em>Planches, petits plats chauds, ça dure toute la soirée. On picore, on ne s'assoit jamais vraiment</em></span></label>
+        <span><span class="note">19h30</span><b>Apéro dînatoire</b><em>Planches et petits plats chauds servis en continu — c'est le repas du soir</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Bar à jeux à la maison">
-        <span><span class="note">22h30</span><b>Le bar à jeux</b><em>La grande table se couvre de jeux de société : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Ça tourne tant qu'il reste du monde</em></span></label>
+        <span><span class="note">22h30</span><b>Le bar à jeux</b><em>La grande table couverte de jeux de société : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Blind test des trente ans">
-        <span><span class="note">23h</span><b>Blind test</b><em>Trente titres, un par année d'Elise. Équipes tirées au sort, aucune pitié</em></span></label>
+        <span><span class="note">23h</span><b>Blind test</b><em>Trente titres, un par année d'Elise. Équipes tirées au sort</em></span></label>
       <label class="opt"><input type="checkbox" name="act" value="Marché d'Aix, place Richelme">
-        <span><span class="note">dimanche</span><b>Le marché d'Aix</b><em>Place Richelme, tous les matins : fromages, olives, calissons. Dix minutes à pied</em></span></label>
+        <span><span class="note">dimanche</span><b>Le marché d'Aix</b><em>Place Richelme, à dix minutes à pied : fromages, olives, calissons</em></span></label>
     </div>
     <div class="champ" id="c-idee">
       <label for="idee">Une autre idée&nbsp;?</label>
-      <input type="text" id="idee" placeholder="Karaoké, atelier cocktail, ce que tu veux">
+      <input type="text" id="idee" placeholder="Karaoké, atelier cocktail, autre chose">
     </div>
 
     <div class="barre">
@@ -375,9 +386,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <div class="cadeau">
       <h3>La cagnotte</h3>
       <p style="font-size:.93rem;color:var(--encre-doux);margin-bottom:0">
-        On lui offre un cadeau commun. La cagnotte est ouverte jusqu'au 8 octobre, et
-        y participer est libre — mets <strong>ton prénom en référence</strong>, qu'on sache
-        qui remercier.</p>
+        Une cagnotte est ouverte pour son cadeau commun, jusqu'au 8 octobre. Mets
+        <strong>ton prénom en référence</strong> du virement.</p>
       <p class="et">Bénéficiaire</p>
       <p class="val nom">__RIB_TITULAIRE__</p>
       <p class="et">IBAN</p>
@@ -400,31 +410,69 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 <!-- ═══ LE WEEK-END ═══ -->
 <div id="v-we" role="tabpanel" aria-labelledby="o-we" class="cache"><main><div class="col">
   <p class="oeil">Le déroulé</p>
-  <h2>Vingt-quatre heures, sans montre</h2>
-  <p class="chapo">On est à la maison : personne ne court après un check-in, et rien n'est
-    verrouillé. Le seul horaire qui compte est celui de ton train.</p>
+  <h2>De samedi midi à dimanche après-midi</h2>
+  <p class="chapo">Le seul horaire ferme est celui de ton train. Les trois options de
+    l'après-midi sont soumises au vote&nbsp;: c'est l'étape 2 de ta réponse.</p>
 
   <p class="jour"><small>Samedi 10 octobre</small>Le jour</p>
-  <div class="heure"><time>13h30</time><div><b>Les arrivées</b><small>On récupère à la gare ceux qui viennent en train</small></div></div>
-  <div class="heure"><time>14h30</time><div><b>Café d'accueil</b><small>On pose les affaires, on se retrouve</small></div></div>
-  <div class="heure"><time>15h30</time><div><b>L'après-midi</b><small>Sainte-Victoire, Bimont ou le vieil Aix — vos votes tranchent</small></div></div>
-  <div class="heure"><time>18h00</time><div><b>Mölkky et pétanque</b><small>Quilles finlandaises au jardin, en équipes de trois — les vainqueurs sont dispensés de vaisselle</small></div></div>
-  <div class="heure"><time>19h30</time><div><b>Apéro dînatoire</b><small>Traiteur : planches, petits plats chauds, ça dure toute la soirée. Rien à préparer, rien à ranger. Prends une petite laine, il fait 12 °C à la nuit tombée</small></div></div>
+
+  <div class="heure"><time>12h00</time><div><b>Les arrivées</b><small>On récupère à la gare celles et ceux qui viennent en train</small></div></div>
+  <div class="heure"><time>12h30</time><div><b>Déjeuner</b><small>À la maison, sans façon</small></div></div>
+
+  <p class="acte"><span>15h00</span>L'après-midi, au choix</p>
+  <div class="trio">
+    <figure class="vue">
+      <img src="photos/sainte-victoire.jpg" alt="La montagne Sainte-Victoire, longue crête calcaire au-dessus de la garrigue" width="760" height="428">
+      <figcaption><b>Vallon de Saint-Ser</b><small>1 h 30 aller-retour sur le versant sud, sous la crête que Cézanne a peinte quatre-vingts fois</small></figcaption>
+    </figure>
+    <figure class="vue">
+      <img src="photos/bimont.jpg" alt="Le lac du barrage de Bimont, eau turquoise encaissée dans les collines boisées" width="760" height="428">
+      <figcaption><b>Barrage de Bimont</b><small>1 h de balade plate au-dessus du lac, avec la montagne en face</small></figcaption>
+    </figure>
+    <figure class="vue">
+      <img src="photos/cours-mirabeau.jpg" alt="Le cours Mirabeau à Aix-en-Provence, allée de platanes, fontaine et terrasses" width="760" height="428">
+      <figcaption><b>Le vieil Aix</b><small>Cours Mirabeau, les ruelles et les fontaines, un verre en terrasse. C'est aussi le programme s'il pleut</small></figcaption>
+    </figure>
+  </div>
+
+  <p class="acte"><span>18h00</span>Mölkky et pétanque</p>
+  <div class="duo">
+    <figure class="vue">
+      <img src="photos/molkky.jpg" alt="Partie de mölkky en extérieur, quilles de bois dressées sur le gravier" width="760" height="507">
+      <figcaption><b>Mölkky</b><small>Douze quilles numérotées, un lanceur, des équipes de trois</small></figcaption>
+    </figure>
+    <figure class="vue">
+      <img src="photos/petanque.jpg" alt="Boules de pétanque posées dans l'herbe, ramassées par un enfant" width="760" height="507">
+      <figcaption><b>Pétanque</b><small>Au jardin, jusqu'à la nuit tombée</small></figcaption>
+    </figure>
+  </div>
+
+  <p class="acte"><span>19h30</span>L'apéro dînatoire</p>
+  <figure class="vue large">
+    <img src="photos/apero.jpg" alt="Assiette d'apéritif : fromages, fruits et pain dressés sur une table" width="760" height="507">
+    <figcaption><b>C'est le repas du soir</b><small>Planches et petits plats chauds servis en continu par le traiteur. On s'assoit où on veut, et on y reste</small></figcaption>
+  </figure>
+
   <div class="heure"><time>22h00</time><div><b>Le gâteau, trente bougies</b><small>Il est commandé. N'en apporte pas</small></div></div>
-  <div class="heure"><time>22h30</time><div><b>Le bar à jeux ouvre</b><small>La grande table se couvre de jeux de société, et le blind test des trente ans départage les prétendants</small></div></div>
+
+  <p class="acte"><span>22h30</span>Le bar à jeux</p>
+  <figure class="vue large">
+    <img src="photos/bar-a-jeux.jpg" alt="Une tablée de joueurs autour de plusieurs jeux de société" width="760" height="507">
+    <figcaption><b>La grande table, débarrassée et couverte de jeux</b><small>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. À 23h, le blind test des trente ans&nbsp;: trente titres, un par année d'Elise</small></figcaption>
+  </figure>
 
   <p class="jour"><small>Dimanche 11 octobre</small>Le lendemain</p>
-  <div class="heure"><time>10h00</time><div><b>Petit-déjeuner qui traîne</b></div></div>
-  <div class="heure"><time>11h30</time><div><b>Le marché d'Aix</b><small>Place Richelme, à dix minutes à pied — ou rien du tout, selon la nuit qu'on aura passée</small></div></div>
-  <div class="heure"><time>13h00</time><div><b>Déjeuner</b><small>Le dernier repas ensemble</small></div></div>
-  <div class="heure"><time>15h00</time><div><b>Les départs</b><small>On raccompagne à la gare — dis-nous ton train de retour</small></div></div>
 
-  <h2 style="margin-top:2.6rem">Ce qu'il faut apporter</h2>
-  <p class="chapo">Très peu.</p>
-  <div class="heure"><time>①</time><div><b>Ta trousse de toilette</b></div></div>
-  <div class="heure"><time>②</time><div><b>Une serviette</b><small>Si tu en as une facile à glisser dans le sac, ça nous arrange</small></div></div>
-  <div class="heure"><time>③</time><div><b>Des chaussures pour marcher</b><small>Seulement si tu votes la Sainte-Victoire</small></div></div>
-  <div class="heure"><time>④</time><div><b>Une petite laine</b><small>Les soirées d'octobre à Aix descendent à 12 °C</small></div></div>
+  <div class="heure"><time>10h00</time><div><b>Petit-déjeuner</b><small>Il traîne, c'est prévu</small></div></div>
+
+  <p class="acte"><span>11h30</span>Le marché d'Aix</p>
+  <figure class="vue large">
+    <img src="photos/marche.jpg" alt="Le marché de la place Richelme à Aix, étals de fruits et légumes sous les platanes" width="760" height="507">
+    <figcaption><b>Place Richelme, à dix minutes à pied</b><small>Fromages, olives, calissons. Tous les matins de l'année</small></figcaption>
+  </figure>
+
+  <div class="heure"><time>13h00</time><div><b>Déjeuner</b><small>Le dernier repas ensemble</small></div></div>
+  <div class="heure"><time>15h00</time><div><b>Les départs</b><small>On raccompagne à la gare — indique ton train de retour</small></div></div>
 </div></main></div>
 
 <!-- ═══ VENIR À AIX ═══ -->
@@ -461,17 +509,20 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     souvent plus simple que la gare TGV d'Aix. Plus de trains, et la gare est en ville.</p>
 
   <h2 style="margin-top:2.4rem">Questions</h2>
-  <details><summary>Il y a quelque chose à prévoir&nbsp;?</summary><p>Non. Le couchage, les repas et les activités, c'est chez nous et c'est pour nous. Il n'y a que la cagnotte du cadeau, tout à la fin de ta réponse, et elle est facultative.</p></details>
-  <details><summary>C'est quoi, le bar à jeux&nbsp;?</summary><p>La grande table de la maison, débarrassée et couverte de jeux de société pour la soirée&nbsp;: Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Ça tourne tant qu'il reste du monde. Si tu as un jeu que tu adores, apporte-le.</p></details>
-  <details><summary>Et mon train&nbsp;?</summary><p>Réserve tôt, les rames d'octobre se remplissent vite. Dis-nous ton horaire à la deuxième étape&nbsp;: on vient te chercher à la gare.</p></details>
-  <details><summary>Vous avez la place pour tout le monde&nbsp;?</summary><p>On a des lits, des canapés et de quoi improviser. C'est exactement pour ça qu'on te demande, à la deuxième étape, s'il te faut un couchage&nbsp;: c'est le seul chiffre sur lequel on ne peut pas improviser la veille.</p></details>
+  <details><summary>À quelle heure faut-il arriver&nbsp;?</summary><p>Le samedi à partir de midi. Le déjeuner est à 12h30, et l'après-midi part vers 15h. Si ton train arrive plus tard, ce n'est pas un problème&nbsp;: indique ton horaire, on s'organise.</p></details>
+  <details><summary>C'est quoi, le bar à jeux&nbsp;?</summary><p>La grande table de la maison, débarrassée et couverte de jeux de société pour la soirée&nbsp;: Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Si tu as un jeu auquel tu tiens, apporte-le.</p></details>
+  <details><summary>Et mon train&nbsp;?</summary><p>Réserve tôt, les rames d'octobre se remplissent vite. Indique ton horaire à la deuxième étape&nbsp;: on vient te chercher à la gare.</p></details>
+  <details><summary>Vous avez la place pour tout le monde&nbsp;?</summary><p>Lits, canapés et matelas d'appoint. C'est pour ça qu'on demande, à la deuxième étape, s'il te faut un couchage&nbsp;: c'est le seul chiffre qu'on ne peut pas ajuster la veille.</p></details>
   <details><summary>Quelle est l'adresse&nbsp;?</summary><p>Elle est dans le groupe WhatsApp, pas ici&nbsp;: cette page circule, notre adresse non. Si tu n'es pas dans le groupe, dis-le et on t'ajoute.</p></details>
-  <details><summary>Et s'il pleut&nbsp;?</summary><p>La randonnée devient un tour du vieil Aix, ou rien du tout. On est à la maison — c'est tout l'intérêt.</p></details>
+  <details><summary>Et s'il pleut&nbsp;?</summary><p>L'après-midi devient un tour du vieil Aix, ou reste à la maison. Le reste du programme ne bouge pas.</p></details>
 </div></main></div>
 
 <footer class="pied"><div class="col">
   <p><strong>Elise, trente ans</strong> — samedi 10 &amp; dimanche 11 octobre 2026, Aix-en-Provence.</p>
-  <p>Réponds avant le <strong>samedi 19 septembre</strong>, qu'on sache combien de lits sortir.</p>
+  <p>Réponse souhaitée avant le <strong>samedi 19 septembre</strong>, pour le compte des couchages.</p>
+  <p class="credits">Photos&nbsp;: Sten van Houwelingen, FrogsLegs71, Ladislaus Hoffner,
+    François de Dijon, Ermell, Ewan Munro, Matěj Baťha, mwanasimba — Wikimedia Commons,
+    licences CC BY-SA.</p>
 </div></footer>
 
 <div id="mot" role="status" aria-live="polite"></div>
@@ -482,7 +533,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   var $ = function(id){ return document.getElementById(id); };
 
   /* ── Jours restants jusqu'au samedi 10 octobre 2026, 13 h 30 (CEST) ── */
-  var reste = Math.ceil((new Date("2026-10-10T13:30:00+02:00") - Date.now()) / 86400000);
+  var reste = Math.ceil((new Date("2026-10-10T12:00:00+02:00") - Date.now()) / 86400000);
   $("j-jours").textContent = reste > 0 ? reste : 0;
 
   /* ── Mémoire locale : peut lever en navigation privée ── */
