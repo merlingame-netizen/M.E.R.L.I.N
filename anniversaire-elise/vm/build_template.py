@@ -71,15 +71,14 @@ SECTION_LIVE = """
         </div>
       </div>
       <div class="live-card" style="margin-top:.8rem">
-        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les repas</h4>
-        <div class="tally" id="lv-traiteurs">
-          {% for nom, n in etat.traiteurs.items() %}
-          <div class="tally-row{% if nom == etat.traiteur_tete and n > 0 %} lead{% endif %}" data-cle="{{ nom }}">
-            <div class="tally-top"><span>{{ nom }}</span><b>{{ n }}</b></div>
-            <div class="bar"><i style="width:{{ (n * 100 // (etat.presents or 1)) if etat.presents else 0 }}%"></i></div>
-          </div>
+        <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les arrivées en train</h4>
+        {% if etat.trains %}
+        <div class="tally">
+          {% for t in etat.trains %}
+          <div class="tally-top"><span>{{ t.qui }}</span><b style="font-weight:600">{{ t.quand }}</b></div>
           {% endfor %}
         </div>
+        {% else %}<p class="live-empty">Personne n'a encore annoncé son train.</p>{% endif %}
       </div>
       <div class="live-card" style="margin-top:.8rem">
         <h4 style="font-family:var(--display);font-size:1rem;margin:0 0 .8rem">Les activités</h4>
@@ -116,7 +115,8 @@ SCRIPT_API = """
       presence: coche("rsvp"),
       nb: parseInt(document.getElementById("nb").value, 10) || 1,
       lieu: coche("lieu"),
-      traiteur: coche("traiteur"),
+      transport: coche("transport"),
+      train: document.getElementById("train").value.trim(),
       activites: Array.prototype.map.call(
         document.querySelectorAll('input[name="act"]:checked'),
         function(e){ return e.value; })
@@ -144,7 +144,6 @@ SCRIPT_API = """
     });
 
     [["lv-lieux", etat.lieux, etat.lieu_tete],
-     ["lv-traiteurs", etat.traiteurs, etat.traiteur_tete],
      ["lv-activites", etat.activites, null]].forEach(function(pair){
       var racine = document.getElementById(pair[0]), compte = pair[1];
       Array.prototype.forEach.call(racine.querySelectorAll(".tally-row"), function(row){

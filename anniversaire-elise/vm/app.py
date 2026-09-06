@@ -36,23 +36,21 @@ PRESENCES = {
     "Je ne peux pas venir",
 }
 LIEUX = {
-    "Le Catalan (Jouques)",
-    "Le Loubatas (Peyrolles)",
-    "Belvédère Sainte-Victoire (Saint-Marc-Jaumegarde)",
+    "Château Thivin (Odenas)",
+    "Gîte du Clair de Nety (Saint-Étienne-des-Oullières)",
+    "La Glycine (Vaux-en-Beaujolais)",
 }
-TRAITEURS = {
-    "Oui, traiteur pour les deux repas",
-    "Traiteur samedi soir seulement",
-    "On cuisine nous-mêmes",
-    "Peu importe",
+TRANSPORTS = {
+    "En train, venez me chercher à la gare",
+    "En voiture, je peux prendre des gens",
+    "En voiture, seul",
 }
 ACTIVITES = {
-    "Randonnée Sainte-Victoire",
-    "Accrobranche Indian Forest",
-    "Via ferrata / escalade",
-    "Canoë sur la Durance",
-    "Balade au barrage de Bimont",
-    "Apéro, pétanque et rien d'autre",
+    "Dégustation dans un domaine",
+    "Montée au mont Brouilly",
+    "Village d'Oingt et Pierres Dorées",
+    "Balade dans les vignes",
+    "Pétanque et apéro, rien d'autre",
 }
 VIENT = PRESENCES - {"Je ne peux pas venir"}
 
@@ -83,7 +81,8 @@ def init_db() -> None:
                 presence  TEXT NOT NULL,
                 nb        INTEGER NOT NULL DEFAULT 1,
                 lieu      TEXT,
-                traiteur  TEXT,
+                transport TEXT,
+                train     TEXT,
                 activites TEXT NOT NULL DEFAULT '[]',
                 maj       REAL NOT NULL
             )
@@ -140,9 +139,11 @@ def valider(payload: dict) -> tuple[dict | None, str]:
     if lieu and lieu not in LIEUX:
         return None, "Lieu inconnu."
 
-    traiteur = str(payload.get("traiteur", "")).strip()
-    if traiteur and traiteur not in TRAITEURS:
-        return None, "Choix de repas inconnu."
+    transport = str(payload.get("transport", "")).strip()
+    if transport and transport not in TRANSPORTS:
+        return None, "Moyen de transport inconnu."
+
+    train = str(payload.get("train", "")).strip()[:120]
 
     brut = payload.get("activites") or []
     if not isinstance(brut, list) or len(brut) > len(ACTIVITES):
@@ -150,7 +151,7 @@ def valider(payload: dict) -> tuple[dict | None, str]:
     activites = [a for a in brut if a in ACTIVITES]
 
     return {"nom": nom, "presence": presence, "nb": nb, "lieu": lieu,
-            "traiteur": traiteur, "activites": activites}, ""
+            "transport": transport, "train": train, "activites": activites}, ""
 
 
 # ── Compteurs ───────────────────────────────────────────────────────────────
@@ -158,15 +159,19 @@ def etat() -> dict:
     rows = db().execute("SELECT * FROM reponses ORDER BY maj").fetchall()
 
     lieux = {x: 0 for x in LIEUX}
-    traiteurs = {t: 0 for t in TRAITEURS}
+    transports = {t: 0 for t in TRANSPORTS}
+    trains = []
     activites = {a: 0 for a in ACTIVITES}
     presents, personnes, prenoms = 0, 0, []
 
     for r in rows:
         if r["lieu"] in lieux:
             lieux[r["lieu"]] += 1
-        if r["traiteur"] in traiteurs:
-            traiteurs[r["traiteur"]] += 1
+        if r["transport"] in transports:
+            transports[r["transport"]] += 1
+        # Les arrivées en train pilotent les navettes : prénom + horaire annoncé.
+        if r["train"] and r["presence"] in VIENT:
+            trains.append({"qui": r["nom"].split()[0][:20], "quand": r["train"]})
         for a in json.loads(r["activites"]):
             if a in activites:
                 activites[a] += 1
@@ -182,10 +187,11 @@ def etat() -> dict:
         "personnes": personnes,
         "prenoms": prenoms,
         "lieux": lieux,
-        "traiteurs": traiteurs,
+        "transports": transports,
+        "trains": trains,
         "activites": activites,
         "lieu_tete": max(lieux, key=lieux.get) if any(lieux.values()) else "",
-        "traiteur_tete": max(traiteurs, key=traiteurs.get) if any(traiteurs.values()) else "",
+
     }
 
 
@@ -216,14 +222,15 @@ def api_reponse():
     pid = request.cookies.get("anniv_id") or secrets.token_urlsafe(16)
     conn = db()
     conn.execute("""
-        INSERT INTO reponses (id, nom, presence, nb, lieu, traiteur, activites, maj)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO reponses (id, nom, presence, nb, lieu, transport, train, activites, maj)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             nom=excluded.nom, presence=excluded.presence, nb=excluded.nb,
-            lieu=excluded.lieu, traiteur=excluded.traiteur,
+            lieu=excluded.lieu, transport=excluded.transport, train=excluded.train,
             activites=excluded.activites, maj=excluded.maj
     """, (pid, data["nom"], data["presence"], data["nb"], data["lieu"],
-          data["traiteur"], json.dumps(data["activites"], ensure_ascii=False), time.time()))
+          data["transport"], data["train"],
+          json.dumps(data["activites"], ensure_ascii=False), time.time()))
     conn.commit()
 
     resp = make_response(jsonify(ok=True, etat=etat()))
@@ -245,10 +252,11 @@ def admin():
                 v = "'" + v
             return '"' + v.replace('"', '""') + '"'
 
-        lignes = ["nom,presence,personnes,lieu,traiteur,activites,maj"]
+        lignes = ["nom,presence,personnes,lieu,transport,train,activites,maj"]
         for r in rows:
             champs = [r["nom"], r["presence"], str(r["nb"]), r["lieu"] or "",
-                      r["traiteur"] or "", " | ".join(json.loads(r["activites"])),
+                      r["transport"] or "", r["train"] or "",
+                      " | ".join(json.loads(r["activites"])),
                       time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"]))]
             lignes.append(",".join(cellule(c) for c in champs))
         out = make_response("\n".join(lignes))
@@ -258,7 +266,7 @@ def admin():
 
     return jsonify(etat=etat(), reponses=[{
         "nom": r["nom"], "presence": r["presence"], "nb": r["nb"],
-        "lieu": r["lieu"], "traiteur": r["traiteur"],
+        "lieu": r["lieu"], "transport": r["transport"], "train": r["train"],
         "activites": json.loads(r["activites"]),
         "maj": time.strftime("%Y-%m-%d %H:%M", time.localtime(r["maj"])),
     } for r in rows])
