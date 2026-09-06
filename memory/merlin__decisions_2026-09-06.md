@@ -54,3 +54,23 @@
   Contrôleur (qui ne prend plus une durée de report pour une durée de référence).
 - La courbe garde les nuits reportées comme des trous visibles ; les mesures disent quand
   l'échantillon est incomplet (trous d'index, beats_joues).
+
+## 2026-09-06 (soir) : le filon, quatre réponses de Maxime
+- La référence de « le jeu s'améliore » est la VM et le conteur e4b ; le PC (e2b) suit.
+- Le prochain effort sur la prose est le fine-tuning sur GPU distant (LoRA de gemma e4b) ; le
+  levier du prompt est épuisé.
+- Côté jeu, on commence par la mort et la progression (répit par Rencontre, épreuve de
+  progression, puis les chapitres), avant les biomes.
+- L'atelier autonome sert à MESURER seulement : garder la nuit, le crible, la courbe ; éteindre
+  ce qui propose ou décide sans lecteur (liste précise à confirmer).
+
+## 2026-09-06 (soir) : le filon, deuxième tour
+- ÉTEINTS dès demain : gd-content-gap, design-council, gd-balance, gd-run, coder-local, sequence,
+  parole, et la plume LLM du journal (le gabarit reste). La tâche #29 (recibler gd-content-gap sur
+  le beat) meurt avec l'agent. Restent : la nuit, le crible, la courbe, et ce qui sert Maxime
+  directement (relance, brasero, contrôle, santé, smoke, CI).
+- Fine-tuning : Kaggle (GPU gratuit), avec un corpus ÉCRIT À LA MAIN élargi de 8 à 15-20 quêtes
+  sur les douze biomes — pas de données synthétiques d'un plus gros modèle.
+- La mort : une menace réelle et rare, environ une traversée sur dix pour un joueur attentif.
+  Cible mesurable sur la nuit avec le bot couvrant : au plus une nuit sur dix finit en mort.
+- Le rythme : une nuit par jour, la machine libre le jour. La courbe parle après une semaine.

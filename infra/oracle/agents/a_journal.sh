@@ -16,8 +16,11 @@ cd "$TOOLS_REPO" || { echo "dépôt d'outillage introuvable"; exit 1; }
 # ne l'est pas, c'est que l'atelier d'écriture a débordé — dans ce cas le
 # chapitre gabarit est écrit et c'est très bien.
 exec 8>"$HOME/.cache/merlin-agents/llm.lock"
-# La plume seulement si le jeu ne tourne pas (gates) ET si le verrou est libre ; sinon le gabarit.
-if python3 tools/gd_agents/gates.py >/dev/null 2>&1 && flock -w 240 8; then
+# LA PLUME EST ÉTEINTE (2026-09-06, décision de Maxime : l'atelier mesure seulement). 375 s de
+# modèle chaque matin pour un chapitre qui ne lisait jamais la partie de la nuit. Le gabarit,
+# sans LLM, reste : le socle est toujours écrit. Remettre PLUME=oui pour la rallumer.
+PLUME=non
+if [ "$PLUME" = oui ] && python3 tools/gd_agents/gates.py >/dev/null 2>&1 && flock -w 240 8; then
     OUT="$(nice -n 10 python3 tools/gd_agents/journal_plume.py 2>&1 | tail -1)"
     RC=$?
 else

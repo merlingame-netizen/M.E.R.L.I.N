@@ -86,8 +86,8 @@
    "label": "Conseil de design (quotidien)",
    "schedule": "40 6 * * *",
    "cmd": "a_design_council.sh",
-   "enabled": true,
-   "desc": "Chaque matin, un conseiller différent relit la mémoire du design et ouvre une conversation dans Parler : une réflexion + deux questions franches."
+   "enabled": false,
+   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : 70 propositions en attente que personne ne lit.] Chaque matin, un conseiller différent relit la mémoire du design et ouvre une conversation dans Parler : une réflexion + deux questions franches."
   },
   {
    "id": "daily-report",
@@ -110,24 +110,24 @@
    "label": "Professeur du modèle",
    "schedule": "7,37 * * * *",
    "cmd": "a_gd_content.sh",
-   "enabled": true,
-   "desc": "Écrit des exemples d'entraînement pour le futur modèle MERLIN. PAUSE du 25/08 levée le 06/09 : le canon (data/ai/lore_canon.json v2.0) est dérivé du jeu depuis le 05/09. Cadence choisie par Maxime (toutes les 30 min, à 7 et 37 pour ne pas partir dans la même seconde que la partie de 4h05 ou le banc de 6h05 ; elle vivait dans une surcharge hors dépôt) et désormais SOUS PORTE : run-gd-agent.sh interroge gates.py et cède les quatre cœurs à tout godot qui tourne, harnais compris. Reste à recibler sur le beat (tâche #29 : il produit encore des cartes à trois options)."
+   "enabled": false,
+   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : 48 courses par jour de cartes d'un format mort, que personne ne relit.] Écrit des exemples d'entraînement pour le futur modèle MERLIN. PAUSE du 25/08 levée le 06/09 : le canon (data/ai/lore_canon.json v2.0) est dérivé du jeu depuis le 05/09. Cadence choisie par Maxime (toutes les 30 min, à 7 et 37 pour ne pas partir dans la même seconde que la partie de 4h05 ou le banc de 6h05 ; elle vivait dans une surcharge hors dépôt) et désormais SOUS PORTE : run-gd-agent.sh interroge gates.py et cède les quatre cœurs à tout godot qui tourne, harnais compris. Reste à recibler sur le beat (tâche #29 : il produit encore des cartes à trois options)."
   },
   {
    "id": "gd-balance",
    "label": "Idées — équilibrage",
    "schedule": "50 7,19 * * *",
    "cmd": "a_gd_balance.sh",
-   "enabled": true,
-   "desc": "Analyse l'équilibrage réel du corpus (effets, factions, verbes) et propose un ajustement chiffré. Deux fois par jour."
+   "enabled": false,
+   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : propositions sans lecteur.] Analyse l'équilibrage réel du corpus (effets, factions, verbes) et propose un ajustement chiffré. Deux fois par jour."
   },
   {
    "id": "coder-local",
    "label": "Codeur local (auto/nightly)",
    "schedule": "*/30 * * * *",
    "cmd": "a_coder_local.sh",
-   "enabled": true,
-   "desc": "Applique les missions acceptées (before/after, périmètre data+constantes+patchs ≤30 lignes) sur auto/nightly, smoke à l'appui. Suspendu quand le jeu tourne. Le merge reste un tap."
+   "enabled": false,
+   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : « rien d'applicable » 139 fois en 57 h.] Applique les missions acceptées (before/after, périmètre data+constantes+patchs ≤30 lignes) sur auto/nightly, smoke à l'appui. Suspendu quand le jeu tourne. Le merge reste un tap."
   },
   {
    "id": "corpus-night",
@@ -238,8 +238,8 @@
    "label": "La Parole",
    "cmd": "a_parole.sh",
    "schedule": "25 * * * *",
-   "enabled": true,
-   "desc": "Laisse les agents t'interpeller quand quelque chose le mérite vraiment : une scène qui casse deux fois, un écran figé, un patch annulé. 2 fils par jour maximum, aucun appel au modèle."
+   "enabled": false,
+   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : la parole du matin, quota 2 par jour, sans lecteur.] Laisse les agents t'interpeller quand quelque chose le mérite vraiment : une scène qui casse deux fois, un écran figé, un patch annulé. 2 fils par jour maximum, aucun appel au modèle."
   },
   {
    "id": "mesures",
@@ -262,8 +262,8 @@
    "label": "L'Arbitre de la run",
    "cmd": "a_gd_run.sh",
    "schedule": "35 2 * * *",
-   "enabled": true,
-   "desc": "Mesure chaque nuit l'équilibrage du jeu que tu joues vraiment : intégrité, main, corruption, talents, butin, soin."
+   "enabled": false,
+   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : juge une chaîne de quêtes que le jeu ne joue plus.] Mesure chaque nuit l'équilibrage du jeu que tu joues vraiment : intégrité, main, corruption, talents, butin, soin."
   },
   {
    "id": "controle",
@@ -278,8 +278,8 @@
    "label": "Le Séquenceur",
    "schedule": "3,33 * * * *",
    "cmd": "a_sequence.sh",
-   "enabled": true,
-   "desc": "Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi. [Régime du 04/09 : 3,13,23,33,43,53 * * * * → 3,33 * * * *.]"
+   "enabled": false,
+   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : la séquence du codeur, sans codeur.] Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi. [Régime du 04/09 : 3,13,23,33,43,53 * * * * → 3,33 * * * *.]"
   },
   {
    "id": "llm-decompose",
