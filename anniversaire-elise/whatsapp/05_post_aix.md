@@ -61,9 +61,10 @@ référence du virement.
 👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
 
 Trois choses, dans l'ordre :
-1️⃣ Vous dites si vous êtes dispo
-2️⃣ Vous dites s'il vous faut un couchage, où et à quelle heure vous
-    arrivez, et quand vous repartez
+1️⃣ Vous dites juste oui ou non
+2️⃣ Vous dites s'il vous faut un couchage, quel jour et à quelle heure
+    vous arrivez, et quand vous repartez. Pas besoin de choisir entre
+    « tout le week-end » et « samedi seulement » : vos horaires le disent.
 3️⃣ Vous votez dans l'onglet « Le week-end », chaque vote est sous la
     photo de ce qu'il décide
 4️⃣ Vous relisez, et vous m'envoyez tout d'un tap

@@ -159,8 +159,8 @@ Depuis la refonte, la page ne pose plus tout au même endroit :
 
 | Où | Ce qui s'y décide |
 |----|-------------------|
-| **Onglet Répondre, étape 1** | Présence et nombre de personnes |
-| **Onglet Répondre, étape 2** | Couchage, lieu et heure d'arrivée, jour et heure de départ |
+| **Onglet Répondre, étape 1** | Oui ou non, le nom, le nombre de personnes |
+| **Onglet Répondre, étape 2** | Couchage, moyen de transport, puis **ton arrivée** (jour, lieu, heure) et **ton départ** (moment, heure) |
 | **Onglet Le week-end** | Tous les votes — déjeuner de midi, escape game, soirée, activités du dimanche, idée libre — chacun dans une « urne » posée sous la photo de ce qu'il décide |
 | **Onglet Répondre, étape 3** | Le récapitulatif, puis l'envoi WhatsApp |
 | **Onglet Comment venir + cagnotte** | Les gares, puis la cagnotte et son IBAN |
@@ -193,8 +193,16 @@ cases hors contexte, et ça rend l'étape 2 respirable.
     cagnotte sert « aux cadeaux et aux activités », et demande à chacun de ne
     rien écrire de précis dans le groupe. Rien de ce que tu as prévu n'est
     écrit ici non plus.
-11. **Le planning gare** — la page collecte maintenant le lieu et l'heure
-    d'arrivée **et** le jour et l'heure de départ. De quoi monter les
+11. **Le planning gare** — la page collecte le jour, le lieu et l'heure
+    d'arrivée **et** le moment et l'heure du départ. De quoi monter les
     allers-retours sans relancer personne.
+
+> **La durée du séjour n'est plus une question.** L'étape 1 se réduit à oui
+> ou non ; « tout le week-end », « samedi seulement » ou « dimanche
+> seulement » se déduit du jour d'arrivée et du moment du départ, et
+> s'affiche en direct sous les deux champs. Deux façons de dire la même
+> chose, c'était deux façons de se contredire. La combinaison impossible —
+> arrivée dimanche, départ samedi soir — est signalée à l'invité au lieu
+> d'être corrigée dans son dos.
 
 Deux appels au lieu de quatre. C'est tout l'intérêt de la simplification.

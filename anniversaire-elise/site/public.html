@@ -209,7 +209,8 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
   border:1px solid var(--craie-3);padding:.85rem .95rem;margin-bottom:1.5rem;
   font-size:.9rem;color:var(--encre-doux);line-height:1.5}
 .renvoi .picto{margin-top:.12rem}
-.lien{background:none;border:none;padding:0;font:inherit;color:var(--terre-fonce);
+.lien{display:inline;text-align:left;background:none;border:none;padding:0;font:inherit;
+  color:var(--terre-fonce);
   font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .lien:hover{color:var(--terre)}
 
@@ -223,6 +224,18 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 .urne .glose{margin:-.35rem 0 .85rem}
 .urne .champ{margin-top:1.05rem;margin-bottom:0}
 .champs-2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.pilules{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+.pilules label{position:relative;display:block}
+.pilules input{position:absolute;opacity:0;width:0;height:0}
+.pilules span{display:flex;align-items:center;min-height:44px;padding:.55rem .9rem;
+  border:1px solid var(--craie-3);background:var(--blanc);font-size:.88rem;font-weight:600;
+  color:var(--encre-doux);cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.pilules input:checked+span{border-color:var(--terre);background:var(--terre);color:var(--blanc)}
+.pilules input:focus-visible+span{outline:2px solid var(--encre);outline-offset:2px}
+.verdict{font-family:var(--display);font-size:1.1rem;font-weight:600;color:var(--terre-fonce);
+  padding-top:.85rem;margin:0}
+.verdict.vide{color:var(--encre-pale);font-weight:400}
+.verdict.doute{color:var(--terre);font-size:.92rem;font-family:var(--texte);padding-top:1rem}
 .couture{border:none;border-top:1px solid var(--craie-3);margin:3.2rem 0 2.4rem}
 
 /* ══ MOUVEMENT ══════════════════════════════════════════════════
@@ -379,14 +392,11 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <section id="e1">
     <h2>Tu viens&nbsp;?</h2>
     <p class="chapo">Samedi 10 octobre à partir de midi, dimanche 11 jusqu'au milieu
-      de l'après-midi. Le programme complet est dans l'onglet <em>Le week-end</em>.</p>
+      de l'après-midi. Viens pour tout, ou pour ce que tu peux&nbsp;: le programme complet
+      est dans l'onglet <em>Le week-end</em>.</p>
     <div class="choix">
-      <label class="opt"><input type="radio" name="rsvp" value="Tout le week-end">
-        <span><b>Oui, tout le week-end</b><em>De samedi midi au dimanche après-midi</em></span></label>
-      <label class="opt"><input type="radio" name="rsvp" value="Samedi seulement">
-        <span><b>Samedi seulement</b><em>Je repars en fin de soirée</em></span></label>
-      <label class="opt"><input type="radio" name="rsvp" value="Dimanche seulement">
-        <span><b>Dimanche</b><em>Je vous rejoins le matin</em></span></label>
+      <label class="opt"><input type="radio" name="rsvp" value="Je viens">
+        <span><b>Oui, je viens</b><em>Tu diras à l'étape suivante quand tu arrives et quand tu repars</em></span></label>
       <label class="opt"><input type="radio" name="rsvp" value="Je ne peux pas venir">
         <span><b>Non, je ne peux pas</b><em>Je ne serai pas là ce week-end</em></span></label>
     </div>
@@ -420,7 +430,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
         <span><b>Je ne dors pas sur place</b><em>Je rentre le soir même</em></span></label>
     </div>
 
-    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-train"></use></svg> L'arrivée</p>
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-train"></use></svg> Comment tu viens</p>
     <div class="choix">
       <label class="opt"><input type="radio" name="venue" value="En train, venez me chercher">
         <span><span class="note">on vient</span><b>En train</b><em>Gare TGV ou Aix-centre</em></span></label>
@@ -431,39 +441,48 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <label class="opt"><input type="radio" name="venue" value="J'habite Aix">
         <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
     </div>
-    <div class="champ">
-      <label for="lieu">Tu arrives où&nbsp;?</label>
-      <input type="text" id="lieu" list="gares" placeholder="Aix TGV, Aix-centre, Marseille Saint-Charles…">
-      <datalist id="gares">
-        <option value="Aix-en-Provence TGV"></option>
-        <option value="Aix-en-Provence centre"></option>
-        <option value="Marseille Saint-Charles"></option>
-        <option value="Directement à la maison"></option>
-      </datalist>
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton arrivée</p>
+    <div class="pilules" role="group" aria-label="Jour d'arrivée">
+      <label><input type="radio" name="jarr" value="Samedi"><span>Samedi</span></label>
+      <label><input type="radio" name="jarr" value="Dimanche"><span>Dimanche</span></label>
     </div>
     <div class="champs-2">
       <div class="champ">
-        <label for="h-arr">Arrivée, samedi</label>
-        <input type="time" id="h-arr">
+        <label for="lieu">Où&nbsp;?</label>
+        <input type="text" id="lieu" list="gares" placeholder="Aix TGV, Aix-centre…">
+        <datalist id="gares">
+          <option value="Aix-en-Provence TGV"></option>
+          <option value="Aix-en-Provence centre"></option>
+          <option value="Marseille Saint-Charles"></option>
+          <option value="Directement à la maison"></option>
+        </datalist>
       </div>
       <div class="champ">
-        <label for="h-dep">Départ</label>
-        <input type="time" id="h-dep">
+        <label for="h-arr">À quelle heure&nbsp;?</label>
+        <input type="time" id="h-arr">
       </div>
     </div>
-    <div class="champ">
-      <label for="quand-dep">Tu repars quel jour&nbsp;?</label>
-      <input type="text" id="quand-dep" list="jours-dep" placeholder="Dimanche après-midi">
-      <datalist id="jours-dep">
-        <option value="Samedi soir"></option>
-        <option value="Dimanche matin"></option>
-        <option value="Dimanche après-midi"></option>
-        <option value="Lundi"></option>
-      </datalist>
+
+    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton départ</p>
+    <div class="pilules" role="group" aria-label="Moment du départ">
+      <label><input type="radio" name="jdep" value="Samedi soir"><span>Samedi soir</span></label>
+      <label><input type="radio" name="jdep" value="Dimanche matin"><span>Dimanche matin</span></label>
+      <label><input type="radio" name="jdep" value="Dimanche après-midi"><span>Dimanche après-midi</span></label>
+      <label><input type="radio" name="jdep" value="Lundi"><span>Lundi</span></label>
     </div>
-    <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg> Les votes — déjeuner, escape game, soirée, dimanche — sont
-      <button type="button" class="lien" id="vers-we">dans l'onglet Le week-end</button>,
-      sous les photos.</p>
+    <div class="champs-2">
+      <div class="champ">
+        <label for="h-dep">Train de retour, si tu le connais</label>
+        <input type="time" id="h-dep">
+      </div>
+      <div class="champ sejour">
+        <label>Ça fait</label>
+        <p class="verdict" id="sejour">—</p>
+      </div>
+    </div>
+    <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg><span>Les votes — déjeuner, escape game, soirée, dimanche — sont sous
+      les photos, dans <button type="button" class="lien" id="vers-we">l'onglet Le
+      week-end</button>.</span></p>
 
     <div class="barre">
       <button class="bt retour" id="r2">Retour</button>
@@ -488,9 +507,9 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <dt id="l-act">Envies</dt><dd class="vide" id="f-act">—</dd>
     </dl></div>
 
-    <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-cadeau"></use></svg> Le jour J, on ne te demandera rien&nbsp;: si tu veux
-      participer, c'est <button type="button" class="lien" id="vers-cag">la cagnotte, dans
-      l'onglet Comment venir</button>.</p>
+    <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-cadeau"></use></svg><span>Le jour J, on ne te demandera rien. Si tu veux participer,
+      la cagnotte est dans <button type="button" class="lien" id="vers-cag">l'onglet Comment
+      venir</button>.</span></p>
 
     <div class="barre">
       <button class="bt retour" id="r3">Retour</button>
@@ -829,12 +848,24 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   function etat(){
     return { nom: $("nom").value.trim(), nb: $("nb").value.trim(), rsvp: une("rsvp"),
              lit: une("lit"), venue: une("venue"),
-             lieu: $("lieu").value.trim(), harr: $("h-arr").value,
-             hdep: $("h-dep").value, qdep: $("quand-dep").value.trim(),
+             jarr: une("jarr"), lieu: $("lieu").value.trim(), harr: $("h-arr").value,
+             jdep: une("jdep"), hdep: $("h-dep").value,
              midi: une("midi"), escape: une("escape"), soiree: une("soiree"),
              act: plusieurs("act"), idee: $("idee").value.trim() };
   }
   function present(){ var r = etat().rsvp; return !!r && r !== "Je ne peux pas venir"; }
+
+  /* La durée du séjour n'est plus une case à cocher : elle se déduit du jour
+     d'arrivée et du moment du départ, qui sont les deux seules choses que
+     l'invité sait vraiment. Une combinaison impossible se dit, elle ne se
+     corrige pas dans son dos. */
+  function sejour(s){
+    if (!s.jarr || !s.jdep) return "";
+    if (s.jarr === "Dimanche" && s.jdep === "Samedi soir") return "?";
+    if (s.jarr === "Dimanche") return "Dimanche seulement";
+    if (s.jdep === "Samedi soir") return "Samedi seulement";
+    return "Tout le week-end";
+  }
 
   function marche(n){
     [1,2,3].forEach(function(i){ $("e" + i).classList.toggle("cache", i !== n); });
@@ -850,12 +881,15 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   function texte(s){
     var L = ["Elise, trente ans — samedi 10 & dimanche 11 octobre, à Aix", ""];
     L.push("Nom : " + (s.nom || "?"));
-    L.push("Présence : " + (s.rsvp || "?"));
+    L.push("Présence : " + (present() ? (sejour(s) === "?" ? "Je viens" : sejour(s) || "Je viens")
+                                        : (s.rsvp || "?")));
     if (s.nb && present()) L.push("Nous serons : " + s.nb);
     if (s.lit) L.push("Couchage : " + s.lit);
-    if (s.venue) L.push("Arrivée : " + s.venue);
-    if (s.lieu || s.harr) L.push("J'arrive : " + [s.lieu, s.harr && "à " + s.harr].filter(Boolean).join(" "));
-    if (s.qdep || s.hdep) L.push("Je repars : " + [s.qdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
+    if (s.venue) L.push("Comment : " + s.venue);
+    if (s.jarr || s.lieu || s.harr)
+      L.push("J'arrive : " + [s.jarr, s.lieu, s.harr && "à " + s.harr].filter(Boolean).join(" "));
+    if (s.jdep || s.hdep)
+      L.push("Je repars : " + [s.jdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
     if (s.midi) L.push("Déjeuner de samedi : " + s.midi);
     if (s.escape) L.push("Escape game de 17h : " + s.escape);
     if (s.soiree) L.push("Soirée de samedi : " + s.soiree);
@@ -871,12 +905,18 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     $("v1").disabled = !(s.nom && s.rsvp);
     $("cpt-act").textContent = s.act.length + (s.act.length > 1 ? " choisis" : " choisi");
 
+    var sej = sejour(s);
     pose("f-nom", s.nom + (s.nb && present() ? " · " + s.nb + " pers." : ""));
-    pose("f-rsvp", s.rsvp);
+    pose("f-rsvp", present() ? (sej && sej !== "?" ? sej : "Je viens") : s.rsvp);
     pose("f-lit", s.lit);
-    var arr = [s.lieu, s.harr && "à " + s.harr].filter(Boolean).join(" ");
-    pose("f-venue", [s.venue, arr].filter(Boolean).join(" — "));
-    pose("f-dep", [s.qdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
+    var el = $("sejour");
+    el.textContent = !present() ? "—" : (sej === "?" ? "Arrivée dimanche et départ samedi : à revoir"
+                                                     : (sej || "—"));
+    el.className = "verdict" + (sej === "?" ? " doute" : (sej ? "" : " vide"));
+
+    var arr = [s.jarr, s.lieu, s.harr && "à " + s.harr].filter(Boolean).join(" ");
+    pose("f-venue", [arr, s.venue].filter(Boolean).join(" — "));
+    pose("f-dep", [s.jdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
     pose("f-midi", s.midi);
     pose("f-escape", s.escape);
     pose("f-soiree", s.soiree);
@@ -931,9 +971,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   if (s.lieu) $("lieu").value = s.lieu;
   if (s.harr) $("h-arr").value = s.harr;
   if (s.hdep) $("h-dep").value = s.hdep;
-  if (s.qdep) $("quand-dep").value = s.qdep;
   if (s.idee) $("idee").value = s.idee;
-  ["rsvp","lit","venue","midi","escape","soiree"].forEach(function(n){
+  ["rsvp","lit","venue","jarr","jdep","midi","escape","soiree"].forEach(function(n){
     if (!s[n]) return;
     var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
     if (e) e.checked = true;
