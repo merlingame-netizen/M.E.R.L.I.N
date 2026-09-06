@@ -97,10 +97,12 @@ absorbe le groupe d'un coup. À vingt minutes de la maison en voiture, donc
 il faut organiser les véhicules.
 
 > **C'est la seule dépense réelle du week-end, et elle est pour vous.**
-> La page l'annonce désormais franchement — « c'est nous qui l'offrons, comme
-> les repas » — parce que sans ça, personne n'ose voter oui à une activité
-> payante. La contrepartie : le vote devient un engagement, et le nombre qui
-> en sort est celui que tu réserves.
+> La page l'annonce franchement — « rien à sortir sur place, c'est réglé
+> d'avance comme les repas » — parce que sans ça, personne n'ose voter oui à
+> une activité qu'il devine payante. La contrepartie : le vote devient un
+> engagement, et le nombre qui en sort est celui que tu réserves.
+> La cagnotte est présentée comme servant **aux cadeaux et aux activités**,
+> ce qui la relie honnêtement à cette ligne de dépense.
 > Comptez de l'ordre de 25 à 32 € par personne selon la salle et l'horaire,
 > soit **350 à 480 € pour quinze**. La page n'affiche aucun prix, c'est
 > délibéré : les invités ne paient rien. **À réserver dès que le vote est
@@ -151,6 +153,21 @@ invités y écrivent remonte dans le message WhatsApp qu'ils t'envoient.
 
 ---
 
+## Là où vivent les questions
+
+Depuis la refonte, la page ne pose plus tout au même endroit :
+
+| Où | Ce qui s'y décide |
+|----|-------------------|
+| **Onglet Répondre, étape 1** | Présence et nombre de personnes |
+| **Onglet Répondre, étape 2** | Couchage, lieu et heure d'arrivée, jour et heure de départ |
+| **Onglet Le week-end** | Tous les votes — déjeuner de midi, escape game, soirée, activités du dimanche, idée libre — chacun dans une « urne » posée sous la photo de ce qu'il décide |
+| **Onglet Répondre, étape 3** | Le récapitulatif, puis l'envoi WhatsApp |
+| **Onglet Pratique** | Les gares, puis la cagnotte et son IBAN |
+
+On vote là où on voit la chose : c'est plus juste qu'une longue liste de
+cases hors contexte, et ça rend l'étape 2 respirable.
+
 ## Ce qu'il reste à faire
 
 1. **Un traiteur**, samedi soir et dimanche midi, dix couverts, livré chez vous.
@@ -172,5 +189,12 @@ invités y écrivent remonte dans le message WhatsApp qu'ils t'envoient.
    œufs, fruits, et du café en quantité.
 9. **Les voitures** — quinze personnes à emmener aux Milles à 16h30 puis à
    ramener. La question des places libres est posée à l'étape 2 de la page.
+10. **Les cadeaux** — plusieurs, non annoncés. La page dit seulement que la
+    cagnotte sert « aux cadeaux et aux activités », et demande à chacun de ne
+    rien écrire de précis dans le groupe. Rien de ce que tu as prévu n'est
+    écrit ici non plus.
+11. **Le planning gare** — la page collecte maintenant le lieu et l'heure
+    d'arrivée **et** le jour et l'heure de départ. De quoi monter les
+    allers-retours sans relancer personne.
 
 Deux appels au lieu de quatre. C'est tout l'intérêt de la simplification.
