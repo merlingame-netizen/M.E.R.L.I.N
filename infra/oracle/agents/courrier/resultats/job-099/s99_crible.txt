@@ -75,7 +75,7 @@ partie 2026-09-06 : 22 beats · fin accomplissement · 8 au banc · 16217 signes
 == LE STUDIO ==
   healthz : 200
   /api/chroniques : 11 parties · nuit 2026-09-06, jeu 06/09 04:10, nuit 2026-09-05, jeu 05/09 04:10, p93, jeu 02/09 16:12, p74, p73
-  tunnel : https://journalist-requirement-sixth-swimming.trycloudflare.com
+  tunnel : <URL du tunnel retirée du dépôt>
 
 == LE JEU ==
   desire=stopped harness= godot=0
