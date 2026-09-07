@@ -805,7 +805,9 @@ func _plus_proche(brut: String, parmi: Array) -> String:
 
 
 func _degre(m: int) -> String:
-	if m >= 8:
+	if m >= 7:   # v55 : MerlinResolution.eclat_margin est passé de 8 à 7 (07/09). Troisième copie du
+	             # seuil, et la seule qui tourne la nuit : sans elle la note du beat et la consigne
+	             # au modèle narraient une éclatante en réussite sur 8,3 % des beats à DC 9.
 		return "eclatante"
 	if m >= 0:
 		return "reussite"

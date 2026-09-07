@@ -19,6 +19,10 @@ const LABELS: Dictionary = {
 # une scene paisible) AMPLIFIE. Barème game-designer (spec Phase 0 B.3/B.4), a tuner au soak (§K).
 const NATURE_BASE_TIER_BY_TYPE: Dictionary = {
 	"Exploration": 0, "Rencontre": 1, "Epreuve": 2, "Dilemme": 2, "Climax": 2,
+	# MerlinRun réécrit le type du beat quand la Promesse est réclamée (merlin_run.gd:1428) :
+	# sans cette ligne la réclamation retombait au tier 1, et son échec coûtait 2 d'intégrité
+	# au lieu de 3. Le beat le plus dur de la quête était le moins cher (relecture du 07/09).
+	"Le créancier revient": 2,
 }
 const NATURE_ESCALATE_FAMILY: String = "Monde"  # tag Monde requis (Rituel/Sacrifice/Equilibre/Mystere) -> +1 tier
 # {tier -> {degre -> [dIntegrite, dCorruption]}}. Corruption clampee >= 0 par apply_resolution.
@@ -72,8 +76,12 @@ const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
 # or c'est dans le milieu que vit un jeu de dés. Trois règles, mesurées par test_progression.gd :
 #   1. les ATOUTS PROPRES (talent + maîtrise + greffes au jet) ne dépassent jamais
 #      atouts_propres_cap : ce qu'on SAIT est borné, ce qu'on LIT dans la scène vaut +3 par tag.
-#      La couverture reste le vrai levier, et un tag de plus vaut TOUJOURS plus (monotone : une
-#      première version plafonnait le total sur les Épreuves et rendait le deuxième tag inutile) ;
+#      La couverture reste le vrai levier : un tag de plus vaut toujours plus de MARGE (une
+#      première version plafonnait le total sur les Épreuves et rendait le deuxième tag inutile).
+#      Une exception connue et assumée : hors Épreuve et hors Climax, couvrir le second tag peut
+#      déclencher le geste sûr et donc REMPLACER une éclatante possible (faces 11-12) par une
+#      réussite certaine. C'est le prix de la certitude, décidé par Maxime le 07/09 ; partout où
+#      le geste sûr est interdit, la couverture est strictement monotone ;
 #   2. le dé se jette TOUJOURS sur une Épreuve et au Climax : là où la quête se joue, aucun geste
 #      n'est sûr (le code le disait pour le Climax, mais les atouts seuls suffisaient à l'obtenir) ;
 #   3. ailleurs, le geste sûr n'existe qu'en difficulté 1, ou en difficulté 2 avec la couverture
@@ -133,7 +141,12 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	var m_sure: int = 0 if beat_type == "Climax" else marge_sure(played_cards, skill_mod)
 	var sur_permis: bool = true
 	if regle_plafond:
-		sur_permis = beat_type != "Climax" and beat_type != "Epreuve" \
+		# UNE LISTE BLANCHE, PAS UNE LISTE NOIRE. Deux types échappaient au « != Epreuve » :
+		# « Le créancier revient », que MerlinRun écrit par-dessus une Épreuve éligible, et
+		# « Épreuve » accentué, que generer_quete.gd produit. Mesuré : le même beat rendait
+		# geste_sur=false au dé sous « Epreuve » et geste_sur=TRUE sous « Le créancier revient ».
+		# Le beat le plus dramatique de la quête était le seul sans dé (relecture du 07/09).
+		sur_permis = beat_type in ["Exploration", "Rencontre", "Dilemme"] \
 			and (diff <= 1 or req_n == 0 or (diff == 2 and covered_n >= req_n))
 	var geste_sur: bool = sur_permis and (2 + mods + m_sure) >= dc
 	var face: int = die if die >= 2 and die <= 12 else DIE_FALLBACK

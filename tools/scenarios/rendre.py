@@ -27,6 +27,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import regles
 from valider import valider  # noqa: E402 — le juge unique du contrat
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -34,14 +35,14 @@ SRC = RACINE / "data" / "scenarios"
 DST = RACINE / "docs" / "scenarios"
 
 
-def degre(m):
-    if m >= 8:
-        return "éclatante"
-    if m >= 0:
-        return "réussite"
-    if m >= -5:
-        return "partiel"
-    return "échec"
+# LE DEGRE SE LIT DANS LE MOTEUR, il ne se recopie pas : cette fonction portait un seuil d'eclat
+# a 8 quand le jeu etait passe a 7 (v55, 07/09). Voir tools/scenarios/regles.py.
+_ACCENTUE = {regles.ECLATANTE: "éclatante", regles.REUSSITE: "réussite",
+             regles.PARTIEL: "partiel", regles.ECHEC: "échec"}
+
+
+def degre(m, de=None):
+    return _ACCENTUE[regles.degre(int(m), de)]
 
 
 def esc(s):

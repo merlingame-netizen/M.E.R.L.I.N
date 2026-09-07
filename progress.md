@@ -3807,7 +3807,21 @@ rendait le deuxième tag inutile ; la règle est monotone désormais.
 `tools/tests/test_progression.gd` joue 900 traversées par série (trois graines) avec le vrai
 moteur, la vraie forme de quête, 30 % de tags Monde et la couverture mesurée du bot : hier 0 % de
 morts et 77 % sans dé ; aujourd'hui 6 % ± 1,6 de morts, 6 % sans dé, Climax au dé dix fois sur
-dix, une éclatante tous les quatorze gestes. Plafond +1 : 24 % ; 0 : 44 %. Le bot de la nuit ne
-choisit plus en connaissant le dé pré-tiré (il était un oracle) : il estime sur la face médiane.
+dix, une éclatante tous les quatorze gestes. Plafond +1 : 24 % ; 0 : 44 %.
 Les six épreuves passent, le smoke de MerlinGame est propre. La nuit mesurera : sans jet ≤ 25 %,
 climax au dé, une éclatante, l'intégrité sous 7.
+
+**Correction du soir.** J'avais écrit ici et dans la bible que le bot de la nuit ne lisait plus le
+dé pré-tiré. C'est faux : le correctif était dans un script Python qui a échoué sur son PREMIER
+remplacement, et les suivants — dont celui-là — n'ont jamais tourné. `git show --stat 089fc076`
+liste cinq fichiers, sans la sonde. La relecture du soir l'a trouvé. Deux leçons : une affirmation
+sur l'état du dépôt se vérifie DANS le dépôt, et un script de correctif doit rapporter ce qu'il n'a
+pas appliqué. Le bot reste un oracle cette nuit, sciemment : la relecture a mesuré qu'il est inerte
+sous v55 (zéro choix divergent sur 165 Épreuves), et l'aveugler seul dégraderait sa couverture.
+
+**Trois défauts trouvés par la relecture, corrigés avant la nuit.** Le type du beat était comparé
+par une liste noire : `MerlinRun` réécrit le type en « Le créancier revient » quand la Promesse est
+réclamée, et ce beat, le plus dur de la quête, redevenait sans dé et coûtait 2 d'intégrité au lieu
+de 3. Le seuil de l'éclatante vivait en cinq copies ; celle du générateur tourne chaque nuit et
+narrait une éclatante en réussite sur 8,3 % des beats. Les copies sont remplacées par
+`tools/scenarios/regles.py`, qui LIT le moteur et refuse de deviner s'il change de forme.

@@ -114,8 +114,13 @@ l'archétype « p74 » : la couverture mesurée du bot, 0 tag une fois sur dix, 
 dix) : hier 0 % de morts et 77 % de gestes sans dé ; aujourd'hui **6 % de morts (± 1,6)**, 6 % de
 gestes sans dé, le Climax au dé dix fois sur dix, une éclatante tous les quatorze gestes. Un joueur
 qui ne lit jamais la scène meurt six fois sur dix : lire est le jeu. L'épreuve refuse hors de 4 à
-15 % de morts. Le plafond à +1 donnait 24 %, à 0 44 % : le réglage est fin, et la nuit du bot
-(désormais aveugle au dé qu'il choisissait en le connaissant) le confronte au vrai jeu.
+15 % de morts. Le plafond à +1 donnait 24 %, à 0 44 % : le réglage est fin.
+
+> **Ce que la nuit ne dit pas encore.** Le bot qui joue la partie de la nuit choisit sa paire en
+> lisant le dé DÉJÀ TIRÉ du beat (`tools/probe_partie_journal.gd`) : c'est un oracle, et sa
+> mortalité est donc un plancher, pas celle d'un humain. Mesuré le 07/09, l'oracle est inerte sous
+> v55 — zéro choix divergent sur 165 Épreuves et 165 Climax — parce que le dé n'y dispense plus
+> rien ; mais tant qu'il voit le dé, la nuit mesure la règle, pas le joueur.
 
 ---
 
