@@ -80,3 +80,13 @@
   relit et corrige (chaque correction devient une règle d'écriture).
 - L'ordre : la mort et la progression d'abord (une session, effet dès la nuit suivante), puis le
   corpus quête par quête, le LoRA quand il y a ~200 exemples.
+
+## 2026-09-07 : v55, le plafond des atouts (codé, mesuré, poussé sur le jeu)
+- Atouts propres ≤ +2 ; le dé toujours jeté sur Épreuve et Climax ; geste sûr réservé à la
+  routine (difficulté 1 ou couverture pleine) ; éclatante à marge 7 ; répit automatique arrêté.
+- Pourquoi +2 et non +1 (l'audit disait +1) : avec la couverture mesurée du bot (0 tag une fois
+  sur dix) et 30 % de tags Monde, +1 donne 24 % de morts et +2 en donne 6 % ± 1,6. La règle est
+  monotone (un tag de plus vaut toujours plus) : la première version ne l'était pas.
+- La nuit du 07/09, jouée AVANT v55 : 25 beats, 1 au banc, 25/25 réussites, 20 gestes sûrs —
+  la preuve en vrai du régime « sans dé ». La nuit du 08/09 jouera v55 : cible sans jet ≤ 25 %,
+  climax au dé, une éclatante, intégrité sous 7.
