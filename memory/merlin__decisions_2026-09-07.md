@@ -21,3 +21,15 @@
 - J'adapte l'orchestrateur à gemma e4b, j'écris le convertisseur GGUF et le chargement natif, je
   laisse un carnet prêt. Maxime pose le jeton quand le corpus est assez gros. Jamais de jeton dans
   le dépôt.
+
+## v55.1 (le soir) : ce que la relecture a change
+- Liste blanche des types de beat pour le geste sûr, et « Le créancier revient » entre dans la
+  table des natures. Sans ça, la réclamation de Promesse était le seul beat sans dé de la quête.
+- `tools/scenarios/regles.py` : le seuil de l'éclatante et les deux planchers durs se lisent dans
+  le moteur. Cinq copies supprimées, dont celle qui tourne chaque nuit.
+- La monotonie de la couverture est vraie en MARGE, mais hors Épreuve et hors Climax couvrir le
+  second tag peut remplacer une éclatante possible (faces 11-12) par une réussite certaine. C'est
+  le prix de la certitude, choisi le 07/09. Nommé dans le code, à trancher si Maxime change d'avis.
+- Le bot de la nuit reste un oracle (il lit le dé pré-tiré) : la relecture a mesuré qu'il est
+  inerte sous v55, et l'aveugler seul dégraderait sa couverture. À faire avec le critère de choix,
+  d'un seul tenant, puis remesurer.
