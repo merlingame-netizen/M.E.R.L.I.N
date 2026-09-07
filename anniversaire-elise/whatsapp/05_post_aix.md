@@ -97,7 +97,8 @@ Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
 
 📅 Samedi 10 octobre à partir de midi → dimanche 11 en milieu d'après-midi
 🏡 Chez nous, à Aix-en-Provence
-🛏️ Lits, canapés et matelas d'appoint — dites-nous s'il vous en faut un
+🛏️ Lits, canapés et matelas d'appoint — on a de quoi loger tout le monde,
+   n'y pensez pas
 
 🎁 LE JOUR J, ON NE VOUS DEMANDERA RIEN.
 Ni pour les repas, ni pour l'escape game, ni pour rien : tout est réglé d'avance.
@@ -111,7 +112,7 @@ référence du virement.
 
 👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
 
-Trois choses, dans l'ordre :
+Quatre choses, dans l'ordre :
 1️⃣ Vous dites juste oui ou non
 2️⃣ Vous dites comment, quel jour et à quelle heure vous arrivez, si on
     vient vous chercher à la gare, et quand vous repartez. Pas besoin de
@@ -191,11 +192,11 @@ Le programme complet est toujours sur VOTRE-URL-ICI
 ```
 🎒 DEMAIN !
 
-📍 [ADRESSE] — on vous attend à partir de 14h30.
+📍 [ADRESSE] — on vous attend à partir de midi, déjeuner à 12h30.
 🚆 Ceux qui arrivent en train : je serai à la gare aux heures convenues.
 
 Dans le sac : trousse de toilette, une serviette si vous en avez une facile
-à emporter, des chaussures pour marcher si vous avez voté la Sainte-Victoire,
+à emporter, des chaussures pour marcher si vous avez voté une balade dimanche,
 et une petite laine — il fera 12 °C le soir.
 
 Rien d'autre. Vraiment.

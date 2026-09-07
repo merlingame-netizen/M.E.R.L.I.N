@@ -23,3 +23,7 @@ whatsapp/messages_prets.md
 # Page publiable fabriquee par site/build_public.py : elle porte l'IBAN en
 # clair et 1,8 Mo de photos encodees. Elle se refabrique en une commande.
 site/public.build.html
+
+# Kit WhatsApp genere : il ne porte ni URL ni adresse, mais il se refabrique
+# en une commande, il n'a pas a vivre dans le depot.
+whatsapp/kit.html
