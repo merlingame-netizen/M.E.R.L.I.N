@@ -135,7 +135,7 @@ Deux branches, soumises au vote sur la page :
 | **Bar à jeux**, 22h30 | La grande table débarrassée, couverte de jeux : Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Sortir aussi de quoi noter les scores |
 | **Blind test des 30 ans**, 23h | Trente titres, un par année d'Elise. À préparer en playlist avant le jour J |
 
-### Samedi 14h30 — mölkky et pétanque
+### Samedi 15h — mölkky et pétanque
 
 **Boulodrome du parc Jourdan**, avenue Anatole France, 13100 Aix-en-Provence.
 2 540 m² de terrain stabilisé sous les platanes, **en accès libre et sans

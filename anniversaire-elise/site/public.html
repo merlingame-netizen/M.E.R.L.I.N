@@ -232,6 +232,7 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 .feuille .lieu{font-family:var(--display);font-size:1.22rem;font-weight:600;color:#fff;
   margin:0 0 .6rem;line-height:1.25}
 .feuille .conseil{font-size:.89rem;line-height:1.55;color:#d6e4ee;margin:0 0 1rem}
+.feuille .repli-et{margin:1rem 0 .45rem;color:#b9d2e4}
 .feuille .creneau{font-size:.87rem;font-weight:600;color:#fff;margin:0 0 .5rem;
   padding-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.22)}
 .deux-cartes{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
@@ -240,6 +241,18 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 .bt.itin:hover{background:#fff}
 .bt.itin.plans{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
 .bt.itin.plans:hover{background:rgba(255,255,255,.14)}
+
+.cloture{background:var(--pin);color:#e6eee2;padding:1.3rem 1.3rem 1.4rem;margin:2.6rem 0 1rem}
+.cloture .et{font-size:.61rem;font-weight:700;letter-spacing:.19em;text-transform:uppercase;
+  color:#bcd0b4;margin:0 0 .45rem}
+.cloture .dit{font-size:.93rem;line-height:1.55;margin:0 0 1rem;color:#dae4d5}
+.cloture .bt{width:100%;background:var(--blanc);color:var(--encre)}
+.cloture .bt:hover:not([disabled]){background:#fff}
+.cloture .bt[disabled]{background:rgba(255,255,255,.22);color:#cbd8c5;cursor:not-allowed}
+.cloture .reste{background:rgba(255,255,255,.12);border-left-color:var(--roche);
+  margin:0 0 1rem}
+.cloture .reste .et{color:var(--roche)}
+.cloture .reste ul{color:#dae4d5}
 
 .reste{background:#f9ede8;border-left:3px solid var(--terre);padding:.85rem 1rem;
   margin-top:1.4rem}
@@ -414,11 +427,11 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
 <div class="legende"><div class="col">
   <p class="quand">Samedi 10 &amp; dimanche 11 octobre 2026</p>
-  <p class="ou">Chez nous, à Aix-en-Provence, à partir de midi.</p>
+  <p class="ou">Chez nous, à Aix-en-Provence, à partir de 14h.</p>
   <div class="jauge">
     <div><b id="j-jours">—</b><span>jours</span></div>
     <div><b id="j-rep">19 sept.</b><span>réponse avant</span></div>
-    <div><b>12h</b><span>samedi, on démarre</span></div>
+    <div><b>14h</b><span>samedi, on démarre</span></div>
   </div>
 </div></div>
 
@@ -436,7 +449,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <!-- 1 -->
   <section id="e1">
     <h2>Tu viens&nbsp;?</h2>
-    <p class="chapo">Samedi 10 octobre à partir de midi, dimanche 11 jusqu'au milieu
+    <p class="chapo">Samedi 10 octobre à partir de 14h, dimanche 11 jusqu'au milieu
       de l'après-midi. Viens pour tout, ou pour ce que tu peux&nbsp;: le programme complet
       est dans l'onglet <em>Le week-end</em>.</p>
     <div class="choix">
@@ -491,13 +504,21 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       </div>
 
       <div class="feuille" id="itineraire" hidden>
-        <p class="et"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg> L'adresse</p>
-        <p class="lieu">__ADRESSE__</p>
+        <p class="et"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg> <span id="et-ou">Où nous rejoindre</span></p>
+        <p class="lieu" id="lieu-maison">__ADRESSE__</p>
+        <p class="lieu" id="lieu-dest" hidden></p>
         <p class="creneau" id="creneau"></p>
         <p class="conseil" id="conseil"></p>
         <div class="deux-cartes">
           <a class="bt itin" id="lien-gmaps" href="#" target="_blank" rel="noopener">Google&nbsp;Maps</a>
           <a class="bt itin plans" id="lien-plans" href="#" target="_blank" rel="noopener">Plans</a>
+        </div>
+        <div id="repli" hidden>
+          <p class="et repli-et">Ou directement à la maison</p>
+          <div class="deux-cartes">
+            <a class="bt itin" id="maison-gmaps" href="#" target="_blank" rel="noopener">Google&nbsp;Maps</a>
+            <a class="bt itin plans" id="maison-plans" href="#" target="_blank" rel="noopener">Plans</a>
+          </div>
         </div>
       </div>
 
@@ -542,7 +563,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <dt>Présence</dt><dd class="vide" id="f-rsvp">—</dd>
       <dt id="l-venue">Arrivée</dt><dd class="vide" id="f-venue">—</dd>
       <dt id="l-dep">Départ</dt><dd class="vide" id="f-dep">—</dd>
-      <dt id="l-midi">Samedi midi</dt><dd class="vide" id="f-midi">—</dd>
       <dt id="l-escape">Escape game</dt><dd class="vide" id="f-escape">—</dd>
       <dt id="l-soiree">Samedi soir</dt><dd class="vide" id="f-soiree">—</dd>
       <dt id="l-salle">Salle d'escape</dt><dd class="vide" id="f-salle">—</dd>
@@ -569,28 +589,16 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 <!-- ═══ LE WEEK-END ═══ -->
 <div id="v-we" role="tabpanel" aria-labelledby="o-we" class="cache"><main><div class="col">
   <p class="oeil">Le déroulé</p>
-  <h2>De samedi midi à dimanche après-midi</h2>
+  <h2>De samedi après-midi à dimanche après-midi</h2>
   <p class="chapo">Deux moments sont soumis au vote&nbsp;: l'escape game de 17h et la suite
     de la soirée. Ça se règle à l'étape&nbsp;2 de ta réponse.</p>
 
   <p class="jour"><small>Samedi 10 octobre</small>Le jour</p>
 
-  <div class="heure"><time>12h00</time><div><b><svg class="picto" aria-hidden="true"><use href="#i-assiette"></use></svg> Le déjeuner</b><small>Pour celles et ceux qui sont déjà là. Les autres nous rejoignent dans l'après-midi</small></div></div>
-  <div class="urne">
-    <p class="demande">Tu es là à midi&nbsp;?</p>
-    <p class="glose">On mange à midi. Ça ne conditionne rien d'autre que les quantités.</p>
-<div class="choix">
-      <label class="opt"><input type="radio" name="midi" value="Je serai là pour le déjeuner">
-        <span><b>J'y serai</b><em>À table à midi</em></span></label>
-      <label class="opt"><input type="radio" name="midi" value="J'arrive dans l'après-midi">
-        <span><b>J'arrive après</b><em>Je vous rejoins dans l'après-midi</em></span></label>
-      <label class="opt"><input type="radio" name="midi" value="Je ne sais pas encore">
-        <span><b>Je ne sais pas encore</b><em>Ça dépend de mon train</em></span></label>
-    </div>
-  </div>
+  <div class="heure"><time>14h00</time><div><b><svg class="picto" aria-hidden="true"><use href="#i-cafe"></use></svg> L'accueil</b><small>On vous attend à la maison à partir de 14h. Café, on pose les sacs, on se retrouve. Mangez avant d'arriver&nbsp;: le premier repas est celui du soir</small></div></div>
 
 
-  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-quilles"></use></svg><span>14h30</span>Mölkky et pétanque</p>
+  <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-quilles"></use></svg><span>15h00</span>Mölkky et pétanque</p>
   <div class="duo">
     <figure class="vue">
       <img src="photos/molkky.jpg" alt="Partie de mölkky en extérieur, quilles de bois numérotées dressées au sol" width="640" height="427">
@@ -656,7 +664,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     </figure>
     <figure class="vue">
       <img src="photos/apero.jpg" alt="Assiette d'apéritif : fromages, fruits et pain dressés sur une table" width="640" height="427">
-      <figcaption><b>À la maison</b><small>Apéro dînatoire servi en continu par le traiteur. C'est le repas du soir, et on est déjà chez nous pour la suite</small></figcaption>
+      <figcaption><b>À la maison</b><small>Apéro dînatoire servi en continu par le traiteur. C'est le repas du soir — et le premier de la journée, alors mange avant d'arriver</small></figcaption>
     </figure>
   </div>
   <div class="urne">
@@ -672,6 +680,17 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     </div>
   </div>
 
+
+  <div class="urne">
+    <p class="demande"><svg class="picto" aria-hidden="true"><use href="#i-assiette"></use></svg> Ce que tu ne manges pas</p>
+    <p class="glose">Deux repas se prennent à la maison&nbsp;: l'apéro dînatoire de samedi soir
+      et le brunch de dimanche. Le traiteur s'adapte, mais il faut le lui dire avant — une fois
+      les plateaux montés, il est trop tard.</p>
+    <div class="champ" id="c-allergies">
+      <label for="allergies">Allergies, régime, ce que tu évites</label>
+      <input type="text" id="allergies" placeholder="Fruits à coque, gluten, lactose, végétarien, sans alcool…">
+    </div>
+  </div>
 
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-gateau"></use></svg><span>22h00</span>Le gâteau, trente bougies</p>
   <figure class="vue large">
@@ -710,10 +729,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
         <span><b>Surprends-nous</b><em>Je fais confiance au pâtissier</em></span></label>
     </div>
 
-    <div class="champ" id="c-allergies">
-      <label for="allergies">Une allergie, un régime, quelque chose qu'on doit savoir&nbsp;?</label>
-      <input type="text" id="allergies" placeholder="Fruits à coque, gluten, lactose, sans alcool…">
-    </div>
   </div>
 
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg><span>22h30</span>La soirée jeux de société</p>
@@ -733,7 +748,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-cafe"></use></svg><span>11h00</span>Le brunch</p>
   <figure class="vue large">
     <img src="photos/brunch.jpg" alt="Une table de brunch : viennoiseries, fruits frais et gaufres" width="640" height="427">
-    <figcaption><b>À la maison</b><small>Salé, sucré, du café en quantité. Il n'y a pas d'heure de fin</small></figcaption>
+    <figcaption><b>À la maison</b><small>Salé, sucré, du café en quantité. Il n'y a pas d'heure de fin. Les allergies indiquées plus haut valent aussi pour ce repas</small></figcaption>
   </figure>
 
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-montagne"></use></svg><span>ensuite</span>Activité libre, selon les départs</p>
@@ -778,6 +793,16 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <label for="idee">Une autre idée&nbsp;?</label>
       <input type="text" id="idee" placeholder="Karaoké, atelier cocktail, autre chose">
     </div>
+  </div>
+
+  <div class="cloture" id="cloture">
+    <p class="et">Quand tu as tout coché</p>
+    <p class="dit" id="cloture-dit"></p>
+    <div class="reste" id="reste-we" hidden>
+      <p class="et">Il reste à voter</p>
+      <ul id="manques-we"></ul>
+    </div>
+    <button class="bt" id="v-we-fin" disabled>Valider mes choix</button>
   </div>
 
 </div></main></div>
@@ -831,7 +856,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   </div>
 
   <h2 style="margin-top:2.4rem">Questions</h2>
-  <details><summary>À quelle heure faut-il arriver&nbsp;?</summary><p>Le samedi à partir de midi. Le déjeuner est à 12h30, et on part au parc vers 14h15. Si ton train arrive plus tard, ce n'est pas un problème&nbsp;: indique ton horaire et rejoins-nous au parc, l'adresse est sur la page.</p></details>
+  <details><summary>À quelle heure faut-il arriver&nbsp;?</summary><p>À partir de 14h, à la maison. Mange avant d'arriver&nbsp;: le premier repas est celui du soir. On part au parc vers 14h45, alors si ton train arrive plus tard, indique ton horaire&nbsp;: la page te donnera l'itinéraire vers le bon endroit, le parc ou la maison selon l'heure.</p></details>
   <details><summary>C'est quoi, le bar à jeux&nbsp;?</summary><p>La grande table de la maison, débarrassée et couverte de jeux de société pour la soirée&nbsp;: Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Si tu as un jeu auquel tu tiens, apporte-le.</p></details>
   <details><summary>Et mon train&nbsp;?</summary><p>Réserve tôt, les rames d'octobre se remplissent vite. Indique ton horaire dans ta réponse&nbsp;: ça nous sert à caler les repas, pas à venir te chercher — tu as l'itinéraire et l'adresse dès que tu as dit comment tu arrives.</p></details>
   <details><summary>Où est-ce que je dors&nbsp;?</summary><p>Chez nous. Lits, canapés et matelas d'appoint&nbsp;: on a de quoi loger tout le monde, tu n'as rien à demander ni à apporter. Une trousse de toilette et une serviette suffisent.</p></details>
@@ -889,7 +914,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   var $ = function(id){ return document.getElementById(id); };
 
   /* ── Jours restants jusqu'au samedi 10 octobre 2026, 13 h 30 (CEST) ── */
-  var reste = Math.ceil((new Date("2026-10-10T12:00:00+02:00") - Date.now()) / 86400000);
+  var reste = Math.ceil((new Date("2026-10-10T14:00:00+02:00") - Date.now()) / 86400000);
   if (reste < 0) reste = 0;
 
   /* ── Mémoire locale : peut lever en navigation privée ── */
@@ -954,6 +979,13 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   $("vers-cag").addEventListener("click", function(){ ouvrir($("o-prat")); });
   $("vers-we").addEventListener("click", function(){ ouvrir($("o-we")); });
 
+  /* Depuis le week-end, on revient à sa réponse pour la relire. */
+  $("v-we-fin").addEventListener("click", function(){
+    if ($("v-we-fin").disabled) return;
+    ouvrir($("o-rep"));
+    if (!$("v1").disabled) marche(2);
+  });
+
   /* ── Entonnoir ── */
   var TITRES = ["Ta réponse", "Vérifie, puis envoie"];
 
@@ -991,6 +1023,38 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       dit: "Tu connais la ville mieux que le lien ci-dessous, mais il est là si besoin."
     }
   };
+  /* Le groupe ne reste pas à la maison de la journée. Selon l'heure annoncée,
+     la destination utile n'est pas la même — et on propose toujours la maison
+     en second, parce qu'un train a du retard et qu'un plan B vaut mieux qu'un
+     rendez-vous manqué. */
+  var ETAPES = [
+    { jour: "Samedi", de: "14:00", a: "14:45", ou: null,
+      dit: "On sera à la maison, c'est l'accueil." },
+    { jour: "Samedi", de: "14:45", a: "16:15",
+      ou: "Boulodrome du Parc Jourdan, Avenue Anatole France, 13100 Aix-en-Provence",
+      nom: "Parc Jourdan (mölkky et pétanque)",
+      dit: "À cette heure-là on sera au parc Jourdan, pas à la maison. Rejoins-nous "
+         + "directement là-bas, c'est en ville." },
+    { jour: "Samedi", de: "16:15", a: "18:45",
+      ou: "Move To Aixit, 378 Rue Bastide de Verdaches, 13290 Aix-en-Provence",
+      nom: "Move To Aixit, aux Milles (escape game)",
+      dit: "À cette heure-là on sera à l'escape game, aux Milles. Préviens-nous : "
+         + "quelqu'un peut passer te prendre au passage." },
+    { jour: "Dimanche", de: "08:00", a: "10:30",
+      ou: "Place Richelme, 13100 Aix-en-Provence",
+      nom: "Marché, place Richelme",
+      dit: "Les lève-tôt seront au marché de la place Richelme avant le brunch." }
+  ];
+
+  function etape(jour, heure){
+    if (!jour || !heure) return null;
+    for (var i = 0; i < ETAPES.length; i++){
+      var e = ETAPES[i];
+      if (e.jour === jour && heure >= e.de && heure < e.a) return e;
+    }
+    return null;
+  }
+
   var BUS = " Pour les bus d'Aix : 1,20 € le trajet en payant sans contact directement "
           + "sur le valideur (Visa ou Mastercard, pas d'Amex), 1,30 € en espèces auprès "
           + "du conducteur. Prends de quoi payer, il n'y a pas de guichet partout.";
@@ -1004,7 +1068,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
              venue: une("venue"),
              jarr: une("jarr"), harr: $("h-arr").value, num: $("num-arr").value.trim(),
              jdep: une("jdep"), hdep: $("h-dep").value,
-             midi: une("midi"), escape: une("escape"),
+             escape: une("escape"),
              soiree: une("soiree"), salle: une("salle"),
              gateau1: une("gateau1"), gateau2: une("gateau2"),
              allergies: $("allergies").value.trim(),
@@ -1047,7 +1111,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
              .filter(Boolean).join(" "));
     if (s.jdep || s.hdep)
       L.push("Je repars : " + [s.jdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
-    if (s.midi) L.push("Déjeuner de samedi : " + s.midi);
     if (s.escape) L.push("Escape game de 17h : " + s.escape);
     if (s.soiree) L.push("Soirée de samedi : " + s.soiree);
     if (s.salle) L.push("Salle d'escape : " + s.salle);
@@ -1073,19 +1136,37 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       if (!s.venue) manques.push("comment tu arrives");
       if (!s.jarr)  manques.push("le jour de ton arrivée");
       if (!s.jdep)  manques.push("quand tu repars");
-      var votes = [];
-      if (!s.midi)   votes.push("le déjeuner de samedi");
-      if (!s.escape) votes.push("l'escape game");
+    }
+
+    /* Les votes du week-end se comptent à part : ils se remplissent dans
+       l'autre onglet, et c'est là que se trouve leur bouton. */
+    var votes = [];
+    if (present()){
+      if (!s.escape) votes.push("l'escape game de 17h");
+      if (!s.salle)  votes.push("la salle qui te tente");
       if (!s.soiree) votes.push("la soirée de samedi");
-      if (!s.gateau1 || !s.gateau2) votes.push("les deux gâteaux");
-      if (votes.length)
-        manques.push("dans l'onglet Le week-end : " + votes.join(", "));
+      if (!s.gateau1) votes.push("le premier gâteau");
+      if (!s.gateau2) votes.push("le second gâteau");
+    }
+    if (votes.length) manques.push("les votes de l'onglet Le week-end");
+
+    function lister(ou, quoi){
+      $(ou).innerHTML = quoi.map(function(m){
+        return "<li>" + m.replace(/[&<>]/g, "") + "</li>";
+      }).join("");
     }
     $("v1").disabled = manques.length > 0;
     $("reste").hidden = !(s.rsvp && manques.length);
-    $("manques").innerHTML = manques.map(function(m){
-      return "<li>" + m.replace(/[&<>]/g, "") + "</li>";
-    }).join("");
+    lister("manques", manques);
+
+    var prets = present() && !votes.length;
+    $("v-we-fin").disabled = !prets;
+    $("reste-we").hidden = !(present() && votes.length);
+    lister("manques-we", votes);
+    $("cloture-dit").textContent = !present()
+      ? "Tu as dit que tu ne pouvais pas venir — il n'y a rien à voter ici."
+      : (prets ? "Tout est coché. Le bouton te ramène à ta réponse pour la relire."
+               : "Coche ce qui manque ci-dessous, puis reviens ici.");
     $("cpt-act").textContent = s.act.length + (s.act.length > 1 ? " choisis" : " choisi");
 
     var sej = sejour(s);
@@ -1107,38 +1188,54 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     var pret = present() && !!t && !!s.jarr;
     $("itineraire").hidden = !pret;
     if (pret){
-      var dest = $("itineraire").querySelector(".lieu").textContent.trim();
+      var maison = $("lieu-maison").textContent.trim();
+      var e = etape(s.jarr, s.harr);
+      var dest = (e && e.ou) ? e.ou : maison;
+
+      /* Quand le groupe n'est pas à la maison, la carte annonce l'endroit du
+         moment en gros, et garde la maison en repli juste dessous. */
+      $("lieu-dest").hidden = !(e && e.ou);
+      $("lieu-maison").hidden = !!(e && e.ou);
+      if (e && e.ou) $("lieu-dest").textContent = e.nom;
+      $("repli").hidden = !(e && e.ou);
+
       $("creneau").textContent = "Pour une arrivée " + s.jarr.toLowerCase()
         + (s.harr ? " à " + s.harr.replace(":", "h") : "")
         + (s.num ? ", " + s.num : "");
-      $("conseil").textContent = t.dit + (t.mode === "transit" ? BUS : "")
+      $("conseil").textContent = (e ? e.dit + " " : "") + t.dit
+        + (t.mode === "transit" ? BUS : "")
         + " Dans l'application, cale la date sur le "
         + (s.jarr === "Dimanche" ? "11" : "10") + " octobre"
         + (s.harr ? " et l'heure sur " + s.harr.replace(":", "h") : "")
         + " : par défaut, elle calcule pour aujourd'hui.";
 
-      $("lien-gmaps").href = "https://www.google.com/maps/dir/?api=1"
-        + (t.de ? "&origin=" + encodeURIComponent(t.de) : "")
-        + "&destination=" + encodeURIComponent(dest)
-        + "&travelmode=" + t.mode;
-      /* Plans (iOS, macOS) : saddr/daddr, et dirflg r pour les transports. */
-      $("lien-plans").href = "https://maps.apple.com/?"
-        + (t.de ? "saddr=" + encodeURIComponent(t.de) + "&" : "")
-        + "daddr=" + encodeURIComponent(dest)
-        + "&dirflg=" + (t.mode === "transit" ? "r" : "d");
+      function gmaps(vers){
+        return "https://www.google.com/maps/dir/?api=1"
+          + (t.de ? "&origin=" + encodeURIComponent(t.de) : "")
+          + "&destination=" + encodeURIComponent(vers) + "&travelmode=" + t.mode;
+      }
+      function plans(vers){
+        return "https://maps.apple.com/?"
+          + (t.de ? "saddr=" + encodeURIComponent(t.de) + "&" : "")
+          + "daddr=" + encodeURIComponent(vers)
+          + "&dirflg=" + (t.mode === "transit" ? "r" : "d");
+      }
+      $("lien-gmaps").href = gmaps(dest);
+      $("lien-plans").href = plans(dest);
+      $("maison-gmaps").href = gmaps(maison);
+      $("maison-plans").href = plans(maison);
     }
 
     var arr = [s.jarr, s.harr && "à " + s.harr, s.num && "(" + s.num + ")"].filter(Boolean).join(" ");
     pose("f-venue", [s.venue, arr].filter(Boolean).join(" — "));
     pose("f-dep", [s.jdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
-    pose("f-midi", s.midi);
     pose("f-escape", s.escape);
     pose("f-soiree", s.soiree);
     pose("f-salle", s.salle);
     pose("f-gateaux", [s.gateau1, s.gateau2].filter(Boolean).join(" + ")
                       + (s.allergies ? " — " + s.allergies : ""));
     pose("f-act", s.act.concat(s.idee ? ["« " + s.idee + " »"] : []).join(" · "));
-    ["venue","dep","midi","escape","salle","soiree","gateaux","act"].forEach(function(k){
+    ["venue","dep","escape","salle","soiree","gateaux","act"].forEach(function(k){
       $("l-" + k).classList.toggle("cache", !present());
       $("f-" + k).classList.toggle("cache", !present());
     });
@@ -1188,7 +1285,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   if (s.allergies) $("allergies").value = s.allergies;
   if (s.hdep) $("h-dep").value = s.hdep;
   if (s.idee) $("idee").value = s.idee;
-  ["rsvp","venue","jarr","jdep","midi","escape","soiree","gateau1","gateau2","salle"].forEach(function(n){
+  ["rsvp","venue","jarr","jdep","escape","soiree","gateau1","gateau2","salle"].forEach(function(n){
     if (!s[n]) return;
     var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
     if (e) e.checked = true;

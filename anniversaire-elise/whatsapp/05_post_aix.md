@@ -94,7 +94,7 @@ Salut tout le monde 👋
 
 Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
 
-📅 Samedi 10 octobre à partir de midi → dimanche 11 en milieu d'après-midi
+📅 Samedi 10 octobre à partir de 14h → dimanche 11 en milieu d'après-midi
 🏡 Chez nous, à Aix-en-Provence
 🛏️ Lits, canapés et matelas d'appoint — on a de quoi loger tout le monde,
    n'y pensez pas
@@ -106,11 +106,12 @@ sur la page. Et n'écrivez rien de précis ici : elle circule.
 
 Quatre choses, dans l'ordre :
 1️⃣ Vous dites juste oui ou non
-2️⃣ Vous dites d'où et QUAND vous arrivez. L'ADRESSE ET L'ITINÉRAIRE
-    S'AFFICHENT ALORS, avec deux boutons : Google Maps et Plans. Pensez
-    à caler la date du 10 octobre dans l'appli, elle calcule pour
-    aujourd'hui par défaut. Puis votre horaire de départ. Le couchage,
-    n'y pensez pas : on a de quoi loger tout le monde.
+2️⃣ Vous dites d'où et QUAND vous arrivez. L'ITINÉRAIRE S'AFFICHE ALORS,
+    VERS L'ENDROIT OÙ ON SERA À CETTE HEURE-LÀ — la maison, le parc ou
+    l'escape game — avec la maison en second choix. Deux boutons :
+    Google Maps et Plans. Pensez à caler la date du 10 octobre dans
+    l'appli, elle calcule pour aujourd'hui par défaut. Le couchage, n'y
+    pensez pas : on a de quoi loger tout le monde.
 3️⃣ Vous votez dans l'onglet « Le week-end », chaque vote est sous la
     photo de ce qu'il décide
 4️⃣ Vous relisez. La page garde tout — vous pouvez revenir corriger
@@ -118,8 +119,9 @@ Quatre choses, dans l'ordre :
 🎲 LE PROGRAMME, EN PHOTOS SUR LA PAGE (onglet « Le week-end ») :
 
 SAMEDI
-12h — déjeuner, pour ceux qui sont déjà là
-14h30 — mölkky et pétanque au PARC JOURDAN (av. Anatole France, accès
+14h — accueil à la maison. MANGEZ AVANT D'ARRIVER : le premier repas
+       est celui du soir.
+15h — mölkky et pétanque au PARC JOURDAN (av. Anatole France, accès
        libre). On y va en bus tous ensemble.
 17h — ESCAPE GAME chez Move To Aixit, quatre salles en parallèle :
        Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN.
@@ -128,8 +130,10 @@ SAMEDI
 19h — AU VOTE : soit on reste sur place, au bar à jeux (300 jeux,
        planches et tapas jusqu'à 22h), soit on rentre pour l'apéro dînatoire.
 22h — LES GÂTEAUX : il y en aura deux, et c'est vous qui choisissez les
-       parfums. Cinq propositions par gâteau sur la page, plus un champ
-       pour vos allergies.
+       parfums. Cinq propositions par gâteau sur la page.
+       ⚠️ ALLERGIES ET RÉGIMES : un champ leur est réservé. Les deux repas
+       à la maison — apéro dînatoire et brunch — s'y adaptent, mais il faut
+       le dire avant que le traiteur monte les plateaux.
 22h30 — soirée jeux de société et animations. Rien à voter, c'est réservé —
        mais si vous avez une idée, le champ libre est là pour ça.
 
@@ -193,7 +197,7 @@ Le programme complet est toujours sur VOTRE-URL-ICI
 ```
 🎒 DEMAIN !
 
-📍 [ADRESSE] — on vous attend à partir de midi, déjeuner à 12h30.
+📍 [ADRESSE] — on vous attend à partir de 14h.
 🚌 L'itinéraire est sur la page, dans votre réponse. Pensez à la carte sans
    contact pour le bus.
 
