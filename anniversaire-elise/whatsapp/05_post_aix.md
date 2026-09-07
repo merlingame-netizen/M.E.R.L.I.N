@@ -114,10 +114,11 @@ référence du virement.
 
 Quatre choses, dans l'ordre :
 1️⃣ Vous dites juste oui ou non
-2️⃣ Vous choisissez comment vous arrivez : L'ADRESSE ET L'ITINÉRAIRE
-    S'AFFICHENT AUSSITÔT, avec le bon point de départ. Puis vos horaires
-    d'arrivée et de départ. Le couchage, n'y pensez pas : on a de quoi
-    loger tout le monde.
+2️⃣ Vous dites d'où et QUAND vous arrivez. L'ADRESSE ET L'ITINÉRAIRE
+    S'AFFICHENT ALORS, avec deux boutons : Google Maps et Plans. Pensez
+    à caler la date du 10 octobre dans l'appli, elle calcule pour
+    aujourd'hui par défaut. Puis votre horaire de départ. Le couchage,
+    n'y pensez pas : on a de quoi loger tout le monde.
 3️⃣ Vous votez dans l'onglet « Le week-end », chaque vote est sous la
     photo de ce qu'il décide
 4️⃣ Vous relisez, et vous m'envoyez tout d'un tap

@@ -232,9 +232,14 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 .feuille .lieu{font-family:var(--display);font-size:1.22rem;font-weight:600;color:#fff;
   margin:0 0 .6rem;line-height:1.25}
 .feuille .conseil{font-size:.89rem;line-height:1.55;color:#d6e4ee;margin:0 0 1rem}
-.bt.itin{background:var(--blanc);color:var(--encre);flex:none;display:inline-flex;
-  min-height:48px;padding:.85rem 1.2rem}
+.feuille .creneau{font-size:.87rem;font-weight:600;color:#fff;margin:0 0 .5rem;
+  padding-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.22)}
+.deux-cartes{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.bt.itin{background:var(--blanc);color:var(--encre);min-height:48px;padding:.85rem .9rem;
+  font-size:.72rem}
 .bt.itin:hover{background:#fff}
+.bt.itin.plans{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
+.bt.itin.plans:hover{background:rgba(255,255,255,.14)}
 
 /* ══ URNES : un vote posé dans le récit, qui ne s'y confond pas ══ */
 .urne{background:var(--blanc);border:1px solid var(--craie-3);border-left:3px solid var(--terre);
@@ -445,7 +450,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <!-- Le voyage, déplié seulement si la réponse est oui -->
     <div class="volet" id="voyage" hidden>
       <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-train"></use></svg> Comment tu arrives</p>
-      <p class="glose">Choisis, et l'itinéraire jusqu'à la maison apparaît en dessous.</p>
+      <p class="glose">Dis d'où et quand tu arrives&nbsp;: l'itinéraire jusqu'à la maison
+        se construit juste après, avec le bon point de départ.</p>
       <div class="choix">
         <label class="opt"><input type="radio" name="venue" value="Train, gare d'Aix TGV">
           <span><span class="note">18 km</span><b>Train — Aix-en-Provence TGV</b><em>Paris 2 h 55, Lyon 1 h 07. En rase campagne, hors de la ville</em></span></label>
@@ -461,13 +467,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
           <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
       </div>
 
-      <div class="feuille" id="itineraire" hidden>
-        <p class="et"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg> L'adresse</p>
-        <p class="lieu">__ADRESSE__</p>
-        <p class="conseil" id="conseil"></p>
-        <a class="bt itin" id="lien-itin" href="#" target="_blank" rel="noopener">Ouvrir l'itinéraire</a>
-      </div>
-
       <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton arrivée</p>
       <div class="pilules" role="group" aria-label="Jour d'arrivée">
         <label><input type="radio" name="jarr" value="Samedi"><span>Samedi</span></label>
@@ -481,6 +480,17 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
         <div class="champ">
           <label for="num-arr">Numéro du train, si tu l'as</label>
           <input type="text" id="num-arr" placeholder="TGV 6173">
+        </div>
+      </div>
+
+      <div class="feuille" id="itineraire" hidden>
+        <p class="et"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg> L'adresse</p>
+        <p class="lieu">__ADRESSE__</p>
+        <p class="creneau" id="creneau"></p>
+        <p class="conseil" id="conseil"></p>
+        <div class="deux-cartes">
+          <a class="bt itin" id="lien-gmaps" href="#" target="_blank" rel="noopener">Google&nbsp;Maps</a>
+          <a class="bt itin plans" id="lien-plans" href="#" target="_blank" rel="noopener">Plans</a>
         </div>
       </div>
 
@@ -1056,17 +1066,33 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     /* Le voyage ne se déplie qu'après un oui, et l'itinéraire qu'après un
        moyen de transport : chaque réponse ouvre la suivante. */
     $("voyage").hidden = !present();
+
+    /* L'itinéraire n'apparaît qu'une fois le point de départ ET le moment
+       connus : une feuille de route sans heure ne sert à personne, et les
+       deux applications calculent « pour maintenant » par défaut. */
     var t = TRAJETS[s.venue];
-    $("itineraire").hidden = !(present() && t);
-    if (t){
-      $("conseil").textContent = t.dit + (t.mode === "transit" ? BUS : "");
+    var pret = present() && !!t && !!s.jarr;
+    $("itineraire").hidden = !pret;
+    if (pret){
       var dest = $("itineraire").querySelector(".lieu").textContent.trim();
-      $("lien-itin").href = "https://www.google.com/maps/dir/?api=1"
+      $("creneau").textContent = "Pour une arrivée " + s.jarr.toLowerCase()
+        + (s.harr ? " à " + s.harr.replace(":", "h") : "")
+        + (s.num ? ", " + s.num : "");
+      $("conseil").textContent = t.dit + (t.mode === "transit" ? BUS : "")
+        + " Dans l'application, cale la date sur le "
+        + (s.jarr === "Dimanche" ? "11" : "10") + " octobre"
+        + (s.harr ? " et l'heure sur " + s.harr.replace(":", "h") : "")
+        + " : par défaut, elle calcule pour aujourd'hui.";
+
+      $("lien-gmaps").href = "https://www.google.com/maps/dir/?api=1"
         + (t.de ? "&origin=" + encodeURIComponent(t.de) : "")
         + "&destination=" + encodeURIComponent(dest)
         + "&travelmode=" + t.mode;
-      $("lien-itin").textContent = t.de ? "Ouvrir l'itinéraire depuis la gare"
-                                        : "Ouvrir l'adresse dans la carte";
+      /* Plans (iOS, macOS) : saddr/daddr, et dirflg r pour les transports. */
+      $("lien-plans").href = "https://maps.apple.com/?"
+        + (t.de ? "saddr=" + encodeURIComponent(t.de) + "&" : "")
+        + "daddr=" + encodeURIComponent(dest)
+        + "&dirflg=" + (t.mode === "transit" ? "r" : "d");
     }
 
     var arr = [s.jarr, s.harr && "à " + s.harr, s.num && "(" + s.num + ")"].filter(Boolean).join(" ");
