@@ -165,7 +165,8 @@ main{padding-block:2rem 4rem}
   <div class="grille">
     <div>
       <label for="url">Lien du site</label>
-      <input type="url" id="url" placeholder="https://…" autocomplete="off" spellcheck="false">
+      <input type="url" id="url" value="__URL_DEFAUT__" placeholder="https://…"
+             autocomplete="off" spellcheck="false">
     </div>
     <div>
       <label for="adresse">Adresse de la maison</label>
@@ -249,7 +250,7 @@ __BLOCS__
   }
 
   var memoire = lu();
-  if (memoire.url) $("url").value = memoire.url;
+  if (memoire.url) $("url").value = memoire.url;   /* un choix passé prime sur le défaut */
   if (memoire.adresse) $("adresse").value = memoire.adresse;
   $("url").addEventListener("input", rendre);
   $("adresse").addEventListener("input", rendre);
@@ -290,6 +291,8 @@ __BLOCS__
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("-o", "--sortie", default=str(HERE / "kit.html"))
+    ap.add_argument("--url", default="",
+                    help="lien de l'invitation, pré-rempli dans le champ")
     args = ap.parse_args()
 
     md = SOURCE.read_text(encoding="utf-8")
@@ -308,7 +311,8 @@ def main() -> None:
                               echappe(contenu))
         )
 
-    page = GABARIT.replace("__BLOCS__", "\n\n".join(morceaux))
+    page = (GABARIT.replace("__BLOCS__", "\n\n".join(morceaux))
+                   .replace("__URL_DEFAUT__", html.escape(args.url, quote=True)))
     pathlib.Path(args.sortie).write_text(page, encoding="utf-8")
     print("%s — %d blocs, %.0f Ko" % (args.sortie, len(morceaux), len(page.encode()) / 1024))
 
