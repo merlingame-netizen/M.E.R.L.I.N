@@ -47,6 +47,13 @@ import json, os, re, subprocess, sys
 nuits, nuit, journal, quete, dquete, rp, rq, reportee, verdict = sys.argv[1:10]
 ligne = {"nuit": nuit, "reportee": reportee == "oui", "partie": None, "quete": None,
          "resume_partie": rp, "resume_quete": rq}
+# LA VERSION DES REGLES DATE LA LIGNE. Sans elle, une nuit d'avant v55 (80 % de gestes sans de)
+# et une nuit d'apres se lisent sur la meme courbe comme si le jeu avait change tout seul.
+try:
+    ligne["jeu"] = subprocess.run(["git", "-C", os.environ.get("GAME_DIR", ""), "rev-parse", "--short", "HEAD"],
+                                  capture_output=True, text=True, timeout=20).stdout.strip() or None
+except Exception:
+    ligne["jeu"] = None
 if os.path.isfile(journal):
     try:
         out = subprocess.run([sys.executable, verdict, "--json", journal],

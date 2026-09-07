@@ -138,6 +138,10 @@ def main() -> int:
                   '{"nuit":"2026-09-07","partie":{"beats"\n'   # une ligne coupée en deux
                   '{"pas":"une nuit"}\n', encoding="utf-8")
     ns = chroniques.nuits(home=tmp)
+    # v55 : une nuit ANCIENNE n'a ni sans_jet_pct ni integrite_min. La courbe doit la garder
+    # comme un trou, pas la refuser — sinon l'historique disparaît le jour d'un changement de règle.
+    verifier("une nuit sans les mesures de v55 reste dans la courbe",
+             any("sans_jet_pct" not in (n.get("partie") or {}) for n in ns), str(ns)[:80])
     verifier("les lignes lisibles sont gardées, la coupée et l'étrangère sautées", len(ns) == 2, str(ns))
     verifier("la courbe est triée par nuit", [n["nuit"] for n in ns] == ["2026-09-05", "2026-09-06"])
 

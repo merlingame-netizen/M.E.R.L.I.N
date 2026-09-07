@@ -75,6 +75,15 @@ def mesures(d: dict) -> dict:
         return round(att[min(len(att) - 1, int(round((len(att) - 1) * p)))], 1) if att else None
 
     tenus, total, _ = _continuite(res)
+    # CE QUE v55 CHANGE, ET QUE LA LIGNE NE VOYAIT PAS (07/09). Le plafond des atouts se juge sur
+    # trois nombres qui n'etaient nulle part : combien de gestes echappent au de, combien
+    # d'eclatantes, et jusqu'ou l'integrite est descendue. Sans eux, une nuit d'avant et une nuit
+    # d'apres se ressemblent. `regles` date la ligne : on ne compare pas deux regles differentes.
+    surs = sum(1 for b in res if b.get("geste_sur"))
+    couv = [int((b.get("choix_du_bot") or {}).get("couverture", 0))
+            for b in res if b.get("choix_du_bot")]
+    integ = [int(b["integrite_apres"]) for b in res if b.get("integrite_apres") is not None]
+    climax = [b for b in res if str(b.get("type")) == "Climax"]
     return {
         "beats": len(bs), "resolus": len(res),
         "banc": len(sec | prov), "banc_scenes": len(prov), "banc_issues": len(sec),
@@ -87,6 +96,13 @@ def mesures(d: dict) -> dict:
         "continuite": [tenus, total],
         "beats_joues": joues or None, "trous": trous, "sans_index": len(res) - len(idx),
         "incomplet": bool(trous or (joues and joues != len(idx)) or len(res) != len(idx)),
+        "gestes_surs": surs,
+        "sans_jet_pct": round(100.0 * surs / len(res)) if res else None,
+        "eclatantes": degres.count("eclatante"),
+        "integrite_min": min(integ) if integ else None,
+        "couverture_moy": round(sum(couv) / len(couv), 2) if couv else None,
+        "climax_au_de": (not any(b.get("geste_sur") for b in climax)) if climax else None,
+        "regles": str(d.get("commit_jeu") or (d.get("meta") or {}).get("commit") or ""),
         "fin": fin.get("type"), "integrite": fin.get("integrite"), "corruption": fin.get("corruption"),
         "signes": sum(len(str(b.get("narration", "")) + str(b.get("resolution", ""))) for b in bs),
     }
@@ -150,6 +166,26 @@ def main(chemin: str) -> int:
                 (b.get("choix_du_bot") or {}).get("couverture"))
                for b in res if str(b.get("degre")) not in PLEIN]
     pleins = len(res) - len(manques)
+    # v55 (07/09) — UN PARTIEL EST DESORMAIS NORMAL. Le plafond des atouts a rendu le de au jeu :
+    # exiger 100 % de reussites afficherait « MANQUEE » sur une nuit parfaitement saine. La cible
+    # de la reussite devient une BANDE, et trois cibles neuves disent ce que v55 voulait obtenir.
+    surs = sum(1 for b in res if b.get("geste_sur"))
+    eclats = sum(1 for b in res if str(b.get("degre")) == "eclatante")
+    integ = [int(b["integrite_apres"]) for b in res if b.get("integrite_apres") is not None]
+    climax = [b for b in res if str(b.get("type")) == "Climax"]
+    pct_surs = (100.0 * surs / len(res)) if res else 0.0
+    print("CIBLE4 le de revient: %s (%d/%d gestes sans jet)" % (
+        "TENUE" if pct_surs <= 25.0 else "MANQUEE", surs, len(res)))
+    if climax:
+        print("CIBLE5 climax au de: %s" % (
+            "TENUE" if not any(b.get("geste_sur") for b in climax) else "MANQUEE (geste sur au climax)"))
+    else:
+        print("CIBLE5 climax au de: NON MESUREE (aucun climax resolu)")
+    print("CIBLE6 l'eclat existe: %s (%d eclatante(s) sur %d gestes)" % (
+        "TENUE" if eclats >= max(1, len(res) // 20) else "MANQUEE", eclats, len(res)))
+    print("CIBLE7 l'integrite bouge: %s (minimum %s sur 10)" % (
+        "TENUE" if integ and min(integ) < 7 else "MANQUEE", min(integ) if integ else "?"))
+
     # SANS BOT COUVRANT, LA CIBLE NE MESURE PAS LE JEU. Le bot cycle ses cartes a l'aveugle : avec
     # un DC de 9, 28 % de reussite sans tag couvert contre 72 % avec un seul. Les deux premieres
     # nuits ont dit MANQUEE sur les des (crible du 06/09). On le dit, on ne juge pas.
@@ -157,10 +193,12 @@ def main(chemin: str) -> int:
         print("CIBLE2 reussite: NON MESUREE (bot NON couvrant — %d/%d pleins jugent les des, pas le jeu ; %s)"
               % (pleins, len(res), " ".join("b%s=%s(diff%s,de%s)" % m[:4] for m in manques) or "aucun manque"))
     else:
-        print("CIBLE2 reussite: %s" % (
-            "TENUE (%d/%d)" % (pleins, len(res)) if not manques else
-            "MANQUEE (%d/%d ; %s)" % (pleins, len(res),
-                " ".join("b%s=%s(diff%s,de%s,cov%s)" % m for m in manques))))
+        # La bande, pas le plein : sous v55 un joueur attentif tient 75 a 95 % de gestes pleins.
+        pct = 100.0 * pleins / len(res) if res else 0.0
+        print("CIBLE2 reussite: %s (%d/%d, %.0f %% — bande visee 75 a 95 %% depuis v55)%s" % (
+            "TENUE" if 75.0 <= pct <= 95.0 else ("TROP HAUTE" if pct > 95.0 else "MANQUEE"),
+            pleins, len(res), pct,
+            ("" if not manques else " ; " + " ".join("b%s=%s(diff%s,de%s,cov%s)" % m for m in manques))))
 
     # --- cible 3 : <= 20 s D'ATTENTE MACHINE (pas de duree de beat)
     att = [(b["index"], float(b["attente_moteur_s"])) for b in res if b.get("attente_moteur_s")]

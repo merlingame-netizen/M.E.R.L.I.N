@@ -890,13 +890,17 @@ async function renderNuits() {
   const mesures = [
     { titre: 'au banc', cle: 'banc', unite: ' beats', fmt: v => `${v}/${denom}` },
     { titre: 'réussite', cle: 'reussite_pct', unite: ' %', fmt: v => `${v} %` },
+    // v55 : le plafond des atouts se juge ici. Sans dé = la part des gestes qui échappent au
+    // hasard ; l'intégrité minimale dit si la traversée a coûté quelque chose.
+    { titre: 'sans dé', cle: 'sans_jet_pct', unite: ' %', fmt: v => `${v} %` },
+    { titre: 'intégrité au plus bas', cle: 'integrite_min', unite: '', fmt: v => `${v}/10` },
     { titre: 'attente médiane', cle: 'attente_med_s', unite: ' s', fmt: v => `${v} s` },
   ];
   box.innerHTML = mesures.map(m => {
     const pts = _serie(nuits, m.cle, m.unite);   // TOUTES les nuits : une nuit reportée est un trou visible
     const v = derniere.partie[m.cle];
     return `<figure class="nuit"><figcaption>${esc(m.titre)}<b>${v == null ? '—' : esc(m.fmt(v))}</b></figcaption>${_sparkline(pts, 140, 36)}</figure>`;
-  }).join('') + `<div class="nuit-legende">${nuits.length} nuits · ${jouees.length} jouées · dernière ${esc(derniere.nuit)}${derniere.partie.bot_couvrant ? '' : ' · bot aveugle'}${derniere.partie.incomplet ? ' · échantillon incomplet' : ''}</div>`;
+  }).join('') + `<div class="nuit-legende">${nuits.length} nuits · ${jouees.length} jouées · dernière ${esc(derniere.nuit)}${derniere.partie.bot_couvrant ? '' : ' · bot aveugle'}${derniere.partie.incomplet ? ' · échantillon incomplet' : ''}${derniere.partie.regles ? ' · règles ' + esc(String(derniere.partie.regles).slice(0, 8)) : ''}</div>`;
   box.hidden = false;
 }
 
