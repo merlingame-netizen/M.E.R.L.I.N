@@ -127,7 +127,8 @@ Quatre choses, dans l'ordre :
 
 SAMEDI
 12h — déjeuner, pour ceux qui sont déjà là
-14h30 — mölkky et pétanque au jardin
+14h30 — mölkky et pétanque au PARC JOURDAN (av. Anatole France, accès
+       libre, dix minutes de la maison). On y va ensemble.
 17h — ESCAPE GAME chez Move To Aixit, quatre salles en parallèle.
        Rien à sortir sur place. Ça se réserve à l'avance : il y a une
        question dédiée sur la page, répondez-y.

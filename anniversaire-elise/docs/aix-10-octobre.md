@@ -137,8 +137,19 @@ Deux branches, soumises au vote sur la page :
 
 ### Samedi 14h30 — mölkky et pétanque
 
-Un jeu de mölkky (12 quilles + le lanceur) et deux triplettes de boules. Le
-jardin suffit. Il faut que ça se termine à 16h30 pour partir aux Milles.
+**Boulodrome du parc Jourdan**, avenue Anatole France, 13100 Aix-en-Provence.
+2 540 m² de terrain stabilisé sous les platanes, **en accès libre et sans
+réservation**, à dix minutes de la maison en voiture. La pelouse attenante
+sert pour le mölkky, que le sol du boulodrome rendrait injouable — les quilles
+ne tiennent pas debout sur du stabilisé.
+
+À apporter : un jeu de mölkky (12 quilles + le lanceur) et deux triplettes de
+boules. Rien ne s'y loue.
+
+> **Le créneau est serré.** Le parc est au centre, l'escape game aux Milles :
+> compte vingt minutes de route. Il faut **quitter le parc à 16h15** pour être
+> à l'heure au briefing de 17h. Prévois qui monte dans quelle voiture avant de
+> partir de la maison, pas sur le parking.
 
 ### Dimanche
 
@@ -187,8 +198,9 @@ cases hors contexte, et ça rend l'étape 2 respirable.
    nombre de participants est connu, et réserver les quatre salles.
 8. **Le brunch du dimanche** — il remplace le déjeuner : viennoiseries,
    œufs, fruits, et du café en quantité.
-9. **Les voitures** — quinze personnes à emmener aux Milles à 16h30 puis à
-   ramener. La question des places libres est posée à l'étape 2 de la page.
+9. **Les voitures** — deux trajets, pas un : la maison → parc Jourdan à
+   14h15, puis parc Jourdan → Les Milles à 16h15, et le retour le soir. La
+   question des places libres est posée à l'étape 2 de la page.
 10. **Les cadeaux** — plusieurs, non annoncés. La page dit seulement que la
     cagnotte sert « aux cadeaux et aux activités », et demande à chacun de ne
     rien écrire de précis dans le groupe. Rien de ce que tu as prévu n'est
