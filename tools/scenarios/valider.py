@@ -152,6 +152,21 @@ def valider(q, nom=""):
                     e.append("beat %s : un choix compte 2 a 4 propositions, il en a %d" % (n, len(opts)))
                 if not (0 <= int(sp.get("pris", -1)) < len(opts)):
                     e.append("beat %s : la proposition retenue est hors des options" % n)
+                # « Une proposition qui ne coute rien n'a pas sa place : si l'une d'elles est
+                # manifestement la bonne, il n'y a pas de choix » (bible §3.1). On l'exige des
+                # propositions ECRITES EN DICTIONNAIRE, la forme qui sait porter un prix ; les
+                # paires d'avant restent tolerees telles quelles.
+                bornes = {"integrite": 2, "corruption": 2, "gwenneg": 6}
+                for k, op in enumerate(opts):
+                    if not isinstance(op, dict):
+                        continue
+                    cout = op.get("cout") or {}
+                    if not cout:
+                        e.append("beat %s : la proposition %d ne coute rien" % (n, k + 1))
+                    for cle, borne in bornes.items():
+                        if abs(int(cout.get(cle, 0))) > borne:
+                            e.append("beat %s : la proposition %d coute %s au-dela de la borne (%d)"
+                                     % (n, k + 1, cle, borne))
             if any(k in b for k in ("action", "rune", "de", "dc", "at")):
                 e.append("beat %s : un beat special n'a ni tuile, ni rune, ni de" % n)
             continue

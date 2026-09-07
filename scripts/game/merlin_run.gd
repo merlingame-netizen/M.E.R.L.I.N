@@ -1503,6 +1503,69 @@ func _end(p_type: String) -> void:
 	emit_signal("run_ended", p_type)
 
 
+# === LE BEAT « CHOIX » (2026-09-07) — deux a quatre propositions, aucun de, un prix ===
+#
+# POURQUOI ICI. Le prix d'une proposition touche les memes jauges qu'une resolution : il doit
+# passer par le meme clamp, emettre le meme signal, et declencher les memes fins. Le poser dans
+# l'interface aurait produit une deuxieme comptabilite — celle qui a mis la bourse de p74 a 65
+# gwenneg sans qu'un seul evenement en donne.
+#
+# LA BORNE EST DEJA PASSEE quand on arrive ici : MerlinSentier.cout_borne l'applique au chargement
+# (1 a 2 points, 6 gwenneg au plus). On re-clampe quand meme — un appelant qui construirait son
+# dictionnaire a la main ne doit pas pouvoir tuer le Voyageur sur une proposition.
+const CHOIX_MAX_JAUGE: int = 2
+const CHOIX_MAX_GWENNEG: int = 6
+
+
+## Paie une proposition et rend ce qui a REELLEMENT ete preleve — jamais ce qui etait demande :
+## une bourse a 3 ne peut pas payer 6, et l'ecart doit se voir dans la chronique.
+func payer_le_choix(cout: Dictionary) -> Dictionary:
+	var paye: Dictionary = {}
+	var di: int = -mini(absi(int(cout.get("integrite", 0))), CHOIX_MAX_JAUGE)
+	if di != 0:
+		var avant_i: int = integrite
+		integrite = clampi(integrite + di, 0, _max_integrite())
+		paye["integrite"] = integrite - avant_i
+	var dc: int = mini(absi(int(cout.get("corruption", 0))), CHOIX_MAX_JAUGE)
+	if dc != 0:
+		corruption = maxi(0, corruption + dc)
+		corruption_max = maxi(corruption_max, corruption)
+		paye["corruption"] = dc
+	var dg: int = mini(absi(int(cout.get("gwenneg", 0))), CHOIX_MAX_GWENNEG)
+	if dg != 0:
+		var pris: int = mini(dg, gwenneg)   # on ne descend jamais sous zero : on paie ce qu'on a
+		gwenneg -= pris
+		paye["gwenneg"] = -pris
+	var rune: String = str(cout.get("rune", ""))
+	if rune != "":
+		# LA RUNE QUITTE LA TRAVERSEE, pas seulement la main : elle sort du paquet et de la defausse.
+		# Renoncer a La Franchise pour un beat ne serait pas un prix — elle reviendrait au tirage
+		# suivant. Ce qu'on laisse, on ne le reprend pas.
+		if _retirer_rune(rune):
+			paye["rune"] = rune
+			draw_to_full()
+	if not paye.is_empty():
+		emit_signal("gauges_changed", integrite, corruption)
+		_check_corruption_threshold()
+		_check_end_after_resolution()
+	return paye
+
+
+## Retire une rune de la main, du paquet et de la defausse. Faux si elle n'y etait pas.
+func _retirer_rune(nom: String) -> bool:
+	var trouve: bool = false
+	for lot in [hand, deck, discard]:
+		var i: int = (lot as Array).size() - 1
+		while i >= 0:
+			var c: Variant = (lot as Array)[i]
+			var n: String = str(c.card_name) if (c is Object and "card_name" in c) else ""
+			if n == nom:
+				(lot as Array).remove_at(i)
+				trouve = true
+			i -= 1
+	return trouve
+
+
 func current_beat() -> Dictionary:
 	var beats: Array = scenario.get("beats", [])
 	if beat_index >= 0 and beat_index < beats.size():

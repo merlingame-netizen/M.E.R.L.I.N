@@ -3825,3 +3825,29 @@ réclamée, et ce beat, le plus dur de la quête, redevenait sans dé et coûtai
 de 3. Le seuil de l'éclatante vivait en cinq copies ; celle du générateur tourne chaque nuit et
 narrait une éclatante en réussite sur 8,3 % des beats. Les copies sont remplacées par
 `tools/scenarios/regles.py`, qui LIT le moteur et refuse de deviner s'il change de forme.
+
+## 2026-09-07 (soir) — v56 : les sentiers écrits deviennent jouables, et le beat « choix » existe
+
+Découverte en commençant : les huit quêtes de `data/scenarios/` n'avaient JAMAIS été jouables.
+Seul `generer_quete.gd` les lisait, comme exemples pour le modèle ; le jeu construisait toujours
+ses propres beats. Décision de Maxime : elles deviennent du contenu.
+
+`MerlinSentier` charge une quête écrite en scénario jouable. La prose écrite s'affiche telle
+quelle — aucune attente, aucun beat au banc, une qualité constante — pendant que la MÉCANIQUE se
+joue pour de vrai : les tags requis sont tirés du pool, le dé roule, la couverture compte,
+l'intégrité descend. Le joueur pose le geste qu'il veut ; l'issue reste celle qui est écrite.
+
+Le beat « choix » (bible §3.1, déclaré depuis toujours, jamais construit) : deux à quatre
+propositions à la place de la main, aucun dé, un prix. Quatre monnaies, bornées dans le CODE et
+non dans les données — une quête mal réglée ne peut pas tuer le Voyageur sur une proposition :
+au plus 2 d'intégrité, 2 de corruption, 6 gwenneg, une rune laissée pour de bon.
+
+Trois pièges trouvés et fermés : « Épreuve » du corpus contre « Epreuve » du moteur (une Épreuve
+écrite aurait été moins chère qu'une générée et le dé s'y serait dispensé) ; une bourse trop
+courte qui serait passée sous zéro ; et surtout le VOCABULAIRE — la bible nomme dix runes que le
+corpus emploie, le code en implémente seize sous d'autres noms. Un coût nommé « La Franchise » ne
+trouvait aucune carte et ne prélevait rien, en silence. Maxime a tranché : le jeu gagne, le corpus
+sera réécrit.
+
+`test_sentier.gd` : 39 vérifications, dont l'accent, les bornes, la bourse courte et la rune qui
+quitte la traversée. Les six épreuves passent, le smoke de MerlinGame est propre.

@@ -1,5 +1,10 @@
 {
- "main_depart": ["La Patience", "La Méfiance", "La Franchise", "L'Élan"],
+ "main_depart": [
+  "La Patience",
+  "La Méfiance",
+  "La Franchise",
+  "L'Élan"
+ ],
  "runes": {
   "La Patience": "laisser venir plutôt qu'aller chercher",
   "La Méfiance": "supposer le pire et se garder",
@@ -23,10 +28,21 @@
  "titre": "Le Compte Juste",
  "monde": "penn_ar_bed",
  "biome": "falaises",
- "figures": ["kado", "erwan", "marcharit"],
+ "figures": [
+  "kado",
+  "erwan",
+  "marcharit"
+ ],
  "bourse_depart": 14,
- "integrite": {"3": -2, "9": -3},
- "corruption": {"3": 1, "8": 1, "9": 2},
+ "integrite": {
+  "3": -2,
+  "9": -3
+ },
+ "corruption": {
+  "3": 1,
+  "8": 1,
+  "9": 2
+ },
  "preambule": [
   "La terre s'arrête net et le vent vient d'en bas. En contrebas, la mer prend et ne rend rien.",
   "Au bout de la pointe, un phare que personne n'allume plus. Quelqu'un y monte quand même, tous les jours.",
@@ -61,7 +77,10 @@
    "issue": "Vous lui demandez pourquoi il ne la monte pas lui-même. Il répond qu'il l'a montée onze fois et qu'il n'a plus l'âge de la douzième. Il vous met la corde sur l'épaule et six gwenneg dans la main avant que vous ayez dit oui.",
    "effet": "gwenneg +6 — Kado paie le portage d'avance, comme on paie un service qu'on ne veut plus rendre soi-même",
    "note": "PARLER avec La Franchise : la question impolie — pourquoi vous ? — obtient le chiffre onze, qui est déjà un compte. Le but tient en une phrase et le Voyageur l'a au beat 2.",
-   "bascule": ["choisie", "vous acceptez de porter la corde et de rapporter un compte"]
+   "bascule": [
+    "choisie",
+    "vous acceptez de porter la corde et de rapporter un compte"
+   ]
   },
   {
    "n": 3,
@@ -89,7 +108,10 @@
    "dial": "« L'eau est tiède, en bas. Personne ne t'y demandera rien. Ni de monter, ni de compter. »",
    "issue": "Vous ne lui répondez pas et vous regardez ce qu'elle a autour d'elle. Il y a des planches prises dans les rochers, vieilles, et sur l'une d'elles une marque au fer que vous avez déjà vue ce matin : la même que sur la corde de Kado.",
    "note": "RÉVÉLER avec La Méfiance : supposer le pire fait chercher ailleurs que dans le chant. La marque est posée ici, cinq beats avant qu'elle serve. Ce qui apparaît revient.",
-   "bascule": ["subie", "la corde et l'épave portent la même marque"]
+   "bascule": [
+    "subie",
+    "la corde et l'épave portent la même marque"
+   ]
   },
   {
    "n": 5,
@@ -98,16 +120,37 @@
    "special": {
     "genre": "choix",
     "options": [
-     ["Monter la corde sans l'ouvrir", "Erwan la prend et vous parle. Vous ne saurez pas d'où elle vient."],
-     ["Défaire un tour de corde pour lire la marque", "Vous saurez. La corde arrive ouverte, et il le verra."],
-     ["Laisser la corde au pied du phare et monter les mains vides", "Rien ne vous engage. Rien ne vous ouvre non plus."]
+     {
+      "texte": "Monter la corde sans l'ouvrir",
+      "entraine": "Erwan la prend et vous parle. Vous ne saurez pas d'où elle vient.",
+      "cout": {
+       "integrite": 1
+      }
+     },
+     {
+      "texte": "Défaire un tour de corde pour lire la marque",
+      "entraine": "Vous saurez. La corde arrive ouverte, et il le verra.",
+      "cout": {
+       "corruption": 1
+      }
+     },
+     {
+      "texte": "Laisser la corde au pied du phare et monter les mains vides",
+      "entraine": "Rien ne vous engage. Rien ne vous ouvre non plus.",
+      "cout": {
+       "gwenneg": 6
+      }
+     }
     ],
     "pris": 1
    },
    "scene": "La corde est lourde et la marque au fer est sous le troisième tour. Tout en haut, dehors, quelqu'un attend sans se retourner.",
    "issue": "Vous défaites un tour au milieu des marches. La marque est la même que sur la planche d'en bas, et sous elle il y a un nom que le sel a mangé aux deux tiers. Vous remontez avec la corde ouverte sur le bras.",
-   "note": "Beat spécial : ni tuile, ni rune, ni dé. Trois propositions, chacune avec ce qu'elle coûte — savoir se paie d'arriver les mains défaites. La troisième option est vraiment jouable, et vraiment mauvaise.",
-   "bascule": ["choisie", "vous savez ce que la corde porte avant de la donner"]
+   "note": "Beat spécial : ni tuile, ni rune, ni dé. Trois propositions, trois monnaies — porter coûte au corps, ouvrir coûte à la confiance, renoncer coûte l'avance de Kado. Savoir se paie d'arriver les mains défaites. La troisième est vraiment jouable, et vraiment mauvaise.",
+   "bascule": [
+    "choisie",
+    "vous savez ce que la corde porte avant de la donner"
+   ]
   },
   {
    "n": 6,
@@ -143,16 +186,37 @@
    "special": {
     "genre": "choix",
     "options": [
-     ["Confirmer : douze, et un qui manque", "Il se calme. Il vous ouvre la lanterne. Vous redescendrez avec une nouvelle fausse pour Kado."],
-     ["Démentir : treize, et le treizième est le sien", "Il se brise. Vous redescendrez avec une nouvelle vraie, et il ne comptera plus."],
-     ["Lui tendre la corde ouverte et le laisser lire", "Vous ne dites rien. Le nom mangé par le sel décide à votre place."]
+     {
+      "texte": "Confirmer : douze, et un qui manque",
+      "entraine": "Il se calme. Il vous ouvre la lanterne. Vous redescendrez avec une nouvelle fausse pour Kado.",
+      "cout": {
+       "corruption": 2
+      }
+     },
+     {
+      "texte": "Démentir : treize, et le treizième est le sien",
+      "entraine": "Il se brise. Vous redescendrez avec une nouvelle vraie, et il ne comptera plus.",
+      "cout": {
+       "integrite": 2
+      }
+     },
+     {
+      "texte": "Lui tendre la corde ouverte et le laisser lire",
+      "entraine": "Vous ne dites rien. Le nom mangé par le sel décide à votre place.",
+      "cout": {
+       "rune": "Le Cœur Franc"
+      }
+     }
     ],
     "pris": 2
    },
    "scene": "Il vous demande, sans lâcher son ardoise, si le compte est juste. La corde ouverte est sur votre bras, la marque tournée vers vous.",
    "issue": "Vous lui tendez la corde du côté de la marque. Il la prend, il regarde longtemps, et il pose l'ardoise à plat sur la pierre. Il ne dit pas treize. Il ne dit pas douze non plus.",
-   "note": "Le choix de la quête. Confirmer calme et ouvre l'accès ; démentir brise et ouvre autre chose ; se taire remet la décision au monde — et le monde tranche moins proprement que vous. Aucune proposition n'est gratuite.",
-   "bascule": ["choisie", "vous laissez la marque parler à votre place"]
+   "note": "Le choix de la quête, et le seul qui coûte une posture. Mentir salit ; briser un homme coûte au corps ; se taire vous prend Le Cœur Franc pour le reste de la traversée — vous ne direz plus ce qui est, sans arranger. Aucune proposition n'est gratuite. (Le nom est celui du JEU, pas celui de la bible : décision du 07/09, le corpus adopte les seize traits du code.)",
+   "bascule": [
+    "choisie",
+    "vous laissez la marque parler à votre place"
+   ]
   },
   {
    "n": 9,
@@ -166,7 +230,10 @@
    "scene": "Erwan reste devant l'ardoise posée. En bas, le chant a cessé d'un coup, et l'écume est vide à l'endroit où quelqu'un se tenait.",
    "issue": "Vous cherchez à lire sur lui ce qu'il va faire et vous ne lisez rien du tout. Quand vous comprenez qu'il est déjà du côté de la rambarde, vous n'êtes plus assez près. Il ne saute pas. Il s'assied dans le vide comme on s'assied sur un banc, et il attend, les deux mains sur la pierre.",
    "note": "OBSERVER avec Le Deuil, sans un seul tag couvert : porter ce qui est perdu n'aide pas à lire un vivant. Marge −6, échec — le seul échec de la quête tombe là où le Voyageur croyait n'avoir plus qu'à regarder.",
-   "bascule": ["subie", "Erwan est assis dans le vide et rien de ce que vous savez ne le fait revenir"]
+   "bascule": [
+    "subie",
+    "Erwan est assis dans le vide et rien de ce que vous savez ne le fait revenir"
+   ]
   },
   {
    "n": 10,
@@ -180,7 +247,10 @@
    "scene": "Il tient la corde neuve d'une main et la rambarde de l'autre. Vous avez le bout mort de la corde, celui qui passe dans l'anneau que vous avez décrassé au beat d'avant.",
    "issue": "Vous prenez le mou et vous tenez, les talons calés dans la pierre, sans lui parler et sans tirer. Il finit par lâcher la rambarde pour prendre la corde à deux mains, ce qui n'est pas revenir, mais ce qui n'est plus tomber. Vous redescendez avec une nouvelle vraie pour Kado : ils étaient treize, et le treizième remonte le sentier derrière vous, lentement.",
    "note": "COMBATTRE avec L'Aplomb : tenir sa place comme si elle vous revenait. Marge +2, réussite — la quête se ferme sur ce que l'anneau du beat 7 rend possible. Ce qui apparaît revient, et la corde a servi trois fois.",
-   "bascule": ["subie", "treize, et Kado aura sa nouvelle vraie"]
+   "bascule": [
+    "subie",
+    "treize, et Kado aura sa nouvelle vraie"
+   ]
   }
  ]
 }

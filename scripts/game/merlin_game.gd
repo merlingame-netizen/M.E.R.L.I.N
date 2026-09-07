@@ -75,6 +75,11 @@ var _status_line: Control = null     # v11-V2a — Z4 « ligne d'état » 72 px 
 var _quest_obj_lbl: Label = null     # N5-C4 - ligne d'objectif « Quête : <titre> · étape N/M » en tête de l'encart récit
 var _meca_lbl: Label = null          # N5-C3 - ligne méca lisible sous la vignette (verbe · jet d20 · degré · Δ · maîtrise)
 var _choice_open: bool = false       # v11-V2a — garde anti-clic du choix (reprend le rôle de _hand_box.visible)
+# LE BEAT « CHOIX » (2026-09-07) — deux a quatre propositions a la place de la main, aucun de.
+# `_choix_actif` dit qu'un choix attend une reponse ; `_choice_open` reste FAUX pendant ce temps,
+# ce qui rend les tuiles et les runes inertes sans une garde de plus (elles la lisent deja).
+var _choix_actif: bool = false
+var _choix_props: Array = []
 var _pending_res: Dictionary = {}    # res/degré mémorisés au resolve → fade-in vignette post-typewriter
 var _pending_degree: String = ""
 # R158 : « Pousser » retire : plus de vars _push_* (la resolution s'applique toujours immediatement,
@@ -406,7 +411,13 @@ func _present_current_beat() -> void:
 	MerlinVisual.swap_zone(_situ_panel, func() -> void:
 		_beat_transition = false
 		_show_situation(_current_situation)
-		_state = 1)
+		_state = 1
+		# LE BEAT SPECIAL N'A NI TUILE, NI RUNE, NI DE (bible §3). Les propositions prennent la place
+		# de la main : le joueur voit tout de suite que ce beat ne se joue pas comme les autres.
+		if MerlinSentier.est_un_choix(beat):
+			_presenter_le_choix(beat)
+		else:
+			_choix_actif = false)
 
 
 func _show_situation(situ: Dictionary, animate: bool = true) -> void:
@@ -2477,6 +2488,99 @@ func _fade_res_block(on: bool) -> void:
 # tuile jouée pulse) — son estompe passe par _set_choice_ui(false) APRÈS fx.run().
 func _set_hand_dimmed(on: bool) -> void:
 	MerlinVisual.set_zone_active(_hand_box, not on)
+
+
+# === LE BEAT « CHOIX » (2026-09-07) ==========================================================
+#
+# « 2 a 4 propositions, chacune avec ce qu'elle entraine. On en selectionne une, sans retour en
+# arriere, et aucun de n'intervient. Une proposition qui ne coute rien n'a pas sa place » (bible
+# §3.1). La premiere des neuf mecaniques declarees et jamais construites.
+#
+# CE QU'IL FAIT A L'ECRAN. Les propositions REMPLACENT la main (decision de Maxime, 07/09) : la
+# scene reste en haut, et la ou il y a d'habitude cinq tuiles et quatre runes, deux a quatre
+# boutons avec leur prix ecrit dessous. Aucun de, aucun sceau, aucune attente du modele.
+#
+# CE QU'IL NE FAIT PAS. Il ne touche pas a la main : rien n'est pose, rien n'est repioche (bible
+# §3). Il n'arme aucun draft — une greffe apres un choix ferait du choix un beat ordinaire.
+func _presenter_le_choix(beat: Dictionary) -> void:
+	_choix_props = MerlinSentier.propositions(beat)
+	if _choix_props.is_empty():
+		_choix_actif = false
+		return  # un choix sans proposition n'est pas un choix : on laisse le beat se jouer normalement
+	_choix_actif = true
+	_selected_action = null
+	_selected_trait = null
+	_set_choice_ui(false)   # tuiles et runes inertes : elles lisent deja `_choice_open`
+	_swap_hand_zone(func() -> void:
+		if not _choix_actif:
+			return  # ferme pendant la fenetre du swap → pas de propositions fantomes
+		for c in _hand_box.get_children():
+			c.queue_free()
+		var rangee: HBoxContainer = HBoxContainer.new()
+		rangee.alignment = BoxContainer.ALIGNMENT_CENTER
+		rangee.add_theme_constant_override("separation", 18)
+		rangee.set_anchors_preset(Control.PRESET_FULL_RECT)
+		for i in _choix_props.size():
+			rangee.add_child(_bouton_de_proposition(int(i)))
+		_hand_box.add_child(rangee)
+		MerlinVisual.set_zone_active(_hand_box, true))
+
+
+## Un bouton par proposition : ce qu'on fait, ce que ça entraîne, ce que ça coûte.
+func _bouton_de_proposition(i: int) -> Control:
+	var prop: Dictionary = _choix_props[i]
+	var col: VBoxContainer = VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	col.custom_minimum_size = Vector2(300, 0)
+	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var btn: Button = Button.new()
+	btn.text = str(prop.get("texte", ""))
+	btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn.custom_minimum_size = Vector2(300, 64)   # ≥ 44 px : pilier TACTILE (bible §21.1)
+	btn.add_theme_font_size_override("font_size", MerlinVisual.FS_CAPTION)
+	MerlinVisual.apply_button_da(btn)
+	MerlinVisual.connect_button_feedback(btn)
+	btn.pressed.connect(_on_choix_pris.bind(i))
+	col.add_child(btn)
+	# CE QUE ÇA ENTRAÎNE, puis LE PRIX. Les deux sont écrits : « si l'une d'elles est manifestement
+	# la bonne, il n'y a pas de choix » — encore faut-il que le joueur puisse les comparer.
+	var suite: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_CAPTION)
+	suite.text = str(prop.get("entraine", ""))
+	suite.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	suite.custom_minimum_size = Vector2(300, 0)
+	suite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(suite)
+	var prix: String = MerlinSentier.cout_en_clair(prop.get("cout", {}))
+	if prix != "":
+		var lbl: Label = MerlinVisual.make_label(COL_GOLD, MerlinVisual.FS_CAPTION)
+		lbl.text = prix
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(lbl)
+	return col
+
+
+## La proposition est prise : elle se paie, elle s'écrit dans la chronique, et on avance. Sans
+## retour en arrière — « un troc ne s'annule pas » vaut pour toutes les mécaniques spéciales.
+func _on_choix_pris(i: int) -> void:
+	if not _choix_actif or i < 0 or i >= _choix_props.size():
+		return  # double-clic, ou clic arrivé après la fermeture : une proposition ne se prend qu'une fois
+	_choix_actif = false
+	var prop: Dictionary = _choix_props[i]
+	var run: Node = get_node("/root/MerlinRun")
+	var paye: Dictionary = run.payer_le_choix(prop.get("cout", {}))
+	# LA CHRONIQUE NOTE LE CHOIX COMME UN GESTE, parce que c'en est un : sans cela, un beat de choix
+	# serait un trou dans la relecture, et l'index sauterait comme il sautait avant v53. L'ISSUE,
+	# elle, est ecrite par `_show_resolution` et par lui seul — « ici et pas ailleurs », dit son
+	# commentaire : la doubler ici serait une deuxieme comptabilite de la chronique.
+	MerlinJournal.beat_geste("CHOIX", str(prop.get("texte", "")))
+	var trace: String = str(prop.get("entraine", ""))
+	var prix: String = MerlinSentier.cout_en_clair(paye)
+	if prix != "":
+		trace += "\n\n[i]%s[/i]" % prix
+	_show_resolution({"degree": "choix", "label": "Choix", "geste_sur": true, "die": 0},
+		trace, true)
+	_can_advance = true
+	_set_caret(true)
 
 
 # v11-V2a (spec écran stable) — le CHOIX s'ouvre/se ferme par ESTOMPE de zone (alpha 0.35 + souris

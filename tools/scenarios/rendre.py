@@ -131,6 +131,30 @@ def controler(q, mains, tirages):
 CSS = (RACINE / "tools" / "scenarios" / "scenario.css").read_text(encoding="utf-8")
 
 
+def option_normale(x):
+    """Une proposition, quelle que soit son ecriture : {texte, entraine, cout}."""
+    if isinstance(x, dict):
+        return {"texte": str(x.get("texte", "")), "entraine": str(x.get("entraine", "")),
+                "cout": x.get("cout") or {}}
+    lib = x[0] if len(x) > 0 else ""
+    suite = x[1] if len(x) > 1 else ""
+    return {"texte": str(lib), "entraine": str(suite), "cout": {}}
+
+
+def cout_en_clair(cout):
+    """Le prix d'une proposition, dans les mots du jeu. Vide si elle ne coute rien."""
+    bouts = []
+    if int(cout.get("integrite", 0)):
+        bouts.append("−%d intégrité" % abs(int(cout["integrite"])))
+    if int(cout.get("corruption", 0)):
+        bouts.append("+%d corruption" % abs(int(cout["corruption"])))
+    if int(cout.get("gwenneg", 0)):
+        bouts.append("−%d gwenneg" % abs(int(cout["gwenneg"])))
+    if str(cout.get("rune", "")):
+        bouts.append("vous laissez %s" % cout["rune"])
+    return " · ".join(bouts)
+
+
 def panneau_special(sp):
     o = ['<div class="table special">']
     o.append('<div class="tr"><span class="lb">Beat spécial</span>'
@@ -214,13 +238,22 @@ def panneau_special(sp):
         o.append('<div class="tr"><span class="lb">Vous écrivez</span>'
                  '<span class="vl"><span class="opt pris"><b>%s</b></span></span></div>' % esc(sp["pris"]))
     else:
+        # DEUX ECRITURES. Une paire [libelle, consequence] ne coute rien mecaniquement ; un
+        # dictionnaire {texte, entraine, cout} porte son prix, borne par MerlinSentier (1 a 2
+        # points, 6 gwenneg). Refuser la premiere aurait rendu illisibles les quetes d'avant.
+        opts = [option_normale(x) for x in sp["options"]]
         o.append('<div class="tr"><span class="lb">On vous propose</span><span class="vl opts">')
-        for k, (lib, suite) in enumerate(sp["options"]):
-            o.append('<span class="opt%s"><b>%s</b><i>%s</i></span>'
-                     % (" pris" if k == sp["pris"] else "", esc(lib), esc(suite)))
+        for k, op in enumerate(opts):
+            prix = cout_en_clair(op["cout"])
+            o.append('<span class="opt%s"><b>%s</b><i>%s%s</i></span>'
+                     % (" pris" if k == sp["pris"] else "", esc(op["texte"]), esc(op["entraine"]),
+                        (" &nbsp;·&nbsp; <b>%s</b>" % esc(prix)) if prix else ""))
         o.append('</span></div>')
+        pris = opts[sp["pris"]]
+        prix_pris = cout_en_clair(pris["cout"])
         o.append('<div class="tr"><span class="lb">Vous choisissez</span>'
-                 '<span class="vl"><b>%s</b></span></div>' % esc(sp["options"][sp["pris"]][0]))
+                 '<span class="vl"><b>%s</b>%s</span></div>'
+                 % (esc(pris["texte"]), (" — %s" % esc(prix_pris)) if prix_pris else ""))
     o.append('</div>')
     return "\n".join(o)
 

@@ -1757,7 +1757,14 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	# v35 — la scène lookahead se lit DANS le beat (fix racine : les clés de cache ne
 	# coïncidaient jamais). Le cache par qn reste en second regard (harnais hors-jeu).
 	var qn_beat: int = int(beat.get("qn", beat.get("n", 1)))
-	if str(beat.get("scene_lookahead", "")) != "":
+	# LE SENTIER ÉCRIT PASSE EN PREMIER (2026-09-07). Sur une quête écrite à la main, la scène est
+	# déjà là : aucune attente, aucun recours au banc, une qualité constante. Sa provenance est
+	# « ecrite » et non « lookahead » — les mesures doivent pouvoir distinguer une nuit écrite d'une
+	# nuit générée, sans quoi la courbe mélange deux jeux.
+	if str(beat.get("scene_ecrite", "")) != "":
+		narration = str(beat.get("scene_ecrite", ""))
+		provenance = "ecrite"
+	elif str(beat.get("scene_lookahead", "")) != "":
 		narration = str(beat.get("scene_lookahead", ""))
 		required = (beat.get("scene_lookahead_tags", []) as Array).duplicate()
 		provenance = "lookahead"
@@ -1861,6 +1868,12 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	return {
 		"provenance": provenance,
 		"narration": narration,
+		# Le sentier écrit fait suivre son issue et son drapeau jusqu'à narrate_resolution et
+		# jusqu'aux mesures : une nuit écrite ne se compare pas à une nuit générée.
+		"issue_ecrite": str(beat.get("issue_ecrite", "")),
+		"sentier": bool(beat.get("sentier", false)),
+		"lieu": str(beat.get("lieu", "")),
+		"special": beat.get("special", {}),
 		# v49 — la narration SANS les coutures du code (pont, ancrage de Climax, annonce de
 		# quete) : c'est la reference du filet anti-echo, voir narrate_resolution.
 		"narration_seule": narration_seule,
@@ -2429,6 +2442,14 @@ func is_strong_moment(situ_type: String, degree: String) -> bool:
 # --- 4) RÉSOLUTION : le code a calculé le degré (affiné par la synergie de la combinaison) ;
 #         le LLM NARRE la COMBINAISON comme UN geste unifié (R63/R105), "" si échec. ---
 func narrate_resolution(situation: Dictionary, played_cards: Array, res: Dictionary) -> String:
+	# L'ISSUE ÉCRITE NE S'ATTEND PAS (2026-09-07). Sur un sentier écrit à la main, elle est déjà là :
+	# on la rend telle quelle, sans un appel au modèle. La quête raconte son histoire ; le geste du
+	# joueur, lui, a déjà décidé du degré, de l'intégrité et de la corruption dans `resolve` — c'est
+	# la MÉCANIQUE qui répond au geste, pas la prose. Décision de Maxime : « le dé roule, la prose
+	# reste ». Zéro attente, zéro beat au banc, une qualité constante.
+	var ecrite: String = str(situation.get("issue_ecrite", "")).strip_edges()
+	if ecrite != "":
+		return ecrite
 	var mn: Node = _mn()
 	if mn == null or not mn.is_ready():
 		return ""
