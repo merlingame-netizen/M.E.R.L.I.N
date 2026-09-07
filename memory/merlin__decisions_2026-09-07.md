@@ -33,3 +33,19 @@
 - Le bot de la nuit reste un oracle (il lit le dé pré-tiré) : la relecture a mesuré qu'il est
   inerte sous v55, et l'aveugler seul dégraderait sa couverture. À faire avec le critère de choix,
   d'un seul tenant, puis remesurer.
+
+## Le soir : les sentiers écrits et le beat « choix » (v56)
+- Découverte : les huit quêtes de data/scenarios n'avaient JAMAIS été jouables. Elles deviennent
+  du contenu. `MerlinSentier` les charge ; la prose écrite s'affiche telle quelle (zéro attente,
+  zéro banc) et la mécanique se joue pour de vrai. Le joueur pose le geste qu'il veut, l'issue
+  reste celle qui est écrite : « le dé roule, la prose reste ».
+- Le beat « choix » existe : 2 à 4 propositions à la place de la main, aucun dé, un prix. Quatre
+  monnaies, bornées DANS LE CODE (2 intégrité, 2 corruption, 6 gwenneg, une rune) pour qu'une
+  quête mal réglée ne puisse pas tuer le Voyageur sur une proposition.
+- Les options du choix sont écrites à la main, quête par quête. Une quête générée n'en a donc pas.
+  La nuit alternera : une nuit générée (mesure la prose et l'attente), une nuit écrite (mesure la
+  mécanique pure).
+- LE VOCABULAIRE : la bible nomme dix runes (La Patience, La Franchise…), le code en implémente
+  seize sous d'autres noms (Le Regard Perçant, Le Cœur Franc…), et le corpus employait ceux de la
+  bible. Un coût nommé « La Franchise » ne prélevait rien, en silence. LE JEU GAGNE : le corpus et
+  la bible adopteront les seize noms du code.
