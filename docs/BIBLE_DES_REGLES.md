@@ -1,6 +1,6 @@
 # BIBLE DES RÈGLES — comment on joue à M.E.R.L.I.N.
 
-> **v1.1 — 2026-08-29.** Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
+> **v1.2 — 2026-09-07** (v1.1 du 2026-08-29). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
 > contient (`docs/BIBLE.md`, canon R1 à R191) ni à quoi ressemblent les écrans
 > (`docs/70_graphic/UI_UX_BIBLE.md`).
 >
@@ -80,7 +80,7 @@ couvre zéro, un ou deux.
 | Par tag requis couvert | **+3** | `COVER_PER_TAG`, `scripts/game/merlin_resolution.gd` |
 | Le jet | **2d6** | R158 |
 | Marge | `total − difficulté` | — |
-| Éclatante | marge **≥ 8** | `ECLAT_MARGIN` |
+| Éclatante | marge **≥ 7** | `eclat_margin` (v55 : 8 → 7, `ECLAT_MARGIN` garde la valeur historique) |
 | Réussite | marge **≥ 0** | — |
 | Partiel | marge **−1 à −5** | `PARTIEL_LOW` |
 | Échec | marge **< −5** | — |
@@ -90,6 +90,32 @@ dit l'enjeu. Certains gestes passent **sans jet** — « le geste est acquis »,
 et l'éclatante leur est alors interdite : dispenser le dé ne peut jamais produire un éclat.
 
 La difficulté vaut 9 dans le cas courant et monte au climax.
+
+**Le plafond des atouts (v55, 2026-09-07).** Mesuré sur p74 : un joueur qui couvrait un tag ne
+jetait plus le dé après le beat 7 (16 gestes sur 20 « sans jet », Climax compris, à +16 contre
+12), finissait à 10 d'intégrité sur 10 et sans une éclatante, pendant qu'un joueur qui ne
+couvrait rien mourait une fois sur cinq. Deux régimes, pas de milieu. Maxime a tranché le 06/09 :
+la mort est une menace réelle et **rare**, environ une traversée sur dix pour un joueur attentif.
+Trois règles, dans `resolve` :
+
+| Règle | Valeur | Source |
+|---|---|---|
+| Les **atouts propres** (talent + maîtrise + greffes au jet) ne dépassent jamais | **+2** | `atouts_propres_cap` |
+| Sur une **Épreuve** et au **Climax**, le dé se jette **toujours** : aucun geste n'y est sûr | — | `sur_permis` |
+| Ailleurs, le **geste sûr** n'existe qu'en difficulté 1, ou en difficulté 2 avec la **couverture pleine** | — | `sur_permis` |
+
+Ce qu'on **sait** est borné ; ce qu'on **lit** dans la scène vaut +3 par tag, et un tag de plus
+vaut toujours plus, Épreuve comprise. La progression du talent continue (elle nourrit la dispense
+du dé sur les gestes de routine), mais elle n'achète plus la victoire là où la quête se joue.
+
+Mesuré par `tools/tests/test_progression.gd` (900 traversées par série sur trois graines, la vraie
+forme de quête, le vrai moteur, un tag Monde requis sur 30 % des beats comme dans p74, et
+l'archétype « p74 » : la couverture mesurée du bot, 0 tag une fois sur dix, 2 tags une fois sur
+dix) : hier 0 % de morts et 77 % de gestes sans dé ; aujourd'hui **6 % de morts (± 1,6)**, 6 % de
+gestes sans dé, le Climax au dé dix fois sur dix, une éclatante tous les quatorze gestes. Un joueur
+qui ne lit jamais la scène meurt six fois sur dix : lire est le jeu. L'épreuve refuse hors de 4 à
+15 % de morts. Le plafond à +1 donnait 24 %, à 0 44 % : le réglage est fin, et la nuit du bot
+(désormais aveugle au dé qu'il choisissait en le connaissant) le confronte au vrai jeu.
 
 ---
 
@@ -221,7 +247,8 @@ Mesurés sur la partie témoin p74 (`docs/chroniques/p74/`), et à corriger.
 
 | Défaut | Mesure | État |
 |---|---|---|
-| La bourse se remplit seule | 2 → 65 gwenneg en 20 beats, 0 achat sur 11 étals | ouvert |
+| La bourse se remplit seule | 2 → 65 gwenneg en 20 beats, 0 achat sur 11 étals | corrigé le 04/09 (l'argent ne vient que d'un événement) |
+| Le dé disparaît pour qui couvre | 16 gestes sur 20 sans jet, Climax compris ; 0 éclatante ; intégrité 10 → 10 | corrigé par v55 (plafond des atouts) |
 | Le même geste partout | 17 beats sur 20 ouvrent par « Vous arrêtez votre regard… » | ouvert |
 | La numérotation fuit dans la prose | « 0. », « 1. », « 6. » dans 7 beats | ouvert |
 | Le climax recopie le milieu | 89 % des mots du beat 16 dans le beat 22 | ouvert |

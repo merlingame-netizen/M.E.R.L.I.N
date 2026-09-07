@@ -3791,3 +3791,23 @@ Le dossier de `MerlinJournal` devient une variable statique (`dossier`, défaut 
 `deplacer()` réservé aux épreuves ; chacune pointe sur `user://chroniques_epreuve_<pid>` et
 l'efface en entier à la fin, avec un garde-fou qui refuse d'effacer le dossier du jeu. Les
 quatre épreuves passent (0 raté) sur une machine où un vrai `index.json` existe.
+
+## 2026-09-07 — v55 : le plafond des atouts, la mort redevient possible
+
+L'audit de design du matin (`docs/AUDIT_GAME_DESIGN_2026-09-07.md`) a montré sur p74 que le dé
+disparaissait pour qui couvre un tag : 16 gestes sur 20 sans jet, Climax compris, intégrité
+10 → 10, zéro éclatante. Maxime veut une mort réelle et rare (une traversée sur dix).
+
+Trois règles dans `resolve` : atouts propres plafonnés à +2, le dé toujours jeté sur une Épreuve et
+au Climax, le geste sûr réservé à la routine (difficulté 1, ou couverture pleine en difficulté 2) ;
+éclatante à marge 7. Le répit automatique est arrêté (jamais déclenché, et il ramènerait la mort
+à zéro). Une première version plafonnait le TOTAL sur les Épreuves : la relecture a montré qu'elle
+rendait le deuxième tag inutile ; la règle est monotone désormais.
+
+`tools/tests/test_progression.gd` joue 900 traversées par série (trois graines) avec le vrai
+moteur, la vraie forme de quête, 30 % de tags Monde et la couverture mesurée du bot : hier 0 % de
+morts et 77 % sans dé ; aujourd'hui 6 % ± 1,6 de morts, 6 % sans dé, Climax au dé dix fois sur
+dix, une éclatante tous les quatorze gestes. Plafond +1 : 24 % ; 0 : 44 %. Le bot de la nuit ne
+choisit plus en connaissant le dé pré-tiré (il était un oracle) : il estime sur la face médiane.
+Les six épreuves passent, le smoke de MerlinGame est propre. La nuit mesurera : sans jet ≤ 25 %,
+climax au dé, une éclatante, l'intégrité sous 7.

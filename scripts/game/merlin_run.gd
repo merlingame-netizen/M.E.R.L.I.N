@@ -30,7 +30,7 @@ const MOMENTUM_MAX: int = 3
 # cross-run). Points gagnés au degré (réussite +1 / éclatante +2) ; alloués AU DRAFT via un NŒUD
 # DE TALENT rendu comme une carte de greffe (zéro nouvel écran, R136). skill_mod d'une résolution =
 # niveau de talent du VERBE de l'action jouée. Constantes de départ (À TUNER par le probe §K).
-const TALENT_CAP: int = 5           # niveau max par verbe
+const TALENT_CAP: int = 5           # niveau max par verbe (la progression continue ; ce qui ENTRE au jet est plafonné par MerlinResolution.atouts_propres_cap, v55)
 const TALENT_COST: int = 2          # points de talent par +1 de niveau
 const TALENT_GAIN_REUSSITE: int = 1 # points gagnés sur une réussite
 const TALENT_GAIN_ECLATANTE: int = 2 # ... sur une éclatante
@@ -1191,6 +1191,9 @@ func advance_beat() -> void:
 	# Tuning soak chaînes (mesures n=300) : +1 → 40% de morts greedy/chaotic ; +2 → 31% ;
 	# +2 et BONUS +2 si Intégrité ≤ 4 (« le sentier accorde un souffle quand on en a besoin »,
 	# amortisseur conditionnel du designer) → cible ≤20% sans rendre `optimal` invulnérable.
+	# ARRÊTÉ (audit du 2026-09-07) : `quest` vaut 0 sur tous les beats d'une quête, ce répit ne
+	# tombe donc jamais — et il ne doit PAS être réparé : dé rendu + répit = 0 % de morts mesuré.
+	# Le soin se paie (étal, greffe heal). Le bloc reste pour les chaînes de quêtes des harnais.
 	if int(current_beat().get("quest", 0)) != prev_quest:
 		var repit: int = 2
 		if integrite <= 4:

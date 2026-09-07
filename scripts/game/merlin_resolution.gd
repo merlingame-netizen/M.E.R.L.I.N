@@ -45,6 +45,7 @@ const SYN: int = 1              # R158 (2d6) : synergie reduite (span du de 19 -
 # Largeur des bandes de marge (planchers depuis DC). PARTIEL = [DC−PARTIEL_LOW, DC−1] ;
 # ÉCLATANTE = marge ≥ ECLAT_MARGIN. Échec strict sous PARTIEL_LOW.
 const PARTIEL_LOW: int = 5      # R158 (2d6) : marge [-5,-1] = partiel ; < -5 = echec (spec C).  Ancien commentaire : DC−13 ≤ total ≤ DC−1 → partiel ; total < DC−13 → échec (L3, final)
+static var eclat_margin: int = 7   # v55 : 8 → 7 (l'éclat n'existe que par le risque, et le risque est revenu) ; ECLAT_MARGIN reste la valeur historique
 const ECLAT_MARGIN: int = 8    # R158 (2d6) : marge >= 7 = eclatante (spec C).  Ancien commentaire : total ≥ DC+9 → éclatante (N5-C2 : 8→9, la maîtrise poussait éclatante à 14,8 % contre plafond 15 % - levier chirurgical §K, ne touche QUE le seuil éclatante, cf. spec game-designer N5)
 # Dé « moyen » déterministe pour les vieux call-sites tools qui appellent resolve(..., die=0) :
 # ~jet médian d'un d20 (ne plante pas, produit une base réaliste). Le jeu et le soak passent 2-12.
@@ -63,6 +64,25 @@ const MARGE_RARETE: Dictionary = {"Commune": 0, "Rare": 1, "Épique": 2, "Mythiq
 
 # Ordre croissant des degrés — sert à borner l'affinage par synergie (hybride, user 2026-05-28).
 const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
+
+# === v55 (audit de design du 2026-09-07, décision de Maxime : la mort est réelle et RARE) ===
+# LE PLAFOND DES ATOUTS. Sur p74, un joueur qui couvre un tag ne jetait plus le dé après le beat 7
+# (16 gestes sur 20 « sans jet », Climax compris : +16 contre DC 12), intégrité 10 → 10, zéro
+# éclatante ; et le bot qui ne couvre pas mourait une fois sur cinq. Deux régimes, pas de milieu —
+# or c'est dans le milieu que vit un jeu de dés. Trois règles, mesurées par test_progression.gd :
+#   1. les ATOUTS PROPRES (talent + maîtrise + greffes au jet) ne dépassent jamais
+#      atouts_propres_cap : ce qu'on SAIT est borné, ce qu'on LIT dans la scène vaut +3 par tag.
+#      La couverture reste le vrai levier, et un tag de plus vaut TOUJOURS plus (monotone : une
+#      première version plafonnait le total sur les Épreuves et rendait le deuxième tag inutile) ;
+#   2. le dé se jette TOUJOURS sur une Épreuve et au Climax : là où la quête se joue, aucun geste
+#      n'est sûr (le code le disait pour le Climax, mais les atouts seuls suffisaient à l'obtenir) ;
+#   3. ailleurs, le geste sûr n'existe qu'en difficulté 1, ou en difficulté 2 avec la couverture
+#      pleine : la routine se dispense du dé, pas l'épreuve.
+# Variables statiques et non constantes pour que l'épreuve mesure « hier », « aujourd'hui » et la
+# grille des réglages dans la même course ; le jeu ne les touche jamais. Les chiffres retenus sont
+# dans test_progression.gd (trois graines, archétype p74) et docs/BIBLE_DES_REGLES.md §2.4.
+static var regle_plafond: bool = true
+static var atouts_propres_cap: int = 2
 
 
 ## played_cards : Array de MerlinCard (ou Dict {tags:Array, corruption:int}).
@@ -97,7 +117,10 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 
 	# === MOTEUR d20 (v2-W1) — un SEUL nombre décide, la marge donne le degré ===
 	var synergy_bonus: int = SYN if synergy > 0 else (-SYN if synergy < 0 else 0)
-	var mods: int = skill_mod + graft_bonus + COVER_PER_TAG * covered_n + synergy_bonus
+	var propres: int = skill_mod + graft_bonus
+	if regle_plafond:
+		propres = mini(propres, atouts_propres_cap)
+	var mods: int = propres + COVER_PER_TAG * covered_n + synergy_bonus
 	var dc: int = int(DC_BY_DIFF.get(clampi(diff, 1, 3), DC_BY_DIFF[2])) + dc_bonus
 	# v34 — GESTE SÛR (Maxime 2026-08-19) : si la réussite est acquise MÊME au jet minimal (2),
 	# aucun dé — un sceau s'appose (merlin_fx). L'éclatante reste réservée aux VRAIS jets : le
@@ -108,7 +131,11 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	# JAMAIS au Climax : le pic de la quete se joue au de, sinon l'eclatante devient
 	# inatteignable la ou elle compte le plus (l'eclat n'existe que par le risque, v34).
 	var m_sure: int = 0 if beat_type == "Climax" else marge_sure(played_cards, skill_mod)
-	var geste_sur: bool = (2 + mods + m_sure) >= dc
+	var sur_permis: bool = true
+	if regle_plafond:
+		sur_permis = beat_type != "Climax" and beat_type != "Epreuve" \
+			and (diff <= 1 or req_n == 0 or (diff == 2 and covered_n >= req_n))
+	var geste_sur: bool = sur_permis and (2 + mods + m_sure) >= dc
 	var face: int = die if die >= 2 and die <= 12 else DIE_FALLBACK
 	var total: int = (2 + mods + m_sure) if geste_sur else (face + mods)
 	var margin: int = total - dc
@@ -200,7 +227,7 @@ static func _degree_from_margin(margin: int, face: int) -> String:
 		return ECLATANTE   # R158 : « boxcars » 2d6 -> plancher eclatante (quels que soient les mods)
 	if face == 2:
 		return ECHEC       # R158 : « snake eyes » 2d6 -> plancher echec
-	if margin >= ECLAT_MARGIN:
+	if margin >= eclat_margin:
 		return ECLATANTE
 	if margin >= 0:
 		return REUSSITE
