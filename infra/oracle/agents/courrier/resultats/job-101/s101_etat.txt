@@ -1,0 +1,33 @@
+== ollama-serve, apres le retrait du verrou ==
+{"id": "ollama-serve", "last_run": "2026-09-07T08:20:01Z", "duration_s": 0, "rc": 0, "ok": true, "reporte": false, "summary": "serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident"}
+
+reveils [ollama-serve] dates dans cron.log : 195
+2026-09-07T08:10:01Z [ollama-serve] rc=0 serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident
+2026-09-07T08:15:01Z [ollama-serve] rc=0 serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident
+2026-09-07T08:20:01Z [ollama-serve] rc=0 serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident
+
+== reportes (rc=75) depuis hier ==
+2026-09-06T20:00:01Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+2026-09-06T20:07:01Z [gd-content-gap] rc=75 gd-content-gap reporté : jeu quitté il y a 7 min — reprise à +10 min
+2026-09-07T04:30:02Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+2026-09-07T07:00:01Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+
+== l'atelier de nuit : etat, duree ==
+{"id": "partie-nuit", "last_run": "2026-09-07T04:05:01Z", "duration_s": 3123, "rc": 0, "ok": true, "reporte": false, "summary": "partie : 25 beats · fin accomplissement · 1 au banc · bot couvrant · quête : 8 beats · 2468 signes · contrat PASSÉ · adresse     tu=0   vous=31  3e pers.=0   · repere corp
+
+== agents eteints hier soir : ont-ils encore couru ? ==
+gd-content-gap : 2026-09-06T21:07:58Z [gd-content-gap] rc=0 carte non écrite pour « Ys » (2 erreur(s) de va
+
+design-council : [design-council] rc=0 conseil ouvert (conseil-20260906, conseiller balance_tuner, 605 car.
+
+gd-balance : 2026-09-06T19:50:41Z [gd-balance] rc=0 proposition 20260906-1950-gd-balance-f00ca7 écrite 
+
+gd-run : [gd-run] rc=0 proposition 20260906-0235-gd-run-37d316 écrite (palier MOYEN, 25s, confiance
+
+coder-local : 2026-09-06T21:00:02Z [coder-local] rc=0 rien d'applicable — 0 mission(s) en file, 0 sans p
+
+sequence : 2026-09-06T21:03:02Z [sequence] rc=0 3/6 — Le codeur applique · rien d'applicable — 0 miss
+
+parole : 2026-09-06T20:25:02Z [parole] rc=0 quota du jour atteint (2) — 0 signal(aux) reporté(s)
+
+lignes de crontab pour ces agents : 0

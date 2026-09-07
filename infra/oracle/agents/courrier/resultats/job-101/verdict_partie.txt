@@ -1,0 +1,21 @@
+CIBLE1 secours: MANQUEE (1 beat(s) au banc : 5)
+  ATTENTION les deux temoins divergent — drapeau=aucun ; provenance=5. Le drapeau seul sous-compte le banc.
+  Les beats 5 n'ont PAS ete ecrits par le modele : ni leur prose, ni leur continuite, ni leur empreinte du Lore ne mesurent quoi que ce soit du LLM.
+CIBLE2 reussite: TENUE (25/25)
+CIBLE3 attente: MANQUEE (6 beats > 20s : b2=71s b6=23s b9=69s b10=55s b13=74s b16=50s ; moy 23s)
+REFERENCE prefixe median=463 tok relus/beat · debit median=5.5 tok/s (la ligne de base de CETTE partie)
+CAUSE attente: 6 beat(s) au-dessus de la cible — 0 PREFIXE RELU, 5 ECRITURE ETRANGLEE, 1 fond de quete
+  b2      71s = prefixe   33s (  507 tok) + ecriture   62s ( 1.9 tok/s)  ECRITURE ETRANGLEE
+  b6      23s = prefixe   30s (  463 tok) + ecriture   17s ( 7.3 tok/s)  fond de quete
+  b9      69s = prefixe   71s (  481 tok) + ecriture   61s ( 2.0 tok/s)  ECRITURE ETRANGLEE
+  b10     55s = prefixe   32s (  482 tok) + ecriture   49s ( 2.4 tok/s)  ECRITURE ETRANGLEE
+  b13     74s = prefixe   31s (  415 tok) + ecriture   68s ( 2.0 tok/s)  ECRITURE ETRANGLEE
+  b16     50s = prefixe   31s (  412 tok) + ecriture   44s ( 2.6 tok/s)  ECRITURE ETRANGLEE
+  => ~0s perdues par eviction de cache + ~174s par contention : les deux accusent l'ORDONNANCEMENT de l'arc, pas le modele.
+  => les 1 beat(s) « fond de quete » ne sont imputables a rien : le contexte grandit, le debit baisse. C'est le prix d'une quete longue.
+BUDGET b1:p412/e127[issue (combina] b2:p507/e117[issue (combina] b3:p499/e126[issue (combina] b4:p401/e124[issue (combina] b5:p424/e119[issue (combina] b6:p463/e127[issue (combina] b7:p505/e127[issue (combina] b8:p488/e134[issue (combina] b9:p481/e123[issue (combina] b10:p482/e115[issue (combina] b11:p475/e133[issue (combina] b12:p438/e93[issue (combina] b13:p415/e134[issue (combina] b14:p427/e75[issue (combina] b15:p457/e114[issue (combina] b16:p412/e115[issue (combina] b17:p445/e123[issue (combina] b18:p444/e120[issue (combina] b19:p518/e114[issue (combina] b20:p479/e129[issue (combina] b21:p441/e122[issue (combina] b22:p495/e116[issue (combina] b23:p500/e115[issue (combina] b24:p449/e127[issue (combina] b25:p471/e160[issue (combina]
+COUPEES aucune
+BOT 25/25 beats justifies ; couverture 2,2,1,1,2,0,1,1,0,1,1,1,0,1,0,0,1,1,1,0,1,1,1,1,2 ; gestes surs 20
+CONTINUITE 21/24 enchainements portent le fil du beat precedent (b2:oui b3:oui b4:non b5:oui b6:oui b7:oui b8:oui b9:oui b10:oui b11:oui b12:oui b13:oui b14:oui b15:oui b16:oui b17:oui b18:non b19:oui b20:oui b21:non b22:oui b23:oui b24:oui b25:oui)
+EMPREINTE lieux=[Val sans Retour,Pierre Qui Oublie,Chene Creux,Tertre] figures=[korrigan,Fanch,Chevalier] boucle=2
+FIN accomplissement beats=25 integrite=10 corruption=2

@@ -1,0 +1,196 @@
+{
+ "_erreurs_moteur": {
+
+ },
+ "beats": [
+  {
+   "action": "OBSERVER",
+   "at": 6,
+   "dc": 9,
+   "de": 7,
+   "issue": "Vous restez sous les arbres et vous voyez le mouvement des feuilles. Le Chœur des Druides continue son chant sans voir la forêt qui rêve. Une Brume apparaît.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 1,
+   "note": "OBSERVER avec La Patience. Marge +4 — reussite. La tuile dit ce qu'on fait, la rune dit avec quoi ; c'est le modele qui a lu la paire.",
+   "rune": "La Patience",
+   "scene": "Le Chœur des Druides psalmodie près de vous. « Le rite tient. » Ils recommencent la phrase une fois.",
+   "t": "Exploration"
+  },
+  {
+   "action": "AGIR",
+   "at": 3,
+   "bascule": [
+    "subie",
+    "ce que le lieu impose"
+   ],
+   "dc": 9,
+   "de": 9,
+   "issue": "Vous avancez dans le bosquet. Les feuilles se font plus lourdes sous vos pas. Dame Aveline aux Corbeaux s'arrête à la limite du bois. Le Rameau Fendu est maintenant visible.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 2,
+   "note": "AGIR avec La Franchise. Marge +3 — reussite. La tuile dit ce qu'on fait, la rune dit avec quoi ; c'est le modele qui a lu la paire.",
+   "rune": "La Franchise",
+   "scene": "Vous regardez Dame Aveline aux Corbeaux s'avancer dans le bois. Le Chœur des Druides continue son chant autour de vous. Une Brume enveloppe la forêt qui rêve.",
+   "t": "Rencontre"
+  },
+  {
+   "bascule": [
+    "choisie",
+    "vous marchez vers le chemin de gauche"
+   ],
+   "issue": "Vous marchez sur le chemin de gauche. Le Rameau Fendu reste dans le bois. Les arbres continuent leur place sous vous.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 3,
+   "note": "Beat special : ni tuile, ni rune, ni de. On selectionne parmi 3 propositions, et aucune n'est neutre.",
+   "scene": "Dame Aveline aux Corbeaux regarde dans le bosquet. Le Chœur des Druides continue son chant derrière elle. Vous voyez trois chemins devant vous sous les arbres.",
+   "special": {
+    "genre": "choix de route",
+    "options": [
+     [
+      "Vous marchez vers le chemin de gauche",
+      "Vous laissez le Rameau Fendu derrière vous."
+     ],
+     [
+      "Vous allez vers le centre du bosquet",
+      "Le Chœur des Druides se tourne légèrement vers votre présence."
+     ],
+     [
+      "Vous descendez vers le chemin de droite",
+      "Dame Aveline aux Corbeaux vous regarde intensément."
+     ]
+    ],
+    "pris": 0
+   },
+   "t": "Dilemme"
+  },
+  {
+   "action": "COMBATTRE",
+   "at": 0,
+   "dc": 9,
+   "de": 7,
+   "issue": "Vous avancez vers Dame Aveline aux Corbeaux. Elle prend le Rameau Fendu. Le Chœur des Druides continue son rite près du bosquet. Vous tenez maintenant un morceau de la voix.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 4,
+   "note": "COMBATTRE avec L'Entêtement. Marge -2 — partiel. La tuile dit ce qu'on fait, la rune dit avec quoi ; c'est le modele qui a lu la paire.",
+   "rune": "L'Entêtement",
+   "scene": "Vous marchez sur le chemin de gauche. Les feuilles deviennent plus lourdes sous vos pas. Dame Aveline aux Corbeaux se tient à la limite du bois. Elle regarde le Rameau Fendu.",
+   "t": "Exploration"
+  },
+  {
+   "action": "RÉVÉLER",
+   "at": 6,
+   "dc": 9,
+   "de": 9,
+   "issue": "La Dame regarde dans l'obscurité du bois. Elle trouve un trou au sol à cet endroit. Vous passez près de ce puits ouvert sous la canopée. Le morceau de voix que vous tenez change en un murmure froid.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 5,
+   "note": "RÉVÉLER avec L'Entêtement. Marge +6 — reussite. La tuile dit ce qu'on fait, la rune dit avec quoi ; c'est le modele qui a lu la paire.",
+   "rune": "L'Entêtement",
+   "scene": "Dame Aveline aux Corbeaux tient le Rameau Fendu. Le Chœur des Druides continue son chant près du bosquet. Vous marchez vers le bord de la forêt qui rêve.",
+   "t": "Rencontre"
+  },
+  {
+   "bascule": [
+    "choisie",
+    "vous offrez le morceau de la voix à dame aveline"
+   ],
+   "issue": "Vous donnez le morceau de la voix à Dame Aveline. Le murmure froid s'arrête dans l'air du bois. Vous ne parlez plus.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 6,
+   "note": "Beat special : ni tuile, ni rune, ni de. On selectionne parmi 3 propositions, et aucune n'est neutre.",
+   "scene": "Le Chœur des Druides chante le rite. Vous tenez le murmure froid dans votre main. La Dame Aveline aux Corbeaux se tient près du bosquet et fait un geste vers vous. Elle attend une réaction de votre part.",
+   "special": {
+    "genre": "choix de dialogue",
+    "options": [
+     [
+      "Vous offrez le morceau de la voix à Dame Aveline",
+      "Le murmure froid disparaît, mais vous perdez l'occasion de parler."
+     ],
+     [
+      "Vous ignorez Dame Aveline et marchez vers le Chœur des Druides",
+      "Le morceau de la voix change en une pierre lourde dans votre main."
+     ],
+     [
+      "Vous lancez le murmure froid sur Dame Aveline",
+      "Vous perdez l'opportunité d'atteindre le Rameau Fendu."
+     ]
+    ],
+    "pris": 0
+   },
+   "t": "Dilemme"
+  },
+  {
+   "action": "PARLER",
+   "at": 6,
+   "dc": 9,
+   "de": 9,
+   "issue": "Vous dites un mot. Fañch le Trotteur accepte le mot. Le morceau de voix devient une main dans votre poche.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 7,
+   "note": "PARLER avec La Franchise. Marge +6 — reussite. La tuile dit ce qu'on fait, la rune dit avec quoi ; c'est le modele qui a lu la paire.",
+   "rune": "La Franchise",
+   "scene": "Vous entendez Fañch le Trotteur entre deux menhirs. Il parle avec la bouche ouverte. FAÑCH LE TROTTEUR : « Trois pour deux, deux pour un, un pour rien, rien pour toi, alors ? »",
+   "t": "Exploration"
+  },
+  {
+   "action": "OBSERVER",
+   "at": 6,
+   "bascule": [
+    "subie",
+    "ce que le lieu impose"
+   ],
+   "dc": 12,
+   "de": 8,
+   "issue": "Vous prenez une partie du bois qui reste près des arbres. Le linge s'arrête de bouger sous le ciel bas. Un Rameau Fendu apparaît dans votre main.",
+   "lieu": "Ar C'hoad Kozh",
+   "n": 8,
+   "note": "OBSERVER avec Le Silence. Marge +2 — reussite. La tuile dit ce qu'on fait, la rune dit avec quoi ; c'est le modele qui a lu la paire.",
+   "rune": "Le Silence",
+   "scene": "Vous vous tenez devant le cercle de corbeaux. La Lavandière de Nuit tient son linge près du bord du bois. Le Chœur des Druides psalmodie sans s'arrêter le rite.",
+   "t": "Climax"
+  }
+ ],
+ "bourse_depart": 20,
+ "chapitre": 1,
+ "corruption": {
+
+ },
+ "genere": true,
+ "gestes": {
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "PARLER": "s'adresser à quelqu'un",
+  "RÉVÉLER": "faire venir au jour ce qui se cache"
+ },
+ "id": "gen_ch1",
+ "integrite": {
+
+ },
+ "main_depart": [
+  "La Patience",
+  "La Méfiance",
+  "La Franchise",
+  "L'Élan"
+ ],
+ "monde": "penn_ar_bed",
+ "preambule": [
+  "Vous vous réveillez dans Ar C'hoad Kozh.",
+  "La Forêt qui rêve entoure votre corps.",
+  "Le Chœur psalmodie un rite sans fin.",
+  "Dans ces bois tout recommence, vous êtes différent."
+ ],
+ "runes": {
+  "L'Aplomb": "tenir sa place devant plus grand que soi",
+  "L'Entêtement": "recommencer sans changer d'avis",
+  "L'Élan": "partir avant d'être sûr",
+  "La Franchise": "dire ce qui est, sans arranger",
+  "La Méfiance": "supposer le pire et se garder",
+  "La Patience": "laisser venir plutôt qu'aller chercher",
+  "La Pitié": "s'arrêter pour ce qui souffre",
+  "La Ruse": "prendre par un autre bord",
+  "Le Deuil": "accepter ce qui ne reviendra pas",
+  "Le Silence": "ne rien dire et laisser le vide travailler"
+ },
+ "titre": "L'Appel sous les Fougères"
+}

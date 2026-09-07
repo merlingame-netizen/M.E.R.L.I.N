@@ -200,8 +200,11 @@ for lock in sorted(glob.glob(os.path.join(st, "*.lock"))):
     if vivants and vivants <= anc:
         continue   # cette course même
     noms = sorted("%s(%d)" % (comm(q), q) for q in vivants) or ["porteur disparu"]
-    outils = {"bash", "python3", "sh", "tail"}
-    if vivants and all(comm(q) in outils for q in vivants):
+    # Un verrou tenu par UN shell vivant est une course en cours (ses enfants curl, sleep, godot
+    # l'accompagnent) ; il n'est hérité que si AUCUN shell ne le tient plus — brasero à 7 h 40
+    # (bash + curl) passait pour un héritage (s101).
+    outils = {"bash", "python3", "sh", "tail", "flock"}
+    if vivants and any(comm(q) in outils for q in vivants):
         genre = "en cours (une course d'agent-run)"
     else:
         genre = "HERITE — l'agent ne tournera plus tant que ce processus vit"; n += 1
