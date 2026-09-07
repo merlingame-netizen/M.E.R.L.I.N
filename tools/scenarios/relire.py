@@ -61,7 +61,12 @@ def lire(q, nom):
             b["issue"] = b.get("resolution", "")
         if "n" not in b:
             b["n"] = b.get("index", i + 1)
-    txt = " ".join(str(b.get("scene", "")) + " " + str(b.get("issue", "")) for b in B)
+    # LE DIALOGUE VIT DANS SON PROPRE CHAMP. Six quetes de reference sur huit affichaient
+    # « 0 replique » alors qu'elles en ont deux a huit : la grille ne lisait que scene et issue,
+    # et le corpus met les repliques dans `dial`. Une mesure qui ne voit pas ce qu'elle compte
+    # apprend au relecteur que le corpus est muet (07/09).
+    txt = " ".join(str(b.get("scene", "")) + " " + str(b.get("issue", "")) + " " + str(b.get("dial", ""))
+                   for b in B)
     nu = hors_dialogue(txt)
     tu, vs = len(TU.findall(nu)), len(VOUS.findall(nu))
     il = len(re.findall(r"\b[Ll]e Voyageur\b", nu))
