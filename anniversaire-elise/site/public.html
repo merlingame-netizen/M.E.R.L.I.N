@@ -241,6 +241,13 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 .bt.itin.plans{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
 .bt.itin.plans:hover{background:rgba(255,255,255,.14)}
 
+.reste{background:#f9ede8;border-left:3px solid var(--terre);padding:.85rem 1rem;
+  margin-top:1.4rem}
+.reste .et{font-size:.61rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--terre-fonce);margin:0 0 .45rem}
+.reste ul{margin:0;padding-left:1.1rem;font-size:.9rem;color:var(--encre-doux);line-height:1.65}
+.reste li::marker{color:var(--terre)}
+
 /* ══ URNES : un vote posé dans le récit, qui ne s'y confond pas ══ */
 .urne{background:var(--blanc);border:1px solid var(--craie-3);border-left:3px solid var(--terre);
   padding:1rem 1.05rem 1.1rem;margin:.9rem 0 1.9rem}
@@ -515,6 +522,11 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg><span>Les votes — déjeuner, escape game, gâteaux, dimanche —
         sont sous les photos, dans <button type="button" class="lien" id="vers-we">l'onglet
         Le week-end</button>.</span></p>
+
+      <div class="reste" id="reste" hidden>
+        <p class="et">Il reste à faire</p>
+        <ul id="manques"></ul>
+      </div>
     </div>
 
     <div class="barre"><button class="bt" id="v1" disabled>Continuer</button></div>
@@ -522,11 +534,9 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
   <!-- 2 -->
   <section id="e2" class="cache">
-    <h2>C'est envoyé&nbsp;?</h2>
-    <p class="chapo">Cette page garde tes choix dans ton téléphone, mais elle ne les
-      transmet à personne toute seule. Le bouton du bas ouvre WhatsApp avec ce récapitulatif
-      déjà écrit&nbsp;: <strong>tu l'envoies à Maxime</strong>, et c'est comme ça que ta
-      réponse arrive. Relis d'abord.</p>
+    <h2>C'est noté</h2>
+    <p class="chapo">Ta réponse est enregistrée. Relis-la&nbsp;: tu peux revenir la
+      corriger quand tu veux, ce navigateur te reconnaîtra.</p>
     <div class="fiche"><dl>
       <dt>Qui</dt><dd class="vide" id="f-nom">—</dd>
       <dt>Présence</dt><dd class="vide" id="f-rsvp">—</dd>
@@ -546,11 +556,12 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
     <div class="barre">
       <button class="bt retour" id="r2">Retour</button>
-      <a class="bt envoi" id="envoi" href="#" target="_blank" rel="noopener">Envoyer sur WhatsApp</a>
+      <a class="bt envoi" id="envoi" href="#" target="_blank" rel="noopener">Prévenir Maxime</a>
     </div>
     <p style="margin-top:1.1rem;font-size:.86rem;color:var(--encre-pale)">
-      Tes réponses sont enregistrées dans ce navigateur&nbsp;: tu peux fermer la page,
-      revenir plus tard, tout sera encore là. Rien ne part avant que tu appuies.
+      Enregistré dans ce navigateur. Le bouton ci-dessus ouvre WhatsApp avec le
+      récapitulatif déjà écrit — c'est facultatif, mais c'est ce qui prévient Maxime
+      le plus vite.
     </p>
   </section>
 </div></main></div>
@@ -1052,7 +1063,29 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     var s = etat();
     // Le nombre de personnes et les votes n'ont pas de sens si on ne vient pas.
     $("c-nb").classList.toggle("cache", !!s.rsvp && !present());
-    $("v1").disabled = !(s.nom && s.rsvp);
+    /* On ne débloque la dernière étape qu'une fois le voyage ET les votes du
+       week-end faits : sinon on récapitule une réponse à trous. La liste dit
+       ce qui manque, ce qu'un bouton grisé ne dit jamais. */
+    var manques = [];
+    if (!s.nom) manques.push("ton prénom et ton nom");
+    if (!s.rsvp) manques.push("dire si tu viens");
+    if (present()){
+      if (!s.venue) manques.push("comment tu arrives");
+      if (!s.jarr)  manques.push("le jour de ton arrivée");
+      if (!s.jdep)  manques.push("quand tu repars");
+      var votes = [];
+      if (!s.midi)   votes.push("le déjeuner de samedi");
+      if (!s.escape) votes.push("l'escape game");
+      if (!s.soiree) votes.push("la soirée de samedi");
+      if (!s.gateau1 || !s.gateau2) votes.push("les deux gâteaux");
+      if (votes.length)
+        manques.push("dans l'onglet Le week-end : " + votes.join(", "));
+    }
+    $("v1").disabled = manques.length > 0;
+    $("reste").hidden = !(s.rsvp && manques.length);
+    $("manques").innerHTML = manques.map(function(m){
+      return "<li>" + m.replace(/[&<>]/g, "") + "</li>";
+    }).join("");
     $("cpt-act").textContent = s.act.length + (s.act.length > 1 ? " choisis" : " choisi");
 
     var sej = sejour(s);

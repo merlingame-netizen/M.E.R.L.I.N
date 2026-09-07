@@ -77,8 +77,7 @@ Anniv Elise — 10/11 oct à Aix
 ```
 Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
 Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
-Le jour J on ne demande rien : cagnotte ou paquet, comme vous préférez,
-et seulement si vous voulez. Onglet « Comment venir + cagnotte » sur la page.
+Tout est sur la page : programme, itinéraire, votes et cadeau.
 
 Répondez ici : VOTRE-URL-ICI
 Deadline : samedi 19 septembre.
@@ -100,15 +99,8 @@ Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
 🛏️ Lits, canapés et matelas d'appoint — on a de quoi loger tout le monde,
    n'y pensez pas
 
-🎁 LE JOUR J, ON NE VOUS DEMANDERA RIEN.
-Ni pour les repas, ni pour l'escape game, ni pour rien : tout est réglé d'avance.
-Si vous voulez participer, c'est maintenant et à un seul endroit : la cagnotte.
-Elle sert aux cadeaux et aux activités du week-end.
-Sinon, apportez votre propre cadeau. Ou les deux. Ou ni l'un ni l'autre.
-Ouverte jusqu'au 8 octobre — onglet « Comment venir + cagnotte », prénom en
-référence du virement.
-
-🤫 Et n'écrivez rien de précis sur les cadeaux ici : la page circule.
+🎁 Le jour J, on ne vous demandera rien. Pour le cadeau, tout est expliqué
+sur la page. Et n'écrivez rien de précis ici : elle circule.
 
 👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
 
@@ -121,7 +113,7 @@ Quatre choses, dans l'ordre :
     n'y pensez pas : on a de quoi loger tout le monde.
 3️⃣ Vous votez dans l'onglet « Le week-end », chaque vote est sous la
     photo de ce qu'il décide
-4️⃣ Vous relisez, et vous m'envoyez tout d'un tap
+4️⃣ Vous relisez. La page garde tout — vous pouvez revenir corriger
 
 🎲 LE PROGRAMME, EN PHOTOS SUR LA PAGE (onglet « Le week-end ») :
 
