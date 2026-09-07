@@ -7,13 +7,10 @@
   "venue": [
    "Train, gare d'Aix TGV",
    "Train, gare d'Aix centre",
+   "Car depuis Marseille ou l'aéroport",
    "En voiture, avec des places libres",
    "En voiture, complet",
    "J'habite Aix"
-  ],
-  "nav": [
-   "Oui, venez me chercher",
-   "Non, je me débrouille"
   ],
   "jarr": [
    "Samedi",
@@ -42,15 +39,31 @@
    "Je passe mon tour",
    "Je ne sais pas encore"
   ],
+  "salle": [
+   "Pandora",
+   "Chasseurs de trésor",
+   "Les Explorateurs urbains",
+   "Le GIGN",
+   "Peu importe"
+  ],
   "soiree": [
    "Bar à jeux sur place",
    "Retour à la maison",
    "Peu importe"
   ],
-  "fin": [
-   "Jeux de société",
-   "Blind test des trente ans",
-   "Les deux, dans cet ordre"
+  "gateau1": [
+   "Chocolat, et pas qu'un peu",
+   "Fruits rouges, please",
+   "Citron meringué",
+   "Caramel beurre salé",
+   "Surprends-nous"
+  ],
+  "gateau2": [
+   "Chocolat, et pas qu'un peu",
+   "Fruits rouges, please",
+   "Citron meringué",
+   "Caramel beurre salé",
+   "Surprends-nous"
   ]
  },
  "libres": {

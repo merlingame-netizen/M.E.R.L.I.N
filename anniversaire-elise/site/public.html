@@ -214,6 +214,28 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
   font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .lien:hover{color:var(--terre)}
 
+/* ══ LE VOYAGE, DÉPLIÉ QUAND ON DIT OUI ═══════════════════════ */
+.volet{margin-top:1.6rem;border-top:1px solid var(--craie-3);padding-top:1.4rem}
+@media (prefers-reduced-motion:no-preference){
+  .volet{animation:deplier-volet .55s cubic-bezier(.22,.8,.3,1) both}
+  @keyframes deplier-volet{
+    from{opacity:0;transform:translateY(-10px)}
+    to{opacity:1;transform:none}}
+  .volet>*{animation:monter-volet .45s cubic-bezier(.22,.8,.3,1) both}
+  @keyframes monter-volet{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .feuille{animation:deplier-volet .4s cubic-bezier(.22,.8,.3,1) both}
+}
+.feuille{background:var(--ciel-fonce);color:#e8f0f6;padding:1.1rem 1.2rem;margin-bottom:1.6rem}
+.feuille .et{font-size:.61rem;font-weight:700;letter-spacing:.19em;text-transform:uppercase;
+  color:#b9d2e4;margin:0 0 .4rem;display:flex;align-items:center;gap:.4rem}
+.feuille .et .picto{color:#b9d2e4;width:1rem;height:1rem}
+.feuille .lieu{font-family:var(--display);font-size:1.22rem;font-weight:600;color:#fff;
+  margin:0 0 .6rem;line-height:1.25}
+.feuille .conseil{font-size:.89rem;line-height:1.55;color:#d6e4ee;margin:0 0 1rem}
+.bt.itin{background:var(--blanc);color:var(--encre);flex:none;display:inline-flex;
+  min-height:48px;padding:.85rem 1.2rem}
+.bt.itin:hover{background:#fff}
+
 /* ══ URNES : un vote posé dans le récit, qui ne s'y confond pas ══ */
 .urne{background:var(--blanc);border:1px solid var(--craie-3);border-left:3px solid var(--terre);
   padding:1rem 1.05rem 1.1rem;margin:.9rem 0 1.9rem}
@@ -269,6 +291,7 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
 /* ══ TRAINS ═══════════════════════════════════════════════════ */
 .quai{background:var(--ciel-fonce);color:#e8f0f6;padding:1.2rem 1.3rem;margin-bottom:1.1rem}
 .quai.vert{background:var(--pin)}
+.quai.jaune{background:var(--roche-fonce)}
 .quai h3{font-size:1.1rem;color:#fff;margin-bottom:.15rem}
 .quai .sous{font-size:.64rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
   color:rgba(255,255,255,.62);margin-bottom:.85rem}
@@ -395,7 +418,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 
 <!-- ═══ RÉPONDRE ═══ -->
 <div id="v-rep" role="tabpanel" aria-labelledby="o-rep"><main><div class="col">
-  <div class="marches" id="marches"><i class="ici"></i><i></i><i></i></div>
+  <div class="marches" id="marches"><i class="ici"></i><i></i></div>
   <p class="oeil" id="etiquette">Première question</p>
 
   <!-- 1 -->
@@ -406,7 +429,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       est dans l'onglet <em>Le week-end</em>.</p>
     <div class="choix">
       <label class="opt"><input type="radio" name="rsvp" value="Je viens">
-        <span><b>Oui, je viens</b><em>Tu diras à l'étape suivante quand tu arrives et quand tu repars</em></span></label>
+        <span><b>Oui, je viens</b><em>Le reste des questions se déplie juste en dessous</em></span></label>
       <label class="opt"><input type="radio" name="rsvp" value="Je ne peux pas venir">
         <span><b>Non, je ne peux pas</b><em>Je ne serai pas là ce week-end</em></span></label>
     </div>
@@ -418,82 +441,77 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <label for="nb">Vous serez combien&nbsp;?</label>
       <input type="text" id="nb" inputmode="numeric" placeholder="1, ou 2 si accompagné·e">
     </div>
+
+    <!-- Le voyage, déplié seulement si la réponse est oui -->
+    <div class="volet" id="voyage" hidden>
+      <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-train"></use></svg> Comment tu arrives</p>
+      <p class="glose">Choisis, et l'itinéraire jusqu'à la maison apparaît en dessous.</p>
+      <div class="choix">
+        <label class="opt"><input type="radio" name="venue" value="Train, gare d'Aix TGV">
+          <span><span class="note">18 km</span><b>Train — Aix-en-Provence TGV</b><em>Paris 2 h 55, Lyon 1 h 07. En rase campagne, hors de la ville</em></span></label>
+        <label class="opt"><input type="radio" name="venue" value="Train, gare d'Aix centre">
+          <span><span class="note">en ville</span><b>Train — Aix-en-Provence centre</b><em>TER depuis Marseille, un par heure</em></span></label>
+        <label class="opt"><input type="radio" name="venue" value="Car depuis Marseille ou l'aéroport">
+          <span><span class="note">car</span><b>En car</b><em>Marseille Saint-Charles ou l'aéroport, arrivée gare routière d'Aix</em></span></label>
+        <label class="opt"><input type="radio" name="venue" value="En voiture, avec des places libres">
+          <span><span class="note">covoit</span><b>En voiture, avec des places</b><em>Je peux embarquer du monde</em></span></label>
+        <label class="opt"><input type="radio" name="venue" value="En voiture, complet">
+          <span><b>En voiture, complet</b><em>Aucune place à proposer</em></span></label>
+        <label class="opt"><input type="radio" name="venue" value="J'habite Aix">
+          <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
+      </div>
+
+      <div class="feuille" id="itineraire" hidden>
+        <p class="et"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg> L'adresse</p>
+        <p class="lieu">__ADRESSE__</p>
+        <p class="conseil" id="conseil"></p>
+        <a class="bt itin" id="lien-itin" href="#" target="_blank" rel="noopener">Ouvrir l'itinéraire</a>
+      </div>
+
+      <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton arrivée</p>
+      <div class="pilules" role="group" aria-label="Jour d'arrivée">
+        <label><input type="radio" name="jarr" value="Samedi"><span>Samedi</span></label>
+        <label><input type="radio" name="jarr" value="Dimanche"><span>Dimanche</span></label>
+      </div>
+      <div class="champs-2">
+        <div class="champ">
+          <label for="h-arr">À quelle heure&nbsp;?</label>
+          <input type="time" id="h-arr">
+        </div>
+        <div class="champ">
+          <label for="num-arr">Numéro du train, si tu l'as</label>
+          <input type="text" id="num-arr" placeholder="TGV 6173">
+        </div>
+      </div>
+
+      <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton départ</p>
+      <div class="pilules" role="group" aria-label="Moment du départ">
+        <label><input type="radio" name="jdep" value="Samedi soir"><span>Samedi soir</span></label>
+        <label><input type="radio" name="jdep" value="Dimanche matin"><span>Dimanche matin</span></label>
+        <label><input type="radio" name="jdep" value="Dimanche après-midi"><span>Dimanche après-midi</span></label>
+        <label><input type="radio" name="jdep" value="Lundi"><span>Lundi</span></label>
+      </div>
+      <div class="champs-2">
+        <div class="champ">
+          <label for="h-dep">Train de retour, si tu le connais</label>
+          <input type="time" id="h-dep">
+        </div>
+        <div class="champ sejour">
+          <label>Ça fait</label>
+          <p class="verdict" id="sejour">—</p>
+        </div>
+      </div>
+
+      <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg><span>Les votes — déjeuner, escape game, gâteaux, dimanche —
+        sont sous les photos, dans <button type="button" class="lien" id="vers-we">l'onglet
+        Le week-end</button>.</span></p>
+    </div>
+
     <div class="barre"><button class="bt" id="v1" disabled>Continuer</button></div>
   </section>
 
   <!-- 2 -->
   <section id="e2" class="cache">
-    <h2>Quelques détails</h2>
-    <p class="chapo">Juste de quoi caler les allers-retours à la gare. Les lits, on en a
-      pour tout le monde — n'y pense pas. Les votes, eux, sont dans l'onglet
-      <em>Le week-end</em>, chacun sous la photo de ce qu'il décide.</p>
-
-    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-train"></use></svg> Comment tu viens</p>
-    <div class="choix">
-      <label class="opt"><input type="radio" name="venue" value="Train, gare d'Aix TGV">
-        <span><span class="note">18 km</span><b>Train — Aix-en-Provence TGV</b><em>Paris 2 h 55, Lyon 1 h 07. En rase campagne, à vingt minutes de la maison</em></span></label>
-      <label class="opt"><input type="radio" name="venue" value="Train, gare d'Aix centre">
-        <span><span class="note">en ville</span><b>Train — Aix-en-Provence centre</b><em>TER depuis Marseille, un par heure. À dix minutes de la maison</em></span></label>
-      <label class="opt"><input type="radio" name="venue" value="En voiture, avec des places libres">
-        <span><span class="note">covoit</span><b>En voiture, avec des places</b><em>Je peux embarquer du monde</em></span></label>
-      <label class="opt"><input type="radio" name="venue" value="En voiture, complet">
-        <span><b>En voiture, complet</b><em>Aucune place à proposer</em></span></label>
-      <label class="opt"><input type="radio" name="venue" value="J'habite Aix">
-        <span><b>J'habite Aix</b><em>Je viens par mes propres moyens</em></span></label>
-    </div>
-    <div class="cache" id="c-nav">
-      <p class="glose">On fait les allers-retours en voiture toute la journée. Dis-nous si
-        tu veux qu'on passe&nbsp;: ça ne dérange pas, c'est prévu.</p>
-      <div class="pilules" role="group" aria-label="Navette depuis la gare">
-        <label><input type="radio" name="nav" value="Oui, venez me chercher"><span>Oui, venez me chercher</span></label>
-        <label><input type="radio" name="nav" value="Non, je me débrouille"><span>Non, je me débrouille</span></label>
-      </div>
-    </div>
-    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton arrivée</p>
-    <div class="pilules" role="group" aria-label="Jour d'arrivée">
-      <label><input type="radio" name="jarr" value="Samedi"><span>Samedi</span></label>
-      <label><input type="radio" name="jarr" value="Dimanche"><span>Dimanche</span></label>
-    </div>
-    <div class="champs-2">
-      <div class="champ">
-        <label for="h-arr">À quelle heure&nbsp;?</label>
-        <input type="time" id="h-arr">
-      </div>
-      <div class="champ">
-        <label for="num-arr">Numéro du train, si tu l'as</label>
-        <input type="text" id="num-arr" placeholder="TGV 6173">
-      </div>
-    </div>
-
-    <p class="groupe"><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Ton départ</p>
-    <div class="pilules" role="group" aria-label="Moment du départ">
-      <label><input type="radio" name="jdep" value="Samedi soir"><span>Samedi soir</span></label>
-      <label><input type="radio" name="jdep" value="Dimanche matin"><span>Dimanche matin</span></label>
-      <label><input type="radio" name="jdep" value="Dimanche après-midi"><span>Dimanche après-midi</span></label>
-      <label><input type="radio" name="jdep" value="Lundi"><span>Lundi</span></label>
-    </div>
-    <div class="champs-2">
-      <div class="champ">
-        <label for="h-dep">Train de retour, si tu le connais</label>
-        <input type="time" id="h-dep">
-      </div>
-      <div class="champ sejour">
-        <label>Ça fait</label>
-        <p class="verdict" id="sejour">—</p>
-      </div>
-    </div>
-    <p class="renvoi"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg><span>Les votes — déjeuner, escape game, soirée, dimanche — sont sous
-      les photos, dans <button type="button" class="lien" id="vers-we">l'onglet Le
-      week-end</button>.</span></p>
-
-    <div class="barre">
-      <button class="bt retour" id="r2">Retour</button>
-      <button class="bt" id="v2">Continuer</button>
-    </div>
-  </section>
-
-  <!-- 3 -->
-  <section id="e3" class="cache">
     <h2>C'est envoyé&nbsp;?</h2>
     <p class="chapo">Cette page garde tes choix dans ton téléphone, mais elle ne les
       transmet à personne toute seule. Le bouton du bas ouvre WhatsApp avec ce récapitulatif
@@ -507,7 +525,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <dt id="l-midi">Samedi midi</dt><dd class="vide" id="f-midi">—</dd>
       <dt id="l-escape">Escape game</dt><dd class="vide" id="f-escape">—</dd>
       <dt id="l-soiree">Samedi soir</dt><dd class="vide" id="f-soiree">—</dd>
-      <dt id="l-fin">Après le gâteau</dt><dd class="vide" id="f-fin">—</dd>
+      <dt id="l-salle">Salle d'escape</dt><dd class="vide" id="f-salle">—</dd>
+      <dt id="l-gateaux">Gâteaux</dt><dd class="vide" id="f-gateaux">—</dd>
       <dt id="l-act">Envies</dt><dd class="vide" id="f-act">—</dd>
     </dl></div>
 
@@ -516,7 +535,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       venir</button>.</span></p>
 
     <div class="barre">
-      <button class="bt retour" id="r3">Retour</button>
+      <button class="bt retour" id="r2">Retour</button>
       <a class="bt envoi" id="envoi" href="#" target="_blank" rel="noopener">Envoyer sur WhatsApp</a>
     </div>
     <p style="margin-top:1.1rem;font-size:.86rem;color:var(--encre-pale)">
@@ -561,7 +580,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <figcaption><b>Pétanque</b><small>Le boulodrome du parc&nbsp;: 2 500 m² de terrain stabilisé sous les platanes, en accès libre</small></figcaption>
     </figure>
   </div>
-  <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Parc Jourdan, avenue Anatole France — dix minutes en voiture, pas de réservation, on s'installe — <a href="https://www.google.com/maps/search/?api=1&amp;query=Boulodrome%20du%20Parc%20Jourdan%2C%20Avenue%20Anatole%20France%2C%2013100%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></span></p>
+  <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Parc Jourdan, avenue Anatole France — on y va en bus tous ensemble, pas de réservation — <a href="https://www.google.com/maps/search/?api=1&amp;query=Boulodrome%20du%20Parc%20Jourdan%2C%20Avenue%20Anatole%20France%2C%2013100%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></span></p>
   <div class="urne">
     <p class="demande">Tu joues&nbsp;?</p>
     <div class="choix">
@@ -588,13 +607,29 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <label class="opt"><input type="radio" name="escape" value="Je ne sais pas encore">
         <span><b>Je ne sais pas encore</b><em>Je confirmerai avant le 19 septembre</em></span></label>
     </div>
+
+    <p class="demande" style="margin-top:1.3rem">Quelle salle te tente&nbsp;?</p>
+    <p class="glose">Les quatre tournent en parallèle. On répartit les équipes selon vos
+      envies, et on complète au petit bonheur.</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="salle" value="Pandora">
+        <span><b>Pandora</b><em>Le nom promet une boîte qu'il vaudrait mieux ne pas ouvrir</em></span></label>
+      <label class="opt"><input type="radio" name="salle" value="Chasseurs de trésor">
+        <span><b>Chasseurs de trésor</b><em>Cartes, coffres et fausses pistes</em></span></label>
+      <label class="opt"><input type="radio" name="salle" value="Les Explorateurs urbains">
+        <span><b>Les Explorateurs urbains</b><em>Pour ceux qui aiment fouiller là où on n'entre pas</em></span></label>
+      <label class="opt"><input type="radio" name="salle" value="Le GIGN">
+        <span><b>Le GIGN</b><em>Chrono, tension, et quelqu'un qui crie « à gauche&nbsp;! »</em></span></label>
+      <label class="opt"><input type="radio" name="salle" value="Peu importe">
+        <span><b>Peu importe</b><em>Mets-moi où il reste de la place</em></span></label>
+    </div>
   </div>
 
 
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-verre"></use></svg><span>19h00</span>La suite, au vote</p>
   <div class="duo">
     <figure class="vue">
-      <img src="photos/bar-a-jeux.jpg" alt="Des joueurs attablés autour de plusieurs jeux de société" width="640" height="427">
+      <img src="photos/bar-a-jeux.jpg" alt="Trois joueurs attablés autour d'un plateau de jeu, dans un café" width="640" height="427">
       <figcaption><b>Le bar à jeux</b><small>Le bar à jeux de Move To Aixit&nbsp;: trois cents jeux, des planches et des tapas, ouvert jusqu'à 22h. Aucun trajet de plus</small>
       <p class="adresse"><svg class="picto" aria-hidden="true"><use href="#i-epingle"></use></svg><span>Move To Aixit, aux Milles — ouvert le samedi jusqu'à 22h — <a href="https://www.google.com/maps/search/?api=1&amp;query=Move%20To%20Aixit%2C%20378%20Rue%20Bastide%20de%20Verdaches%2C%2013290%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></span></p></figcaption>
     </figure>
@@ -620,8 +655,45 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-gateau"></use></svg><span>22h00</span>Le gâteau, trente bougies</p>
   <figure class="vue large">
     <img src="photos/gateau.jpg" alt="Un gâteau d'anniversaire couvert de bougies allumées" width="640" height="427">
-    <figcaption><b>Il est commandé</b><small>N'en apporte pas</small></figcaption>
+    <figcaption><b>Il y en aura deux</b><small>Un de chaque parfum le plus demandé. C'est vous qui décidez lesquels</small></figcaption>
   </figure>
+  <div class="urne">
+    <p class="demande">Le premier gâteau</p>
+    <p class="glose">Le parfum qui arrive en tête est commandé. Dis ce que tu aimes,
+      pas ce qui te semble raisonnable.</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="gateau1" value="Chocolat, et pas qu'un peu">
+        <span><b>Chocolat, et pas qu'un peu</b><em>Noir, intense, celui qui tache les dents</em></span></label>
+      <label class="opt"><input type="radio" name="gateau1" value="Fruits rouges, please">
+        <span><b>Fruits rouges, please</b><em>Framboise, fraise, cassis — le frais de la soirée</em></span></label>
+      <label class="opt"><input type="radio" name="gateau1" value="Citron meringué">
+        <span><b>Citron meringué</b><em>L'acidité qui réveille après l'apéro</em></span></label>
+      <label class="opt"><input type="radio" name="gateau1" value="Caramel beurre salé">
+        <span><b>Caramel beurre salé</b><em>Le sucré qui ne s'excuse pas</em></span></label>
+      <label class="opt"><input type="radio" name="gateau1" value="Surprends-nous">
+        <span><b>Surprends-nous</b><em>Je fais confiance au pâtissier</em></span></label>
+    </div>
+
+    <p class="demande" style="margin-top:1.3rem">Le second gâteau</p>
+    <p class="glose">Même liste, autre gâteau&nbsp;: le deuxième parfum le plus demandé.</p>
+    <div class="choix">
+      <label class="opt"><input type="radio" name="gateau2" value="Chocolat, et pas qu'un peu">
+        <span><b>Chocolat, et pas qu'un peu</b><em>Noir, intense, celui qui tache les dents</em></span></label>
+      <label class="opt"><input type="radio" name="gateau2" value="Fruits rouges, please">
+        <span><b>Fruits rouges, please</b><em>Framboise, fraise, cassis — le frais de la soirée</em></span></label>
+      <label class="opt"><input type="radio" name="gateau2" value="Citron meringué">
+        <span><b>Citron meringué</b><em>L'acidité qui réveille après l'apéro</em></span></label>
+      <label class="opt"><input type="radio" name="gateau2" value="Caramel beurre salé">
+        <span><b>Caramel beurre salé</b><em>Le sucré qui ne s'excuse pas</em></span></label>
+      <label class="opt"><input type="radio" name="gateau2" value="Surprends-nous">
+        <span><b>Surprends-nous</b><em>Je fais confiance au pâtissier</em></span></label>
+    </div>
+
+    <div class="champ" id="c-allergies">
+      <label for="allergies">Une allergie, un régime, quelque chose qu'on doit savoir&nbsp;?</label>
+      <input type="text" id="allergies" placeholder="Fruits à coque, gluten, lactose, sans alcool…">
+    </div>
+  </div>
 
   <p class="acte"><svg class="picto" aria-hidden="true"><use href="#i-des"></use></svg><span>22h30</span>La soirée jeux de société</p>
   <figure class="vue large">
@@ -629,17 +701,10 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <figcaption><b>La grande table, débarrassée</b><small>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Et le blind test des trente ans&nbsp;: trente titres, un par année d'Elise</small></figcaption>
   </figure>
   <div class="urne">
-    <p class="demande">Tu votes quoi&nbsp;?</p>
-    <p class="glose">À 22h30 on est forcément à la maison — le bar à jeux ferme à 22h.
-      Reste à savoir ce qu'on sort de l'armoire.</p>
-    <div class="choix">
-      <label class="opt"><input type="radio" name="fin" value="Jeux de société">
-        <span><span class="note">la table</span><b>Les jeux de société</b><em>Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Ça tourne par tablées</em></span></label>
-      <label class="opt"><input type="radio" name="fin" value="Blind test des trente ans">
-        <span><span class="note">le salon</span><b>Le blind test</b><em>Trente titres, un par année d'Elise. Équipes tirées au sort, tout le monde joue en même temps</em></span></label>
-      <label class="opt"><input type="radio" name="fin" value="Les deux, dans cet ordre">
-        <span><b>Les deux</b><em>Le blind test d'abord, les jeux ensuite pour ceux qui tiennent</em></span></label>
-    </div>
+    <p class="demande">Rien à voter ici</p>
+    <p class="glose">Les jeux et les animations de fin de soirée sont réservés, c'est
+      notre affaire. Si tu as une idée — un jeu que tu adores, quelque chose qu'on n'aurait
+      pas prévu — écris-la dans le champ libre, en bas du dimanche.</p>
   </div>
 
   <p class="jour"><small>Dimanche 11 octobre</small>Le lendemain</p>
@@ -694,7 +759,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     </div>
   </div>
 
-  <div class="heure"><time>15h00</time><div><b><svg class="picto" aria-hidden="true"><use href="#i-depart"></use></svg> Les départs</b><small>On raccompagne à la gare — indique ton train de retour</small></div></div>
 </div></main></div>
 
 <!-- ═══ VENIR À AIX ═══ -->
@@ -712,28 +776,43 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       <tr><td>Lyon Part-Dieu</td><td>1 h 07</td></tr>
       <tr><td>Montpellier, Nice, Toulouse</td><td>direct ou 1 corresp.</td></tr>
     </table>
-    <p>La navette A2 rejoint le centre-ville toutes les 20 minutes. Mais préviens-nous&nbsp;:
-      on préfère largement venir te chercher.</p>
+    <p>Une navette relie la gare TGV au centre d'Aix. De là, un bus de ville finit le
+      trajet. Compte trois quarts d'heure en tout&nbsp;: le lien d'itinéraire de ta réponse
+      te donne l'horaire exact du jour.</p>
   </div>
 
   <div class="quai vert">
     <h3>Aix-en-Provence centre</h3>
-    <p class="sous">en ville, à dix minutes de chez nous — <a href="https://www.google.com/maps/search/?api=1&amp;query=Gare%20d%27Aix-en-Provence%20Centre%2C%20Avenue%20Victor%20Hugo%2C%2013100%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></p>
+    <p class="sous">en ville, un bus jusqu'à la maison — <a href="https://www.google.com/maps/search/?api=1&amp;query=Gare%20d%27Aix-en-Provence%20Centre%2C%20Avenue%20Victor%20Hugo%2C%2013100%20Aix-en-Provence" target="_blank" rel="noopener">voir sur la carte</a></p>
     <table>
       <tr><td>Marseille Saint-Charles</td><td>45 min</td></tr>
       <tr><td>Pertuis, Manosque, Gap</td><td>TER direct</td></tr>
     </table>
-    <p>Un TER toutes les heures depuis Marseille, de 6 h à minuit.</p>
+    <p>Un TER toutes les heures depuis Marseille, de 6 h à minuit. La gare routière,
+      où arrivent les cars, est juste à côté.</p>
   </div>
 
   <p><strong>Le conseil qui compte&nbsp;:</strong> si tu viens de loin, descendre en TGV à
     <strong>Marseille Saint-Charles</strong> puis prendre le TER jusqu'à Aix-centre est
     souvent plus simple que la gare TGV d'Aix. Plus de trains, et la gare est en ville.</p>
 
+  <div class="quai jaune">
+    <h3>Payer le bus, à Aix</h3>
+    <p>On se déplace en bus tout le week-end — le parc Jourdan, le vieil Aix, le marché.
+      Deux façons de payer&nbsp;:</p>
+    <table>
+      <tr><td>Carte sans contact, sur le valideur</td><td>1,20 €</td></tr>
+      <tr><td>Ticket acheté au conducteur, en espèces</td><td>1,30 €</td></tr>
+    </table>
+    <p>Le sans contact marche avec une Visa ou une Mastercard, ou un téléphone —
+      <strong>pas avec une American Express</strong>. Le débit tombe le lendemain.
+      Prends un peu de liquide en secours&nbsp;: il n'y a pas de guichet à chaque arrêt.</p>
+  </div>
+
   <h2 style="margin-top:2.4rem">Questions</h2>
-  <details><summary>À quelle heure faut-il arriver&nbsp;?</summary><p>Le samedi à partir de midi. Le déjeuner est à 12h30, et l'après-midi part vers 15h. Si ton train arrive plus tard, ce n'est pas un problème&nbsp;: indique ton horaire, on s'organise.</p></details>
+  <details><summary>À quelle heure faut-il arriver&nbsp;?</summary><p>Le samedi à partir de midi. Le déjeuner est à 12h30, et on part au parc vers 14h15. Si ton train arrive plus tard, ce n'est pas un problème&nbsp;: indique ton horaire et rejoins-nous au parc, l'adresse est sur la page.</p></details>
   <details><summary>C'est quoi, le bar à jeux&nbsp;?</summary><p>La grande table de la maison, débarrassée et couverte de jeux de société pour la soirée&nbsp;: Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Si tu as un jeu auquel tu tiens, apporte-le.</p></details>
-  <details><summary>Et mon train&nbsp;?</summary><p>Réserve tôt, les rames d'octobre se remplissent vite. Indique ton horaire à la deuxième étape&nbsp;: on vient te chercher à la gare.</p></details>
+  <details><summary>Et mon train&nbsp;?</summary><p>Réserve tôt, les rames d'octobre se remplissent vite. Indique ton horaire dans ta réponse&nbsp;: ça nous sert à caler les repas, pas à venir te chercher — tu as l'itinéraire et l'adresse dès que tu as dit comment tu arrives.</p></details>
   <details><summary>Où est-ce que je dors&nbsp;?</summary><p>Chez nous. Lits, canapés et matelas d'appoint&nbsp;: on a de quoi loger tout le monde, tu n'as rien à demander ni à apporter. Une trousse de toilette et une serviette suffisent.</p></details>
   <details><summary>Quelle est l'adresse&nbsp;?</summary><p>Elle est dans le groupe WhatsApp, pas ici&nbsp;: cette page circule, notre adresse non. Si tu n'es pas dans le groupe, dis-le et on t'ajoute.</p></details>
   <details><summary>Et s'il pleut&nbsp;?</summary><p>L'après-midi devient un tour du vieil Aix, ou reste à la maison. Le reste du programme ne bouge pas.</p></details>
@@ -855,7 +934,45 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   $("vers-we").addEventListener("click", function(){ ouvrir($("o-we")); });
 
   /* ── Entonnoir ── */
-  var TITRES = ["Première question", "Quelques détails", "Dernière étape"];
+  var TITRES = ["Ta réponse", "Vérifie, puis envoie"];
+
+  /* D'où l'on part, et ce qu'il faut savoir pour finir le trajet. Le lien
+     s'appuie sur Google Maps plutôt que sur des numéros de ligne : un horaire
+     de bus recopié aujourd'hui serait faux en octobre. */
+  var TRAJETS = {
+    "Train, gare d'Aix TGV": {
+      de: "Gare d'Aix-en-Provence TGV, 13290 Aix-en-Provence", mode: "transit",
+      dit: "La gare TGV est à 18 km, en pleine campagne. Une navette rejoint le centre "
+         + "d'Aix, puis un bus de ville finit le trajet. Compte trois quarts d'heure en tout."
+    },
+    "Train, gare d'Aix centre": {
+      de: "Gare d'Aix-en-Provence Centre, avenue Victor Hugo, 13100 Aix-en-Provence",
+      mode: "transit",
+      dit: "Tu arrives en ville. Un bus, ou une bonne marche si ton sac le permet."
+    },
+    "Car depuis Marseille ou l'aéroport": {
+      de: "Gare routière d'Aix-en-Provence, avenue de l'Europe, 13100 Aix-en-Provence",
+      mode: "transit",
+      dit: "La gare routière est en centre-ville, à deux pas de la gare d'Aix-centre. "
+         + "Un bus finit le trajet."
+    },
+    "En voiture, avec des places libres": {
+      de: "", mode: "driving",
+      dit: "Stationnement dans la rue, c'est résidentiel et ça se trouve. Dis-nous "
+         + "combien de places tu as, on remplira ta voiture."
+    },
+    "En voiture, complet": {
+      de: "", mode: "driving",
+      dit: "Stationnement dans la rue, c'est résidentiel et ça se trouve."
+    },
+    "J'habite Aix": {
+      de: "", mode: "driving",
+      dit: "Tu connais la ville mieux que le lien ci-dessous, mais il est là si besoin."
+    }
+  };
+  var BUS = " Pour les bus d'Aix : 1,20 € le trajet en payant sans contact directement "
+          + "sur le valideur (Visa ou Mastercard, pas d'Amex), 1,30 € en espèces auprès "
+          + "du conducteur. Prends de quoi payer, il n'y a pas de guichet partout.";
   function une(n){ var e = document.querySelector('input[name="' + n + '"]:checked'); return e ? e.value : ""; }
   function plusieurs(n){
     return Array.prototype.map.call(document.querySelectorAll('input[name="' + n + '"]:checked'),
@@ -863,11 +980,13 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   }
   function etat(){
     return { nom: $("nom").value.trim(), nb: $("nb").value.trim(), rsvp: une("rsvp"),
-             venue: une("venue"), nav: une("nav"),
+             venue: une("venue"),
              jarr: une("jarr"), harr: $("h-arr").value, num: $("num-arr").value.trim(),
              jdep: une("jdep"), hdep: $("h-dep").value,
              midi: une("midi"), escape: une("escape"),
-             soiree: une("soiree"), fin: une("fin"),
+             soiree: une("soiree"), salle: une("salle"),
+             gateau1: une("gateau1"), gateau2: une("gateau2"),
+             allergies: $("allergies").value.trim(),
              act: plusieurs("act"), idee: $("idee").value.trim() };
   }
   function present(){ var r = etat().rsvp; return !!r && r !== "Je ne peux pas venir"; }
@@ -885,7 +1004,7 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   }
 
   function marche(n){
-    [1,2,3].forEach(function(i){ $("e" + i).classList.toggle("cache", i !== n); });
+    [1,2].forEach(function(i){ $("e" + i).classList.toggle("cache", i !== n); });
     Array.prototype.forEach.call($("marches").children, function(b, i){
       b.className = i + 1 === n ? "ici" : (i + 1 < n ? "faite" : "");
     });
@@ -902,7 +1021,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
                                         : (s.rsvp || "?")));
     if (s.nb && present()) L.push("Nous serons : " + s.nb);
     if (s.venue) L.push("Comment : " + s.venue);
-    if (s.nav) L.push("Navette gare : " + s.nav);
     if (s.jarr || s.harr || s.num)
       L.push("J'arrive : " + [s.jarr, s.harr && "à " + s.harr, s.num && "(" + s.num + ")"]
              .filter(Boolean).join(" "));
@@ -911,7 +1029,10 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     if (s.midi) L.push("Déjeuner de samedi : " + s.midi);
     if (s.escape) L.push("Escape game de 17h : " + s.escape);
     if (s.soiree) L.push("Soirée de samedi : " + s.soiree);
-    if (s.fin) L.push("Après le gâteau : " + s.fin);
+    if (s.salle) L.push("Salle d'escape : " + s.salle);
+    if (s.gateau1 || s.gateau2)
+      L.push("Gâteaux : " + [s.gateau1, s.gateau2].filter(Boolean).join(" + "));
+    if (s.allergies) L.push("Allergies / régime : " + s.allergies);
     if (s.act.length) L.push("Envies : " + s.act.join(", "));
     if (s.idee) L.push("Autre idée : " + s.idee);
     return L.join("\n");
@@ -932,16 +1053,33 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
                                                      : (sej || "—"));
     el.className = "verdict" + (sej === "?" ? " doute" : (sej ? "" : " vide"));
 
-    $("c-nav").classList.toggle("cache", s.venue.indexOf("Train") !== 0);
+    /* Le voyage ne se déplie qu'après un oui, et l'itinéraire qu'après un
+       moyen de transport : chaque réponse ouvre la suivante. */
+    $("voyage").hidden = !present();
+    var t = TRAJETS[s.venue];
+    $("itineraire").hidden = !(present() && t);
+    if (t){
+      $("conseil").textContent = t.dit + (t.mode === "transit" ? BUS : "");
+      var dest = $("itineraire").querySelector(".lieu").textContent.trim();
+      $("lien-itin").href = "https://www.google.com/maps/dir/?api=1"
+        + (t.de ? "&origin=" + encodeURIComponent(t.de) : "")
+        + "&destination=" + encodeURIComponent(dest)
+        + "&travelmode=" + t.mode;
+      $("lien-itin").textContent = t.de ? "Ouvrir l'itinéraire depuis la gare"
+                                        : "Ouvrir l'adresse dans la carte";
+    }
+
     var arr = [s.jarr, s.harr && "à " + s.harr, s.num && "(" + s.num + ")"].filter(Boolean).join(" ");
-    pose("f-venue", [s.venue, arr, s.nav].filter(Boolean).join(" — "));
+    pose("f-venue", [s.venue, arr].filter(Boolean).join(" — "));
     pose("f-dep", [s.jdep, s.hdep && "à " + s.hdep].filter(Boolean).join(" "));
     pose("f-midi", s.midi);
     pose("f-escape", s.escape);
     pose("f-soiree", s.soiree);
-    pose("f-fin", s.fin);
+    pose("f-salle", s.salle);
+    pose("f-gateaux", [s.gateau1, s.gateau2].filter(Boolean).join(" + ")
+                      + (s.allergies ? " — " + s.allergies : ""));
     pose("f-act", s.act.concat(s.idee ? ["« " + s.idee + " »"] : []).join(" · "));
-    ["venue","dep","midi","escape","soiree","fin","act"].forEach(function(k){
+    ["venue","dep","midi","escape","salle","soiree","gateaux","act"].forEach(function(k){
       $("l-" + k).classList.toggle("cache", !present());
       $("f-" + k).classList.toggle("cache", !present());
     });
@@ -950,10 +1088,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     $("envoi").href = "https://wa.me/?text=" + encodeURIComponent(texte(s));
   }
 
-  $("v1").addEventListener("click", function(){ if (!$("v1").disabled) marche(present() ? 2 : 3); });
-  $("v2").addEventListener("click", function(){ marche(3); });
+  $("v1").addEventListener("click", function(){ if (!$("v1").disabled) marche(2); });
   $("r2").addEventListener("click", function(){ marche(1); });
-  $("r3").addEventListener("click", function(){ marche(present() ? 2 : 1); });
   $("envoi").addEventListener("click", function(e){
     var s = etat();
     if (!s.nom || !s.rsvp){
@@ -990,9 +1126,10 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
   if (s.nb) $("nb").value = s.nb;
   if (s.harr) $("h-arr").value = s.harr;
   if (s.num) $("num-arr").value = s.num;
+  if (s.allergies) $("allergies").value = s.allergies;
   if (s.hdep) $("h-dep").value = s.hdep;
   if (s.idee) $("idee").value = s.idee;
-  ["rsvp","venue","nav","jarr","jdep","midi","escape","soiree","fin"].forEach(function(n){
+  ["rsvp","venue","jarr","jdep","midi","escape","soiree","gateau1","gateau2","salle"].forEach(function(n){
     if (!s[n]) return;
     var e = document.querySelector('input[name="' + n + '"][value="' + CSS.escape(s[n]) + '"]');
     if (e) e.checked = true;

@@ -30,6 +30,9 @@ DEFAUTS = {
     "RIB_TITULAIRE": "coordonnées à venir",
     "RIB_IBAN": "communiqué dans le groupe",
     "RIB_BIC": "—",
+    # L'adresse figure désormais sur la page publiée — les invités doivent
+    # pouvoir calculer leur trajet — mais toujours pas dans le dépôt.
+    "ADRESSE": "adresse communiquée dans le groupe",
 }
 
 
@@ -78,7 +81,7 @@ def main() -> None:
     for cle in DEFAUTS:
         html = html.replace("__%s__" % cle, env.get(cle, DEFAUTS[cle]))
 
-    restants = re.findall(r"__RIB_\w+__", html)
+    restants = re.findall(r"__(?:RIB_\w+|ADRESSE)__", html)
     if restants:
         sys.exit("marqueurs non substitués : " + ", ".join(sorted(set(restants))))
 

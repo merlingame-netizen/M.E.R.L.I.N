@@ -148,8 +148,9 @@ boules. Rien ne s'y loue.
 
 > **Le créneau est serré.** Le parc est au centre, l'escape game aux Milles :
 > compte vingt minutes de route. Il faut **quitter le parc à 16h15** pour être
-> à l'heure au briefing de 17h. Prévois qui monte dans quelle voiture avant de
-> partir de la maison, pas sur le parking.
+> à l'heure au briefing de 17h. C'est le seul trajet du week-end qui exige des
+> voitures — le reste se fait en bus. Prévois qui monte avec qui avant de
+> partir, pas sur le parking.
 
 ### Dimanche
 
@@ -198,16 +199,24 @@ cases hors contexte, et ça rend l'étape 2 respirable.
    nombre de participants est connu, et réserver les quatre salles.
 8. **Le brunch du dimanche** — il remplace le déjeuner : viennoiseries,
    œufs, fruits, et du café en quantité.
-9. **Les voitures** — deux trajets, pas un : la maison → parc Jourdan à
-   14h15, puis parc Jourdan → Les Milles à 16h15, et le retour le soir. La
-   question des places libres est posée à l'étape 2 de la page.
-10. **Les cadeaux** — plusieurs, non annoncés. La page dit seulement que la
+9. **Les bus, pas les voitures** — plus de ramassage à la gare : chacun
+   arrive par ses moyens, et la page lui donne l'itinéraire dès qu'il a dit
+   comment il vient. Les déplacements dans Aix se font en bus (1,20 € en sans
+   contact, 1,30 € en espèces au conducteur). **L'exception reste Les Milles** :
+   l'escape game n'est pas desservi commodément, il faut des voitures pour le
+   trajet de 16h15. La question des places libres est posée à l'étape 1.
+10. **Les deux gâteaux** — deux parfums à commander, choisis par vote parmi
+    cinq propositions. Le champ « allergies » de la même urne remonte dans les
+    réponses : lis-le avant de commander.
+11. **Les quatre salles d'escape** — les invités votent celle qui les tente.
+    Répartis les équipes selon les votes, complète au petit bonheur.
+12. **Les cadeaux** — plusieurs, non annoncés. La page dit seulement que la
     cagnotte sert « aux cadeaux et aux activités », et demande à chacun de ne
     rien écrire de précis dans le groupe. Rien de ce que tu as prévu n'est
     écrit ici non plus.
-11. **Le planning gare** — la page collecte le jour, le lieu et l'heure
-    d'arrivée **et** le moment et l'heure du départ. De quoi monter les
-    allers-retours sans relancer personne.
+13. **Les horaires** — la page collecte toujours arrivées et départs, non
+    plus pour organiser des navettes mais pour caler les repas et savoir qui
+    est là quand.
 
 > **La durée du séjour n'est plus une question.** L'étape 1 se réduit à oui
 > ou non ; « tout le week-end », « samedi seulement » ou « dimanche

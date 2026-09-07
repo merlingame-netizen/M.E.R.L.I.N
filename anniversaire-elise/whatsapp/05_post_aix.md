@@ -114,11 +114,10 @@ référence du virement.
 
 Quatre choses, dans l'ordre :
 1️⃣ Vous dites juste oui ou non
-2️⃣ Vous dites comment, quel jour et à quelle heure vous arrivez, si on
-    vient vous chercher à la gare, et quand vous repartez. Pas besoin de
-    choisir entre « tout le week-end » et « samedi seulement » : vos
-    horaires le disent. Le couchage, n'y pensez pas : on a de quoi loger
-    tout le monde.
+2️⃣ Vous choisissez comment vous arrivez : L'ADRESSE ET L'ITINÉRAIRE
+    S'AFFICHENT AUSSITÔT, avec le bon point de départ. Puis vos horaires
+    d'arrivée et de départ. Le couchage, n'y pensez pas : on a de quoi
+    loger tout le monde.
 3️⃣ Vous votez dans l'onglet « Le week-end », chaque vote est sous la
     photo de ce qu'il décide
 4️⃣ Vous relisez, et vous m'envoyez tout d'un tap
@@ -128,20 +127,24 @@ Quatre choses, dans l'ordre :
 SAMEDI
 12h — déjeuner, pour ceux qui sont déjà là
 14h30 — mölkky et pétanque au PARC JOURDAN (av. Anatole France, accès
-       libre, dix minutes de la maison). On y va ensemble.
-17h — ESCAPE GAME chez Move To Aixit, quatre salles en parallèle.
-       Rien à sortir sur place. Ça se réserve à l'avance : il y a une
-       question dédiée sur la page, répondez-y.
+       libre). On y va en bus tous ensemble.
+17h — ESCAPE GAME chez Move To Aixit, quatre salles en parallèle :
+       Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN.
+       Vous votez la salle qui vous tente sur la page. Rien à sortir sur
+       place, mais ça se réserve à l'avance : répondez vite.
 19h — AU VOTE : soit on reste sur place, au bar à jeux (300 jeux,
        planches et tapas jusqu'à 22h), soit on rentre pour l'apéro dînatoire.
-22h — le gâteau et les trente bougies
-22h30 — soirée jeux de société, puis le blind test des trente ans
+22h — LES GÂTEAUX : il y en aura deux, et c'est vous qui choisissez les
+       parfums. Cinq propositions par gâteau sur la page, plus un champ
+       pour vos allergies.
+22h30 — soirée jeux de société et animations. Rien à voter, c'est réservé —
+       mais si vous avez une idée, le champ libre est là pour ça.
 
 DIMANCHE
 9h30 — le marché place Richelme, pour les lève-tôt
 11h — brunch à la maison
 Ensuite — activité libre selon vos trains : Sainte-Victoire, Bimont
-       ou le vieil Aix. On raccompagne à la gare.
+       ou le vieil Aix.
 
 🚄 POUR CEUX QUI VIENNENT DE LOIN :
 Paris → Aix TGV en 2h55 direct
@@ -151,7 +154,11 @@ Marseille → Aix centre en 45 min de TER, un par heure
 Petit conseil : si vous venez de loin, descendre à Marseille Saint-Charles
 puis prendre le TER jusqu'à Aix-centre est souvent plus simple que la gare
 TGV d'Aix, qui est à 18 km en pleine campagne.
-Dans tous les cas, DITES-NOUS VOTRE GARE ET VOTRE HEURE, on vient vous chercher.
+
+🚌 ON SE DÉPLACE EN BUS TOUT LE WEEK-END.
+Prévoyez une carte sans contact (Visa ou Mastercard, pas d'Amex) : 1,20 € le
+trajet directement sur le valideur. Sinon 1,30 € en espèces auprès du
+conducteur — gardez un peu de liquide, il n'y a pas de guichet partout.
 
 ⏳ RÉPONSE AVANT LE SAMEDI 19 SEPTEMBRE, pour réserver l'escape game.
 
@@ -194,7 +201,8 @@ Le programme complet est toujours sur VOTRE-URL-ICI
 🎒 DEMAIN !
 
 📍 [ADRESSE] — on vous attend à partir de midi, déjeuner à 12h30.
-🚆 Ceux qui arrivent en train : je serai à la gare aux heures convenues.
+🚌 L'itinéraire est sur la page, dans votre réponse. Pensez à la carte sans
+   contact pour le bus.
 
 Dans le sac : trousse de toilette, une serviette si vous en avez une facile
 à emporter, des chaussures pour marcher si vous avez voté une balade dimanche,
