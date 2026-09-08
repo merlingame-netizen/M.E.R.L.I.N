@@ -58,3 +58,10 @@
   (Poigne, Flair, Voix, Ombre, Coutume) : ils auront leurs beats dans les onze quêtes à écrire.
 - Garde-fou : regles.traits() lit les seize traits de départ dans le code, valider.py refuse une
   rune que le jeu ne fabrique pas.
+
+## 2026-09-08 : trois décisions après la première nuit sous v55
+- L'arc : on ne renonce qu'après DEUX tranches abandonnées de suite (v57), et la tranche perdue
+  réserve sa place pour que rien ne se décale.
+- Le bot de la nuit deviendra faillible : il ne verra plus le dé et se trompera une fois sur dix,
+  pour que la nuit mesure une traversée vraisemblable et non un plafond (tâche #39).
+- L'ordre : l'arc d'abord (fait), le bot ensuite, puis le menu qui lance un sentier écrit.
