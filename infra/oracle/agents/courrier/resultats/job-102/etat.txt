@@ -1,0 +1,56 @@
+== ollama-serve, apres le retrait du verrou ==
+{"id": "ollama-serve", "last_run": "2026-09-08T07:50:01Z", "duration_s": 0, "rc": 0, "ok": true, "reporte": false, "summary": "serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident"}
+
+reveils [ollama-serve] dates dans cron.log : 477
+2026-09-08T07:40:02Z [ollama-serve] rc=0 serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident
+2026-09-08T07:45:01Z [ollama-serve] rc=0 serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident
+2026-09-08T07:50:01Z [ollama-serve] rc=0 serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident
+
+== reportes (rc=75) depuis hier ==
+2026-09-06T20:00:01Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+2026-09-06T20:07:01Z [gd-content-gap] rc=75 gd-content-gap reporté : jeu quitté il y a 7 min — reprise à +10 min
+2026-09-07T04:30:02Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+2026-09-07T07:00:01Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+2026-09-07T17:00:02Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+2026-09-07T21:00:02Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+2026-09-08T04:30:01Z [relance] rc=75 jeu en cours — les fils attendront (gates)
+
+== l'atelier de nuit : etat, duree ==
+{"id": "partie-nuit", "last_run": "2026-09-08T04:05:01Z", "duration_s": 2371, "rc": 0, "ok": true, "reporte": false, "summary": "partie : 16 beats · fin accomplissement · 11 au banc · bot couvrant · quête : 8 beats · 2467 signes · contrat PASSÉ · adresse     tu=0   vous=25  3e pers.=0   · repere cor
+
+== v55 : LA PREMIERE NUIT SOUS LE PLAFOND DES ATOUTS ==
+CIBLE1 secours: MANQUEE (11 beat(s) au banc : 5,6,7,8,9,10,11,12,13,14,15)
+CIBLE4 le de revient: MANQUEE (5/16 gestes sans jet)
+CIBLE5 climax au de: TENUE
+CIBLE6 l'eclat existe: TENUE (2 eclatante(s) sur 16 gestes)
+CIBLE7 l'integrite bouge: MANQUEE (minimum 10 sur 10)
+CIBLE2 reussite: TROP HAUTE (16/16, 100 % — bande visee 75 a 95 % depuis v55)
+CIBLE3 attente: MANQUEE (3 beats > 20s : b2=97s b4=46s b12=20s ; moy 18s)
+REFERENCE prefixe median=472 tok relus/beat · debit median=4.1 tok/s (la ligne de base de CETTE partie)
+CAUSE attente: 3 beat(s) au-dessus de la cible — 0 PREFIXE RELU, 0 ECRITURE ETRANGLEE, 3 fond de quete
+BOT 16/16 beats justifies ; couverture 1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2 ; gestes surs 3
+CONTINUITE 10/15 enchainements portent le fil du beat precedent (b2:oui b3:oui b4:oui b5:oui b6:non b7:non b8:non b9:non b10:non b11:oui b12:oui b13:oui b14:oui
+FIN accomplissement beats=16 integrite=10 corruption=12
+-- la ligne de nuit (mesures v55) --
+  2026-09-07 jeu=None | beats=25 banc=1 reussite=100% sansjet=None% eclat=None integ_min=None couv=None climax_de=None fin=accomplissement
+  2026-09-08 jeu=None | beats=16 banc=11 reussite=100% sansjet=31% eclat=2 integ_min=10 couv=1.38 climax_de=True fin=accomplissement
+-- le jeu joue-t-il bien v55 ? --
+  commit du jeu sur la VM : 038621ad fix(choix): le prix d'une rune nomme la carte comme le joueur
+  MerlinSentier connu du cache : 1
+
+== agents eteints hier soir : ont-ils encore couru ? ==
+gd-content-gap : 2026-09-06T21:07:58Z [gd-content-gap] rc=0 carte non écrite pour « Ys » (2 erreur(s) de va
+
+design-council : [design-council] rc=0 conseil ouvert (conseil-20260906, conseiller balance_tuner, 605 car.
+
+gd-balance : 2026-09-06T19:50:41Z [gd-balance] rc=0 proposition 20260906-1950-gd-balance-f00ca7 écrite 
+
+gd-run : [gd-run] rc=0 proposition 20260906-0235-gd-run-37d316 écrite (palier MOYEN, 25s, confiance
+
+coder-local : 2026-09-06T21:00:02Z [coder-local] rc=0 rien d'applicable — 0 mission(s) en file, 0 sans p
+
+sequence : 2026-09-06T21:03:02Z [sequence] rc=0 3/6 — Le codeur applique · rien d'applicable — 0 miss
+
+parole : 2026-09-06T20:25:02Z [parole] rc=0 quota du jour atteint (2) — 0 signal(aux) reporté(s)
+
+lignes de crontab pour ces agents : 0

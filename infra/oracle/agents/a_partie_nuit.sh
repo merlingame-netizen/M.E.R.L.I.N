@@ -42,15 +42,17 @@ mkdir -p "$B"
 ligne_de_nuit() {
     # $1 résumé partie · $2 résumé quête · $3 reportée (oui|non)
     python3 - "$NUITS" "$NUIT" "$GARDE/journal.json" "$QUETE_JSON" "$(dirname "$QUETE_JSON")" \
-            "$1" "$2" "$3" "$HERE/courrier/verdict_partie.py" <<'PYX'
+            "$1" "$2" "$3" "$HERE/courrier/verdict_partie.py" "$GAME_DIR" <<'PYX'
 import json, os, re, subprocess, sys
 nuits, nuit, journal, quete, dquete, rp, rq, reportee, verdict = sys.argv[1:10]
 ligne = {"nuit": nuit, "reportee": reportee == "oui", "partie": None, "quete": None,
          "resume_partie": rp, "resume_quete": rq}
 # LA VERSION DES REGLES DATE LA LIGNE. Sans elle, une nuit d'avant v55 (80 % de gestes sans de)
 # et une nuit d'apres se lisent sur la meme courbe comme si le jeu avait change tout seul.
+# GAME_DIR est une variable de SHELL, pas d'environnement : game-env.sh la pose sans l'exporter,
+# donc python ne la voyait pas et toutes les lignes portaient jeu=None (mesure du 08/09).
 try:
-    ligne["jeu"] = subprocess.run(["git", "-C", os.environ.get("GAME_DIR", ""), "rev-parse", "--short", "HEAD"],
+    ligne["jeu"] = subprocess.run(["git", "-C", sys.argv[10], "rev-parse", "--short", "HEAD"],
                                   capture_output=True, text=True, timeout=20).stdout.strip() or None
 except Exception:
     ligne["jeu"] = None

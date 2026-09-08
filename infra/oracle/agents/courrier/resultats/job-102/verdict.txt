@@ -1,0 +1,21 @@
+CIBLE1 secours: MANQUEE (11 beat(s) au banc : 5,6,7,8,9,10,11,12,13,14,15)
+  ATTENTION les deux temoins divergent — drapeau=aucun ; provenance=5,6,7,8,9,10,11,12,13,14,15. Le drapeau seul sous-compte le banc.
+  Les beats 5,6,7,8,9,10,11,12,13,14,15 n'ont PAS ete ecrits par le modele : ni leur prose, ni leur continuite, ni leur empreinte du Lore ne mesurent quoi que ce soit du LLM.
+CIBLE4 le de revient: MANQUEE (5/16 gestes sans jet)
+CIBLE5 climax au de: TENUE
+CIBLE6 l'eclat existe: TENUE (2 eclatante(s) sur 16 gestes)
+CIBLE7 l'integrite bouge: MANQUEE (minimum 10 sur 10)
+CIBLE2 reussite: TROP HAUTE (16/16, 100 % — bande visee 75 a 95 % depuis v55)
+CIBLE3 attente: MANQUEE (3 beats > 20s : b2=97s b4=46s b12=20s ; moy 18s)
+REFERENCE prefixe median=472 tok relus/beat · debit median=4.1 tok/s (la ligne de base de CETTE partie)
+CAUSE attente: 3 beat(s) au-dessus de la cible — 0 PREFIXE RELU, 0 ECRITURE ETRANGLEE, 3 fond de quete
+  b2      97s = prefixe    0s (    1 tok) + ecriture   24s ( 4.8 tok/s)  fond de quete
+  b4      46s = prefixe   12s (  178 tok) + ecriture   33s ( 4.0 tok/s)  fond de quete
+  b12     20s = prefixe   14s (  475 tok) + ecriture   41s ( 3.9 tok/s)  fond de quete
+  => les 3 beat(s) « fond de quete » ne sont imputables a rien : le contexte grandit, le debit baisse. C'est le prix d'une quete longue.
+BUDGET b1:p448/e116[issue (combina] b2:p1/e115[issue (combina] b3:p476/e132[issue (combina] b4:p178/e134[issue (combina] b5:p441/e118[issue (combina] b6:p397/e115[issue (combina] b7:p377/e121[issue (combina] b8:p401/e89[issue (combina] b9:p443/e134[issue (combina] b10:p480/e158[issue (combina] b11:p493/e88[issue (combina] b12:p475/e159[issue (combina] b13:p492/e104[issue (combina] b14:p472/e116[issue (combina] b15:p480/e120[issue (combina] b16:p516/e83[issue (combina]
+COUPEES aucune
+BOT 16/16 beats justifies ; couverture 1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2 ; gestes surs 3
+CONTINUITE 10/15 enchainements portent le fil du beat precedent (b2:oui b3:oui b4:oui b5:oui b6:non b7:non b8:non b9:non b10:non b11:oui b12:oui b13:oui b14:oui b15:oui b16:oui)
+EMPREINTE lieux=[Val sans Retour,Gue des Brumes,Chene Creux,Tertre] figures=[Lavandiere,Passeur,Ankou,korrigan,Chevalier,Enfant] boucle=0
+FIN accomplissement beats=16 integrite=10 corruption=12

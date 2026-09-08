@@ -1,0 +1,9 @@
+
+quete — 8 beats
+  adresse     tu=0   vous=25  3e pers.=0   · repere corpus : tu≤1
+  figures     11 nommee(s) : Aveline, C'hoad, Corbeaux, Dame, Druides, Fendu, Kozh, Lavandière, Nuit, Pitié
+  images      0 interdite(s)
+  interieurs  beats citant porte/pièce/cheminée : aucun
+  dialogue    3 replique(s) entre guillemets
+  regards     1 verbe(s) de simple regard (0.1 par beat) — les figures agissent-elles ?
+  longueurs   2467 car. au total · 251 le beat le plus court · 402 le plus long

@@ -1,0 +1,149 @@
+== MACHINE ==
+date=2026-09-08T07:40Z coeurs=4 charge=0.06 0.06 0.01 up 2 weeks, 3 days, 18 hours, 26 minutes
+MemTotal: 22945 Mo  MemAvailable: 15179 Mo  SwapFree: 4567 Mo  
+disque : 42G sur 83G (51%)
+modeles ollama charges : gemma4:e4b-it-qat
+jeu : desire=stopped harnais=«  » godot=0
+
+== L'ATELIER DE NUIT : ce qui est garde (7 dernieres) ==
+partie 2026-09-05 : 14 beats · fin mort · 6 au banc · bot AVEUGLE
+     CIBLE1 secours: MANQUEE (5 beat(s) au banc : 5,8,11,12,13)
+     CIBLE2 reussite: MANQUEE (8/13 ; b3=partiel(diff2,de4,covNone) b4=partiel(diff2,de4,covNone) b8=partiel(diff2,de5,covNone) b12=partiel(diff2,de4,covNo
+     CIBLE3 attente: MANQUEE (6 beats > 20s : b2=71s b6=34s b7=42s b9=61s b11=98s b12=103s ; moy 39s)
+     BOT AUCUN choix justifie — le mode couvrant n'a PAS tourne
+partie 2026-09-06 : 22 beats · fin accomplissement · 8 au banc · bot AVEUGLE
+     CIBLE1 secours: MANQUEE (8 beat(s) au banc : 12,13,16,17,18,19,20,21)
+     CIBLE2 reussite: MANQUEE (16/22 ; b3=partiel(diff2,de8,covNone) b4=partiel(diff2,de6,covNone) b8=partiel(diff2,de4,covNone) b9=partiel(diff2,de5,covNo
+     CIBLE3 attente: MANQUEE (7 beats > 20s : b2=68s b5=55s b6=26s b9=32s b12=125s b13=128s b14=36s ; moy 30s)
+     BOT AUCUN choix justifie — le mode couvrant n'a PAS tourne
+partie 2026-09-07 : 25 beats · fin accomplissement · 1 au banc · bot couvrant
+     CIBLE1 secours: MANQUEE (1 beat(s) au banc : 5)
+     CIBLE2 reussite: TENUE (25/25)
+     CIBLE3 attente: MANQUEE (6 beats > 20s : b2=71s b6=23s b9=69s b10=55s b13=74s b16=50s ; moy 23s)
+     BOT 25/25 beats justifies ; couverture 2,2,1,1,2,0,1,1,0,1,1,1,0,1,0,0,1,1,1,0,1,1,1,1,2 ; gestes surs 20
+partie 2026-09-08 : 16 beats · fin accomplissement · 11 au banc · bot couvrant
+     CIBLE1 secours: MANQUEE (11 beat(s) au banc : 5,6,7,8,9,10,11,12,13,14,15)
+     CIBLE4 le de revient: MANQUEE (5/16 gestes sans jet)
+     CIBLE5 climax au de: TENUE
+     CIBLE6 l'eclat existe: TENUE (2 eclatante(s) sur 16 gestes)
+     CIBLE7 l'integrite bouge: MANQUEE (minimum 10 sur 10)
+     CIBLE2 reussite: TROP HAUTE (16/16, 100 % — bande visee 75 a 95 % depuis v55)
+     CIBLE3 attente: MANQUEE (3 beats > 20s : b2=97s b4=46s b12=20s ; moy 18s)
+     BOT 16/16 beats justifies ; couverture 1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,2 ; gestes surs 3
+quete  2026-09-07 :  ok quete  ·  adresse tu=0 vous=31 3e pers.=0 · repere corpus : tu≤1
+quete  2026-09-08 :  ok quete  ·  adresse tu=0 vous=25 3e pers.=0 · repere corpus : tu≤1
+-- la courbe (nuits.jsonl, 7 dernieres) --
+  2026-09-07  partie: beats=25 banc=1 reussite=100% att_med=14.6s p90=68.6s bot=couvrant fin=accomplissement | quete: 8 beats, contrat PASSE, tu=0 vous=31
+  2026-09-08  partie: beats=16 banc=11 reussite=100% att_med=10.0s p90=45.8s bot=couvrant fin=accomplissement | quete: 8 beats, contrat PASSE, tu=0 vous=25
+
+== LE SMOKE ET SES EPREUVES (dernier rapport) ==
+  2026-09-08T03:01:47Z · commit e52b993d · scenes 7 (0 en erreur) · epreuves : test_economie=passee(0 rates), test_ecran_chroniques=passee(0 rates), test_journal=passee(0 rates), test_progression=passee(0 rates), test_quete=passee(0 rates), test_sentier=passee(0 rates) · echouees=0
+
+== CHAQUE AGENT : derniere course (etat final), duree, rc, resume ==
+  billing          17 7 * * *     il y a 0h      1s ok          0.0 EUR ce mois (source=snapshot, 0 service(s) facturé(s))
+  brasero          */20 7-23 * *  il y a 0h      1s ok          gemma4:e4b-it-qat chaud en 1s — résidents : gemma4:e4b-it-qat
+  ci-commit        webhook/push   il y a 10h    28s ok          CI e52b993d : VERT — 7 scènes saines, boot rendu OK
+  coder            à la demande   desactive
+  coder-local      */30 * * * *   il y a 34h     0s ok          rien d'applicable — 0 mission(s) en file, 0 sans patch (décisions d'architecture
+  controle         11,41 * * * *  il y a 0h      0s ok          1 écart(s) entre ce qui est déclaré et ce qui est vérifiable · 0 déposé(s) dans 
+  corpus-night     10 0-6 * * *   il y a 14j     0s ok          {"loop": "gen", "skipped": "RAM insuffisante (7667 Mo)"}
+  courrier         */2 * * * *    il y a 0h      1s ok          aucun courrier en attente
+  crible           40 7 * * *     il y a 24h     1s ok          crible 2026-09-07 : 137 lignes · 0 agent(s) en echec · 0 reporte(s) · 1 verrou(s
+  daily-report     0 7 * * *      il y a 0h      1s ok          rapport écrit (33 lignes) · 0 CI rouge(s) · 0 agent(s) en échec
+  design-council   40 6 * * *     il y a 2j    214s ok          conseil ouvert (conseil-20260906, conseiller balance_tuner, 605 car.)
+  disk-guard       17 * * * *     il y a 0h      0s ok          disque 51% — sous le seuil de 80%, rien à purger
+  game-autosync    */15 * * * *   il y a 0h      0s ok          à jour (feat/practices-docs @ e52b993d)
+  game-idle        3-59/5 * * * * il y a 0h      0s ok          jeu non demandé (désiré=stopped) — rien à surveiller
+  game-watchdog    */5 * * * *    il y a 0h      1s ok          état désiré=stopped — rien à faire
+  gd-audit         10 3 * * *     il y a 13j    21s ok          proposition 20260825-2052-gd-audit-a169d1 écrite (palier LEGER, 20s, confiance 0
+  gd-balance       50 7,19 * * *  il y a 35h    40s ok          proposition 20260906-1950-gd-balance-f00ca7 écrite (palier MOYEN, 39s, confiance
+  gd-content-gap   7,37 * * * *   il y a 34h    57s ok          carte non écrite pour « Ys » (2 erreur(s) de validation) — rien mis dans Décider
+  gd-economy       50 2 * * *     desactive
+  gd-pacing        40 2 * * *     il y a 13j    21s ok          proposition 20260825-2053-gd-pacing-4659b8 écrite (palier MOYEN, 20s, confiance 
+  gd-run           35 2 * * *     il y a 2j     25s ok          proposition 20260906-0235-gd-run-37d316 écrite (palier MOYEN, 25s, confiance 0.6
+  health           */15 * * * *   il y a 0h      1s ok          charge 0.00/4 · RAM 34% · disque 51%
+  journal          50 5 * * *     il y a 1h      0s ok          chapitre 29 gravé (989 caractères) → /var/lib/ocarun/merlin-memory/journal/chapi
+  labo-recit       à la demande   JAMAIS COURU (aucun etat)
+  llm-bench        à la demande   il y a 13j   362s ok          champion: gemma4:12b-it-qat · TRIAGE_MODEL inchangé
+  llm-decompose    à la demande   JAMAIS COURU (aucun etat)
+  mesures          5 5 * * *      il y a 2h      0s ok          23 mesure(s) relevée(s)
+  native-bench     5 6 * * *      il y a 1h      4s ok          chargement 4 s · 0.0 tok/s · quêtes en 0 s · SECOURS affiché
+  ollama-idle      */15 * * * *   il y a 0h      1s ok          rien à libérer (gardé gemma4:e4b-it-qat) · 15169 Mo disponibles
+  ollama-serve     */5 * * * *    il y a 0h      1s ok          serveur OK (relance=non) · copilote gemma4:e4b-it-qat: résident
+  parcours         15 5 * * *     il y a 2h      0s ok          7 écran(s) cartographié(s) → /var/lib/ocarun/merlin-memory/parcours.json
+  parole           25 * * * *     il y a 35h     0s ok          quota du jour atteint (2) — 0 signal(aux) reporté(s)
+  partie-journal   à la demande   JAMAIS COURU (aucun etat)
+  partie-nuit      5 4 * * *      il y a 3h   2371s ok          partie : 16 beats · fin accomplissement · 11 au banc · bot couvrant · quête : 8 
+  playtest-bot     20 2 * * *     il y a 5h     80s ok          17 écrans joués · aucune anomalie (pellicule 20260908-0220)
+  quete-nuit       à la demande   il y a 2j      0s ok          le jeu est occupé — quête de la nuit annulée
+  relance          */30 * * * *   il y a 0h      1s ok          aucun fil en attente
+  sequence         3,33 * * * *   il y a 34h     0s ok          3/6 — Le codeur applique · rien d'applicable — 0 mission(s) en file, 0 sans patc
+  smoke-scenes     0 3 * * *      il y a 4h    106s ok          7 scènes testées · 0 en erreur · épreuves échouées : 0
+  tools-autosync   7,22,37,52 * * il y a 0h      1s ok          à jour (claude/oracle-free-tier-access-IN1Wm @ 7907d8d8)
+  tunnel-watch     */10 * * * *   il y a 0h      1s ok          portail OK · public 200 · url dans tunnel-history.jsonl
+
+== REVEILS PAR AGENT et ECHECS, sur la fenetre REELLEMENT lue dans cron.log ==
+  fenetre datee : 2026-09-06T16:08:01Z → 2026-09-08T07:40:02Z (3811 lignes datees, 3699 anterieures non datees)
+   2411 courrier         reportes=0
+    965 game-watchdog    reportes=0
+    964 game-idle        reportes=0
+    483 tunnel-watch     reportes=0
+    475 ollama-serve     reportes=0
+    322 tools-autosync   reportes=0
+    321 health           reportes=0
+    321 ollama-idle      reportes=0
+    321 game-autosync    reportes=0
+    161 relance          reportes=6
+    160 controle         reportes=0
+    157 brasero          reportes=0
+     92 coder-local      reportes=0
+     92 gd-content-gap   reportes=1
+     92 sequence         reportes=0
+     80 disk-guard       reportes=0
+     46 parole           reportes=0
+      4 playtest-bot     reportes=0
+      4 smoke-scenes     reportes=0
+      4 native-bench     reportes=0
+      4 partie-nuit      reportes=0
+      4 mesures          reportes=0
+      4 parcours         reportes=0
+      4 journal          reportes=0
+      4 daily-report     reportes=0
+      4 billing          reportes=0
+      4 gd-balance       reportes=0
+      2 gd-run           reportes=0
+      2 quete-nuit       reportes=0
+      2 design-council   reportes=0
+      1 crible           reportes=0
+-- rc non nuls, hors reportes (12 derniers) --
+  [smoke-scenes] rc=1 7 scènes testées · 0 en erreur · épreuves échouées : 1
+  [smoke-scenes] rc=1 7 scènes testées · 0 en erreur · épreuves échouées : 1
+
+== VERROUS TENUS (lus dans /proc/locks, sans en prendre aucun) ==
+  brasero.lock             en cours (une course d'agent-run) : bash(1550714), bash(1550812), tail(1550814)
+  crible.lock              en cours (une course d'agent-run) : bash(1550749), bash(1550839), tail(1550843)
+  llm.lock                 en cours (une course d'agent-run) : bash(1550813), curl(1550977)
+  0 verrou(s) herite(s)
+
+== SURCHARGES HORS DEPOT ==
+{
+ "playtest-bot": {
+  "schedule": "20 2 * * *",
+  "enabled": true
+ }
+}
+== LE CORPUS ET L'ATELIER DE CONTENU ==
+  auto_corpus.jsonl : 2226 exemples · dernier 08-25T04:26
+  curated_corpus.jsonl : 908 exemples · dernier 09-06T04:00
+  propositions : inbox 75 · acceptees 919 · refusees 92
+
+== LE STUDIO ==
+  healthz : 200
+  /api/chroniques : 15 parties · Le Poids du Passé Obsc, Le Poids du Passé Obsc, Le Souffle du Gwenneg , Le Souffle du Gwenneg , Le Murmure du Tertre d
+  /api/nuits : 2 nuit(s)
+  tunnel : 2 url(s) dans l'historique (jamais imprimees ici)
+
+== LES DEPOTS ==
+  jeu : e52b993d feat(sentier): v56 — les quêtes écrites deviennent jouables, et le beat « choix »
+  outillage : 7907d8d8 docs(memory): v56 — sentiers jouables, beat choix, et le vocabulaire des runes tr
+  chroniques du jeu : 10
