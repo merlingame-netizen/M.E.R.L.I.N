@@ -1,21 +1,27 @@
 {
  "main_depart": [
-  "La Patience",
-  "La Méfiance",
-  "La Franchise",
-  "L'Élan"
+  "Calme",
+  "Acuité",
+  "Droiture",
+  "Légèreté"
  ],
  "runes": {
-  "La Patience": "laisser venir plutôt qu'aller chercher",
-  "La Méfiance": "supposer le pire et se garder",
-  "La Franchise": "dire ce qui est, sans arranger",
-  "L'Élan": "partir avant d'être sûr",
-  "La Pitié": "s'arrêter pour ce qui souffre",
-  "L'Entêtement": "recommencer sans changer d'avis",
-  "Le Silence": "ne rien dire et laisser le vide travailler",
-  "La Ruse": "prendre par un autre bord",
-  "L'Aplomb": "tenir sa place devant plus grand que soi",
-  "Le Deuil": "accepter ce qui ne reviendra pas"
+  "Acuité": "Vigilance, Sens",
+  "Écoute": "Vigilance, Mémoire",
+  "Souvenance": "Mémoire, Savoir",
+  "Poigne": "Force, Endurance",
+  "Légèreté": "Agilité, Finesse",
+  "Ténacité": "Endurance, Force",
+  "Charme": "Ruse, Empathie",
+  "Malice": "Ruse, Verbe",
+  "Calme": "Autorité, Empathie",
+  "Flair": "Vision, Instinct",
+  "Voix": "Vision, Nature",
+  "Ombre": "Mystère, Nature",
+  "Adresse": "Finesse, Agilité",
+  "Prestance": "Autorité, Verbe",
+  "Droiture": "Franchise, Empathie",
+  "Coutume": "Rituel, Savoir"
  },
  "gestes": {
   "OBSERVER": "lire une scène avant d'y toucher",
@@ -56,10 +62,10 @@
    "at": 6,
    "de": 6,
    "action": "OBSERVER",
-   "rune": "La Méfiance",
+   "rune": "Acuité",
    "scene": "Le bord de la tourbière est piétiné sur dix pas, puis plus rien. Des gens ont attendu ici, souvent, et longtemps.",
    "issue": "Vous cherchez des traces de départ autant que d'arrivée. Il y a beaucoup d'empreintes qui viennent, peu qui repartent, et aucune qui fasse demi-tour.",
-   "note": "OBSERVER avec La Méfiance : on compte ce qui manque, pas ce qui est là. Le modèle en a tiré une inquiétude fondée plutôt qu'une ambiance."
+   "note": "OBSERVER avec Acuité : on compte ce qui manque, pas ce qui est là. Le modèle en a tiré une inquiétude fondée plutôt qu'une ambiance."
   },
   {
    "n": 2,
@@ -104,11 +110,11 @@
    "at": 6,
    "de": 7,
    "action": "PARLER",
-   "rune": "La Franchise",
+   "rune": "Droiture",
    "scene": "Il tient la perche debout à l'arrière d'une barque à fond plat. Il ne salue pas et ne demande rien.",
    "dial": "« Montez. Le prix se dit au milieu, pas au bord. C'est comme ça et ce n'est pas moi qui l'ai fait. »",
    "issue": "Vous lui demandez droit s'il est déjà arrivé qu'on refuse au milieu. Il répond que oui, deux fois, et que les deux sont restés au milieu.",
-   "note": "La Franchise obtient une réponse qui glace mais qui sert : vous savez maintenant que refuser n'est pas une option gratuite."
+   "note": "Droiture obtient une réponse qui glace mais qui sert : vous savez maintenant que refuser n'est pas une option gratuite."
   },
   {
    "n": 4,
@@ -118,10 +124,10 @@
    "at": 3,
    "de": 9,
    "action": "OBSERVER",
-   "rune": "La Patience",
+   "rune": "Calme",
    "scene": "La barque avance à la perche, sans bruit. Des formes passent sous l'eau brune, à un pied de la surface, et ne remontent pas.",
    "issue": "Vous les regardez longtemps avant d'y voir autre chose que des ombres. Ce sont des troncs debout, plantés dans la tourbe, une forêt entière noyée et conservée.",
-   "note": "+3 seulement, et le 9 rattrape. La Patience transforme une image en information : ce ne sont pas des créatures, c'est une forêt."
+   "note": "+3 seulement, et le 9 rattrape. Calme transforme une image en information : ce ne sont pas des créatures, c'est une forêt."
   },
   {
    "n": 5,
@@ -131,7 +137,7 @@
    "at": 6,
    "de": 3,
    "action": "COMBATTRE",
-   "rune": "L'Aplomb",
+   "rune": "Prestance",
    "scene": "Il plante la perche et arrête la barque. On ne voit plus aucun bord. Il dit le prix.",
    "dial": "« Un souvenir. N'importe lequel, vous le choisissez. Je le prends et vous ne saurez plus que vous l'aviez. »",
    "issue": "Vous vous levez dans la barque, ce qui ne se fait pas, et vous tenez debout le temps de dire que vous choisirez lequel vous-même. Il attend, puis il hoche la tête. La barque repart.",
@@ -146,11 +152,11 @@
    "at": 6,
    "de": 11,
    "action": "OBSERVER",
-   "rune": "Le Silence",
+   "rune": "Écoute",
    "scene": "Un homme est assis à l'avant de la barque. Il n'y était pas au départ. Il vous appelle par un surnom que personne n'utilise depuis votre enfance.",
    "dial": "« Donne-lui le souvenir de moi. Tu ne perdras rien : je suis déjà parti. »",
    "issue": "Vous ne répondez pas et vous ne le regardez pas. Il parle encore un moment, change de ton deux fois, puis se tait. Le Passeur n'a pas tourné la tête une seule fois.",
-   "note": "Marge +8, l'éclatante. Face à un tentateur, Le Silence est la seule rune qui ne lui donne pas de prise : PARLER lui aurait ouvert une conversation qu'il sait mieux mener que vous."
+   "note": "Marge +8, l'éclatante. Face à un tentateur, Écoute est la seule rune qui ne lui donne pas de prise : PARLER lui aurait ouvert une conversation qu'il sait mieux mener que vous."
   },
   {
    "n": 7,
@@ -191,10 +197,10 @@
    "at": 6,
    "de": 8,
    "action": "AGIR",
-   "rune": "L'Élan",
+   "rune": "Légèreté",
    "scene": "La barque touche. La ferme est à deux cents pas, éclairée. Le Passeur ne descend pas.",
    "issue": "Vous sautez sans attendre qu'il amarre et vous remontez le talus d'un trait. Derrière vous, la perche repart déjà vers le milieu.",
-   "note": "AGIR avec L'Élan pour quitter une barque : le modèle a écrit quelqu'un qui ne demande pas la permission de descendre. C'est exactement ce qu'on veut après le beat 7."
+   "note": "AGIR avec Légèreté pour quitter une barque : le modèle a écrit quelqu'un qui ne demande pas la permission de descendre. C'est exactement ce qu'on veut après le beat 7."
   },
   {
    "n": 9,
@@ -204,10 +210,10 @@
    "at": 6,
    "de": 4,
    "action": "PARLER",
-   "rune": "La Pitié",
+   "rune": "Charme",
    "scene": "La fermière ouvre avant que vous ayez frappé. Elle regarde derrière vous, vers l'eau, et demande combien vous étiez dans la barque.",
    "issue": "Vous répondez deux, et vous voyez à son visage que ce n'est pas la réponse qu'elle attendait. Elle vous fait entrer sans insister. Sur la table, il y a trois bols.",
-   "note": "Marge +1. La Pitié empêche le Voyageur de la presser de questions : ce qu'elle sait, elle le dira ou ne le dira pas, et les trois bols en disent assez.",
+   "note": "Marge +1. Charme empêche le Voyageur de la presser de questions : ce qu'elle sait, elle le dira ou ne le dira pas, et les trois bols en disent assez.",
    "effet": "+1 corruption"
   },
   {
@@ -218,7 +224,7 @@
    "at": 6,
    "de": 10,
    "action": "RÉVÉLER",
-   "rune": "Le Deuil",
+   "rune": "Souvenance",
    "scene": "Elle a mis trois bols. Vous êtes deux à table.",
    "issue": "Vous lui demandez pour qui est le troisième. Elle dit : pour celui qui traverse avec eux, il descend toujours. Vous répondez qu'il n'est pas descendu ce soir. Elle regarde la porte un long moment, puis elle retire le bol et s'assied.",
    "note": "Difficulté 12. RÉVÉLER ne sort rien d'un trou : il rend visible que le Compagnon n'a pas débarqué, donc qu'il est resté dans la barque, donc qu'il y était déjà avant vous. Rien n'est expliqué — la fermière retire un bol, et ça suffit.",

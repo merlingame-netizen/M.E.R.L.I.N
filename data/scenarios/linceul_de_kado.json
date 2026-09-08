@@ -19,22 +19,28 @@
   "ankou"
  ],
  "main_depart": [
-  "La Patience",
-  "La Méfiance",
-  "La Franchise",
-  "L'Élan"
+  "Calme",
+  "Acuité",
+  "Droiture",
+  "Légèreté"
  ],
  "runes": {
-  "La Patience": "laisser venir plutôt qu'aller chercher",
-  "La Méfiance": "supposer le pire et se garder",
-  "La Franchise": "dire ce qui est, sans arranger",
-  "L'Élan": "partir avant d'être sûr",
-  "La Pitié": "s'arrêter pour ce qui souffre",
-  "L'Entêtement": "recommencer sans changer d'avis",
-  "Le Silence": "ne rien dire et laisser le vide travailler",
-  "La Ruse": "prendre par un autre bord",
-  "L'Aplomb": "tenir sa place devant plus grand que soi",
-  "Le Deuil": "accepter ce qui ne reviendra pas"
+  "Acuité": "Vigilance, Sens",
+  "Écoute": "Vigilance, Mémoire",
+  "Souvenance": "Mémoire, Savoir",
+  "Poigne": "Force, Endurance",
+  "Légèreté": "Agilité, Finesse",
+  "Ténacité": "Endurance, Force",
+  "Charme": "Ruse, Empathie",
+  "Malice": "Ruse, Verbe",
+  "Calme": "Autorité, Empathie",
+  "Flair": "Vision, Instinct",
+  "Voix": "Vision, Nature",
+  "Ombre": "Mystère, Nature",
+  "Adresse": "Finesse, Agilité",
+  "Prestance": "Autorité, Verbe",
+  "Droiture": "Franchise, Empathie",
+  "Coutume": "Rituel, Savoir"
  },
  "gestes": {
   "OBSERVER": "lire une scène avant d'y toucher",
@@ -59,9 +65,9 @@
    "lieu": "Le Gué des Brumes",
    "scene": "On entend des coups réguliers avant de voir le gué. De la berge haute, une femme est agenouillée sur une pierre plate au milieu du courant. Elle bat quelque chose de blanc avec un battoir. Elle ne vous a pas vu.",
    "issue": "Vous restez où vous êtes et vous laissez le bruit se répéter. Au bout d'un moment vous distinguez le geste : elle plie le tissu, elle frappe, elle rince. Toujours dans le même ordre. Le tissu est trop grand pour un drap.",
-   "note": "OBSERVER dit ce que vous faites, La Patience dit comment. Le modèle en a tiré un Voyageur qui ne bouge pas et qui laisse la scène se répéter devant lui — c'est ce qui lui fait remarquer la boucle.",
+   "note": "OBSERVER dit ce que vous faites, Calme dit comment. Le modèle en a tiré un Voyageur qui ne bouge pas et qui laisse la scène se répéter devant lui — c'est ce qui lui fait remarquer la boucle.",
    "action": "OBSERVER",
-   "rune": "La Patience",
+   "rune": "Calme",
    "dc": 9,
    "at": 6,
    "de": 7
@@ -72,9 +78,9 @@
    "lieu": "La traversée",
    "scene": "Pour l'atteindre il faut descendre la berge et traverser sur les pierres. Elles sont couvertes de mousse et l'eau passe par-dessus les deux dernières.",
    "issue": "Vous testez chaque pierre du pied avant d'y porter le poids. La quatrième bouge, vous la laissez. Vous arrivez en face d'elle avec les bottes pleines mais debout. Elle lève la tête pour la première fois.",
-   "note": "AGIR + La Méfiance : on avance, mais en supposant que ça cède. Sans ce beat, elle vous parlait depuis l'autre rive — le geste manquait et la scène suivante n'était pas gagnée.",
+   "note": "AGIR + Acuité : on avance, mais en supposant que ça cède. Sans ce beat, elle vous parlait depuis l'autre rive — le geste manquait et la scène suivante n'était pas gagnée.",
    "action": "AGIR",
-   "rune": "La Méfiance",
+   "rune": "Acuité",
    "dc": 9,
    "at": 3,
    "de": 6
@@ -88,7 +94,7 @@
    "note": "COMBATTRE n'est pas se battre : c'est l'effort du corps. Le beat sert à deux choses — elle a besoin de vos bras, et en approchant assez pour tenir le tissu vous voyez le fil noir. Sans ce geste, le beat 4 n'a aucune raison de commencer.",
    "dial": "« Tenez ça. À deux ça se fait. Je lave celui-là depuis mille nuits et il ne sèche pas. Ce n'est pas du linge, c'est un linceul. »",
    "action": "COMBATTRE",
-   "rune": "La Patience",
+   "rune": "Calme",
    "dc": 9,
    "at": 6,
    "de": 5
@@ -99,14 +105,14 @@
    "lieu": "Le nom",
    "scene": "Le fil noir forme des lettres. Le tissu est replié dessus et le courant tire dessus dès que vous le sortez de l'eau.",
    "issue": "Vous étalez le coin sur la pierre en le tenant des deux mains, et vous lisez avant de lâcher. Les lettres forment un nom : Kado. C'est le cordier. Vous lui avez acheté de la corde avant-hier.",
-   "note": "RÉVÉLER, et non OBSERVER : il ne s'agit pas de regarder mais de faire venir au jour un nom cousu dans une trame mouillée. Avec La Méfiance, le modèle a écrit quelqu'un qui tient le tissu des deux mains et lit avant de lâcher. Marge +1 — un point de moins et c'était un partiel, la moitié du nom.",
+   "note": "RÉVÉLER, et non OBSERVER : il ne s'agit pas de regarder mais de faire venir au jour un nom cousu dans une trame mouillée. Avec Acuité, le modèle a écrit quelqu'un qui tient le tissu des deux mains et lit avant de lâcher. Marge +1 — un point de moins et c'était un partiel, la moitié du nom.",
    "apres": "Elle vous dit que l'Ankou vient cette nuit chercher celui dont le nom est cousu.",
    "bascule": [
     "subie",
     "le nom cousu est celui d'un vivant que vous connaissez"
    ],
    "action": "RÉVÉLER",
-   "rune": "La Méfiance",
+   "rune": "Acuité",
    "dc": 9,
    "at": 6,
    "de": 4
@@ -152,7 +158,7 @@
    "dial": "« Je vous en ai déjà vendu une. Je ne sais plus quel jour. Je m'embrouille en ce moment. »",
    "sans_jet": "le geste est acquis",
    "action": "PARLER",
-   "rune": "La Patience",
+   "rune": "Calme",
    "dc": 9,
    "at": 6
   },
@@ -189,14 +195,14 @@
    "lieu": "Retour au gué",
    "scene": "Vous redescendez au gué, Kado derrière vous. La Lavandière lève les yeux, le regarde un long moment, puis se remet à sa pierre. Elle explique ce qu'il faut faire sans baisser la voix, alors qu'il est à trois pas.",
    "issue": "Vous répétez après elle pour être sûr. Vous dites « prêté », elle dit « donné », et elle attend que vous le redisiez correctement. Puis elle sort une alène de son panier et vous la met dans la main : c'est le seul outil qui sorte un point sans couper le fil. Kado a tout entendu. Il ne demande pas qui donnera son nom.",
-   "note": "OBSERVER avec La Méfiance : on répète après elle parce qu'on ne se fie pas à sa propre mémoire, et elle attend qu'on ait le mot exact. La règle arrive dite par quelqu'un, pas lâchée comme une énigme — et elle arrive TARD parce que vous avez choisi de vous taire au beat 5. C'est ce qu'on veut d'une décision : qu'on en paie le prix cinq beats plus loin, sans qu'on vous l'ait annoncé.",
+   "note": "OBSERVER avec Acuité : on répète après elle parce qu'on ne se fie pas à sa propre mémoire, et elle attend qu'on ait le mot exact. La règle arrive dite par quelqu'un, pas lâchée comme une énigme — et elle arrive TARD parce que vous avez choisi de vous taire au beat 5. C'est ce qu'on veut d'une décision : qu'on en paie le prix cinq beats plus loin, sans qu'on vous l'ait annoncé.",
    "dial": "« Découdre le nom, puis en coudre un autre avant le matin. Il faut que celui-là vous le donne lui-même, et un fil pris sur son vêtement. Si vous ne recousez rien, le linceul se remplit tout seul au lever du jour, avec le nom de qui se tient le plus près. »",
    "bascule": [
     "subie",
     "sauver Kado veut dire condamner quelqu'un d'autre"
    ],
    "action": "OBSERVER",
-   "rune": "La Méfiance",
+   "rune": "Acuité",
    "dc": 9,
    "at": 3,
    "de": 8
@@ -214,7 +220,7 @@
     "l'alène est perdue"
    ],
    "action": "AGIR",
-   "rune": "L'Élan",
+   "rune": "Légèreté",
    "dc": 9,
    "at": 6,
    "de": 2
@@ -260,9 +266,9 @@
    "lieu": "La route du Val",
    "scene": "La route monte, tourne, redescend, et vous ramène devant un houx fendu par la foudre. Vous êtes déjà passé là. Vous recommencez, et vous y revenez encore. Trois fois.",
    "issue": "Kado dit que les gens d'ici ne cherchent pas d'autre chemin : ils refont le même jusqu'à ce qu'il se lasse. Vous repartez donc à l'identique, sans rien changer, lui derrière vous. Au bout du quatrième tour la route ne revient plus au houx : elle continue.",
-   "note": "L'Entêtement contre une boucle : refaire le même chemin sans rien changer, jusqu'à ce qu'il cède. Ce n'est pas une trouvaille du Voyageur — c'est Kado qui le lui dit, parce que c'est ce que font les gens d'ici. Aucune décision à ce beat : le sol ne bouge pas, on avance.",
+   "note": "Ténacité contre une boucle : refaire le même chemin sans rien changer, jusqu'à ce qu'il cède. Ce n'est pas une trouvaille du Voyageur — c'est Kado qui le lui dit, parce que c'est ce que font les gens d'ici. Aucune décision à ce beat : le sol ne bouge pas, on avance.",
    "action": "AGIR",
-   "rune": "L'Entêtement",
+   "rune": "Ténacité",
    "dc": 9,
    "at": 3,
    "de": 8
@@ -276,7 +282,7 @@
    "note": "Marge +8 : l'éclatante de la quête, sur le seul beat où l'on ne fait rien d'autre que regarder. Et ce n'est pas vous qu'il regarde, c'est Kado. Sans le beat 7, il n'y aurait eu personne à côté de vous, et la scène suivante n'existerait pas.",
    "dial": "« Je perds la même bataille tous les soirs. Je sais où je tombe. J'ai essayé de changer, ça ne change pas. »",
    "action": "OBSERVER",
-   "rune": "La Pitié",
+   "rune": "Charme",
    "dc": 9,
    "at": 6,
    "de": 11
@@ -319,9 +325,9 @@
    "lieu": "Le Chœur des Druides",
    "scene": "Deux druides vous barrent le sentier. Le premier dit que le rite interdit de défaire un nom. Le second dit que le rite l'ordonne quand l'homme est vivant — et en disant cela il montre Kado, qui s'est arrêté derrière vous. Ils répètent chacun leur phrase sans écouter l'autre.",
    "issue": "Vous ne répondez ni à l'un ni à l'autre. Ils répètent leurs phrases deux fois encore, puis s'arrêtent et se tournent l'un vers l'autre. Vous passez pendant qu'ils discutent.",
-   "note": "PARLER + Le Silence est une paire contradictoire, et c'est là que la combinaison devient intéressante : le modèle en a fait une prise de parole qui consiste à ne rien dire.",
+   "note": "PARLER + Écoute est une paire contradictoire, et c'est là que la combinaison devient intéressante : le modèle en a fait une prise de parole qui consiste à ne rien dire.",
    "action": "PARLER",
-   "rune": "Le Silence",
+   "rune": "Écoute",
    "dc": 9,
    "at": 6,
    "de": 6
@@ -334,7 +340,7 @@
    "issue": "Vous posez votre botte à côté : la sienne est plus grande d'une main. Il est passé il y a quelques minutes, et il va au gué. Vous n'y serez pas avant lui. Kado regarde l'empreinte, puis le chemin, et se met à marcher plus vite qu'il ne l'a fait de la nuit.",
    "note": "Bien jouer ne donne pas toujours un avantage : ici cela donne une mauvaise nouvelle exacte, au lieu d'une inquiétude vague.",
    "action": "OBSERVER",
-   "rune": "La Méfiance",
+   "rune": "Acuité",
    "dc": 9,
    "at": 6,
    "de": 5
@@ -345,9 +351,9 @@
    "lieu": "Découdre",
    "scene": "Le fil noir est pris dans la trame et non posé dessus. Il faut le sortir point par point. Le tissu est trempé. La Lavandière se pousse pour vous faire de la place mais elle ne vous aide pas. Kado s'est accroupi de l'autre côté de la pierre et regarde défaire son nom, lettre après lettre.",
    "issue": "Vous sortez les points un par un et vous vous arrêtez chaque fois que le tissu tire. Le nom s'en va lettre par lettre. Le linceul est intact.",
-   "note": "Marge +1, comme au beat 4. Un partiel ici abîmait le linceul — et un linceul abîmé ne sert plus à personne, ni à Kado ni au chevalier.",
+   "note": "AGIR avec Adresse — La Main Sûre : sortir un fil point par point d'une trame trempée est de la finesse, pas de la présence. Le trait était Calme (Autorité, Empathie), qui ne dit rien d'une aiguille : une traduction de vocabulaire l'a mis au jour (08/09). Marge +1, comme au beat 4. Un partiel ici abîmait le linceul — et un linceul abîmé ne sert plus à personne, ni à Kado ni au chevalier.",
    "action": "AGIR",
-   "rune": "La Patience",
+   "rune": "Adresse",
    "dc": 9,
    "at": 6,
    "de": 4
@@ -365,7 +371,7 @@
     "l'Ankou est là et il attend"
    ],
    "action": "OBSERVER",
-   "rune": "L'Aplomb",
+   "rune": "Prestance",
    "dc": 9,
    "at": 6,
    "de": 3

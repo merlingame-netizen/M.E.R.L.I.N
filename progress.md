@@ -3851,3 +3851,27 @@ sera réécrit.
 
 `test_sentier.gd` : 39 vérifications, dont l'accent, les bornes, la bourse courte et la rune qui
 quitte la traversée. Les six épreuves passent, le smoke de MerlinGame est propre.
+
+## 2026-09-08 — le corpus parle enfin la langue du jeu
+
+Une carte porte TROIS noms : « Le Geste Ancien » dans les données, « Coutume » en haut de la carte,
+« Henwaz » sous le glyphe. La bible en nommait un quatrième — La Patience, La Franchise, L'Élan —
+que le code n'a jamais connu, et les neuf quêtes de référence l'employaient. Conséquence mesurée
+la veille : un coût de choix nommé « La Franchise » ne trouvait aucune carte et ne prélevait rien,
+en silence. Décision de Maxime : quand la bible et le code divergent, le code joue, et le corpus
+emploie le nom que le JOUEUR VOIT.
+
+78 beats traduits par une table (La Franchise → Droiture, Le Silence → Écoute, L'Entêtement →
+Ténacité…), 58 notes réalignées, puis relecture beat par beat. La relecture a compté : sur six
+placements que je voulais faire pour employer les traits restés inutilisés, **cinq auraient abîmé
+le beat** — les notes défendent explicitement leur trait (« la mousse ne part pas d'un coup, elle
+part en recommençant » EST Ténacité ; « Écoute est la seule rune qui ne donne pas de prise au
+tentateur »). Un seul changement améliore : linceul_de_kado b16, où Calme (Autorité, Empathie)
+tenait une aiguille — c'est Adresse, La Main Sûre. Cinq traits restent jamais posés (Poigne,
+Flair, Voix, Ombre, Coutume) : ils auront leurs beats dans les onze quêtes à écrire, pas par
+rétro-ajustement.
+
+Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_card.gd`, et
+`valider.py` refuse toute quête qui nommerait une rune que le jeu ne fabrique pas. La bible §2.2
+est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
+régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.

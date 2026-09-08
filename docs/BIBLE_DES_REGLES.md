@@ -1,6 +1,6 @@
 # BIBLE DES RÈGLES — comment on joue à M.E.R.L.I.N.
 
-> **v1.2 — 2026-09-07** (v1.1 du 2026-08-29). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
+> **v1.3 — 2026-09-08** (v1.1 du 2026-08-29, v1.2 du 2026-09-07). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
 > contient (`docs/BIBLE.md`, canon R1 à R191) ni à quoi ressemblent les écrans
 > (`docs/70_graphic/UI_UX_BIBLE.md`).
 >
@@ -46,16 +46,42 @@ une a un défaut de conception** — `tools/scenarios/rendre.py` le signale à c
 
 ### 2.2 Les runes, la main
 
-Le Voyageur tient **quatre runes**. Une rune est une *posture*, pas une statistique : la Patience,
-la Méfiance, la Franchise, l'Élan pour la main de départ ; la Pitié, l'Entêtement, le Silence, la
-Ruse, l'Aplomb, le Deuil s'y ajoutent en cours de partie.
+Le Voyageur tient **quatre runes** tirées d'un paquet de **seize**. Une rune est une *posture*,
+pas une statistique : elle porte deux **tags**, et ce sont eux qui couvrent ce que le beat demande.
 
 **La rune posée quitte la main, et on en repioche une.** La main de la fin n'est donc pas celle du
-début : elle est le produit de ce qui a été joué.
+début : elle est le produit de ce qui a été joué. Elle persiste d'une quête à l'autre.
 
-**La main persiste d'une quête à l'autre.** Elle n'est pas remise à zéro : *La Course des Korrigans*
-s'ouvre avec La Ruse, La Méfiance, La Franchise et La Patience — l'Élan est parti dans une partie
-antérieure, La Ruse y est arrivée, et c'est elle qui ouvre la quête.
+> **UNE CARTE PORTE TROIS NOMS, et le corpus emploie celui que le JOUEUR VOIT.** Découvert le
+> 2026-09-08 en regardant une capture : « Le Geste Ancien » est le nom dans les données, « Coutume »
+> celui qui est écrit en haut de la carte, « Henwaz » celui qui est gravé sous le glyphe. Cette
+> bible en nommait un quatrième — La Patience, La Franchise, L'Élan — que le code n'a jamais connu,
+> et le corpus l'employait : un coût de choix nommé « La Franchise » ne trouvait aucune carte et ne
+> prélevait rien, **en silence**. Décision de Maxime : **quand la bible et le code divergent, le
+> code joue.** Le tableau ci-dessous est LU dans `scripts/game/merlin_card.gd` par
+> `tools/scenarios/regles.py`, et `valider.py` refuse toute quête qui nommerait une rune que le jeu
+> ne fabrique pas.
+
+| Ce que le joueur voit | Dans les données | Sous le glyphe | Ses deux tags |
+|---|---|---|---|
+| **Acuité** | Le Regard Perçant | Sulwen | Vigilance, Sens |
+| **Écoute** | L'Écoute du Silence | Klewen | Vigilance, Mémoire |
+| **Souvenance** | La Mémoire des Lieux | Kovren | Mémoire, Savoir |
+| **Poigne** | La Main de Fer | Dornek | Force, Endurance |
+| **Légèreté** | Le Pas Léger | Skanvel | Agilité, Finesse |
+| **Ténacité** | Le Souffle Tenace | Padwen | Endurance, Force |
+| **Charme** | La Langue de Miel | Melgan | Ruse, Empathie |
+| **Malice** | Le Mot Rusé | Kelvor | Ruse, Verbe |
+| **Calme** | La Présence Calme | Sioulan | Autorité, Empathie |
+| **Flair** | Le Pressentiment | Awenel | Vision, Instinct |
+| **Voix** | La Voix de la Forêt | Gwezhen | Vision, Nature |
+| **Ombre** | L'Appel de l'Ombre | Duvael | Mystère, Nature |
+| **Adresse** | La Main Sûre | Kervoal | Finesse, Agilité |
+| **Prestance** | Le Verbe Haut | Uhelvan | Autorité, Verbe |
+| **Droiture** | Le Cœur Franc | Gwiren | Franchise, Empathie |
+| **Coutume** | Le Geste Ancien | Henwaz | Rituel, Savoir |
+
+La main de départ est tirée dans ces seize.
 
 > **Décidé, non construit.** La pioche est aujourd'hui *dirigée* dans les scénarios de référence :
 > la quête donne les runes dont ses beats auront besoin. Le tirage réellement aléatoire reste à
@@ -270,7 +296,7 @@ Mesurés sur la partie témoin p74 (`docs/chroniques/p74/`), et à corriger.
 
 ## 7. Le corpus de référence
 
-Six quêtes, 67 beats, sous `data/scenarios/` et rendues dans `docs/scenarios/`. Elles servent à
+Neuf quêtes, 99 beats, sous `data/scenarios/` et rendues dans `docs/scenarios/`. Elles servent à
 deux choses : montrer le rendu qu'on vise, et donner au modèle des exemples de ce qu'on attend.
 
 | Quête | Beats | Ce qu'elle exerce |

@@ -32,6 +32,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import regles
 
+TRAITS_DU_JEU = regles.traits()
+
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 SRC = RACINE / "data" / "scenarios"
 
@@ -174,6 +176,9 @@ def valider(q, nom=""):
             e.append("beat %s : tuile %r hors du socle" % (n, b.get("action")))
         if b.get("rune") not in q["runes"]:
             e.append("beat %s : rune %r hors du paquet" % (n, b.get("rune")))
+        elif b.get("rune") not in TRAITS_DU_JEU:
+            e.append("beat %s : rune %r inconnue du JEU — le corpus emploie le nom que le joueur "
+                     "voit (regles.traits())" % (n, b.get("rune")))
         if b.get("sans_jet"):
             continue
         for cle in ("dc", "at", "de"):
@@ -189,6 +194,17 @@ def valider(q, nom=""):
 
     if e:
         return e, avert
+
+    # LE PAQUET DECLARE EST CELUI DU JEU. Une quete qui declare des runes que le jeu n'a pas est
+    # injouable : le cout d'un choix ne trouve rien, la main affichee ne correspond a rien, et rien
+    # ne le signale (defaut mesure le 08/09, corpus ecrit dans le vocabulaire de la bible).
+    inconnues = sorted(set(q.get("runes") or {}) - set(TRAITS_DU_JEU))
+    if inconnues:
+        e.append("paquet : %d rune(s) que le jeu ne connait pas : %s"
+                 % (len(inconnues), ", ".join(inconnues[:6])))
+    hors_main = sorted(set(q.get("main_depart") or []) - set(TRAITS_DU_JEU))
+    if hors_main:
+        e.append("main de depart : %s inconnue(s) du jeu" % ", ".join(hors_main))
 
     # ── DECK
     mains, _ = simuler_deck(q, e)

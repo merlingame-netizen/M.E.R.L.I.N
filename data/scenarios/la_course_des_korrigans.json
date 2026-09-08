@@ -1,21 +1,27 @@
 {
  "main_depart": [
-  "La Ruse",
-  "La Méfiance",
-  "La Franchise",
-  "La Patience"
+  "Malice",
+  "Acuité",
+  "Droiture",
+  "Calme"
  ],
  "runes": {
-  "La Patience": "laisser venir plutôt qu'aller chercher",
-  "La Méfiance": "supposer le pire et se garder",
-  "La Franchise": "dire ce qui est, sans arranger",
-  "L'Élan": "partir avant d'être sûr",
-  "La Pitié": "s'arrêter pour ce qui souffre",
-  "L'Entêtement": "recommencer sans changer d'avis",
-  "Le Silence": "ne rien dire et laisser le vide travailler",
-  "La Ruse": "prendre par un autre bord",
-  "L'Aplomb": "tenir sa place devant plus grand que soi",
-  "Le Deuil": "accepter ce qui ne reviendra pas"
+  "Acuité": "Vigilance, Sens",
+  "Écoute": "Vigilance, Mémoire",
+  "Souvenance": "Mémoire, Savoir",
+  "Poigne": "Force, Endurance",
+  "Légèreté": "Agilité, Finesse",
+  "Ténacité": "Endurance, Force",
+  "Charme": "Ruse, Empathie",
+  "Malice": "Ruse, Verbe",
+  "Calme": "Autorité, Empathie",
+  "Flair": "Vision, Instinct",
+  "Voix": "Vision, Nature",
+  "Ombre": "Mystère, Nature",
+  "Adresse": "Finesse, Agilité",
+  "Prestance": "Autorité, Verbe",
+  "Droiture": "Franchise, Empathie",
+  "Coutume": "Rituel, Savoir"
  },
  "gestes": {
   "OBSERVER": "lire une scène avant d'y toucher",
@@ -56,10 +62,10 @@
    "at": 6,
    "de": 8,
    "action": "OBSERVER",
-   "rune": "La Ruse",
+   "rune": "Malice",
    "scene": "Trente étals, aucun ordre. Les korrigans vendent en criant et changent de place entre deux clients.",
    "issue": "Vous ne cherchez pas le registre : vous cherchez qui regarde ailleurs quand vous approchez. Trois étals sur trente. Le troisième a un coin de cuir qui dépasse sous une toile.",
-   "note": "OBSERVER avec La Ruse : prendre par un autre bord. On ne fouille pas trente étals, on lit trente regards. C'est la première fois que cette rune sort du corpus."
+   "note": "OBSERVER avec Malice : prendre par un autre bord. On ne fouille pas trente étals, on lit trente regards. C'est la première fois que cette rune sort du corpus."
   },
   {
    "n": 2,
@@ -69,11 +75,11 @@
    "at": 6,
    "de": 4,
    "action": "PARLER",
-   "rune": "La Franchise",
+   "rune": "Droiture",
    "scene": "Fañch tient l'étal d'à côté. Il a vu ce que vous avez vu et il attend de savoir ce que vous en ferez.",
    "dial": "« Il ne vous le vendra pas. Ce n'est pas qu'il y tient : c'est qu'il aime mieux courir. Si vous le prenez, il court, et ici tout le monde le laisse passer. »",
    "issue": "Vous lui demandez droit s'il court vite. Fañch répond que non, mais qu'il connaît le marché et que vous non.",
-   "note": "Marge +1, ça passe de justesse. La Franchise obtient un avertissement précis au lieu d'un conseil vague — et cet avertissement est la règle du beat 3."
+   "note": "Marge +1, ça passe de justesse. Droiture obtient un avertissement précis au lieu d'un conseil vague — et cet avertissement est la règle du beat 3."
   },
   {
    "n": 3,
@@ -120,7 +126,7 @@
    "at": 3,
    "de": 5,
    "action": "PARLER",
-   "rune": "La Pitié",
+   "rune": "Charme",
    "scene": "Vous revenez à l'étal, couvert de tourbe. Fañch n'a pas bougé et ne se moque pas.",
    "dial": "« Je vous avais dit. Maintenant vous savez ce que vous ne savez pas : le marché. Ça se loue. »",
    "issue": "Vous ne discutez pas le prix et vous ne faites pas semblant d'avoir failli réussir. Il apprécie assez pour dire où le korrigan dort.",
@@ -135,7 +141,7 @@
    "at": 0,
    "de": 2,
    "action": "AGIR",
-   "rune": "La Méfiance",
+   "rune": "Acuité",
    "scene": "Le korrigan dort sous le menhir couche, a cent pas du marche. Le registre est sous sa tete. Il fait noir et il faut approcher sans reveiller ce qui dort autour.",
    "issue": "Vous avancez a pas comptes jusqu'au bord du cercle. Vous arrivez plus pres que vous ne l'aviez prevu, et de la vous ne voyez plus l'ensemble : vous croyez qu'ils sont trois et qu'un espace entre deux corps est une sortie. Ils sont sept, et cet espace est la place d'un huitieme parti pisser.",
    "note": "2 sur 2d6, aucun tag couvert, marge -7 : ECHEC, le seul du corpus. AGIR et non OBSERVER — on ne rate pas une lecture, on rate une approche : arriver trop pres empeche de voir l'ensemble. L'echec ne bloque rien, il rend la suite plus chere.",
@@ -149,10 +155,10 @@
    "at": 6,
    "de": 3,
    "action": "COMBATTRE",
-   "rune": "L'Entêtement",
+   "rune": "Ténacité",
    "scene": "Vous tirez le registre de sous sa tête. Le cuir grince. Sept korrigans se lèvent d'un coup, et la sortie que vous aviez repérée n'existe pas.",
    "issue": "Vous passez en force par où il n'y a pas de passage. Vous encaissez, vous poussez, vous recommencez, et vous sortez du cercle avec le registre et trois coups de bâton dans le dos.",
-   "note": "Marge 0 : ça tient à un point. COMBATTRE avec L'Entêtement parce que l'echec du beat 5 a supprime l'option discrete — c'est la lecture ratee qui impose la force, et elle coute trois points de sante.",
+   "note": "Marge 0 : ça tient à un point. COMBATTRE avec Ténacité parce que l'echec du beat 5 a supprime l'option discrete — c'est la lecture ratee qui impose la force, et elle coute trois points de sante.",
    "effet": "−3 santé · vous avez le registre"
   },
   {
@@ -163,11 +169,11 @@
    "at": 6,
    "de": 11,
    "action": "OBSERVER",
-   "rune": "La Patience",
+   "rune": "Calme",
    "scene": "Deux druides attendent sur le chemin du retour. Ils savent déjà pour le registre — le marché parle vite.",
    "dial": "« Un registre pris à un voleur reste un registre pris. Le recteur voudra savoir par quelles mains il est passé. »",
    "issue": "Vous les laissez finir sans vous défendre. Ils attendent une réponse qui ne vient pas, se regardent, et finissent par s'écarter. L'un dit qu'il ne dira rien ; l'autre ne dit rien du tout.",
-   "note": "Marge +8, l'éclatante. La Patience contre deux druides qui cherchent la contradiction : ne pas répondre les prive de la moitié de leur rite."
+   "note": "Marge +8, l'éclatante. Calme contre deux druides qui cherchent la contradiction : ne pas répondre les prive de la moitié de leur rite."
   },
   {
    "n": 8,
@@ -208,12 +214,12 @@
    "at": 6,
    "de": 9,
    "action": "RÉVÉLER",
-   "rune": "L'Aplomb",
+   "rune": "Prestance",
    "scene": "Le recteur ouvre le registre devant les douze familles. Il tourne les pages, s'arrête, et recommence depuis le début.",
    "issue": "Vous lui prenez le livre des mains et vous montrez la page vous-même : elle a été arrachée puis recousue, il y a des années, bien avant le vol de cette semaine. Le korrigan n'a pas pris le registre pour le voler. Il l'a pris parce que quelqu'un du village l'avait déjà falsifié, et qu'il le savait.",
    "note": "Difficulté 12. RÉVÉLER met au jour ce que la poursuite du beat 3 empêchait de voir : on courait après le mauvais coupable depuis le début. L'échec du beat 3 était nécessaire — en rattrapant le korrigan tout de suite, on rendait le registre sans jamais l'ouvrir.",
    "effet": "le registre est rendu · une page a été recousue · santé 5 · 9 gwenneg"
   }
  ],
- "note_main": "La main de depart n'est PAS celle du premier jour : le Voyageur arrive au marche avec ce que les quetes precedentes lui ont laisse. L'Elan est parti, La Ruse est arrivee — et c'est elle qui ouvre celle-ci."
+ "note_main": "La main de depart n'est PAS celle du premier jour : le Voyageur arrive au marche avec ce que les quetes precedentes lui ont laisse. Légèreté est parti, Malice est arrivee — et c'est elle qui ouvre celle-ci."
 }
