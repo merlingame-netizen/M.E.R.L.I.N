@@ -391,13 +391,13 @@ func _selftest_talent() -> void:
 	# À neuf : 0 point, 4 verbes à 0, aucun usage, nœud non offert.
 	_st(int(run.talent_points) == 0 and not run.can_offer_talent_node(), "talent neuf : 0 point, nœud non offert")
 	_st(int(run.skill_mod_for(run.actions[0])) == 0, "skill_mod neuf = 0")
-	# Gain au degré : réussite +1, éclatante +2, partiel/échec 0.
+	# 001 (08/09) : un point par beat joué quel que soit le degré, deux sur une éclatante.
 	run.gain_talent_points(ResolutionScript.REUSSITE)
 	run.gain_talent_points(ResolutionScript.PARTIEL)
 	run.gain_talent_points(ResolutionScript.ECHEC)
 	run.gain_talent_points(ResolutionScript.ECLATANTE)
-	_st(int(run.talent_points) == int(run.TALENT_GAIN_REUSSITE) + int(run.TALENT_GAIN_ECLATANTE),
-		"gain au degré (réussite+éclatante = %d)" % int(run.talent_points))
+	_st(int(run.talent_points) == 3 * int(run.TALENT_GAIN_BEAT) + int(run.TALENT_GAIN_ECLATANTE),
+		"gain au temps (trois beats + une éclatante = %d)" % int(run.talent_points))
 	# Ciblage : le verbe le plus utilisé est la cible du nœud.
 	run.note_verb_played(run.actions[1])  # AGIR
 	run.note_verb_played(run.actions[1])  # AGIR ×2

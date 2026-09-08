@@ -112,7 +112,7 @@ var _encart_bg_tw: Tween = null  # Vague D (D3) : fondu du fond d'encart (bleu-n
 # v10.11/12 (user 2026-06-07) — Map du chemin (coin droit) + Draft « 1 carte sur 3 » aux beats clés.
 # v11-V2b (spec matrice ligne 9) : le draft vit DANS les zones — les 3 cartes remplacent l'éventail,
 # titre + « Passer » dans Z4. Le flag _draft_active REMPLACE l'ancien overlay modal _draft_layer.
-var _pending_draft: bool = false         # armé en résolution (réussite/éclatante, beats restants) → draft à l'avance
+var _pending_draft: bool = false         # armé en résolution quand LE MONDE OFFRE (001 : Rencontre une sur deux, ou revers) → draft à l'avance
 var _draft_active: bool = false          # draft/offrande ouvert dans les zones (outillé par l'autoplay)
 var _draft_bar: HBoxContainer = null     # Z4 : titre + « Passer » pendant le draft
 var _draft_pick: MerlinCard = null       # carte choisie (null = passer)
@@ -942,7 +942,8 @@ func _on_resolve() -> void:
 	# explicite est une voie ALTERNATIVE, cf. _offer_debt_refusal/_on_debt_refuse).
 	if str(run.current_beat().get("type", "")) == str(run.DEBT_RECLAMATION_TYPE):
 		res["debt_settled"] = run.settle_debt(deg)
-	_pending_draft = (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) and not run.is_climax() and not run.ended
+	# 001 : le draft n'est plus armé par le degré mais par le monde (une Rencontre sur deux, ou un revers).
+	_pending_draft = run.le_monde_offre(deg, str(_current_situation.get("type", ""))) and not run.is_climax() and not run.ended
 	run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
 	if run.faits_marquants.size() > 6:
 		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
@@ -1467,11 +1468,8 @@ func _build_effect_vignette(res: Dictionary, degree: String) -> void:
 	# _on_push_choice) : l'affichage colle exactement a run.gain_talent_points. Differe d'une frame
 	# (call_deferred) : la pill vient d'entrer dans le HBox, son global_position attend le layout.
 	var run_tp: Node = get_node("/root/MerlinRun")
-	var tp_gain: int = 0
-	if degree == MerlinResolution.REUSSITE:
-		tp_gain = int(run_tp.TALENT_GAIN_REUSSITE)
-	elif degree == MerlinResolution.ECLATANTE:
-		tp_gain = int(run_tp.TALENT_GAIN_ECLATANTE)
+	# 001 : un point sur tout beat joué, deux sur une éclatante — l'affichage colle à gain_talent_points.
+	var tp_gain: int = int(run_tp.TALENT_GAIN_ECLATANTE) if degree == MerlinResolution.ECLATANTE else int(run_tp.TALENT_GAIN_BEAT)
 	if tp_gain > 0:
 		call_deferred("_float_talent_gain", pill, tp_gain)
 	# v11-W0 (user : « un compteur avec des chiffres ») — les chips chiffrées Intégrité/Corruption sont
@@ -1605,7 +1603,7 @@ func _advance_to_next() -> void:
 	# v10.11/v11-W3 — Draft de GREFFE « 1 sur 3 » aux beats clés, désormais SUR la scène révélée.
 	if _pending_draft:
 		_pending_draft = false
-		if run.has_graftable_action():
+		if run.has_graftable_action() or run.can_offer_talent_node():
 			_scene_epoch += 1  # v10.13 (Fix 10) : tout enrichissement LLM en vol ne s'écrit pas sous le draft
 			await _present_draft()
 			if not is_inside_tree():
@@ -1625,9 +1623,10 @@ func _advance_to_next() -> void:
 func _present_draft() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var grafts: Array = run.graft_choices(3)
-	if grafts.is_empty():
+	if grafts.is_empty() and not run.can_offer_talent_node():
 		return
-	_begin_graft_draft(grafts, "Une greffe s'offre à toi : choisis, puis touche un verbe", "")
+	_begin_graft_draft(grafts, "Le monde t'offre quelque chose : choisis, puis touche un verbe" if not grafts.is_empty()
+		else "Ce que tu as appris demande un verbe : choisis-le", "")
 	# v10.13 (Fix 1) : gardes STRUCTURELLES (pas de timeout mural — un joueur AFK sur un choix n'est
 	# pas un bug). Les seuls vrais états de blocage = zone refermée / run terminée / scène quittée :
 	# tous font sortir la boucle ; sortie sans flag = passer (aucune greffe).

@@ -3876,6 +3876,22 @@ Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_ca
 est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
 régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.
 
+## 2026-09-08 — 001 Le perdant reçoit quelque chose : le draft au monde, le talent au temps
+
+- Les trois fourches tranchées avec Maxime en session (001 → A, 002 → C, 003 → A), gravées.
+- 001 appliqué : `gain_talent_points` donne +1 sur tout beat joué (+2 éclatante) ; `le_monde_offre`
+  ouvre le draft une Rencontre sur deux ou après un revers, jamais sur un degré ni au Climax ;
+  caps `TALENT_NODES_PER_RUN = 3`, `MAX_GRAFTS_PER_RUN = 5` (dans `graft_choices` et `apply_graft`) ;
+  compteurs `noeuds_pris`, `rencontres_jouees` persistés ; le draft peut n'offrir que le nœud de
+  talent quand les greffes sont pleines (titre adapté).
+- Mesuré (`test_progression.gd`, 900 traversées p74) : morts 7,3 % ± 1,7 (cible 4-15 tenue),
+  greffes 0,74 par traversée (max 4), nœuds 1,69 (max 3), points sur revers 2,51, drafts armés par
+  un degré 0. Unités sur `MerlinRun` : réussite n'ouvre rien, partiel/échec ouvrent, Rencontre une
+  sur deux, échec +1 point, éclatante +2, trois nœuds puis plus rien.
+- Bible v1.4 §2.5. `probe_soak.gd` et l'affichage du gain (`tp_gain`) alignés.
+- À faire ensuite : 002 (bourse cachée et étal fermé hors sentier écrit), 003 (la quête de
+  Marc'harit la Noyée).
+
 ## 2026-09-08 — La patte : Merlin, l'encre, le verdict, la main, et ce que Merlin dit
 
 - Décisions (AskUserQuestion) : le corps parle (quatre postures), le regard (trois humeurs de plus,

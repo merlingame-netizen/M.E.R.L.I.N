@@ -32,8 +32,15 @@ const MOMENTUM_MAX: int = 3
 # niveau de talent du VERBE de l'action jouée. Constantes de départ (À TUNER par le probe §K).
 const TALENT_CAP: int = 5           # niveau max par verbe (la progression continue ; ce qui ENTRE au jet est plafonné par MerlinResolution.atouts_propres_cap, v55)
 const TALENT_COST: int = 2          # points de talent par +1 de niveau
-const TALENT_GAIN_REUSSITE: int = 1 # points gagnés sur une réussite
+# 001 (décision de Maxime, 08/09) — LE TALENT AU TEMPS, LE DRAFT AU MONDE. Un point de talent par
+# beat JOUÉ quel que soit le degré, deux sur une éclatante ; au plus trois nœuds par traversée. La
+# greffe ne se propose plus parce qu'on a réussi : le monde l'offre une Rencontre sur deux, ou après
+# un revers, et jamais plus de cinq par traversée. Le degré ne paie plus deux fois, et le perdant
+# progresse au même rythme que le vainqueur.
+const TALENT_GAIN_BEAT: int = 1      # points gagnés sur tout beat joué (échec compris)
 const TALENT_GAIN_ECLATANTE: int = 2 # ... sur une éclatante
+const TALENT_NODES_PER_RUN: int = 3  # nœuds de talent pris au plus par traversée
+const MAX_GRAFTS_PER_RUN: int = 5    # greffes posées au plus par traversée
 # Les 4 clés de verbe canoniques (== MerlinCard.card_name des actions). L'ordre est stable.
 const TALENT_VERBS: Array = ["OBSERVER", "AGIR", "COMBATTRE", "PARLER", "RÉVÉLER"]  # R158 : 5 verbes (card_name des actions)
 
@@ -113,6 +120,8 @@ var next_draw_bonus: int = 0
 # au load — pas de bump SAVE_VERSION) : la prise d'un nœud est une progression réelle (R108).
 var talent: Dictionary = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}
 var talent_points: int = 0
+var noeuds_pris: int = 0        # 001 : nœuds de talent pris cette traversée (cap TALENT_NODES_PER_RUN)
+var rencontres_jouees: int = 0  # 001 : Rencontres résolues, pour l'offre du monde une sur deux
 var verb_usage: Dictionary = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}
 # N3-V1 (2026-07-06) : MOMENTUM NARRATIF (colore le TON du pont inter-beats, ZÉRO impact §K/moteur).
 # +1 par réussite/éclatante, -1 par échec/partiel, clampé [MOMENTUM_MIN, MOMENTUM_MAX]. Remis à zéro
@@ -374,6 +383,8 @@ func new_run(p_scenario: Dictionary) -> void:
 	next_draw_bonus = 0
 	talent = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}  # R158 : talent IN-RUN, 5 verbes
 	talent_points = 0
+	noeuds_pris = 0
+	rencontres_jouees = 0
 	verb_usage = {"OBSERVER": 0, "AGIR": 0, "COMBATTRE": 0, "PARLER": 0, "RÉVÉLER": 0}
 	momentum = 0  # N3-V1 : le ton narratif repart neutre à chaque run
 	corruption_max = 0  # P2 : traçage de récompense remis à zéro
@@ -744,7 +755,7 @@ func apply_graft(action_id: String, graft: Dictionary) -> bool:
 	var act: MerlinCard = _action_by_id(action_id)
 	if act == null or graft.is_empty():
 		return false
-	if (act.grafts as Array).size() >= MAX_GRAFTS_PER_ACTION:
+	if (act.grafts as Array).size() >= MAX_GRAFTS_PER_ACTION or total_grafts() >= MAX_GRAFTS_PER_RUN:
 		return false
 	act.grafts.append(graft.duplicate(true))
 	act.refresh_from_grafts()  # dérivation unique : tags = base + greffés, rarity = f(nb greffes)
@@ -813,6 +824,8 @@ func graft_roll_bonus(action: Variant) -> int:
 # la banque ENRICHIE + l'anti-répétition + le tri à libellés distincts s'appliquent ; en mode SOAK /
 # self-test (varied_drafts=false), banque canonique + chemin historique STRICT (bandes de degrés ISO).
 func graft_choices(n: int = 3) -> Array:
+	if total_grafts() >= MAX_GRAFTS_PER_RUN:
+		return []  # 001 : cinq greffes par traversée, pas une de plus (le nœud de talent reste possible)
 	if varied_drafts:
 		return _graft_pick(MerlinCard.graft_bank_generic_varied(), n, true)
 	return _graft_pick(MerlinCard.graft_banks(""), n, false)
@@ -982,13 +995,26 @@ func note_verb_played(action_card: Variant) -> void:
 		verb_usage[v] = int(verb_usage.get(v, 0)) + 1
 
 
-# Gain de points de talent au DEGRÉ (réussite +1 / éclatante +2 ; partiel/échec 0). Appelé là où le
-# degré est appliqué (merlin_game._on_resolve / le probe), à côté d'apply_resolution.
+# Gain de points de talent AU BEAT JOUÉ (001) : un point quel que soit le degré, deux sur une
+# éclatante. Appelé là où le degré est appliqué (merlin_game._on_resolve / le probe), à côté
+# d'apply_resolution. Celui qui rate apprend autant que celui qui réussit.
 func gain_talent_points(degree: String) -> void:
-	if degree == MerlinResolution.REUSSITE:
-		talent_points += TALENT_GAIN_REUSSITE
-	elif degree == MerlinResolution.ECLATANTE:
-		talent_points += TALENT_GAIN_ECLATANTE
+	talent_points += TALENT_GAIN_ECLATANTE if degree == MerlinResolution.ECLATANTE else TALENT_GAIN_BEAT
+
+
+# 001 — LE DRAFT APPARTIENT AU MONDE. Appelé une fois par beat résolu, avec le degré et le type : le
+# monde offre quelque chose une Rencontre sur deux, ou après un revers (partiel, échec). Jamais
+# parce qu'on a réussi. Ce qui est offert (greffe ou nœud de talent) se décide à l'ouverture du
+# draft ; ici on ne décide que SI le monde s'ouvre.
+func le_monde_offre(degree: String, beat_type: String) -> bool:
+	var revers: bool = degree == MerlinResolution.PARTIEL or degree == MerlinResolution.ECHEC
+	var rencontre: bool = false
+	if beat_type == "Rencontre":
+		rencontres_jouees += 1
+		rencontre = rencontres_jouees % 2 == 0
+	if not (revers or rencontre):
+		return false
+	return (has_graftable_action() and total_grafts() < MAX_GRAFTS_PER_RUN) or can_offer_talent_node()
 
 
 # Y a-t-il un verbe encore améliorable (niveau < cap) ? Sinon le nœud de talent ne s'offre plus.
@@ -1001,7 +1027,7 @@ func has_upgradable_verb() -> bool:
 
 # Le nœud de talent peut-il s'offrir au draft ? Assez de points ET un verbe sous le cap.
 func can_offer_talent_node() -> bool:
-	return talent_points >= TALENT_COST and has_upgradable_verb()
+	return talent_points >= TALENT_COST and has_upgradable_verb() and noeuds_pris < TALENT_NODES_PER_RUN
 
 
 # Verbe CIBLE du nœud de talent : le plus utilisé (argmax verb_usage) parmi ceux encore sous le cap ;
@@ -1058,6 +1084,7 @@ func apply_talent_node(node: Dictionary) -> bool:
 		return false
 	talent[v] = mini(TALENT_CAP, int(talent.get(v, 0)) + int(node.get("amount", 1)))
 	talent_points -= TALENT_COST
+	noeuds_pris += 1
 	return true
 
 
@@ -1648,6 +1675,7 @@ func save() -> void:
 		"offered_graft_ids": offered_graft_ids,  # A3 : anti-répétition des drafts persistée (additif, défaut {} au load)
 		"next_draw_bonus": next_draw_bonus,  # v11-W3 (M1) : pioche DRAW due à la main suivante (additif)
 		"talent": talent, "talent_points": talent_points, "verb_usage": verb_usage,  # v2-W2 : talent IN-RUN (additif, R108)
+		"noeuds_pris": noeuds_pris, "rencontres_jouees": rencontres_jouees,  # 001 : additif, défaut 0 au load
 		"momentum": momentum,  # N3-V1 : ton narratif du pont (additif, défaut 0 au load)
 		"corruption_max": corruption_max, "degree_counts": degree_counts,  # P2 : traçage récap (additif, R108)
 		"gwenneg": gwenneg, "pending_debts": pending_debts,  # Vague Economie V1 : additif, defauts surs au load
@@ -1714,6 +1742,8 @@ func load_run() -> bool:
 	# _talent_dict garantit les 4 clés présentes même si le JSON est partiel/corrompu (robustesse R108).
 	talent = _talent_dict(data.get("talent", {}))
 	talent_points = int(data.get("talent_points", 0))
+	noeuds_pris = int(data.get("noeuds_pris", 0))
+	rencontres_jouees = int(data.get("rencontres_jouees", 0))
 	verb_usage = _talent_dict(data.get("verb_usage", {}))
 	momentum = clampi(int(data.get("momentum", 0)), MOMENTUM_MIN, MOMENTUM_MAX)  # N3-V1 : défaut 0 (saves antérieures neutres)
 	corruption_max = maxi(int(data.get("corruption_max", corruption)), corruption)  # P2 : défaut = corruption courante (saves antérieures)

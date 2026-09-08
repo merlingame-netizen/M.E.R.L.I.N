@@ -109,6 +109,33 @@ func _init() -> void:
 	_verifier("sur une Épreuve, aucun geste n'est sûr", not bool(c1["geste_sur"]) and not bool(c2["geste_sur"]))
 	_verifier("au Climax, même la couverture pleine jette le dé", not bool(cx["geste_sur"]) and int(cx["die"]) == 7)
 
+	# ── 001 : LE PERDANT REÇOIT QUELQUE CHOSE (décision de Maxime, 08/09)
+	print("\n001 — greffes %.2f par traversée (max %d) · nœuds %.2f (max %d) · points gagnés sur revers %.2f · drafts armés par un degré %d"
+		% [auj["greffes"], int(auj["greffes_max"]), auj["noeuds"], int(auj["noeuds_max"]), auj["points_revers"], int(auj["drafts_degre"])])
+	_verifier("le perdant gagne des points de talent (points sur revers > 0)", auj["points_revers"] > 0.0, "%.2f" % auj["points_revers"])
+	_verifier("jamais plus de cinq greffes par traversée", int(auj["greffes_max"]) <= MerlinRun.MAX_GRAFTS_PER_RUN, "%d" % int(auj["greffes_max"]))
+	_verifier("jamais plus de trois nœuds de talent par traversée", int(auj["noeuds_max"]) <= MerlinRun.TALENT_NODES_PER_RUN, "%d" % int(auj["noeuds_max"]))
+	_verifier("aucun draft n'est armé par un degré", int(auj["drafts_degre"]) == 0, "%d" % int(auj["drafts_degre"]))
+	# La règle elle-même, dans le moteur de run (pas la simulation) :
+	var run: Node = load("res://scripts/game/merlin_run.gd").new()
+	run.new_run({"title": "épreuve", "beats": [{"n": 1, "type": "Exploration"}, {"n": 2, "type": "Rencontre"}]})
+	_verifier("une réussite en Exploration n'ouvre rien", not run.le_monde_offre("reussite", "Exploration"))
+	_verifier("une éclatante non plus", not run.le_monde_offre("eclatante", "Epreuve"))
+	_verifier("un partiel ouvre le monde", run.le_monde_offre("partiel", "Exploration"))
+	_verifier("un échec aussi", run.le_monde_offre("echec", "Epreuve"))
+	_verifier("la première Rencontre n'ouvre pas", not run.le_monde_offre("reussite", "Rencontre"))
+	_verifier("la seconde Rencontre ouvre", run.le_monde_offre("reussite", "Rencontre"))
+	var tp0: int = int(run.talent_points)
+	run.gain_talent_points("echec")
+	_verifier("un échec donne un point de talent", int(run.talent_points) == tp0 + 1)
+	run.gain_talent_points("eclatante")
+	_verifier("une éclatante en donne deux", int(run.talent_points) == tp0 + 3)
+	run.talent_points = 10
+	run.noeuds_pris = MerlinRun.TALENT_NODES_PER_RUN
+	_verifier("trois nœuds pris : le nœud ne s'offre plus", not run.can_offer_talent_node())
+	run.noeuds_pris = 0
+	_verifier("… et revient sous le cap", run.can_offer_talent_node())
+
 	print("\n%s (%d échec%s)" % ["ÉPREUVE PASSÉE" if _rates == 0 else "ÉPREUVE ÉCHOUÉE",
 		_rates, "s" if _rates > 1 else ""])
 	quit(1 if _rates > 0 else 0)
@@ -133,6 +160,12 @@ func _serie(arch: String) -> Dictionary:
 	var climax_de: int = 0
 	var integ_fin_sum: int = 0
 	var integ_min_sum: int = 0
+	var greffes_sum: int = 0
+	var greffes_max: int = 0
+	var noeuds_sum: int = 0
+	var noeuds_max: int = 0
+	var points_revers: int = 0
+	var drafts_degre: int = 0
 	for graine in GRAINES:
 		rng.seed = int(graine)
 		for i in _n_runs:
@@ -146,6 +179,8 @@ func _serie(arch: String) -> Dictionary:
 			var points: int = 0
 			var usage: int = 0
 			var greffes: int = 0
+			var noeuds: int = 0
+			var rencontres: int = 0
 			for b in beats:
 				var btype: String = str((b as Dictionary).get("type", "Exploration"))
 				var diff: int = int((b as Dictionary).get("difficulte", 2))
@@ -170,15 +205,26 @@ func _serie(arch: String) -> Dictionary:
 				integ_min = mini(integ_min, integ)
 				corruption = maxi(0, corruption + int(res["corruption_delta"]))
 				usage += 1
-				if deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE:
-					points += 2 if deg == MerlinResolution.ECLATANTE else 1
-					if btype != "Climax":
-						# UN draft : le nœud de talent ou une greffe, jamais les deux (merlin_game._inject_talent_node).
-						if points >= MerlinRun.TALENT_COST and talent < MerlinRun.TALENT_CAP and rng.randf() < TALENT_P:
-							talent += 1
-							points -= MerlinRun.TALENT_COST
-						elif rng.randf() < GRAFT_P:
-							greffes += 1
+				# 001 (08/09) — LE TALENT AU TEMPS : un point par beat joué, deux sur une éclatante.
+				var revers: bool = deg == MerlinResolution.PARTIEL or deg == MerlinResolution.ECHEC
+				points += MerlinRun.TALENT_GAIN_ECLATANTE if deg == MerlinResolution.ECLATANTE else MerlinRun.TALENT_GAIN_BEAT
+				if revers:
+					points_revers += 1
+				# 001 — LE DRAFT AU MONDE : une Rencontre sur deux, ou après un revers ; jamais au Climax,
+				# jamais parce qu'on a réussi. UN draft : le nœud de talent ou une greffe, jamais les deux.
+				if btype == "Rencontre":
+					rencontres += 1
+				var offre: bool = (btype == "Rencontre" and rencontres % 2 == 0) or revers
+				if offre and btype != "Climax":
+					if not revers and btype != "Rencontre":
+						drafts_degre += 1  # ne doit jamais arriver : c'est la règle d'hier
+					if points >= MerlinRun.TALENT_COST and talent < MerlinRun.TALENT_CAP \
+							and noeuds < MerlinRun.TALENT_NODES_PER_RUN and rng.randf() < TALENT_P:
+						talent += 1
+						points -= MerlinRun.TALENT_COST
+						noeuds += 1
+					elif greffes < MerlinRun.MAX_GRAFTS_PER_RUN and rng.randf() < GRAFT_P:
+						greffes += 1
 				if integ <= 0:
 					morts += 1
 					break
@@ -187,6 +233,10 @@ func _serie(arch: String) -> Dictionary:
 					break
 			integ_fin_sum += integ
 			integ_min_sum += integ_min
+			greffes_sum += greffes
+			greffes_max = maxi(greffes_max, greffes)
+			noeuds_sum += noeuds
+			noeuds_max = maxi(noeuds_max, noeuds)
 	var p: float = float(morts) / maxi(runs, 1)
 	return {
 		"morts": 100.0 * p,
@@ -197,6 +247,9 @@ func _serie(arch: String) -> Dictionary:
 		"climax_de": 100.0 * climax_de / maxi(climax_total, 1),
 		"integ_fin": float(integ_fin_sum) / maxi(runs, 1),
 		"integ_min": float(integ_min_sum) / maxi(runs, 1),
+		"greffes": float(greffes_sum) / maxi(runs, 1), "greffes_max": greffes_max,
+		"noeuds": float(noeuds_sum) / maxi(runs, 1), "noeuds_max": noeuds_max,
+		"points_revers": float(points_revers) / maxi(runs, 1), "drafts_degre": drafts_degre,
 	}
 
 

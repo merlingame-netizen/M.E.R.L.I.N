@@ -1,6 +1,6 @@
 # BIBLE DES RÈGLES — comment on joue à M.E.R.L.I.N.
 
-> **v1.3 — 2026-09-08** (v1.1 du 2026-08-29, v1.2 du 2026-09-07). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
+> **v1.4 — 2026-09-08** (v1.1 du 2026-08-29, v1.2 du 2026-09-07, v1.3 du 2026-09-08). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
 > contient (`docs/BIBLE.md`, canon R1 à R191) ni à quoi ressemblent les écrans
 > (`docs/70_graphic/UI_UX_BIBLE.md`).
 >
@@ -147,6 +147,26 @@ qui ne lit jamais la scène meurt six fois sur dix : lire est le jeu. L'épreuve
 > mortalité est donc un plancher, pas celle d'un humain. Mesuré le 07/09, l'oracle est inerte sous
 > v55 — zéro choix divergent sur 165 Épreuves et 165 Climax — parce que le dé n'y dispense plus
 > rien ; mais tant qu'il voit le dé, la nuit mesure la règle, pas le joueur.
+
+### 2.5 Ce que le monde offre (001, 2026-09-08)
+
+Hier, tout ce qui faisait grandir le Voyageur tombait sur la réussite : la greffe ne s'offrait
+qu'après une réussite ou une éclatante, le point de talent ne venait que sur réussite. Celui qui
+ratait ne recevait rien, celui qui réussissait recevait de quoi réussir encore ; sur p74, huit
+greffes en treize beats. Maxime a tranché (fourche 001, option A) : **le draft appartient au monde,
+le talent au temps.**
+
+| Règle | Valeur | Source |
+|---|---|---|
+| Un point de talent par beat **joué**, quel que soit le degré ; deux sur une éclatante | +1 / +2 | `TALENT_GAIN_BEAT`, `TALENT_GAIN_ECLATANTE` |
+| Nœuds de talent pris au plus par traversée | **3** | `TALENT_NODES_PER_RUN` |
+| Le monde offre un draft **une Rencontre sur deux**, ou **après un revers** (partiel, échec) ; jamais au Climax, jamais parce qu'on a réussi | — | `le_monde_offre` |
+| Greffes posées au plus par traversée | **5** | `MAX_GRAFTS_PER_RUN` |
+
+Le degré ne paie plus deux fois : réussir garde l'intégrité, et c'est tout. Le perdant progresse au
+même rythme que le vainqueur, et le monde lui tend quelque chose quand il tombe. Mesuré par
+`test_progression.gd` (900 traversées, archétype p74) : 7,3 % de morts (± 1,7), 0,7 greffe et 1,7
+nœud par traversée, 2,5 points de talent gagnés sur des revers, zéro draft armé par un degré.
 
 ---
 
