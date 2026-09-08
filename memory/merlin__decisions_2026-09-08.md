@@ -56,3 +56,12 @@
   tournait. Les preuves se font AVANT de pousser, dans la session qui développe.
 - job-103 éteint Ollama sur la VM et régénère le crontab ; l'ancien état des agents disparus
   reste dans ~/.cache/merlin-agents/state à titre d'archive.
+
+## 2026-09-08 : les attentes deviennent des scènes, le rendu prend de la profondeur
+- Tout retenu par Maxime : la carte à l'encre (sélection), le tissage (fusion), le décor en
+  profondeur, le papier et l'encre de l'encart, les runes trait par trait, la frise en encre, le
+  boot qui se dessine, l'ouverture de quête, l'écran de fin, « Merlin trace ton sentier ».
+- Contrainte tenue : tout procédural, dans la palette, calculé sur l'horloge (les attentes tournent
+  à 5 images par seconde pour rendre les cœurs au modèle) ; la VM diffuse par VNC sans GPU.
+- Les fils du tissage sont sombres sur le parchemin et crème au-dessus du monde : un fil crème sur
+  du crème n'existe pas.
