@@ -27,3 +27,16 @@
 - AMORCE : trois fourches ouvertes le 08/09 — 001 le perdant, 002 l'argent, 003 la dixième quête.
 - CE QUE ÇA REMPLACE : l'ancien Cycle Director (Routine horaire d'avril, « tout faire », « jamais
   AskUserQuestion ») mort en état AWAITING_HUMAN_DECISION ; l'onglet Décider et ses 70 propositions.
+
+## 2026-09-08 : la patte — Merlin, l'encre, le verdict, la main, le lexique
+- Merlin reste plat, deux tons, deux barres bleues. Il gagne quatre postures (attente, pensée,
+  verdict, révélation), trois humeurs (doute, malice, gravité), des manches, l'orbe qui éclaire la
+  cape, l'ombre qui fuit la lune. Les postures ne se voient qu'où la figure est dessinée (menu, boot,
+  sélection, fin) : en jeu, Merlin est l'œil dans la lune.
+- L'encre suit le sens du voyage : depuis Merlin vers la sélection, du haut vers le jeu (la page),
+  du bas vers la fin, retour par la gauche. Des motes d'or sur le front.
+- Le beat tourne comme une page (12 px), le décor annonce le type du beat suivant.
+- Le verdict se lit : « 7 + 3 contre 9 : +1 · Réussite » sous le dé, couleur du degré, deux
+  secondes ; Merlin et le monde réagissent au callback du dé.
+- Les formules de Merlin sont un lexique écrit à la main (data/merlin_lexique.json), tiré sans
+  modèle ; le modèle garde le menu. Douze biomes cadrés. Jamais de tiret cadratin.
