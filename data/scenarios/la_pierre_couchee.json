@@ -202,7 +202,7 @@
    "lieu": "Ar C'hoad Kozh",
    "scene": "Le cercle compte de nouveau douze pierres debout. La douzième penche, et le nom qu'elle portait est contre la terre.",
    "issue": "Vous repartez avec deux gwenneg et onze éclats de granit rangés par taille dans votre poche, qui ne servent à rien. Le nom, lui, reste sous la pierre. Personne dans ce bois ne le prononcera plus, et le cercle tient quand même.",
-   "note": "OBSERVER avec Légèreté : partir avant d'être sûr est le seul geste possible quand ce qu'on cherchait est enterré sous ce qu'on a réparé. Marge +2, réussite — la quête se ferme sur ce qu'elle a perdu, pas sur ce qu'elle rapporte.",
+   "note": "OBSERVER avec Légèreté — Le Pas Léger : on regarde une dernière fois et on s'en va sans s'appesantir, parce que ce qu'on cherchait est enterré sous ce qu'on a réparé. Marge +2, réussite — la quête se ferme sur ce qu'elle a perdu, pas sur ce qu'elle rapporte.",
    "dc": 12,
    "at": 6,
    "de": 8,

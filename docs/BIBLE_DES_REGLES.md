@@ -308,6 +308,13 @@ deux choses : montrer le rendu qu'on vise, et donner au modèle des exemples de 
 | Trois Pains à Kerlan | 10 | le **partage** et le **rituel** |
 | La Course des Korrigans | 9 | la **poursuite**, et le seul **échec** du corpus |
 
+**Elles se jouent** (08/09). L'entrée SENTIERS du menu liste les quêtes écrites — titre, lieu,
+longueur, première ligne du préambule — et en lance une sans passer par le modèle : le préambule
+ouvre la traversée, la bourse de départ écrite est appliquée, la prose de chaque beat est servie
+telle quelle, et la mécanique se joue pour de vrai (tags tirés, dé, intégrité). Le beat de choix
+(§3.1) remplace la main par ses propositions et prélève leur prix. Captures :
+`docs/captures/menu_sentiers.png`, `docs/captures/sentier_ouverture.png`.
+
 `tools/scenarios/rendre.py` rend les pages et publie un **rapport de corpus** : mécaniques
 couvertes, tuiles jouées, degrés obtenus, runes jamais posées. Ce rapport a déjà attrapé quatre
 défauts réels — une quête qui ne jouait jamais `AGIR`, une autre `COMBATTRE`, la rune `La Ruse`

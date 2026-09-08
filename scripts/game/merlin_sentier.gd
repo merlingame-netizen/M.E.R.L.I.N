@@ -204,6 +204,39 @@ static func cout_en_clair(cout: Dictionary) -> String:
 	return " · ".join(bouts)
 
 
+## De quoi présenter un sentier sans le charger tout entier : titre, lieu, longueur, première ligne.
+## C'est ce que le menu affiche — « assez pour choisir, rien qui déflore » (décision du 08/09).
+static func resume(cle: String) -> Dictionary:
+	var q: Dictionary = lire(cle)
+	if q.is_empty():
+		return {}
+	var pre: Array = q.get("preambule", []) as Array
+	return {
+		"cle": cle,
+		"titre": str(q.get("titre", cle)),
+		"biome": str(q.get("biome", "")),
+		"biome_nom": nom_du_biome(str(q.get("biome", ""))),
+		"beats": (q.get("beats", []) as Array).size(),
+		"ouverture": str(pre[0]) if not pre.is_empty() else "",
+	}
+
+
+## Le nom que le joueur connaît d'un biome (« Les Falaises du Bout-du-Monde »), lu dans ses données.
+## L'identifiant brut en repli : mieux vaut « falaises » qu'une ligne vide.
+static func nom_du_biome(id: String) -> String:
+	if id == "":
+		return ""
+	var f: FileAccess = FileAccess.open("res://data/biomes/%s.json" % id, FileAccess.READ)
+	if f == null:
+		return id
+	var brut: Variant = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(brut) != TYPE_DICTIONARY:
+		return id
+	var d: Dictionary = brut
+	return str(d.get("sous_titre", d.get("nom", id)))
+
+
 # ── interne ───────────────────────────────────────────────────────────────────────────────────
 
 ## Le pitch d'un sentier est son préambule : c'est ce que la quête promet, et le climax s'y ancre.

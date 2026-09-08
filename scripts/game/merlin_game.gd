@@ -3219,6 +3219,15 @@ func _show_intro_popup() -> void:
 	# désormais écrite pendant « Merlin rêve » (prepare_arc_ouverture) et attendue : à l'arrivée
 	# ici, elle est prête. Le cadrage en dur ne reste que comme secours, et le journal le marque.
 	var legende: String = str(sc.quest_intro()) if sc.has_method("quest_intro") else ""
+	# LE SENTIER ÉCRIT PORTE SON PRÉAMBULE (2026-09-08). Sur une quête écrite à la main, rien n'a
+	# été rêvé : la légende est vide et le joueur lisait le cadrage en dur du biome — deux phrases
+	# de météo à la place des quatre lignes qui ouvrent la quête. Vu à la sonde du menu.
+	var preambule: Array = run.scenario.get("preambule", []) as Array
+	if not preambule.is_empty():
+		var lignes: PackedStringArray = PackedStringArray()
+		for l in preambule:
+			lignes.append(str(l))
+		legende = " ".join(lignes)
 	_intro_data = {
 		"title": title,
 		"intro": legende if legende != "" else str(sc.world_setup_short(str(run.biome))),

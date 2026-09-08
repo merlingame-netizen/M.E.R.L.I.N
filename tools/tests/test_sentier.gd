@@ -104,6 +104,10 @@ func _init() -> void:
 	# ── LE PAIEMENT, dans une vraie partie
 	var run: Node = load("res://scripts/game/merlin_run.gd").new()
 	run.new_run(s)
+	_verifier("la traversée ouvre avec la bourse écrite", int(run.gwenneg) == 14, "%d" % int(run.gwenneg))
+	var vierge: Node = load("res://scripts/game/merlin_run.gd").new()
+	vierge.new_run({"title": "x", "beats": [{"n": 1, "type": "Exploration"}]})
+	_verifier("une quête sans bourse écrite ouvre à zéro", int(vierge.gwenneg) == 0, "%d" % int(vierge.gwenneg))
 	run.gwenneg = 14
 	var integ0: int = int(run.integrite)
 	var paye: Dictionary = run.payer_le_choix({"integrite": 1, "corruption": 1, "gwenneg": 6})
@@ -164,7 +168,30 @@ func _init() -> void:
 		+ (run2.discard as Array).size() == 15, "%d cartes" % ((run2.deck as Array).size()
 		+ (run2.hand as Array).size() + (run2.discard as Array).size()))
 
+	# ── LE RÉSUMÉ, ce que le menu affiche (08/09) : titre, lieu, longueur, première ligne
+	var r: Dictionary = MerlinSentier.resume("le_compte_juste")
+	_verifier("le résumé porte le titre", str(r.get("titre", "")) == "Le Compte Juste", str(r))
+	_verifier("le lieu est le nom que le joueur connaît",
+		str(r.get("biome_nom", "")) == "Les Falaises du Bout-du-Monde", str(r.get("biome_nom", "")))
+	_verifier("la longueur est comptée", int(r.get("beats", 0)) == 10, "%d" % int(r.get("beats", 0)))
+	_verifier("l'ouverture est la première ligne du préambule, pas plus",
+		str(r.get("ouverture", "")).begins_with("La terre s'arrête net") and not str(r.get("ouverture", "")).contains("\n"))
+	_verifier("un sentier illisible n'a pas de résumé", MerlinSentier.resume("nexiste_pas").is_empty())
+	_verifier("un biome inconnu rend son identifiant, pas une ligne vide",
+		MerlinSentier.nom_du_biome("nulle_part") == "nulle_part")
+	_verifier("chaque sentier listé a un résumé complet", _tous_resumes(), str(MerlinSentier.liste()))
+
 	_finir()
+
+
+## Un sentier sans titre, sans lieu ou sans ouverture ferait une ligne de menu à trous.
+func _tous_resumes() -> bool:
+	for cle in MerlinSentier.liste():
+		var r: Dictionary = MerlinSentier.resume(str(cle))
+		if r.is_empty() or str(r.get("titre", "")) == "" or str(r.get("biome_nom", "")) == "" \
+			or int(r.get("beats", 0)) == 0 or str(r.get("ouverture", "")) == "":
+			return false
+	return true
 
 
 func _finir() -> void:

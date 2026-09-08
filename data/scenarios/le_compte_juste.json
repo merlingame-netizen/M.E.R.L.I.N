@@ -96,10 +96,10 @@
    "at": 3,
    "de": 5,
    "action": "COMBATTRE",
-   "rune": "Légèreté",
+   "rune": "Poigne",
    "scene": "Le sentier se réduit à une saignée dans la roche, à hauteur d'homme au-dessus du vide. Le vent y arrive de côté et la corde sur votre épaule fait voile et tire de travers.",
    "issue": "Vous passez en force, tête baissée, sans attendre l'accalmie. Une rafale vous met à genoux au milieu du passage. Vous arrivez de l'autre côté avec la corde et un coude ouvert jusqu'à l'os du poignet.",
-   "note": "COMBATTRE avec Légèreté sur une corniche : le geste juste eût été Calme, comme au beat 1. Marge −1, partiel — le corps paie ce que l'impatience décide, et la quête garde la trace."
+   "note": "COMBATTRE avec Poigne — La Main de Fer : passer en force quand la douceur échoue. Le geste juste eût été Calme, comme au beat 1 : attendre l'accalmie. Marge −1, partiel — le corps paie ce que la précipitation décide, et la quête garde la trace jusqu'au bout. (Le trait était Légèreté après la traduction du 08/09 : de l'agilité pour forcer un passage, c'était le contraire de ce que la scène raconte.)"
   },
   {
    "n": 4,

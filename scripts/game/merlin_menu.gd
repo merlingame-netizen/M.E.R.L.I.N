@@ -248,6 +248,12 @@ func _build_ui() -> void:
 	menu.add_child(_menu_row("burst", "NOUVELLE PARTIE", _on_new, true))
 	# P2 (chantier 4b) : CHRONIQUES devient un vrai écran de lecture (palmarès) ; l'entrée CARTES,
 	# grisée et sans fonction, est RETIRÉE (un bouton grisé sans condition lisible est pire qu'absent).
+	# LES SENTIERS ÉCRITS (2026-09-08). Les quêtes de `data/scenarios/` n'avaient jamais été
+	# jouables : seul le générateur les lisait, comme exemples pour le modèle. Elles sont du
+	# contenu depuis v56, et il fallait une porte pour y entrer. Ici et non sur l'écran de
+	# sélection : celui-ci est occupé 38 s par le voile pendant que Merlin rêve ses trois sentiers,
+	# et la distinction reste nette entre ce qu'il rêve et ce qui est écrit.
+	menu.add_child(_menu_row("cards", "SENTIERS", _on_sentiers, not MerlinSentier.liste().is_empty()))
 	menu.add_child(_menu_row("book", "CHRONIQUES", _on_chronicles, true))
 	menu.add_child(_menu_row("target", "OPTIONS", _on_options, true))
 	menu.add_child(_menu_row("cross", "QUITTER", _on_quit, true))
@@ -976,6 +982,109 @@ func _on_quit() -> void:
 # DEUX VUES, UN SEUL VOILE. La liste, puis le détail d'une traversée, se remplacent dans le même
 # panneau : un second voile empilé demanderait deux clics pour revenir, et le pilier FACILE
 # (bible §21.1) tient l'action à deux gestes au plus.
+# === LES SENTIERS ÉCRITS À LA MAIN ===========================================================
+#
+# Une quête écrite se joue SANS le modèle : sa prose est déjà là, donc aucune attente, aucun beat
+# au banc. La mécanique, elle, se joue pour de vrai (tags tirés, dé lancé, intégrité qui descend).
+# On ne passe donc ni par l'écran de sélection, ni par `build_skeleton`, ni par l'écriture de
+# l'ouverture : le sentier EST le scénario.
+func _on_sentiers() -> void:
+	if get_node_or_null("SentiersOverlay") != null:
+		return  # garde de ré-entrance (pas d'empilement de voiles)
+	var layer: Control = Control.new()
+	layer.name = "SentiersOverlay"
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(layer)
+	var dim: ColorRect = ColorRect.new()
+	dim.color = MerlinVisual.DIM_MODAL
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	layer.add_child(dim)
+	# SEUL LE FOND FERME : le panneau porte des lignes cliquables.
+	dim.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed:
+			layer.queue_free())
+	var panel: PanelContainer = PanelContainer.new()
+	panel.name = "Panneau"
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(760, 540)
+	var psb: StyleBoxFlat = StyleBoxFlat.new()
+	psb.bg_color = MerlinVisual.PANEL
+	psb.border_color = MerlinVisual.BORDER_BRUN
+	psb.set_border_width_all(2)
+	psb.set_content_margin_all(26)
+	panel.add_theme_stylebox_override("panel", psb)
+	layer.add_child(panel)
+	_sentiers_liste(panel, layer)
+
+
+func _sentiers_liste(panel: PanelContainer, layer: Control) -> void:
+	_vider(panel)
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	panel.add_child(v)
+	v.add_child(_chro_ligne("SENTIERS", 34, COL_GOLD))
+	v.add_child(_chro_ligne("Des traversées écrites à la main. La prose y est déjà posée : "
+		+ "rien à attendre, et le dé décide comme partout ailleurs.", 16, COL_DIM))
+	v.add_child(HSeparator.new())
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size = Vector2(0, 380)
+	v.add_child(scroll)
+	var liste: VBoxContainer = VBoxContainer.new()
+	liste.add_theme_constant_override("separation", 12)
+	liste.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(liste)
+	for cle in MerlinSentier.liste():
+		var r: Dictionary = MerlinSentier.resume(str(cle))
+		if r.is_empty():
+			continue  # un sentier illisible ne s'affiche pas : on ne propose pas ce qu'on ne peut pas jouer
+		liste.add_child(_sentier_ligne(r, layer))
+	v.add_child(HSeparator.new())
+	v.add_child(_chro_bouton("← Retour", func() -> void: layer.queue_free()))
+
+
+## Titre, lieu et longueur, puis la première ligne du préambule. Assez pour choisir, rien qui déflore.
+func _sentier_ligne(r: Dictionary, layer: Control) -> Control:
+	var b: Button = Button.new()
+	b.custom_minimum_size = Vector2(0, 86)   # ≥ 44 px : pilier TACTILE
+	b.flat = true
+	b.clip_contents = true                    # rien ne déborde sur la ligne suivante
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	b.pressed.connect(func() -> void: _lancer_le_sentier(str(r.get("cle", "")), layer))
+	var col: VBoxContainer = VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_FULL_RECT)
+	col.add_theme_constant_override("separation", 2)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(col)
+	var titre: Label = MerlinVisual.make_label(COL_GOLD, 20)
+	titre.text = "%s  ·  %s  ·  %d beats" % [str(r.get("titre", "")), str(r.get("biome_nom", "")),
+		int(r.get("beats", 0))]
+	titre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(titre)
+	var ouverture: Label = MerlinVisual.make_label(COL_DIM, 15)
+	ouverture.text = str(r.get("ouverture", ""))
+	ouverture.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ouverture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(ouverture)
+	return b
+
+
+## Le sentier devient la traversée. Aucun squelette, aucune ouverture à écrire : on entre en jeu.
+func _lancer_le_sentier(cle: String, layer: Control) -> void:
+	var s: Dictionary = MerlinSentier.charger(cle)
+	if s.is_empty():
+		return  # illisible : on ne lance pas une traversée qui mentirait sur ce qu'elle raconte
+	var run: Node = get_node("/root/MerlinRun")
+	# LE BIOME AVANT LA TRAVERSÉE : `new_run` ouvre la chronique avec lui, et le décor le lit.
+	run.biome = str(s.get("biome", run.biome))
+	run.new_run(s)
+	layer.queue_free()
+	_stop_voice()
+	MerlinTransition.change_scene(GAME_SCENE)
+
+
 func _on_chronicles() -> void:
 	if get_node_or_null("ChroniclesOverlay") != null:
 		return  # garde de ré-entrance (pas d'empilement de voiles)

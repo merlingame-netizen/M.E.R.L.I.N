@@ -3876,6 +3876,24 @@ Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_ca
 est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
 régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.
 
+## 2026-09-08 — SENTIERS : le joueur peut enfin lancer une quête écrite
+
+- Décision (AskUserQuestion) : une entrée de menu à côté de CHRONIQUES, pas l'écran de sélection
+  (occupé 38 s par le voile) ; la ligne montre titre, lieu, longueur et la première ligne du
+  préambule — assez pour choisir, rien qui déflore.
+- `MerlinSentier.resume()` / `nom_du_biome()` ; `merlin_menu.gd` `_on_sentiers` → liste → `_lancer_le_sentier`
+  (`run.biome` posé avant `new_run`, puis `GAME_SCENE`, sans squelette ni ouverture à écrire).
+- Deux défauts vus à la sonde et corrigés : l'intro était le cadrage en dur du biome (le préambule
+  écrit ouvre désormais la traversée) ; la bourse ouvrait à 0 (`bourse_depart` appliqué dans `new_run`,
+  0 partout ailleurs — l'argent ne vient toujours que d'un événement).
+- Preuve : `probe_menu_sentiers.gd` sous xvfb (9/9 sentiers proposés, MerlinGame atteint, beat 1
+  `sentier=true`) ; `test_sentier` 50+ ok ; `test_progression`, `test_journal` verts.
+- Corpus : deux appariements que la traduction du 08/09 avait faussés — « passer en force » joué
+  avec Légèreté (→ Poigne, La Main de Fer) dans Le Compte Juste b3 ; la note de La Pierre Couchée
+  b10 récitait la définition de l'ancienne rune. Runes jamais posées : Flair, Voix, Ombre, Coutume.
+- Non fait, à savoir : les `effet` écrits (« gwenneg +6 » de Kado au beat 2) ne sont pas appliqués
+  par le chargeur ; seuls les coûts des choix le sont.
+
 ## 2026-09-08 — v57 : une tranche d'arc perdue ne coûte plus toute la fin de la quête
 
 La première nuit sous v55 a mis ONZE beats sur seize au banc. La cause était nommée depuis le

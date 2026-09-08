@@ -379,6 +379,10 @@ func new_run(p_scenario: Dictionary) -> void:
 	corruption_max = 0  # P2 : traçage de récompense remis à zéro
 	degree_counts = {"echec": 0, "partiel": 0, "reussite": 0, "eclatante": 0}
 	gwenneg = 0  # Vague Economie V1 : monnaie + dette remises a neuf a chaque run
+	# UN SENTIER ÉCRIT DIT SA BOURSE DE DÉPART (2026-09-08). Elle fait partie de l'écriture : « Le
+	# Compte Juste » ouvre à 14 et l'un de ses choix coûte 6. Ailleurs la clé est absente et rien
+	# ne change — l'argent ne vient que d'un événement (chantier du 2026-08).
+	gwenneg = maxi(0, int(p_scenario.get("bourse_depart", 0)))
 	pending_debts = []
 	soins_achetes = 0
 	purges_achetees = 0
