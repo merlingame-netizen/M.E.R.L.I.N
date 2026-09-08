@@ -49,3 +49,12 @@
   seize sous d'autres noms (Le Regard Perçant, Le Cœur Franc…), et le corpus employait ceux de la
   bible. Un coût nommé « La Franchise » ne prélevait rien, en silence. LE JEU GAGNE : le corpus et
   la bible adopteront les seize noms du code.
+
+## 2026-09-08 : le corpus parle la langue du jeu
+- Une carte porte TROIS noms (données, affichage, glyphe) et la bible en ajoutait un quatrième.
+  Le corpus emploie celui que le JOUEUR VOIT. Quand la bible et le code divergent, le code joue.
+- 78 beats traduits, 58 notes réalignées, un seul appariement réellement amélioré (linceul b16 :
+  Calme → Adresse, une aiguille n'est pas une présence). Cinq traits restent jamais posés
+  (Poigne, Flair, Voix, Ombre, Coutume) : ils auront leurs beats dans les onze quêtes à écrire.
+- Garde-fou : regles.traits() lit les seize traits de départ dans le code, valider.py refuse une
+  rune que le jeu ne fabrique pas.
