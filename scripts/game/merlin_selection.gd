@@ -61,6 +61,8 @@ var _flux_vu: bool = false
 var _title_lbl: Label
 var _back_btn: Button
 var _overlay: Panel
+var _carte: MerlinCarteEncre = null   # 08/09 : la carte à l'encre qui se dessine pendant l'attente
+var _titres_poses: Array = []          # les titres dans l'ordre d'arrivée : index du chemin de chacun
 var _overlay_art: MerlinSceneArt
 var _overlay_lbl: Label
 var _busy: bool = false
@@ -103,6 +105,7 @@ func _load_selection() -> void:
 	_show_overlay(MerlinLexique.tirer("attente.reve", "Merlin rêve les trois sentiers"))
 	if _overlay_art != null:
 		_overlay_art.set_posture("pensee")
+	_demarrer_la_carte()
 	# Titres FORCÉMENT écrits par le modèle. Il n'y a plus de bouton « passer » et plus de secours :
 	# soit Merlin écrit, soit on renonce et on retourne au menu. take_selection() ne sert plus que
 	# de récupérateur et rend un tableau VIDE tant que rien n'a été écrit.
@@ -310,6 +313,9 @@ func _add_parchemin(title: String, pitch: String) -> void:
 
 	_cards_box.add_child(panel)
 	_card_in(panel, 0.10 + 0.14 * float(_cards_box.get_child_count() - 1))
+	_titres_poses.append(title)
+	if _carte != null:
+		_carte.terminer(_titres_poses.size() - 1)  # 08/09 : le trait de ce sentier se ferme
 
 
 # Entrée de parchemin : pop d'échelle + fondu (juice renforcé, user 2026-06-29). Pas de position
@@ -350,6 +356,7 @@ func _on_pick(title: String, pitch: String) -> void:
 	_show_overlay(MerlinLexique.tirer("attente.trace", "Merlin trace ton sentier"))
 	if _overlay_art != null:
 		_overlay_art.set_posture("verdict")
+	_prolonger_la_carte(title)
 	if _overlay != null and not _overlay.gui_input.is_connected(_on_ouverture_input):
 		_overlay.gui_input.connect(_on_ouverture_input)
 	if _fps_avant < 0:
@@ -365,6 +372,8 @@ func _on_pick(title: String, pitch: String) -> void:
 		return
 	_rendre_la_cadence()
 	_degeler_le_decor()
+	if _carte != null:
+		_carte.arreter(0.4)
 	# Transition à l'encre, sans légende (user 2026-08-14) : le montage « zoom vers Merlin » est retiré
 	# — il montrait Merlin seul, agrandi, sur fond sombre, sans rien dire. Les captions CANNÉES restent
 	# neutralisées depuis la Vague D (D1) : aucun panneau de texte à la bascule.
@@ -458,14 +467,22 @@ func _build_ui() -> void:
 	_overlay_art.set_time_of_day(hour)
 	_overlay_art.set_animated(true)
 	_overlay_lbl = Label.new()
-	_overlay_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# En bas de l'écran (08/09) : la carte se dessine au milieu, la légende ne la couvre plus.
+	_overlay_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_overlay_lbl.offset_top = -110.0
+	_overlay_lbl.offset_bottom = -40.0
 	_overlay_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_overlay_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
-	_overlay_lbl.add_theme_font_size_override("font_size", 40)
+	_overlay_lbl.add_theme_font_size_override("font_size", 30)
 	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
+	# LA CARTE À L'ENCRE (08/09) vit AU-DESSUS du voile et des parchemins : le voile tombe au premier
+	# parchemin, la carte reste et finit de se dessiner ; après le choix, le trait choisi se prolonge.
+	_carte = MerlinCarteEncre.new()
+	_carte.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_carte)
 
 
 # Chaque morceau de texte écrit par le modèle passe ici. On n'attend pas la fin : dès qu'un objet
@@ -637,6 +654,43 @@ func _set_overlay_text(txt: String) -> void:
 	_overlay_base_txt = txt
 	if _overlay_lbl != null:
 		_overlay_lbl.text = txt
+
+
+## 08/09 — Les trois traits partent de l'orbe de Merlin (tel que _figure le dessine dans le voile)
+## et vont se poser au-dessus des trois colonnes de parchemins.
+func _demarrer_la_carte() -> void:
+	if _carte == null:
+		return
+	var w: float = size.x
+	var h: float = size.y
+	if w < 10.0 or h < 10.0:
+		w = 1920.0
+		h = 1080.0
+	# _figure : base (0,5 w ; 0,84 h), hauteur 0,5 h, demi-largeur 0,075 w → l'orbe est à
+	# (base.x + 1,30 hw ; sommet − 0,06 h).
+	var origine: Vector2 = Vector2(w * (0.5 + 0.075 * 1.30), h * (0.84 - 0.50 - 0.06))
+	var cibles: Array = [Vector2(w * 0.17, h * 0.22), Vector2(w * 0.50, h * 0.13), Vector2(w * 0.83, h * 0.22)]
+	_titres_poses = []
+	_carte.demarrer(origine, cibles, int(Time.get_ticks_msec()))
+
+
+func _prolonger_la_carte(title: String) -> void:
+	if _carte == null:
+		return
+	var i: int = _titres_poses.find(title)
+	if i < 0:
+		i = 1
+	var w: float = size.x if size.x > 10.0 else 1920.0
+	var h: float = size.y if size.y > 10.0 else 1080.0
+	_carte.prolonger(i, Vector2(w * 0.5, h * 0.05))
+	# Le décor du monde se construit derrière, lentement, pendant que Merlin trace : à l'arrivée du
+	# premier beat il est là. Le voile s'éclaircit d'autant.
+	if _overlay_art != null and not MerlinVisual.reduced_motion:
+		_overlay_art.set_decor_reveal(0.30)
+		_overlay_art.modulate.a = 0.5
+		var tw: Tween = _overlay_art.create_tween().set_parallel(true)
+		tw.tween_method(_overlay_art.set_decor_reveal, 0.30, 1.0, 24.0).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(_overlay_art, "modulate:a", 0.9, 24.0).set_trans(Tween.TRANS_SINE)
 
 
 func _hide_overlay() -> void:

@@ -338,25 +338,33 @@ func run() -> void:
 		cap_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cap_lbl.size = Vector2(screen_size.x, 40.0)
 		cap_lbl.position = Vector2(0.0, screen_size.y * 0.60)
+		cap_lbl.add_theme_font_size_override("font_size", 20)
 		cap_lbl.modulate.a = 0.0
 		add_child(cap_lbl)
 		create_tween().tween_property(cap_lbl, "modulate:a", 0.85, 0.4)
 		# R128 (user 2026-06-30) — barre de progression « où on en est ». Gemma ne streame PAS (texte d'un bloc)
 		# → progression HEURISTIQUE temps écoulé, plafonnée à 0.90 jusqu'à ce que l'issue soit prête, puis 100 %.
-		var bar_w: float = 360.0
-		var bar_track: ColorRect = ColorRect.new()
-		bar_track.color = Color(MerlinVisual.INK.r, MerlinVisual.INK.g, MerlinVisual.INK.b, 0.50)
-		bar_track.size = Vector2(bar_w, 6.0)
-		bar_track.position = Vector2((screen_size.x - bar_w) * 0.5, screen_size.y * 0.655)
-		bar_track.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		bar_track.modulate.a = 0.0
-		add_child(bar_track)
-		var bar_fill: ColorRect = ColorRect.new()
-		bar_fill.color = MerlinVisual.GOLD
-		bar_fill.size = Vector2(0.0, 6.0)
-		bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		bar_track.add_child(bar_fill)
-		create_tween().tween_property(bar_track, "modulate:a", 0.85, 0.4)
+		# 08/09 — MERLIN TISSE POUR DE VRAI (décision de Maxime) : la barre est remplacée par des fils
+		# qui descendent de la lune vers l'encart et le tissent ; l'issue déchire le tissu. La lune
+		# et l'encart sont ceux de l'hôte (la scène de jeu) ; à défaut, le haut et le milieu de l'écran.
+		var hote: Node = get_parent()
+		var lune: Vector2 = Vector2(screen_size.x * 0.5, screen_size.y * 0.19)
+		var cadre: Rect2 = Rect2(screen_size.x * 0.02, screen_size.y * 0.29, screen_size.x * 0.96, screen_size.y * 0.32)
+		var art: Variant = hote.get("_scene_art") if hote != null else null
+		if art is Control and is_instance_valid(art):
+			lune = (art as Control).global_position + Vector2((art as Control).size.x * 0.5, (art as Control).size.y * 0.40) - global_position
+			if (art as Control).has_method("set_scripted_gaze"):
+				(art as Control).call("set_scripted_gaze", true, Vector2(0.0, 0.85))  # les yeux suivent les fils
+		var encart: Variant = hote.get("_situ_panel") if hote != null else null
+		if encart is Control and is_instance_valid(encart):
+			var r: Rect2 = (encart as Control).get_global_rect()
+			cadre = Rect2(r.position - global_position, r.size)
+		var tissage: MerlinTissage = MerlinTissage.new()
+		tissage.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tissage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(tissage)
+		tissage.demarrer(lune, cadre)
+		cap_lbl.position = Vector2(0.0, cadre.end.y + 10.0)  # la légende sous l'encart, jamais dessus
 		var pulse: Tween = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		pulse.tween_property(glow, "color:a", 0.18, 0.9)
 		pulse.tween_property(glow, "color:a", 0.06, 0.9)
@@ -388,10 +396,6 @@ func run() -> void:
 		while is_inside_tree() and is_instance_valid(glow) and not skip_box[0] \
 				and not _is_ready() and Time.get_ticks_msec() < deadline_ms:
 			var now: int = Time.get_ticks_msec()
-			if is_instance_valid(bar_fill):
-				# La barre suit le CAP : calée sur 10 s alors que l'attente peut durer quatre fois plus,
-				# elle restait collée à 0,90 pendant l'essentiel du temps et ne renseignait plus rien.
-				bar_fill.size.x = minf(0.90, float(now - sustain_t0) / float(SUSTAIN_CAP_MS)) * bar_w
 			if now >= next_think_ms:
 				next_think_ms = now + randi_range(3000, 5000)  # cadence 3-5 s, jamais superposé
 				MerlinAudio.play_sfx(str(think_sfx[think_idx % think_sfx.size()]))
@@ -409,13 +413,10 @@ func run() -> void:
 		_rendre_cadence_sustain()
 		if pulse != null and pulse.is_valid():
 			pulse.kill()
-		if is_instance_valid(bar_fill):
-			bar_fill.size.x = bar_w  # issue prête → barre pleine (100 %), honnête : on n'atteint 100 % qu'ici
-		if is_instance_valid(bar_track):
-			var bout: Tween = bar_track.create_tween()
-			bout.tween_interval(0.18)
-			bout.tween_property(bar_track, "modulate:a", 0.0, 0.22)
-			bout.tween_callback(bar_track.queue_free)
+		if art is Control and is_instance_valid(art) and (art as Control).has_method("set_scripted_gaze"):
+			(art as Control).call("set_scripted_gaze", false)
+		if is_instance_valid(tissage) and is_inside_tree():
+			await tissage.dechirer(0.55)  # l'issue est là : le tissu cède en motes, le texte est dessous
 		if is_instance_valid(cap_lbl):
 			cap_lbl.queue_free()
 		if is_inside_tree() and is_instance_valid(glow):
