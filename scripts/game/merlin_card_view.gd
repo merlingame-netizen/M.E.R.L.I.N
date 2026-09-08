@@ -210,6 +210,17 @@ func set_affinity(level: int) -> void:
 	_aff_tw.tween_method(_set_aff_alpha, AFF_PULSE_LO, AFF_ALPHA_2, _dur(1.1))
 
 
+## Un souffle : la lueur d'affinité monte d'un cran puis revient — quand une tuile est survolée, les
+## runes qui couvrent un requis du beat se signalent (08/09, « la main vivante »). Sans affinité, rien.
+func souffle_affinite() -> void:
+	if _aff_level <= 0 or MerlinVisual.reduced_motion or not is_inside_tree():
+		return
+	var tw: Tween = MerlinTween.retween(self, "souffle")
+	var haut: float = minf(_aff_alpha + 0.35, 1.0)
+	tw.tween_method(_set_aff_alpha, _aff_alpha, haut, _dur(0.12)).set_trans(Tween.TRANS_SINE)
+	tw.tween_method(_set_aff_alpha, haut, AFF_ALPHA_1 if _aff_level == 1 else AFF_ALPHA_2, _dur(0.45)).set_trans(Tween.TRANS_SINE)
+
+
 func _set_aff_alpha(v: float) -> void:
 	_aff_alpha = v
 	queue_redraw()
@@ -541,6 +552,34 @@ func discard_out() -> void:
 	_tw.tween_property(self, "scale", Vector2(0.5, 0.5), d).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_tw.tween_property(self, "modulate:a", 0.0, d * 0.85).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_tw.chain().tween_callback(queue_free)
+	_fumee_d_encre(d)
+
+
+## 08/09 — LA SORTIE EN FUMÉE D'ENCRE : six gouttes sombres montent de la carte et s'effacent, dans
+## le ton de la transition d'encre. Posées chez le parent (la carte meurt avant elles) ; rien en
+## mouvement réduit, et six nœuds à peine, qui s'auto-détruisent.
+func _fumee_d_encre(d: float) -> void:
+	var par: Node = get_parent()
+	if par == null or MerlinVisual.reduced_motion or not (par is Control):
+		return
+	var encre: Color = MerlinVisual.SILHOUETTE
+	for i in 6:
+		var goutte: Panel = Panel.new()
+		var r: float = randf_range(4.0, 9.0)
+		goutte.size = Vector2(r * 2.0, r * 2.0)
+		goutte.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var sb: StyleBoxFlat = StyleBoxFlat.new()
+		sb.bg_color = Color(encre.r, encre.g, encre.b, 0.55)
+		sb.set_corner_radius_all(int(r))
+		goutte.add_theme_stylebox_override("panel", sb)
+		goutte.position = position + Vector2(randf_range(0.15, 0.85) * size.x, randf_range(0.2, 0.7) * size.y)
+		goutte.z_index = z_index + 1
+		par.add_child(goutte)
+		var tw: Tween = goutte.create_tween().set_parallel(true)
+		tw.tween_property(goutte, "position", goutte.position + Vector2(randf_range(-18.0, 18.0), -randf_range(40.0, 90.0)), d * 1.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(goutte, "modulate:a", 0.0, d * 1.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_property(goutte, "scale", Vector2(0.3, 0.3), d * 1.4)
+		tw.chain().tween_callback(goutte.queue_free)
 
 
 ## Pose dans la combinaison : apparition pop (échelle + fondu). `delay` permet d'attendre

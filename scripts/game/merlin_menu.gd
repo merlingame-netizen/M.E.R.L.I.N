@@ -140,6 +140,15 @@ func _saison_label(key: String) -> String:
 
 
 # Position ÉCRAN de la tête de Merlin (lue live dans MerlinSceneArt) pour ancrer la bulle au-dessus.
+## D'où l'encre part quand on quitte le menu : la tête de Merlin à l'écran, ou le centre s'il n'est
+## pas dessiné (mouvement réduit, boot interrompu).
+func _origine_de_merlin() -> Vector2:
+	var h: Dictionary = _head_screen()
+	if h.is_empty():
+		return Vector2(-1.0, -1.0)
+	return h["pos"]
+
+
 func _head_screen() -> Dictionary:
 	if _scene_art == null or not is_instance_valid(_scene_art):
 		return {}
@@ -714,6 +723,7 @@ func _say(line: String) -> void:
 	var mood: String = MerlinSceneArt.mood_for_text(line)
 	if _scene_art != null:
 		_scene_art.set_eye_mood(mood)
+		_scene_art.set_posture("pensee", 4.0)  # 08/09 : le corps parle — il penche la tête le temps de la bulle
 	# v10.22 (user) — placement ALÉATOIRE (5 slots hors UI) + en-tête « MERLIN » : la bulle habite l'écran.
 	_bubble.show_line(line, Callable(self, "_head_screen"), mood, true)
 
@@ -934,10 +944,10 @@ func _on_biome_picked(bio: String) -> void:
 		pop.tween_interval(0.5 * m)
 		pop.tween_callback(func() -> void:
 			_stop_voice()
-			MerlinTransition.change_scene(SELECTION_SCENE))
+			MerlinTransition.change_scene(SELECTION_SCENE, "", "depuis", _origine_de_merlin()))
 	else:
 		_stop_voice()
-		MerlinTransition.change_scene(SELECTION_SCENE)
+		MerlinTransition.change_scene(SELECTION_SCENE, "", "depuis", _origine_de_merlin())
 
 
 func _on_continue() -> void:
@@ -945,7 +955,7 @@ func _on_continue() -> void:
 	if run.has_save() and run.load_run():
 		_confirm_row("spark")
 		_stop_voice()
-		MerlinTransition.change_scene(GAME_SCENE)
+		MerlinTransition.change_scene(GAME_SCENE, "", "haut")
 
 
 # Coupe la voix du menu avant de quitter la scène (single-flight : la scène suivante a besoin du
@@ -1082,7 +1092,7 @@ func _lancer_le_sentier(cle: String, layer: Control) -> void:
 	run.new_run(s)
 	layer.queue_free()
 	_stop_voice()
-	MerlinTransition.change_scene(GAME_SCENE)
+	MerlinTransition.change_scene(GAME_SCENE, "", "haut")
 
 
 func _on_chronicles() -> void:

@@ -181,6 +181,7 @@ func _play_cinematic() -> void:
 	if OS.get_environment("MERLIN_BOOT_SKIP_TO_PUSH") != "":
 		_scene_art.scale = Vector2.ONE
 		_scene_art.set_figure_reveal(1.0)
+		_scene_art.set_posture("revelation", 2.6)  # 08/09 : il se redresse, bâton levé, puis se pose
 		_scene_art.set_eye_open(-1.0)
 		_scene_art.set_decor_reveal(1.0)
 		_ready_model = true

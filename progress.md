@@ -3876,6 +3876,42 @@ Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_ca
 est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
 régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.
 
+## 2026-09-08 — La patte : Merlin, l'encre, le verdict, la main, et ce que Merlin dit
+
+- Décisions (AskUserQuestion) : le corps parle (quatre postures), le regard (trois humeurs de plus,
+  des manches), l'orbe éclaire la cape ; l'encre suit le sens du voyage ET le beat tourne comme une
+  page ; Merlin réagit au verdict, le dé et la marge se lisent, la main vit ; un lexique écrit à la
+  main tiré sans modèle. Le plat deux tons et les yeux bleus ne bougent pas.
+- **Merlin** (`merlin_scene_art.gd`) : `set_posture` attente / pensée / verdict / révélation, interpolée
+  à 2,2/s, retour automatique ; `set_eye_mood` doute / malice / gravité en plus (barres penchées,
+  raccourcies, pâlies : toujours deux barres) ; deux manches en quadrilatères perpendiculaires (la
+  triangulation ne peut plus échouer), la droite tient le bâton ; le bâton se lève au verdict ; un
+  second ton plat sur la cape côté orbe ; l'ombre fuit la lune ; `set_halo_tint` teinte le halo au
+  degré ; `pulse_eye_widen`. Menu : il pense quand il parle ; boot : révélation ; sélection : pensée
+  puis verdict. Capture : `docs/captures/merlin_postures_humeurs.png`.
+- **Encre** (`merlin_transition.gd`) : cinq sens — droite, gauche (retours), haut (vers le jeu, la
+  page), bas (vers la fin), depuis (un disque qui s'ouvre depuis la tête de Merlin au menu) — et 28
+  motes d'or sur le front. Chaque appel de `change_scene` nomme son sens. Capture :
+  `docs/captures/encre_depuis_merlin.png`.
+- **Le beat tourne** : `swap_zone(zone, build, glisse)` glisse de 12 px (jamais sous un Container) ;
+  le décor annonce le type du beat suivant (Épreuve : lune sombre + arbres ; Dilemme : brume ;
+  Climax : bourrasque).
+- **Verdict** : `_reagir_au_verdict` au callback du dé — halo teinté, yeux écarquillés (éclatante) ou
+  plissés (échec), lune, brume, bourrasque ; `_afficher_la_marge` écrit « 7 + 3 contre 9 : +1 ·
+  Réussite » sous le dé, deux secondes, couleur du degré. Captures : `verdict_reussite.png`,
+  `verdict_echec.png`.
+- **La main** : au survol d'une tuile, les runes qui couvrent un requis soufflent (`souffle_affinite`) ;
+  la défausse part en fumée d'encre (six gouttes, chez le parent, mouvement réduit respecté).
+- **Lexique** (`data/merlin_lexique.json`, `MerlinLexique`) : attente (rêve, trace, tisse), verdict
+  par degré, choix, sentier, fin (mort, corruption, victoire, retour), et les DOUZE biomes cadrés
+  (deux l'étaient). Branché : voiles de la sélection, fusion, cadrage de biome, ouverture d'un
+  sentier, écran de fin (une ligne sous le titre). `test_lexique.gd` : clés, longueur, pas de tiret
+  cadratin, douze biomes, le scénario et le lexique d'accord.
+- Preuves : test_lexique, test_sentier, test_journal, test_ecran_chroniques verts ; sondes xvfb
+  `probe_merlin_capture.gd`, `probe_transitions_capture.gd`, `probe_menu_sentiers.gd` passées.
+- Laissé de côté : les postures ne se voient pas en jeu (les yeux vivent dans la lune) ; le verdict
+  n'a pas encore sa formule du lexique à l'écran (la ligne du compte suffit, à juger).
+
 ## 2026-09-08 — L'ATELIER : le jeu se développe, Maxime ne tranche que les fourches
 
 - Constat de Maxime : trop de décisions en attente, un design plein de défauts. Décisions

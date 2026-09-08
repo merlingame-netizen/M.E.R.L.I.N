@@ -75,6 +75,24 @@ var _eye_mood_t: float = 0.0
 # v10.20 — Mode ŒIL-LUNE (in-game, user 2026-06-29) : les yeux de Merlin vivent DANS la lune (cercle
 # central) et suivent le curseur. La lune est agrandie ; les yeux du figure sont alors supprimés (doublon).
 var _watch_eyes: bool = false
+
+# ── LE CORPS PARLE (08/09, décision de Maxime) : quatre postures interpolées, toujours en polygones
+# plats. `tilt` penche la tête (−1..1), `bow` la baisse (négatif = relève), `lean` penche la cape,
+# `staff` lève le bâton (0 au repos, 1 brandi), `open` élargit la cape, `rise` fait flotter plus haut.
+const POSTURES: Dictionary = {
+	"attente":    {"tilt": 0.0,  "bow": 0.05,  "lean": 0.0,   "staff": 0.0, "open": 1.00, "rise": 0.0},
+	"pensee":     {"tilt": 0.35, "bow": 0.18,  "lean": 0.15,  "staff": 0.1, "open": 0.94, "rise": 0.0},
+	"verdict":    {"tilt": 0.0,  "bow": -0.05, "lean": -0.10, "staff": 1.0, "open": 1.10, "rise": 0.4},
+	"revelation": {"tilt": -0.2, "bow": -0.20, "lean": 0.0,   "staff": 0.55, "open": 1.16, "rise": 0.7},
+}
+var _posture: String = "attente"
+var _pose: Dictionary = POSTURES["attente"].duplicate()
+var _pose_cible: Dictionary = POSTURES["attente"].duplicate()
+var _pose_vitesse: float = 2.2         # 1/s : ~0,45 s pour aller aux deux tiers
+var _posture_retour: float = -1.0      # >0 : secondes avant le retour à « attente »
+var _halo_tint: Color = MerlinVisual.CREAM
+var _halo_tint_a: float = 0.0          # 0 = lune crème ; 1 = lune teintée (verdict)
+var _moon_c_last: Vector2 = Vector2(-1.0, -1.0)  # la lune vue au dernier dessin : l'ombre la fuit
 var _gaze_scripted: bool = false    # true = regard piloté par merlin_boot (pas la souris)
 var _gaze_forced: Vector2 = Vector2.ZERO
 
@@ -264,12 +282,48 @@ func set_eye_glow(v: float) -> void:
 	queue_redraw()
 
 
+## Un écarquillement (> 1) ou un plissement (< 1) qui revient de lui-même à 1 en `tenue` secondes.
+func pulse_eye_widen(v: float, tenue: float = 1.2) -> void:
+	_eye_widen = v
+	var tw: Tween = MerlinTween.retween(self, "eye_widen")
+	tw.tween_interval(tenue * 0.4)
+	tw.tween_property(self, "_eye_widen", 1.0, tenue * 0.6 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	queue_redraw()
+
+
 func set_eye_widen(v: float) -> void:
 	_eye_widen = maxf(v, 0.1)
 	queue_redraw()
 
 
 # Humeur des yeux : "neutral" (bleu), "surprise" (jaune+glow), "angry" (rouge+sourcils). Décroît seule.
+## La posture de Merlin (« attente », « pensee », « verdict », « revelation »). `tenue` > 0 : il
+## revient à l'attente après ce délai. Interpolée dans _process : jamais de pose qui « pop ».
+func set_posture(nom: String, tenue: float = 0.0) -> void:
+	if not POSTURES.has(nom):
+		nom = "attente"
+	_posture = nom
+	_pose_cible = (POSTURES[nom] as Dictionary).duplicate()
+	_posture_retour = tenue if tenue > 0.0 else -1.0
+	if MerlinVisual.reduced_motion:
+		_pose = _pose_cible.duplicate()  # mouvement réduit : la pose est prise, pas jouée
+	queue_redraw()
+
+
+func posture() -> String:
+	return _posture
+
+
+## Le halo de la lune prend une couleur (celle du degré, au verdict) puis revient au crème.
+func set_halo_tint(col: Color, tenue: float = 2.2) -> void:
+	_halo_tint = col
+	_halo_tint_a = 1.0
+	var tw: Tween = MerlinTween.retween(self, "halo_tint")
+	tw.tween_interval(tenue * 0.45)
+	tw.tween_property(self, "_halo_tint_a", 0.0, tenue * 0.55 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	queue_redraw()
+
+
 func set_eye_mood(mood: String) -> void:
 	_eye_mood = mood
 	_eye_mood_t = 0.0 if mood == "neutral" else 4.5  # tenue ~4.5s puis retour au bleu
@@ -292,6 +346,17 @@ static func mood_for_text(t: String) -> String:
 	for w in angry:
 		if s.find(w) != -1:
 			return "angry"
+	# 08/09 : trois humeurs de plus. La gravité avant la malice avant le doute : une phrase qui parle
+	# de mort n'est jamais malicieuse, même si elle rit.
+	for w in ["mort", "adieu", "sang", "dette", "jamais plus", "deuil", "tombe", "linceul"]:
+		if s.find(w) != -1:
+			return "gravite"
+	for w in ["hé hé", "he he", "malin", "ruse", "petit voyageur", "tu croyais", "je te vois"]:
+		if s.find(w) != -1:
+			return "malice"
+	for w in ["peut-être", "peut-etre", "je ne sais", "qui sait", "sans doute", "hésit", "hesit", "on verra"]:
+		if s.find(w) != -1:
+			return "doute"
 	if s.find("?") != -1 or s.find("…") != -1 or s.find("oh") != -1 or s.find("ah ") != -1 \
 			or s.find("tiens") != -1 or s.find("vraiment") != -1 or s.find("étrange") != -1 \
 			or s.find("etrange") != -1 or s.find("korrigan") != -1 or s.find("eh bien") != -1:
@@ -469,6 +534,14 @@ func set_time_of_day(hour: int) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
+	if _posture_retour > 0.0:
+		_posture_retour -= delta
+		if _posture_retour <= 0.0:
+			set_posture("attente")
+	if not MerlinVisual.reduced_motion:
+		var k: float = clampf(delta * _pose_vitesse, 0.0, 1.0)
+		for key in _pose.keys():
+			_pose[key] = lerpf(float(_pose[key]), float(_pose_cible.get(key, _pose[key])), k)
 	if _eye_mood_t > 0.0:
 		_eye_mood_t -= delta
 		if _eye_mood_t <= 0.0:
@@ -645,6 +718,8 @@ func _draw() -> void:
 
 	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
 	var moon_r: float = minf(w, h) * (0.17 if _watch_eyes else 0.13)  # lune agrandie en mode œil-lune (lisibilité)
+	_moon_c_last = moon_c
+	var halo_col: Color = COL_MOON.lerp(_halo_tint, _halo_tint_a * 0.85)  # le verdict teinte le halo, brièvement
 
 	# God rays (behind everything except background)
 	if _animated and not rm:
@@ -672,10 +747,10 @@ func _draw() -> void:
 		var halo_outer_a: float = (0.025 + 0.012 * (0.5 + 0.5 * sin(_halo_phase * 0.6))) * dr * (1.0 + m_hov * 0.4)
 		if rm:
 			halo_outer_a *= 0.5
-		draw_circle(moon_c, halo_outer_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_outer_a))
+		draw_circle(moon_c, halo_outer_r, Color(halo_col.r, halo_col.g, halo_col.b, halo_outer_a * (1.0 + _halo_tint_a * 0.8)))
 		var halo_r: float = moon_r * (1.22 + 0.06 * sin(_halo_phase))
 		var halo_a: float = (0.05 + 0.025 * (0.5 + 0.5 * sin(_halo_phase))) * dr * (1.0 + m_hov * 0.4)
-		draw_circle(moon_c, halo_r, Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, halo_a))
+		draw_circle(moon_c, halo_r, Color(halo_col.r, halo_col.g, halo_col.b, halo_a * (1.0 + _halo_tint_a * 0.8)))
 
 	# Moon flash/dim reactive (+ chaleur selon l'heure, v10.18 ; + teinte de faction, Wave C)
 	var moon_col: Color = COL_MOON.lerp(MerlinVisual.GOLD, _tod_moon_warm * 0.35).lerp(_faction_accent, _faction_moon_f)
@@ -1341,78 +1416,145 @@ func _menhir(pos: Vector2, dim: Vector2, alpha: float = 1.0) -> void:
 
 func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	# v10.18 — Merlin FLOTTE (menu) : bob vertical + sway horizontal smooth via _t. In-game inchangé.
-	# v10.21 (goal) — MERLIN plus DÉTAILLÉ et VIVANT, toujours simpliste/flat : ombre au sol, ourlet de
-	# cape ONDULANT, capuche en pointe, BÂTON à orbe qui pulse avec le halo, étincelles runiques en orbite.
+	# v10.21 — plus DÉTAILLÉ et VIVANT, toujours simpliste/flat : ombre au sol, ourlet ondulant,
+	# bâton à orbe qui pulse avec le halo, étincelles runiques en orbite.
+	# 08/09 — LE CORPS PARLE : la pose (_pose, interpolée) penche la tête, la cape, lève le bâton ;
+	# des MANCHES sortent de la cape (la droite tient le bâton, la gauche est rentrée) ; l'ORBE ÉCLAIRE
+	# la cape de son côté (second ton, plat) ; l'ombre au sol FUIT LA LUNE. Toujours deux tons et les
+	# yeux bleus : rien de nouveau dans la palette, seulement des polygones.
 	var menu: bool = _menu_decor and _animated and not MerlinVisual.reduced_motion
+	var tilt: float = float(_pose["tilt"])
+	var bow: float = float(_pose["bow"])
+	var lean: float = float(_pose["lean"])
+	var staff_up: float = float(_pose["staff"])
+	var open_w: float = float(_pose["open"])
+	var rise: float = float(_pose["rise"])
 	var fx: float = (sin(_t * 0.55) * half_w * 0.10) if menu else 0.0
 	var fy: float = (sin(_t * 0.80) * height * 0.018) if menu else 0.0
 	# Matérialisation : la figure monte un peu en se formant + alpha par COUCHE (cape → tête → yeux).
-	var base: Vector2 = base_in + Vector2(fx, fy + (1.0 - _fig_reveal) * height * 0.10)
+	var base: Vector2 = base_in + Vector2(fx, fy + (1.0 - _fig_reveal) * height * 0.10 - rise * height * 0.05)
 	var a_cloak: float = clampf(_fig_reveal / 0.45, 0.0, 1.0)
 	var a_head: float = clampf((_fig_reveal - 0.40) / 0.30, 0.0, 1.0)
 	var a_eyes: float = clampf((_fig_reveal - 0.65) / 0.35, 0.0, 1.0)
+	var hw: float = half_w * open_w
 	var top: float = base.y - height
 	var shoulder: float = base.y - height * 0.62
-	# Ombre au sol : flaque elliptique douce sous la cape (l'ancre au monde — il FLOTTE au-dessus).
-	var sh_c: Vector2 = Vector2(base_in.x, base_in.y + height * 0.015)
+	var lean_px: float = lean * half_w * 0.45   # le haut de la cape penche, le bas reste posé
+	var col_sil: Color = Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_cloak)
+	# Ombre au sol : flaque elliptique douce, DÉCALÉE À L'OPPOSÉ DE LA LUNE (l'ancre au monde).
+	var fuite: float = 0.0
+	if _moon_c_last.x >= 0.0:
+		fuite = clampf((base_in.x - _moon_c_last.x) / maxf(height, 1.0), -1.0, 1.0) * half_w * 0.35
+	var sh_c: Vector2 = Vector2(base_in.x + fuite, base_in.y + height * 0.015)
 	var sh_pts: PackedVector2Array = PackedVector2Array()
 	for shi in 10:
 		var sha: float = float(shi) / 10.0 * TAU
-		sh_pts.append(sh_c + Vector2(cos(sha) * half_w * 1.15, sin(sha) * half_w * 0.22))
+		sh_pts.append(sh_c + Vector2(cos(sha) * hw * (1.15 + rise * 0.15), sin(sha) * hw * 0.22))
 	if MerlinVisual.polygon_drawable(sh_pts):  # #52 : garde sur tout polygone généré
-		draw_colored_polygon(sh_pts, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.28 * a_cloak))
+		draw_colored_polygon(sh_pts, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, (0.28 - rise * 0.10) * a_cloak))
 	# Cape à OURLET VIVANT : le bas ondule (3 points animés entre les deux coins).
 	var hem_w: float = 0.0 if not menu else 1.0
 	var cloak: PackedVector2Array = PackedVector2Array([
-		Vector2(base.x - half_w * 0.45, top + height * 0.10),
-		Vector2(base.x - half_w, base.y),
-		Vector2(base.x - half_w * 0.5, base.y + sin(_t * 1.3 + 0.5) * height * 0.014 * hem_w),
+		Vector2(base.x - hw * 0.45 + lean_px, top + height * 0.10),
+		Vector2(base.x - hw, base.y),
+		Vector2(base.x - hw * 0.5, base.y + sin(_t * 1.3 + 0.5) * height * 0.014 * hem_w),
 		Vector2(base.x, base.y + sin(_t * 1.1 + 2.1) * height * 0.018 * hem_w),
-		Vector2(base.x + half_w * 0.5, base.y + sin(_t * 1.4 + 4.2) * height * 0.014 * hem_w),
-		Vector2(base.x + half_w, base.y),
-		Vector2(base.x + half_w * 0.45, top + height * 0.10),
-		Vector2(base.x + half_w * 0.30, shoulder),
-		Vector2(base.x - half_w * 0.30, shoulder),
+		Vector2(base.x + hw * 0.5, base.y + sin(_t * 1.4 + 4.2) * height * 0.014 * hem_w),
+		Vector2(base.x + hw, base.y),
+		Vector2(base.x + hw * 0.45 + lean_px, top + height * 0.10),
+		Vector2(base.x + hw * 0.30 + lean_px * 0.8, shoulder),
+		Vector2(base.x - hw * 0.30 + lean_px * 0.8, shoulder),
 	])
-	draw_colored_polygon(cloak, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_cloak))
-	var head_c: Vector2 = Vector2(base.x, top + height * 0.06)
-	var hr: float = half_w * 0.42
-	draw_circle(head_c, hr, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
-	# (Pas de chapeau/capuche — user 2026-07-04 : tête ronde nue, signature = les yeux.)
-	# BÂTON : hampe légèrement inclinée à sa droite + ORBE d'or qui pulse avec le halo de la lune.
-	var staff_top: Vector2 = Vector2(base.x + half_w * 1.30, top - height * 0.06)
-	var staff_bot: Vector2 = Vector2(base.x + half_w * 1.05, base.y)
-	draw_line(staff_bot, staff_top, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head), maxf(half_w * 0.07, 2.5), true)
+	draw_colored_polygon(cloak, col_sil)
+	# LE BÂTON. Au repos : planté à droite, un peu incliné. Brandi : il se lève, se redresse, et l'orbe
+	# monte au-dessus de la tête. La main droite le tient aux deux tiers.
+	var staff_bot: Vector2 = Vector2(base.x + hw * 1.05, base.y - staff_up * height * 0.22)
+	var staff_top: Vector2 = Vector2(base.x + hw * (1.30 - staff_up * 0.55), top - height * (0.06 + staff_up * 0.16))
 	var orb_pulse: float = 0.5 + 0.5 * sin(_halo_phase) if _animated else 1.0
-	var orb_a: float = (0.45 + 0.35 * orb_pulse) * a_eyes
-	draw_circle(staff_top, half_w * 0.30, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, orb_a * 0.25))
-	draw_circle(staff_top, half_w * 0.16, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, orb_a))
-	# Étincelles runiques : 3 poussières d'or en orbite lente autour de lui (vivant, discret).
+	var orb_a: float = (0.45 + 0.35 * orb_pulse + staff_up * 0.2) * a_eyes
+	# L'ORBE ÉCLAIRE LA CAPE : un second ton, plat, sur le tiers de la cape côté bâton, qui respire avec
+	# l'orbe et s'intensifie quand le bâton est brandi. Pas de dégradé : un polygone de plus.
+	var lit: Color = COL_SIL.lerp(MerlinVisual.GOLD, 0.10 + 0.05 * orb_pulse + staff_up * 0.08)
+	var lit_pts: PackedVector2Array = PackedVector2Array([
+		Vector2(base.x + hw * 0.45 + lean_px, top + height * 0.10),
+		Vector2(base.x + hw * 0.30 + lean_px * 0.8, shoulder),
+		Vector2(base.x + hw * 0.36, base.y - height * 0.06),
+		Vector2(base.x + hw, base.y),
+	])
+	if MerlinVisual.polygon_drawable(lit_pts):
+		draw_colored_polygon(lit_pts, Color(lit.r, lit.g, lit.b, a_cloak * (0.55 + 0.25 * orb_pulse)))
+	# LES MANCHES : deux polygones effilés qui sortent de la cape. La droite va jusqu'à la main sur le
+	# bâton ; la gauche est rentrée, un pli qui tombe. Un ton à peine plus clair que la cape : relief
+	# sans dessin, comme un pli qui prend la lumière.
+	var manche: Color = COL_SIL.lerp(MerlinVisual.CREAM, 0.07)
+	var col_m: Color = Color(manche.r, manche.g, manche.b, a_cloak)
+	var hand_r: Vector2 = staff_bot.lerp(staff_top, 0.62)
+	var sh_r: Vector2 = Vector2(base.x + hw * 0.28 + lean_px * 0.8, shoulder + height * 0.04)
+	var elbow_r: Vector2 = sh_r.lerp(hand_r, 0.5) + Vector2(0.0, height * (0.05 - staff_up * 0.03))
+	var m_w: float = hw * 0.22
+	# Deux segments (bras, avant-bras), chacun un QUADRILATÈRE à décalages PERPENDICULAIRES au membre :
+	# toujours simple, jamais croisé — la triangulation ne peut pas échouer.
+	_membre(sh_r, elbow_r, m_w * 0.55, m_w * 0.42, col_m)
+	_membre(elbow_r, hand_r, m_w * 0.42, m_w * 0.30, col_m)
+	var sh_l: Vector2 = Vector2(base.x - hw * 0.30 + lean_px * 0.8, shoulder + height * 0.05)
+	var hand_l: Vector2 = Vector2(base.x - hw * 0.46 + lean_px * 0.4, shoulder + height * 0.24 + sin(_t * 0.9) * height * 0.006 * hem_w)
+	_membre(sh_l, hand_l, m_w * 0.50, m_w * 0.28, col_m)
+	# La hampe passe DEVANT la manche, l'orbe devant tout.
+	draw_line(staff_bot, staff_top, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head), maxf(hw * 0.07, 2.5), true)
+	draw_circle(hand_r, m_w * 0.42, Color(manche.r, manche.g, manche.b, a_cloak))  # la main, un rond
+	draw_circle(staff_top, hw * 0.30, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, orb_a * 0.25))
+	draw_circle(staff_top, hw * 0.16, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, orb_a))
+	# LA TÊTE : ronde, nue (user 2026-07-04 : signature = les yeux). Penchée par `tilt`, baissée par `bow`.
+	var hr: float = half_w * 0.42
+	var head_c: Vector2 = Vector2(base.x + tilt * hr * 0.55 + lean_px * 0.9, top + height * 0.06 + bow * hr * 0.6)
+	draw_circle(head_c, hr, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, a_head))
+	# Étincelles runiques : 3 poussières d'or en orbite lente autour de lui (vivant, discret) ; plus
+	# vives quand le bâton est brandi.
 	if menu and a_eyes > 0.3:
 		for rs in 3:
-			var ra: float = _t * (0.35 + float(rs) * 0.11) + float(rs) * 2.09
-			var rp: Vector2 = Vector2(base.x, shoulder) + Vector2(cos(ra) * half_w * 1.55, sin(ra) * height * 0.30)
-			var rs_a: float = (0.25 + 0.30 * (0.5 + 0.5 * sin(_t * 1.8 + float(rs) * 2.0))) * a_eyes
-			draw_circle(rp, 1.8, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, rs_a))
+			var ra: float = _t * (0.35 + float(rs) * 0.11 + staff_up * 0.3) + float(rs) * 2.09
+			var rp: Vector2 = Vector2(base.x, shoulder) + Vector2(cos(ra) * hw * 1.55, sin(ra) * height * 0.30)
+			var rs_a: float = (0.25 + 0.30 * (0.5 + 0.5 * sin(_t * 1.8 + float(rs) * 2.0)) + staff_up * 0.2) * a_eyes
+			draw_circle(rp, 1.8 + staff_up * 0.8, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, rs_a))
 	# v10.18 — Yeux MERLIN (menu) : 2 BARRES BLEUES VERTICALES lumineuses + lueur qui pulse (signature,
 	# user 2026-06-29). S'ALLUMENT EN DERNIER dans la matérialisation (a_eyes : grandissent + s'éclairent).
-	# v10.20 — en mode « œil-lune » (set_watch_eyes), les yeux vivent dans la LUNE (dessinés en _draw) :
-	# on ne les dessine PAS aussi sur la tête (anti-doublon) et on NE touche PAS _fig_head (la lune l'a posé).
+	# v10.20 — en mode « œil-lune » (set_watch_eyes), les yeux vivent dans la LUNE (dessinés en _draw).
 	if _menu_decor and not _watch_eyes:
 		_fig_head = head_c  # lu par _update_merlin_gaze (frame suivante) pour viser la souris
 		_fig_hr = hr
-		_draw_eyes(head_c, hr, a_eyes)
+		_draw_eyes(head_c, hr, a_eyes, tilt * 0.35)
 
 
-# v10.20 — Rendu des YEUX (2 barres bleues + humeur + gaze + lueur + sourcils colère) à un CENTRE et un
-# RAYON donnés. Appelé par _figure (à la tête) ET par le mode œil-lune (set_watch_eyes, centre de la lune).
-func _draw_eyes(center: Vector2, hr: float, a_eyes: float) -> void:
+## Un membre : quadrilatère de `a` à `b`, large de `wa` en `a` et `wb` en `b`, décalé perpendiculairement.
+func _membre(a: Vector2, b: Vector2, wa: float, wb: float, col: Color) -> void:
+	var d: Vector2 = b - a
+	if d.length() < 0.5:
+		return
+	var n: Vector2 = Vector2(-d.y, d.x).normalized()
+	var pts: PackedVector2Array = PackedVector2Array([a + n * wa, b + n * wb, b - n * wb, a - n * wa])
+	if MerlinVisual.polygon_drawable(pts):
+		draw_colored_polygon(pts, col)
+
+
+# v10.20 — Rendu des YEUX à un CENTRE et un RAYON donnés. Appelé par _figure (à la tête) ET par le mode
+# œil-lune (set_watch_eyes, centre de la lune).
+# 08/09 — SIX HUMEURS, toujours deux barres et rien d'autre : la surprise (jaune, écarquillé), la
+# colère (rouge, plissé, sourcils), le DOUTE (une barre plus courte, penchées vers l'extérieur, bleu
+# terni), la MALICE (courtes, penchées vers l'intérieur, chaudes), la GRAVITÉ (hautes, serrées, pâles,
+# pulsation lente). Les barres sont des traits à bouts ronds entre deux points : les pencher est
+# gratuit, et `inclinaison` suit la tête.
+func _draw_eyes(center: Vector2, hr: float, a_eyes: float, inclinaison: float = 0.0) -> void:
 	if a_eyes <= 0.01:
 		return
-	var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * 1.7))) if (_animated and not MerlinVisual.reduced_motion) else 1.0
+	var vif: bool = _animated and not MerlinVisual.reduced_motion
 	var eye_col: Color = MerlinVisual.EYE_NEUTRAL
 	var mood_glow: float = 1.0
-	var mood_widen: float = 1.0
+	var mood_widen: float = 1.0      # écart des barres
+	var mood_tall: float = 1.0       # hauteur des barres
+	var tilt_l: float = 0.0          # inclinaison (rad) de la barre gauche, sommet vers l'extérieur si > 0
+	var tilt_r: float = 0.0
+	var court_g: float = 1.0         # la barre gauche seule peut être plus courte (doute)
+	var pulse_v: float = 1.7
 	match _eye_mood:
 		"surprise":
 			eye_col = MerlinVisual.EYE_SURPRISE
@@ -1422,9 +1564,29 @@ func _draw_eyes(center: Vector2, hr: float, a_eyes: float) -> void:
 			eye_col = MerlinVisual.EYE_ANGRY
 			mood_glow = 1.35
 			mood_widen = 0.90  # les yeux se plissent en colère
+		"doute":
+			eye_col = MerlinVisual.EYE_NEUTRAL.darkened(0.18)
+			mood_glow = 0.85
+			court_g = 0.72
+			tilt_l = 0.16
+			tilt_r = 0.10
+		"malice":
+			eye_col = MerlinVisual.EYE_NEUTRAL.lerp(MerlinVisual.GOLD, 0.40)
+			mood_glow = 1.15
+			mood_tall = 0.62
+			mood_widen = 1.05
+			tilt_l = -0.22
+			tilt_r = -0.22
+		"gravite":
+			eye_col = MerlinVisual.EYE_NEUTRAL.lerp(MerlinVisual.CREAM, 0.30)
+			mood_glow = 0.78
+			mood_tall = 1.18
+			mood_widen = 0.88
+			pulse_v = 0.9
+	var pulse: float = (0.62 + 0.38 * (0.5 + 0.5 * sin(_t * pulse_v))) if vif else 1.0
 	var openf: float = _eye_open_force if _eye_open_force >= 0.0 else maxf(1.0 - 0.9 * _blink, 0.07)
 	var widen: float = _eye_widen * mood_widen
-	var eye_h: float = hr * 0.70 * openf * a_eyes * widen
+	var eye_h: float = hr * 0.70 * openf * a_eyes * widen * mood_tall
 	var eye_w: float = maxf(hr * 0.16, 2.0)
 	var eye_dx: float = hr * 0.34 * widen
 	var gaze_px: Vector2 = _gaze * (hr * 0.22)  # le REGARD décale les barres (suit la souris / ailleurs)
@@ -1432,11 +1594,16 @@ func _draw_eyes(center: Vector2, hr: float, a_eyes: float) -> void:
 	var halo_a: float = minf(0.16 * pulse * a_eyes * _eye_glow * mood_glow, 0.7)
 	for s in [-1.0, 1.0]:
 		var ec2: Vector2 = Vector2(center.x + s * eye_dx, center.y) + gaze_px
-		var ey: float = ec2.y - eye_h * 0.5
+		var h_ici: float = eye_h * (court_g if s < 0.0 else 1.0)
+		# L'inclinaison propre à l'humeur pointe vers l'extérieur (signe de s) ; celle de la tête est commune.
+		var ang: float = (tilt_l if s < 0.0 else tilt_r) * s + inclinaison
+		var dir_v: Vector2 = Vector2(sin(ang), -cos(ang)) * (h_ici * 0.5)
+		var haut: Vector2 = ec2 + dir_v
+		var bas: Vector2 = ec2 - dir_v
 		draw_circle(ec2, eye_w * 2.4, Color(eye_col.r, eye_col.g, eye_col.b, halo_a))
-		draw_rect(Rect2(ec2.x - eye_w * 0.5, ey, eye_w, eye_h), Color(eye_col.r, eye_col.g, eye_col.b, core_a), true)
-		draw_circle(Vector2(ec2.x, ey), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
-		draw_circle(Vector2(ec2.x, ey + eye_h), eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
+		draw_line(bas, haut, Color(eye_col.r, eye_col.g, eye_col.b, core_a), eye_w, true)
+		draw_circle(haut, eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
+		draw_circle(bas, eye_w * 0.5, Color(eye_col.r, eye_col.g, eye_col.b, core_a))
 	if _eye_mood == "angry":
 		var brow_y: float = center.y - eye_h * 0.62
 		var brow_col: Color = Color(eye_col.r, eye_col.g, eye_col.b, core_a)

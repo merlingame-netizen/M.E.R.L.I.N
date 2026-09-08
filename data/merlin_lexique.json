@@ -1,0 +1,101 @@
+{
+ "_note": "Les formules de Merlin, écrites à la main (08/09). Tirées sans modèle, dans le ton du corpus : phrases courtes, tutoiement du Voyageur, jamais de tiret cadratin. Une clé = une situation ; le jeu tire une ligne et ne répète pas la précédente.",
+ "attente": {
+  "reve": [
+   "Merlin rêve les trois sentiers",
+   "Merlin écoute ce que la brume propose",
+   "Merlin cherche où le sentier voudra te mener"
+  ],
+  "trace": [
+   "Merlin trace ton sentier",
+   "Merlin ouvre le chemin devant toi",
+   "Merlin pose la première pierre"
+  ],
+  "tisse": [
+   "Merlin tisse les fils du sort",
+   "Merlin lit ce que le dé a décidé",
+   "Merlin cherche les mots de ce qui vient d'arriver"
+  ]
+ },
+ "verdict": {
+  "eclatante": [
+   "Voilà un geste dont on parlera.",
+   "Le monde t'a regardé faire, Voyageur.",
+   "Rien à reprendre. Continue comme ça.",
+   "Même la brume s'est écartée."
+  ],
+  "reussite": [
+   "C'est passé. Ne demande pas comment.",
+   "Juste ce qu'il fallait, pas davantage.",
+   "Le sentier te laisse avancer.",
+   "Bien joué. Le prochain pas compte aussi."
+  ],
+  "partiel": [
+   "Tu avances, mais quelque chose s'est accroché.",
+   "Ce n'est pas perdu. Ce n'est pas gagné non plus.",
+   "Le monde a pris sa part au passage.",
+   "Retiens ce que ça t'a coûté."
+  ],
+  "echec": [
+   "Non. Pas comme ça.",
+   "Le sentier ne t'a pas laissé passer.",
+   "Ça se paiera. Relève-toi.",
+   "Tu n'étais pas là où il fallait."
+  ]
+ },
+ "choix": {
+  "avant": [
+   "Ici, personne ne lance de dé. Choisis.",
+   "Trois portes, une seule s'ouvre. À toi.",
+   "Le dé se tait. C'est toi qui décides."
+  ],
+  "apres": [
+   "C'est choisi. On ne revient pas.",
+   "Le monde a entendu.",
+   "Voilà qui est dit."
+  ]
+ },
+ "sentier": {
+  "ouverture": [
+   "Ce sentier a déjà été marché. Pas par toi.",
+   "Une histoire écrite d'avance. Ce que tu en feras ne l'est pas.",
+   "Les mots sont posés. Les pas restent à faire."
+  ]
+ },
+ "fin": {
+  "mort": [
+   "La brume garde ton nom, Voyageur. Elle garde tout.",
+   "Tu t'es arrêté là. D'autres continueront.",
+   "Le sentier finit ici. Pas l'histoire."
+  ],
+  "corruption": [
+   "Ce n'est plus toi qui marches.",
+   "Tu as pris ce qu'on t'offrait. Tout.",
+   "L'ombre a fini de te lire."
+  ],
+  "victoire": [
+   "Tu as tenu jusqu'au bout. Peu le font.",
+   "Le monde te doit quelque chose, maintenant.",
+   "C'est fini. Rentre, et souviens-toi."
+  ],
+  "retour": [
+   "Reviens quand la brume t'appellera.",
+   "Le feu reste allumé.",
+   "Je serai là. Je suis toujours là."
+  ]
+ },
+ "biomes": {
+  "foret": "Nous voici à Brocéliande, Voyageur, là où la brume garde le compte des promesses et des dettes. Avance : le sentier ne s'ouvre qu'à ceux qu'il a choisi d'éprouver.",
+  "falaises": "Nous voici aux Falaises du Bout-du-Monde, Voyageur, là où la terre s'achève et où la mer ne rend rien. Avance : sous l'eau noire, quelque chose compte déjà tes pas.",
+  "village": "Nous voici à Kerlan, Voyageur, le village des Veilleurs, où l'on ferme les volets avant la nuit et où l'on compte ceux qui rentrent. Avance : ici, on te regardera avant de te parler.",
+  "marche": "Nous voici au Marché des Marées, Voyageur, qui se tient entre deux menhirs et n'a pas d'heure. Avance : tout s'y vend, et le prix n'est jamais celui qu'on croit.",
+  "souterrain": "Nous voici à la Porte Basse, Voyageur, là où le marais s'ouvre sous les pieds et où le passeur attend. Avance : ce qu'on descend ici, on ne le remonte pas toujours.",
+  "cairn": "Nous voici au Cairn des Âges, Voyageur, où les pierres se souviennent de ceux qui les ont posées. Avance : parle bas, elles écoutent.",
+  "landes": "Nous voici sur les Landes Brûlées, Voyageur, où le vent a tout couché et où rien ne repousse sans qu'on le lui demande. Avance : il n'y a nulle part où se cacher.",
+  "mont": "Nous voici au Mont du Serment, Voyageur, là où l'on monte pour promettre et d'où l'on redescend tenu. Avance : chaque pas ici engage.",
+  "archipel": "Nous voici sur l'Archipel Pâle, Voyageur, des îles qui se comptent différemment selon la marée. Avance : celle qu'on ne voit pas est la seule qui compte.",
+  "chateau": "Nous voici au Château d'Ombre, Voyageur, dont les salles se souviennent d'un maître que personne n'a vu. Avance : les portes s'ouvrent, c'est fermer qui est difficile.",
+  "ile": "Nous voici sur l'Île du Gardien, Voyageur, un seul homme y vit et il n'a pas besoin de toi. Avance : il faudra pourtant lui parler.",
+  "ys": "Nous voici à Ys, Voyageur, la ville que la mer a prise et qui chante encore sous l'eau. Avance : si tu entends la cloche, ne réponds pas."
+ }
+}

@@ -384,6 +384,7 @@ func run() -> void:
 		var next_think_ms: int = sustain_t0 + 1200
 		var think_sfx: Array = ["question_transition", "ogham_chime", "magic_reveal"]
 		var think_idx: int = 0
+		var formule: String = MerlinLexique.tirer("attente.tisse", "Merlin tisse les fils du sort")
 		while is_inside_tree() and is_instance_valid(glow) and not skip_box[0] \
 				and not _is_ready() and Time.get_ticks_msec() < deadline_ms:
 			var now: int = Time.get_ticks_msec()
@@ -403,7 +404,7 @@ func run() -> void:
 				dots = (dots + 1) % 4
 				# v10.20.1 (T2) : affordance de skip révélée vite (1,5 s) — le joueur qui a compris avance.
 				var hint: String = "  ·  clic pour continuer" if now - sustain_t0 > 1500 else ""
-				cap_lbl.text = "Merlin tisse les fils du sort " + ".".repeat(dots) + hint
+				cap_lbl.text = formule + " " + ".".repeat(dots) + hint
 			await get_tree().process_frame
 		_rendre_cadence_sustain()
 		if pulse != null and pulse.is_valid():

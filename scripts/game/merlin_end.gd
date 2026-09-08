@@ -22,6 +22,7 @@ var _title_lbl: Label
 var _epilogue: RichTextLabel
 var _epilogue_panel: PanelContainer  # capte le clic pour skip-typewriter / advance (parité merlin_game.gd)
 var _state_lbl: Label
+var _merlin_lbl: Label = null   # la formule de Merlin sous le titre (lexique, 08/09)
 var _recap_box: VBoxContainer = null  # P2 (chantier 2) : bloc récap gravure (VOIE + stats + fragment)
 var _continue_btn: Button
 var _tw: Tween
@@ -50,6 +51,9 @@ func _run_end() -> void:
 	MerlinAudio.play_end_stinger(et)  # P3 (chantier 6) : stinger de fin par type de run (à l'entrée de scène)
 	_title_lbl.text = END_TITLES.get(et, "Fin")
 	_title_lbl.add_theme_color_override("font_color", _end_color(et))
+	if _merlin_lbl != null:
+		var cle: String = {"mort": "fin.mort", "corrompu": "fin.corruption"}.get(et, "fin.victoire")
+		_merlin_lbl.text = MerlinLexique.tirer(cle)
 	_state_lbl.text = "Intégrité finale : %d/10    ·    Corruption finale : %d" % [run.integrite, run.corruption]
 	_fill_recap(run)  # P2 (chantier 2) : VOIE + récap du build + fragment (l'écran de fin donne envie de relancer)
 
@@ -107,6 +111,14 @@ func _build_ui() -> void:
 	_title_lbl.add_theme_font_size_override("font_size", 40)
 	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_title_lbl)
+	# LA VOIX DE MERLIN SOUS LE TITRE : une formule du lexique, par issue. Le titre dit le fait
+	# (« Mort narrative »), Merlin dit ce qu'il en pense, en une ligne, sans modèle.
+	_merlin_lbl = Label.new()
+	_merlin_lbl.add_theme_color_override("font_color", COL_DIM)
+	_merlin_lbl.add_theme_font_size_override("font_size", 22)
+	_merlin_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_merlin_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	root.add_child(_merlin_lbl)
 
 	_epilogue_panel = PanelContainer.new()
 	_epilogue_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -172,7 +184,7 @@ func _build_ui() -> void:
 
 
 func _on_continue() -> void:
-	MerlinTransition.change_scene(MENU_SCENE)
+	MerlinTransition.change_scene(MENU_SCENE, "", "gauche")
 
 
 # P3 (chantier 2, revue design BLOCKER) : la taille du pack lecture s'applique AUSSI a l'epilogue
@@ -266,6 +278,8 @@ func _on_epilogue_click(event: InputEvent) -> void:
 
 func _animate_entrance() -> void:
 	_fade_in(_title_lbl, 0.00, 0.50)
+	if _merlin_lbl != null:
+		_fade_in(_merlin_lbl, 0.15, 0.50)
 	_fade_in(_epilogue_panel, 0.25, 0.55)
 	_fade_in(_state_lbl, 0.50, 0.40)
 	if _recap_box != null and _recap_box.get_parent() is CanvasItem:

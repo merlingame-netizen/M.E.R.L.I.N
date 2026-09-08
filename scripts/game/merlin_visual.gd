@@ -206,7 +206,7 @@ static func save_prefs() -> void:
 # Swap du contenu d'une zone : fade-out 0.18 s → build.call() (repose le contenu) → fade-in
 # DUR_ZONE_FADE. reduced_motion : swap sec, alpha restitué à 1 (l'information ne s'efface jamais).
 # Tween LIÉ à la zone (jamais orphelin) ; un swap relancé tue le précédent (meta).
-static func swap_zone(zone: Control, build: Callable) -> void:
+static func swap_zone(zone: Control, build: Callable, glisse: Vector2 = Vector2.ZERO) -> void:
 	if zone == null or not is_instance_valid(zone) or not zone.is_inside_tree():
 		if build.is_valid():
 			build.call()  # zone absente → au moins poser le contenu (jamais de beat perdu)
@@ -230,15 +230,31 @@ static func swap_zone(zone: Control, build: Callable) -> void:
 			zone.remove_meta("_fx_swap_build_pending")
 			if pend.is_valid():
 				pend.call()  # build precedent JAMAIS perdu (etat critique du beat preserve)
-	var t: Tween = zone.create_tween()
+	# 08/09 — LA PAGE QUI TOURNE : avec `glisse`, la zone part de quelques pixels dans un sens en
+	# fondant, et revient de l'autre côté. Le repos est mémorisé une fois (meta) : un swap relancé en
+	# vol ne dérive jamais. Sans `glisse`, le fondu d'avant, inchangé.
+	if zone.get_parent() is Container:
+		glisse = Vector2.ZERO  # un conteneur repose la position de ses enfants : la glisse se battrait contre lui
+	if not zone.has_meta("_fx_swap_repos"):
+		zone.set_meta("_fx_swap_repos", zone.position)
+	var repos: Vector2 = zone.get_meta("_fx_swap_repos")
+	var t: Tween = zone.create_tween().set_parallel(true)
 	t.tween_property(zone, "modulate:a", 0.0, 0.18 * motion()).set_trans(Tween.TRANS_SINE)
+	if glisse != Vector2.ZERO:
+		t.tween_property(zone, "position", repos - glisse, 0.18 * motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	t.set_parallel(false)
 	zone.set_meta("_fx_swap_build_pending", build)
 	t.tween_callback(func() -> void:
 		if zone != null and is_instance_valid(zone) and zone.has_meta("_fx_swap_build_pending"):
 			zone.remove_meta("_fx_swap_build_pending")
 		if build.is_valid():
-			build.call())
+			build.call()
+		if glisse != Vector2.ZERO and zone != null and is_instance_valid(zone):
+			zone.position = repos + glisse)
+	t.set_parallel(true)
 	t.tween_property(zone, "modulate:a", 1.0, DUR_ZONE_FADE * motion()).set_trans(Tween.TRANS_SINE)
+	if glisse != Vector2.ZERO:
+		t.tween_property(zone, "position", repos, DUR_ZONE_FADE * motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	zone.set_meta("_fx_tw_swap", t)
 
 

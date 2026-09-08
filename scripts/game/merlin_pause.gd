@@ -96,7 +96,7 @@ func _to_menu() -> void:
 		mn.cancel()
 	MerlinAudio.stop_pad()
 	get_tree().paused = false
-	MerlinTransition.change_scene(MENU_SCENE)
+	MerlinTransition.change_scene(MENU_SCENE, "", "gauche")
 
 
 # Échap referme la pause (Reprendre) — SAUF si les Options sont ouvertes par-dessus : dans ce cas

@@ -100,7 +100,9 @@ func _setup_music() -> void:
 
 func _load_selection() -> void:
 	var sc: Node = get_node("/root/MerlinScenario")
-	_show_overlay("Merlin rêve les trois sentiers")
+	_show_overlay(MerlinLexique.tirer("attente.reve", "Merlin rêve les trois sentiers"))
+	if _overlay_art != null:
+		_overlay_art.set_posture("pensee")
 	# Titres FORCÉMENT écrits par le modèle. Il n'y a plus de bouton « passer » et plus de secours :
 	# soit Merlin écrit, soit on renonce et on retourne au menu. take_selection() ne sert plus que
 	# de récupérateur et rend un tableau VIDE tant que rien n'a été écrit.
@@ -222,7 +224,7 @@ func _give_up() -> void:
 		_overlay_dots_tw.kill()   # les points « … » promettent une suite qui ne viendra pas
 	await get_tree().create_timer(2.2).timeout
 	if is_inside_tree():
-		MerlinTransition.change_scene(MENU_SCENE)
+		MerlinTransition.change_scene(MENU_SCENE, "", "gauche")
 
 
 # VERDICT DE BOUT EN BOUT. Actif uniquement si MERLIN_E2E=1 — le jeu normal ne s'arrête jamais
@@ -345,7 +347,9 @@ func _on_pick(title: String, pitch: String) -> void:
 	# - le voile est CLIQUABLE : un clic part en jeu avec ce qui est déjà écrit (le reste
 	#   continue en fond, l'intro en dur sera marquée au journal) ;
 	# - un CAP borne l'attente — un moteur coincé ne doit jamais donner un voile éternel.
-	_show_overlay("Merlin trace ton sentier")
+	_show_overlay(MerlinLexique.tirer("attente.trace", "Merlin trace ton sentier"))
+	if _overlay_art != null:
+		_overlay_art.set_posture("verdict")
 	if _overlay != null and not _overlay.gui_input.is_connected(_on_ouverture_input):
 		_overlay.gui_input.connect(_on_ouverture_input)
 	if _fps_avant < 0:
@@ -364,7 +368,7 @@ func _on_pick(title: String, pitch: String) -> void:
 	# Transition à l'encre, sans légende (user 2026-08-14) : le montage « zoom vers Merlin » est retiré
 	# — il montrait Merlin seul, agrandi, sur fond sombre, sans rien dire. Les captions CANNÉES restent
 	# neutralisées depuis la Vague D (D1) : aucun panneau de texte à la bascule.
-	MerlinTransition.change_scene(GAME_SCENE)
+	MerlinTransition.change_scene(GAME_SCENE, "", "haut")  # vers le jeu : la page se tourne
 
 
 # Écrit l'ouverture (première tranche + légende d'intro), PUIS enchaîne la suite de l'arc en
@@ -596,7 +600,7 @@ func _exit_tree() -> void:
 
 
 func _on_back() -> void:
-	MerlinTransition.change_scene(MENU_SCENE)
+	MerlinTransition.change_scene(MENU_SCENE, "", "gauche")
 
 
 func _show_overlay(txt: String) -> void:

@@ -408,6 +408,8 @@ func _present_current_beat() -> void:
 	_restore_encart_cream()
 	if _situ_tw != null and _situ_tw.is_valid():
 		_situ_tw.kill()  # fondu d'interstitiel en vol → le swap de zone prend la main sur l'alpha
+	# 08/09 — la page tourne : l'encart glisse de douze pixels vers le haut en s'effaçant, et revient
+	# d'en bas. Le sens dit que le récit avance.
 	MerlinVisual.swap_zone(_situ_panel, func() -> void:
 		_beat_transition = false
 		_show_situation(_current_situation)
@@ -417,7 +419,7 @@ func _present_current_beat() -> void:
 		if MerlinSentier.est_un_choix(beat):
 			_presenter_le_choix(beat)
 		else:
-			_choix_actif = false)
+			_choix_actif = false, Vector2(0.0, 12.0))
 
 
 func _show_situation(situ: Dictionary, animate: bool = true) -> void:
@@ -425,6 +427,17 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	var btype: String = str(situ.get("type", ""))
 	if _scene_art != null:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
+		# 08/09 — LE DÉCOR ANNONCE LE BEAT : l'Épreuve assombrit la lune et couche les arbres, le
+		# Dilemme épaissit la brume, le Climax fait souffler la forêt, la Rencontre fait battre la lune
+		# (sauf si un pilier arrive : sa propre réaction prime, plus bas). L'Exploration reste calme.
+		match btype:
+			"Epreuve", "Épreuve":
+				_scene_art.dim_moon()
+				_scene_art.sway_trees()
+			"Dilemme":
+				_scene_art.thicken_mist()
+			"Climax":
+				_scene_art.trigger_gust()
 		var sc_f: Node = get_node_or_null("/root/MerlinScenario")  # Wave C : décor teinté par la faction de la run
 		if sc_f != null and sc_f.has_method("current_faction"):
 			_scene_art.set_faction(str(sc_f.current_faction()))
@@ -688,6 +701,7 @@ func _build_action_tiles() -> void:
 		av.setup(acts[i])
 		av.action_clicked.connect(_on_action_tile)
 		_action_views.append(av)
+		av.mouse_entered.connect(_souffler_les_affinites)  # 08/09 : la main vivante
 
 
 # v11-W2 — re-render léger des tuiles : sélection, bénédictions R131 (badge ✦tag), feedforward
@@ -980,6 +994,7 @@ func _on_resolve() -> void:
 	var fx_verdict: Callable = func() -> void:
 		if is_instance_valid(self):  # review P1 HIGH-1 : le dé (hébergé hors layer) peut survivre à la scène
 			_play_seal_audio(deg)
+			_reagir_au_verdict(res, deg)  # 08/09 : Merlin et le monde réagissent, la marge se lit
 	var fx: MerlinFx = MerlinFx.play(self, res, played_cards, vues_du_combo, fx_pret, fx_verdict, tile)
 	await fx.run()
 	if tile != null and is_instance_valid(tile):
@@ -2736,8 +2751,75 @@ func _clear_tuto_hint() -> void:
 	t.tween_callback(lbl.queue_free)
 
 
+## Au survol d'une tuile, les runes de la main qui couvrent un requis du beat se signalent d'un souffle.
+func _souffler_les_affinites() -> void:
+	if _hand_box == null or not is_instance_valid(_hand_box):
+		return
+	for cv in _hand_box.get_children():
+		if cv is MerlinCardView and cv.has_method("souffle_affinite"):
+			cv.souffle_affinite()
+
+
 func _degree_color(degree: String) -> Color:
 	return MerlinVisual.degree_color(degree)
+
+
+# 08/09 — LE VERDICT SE VOIT (décision de Maxime : « le dé et la marge lisibles », « Merlin réagit »).
+# Au moment exact où le dé se pose : la lune prend la couleur du degré, les yeux de Merlin s'ouvrent
+# sur l'éclatante et se ferment sur l'échec, le monde souffle ou s'assombrit, et une ligne dit le
+# compte — « 7 + 3 contre 9 : +1 » — pour que v55 se joue à découvert. Sans jet (geste sûr), la ligne
+# le dit aussi : c'est la certitude qui se paie.
+func _reagir_au_verdict(res: Dictionary, deg: String) -> void:
+	var col: Color = _degree_color(deg)
+	if _scene_art != null and is_instance_valid(_scene_art):
+		_scene_art.set_halo_tint(col, 2.4)
+		match deg:
+			"eclatante":
+				_scene_art.pulse_eye_widen(1.35, 1.2)
+				_scene_art.flash_moon()
+				_scene_art.trigger_gust()
+			"reussite":
+				_scene_art.moon_pulse()
+			"partiel":
+				_scene_art.thicken_mist()
+			"echec":
+				_scene_art.pulse_eye_widen(0.72, 1.4)
+				_scene_art.dim_moon()
+	_afficher_la_marge(res, deg, col)
+
+
+## La ligne du compte, sous le dé, le temps d'être lue. Le degré est nommé comme le moteur le nomme.
+func _afficher_la_marge(res: Dictionary, deg: String, col: Color) -> void:
+	var die: int = int(res.get("die", 0))
+	var total: int = int(res.get("total", 0))
+	var dc: int = int(res.get("dc", 0))
+	var marge: int = int(res.get("margin", 0))
+	var nom: String = str(MerlinResolution.LABELS.get(deg, deg))
+	var compte: String
+	if die < 1 or bool(res.get("geste_sur", false)):
+		compte = "sans jet · %s" % nom
+	else:
+		var atouts: int = total - die
+		var signe: String = "+" if marge >= 0 else "−"
+		compte = "%d %s %d contre %d : %s%d · %s" % [die, ("+" if atouts >= 0 else "−"), absi(atouts), dc, signe, absi(marge), nom]
+	var lbl: Label = Label.new()
+	lbl.text = compte
+	lbl.add_theme_color_override("font_color", col)
+	lbl.add_theme_font_size_override("font_size", MerlinVisual.FS_CAPTION)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var vp: Vector2 = get_viewport_rect().size
+	lbl.size = Vector2(vp.x, 32.0)
+	lbl.position = Vector2(0.0, vp.y * 0.19 + MerlinDice.SIZE_PX * 0.5 + 6.0)
+	lbl.z_index = 31
+	lbl.modulate.a = 0.0
+	add_child(lbl)
+	var m: float = MerlinVisual.motion()
+	var tw: Tween = lbl.create_tween()
+	tw.tween_property(lbl, "modulate:a", 1.0, 0.18 * m)
+	tw.tween_interval((2.6 if deg == "eclatante" else 2.0) * m)
+	tw.tween_property(lbl, "modulate:a", 0.0, 0.35 * m)
+	tw.tween_callback(lbl.queue_free)
 
 
 func _on_gauges(integrite: int, corruption: int) -> void:
@@ -3122,7 +3204,7 @@ func _goto_end() -> void:
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
 		mn.cancel()
-	MerlinTransition.change_scene(END_SCENE)
+	MerlinTransition.change_scene(END_SCENE, "", "bas")  # vers la fin : l'encre monte du sol
 
 
 # P3 (chantier 2) — applique la taille de récit du pack lecture au fil narratif (normal + italique +
@@ -3228,6 +3310,9 @@ func _show_intro_popup() -> void:
 		for l in preambule:
 			lignes.append(str(l))
 		legende = " ".join(lignes)
+		# L'OBJECTIF NE RÉPÈTE PAS LA PREMIÈRE LIGNE : sur un sentier, le pitch EST cette ligne. Merlin
+		# dit à la place ce qu'est un sentier écrit, en une formule du lexique.
+		pitch = MerlinLexique.tirer("sentier.ouverture", pitch)
 	_intro_data = {
 		"title": title,
 		"intro": legende if legende != "" else str(sc.world_setup_short(str(run.biome))),

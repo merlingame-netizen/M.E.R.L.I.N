@@ -1614,6 +1614,11 @@ func intro_du_modele() -> bool:
 
 func world_setup_short(biome: String = "") -> String:
 	var b: String = _run_biome(biome)
+	# LE LEXIQUE CADRE LES DOUZE BIOMES (08/09) ; ce dictionnaire n'en cadrait que deux et reste
+	# le repli si le fichier manque. L'épreuve du lexique vérifie que les deux disent la même chose.
+	var lex: String = MerlinLexique.biome(b)
+	if lex != "":
+		return lex
 	return str(WORLD_SETUP_SHORT.get(b, WORLD_SETUP_SHORT["foret"]))
 
 
