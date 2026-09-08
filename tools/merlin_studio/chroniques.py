@@ -195,7 +195,8 @@ def liste(home: Path | None = None, repo: Path | None = None) -> list[dict]:
 # ── la page ─────────────────────────────────────────────────────────────────────────────────────
 
 def nuits(home: Path | None = None, limite: int = 60) -> list[dict]:
-    """La courbe : une ligne par nuit, écrite par a_partie_nuit.sh dans nuits.jsonl.
+    """La courbe : une ligne par nuit mesurée dans nuits.jsonl (plus aucune depuis le 08/09 : la VM
+    n'héberge que le jeu ; le fichier reste lisible pour ce qui a été mesuré).
 
     Chaque ligne porte `nuit` (date), `partie` (les mesures de verdict_partie.py --json, ou null
     si rien n'a été joué) et `quete` (beats, contrat, adresse). Une ligne illisible est sautée, pas

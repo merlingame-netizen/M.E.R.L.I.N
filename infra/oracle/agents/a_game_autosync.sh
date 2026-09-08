@@ -17,12 +17,24 @@ if [ "$LOCAL" = "$REMOTE" ]; then
     echo "à jour ($GAME_REF @ $(git -C "$GAME_DIR" rev-parse --short HEAD))"; exit 0
 fi
 
-# JAMAIS PAR-DESSUS UNE SONDE. La CI finit par `game-stack restart`, qui tue ce qui tourne et
-# relance le jeu NORMAL : un commit poussé entre 4 h et 5 h 30 aurait tué la partie de la nuit
-# (relecture du 06/09). Le commit attend le prochain passage ; la sonde, elle, ne se rejoue pas.
+# JAMAIS PAR-DESSUS UNE PARTIE TENUE : un harnais (une sonde lancée à la main par le Courrier)
+# ne se fait pas tuer par une synchro. Le commit attend le prochain passage.
 HARNAIS="$(merlin_harnais)"
-if [ -n "$HARNAIS" ] || ! (cd "$TOOLS_REPO" && python3 tools/gd_agents/gates.py >/dev/null 2>&1); then
-    echo "nouveau commit, mais le jeu est tenu (harnais « $HARNAIS ») — CI reportée"; exit 75
+if [ -n "$HARNAIS" ]; then
+    echo "nouveau commit, mais le jeu est tenu (harnais « $HARNAIS ») — synchro reportée"; exit 75
 fi
-echo "nouveau commit sur $GAME_REF — passage de main à la CI" >&2
-exec bash "$HERE/agent-run.sh" ci-commit
+# HÉBERGEMENT SEUL (2026-09-08) : plus de CI ni de smoke sur la VM — les preuves sont faites avant
+# de pousser, par la session qui développe. Ici on synchronise, on importe, et on relance le jeu
+# s'il tournait, pour que Maxime joue toujours le dernier commit.
+echo "nouveau commit sur $GAME_REF — synchro et import" >&2
+ETAIT_OUVERT="$(bash "$HERE/../game/game-stack.sh" status 2>/dev/null | tail -1 | python3 -c 'import json,sys
+try:
+    print(1 if json.loads(sys.stdin.read()).get("vnc_open") else 0)
+except Exception:
+    print(0)')"
+bash "$HERE/../game/game-sync.sh" || { echo "synchro KO" >&2; exit 1; }
+if [ "$ETAIT_OUVERT" = "1" ]; then
+    echo "le jeu tournait : relance sur le nouveau commit" >&2
+    bash "$HERE/../game/game-stack.sh" restart >/dev/null 2>&1 || echo "relance KO" >&2
+fi
+echo "synchronisé : $GAME_REF @ $(git -C "$GAME_DIR" rev-parse --short HEAD)"

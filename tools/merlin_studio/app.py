@@ -221,9 +221,6 @@ def build_app() -> Flask:
         # Handshake noVNC : un ticket frais (délivré derrière Basic auth) vaut auth.
         if request.path == "/websockify" and _ticket_ok(request.args.get("ticket")):
             return None
-        # Webhook GitHub : signé HMAC (GitHub ne sait pas faire de Basic auth).
-        if request.path == "/api/hook/push":
-            return None
         if not _auth_ok():
             return Response("Authentication required.\n", 401,
                             {"WWW-Authenticate": 'Basic realm="MERLIN Studio"'})
@@ -284,29 +281,6 @@ def build_app() -> Flask:
     def api_overview():
         return jsonify(probes.overview())
 
-    @app.route("/api/godot")
-    def api_godot():
-        return jsonify({"godot": probes.godot_info(), "runs": probes.last_runs()})
-
-    @app.route("/api/content")
-    def api_content():
-        return jsonify({"canon": probes.canon(), "corpus": probes.corpus(),
-                        "loops": probes.loops()})
-
-    @app.route("/api/llm")
-    def api_llm():
-        return jsonify({"ollama": probes.ollama(), "voice": probes.voice()})
-
-    # Route séparée de /api/llm : celle-ci ne fait que lire un fichier, donc Santé
-    # peut l'interroger souvent sans dépendre des délais réseau d'Ollama.
-    @app.route("/api/moteur")
-    def api_moteur():
-        return jsonify(probes.moteur())
-
-    @app.route("/api/repo")
-    def api_repo():
-        return jsonify(probes.repo())
-
     @app.route("/api/host")
     def api_host():
         return jsonify(probes.host())
@@ -324,49 +298,6 @@ def build_app() -> Flask:
     @app.route("/api/agents")
     def api_agents():
         return jsonify(probes.agents())
-
-    @app.route("/api/route")
-    def api_route():
-        """La feuille de route : ce qui est prévu, en cours, fait — avec la preuve."""
-        return jsonify(probes.feuille_de_route())
-
-    @app.route("/api/sequence")
-    def api_sequence():
-        """L'échelle de la chaîne de dev : où elle en est, et qui elle attend."""
-        return jsonify(probes.sequence())
-
-    # ── webhook GitHub : push sur la branche du jeu → CI immédiate ───────────
-    def _game_env() -> dict:
-        env = {}
-        try:
-            for line in (Path.home() / ".config" / "merlin-game.env").read_text().splitlines():
-                k, _, v = line.partition("=")
-                if k.strip():
-                    env[k.strip()] = v.strip()
-        except Exception:
-            pass
-        return env
-
-    @app.route("/api/hook/push", methods=["POST"])
-    def api_hook_push():
-        import hashlib
-        env = _game_env()
-        secret = env.get("WEBHOOK_SECRET", "")
-        if not secret:
-            return jsonify({"error": "webhook non configuré (WEBHOOK_SECRET absent)"}), 503
-        sig = request.headers.get("X-Hub-Signature-256", "")
-        body = request.get_data()
-        want = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(sig, want):
-            return jsonify({"error": "signature invalide"}), 401
-        payload = request.get_json(silent=True) or {}
-        ref = str(payload.get("ref", ""))
-        game_ref = env.get("GAME_REF", "")
-        if not game_ref or ref != f"refs/heads/{game_ref}":
-            return jsonify({"ok": True, "skipped": f"ref {ref} ≠ branche du jeu"}), 200
-        rec = actions.launch("agent-run", {"id": "ci-commit"})
-        return jsonify({"ok": not rec.get("error"), "job": rec.get("id"),
-                        "error": rec.get("error")}), (202 if not rec.get("error") else 409)
 
     # ── les fourches : ce que seul Maxime tranche (08/09) ────────────────────
     # Elles vivent dans docs/decisions/ du dépôt du jeu ; la VM ne pousse pas sur GitHub, alors le
@@ -415,44 +346,6 @@ def build_app() -> Flask:
             return jsonify({"ok": True, "via": via, "reponse": rec})
         except Exception as exc:
             return jsonify({"error": str(exc)[:200]}), 502
-
-    # ── propositions des agents de game design ───────────────────────────────
-    # Doctrine : les agents proposent, Maxime tranche. Accepter met une mission
-    # en file ; lancer le codeur reste un second geste explicite.
-    @app.route("/api/proposals")
-    def api_proposals():
-        try:
-            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gd_agents"))
-            import proposals as P
-            return jsonify(P.listing())
-        except Exception as exc:
-            return jsonify({"pending": [], "counts": {}, "error": str(exc)[:200]})
-
-    @app.route("/api/proposal/<pid>/decide", methods=["POST"])
-    def api_proposal_decide(pid: str):
-        body = request.get_json(silent=True) or {}
-        try:
-            sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gd_agents"))
-            import proposals as P
-            res = P.decide(pid, str(body.get("decision", "")),
-                           str(body.get("reason", "")))
-        except Exception as exc:
-            return jsonify({"error": str(exc)[:200]}), 500
-        return jsonify(res), (400 if res.get("error") else 200)
-
-    # ── file de missions du codeur résident ──────────────────────────────────
-    @app.route("/api/mission", methods=["POST"])
-    def api_mission():
-        body = request.get_json(silent=True) or {}
-        text = str(body.get("text", "")).strip()
-        if not (10 <= len(text) <= 4000):
-            return jsonify({"error": "mission entre 10 et 4000 caractères"}), 400
-        qdir = Path.home() / ".cache" / "merlin-missions" / "queue"
-        qdir.mkdir(parents=True, exist_ok=True)
-        name = time.strftime("%Y%m%d-%H%M%S") + ".md"
-        (qdir / name).write_text(text, encoding="utf-8")
-        return jsonify({"ok": True, "mission": name,
-                        "queued": len(list(qdir.glob("*")))})
 
     # ── MFA : page d'enrôlement (QR à scanner), fenêtre de 30 min ────────────
     @app.route("/mfa/enroll")
@@ -571,306 +464,6 @@ Fenêtre ouverte encore {left} min.</p>
         resp.headers["Service-Worker-Allowed"] = "/"
         return resp
 
-    # ── mémoire absolue + chat interne + roster des conseillers ──────────────
-    def _gd(mod):
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gd_agents"))
-        return __import__(mod)
-
-    @app.route("/api/roster")
-    def api_roster():
-        """Les 101 conseillers : chaque fiche .claude/agents/*.md, titre + rôle."""
-        out = []
-        root = Path(__file__).resolve().parents[2]
-        for f in sorted((root / ".claude" / "agents").glob("*.md")):
-            if f.name == "AGENTS.md":
-                continue
-            try:
-                lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
-                title = next((l.lstrip("# ").strip() for l in lines if l.startswith("#")),
-                             f.stem)
-                out.append({"file": f".claude/agents/{f.name}", "id": f.stem,
-                            "title": title[:70]})
-            except Exception:
-                continue
-        return jsonify({"count": len(out), "advisers": out})
-
-    @app.route("/api/memory")
-    def api_memory():
-        try:
-            M = _gd("memory")
-            return jsonify({"count": M.count(), "entries": M.entries(limit=30)})
-        except Exception as exc:
-            return jsonify({"count": 0, "entries": [], "error": str(exc)[:150]})
-
-    @app.route("/api/memory", methods=["POST"])
-    def api_memory_add():
-        body = request.get_json(silent=True) or {}
-        title = str(body.get("title", "")).strip()
-        if not (3 <= len(title) <= 200):
-            return jsonify({"error": "titre entre 3 et 200 caractères"}), 400
-        M = _gd("memory")
-        e = M.add(str(body.get("kind", "note")), title,
-                  str(body.get("detail", ""))[:800], source="maxime/portail")
-        return jsonify({"ok": True, "entry": e, "count": M.count()})
-
-    @app.route("/api/chats")
-    def api_chats():
-        M = _gd("memory")
-        return jsonify({"chats": M.chat_list()})
-
-    @app.route("/api/chat/<conv>")
-    def api_chat_read(conv: str):
-        import re as _re
-        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
-            return jsonify({"error": "conversation invalide"}), 400
-        M = _gd("memory")
-        return jsonify({"conv": conv, "messages": M.chat_read(conv)})
-
-    def _demarquer(M, conv: str, aid: str) -> None:
-        """Rendre un bouton après un échec — le pendant de chat_mark_action_done.
-
-        On marque AVANT d'exécuter pour bloquer le double tap ; il faut donc
-        savoir revenir en arrière, sinon un échec réseau consommerait le bouton
-        à vie."""
-        try:
-            with M._verrou(conv):
-                p = M.CHATS / f"{conv}.jsonl"
-                rows = [json.loads(x) for x in
-                        p.read_text(encoding="utf-8").splitlines() if x.strip()]
-                for r in rows:
-                    for a in r.get("actions", []):
-                        if a.get("id") == aid:
-                            a.pop("done", None)
-                p.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows)
-                             + "\n", encoding="utf-8")
-        except Exception:
-            pass
-
-    def _derniere_demande(M, conv: str) -> str:
-        """Le dernier message de Maxime dans ce fil — la source de vérité.
-
-        Ce qui part au codeur ne doit pas être le résumé du modèle : mesuré, ce
-        résumé a interverti « MERLIN » et « le biome » et jeté « lentement »,
-        « plus animée » et l'ordre d'apparition du HUD. Les mots d'origine
-        accompagnent donc chaque mission."""
-        try:
-            for m in reversed(M.chat_read(conv, limit=12)):
-                if m.get("role") == "user" and str(m.get("text", "")).strip():
-                    return str(m["text"]).strip()
-        except Exception:
-            pass
-        return ""
-
-    @app.route("/api/chat/action", methods=["POST"])
-    def api_chat_action():
-        # Le front n'envoie qu'un id ; le backend relit l'action depuis le
-        # message stocké et la re-valide. Impossible de forger une action.
-        import re as _re
-        body = request.get_json(silent=True) or {}
-        conv = str(body.get("conv", ""))
-        aid = str(body.get("action_id", ""))
-        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv) or not _re.fullmatch(r"[0-9a-f]{10}", aid):
-            return jsonify({"error": "requête invalide"}), 400
-        try:
-            M = _gd("memory")
-            CA = _gd("chat_actions")
-            # Deux taps coup sur coup exécutaient l'action DEUX FOIS : rien ne
-            # séparait la relecture du marquage. On marque d'abord — un « déjà
-            # fait » injuste est moins grave qu'une mission mise en file deux
-            # fois ou qu'un agent relancé en double.
-            action = M.chat_find_action(conv, aid)
-            if not action:
-                return jsonify({"error": "action introuvable"}), 404
-            if action.get("done"):
-                return jsonify({"ok": True, "effect": "déjà fait"})
-            M.chat_mark_action_done(conv, aid)
-            res = CA.execute(action, _derniere_demande(M, conv))
-            if res.get("ok"):
-                M.chat_append(conv, "assistant", "studio", "✓ " + res["effect"])
-            else:
-                # Échec : on rend le bouton, ET on laisse une trace dans le fil.
-                # Sans elle, une action ratée ne laissait AUCUNE trace durable —
-                # ni ici, ni en mémoire, ni dans le journal.
-                _demarquer(M, conv, aid)
-                M.chat_append(conv, "assistant", "studio",
-                              "✗ " + str(res.get("error", "échec"))[:200])
-            return jsonify(res), (200 if res.get("ok") else 400)
-        except Exception as exc:
-            return jsonify({"error": str(exc)[:150]}), 500
-
-    @app.route("/api/chat/plan", methods=["POST"])
-    def api_chat_plan():
-        # « Tout lancer » : exécute toutes les actions encore en attente d'un
-        # message. Le backend relit les actions depuis le message stocké.
-        import re as _re
-        body = request.get_json(silent=True) or {}
-        conv = str(body.get("conv", ""))
-        mid = str(body.get("msg_ts", ""))       # horodatage du message porteur
-        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
-            return jsonify({"error": "conversation invalide"}), 400
-        try:
-            M = _gd("memory")
-            CA = _gd("chat_actions")
-            todo, done_ids = [], []
-            for r in M.chat_read(conv, limit=200):
-                if mid and r.get("t") != mid:
-                    continue
-                for a in r.get("actions", []):
-                    if not a.get("done"):
-                        todo.append(a)
-            if not todo:
-                return jsonify({"ok": True, "results": [], "effect": "rien à lancer"})
-            results = CA.execute_plan(todo, _derniere_demande(M, conv))
-            for res in results:
-                if res.get("ok"):
-                    M.chat_mark_action_done(conv, res["id"])
-                    done_ids.append(res["id"])
-            recap = "\n".join(("✓ " if r.get("ok") else "✗ ")
-                              + (r.get("effect") or r.get("error") or r.get("label", ""))
-                              for r in results)
-            M.chat_append(conv, "assistant", "studio",
-                          f"Plan exécuté ({len(done_ids)}/{len(todo)}) :\n{recap}")
-            return jsonify({"ok": True, "results": results, "done": len(done_ids)})
-        except Exception as exc:
-            return jsonify({"error": str(exc)[:150]}), 500
-
-    @app.route("/api/chat", methods=["POST"])
-    def api_chat_send():
-        import re as _re
-        body = request.get_json(silent=True) or {}
-        conv = str(body.get("conv") or time.strftime("%Y%m%d-%H%M"))
-        text = str(body.get("text", "")).strip()
-        to = str(body.get("to", "merlin"))
-        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv) or not (1 <= len(text) <= 2000):
-            return jsonify({"error": "message ou conversation invalide"}), 400
-        # Le destinataire est celui du FIL, pas celui du menu du front. Sans ça,
-        # répondre au conseiller du matin s'adressait en réalité à MERLIN, et le
-        # conseiller ne voyait jamais la réponse — la boucle restait ouverte aux
-        # deux bouts. Le menu ne sert plus que pour un fil neuf.
-        try:
-            B = _gd("boite")
-            propre = B.destinataire(conv)
-            if propre:
-                to = propre
-        except Exception:
-            pass
-        # « jeu » = le personnage du jeu (merlin_jeu.py), pas un conseiller du
-        # studio : il n'a pas de fiche .md, sa voix vit dans son propre fichier.
-        # « sage » = l'esprit de la Bible (grimoire.py) : mécaniques + lore,
-        # réponses sourcées — la troisième voix, à côté du studio et du personnage.
-        if to not in ("merlin", "jeu", "sage") \
-                and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
-            return jsonify({"error": "conseiller inconnu"}), 400
-        M = _gd("memory")
-        # `to` est gravé sur le message : c'est lui qui permettra de rouvrir le
-        # dernier fil du BON interlocuteur quand Maxime revient sur Parler.
-        M.chat_append(conv, "user", "maxime", text, to=to)
-        rec = actions.launch("chat-reply", {"conv": conv, "to": to})
-        return jsonify({"ok": not rec.get("error"), "conv": conv, "to": to,
-                        "job": rec.get("id"), "error": rec.get("error")})
-
-    # ── La voix du MERLIN du jeu : la lire, l'affiner ───────────────────────
-    # « Fine-tuner » utilement, ici, ce n'est pas réentraîner un modèle : c'est
-    # écrire ce que le personnage EST. Quelques lignes font 90 % du travail,
-    # pour 0 € et 0 minute de calcul. Le vrai LoRA viendra quand le corpus le
-    # justifiera.
-    @app.route("/api/merlin/voix")
-    def api_voix():
-        try:
-            return jsonify(_gd("merlin_jeu").apercu())
-        except Exception as exc:
-            return jsonify({"error": str(exc)[:200]}), 500
-
-    @app.route("/api/merlin/voix", methods=["POST"])
-    def api_voix_set():
-        body = request.get_json(silent=True) or {}
-        try:
-            M = _gd("merlin_jeu")
-            v = M.enregistrer(body)
-            return jsonify({"ok": True, "voix": v, "prompt": M.prompt(v)})
-        except Exception as exc:
-            return jsonify({"error": str(exc)[:200]}), 500
-
-    # ── La boîte aux lettres : qui t'a écrit, qui attend ta réponse ─────────
-    @app.route("/api/boite")
-    def api_boite():
-        try:
-            return jsonify(_gd("boite").etat())
-        except Exception as exc:
-            return jsonify({"non_lus": 0, "fils": [], "error": str(exc)[:200]})
-
-    @app.route("/api/boite/lu", methods=["POST"])
-    def api_boite_lu():
-        import re as _re
-        conv = str((request.get_json(silent=True) or {}).get("conv", ""))
-        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
-            return jsonify({"error": "conversation invalide"}), 400
-        try:
-            return jsonify({"ok": _gd("boite").marquer_lu(conv)})
-        except Exception as exc:
-            return jsonify({"error": str(exc)[:200]}), 500
-
-    # ── « Ce matin » : les 4 lignes lues avant tout le reste ────────────────
-    @app.route("/api/briefing")
-    def api_briefing():
-        try:
-            return jsonify(probes.briefing())
-        except Exception as exc:
-            return jsonify({"nuit": [], "attente": [], "bloque": [],
-                            "jeu": [], "error": str(exc)[:200]})
-
-    # Courbe d'avancement : le jeu progresse-t-il vraiment, semaine après semaine ?
-    @app.route("/api/progress")
-    def api_progress():
-        try:
-            return jsonify({"points": probes.progress()})
-        except Exception as exc:
-            return jsonify({"points": [], "error": str(exc)[:200]})
-
-    # Journal complet d'un agent : sans lui, diagnostiquer un échec imposait un SSH.
-    @app.route("/api/agent/<aid>/log")
-    def api_agent_log(aid: str):
-        try:
-            return jsonify(probes.agent_log(aid))
-        except Exception as exc:
-            return jsonify({"id": aid, "error": str(exc)[:200]})
-
-    # Les chapitres gravés : le récit qui survit aux purges de sources.
-    @app.route("/api/chapitres")
-    def api_chapitres():
-        try:
-            return jsonify(probes.chapitres())
-        except Exception as exc:
-            return jsonify({"chapitres": [], "fils_ouverts": [], "error": str(exc)[:200]})
-
-    # ── journal de développement : la timeline agrégée, avec preuves ─────────
-    @app.route("/api/journal")
-    def api_journal():
-        try:
-            return jsonify({"events": probes.journal()})
-        except Exception as exc:
-            return jsonify({"events": [], "error": str(exc)[:200]})
-
-    # Captures du playtest bot (nom strict : pas de traversée possible).
-    @app.route("/api/playtest/shot/<name>")
-    def api_playtest_shot(name: str):
-        import re as _re
-        if not _re.fullmatch(r"[0-9]{8}-[0-9]{4}[0-9a-z-]{0,16}\.png", name):
-            return Response("bad name\n", 400)
-        return send_from_directory(str(Path.home() / ".cache" / "merlin-agents" / "playtest"),
-                                   name, max_age=3600)
-
-    # Les écrans clés conservés par le journal. Ils vivent HORS du cache : la
-    # pellicule du playtest est purgée à 200 images, et un chapitre de la semaine
-    # dernière pointerait sinon vers des cadres vides.
-    @app.route("/api/journal/vue/<name>")
-    def api_journal_vue(name: str):
-        import re as _re
-        if not _re.fullmatch(r"[0-9]{8}-[0-9]{4}[0-9a-z-]{0,16}\.png", name):
-            return Response("bad name\n", 400)
-        return send_from_directory(
-            str(Path.home() / "merlin-memory" / "journal" / "vues"), name, max_age=86400)
-
     # ── chroniques des parties jouées par la machine ─────────────────────────
     # La liseuse (page normée) est REMPLIE À LA DEMANDE avec tout ce que la VM a joué : copies
     # de sûreté du Courrier, résultats commités, chroniques sauvées, et celles que le jeu écrit
@@ -901,13 +494,6 @@ Fenêtre ouverte encore {left} min.</p>
                                     "cache-control": "no-store"})
 
     # Vignettes CI (sha court hexa uniquement — pas de traversée possible).
-    @app.route("/api/ci/shot/<sha>")
-    def api_ci_shot(sha: str):
-        if not sha.isalnum() or len(sha) > 16:
-            return Response("bad sha\n", 400)
-        return send_from_directory(str(Path.home() / ".cache" / "merlin-agents" / "ci"),
-                                   sha + ".png", max_age=3600)
-
     @app.route("/api/vnc/ticket", methods=["POST"])
     def api_vnc_ticket():
         # Derrière le gate Basic auth : délivre un laissez-passer 60 s à usage
@@ -923,10 +509,6 @@ Fenêtre ouverte encore {left} min.</p>
                                    max_age=86400)
 
     # ── actions ──────────────────────────────────────────────────────────────
-    @app.route("/api/launchers")
-    def api_launchers():
-        return jsonify(actions.catalog())
-
     @app.route("/api/launch", methods=["POST"])
     def api_launch():
         body = request.get_json(silent=True) or {}

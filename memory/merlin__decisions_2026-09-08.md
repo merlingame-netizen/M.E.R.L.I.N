@@ -40,3 +40,19 @@
   secondes ; Merlin et le monde réagissent au callback du dé.
 - Les formules de Merlin sont un lexique écrit à la main (data/merlin_lexique.json), tiré sans
   modèle ; le modèle garde le menu. Douze biomes cadrés. Jamais de tiret cadratin.
+
+## 2026-09-08 : HÉBERGEMENT SEUL — la VM n'héberge que le jeu, Claude développe
+- Constat de Maxime : la plateforme (4 cœurs ARM, 22 Go, pas de GPU) est trop sous-dimensionnée
+  pour assurer à la fois le contrôle et le développement. Décision : enlever TOUS les agents de
+  travail ; la VM n'est là que pour héberger le jeu ; le développement, c'est Claude.
+- Neuf gardiens restent (watchdog, veille, synchro du jeu, synchro de l'outillage, Courrier,
+  tunnel, santé, disque, facture). Trente-deux agents retirés avec leurs scripts, le paquet
+  tools/gd_agents, le cockpit, infra/oracle/llm, la feuille de route.
+- Ollama et le chat du Studio éteints (8 Go rendus au jeu) ; la partie de nuit éteinte (mesure
+  à la demande par un job du Courrier, lue à la session suivante) ; la Routine quotidienne
+  « L'atelier » reste (elle ne tourne pas sur la VM) ; le Studio réduit à Jouer, Décider,
+  Chronique, Santé.
+- game-autosync ne passe plus la main à une CI : il synchronise, importe, et relance le jeu s'il
+  tournait. Les preuves se font AVANT de pousser, dans la session qui développe.
+- job-103 éteint Ollama sur la VM et régénère le crontab ; l'ancien état des agents disparus
+  reste dans ~/.cache/merlin-agents/state à titre d'archive.

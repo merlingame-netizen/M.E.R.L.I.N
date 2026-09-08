@@ -41,8 +41,7 @@ GODOT = probes.GODOT
 # c'est-à-dire précisément quand Maxime voulait savoir ce qui se passait. Le chat
 # a donc son propre groupe : le modèle étant résident (voir a_brasero.sh), un
 # second appel ne recharge rien, il partage juste le CPU quelques secondes.
-GROUPS = {"godot": 1, "content": 1, "llm": 1, "git": 1, "daemon": 4, "misc": 2,
-          "game": 1, "agents": 2, "chat": 2}
+GROUPS = {"game": 1, "agents": 2, "misc": 2}
 
 # Résolutions autorisées pour le jeu natif (jamais interpolé librement).
 GAME_RES = ("1280x720", "960x540", "1920x1080")
@@ -67,95 +66,6 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
     """Return (argv, group, label). argv=None => unknown/refused kind."""
     p = p or {}
     # -- Godot (shelled directly; headless on the VM) --
-    if kind == "godot-boot":
-        return ([GODOT, "--headless", "--path", ".", "--quit-after", "3"], "godot", "Boot check")
-    if kind == "godot-test":
-        return ([GODOT, "--headless", "--path", ".", "--quit-after", "60",
-                 "--script", "res://tests/headless_runner.gd"], "godot", "Suite de tests")
-    if kind == "godot-parse":
-        # full import/parse pass (cold: several minutes)
-        return ([GODOT, "--headless", "--path", ".", "--import"], "godot", "Import/parse projet")
-    if kind == "godot-smoke":
-        scene = _scene_arg(p.get("scene"))
-        if not scene:
-            return (None, "godot", "scène inconnue")
-        dur = str(max(3, min(int(p.get("duration", 8) or 8), 60)))
-        return ([GODOT, "--headless", "--path", ".", f"scenes/{scene}",
-                 "--quit-after", dur], "godot", f"Smoke {scene}")
-    if kind == "godot-smoke-all":
-        dur = str(max(3, min(int(p.get("duration", 6) or 6), 30)))
-        inner = " ; ".join(
-            f'echo "=== {s} ===" ; {shlex.quote(GODOT)} --headless --path . scenes/{s} --quit-after {dur} 2>&1 | tail -25'
-            for s in probes.scenes())
-        return (["/bin/sh", "-c", inner], "godot", "Smoke toutes scènes")
-    if kind == "godot-export":
-        if not (ROOT / "export_presets.cfg").exists():
-            return (None, "godot", "export_presets.cfg absent")
-        preset = _s(p.get("preset", "web"))
-        out = "build/web/index.html" if preset == "web" else f"build/{preset}/merlin"
-        return ([GODOT, "--headless", "--path", ".", "--export-release", preset, out],
-                "godot", f"Export {preset}")
-    if kind == "godot-build-web":
-        # Build web complet (installe les templates d'export au 1er passage) —
-        # le jeu devient jouable dans le navigateur via /play/ (PC + mobile).
-        return (["bash", "infra/oracle/studio/build-web.sh"], "godot", "Build web du jeu")
-
-    # -- Contenu --
-    if kind == "content-gen":
-        n = str(max(1, min(int(p.get("count", 12) or 12), 200)))
-        backend = _s(p.get("backend", "template"))
-        backend = backend if backend in ("template", "ollama", "workers-ai", "gemma") else "template"
-        return ([PY, "tools/cockpit/control_loops.py", "gen", "--count", n,
-                 "--backend", backend], "content", f"Génération {n} ({backend})")
-    if kind == "content-validate":
-        target = _s(p.get("file", ""))
-        if target:
-            tp = (ROOT / target).resolve()
-            if not (str(tp).startswith(str((ROOT / "data" / "ai").resolve())) and tp.exists()):
-                return (None, "content", "fichier hors data/ai ou introuvable")
-            return ([PY, "tools/lora/scenario_validator.py", str(tp)], "content", f"Validation {target}")
-        return ([PY, "tools/lora/scenario_validator.py", "--selftest"], "content", "Validator selftest")
-    if kind == "content-eval":
-        n = str(max(1, min(int(p.get("count", 20) or 20), 100)))
-        backend = _s(p.get("backend", "template"))
-        argv = [PY, "tools/lora/eval_models.py", "--backend", backend, "--count", n]
-        if p.get("models"):
-            argv += ["--models", _s(p["models"])]
-        return (argv, "content", f"Éval modèles ({backend})")
-
-    # -- LLM local --
-    if kind == "ollama-pull":
-        model = _s(p.get("model", "")).strip()
-        if not model or any(c in model for c in " ;|&$`"):
-            return (None, "llm", "nom de modèle invalide")
-        return (["ollama", "pull", model], "llm", f"Pull {model}")
-    if kind == "ollama-generate":
-        model = _s(p.get("model", "gemma3:4b")).strip()
-        prompt = _s(p.get("prompt", "Décris Brocéliande en une phrase."))
-        if any(c in model for c in " ;|&$`"):
-            return (None, "llm", "nom de modèle invalide")
-        # `think: False` OBLIGATOIRE — sans ce champ, gemma4 part en réflexion
-        # interne, épuise son budget de tokens et rend une réponse VIDE
-        # (mesuré : eval_count=60, done_reason="length", response=""). Le bouton
-        # « Générer » du portail ne rendait donc jamais rien.
-        payload = json.dumps({"model": model, "prompt": prompt, "stream": False,
-                              "think": False})
-        return ([PY, "-c",
-                 "import json,os,sys,urllib.request;"
-                 "u=os.environ.get('OLLAMA_URL','http://127.0.0.1:11434').rstrip('/')+'/api/generate';"
-                 f"d={payload!r}.encode();"
-                 "r=urllib.request.urlopen(urllib.request.Request(u,data=d,"
-                 "headers={'content-type':'application/json'}),timeout=600);"
-                 "print(json.loads(r.read()).get('response',''))"],
-                "llm", f"Génération {model}")
-
-    # -- Voix (daemons) --
-    if kind == "tts-start":
-        return ([PY, "tools/tts/tts_server.py", "--port", "8772"], "daemon", "Service TTS")
-    if kind == "asr-start":
-        return ([PY, "tools/asr/asr_server.py", "--port", "8770"], "daemon", "Service ASR")
-
-    # -- Jeu natif (conteneur podman Xvfb+x11vnc, affiché via noVNC) --
     if kind == "game-start":
         res = _s(p.get("res", "1280x720"))
         if res not in GAME_RES:
@@ -177,21 +87,6 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
                 "game", f"Jeu natif : redémarrer ({res})")
 
     # -- Agents de la VM (allow-list stricte : ids du manifeste uniquement) --
-    if kind == "chat-reply":
-        import re as _re
-        conv = _s(p.get("conv", ""))
-        to = _s(p.get("to", "merlin"))
-        if not _re.fullmatch(r"[0-9a-z-]{3,40}", conv):
-            return (None, "chat", "conversation invalide")
-        # « jeu » = le MERLIN du JEU, le personnage. Il n'a pas de fiche .md :
-        # sa voix vit dans merlin_jeu.py. Ce second contrôle l'ignorait, et
-        # choisir le personnage rendait « conseiller invalide » alors que la
-        # route principale, elle, l'acceptait déjà.
-        if to not in ("merlin", "jeu") \
-                and not _re.fullmatch(r"\.claude/agents/[\w-]+\.md", to):
-            return (None, "chat", "conseiller invalide")
-        return ([PY, "tools/gd_agents/chat_reply.py", conv, to],
-                "chat", "Réponse du conseiller")
     if kind == "agent-run":
         aid = _s(p.get("id", "")).strip()
         valid = {a.get("id") for a in probes.agents().get("agents", [])}
@@ -204,12 +99,7 @@ def build(kind: str, p: dict) -> tuple[list[str] | None, str, str]:
                 "agents", "Agents : (ré)installer la planification")
 
     # -- Repo (lecture/avance rapide seulement — jamais commit/push/reset) --
-    if kind == "git-fetch":
-        return (["git", "fetch", "--all", "--prune"], "git", "Git fetch")
-    if kind == "git-pull":
-        return (["git", "pull", "--ff-only"], "git", "Git pull (ff-only)")
-    return (None, "misc", "type inconnu")
-
+    return None, "", "misc"
 
 def catalog() -> dict:
     """What the UI offers, with availability so impossible buttons render disabled."""
@@ -229,44 +119,6 @@ def catalog() -> dict:
          "available": gm.get("available", False) and gm.get("image_built", False),
          "reason": gm.get("reason", ""),
          "params": [{"name": "res", "options": list(GAME_RES)}]},
-        {"kind": "godot-boot", "label": "Boot check (rapide)", "group": "godot",
-         "available": g.get("available", False), "params": []},
-        {"kind": "godot-test", "label": "Suite de tests headless", "group": "godot",
-         "available": g.get("available", False), "params": []},
-        {"kind": "godot-smoke", "label": "Smoke une scène", "group": "godot",
-         "available": g.get("available", False) and bool(sc),
-         "params": [{"name": "scene", "options": sc}, {"name": "duration", "default": 8}]},
-        {"kind": "godot-smoke-all", "label": "Smoke TOUTES les scènes", "group": "godot",
-         "available": g.get("available", False) and bool(sc),
-         "params": [{"name": "duration", "default": 6}]},
-        {"kind": "godot-parse", "label": "Import/parse projet (long)", "group": "godot",
-         "available": g.get("available", False), "params": []},
-        {"kind": "godot-export", "label": "Export", "group": "godot",
-         "available": (ROOT / "export_presets.cfg").exists(),
-         "reason": "" if (ROOT / "export_presets.cfg").exists() else "export_presets.cfg absent",
-         "params": [{"name": "preset", "default": "web"}]},
-        {"kind": "godot-build-web", "label": "Build web du jeu (jouable sur /play/)", "group": "godot",
-         "available": (ROOT / "export_presets.cfg").exists(),
-         "reason": "" if (ROOT / "export_presets.cfg").exists() else "export_presets.cfg absent",
-         "params": []},
-        {"kind": "content-gen", "label": "Générer des cartes", "group": "content", "available": True,
-         "params": [{"name": "count", "default": 12},
-                    {"name": "backend", "options": ["template", "ollama", "workers-ai"]}]},
-        {"kind": "content-validate", "label": "Valider (selftest ou fichier)", "group": "content",
-         "available": True, "params": [{"name": "file", "default": ""}]},
-        {"kind": "content-eval", "label": "Éval modèles", "group": "content", "available": True,
-         "params": [{"name": "backend", "options": ["template", "ollama"]},
-                    {"name": "count", "default": 20}, {"name": "models", "default": ""}]},
-        {"kind": "ollama-pull", "label": "Ollama : pull modèle", "group": "llm", "available": True,
-         "params": [{"name": "model", "default": "gemma3:4b"}]},
-        {"kind": "ollama-generate", "label": "Ollama : générer", "group": "llm", "available": True,
-         "params": [{"name": "model", "default": "gemma3:4b"}, {"name": "prompt", "default": ""}]},
-        {"kind": "tts-start", "label": "Démarrer le service voix (TTS)", "group": "daemon",
-         "available": True, "params": []},
-        {"kind": "asr-start", "label": "Démarrer le service ASR", "group": "daemon",
-         "available": True, "params": []},
-        {"kind": "git-fetch", "label": "Git fetch", "group": "git", "available": True, "params": []},
-        {"kind": "git-pull", "label": "Git pull (ff-only)", "group": "git", "available": True, "params": []},
     ]}
 
 

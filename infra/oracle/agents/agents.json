@@ -7,7 +7,7 @@
    "schedule": "*/5 * * * *",
    "cmd": "a_game_watchdog.sh",
    "enabled": true,
-   "desc": "Relance le jeu s'il est mort alors qu'il devait tourner (état désiré posé par PLAY/STOP). [Régime du 04/09 : */2 * * * * → */5 * * * *.]"
+   "desc": "Relance le jeu s'il est mort alors qu'il devait tourner (état désiré posé par PLAY/STOP)."
   },
   {
    "id": "game-idle",
@@ -15,7 +15,7 @@
    "schedule": "3-59/5 * * * *",
    "cmd": "a_game_idle.sh",
    "enabled": true,
-   "desc": "Coupe le jeu apres 5 min sans spectateur, pour rendre les 4 coeurs au developpement. [Régime du 04/09 : 1-59/2 * * * * → 3-59/5 * * * *.]"
+   "desc": "Coupe le jeu après 5 min sans spectateur : la machine ne travaille pas pour un écran que personne ne regarde."
   },
   {
    "id": "game-autosync",
@@ -31,7 +31,7 @@
    "schedule": "*/2 * * * *",
    "cmd": "a_courrier.sh",
    "enabled": true,
-   "desc": "Exécute une fois chaque job-*.sh commité dans courrier/ et pousse le résultat dans courrier/resultats/ — canal de secours quand Run Command est indisponible (né du conteneur qui a emporté ~/.oci le 2026-08-19)."
+   "desc": "Exécute une fois chaque job-*.sh commité dans courrier/ et remonte le résultat par ntfy : les seules mains de Claude sur la VM."
   },
   {
    "id": "tools-autosync",
@@ -39,7 +39,7 @@
    "schedule": "7,22,37,52 * * * *",
    "cmd": "a_tools_autosync.sh",
    "enabled": true,
-   "desc": "Recupere l'outillage depuis GitHub, regenere le crontab et relance le Studio si le code a bouge."
+   "desc": "Récupère l'outillage depuis GitHub, régénère le crontab et relance le Studio si le code a bougé."
   },
   {
    "id": "health",
@@ -47,7 +47,7 @@
    "schedule": "*/15 * * * *",
    "cmd": "a_health.sh",
    "enabled": true,
-   "desc": "Relevé CPU / RAM / disque / charge, historisé pour repérer les dérives. [Régime du 04/09 : */5 * * * * → */15 * * * *.]"
+   "desc": "Relevé CPU / RAM / disque / charge, historisé pour repérer les dérives."
   },
   {
    "id": "disk-guard",
@@ -66,268 +66,13 @@
    "desc": "Vérifie que le portail répond et journalise l'URL publique (elle change à chaque redémarrage du tunnel)."
   },
   {
-   "id": "smoke-scenes",
-   "label": "Smoke nocturne",
-   "schedule": "0 3 * * *",
-   "cmd": "a_smoke_scenes.sh",
-   "enabled": true,
-   "desc": "Lance chaque scène du jeu en headless et compte les erreurs de script. Rapport consultable au réveil."
-  },
-  {
-   "id": "ci-commit",
-   "label": "CI de commit",
-   "schedule": "webhook/push",
-   "cmd": "a_ci_commit.sh",
-   "enabled": false,
-   "desc": "À chaque push sur la branche du jeu : sync + import + smoke de toutes les scènes + boot rendu + capture d'écran. Déclenchée par le webhook GitHub ou par la synchro (15 min)."
-  },
-  {
-   "id": "design-council",
-   "label": "Conseil de design (quotidien)",
-   "schedule": "40 6 * * *",
-   "cmd": "a_design_council.sh",
-   "enabled": false,
-   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : 70 propositions en attente que personne ne lit.] Chaque matin, un conseiller différent relit la mémoire du design et ouvre une conversation dans Parler : une réflexion + deux questions franches."
-  },
-  {
-   "id": "daily-report",
-   "label": "Rapport du matin",
-   "schedule": "0 7 * * *",
-   "cmd": "a_daily_report.sh",
-   "enabled": true,
-   "desc": "Compile les 24 dernières heures en une page : commits, verdicts CI, agents en échec, santé, smoke."
-  },
-  {
-   "id": "coder",
-   "label": "Codeur résident",
-   "schedule": "à la demande",
-   "cmd": "a_coder.sh",
-   "enabled": false,
-   "desc": "Consomme la file de missions (Claude Code headless) et committe sur une branche auto/coder. Requiert une clé API dans ~/.config/merlin-coder.env."
-  },
-  {
-   "id": "gd-content-gap",
-   "label": "Professeur du modèle",
-   "schedule": "7,37 * * * *",
-   "cmd": "a_gd_content.sh",
-   "enabled": false,
-   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : 48 courses par jour de cartes d'un format mort, que personne ne relit.] Écrit des exemples d'entraînement pour le futur modèle MERLIN. PAUSE du 25/08 levée le 06/09 : le canon (data/ai/lore_canon.json v2.0) est dérivé du jeu depuis le 05/09. Cadence choisie par Maxime (toutes les 30 min, à 7 et 37 pour ne pas partir dans la même seconde que la partie de 4h05 ou le banc de 6h05 ; elle vivait dans une surcharge hors dépôt) et désormais SOUS PORTE : run-gd-agent.sh interroge gates.py et cède les quatre cœurs à tout godot qui tourne, harnais compris. Reste à recibler sur le beat (tâche #29 : il produit encore des cartes à trois options)."
-  },
-  {
-   "id": "gd-balance",
-   "label": "Idées — équilibrage",
-   "schedule": "50 7,19 * * *",
-   "cmd": "a_gd_balance.sh",
-   "enabled": false,
-   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : propositions sans lecteur.] Analyse l'équilibrage réel du corpus (effets, factions, verbes) et propose un ajustement chiffré. Deux fois par jour."
-  },
-  {
-   "id": "coder-local",
-   "label": "Codeur local (auto/nightly)",
-   "schedule": "*/30 * * * *",
-   "cmd": "a_coder_local.sh",
-   "enabled": false,
-   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : « rien d'applicable » 139 fois en 57 h.] Applique les missions acceptées (before/after, périmètre data+constantes+patchs ≤30 lignes) sur auto/nightly, smoke à l'appui. Suspendu quand le jeu tourne. Le merge reste un tap."
-  },
-  {
-   "id": "corpus-night",
-   "label": "Jeu d'entraînement (nuit)",
-   "schedule": "10 0-6 * * *",
-   "cmd": "a_corpus_night.sh",
-   "enabled": false,
-   "desc": "Produit en masse des exemples pour le fine-tune merlin-e4b, filtrés par le validateur. Ce n'est PAS du contenu de jeu : le jeu génère ses scénarios en direct. [PAUSE 2026-08-25 : entraine le futur modele sur un canon PERIME (dieux celtiques interdits par le jeu, format a branches d'avant le pivot v11). Le laisser tourner graverait le generique DANS le modele — l'inverse de l'empreinte visee (v48). A reactiver quand data/ai/lore_canon.json est refait, aligne sur v48 + format R166.]"
-  },
-  {
-   "id": "playtest-bot",
-   "label": "Playtest bot (VNC réel)",
-   "schedule": "30 3 * * *",
-   "cmd": "a_playtest_bot.sh",
-   "enabled": true,
-   "desc": "Joue réellement au jeu rendu (clics et touches via VNC), capture chaque écran, détecte NOIR/FIGÉ/MORT par heuristiques. Chaque anomalie devient une carte Décider."
-  },
-  {
    "id": "billing",
    "label": "Facturation Oracle",
    "schedule": "17 7 * * *",
    "cmd": "a_billing.sh",
    "enabled": true,
-   "desc": "Relève le coût du mois (Usage API). La VM est sur l'offre Always Free : tout montant non nul déclenche une alerte urgente. [Régime du 04/09 : 17 * * * * → 17 7 * * *.]"
-  },
-  {
-   "id": "ollama-serve",
-   "label": "Serveur LLM local",
-   "schedule": "*/5 * * * *",
-   "cmd": "a_ollama_serve.sh",
-   "enabled": true,
-   "desc": "Garantit qu'Ollama tourne (userland) et que le modèle copilote reste résident en RAM. [Régime du 04/09 : */2 * * * * → */5 * * * *.]"
-  },
-  {
-   "id": "llm-bench",
-   "label": "Bench des modèles",
-   "schedule": "à la demande",
-   "cmd": "a_llm_bench.sh",
-   "enabled": false,
-   "desc": "Mesure chaque modèle installé sur la tâche de triage (latence, tok/s) et fige TRIAGE_MODEL."
-  },
-  {
-   "id": "native-bench",
-   "label": "Vitesse du moteur du jeu",
-   "schedule": "5 6 * * *",
-   "cmd": "a_llm_native_bench.sh",
-   "enabled": true,
-   "desc": "Chronomètre le moteur compilé DANS le jeu (pas Ollama) sur la vraie génération de quêtes : chargement, tok/s, et si le modèle bat les titres de secours. 6h05 (hors des minutes 0/30 des agents de corpus), après l'atelier de nuit, et jamais sous un harnais ni sous desired=running (06/09 : sa garde vnc_open tenait déjà, le harnais ouvrant x11vnc ; celle-ci couvre le reste)."
-  },
-  {
-   "id": "ollama-idle",
-   "label": "Le Délesteur",
-   "schedule": "*/15 * * * *",
-   "cmd": "a_ollama_idle.sh",
-   "enabled": true,
-   "desc": "Rend la RAM à l'atelier d'écriture : il libère le modèle de triage (8 Go) qui ne sert qu'en lot deux fois par jour, et ne touche JAMAIS au modèle de conversation ni à un modèle en train de travailler. Sans lui, 14 Go de modèles restaient chargés et la boucle de corpus, qui en exige 8 de libres, était sautée toute la nuit."
-  },
-  {
-   "id": "gd-pacing",
-   "label": "Rythmeur",
-   "schedule": "40 2 * * *",
-   "cmd": "a_gd_pacing.sh",
-   "enabled": false,
-   "desc": "Simule une run complète : durée, courbe de vie, marge de survie. Joint le patch quand le rythme est incohérent."
-  },
-  {
-   "id": "gd-economy",
-   "label": "Trésorier",
-   "schedule": "50 2 * * *",
-   "cmd": "a_gd_economy.sh",
-   "enabled": false,
-   "desc": "Simule les gains d'une session (Faveurs, Anam, multiplicateurs) et repère l'inflation."
-  },
-  {
-   "id": "gd-audit",
-   "label": "Auditeur bible",
-   "schedule": "10 3 * * *",
-   "cmd": "a_gd_audit.sh",
-   "enabled": false,
-   "desc": "Compte les systèmes que la bible déclare supprimés mais qui vivent encore dans le code."
-  },
-  {
-   "id": "journal",
-   "label": "Le Chroniqueur",
-   "cmd": "a_journal.sh",
-   "schedule": "50 5 * * *",
-   "enabled": true,
-   "desc": "Grave le chapitre du jour : ce que les agents ont fait, ce que tu as décidé, ce qui a bougé et ce qui reste en suspens. Aucun appel au modèle — il ne peut pas se taire."
-  },
-  {
-   "id": "brasero",
-   "label": "Le Braséro",
-   "cmd": "a_brasero.sh",
-   "schedule": "*/20 7-23 * * *",
-   "enabled": true,
-   "desc": "Garde le modèle de conversation chaud en RAM : sans lui, le premier message après une heure de silence paie 40 s de chargement avant même de commencer à répondre. Un seul token demandé toutes les 20 min, zéro euro, et rien du tout quand tu joues. [Régime du 04/09 : chauffe seulement de 7 h à 23 h (horloge de la VM) — personne ne parle au Studio la nuit, et 6 Go de modèle tenus chauds pour rien coûtaient un réveil toutes les 20 min.]"
-  },
-  {
-   "id": "relance",
-   "label": "Le Facteur",
-   "cmd": "a_relance.sh",
-   "schedule": "*/30 * * * *",
-   "enabled": true,
-   "desc": "Rattrape les messages que tu as envoyés et auxquels aucun agent n'a répondu — le cas où le modèle était occupé au moment de l'envoi. [Régime du 04/09 : */10 * * * * → */30 * * * *.]"
-  },
-  {
-   "id": "parole",
-   "label": "La Parole",
-   "cmd": "a_parole.sh",
-   "schedule": "25 * * * *",
-   "enabled": false,
-   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : la parole du matin, quota 2 par jour, sans lecteur.] Laisse les agents t'interpeller quand quelque chose le mérite vraiment : une scène qui casse deux fois, un écran figé, un patch annulé. 2 fils par jour maximum, aucun appel au modèle."
-  },
-  {
-   "id": "mesures",
-   "label": "Le Métreur du jeu",
-   "cmd": "a_mesures.sh",
-   "schedule": "5 5 * * *",
-   "enabled": true,
-   "desc": "Relève chaque nuit tous les chiffres du jeu (cartes, factions, verbes, rythme, économie, vestiges). Aucun appel au modèle — c'est ce qui permet au journal de dire « ×2,5 → ×2,0 »."
-  },
-  {
-   "id": "parcours",
-   "label": "Le Cartographe",
-   "cmd": "a_parcours.sh",
-   "schedule": "15 5 * * *",
-   "enabled": true,
-   "desc": "Relit le jeu chaque nuit et met à jour la carte du parcours : les écrans, leur enchaînement, l'ordre d'apparition des choses. C'est ce que MERLIN consulte pour savoir de quel écran tu parles."
-  },
-  {
-   "id": "gd-run",
-   "label": "L'Arbitre de la run",
-   "cmd": "a_gd_run.sh",
-   "schedule": "35 2 * * *",
-   "enabled": false,
-   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : juge une chaîne de quêtes que le jeu ne joue plus.] Mesure chaque nuit l'équilibrage du jeu que tu joues vraiment : intégrité, main, corruption, talents, butin, soin."
-  },
-  {
-   "id": "controle",
-   "label": "Le Contrôleur",
-   "schedule": "11,41 * * * *",
-   "cmd": "a_controle.sh",
-   "enabled": true,
-   "desc": "Confronte ce que les agents déclarent à des traces vérifiables et signale les écarts dans Décider."
-  },
-  {
-   "id": "sequence",
-   "label": "Le Séquenceur",
-   "schedule": "3,33 * * * *",
-   "cmd": "a_sequence.sh",
-   "enabled": false,
-   "desc": "[ÉTEINT 2026-09-06 — l'atelier autonome MESURE seulement (décision de Maxime) : la séquence du codeur, sans codeur.] Lit où en est la chaîne de dev — sans rien relancer — et dit si elle attend la machine ou toi. [Régime du 04/09 : 3,13,23,33,43,53 * * * * → 3,33 * * * *.]"
-  },
-  {
-   "id": "llm-decompose",
-   "label": "La Décomposition",
-   "schedule": "à la demande",
-   "cmd": "a_llm_decompose.sh",
-   "enabled": true,
-   "desc": "Sépare le temps du prompt de celui de l'écriture, et confronte le moteur du jeu à Ollama sur le MÊME prompt."
-  },
-  {
-   "id": "partie-journal",
-   "label": "Le Chroniqueur",
-   "schedule": "à la demande",
-   "cmd": "a_partie_journal.sh",
-   "enabled": true,
-   "desc": "Joue une partie entière en rendu réel et en écrit le journal, beat par beat, avec captures."
-  },
-  {
-   "id": "labo-recit",
-   "label": "Le Laboratoire",
-   "schedule": "à la demande",
-   "cmd": "a_labo_recit.sh",
-   "enabled": true,
-   "desc": "Batterie de mini-tests du récit : richesse des issues, enchaînement lookahead, comparaison e2b/e4b."
-  },
-  {
-   "id": "partie-nuit",
-   "label": "L'atelier de nuit",
-   "schedule": "5 4 * * *",
-   "cmd": "a_partie_nuit.sh",
-   "enabled": true,
-   "desc": "Joue chaque nuit UNE partie entière avec le bot COUVRANT, puis génère UNE quête avec le vrai moteur, dans cet ordre et sans personne d'autre sur le moteur ; garde tout daté (30 nuits) et écrit une ligne par nuit dans nuits.jsonl, la courbe que le Studio trace. Ne tourne pas si quelqu'un joue ou si un autre harnais tient le jeu (rc=75 : reporté). [06/09 : remplace le couple partie-nuit 4h05 / quete-nuit 4h40, dont la quête n'a jamais tourné.]"
-  },
-  {
-   "id": "quete-nuit",
-   "label": "La quête de la nuit",
-   "schedule": "à la demande",
-   "cmd": "a_quete_nuit.sh",
-   "enabled": true,
-   "desc": "Génère UNE quête du chapitre courant avec le vrai moteur, la passe au contrat et à la grille de lecture, et la garde datée. Appelée par l'atelier de nuit APRÈS la partie (06/09) : à heure fixe, elle trouvait le jeu occupé par la partie et sortait en 0 sans rien écrire."
-  },
-  {
-   "id": "crible",
-   "label": "Le crible",
-   "schedule": "40 7 * * *",
-   "cmd": "a_crible.sh",
-   "enabled": true,
-   "desc": "Chaque matin, l'état RÉEL de la VM en un texte : nuits gardées et leurs verdicts, courbe des nuits, smoke et épreuves, dernière course de CHAQUE agent (last_run, durée, rc, résumé, reportés), réveils et échecs sur la fenêtre réellement lue dans cron.log, surcharges, corpus, Studio, verrous suspects. Gardé 30 jours sous ~/.cache/merlin-agents/crible/ et envoyé sur ntfy. Jamais d'URL ni de secret dedans."
+   "desc": "Relève le coût du mois (Usage API). La VM est sur l'offre Always Free : tout montant non nul déclenche une alerte urgente."
   }
- ]
+ ],
+ "_note": "HÉBERGEMENT SEUL (décision de Maxime, 2026-09-08) : la VM n'héberge que le jeu. Ces neuf gardiens la tiennent debout ; tout ce qui développait, mesurait, proposait ou conversait a été retiré. Le développement est assuré par des sessions Claude (docs/ATELIER.md sur la branche du jeu)."
 }

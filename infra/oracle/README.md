@@ -1,5 +1,14 @@
 # Oracle Cloud ARM A1 — M.E.R.L.I.N. host (Always Free)
 
+> **Hébergement seul (décision de Maxime, 2026-09-08).** La VM n'héberge que le jeu : le Studio
+> (`tools/merlin_studio/`, port 8790) pour y jouer par VNC et trancher les fourches, et neuf
+> gardiens en cron (`agents/README.md`). Tout ce qui développait, mesurait ou conversait sur la
+> machine a été retiré — Ollama compris, dont le service n'est plus entretenu. Le développement
+> est assuré par des sessions Claude hors de la VM (`docs/ATELIER.md` sur la branche du jeu) ;
+> une vraie partie sur la VM se demande par un job du Courrier (`agents/courrier/`).
+> Ce qui suit décrit le provisionnement Terraform d'origine ; la pile de dev (Ollama, Open WebUI,
+> code-server) qu'il installe n'est plus utilisée par le jeu ni par les gardiens.
+
 Provision and configure a free Oracle Cloud **Ampere A1** VM
 (**4 OCPU / 24 GB RAM**, region `eu-paris-1`) to host your Claude/dev/Godot
 workloads. Infrastructure is **Terraform + cloud-init** so it is reproducible

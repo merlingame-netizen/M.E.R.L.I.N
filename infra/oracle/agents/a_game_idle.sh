@@ -134,7 +134,7 @@ MIN=$(( ECOULE / 60 ))
 # Prévenir n'est pas cosmétique : un jeu qui s'arrête sans explication se vit comme une panne,
 # et Maxime chercherait un bug qui n'existe pas.
 bash "$HERE/notify.sh" low "Jeu mis en veille" \
-    "Personne devant depuis ${MIN} min — la machine est rendue au développement. Un tap sur Jouer le relance." \
+    "Personne devant depuis ${MIN} min — le jeu s'est éteint tout seul. Un tap sur Jouer le relance." \
     "?tab=play" >/dev/null 2>&1
 
 echo "coupé après ${MIN} min sans spectateur — machine rendue au dev"
