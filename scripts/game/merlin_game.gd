@@ -2395,6 +2395,12 @@ func _on_typewriter_done() -> void:
 				_build_pact_choice(ppk)
 		# Situation entièrement écrite → caret masqué, les cartes MONTENT pour le choix (user 2026-06-06).
 		_set_caret(false)
+		# SAUF SUR UN BEAT « CHOIX » (2026-09-07) : la main n'y monte pas, les propositions l'ont
+		# remplacée. Sans cette garde, `_render_hand` redessinait les quatre runes PAR-DESSUS les
+		# propositions et `_set_choice_ui(true)` rallumait les tuiles — vu à la capture du beat 8.
+		# La fin du typewriter est le dernier à passer : c'est ici que la garde doit vivre.
+		if _choix_actif:
+			return
 		# v10.15 — Prose breathing : le texte pulse doucement (alpha 0.88↔1.0) en attendant le choix.
 		# Stocké dans _prose_tw pour kill au prochain _typewriter (review HIGH-1).
 		if not MerlinVisual.reduced_motion and _situation_text != null:
@@ -2516,47 +2522,80 @@ func _presenter_le_choix(beat: Dictionary) -> void:
 			return  # ferme pendant la fenetre du swap → pas de propositions fantomes
 		for c in _hand_box.get_children():
 			c.queue_free()
+		# LA LARGEUR SE CALCULE, elle ne se devine pas. La zone de la main fait 1864 x 208 en unites
+		# de dessin ; des blocs de 300 (mesure prise au juge) forcaient le texte sur six lignes et le
+		# faisaient deborder sur la rangee des tuiles. Chaque proposition prend sa part de la zone.
+		var n: int = _choix_props.size()
+		var ecart: float = 24.0
+		var large: float = _hand_box.size.x
+		if large <= 0.0:
+			large = 1864.0
+		var largeur: float = minf(620.0, (large - ecart * float(n - 1)) / float(n))
+		var haute: float = maxf(120.0, _hand_box.size.y - 12.0)
 		var rangee: HBoxContainer = HBoxContainer.new()
 		rangee.alignment = BoxContainer.ALIGNMENT_CENTER
-		rangee.add_theme_constant_override("separation", 18)
+		rangee.add_theme_constant_override("separation", int(ecart))
 		rangee.set_anchors_preset(Control.PRESET_FULL_RECT)
-		for i in _choix_props.size():
-			rangee.add_child(_bouton_de_proposition(int(i)))
+		for i in n:
+			rangee.add_child(_bouton_de_proposition(int(i), largeur, haute))
 		_hand_box.add_child(rangee)
 		MerlinVisual.set_zone_active(_hand_box, true))
 
 
-## Un bouton par proposition : ce qu'on fait, ce que ça entraîne, ce que ça coûte.
-func _bouton_de_proposition(i: int) -> Control:
+## Une proposition = UN bloc de hauteur bornée : ce qu'on fait, ce que ça entraîne, ce que ça coûte.
+##
+## TOUT TIENT DANS LE BOUTON, et c'est la correction du premier jet : les trois textes étaient
+## empilés SOUS le bouton, dans une colonne libre, et débordaient sur la rangée des tuiles — au
+## beat 8 le prix s'écrivait par-dessus « Conflit » et « Parole », illisible. Un contenu qui sort de
+## sa zone n'est pas un défaut de style, c'est une zone qui ment sur ce qu'elle contient.
+## Les libellés ignorent la souris : le clic traverse et atteint le bouton, partout dans le bloc.
+func _bouton_de_proposition(i: int, largeur: float, haute: float) -> Control:
 	var prop: Dictionary = _choix_props[i]
-	var col: VBoxContainer = VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
-	col.custom_minimum_size = Vector2(300, 0)
-	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var btn: Button = Button.new()
-	btn.text = str(prop.get("texte", ""))
-	btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn.custom_minimum_size = Vector2(300, 64)   # ≥ 44 px : pilier TACTILE (bible §21.1)
-	btn.add_theme_font_size_override("font_size", MerlinVisual.FS_CAPTION)
+	btn.custom_minimum_size = Vector2(largeur, haute)  # ≥ 44 px : pilier TACTILE
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# RIEN NE SORT DU BLOC. Sans ce clip, une proposition un peu longue ecrivait par-dessus les
+	# tuiles : la zone mentait sur ce qu'elle contenait (capture du beat 8, 08/09).
+	btn.clip_contents = true
 	MerlinVisual.apply_button_da(btn)
 	MerlinVisual.connect_button_feedback(btn)
 	btn.pressed.connect(_on_choix_pris.bind(i))
-	col.add_child(btn)
-	# CE QUE ÇA ENTRAÎNE, puis LE PRIX. Les deux sont écrits : « si l'une d'elles est manifestement
-	# la bonne, il n'y a pas de choix » — encore faut-il que le joueur puisse les comparer.
-	var suite: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_CAPTION)
+
+	var col: VBoxContainer = VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_FULL_RECT)
+	col.offset_left = 14.0
+	col.offset_right = -14.0
+	col.offset_top = 12.0
+	col.offset_bottom = -12.0
+	col.add_theme_constant_override("separation", 8)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(col)
+
+	var titre: Label = MerlinVisual.make_label(COL_GOLD, MerlinVisual.FS_CAPTION)
+	titre.text = str(prop.get("texte", ""))
+	titre.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	titre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	titre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(titre)
+
+	# CE QUE ÇA ENTRAÎNE : « si l'une d'elles est manifestement la bonne, il n'y a pas de choix »
+	# (bible §3.1) — encore faut-il que le joueur puisse les comparer avant de trancher.
+	var suite: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
 	suite.text = str(prop.get("entraine", ""))
 	suite.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	suite.custom_minimum_size = Vector2(300, 0)
+	suite.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	suite.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	suite.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(suite)
+
 	var prix: String = MerlinSentier.cout_en_clair(prop.get("cout", {}))
 	if prix != "":
 		var lbl: Label = MerlinVisual.make_label(COL_GOLD, MerlinVisual.FS_CAPTION)
 		lbl.text = prix
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(lbl)
-	return col
+	return btn
 
 
 ## La proposition est prise : elle se paie, elle s'écrit dans la chronique, et on avance. Sans
