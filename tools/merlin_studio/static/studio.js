@@ -704,8 +704,9 @@ async function refreshHealth() {
     else if (typeof b.total === 'number') vital('#v-euro', 'down', b.total.toFixed(2) + ' € !');
   } catch { /* les voyants gardent leur dernier état */ }
   try {
-    const p = await j('/api/proposals');
-    const n = (p.counts || {}).pending || 0;
+    // Le voyant compte les FOURCHES (08/09), plus les propositions des agents locaux.
+    const f = await j('/api/decisions');
+    const n = f.a_trancher || 0;
     vital('#v-decide', n ? 'up' : 'idle', n ? n + ' à trancher' : 'rien');
     const pill = $('#dock-pending');
     if (pill) { pill.hidden = !n; pill.textContent = n; }
@@ -1213,6 +1214,87 @@ async function refreshProposals() {
   });
 }
 
+/* ── Les fourches ───────────────────────────────────────────────────────────
+   Une carte par fourche ouverte : la question, deux à trois options avec leur coût, la
+   recommandation, et une lettre à choisir. Le choix est enregistré sur la VM et publié sur le
+   canal du Courrier ; tant que la session suivante ne l'a pas gravé dans le dépôt, la carte le
+   dit (« en route »). Les fourches tranchées et périmées restent visibles, repliées : la liste
+   est aussi l'histoire des choix. */
+const DOMAINE_FR = { regles: 'règles', lore: 'lore', ecrans: 'écrans', outillage: 'outillage' };
+function md(t) {
+  return esc(t || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\n\n/g, '<br><br>').replace(/\n- /g, '<br>• ');
+}
+async function refreshFourches() {
+  let d;
+  try { d = await j('/api/decisions'); } catch { return; }
+  const meta = $('#fourches-meta'), list = $('#fourches-list');
+  if (!meta || !list) return;
+  if (d.erreur) { meta.textContent = 'illisible'; list.innerHTML = `<div class="mut">${esc(d.erreur)}</div>`; return; }
+  const fs = d.fourches || [];
+  const ouvertes = fs.filter(f => f.etat === 'ouverte');
+  meta.textContent = ouvertes.length
+    ? `${d.a_trancher} à trancher · ${ouvertes.length}/${d.plafond} ouvertes`
+    : (fs.length ? 'rien à trancher' : 'aucune fourche');
+  if (!fs.length) { list.innerHTML = '<div class="mut">aucune fourche — les agents avancent sur ce qui est tranché</div>'; return; }
+  const carte = (f) => {
+    const loc = f.locale, rep = f.reponse;
+    const jours = f.ouverte ? Math.max(0, Math.round((Date.now() - Date.parse(f.ouverte)) / 864e5)) : 0;
+    const etat = rep ? `tranchée ${esc(rep.lettre)} le ${esc(rep.date)}`
+      : loc ? `${esc(loc.lettre)} choisie le ${esc(loc.date)} — en route vers le dépôt${loc.via ? ' (via ' + esc(loc.via) + ')' : ''}`
+      : f.etat === 'perimee' ? 'périmée' : `ouverte depuis ${jours} j`;
+    const opts = (f.options || []).map(o => `
+      <details class="option ${rep && rep.lettre === o.lettre ? 'prise' : ''}">
+        <summary><b class="lettre">${esc(o.lettre)}</b> ${esc(o.titre)}</summary>
+        <div class="mut">${md(o.texte)}</div>
+      </details>`).join('');
+    const reco = f.recommandation ? `<div class="reco">Recommandation : <b>${esc(f.recommandation.lettre)}</b> — ${esc(f.recommandation.pourquoi)}</div>` : '';
+    const boutons = (f.etat === 'ouverte' && !loc) ? `
+      <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
+        ${(f.options || []).map(o => `<button class="go" style="flex:1;min-height:48px" data-lettre="${esc(o.lettre)}">${esc(o.lettre)} — ${esc(o.titre)}</button>`).join('')}
+      </div>
+      <input class="note" placeholder="une note, si tu veux (elle part sur le canal, sans lien ni secret)" maxlength="300">` : '';
+    const ouverte = f.etat === 'ouverte' ? ' open' : '';
+    return `<details class="card fourche" data-id="${esc(f.id)}"${ouverte}>
+      <summary class="row"><span class="name">${esc(f.id)} · ${esc(f.titre)}</span>
+        <span class="badge ${f.etat === 'ouverte' ? 'up' : 'idle'}">${esc(DOMAINE_FR[f.domaine] || f.domaine)}</span>
+        <span class="mut">${etat}</span></summary>
+      <div class="mut" style="margin:8px 0">${md(f.fourche)}</div>
+      ${f.aujourdhui ? `<details><summary class="mut">aujourd'hui, dans le code</summary><div class="mut">${md(f.aujourdhui)}</div></details>` : ''}
+      <div class="options">${opts}</div>
+      ${reco}${boutons}
+      ${rep && rep.note ? `<div class="mut">« ${esc(rep.note)} »</div>` : ''}
+    </details>`;
+  };
+  list.innerHTML = fs.map(carte).join('');
+  list.querySelectorAll('button[data-lettre]').forEach(b => {
+    b.onclick = () => trancher(b.closest('.fourche'), b.dataset.lettre, b);
+  });
+}
+async function trancher(card, lettre, btn) {
+  const id = card.dataset.id;
+  const note = (card.querySelector('input.note') || {}).value || '';
+  card.querySelectorAll('button').forEach(x => x.disabled = true);
+  btn.textContent = '…';
+  try {
+    const r = await fetch(`/api/decision/${encodeURIComponent(id)}/trancher`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lettre, note }) });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || r.status);
+    dire(`${id} → ${lettre} · publiée${d.via ? ' via ' + d.via : ''}`);
+  } catch (e) {
+    dire('refusée : ' + e.message);
+    card.querySelectorAll('button').forEach(x => x.disabled = false);
+    btn.textContent = lettre;
+    return;
+  }
+  refreshFourches();
+  refreshHealth();
+}
+// Le Studio n'a pas de bulle de notification : la ligne de titre de la fenêtre dit ce qui vient d'arriver.
+function dire(t) { const m = $('#fourches-meta'); if (m) m.textContent = t; }
+
 /* ── Ton pourquoi ───────────────────────────────────────────────────────────
    Le serveur savait déjà tout recevoir : app.py lit `reason`, proposals.decide
    le range dans `decision_reason`, memory.add le grave dans la mémoire absolue.
@@ -1415,7 +1497,7 @@ const PAR_ONGLET = {
   play:    () => { refreshPlay(); refreshRun(); },
   journal: () => { refreshSequence(); refreshRoute(); refreshChapitres(); refreshJournal(); },
   chronique: () => refreshChroniques(),
-  ideas:   () => refreshProposals(),
+  ideas:   () => { refreshFourches(); refreshProposals(); },
   talk:   () => {},                       // talkPoll a sa propre minuterie
   health: () => { refreshHealth(); refreshCpu(); refreshHost(); },
   agents: () => { refreshAgents(); refreshCrew(); refreshJobs(); },

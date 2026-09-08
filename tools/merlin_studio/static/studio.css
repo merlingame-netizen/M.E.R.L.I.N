@@ -562,3 +562,15 @@ code { color: var(--blue); }
 .nuit svg { display: block; }
 .nuit circle { fill: var(--cream); }
 .nuit-legende { font-size: 13px; color: var(--dim); margin-left: auto; align-self: center; }
+
+/* ── Les fourches (08/09) : une carte repliable par fourche, les options en accordéon ────── */
+.fourche { margin-bottom: 12px; }
+.fourche > summary { cursor: pointer; list-style: none; }
+.fourche > summary::-webkit-details-marker { display: none; }
+.fourche .options { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
+.fourche .option summary { cursor: pointer; padding: 6px 0; color: var(--cream); }
+.fourche .option .lettre { display: inline-block; min-width: 22px; color: var(--gold, #d8b25a); }
+.fourche .option.prise summary { color: var(--gold, #d8b25a); }
+.fourche .reco { margin: 6px 0; font-size: 14px; color: var(--dim); }
+.fourche input.note { width: 100%; box-sizing: border-box; margin-top: 8px; min-height: 40px;
+  background: transparent; color: var(--cream); border: 1px solid var(--dim); padding: 6px 8px; }

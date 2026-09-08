@@ -368,6 +368,54 @@ def build_app() -> Flask:
         return jsonify({"ok": not rec.get("error"), "job": rec.get("id"),
                         "error": rec.get("error")}), (202 if not rec.get("error") else 409)
 
+    # ── les fourches : ce que seul Maxime tranche (08/09) ────────────────────
+    # Elles vivent dans docs/decisions/ du dépôt du jeu ; la VM ne pousse pas sur GitHub, alors le
+    # choix est enregistré ici et publié sur le canal du Courrier, que la session suivante relève
+    # et grave. Le module tools/decisions.py est partagé avec cette session-là.
+    def _decisions():
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        import decisions as D
+        return D
+
+    @app.route("/api/decisions")
+    def api_decisions():
+        try:
+            D = _decisions()
+            jeu = D.dossier_du_jeu()
+            fourches = D.lister(jeu)
+            for d in fourches:
+                d["locale"] = D.reponse_locale(d["id"])
+            return jsonify({"fourches": fourches,
+                            "ouvertes": sum(1 for d in fourches if d["etat"] == "ouverte"),
+                            "a_trancher": sum(1 for d in fourches
+                                              if d["etat"] == "ouverte" and not d["locale"]),
+                            "plafond": D.PLAFOND, "jeu": str(jeu) if jeu else None,
+                            "problemes": D.verifier(jeu) if jeu else []})
+        except Exception as exc:
+            return jsonify({"fourches": [], "ouvertes": 0, "a_trancher": 0, "erreur": str(exc)[:200]})
+
+    @app.route("/api/decision/<did>/trancher", methods=["POST"])
+    def api_decision_trancher(did: str):
+        body = request.get_json(silent=True) or {}
+        lettre = str(body.get("lettre", "")).strip().upper()[:1]
+        note = str(body.get("note", ""))[:300]
+        try:
+            D = _decisions()
+            cible = next((d for d in D.lister(D.dossier_du_jeu()) if d["id"] == did), None)
+            if cible is None:
+                return jsonify({"error": "aucune fourche %s" % did}), 404
+            if cible["etat"] != "ouverte":
+                return jsonify({"error": "la fourche %s est %s" % (did, cible["etat"])}), 409
+            if lettre not in [o["lettre"] for o in cible["options"]]:
+                return jsonify({"error": "pas d'option %s" % (lettre or "?")}), 400
+            via = ""
+            if os.environ.get("MERLIN_DECISIONS_SANS_ENVOI") != "1":
+                via = D.publier(did, lettre, note)
+            rec = D.enregistrer_localement(did, lettre, note, via)
+            return jsonify({"ok": True, "via": via, "reponse": rec})
+        except Exception as exc:
+            return jsonify({"error": str(exc)[:200]}), 502
+
     # ── propositions des agents de game design ───────────────────────────────
     # Doctrine : les agents proposent, Maxime tranche. Accepter met une mission
     # en file ; lancer le codeur reste un second geste explicite.
