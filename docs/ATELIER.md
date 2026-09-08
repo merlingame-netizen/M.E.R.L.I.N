@@ -8,7 +8,9 @@
 Maxime ne tranche que les **fourches** : les choix qui changent l'expérience du joueur — une
 règle, un ton, une coupe de périmètre, une direction visuelle. Tout le reste est fait par des
 sessions Claude planifiées, une par jour, un domaine à la fois, avec des preuves. La VM d'Oracle
-ne développe rien : elle **mesure** (la nuit du bot, le crible, la courbe, les captures).
+**n'héberge que le jeu** (décision du 08/09, deuxième tour) : neuf gardiens la tiennent debout,
+et rien n'y mesure, ne propose ni ne converse. Une vraie partie sur la VM se demande par un job
+du Courrier et se lit à la session suivante.
 
 Ce dispositif remplace deux choses qui n'ont pas marché : le « Cycle Director » d'avril (une
 Routine horaire, « créative et expérimentale », qui décidait seule et s'est arrêtée en attendant
@@ -17,7 +19,7 @@ d'agents locaux, sans lecteur).
 
 ## 2. La rotation
 
-Une session par jour, à 9 h 30 UTC, après le crible de la nuit (7 h 40). Jamais deux à la fois.
+Une session par jour, à 9 h 30 UTC. Jamais deux à la fois.
 
 | Jour (UTC) | Domaine | Ce qu'on y fait |
 |---|---|---|
@@ -25,7 +27,7 @@ Une session par jour, à 9 h 30 UTC, après le crible de la nuit (7 h 40). Jamai
 | mardi, samedi | **lore** | le corpus écrit (`data/scenarios/`), les figures, les biomes ; `valider.py` vert, jouable par SENTIERS |
 | mercredi | **écrans** | ce que le joueur voit : encart, cartes, transitions, décor par biome ; prouvé par capture xvfb |
 | jeudi | **outillage** | la nuit, le crible, la courbe, le Studio, les sondes ; sur la branche de l'outillage |
-| dimanche | **revue** | relire la semaine : la courbe des nuits, les régressions à révert, les fourches périmées, une note de semaine |
+| dimanche | **revue** | relire la semaine : les commits, les jobs du Courrier, les régressions à révert, les fourches périmées, une note de semaine |
 
 ## 3. Ce qu'une session fait, dans l'ordre
 
@@ -39,8 +41,8 @@ Une session par jour, à 9 h 30 UTC, après le crible de la nuit (7 h 40). Jamai
    `docs/decisions/NNN.md`, et l'affiche. Une fourche tranchée passe **avant tout le reste**
    dans son domaine.
 3. **Lire.** `docs/decisions/` (ce qui est ouvert, ce qui est tranché), les vingt dernières
-   entrées de `progress.md`, `docs/BIBLE_DES_REGLES.md`, l'audit du 07/09, et le dernier crible
-   (`python3 tools/decisions.py courrier` liste les derniers messages de la nuit).
+   entrées de `progress.md`, `docs/BIBLE_DES_REGLES.md`, l'audit du 07/09, et les résultats des
+   jobs du Courrier déposés par les sessions précédentes (`python3 tools/decisions.py courrier`).
 4. **Choisir UN chantier** du domaine du jour, borné : ce qu'une session finit avec ses preuves.
    Pas de nouveau système que Maxime n'a pas tranché. Pas de « pendant que j'y suis ».
 5. **Faire, prouver, écrire.** Les preuves par domaine sont au §4. Sans preuve, pas de commit.
@@ -57,8 +59,9 @@ Une session par jour, à 9 h 30 UTC, après le crible de la nuit (7 h 40). Jamai
 ## 4. Les preuves, par domaine
 
 - **règles** : `tools/tests/test_progression.gd` et les épreuves touchées vertes ; la mesure
-  annoncée avec sa population (le bot de la nuit, pas la simulation) ; la bible mise à jour si
-  une règle change, et `regles.py` si un seuil change.
+  annoncée avec sa population (une vraie partie jouée sur la VM par un job du Courrier quand le
+  chantier le demande, sinon la simulation, dite comme telle) ; la bible mise à jour si une règle
+  change, et `regles.py` si un seuil change.
 - **lore** : `python3 tools/scenarios/valider.py` sans refus ; `rendre.py` sans rune inconnue ;
   la quête se charge dans `test_sentier.gd` ; elle se joue par SENTIERS (sonde
   `tools/probe_menu_sentiers.gd`, ou `probe_choix_capture.gd` avec `MERLIN_SENTIER=<cle>`).
@@ -67,7 +70,8 @@ Une session par jour, à 9 h 30 UTC, après le crible de la nuit (7 h 40). Jamai
   --script res://tools/<sonde>.gd`) ; le smoke des scènes touchées ; `--check-only` ne compte
   pas (faux positif MerlinAudio).
 - **outillage** : les épreuves Python (`tools/merlin_studio/test_*.py`, `tools/scenarios/`),
-  et pour un agent de la VM un job du Courrier qui montre son état réel.
+  et pour un gardien de la VM un job du Courrier qui montre son état réel. La VM n'accueille
+  aucun nouvel agent de travail : ce qui doit tourner tourne ici, dans la session.
 - **revue** : rien à prouver, tout à lire ; un révert se prouve comme le chantier qu'il défait.
 
 ## 5. Les fourches
