@@ -204,7 +204,7 @@
       "texte": "Lui tendre la corde ouverte et le laisser lire",
       "entraine": "Vous ne dites rien. Le nom mangé par le sel décide à votre place.",
       "cout": {
-       "rune": "Le Cœur Franc"
+       "rune": "Droiture"
       }
      }
     ],
@@ -212,7 +212,7 @@
    },
    "scene": "Il vous demande, sans lâcher son ardoise, si le compte est juste. La corde ouverte est sur votre bras, la marque tournée vers vous.",
    "issue": "Vous lui tendez la corde du côté de la marque. Il la prend, il regarde longtemps, et il pose l'ardoise à plat sur la pierre. Il ne dit pas treize. Il ne dit pas douze non plus.",
-   "note": "Le choix de la quête, et le seul qui coûte une posture. Mentir salit ; briser un homme coûte au corps ; se taire vous prend Le Cœur Franc pour le reste de la traversée — vous ne direz plus ce qui est, sans arranger. Aucune proposition n'est gratuite. (Le nom est celui du JEU, pas celui de la bible : décision du 07/09, le corpus adopte les seize traits du code.)",
+   "note": "Le choix de la quête, et le seul qui coûte une posture. Mentir salit ; briser un homme coûte au corps ; se taire vous prend Droiture pour le reste de la traversée — vous ne direz plus ce qui est, sans arranger. Aucune proposition n'est gratuite. (Le nom est celui du JEU, pas celui de la bible : décision du 07/09, le corpus adopte les seize traits du code.)",
    "bascule": [
     "choisie",
     "vous laissez la marque parler à votre place"

@@ -141,7 +141,19 @@ func _init() -> void:
 	var avant: int = _compter_rune(run2, "Le Cœur Franc")
 	var recu: Dictionary = run2.payer_le_choix({"rune": "Le Cœur Franc"})
 	_verifier("Le Cœur Franc était dans la traversée", avant > 0, "%d" % avant)
-	_verifier("il est laissé", str(recu.get("rune", "")) == "Le Cœur Franc", str(recu))
+	# LE REÇU REND LE NOM QUE LE JOUEUR VOIT. La carte s'appelle « Le Cœur Franc » dans les données
+	# et « Droiture » en haut de la carte : dire « vous laissez Le Cœur Franc » nommerait une chose
+	# introuvable à l'écran. Vu à la capture du 08/09, où les cartes affichent Coutume et Adresse.
+	_verifier("le reçu nomme la carte comme le joueur la voit",
+		str(recu.get("rune", "")) == "Droiture", str(recu))
+	var run3: Node = load("res://scripts/game/merlin_run.gd").new()
+	run3.new_run(s)
+	_verifier("le nom affiché ouvre la même porte",
+		str(run3.payer_le_choix({"rune": "Droiture"}).get("rune", "")) == "Droiture")
+	var run4: Node = load("res://scripts/game/merlin_run.gd").new()
+	run4.new_run(s)
+	_verifier("le nom de rune celte aussi",
+		str(run4.payer_le_choix({"rune": "Gwiren"}).get("rune", "")) == "Droiture")
 	_verifier("il ne revient ni en main, ni au paquet, ni à la défausse",
 		_compter_rune(run2, "Le Cœur Franc") == 0, "%d restant(s)" % _compter_rune(run2, "Le Cœur Franc"))
 	_verifier("la main reste pleine après le renoncement", (run2.hand as Array).size() == 4,

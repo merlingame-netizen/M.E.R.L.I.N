@@ -1539,10 +1539,16 @@ func payer_le_choix(cout: Dictionary) -> Dictionary:
 	var rune: String = str(cout.get("rune", ""))
 	if rune != "":
 		# LA RUNE QUITTE LA TRAVERSEE, pas seulement la main : elle sort du paquet et de la defausse.
-		# Renoncer a La Franchise pour un beat ne serait pas un prix — elle reviendrait au tirage
+		# Renoncer a une posture pour un beat ne serait pas un prix — elle reviendrait au tirage
 		# suivant. Ce qu'on laisse, on ne le reprend pas.
-		if _retirer_rune(rune):
-			paye["rune"] = rune
+		#
+		# LE RECU REND LE NOM QUE LE JOUEUR VOIT. Une carte porte TROIS noms : `card_name` dans les
+		# donnees (« Le Coeur Franc »), `display_name` en haut de la carte (« Droiture »), et
+		# `rune_name` sous le glyphe (« Gwiren »). Le prix affiche nommait le premier — un nom qui
+		# n'est ecrit nulle part a l'ecran. On accepte les trois en entree, on rend le nom VU.
+		var vu: String = _retirer_rune(rune)
+		if vu != "":
+			paye["rune"] = vu
 			draw_to_full()
 	if not paye.is_empty():
 		emit_signal("gauges_changed", integrite, corruption)
@@ -1551,19 +1557,27 @@ func payer_le_choix(cout: Dictionary) -> Dictionary:
 	return paye
 
 
-## Retire une rune de la main, du paquet et de la defausse. Faux si elle n'y etait pas.
-func _retirer_rune(nom: String) -> bool:
-	var trouve: bool = false
+## Retire une rune de la main, du paquet et de la defausse, par n'importe lequel de ses trois noms.
+## Rend le nom QUE LE JOUEUR VOIT (display_name), vide si elle n'y etait pas.
+func _retirer_rune(nom: String) -> String:
+	var vu: String = ""
 	for lot in [hand, deck, discard]:
 		var i: int = (lot as Array).size() - 1
 		while i >= 0:
 			var c: Variant = (lot as Array)[i]
-			var n: String = str(c.card_name) if (c is Object and "card_name" in c) else ""
-			if n == nom:
+			if c is Object and _est_la_rune(c, nom):
+				if vu == "":
+					vu = str(c.display_name) if str(c.get("display_name")) != "" else str(c.card_name)
 				(lot as Array).remove_at(i)
-				trouve = true
 			i -= 1
-	return trouve
+	return vu
+
+
+func _est_la_rune(c: Variant, nom: String) -> bool:
+	for cle in ["card_name", "display_name", "rune_name"]:
+		if cle in c and str(c.get(cle)) == nom:
+			return true
+	return false
 
 
 func current_beat() -> Dictionary:
