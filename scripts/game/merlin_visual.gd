@@ -231,13 +231,13 @@ static func swap_zone(zone: Control, build: Callable, glisse: Vector2 = Vector2.
 			if pend.is_valid():
 				pend.call()  # build precedent JAMAIS perdu (etat critique du beat preserve)
 	# 08/09 — LA PAGE QUI TOURNE : avec `glisse`, la zone part de quelques pixels dans un sens en
-	# fondant, et revient de l'autre côté. Le repos est mémorisé une fois (meta) : un swap relancé en
-	# vol ne dérive jamais. Sans `glisse`, le fondu d'avant, inchangé.
-	if zone.get_parent() is Container:
-		glisse = Vector2.ZERO  # un conteneur repose la position de ses enfants : la glisse se battrait contre lui
-	if not zone.has_meta("_fx_swap_repos"):
-		zone.set_meta("_fx_swap_repos", zone.position)
-	var repos: Vector2 = zone.get_meta("_fx_swap_repos")
+	# fondant, et revient de l'autre côté. Sans `glisse`, le fondu d'avant, inchangé.
+	# SOUS UN CONTENEUR (l'encart vit dans un VBoxContainer) : le conteneur ne repose la position de
+	# ses enfants qu'à un tri (ajout, redimensionnement), pas à chaque image ; le tween gagne entre
+	# deux tris, et l'on demande un tri à la fin pour que la vérité du conteneur ait le dernier mot.
+	# Le repos est lu à CHAQUE swap (jamais mémorisé) : une mise en page qui a bougé n'est jamais
+	# rejouée depuis une vieille valeur.
+	var repos: Vector2 = zone.position
 	var t: Tween = zone.create_tween().set_parallel(true)
 	t.tween_property(zone, "modulate:a", 0.0, 0.18 * motion()).set_trans(Tween.TRANS_SINE)
 	if glisse != Vector2.ZERO:
@@ -255,6 +255,10 @@ static func swap_zone(zone: Control, build: Callable, glisse: Vector2 = Vector2.
 	t.tween_property(zone, "modulate:a", 1.0, DUR_ZONE_FADE * motion()).set_trans(Tween.TRANS_SINE)
 	if glisse != Vector2.ZERO:
 		t.tween_property(zone, "position", repos, DUR_ZONE_FADE * motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		t.set_parallel(false)
+		t.tween_callback(func() -> void:
+			if zone != null and is_instance_valid(zone) and zone.get_parent() is Container:
+				(zone.get_parent() as Container).queue_sort())
 	zone.set_meta("_fx_tw_swap", t)
 
 

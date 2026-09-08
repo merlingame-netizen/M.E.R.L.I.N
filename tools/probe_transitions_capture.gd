@@ -41,6 +41,22 @@ func _run() -> void:
 	var jeu: Node = current_scene
 	var en_jeu: bool = jeu != null and jeu.scene_file_path.ends_with("MerlinGame.tscn")
 	print("[TRANS] en jeu : %s" % str(en_jeu))
+	# LA PAGE QUI TOURNE revient exactement à sa place : l'encart vit dans un VBoxContainer, la glisse
+	# ne doit pas le laisser décalé d'un pixel.
+	var page_ok: bool = true
+	if en_jeu:
+		var encart: Variant = jeu.get("_situ_panel")
+		if encart is Control:
+			var repos: Vector2 = (encart as Control).position
+			jeu.call("_present_current_beat")
+			await create_timer(0.12).timeout
+			var en_vol: Vector2 = (encart as Control).position
+			await create_timer(1.2).timeout
+			var apres: Vector2 = (encart as Control).position
+			page_ok = apres.is_equal_approx(repos)
+			print("[TRANS] encart : repos=%s en vol=%s après=%s → %s" % [str(repos), str(en_vol), str(apres),
+				"revenu" if page_ok else "DÉCALÉ"])
+			en_jeu = en_jeu and page_ok and not en_vol.is_equal_approx(repos)
 	if en_jeu and jeu.has_method("_reagir_au_verdict"):
 		jeu.call("_reagir_au_verdict", {"die": 7, "total": 10, "dc": 9, "margin": 1}, "reussite")
 		await create_timer(0.6).timeout
