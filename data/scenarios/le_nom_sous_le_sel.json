@@ -1,0 +1,263 @@
+{
+ "main_depart": [
+  "Acuité",
+  "Droiture",
+  "Flair",
+  "Légèreté"
+ ],
+ "runes": {
+  "Acuité": "Vigilance, Sens",
+  "Écoute": "Vigilance, Mémoire",
+  "Souvenance": "Mémoire, Savoir",
+  "Poigne": "Force, Endurance",
+  "Légèreté": "Agilité, Finesse",
+  "Ténacité": "Endurance, Force",
+  "Charme": "Ruse, Empathie",
+  "Malice": "Ruse, Verbe",
+  "Calme": "Autorité, Empathie",
+  "Flair": "Vision, Instinct",
+  "Voix": "Vision, Nature",
+  "Ombre": "Mystère, Nature",
+  "Adresse": "Finesse, Agilité",
+  "Prestance": "Autorité, Verbe",
+  "Droiture": "Franchise, Empathie",
+  "Coutume": "Rituel, Savoir"
+ },
+ "gestes": {
+  "OBSERVER": "lire une scène avant d'y toucher",
+  "AGIR": "faire de ses mains, avec adresse",
+  "COMBATTRE": "y mettre le corps et tenir",
+  "RÉVÉLER": "faire venir au jour ce qui se cache",
+  "PARLER": "s'adresser à quelqu'un"
+ },
+ "id": "le_nom_sous_le_sel",
+ "titre": "Le Nom sous le Sel",
+ "monde": "penn_ar_bed",
+ "biome": "falaises",
+ "figures": [
+  "marcharit",
+  "kado",
+  "erwan"
+ ],
+ "bourse_depart": 9,
+ "integrite": {
+  "3": -1,
+  "4": -2
+ },
+ "corruption": {
+  "4": 1,
+  "5": 1,
+  "8": 1
+ },
+ "preambule": [
+  "La marée est basse et la grève rend ce qu'elle a pris cet hiver : des planches, des cordes, un banc de barque.",
+  "Depuis trois nuits, une voix chante dans le ressac. Elle chante un nom, et le nom n'a pas de fin.",
+  "Kado le Cordier a gardé une planche que personne ne veut. Il y a un nom dessous, et le sel en a mangé les deux tiers.",
+  "Ici, Voyageur, on compte. Vous êtes le seul à savoir encore lire."
+ ],
+ "beats": [
+  {
+   "n": 1,
+   "t": "Exploration",
+   "lieu": "La grève au matin",
+   "dc": 6,
+   "at": 3,
+   "de": 7,
+   "action": "OBSERVER",
+   "rune": "Acuité",
+   "scene": "Le jusant a laissé la grève nue jusqu'aux rochers du bout. Des planches sont prises dans les algues, gonflées d'eau, et l'une d'elles est posée à part sur un galet plat, comme si quelqu'un l'avait déjà ramassée une fois.",
+   "issue": "Vous regardez la planche sans la toucher. Le bois porte une marque au fer, la même que sur les cordes de Kado, et sous la marque des lettres que le sel a rongées : un début, un creux, une fin. Le début tient encore. Le reste est une bouche vide.",
+   "note": "OBSERVER avec Acuité : lire avant de prendre. Marge +4, réussite. La planche est posée au premier beat et le nom manque déjà : la quête tient dans ce creux. Ce qui apparaît revient."
+  },
+  {
+   "n": 2,
+   "t": "Rencontre",
+   "lieu": "L'atelier de Kado",
+   "dc": 9,
+   "at": 3,
+   "de": 8,
+   "action": "PARLER",
+   "rune": "Droiture",
+   "scene": "Kado le Cordier tresse dos à la porte, et la planche du galet plat est debout contre son mur, à la place d'honneur, entre deux rouleaux. Il ne se retourne pas quand vous entrez.",
+   "dial": "« Je compte, je ne lis pas. Il y a un nom là-dessous. Lisez-le-moi. Tout entier, pas le morceau que la mer a laissé. »",
+   "issue": "Vous lui demandez pourquoi ce nom-là plutôt qu'un autre, avec toutes les planches que la mer rend. Il répond que c'est la seule qui chante, et il vous met cinq gwenneg dans la main pour la peine, comme on paie d'avance ce qu'on n'ose pas faire soi-même.",
+   "effet": "gwenneg +5 — Kado paie la lecture d'avance, comme le portage dans Le Compte Juste : ici, on paie ce qu'on ne fera pas soi-même",
+   "note": "PARLER avec Droiture : la question franche — pourquoi celle-là ? — obtient la phrase qui lie la planche au chant. Marge +2, réussite. Le but tient en une phrase et le joueur l'a au beat 2 : lire un nom entier.",
+   "bascule": [
+    "choisie",
+    "vous acceptez de lire le nom sous le sel"
+   ]
+  },
+  {
+   "n": 3,
+   "t": "Épreuve",
+   "lieu": "Le sentier du bas",
+   "dc": 9,
+   "at": 3,
+   "de": 4,
+   "action": "AGIR",
+   "rune": "Légèreté",
+   "scene": "Pour savoir d'où vient une planche, il faut descendre où la mer les range : les grottes du pied de la falaise, à marée basse, par un sentier de varech qui n'a jamais été un sentier.",
+   "issue": "Vous descendez vite, en confiance, la planche sous le bras. Le varech cède sous le pied et vous partez sur trois mètres de roche mouillée. La planche cogne, une écharde longue comme un doigt s'en détache, et avec elle une lettre de plus : le creux s'est agrandi.",
+   "note": "AGIR avec Légèreté sur du varech : la légèreté ne remplace pas la prudence. Marge −2, partiel — le corps paie, et la planche aussi : le nom recule d'une lettre. La quête garde la trace."
+  },
+  {
+   "n": 4,
+   "t": "Rencontre",
+   "lieu": "Les grottes de la marée",
+   "dc": 9,
+   "at": 0,
+   "de": 3,
+   "action": "RÉVÉLER",
+   "rune": "Flair",
+   "scene": "Trois bouches noires dans la falaise, à hauteur d'eau. Dans l'une d'elles la mer respire plus fort que dans les autres, et le chant de la nuit y a laissé quelque chose qui n'est pas un son : une envie d'entrer.",
+   "dial": "« Par ici. C'est par ici qu'elle est passée. »",
+   "issue": "Vous suivez l'envie, pas les planches. La grotte descend, tourne, et l'eau y monte plus vite que vous ne redescendez. Vous ressortez à la nage, la planche tenue au-dessus de la tête, et la marée a pris la moitié de l'après-midi. Personne n'est passé par là depuis longtemps.",
+   "note": "RÉVÉLER avec Flair, sans un tag couvert : l'instinct seul, dans un lieu qui ment. Marge −6, échec — le seul échec de la quête, et il tombe sur le trait qui devait la porter. Flair est un couteau : il coupe dans les deux sens.",
+   "bascule": [
+    "subie",
+    "la voix vous a mené où elle voulait, pas où était le nom"
+   ]
+  },
+  {
+   "n": 5,
+   "t": "Dilemme",
+   "lieu": "La grève, à marée haute",
+   "special": {
+    "genre": "choix",
+    "options": [
+     {
+      "texte": "Gratter le sel au couteau pour lire le reste",
+      "entraine": "Vous lirez ce qui reste. Ce qui reste n'est peut-être pas assez.",
+      "cout": {
+       "integrite": 1
+      }
+     },
+     {
+      "texte": "Attendre la nuit et le demander à celle qui chante",
+      "entraine": "Elle vous dira le nom. Vous lui devrez de l'avoir écoutée.",
+      "cout": {
+       "corruption": 1
+      }
+     },
+     {
+      "texte": "Jeter la planche à la mer et dire à Kado qu'il n'y avait rien",
+      "entraine": "Vous rendez ses cinq gwenneg, et la mer garde ce qu'elle sait.",
+      "cout": {
+       "gwenneg": 4
+      }
+     }
+    ],
+    "pris": 1
+   },
+   "scene": "La planche sèche sur un rocher, ce qui reste des lettres tourné vers le ciel. La marée remonte, et avec elle, dans une heure, la voix.",
+   "issue": "Vous laissez la planche sécher et vous restez. La nuit vient, la voix monte du ressac, et elle chante le début du nom, celui que le bois a gardé, puis elle s'arrête au creux comme la planche. Elle non plus ne sait pas la fin.",
+   "note": "Beat spécial : ni tuile, ni rune, ni dé. Trois monnaies — le corps, la confiance, l'avance de Kado. La deuxième est prise : écouter celle qui chante coûte un point de corruption, et apprend que le nom est cassé des deux côtés. La troisième est jouable, et c'est une lâcheté honnête.",
+   "bascule": [
+    "choisie",
+    "vous demandez le nom à celle qui le chante"
+   ]
+  },
+  {
+   "n": 6,
+   "t": "Rencontre",
+   "lieu": "Le ressac, la nuit",
+   "dc": 9,
+   "at": 6,
+   "de": 10,
+   "action": "RÉVÉLER",
+   "rune": "Flair",
+   "scene": "Marc'harit la Noyée se tient dans l'écume, à l'endroit où personne ne tient debout, et elle chante le début du nom en regardant la planche que vous tenez, pas vous.",
+   "dial": "« C'est le mien. Je le chante depuis que la mer l'a mangé. Personne ne me le rend. Dis-le. Dis-le tout entier. »",
+   "issue": "Vous ne cherchez pas le nom, vous cherchez ce qu'elle veut, et cette fois l'instinct porte juste : elle ne veut pas qu'on l'écoute, elle veut qu'on la nomme. Une voix vivante, qui dise le nom d'un bout à l'autre. Le sien. Celui de la planche. Celui de la treizième coque qu'Erwan n'a jamais su nommer.",
+   "note": "RÉVÉLER avec Flair, deux tags couverts : le même trait qui a trompé au beat 4 fait mouche ici, parce que cette fois il lit une personne et non un lieu. Marge +7, l'éclatante de la quête — et ce qu'elle achète est une compréhension, pas un objet. Erwan entre dans la quête par le compte de l'autre.",
+   "bascule": [
+    "subie",
+    "le nom sous le sel est le sien, et la treizième coque était à elle"
+   ]
+  },
+  {
+   "n": 7,
+   "t": "Rencontre",
+   "lieu": "La galerie du phare",
+   "dc": 9,
+   "at": 6,
+   "de": 5,
+   "action": "PARLER",
+   "rune": "Souvenance",
+   "scene": "Erwan Veilleur fait le tour de la galerie avec son ardoise. Vous montez lui demander la seule chose qu'il ne compte pas : comment s'appelait la treizième coque.",
+   "dial": "« Elle s'appelait comme la fille. On l'avait baptisée comme elle, la barque, le jour où elle a chanté au départ. Marc'harit. Je ne l'ai jamais écrit. On n'écrit pas ce qu'on n'a pas ramené. »",
+   "issue": "Vous lui rappelez le départ, pas le naufrage : le quai, le convoi, la fille qui chantait. Il s'arrête de compter le temps d'une phrase, et la phrase contient le nom entier. Vous redescendez avec un nom que personne n'a prononcé depuis onze ans, et une planche qui n'a plus besoin de ses lettres.",
+   "note": "PARLER avec Souvenance : convoquer ce qui est perdu pour qu'un vivant le dise. Marge +2, réussite. Le nom vient par la mémoire d'un homme, pas par la mer : c'est la règle des Falaises, la mer ne rend rien."
+  },
+  {
+   "n": 8,
+   "t": "Dilemme",
+   "lieu": "Le sentier, entre le phare et la grève",
+   "special": {
+    "genre": "choix",
+    "options": [
+     {
+      "texte": "Le porter d'abord à Kado, comme promis",
+      "entraine": "Kado saura. La voix chantera une nuit de plus, et cette nuit-là vous appartient.",
+      "cout": {
+       "integrite": 1
+      }
+     },
+     {
+      "texte": "Descendre le dire à la mer cette nuit, avant Kado",
+      "entraine": "Elle saura la première. Kado l'apprendra de vous, après elle.",
+      "cout": {
+       "corruption": 1
+      }
+     },
+     {
+      "texte": "Ne le dire à personne",
+      "entraine": "Le nom reste à vous. Vous laissez Souvenance : ce que vous avez porté, vous ne le porterez plus.",
+      "cout": {
+       "rune": "Souvenance"
+      }
+     }
+    ],
+    "pris": 1
+   },
+   "scene": "Vous avez le nom entier et deux personnes qui l'attendent : celui qui paie, en bas, et celle qui chante, plus bas encore. La nuit tombe, et il n'y aura pas deux nuits.",
+   "issue": "Vous descendez droit à la grève. Le nom est à celle qui le chante avant d'être à celui qui l'a acheté ; Kado l'aura demain, de votre bouche, et il saura que vous êtes passé par elle. C'est ce qu'il vous en coûte.",
+   "note": "Le choix de la quête. Tenir sa promesse d'abord coûte au corps (une nuit de chant de plus, et l'on ne dort pas) ; passer devant Kado coûte à la confiance ; se taire vous prend Souvenance pour le reste de la traversée. Aucune proposition n'est gratuite.",
+   "bascule": [
+    "choisie",
+    "vous portez le nom à la mer avant de le porter à Kado"
+   ]
+  },
+  {
+   "n": 9,
+   "t": "Épreuve",
+   "lieu": "La descente de nuit",
+   "dc": 9,
+   "at": 3,
+   "de": 6,
+   "action": "COMBATTRE",
+   "rune": "Ténacité",
+   "scene": "Le sentier de varech, de nuit, avec la marée qui monte et le vent qui vient d'en bas. Vous l'avez déjà descendu une fois en confiance ; cette fois il faut le descendre en tenant.",
+   "issue": "Vous descendez à quatre membres, la planche coincée dans le dos, en rattrapant chaque glissade avant qu'elle ne devienne une chute. Vous arrivez en bas avec les paumes ouvertes et le nom intact dans la bouche. La mer est déjà aux chevilles.",
+   "note": "COMBATTRE avec Ténacité : tenir contre le sentier qui a gagné au beat 3. Marge 0, réussite juste — la leçon du partiel est apprise, et la quête le montre par le même lieu joué autrement."
+  },
+  {
+   "n": 10,
+   "t": "Climax",
+   "lieu": "L'écume",
+   "dc": 12,
+   "at": 6,
+   "de": 9,
+   "action": "PARLER",
+   "rune": "Voix",
+   "scene": "Elle est là, dans le ressac, et elle chante le début du nom. Vous avez la fin. Il faut la dire assez fort pour couvrir la mer, assez juste pour qu'elle la reconnaisse comme sienne.",
+   "issue": "Vous dites le nom d'un bout à l'autre, une seule fois, sans le chanter. Elle s'arrête au milieu du sien et écoute la fin venir d'une bouche vivante. Puis l'écume se vide, doucement, comme une marée qui descend, et le ressac ne chante plus. Vous remontez avec une planche sans lettres et un nom pour Kado : Marc'harit, entier. Là-haut, Erwan écrira une treizième ligne.",
+   "note": "PARLER avec Voix — La Voix Claire : dire, pas chanter. Marge +3, réussite au Climax, dé jeté. La quête se ferme sur le trait jamais posé jusqu'ici, et sur ce que la mer ne rend pas mais qu'un vivant peut dire. Ce qui apparaît revient : la planche du beat 1, le nom du beat 7, la treizième ligne du Compte Juste.",
+   "bascule": [
+    "subie",
+    "le ressac se tait ; Kado aura son nom, Erwan sa treizième ligne"
+   ]
+  }
+ ]
+}

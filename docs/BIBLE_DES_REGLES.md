@@ -316,7 +316,7 @@ Mesurés sur la partie témoin p74 (`docs/chroniques/p74/`), et à corriger.
 
 ## 7. Le corpus de référence
 
-Neuf quêtes, 99 beats, sous `data/scenarios/` et rendues dans `docs/scenarios/`. Elles servent à
+Dix quêtes, 109 beats, sous `data/scenarios/` et rendues dans `docs/scenarios/`. Elles servent à
 deux choses : montrer le rendu qu'on vise, et donner au modèle des exemples de ce qu'on attend.
 
 | Quête | Beats | Ce qu'elle exerce |
@@ -327,6 +327,8 @@ deux choses : montrer le rendu qu'on vise, et donner au modèle des exemples de 
 | Le Prix du Passeur | 10 | la **veille**, et un prix qu'on ne connaît qu'au milieu |
 | Trois Pains à Kerlan | 10 | le **partage** et le **rituel** |
 | La Course des Korrigans | 9 | la **poursuite**, et le seul **échec** du corpus |
+| Le Compte Juste | 10 | les Falaises, deux **choix qui coûtent** (fourche 003 : le corpus adopte le prix) |
+| Le Nom sous le Sel | 10 | Marc'harit la Noyée en figure centrale ; **Flair** qui trompe puis fait mouche, **Voix** au Climax ; le même sentier joué deux fois |
 
 **Elles se jouent** (08/09). L'entrée SENTIERS du menu liste les quêtes écrites — titre, lieu,
 longueur, première ligne du préambule — et en lance une sans passer par le modèle : le préambule

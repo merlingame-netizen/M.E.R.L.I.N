@@ -3876,6 +3876,19 @@ Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_ca
 est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
 régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.
 
+## 2026-09-08 — 003 : la dixième quête, « Le Nom sous le Sel »
+
+- Fourche 003 tranchée A : les Falaises, Marc'harit la Noyée en figure centrale. Dix beats, deux
+  choix qui coûtent (beat 5 : le corps, la confiance ou l'avance de Kado ; beat 8 : la promesse,
+  la mer d'abord, ou laisser Souvenance), un échec (Flair sans tag couvert, beat 4), une éclatante
+  (Flair à deux tags, beat 6 : le même trait lit une personne et non un lieu), le Climax au dé
+  avec Voix. Kado paie cinq gwenneg au beat 2 (`effet`), bourse de départ 9.
+- Continuité avec Le Compte Juste : la marque au fer, la treizième coque d'Erwan qui reçoit son
+  nom, le sentier de varech joué deux fois (partiel puis réussite). Règle des Falaises tenue : la
+  mer ne rend rien, c'est un vivant qui dit le nom.
+- `valider.py` : validée sans refus ; corpus à dix quêtes et 109 beats ; runes jamais posées :
+  Ombre et Coutume seulement (pour Brocéliande). Bible §7 mise à jour.
+
 ## 2026-09-08 — Les attentes deviennent des scènes, et le rendu prend de la profondeur
 
 - Décisions (AskUserQuestion, tout retenu) : la carte à l'encre pendant que Merlin rêve, le tissage
