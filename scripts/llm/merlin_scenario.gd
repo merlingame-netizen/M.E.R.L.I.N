@@ -70,6 +70,9 @@ const ARC_TRANCHE: int = 4
 const RICHESSE_ISSUE: int = 1  # v34 : intermédiaire 3-5 phrases directes (Maxime — style HoF2)
 const ARC_TRANCHE_BUDGET_S: float = 300.0
 const ARC_ECHECS_REELS_MAX: int = 2
+# Combien de tranches abandonnées D'AFFILÉE avant de renoncer à l'arc entier (v57, 08/09). À 1, le
+# comportement d'avant : un abandon condamnait toute la fin de la quête.
+const ARC_ABANDONS_MAX: int = 2
 # Combien de temps on laisse le moteur finir ce qu'il fait avant de retenter. Une résolution
 # coûte jusqu'à ~86 s quand son préfixe a été évincé par un prompt d'arc : 45 s faisaient
 # retomber la retentative en plein milieu, comptée à tort comme un échec.
@@ -2278,6 +2281,14 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 		tags_complets = []
 	var debut: int = arc_complet.size()
 	var faites: int = 0
+	# UNE TRANCHE PERDUE N'EST PAS UNE HISTOIRE PERDUE (2026-09-08). Un `break` sur le premier
+	# abandon condamnait TOUTES les tranches suivantes : la nuit du 08/09 a mis onze beats sur seize
+	# au banc pour une seule tranche manquée (beats 5 a 15 ; seul le climax a survecu, parce qu'il
+	# lit la derniere entree de l'arc quelle qu'elle soit). Or un abandon est presque toujours une
+	# collision passagere — le moteur est mono-place et la resolution du beat courant passe devant.
+	# On ne renonce donc qu'apres DEUX abandons de suite. Cout maximal si le moteur est vraiment
+	# mort : une tranche de plus, soit ARC_TRANCHE_BUDGET_S de rab sur une nuit de trente minutes.
+	var abandons_consecutifs: int = 0
 	while debut < total:
 		# `tranches_max` > 0 : on ne fait que ce nombre de tranches et on rend la main (l'ouverture
 		# est attendue par l'appelant, le reste suivra en fond).
@@ -2346,10 +2357,28 @@ func _prepare_arc_corps(scenario: Dictionary, tranches_max: int) -> void:
 		if str(_run_thread.get("title", "")) != title:
 			return
 		if morceau.is_empty():
-			# Épuisé pour de bon : on garde ce qui est écrit, le reste ira au secours — et on le DIT.
-			push_warning("[MerlinScenario] arc — tranche %d-%d abandonnée (budget ou échecs épuisés) : le secours prendra ces scènes"
-					% [debut + 1, fin])
-			break
+			abandons_consecutifs += 1
+			if abandons_consecutifs >= ARC_ABANDONS_MAX:
+				# Épuisé pour de bon : on garde ce qui est écrit, le reste ira au secours — et on le DIT.
+				# Les parenthèses ne sont pas décoratives : `%` lie plus fort que `+`, donc sans
+				# elles le format s'appliquerait à la SECONDE moitié du texte, qui n'a pas de champ.
+				push_warning(("[MerlinScenario] arc — %d tranches abandonnées de suite (la dernière "
+						+ "%d-%d) : le secours prendra les scènes restantes")
+						% [abandons_consecutifs, debut + 1, fin])
+				break
+			# ON PASSE À LA SUIVANTE. Ces quatre beats-là iront au secours, et eux seuls : rien ne
+			# dit que la tranche d'après échouera aussi, et l'expérience dit le contraire.
+			push_warning("[MerlinScenario] arc — tranche %d-%d abandonnée (%d/%d) : on tente la suivante"
+					% [debut + 1, fin, abandons_consecutifs, ARC_ABANDONS_MAX])
+			for i in range(debut, fin):
+				arc_complet.append("")            # trou explicite : le secours ecrira ces scenes-la
+				tags_complets.append(picked[i] if i < picked.size() else [])
+			_run_thread["arc"] = arc_complet.duplicate()
+			_run_thread["arc_tags"] = tags_complets.duplicate(true)
+			debut = fin
+			faites += 1
+			continue
+		abandons_consecutifs = 0   # une tranche écrite efface l'ardoise : on ne compte que le CONSÉCUTIF
 		for i in morceau.size():
 			arc_complet.append(morceau[i])
 			tags_complets.append(tags_tranche[i] if i < tags_tranche.size() else [])

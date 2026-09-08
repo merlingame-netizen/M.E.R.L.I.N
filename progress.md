@@ -3875,3 +3875,23 @@ Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_ca
 `valider.py` refuse toute quête qui nommerait une rune que le jeu ne fabrique pas. La bible §2.2
 est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
 régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.
+
+## 2026-09-08 — v57 : une tranche d'arc perdue ne coûte plus toute la fin de la quête
+
+La première nuit sous v55 a mis ONZE beats sur seize au banc. La cause était nommée depuis le
+crible du 06/09 sans avoir été corrigée : l'arc s'écrit par tranches de quatre beats, et un
+`break` sur le premier abandon condamnait toutes les tranches suivantes. Beats 5 à 15 au secours ;
+seul le climax survivait, parce qu'il lit la dernière entrée de l'arc quelle qu'elle soit.
+
+On ne renonce désormais qu'après DEUX abandons de suite, et une tranche écrite remet le compteur
+à zéro. Le piège de la correction n'est pas le compteur : c'est l'ALIGNEMENT. En passant à la
+tranche suivante il faut réserver la place des beats perdus, sinon les scènes remontent d'un cran
+et le beat 9 reçoit celle du beat 5. Un décalage silencieux est pire qu'un beat au banc : le banc
+se voit dans le verdict, le décalage ne se voit nulle part. `test_arc.gd` le garde.
+
+Ce que v55 a donné, mesuré sur la nuit : gestes sans dé de 80 % à 31 %, climax au dé, deux
+éclatantes contre zéro. Ce qu'il n'a pas donné : l'intégrité n'a pas bougé, parce que le bot
+couvre 1,38 tag en moyenne là où ma simulation supposait 1,04 — à 1,38 il faut un 3 aux dés pour
+échouer. Le taux de 6 % que j'avais annoncé vaut pour un joueur qui couvre moins bien ; il n'est
+pas faux, sa population l'était. Le bot deviendra faillible (tâche #39) pour que la nuit mesure
+une traversée vraisemblable et non un plafond.
