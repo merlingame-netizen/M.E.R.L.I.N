@@ -3,7 +3,7 @@ id: 003
 titre: La dixième quête : quel lieu, quelle figure ?
 domaine: lore
 ouverte: 2026-09-08
-etat: ouverte
+etat: tranchee
 ---
 
 ## La fourche
@@ -51,4 +51,4 @@ corpus à Brocéliande et aux Falaises ; il faudrait la rouvrir.
 la figure la plus forte qui n'ait pas encore de traversée.
 
 ## Réponse
-_En attente._
+**Tranchée le 2026-09-08 : A.** tranchée avec Claude en session, 08/09

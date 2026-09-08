@@ -3,7 +3,7 @@ id: 002
 titre: D'où vient l'argent, et qu'achète-t-il ?
 domaine: regles
 ouverte: 2026-09-08
-etat: ouverte
+etat: tranchee
 ---
 
 ## La fourche
@@ -60,4 +60,4 @@ qu'aux sentiers ; une session.
 soin — une économie n'a de demande que si quelque chose manque, et rien ne manque encore.
 
 ## Réponse
-_En attente._
+**Tranchée le 2026-09-08 : C.** tranchée avec Claude en session, 08/09 ; A quand un joueur manquera de soin

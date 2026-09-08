@@ -3,7 +3,7 @@ id: 001
 titre: Que reçoit le perdant ?
 domaine: regles
 ouverte: 2026-09-08
-etat: ouverte
+etat: tranchee
 ---
 
 ## La fourche
@@ -54,4 +54,4 @@ qu'on tient).
 existe déjà dans `verdict_partie.py` (gestes sûrs, éclatantes, intégrité minimale).
 
 ## Réponse
-_En attente._
+**Tranchée le 2026-09-08 : A.** tranchée avec Claude en session, 08/09
