@@ -9,6 +9,7 @@ var line_w: float = 2.5
 # N4-RUNES (2026-07-11) : >= 0 = mode RUNE OGHAM INVENTÉE (le _draw dessine le motif procédural
 # via draw_rune_on au lieu du glyphe nommé). -1 = mode glyphe nommé historique (menu, ornements).
 var rune_pattern: int = -1
+var rune_reveal: float = 1.0   # 08/09 : part du glyphe tracée (0 = rien, 1 = tout) — la rune s'écrit trait par trait
 
 # N4-RUNES : tag canon -> motif de REPLI (cartes de présentation de greffe/talent, pips de slot).
 # La rune du CONCEPT quand la carte n'a pas de motif propre. Clés normalisées (MerlinTags.to_canon).
@@ -42,30 +43,48 @@ static func pattern_for_tag(tag: String) -> int:
 # Plages DISJOINTES (revue de code N4, MEDIUM-2) :
 #   0-24  = runes canon simples ; 25-49 = runes canon à marque-point (sommet de tige) ;
 #   50-74 = motifs de TAG-CONCEPT, marqués d'un ANNEAU gravé au pied de la tige (jamais confondus).
-static func draw_rune_on(ci: CanvasItem, center: Vector2, half_h: float, pattern: int, col: Color, w: float) -> void:
+## 08/09 — `reveal` (0..1) trace la rune TRAIT PAR TRAIT : la tige d'abord (du haut vers le bas sur
+## le premier tiers), puis chaque trait dans l'ordre, l'anneau ou le point en dernier. À 1, tout.
+static func draw_rune_on(ci: CanvasItem, center: Vector2, half_h: float, pattern: int, col: Color, w: float,
+		reveal: float = 1.0) -> void:
 	var p: int = maxi(pattern, 0)
 	var series: int = p % 5
 	var count: int = 1 + int(float(p) / 5.0) % 5
 	var len_x: float = half_h * 0.55
-	ci.draw_line(center + Vector2(0.0, -half_h), center + Vector2(0.0, half_h), col, w, true)
+	var r: float = clampf(reveal, 0.0, 1.0)
+	var f_tige: float = clampf(r / 0.35, 0.0, 1.0)
+	if f_tige > 0.0:
+		ci.draw_line(center + Vector2(0.0, -half_h), center + Vector2(0.0, -half_h + 2.0 * half_h * f_tige), col, w, true)
 	var span: float = half_h * 1.2
+	var part: float = 0.6 / float(count)
 	for i in count:
+		var f_i: float = clampf((r - 0.35 - float(i) * part) / part, 0.0, 1.0)
+		if f_i <= 0.0:
+			continue
 		var t: float = 0.5 if count == 1 else float(i) / float(count - 1)
 		var y: float = -span * 0.5 + span * t
 		match series:
 			0:  # traits perpendiculaires à DROITE de la tige
-				ci.draw_line(center + Vector2(0.0, y), center + Vector2(len_x, y), col, w, true)
+				ci.draw_line(center + Vector2(0.0, y), center + Vector2(len_x * f_i, y), col, w, true)
 			1:  # traits perpendiculaires à GAUCHE
-				ci.draw_line(center + Vector2(-len_x, y), center + Vector2(0.0, y), col, w, true)
+				ci.draw_line(center + Vector2(-len_x, y), center + Vector2(-len_x + len_x * f_i, y), col, w, true)
 			2:  # traits TRAVERSANTS perpendiculaires
-				ci.draw_line(center + Vector2(-len_x, y), center + Vector2(len_x, y), col, w, true)
+				ci.draw_line(center + Vector2(-len_x, y), center + Vector2(-len_x + 2.0 * len_x * f_i, y), col, w, true)
 			3:  # traits traversants OBLIQUES (gravure inclinée)
-				ci.draw_line(center + Vector2(-len_x, y + len_x * 0.35),
-					center + Vector2(len_x, y - len_x * 0.35), col, w, true)
-			4:  # CHEVRONS : pointe sur la tige, branches vers la droite
-				ci.draw_polyline(PackedVector2Array([
-					center + Vector2(len_x, y - len_x * 0.45), center + Vector2(0.0, y),
-					center + Vector2(len_x, y + len_x * 0.45)]), col, w, true)
+				var a3: Vector2 = center + Vector2(-len_x, y + len_x * 0.35)
+				var b3: Vector2 = center + Vector2(len_x, y - len_x * 0.35)
+				ci.draw_line(a3, a3.lerp(b3, f_i), col, w, true)
+			4:  # CHEVRONS : pointe sur la tige, branches vers la droite — deux segments, l'un après l'autre
+				var c0: Vector2 = center + Vector2(len_x, y - len_x * 0.45)
+				var c1: Vector2 = center + Vector2(0.0, y)
+				var c2: Vector2 = center + Vector2(len_x, y + len_x * 0.45)
+				if f_i < 0.5:
+					ci.draw_line(c0, c0.lerp(c1, f_i * 2.0), col, w, true)
+				else:
+					ci.draw_line(c0, c1, col, w, true)
+					ci.draw_line(c1, c1.lerp(c2, (f_i - 0.5) * 2.0), col, w, true)
+	if r < 0.97:
+		return
 	if p >= TAG_PATTERN_BASE:
 		# Plage tag-concept (50-74) : ANNEAU gravé au pied de la tige, marque propre de la plage.
 		ci.draw_arc(center + Vector2(half_h * 0.35, half_h * 0.82), maxf(w * 1.1, 2.4),
@@ -139,6 +158,11 @@ func setup(p_glyph: String, p_color: Color = MerlinVisual.INK, p_width: float = 
 
 
 # N4-RUNES : bascule la vue en mode rune ogham (motif procédural, voir draw_rune_on).
+func set_rune_reveal(v: float) -> void:
+	rune_reveal = clampf(v, 0.0, 1.0)
+	queue_redraw()
+
+
 func setup_rune(p_pattern: int, p_color: Color = MerlinVisual.INK, p_width: float = 2.5) -> void:
 	rune_pattern = maxi(p_pattern, 0)
 	line_color = p_color
@@ -154,7 +178,7 @@ func _draw() -> void:
 	if rune_pattern >= 0:  # N4-RUNES : mode rune ogham (grand glyphe gravé, cartes-runes)
 		# fix flake bugres : appel SANS préfixe de classe (l'auto-référence MerlinGlyph. dans son
 		# propre _draw créait une arête de dépendance inutile pour le résolveur GDScript).
-		draw_rune_on(self, c, minf(s.x, s.y) * 0.45, rune_pattern, line_color, line_w)
+		draw_rune_on(self, c, minf(s.x, s.y) * 0.45, rune_pattern, line_color, line_w, rune_reveal)
 		return
 	var r: float = minf(s.x, s.y) * 0.34
 	match glyph:

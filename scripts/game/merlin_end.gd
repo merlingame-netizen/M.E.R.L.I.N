@@ -23,6 +23,8 @@ var _epilogue: RichTextLabel
 var _epilogue_panel: PanelContainer  # capte le clic pour skip-typewriter / advance (parité merlin_game.gd)
 var _state_lbl: Label
 var _merlin_lbl: Label = null   # la formule de Merlin sous le titre (lexique, 08/09)
+var _fond: MerlinSceneArt = null
+var _anneaux: MerlinAnneauxFin = null   # 08/09 : intégrité et corruption dessinées en arcs
 var _recap_box: VBoxContainer = null  # P2 (chantier 2) : bloc récap gravure (VOIE + stats + fragment)
 var _continue_btn: Button
 var _tw: Tween
@@ -55,6 +57,8 @@ func _run_end() -> void:
 		var cle: String = {"mort": "fin.mort", "corrompu": "fin.corruption"}.get(et, "fin.victoire")
 		_merlin_lbl.text = MerlinLexique.tirer(cle)
 	_state_lbl.text = "Intégrité finale : %d/10    ·    Corruption finale : %d" % [run.integrite, run.corruption]
+	if _anneaux != null:
+		_anneaux.montrer(int(run.integrite), int(run.corruption))
 	_fill_recap(run)  # P2 (chantier 2) : VOIE + récap du build + fragment (l'écran de fin donne envie de relancer)
 
 	# Épilogue procédural INSTANTANÉ, puis enrichissement LLM en arrière-plan (jamais bloquant).
@@ -94,7 +98,13 @@ func _build_ui() -> void:
 
 	# v10.21 (goal uniformisation) — MÊME monde vivant que le menu derrière l'écran de fin (dimmé
 	# davantage : le bilan doit dominer, la forêt respire encore derrière — elle a « pris sa part »).
-	add_child(MerlinOrnament.scene_backdrop(0.30))
+	# 08/09 : le biome se CONSTRUIT derrière l'écran de fin (silhouette d'encre, quatre secondes).
+	_fond = MerlinOrnament.scene_backdrop(0.30)
+	add_child(_fond)
+	if not MerlinVisual.reduced_motion:
+		_fond.set_decor_reveal(0.0)
+		var rvl: Tween = create_tween()
+		rvl.tween_method(_fond.set_decor_reveal, 0.0, 1.0, 4.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -165,6 +175,9 @@ func _build_ui() -> void:
 	_recap_box.add_theme_constant_override("separation", 10)
 	recap_panel.add_child(_recap_box)
 
+	_anneaux = MerlinAnneauxFin.new()
+	_anneaux.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	root.add_child(_anneaux)
 	_state_lbl = Label.new()
 	_state_lbl.add_theme_color_override("font_color", COL_DIM)
 	_state_lbl.add_theme_font_size_override("font_size", 24)
@@ -280,6 +293,14 @@ func _animate_entrance() -> void:
 	_fade_in(_title_lbl, 0.00, 0.50)
 	if _merlin_lbl != null:
 		_fade_in(_merlin_lbl, 0.15, 0.50)
+		# 08/09 : la formule s'écrit à la plume, lettre à lettre, après le titre.
+		if not MerlinVisual.reduced_motion:
+			_merlin_lbl.visible_characters = 0
+			var plume: Tween = create_tween()
+			plume.tween_interval(0.6)
+			plume.tween_property(_merlin_lbl, "visible_characters", _merlin_lbl.text.length(), 1.6).set_trans(Tween.TRANS_LINEAR)
+	if _anneaux != null:
+		_fade_in(_anneaux, 0.60, 0.40)
 	_fade_in(_epilogue_panel, 0.25, 0.55)
 	_fade_in(_state_lbl, 0.50, 0.40)
 	if _recap_box != null and _recap_box.get_parent() is CanvasItem:

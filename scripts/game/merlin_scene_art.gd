@@ -30,6 +30,12 @@ var _redraw_acc: float = 0.0  # accumulateur du throttle de redessin (R121 : dec
 # v10.18 (menu Phase 2) — densité de motes + parallaxe + aura de curseur, pilotés par merlin_menu.gd.
 var _mote_density: float = 1.0
 var _parallax: Vector2 = Vector2.ZERO
+# 08/09 — LE DÉCOR EN PROFONDEUR : trois plans qui glissent avec la souris (en jeu, sans câblage
+# par scène) et au changement de beat (`glisser`). La lune est le plan le plus lointain, les
+# nappes de brume le plus proche.
+var _parallax_souris_amp: float = 0.0
+var _parallax_cible: Vector2 = Vector2.ZERO
+var _parallax_beat: Vector2 = Vector2.ZERO
 var _cursor_pos: Vector2 = Vector2.ZERO
 var _cursor_inside: bool = false
 
@@ -241,6 +247,20 @@ func set_mote_density(factor: float) -> void:
 func set_parallax(offset: Vector2) -> void:
 	_parallax = offset
 	queue_redraw()
+
+
+## En jeu : la souris fait glisser les plans d'au plus `amp` pixels, sans câblage par scène.
+func set_parallax_souris(amp: float) -> void:
+	_parallax_souris_amp = maxf(0.0, amp)
+
+
+## Au changement de beat : les plans partent d'un côté et reviennent — on avance dans le monde.
+func glisser(vers: Vector2, duree: float = 1.3) -> void:
+	if MerlinVisual.reduced_motion:
+		return
+	_parallax_beat = vers
+	var tw: Tween = MerlinTween.retween(self, "glisser")
+	tw.tween_property(self, "_parallax_beat", Vector2.ZERO, duree * MerlinVisual.motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 # Curseur (coordonnées locales au node) + dedans/dehors → aura GOLD douce près du curseur dans _draw.
@@ -533,6 +553,14 @@ func set_time_of_day(hour: int) -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _parallax_souris_amp > 0.0 and not MerlinVisual.reduced_motion and size.x > 4.0:
+		var m: Vector2 = get_local_mouse_position()
+		if Rect2(Vector2.ZERO, size).grow(size.y).has_point(m):
+			var norm: Vector2 = Vector2(clampf(m.x / size.x - 0.5, -0.5, 0.5) * 2.0, clampf(m.y / size.y - 0.5, -0.5, 0.5) * 2.0)
+			_parallax_cible = -norm * _parallax_souris_amp
+		_parallax = _parallax.lerp(_parallax_cible + _parallax_beat, clampf(delta * 3.5, 0.0, 1.0))
+	elif _parallax_beat != Vector2.ZERO:
+		_parallax = _parallax_beat
 	_halo_phase += delta * (HALO_SPEED_THINK if _thinking else HALO_SPEED_IDLE)
 	if _posture_retour > 0.0:
 		_posture_retour -= delta
@@ -694,6 +722,14 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2(0.0, h * 0.52), Vector2(w, h * 0.20)), Color(horizon_l.r, horizon_l.g, horizon_l.b, 0.5 * dr), true)
 	var horizon_l2: Color = sky_col.lerp(MerlinVisual.CREAM, 0.08)
 	draw_rect(Rect2(Vector2(0.0, h * 0.62), Vector2(w, h * 0.10)), Color(horizon_l2.r, horizon_l2.g, horizon_l2.b, 0.5 * dr), true)
+	# 08/09 — LA LUEUR D'HORIZON SELON L'HEURE : cinq bandes de plus en plus chaudes vers la ligne
+	# d'horizon, dorées à l'aube et au crépuscule (_tod_moon_warm), bleutées la nuit. Un dégradé sans
+	# dégradé : des rectangles, dans la palette.
+	var lueur: Color = sky_col.lerp(MerlinVisual.GOLD, 0.10 + 0.30 * _tod_moon_warm).lerp(MerlinVisual.RARE_BLUE, 0.10 * (1.0 - _tod_moon_warm))
+	for bi in 5:
+		var bf: float = float(bi) / 4.0
+		var by: float = h * (0.44 + 0.05 * float(bi))
+		draw_rect(Rect2(Vector2(0.0, by), Vector2(w, h * 0.06)), Color(lueur.r, lueur.g, lueur.b, (0.03 + 0.05 * bf) * dr), true)
 	# v10.21 — ÉTOILES scintillantes (positions déterministes, twinkle par phase) — la nuit vit aussi in-game.
 	if _animated:
 		for sti in 14:
@@ -702,7 +738,7 @@ func _draw() -> void:
 			var tw_a: float = (0.10 + 0.16 * maxf(sin(_t * (0.7 + fmod(stf, 0.6)) + stf * 2.3), 0.0)) * dr
 			if rm:
 				tw_a *= 0.5
-			draw_circle(sp2 + _parallax * 0.3, 1.4 + fmod(stf * 0.7, 1.2), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, tw_a))
+			draw_circle(sp2 + _parallax * 0.15, 1.4 + fmod(stf * 0.7, 1.2), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, tw_a))
 	# v10.21 — COLLINES LOINTAINES (forêt uniquement) : bande silhouette douce derrière les arbres.
 	if _biome == "foret" and _stage(0.05, 0.35) > 0.01:
 		var hills: PackedVector2Array = PackedVector2Array()
@@ -710,14 +746,20 @@ func _draw() -> void:
 		for hi2 in h_steps + 1:
 			var hx: float = float(hi2) / float(h_steps) * w
 			var hy: float = h * 0.74 + sin(hx * 0.006 + 1.3) * h * 0.030 + sin(hx * 0.017 + 4.0) * h * 0.012
+			hy += (1.0 - _stage(0.05, 0.35)) * h * 0.10  # 08/09 : les collines se LÈVENT à la construction
 			hills.append(Vector2(hx, hy) + _parallax * 0.25)
 		hills.append(Vector2(w, h))
 		hills.append(Vector2(0.0, h))
 		if MerlinVisual.polygon_drawable(hills):  # #52 : garde sur tout polygone généré
 			draw_colored_polygon(hills, Color(COL_SIL.r, COL_SIL.g, COL_SIL.b, 0.30 * _stage(0.05, 0.35)))
 
-	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.5  # parallaxe : la lune = couche lointaine
+	var moon_c: Vector2 = Vector2(w * 0.5, h * 0.40) + _parallax * 0.10  # parallaxe : la lune est le plan le plus lointain
 	var moon_r: float = minf(w, h) * (0.17 if _watch_eyes else 0.13)  # lune agrandie en mode œil-lune (lisibilité)
+	# 08/09 — LA LUNE SE REMPLIT COMME UNE GOUTTE D'ENCRE à la construction du décor : elle gonfle un
+	# peu au-delà de sa taille puis se pose. À décor construit, facteur 1 : rien ne change.
+	var goutte: float = _stage(0.22, 0.50)
+	if goutte < 1.0:
+		moon_r *= goutte * goutte * (1.0 + 0.22 * sin(goutte * PI))
 	_moon_c_last = moon_c
 	var halo_col: Color = COL_MOON.lerp(_halo_tint, _halo_tint_a * 0.85)  # le verdict teinte le halo, brièvement
 
@@ -800,7 +842,7 @@ func _draw() -> void:
 			var ff: float = float(fi)
 			var fh: float = h * (0.10 + 0.045 * fmod(ff * 0.6180339887, 1.0))
 			var fa: float = (0.30 + 0.08 * fmod(ff * 0.3819660113, 1.0)) * fdr
-			_tree(Vector2(w * fx, h * 0.78) + _parallax * 0.25, fh, w, fa, 40 + fi, 0)
+			_tree(Vector2(w * fx, h * 0.78) + _parallax * 0.35, fh, w, fa, 40 + fi, 0)
 
 	# Background trees (with reactive sway) : alpha = decor_reveal (boot : decor cache en gros plan yeux)
 	if _biome == "foret" and _stage(0.25, 0.60) > 0.01:
@@ -811,12 +853,12 @@ func _draw() -> void:
 		# PLAN MEDIAN : 6 arbres (avant 4), seeds EXPLICITES et distincts. Le corridor x [0.38, 0.62]
 		# reste vide : lune, yeux de Merlin (set_watch_eyes) et eventail des god rays y vivent, et c'est
 		# de l'information lisible au sens du pilier EVIDENT.
-		_tree(Vector2(w * 0.12, h), h * 0.74, w, tdr, 1, 1)
-		_tree(Vector2(w * 0.27, h), h * 0.60, w, tdr, 2, 1)
-		_tree(Vector2(w * 0.34, h), h * 0.46, w, tdr * 0.82, 3, 1)
-		_tree(Vector2(w * 0.70, h), h * 0.50, w, tdr * 0.82, 4, 1)
-		_tree(Vector2(w * 0.80, h), h * 0.66, w, tdr, 5, 1)
-		_tree(Vector2(w * 0.91, h), h * 0.78, w, tdr, 6, 1)
+		_tree(Vector2(w * 0.12, h) + _parallax * 0.55, h * 0.74, w, tdr, 1, 1)
+		_tree(Vector2(w * 0.27, h) + _parallax * 0.55, h * 0.60, w, tdr, 2, 1)
+		_tree(Vector2(w * 0.34, h) + _parallax * 0.55, h * 0.46, w, tdr * 0.82, 3, 1)
+		_tree(Vector2(w * 0.70, h) + _parallax * 0.55, h * 0.50, w, tdr * 0.82, 4, 1)
+		_tree(Vector2(w * 0.80, h) + _parallax * 0.55, h * 0.66, w, tdr, 5, 1)
+		_tree(Vector2(w * 0.91, h) + _parallax * 0.55, h * 0.78, w, tdr, 6, 1)
 		# Menhir — point d'intérêt : avant-dernier étage
 		if _stage(0.50, 0.80) > 0.01:
 			_menhir(Vector2(w * 0.66, h * 0.46), Vector2(w * 0.052, h * 0.40), _stage(0.50, 0.80))
@@ -972,7 +1014,8 @@ func _draw() -> void:
 		if alpha <= 0.004:
 			continue
 		var m_w: float = w * float(ml["width"])
-		var m_x: float = w * 0.5 - m_w * 0.5
+		# 08/09 : les nappes DÉRIVENT (une lente respiration horizontale) et sont le plan le plus proche.
+		var m_x: float = w * 0.5 - m_w * 0.5 + (sin(_t * float(ml["speed"]) * 0.35 + float(li) * 1.7) * w * 0.05 if _animated else 0.0) + _parallax.x * 0.7
 		var m_y: float = h * float(ml["y"])
 		var m_th: float = h * float(ml["th"])
 		var drift: float = (_t * float(ml["speed"])) if _animated else 0.0
@@ -1320,6 +1363,16 @@ func _draw_falaises(w: float, h: float, dr: float, rm: bool) -> void:
 	var sea: Color = MerlinVisual.SCENE_BG.lerp(MerlinVisual.RARE_BLUE, 0.30)
 	draw_rect(Rect2(Vector2(0.0, sea_top), Vector2(w, h - sea_top)), Color(sea.r, sea.g, sea.b, 0.85 * sdr), true)
 	draw_rect(Rect2(Vector2(w * 0.47, sea_top), Vector2(w * 0.06, h - sea_top)), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, 0.05 * sdr), true)
+	# 08/09 — LE REFLET DE LA LUNE : des traînées courtes sous la lune, qui miroitent sur l'horloge et
+	# pâlissent en descendant. Le plan est celui de la lune (elle bouge peu).
+	var rx: float = w * 0.5 + _parallax.x * 0.10
+	for ri in 11:
+		var rf: float = float(ri) / 10.0
+		var ry: float = sea_top + (h - sea_top) * (0.04 + 0.90 * rf)
+		var shimmer: float = (sin(_t * (1.4 + rf) + float(ri) * 1.9) if (_animated and not rm) else 0.3)
+		var rl: float = w * (0.012 + 0.030 * rf) * (0.75 + 0.25 * shimmer)
+		var ra2: float = (0.16 - 0.12 * rf) * (0.7 + 0.3 * shimmer) * sdr
+		draw_line(Vector2(rx - rl + shimmer * 4.0, ry), Vector2(rx + rl + shimmer * 4.0, ry), Color(COL_MOON.r, COL_MOON.g, COL_MOON.b, ra2), 2.0, true)
 	for wi in 3:
 		var wf: float = float(wi)
 		var wy: float = sea_top + (h - sea_top) * (0.18 + 0.28 * wf)

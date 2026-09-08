@@ -430,6 +430,7 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		# 08/09 — LE DÉCOR ANNONCE LE BEAT : l'Épreuve assombrit la lune et couche les arbres, le
 		# Dilemme épaissit la brume, le Climax fait souffler la forêt, la Rencontre fait battre la lune
 		# (sauf si un pilier arrive : sa propre réaction prime, plus bas). L'Exploration reste calme.
+		_scene_art.glisser(Vector2(-16.0, 0.0))  # 08/09 : on avance dans le monde — les plans glissent
 		match btype:
 			"Epreuve", "Épreuve":
 				_scene_art.dim_moon()
@@ -2363,6 +2364,10 @@ func _keyboard_confirm() -> bool:
 
 
 func _on_typewriter_done() -> void:
+	# 08/09 — L'ENCRE SÈCHE : le texte revient à sa pleine encre en une seconde.
+	if _tw_target != null and is_instance_valid(_tw_target) and _tw_target.modulate.a < 0.999:
+		var seche: Tween = MerlinTween.retween(_tw_target, "encre")
+		seche.tween_property(_tw_target, "modulate:a", 1.0, 0.9 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
 	# v11-V2b — fin de frappe de l'INTRO : rien à piloter (« Accepter ✦ » attend en Z4).
 	if _intro_open:
 		_set_caret(false)
@@ -3249,6 +3254,7 @@ func _typewriter(txt: String, animate: bool = true, target: RichTextLabel = null
 	var added: int = n - start  # nombre de caractères réellement animés (l'issue seule en continuation)
 	# P3 (chantier 2) — vitesse lue depuis le pack lecture (Lent/Normal/Rapide) au lieu du 30 c/s figé.
 	var dur: float = clampf(float(added) / MerlinVisual.typewriter_cps(), 0.8, 10.0)
+	lbl.modulate.a = 0.86  # 08/09 : l'encre fraîche est un peu plus pâle ; elle sèche à la fin de la frappe
 	_tw = create_tween()
 	_tw.tween_property(lbl, "visible_characters", n, dur)
 	_tw.finished.connect(_on_typewriter_done)
@@ -3329,8 +3335,8 @@ func _show_intro_popup() -> void:
 	_set_encart_phase(MerlinVisual.MERLIN_SPEECH_BORDER)
 	# Z3 : le fil porte le cadrage court (titre révélé d'emblée, cadrage au typewriter via from_chars R128).
 	MerlinVisual.swap_zone(_situ_panel, func() -> void:
-		_typewriter(_intro_bbcode(str(_intro_data["intro"])), true, _situation_text,
-			str(_intro_data["title"]).length() + 2)
+		# 08/09 : le TITRE s'écrit aussi, lettre à lettre en or (from_chars 0), avant le cadrage.
+		_typewriter(_intro_bbcode(str(_intro_data["intro"])), true, _situation_text, 0)
 		_show_skip_hint()
 		if _caret != null:
 			_caret.text = "▶ clic pour tout lire")
@@ -3741,11 +3747,15 @@ func _build_ui() -> void:
 	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
 	_scene_art.set_watch_eyes(true)  # v10.20 : les yeux de Merlin vivent dans la LUNE et suivent le curseur
 	_scene_art.set_biome(str(get_node("/root/MerlinRun").biome))  # v10.22 : le monde choisi au menu
+	_scene_art.set_parallax_souris(6.0)  # 08/09 : les plans glissent avec la souris
 	# v10.22 (user) — le paysage se CONSTRUIT à l'entrée de scène (rampe reveal → étages du décor).
 	if not MerlinVisual.reduced_motion:
 		_scene_art.set_decor_reveal(0.0)
 		var rvl: Tween = create_tween()
-		rvl.tween_method(_scene_art.set_decor_reveal, 0.0, 1.0, 1.4 * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		# 08/09 : à l'ouverture d'une quête (beat 0), le paysage se construit en trois secondes — les étages
+		# existaient, ils passaient trop vite pour se voir. En reprise de partie, la rampe courte d'avant.
+		var duree_decor: float = 3.2 if int(get_node("/root/MerlinRun").beat_index) == 0 else 1.4
+		rvl.tween_method(_scene_art.set_decor_reveal, 0.0, 1.0, duree_decor * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# Z3 ENCART crème 348 px FIXE (v11-V2a : plus AUCUN SIZE_EXPAND_FILL vertical — la grille ne
 	# reflow jamais). Porte chaque situation/issue ; bordure teintée par phase (_set_encart_phase).
@@ -3755,6 +3765,7 @@ func _build_ui() -> void:
 	_situ_sb = _cream_style()
 	_situ_panel.add_theme_stylebox_override("panel", _situ_sb)
 	root.add_child(_situ_panel)
+	_situ_panel.add_child(MerlinParchemin.new())  # 08/09 : grain, fibres et bords du papier, sous le texte
 	var inner: VBoxContainer = VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 6)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE

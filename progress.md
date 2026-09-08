@@ -3876,6 +3876,38 @@ Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_ca
 est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
 régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.
 
+## 2026-09-08 — Les attentes deviennent des scènes, et le rendu prend de la profondeur
+
+- Décisions (AskUserQuestion, tout retenu) : la carte à l'encre pendant que Merlin rêve, le tissage
+  pendant qu'il cherche l'issue, le décor en profondeur, le papier et l'encre de l'encart, les
+  runes tracées trait par trait, le chemin du beat en encre, le boot qui se dessine, l'ouverture
+  de la quête, l'écran de fin, « Merlin trace ton sentier ». Tout procédural, dans la palette, sur
+  l'horloge (les attentes tournent à 5 images par seconde).
+- **MerlinCarteEncre** (sélection) : trois traits depuis l'orbe vers trois horizons, asymptote à
+  90 % sans nouvelle, fermés à l'arrivée de chaque titre ; après le choix, le trait choisi se
+  prolonge vers l'horizon, les autres s'effacent, le décor du monde se construit derrière.
+- **MerlinTissage** (fusion) : seize fils de chaîne de la lune à l'encart, huit de trame, encre
+  sombre sur le parchemin, crème au-dessus du monde ; les yeux suivent les fils ; l'issue déchire
+  le tissu en motes. La barre a disparu, la légende passe sous l'encart.
+- **Profondeur** (`merlin_scene_art.gd`) : parallaxe à la souris en jeu (`set_parallax_souris`)
+  et glissement de 16 px au changement de beat (`glisser`) ; la lune plan le plus lointain, les
+  arbres du plan médian à 0,55, les nappes de brume à 0,7 et qui dérivent ; lueur d'horizon selon
+  l'heure ; reflet de la lune sur la mer aux Falaises ; à la construction, la lune se remplit
+  comme une goutte et les collines se lèvent.
+- **MerlinParchemin** : grain, fibres et bords irréguliers sous le texte de l'encart ; l'encre
+  fraîche à 86 % sèche en une seconde à la fin de la frappe.
+- **Runes trait par trait** (`draw_rune_on` avec `reveal`) : tige puis traits, à la distribution.
+- **Frise** (`merlin_beat_map.gd`) : un sentier d'encre qui ondule, et un Voyageur qui marche
+  d'un beat au suivant.
+- **Boot** : l'acte de construction passe de 2,2 à 3,4 s. **Ouverture** : le titre s'écrit
+  lettre à lettre, le paysage se construit en 3,2 s au beat 0. **Fin** : le biome se construit
+  derrière, deux anneaux (MerlinAnneauxFin) se dessinent, la formule s'écrit à la plume.
+- Preuves : sondes `probe_carte_capture`, `probe_attentes_capture`, `probe_transitions_capture`
+  sous xvfb (toutes passées) ; captures dans docs/captures (attente_carte_encre,
+  attente_trace_ton_sentier, attente_tissage, fin_anneaux, encart_papier).
+- À juger en mouvement sur la VM : la carte et le tissage à 5 images par seconde, la marche du
+  Voyageur sur la frise (0,6 s), la goutte de lune au boot.
+
 ## 2026-09-08 — 001 Le perdant reçoit quelque chose : le draft au monde, le talent au temps
 
 - Les trois fourches tranchées avec Maxime en session (001 → A, 002 → C, 003 → A), gravées.

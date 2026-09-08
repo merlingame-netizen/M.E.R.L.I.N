@@ -131,16 +131,18 @@ func _draw() -> void:
 			_quest_diamond(Vector2(first.x - 18.0 - float(_quest_idx - 1 - qp) * 12.0, first.y), true)
 		for qf in (_quest_count - _quest_idx - 1):
 			_quest_diamond(Vector2(last.x + 18.0 + float(qf) * 12.0, last.y), false)
+	# 08/09 — LE SENTIER D'ENCRE : entre deux beats, un trait qui ondule (jamais une droite), tracé
+	# à mesure qu'on avance ; pendant l'avance, un petit Voyageur marche le long du trait.
 	for i in range(_total - 1):
-		var p0: Vector2 = _node_pos(i)
-		var p1: Vector2 = _node_pos(i + 1)
+		var pts: PackedVector2Array = _trait(i)
 		if i == _growth_idx and _growth < 1.0:
-			draw_line(p0, p1, COL_DIM, 2.0)
+			draw_polyline(pts, COL_DIM, 2.0, true)
 			if _growth > 0.0:
-				draw_line(p0, p0.lerp(p1, _growth), COL_INK, 2.0)
+				draw_polyline(_partie(pts, _growth), COL_INK, 2.2, true)
+				_voyageur(_le_long(pts, _growth))
 		else:
 			var col: Color = COL_INK if i < _current else COL_DIM
-			draw_line(p0, p1, col, 2.0)
+			draw_polyline(pts, col, 2.0 if i < _current else 1.6, true)
 	for i in _total:
 		var p: Vector2 = _node_pos(i)
 		if _draft_marks.has(i):
@@ -163,6 +165,48 @@ func _draw() -> void:
 		else:
 			draw_circle(p, NODE_R, COL_DIM)
 			draw_circle(p, NODE_R - 2.0, COL_FUTURE)
+
+
+## Le trait d'encre entre le beat i et le suivant : neuf points, deux ondes, une graine par segment.
+func _trait(i: int) -> PackedVector2Array:
+	var p0: Vector2 = _node_pos(i)
+	var p1: Vector2 = _node_pos(i + 1)
+	var out: PackedVector2Array = PackedVector2Array()
+	var d: Vector2 = p1 - p0
+	var n: Vector2 = Vector2(-d.y, d.x).normalized()
+	var ph: float = float(i) * 1.7
+	for k in 9:
+		var u: float = float(k) / 8.0
+		var env: float = sin(u * PI)
+		out.append(p0 + d * u + n * (sin(u * 5.0 + ph) * 2.2 + sin(u * 11.0 + ph * 2.0) * 0.8) * env)
+	return out
+
+
+func _partie(pts: PackedVector2Array, f: float) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	var pos: float = f * float(pts.size() - 1)
+	var n: int = int(floor(pos))
+	for k in mini(n + 1, pts.size()):
+		out.append(pts[k])
+	if n < pts.size() - 1:
+		out.append(pts[n].lerp(pts[n + 1], pos - float(n)))
+	if out.size() < 2:
+		out.append(out[0] + Vector2(0.5, 0.0))
+	return out
+
+
+func _le_long(pts: PackedVector2Array, f: float) -> Vector2:
+	var pos: float = f * float(pts.size() - 1)
+	var n: int = clampi(int(floor(pos)), 0, pts.size() - 2)
+	return pts[n].lerp(pts[n + 1], pos - float(n))
+
+
+## Le Voyageur : une tête ronde et une cape en pointe, trois pixels de haut, qui marche (un bob).
+func _voyageur(p: Vector2) -> void:
+	var bob: float = absf(sin(_growth * PI * 5.0)) * 1.6
+	var pied: Vector2 = p + Vector2(0.0, -3.0 - bob)
+	draw_colored_polygon(PackedVector2Array([pied + Vector2(-3.0, 0.0), pied + Vector2(3.0, 0.0), pied + Vector2(0.0, -8.0)]), COL_GOLD)
+	draw_circle(pied + Vector2(0.0, -9.5), 2.4, COL_GOLD)
 
 
 func _sparks_at_current() -> void:

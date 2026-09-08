@@ -57,6 +57,14 @@ func _run() -> void:
 			print("[TRANS] encart : repos=%s en vol=%s après=%s → %s" % [str(repos), str(en_vol), str(apres),
 				"revenu" if page_ok else "DÉCALÉ"])
 			en_jeu = en_jeu and page_ok and not en_vol.is_equal_approx(repos)
+	# 08/09 : le Voyageur qui marche sur le sentier d'encre de la frise, capturé en vol.
+	if en_jeu:
+		var carte: Variant = jeu.get("_beat_map")
+		if carte is Node and (carte as Node).has_method("animate_advance"):
+			(carte as Node).call("animate_advance", 4)
+			await create_timer(0.3).timeout
+			await _capturer("frise_voyageur_en_marche")
+			await create_timer(1.0).timeout
 	if en_jeu and jeu.has_method("_reagir_au_verdict"):
 		jeu.call("_reagir_au_verdict", {"die": 7, "total": 10, "dc": 9, "margin": 1}, "reussite")
 		await create_timer(0.6).timeout

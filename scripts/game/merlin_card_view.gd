@@ -66,6 +66,7 @@ var _sway_phase: float = 0.0
 var _sway_active: bool = false
 var _t: float = 0.0
 var _rarity_rank: int = 0
+var _glyph: MerlinGlyph = null   # 08/09 : le glyphe gravé, tracé trait par trait à l'arrivée en main
 var _panel_sb: StyleBoxFlat
 var _glow_col: Color = MerlinVisual.GOLD
 # v11-W2 — sélection SUR l'élément (le combo panel est supprimé) : bordure GOLD + levée +20 px,
@@ -165,6 +166,7 @@ func _build(role: String) -> void:
 	glyph.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	glyph.setup_rune(card.glyph_pattern(), COL_INK, 2.4 if _compact else 3.2)
 	v.add_child(glyph)
+	_glyph = glyph  # 08/09 : pour tracer la rune trait par trait à la distribution
 
 	# N4-RUNES : nom de RUNE CELTE inventé sous le glyphe (13 px, INK_DIM discret). Les pastilles
 	# de tags sont SUPPRIMÉES : le jargon quitte l'écran, l'affinité se lit à la preview (R120).
@@ -526,6 +528,10 @@ func deal_in(delay: float) -> void:
 	_tw.tween_property(self, "position", _base_pos, d).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_tw.tween_property(self, "scale", Vector2.ONE, d * 0.85).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_tw.tween_property(self, "rotation", _base_rot, d * 0.7).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	# 08/09 — LA RUNE SE TRACE en arrivant : tige puis traits, sur 1,4 fois la durée de vol.
+	if _glyph != null and is_instance_valid(_glyph) and not MerlinVisual.reduced_motion:
+		_glyph.set_rune_reveal(0.0)
+		_tw.tween_method(_glyph.set_rune_reveal, 0.0, 1.0, d * 1.4).set_delay(delay + d * 0.35).set_trans(Tween.TRANS_SINE)
 	_tw.chain().tween_callback(func() -> void:
 		_sway_active = not _compact
 		_sway_phase = _base_rot * 3.0
