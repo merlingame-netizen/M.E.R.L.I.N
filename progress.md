@@ -3876,6 +3876,23 @@ Le garde-fou : `regles.traits()` lit les seize traits de départ dans `merlin_ca
 est réécrite depuis le relevé du jeu lui-même — mon premier tableau, bâti à l'expression
 régulière, donnait de faux tags, et c'est le contrôle automatique qui l'a dit.
 
+## 2026-09-08 — L'ATELIER : le jeu se développe, Maxime ne tranche que les fourches
+
+- Constat de Maxime : trop de décisions en attente, un design plein de défauts. Décisions
+  (AskUserQuestion, deux tours) : des sessions Claude planifiées, une par jour, domaines en
+  rotation (règles, lore, écrans, outillage, revue le dimanche) ; seules les fourches qui changent
+  l'expérience du joueur remontent, trois ouvertes au plus ; une page « À trancher » dans le
+  Studio, gravée dans le dépôt ; retour par le canal du Courrier (la VM ne pousse pas) ; poussée
+  directe sur feat/practices-docs, les preuves comme garde-fou.
+- `docs/ATELIER.md` : le protocole de chaque session. `docs/decisions/README.md` : le format.
+- Trois fourches ouvertes : 001 que reçoit le perdant, 002 d'où vient l'argent, 003 la dixième
+  quête. Chacune avec l'état du code, deux à trois options, leur coût, une mesure, une
+  recommandation.
+- Côté outillage : `tools/decisions.py` (lister, vérifier, relever, graver, publier, courrier),
+  l'onglet Décider du Studio, et une Routine quotidienne à 9 h 30 UTC.
+- Ce que ça remplace : le Cycle Director d'avril (mort en AWAITING_HUMAN_DECISION) et les 70
+  propositions sans lecteur.
+
 ## 2026-09-08 — SENTIERS : le joueur peut enfin lancer une quête écrite
 
 - Décision (AskUserQuestion) : une entrée de menu à côté de CHRONIQUES, pas l'écran de sélection
