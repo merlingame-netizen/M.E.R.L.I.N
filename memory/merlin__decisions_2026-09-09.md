@@ -25,3 +25,13 @@
   toujours baisser), libellés hostile/méfiant/neutre/bien disposé/allié, lus par le portrait
   (« bien disposé · votre aide »), le Journal, et les prompts (scène et issue : « CE QUE LES
   ETRES SE RAPPELLENT DE VOUS »).
+
+## 2026-09-09 : 002 précisée et le coup double (AskUserQuestion)
+- 002 sur les quêtes générées : bourse visible mais figée, étal fermé (pas « cacher », pas « vente
+  seule »). Sur les sentiers écrits : tout ce que l'`effet` chiffre ET signe s'applique (gwenneg,
+  santé, corruption) ; « échec : … » ne vaut que pour ce degré ; un nombre non signé décrit un état.
+- Coup double : DC +3, éclatante dès +4 de marge, talent x2, jamais de geste sûr ; une fois par
+  sentier ; déclenché par un second trait posé quand la paire est déjà là ; bouton « Coup double ».
+- Rejetés : seconde tuile défaussée, coût en corruption, restriction aux Épreuves/Climax, blocage
+  avant le beat 3.
+- Bible des règles v1.5 (§2.4bis, §3.2, §3.2bis, §4).
