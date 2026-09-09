@@ -19,6 +19,7 @@ la sonde : rien n'est estimé.
 from __future__ import annotations
 
 import argparse
+import re
 import base64
 import html
 import json
@@ -37,8 +38,12 @@ def _img(chemin: pathlib.Path) -> str:
         return ""
 
 
+_BBCODE = re.compile(r"\[/?[a-z_]+(?:=[^\]]*)?\]")
+
+
 def _s(v) -> str:
-    return html.escape(str(v if v is not None else ""))
+    # Le jeu écrit du BBCode ([center], [i], [color=…]) : la page le retire, elle ne l'affiche pas.
+    return html.escape(_BBCODE.sub("", str(v if v is not None else "")).strip())
 
 
 def _duree(s: float) -> str:
