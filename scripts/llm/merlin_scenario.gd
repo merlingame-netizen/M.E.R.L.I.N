@@ -1029,6 +1029,14 @@ func _voice_prefix() -> String:
 	return p
 
 
+## 09/09 — ce que les figures rencontrées ont retenu du Voyageur (MerlinRun.figures_resume). Vide si rien.
+func _memoire_des_figures() -> String:
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run == null or not run.has_method("figures_resume"):
+		return ""
+	return str(run.call("figures_resume"))
+
+
 # Mémoire intra-run (R60) que Merlin peut « se souvenir » : vide en run neuf (new_run RAZ), peuplée sur
 # run repris (load_run) / beats avancés. Câble l'existant — pas de profil cross-run sur cette branche.
 func _build_memory_hint() -> String:
@@ -2187,7 +2195,7 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	var pj: Dictionary = MerlinPromptBuilder.scene_jit(
 		{"title": titre, "pitch": str(_run_thread.get("pitch", ""))},
 		btype, qn - 1, total, tags, precedent, issue_prec, fblock, _lieu_name(),
-		pool_display_list(pool_info))
+		pool_display_list(pool_info), _memoire_des_figures())
 	var r: Dictionary = await mn.generate(str(pj["system"]), str(pj["user"]), pj["opts"])
 	_scene_jit_qn = -1
 	if r.has("error"):
@@ -2495,6 +2503,7 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# personnages nommés de la scène réagissent — la pierre se fissure, le chevalier cesse de
 	# prier, les druides s'interrompent — pour un coût quasi identique (47 → 51 s, l'évaluation
 	# domine). « Les résolutions sont trop légères » : c'est ce palier qui répond.
+	_run_thread["figures"] = _memoire_des_figures()  # 09/09 : les êtres se souviennent
 	var p: Dictionary = MerlinPromptBuilder.resolution(situation, played_cards, res, _run_thread, RICHESSE_ISSUE)
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):

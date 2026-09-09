@@ -18,6 +18,8 @@ var _attitude: String = ""
 var _dit: String = ""
 var _t: float = 0.0
 var _visible_f: float = 0.0   # 0 = caché, 1 = posé (glisse + fondu)
+var _depuis: float = 99.0     # secondes depuis l'entrée (le liseré du médaillon s'allume à l'arrivée)
+var _teinte: Color = MerlinVisual.GOLD   # le tempérament : menace, supplique, moquerie, ou l'or
 var _nom_lbl: Label
 var _att_lbl: Label
 var _dit_lbl: RichTextLabel
@@ -52,13 +54,22 @@ func _ready() -> void:
 
 
 ## Pose le portrait : `qui` est une clé de MerlinProse.FIGURES (ou « inconnu »).
-func montrer(qui: String, nom: String, attitude: String, dit: String) -> void:
+## `memoire` (09/09) : ce que la figure a retenu du Voyageur (« allié · votre aide »), sous l'attitude.
+func montrer(qui: String, nom: String, attitude: String, dit: String, memoire: String = "") -> void:
 	_qui = qui if qui != "" else "inconnu"
 	_nom = nom if nom != "" else str(MerlinProse.NOMS_EN_CLAIR.get(_qui, "Une voix"))
 	_attitude = attitude
 	_dit = dit
+	_teinte = temperament(attitude)
+	_depuis = 0.0
 	_nom_lbl.text = _nom
-	_att_lbl.text = ("— " + attitude) if attitude != "" else ""
+	_nom_lbl.add_theme_color_override("font_color", _teinte)
+	var sous: PackedStringArray = PackedStringArray()
+	if attitude != "":
+		sous.append(attitude)
+	if memoire != "":
+		sous.append(memoire)
+	_att_lbl.text = ("— " + " · ".join(sous)) if not sous.is_empty() else ""
 	_dit_lbl.text = "[i]« %s »[/i]" % dit
 	visible = true
 	set_process(true)
@@ -70,7 +81,22 @@ func montrer(qui: String, nom: String, attitude: String, dit: String) -> void:
 	var tw: Tween = MerlinTween.retween(self, "portrait")
 	tw.set_parallel(true)
 	tw.tween_property(self, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(self, "_visible_f", 1.0, 0.36).from(0.0).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "_visible_f", 1.0, 0.42).from(0.0).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+## Le tempérament d'une attitude, en couleur : la menace en rouge, la supplique en violet, la
+## moquerie en or vif, la douceur en vert ; l'or du jeu pour tout le reste.
+static func temperament(attitude: String) -> Color:
+	var a: String = attitude.to_lower()
+	if a.contains("menac") or a.contains("menaç") or a.contains("colère") or a.contains("colere") or a.contains("furi") or a.contains("hostil"):
+		return MerlinVisual.EYE_ANGRY
+	if a.contains("suppli") or a.contains("triste") or a.contains("las") or a.contains("peur") or a.contains("inquiet"):
+		return MerlinVisual.VIOLET
+	if a.contains("moqu") or a.contains("malic") or a.contains("rieur") or a.contains("amus"):
+		return MerlinVisual.GOLD
+	if a.contains("doux") or a.contains("douce") or a.contains("bienveill") or a.contains("soulag") or a.contains("reconnaiss"):
+		return MerlinVisual.GREEN
+	return MerlinVisual.GOLD
 
 
 func cacher() -> void:
@@ -88,12 +114,13 @@ func cacher() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	_depuis += delta
 	queue_redraw()
 
 
 func _draw() -> void:
 	# La carte : sombre, liseré d'or, glissée depuis la gauche.
-	var dx: float = (1.0 - _visible_f) * -24.0
+	var dx: float = (1.0 - _visible_f) * -64.0   # 09/09 : elle vient de plus loin — de la main de Merlin
 	var cadre: Rect2 = Rect2(Vector2(dx, 0.0), size)
 	var fond: Color = MerlinVisual.BG_DEEP.lerp(MerlinVisual.MERLIN_SPEECH_BG, 0.35)
 	draw_rect(cadre, Color(fond.r, fond.g, fond.b, 0.96), true)
@@ -198,16 +225,13 @@ func _silhouette(qui: String, c: Vector2, r: float) -> void:
 			_robe(pied, r * 1.5, r * 0.32, corps)
 			draw_circle(pied + Vector2(0.0, -r * 1.45), r * 0.26, corps)
 	if _attitude != "":
-		# L'attitude teinte le liseré du médaillon : menace en rouge, supplique en violet, moquerie en or.
-		var a: String = _attitude.to_lower()
-		var col: Color = accent
-		if a.contains("menac") or a.contains("colère") or a.contains("colere") or a.contains("furi"):
-			col = MerlinVisual.EYE_ANGRY
-		elif a.contains("suppli") or a.contains("triste") or a.contains("las"):
-			col = MerlinVisual.VIOLET
-		elif a.contains("moqu") or a.contains("malic") or a.contains("rieur"):
-			col = MerlinVisual.GOLD
+		# Le tempérament teinte le liseré du médaillon (la même couleur que le nom).
+		var col: Color = _teinte
 		draw_arc(c, 44.0, -PI * 0.5, PI * 0.5, 24, Color(col.r, col.g, col.b, 0.8), 2.0, true)
+	# À l'ARRIVÉE : le médaillon s'allume d'un anneau d'or qui s'élargit et s'éteint en 0,7 s.
+	var flash: float = clampf(1.0 - _depuis / 0.7, 0.0, 1.0)
+	if flash > 0.01:
+		draw_arc(c, 50.0 + (1.0 - flash) * 10.0, 0.0, TAU, 40, Color(MerlinVisual.GOLD.r, MerlinVisual.GOLD.g, MerlinVisual.GOLD.b, flash * 0.9), 2.5, true)
 
 
 func _robe(pied: Vector2, haut: float, demi: float, col: Color) -> void:

@@ -75,6 +75,11 @@ var discard: Array = []
 var summary: String = ""
 var faits_marquants: Array = []
 var pnj_rencontres: Array = []
+# 09/09 (Maxime : « figures persistantes ») — LES ÊTRES SE SOUVIENNENT. Clé de figure (MerlinProse.FIGURES)
+# → {nom, disposition −3..3, dernier (ce qui s'est passé), beats [n]}. La disposition bouge avec le
+# degré du geste posé devant la figure ; COMBATTRE la fait toujours baisser. Lue par le portrait
+# (« allié · votre aide »), par le Journal, et par les prompts (l'être qui revient agit selon cela).
+var figures: Dictionary = {}
 var choix_cles: Array = []
 var cartes_notables: Array = []
 var archetype_scores: Dictionary = {}  # v10.11 : compteur des archétypes des cartes JOUÉES (→ Carte Destin)
@@ -368,6 +373,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	summary = ""
 	faits_marquants = []
 	pnj_rencontres = []
+	figures = {}
 	choix_cles = []
 	cartes_notables = []
 	archetype_scores = {}
@@ -1635,6 +1641,7 @@ func to_state_dict() -> Dictionary:
 		},
 		"faits_marquants": faits_marquants.duplicate(),
 		"pnj_rencontres": pnj_rencontres.duplicate(),
+		"figures": figures_resume(),
 		"choix_cles": choix_cles.duplicate(),
 		"cartes_notables_jouees": cartes_notables.duplicate(),
 	}
@@ -1646,6 +1653,104 @@ func _shuffle(arr: Array) -> void:
 		var tmp: Variant = arr[i]
 		arr[i] = arr[j]
 		arr[j] = tmp
+
+
+# --- 09/09 : LES FIGURES SE SOUVIENNENT ---
+
+const DISPOSITION_MIN: int = -3
+const DISPOSITION_MAX: int = 3
+const DISPOSITION_PAR_DEGRE: Dictionary = {"eclatante": 2, "reussite": 1, "partiel": 0, "echec": -1, "choix": 0}
+
+
+## Une figure est là dans la scène du beat `n` : on la note (sans rien décider de sa disposition).
+func figure_vue(cle: String, nom: String, n: int) -> void:
+	if cle == "" or cle == "inconnu":
+		return
+	if not figures.has(cle):
+		figures[cle] = {"nom": nom, "disposition": 0, "dernier": "", "beats": []}
+	var f: Dictionary = figures[cle]
+	if nom != "":
+		f["nom"] = nom
+	var beats: Array = f.get("beats", [])
+	if not beats.has(n):
+		beats.append(n)
+	f["beats"] = beats
+	figures[cle] = f
+
+
+## Le geste est résolu devant la figure : sa disposition bouge. Rend la nouvelle disposition.
+## COMBATTRE fait toujours baisser (on l'a affrontée), même en réussissant.
+func figure_reagit(cle: String, degre: String, verbe: String, n: int = -1) -> int:
+	if cle == "" or cle == "inconnu":
+		return 0
+	if not figures.has(cle):
+		figure_vue(cle, "", n)
+	var f: Dictionary = figures[cle]
+	var delta: int = int(DISPOSITION_PAR_DEGRE.get(degre, 0))
+	var dernier: String
+	if verbe == "COMBATTRE":
+		delta = -2 if degre == "echec" else -1
+		dernier = "un affrontement"
+	else:
+		match degre:
+			"eclatante", "reussite":
+				dernier = "votre aide"
+			"partiel":
+				dernier = "un demi-geste"
+			"echec":
+				dernier = "un échec devant elle"
+			_:
+				dernier = ""
+	f["disposition"] = clampi(int(f.get("disposition", 0)) + delta, DISPOSITION_MIN, DISPOSITION_MAX)
+	if dernier != "":
+		f["dernier"] = dernier
+	if n >= 0:
+		var beats: Array = f.get("beats", [])
+		if not beats.has(n):
+			beats.append(n)
+		f["beats"] = beats
+	figures[cle] = f
+	return int(f["disposition"])
+
+
+static func disposition_label(d: int) -> String:
+	if d <= -2:
+		return "hostile"
+	if d == -1:
+		return "méfiant"
+	if d == 0:
+		return "neutre"
+	if d == 1:
+		return "bien disposé"
+	return "allié"
+
+
+## Ce que le portrait dit sous le nom : « allié · votre aide ». Vide si la figure est nouvelle.
+func figure_memoire(cle: String) -> String:
+	if not figures.has(cle):
+		return ""
+	var f: Dictionary = figures[cle]
+	var d: int = int(f.get("disposition", 0))
+	var dernier: String = str(f.get("dernier", ""))
+	if d == 0 and dernier == "":
+		return ""
+	return disposition_label(d) + ((" · " + dernier) if dernier != "" else "")
+
+
+## Une ligne pour les prompts : « Kado le Cordier : allié (votre aide, moment 2) ; ... ». Vide si rien.
+func figures_resume() -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for cle in figures.keys():
+		var f: Dictionary = figures[cle]
+		var d: int = int(f.get("disposition", 0))
+		var dernier: String = str(f.get("dernier", ""))
+		if d == 0 and dernier == "":
+			continue
+		var nom: String = str(f.get("nom", cle))
+		var beats: Array = f.get("beats", [])
+		var quand: String = (", moment %d" % int(beats[beats.size() - 1])) if not beats.is_empty() else ""
+		parts.append("%s : %s (%s%s)" % [nom, disposition_label(d), dernier if dernier != "" else "rien encore", quand])
+	return " ; ".join(parts)
 
 
 # --- Sauvegarde (R73 : auto-save par beat) ---
@@ -1663,6 +1768,7 @@ func save() -> void:
 		"summary": summary,
 		"faits_marquants": faits_marquants,
 		"pnj_rencontres": pnj_rencontres,
+		"figures": figures,  # 09/09 : les êtres se souviennent (additif, défaut {} au load)
 		"choix_cles": choix_cles,
 		"cartes_notables": cartes_notables,
 		"archetype_scores": archetype_scores,
@@ -1725,6 +1831,7 @@ func load_run() -> bool:
 	summary = str(data.get("summary", ""))
 	faits_marquants = data.get("faits_marquants", [])
 	pnj_rencontres = data.get("pnj_rencontres", [])
+	figures = data.get("figures", {}) if data.get("figures", {}) is Dictionary else {}
 	choix_cles = data.get("choix_cles", [])
 	cartes_notables = data.get("cartes_notables", [])
 	archetype_scores = data.get("archetype_scores", {})

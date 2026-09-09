@@ -335,7 +335,8 @@ static func _regle_passe_issue() -> String:
 
 static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		req_tags: Array, precedent: String, issue_precedente: String,
-		faction_block: String = "", lieu: String = "Broceliande", pool_list: Array = []) -> Dictionary:
+		faction_block: String = "", lieu: String = "Broceliande", pool_list: Array = [],
+		memoire: String = "") -> Dictionary:
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
 	var role: String = _role_de_beat(btype, pos, total, title)
@@ -354,6 +355,9 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		fil += "\nSCENE PRECEDENTE (ne la reecris pas) : %s" % precedent.strip_edges()
 	if issue_precedente.strip_edges() != "":
 		fil += "\nCE QUE LE VOYAGEUR VIENT DE FAIRE ET SON RESULTAT : %s\nTa scene DECOULE de ce resultat : elle en porte la trace visible (une porte ouverte reste ouverte, un etre offense reste offense, une dette suit)." % issue_precedente.strip_edges()
+	# 09/09 — LES ETRES SE SOUVIENNENT : un etre deja croise revient avec ce qu'il a retenu.
+	if memoire.strip_edges() != "":
+		fil += "\nCE QUE LES ETRES SE RAPPELLENT DE VOUS : %s. Un etre qui revient AGIT selon cela (un allie aide, un hostile barre ou trompe)." % memoire.strip_edges()
 	# v35.6 — TÊTE STABLE d'abord (identité de quête, règles, pool : identiques d'un beat à
 	# l'autre → le cache de préfixe KV saute leur évaluation), le VARIABLE en queue (numéro,
 	# rôle, fil du récit). Et 2-3 phrases : course49 — 3 scènes finies en 95-108 s pour une
@@ -628,6 +632,10 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	var fil_p: String = str(run_thread.get("last_fil", "")).strip_edges()
 	if fil_p != "":
 		ctx += "CE QUI ATTENDAIT LE VOYAGEUR EN ARRIVANT : %s\n" % fil_p
+	# 09/09 — LES ETRES SE SOUVIENNENT (en queue : cela change a chaque beat).
+	var fig_p: String = str(run_thread.get("figures", "")).strip_edges()
+	if fig_p != "":
+		ctx += "CE QUE LES ETRES SE RAPPELLENT DE VOUS : %s. L'etre d'en face reagit selon cela.\n" % fig_p
 	# Longueur VARIABLE (user 2026-06-06 : « plus variable sur la longueur … quelquefois plus long
 	# selon le déroulé ») : ample aux MOMENTS FORTS (Climax ou réussite éclatante), brève sinon.
 	# La cible de phrases vit désormais dans la TÊTE STABLE du prompt (degré-neutre, pour le cache

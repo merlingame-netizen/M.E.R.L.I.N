@@ -59,6 +59,14 @@ func _run() -> void:
 			en_jeu = en_jeu and page_ok and not en_vol.is_equal_approx(repos)
 	if en_jeu:
 		await _capturer("portrait_kado")
+		# 09/09 : Kado se souvient — on lui prête une aide passée, on re-présente : le portrait porte
+		# « bien disposé · votre aide », et Merlin le présente (posture « presente »).
+		var run_p: Node = root.get_node("/root/MerlinRun")
+		if run_p.has_method("figure_reagit"):
+			run_p.call("figure_reagit", "kado", "reussite", "PARLER", 1)
+			jeu.call("_present_current_beat")
+			await create_timer(1.4).timeout
+			await _capturer("portrait_kado_memoire")
 		if jeu.has_method("_ouvrir_le_journal"):
 			jeu.call("_ouvrir_le_journal")
 			await create_timer(0.6).timeout

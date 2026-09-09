@@ -81,6 +81,10 @@ var _eye_mood_t: float = 0.0
 # v10.20 — Mode ŒIL-LUNE (in-game, user 2026-06-29) : les yeux de Merlin vivent DANS la lune (cercle
 # central) et suivent le curseur. La lune est agrandie ; les yeux du figure sont alors supprimés (doublon).
 var _watch_eyes: bool = false
+# 09/09 — MERLIN VISIBLE EN JEU : la silhouette se tient à gauche du décor, au premier plan, et
+# c'est elle qui porte les yeux (la lune redevient une lune). Il se penche quand le geste est posé,
+# recule à l'échec, lève le bâton à l'éclatante, présente la figure qui parle.
+var _merlin_en_jeu: bool = false
 
 # ── LE CORPS PARLE (08/09, décision de Maxime) : quatre postures interpolées, toujours en polygones
 # plats. `tilt` penche la tête (−1..1), `bow` la baisse (négatif = relève), `lean` penche la cape,
@@ -90,6 +94,10 @@ const POSTURES: Dictionary = {
 	"pensee":     {"tilt": 0.35, "bow": 0.18,  "lean": 0.15,  "staff": 0.1, "open": 0.94, "rise": 0.0},
 	"verdict":    {"tilt": 0.0,  "bow": -0.05, "lean": -0.10, "staff": 1.0, "open": 1.10, "rise": 0.4},
 	"revelation": {"tilt": -0.2, "bow": -0.20, "lean": 0.0,   "staff": 0.55, "open": 1.16, "rise": 0.7},
+	# 09/09 (Maxime : « Merlin visible en jeu ») — il RECULE à l'échec (tête baissée, cape rentrée, le
+	# bâton retombe) et il PRÉSENTE la figure qui parle (penché vers le portrait, bâton à demi levé).
+	"recul":      {"tilt": -0.25, "bow": 0.30, "lean": -0.35, "staff": 0.0, "open": 0.88, "rise": 0.0},
+	"presente":   {"tilt": 0.15, "bow": 0.02,  "lean": 0.28,  "staff": 0.35, "open": 1.05, "rise": 0.12},
 }
 var _posture: String = "attente"
 var _pose: Dictionary = POSTURES["attente"].duplicate()
@@ -356,6 +364,14 @@ func set_watch_eyes(on: bool) -> void:
 	queue_redraw()
 
 
+## 09/09 — Merlin debout dans le décor de jeu (à gauche, premier plan). Exclusif de l'œil-lune.
+func set_merlin_en_jeu(on: bool) -> void:
+	_merlin_en_jeu = on
+	if on:
+		_watch_eyes = false
+	queue_redraw()
+
+
 # Heuristique d'humeur depuis une réplique (zéro LLM) : "?"/interjections → surprise ; ton dur/colère/
 # corruption → angry ; sinon neutral. Statique → utilisable par tout appelant qui fait parler Merlin.
 static func mood_for_text(t: String) -> String:
@@ -574,7 +590,7 @@ func _process(delta: float) -> void:
 		_eye_mood_t -= delta
 		if _eye_mood_t <= 0.0:
 			_eye_mood = "neutral"  # retour au bleu brillant après la tenue d'humeur
-	if (_menu_decor or _watch_eyes) and not MerlinVisual.reduced_motion:
+	if (_menu_decor or _watch_eyes or _merlin_en_jeu) and not MerlinVisual.reduced_motion:
 		if _menu_decor:
 			_update_shooting_star(delta)
 		_update_merlin_gaze(delta)  # menu = suit la souris ; œil-lune in-game = suit le curseur (set_cursor)
@@ -873,7 +889,7 @@ func _draw() -> void:
 
 	# Figure — supprimée en mode œil-lune (in-game) : la présence de Merlin EST l'œil dans la lune ;
 	# la silhouette encapuchonnée occulterait les yeux (v10.20, capture QA).
-	if not _watch_eyes and (_beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme"):
+	if not _watch_eyes and not _merlin_en_jeu and (_beat == "Rencontre" or _beat == "Climax" or _beat == "Dilemme"):
 		_figure(Vector2(w * 0.5, h * 0.84), h * 0.50, w * 0.075)
 
 	# (v10.21 — la silhouette du pilier est dessinée APRÈS la brume : présence au premier plan, jamais délavée.)
@@ -1049,6 +1065,10 @@ func _draw() -> void:
 	# EXEMPTION L-a : la présence du PNJ est un INDICE D'ÉTAT → recul limité à −20 % (spec panel cap 0.80).
 	if _pilier_reveal > 0.01:
 		_draw_pilier(w, h, _decor_reveal * (1.0 - _recess * 0.20))
+	# 09/09 — MERLIN EN JEU : à gauche, devant la brume, plus petit que dans le menu (la bande fait
+	# 200 px). Ses yeux sont sur lui ; la lune n'en a plus. Il entre avec le décor (_fig_reveal).
+	if _merlin_en_jeu and _fig_reveal > 0.01:
+		_figure(Vector2(w * 0.072, h * 0.985), h * 0.68, w * 0.033)
 
 	# v10.21 — FEUILLES qui tombent (quads tournoyants, couleur saison ; hiver = flocons crème ronds).
 	# v10.22 — falaises : les particules deviennent des EMBRUNS crème ascendants ; menu neutre : rien.
@@ -1475,7 +1495,7 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	# des MANCHES sortent de la cape (la droite tient le bâton, la gauche est rentrée) ; l'ORBE ÉCLAIRE
 	# la cape de son côté (second ton, plat) ; l'ombre au sol FUIT LA LUNE. Toujours deux tons et les
 	# yeux bleus : rien de nouveau dans la palette, seulement des polygones.
-	var menu: bool = _menu_decor and _animated and not MerlinVisual.reduced_motion
+	var menu: bool = (_menu_decor or _merlin_en_jeu) and _animated and not MerlinVisual.reduced_motion
 	var tilt: float = float(_pose["tilt"])
 	var bow: float = float(_pose["bow"])
 	var lean: float = float(_pose["lean"])
@@ -1572,7 +1592,7 @@ func _figure(base_in: Vector2, height: float, half_w: float) -> void:
 	# v10.18 — Yeux MERLIN (menu) : 2 BARRES BLEUES VERTICALES lumineuses + lueur qui pulse (signature,
 	# user 2026-06-29). S'ALLUMENT EN DERNIER dans la matérialisation (a_eyes : grandissent + s'éclairent).
 	# v10.20 — en mode « œil-lune » (set_watch_eyes), les yeux vivent dans la LUNE (dessinés en _draw).
-	if _menu_decor and not _watch_eyes:
+	if (_menu_decor or _merlin_en_jeu) and not _watch_eyes:
 		_fig_head = head_c  # lu par _update_merlin_gaze (frame suivante) pour viser la souris
 		_fig_hr = hr
 		_draw_eyes(head_c, hr, a_eyes, tilt * 0.35)

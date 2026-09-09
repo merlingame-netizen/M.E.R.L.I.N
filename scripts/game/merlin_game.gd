@@ -96,6 +96,8 @@ var _intro_accept_btn: Button = null  # bouton « Accepter ✦ » (Z4) — cross
 var _intro_data: Dictionary = {}      # titre/pitch/objectif figés → recomposition à l'enrichissement LLM
 var _portrait: MerlinPortrait = null    # 09/09 : la figure qui parle, en médaillon sur l'encart
 var _journal_overlay: Control = null    # 09/09 : le Journal de quête (objectif + déroulé)
+var _figure_du_beat: String = ""        # 09/09 : la figure présente dans la scène du beat (clé MerlinProse.FIGURES)
+var _verbe_du_geste: String = ""        # 09/09 : le verbe posé au resolve (lu à l'issue, quand la sélection est vidée)
 var _pulse_tw: Tween
 var _prev_integrite: int = -999  # pour animer les deltas de jauges (-999 = pas encore initialisé)
 var _prev_corruption: int = -999
@@ -477,6 +479,20 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	if dial_ecrit != "":
 		parole = {"qui": MerlinProse.figure_dans(narration_brute), "nom": "", "attitude": "",
 			"dit": dial_ecrit.trim_prefix("«").trim_suffix("»").strip_edges(), "reste": narration_brute}
+	# 09/09 — LA FIGURE DU BEAT est notée (elle se souviendra du geste posé devant elle).
+	_figure_du_beat = MerlinProse.figure_dans(narration_brute)
+	if _figure_du_beat != "inconnu" and run.has_method("figure_vue"):
+		run.call("figure_vue", _figure_du_beat, str(MerlinProse.NOMS_EN_CLAIR.get(_figure_du_beat, "")),
+			int(situ.get("qn", run.beat_index + 1)))
+	if _scene_art != null:
+		match btype:
+			"Climax":
+				_scene_art.set_posture("revelation", 3.0)
+			"Dilemme":
+				_scene_art.set_posture("pensee", 2.6)
+			_:
+				if _scene_art.posture() != "attente":
+					_scene_art.set_posture("attente")
 	if str(parole.get("dit", "")) != "":
 		texte_scene = str(parole.get("reste", narration_brute))
 		_montrer_le_portrait(parole)
@@ -870,6 +886,9 @@ func _on_resolve() -> void:
 	if _state != 1 or _selected_action == null or _selected_trait == null:
 		return
 	_state = 2
+	_verbe_du_geste = str(_selected_action.get("card_name")) if _selected_action != null else ""
+	if _scene_art != null:
+		_scene_art.set_posture("pensee")  # 09/09 : Merlin se penche sur le geste posé, jusqu'au verdict
 	_set_resolve_armed(false)  # Z6 : désarmé (alpha 0.35 + disabled) — le bouton ne disparaît jamais
 	_clear_debt_refuse_btn()  # la voie « Refuser » cède devant la résolution normale choisie
 	_clear_convert_offer()  # R168 (chantier 2) — une offre non tranchée cède devant la résolution choisie
@@ -1138,6 +1157,12 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	if _rn != null:
 		MerlinJournal.beat_resolu(degree, narration,
 			int(_rn.get("integrite")), int(_rn.get("corruption")))
+		# 09/09 — LA FIGURE SE SOUVIENT : celle de la scène, ou celle que l'issue nomme.
+		var cle_f: String = _figure_du_beat
+		if cle_f == "" or cle_f == "inconnu":
+			cle_f = MerlinProse.figure_dans(narration)
+		if cle_f != "" and cle_f != "inconnu" and _rn.has_method("figure_reagit"):
+			_rn.call("figure_reagit", cle_f, degree, _verbe_du_geste, int(_current_situation.get("qn", int(_rn.beat_index) + 1)))
 	var deg_col: Color = _degree_color(degree)
 	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)
 	# v10.21 (user 2026-06-30, R128) : l'issue s'écrit À LA SUITE de la situation, dans le MÊME fil de prose —
@@ -2791,8 +2816,18 @@ func _montrer_le_portrait(parole: Dictionary) -> void:
 	if _portrait == null or _situ_panel == null:
 		return
 	var r: Rect2 = _situ_panel.get_global_rect()
-	_portrait.global_position = r.position + Vector2(10.0, -MerlinPortrait.HAUTEUR * 0.62)
-	_portrait.montrer(str(parole.get("qui", "")), str(parole.get("nom", "")), str(parole.get("attitude", "")), str(parole.get("dit", "")))
+	# À DROITE de Merlin (il se tient à gauche du décor) : la carte part de sa main, elle ne le couvre pas.
+	_portrait.global_position = r.position + Vector2(176.0, -MerlinPortrait.HAUTEUR * 0.62)
+	# 09/09 — c'est Merlin qui tend le portrait : il se penche vers lui, bâton à demi levé ; et la
+	# figure arrive avec ce qu'elle a retenu du Voyageur (« allié · votre aide »).
+	if _scene_art != null:
+		_scene_art.set_posture("presente", 2.6)
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	var memoire: String = ""
+	var qui: String = str(parole.get("qui", ""))
+	if run != null and run.has_method("figure_memoire") and qui != "" and qui != "inconnu":
+		memoire = str(run.call("figure_memoire", qui))
+	_portrait.montrer(qui, str(parole.get("nom", "")), str(parole.get("attitude", "")), str(parole.get("dit", "")), memoire)
 
 
 # 09/09 — LE JOURNAL DE QUÊTE : l'objectif, puis le déroulé beat par beat (scène en une ligne, geste,
@@ -2818,8 +2853,13 @@ func _ouvrir_le_journal() -> void:
 			layer.queue_free())
 	layer.add_child(dim)
 	var panel: PanelContainer = PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(820, 600)
+	# Centré POUR DE VRAI : l'ancre centre seule fait grandir le panneau vers le bas-droite (la
+	# capture du 09/09 coupait « Rencontrés » et le bouton Fermer sous l'écran).
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var vp_j: Vector2 = get_viewport_rect().size
+	panel.custom_minimum_size = Vector2(minf(820.0, vp_j.x - 40.0), minf(600.0, vp_j.y - 40.0))
 	var psb: StyleBoxFlat = StyleBoxFlat.new()
 	psb.bg_color = MerlinVisual.PANEL
 	psb.border_color = MerlinVisual.GOLD
@@ -2840,7 +2880,7 @@ func _ouvrir_le_journal() -> void:
 	v.add_child(HSeparator.new())
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size = Vector2(0, 380)
+	scroll.custom_minimum_size = Vector2(0, 300)
 	v.add_child(scroll)
 	var liste: VBoxContainer = VBoxContainer.new()
 	liste.add_theme_constant_override("separation", 6)
@@ -2869,12 +2909,18 @@ func _ouvrir_le_journal() -> void:
 			var f: String = MerlinProse.figure_dans(t)
 			if f != "inconnu" and not figures.has(f) and t.to_lower().find(str((MerlinProse.FIGURES[f] as Array)[0])) != -1:
 				figures.append(f)
-	if not figures.is_empty():
+	if not figures.is_empty() or not (run.figures as Dictionary).is_empty():
 		v.add_child(HSeparator.new())
 		var fl: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
 		var noms: PackedStringArray = PackedStringArray()
+		# 09/09 — ce que chaque figure a retenu : « Kado le Cordier (allié · votre aide) ».
 		for f in figures:
-			noms.append(str(MerlinProse.NOMS_EN_CLAIR.get(f, f)))
+			if not (run.figures as Dictionary).has(f):
+				noms.append(str(MerlinProse.NOMS_EN_CLAIR.get(f, f)))
+		for cle in (run.figures as Dictionary).keys():
+			var fd: Dictionary = (run.figures as Dictionary)[cle]
+			var mem: String = str(run.call("figure_memoire", cle))
+			noms.append(str(fd.get("nom", MerlinProse.NOMS_EN_CLAIR.get(cle, cle))) + ((" (%s)" % mem) if mem != "" else ""))
 		fl.text = "Rencontrés : " + ", ".join(noms)
 		fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		v.add_child(fl)
@@ -2904,18 +2950,26 @@ func _reagir_au_verdict(res: Dictionary, deg: String) -> void:
 	var col: Color = _degree_color(deg)
 	if _scene_art != null and is_instance_valid(_scene_art):
 		_scene_art.set_halo_tint(col, 2.4)
+		# 09/09 — LE CORPS DE MERLIN RÉPOND : bâton brandi à l'éclatante, levé à la réussite, tête
+		# penchée au partiel, recul à l'échec. Puis il revient à l'attente.
 		match deg:
 			"eclatante":
+				_scene_art.set_posture("revelation", 3.2)
 				_scene_art.pulse_eye_widen(1.35, 1.2)
 				_scene_art.flash_moon()
 				_scene_art.trigger_gust()
 			"reussite":
+				_scene_art.set_posture("verdict", 2.4)
 				_scene_art.moon_pulse()
 			"partiel":
+				_scene_art.set_posture("pensee", 2.4)
 				_scene_art.thicken_mist()
 			"echec":
+				_scene_art.set_posture("recul", 2.8)
 				_scene_art.pulse_eye_widen(0.72, 1.4)
 				_scene_art.dim_moon()
+			_:
+				_scene_art.set_posture("attente")
 	_afficher_la_marge(res, deg, col)
 
 
@@ -3887,7 +3941,10 @@ func _build_ui() -> void:
 	_scene_art.custom_minimum_size = Vector2(0, 200)
 	root.add_child(_scene_art)
 	_scene_art.set_animated(true)  # v10.13 (B7) : couche ambiante GAME (halo lune + brume vivantes)
-	_scene_art.set_watch_eyes(true)  # v10.20 : les yeux de Merlin vivent dans la LUNE et suivent le curseur
+	# 09/09 (Maxime : « Merlin visible en jeu ») — il se tient à gauche du décor, ses yeux sur lui ; la
+	# lune redevient une lune. Il entre une fois le paysage construit (rampe de figure après le décor).
+	_scene_art.set_merlin_en_jeu(true)
+	_scene_art.set_figure_reveal(0.0)
 	_scene_art.set_biome(str(get_node("/root/MerlinRun").biome))  # v10.22 : le monde choisi au menu
 	_scene_art.set_parallax_souris(6.0)  # 08/09 : les plans glissent avec la souris
 	# v10.22 (user) — le paysage se CONSTRUIT à l'entrée de scène (rampe reveal → étages du décor).
@@ -3898,6 +3955,9 @@ func _build_ui() -> void:
 		# existaient, ils passaient trop vite pour se voir. En reprise de partie, la rampe courte d'avant.
 		var duree_decor: float = 3.2 if int(get_node("/root/MerlinRun").beat_index) == 0 else 1.4
 		rvl.tween_method(_scene_art.set_decor_reveal, 0.0, 1.0, duree_decor * MerlinVisual.motion()).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		rvl.tween_method(_scene_art.set_figure_reveal, 0.0, 1.0, 1.4 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
+	else:
+		_scene_art.set_figure_reveal(1.0)
 
 	# Z3 ENCART crème 348 px FIXE (v11-V2a : plus AUCUN SIZE_EXPAND_FILL vertical — la grille ne
 	# reflow jamais). Porte chaque situation/issue ; bordure teintée par phase (_set_encart_phase).

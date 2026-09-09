@@ -2,6 +2,28 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-09-09 (suite) : Merlin visible en jeu, les figures se souviennent, le portrait tempéré : FAIT
+
+Tranché par Maxime (AskUserQuestion) : graphique = Merlin visible en jeu ; mécaniques = figures
+persistantes + l'argent (002) + le geste combiné ; le portrait reste une carte ; commencer par
+Merlin visible + figures persistantes.
+
+- [x] MerlinSceneArt.set_merlin_en_jeu : Merlin debout à gauche du décor, premier plan, ses yeux sur lui (la lune
+      redevient une lune) ; entre avec le décor (figure_reveal) ; postures nouvelles « recul » et « presente »
+- [x] merlin_game : « pensee » au resolve, « revelation » à l'éclatante, « verdict » à la réussite, « pensee » au
+      partiel, « recul » à l'échec, « presente » quand il tend le portrait (posé à sa droite, 176 px), Climax/Dilemme
+- [x] MerlinRun.figures : figure_vue / figure_reagit (disposition −3..3 par degré, COMBATTRE fait baisser) /
+      disposition_label / figure_memoire / figures_resume ; sauvegardé, remis à zéro par new_run, dans to_state_dict
+- [x] Portrait : « — attitude · bien disposé · votre aide », tempérament coloré (menace rouge, supplique violet,
+      moquerie or, douceur vert), anneau d'or à l'arrivée, glisse depuis plus loin ; cédille de « menaçant » reconnue
+- [x] Prompts : « CE QUE LES ETRES SE RAPPELLENT DE VOUS » en queue de l'issue (run_thread.figures) et de la scène JIT
+      (paramètre memoire) ; MerlinScenario._memoire_des_figures
+- [x] Journal de quête : centré pour de vrai (Fermer était hors écran), « Rencontrés : Kado le Cordier (bien disposé ·
+      votre aide) »
+- [x] Preuves : tools/tests/test_figures.gd (16 ok) ; journal, sentier, arc, économie, progression verts ; sonde
+      transitions passée ; captures docs/captures/2026-09-09_merlin_en_jeu/ (portrait_kado_memoire, verdict_echec,
+      verdict_reussite, journal_de_quete)
+
 ## Session: 2026-09-09 : le récit lié au geste, les figures qui parlent, le Journal de quête, le tissage redessiné : FAIT
 
 Demande de Maxime : « trop de prose et de phrasé complexe, pas assez de lien entre les actions et les
