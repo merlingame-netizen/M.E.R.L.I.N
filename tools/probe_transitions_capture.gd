@@ -67,6 +67,11 @@ func _run() -> void:
 			jeu.call("_present_current_beat")
 			await create_timer(1.4).timeout
 			await _capturer("portrait_kado_memoire")
+		# 09/09 : le registre de continuité se lit dans le Journal (« Ce que vous savez »).
+		var run_j: Node = root.get_node("/root/MerlinRun")
+		if run_j.has_method("noter_acquis"):
+			run_j.call("noter_acquis", "Kado a menti sur le compte")
+			run_j.call("noter_acquis", "la corde est trop courte de deux brasses")
 		if jeu.has_method("_ouvrir_le_journal"):
 			jeu.call("_ouvrir_le_journal")
 			await create_timer(0.6).timeout
