@@ -99,6 +99,7 @@ static func charger(cle: String) -> Dictionary:
 			# au moment de la scène, avec la figure qui la dit ; l'issue reste l'issue.
 			"dial_ecrit": str(b.get("dial", "")).strip_edges(),
 			"issue_ecrite": str(b.get("issue", "")).strip_edges(),
+			"effet": str(b.get("effet", "")).strip_edges(),  # 002 : appliqué à la résolution (effet_chiffre)
 		}
 		if b.get("special") is Dictionary:
 			beat["special"] = (b["special"] as Dictionary).duplicate(true)
@@ -122,6 +123,63 @@ static func charger(cle: String) -> Dictionary:
 ## Exploration plutôt que de traverser tel quel : le moteur le classerait au tier 1 en silence.
 static func type_normalise(t: String) -> String:
 	return str(TYPES.get(t.strip_edges().to_lower(), "Exploration"))
+
+
+## 002 (09/09) — CE QUE L'EFFET ÉCRIT CHIFFRE. « gwenneg +6 — Kado paie… », « −2 santé · vous tenez le
+## battant », « +1 corruption », « échec : vous croyez qu'ils sont trois ». Seuls les nombres SIGNÉS
+## comptent (« santé 5 · 9 gwenneg » décrit un état, il ne s'applique pas) ; un morceau préfixé d'un
+## degré (« échec : », « partiel : ») ne vaut que pour ce degré. Le texte libre est rendu tel quel.
+## Rend {gwenneg, integrite, corruption, texte}.
+static func effet_chiffre(effet: String, degre: String) -> Dictionary:
+	var out: Dictionary = {"gwenneg": 0, "integrite": 0, "corruption": 0, "texte": ""}
+	var brut: String = effet.strip_edges()
+	if brut == "":
+		return out
+	var morceaux: PackedStringArray = PackedStringArray()
+	for m in brut.replace(" — ", " · ").replace(" - ", " · ").split("·"):
+		var t: String = m.strip_edges()
+		if t != "":
+			morceaux.append(t)
+	var re_deg: RegEx = RegEx.new()
+	re_deg.compile("^(échec|echec|partiel|réussite|reussite|éclatante|eclatante)\\s*:\\s*(.*)$")
+	var re_gw: RegEx = RegEx.new()
+	re_gw.compile("(?:gwenneg\\s*([+−\\-]\\s*\\d+))|(?:([+−\\-]\\s*\\d+)\\s*gwenneg)")
+	var re_sa: RegEx = RegEx.new()
+	re_sa.compile("([+−\\-]\\s*\\d+)\\s*(?:santé|sante|intégrité|integrite|vie)")
+	var re_co: RegEx = RegEx.new()
+	re_co.compile("([+−\\-]\\s*\\d+)\\s*corruption")
+	var textes: PackedStringArray = PackedStringArray()
+	for m in morceaux:
+		var t: String = m
+		var md: RegExMatch = re_deg.search(t.to_lower())
+		if md != null:
+			var d: String = md.get_string(1).replace("é", "e")
+			var degre_n: String = degre.to_lower().replace("é", "e")
+			if d != degre_n:
+				continue  # un effet d'un autre degré
+			t = t.substr(md.get_start(2)).strip_edges()
+		var chiffre: bool = false
+		var mg: RegExMatch = re_gw.search(t)
+		if mg != null:
+			out["gwenneg"] += _signe(mg.get_string(1) if mg.get_string(1) != "" else mg.get_string(2))
+			chiffre = true
+		var ms: RegExMatch = re_sa.search(t)
+		if ms != null:
+			out["integrite"] += _signe(ms.get_string(1))
+			chiffre = true
+		var mc: RegExMatch = re_co.search(t)
+		if mc != null:
+			out["corruption"] += _signe(mc.get_string(1))
+			chiffre = true
+		if not chiffre and t.length() >= 4:
+			textes.append(t)
+	out["texte"] = " · ".join(textes)
+	return out
+
+
+static func _signe(s: String) -> int:
+	var t: String = s.replace(" ", "").replace("−", "-")
+	return int(t)
 
 
 ## Le beat porte-t-il un choix jouable ? Deux à quatre propositions, pas une de plus.

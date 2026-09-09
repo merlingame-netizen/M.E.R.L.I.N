@@ -105,7 +105,13 @@ static var atouts_propres_cap: int = 2
 ## AJOUTÉ au DC de base, jamais à la composition des requis. Défaut 0 (zéro régression legacy).
 ## Retourne {degree, label, integrite_delta, corruption_delta, coverage, eclatante_bonus, sabotaged,
 ##           synergy, die, die_mod, die_rarity, total, dc, margin, success}.
-static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = [], diff: int = 2, skill_mod: int = 0, graft_bonus: int = 0, beat_type: String = "", dc_bonus: int = 0) -> Dictionary:
+# 09/09 — LE COUP DOUBLE (action + deux traits, une fois par sentier) : DC +3, l'éclatante dès +4 de
+# marge, jamais de geste sûr (un coup fort se joue au dé). Les tags des deux traits couvrent.
+const COUP_DOUBLE_DC: int = 3
+const COUP_DOUBLE_ECLAT: int = 4
+
+
+static func resolve(required: Array, played_cards: Array, antagonist_tags: Array = [], die: int = 0, bonus_tags: Array = [], diff: int = 2, skill_mod: int = 0, graft_bonus: int = 0, beat_type: String = "", dc_bonus: int = 0, coup_double: bool = false) -> Dictionary:
 	var played_tags: Array = []
 	for c in played_cards:
 		var tags: Array = _card_tags(c)
@@ -129,7 +135,7 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	if regle_plafond:
 		propres = mini(propres, atouts_propres_cap)
 	var mods: int = propres + COVER_PER_TAG * covered_n + synergy_bonus
-	var dc: int = int(DC_BY_DIFF.get(clampi(diff, 1, 3), DC_BY_DIFF[2])) + dc_bonus
+	var dc: int = int(DC_BY_DIFF.get(clampi(diff, 1, 3), DC_BY_DIFF[2])) + dc_bonus + (COUP_DOUBLE_DC if coup_double else 0)
 	# v34 — GESTE SÛR (Maxime 2026-08-19) : si la réussite est acquise MÊME au jet minimal (2),
 	# aucun dé — un sceau s'appose (merlin_fx). L'éclatante reste réservée aux VRAIS jets : le
 	# risque est le seul chemin vers l'éclat. Déterministe (mêmes entrées → même verdict) →
@@ -148,12 +154,14 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		# Le beat le plus dramatique de la quête était le seul sans dé (relecture du 07/09).
 		sur_permis = beat_type in ["Exploration", "Rencontre", "Dilemme"] \
 			and (diff <= 1 or req_n == 0 or (diff == 2 and covered_n >= req_n))
+	if coup_double:
+		sur_permis = false  # le coup double se joue toujours au dé
 	var geste_sur: bool = sur_permis and (2 + mods + m_sure) >= dc
 	var face: int = die if die >= 2 and die <= 12 else DIE_FALLBACK
 	var total: int = (2 + mods + m_sure) if geste_sur else (face + mods)
 	var margin: int = total - dc
 
-	var degree: String = REUSSITE if geste_sur else _degree_from_margin(margin, face)
+	var degree: String = REUSSITE if geste_sur else _degree_from_margin(margin, face, COUP_DOUBLE_ECLAT if coup_double else -1)
 
 	# Sabotage par tag antagoniste (R66) : dégrade d'un cran — APRÈS le jet (garde son sens : même
 	# un jet éclatant est amorti par un tag qui sabote la situation). Ne peut PAS annuler un nat 20 ?
@@ -194,6 +202,7 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 
 	return {
 		"degree": degree,
+		"coup_double": coup_double,
 		"label": LABELS.get(degree, degree),
 		"integrite_delta": integrite_delta,
 		"corruption_delta": corruption_delta,
@@ -235,12 +244,12 @@ static func roll_2d6(rng: RandomNumberGenerator) -> int:
 # v2-W1 — degré par la MARGE (total − DC) + planchers nat 1 / nat 20. `face` est déjà normalisé en
 # amont (1-20, ou DIE_FALLBACK si le call-site n'a pas de dé) → les planchers ne s'arment que sur un
 # vrai jet 1/20 ; un call-site sans dé (fallback 10) passe donc par la marge, jamais par un plancher.
-static func _degree_from_margin(margin: int, face: int) -> String:
+static func _degree_from_margin(margin: int, face: int, eclat_min: int = -1) -> String:
 	if face == 12:
 		return ECLATANTE   # R158 : « boxcars » 2d6 -> plancher eclatante (quels que soient les mods)
 	if face == 2:
 		return ECHEC       # R158 : « snake eyes » 2d6 -> plancher echec
-	if margin >= eclat_margin:
+	if margin >= (eclat_min if eclat_min >= 0 else eclat_margin):
 		return ECLATANTE
 	if margin >= 0:
 		return REUSSITE

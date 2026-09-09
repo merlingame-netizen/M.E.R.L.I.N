@@ -75,6 +75,39 @@ func _run() -> void:
 			if ov != null:
 				ov.queue_free()
 			await create_timer(0.3).timeout
+	# 09/09 : LE COUP DOUBLE armé — une tuile, deux cartes levées, le bouton qui dit « Coup double ».
+	if en_jeu:
+		var run_c: Node = root.get_node("/root/MerlinRun")
+		jeu.set("_choice_open", true)
+		jeu.set("_state", 1)
+		var acts: Array = run_c.actions
+		var vues: Array = []
+		# La main se distribue quand la scène finit de s'écrire : on l'attend (8 s au plus), sinon on la distribue.
+		for essai in 20:
+			vues = []
+			for c in (jeu.get("_hand_box") as Node).get_children():
+				if c is MerlinCardView and not c.is_queued_for_deletion():
+					vues.append(c)
+			if vues.size() >= 2:
+				break
+			if essai == 12 and jeu.has_method("_render_hand"):
+				jeu.call("_render_hand", false)
+			await create_timer(0.4).timeout
+		jeu.set("_choice_open", true)
+		jeu.set("_state", 1)
+		print("[TRANS] coup double : %d actions, %d vues de carte, main de %d" % [acts.size(), vues.size(), (run_c.hand as Array).size()])
+		if acts.size() > 0 and vues.size() >= 2:
+			jeu.call("_on_action_tile", acts[0])
+			jeu.call("_on_trait_card", (vues[0] as MerlinCardView).card)
+			jeu.call("_on_trait_card", (vues[1] as MerlinCardView).card)
+			await create_timer(0.8).timeout
+			print("[TRANS] coup double : bouton « %s », second trait %s" % [str((jeu.get("_resolve_btn") as Button).text),
+				"posé" if jeu.get("_selected_trait2") != null else "ABSENT"])
+			await _capturer("coup_double_arme")
+			jeu.call("_on_trait_card", (vues[1] as MerlinCardView).card)
+			jeu.call("_on_trait_card", (vues[0] as MerlinCardView).card)
+			jeu.call("_on_action_tile", acts[0])
+			await create_timer(0.3).timeout
 	# 08/09 : le Voyageur qui marche sur le sentier d'encre de la frise, capturé en vol.
 	if en_jeu:
 		var carte: Variant = jeu.get("_beat_map")

@@ -2,6 +2,23 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-09-09 (suite 2) : 002 appliquée et le coup double : FAIT
+
+Tranché par Maxime (AskUserQuestion) : bourse visible mais figée + étal fermé sur les quêtes générées ;
+tout l'effet chiffré du corpus s'applique sur les sentiers écrits ; coup double = DC +3, éclatante dès +4,
+talent x2, une fois par sentier, troisième tuile qui s'allume.
+
+- [x] 002 : MerlinRun.est_un_sentier_ecrit / argent_actif ; étal gardé par argent_actif (deux portes) ; MerlinSentier
+      charge `effet` ; MerlinSentier.effet_chiffre (signés seulement, préfixes de degré, texte libre) ;
+      MerlinRun.appliquer_effet_ecrit à la résolution, avant la lecture des deltas ; « (+X) » à côté de la bourse
+- [x] Coup double : MerlinResolution.resolve(..., coup_double) — COUP_DOUBLE_DC 3, COUP_DOUBLE_ECLAT 4, jamais sûr,
+      drapeau dans le résultat ; MerlinRun.coup_double_utilise / coup_double_disponible / gain_talent_points(double) ;
+      merlin_game : _selected_trait2, second clic = second trait, deux cartes levées, bouton « Coup double », bandeau
+      (cède à l'offre de conversion), les deux traits volent dans la fusion, Journal « Franchise + Ténacité »
+- [x] Bible des règles v1.5 : §2.4bis Le coup double, §3.2 002, §3.2bis Les figures se souviennent, §4 défaut corrigé
+- [x] Preuves : test_coup_double (12 ok), test_sentier (+7 cas effet_chiffre), économie, progression, journal, figures,
+      quête verts ; sonde transitions « Coup double » armé (docs/captures/2026-09-09_coup_double/coup_double_arme.png)
+
 ## Session: 2026-09-09 (suite) : Merlin visible en jeu, les figures se souviennent, le portrait tempéré : FAIT
 
 Tranché par Maxime (AskUserQuestion) : graphique = Merlin visible en jeu ; mécaniques = figures

@@ -62,6 +62,7 @@ var _current_situation: Dictionary = {}
 # Remplace l'ancien _combo Array (2 cartes de la main).
 var _selected_action: MerlinCard = null
 var _selected_trait: MerlinCard = null
+var _selected_trait2: MerlinCard = null  # 09/09 : le second trait du COUP DOUBLE (une fois par sentier)
 var _state: int = 0  # 0=loading 1=playing 2=resolving
 var _eye_cursor_acc: float = 0.0  # v10.20 — throttle du suivi curseur de l'œil-lune (yeux de Merlin)
 var _cap_last_ms: int = 0         # dev capture in-game
@@ -395,6 +396,7 @@ func _present_current_beat() -> void:
 	# l'affinité se lit au souligné feedforward des tuiles + à la preview de résolution (R120).
 	_selected_action = null
 	_selected_trait = null
+	_selected_trait2 = null
 	_set_resolve_armed(false)  # Z6 : le bouton reste VISIBLE, simplement désarmé (alpha 0.35)
 	_refresh_action_tiles()
 	# v10.10 (user 2026-06-06) : la SITUATION s'affiche SEULE dans l'encart central ; le choix ne
@@ -646,10 +648,25 @@ func _layout_fan() -> void:
 func _on_trait_card(card: MerlinCard) -> void:
 	if _state != 1 or not _choice_open:
 		return  # v11-V2a : zone estompée = choix fermé (l'alpha n'est pas une porte, _choice_open l'est)
-	_selected_trait = null if _selected_trait == card else card
+	# 09/09 — LE COUP DOUBLE (Maxime) : action + trait posés, le coup encore disponible → la carte
+	# suivante devient le SECOND trait. Re-clic sur l'un ou l'autre = on le retire.
+	var run_t: Node = get_node("/root/MerlinRun")
+	if card == _selected_trait:
+		_selected_trait = _selected_trait2
+		_selected_trait2 = null
+	elif card == _selected_trait2:
+		_selected_trait2 = null
+	elif _selected_trait == null:
+		_selected_trait = card
+	elif _selected_action != null and _selected_trait2 == null and run_t.coup_double_disponible():
+		_selected_trait2 = card
+	else:
+		_selected_trait = card
+		_selected_trait2 = null
 	for c in _hand_box.get_children():
 		if c is MerlinCardView and not c.is_queued_for_deletion():
-			(c as MerlinCardView).set_selected((c as MerlinCardView).card == _selected_trait)
+			var cc: MerlinCard = (c as MerlinCardView).card
+			(c as MerlinCardView).set_selected(cc == _selected_trait or cc == _selected_trait2)
 	_update_preview()
 	_refresh_redraw_btn()  # R168 (chantier 1) — l'affordance dépend de la carte sélectionnée
 
@@ -671,6 +688,7 @@ func _on_redraw_pressed() -> void:
 	if not run.redraw_one(str(_selected_trait.id)):
 		return
 	_selected_trait = null
+	_selected_trait2 = null
 	run.save()  # geste hors du save unique de _advance_to_next (pattern pacte/achat, R108)
 	_render_hand(true)  # la nouvelle carte arrive par le deal_in habituel (MerlinAudio.play_deal_sequence)
 	_update_preview()
@@ -786,10 +804,22 @@ func _update_preview() -> void:
 	if _selected_action == null or _selected_trait == null:
 		_set_resolve_armed(false)
 		_clear_convert_offer()  # R168 (chantier 2) — combo incomplet : jamais d'offre de conversion
+		_resolve_btn.text = "Résoudre"
 		return
 	var combo: Array = [_selected_action, _selected_trait]
+	var coup_double_p: bool = _selected_trait2 != null
+	if coup_double_p:
+		combo.append(_selected_trait2)
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var run_p: Node = get_node("/root/MerlinRun")
+	# 09/09 — le bouton dit le coup ; le bandeau dit ce qu'il coûte et ce qu'il donne.
+	_resolve_btn.text = "Coup double" if coup_double_p else "Résoudre"
+	# (pas de bandeau si une offre de conversion occupe déjà la ligne : les deux se chevauchaient)
+	if _pact_active_pk != "convert":
+		if coup_double_p:
+			_show_tuto_hint("Coup double armé : difficulté +3, éclatante dès +4, talent doublé.")
+		elif run_p.coup_double_disponible() and _choice_open:
+			_show_tuto_hint("Coup double : posez un second trait (une fois par sentier).")
 	# v2-W2/W3 — skill_mod = talent du VERBE ; graft_bonus = greffes « roll » posées sur l'action.
 	# La preview passe EXACTEMENT les mêmes arguments que la résolution (die, diff, skill_mod, graft_bonus) — R120.
 	var skill_mod_p: int = run_p.skill_mod_for(_selected_action)
@@ -804,7 +834,8 @@ func _update_preview() -> void:
 		run_p.blessed_bonus(combo),
 		int(_current_situation.get("difficulte", 2)), skill_mod_p, graft_bonus_p,
 		str(_current_situation.get("type", "")),  # R158 : + beat_type (nature) : preview = resolution (R120)
-		int(_current_situation.get("dc_bonus", 0)))  # v2-W1 (R165) : rampe de DC, meme dictionnaire fige que "difficulte" (R120)
+		int(_current_situation.get("dc_bonus", 0)),  # v2-W1 (R165) : rampe de DC, meme dictionnaire fige que "difficulte" (R120)
+		coup_double_p)  # 09/09 : preview = résolution, coup double compris
 	var was_disabled: bool = _resolve_btn.disabled
 	_set_resolve_armed(true)
 	# v11-V2a (dé-jargonnage) — l'indice de dé est SUPPRIMÉ : le liseré de la tuile porte déjà la
@@ -895,6 +926,10 @@ func _on_resolve() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var sc: Node = get_node("/root/MerlinScenario")
 	var combo: Array = [_selected_action, _selected_trait]  # [0] = action (contrat resolve R20)
+	var coup_double_r: bool = _selected_trait2 != null and run.coup_double_disponible()
+	if coup_double_r:
+		combo.append(_selected_trait2)
+		run.coup_double_utilise = true  # 09/09 : une fois par sentier
 	# LE GESTE SE NOTE ICI, AU MOMENT OU IL EST POSE. La chronique le lisait dans
 	# `_show_resolution`, où `_selected_action` et `_selected_trait` valent DEJA null : ils sont
 	# vidés une centaine de lignes plus haut, avant l'affichage. p93 l'a montré — neuf beats
@@ -902,7 +937,8 @@ func _on_resolve() -> void:
 	# mauvais moment ne rend pas une erreur : elle rend du vide, ce qui se lit comme une donnée.
 	MerlinJournal.beat_geste(
 		str(_selected_action.get("card_name")) if _selected_action != null else "",
-		str(_selected_trait.get("card_name")) if _selected_trait != null else "")
+		(str(_selected_trait.get("card_name")) if _selected_trait != null else "")
+			+ ((" + " + str(_selected_trait2.get("card_name"))) if coup_double_r else ""))
 	var reqs: Array = _current_situation.get("required_tags", [])
 	# v2-W2/W3 — mêmes arguments que la preview (die, diff, skill_mod=talent du verbe, graft_bonus=greffes roll) → R120.
 	var skill_mod_r: int = run.skill_mod_for(_selected_action)
@@ -916,7 +952,8 @@ func _on_resolve() -> void:
 		run.blessed_bonus(combo),
 		int(_current_situation.get("difficulte", 2)), skill_mod_r, graft_bonus_r,
 		str(_current_situation.get("type", "")),  # R158 : + beat_type (nature) : memes args que la preview (R120)
-		int(_current_situation.get("dc_bonus", 0)))  # v2-W1 (R165) : rampe de DC, meme dictionnaire fige que "difficulte" (R120)
+		int(_current_situation.get("dc_bonus", 0)),  # v2-W1 (R165) : rampe de DC, meme dictionnaire fige que "difficulte" (R120)
+		coup_double_r)  # 09/09 : le coup double, mêmes arguments que la preview
 	var played_cards: Array = combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
@@ -948,7 +985,10 @@ func _on_resolve() -> void:
 	# R158 : le « Pousser » est retire. La resolution s'applique TOUJOURS immediatement (partiel = un
 	# resultat en soi) ; la corruption/sante decoule de la scene, plus jamais d'un choix a payer.
 	run.apply_resolution(res)
-	run.gain_talent_points(str(res.get("degree", "")))  # points de talent au degre FINAL (reussite +1 / eclatante +2)
+	run.gain_talent_points(str(res.get("degree", "")), coup_double_r)  # points de talent au degre FINAL (reussite +1 / eclatante +2 ; coup double x2)
+	# 002 (09/09) — L'EFFET ÉCRIT DU SENTIER S'APPLIQUE ICI (gwenneg, santé, corruption chiffrés et
+	# signés ; le texte libre aux faits marquants). Avant la lecture des deltas : la vignette les voit.
+	var effet_ecrit: Dictionary = run.appliquer_effet_ecrit(str(_current_situation.get("effet", "")), str(res.get("degree", "")))
 	res["integrite_delta"] = int(run.get("integrite")) - int_before
 	res["corruption_delta"] = int(run.get("corruption")) - corr_before
 	var fx_effects: Array = []  # effets actifs déclenchés (HEAL/PURGE/DRAW) pour les glyphes de la vignette
@@ -972,7 +1012,7 @@ func _on_resolve() -> void:
 	# gain, il s'annonce à côté de la bourse.
 	var _gain_g: int = run.butin_du_beat(run.current_beat(), deg)
 	run.add_gwenneg(_gain_g)
-	_gain_gwenneg_recent = _gain_g
+	_gain_gwenneg_recent = _gain_g + maxi(0, int(effet_ecrit.get("gwenneg", 0)))  # 002 : le sentier qui paie s'annonce aussi
 	# Si ce beat est la reclamation de la Promesse (« Le créancier revient », muté par
 	# merlin_run._tick_pending_debts), la résolution normale règle AUSSI la dette (le refus
 	# explicite est une voie ALTERNATIVE, cf. _offer_debt_refusal/_on_debt_refuse).
@@ -989,9 +1029,11 @@ func _on_resolve() -> void:
 	# v11-W2 — capture des vues AVANT le clear : SEULE la vue du TRAIT vole dans la fusion (aspirée
 	# par MerlinFx) ; l'ACTION est une tuile permanente qui PULSE sur place pendant la séquence.
 	var trait_view: MerlinCardView = _find_card_view(_hand_box, _selected_trait)
+	var trait2_view: MerlinCardView = _find_card_view(_hand_box, _selected_trait2) if coup_double_r else null
 	var tile: MerlinActionView = _tile_for(_selected_action)
 	_selected_action = null
 	_selected_trait = null
+	_selected_trait2 = null
 	# v11-V2a : la MAIN s'estompe (ÉVIDENT : on lit l'issue) mais la rangée d'actions reste PLEINE
 	# alpha pendant la fusion — la tuile jouée pulse à 1.0 ; l'estompe de Z6 part APRÈS fx.run().
 	_set_hand_dimmed(true)
@@ -1005,6 +1047,8 @@ func _on_resolve() -> void:
 	var vues_du_combo: Array = []
 	if trait_view != null:
 		vues_du_combo.append(trait_view)
+	if trait2_view != null:
+		vues_du_combo.append(trait2_view)  # 09/09 : les deux traits volent dans la fusion
 	if tile != null:
 		tile.set_selected(false)
 		tile.queue_redraw()  # v11-W3 : compteurs de charges décrémentés → slots redessinés
@@ -1609,7 +1653,8 @@ func _advance_to_next() -> void:
 	var q_marchand: int = int(run.current_beat().get("quest", 0))
 	var titre_m: String = str((run.scenario as Dictionary).get("title", (run.scenario as Dictionary).get("titre", "")))
 	var etal_tire: bool = (absi(hash("etal:%s:%d" % [titre_m, q_marchand])) % 100) < 40
-	var force_merchant: bool = rencontre_beat and ((run.rencontre_count_this_run >= 2 and not run.merchant_seen_this_run) \
+	# 002 (09/09) — l'étal n'ouvre que sur un sentier écrit : sur une quête générée l'argent est figé.
+	var force_merchant: bool = run.argent_actif() and rencontre_beat and ((run.rencontre_count_this_run >= 2 and not run.merchant_seen_this_run) \
 			or (etal_tire and run.marchand_vu_quete != q_marchand))
 	if rencontre_beat and not force_merchant and not run.pilier_offering_done and not run.ended and run.has_graftable_action():
 		var pk: String = _current_offer_pilier()
@@ -1620,7 +1665,7 @@ func _advance_to_next() -> void:
 			await _present_pilier_offering(pk)
 			if not is_inside_tree():
 				return
-	if rencontre_beat and not rencontre_slot_used and not run.ended:
+	if rencontre_beat and not rencontre_slot_used and not run.ended and run.argent_actif():
 		_scene_epoch += 1
 		run.marchand_vu_quete = q_marchand  # v34 : un seul étal par quête tirée
 		await _present_merchant_stall()

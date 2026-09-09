@@ -80,6 +80,9 @@ var pnj_rencontres: Array = []
 # degré du geste posé devant la figure ; COMBATTRE la fait toujours baisser. Lue par le portrait
 # (« allié · votre aide »), par le Journal, et par les prompts (l'être qui revient agit selon cela).
 var figures: Dictionary = {}
+# 09/09 (Maxime : « le geste combiné ») — LE COUP DOUBLE : action + deux traits, UNE fois par
+# sentier. DC +3, l'éclatante dès +4 de marge, les points de talent doublés. Jamais de geste sûr.
+var coup_double_utilise: bool = false
 var choix_cles: Array = []
 var cartes_notables: Array = []
 var archetype_scores: Dictionary = {}  # v10.11 : compteur des archétypes des cartes JOUÉES (→ Carte Destin)
@@ -374,6 +377,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	faits_marquants = []
 	pnj_rencontres = []
 	figures = {}
+	coup_double_utilise = false
 	choix_cles = []
 	cartes_notables = []
 	archetype_scores = {}
@@ -1004,8 +1008,50 @@ func note_verb_played(action_card: Variant) -> void:
 # Gain de points de talent AU BEAT JOUÉ (001) : un point quel que soit le degré, deux sur une
 # éclatante. Appelé là où le degré est appliqué (merlin_game._on_resolve / le probe), à côté
 # d'apply_resolution. Celui qui rate apprend autant que celui qui réussit.
-func gain_talent_points(degree: String) -> void:
-	talent_points += TALENT_GAIN_ECLATANTE if degree == MerlinResolution.ECLATANTE else TALENT_GAIN_BEAT
+func gain_talent_points(degree: String, double: bool = false) -> void:
+	var gain: int = TALENT_GAIN_ECLATANTE if degree == MerlinResolution.ECLATANTE else TALENT_GAIN_BEAT
+	talent_points += gain * (2 if double else 1)  # 09/09 : le coup double paie double
+
+
+## 09/09 — le coup double n'existe qu'une fois par sentier, et jamais quand la traversée est finie.
+func coup_double_disponible() -> bool:
+	return not coup_double_utilise and not ended
+
+
+## 002 (tranché le 08/09, C, précisé le 09/09) — L'ARGENT NE VIT QUE SUR LES SENTIERS ÉCRITS. Sur une
+## quête générée la bourse reste visible mais figée et l'étal ne s'ouvre pas : le modèle ne sait pas
+## encore faire payer une figure. Le sentier écrit se reconnaît à sa clé `sentier` dans le scénario.
+func est_un_sentier_ecrit() -> bool:
+	return str(scenario.get("sentier", "")).strip_edges() != ""
+
+
+func argent_actif() -> bool:
+	return est_un_sentier_ecrit()
+
+
+## 002 — LES EFFETS ÉCRITS DU CORPUS S'APPLIQUENT (tout ce qui est chiffré et signé) : gwenneg ±N,
+## santé ±N, corruption ±N ; « échec : … » / « partiel : … » ne valent que pour ce degré ; le texte
+## libre va aux faits marquants. Rend ce qui a été appliqué {gwenneg, integrite, corruption, texte}.
+func appliquer_effet_ecrit(effet: String, degre: String) -> Dictionary:
+	var e: Dictionary = MerlinSentier.effet_chiffre(effet, degre)
+	var dg: int = int(e.get("gwenneg", 0))
+	if dg != 0 and argent_actif():
+		add_gwenneg(dg)
+	var di: int = int(e.get("integrite", 0))
+	if di != 0:
+		integrite = clampi(integrite + di, 0, _max_integrite())
+	var dc: int = int(e.get("corruption", 0))
+	if dc != 0:
+		corruption = maxi(0, corruption + dc)
+		corruption_max = maxi(corruption_max, corruption)
+	if di != 0 or dc != 0:
+		emit_signal("gauges_changed", integrite, corruption)
+		_check_corruption_threshold()
+		_check_end_after_resolution()
+	var texte: String = str(e.get("texte", "")).strip_edges()
+	if texte != "" and not faits_marquants.has(texte):
+		faits_marquants.append(texte)
+	return e
 
 
 # 001 — LE DRAFT APPARTIENT AU MONDE. Appelé une fois par beat résolu, avec le degré et le type : le
@@ -1769,6 +1815,7 @@ func save() -> void:
 		"faits_marquants": faits_marquants,
 		"pnj_rencontres": pnj_rencontres,
 		"figures": figures,  # 09/09 : les êtres se souviennent (additif, défaut {} au load)
+		"coup_double_utilise": coup_double_utilise,  # 09/09 : une fois par sentier (additif, défaut false)
 		"choix_cles": choix_cles,
 		"cartes_notables": cartes_notables,
 		"archetype_scores": archetype_scores,
@@ -1832,6 +1879,7 @@ func load_run() -> bool:
 	faits_marquants = data.get("faits_marquants", [])
 	pnj_rencontres = data.get("pnj_rencontres", [])
 	figures = data.get("figures", {}) if data.get("figures", {}) is Dictionary else {}
+	coup_double_utilise = bool(data.get("coup_double_utilise", false))
 	choix_cles = data.get("choix_cles", [])
 	cartes_notables = data.get("cartes_notables", [])
 	archetype_scores = data.get("archetype_scores", {})

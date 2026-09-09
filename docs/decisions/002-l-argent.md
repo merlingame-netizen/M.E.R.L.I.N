@@ -61,3 +61,10 @@ soin — une économie n'a de demande que si quelque chose manque, et rien ne ma
 
 ## Réponse
 **Tranchée le 2026-09-08 : C.** tranchée avec Claude en session, 08/09 ; A quand un joueur manquera de soin
+
+**Appliquée le 2026-09-09.** Précisions tranchées avec Claude (AskUserQuestion) : sur une quête générée la
+bourse reste visible mais figée et l'étal ne s'ouvre pas (`MerlinRun.argent_actif`) ; sur un sentier
+écrit le chargeur applique tout ce que l'`effet` chiffre et signe (gwenneg ±N, santé ±N, corruption ±N ;
+« échec : … » / « partiel : … » ne valent que pour ce degré ; un nombre non signé décrit un état et ne
+s'applique pas ; le texte libre va aux faits marquants) — `MerlinSentier.effet_chiffre`,
+`MerlinRun.appliquer_effet_ecrit`. Preuves : test_sentier (7 cas), test_economie.

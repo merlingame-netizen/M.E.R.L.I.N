@@ -1,6 +1,6 @@
 # BIBLE DES RÈGLES — comment on joue à M.E.R.L.I.N.
 
-> **v1.4 — 2026-09-08** (v1.1 du 2026-08-29, v1.2 du 2026-09-07, v1.3 du 2026-09-08). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
+> **v1.5 — 2026-09-09** (v1.1 du 2026-08-29, v1.2 du 2026-09-07, v1.3 et v1.4 du 2026-09-08). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
 > contient (`docs/BIBLE.md`, canon R1 à R191) ni à quoi ressemblent les écrans
 > (`docs/70_graphic/UI_UX_BIBLE.md`).
 >
@@ -148,6 +148,24 @@ qui ne lit jamais la scène meurt six fois sur dix : lire est le jeu. L'épreuve
 > v55 — zéro choix divergent sur 165 Épreuves et 165 Climax — parce que le dé n'y dispense plus
 > rien ; mais tant qu'il voit le dé, la nuit mesure la règle, pas le joueur.
 
+### 2.4bis Le coup double (2026-09-09)
+
+**Une fois par sentier**, le joueur pose **une tuile et deux runes**. Le second trait s'ajoute au
+premier quand la paire est déjà posée et que le coup est encore disponible ; le bouton *Résoudre*
+devient *Coup double*. Les tags des deux runes couvrent ; les atouts propres restent sous le plafond
+v55.
+
+| Élément | Valeur | Source |
+|---|---|---|
+| Difficulté | **+3** | `COUP_DOUBLE_DC`, `scripts/game/merlin_resolution.gd` |
+| Éclatante | marge **≥ 4** (au lieu de 7) | `COUP_DOUBLE_ECLAT` |
+| Geste sûr | **jamais** : le coup double se joue toujours au dé | `resolve(..., coup_double)` |
+| Points de talent | **doublés** | `MerlinRun.gain_talent_points(degre, double)` |
+| Disponibilité | une fois par traversée, jamais après la fin | `MerlinRun.coup_double_disponible` |
+
+Un coup fort, pas une triche : il coûte trois points de difficulté et la sûreté, il rend l'éclat
+plus proche et le talent plus vite. Preuve : `tools/tests/test_coup_double.gd`.
+
 ### 2.5 Ce que le monde offre (001, 2026-09-08)
 
 Hier, tout ce qui faisait grandir le Voyageur tombait sur la réussite : la greffe ne s'offrait
@@ -189,6 +207,20 @@ d'elles est manifestement la bonne, il n'y a pas de choix.
 
 Un étal de trois à cinq articles avec leur prix. On achète, on refuse, on repart ; ce qu'on laisse
 reste sur l'étal. **Un troc ne s'annule pas.**
+
+**002 (tranchée le 08/09, appliquée le 09/09).** L'étal n'ouvre que sur un **sentier écrit**
+(`MerlinRun.argent_actif`) : sur une quête générée la bourse reste visible mais figée, tant que le
+modèle ne sait pas faire payer une figure.
+
+### 3.2bis Les figures se souviennent (2026-09-09)
+
+Chaque figure nommée dans une scène (`MerlinProse.FIGURES`) garde une **disposition** de −3 à +3
+qui bouge avec le degré du geste posé devant elle : +2 éclatante, +1 réussite, 0 partiel, −1 échec ;
+**COMBATTRE** la fait toujours baisser (−1, −2 sur un échec). Libellés : hostile, méfiant, neutre,
+bien disposé, allié. Le portrait la porte sous l'attitude (« bien disposé · votre aide »), le Journal
+de quête la liste, et les prompts de scène et d'issue la reçoivent (« CE QUE LES ETRES SE RAPPELLENT
+DE VOUS ») pour qu'un être qui revient agisse selon cela. Source : `MerlinRun.figure_vue`,
+`figure_reagit`, `figures_resume` ; preuve `tools/tests/test_figures.gd`.
 
 ### 3.3 Le boss
 
@@ -249,10 +281,12 @@ Une quête peut ne contenir **aucun** événement d'argent, et n'avoir **aucun m
 du contexte. Dans *Le Linceul de Kado*, la bourse ne bouge qu'une fois en dix-huit beats — et c'est
 ce qui rend les neuf gwenneg lourds.
 
-> **Défaut mesuré, à corriger — voir la tâche ouverte.** Le jeu verse aujourd'hui +2 à +6 gwenneg à
-> **chaque beat** sans raison narrative : sur la partie témoin p74, la bourse passe de 2 à 65 toute
-> seule et les onze étals du colporteur enregistrent **zéro achat**. L'argent n'est ni gagné ni
-> dépensé, c'est un compteur qui monte.
+> **Corrigé le 04/09** (l'argent ne vient que d'un événement) puis **tranché le 08/09, fourche 002,
+> option C, appliqué le 09/09** : l'argent ne vit que sur les sentiers écrits. Le chargeur applique
+> tout ce que l'`effet` d'un beat chiffre et signe — gwenneg ±N, santé ±N, corruption ±N ; « échec :
+> … » / « partiel : … » ne valent que pour ce degré ; un nombre non signé décrit un état et ne
+> s'applique pas ; le texte libre va aux faits marquants (`MerlinSentier.effet_chiffre`,
+> `MerlinRun.appliquer_effet_ecrit`).
 
 ---
 

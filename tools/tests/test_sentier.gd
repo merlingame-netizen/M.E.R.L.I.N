@@ -203,6 +203,23 @@ func _tous_resumes() -> bool:
 
 
 func _finir() -> void:
+	# ── 002 (09/09) : CE QUE L'EFFET ÉCRIT CHIFFRE
+	var e1: Dictionary = MerlinSentier.effet_chiffre("gwenneg +6 — Kado paie le portage d'avance, comme on paie un service", "reussite")
+	_verifier("« gwenneg +6 » crédite six", int(e1["gwenneg"]) == 6 and int(e1["integrite"]) == 0, str(e1))
+	_verifier("le texte libre est rendu à part", str(e1["texte"]).begins_with("Kado paie"), str(e1["texte"]))
+	var e2: Dictionary = MerlinSentier.effet_chiffre("−3 santé · vous avez le registre", "partiel")
+	_verifier("« −3 santé » retire trois", int(e2["integrite"]) == -3, str(e2))
+	var e3: Dictionary = MerlinSentier.effet_chiffre("+1 corruption", "echec")
+	_verifier("« +1 corruption » ajoute un", int(e3["corruption"]) == 1, str(e3))
+	var e4: Dictionary = MerlinSentier.effet_chiffre("échec : vous croyez qu'ils sont trois", "reussite")
+	_verifier("un effet d'échec ne s'applique pas à une réussite", str(e4["texte"]) == "" and int(e4["gwenneg"]) == 0, str(e4))
+	var e5: Dictionary = MerlinSentier.effet_chiffre("échec : vous croyez qu'ils sont trois", "echec")
+	_verifier("… mais bien à l'échec", str(e5["texte"]).begins_with("vous croyez"), str(e5))
+	var e6: Dictionary = MerlinSentier.effet_chiffre("le registre est rendu · une page a été recousue · santé 5 · 9 gwenneg", "eclatante")
+	_verifier("un nombre non signé décrit un état, il ne s'applique pas", int(e6["gwenneg"]) == 0 and int(e6["integrite"]) == 0, str(e6))
+	_verifier("le chargeur porte l'effet du beat 2 du Compte Juste",
+		str((MerlinSentier.charger("le_compte_juste").get("beats", []) as Array)[1].get("effet", "")).begins_with("gwenneg +6"))
+
 	print("\n%s (%d échec%s)" % ["ÉPREUVE PASSÉE" if _rates == 0 else "ÉPREUVE ÉCHOUÉE",
 		_rates, "s" if _rates > 1 else ""])
 	quit(1 if _rates > 0 else 0)
