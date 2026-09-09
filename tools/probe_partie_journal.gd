@@ -26,7 +26,7 @@ const RUN_DEADLINE_S: float = 5400.0   # v50 — une QUETE COMPLETE : jusqu'a 25
                                        # portant ses poses deliberees (25 s + 35 s) en plus de
                                        # la generation. L'ancienne borne visait 12-15 beats.
 const END_DEADLINE_S: float = 40.0
-const SHOTS_MAX: int = 12
+const SHOTS_MAX: int = 12   # relevé par MERLIN_SHOTS_MAX (09/09 : une chronique imagée veut chaque beat)
 # Temps de « réflexion » du joueur entre la pose des cartes et le clic Résoudre. 25 s et non 8
 # (mesuré 2026-08-18, partie de 18 beats) : dans une quête longue, l'arc s'écrit en fond entre
 # les beats et évince le cache du prompt d'issue — l'issue repart alors à froid (~87 s), et la
@@ -86,7 +86,8 @@ func _ecrire(chemin: String, contenu: String) -> void:
 # Capture nommée. Plafonnée : au-delà d'une douzaine d'images le document devient un diaporama
 # illisible, et c'est un compte rendu qu'on veut, pas un film.
 func _cliche(nom: String) -> void:
-	if _shots_dir == "" or _shots >= SHOTS_MAX:
+	var plafond: int = int(OS.get_environment("MERLIN_SHOTS_MAX")) if OS.has_environment("MERLIN_SHOTS_MAX") else SHOTS_MAX
+	if _shots_dir == "" or _shots >= plafond:
 		return
 	await process_frame
 	await process_frame
@@ -439,6 +440,7 @@ func _boucle(game: Node, run: Node) -> void:
 					game._on_resolve()
 		elif game._state == 2 and game._can_advance:
 			_noter_sortie(run)
+			await _cliche("beat_%02d_issue" % (_journal["beats"] as Array).size())  # 09/09 : le verdict et l'issue, en image
 			# LECTURE de l'issue avant d'avancer : un humain lit ce que Merlin a écrit (~15-30 s).
 			# Avancer dans la frame suivante jetait la scène lookahead en cours d'écriture — la
 			# première complète (42,9 s) est arrivée juste après la présentation du beat suivant.
