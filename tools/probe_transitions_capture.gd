@@ -28,7 +28,7 @@ func _run() -> void:
 		return
 	run.biome = "falaises"
 	run.new_run(s)
-	run.beat_index = 2   # le beat 3, une Épreuve : le décor doit réagir
+	run.beat_index = 1   # le beat 2 : Kado parle — le portrait doit s'ouvrir (09/09)
 	var menu: Node = current_scene
 	var origine: Vector2 = Vector2(-1.0, -1.0)
 	if menu != null and menu.has_method("_origine_de_merlin"):
@@ -57,6 +57,16 @@ func _run() -> void:
 			print("[TRANS] encart : repos=%s en vol=%s après=%s → %s" % [str(repos), str(en_vol), str(apres),
 				"revenu" if page_ok else "DÉCALÉ"])
 			en_jeu = en_jeu and page_ok and not en_vol.is_equal_approx(repos)
+	if en_jeu:
+		await _capturer("portrait_kado")
+		if jeu.has_method("_ouvrir_le_journal"):
+			jeu.call("_ouvrir_le_journal")
+			await create_timer(0.6).timeout
+			await _capturer("journal_de_quete")
+			var ov: Node = jeu.get_node_or_null("JournalOverlay")
+			if ov != null:
+				ov.queue_free()
+			await create_timer(0.3).timeout
 	# 08/09 : le Voyageur qui marche sur le sentier d'encre de la frise, capturé en vol.
 	if en_jeu:
 		var carte: Variant = jeu.get("_beat_map")

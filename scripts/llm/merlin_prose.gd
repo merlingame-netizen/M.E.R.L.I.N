@@ -10,6 +10,85 @@ extends RefCounted
 
 # Coupe la prose à la dernière phrase COMPLÈTE : évite les troncatures mid-mot (« se dess… »)
 # quand le modèle atteint le plafond de tokens, qui donnaient l'impression d'un blocage (user 2026-05-28).
+# 09/09 — LES FIGURES QUI PARLENT. Le modèle écrit une parole en fin de texte sous la forme
+# « NOM — attitude : « … » » (consigne des prompts) ; les quêtes écrites portent un `dial`. Ici on
+# reconnaît QUI parle (une clé de figure, pour le portrait) et on sépare la parole de la prose.
+const FIGURES: Dictionary = {
+	"ankou": ["ankou", "passeur de brumes", "passeur"],
+	"lavandiere": ["lavandi"],
+	"korrigan": ["korrigan"],
+	"fanch": ["fañch", "fanch", "trotteur", "colporteur"],
+	"kado": ["kado", "cordier"],
+	"chevalier": ["chevalier"],
+	"choeur": ["chœur", "choeur", "druide"],
+	"enfant": ["enfant", "petite fille", "petit garçon"],
+	"etre": ["l'être", "l'etre", "être des bois", "etre des bois"],
+	"arthur": ["arthur"],
+	"marcharit": ["marc'harit", "marc’harit", "noyée", "noyee"],
+	"erwan": ["erwan", "veilleur"],
+	"aveline": ["aveline"],
+	"ordalch": ["ordalc'h", "ordalc’h"],
+}
+const NOMS_EN_CLAIR: Dictionary = {
+	"ankou": "L'Ankou", "lavandiere": "La Lavandière de Nuit", "korrigan": "Un korrigan",
+	"fanch": "Fañch le Trotteur", "kado": "Kado le Cordier", "chevalier": "Le Chevalier à l'armure ternie",
+	"choeur": "Le Chœur des Druides", "enfant": "L'Enfant", "etre": "L'Être", "arthur": "Arthur",
+	"marcharit": "Marc'harit la Noyée", "erwan": "Erwan Veilleur", "aveline": "Dame Aveline aux Corbeaux",
+	"ordalch": "Ordalc'h", "inconnu": "Une voix",
+}
+
+
+## La clé de la figure nommée dans `t` (la dernière nommée gagne : c'est elle qui parle). « inconnu » sinon.
+static func figure_dans(t: String) -> String:
+	var bas: String = t.to_lower()
+	var meilleure: String = "inconnu"
+	var pos_max: int = -1
+	for cle in FIGURES.keys():
+		for motif in FIGURES[cle]:
+			var pos: int = bas.rfind(str(motif))
+			if pos > pos_max:
+				pos_max = pos
+				meilleure = str(cle)
+	return meilleure
+
+
+## Sépare la parole de la prose. Rend {qui, nom, attitude, dit, reste}. `dit` vide = personne ne parle.
+##
+## Deux formes : la ligne dédiée « NOM — attitude : « parole » » (ou « NOM (attitude) : « parole » »),
+## et, à défaut, une citation « … » dans le texte, attribuée à la dernière figure nommée avant elle.
+static func extraire_parole(t: String) -> Dictionary:
+	var out: Dictionary = {"qui": "", "nom": "", "attitude": "", "dit": "", "reste": t}
+	var texte: String = t.strip_edges()
+	if texte == "":
+		return out
+	var re: RegEx = RegEx.new()
+	re.compile("(?m)^\\s*([A-ZÀ-ÜŒ][^\\n:«»]{1,40}?)\\s*(?:[—\\-–]\\s*([^:«»\\n]{1,40}?)\\s*|\\(([^)]{1,40})\\)\\s*)?:\\s*«\\s*([^»]{3,400})\\s*»\\s*\\.?\\s*$")
+	var m: RegExMatch = re.search(texte)
+	if m != null:
+		var nom: String = m.get_string(1).strip_edges()
+		var attitude: String = (m.get_string(2) if m.get_string(2) != "" else m.get_string(3)).strip_edges()
+		out["qui"] = figure_dans(nom)
+		out["nom"] = nom if out["qui"] == "inconnu" else str(NOMS_EN_CLAIR.get(out["qui"], nom))
+		out["attitude"] = attitude
+		out["dit"] = m.get_string(4).strip_edges()
+		out["reste"] = (texte.substr(0, m.get_start()) + texte.substr(m.get_end())).strip_edges()
+		return out
+	# Une citation dans le texte : la figure nommée avant elle parle.
+	var re2: RegEx = RegEx.new()
+	re2.compile("«\\s*([^»]{6,400})\\s*»")
+	var m2: RegExMatch = re2.search(texte)
+	if m2 == null:
+		return out
+	var avant: String = texte.substr(0, m2.get_start())
+	out["qui"] = figure_dans(avant if avant.strip_edges() != "" else texte)
+	out["nom"] = str(NOMS_EN_CLAIR.get(out["qui"], "Une voix"))
+	out["dit"] = m2.get_string(1).strip_edges()
+	out["attitude"] = ""
+	# La prose garde sa phrase, sans les guillemets doublés : le portrait porte la parole.
+	out["reste"] = texte
+	return out
+
+
 static func clean_prose(s: String) -> String:
 	var t: String = repair_accents(s.strip_edges())  # v11 (R156) : filet accents sur la prose LLM affichée
 	if t.is_empty():

@@ -53,6 +53,11 @@ func _init() -> void:
 	MerlinJournal.beat_geste("OBSERVER", "La Patience")
 	MerlinJournal.beat_resolu("reussite", "Vous restez dans les fougères et vous comptez.", 20, 0)
 	MerlinJournal.beat_pose(2, "Rencontre", "Une femme sort du cercle.", "arc", 9, 9, 20, 1)
+	# 09/09 : le même beat re-présenté (greffe, retour du Journal) ne double pas son entrée.
+	MerlinJournal.beat_pose(2, "Rencontre", "Une femme sort du cercle.", "arc", 9, 9, 20, 1)
+	_verifier("re-présenter le même beat ne le double pas dans la chronique",
+		(MerlinJournal.courante().get("beats", []) as Array).size() == 2,
+		"%d beats" % (MerlinJournal.courante().get("beats", []) as Array).size())
 	MerlinJournal.beat_geste("PARLER", "La Franchise")
 	MerlinJournal.beat_resolu("partiel", "Elle vous demande de dégager l'entrée.", 18, 2)
 	var ouverte: Array = MerlinJournal.liste()

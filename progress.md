@@ -2,6 +2,27 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-09-09 : le récit lié au geste, les figures qui parlent, le Journal de quête, le tissage redessiné : FAIT
+
+Demande de Maxime : « trop de prose et de phrasé complexe, pas assez de lien entre les actions et les
+beats ; si un PNJ nous parle, un portrait avec ce qu'il dit et comment il se comporte ; les liens
+tissés ne sont pas design ; un bouton Journal de quête ».
+
+- [x] Prompts (merlin_prompt_builder) : issue en 3 phrases de 14 mots max (4 au Climax/éclatante, 5-7 si richesse 2),
+      phrase 1 = le geste du joueur, phrase 2 = la conséquence avec l'être nommé, phrase 3 = ce qui attend ;
+      scène JIT en 2 phrases ; dernière ligne `NOM — attitude : « parole »` quand un être parle ; max_tokens scène 65→90
+- [x] MerlinProse.extraire_parole / figure_dans / FIGURES / NOMS_EN_CLAIR : la parole est détachée de la narration
+- [x] MerlinPortrait (scripts/game/merlin_portrait.gd) : carte sombre liseré d'or, médaillon avec 14 silhouettes
+      procédurales, l'attitude teinte l'arc (menace/supplique/moquerie), posé au-dessus de l'encart à gauche
+- [x] MerlinSentier : `dial_ecrit` (le dialogue seul) et `issue_ecrite` séparés ; scénario passe `dial_ecrit`
+- [x] Bouton Journal (HUD, en haut à droite) → overlay : titre, objectif, chaque beat « n · type · scène → geste · degré »,
+      figures rencontrées, faits marquants ; MerlinJournal.courante()
+- [x] MerlinJournal.beat_pose idempotent : le même beat re-présenté ne se double plus (vu sur la capture du Journal)
+- [x] MerlinTissage : un métier, pas un fouillis : 9 fils de chaîne symétriques en courbes lisses, bande tissée
+      hachurée qui descend avec le temps, navette d'or qui va et vient
+- [x] Preuves : test_sentier (parole de Kado reconnue), test_lexique, test_journal (+ cas du doublon), test_quete verts ;
+      captures xvfb docs/captures/2026-09-09_portrait_journal/ (portrait_kado, journal_de_quete, attente_fusion_tisse_1/2)
+
 ## Session: 2026-07-11 : P1 « le beat qui claque » (7 fixes rendu pur, panel 6 joueurs) : EN COURS (subagent, zero commit)
 
 ### Phases

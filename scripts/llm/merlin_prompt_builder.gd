@@ -361,7 +361,7 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 	var usr: String = faction_block + ("Conte une SCENE de la quete « %s » (%s) a %s. 2e PERSONNE (« Vous »), au PRESENT." % [
 		title, pitch, lieu]) \
 		+ LORE_CANON + REGLE_PASSE \
-		+ "\nLa scene = 1 a 2 phrases COURTES et CONCRETES (qui, quoi, ou ; AUCUNE image, AUCUN lyrisme, AUCUNE comparaison) avec un MONDE VIVANT (un personnage qui AGIT ou une presence qui reagit), SANS abstraction, qui FINIT sur un instant SUSPENDU : VARIE la chute, n'utilise JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». UN DETAIL, UN SEUL, montre que ces bois REJOUENT : un etre qui refait un geste deja fait, une trace qui revient, une parole redite comme si c'etait la premiere fois. Montre-le, ne l'explique JAMAIS. Rien d'autre que la scene." \
+		+ "\nLa scene = 2 phrases COURTES et CONCRETES (14 mots au plus chacune : qui est la, ce qu'il fait, ou ; AUCUNE image, AUCUNE comparaison, AUCUNE abstraction qui agit), avec un etre NOMME qui AGIT, qui FINIT sur un instant SUSPENDU : VARIE la chute, JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». SI CET ETRE PARLE, ajoute UNE derniere ligne, seule, sous cette forme exacte : NOM — attitude : « sa parole » (attitude = un ou deux mots). Rien d'autre que la scene." \
 		+ pool_line \
 		+ ("\nSCENE %d sur %d." % [pos + 1, total]) \
 		+ "\nROLE de cette scene : %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [role, cue_txt] \
@@ -369,7 +369,7 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 	# v35.1 — plein_regime : la scène s'écrit pendant la LECTURE (le Vif est libre, la voie
 	# est seule) — à 4 fils elle tient dans la fenêtre (~30 s contre 92-97 s mesurés à 1 fil).
 	return {"system": SYSTEM_PREFIX, "user": usr,
-			"opts": {"creative": true, "max_tokens": 65, "fin_phrase": true, "plein_regime": true,
+			"opts": {"creative": true, "max_tokens": 90, "fin_phrase": true, "plein_regime": true,
 			"label": "scène %d (lookahead)" % [pos + 1]}}
 
 
@@ -503,12 +503,13 @@ static func _tete_issue_interne(richesse: int) -> String:
 	# v34 (Maxime : « trop long, trop de figures imagées — style Hand of Fate 2 ») : paliers
 	# resserrés — 0 = sec (2-4), 1 = intermédiaire (3-5, DÉFAUT), 2 = riche (inchangé).
 	# v36 (Maxime : « trop de texte, pas assez direct ») : 2-3 phrases sèches par défaut.
-	var cible_phrases: String = "2 a 3 phrases PUIS la phrase de suite (3 a 4 plus la suite si le moment est un Climax ou une reussite eclatante)"
-	if richesse == 1:
-		cible_phrases = "2 a 3 phrases PUIS la phrase de suite (3 a 4 plus la suite si le moment est un Climax ou une reussite eclatante)"
-	elif richesse >= 2:
-		cible_phrases = "7 a 9 phrases, amples et sensorielles (jusqu'a 10 si le moment est un Climax)"
-	return ex + _regle_passe_issue() + "\nREGLES : Raconte l'issue a la 2e PERSONNE (« Vous ») au PRESENT, en " + cible_phrases + ". Ta TOUTE PREMIERE phrase est le GESTE, ECRITE ENTRE [i] et [/i] et commencant par « Vous ». LE GESTE T'EST DONNE EN FIN DE PROMPT : accomplis-le avec TES mots et le detail de CETTE scene, sans y ajouter aucun autre geste. TRADUIS les forces en gestes ; n'ecris JAMAIS le mot 'registre' ni PAROLE / FORCE / PERCEPTION / PROTECTION / OMBRE en majuscules ; ne CITE JAMAIS de formule entre guillemets. Referme la balise [/i] a la fin de cette premiere phrase. PUIS, HORS italique, raconte CE QUE CELA CAUSE : le personnage ou le monde REAGIT (il cede, se lie, explique, se retourne, se referme), la consequence concrete qui RESOUT la situation. Ta consequence fait AGIR ou REAGIR au moins un element NOMME de la situation : c'est ce qui prouve que l'issue appartient a CETTE scene. NE RE-DECRIS PAS le decor deja connu (reprendre = le faire agir, jamais le redecrire). TON DIRECT de conteur de jeu de cartes : phrases COURTES et DECLARATIVES, chaque phrase enonce un FAIT (quelqu'un agit, le monde repond). AUCUNE image, AUCUNE metaphore, AUCUNE comparaison ('comme si', 'tel un', 'pareil a') — nulle part, Climax compris : du CONCRET sec, l'ambiance vient des FAITS. Phrases LIEES et CONCRETES. Chaque phrase a pour sujet le Voyageur, un etre ou un objet NOMME : une abstraction ('le silence', 'la brume', 'la presence') n'agit JAMAIS. LE RESULTAT PRIME sur les forces : pour un echec, l'action est TENTEE mais elle ECHOUE (la porte reste close, l'obstacle resiste) ; pour un partiel, elle ne reussit qu'a demi avec un prix : ne narre JAMAIS un succes net si l'issue n'en est pas un. INTERDIT de finir sur « vous poursuivez votre route » ou « vous continuez le chemin ». Pas de liste ni de chiffres. TERMINE par UNE phrase courte qui OUVRE LA SUITE (ce qui attend le Voyageur au pas suivant) : elle relance, elle ne resume ni ne commente. Cette DERNIERE phrase COMMENCE par l'etre, la bete ou l'objet NOMME qui vient de reagir, et dit ce qu'il fait ou ce qu'il laisse au Voyageur : JAMAIS « Il », « Elle », « Ils », « Cela », JAMAIS une abstraction ('le silence', 'la brume', 'la presence'), AUCUNE parole rapportee. Termine sur une phrase complete."
+	# 09/09 (Maxime : « trop de prose et de phrasé complexe, pas assez de lien entre les actions et
+	# les beats ») : TROIS phrases, courtes, et la première EST le geste. Les règles tiennent en dix
+	# lignes : un modèle de 4 milliards suit dix règles, pas quarante.
+	var cible_phrases: String = "3 phrases (4 si le moment est un Climax ou une reussite eclatante)"
+	if richesse >= 2:
+		cible_phrases = "5 a 7 phrases"
+	return ex + _regle_passe_issue() + "\nREGLES : 2e PERSONNE (« Vous »), PRESENT, " + cible_phrases + ", chacune de 14 mots au plus, sujet + verbe + complement. PHRASE 1 = LE GESTE, entre [i] et [/i], commencant par « Vous », qui accomplit litteralement le geste donne en fin de prompt avec le detail de CETTE scene. PHRASE 2 = CE QUE CELA CAUSE : un etre ou un objet NOMME de la scene reagit (il cede, refuse, se retourne, s'ouvre) ; le RESULTAT annonce (echec, demi-succes, reussite) se voit dans ce fait. PHRASE 3 = CE QUI ATTEND LE VOYAGEUR au pas suivant, sujet nomme, sans commenter. AUCUNE image, AUCUNE comparaison, AUCUNE abstraction qui agit ('le silence', 'la brume'), AUCUN 'vous poursuivez votre route'. Ne redecris pas le decor. SI UN ETRE PARLE, ajoute UNE derniere ligne, seule, sous cette forme exacte : NOM — attitude : « sa parole » (NOM = la figure nommee, attitude = un ou deux mots : calme, menacant, suppliant, moqueur, las…). Sinon, aucune parole rapportee."
 	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
 	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
 	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.

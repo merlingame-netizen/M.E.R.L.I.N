@@ -95,7 +95,10 @@ static func charger(cle: String) -> Dictionary:
 			"sentier": true,
 			"lieu": str(b.get("lieu", "")),
 			"scene_ecrite": str(b.get("scene", "")),
-			"issue_ecrite": _issue_ecrite(b),
+			# 09/09 : la réplique écrite (`dial`) ne se fond plus dans l'issue — elle ouvre un PORTRAIT
+			# au moment de la scène, avec la figure qui la dit ; l'issue reste l'issue.
+			"dial_ecrit": str(b.get("dial", "")).strip_edges(),
+			"issue_ecrite": str(b.get("issue", "")).strip_edges(),
 		}
 		if b.get("special") is Dictionary:
 			beat["special"] = (b["special"] as Dictionary).duplicate(true)
@@ -252,13 +255,3 @@ static func _difficulte(b: Dictionary) -> int:
 	if type_normalise(str(b.get("t", ""))) == "Climax":
 		return 3
 	return 1 if int(b.get("n", 2)) == 1 else 2
-
-
-## L'issue écrite, dialogue compris : le corpus met les répliques dans leur propre champ, et une
-## issue qui perdrait la réplique perdrait la moitié de la scène.
-static func _issue_ecrite(b: Dictionary) -> String:
-	var dial: String = str(b.get("dial", "")).strip_edges()
-	var issue: String = str(b.get("issue", "")).strip_edges()
-	if dial == "":
-		return issue
-	return dial + "\n\n" + issue if issue != "" else dial

@@ -67,86 +67,68 @@ func _draw() -> void:
 	if _alpha <= 0.01 or _cadre.size.x < 4.0:
 		return
 	var t: float = float(Time.get_ticks_msec() - _t0) / 1000.0
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = _graine
-	var n_chaine: int = mini(FILS_MAX, 1 + int(t / CADENCE_S))
-	var n_trame: int = clampi(int((t - float(FILS_MAX) * CADENCE_S * 0.5) / (CADENCE_S * 1.6)), 0, TRAMES_MAX)
-	# LES FILS DE CHAÎNE : de la lune à un point du bord haut de l'encart, puis jusqu'au bas. Chaque
-	# fil est une courbe qui ondule un peu (sur l'horloge), et le dernier venu s'écrit encore.
-	for i in FILS_MAX:
-		var u: float = (float(i) + 0.5) / float(FILS_MAX)
-		var x_haut: float = _cadre.position.x + _cadre.size.x * (0.06 + 0.88 * u)
-		var ph: float = rng.randf_range(0.0, TAU)
-		var amp: float = rng.randf_range(6.0, 14.0)
-		if i >= n_chaine:
+	# 09/09 (Maxime : « les liens tissés ne sont pas design ») — UN MÉTIER, PAS UN FOUILLIS. Neuf fils
+	# de chaîne symétriques, en courbes lisses, de la lune au bord haut de l'encart ; dedans, une
+	# navette d'or va et vient et laisse derrière elle une bande tissée qui descend avec le temps.
+	# Rien ne tremble : la seule chose qui bouge est la navette, et la bande qui grandit.
+	var n_fils: int = 9
+	var poses: int = mini(n_fils, 1 + int(t / CADENCE_S))
+	for i in n_fils:
+		var u: float = (float(i) + 0.5) / float(n_fils)
+		var x_haut: float = _cadre.position.x + _cadre.size.x * (0.08 + 0.84 * u)
+		if i >= poses:
 			continue
-		var age: float = t - float(i) * CADENCE_S
-		var avance: float = clampf(age / 1.1, 0.0, 1.0)   # le fil descend en ~1 s
-		var a: float = (0.35 + 0.25 * sin(t * 0.9 + ph)) * _alpha
-		var pts: PackedVector2Array = PackedVector2Array()
+		var ordre: int = absi(i - n_fils / 2)   # du centre vers les bords
+		var age: float = t - float(ordre) * CADENCE_S * 0.6
+		var avance: float = clampf(age / 1.2, 0.0, 1.0)
 		var haut: Vector2 = Vector2(x_haut, _cadre.position.y)
-		var bas: Vector2 = Vector2(x_haut + rng.randf_range(-30.0, 30.0), _cadre.end.y - 8.0)
-		var segs: int = 18
+		var ctrl: Vector2 = Vector2(lerpf(_lune.x, x_haut, 0.35), lerpf(_lune.y, haut.y, 0.62))
+		var pts: PackedVector2Array = PackedVector2Array()
+		var segs: int = 20
 		for k in segs + 1:
 			var f: float = float(k) / float(segs)
 			if f > avance:
 				break
-			var p: Vector2
-			if f < 0.5:
-				var g: float = f * 2.0
-				p = _lune.lerp(haut, g) + Vector2(sin(g * PI) * amp * sin(t * 1.1 + ph), 0.0)
-			else:
-				var g2: float = (f - 0.5) * 2.0
-				p = haut.lerp(bas, g2) + Vector2(sin(g2 * PI * 2.0 + t * 0.7 + ph) * 3.0, 0.0)
-			# La déchirure : chaque point s'écarte de sa place et tombe.
+			var p: Vector2 = _lune.lerp(ctrl, f).lerp(ctrl.lerp(haut, f), f)  # quadratique
 			if _dechire > 0.0:
-				p += Vector2(sin(ph + float(k)) * 40.0, 30.0 + float(k) * 4.0) * _dechire
+				p += Vector2(sin(float(i) * 1.3 + float(k) * 0.4) * 30.0, 40.0 + float(k) * 3.0) * _dechire
 			pts.append(p)
 		if pts.size() >= 2:
-			_dessiner_fil(pts, a)
+			var a: float = (0.55 - 0.03 * float(ordre)) * _alpha
+			draw_polyline(pts, Color(COL_OR.r, COL_OR.g, COL_OR.b, a * 0.30), 3.0, true)
+			draw_polyline(pts, Color(COL_FIL.r, COL_FIL.g, COL_FIL.b, a), 1.3, true)
 			if avance < 1.0:
-				draw_circle(pts[pts.size() - 1], 2.6, Color(COL_OR.r, COL_OR.g, COL_OR.b, 0.9 * _alpha))
-	# LES FILS DE TRAME : en travers de l'encart, ils arrivent quand la chaîne est à demi posée. Le
-	# tissu se resserre : c'est l'avance sans mentir sur la fin.
-	for j in n_trame:
-		var v: float = (float(j) + 0.5) / float(TRAMES_MAX)
-		var y: float = _cadre.position.y + _cadre.size.y * (0.10 + 0.80 * v)
-		var age2: float = t - (float(FILS_MAX) * CADENCE_S * 0.5 + float(j) * CADENCE_S * 1.6)
-		var avance2: float = clampf(age2 / 1.4, 0.0, 1.0)
-		var sens: float = 1.0 if j % 2 == 0 else -1.0
-		var x0: float = _cadre.position.x + 10.0 if sens > 0.0 else _cadre.end.x - 10.0
-		var x1: float = x0 + sens * (_cadre.size.x - 20.0) * avance2
-		var pts2: PackedVector2Array = PackedVector2Array()
-		for k2 in 24:
-			var f2: float = float(k2) / 23.0
-			var p2: Vector2 = Vector2(lerpf(x0, x1, f2), y + sin(f2 * 14.0 + t * 0.8 + float(j)) * 2.0)
-			if _dechire > 0.0:
-				p2 += Vector2(0.0, (40.0 + float(k2) * 3.0) * _dechire * (0.5 + 0.5 * sin(float(k2) * 1.3)))
-			pts2.append(p2)
-		var a2: float = (0.30 + 0.14 * sin(t * 0.6 + float(j))) * _alpha
-		draw_polyline(pts2, Color(COL_ENCRE.r, COL_ENCRE.g, COL_ENCRE.b, a2), 1.2, true)
+				draw_circle(pts[pts.size() - 1], 2.4, Color(COL_OR.r, COL_OR.g, COL_OR.b, 0.9 * _alpha))
+	# LA BANDE TISSÉE : elle descend du bord haut à raison d'un huitième de l'encart toutes les 6 s,
+	# sans jamais atteindre le bas (l'issue arrive quand elle arrive). Hachures fines, encre sombre.
+	var debut_bande: float = float(n_fils / 2) * CADENCE_S * 0.6 + 1.2
+	var hauteur: float = 0.0
+	if t > debut_bande:
+		hauteur = _cadre.size.y * 0.85 * (1.0 - exp(-(t - debut_bande) / 40.0))
+	if hauteur > 2.0 and _dechire < 1.0:
+		var y0: float = _cadre.position.y + 6.0
+		var pas: float = 7.0
+		var k2: int = 0
+		var y: float = y0
+		while y < y0 + hauteur:
+			var decal: float = (pas * 0.5) if k2 % 2 == 0 else 0.0
+			var x_a: float = _cadre.position.x + 12.0 + decal + sin(float(k2) * 0.7) * 2.0
+			var x_b: float = _cadre.end.x - 12.0 - decal
+			var chute: float = _dechire * (30.0 + float(k2 % 5) * 12.0)
+			draw_line(Vector2(x_a, y + chute), Vector2(x_b, y + chute), Color(COL_ENCRE.r, COL_ENCRE.g, COL_ENCRE.b, 0.22 * _alpha * (1.0 - _dechire)), 1.0, true)
+			y += pas
+			k2 += 1
+		# LA NAVETTE : un losange d'or qui va et vient sur la ligne en train de se tisser.
+		var va: float = fmod(t * 0.45, 2.0)
+		var f_nav: float = va if va <= 1.0 else 2.0 - va
+		var nx: float = lerpf(_cadre.position.x + 14.0, _cadre.end.x - 14.0, f_nav)
+		var ny: float = y0 + hauteur
+		draw_colored_polygon(PackedVector2Array([Vector2(nx - 9.0, ny), Vector2(nx, ny - 4.0), Vector2(nx + 9.0, ny), Vector2(nx, ny + 4.0)]),
+			Color(COL_OR.r, COL_OR.g, COL_OR.b, 0.9 * _alpha * (1.0 - _dechire)))
+		draw_line(Vector2(_cadre.position.x + 12.0, ny), Vector2(nx, ny), Color(COL_ENCRE.r, COL_ENCRE.g, COL_ENCRE.b, 0.35 * _alpha), 1.2, true)
 	# LES MOTES DE LA DÉCHIRURE : quelques points d'or qui s'envolent quand le tissu cède.
 	if _dechire > 0.0:
-		for m in 18:
+		for m in 14:
 			var mx: float = _cadre.position.x + _cadre.size.x * fmod(float(m) * 0.618, 1.0)
 			var my: float = _cadre.position.y + _cadre.size.y * fmod(float(m) * 0.382, 1.0) - _dechire * (60.0 + float(m % 5) * 20.0)
 			draw_circle(Vector2(mx, my), 2.0 + float(m % 3), Color(COL_OR.r, COL_OR.g, COL_OR.b, (1.0 - _dechire) * 0.8))
-
-
-## Un fil : crème et doré au-dessus du monde, encre sombre sur le parchemin — sinon il disparaît
-## dans le crème de l'encart. Coupé en deux polylignes au bord haut de l'encart.
-func _dessiner_fil(pts: PackedVector2Array, a: float) -> void:
-	var dehors: PackedVector2Array = PackedVector2Array()
-	var dedans: PackedVector2Array = PackedVector2Array()
-	for p in pts:
-		if _cadre.has_point(p):
-			if dedans.is_empty() and not dehors.is_empty():
-				dedans.append(dehors[dehors.size() - 1])  # jonction
-			dedans.append(p)
-		else:
-			dehors.append(p)
-	if dehors.size() >= 2:
-		draw_polyline(dehors, Color(COL_OR.r, COL_OR.g, COL_OR.b, a * 0.35), 3.0, true)
-		draw_polyline(dehors, Color(COL_FIL.r, COL_FIL.g, COL_FIL.b, a), 1.2, true)
-	if dedans.size() >= 2:
-		draw_polyline(dedans, Color(COL_ENCRE.r, COL_ENCRE.g, COL_ENCRE.b, a * 0.9), 1.4, true)

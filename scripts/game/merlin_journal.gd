@@ -81,11 +81,23 @@ static func beat_pose(n: int, type_beat: String, narration: String, provenance: 
 		difficulte: int, de: int, integrite: int, corruption: int) -> void:
 	if _courante.is_empty():
 		return
-	(_courante["beats"] as Array).append({
+	var entree: Dictionary = {
 		"n": n, "type": type_beat, "provenance": provenance,
 		"scene": narration, "difficulte": difficulte, "de": de,
 		"integrite_avant": integrite, "corruption_avant": corruption,
-	})
+	}
+	# 09/09 — IDEMPOTENT : le même beat re-présenté (après une greffe, un retour du Journal, une sonde)
+	# remplace son entrée encore ouverte au lieu d'en ajouter une seconde. Le Journal de quête
+	# affichait « 2 · Rencontre » deux fois.
+	var b: Array = _courante["beats"]
+	if not b.is_empty():
+		var dernier: Dictionary = b[b.size() - 1]
+		if int(dernier.get("n", -1)) == n and not dernier.has("degre"):
+			for k in entree:
+				dernier[k] = entree[k]
+			_ecrire()
+			return
+	b.append(entree)
 	_ecrire()
 
 
@@ -144,6 +156,11 @@ static func clore(fin_type: String, integrite: int, corruption: int, resume: Str
 
 
 ## L'index, la plus récente d'abord. C'est tout ce que l'écran de liste a besoin de lire.
+## La traversée EN COURS, telle qu'elle s'écrit : ce que le Journal de quête montre au joueur.
+static func courante() -> Dictionary:
+	return _courante
+
+
 static func liste() -> Array:
 	var f: FileAccess = FileAccess.open(index_chemin(), FileAccess.READ)
 	if f == null:

@@ -1879,6 +1879,7 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		# Le sentier écrit fait suivre son issue et son drapeau jusqu'à narrate_resolution et
 		# jusqu'aux mesures : une nuit écrite ne se compare pas à une nuit générée.
 		"issue_ecrite": str(beat.get("issue_ecrite", "")),
+		"dial_ecrit": str(beat.get("dial_ecrit", "")),  # 09/09 : la réplique écrite, pour le portrait
 		"sentier": bool(beat.get("sentier", false)),
 		"lieu": str(beat.get("lieu", "")),
 		"special": beat.get("special", {}),

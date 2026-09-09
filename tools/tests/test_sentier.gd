@@ -69,8 +69,16 @@ func _init() -> void:
 			sans_scene.append(int((b as Dictionary)["n"]))
 	_verifier("chaque beat porte sa scène écrite", sans_scene.is_empty(), str(sans_scene))
 	var b2: Dictionary = beats[1]
-	_verifier("la réplique n'est pas perdue : elle ouvre l'issue",
-		str(b2["issue_ecrite"]).begins_with("« Monte-la-lui."), str(b2["issue_ecrite"]).substr(0, 40))
+	_verifier("la réplique n'est pas perdue : elle a son champ, pour le portrait",
+		str(b2["dial_ecrit"]).begins_with("« Monte-la-lui.") and not str(b2["issue_ecrite"]).begins_with("«"),
+		str(b2["dial_ecrit"]).substr(0, 40))
+	# 09/09 : la parole se reconnaît, et la figure qui la dit aussi.
+	var pr: Dictionary = MerlinProse.extraire_parole("Kado le Cordier tresse une corde. " + str(b2["dial_ecrit"]))
+	_verifier("la parole écrite est reconnue", str(pr["dit"]).begins_with("Monte-la-lui"), str(pr))
+	_verifier("et c'est Kado qui la dit", str(pr["qui"]) == "kado", str(pr["qui"]))
+	var pl: Dictionary = MerlinProse.extraire_parole("Vous poussez la porte. La Lavandière lève la tête.\nLa Lavandière de Nuit — lasse : « Aide-moi, ou passe. »")
+	_verifier("la ligne de parole du modèle est reconnue", str(pl["dit"]) == "Aide-moi, ou passe." and str(pl["qui"]) == "lavandiere"
+		and str(pl["attitude"]) == "lasse" and not str(pl["reste"]).contains("«"), str(pl))
 
 	# ── LES CHOIX
 	var choix: Array = []

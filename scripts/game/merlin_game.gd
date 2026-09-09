@@ -94,6 +94,8 @@ var _tw: Tween
 var _intro_open: bool = false
 var _intro_accept_btn: Button = null  # bouton « Accepter ✦ » (Z4) — cross-fadé par _accept_quest
 var _intro_data: Dictionary = {}      # titre/pitch/objectif figés → recomposition à l'enrichissement LLM
+var _portrait: MerlinPortrait = null    # 09/09 : la figure qui parle, en médaillon sur l'encart
+var _journal_overlay: Control = null    # 09/09 : le Journal de quête (objectif + déroulé)
 var _pulse_tw: Tween
 var _prev_integrite: int = -999  # pour animer les deltas de jauges (-999 = pas encore initialisé)
 var _prev_corruption: int = -999
@@ -466,7 +468,21 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		else:
 			_scene_art.set_pilier("", false)
 			MerlinAudio.stop_pad()  # le pilier s'en va → sa nappe s'éteint (canal unique, jamais superposé)
-	_typewriter("[center]" + str(situ.get("narration", "")) + _build_nature_bandeau(situ) + "[/center]", animate)
+	# 09/09 — LA FIGURE QUI PARLE A UN PORTRAIT. Une réplique écrite (`dial_ecrit`) ou une ligne de
+	# parole du modèle (« NOM — attitude : « … » ») sort de la prose et ouvre le médaillon.
+	var narration_brute: String = str(situ.get("narration", ""))
+	var texte_scene: String = narration_brute
+	var parole: Dictionary = MerlinProse.extraire_parole(narration_brute)
+	var dial_ecrit: String = str(situ.get("dial_ecrit", "")).strip_edges()
+	if dial_ecrit != "":
+		parole = {"qui": MerlinProse.figure_dans(narration_brute), "nom": "", "attitude": "",
+			"dit": dial_ecrit.trim_prefix("«").trim_suffix("»").strip_edges(), "reste": narration_brute}
+	if str(parole.get("dit", "")) != "":
+		texte_scene = str(parole.get("reste", narration_brute))
+		_montrer_le_portrait(parole)
+	elif _portrait != null:
+		_portrait.cacher()
+	_typewriter("[center]" + texte_scene + _build_nature_bandeau(situ) + "[/center]", animate)
 	# v10.21 — feedforward « Ce lieu réclame » RETIRÉ (user 2026-06-30) : immersion narrative ; l'issue continue le fil.
 	# v10.13.1 (R75 palier emprise+) : tremblement BREF du cadre à l'ARRIVÉE de la prose —
 	# jamais pendant la lecture (Wave1 : amplitude ≤2px), off en reduce-motion (pastille = info).
@@ -1141,13 +1157,19 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 		_scene_art.set_eye_mood(mood)
 	# Texte COMBINÉ : ce qui est RÉELLEMENT affiché (situation, éventuellement enrichie) + l'issue, à la suite.
 	# _typewriter(from_chars = longueur situation) → seule l'issue se révèle, la situation reste écrite.
+	# 09/09 : si la figure répond, sa parole va au portrait et l'issue garde les faits.
+	var parole_i: Dictionary = MerlinProse.extraire_parole(narration)
+	var issue_affichee: String = narration
+	if str(parole_i.get("dit", "")) != "" and str(parole_i.get("reste", "")).strip_edges() != "":
+		issue_affichee = str(parole_i["reste"])
+		_montrer_le_portrait(parole_i)
 	var cur: String = _situation_text.text
 	var situ_chars: int = _situation_text.get_total_character_count()
 	var combined: String
 	if cur.ends_with("[/center]"):
-		combined = cur.substr(0, cur.length() - 9) + "\n\n%s[/center]" % narration  # 9 = len("[/center]")
+		combined = cur.substr(0, cur.length() - 9) + "\n\n%s[/center]" % issue_affichee  # 9 = len("[/center]")
 	else:
-		combined = "[center]%s\n\n%s[/center]" % [cur, narration]
+		combined = "[center]%s\n\n%s[/center]" % [cur, issue_affichee]
 	_typewriter(combined, animate, _situation_text, situ_chars)
 
 
@@ -2764,6 +2786,111 @@ func _souffler_les_affinites() -> void:
 			cv.souffle_affinite()
 
 
+## Pose le portrait sur le coin haut-gauche de l'encart (hors conteneur : on le place à la main).
+func _montrer_le_portrait(parole: Dictionary) -> void:
+	if _portrait == null or _situ_panel == null:
+		return
+	var r: Rect2 = _situ_panel.get_global_rect()
+	_portrait.global_position = r.position + Vector2(10.0, -MerlinPortrait.HAUTEUR * 0.62)
+	_portrait.montrer(str(parole.get("qui", "")), str(parole.get("nom", "")), str(parole.get("attitude", "")), str(parole.get("dit", "")))
+
+
+# 09/09 — LE JOURNAL DE QUÊTE : l'objectif, puis le déroulé beat par beat (scène en une ligne, geste,
+# degré), les figures rencontrées, les faits marquants. Lu dans la chronique en cours (MerlinJournal),
+# jamais réécrit ici. Le fond ferme ; le panneau porte un bouton.
+func _ouvrir_le_journal() -> void:
+	if _journal_overlay != null and is_instance_valid(_journal_overlay):
+		return
+	var run: Node = get_node("/root/MerlinRun")
+	var layer: Control = Control.new()
+	layer.name = "JournalOverlay"
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	layer.z_index = 90
+	add_child(layer)
+	_journal_overlay = layer
+	var dim: ColorRect = ColorRect.new()
+	dim.color = MerlinVisual.DIM_MODAL
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed:
+			layer.queue_free())
+	layer.add_child(dim)
+	var panel: PanelContainer = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(820, 600)
+	var psb: StyleBoxFlat = StyleBoxFlat.new()
+	psb.bg_color = MerlinVisual.PANEL
+	psb.border_color = MerlinVisual.GOLD
+	psb.set_border_width_all(2)
+	psb.set_content_margin_all(26)
+	panel.add_theme_stylebox_override("panel", psb)
+	layer.add_child(panel)
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	panel.add_child(v)
+	var titre: Label = MerlinVisual.make_label(MerlinVisual.GOLD, MerlinVisual.FS_TITLE_POPUP - 6)
+	titre.text = str(run.scenario.get("title", "La Quête"))
+	v.add_child(titre)
+	var obj: Label = MerlinVisual.make_label(MerlinVisual.CREAM, MerlinVisual.FS_CAPTION)
+	obj.text = "✦ Objectif : " + str(_intro_data.get("objectif", run.scenario.get("pitch", "")))
+	obj.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(obj)
+	v.add_child(HSeparator.new())
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size = Vector2(0, 380)
+	v.add_child(scroll)
+	var liste: VBoxContainer = VBoxContainer.new()
+	liste.add_theme_constant_override("separation", 6)
+	liste.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(liste)
+	var chro: Dictionary = MerlinJournal.courante()
+	var beats: Array = chro.get("beats", []) as Array
+	var figures: Array = []
+	if beats.is_empty():
+		var vide: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
+		vide.text = "Le sentier commence : rien n'est encore écrit."
+		liste.add_child(vide)
+	for b_v in beats:
+		var b: Dictionary = b_v
+		var ligne: Label = MerlinVisual.make_label(MerlinVisual.CREAM, MerlinVisual.FS_HINT)
+		ligne.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var scene: String = MerlinProse.first_sentence(str(b.get("scene", ""))).strip_edges()
+		var geste: String = ""
+		if str(b.get("action", "")) != "":
+			geste = " → %s + %s" % [str(b.get("action", "")), str(b.get("trait", ""))]
+		var degre: String = str(b.get("degre", ""))
+		var deg_txt: String = (" · " + str(MerlinResolution.LABELS.get(degre, degre))) if degre != "" else " · en cours"
+		ligne.text = "%d · %s · %s%s%s" % [int(b.get("n", 0)), str(b.get("type", "")), scene, geste, deg_txt]
+		liste.add_child(ligne)
+		for t in [str(b.get("scene", "")), str(b.get("issue", ""))]:
+			var f: String = MerlinProse.figure_dans(t)
+			if f != "inconnu" and not figures.has(f) and t.to_lower().find(str((MerlinProse.FIGURES[f] as Array)[0])) != -1:
+				figures.append(f)
+	if not figures.is_empty():
+		v.add_child(HSeparator.new())
+		var fl: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
+		var noms: PackedStringArray = PackedStringArray()
+		for f in figures:
+			noms.append(str(MerlinProse.NOMS_EN_CLAIR.get(f, f)))
+		fl.text = "Rencontrés : " + ", ".join(noms)
+		fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(fl)
+	if not (run.faits_marquants as Array).is_empty():
+		var fm: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
+		fm.text = "Faits marquants : " + " · ".join(PackedStringArray(run.faits_marquants))
+		fm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(fm)
+	var fermer: Button = Button.new()
+	fermer.text = "Fermer"
+	fermer.custom_minimum_size = Vector2(0, 48)
+	MerlinVisual.apply_button_da(fermer)
+	fermer.pressed.connect(func() -> void: layer.queue_free())
+	v.add_child(fermer)
+
+
 func _degree_color(degree: String) -> Color:
 	return MerlinVisual.degree_color(degree)
 
@@ -3738,6 +3865,21 @@ func _build_ui() -> void:
 	_emprise_lbl.position = Vector2(-34, 52)
 	_emprise_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_emprise_lbl.visible = false
+	# 09/09 — LE JOURNAL DE QUÊTE : l'objectif et le déroulé jusqu'ici, à portée d'un tap. Il
+	# remplace les « liens tissés » que Merlin glissait dans la prose : ce qu'on doit faire et ce
+	# qu'on a fait se lisent au même endroit, quand on le veut.
+	var sp_j: Control = Control.new()
+	sp_j.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sp_j.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(sp_j)
+	var journal_btn: Button = Button.new()
+	journal_btn.text = "Journal"
+	journal_btn.custom_minimum_size = Vector2(120, 44)
+	journal_btn.add_theme_font_size_override("font_size", MerlinVisual.FS_HINT)
+	MerlinVisual.apply_button_da(journal_btn)
+	journal_btn.pressed.connect(_ouvrir_le_journal)
+	MerlinVisual.connect_button_feedback(journal_btn)
+	hud.add_child(journal_btn)
 	_corr_gauge.add_child(_emprise_lbl)
 
 	# Scène en silhouettes plates — Z2 DÉCOR 200 px FIXE (dessine relatif à `size`).
@@ -3766,6 +3908,9 @@ func _build_ui() -> void:
 	_situ_panel.add_theme_stylebox_override("panel", _situ_sb)
 	root.add_child(_situ_panel)
 	_situ_panel.add_child(MerlinParchemin.new())  # 08/09 : grain, fibres et bords du papier, sous le texte
+	_portrait = MerlinPortrait.new()
+	_portrait.z_index = 40
+	add_child(_portrait)  # 09/09 : hors de tout conteneur, posé sur le coin haut-gauche de l'encart au moment de parler
 	var inner: VBoxContainer = VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 6)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
