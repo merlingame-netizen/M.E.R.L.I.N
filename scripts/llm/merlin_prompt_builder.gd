@@ -336,10 +336,13 @@ static func _regle_passe_issue() -> String:
 static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		req_tags: Array, precedent: String, issue_precedente: String,
 		faction_block: String = "", lieu: String = "Broceliande", pool_list: Array = [],
-		memoire: String = "") -> Dictionary:
+		memoire: String = "", contexte: Dictionary = {}) -> Dictionary:
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
-	var role: String = _role_de_beat(btype, pos, total, title)
+	# 09/09 — la courbe : le rôle vient de la position dans la quête, le Tour tombe au milieu, et
+	# « l'être se retourne » n'est possible que si une figure a déjà été croisée.
+	var graine: int = MerlinCourbe.graine_de(title)
+	var role: String = _role_de_beat(btype, pos, total, title, graine, str(contexte.get("figure_croisee", "")))
 	var cues: PackedStringArray = []
 	for t in req_tags:
 		cues.append(str(TAG_CUE.get(str(t), str(t))))
@@ -368,7 +371,9 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 		+ "\nLa scene = 2 phrases COURTES et CONCRETES (14 mots au plus chacune : qui est la, ce qu'il fait, ou ; AUCUNE image, AUCUNE comparaison, AUCUNE abstraction qui agit), avec un etre NOMME qui AGIT, qui FINIT sur un instant SUSPENDU : VARIE la chute, JAMAIS « que faire », « que decidez-vous », « vous vous demandez ». SI CET ETRE PARLE, ajoute UNE derniere ligne, seule, sous cette forme exacte : NOM — attitude : « sa parole » (attitude = un ou deux mots). Rien d'autre que la scene." \
 		+ pool_line \
 		+ ("\nSCENE %d sur %d." % [pos + 1, total]) \
+		+ _ancrage(pos, total, str(contexte.get("biome", "")), graine) \
 		+ "\nROLE de cette scene : %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [role, cue_txt] \
+		+ _registre_bloc(str(contexte.get("registre", ""))) \
 		+ fil
 	# v35.1 — plein_regime : la scène s'écrit pendant la LECTURE (le Vif est libre, la voie
 	# est seule) — à 4 fils elle tient dans la fenêtre (~30 s contre 92-97 s mesurés à 1 fil).
@@ -390,21 +395,28 @@ static func scene_jit(scenario: Dictionary, btype: String, pos: int, total: int,
 # le fil rouge se romprait exactement là où on cherche à le tenir.
 static func arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, debut: int,
 		total: int, precedent: String, faction_block: String = "",
-		lieu: String = "Broceliande", pool_list: Array = []) -> Dictionary:
+		lieu: String = "Broceliande", pool_list: Array = [],
+		contexte: Dictionary = {}) -> Dictionary:
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
+	var graine: int = MerlinCourbe.graine_de(title)
+	var biome_a: String = str(contexte.get("biome", ""))
+	var cle_a: String = str(BIOME_ALIAS.get(biome_a, biome_a))
+	var mat_a: String = str((BIOMES.get(cle_a, BIOMES["foret_broceliande"]) as Dictionary)["matiere"])
 	var n: int = types.size()
 	var steps: String = ""
 	for i in n:
 		var pos: int = debut + i                       # index absolu dans la quête
-		var role: String = _role_de_beat(str(types[i]), pos, total, title)
+		var role: String = _role_de_beat(str(types[i]), pos, total, title, graine, str(contexte.get("figure_croisee", "")))
 		var pair: Array = (req_tags[i] as Array) if (i < req_tags.size() and req_tags[i] is Array) else []
 		var cues: PackedStringArray = []
 		for t in pair:
 			cues.append(str(TAG_CUE.get(str(t), str(t))))
 		var cue_txt: String = " ET ".join(cues) if cues.size() > 0 else "agir"
-		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que vous devrez faire)." % [
-			pos + 1, role, cue_txt]
+		var mat_i: String = MerlinCourbe.matiere(mat_a, pos, graine)
+		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que vous devrez faire)%s." % [
+			pos + 1, role, cue_txt,
+			(" ; elle touche %s" % mat_i) if mat_i != "" else ""]
 	var pool_line: String = ""
 	if not pool_list.is_empty():
 		var pl: PackedStringArray = []
@@ -443,13 +455,16 @@ static func arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, deb
 
 # Le RÔLE dramatique d'un beat selon sa place dans la quête : l'ouverture découvre l'enjeu, la
 # fin le résout, l'avant-dernier fait choisir, et le corps alterne selon le type du beat.
-static func _role_de_beat(btype: String, pos: int, total: int, title: String) -> String:
-	if pos == 0:
-		return "arrivee : vous entrez dans le lieu et DECOUVREZ l'enjeu de la quete"
-	if pos >= total - 1:
-		return "la confrontation finale qui RESOUT la quete : vous atteignez, obtenez ou affrontez ce que « %s » promet" % title
-	if pos == total - 2:
-		return "un choix a faire qui engage la fin"
+# 09/09 (Maxime : « la continuité, varier les situations, des rebondissements ») — LE ROLE VIENT DE
+# LA COURBE, plus d'une table de quatre lignes rejouée en boucle. MerlinCourbe donne les cinq
+# mouvements (arrivée, piste, TOUR, montée, confrontation), un rôle qui ne se répète jamais deux
+# fois de suite, et le Tour au milieu. `btype` n'est plus qu'un repli quand la courbe n'a rien à
+# dire (quête de deux beats) : la position dans la quête raconte mieux que le type du beat.
+static func _role_de_beat(btype: String, pos: int, total: int, title: String,
+		graine: int = 0, figure_croisee: String = "") -> String:
+	var r: String = MerlinCourbe.role(pos, total, title, graine, figure_croisee)
+	if r.strip_edges() != "":
+		return r
 	match btype:
 		"Rencontre":
 			return "une rencontre (un etre, une voix) qui AGIT et vous APPREND un bout de legende sur le but a atteindre"
@@ -459,6 +474,27 @@ static func _role_de_beat(btype: String, pos: int, total: int, title: String) ->
 			return "un choix a faire qui engage la suite"
 		_:
 			return "une progression dans le lieu qui RAPPROCHE du but et montre ce qui y resiste"
+
+
+# 09/09 — LA MATIERE ET L'ETAT, la queue variable du prompt : une chose du lieu que CETTE scene doit
+# toucher (jamais la même deux beats de suite), et où l'on en est dans la courbe.
+static func _ancrage(pos: int, total: int, biome: String, graine: int) -> String:
+	var out: String = "\nOU EN EST LA QUETE : %s." % MerlinCourbe.etat(pos, total)
+	var cle: String = str(BIOME_ALIAS.get(biome, biome))
+	var b: Dictionary = BIOMES.get(cle, BIOMES["foret_broceliande"])
+	var mat: String = MerlinCourbe.matiere(str(b["matiere"]), pos, graine)
+	if mat != "":
+		out += "\nMATIERE DE CETTE SCENE (touche-la, ne la nomme pas deux fois) : %s. Une AUTRE que celle du beat precedent." % mat
+	return out
+
+
+# 09/09 — LE REGISTRE DES FAITS ACQUIS : ce que le jeu tient pour vrai. Le modèle ne peut plus le
+# contredire, et il doit s'en servir. En queue (il change à chaque beat).
+static func _registre_bloc(registre: String) -> String:
+	if registre.strip_edges() == "":
+		return ""
+	return ("\nCE QUI EST DEJA ACQUIS (vrai, ne le contredis JAMAIS, sers-t'en) : %s."
+		% registre.strip_edges())
 
 
 static func arc(scenario: Dictionary, req_tags: Array, faction_block: String = "", lieu: String = "Broceliande", pool_list: Array = []) -> Dictionary:
@@ -513,7 +549,7 @@ static func _tete_issue_interne(richesse: int) -> String:
 	var cible_phrases: String = "3 phrases (4 si le moment est un Climax ou une reussite eclatante)"
 	if richesse >= 2:
 		cible_phrases = "5 a 7 phrases"
-	return ex + _regle_passe_issue() + "\nREGLES : 2e PERSONNE (« Vous »), PRESENT, " + cible_phrases + ", chacune de 14 mots au plus, sujet + verbe + complement. PHRASE 1 = LE GESTE, entre [i] et [/i], commencant par « Vous », qui accomplit litteralement le geste donne en fin de prompt avec le detail de CETTE scene. PHRASE 2 = CE QUE CELA CAUSE : un etre ou un objet NOMME de la scene reagit (il cede, refuse, se retourne, s'ouvre) ; le RESULTAT annonce (echec, demi-succes, reussite) se voit dans ce fait. PHRASE 3 = CE QUI ATTEND LE VOYAGEUR au pas suivant, sujet nomme, sans commenter. AUCUNE image, AUCUNE comparaison, AUCUNE abstraction qui agit ('le silence', 'la brume'), AUCUN 'vous poursuivez votre route'. Ne redecris pas le decor. SI UN ETRE PARLE, ajoute UNE derniere ligne, seule, sous cette forme exacte : NOM — attitude : « sa parole » (NOM = la figure nommee, attitude = un ou deux mots : calme, menacant, suppliant, moqueur, las…). Sinon, aucune parole rapportee."
+	return ex + _regle_passe_issue() + "\nREGLES : 2e PERSONNE (« Vous »), PRESENT, " + cible_phrases + ", chacune de 14 mots au plus, sujet + verbe + complement. PHRASE 1 = LE GESTE, entre [i] et [/i], commencant par « Vous », qui accomplit litteralement le geste donne en fin de prompt avec le detail de CETTE scene. PHRASE 2 = CE QUE CELA CAUSE : un etre ou un objet NOMME de la scene reagit (il cede, refuse, se retourne, s'ouvre) ; le RESULTAT annonce (echec, demi-succes, reussite) se voit dans ce fait. PHRASE 3 = CE QUI ATTEND LE VOYAGEUR au pas suivant, sujet nomme, sans commenter. AUCUNE image, AUCUNE comparaison, AUCUNE abstraction qui agit ('le silence', 'la brume'), AUCUN 'vous poursuivez votre route'. Ne redecris pas le decor. SI UN ETRE PARLE, ajoute UNE derniere ligne, seule, sous cette forme exacte : NOM — attitude : « sa parole » (NOM = la figure nommee, attitude = un ou deux mots : calme, menacant, suppliant, moqueur, las…). Sinon, aucune parole rapportee. TOUT A LA FIN, apres tout le reste, ajoute une ligne seule : ACQUIS : ce que le Voyageur SAIT ou POSSEDE maintenant et qu'il ignorait avant (six mots au plus, un FAIT, jamais une humeur)."
 	# Le degré est nommé DEUX fois — « ISSUE = X » puis le rappel « Fais RESSENTIR (X) » : cette
 	# redondance date de v10.6 (l'échec se lisait comme un succès) et la revue adversariale du
 	# 2026-08-18 a rattrapé sa disparition pendant le réordonnancement. En queue : cache-compatible.
@@ -636,6 +672,10 @@ static func resolution(situation: Dictionary, played_cards: Array, res: Dictiona
 	var fig_p: String = str(run_thread.get("figures", "")).strip_edges()
 	if fig_p != "":
 		ctx += "CE QUE LES ETRES SE RAPPELLENT DE VOUS : %s. L'etre d'en face reagit selon cela.\n" % fig_p
+	# 09/09 — LE REGISTRE : l'issue ne peut pas contredire ce qui est acquis, et elle l'AVANCE.
+	var reg_p: String = str(run_thread.get("registre", "")).strip_edges()
+	if reg_p != "":
+		ctx += "CE QUI EST DEJA ACQUIS (vrai, ne le contredis JAMAIS) : %s.\n" % reg_p
 	# Longueur VARIABLE (user 2026-06-06 : « plus variable sur la longueur … quelquefois plus long
 	# selon le déroulé ») : ample aux MOMENTS FORTS (Climax ou réussite éclatante), brève sinon.
 	# La cible de phrases vit désormais dans la TÊTE STABLE du prompt (degré-neutre, pour le cache

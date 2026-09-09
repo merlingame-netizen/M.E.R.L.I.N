@@ -1,0 +1,69 @@
+
+=== LA COURBE DE « Le Chant du Chene Creux » — 24 beats (graine 327) ===
+
+  b01  arrivee        gui                        l'ARRIVEE : vous entrez dans le lieu et vous DECOUVREZ ce qui s'y joue, sans encore 
+  b02  piste          souches creuses            un temoin de ce qui s'est passe ici avant vous : un reste, une marque, un objet aban
+  b03  piste          sentiers qui se referment  une fausse piste qui coute du temps : elle ressemble a la bonne et n'en est pas une
+  b04  piste          mousse gorgee d'eau        une trace a lire : quelque chose ici dit ou est passe ce que vous cherchez
+  b05  piste          chenes tordus              un etre qui sait et qui ne dit pas tout : il faut le faire parler
+  b06  piste          houx                       un passage qui resiste : le lieu ne vous laisse pas avancer sans payer d'effort
+  b07  piste          gui                        un temoin de ce qui s'est passe ici avant vous : un reste, une marque, un objet aban
+  b08  piste          souches creuses            une fausse piste qui coute du temps : elle ressemble a la bonne et n'en est pas une
+  b09  tour           sentiers qui se referment  LE TOUR de la quete : Kado le Cordier, deja croise, revient et CHANGE DE CAMP. Ce qu
+  b10  montee         mousse gorgee d'eau        un prix a payer tout de suite pour continuer
+  b11  montee         chenes tordus              le lieu se referme derriere vous : reculer n'est plus une option
+  b12  montee         houx                       un etre vous met en garde une derniere fois, et il a de bonnes raisons
+  b13  montee         gui                        une porte, un seuil, une garde : le dernier obstacle avant le but
+  b14  montee         souches creuses            ce que vous avez derange se met en travers : quelque chose vous suit ou vous attend
+  b15  montee         sentiers qui se referment  un prix a payer tout de suite pour continuer
+  b16  montee         mousse gorgee d'eau        le lieu se referme derriere vous : reculer n'est plus une option
+  b17  tour           chenes tordus              LE TOUR de la quete : ce que vous cherchiez EXISTE, mais PAS comme on vous l'a dit. 
+  b18  montee         houx                       une porte, un seuil, une garde : le dernier obstacle avant le but
+  b19  montee         gui                        ce que vous avez derange se met en travers : quelque chose vous suit ou vous attend
+  b20  montee         souches creuses            un prix a payer tout de suite pour continuer
+  b21  montee         sentiers qui se referment  le lieu se referme derriere vous : reculer n'est plus une option
+  b22  montee         mousse gorgee d'eau        un etre vous met en garde une derniere fois, et il a de bonnes raisons
+  b23  confrontation  chenes tordus              le DERNIER CHOIX avant la fin : deux voies s'ouvrent et celle que vous prenez decide
+  b24  confrontation  houx                       la CONFRONTATION FINALE qui RESOUT « Le Chant du Chene Creux » : vous atteignez, obt
+
+
+────────── PROMPT DU BEAT 1 sur 24 (arrivee) ──────────
+». SI CET ETRE PARLE, ajoute UNE derniere ligne, seule, sous cette forme exacte : NOM — attitude : « sa parole » (attitude = un ou deux mots). Rien d'autre que la scene.
+FORCES AUTORISEES (liste FERMEE) : Instinct, Nature, Ruse. La scene ne doit exiger QUE des forces de cette liste.
+SCENE 1 sur 24.
+OU EN EST LA QUETE : l'arrivee (beat 1 sur 24 de la quete).
+MATIERE DE CETTE SCENE (touche-la, ne la nomme pas deux fois) : gui. Une AUTRE que celle du beat precedent.
+ROLE de cette scene : l'ARRIVEE : vous entrez dans le lieu et vous DECOUVREZ ce qui s'y joue, sans encore savoir a qui vous avez affaire ; ecris une scene ou il faut sentir le danger, suivre son intuition ET parler aux betes et aux plantes, lire la foret (c'est CE que le Voyageur devra faire).
+CE QUI EST DEJA ACQUIS (vrai, ne le contredis JAMAIS, sers-t'en) : le Chevalier cherche la meme chose ; la corde est trop courte ; Kado a menti sur le compte.
+SCENE PRECEDENTE (ne la reecris pas) : Vous avez tire la corde et elle a tenu.
+CE QUE LE VOYAGEUR VIENT DE FAIRE ET SON RESULTAT : vous avez vu ce qui se cachait
+Ta scene DECOULE de ce resultat : elle en porte la trace visible (une porte ouverte reste ouverte, un etre offense reste offense, une dette suit).
+CE QUE LES ETRES SE RAPPELLENT DE VOUS : Kado le Cordier : allie (votre aide, moment 4). Un etre qui revient AGIT selon cela (un allie aide, un hostile barre ou trompe).
+
+
+────────── PROMPT DU BEAT 9 sur 24 (tour) ──────────
+de : « sa parole » (attitude = un ou deux mots). Rien d'autre que la scene.
+FORCES AUTORISEES (liste FERMEE) : Instinct, Nature, Ruse. La scene ne doit exiger QUE des forces de cette liste.
+SCENE 9 sur 24.
+OU EN EST LA QUETE : le tour (beat 9 sur 24 de la quete).
+MATIERE DE CETTE SCENE (touche-la, ne la nomme pas deux fois) : sentiers qui se referment. Une AUTRE que celle du beat precedent.
+ROLE de cette scene : LE TOUR de la quete : Kado le Cordier, deja croise, revient et CHANGE DE CAMP. Ce qu'il faisait pour vous, il le fait contre vous, ou l'inverse. Dis-le par un FAIT, pas par une explication ; ecris une scene ou il faut sentir le danger, suivre son intuition ET parler aux betes et aux plantes, lire la foret (c'est CE que le Voyageur devra faire).
+CE QUI EST DEJA ACQUIS (vrai, ne le contredis JAMAIS, sers-t'en) : le Chevalier cherche la meme chose ; la corde est trop courte ; Kado a menti sur le compte.
+SCENE PRECEDENTE (ne la reecris pas) : Vous avez tire la corde et elle a tenu.
+CE QUE LE VOYAGEUR VIENT DE FAIRE ET SON RESULTAT : vous avez vu ce qui se cachait
+Ta scene DECOULE de ce resultat : elle en porte la trace visible (une porte ouverte reste ouverte, un etre offense reste offense, une dette suit).
+CE QUE LES ETRES SE RAPPELLENT DE VOUS : Kado le Cordier : allie (votre aide, moment 4). Un etre qui revient AGIT selon cela (un allie aide, un hostile barre ou trompe).
+
+
+────────── PROMPT DU BEAT 24 sur 24 (confrontation) ──────────
+s cette forme exacte : NOM — attitude : « sa parole » (attitude = un ou deux mots). Rien d'autre que la scene.
+FORCES AUTORISEES (liste FERMEE) : Instinct, Nature, Ruse. La scene ne doit exiger QUE des forces de cette liste.
+SCENE 24 sur 24.
+OU EN EST LA QUETE : la confrontation, 2e beat sur 2 (beat 24 sur 24 de la quete).
+MATIERE DE CETTE SCENE (touche-la, ne la nomme pas deux fois) : houx. Une AUTRE que celle du beat precedent.
+ROLE de cette scene : la CONFRONTATION FINALE qui RESOUT « Le Chant du Chene Creux » : vous atteignez, obtenez ou affrontez ce que la quete promet, et cela se termine ici ; ecris une scene ou il faut sentir le danger, suivre son intuition ET parler aux betes et aux plantes, lire la foret (c'est CE que le Voyageur devra faire).
+CE QUI EST DEJA ACQUIS (vrai, ne le contredis JAMAIS, sers-t'en) : le Chevalier cherche la meme chose ; la corde est trop courte ; Kado a menti sur le compte.
+SCENE PRECEDENTE (ne la reecris pas) : Vous avez tire la corde et elle a tenu.
+CE QUE LE VOYAGEUR VIENT DE FAIRE ET SON RESULTAT : vous avez vu ce qui se cachait
+Ta scene DECOULE de ce resultat : elle en porte la trace visible (une porte ouverte reste ouverte, un etre offense reste offense, une dette suit).
+CE QUE LES ETRES SE RAPPELLENT DE VOUS : Kado le Cordier : allie (votre aide, moment 4). Un etre qui revient AGIT selon cela (un allie aide, un hostile barre ou trompe).

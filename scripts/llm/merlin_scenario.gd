@@ -1030,6 +1030,34 @@ func _voice_prefix() -> String:
 
 
 ## 09/09 — ce que les figures rencontrées ont retenu du Voyageur (MerlinRun.figures_resume). Vide si rien.
+## 09/09 — LE CONTEXTE DE COURBE passé aux prompts : le registre des faits acquis (continuité), le
+## biome (la matière imposée à chaque scène) et la figure déjà croisée (le Tour « l'être se retourne »
+## n'existe que si on a rencontré quelqu'un).
+func _contexte_de_courbe() -> Dictionary:
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run == null:
+		return {}
+	var croisee: String = ""
+	var figs: Variant = run.get("figures")
+	if figs is Dictionary and not (figs as Dictionary).is_empty():
+		# La dernière figure vue, nommée en clair : c'est elle qui peut se retourner.
+		var derniere: String = ""
+		var vu_max: int = -1
+		for cle in (figs as Dictionary).keys():
+			var f: Dictionary = (figs as Dictionary)[cle]
+			var beats: Array = f.get("beats", [])
+			var dernier_beat: int = int(beats[beats.size() - 1]) if not beats.is_empty() else 0
+			if dernier_beat >= vu_max:
+				vu_max = dernier_beat
+				derniere = str(f.get("nom", cle))
+		croisee = derniere
+	return {
+		"registre": str(run.call("registre")) if run.has_method("registre") else "",
+		"biome": str(run.get("biome")),
+		"figure_croisee": croisee,
+	}
+
+
 func _memoire_des_figures() -> String:
 	var run: Node = get_node_or_null("/root/MerlinRun")
 	if run == null or not run.has_method("figures_resume"):
@@ -2196,7 +2224,7 @@ func prefetch_scene_suivante(run_node: Node) -> void:
 	var pj: Dictionary = MerlinPromptBuilder.scene_jit(
 		{"title": titre, "pitch": str(_run_thread.get("pitch", ""))},
 		btype, qn - 1, total, tags, precedent, issue_prec, fblock, _lieu_name(),
-		pool_display_list(pool_info), _memoire_des_figures())
+		pool_display_list(pool_info), _memoire_des_figures(), _contexte_de_courbe())
 	var r: Dictionary = await mn.generate(str(pj["system"]), str(pj["user"]), pj["opts"])
 	_scene_jit_qn = -1
 	if r.has("error"):
@@ -2468,7 +2496,7 @@ func narrate_arc_tranche(scenario: Dictionary, req_tags: Array, types: Array, de
 		str(_run_thread.get("faction", "")), str(_run_thread.get("pilier", "")),
 		str(_run_thread.get("pilier2", "")), bool(_run_thread.get("pnj_recog", false)))
 	var p: Dictionary = MerlinPromptBuilder.arc_tranche(scenario, req_tags, types, debut, total,
-			precedent, fblock, _lieu_name(), pool_display_list(_live_pool_info()))
+			precedent, fblock, _lieu_name(), pool_display_list(_live_pool_info()), _contexte_de_courbe())
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):
 		return []
@@ -2505,6 +2533,8 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# prier, les druides s'interrompent — pour un coût quasi identique (47 → 51 s, l'évaluation
 	# domine). « Les résolutions sont trop légères » : c'est ce palier qui répond.
 	_run_thread["figures"] = _memoire_des_figures()  # 09/09 : les êtres se souviennent
+	var _ctx_i: Dictionary = _contexte_de_courbe()
+	_run_thread["registre"] = str(_ctx_i.get("registre", ""))  # 09/09 : la continuité, ce qui est acquis
 	var p: Dictionary = MerlinPromptBuilder.resolution(situation, played_cards, res, _run_thread, RICHESSE_ISSUE)
 	var r: Dictionary = await mn.generate(str(p["system"]), str(p["user"]), p["opts"])
 	if r.has("error"):

@@ -89,6 +89,24 @@ static func extraire_parole(t: String) -> Dictionary:
 	return out
 
 
+## 09/09 — LE FAIT ACQUIS. Le modèle finit l'issue par une ligne « ACQUIS : ce qu'on sait maintenant »
+## (six mots). Elle ne s'affiche jamais : elle entre au registre de continuité (MerlinRun.noter_acquis)
+## et revient dans les prompts des beats suivants. Rend {fait, reste}.
+static func extraire_acquis(t: String) -> Dictionary:
+	var out: Dictionary = {"fait": "", "reste": t}
+	var texte: String = t.strip_edges()
+	if texte == "":
+		return out
+	var re: RegEx = RegEx.new()
+	re.compile("(?im)^\\s*ACQUIS\\s*[:\\-]\\s*(.{3,120}?)\\s*$")
+	var m: RegExMatch = re.search(texte)
+	if m == null:
+		return out
+	out["fait"] = m.get_string(1).strip_edges().trim_prefix("«").trim_suffix("»").strip_edges()
+	out["reste"] = (texte.substr(0, m.get_start()) + texte.substr(m.get_end())).strip_edges()
+	return out
+
+
 static func clean_prose(s: String) -> String:
 	var t: String = repair_accents(s.strip_edges())  # v11 (R156) : filet accents sur la prose LLM affichée
 	if t.is_empty():

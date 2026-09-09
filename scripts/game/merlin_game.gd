@@ -1227,8 +1227,16 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	# Texte COMBINÉ : ce qui est RÉELLEMENT affiché (situation, éventuellement enrichie) + l'issue, à la suite.
 	# _typewriter(from_chars = longueur situation) → seule l'issue se révèle, la situation reste écrite.
 	# 09/09 : si la figure répond, sa parole va au portrait et l'issue garde les faits.
-	var parole_i: Dictionary = MerlinProse.extraire_parole(narration)
-	var issue_affichee: String = narration
+	# 09/09 — LE FAIT ACQUIS (continuité) : la dernière ligne « ACQUIS : … » entre au registre du run
+	# et ne s'affiche JAMAIS. Elle est retirée AVANT la parole : elle vient après elle dans le texte.
+	var sans_acquis: String = narration
+	var acq: Dictionary = MerlinProse.extraire_acquis(narration)
+	if str(acq.get("fait", "")) != "":
+		sans_acquis = str(acq.get("reste", narration))
+		if _rn != null and _rn.has_method("noter_acquis"):
+			_rn.call("noter_acquis", str(acq["fait"]))
+	var parole_i: Dictionary = MerlinProse.extraire_parole(sans_acquis)
+	var issue_affichee: String = sans_acquis
 	if str(parole_i.get("dit", "")) != "" and str(parole_i.get("reste", "")).strip_edges() != "":
 		issue_affichee = str(parole_i["reste"])
 		_montrer_le_portrait(parole_i)
@@ -2969,6 +2977,13 @@ func _ouvrir_le_journal() -> void:
 		fl.text = "Rencontrés : " + ", ".join(noms)
 		fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		v.add_child(fl)
+	# 09/09 — CE QUE VOUS SAVEZ : le registre de continuité, celui que le modèle reçoit à chaque beat.
+	if run.has_method("registre") and str(run.call("registre")) != "":
+		v.add_child(HSeparator.new())
+		var rl: Label = MerlinVisual.make_label(MerlinVisual.CREAM, MerlinVisual.FS_HINT)
+		rl.text = "Ce que vous savez : " + str(run.call("registre"))
+		rl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(rl)
 	if not (run.faits_marquants as Array).is_empty():
 		var fm: Label = MerlinVisual.make_label(MerlinVisual.DIM_WARM, MerlinVisual.FS_HINT)
 		fm.text = "Faits marquants : " + " · ".join(PackedStringArray(run.faits_marquants))

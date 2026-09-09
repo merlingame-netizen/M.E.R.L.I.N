@@ -2,6 +2,27 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-09-09 (suite 3) : la courbe de la quête — continuité, variété, rebondissements : FAIT
+
+Demande de Maxime : « la priorité est la continuité dans la quête, varier les situations, créer du
+dynamisme et des rebondissements, être concentré sur les actions et leur continuité pour que tout
+semble cohérent ». Tranché en AskUserQuestion : cinq mouvements ; le Tour = le but n'était pas le but
++ l'être se retourne ; un registre des faits acquis ; jamais deux fois le même rôle + une matière par beat.
+
+- [x] `scripts/llm/merlin_courbe.gd` (MerlinCourbe, pur et déterministe) : cinq mouvements, le Tour au
+      milieu (deux tours dès 14 beats, jamais voisins, de formes différentes), dix rôles de piste et de
+      montée tirés sans répétition, la matière du lieu tirée de la table des biomes, l'état en clair
+- [x] `_role_de_beat` du prompt builder délègue à la courbe ; `_ancrage` (état + matière) et
+      `_registre_bloc` injectés dans scene_jit ET arc_tranche ; le registre entre aussi dans l'issue
+- [x] Registre des faits acquis : `MerlinRun.faits_acquis` (5 max, 10 mots, ni doublon ni vide),
+      `noter_acquis` / `registre`, persisté ; la consigne `ACQUIS : …` en fin d'issue ;
+      `MerlinProse.extraire_acquis` le retire de l'affichage ; le Journal montre « Ce que vous savez »
+- [x] `_contexte_de_courbe` (scénario) porte registre + biome + dernière figure croisée aux deux prompts
+- [x] Preuves : test_courbe (39 vérifications, dont « de 2 à 40 beats, aucun plan bancal ») ; huit
+      épreuves de régression vertes ; `tools/probe_courbe_prompts.gd` →
+      docs/captures/2026-09-09_courbe/courbe_et_prompts.txt (plan de 24 beats + 3 prompts complets)
+- [x] Bible des règles v1.6, §2.3bis La courbe de la quête
+
 ## Session: 2026-09-09 (suite 2) : 002 appliquée et le coup double : FAIT
 
 Tranché par Maxime (AskUserQuestion) : bourse visible mais figée + étal fermé sur les quêtes générées ;

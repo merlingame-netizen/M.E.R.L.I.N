@@ -1,6 +1,6 @@
 # BIBLE DES RÈGLES — comment on joue à M.E.R.L.I.N.
 
-> **v1.5 — 2026-09-09** (v1.1 du 2026-08-29, v1.2 du 2026-09-07, v1.3 et v1.4 du 2026-09-08). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
+> **v1.6 — 2026-09-09** (v1.1 du 2026-08-29, v1.2 du 2026-09-07, v1.3 et v1.4 du 2026-09-08, v1.5 du 2026-09-09). Ce document dit comment une partie se joue. Il ne dit pas ce que le monde
 > contient (`docs/BIBLE.md`, canon R1 à R191) ni à quoi ressemblent les écrans
 > (`docs/70_graphic/UI_UX_BIBLE.md`).
 >
@@ -147,6 +147,43 @@ qui ne lit jamais la scène meurt six fois sur dix : lire est le jeu. L'épreuve
 > mortalité est donc un plancher, pas celle d'un humain. Mesuré le 07/09, l'oracle est inerte sous
 > v55 — zéro choix divergent sur 165 Épreuves et 165 Climax — parce que le dé n'y dispense plus
 > rien ; mais tant qu'il voit le dé, la nuit mesure la règle, pas le joueur.
+
+### 2.3bis La courbe de la quête (2026-09-09)
+
+Une quête n'est pas une file de beats : elle **monte**. Le rôle d'une scène vient de sa **position**,
+plus d'une table de quatre lignes rejouée en boucle — sur la partie témoin p104, vingt-quatre scènes
+générées tournaient sur « une progression », « une rencontre », « un obstacle », « un choix », et
+la partie était plate. Maxime a tranché le 09/09 : **cinq mouvements**.
+
+| Mouvement | Part | Ce qui s'y passe |
+|---|---|---|
+| **Arrivée** | 1 beat | on entre, on découvre ce qui se joue |
+| **Piste** | jusqu'au premier tour | on apprend, on s'enfonce, la piste se précise |
+| **Tour** | 1 beat (2 sur une quête longue) | ce qu'on croyait **se retourne** |
+| **Montée** | jusqu'à la fin | le prix monte, l'étau se serre, reculer n'est plus une option |
+| **Confrontation** | 2 derniers beats | le dernier choix, puis la résolution |
+
+**Le Tour** prend deux formes, tranchées le 09/09 : *le but n'était pas le but* (la chose est déjà
+prise, le coupable n'est pas celui qu'on accuse, le secret protégeait quelqu'un — le but ne
+disparaît pas, il se **corrige**) et *l'être se retourne* (une figure déjà croisée change de camp,
+selon la disposition qu'elle a gardée, §3.2bis). La seconde forme n'existe que si une figure a été
+rencontrée. Une quête de moins de cinq beats n'a pas de Tour ; à partir de quatorze beats elle en
+porte **deux**, jamais voisins, de formes différentes — un seul retournement sur vingt-quatre beats
+laissait onze beats de piste plate.
+
+**La variété** est imposée par le plan, pas espérée du modèle : aucun rôle ne se répète deux beats
+de suite, et chaque scène reçoit une **matière** du lieu (la mousse, le houx, les souches creuses,
+les sentiers qui se referment) différente de celle du beat précédent, tirée de la table des biomes.
+
+**La continuité** tient dans un **registre des faits acquis** : cinq faits courts que le jeu garde
+et passe à chaque scène **et** à chaque issue (« ne le contredis JAMAIS, sers-t'en »). Le modèle les
+écrit lui-même : chaque issue finit par une ligne `ACQUIS : …` de six mots, qui n'est jamais
+affichée, entre au registre et se lit dans le Journal de quête sous « Ce que vous savez ».
+
+Source : `scripts/llm/merlin_courbe.gd`, `MerlinRun.noter_acquis` / `registre`,
+`MerlinProse.extraire_acquis`. Preuves : `tools/tests/test_courbe.gd` (39 vérifications),
+`docs/captures/2026-09-09_courbe/courbe_et_prompts.txt` (le plan d'une quête de 24 beats et trois
+prompts complets).
 
 ### 2.4bis Le coup double (2026-09-09)
 

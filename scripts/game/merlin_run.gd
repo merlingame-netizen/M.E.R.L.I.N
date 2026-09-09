@@ -83,6 +83,11 @@ var figures: Dictionary = {}
 # 09/09 (Maxime : « le geste combiné ») — LE COUP DOUBLE : action + deux traits, UNE fois par
 # sentier. DC +3, l'éclatante dès +4 de marge, les points de talent doublés. Jamais de geste sûr.
 var coup_double_utilise: bool = false
+# 09/09 (Maxime : « la continuité, que tout semble cohérent ») — LE REGISTRE DES FAITS ACQUIS.
+# Cinq faits courts, tenus par le jeu, écrits par le modèle en fin d'issue (« ACQUIS : … ») : ce
+# qu'on a appris, ce qu'on porte, ce qu'on a perdu, qui nous doit quoi. Passés à CHAQUE scène et à
+# CHAQUE issue : le modèle ne peut plus contredire ce qui a eu lieu six beats plus tôt.
+var faits_acquis: Array = []
 var choix_cles: Array = []
 var cartes_notables: Array = []
 var archetype_scores: Dictionary = {}  # v10.11 : compteur des archétypes des cartes JOUÉES (→ Carte Destin)
@@ -378,6 +383,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	pnj_rencontres = []
 	figures = {}
 	coup_double_utilise = false
+	faits_acquis = []
 	choix_cles = []
 	cartes_notables = []
 	archetype_scores = {}
@@ -1701,6 +1707,37 @@ func _shuffle(arr: Array) -> void:
 		arr[j] = tmp
 
 
+# --- 09/09 : LE REGISTRE DES FAITS ACQUIS (la continuité) ---
+
+const FAITS_MAX: int = 5
+const FAIT_MOTS_MAX: int = 10
+
+
+## Un fait acquis entre au registre. Le plus ancien sort quand il est plein : ce qui compte pour la
+## suite, c'est ce qu'on vient d'apprendre, pas le premier pas. Refuse les doublons et le vide.
+func noter_acquis(fait: String) -> bool:
+	var t: String = fait.strip_edges().trim_suffix(".").strip_edges()
+	if t.length() < 4:
+		return false
+	var mots: PackedStringArray = t.split(" ", false)
+	if mots.size() > FAIT_MOTS_MAX:
+		t = " ".join(mots.slice(0, FAIT_MOTS_MAX))
+	for f in faits_acquis:
+		if str(f).to_lower() == t.to_lower():
+			return false
+	faits_acquis.append(t)
+	while faits_acquis.size() > FAITS_MAX:
+		faits_acquis.remove_at(0)
+	return true
+
+
+## Le registre en une ligne, pour les prompts et le Journal. Vide si rien n'a encore été acquis.
+func registre() -> String:
+	if faits_acquis.is_empty():
+		return ""
+	return " ; ".join(PackedStringArray(faits_acquis))
+
+
 # --- 09/09 : LES FIGURES SE SOUVIENNENT ---
 
 const DISPOSITION_MIN: int = -3
@@ -1816,6 +1853,7 @@ func save() -> void:
 		"pnj_rencontres": pnj_rencontres,
 		"figures": figures,  # 09/09 : les êtres se souviennent (additif, défaut {} au load)
 		"coup_double_utilise": coup_double_utilise,  # 09/09 : une fois par sentier (additif, défaut false)
+		"faits_acquis": faits_acquis,  # 09/09 : le registre de continuité (additif, défaut [] au load)
 		"choix_cles": choix_cles,
 		"cartes_notables": cartes_notables,
 		"archetype_scores": archetype_scores,
@@ -1880,6 +1918,7 @@ func load_run() -> bool:
 	pnj_rencontres = data.get("pnj_rencontres", [])
 	figures = data.get("figures", {}) if data.get("figures", {}) is Dictionary else {}
 	coup_double_utilise = bool(data.get("coup_double_utilise", false))
+	faits_acquis = data.get("faits_acquis", []) if data.get("faits_acquis", []) is Array else []
 	choix_cles = data.get("choix_cles", [])
 	cartes_notables = data.get("cartes_notables", [])
 	archetype_scores = data.get("archetype_scores", {})
