@@ -28,3 +28,5 @@
 | 2026-09-09 | MerlinJournal.beat_pose ajoutait une entrée à chaque présentation du même beat (le Journal affichait « 2 · Rencontre » deux fois) | beat_pose idempotent : même n sans degré → remplace | capture journal_de_quete |
 | 2026-09-09 | PRESET_CENTER seul sur un PanelContainer le fait grandir vers le bas-droite (Fermer hors écran) | set_anchors_and_offsets_preset(CENTER) + grow BOTH + min size bornée au viewport | capture journal_de_quete |
 | 2026-09-09 | contains("menac") ne reconnaît pas « menaçant » (cédille) | ajouter la variante avec ç dans toute heuristique de mot | test_figures |
+| 2026-09-09 | p104 : 24 scènes générées tournaient sur 4 rôles en boucle, sans montée ni retournement | le rôle vient de la POSITION dans la quête (cinq mouvements), pas du type du beat | docs/captures/2026-09-09_courbe |
+| 2026-09-09 | Une nouvelle class_name GDScript n'est pas vue par --check-only tant que --import n'a pas tourné | lancer l'import en tâche de fond et continuer à câbler pendant ce temps | MerlinCourbe |

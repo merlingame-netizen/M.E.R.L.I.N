@@ -35,3 +35,19 @@
 - Rejetés : seconde tuile défaussée, coût en corruption, restriction aux Épreuves/Climax, blocage
   avant le beat 3.
 - Bible des règles v1.5 (§2.4bis, §3.2, §3.2bis, §4).
+
+## 2026-09-09 : la courbe de la quête (AskUserQuestion)
+- Priorité de Maxime : « la continuité dans la quête, varier les situations, du dynamisme et des
+  rebondissements, bien concentré sur les actions et leur continuité pour que tout semble cohérent ».
+- Retenu : CINQ MOUVEMENTS (arrivée, piste, tour, montée, confrontation) ; le Tour = « le but n'était
+  pas le but » ET « l'être se retourne » (les deux) ; un REGISTRE DES FAITS ACQUIS ; jamais deux fois
+  le même rôle d'affilée + une MATIÈRE imposée par beat.
+- Rejetés : trois actes simples, le plan complet écrit à l'avance par Merlin, le lieu qui se referme
+  et le prix qui se révèle (comme formes de Tour), le résumé des trois derniers beats, le résumé
+  Merlin tous les cinq beats, l'interdiction des mots déjà servis, la fourchette de rythme.
+- Conséquence assumée, non tranchée par Maxime : sur une quête de 14 beats et plus, DEUX tours (au
+  tiers et aux deux tiers, jamais voisins, de formes différentes) — un seul retournement sur
+  vingt-quatre beats laissait onze beats de piste plate.
+- Le registre est écrit PAR LE MODÈLE : chaque issue finit par « ACQUIS : … » (six mots), jamais
+  affichée, extraite par MerlinProse, bornée à cinq faits, relue dans les deux prompts et au Journal.
+- Bible des règles v1.6, §2.3bis.
