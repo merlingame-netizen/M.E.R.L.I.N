@@ -27,3 +27,10 @@ site/public.build.html
 # Kit WhatsApp genere : il ne porte ni URL ni adresse, mais il se refabrique
 # en une commande, il n'a pas a vivre dans le depot.
 whatsapp/kit.html
+
+# Cloudflare : la page construite porte l'IBAN et l'adresse, le jeton
+# d'administration est un secret, et l'etat local de wrangler est jetable.
+cloudflare/public/
+cloudflare/.admin-token
+cloudflare/.wrangler/
+cloudflare/node_modules/

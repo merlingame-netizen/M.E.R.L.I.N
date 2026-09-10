@@ -1,0 +1,13 @@
+# Cloudflare Pages + Functions + D1 — le tout sur le palier gratuit :
+# 100 000 requêtes/jour, 100 000 écritures/jour, 5 Go. Pour neuf invités,
+# c'est six ordres de grandeur au-dessus du besoin.
+name = "anniv-elise"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "anniv-elise"
+# Rempli par `deploy.sh` au premier lancement — la commande
+# `wrangler d1 create` renvoie l'identifiant.
+database_id = "__A_REMPLIR__"
