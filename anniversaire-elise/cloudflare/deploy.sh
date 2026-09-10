@@ -72,9 +72,26 @@ printf '%s' "$JETON" | npx --yes wrangler@latest pages secret put ADMIN_TOKEN \
 
 # ── 6. Vérification de bout en bout ─────────────────────────────────────────
 say "Vérification"
+# Cette vérification n'est pas une politesse. Si le binding D1 ne monte pas,
+# rien ne le dit au déploiement : la page s'affiche normalement et c'est
+# seulement à la première réponse que `env.DB` sort `undefined`, en 500.
+# On appelle donc l'API pour de bon avant d'annoncer quoi que ce soit.
 SANTE="$(curl -fsS --max-time 20 "$URL/api/etat" || true)"
-[ -n "$SANTE" ] || die "l'API ne répond pas encore — réessaie dans une minute, puis $URL/api/etat"
+if [ -z "$SANTE" ]; then
+  curl -sS --max-time 20 "$URL/api/etat" | head -5 | sed 's/^/    /' || true
+  die "l'API ne répond pas. Si l'erreur parle de 'prepare' ou de 'undefined',
+    c'est le binding D1 : ouvre le tableau de bord Cloudflare, Pages →
+    $PROJET → Settings → Bindings, et déclare D1 'DB' sur la base
+    '$PROJET'. Sinon, réessaie dans une minute : $URL/api/etat"
+fi
 echo "    $SANTE"
+
+# ── 7. Le lien, partout ─────────────────────────────────────────────────────
+# La publication ne vaut rien tant que les messages pointent ailleurs : on
+# enchaîne, plutôt que de laisser une commande à recopier.
+say "Propagation du lien dans les messages"
+python3 "$ICI/../whatsapp/set_url.py" "$URL" | sed 's/^/    /' \
+  || die "le lien n'a pas pu être propagé — lance set_url.py à la main"
 
 cat <<RECAP
 
@@ -96,8 +113,9 @@ cat <<RECAP
       bash anniversaire-elise/cloudflare/deploy.sh
   Les réponses déjà données ne bougent pas.
 
-  Mettre ce lien dans les messages WhatsApp :
-      python3 anniversaire-elise/whatsapp/build_messages.py --url "$URL"
-      python3 anniversaire-elise/whatsapp/build_kit.py --url "$URL"
+  Les messages WhatsApp portent déjà ce lien : il vient d'être écrit dans
+  05_post_aix.md, messages_prets.md et kit.html. Rien à recopier.
+      whatsapp/messages_prets.md   les six blocs, adresse et IBAN remplis
+      whatsapp/kit.html            la même chose, à copier en un clic
 
 RECAP

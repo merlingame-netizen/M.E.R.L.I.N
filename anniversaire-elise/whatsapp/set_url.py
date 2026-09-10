@@ -58,7 +58,10 @@ def main() -> None:
 
     vieille = url_actuelle()
     if neuve == vieille:
-        sys.exit("c'est déjà cette adresse : " + neuve)
+        # Idempotent, et sans code d'erreur : `deploy.sh` finit par nous
+        # appeler à chaque publication, y compris quand rien n'a bougé.
+        print("déjà cette adresse, rien à changer : " + neuve)
+        return
 
     if not args.sans_verif:
         ok, detail = joignable(neuve)
