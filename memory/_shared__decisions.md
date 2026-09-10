@@ -25,3 +25,14 @@
 - Pourquoi : l'agent Oracle des images Ubuntu (snap) N'EMBARQUE PAS le plugin « Compute Instance Run Command » (vérifié : 10 plugins listés, Run Command absent après 50 min + reboot). Sans SSH sortant depuis le sandbox Claude, Run Command est le SEUL canal de pilotage agent → Ubuntu = VM impilotable.
 - Règle : toute VM OCI destinée à être pilotée par l'agent DOIT être Oracle Linux (utilisateur `opc`). `agent_launch.py --os oracle9` est le défaut.
 - Provisioning : cloud-init minimal + `infra/oracle/studio/provision-ol9.sh` via Run Command (godot 4.6 arm64, node 20, ollama, repo, up.sh Studio+tunnel, pull Gemma en arrière-plan).
+
+## 2026-09-10: Style de rédaction des mails figé en mémoire
+- **quoi** : `memory/_shared__business_rules.md` devient la règle permanente de rédaction
+  de tout mail. Bannissement définitif de « Ce que j'attends de vous » (et variantes) +
+  liste noire des marqueurs de rédaction IA (sections en gras, « n'hésitez pas à revenir
+  vers moi », tirets cadratins, triades, emojis). Banque de formulations réelles
+  (ouverture / demande / relance / livraison / réserve / clôture) à réutiliser telles quelles.
+  Outil `tools/mail_style_mine.py` : extrait les tournures récurrentes des Éléments envoyés
+  Outlook et alimente la §5 du fichier mémoire (poste Windows, Outlook ouvert).
+- **pourquoi** : les brouillons sonnaient IA et employaient une formule descendante que
+  Maxime n'utilise jamais ; l'objectif est un mail indiscernable de sa rédaction habituelle.

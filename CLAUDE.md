@@ -165,6 +165,19 @@ Pattern multi-round : R1 (divergences fondamentales) → R2 (implications) → R
 - **asset_spawn_animator** module commun
 - **Merlin speech-bar + TTS** pendant scenario writing
 
+### 11. Rédaction de mails — Style Maxime (NON-NÉGOCIABLE)
+
+**Décrété 2026-09-10.** Avant de rédiger ou proposer **tout** mail (Outlook pro, Gmail perso,
+relance, compte rendu), LIRE `memory/_shared__business_rules.md` et l'appliquer intégralement.
+
+- **INTERDIT DÉFINITIF** : « Ce que j'attends de vous » et toutes ses variantes
+  (« ce que j'attends de toi », « mes attentes », rubrique « Attendus »).
+- Liste noire complète des marqueurs de rédaction IA + banque de formulations habituelles :
+  voir §1 à §3 du fichier mémoire. Piocher les tournures telles quelles, ne pas en inventer.
+- Corpus réel : `python tools/mail_style_mine.py --limit 200 --write` (poste Windows, Outlook ouvert).
+
+---
+
 ### 9. Game Design & Playthrough — Cascade Obligatoire (NON-NÉGOCIABLE)
 
 **Décrété 2026-05-14 part 16.** Toute activité touchant au game design DOIT
