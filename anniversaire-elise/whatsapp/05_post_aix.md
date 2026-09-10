@@ -54,7 +54,8 @@ description ci-dessous — les deux se collent tels quels.
 ### 3. Coller, puis épingler
 
 Colle le **message A** dans le groupe, puis maintiens-le appuyé →
-**Épingler**. C'est lui qui porte le lien du site et l'adresse.
+**Épingler**. Il est court : tout le détail vit sur la page, où il reste
+à jour. L'adresse, elle, n'est que dans le message C et le message D.
 
 > Les messages avec l'URL, l'adresse et l'IBAN déjà dedans sont dans
 > `whatsapp/messages_prets.md`, produit par&nbsp;:
@@ -80,7 +81,7 @@ Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
 Tout est sur la page : programme, itinéraire, votes et cadeau.
 
 Répondez ici : VOTRE-URL-ICI
-Deadline : samedi 19 septembre.
+Réponses avant le vendredi 25 septembre.
 
 ⚠️ L'adresse est épinglée dans ce groupe, pas sur le site.
 ```
@@ -90,76 +91,32 @@ Deadline : samedi 19 septembre.
 ## Message A — l'annonce ⏱ maintenant, **à épingler**
 
 ```
-Salut tout le monde 👋
+✨ ELISE A 30 ANS ✨
 
-Elise a 30 ans. On fête ça chez nous, et vous êtes invités.
+Et on fête ça chez nous, à Aix, le week-end du 10 octobre.
+Vous êtes invités — tous les neuf.
 
-📅 Samedi 10 octobre à partir de 14h → dimanche 11 en milieu d'après-midi
-🏡 Chez nous, à Aix-en-Provence
-🛏️ Lits, canapés et matelas d'appoint — on a de quoi loger tout le monde,
-   n'y pensez pas
+📅  Samedi 10 octobre, 14h → dimanche 11, milieu d'après-midi
+🏡  Chez nous. On vous loge, ne prévoyez rien pour dormir.
 
-🎁 Le jour J, on ne vous demandera rien. Pour le cadeau, tout est expliqué
-sur la page. Et n'écrivez rien de précis ici : elle circule.
+Au programme : mölkky au parc, escape game, apéro dînatoire,
+gâteaux, jeux jusqu'à pas d'heure. Et le dimanche, ce que vous
+voulez.
 
-👉 Tout se règle ici, en deux minutes : VOTRE-URL-ICI
+👉  TOUT EST LÀ, EN PHOTOS :
+VOTRE-URL-ICI
 
-Quatre choses, dans l'ordre :
-1️⃣ Vous dites juste oui ou non
-2️⃣ Vous dites d'où et QUAND vous arrivez. L'ITINÉRAIRE S'AFFICHE ALORS,
-    VERS L'ENDROIT OÙ ON SERA À CETTE HEURE-LÀ — la maison, le parc ou
-    l'escape game — avec la maison en second choix. Deux boutons :
-    Google Maps et Plans. Pensez à caler la date du 10 octobre dans
-    l'appli, elle calcule pour aujourd'hui par défaut. Le couchage, n'y
-    pensez pas : on a de quoi loger tout le monde.
-3️⃣ Vous votez dans l'onglet « Le week-end », chaque vote est sous la
-    photo de ce qu'il décide
-4️⃣ Vous relisez. La page garde tout — vous pouvez revenir corriger
+Sur la page, en trois minutes :
+· vous dites si vous venez, quand vous arrivez et quand vous repartez
+· l'itinéraire s'affiche tout seul, vers le bon endroit selon votre heure
+· vous votez ce qui vous tente — la salle d'escape, les parfums des
+  deux gâteaux, la suite de la soirée
+· vous signalez vos allergies
 
-🎲 LE PROGRAMME, EN PHOTOS SUR LA PAGE (onglet « Le week-end ») :
+⏳  Réponse avant le VENDREDI 25 SEPTEMBRE.
+Passé cette date je réserve, et c'est trop tard pour changer.
 
-SAMEDI
-14h — accueil à la maison. MANGEZ AVANT D'ARRIVER : le premier repas
-       est celui du soir.
-15h — mölkky et pétanque au PARC JOURDAN (av. Anatole France, accès
-       libre). On y va en bus tous ensemble.
-17h — ESCAPE GAME chez Move To Aixit, quatre salles en parallèle :
-       Pandora, Chasseurs de trésor, Les Explorateurs urbains, Le GIGN.
-       Vous votez la salle qui vous tente sur la page. Rien à sortir sur
-       place, mais ça se réserve à l'avance : répondez vite.
-19h — AU VOTE : soit on reste sur place, au bar à jeux (300 jeux,
-       planches et tapas jusqu'à 22h), soit on rentre pour l'apéro dînatoire.
-22h — LES GÂTEAUX : il y en aura deux, et c'est vous qui choisissez les
-       parfums. Cinq propositions par gâteau sur la page.
-       ⚠️ ALLERGIES ET RÉGIMES : un champ leur est réservé. Les deux repas
-       à la maison — apéro dînatoire et brunch — s'y adaptent, mais il faut
-       le dire avant que le traiteur monte les plateaux.
-22h30 — soirée jeux de société et animations. Rien à voter, c'est réservé —
-       mais si vous avez une idée, le champ libre est là pour ça.
-
-DIMANCHE
-9h30 — le marché place Richelme, pour les lève-tôt
-11h — brunch à la maison
-Ensuite — activité libre selon vos trains : Sainte-Victoire, Bimont
-       ou le vieil Aix.
-
-🚄 POUR CEUX QUI VIENNENT DE LOIN :
-Paris → Aix TGV en 2h55 direct
-Lyon → Aix TGV en 1h07 direct
-Marseille → Aix centre en 45 min de TER, un par heure
-
-Petit conseil : si vous venez de loin, descendre à Marseille Saint-Charles
-puis prendre le TER jusqu'à Aix-centre est souvent plus simple que la gare
-TGV d'Aix, qui est à 18 km en pleine campagne.
-
-🚌 ON SE DÉPLACE EN BUS TOUT LE WEEK-END.
-Prévoyez une carte sans contact (Visa ou Mastercard, pas d'Amex) : 1,20 € le
-trajet directement sur le valideur. Sinon 1,30 € en espèces auprès du
-conducteur — gardez un peu de liquide, il n'y a pas de guichet partout.
-
-⏳ RÉPONSE AVANT LE SAMEDI 19 SEPTEMBRE, pour réserver l'escape game.
-
-Réservez vos trains tôt, les rames d'octobre se remplissent vite.
+Des questions ? Ici, je réponds 🙂
 ```
 
 ## Message B — relance ⏱ J-7, **en privé**

@@ -1,7 +1,7 @@
 # À la maison, Aix-en-Provence — 10-11 octobre 2026
 
 **Aujourd'hui : dimanche 6 septembre. J-34.**
-Réponses attendues avant le **samedi 19 septembre**, pour caler les couchages.
+Réponses attendues avant le **vendredi 25 septembre**, pour réserver l'escape game.
 
 ---
 
