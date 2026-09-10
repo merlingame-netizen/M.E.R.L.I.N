@@ -1,7 +1,12 @@
 # Le message à poster — Aix, 10-11 octobre
 
-Le lien de l'invitation est déjà dans les messages. S'il change, relance
-`build_messages.py --url https://…` et il sera remplacé partout.
+Le lien de l'invitation est écrit en clair dans les messages ci-dessous.
+S'il change — nouvel hébergement, nouveau nom de domaine — une seule commande
+le remplace partout, ici comme dans les deux générateurs&nbsp;:
+
+```bash
+python3 anniversaire-elise/whatsapp/set_url.py https://…
+```
 
 > ⚠️ **`[ADRESSE]` reste un placeholder ici, et c'est volontaire.**
 > Le dépôt `merlingame-netizen/M.E.R.L.I.N` est **public** : l'adresse du
@@ -61,10 +66,9 @@ Colle le **message A** dans le groupe, puis maintiens-le appuyé →
 > Les messages avec l'URL, l'adresse et l'IBAN déjà dedans sont dans
 > `whatsapp/messages_prets.md`, produit par&nbsp;:
 > ```bash
-> python3 anniversaire-elise/whatsapp/build_messages.py --url "https://…"
+> python3 anniversaire-elise/whatsapp/build_messages.py
 > ```
-> `deploy-vote.sh` le lance tout seul en fin de déploiement, avec l'URL du
-> tunnel — tu n'as normalement rien à faire.
+> Ce fichier-là est gitignoré : c'est le seul qui porte l'adresse en clair.
 
 ---
 
@@ -78,8 +82,8 @@ Anniv Elise — 10/11 oct à Aix
 
 ```
 Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
-Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
-Tout est sur la page : programme, itinéraire, votes et cadeau.
+Samedi à partir de 14h, dimanche jusqu'au milieu de l'après-midi.
+Tout est sur la page : programme, itinéraire, votes et cagnotte.
 
 Répondez ici : https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66
 Réponses avant le vendredi 25 septembre.
@@ -98,7 +102,7 @@ Et on fête ça chez nous, à Aix, le week-end du 10 octobre.
 Vous êtes invités — tous les neuf.
 
 📅  Samedi 10 octobre, 14h → dimanche 11, milieu d'après-midi
-🏡  Chez nous. On vous loge, ne prévoyez rien pour dormir.
+🏡  Chez nous, à Aix. L'adresse est épinglée dans ce groupe.
 
 Au programme : mölkky au parc, escape game, apéro dînatoire,
 gâteaux, jeux jusqu'à pas d'heure. Et le dimanche, ce que vous
@@ -140,7 +144,7 @@ si tu fais l'escape game, et quand tu arrives 🙏
 🚆 Les arrivées du samedi :
 [HEURE] — [PRÉNOMS] — Aix TGV
 [HEURE] — [PRÉNOMS] — Aix centre
-Je fais les allers-retours, si votre train change dites-le ici.
+Si votre train change, dites-le ici.
 
 🥾 Activité du samedi : [ACTIVITÉ] — [X] voix
 
