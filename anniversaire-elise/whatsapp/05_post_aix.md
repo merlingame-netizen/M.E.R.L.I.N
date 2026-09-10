@@ -88,7 +88,7 @@ Tout est sur la page : programme, itinéraire, votes et cagnotte.
 Répondez ici : https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66
 Réponses avant le vendredi 25 septembre.
 
-⚠️ L'adresse est épinglée dans ce groupe, pas sur le site.
+📍 L'adresse est sur la page, dans « Comment venir ».
 ```
 
 ---
@@ -102,7 +102,7 @@ Et on fête ça chez nous, à Aix, le week-end du 10 octobre.
 Vous êtes invités — tous les neuf.
 
 📅  Samedi 10 octobre, 14h → dimanche 11, milieu d'après-midi
-🏡  Chez nous, à Aix. L'adresse est épinglée dans ce groupe.
+🏡  Chez nous, à Aix. L'adresse et l'itinéraire sont sur la page.
 
 Au programme : mölkky au parc, escape game, apéro dînatoire,
 gâteaux, jeux jusqu'à pas d'heure. Et le dimanche, ce que vous
@@ -149,7 +149,6 @@ Si votre train change, dites-le ici.
 🥾 Activité du samedi : [ACTIVITÉ] — [X] voix
 
 📍 L'adresse : [ADRESSE]
-   (elle reste ici, pas sur le site)
 
 Le programme complet est toujours sur https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66
 ```

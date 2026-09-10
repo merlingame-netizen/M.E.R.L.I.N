@@ -179,7 +179,9 @@ main{padding-block:2rem 4rem}
   </div>
   <p class="avis"><b>Ces deux valeurs restent dans ton navigateur.</b> Elles ne sont pas
     écrites dans cette page, et rien n'est transmis nulle part — c'est pour ça qu'elles
-    te sont demandées ici plutôt qu'inscrites dans le dépôt, qui est public.</p>
+    te sont demandées ici plutôt qu'inscrites dans le dépôt, qui est public.<br>
+    <b>Le site a déménagé ?</b> Colle sa nouvelle adresse dans le champ de gauche&nbsp;:
+    les six blocs ci-dessous se mettent à jour ensemble, et la page s'en souvient.</p>
 </div></div>
 
 <main><div class="col">
