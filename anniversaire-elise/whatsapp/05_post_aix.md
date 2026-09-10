@@ -1,6 +1,7 @@
 # Le message à poster — Aix, 10-11 octobre
 
-Remplace `VOTRE-URL-ICI` par le lien du site.
+Le lien de l'invitation est déjà dans les messages. S'il change, relance
+`build_messages.py --url https://…` et il sera remplacé partout.
 
 > ⚠️ **`[ADRESSE]` reste un placeholder ici, et c'est volontaire.**
 > Le dépôt `merlingame-netizen/M.E.R.L.I.N` est **public** : l'adresse du
@@ -80,7 +81,7 @@ Les 30 ans d'Elise — samedi 10 → dimanche 11 octobre 2026, chez nous à Aix.
 Samedi à partir de midi, dimanche jusqu'au milieu de l'après-midi.
 Tout est sur la page : programme, itinéraire, votes et cadeau.
 
-Répondez ici : VOTRE-URL-ICI
+Répondez ici : https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66
 Réponses avant le vendredi 25 septembre.
 
 ⚠️ L'adresse est épinglée dans ce groupe, pas sur le site.
@@ -104,7 +105,7 @@ gâteaux, jeux jusqu'à pas d'heure. Et le dimanche, ce que vous
 voulez.
 
 👉  TOUT EST LÀ, EN PHOTOS :
-VOTRE-URL-ICI
+https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66
 
 Sur la page, en trois minutes :
 · vous dites si vous venez, quand vous arrivez et quand vous repartez
@@ -123,7 +124,7 @@ Des questions ? Ici, je réponds 🙂
 
 ```
 Hey [PRÉNOM] ! Il me manque ta réponse pour les 30 ans d'Elise
-(10-11 octobre, chez nous à Aix). Deux minutes : VOTRE-URL-ICI
+(10-11 octobre, chez nous à Aix). Deux minutes : https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66
 
 Le programme est en photos sur la page. J'ai surtout besoin de savoir
 si tu fais l'escape game, et quand tu arrives 🙏
@@ -146,7 +147,7 @@ Je fais les allers-retours, si votre train change dites-le ici.
 📍 L'adresse : [ADRESSE]
    (elle reste ici, pas sur le site)
 
-Le programme complet est toujours sur VOTRE-URL-ICI
+Le programme complet est toujours sur https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66
 ```
 
 ## Message D — la veille ⏱ vendredi 9 octobre

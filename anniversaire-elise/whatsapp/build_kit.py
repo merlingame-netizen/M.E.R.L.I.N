@@ -21,6 +21,10 @@ import pathlib
 import re
 import sys
 
+# L'invitation publiée. Publique par destination : elle est faite pour
+# circuler, alors elle est écrite en clair plutôt que laissée en marqueur.
+INVITATION = "https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66"
+
 HERE = pathlib.Path(__file__).resolve().parent
 SOURCE = HERE / "05_post_aix.md"
 
@@ -214,6 +218,9 @@ __BLOCS__
   "use strict";
   var $ = function(id){ return document.getElementById(id); };
   var CLE = "elise-kit-whatsapp";
+  /* Le lien écrit dans la source : on le remplace à la volée si l'utilisateur
+     en saisit un autre, par exemple celui de la version hébergée. */
+  var GRAVE = "__URL_GRAVEE__";
 
   function lu(){ try { return JSON.parse(localStorage.getItem(CLE) || "{}"); } catch(e){ return {}; } }
   function ecrit(o){ try { localStorage.setItem(CLE, JSON.stringify(o)); } catch(e){} }
@@ -237,7 +244,7 @@ __BLOCS__
 
     blocs.forEach(function(b){
       var t = b.dataset.brut;
-      t = t.split("VOTRE-URL-ICI").join(url
+      t = t.split(GRAVE).join(url
             ? '<span class="ok">' + url.replace(/[&<>]/g, "") + '</span>'
             : '<span class="vide">[LIEN DU SITE]</span>');
       t = t.split("[ADRESSE]").join(adr
@@ -291,7 +298,7 @@ __BLOCS__
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("-o", "--sortie", default=str(HERE / "kit.html"))
-    ap.add_argument("--url", default="",
+    ap.add_argument("--url", default=INVITATION,
                     help="lien de l'invitation, pré-rempli dans le champ")
     args = ap.parse_args()
 
@@ -312,7 +319,8 @@ def main() -> None:
         )
 
     page = (GABARIT.replace("__BLOCS__", "\n\n".join(morceaux))
-                   .replace("__URL_DEFAUT__", html.escape(args.url, quote=True)))
+                   .replace("__URL_DEFAUT__", html.escape(args.url, quote=True))
+                   .replace("__URL_GRAVEE__", INVITATION))
     pathlib.Path(args.sortie).write_text(page, encoding="utf-8")
     print("%s — %d blocs, %.0f Ko" % (args.sortie, len(morceaux), len(page.encode()) / 1024))
 
