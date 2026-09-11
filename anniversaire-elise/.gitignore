@@ -34,3 +34,7 @@ cloudflare/public/
 cloudflare/.admin-token
 cloudflare/.wrangler/
 cloudflare/node_modules/
+
+# Le bundle statique porte l adresse et l IBAN : jamais dans le depot.
+site/statique/
+site/anniv-elise.zip
