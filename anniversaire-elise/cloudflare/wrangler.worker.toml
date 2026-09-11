@@ -1,0 +1,24 @@
+# L'invitation en Worker + assets, la forme que prend le site depuis qu'il a
+# été déposé dans le tableau de bord. À déployer avec :
+#
+#     npx wrangler deploy -c anniversaire-elise/cloudflare/wrangler.worker.toml
+#
+# Le nom décide de l'adresse : <name>.<sous-domaine>.workers.dev. Le tableau
+# de bord en avait tiré un au hasard (« little-fog-82ea ») ; celui-ci se lit
+# et se colle dans WhatsApp sans qu'on ait honte.
+name = "anniv-elise"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+# La page est une application à une seule adresse : tout ce qui n'est ni
+# /api/ ni un fichier existant retombe sur elle.
+not_found_handling = "single-page-application"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "anniv-elise"
+# Rempli par deploy-worker.sh au premier lancement.
+database_id = "__A_REMPLIR__"
