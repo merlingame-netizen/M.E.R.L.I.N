@@ -309,8 +309,6 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
   .bt,.copier,.lien{transition:transform .14s ease,background .2s,color .2s}
   .bt:active,.copier:active{transform:translateY(1px)}
   .marches i{transition:background .35s ease,flex-grow .35s ease}
-  details[open] summary~*{animation:deplier .3s ease-out both}
-  @keyframes deplier{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 }
 
 /* ══ TRAINS ═══════════════════════════════════════════════════ */
@@ -327,15 +325,6 @@ h2{font-size:clamp(1.7rem,6.5vw,2.4rem);margin-bottom:.5rem}
   font-variant-numeric:tabular-nums}
 .quai p{margin:.85rem 0 0;font-size:.88rem;color:rgba(255,255,255,.85)}
 
-details{border-bottom:1px solid var(--craie-3)}
-details:first-of-type{border-top:1px solid var(--craie-3)}
-summary{padding:.95rem 0;cursor:pointer;font-weight:600;font-size:.97rem;list-style:none;
-  display:flex;justify-content:space-between;gap:1rem;align-items:center;min-height:50px}
-summary::-webkit-details-marker{display:none}
-summary::after{content:"+";font-family:var(--display);font-size:1.35rem;color:var(--terre);
-  transition:transform .2s;line-height:1}
-details[open] summary::after{transform:rotate(45deg)}
-details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max-width:60ch}
 
 .pied{background:var(--encre);color:var(--encre-pale);padding-block:2.2rem;font-size:.84rem}
 .pied strong{color:var(--craie)}
@@ -810,8 +799,8 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
 <!-- ═══ VENIR À AIX ═══ -->
 <div id="v-prat" role="tabpanel" aria-labelledby="o-prat" class="cache"><main><div class="col">
   <p class="oeil">Le trajet</p>
-  <h2>Deux gares, et on vient te chercher</h2>
-  <p class="chapo">Aix a deux gares qui n'ont rien à voir l'une avec l'autre. Le choix change
+  <h2>Deux gares, à ne pas confondre</h2>
+  <p class="chapo">Aix en a deux, qui n'ont rien à voir l'une avec l'autre. Le choix change
     beaucoup selon d'où tu pars.</p>
 
   <div class="quai">
@@ -855,13 +844,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
       Prends un peu de liquide en secours&nbsp;: il n'y a pas de guichet à chaque arrêt.</p>
   </div>
 
-  <h2 style="margin-top:2.4rem">Questions</h2>
-  <details><summary>À quelle heure faut-il arriver&nbsp;?</summary><p>À partir de 14h, à la maison. Mange avant d'arriver&nbsp;: le premier repas est celui du soir. On part au parc vers 14h45, alors si ton train arrive plus tard, indique ton horaire&nbsp;: la page te donnera l'itinéraire vers le bon endroit, le parc ou la maison selon l'heure.</p></details>
-  <details><summary>C'est quoi, le bar à jeux&nbsp;?</summary><p>La grande table de la maison, débarrassée et couverte de jeux de société pour la soirée&nbsp;: Time's Up, Blanc-Manger Coco, Skull, Loup-Garou. Si tu as un jeu auquel tu tiens, apporte-le.</p></details>
-  <details><summary>Et mon train&nbsp;?</summary><p>Réserve tôt, les rames d'octobre se remplissent vite. Indique ton horaire dans ta réponse&nbsp;: ça nous sert à caler les repas, pas à venir te chercher — tu as l'itinéraire et l'adresse dès que tu as dit comment tu arrives.</p></details>
-  <details><summary>Où est-ce que je dors&nbsp;?</summary><p>Chez nous. Lits, canapés et matelas d'appoint&nbsp;: on a de quoi loger tout le monde, tu n'as rien à demander ni à apporter. Une trousse de toilette et une serviette suffisent.</p></details>
-  <details><summary>Quelle est l'adresse&nbsp;?</summary><p>Elle est dans le groupe WhatsApp, pas ici&nbsp;: cette page circule, notre adresse non. Si tu n'es pas dans le groupe, dis-le et on t'ajoute.</p></details>
-  <details><summary>Et s'il pleut&nbsp;?</summary><p>L'après-midi devient un tour du vieil Aix, ou reste à la maison. Le reste du programme ne bouge pas.</p></details>
   <hr class="couture">
 
   <p class="oeil">Le cadeau</p>
@@ -888,15 +870,6 @@ details p{padding:0 0 1rem;margin:0;color:var(--encre-doux);font-size:.93rem;max
     <button class="copier" type="button" id="cop">Copier l'IBAN</button>
   </div>
 
-  <h2 style="margin-top:2.4rem">Questions sur la cagnotte</h2>
-  <details><summary>Combien&nbsp;?</summary><p>Ce que tu veux. On ne tiendra pas de compte, et personne ne saura ce qu'ont mis les autres.</p></details>
-  <details><summary>Il faut prévoir de l'argent pour le week-end&nbsp;?</summary><p>Non. Rien ne se paie sur place&nbsp;: les repas, l'escape game et le reste sont réglés à l'avance. Le seul billet à sortir, c'est celui du train.</p></details>
-  <details><summary>Je peux ne rien mettre&nbsp;?</summary><p>Oui. Ta présence est ce qui compte, et c'est déjà un train pour beaucoup d'entre vous.</p></details>
-  <details><summary>Je préfère apporter mon propre cadeau&nbsp;?</summary><p>Fais-le, c'est même mieux si tu as l'idée. La cagnotte existe pour ceux qui n'ont ni le temps ni l'inspiration — pas pour remplacer un cadeau choisi.</p></details>
-  <details><summary>Les deux&nbsp;?</summary><p>Les deux marchent aussi. Personne ne tient de comptes.</p></details>
-  <details><summary>La cagnotte, c'est pour offrir quoi&nbsp;?</summary><p>Plusieurs cadeaux, et une partie des activités du week-end. Je n'en dis pas plus&nbsp;: elle peut lire cette page.</p></details>
-  <details><summary>Elle sait ce qu'elle va recevoir&nbsp;?</summary><p>Non, et ça restera comme ça jusqu'à samedi soir. Cette page circule et le groupe WhatsApp aussi&nbsp;: évitez d'y écrire quoi que ce soit de précis.</p></details>
-  <details><summary>Le virement n'est pas passé, ou j'ai un doute&nbsp;?</summary><p>Écris-le dans le groupe WhatsApp&nbsp;: on vérifie et on te répond.</p></details>
 </div></main></div>
 
 <footer class="pied"><div class="col">
