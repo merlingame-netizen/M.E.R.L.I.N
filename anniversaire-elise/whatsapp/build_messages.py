@@ -20,7 +20,7 @@ from pathlib import Path
 
 # L'invitation publiée. Publique par destination : elle est faite pour
 # circuler, alors elle est écrite en clair plutôt que laissée en marqueur.
-INVITATION = "https://claude.ai/code/artifact/29f10c22-6058-494a-bd9a-15bbab495e66"
+INVITATION = "https://anniv-elise.maxbab38.workers.dev"
 
 HERE = Path(__file__).parent
 SOURCE = HERE / "05_post_aix.md"

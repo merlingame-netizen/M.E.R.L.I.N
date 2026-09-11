@@ -21,4 +21,4 @@ not_found_handling = "single-page-application"
 binding = "DB"
 database_name = "anniv-elise"
 # Rempli par deploy-worker.sh au premier lancement.
-database_id = "__A_REMPLIR__"
+database_id = "88f24b53-4006-4bd2-baf5-4e0730b3341d"

@@ -72,7 +72,12 @@ SCRIPT = r"""
 (function(){
   "use strict";
   var CLE = "elise-trente-ans";
-  var etape3 = document.getElementById("e3");
+  /* On s'accroche au bouton WhatsApp, pas au numéro de l'étape : l'entonnoir
+     est passé de trois étapes à deux, « #e3 » a disparu, et ce bloc entier
+     sortait en silence — page servie, API en place, et pas une réponse
+     enregistrée. Le récapitulatif, lui, portera toujours cet envoi. */
+  var envoi = document.getElementById("envoi");
+  var etape3 = envoi && envoi.closest("section");
   if (!etape3) return;
 
   function lu(){
@@ -91,7 +96,6 @@ SCRIPT = r"""
 
   /* Le bouton d'enregistrement, devant l'envoi WhatsApp qui devient secondaire. */
   var barre = etape3.querySelector(".barre");
-  var envoi = document.getElementById("envoi");
   var garder = document.createElement("button");
   garder.type = "button";
   garder.className = "bt garder";

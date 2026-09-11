@@ -51,6 +51,15 @@ def main() -> None:
     if 'src="photos/' in page:
         sys.exit("une photo n'a pas été incrustée")
 
+    # Le script d'hébergement se greffe sur le récapitulatif. S'il ne trouve
+    # pas son point d'accroche il sort en silence : la page s'affiche, l'API
+    # répond, et pas une réponse n'est enregistrée. C'est arrivé — l'ancre
+    # était « #e3 », et l'entonnoir est passé à deux étapes. Donc on vérifie
+    # ici, au build, plutôt que de le découvrir après le déploiement.
+    for ancre in ('id="envoi"', 'class="barre"', 'class="fiche"'):
+        if ancre not in page:
+            sys.exit("point d'accroche manquant dans la page : " + ancre)
+
     # Un document complet : Pages sert un fichier, pas un gabarit.
     page = ("<!doctype html>\n<html lang=\"fr\">\n<head>\n"
             "<meta charset=\"utf-8\">\n"
