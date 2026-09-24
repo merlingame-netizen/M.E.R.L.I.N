@@ -10,6 +10,8 @@ const COL_GREEN: Color = MerlinVisual.GREEN
 const COL_VIOLET: Color = MerlinVisual.VIOLET
 const COL_DIM: Color = MerlinVisual.DIM_WARM
 
+const COL_INK: Color = MerlinVisual.INK
+const ORB_SCENE: PackedScene = preload("res://scenes/MerlinOrb.tscn")
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 
 const END_TITLES: Dictionary = {
@@ -35,6 +37,7 @@ var _can_advance: bool = false  # vrai après typewriter terminé : le clic avan
 var _caret: Label = null  # ▮ cliquer pour continuer (clignotant, identique merlin_game.gd)
 var _caret_tw: Tween = null
 var _quill_tw: Tween
+var _orb: Node = null
 
 
 func _ready() -> void:
@@ -56,6 +59,9 @@ func _run_end() -> void:
 	if _merlin_lbl != null:
 		var cle: String = {"mort": "fin.mort", "corrompu": "fin.corruption"}.get(et, "fin.victoire")
 		_merlin_lbl.text = MerlinLexique.tirer(cle)
+	if _orb != null and _orb.has_method("set_mood"):
+		var orb_mood: String = {"mort": "sad", "corrompu": "angry"}.get(et, "happy")
+		_orb.set_mood(orb_mood)
 	_state_lbl.text = "Intégrité finale : %d/10    ·    Corruption finale : %d" % [run.integrite, run.corruption]
 	if _anneaux != null:
 		_anneaux.montrer(int(run.integrite), int(run.corruption))
@@ -119,6 +125,9 @@ func _build_ui() -> void:
 	_title_lbl = Label.new()
 	_title_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_title_lbl.add_theme_font_size_override("font_size", 40)
+	var fnt_title: FontFile = _load_font(MerlinVisual.FONT_IM_FELL)
+	if fnt_title != null:
+		_title_lbl.add_theme_font_override("font", fnt_title)
 	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_title_lbl)
 	# LA VOIX DE MERLIN SOUS LE TITRE : une formule du lexique, par issue. Le titre dit le fait
@@ -126,25 +135,27 @@ func _build_ui() -> void:
 	_merlin_lbl = Label.new()
 	_merlin_lbl.add_theme_color_override("font_color", COL_DIM)
 	_merlin_lbl.add_theme_font_size_override("font_size", 22)
+	var fnt_italic: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND_ITALIC)
+	if fnt_italic != null:
+		_merlin_lbl.add_theme_font_override("font", fnt_italic)
 	_merlin_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_merlin_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_merlin_lbl)
 
 	_epilogue_panel = PanelContainer.new()
 	_epilogue_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_epilogue_panel.mouse_filter = Control.MOUSE_FILTER_STOP  # capte le clic pour skip-typewriter / advance
+	_epilogue_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_epilogue_panel.gui_input.connect(_on_epilogue_click)
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = COL_SURFACE
-	sb.set_corner_radius_all(8)
-	sb.set_content_margin_all(24)
-	_epilogue_panel.add_theme_stylebox_override("panel", sb)
+	_epilogue_panel.add_theme_stylebox_override("panel", MerlinClaudeUI.panel_style())
 	root.add_child(_epilogue_panel)
 	_epilogue = RichTextLabel.new()
 	_epilogue.bbcode_enabled = true
 	_epilogue.add_theme_color_override("default_color", COL_TEXT)
 	_epilogue.add_theme_font_size_override("normal_font_size", 30)
-	_epilogue.mouse_filter = Control.MOUSE_FILTER_IGNORE  # laisse le clic passer au panel parent
+	var fnt_body: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND)
+	if fnt_body != null:
+		_epilogue.add_theme_font_override("normal_font", fnt_body)
+	_epilogue.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_epilogue_panel.add_child(_epilogue)
 
 	# Caret « ▮ cliquer pour continuer » — apparaît clignotant après la fin du typewriter (bible §21.1 ÉVIDENT).
@@ -152,6 +163,9 @@ func _build_ui() -> void:
 	_caret.text = "▮ cliquer pour continuer"
 	_caret.add_theme_color_override("font_color", MerlinVisual.GOLD_DARK)
 	_caret.add_theme_font_size_override("font_size", 20)
+	var fnt_caret: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_caret != null:
+		_caret.add_theme_font_override("font", fnt_caret)
 	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_caret.visible = false
@@ -162,14 +176,8 @@ func _build_ui() -> void:
 	# stats sobres, fragment révélé sur accomplissement. L'argument de re-run vit ici.
 	var recap_panel: PanelContainer = PanelContainer.new()
 	recap_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	recap_panel.custom_minimum_size = Vector2(600, 0)  # P2 : largeur mini (les valeurs de stats ne wrappent plus)
-	var rsb: StyleBoxFlat = StyleBoxFlat.new()
-	rsb.bg_color = COL_SURFACE
-	rsb.set_corner_radius_all(8)
-	rsb.set_content_margin_all(18)
-	rsb.set_border_width_all(1)
-	rsb.border_color = MerlinVisual.BORDER_BRUN
-	recap_panel.add_theme_stylebox_override("panel", rsb)
+	recap_panel.custom_minimum_size = Vector2(600, 0)
+	recap_panel.add_theme_stylebox_override("panel", MerlinClaudeUI.panel_style())
 	root.add_child(recap_panel)
 	_recap_box = VBoxContainer.new()
 	_recap_box.add_theme_constant_override("separation", 10)
@@ -181,23 +189,45 @@ func _build_ui() -> void:
 	_state_lbl = Label.new()
 	_state_lbl.add_theme_color_override("font_color", COL_DIM)
 	_state_lbl.add_theme_font_size_override("font_size", 24)
+	var fnt_state: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_state != null:
+		_state_lbl.add_theme_font_override("font", fnt_state)
 	_state_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_state_lbl)
 
-	_continue_btn = Button.new()
-	_continue_btn.text = "Continuer ▶"
-	_continue_btn.custom_minimum_size = Vector2(300, 64)
-	_continue_btn.add_theme_font_size_override("font_size", 24)
+	_continue_btn = MerlinClaudeUI.make_primary_button("Rejouer ▶", "Enter")
+	_continue_btn.custom_minimum_size = Vector2(300, 56)
 	_continue_btn.disabled = true
-	MerlinVisual.apply_button_da(_continue_btn)
 	_continue_btn.pressed.connect(_on_continue)
-	MerlinVisual.connect_button_feedback(_continue_btn)
+	_continue_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	root.add_child(_continue_btn)
+	# MerlinOrb 128×128 top-right (hors VBox — ancré absolu)
+	_orb = ORB_SCENE.instantiate()
+	_orb.custom_minimum_size = Vector2(128, 128)
+	_orb.size = Vector2(128, 128)
+	_orb.position = Vector2(size.x - 128 - 32, 32)
+	add_child(_orb)
+	resized.connect(func() -> void:
+		if _orb != null and is_instance_valid(_orb):
+			_orb.position = Vector2(size.x - 128 - 32, 32))
 	_animate_entrance()
+
+
+func _process(delta: float) -> void:
+	if MerlinWoodcut.tick_boil(delta):
+		queue_redraw()
 
 
 func _on_continue() -> void:
 	MerlinTransition.change_scene(MENU_SCENE, "", "gauche")
+
+
+static func _load_font(path: String) -> FontFile:
+	if ResourceLoader.exists(path):
+		var res: Resource = load(path)
+		if res is FontFile:
+			return res as FontFile
+	return null
 
 
 # P3 (chantier 2, revue design BLOCKER) : la taille du pack lecture s'applique AUSSI a l'epilogue
@@ -332,15 +362,20 @@ func _plur(n: int, sing: String, plur: String) -> String:
 
 # P2 (chantier 2) : une ligne du récap (label estompé + valeur crème) dans la grille 2 colonnes.
 func _recap_row(grid: GridContainer, label_txt: String, value_txt: String) -> void:
+	var fnt_ui: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
 	var l: Label = Label.new()
 	l.text = label_txt
 	l.add_theme_color_override("font_color", COL_DIM)
 	l.add_theme_font_size_override("font_size", 20)
+	if fnt_ui != null:
+		l.add_theme_font_override("font", fnt_ui)
 	grid.add_child(l)
 	var v: Label = Label.new()
 	v.text = value_txt
 	v.add_theme_color_override("font_color", COL_TEXT)
 	v.add_theme_font_size_override("font_size", 20)
+	if fnt_ui != null:
+		v.add_theme_font_override("font", fnt_ui)
 	grid.add_child(v)
 
 
