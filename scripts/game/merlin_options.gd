@@ -98,9 +98,9 @@ func _build_ui() -> void:
 	root.add_child(_panel)
 	_panel.resized.connect(func() -> void: _panel.pivot_offset = _panel.size * 0.5)
 
-	var bg: ColorRect = ColorRect.new()
-	bg.color = COL_BG
+	var bg: PanelContainer = PanelContainer.new()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.add_theme_stylebox_override("panel", MerlinClaudeUI.panel_style())
 	_panel.add_child(bg)
 
 	var inner: MarginContainer = MarginContainer.new()
@@ -117,6 +117,9 @@ func _build_ui() -> void:
 	_title_lbl.text = "Options"
 	_title_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_title_lbl.add_theme_font_size_override("font_size", 34)
+	var fnt_title: FontFile = _load_font(MerlinVisual.FONT_IM_FELL)
+	if fnt_title != null:
+		_title_lbl.add_theme_font_override("font", fnt_title)
 	vbox.add_child(_title_lbl)
 	# Filet + triskèle or (DA alignée sur le menu, user 2026-06-29).
 	var rule: HBoxContainer = MerlinOrnament.triskele_rule(22.0)
@@ -177,13 +180,10 @@ func _build_ui() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
 
-	_back_btn = Button.new()
-	_back_btn.text = "◀ Fermer"
+	_back_btn = MerlinClaudeUI.make_primary_button("◀ Fermer")
 	_back_btn.custom_minimum_size = Vector2(160, 48)
-	MerlinVisual.apply_button_da(_back_btn)
 	_back_btn.pressed.connect(toggle)
 	vbox.add_child(_back_btn)
-	MerlinVisual.connect_button_feedback(_back_btn)
 
 
 # N4-TUTO : clic = ré-armement persisté (MerlinChronicle) + confirmation SUR le bouton (un seul
@@ -201,6 +201,14 @@ func _refresh_tuto_btn() -> void:
 	_tuto_btn.text = TUTO_BTN_ARMED if armed else TUTO_BTN_IDLE
 
 
+static func _load_font(path: String) -> FontFile:
+	if ResourceLoader.exists(path):
+		var res: Resource = load(path)
+		if res is FontFile:
+			return res as FontFile
+	return null
+
+
 func _slider_row(label: String, value: float, parent: Control) -> HSlider:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 20)
@@ -209,6 +217,9 @@ func _slider_row(label: String, value: float, parent: Control) -> HSlider:
 	l.custom_minimum_size = Vector2(280, 0)
 	l.add_theme_color_override("font_color", COL_TEXT)
 	l.add_theme_font_size_override("font_size", 17)
+	var fnt_ui: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui != null:
+		l.add_theme_font_override("font", fnt_ui)
 	row.add_child(l)
 	var s: HSlider = HSlider.new()
 	s.min_value = 0
@@ -232,6 +243,9 @@ func _segmented_row(label_txt: String, options: Array, get_idx: Callable, set_id
 	l.custom_minimum_size = Vector2(280, 0)
 	l.add_theme_color_override("font_color", COL_TEXT)
 	l.add_theme_font_size_override("font_size", 17)
+	var fnt_seg: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_seg != null:
+		l.add_theme_font_override("font", fnt_seg)
 	row.add_child(l)
 	var seg: HBoxContainer = HBoxContainer.new()
 	seg.add_theme_constant_override("separation", 8)
@@ -276,6 +290,9 @@ func _check_row(label: String, on: bool) -> CheckButton:
 	c.button_pressed = on
 	c.custom_minimum_size = Vector2(0, 44)
 	c.add_theme_color_override("font_color", COL_TEXT)
+	var fnt_chk: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_chk != null:
+		c.add_theme_font_override("font", fnt_chk)
 	return c
 
 
