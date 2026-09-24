@@ -1,32 +1,41 @@
 extends Control
-## MerlinMenu — écran-titre, DA flat rétro-minimaliste (mockup validé 2026-05-26).
-## Gauche : wordmark M·E·R·L·I·N + filet/triskèle + rangée de runes + liste à icônes (focus or).
-## Droite : scène en silhouettes (MerlinSceneArt). Coins : émblèmes-anneaux. Bas : barre ornementale.
-## Animé (2026-06-10) : entrée en cascade de fondus, triskèle rotative, runes qui respirent,
-## anneaux pulsants, scène vivante (brume/étoiles/halo) + thème ambient celtic (MusicGen) en boucle.
+## MerlinMenu — DA v8 "Seuil entre les mondes" : panneau latéral Claude-style à gauche,
+## MerlinSceneArt à droite (~62 %), MerlinOrb coin haut-droit, carte-réponse Merlin bas-droit,
+## pilule de biome bas-centre. Entrée en cascade, woodcut boil, voix LLM.
 
 const COL_BG: Color = MerlinVisual.BG_PAGE
+const COL_BG_DEEP: Color = MerlinVisual.BG_DEEP
 const COL_CREAM: Color = MerlinVisual.CREAM
 const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_GOLD_D: Color = MerlinVisual.GOLD_DARK
 const COL_DIM: Color = MerlinVisual.INK_DIM
+const COL_DIM_W: Color = MerlinVisual.DIM_WARM
+const COL_INK: Color = MerlinVisual.INK
+const COL_GREEN: Color = MerlinVisual.GREEN
+const COL_CYAN: Color = MerlinVisual.MACHINE_CYAN
+const COL_SURFACE: Color = MerlinVisual.SURFACE
 
+const ORB_SCENE: String = "res://scenes/MerlinOrb.tscn"
 const SELECTION_SCENE: String = "res://scenes/MerlinSelection.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 
 const THEME_WAV: String = "res://music/theme/merlin_main_theme.wav"
-const MUSIC_DB: float = -10.0       # volume cible du thème (ambient discret)
-const MUSIC_FADE_IN: float = 3.0    # fondu d'entrée long (ambient)
-const MUSIC_FADE_OUT: float = 0.22  # calé sur MerlinTransition.DUR
+const MUSIC_DB: float = -10.0
+const MUSIC_FADE_IN: float = 3.0
+const MUSIC_FADE_OUT: float = 0.22
 
-var _rows: Array[Dictionary] = []  # [{btn, glyph, lbl, disc, icon_box, pop_tw, key}]
+var _rows: Array[Dictionary] = []  # [{btn, glyph, lbl, kbd_lbl, key}]
 var _title: Label
+var _subtitle: Label
 var _tris: MerlinGlyph
 var _scene_art: MerlinSceneArt
-var _left: VBoxContainer = null  # colonne gauche (pour le slide d'entrée)
-var _bottom_bar: HBoxContainer
-var _rule_box: HBoxContainer
-var _model_lbl: Label = null      # v10.13 (B1) : indicateur d'éveil du modèle (barre du bas)
-var _model_pulse_tw: Tween = null # pulse discret pendant le chargement (modulate sine)
+var _left: VBoxContainer = null       # colonne gauche (panneau Claude-style)
+var _panel: PanelContainer = null     # le PanelContainer qui porte le panneau
+var _orb: Node = null                 # MerlinOrb (SubViewportContainer)
+var _response_card: PanelContainer = null
+var _status_dot: ColorRect = null
+var _status_lbl: Label = null
+var _model_pulse_tw: Tween = null
 
 # v10.18 — Phase 1 : driver d'ambiance (souffle, parallaxe, aura curseur) + capture dev (env-gated).
 var _gust_timer: float = 0.0
@@ -40,68 +49,68 @@ var _cap_max: int = 40
 var _cap_count: int = 0
 var _cap_last: int = 0
 var _cap_boot: int = 0
-var _last_focus_box: Control = null  # v10.18 — pour la comète de navigation
-var _walk_acc: float = 0.0           # dev : focus-walk pendant la capture
+var _last_focus_box: Control = null
+var _walk_acc: float = 0.0
 var _walk_idx: int = 0
 
-# v10.19 — VOIX DE MERLIN (user 2026-06-29) : bulles de pensée LLM au-dessus de sa tête.
+# v10.19 — VOIX DE MERLIN.
 const HOVER_BTNS: Array = ["CONTINUER", "NOUVELLE PARTIE", "OPTIONS"]
 var _voice: MerlinMenuVoice = null
 var _bubble: MerlinSpeechBubble = null
 var _chron: Dictionary = {}
 var _speak_acc: float = 0.0
-var _next_speak: float = 3.0         # 1re prise de parole dès qu'une pensée est prête
-var _voice_test: bool = false        # dev : MERLIN_VOICE_TEST → bulle factice instantanée (rendu)
+var _next_speak: float = 3.0
+var _voice_test: bool = false
 var _voice_test_done: bool = false
 var _voice_test_acc: float = 0.0
-var _autoclick_done: bool = false    # dev : MERLIN_AUTOCLICK → déclenche Nouvelle Partie (capture entrée)
+var _autoclick_done: bool = false
 var _autoclick_acc: float = 0.0
+
+# Typewriter state for response card
+var _card_text_full: String = ""
+var _card_text_idx: int = 0
+var _card_tw_acc: float = 0.0
+var _card_typing: bool = false
 
 
 func _ready() -> void:
-	MerlinVisual.load_prefs()  # v10.13.1 — préférences a11y (reduce-motion) chargées dès l'entrée
+	MerlinVisual.load_prefs()
 	_build_ui()
 	_setup_music()
 	_animate_entrance()
 	_start_idle_anims()
-	_scene_art.set_mote_density(1.05)  # scène plus subtile (user 2026-06-29) : motes à peine au-dessus du canon
-	# Le menu change selon l'heure RÉELLE ; override dev MERLIN_TOD_HOUR pour capturer les 4 variantes.
+	_scene_art.set_mote_density(1.05)
 	var tod_hour: int = int(Time.get_datetime_dict_from_system().get("hour", 21))
 	if OS.has_environment("MERLIN_TOD_HOUR"):
 		tod_hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
 	_scene_art.set_time_of_day(tod_hour)
-	_scene_art.set_season(MerlinSceneArt.season_for_now())  # v10.18 : décor saisonnier (cohérent avec le boot)
+	_scene_art.set_season(MerlinSceneArt.season_for_now())
 	_setup_dev_capture()
 	_setup_voice()
-	# Le modèle chauffe dès le menu, mais N'ÉCRIT PLUS ICI (mesuré 2026-08-15) : le menu lançait
-	# 44 s de génération AVANT que le biome soit choisi, et `_on_biome_picked` jetait ce travail
-	# puisqu'il portait le mauvais monde. Le moteur travaillait donc 88 s pour n'en faire gagner
-	# aucune — il est single-flight, ces 44 s volaient le créneau de la vraie génération.
-	# L'écriture part désormais au tap du biome, quand elle sait enfin quoi écrire.
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
-		# v10.13 (B1) : indicateur d'éveil — « Merlin s'éveille… » pulse, flip or sur model_ready.
 		if mn.is_ready():
 			_set_model_awake()
 		elif not mn.model_ready.is_connected(_set_model_awake):
 			mn.model_ready.connect(_set_model_awake)
 
 
-# v10.19 — Voix de Merlin : bulle suivi-tête + ordonnanceur LLM (cède la priorité aux scénarios).
+# ============================== VOIX DE MERLIN ==============================
+
+
 func _setup_voice() -> void:
 	_voice_test = OS.has_environment("MERLIN_VOICE_TEST")
 	_chron = MerlinChronicle.read()
-	MerlinChronicle.touch_seen()  # horodate CETTE visite (après lecture du « depuis la dernière fois »)
+	MerlinChronicle.touch_seen()
 	_bubble = MerlinSpeechBubble.new()
 	_bubble.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	add_child(_bubble)  # au-dessus de _scene_art (ajouté après) ; sous d'éventuels modaux
+	add_child(_bubble)
 	_voice = MerlinMenuVoice.new()
 	add_child(_voice)
 	_voice.setup(_voice_prefix(), _build_voice_ctx())
 	_voice.start()
 
 
-# Préfixe voix enrichi par la persona (via l'autoload MerlinScenario), sinon la constante canon.
 func _voice_prefix() -> String:
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc != null and sc.has_method("_voice_prefix"):
@@ -139,9 +148,6 @@ func _saison_label(key: String) -> String:
 	return ""
 
 
-# Position ÉCRAN de la tête de Merlin (lue live dans MerlinSceneArt) pour ancrer la bulle au-dessus.
-## D'où l'encre part quand on quitte le menu : la tête de Merlin à l'écran, ou le centre s'il n'est
-## pas dessiné (mouvement réduit, boot interrompu).
 func _origine_de_merlin() -> Vector2:
 	var h: Dictionary = _head_screen()
 	if h.is_empty():
@@ -182,101 +188,163 @@ func _exit_tree() -> void:
 		_voice.stop()
 
 
+# ============================== UI (DA v8 — Claude-style panel) ==============================
+
+
 func _build_ui() -> void:
+	# --- Fond page ---
 	var bg: ColorRect = ColorRect.new()
 	bg.color = COL_BG
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	# --- Scène en silhouettes à droite (~58%) ---
+	# --- Scène en silhouettes à droite (~62 %) ---
 	_scene_art = MerlinSceneArt.new()
-	_scene_art.anchor_left = 0.42
+	_scene_art.anchor_left = 0.38
 	_scene_art.anchor_right = 1.0
 	_scene_art.anchor_top = 0.0
 	_scene_art.anchor_bottom = 1.0
 	_scene_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_scene_art)
 	_scene_art.set_menu_decor(true)
-	_scene_art.set_beat("Rencontre")  # figure encapuchonnée devant la lune
-	_scene_art.set_animated(true)     # scène vivante : brume qui dérive, étoiles, halo de lune
-	# v10.22 (user) — le menu est NU : ciel + étoiles + lune + Merlin seuls. Le monde (biome) n'apparaît
-	# qu'après le choix Forêt/Falaises (Nouvelle Partie), en pop progressif.
+	_scene_art.set_beat("Rencontre")
+	_scene_art.set_animated(true)
 	_scene_art.set_biome("")
 
-	# --- Colonne gauche ---
-	var left: VBoxContainer = VBoxContainer.new()
-	left.anchor_left = 0.0
-	left.anchor_top = 0.0
-	left.anchor_right = 0.42
-	left.anchor_bottom = 1.0
-	left.offset_left = 56
-	left.offset_top = 64
-	left.offset_right = -16
-	left.offset_bottom = -70
-	left.add_theme_constant_override("separation", 10)
-	add_child(left)
-	_left = left
+	# --- MerlinOrb (petit 128x128, coin haut-droit de la zone scène) ---
+	if ResourceLoader.exists(ORB_SCENE):
+		var orb_scene: PackedScene = load(ORB_SCENE)
+		if orb_scene != null:
+			_orb = orb_scene.instantiate()
+			_orb.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+			_orb.offset_left = -160
+			_orb.offset_top = 24
+			_orb.offset_right = -32
+			_orb.offset_bottom = 152
+			_orb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			add_child(_orb)
 
+	# --- Panneau latéral Claude-style (gauche, ~38 %) ---
+	_panel = PanelContainer.new()
+	_panel.anchor_left = 0.0
+	_panel.anchor_top = 0.0
+	_panel.anchor_right = 0.38
+	_panel.anchor_bottom = 1.0
+	_panel.offset_left = 0
+	_panel.offset_top = 0
+	_panel.offset_right = 0
+	_panel.offset_bottom = 0
+	_panel.add_theme_stylebox_override("panel", MerlinClaudeUI.panel_style())
+	add_child(_panel)
+
+	_left = VBoxContainer.new()
+	_left.add_theme_constant_override("separation", 6)
+	_left.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_left.offset_left = 36
+	_left.offset_top = 48
+	_left.offset_right = -20
+	_left.offset_bottom = -24
+	_panel.add_child(_left)
+
+	# Titre M.E.R.L.I.N en IM Fell, or, breathing
 	_title = Label.new()
 	_title.text = "M·E·R·L·I·N"
 	_title.add_theme_color_override("font_color", COL_GOLD)
-	_title.add_theme_font_size_override("font_size", 64)
-	left.add_child(_title)
+	_title.add_theme_font_size_override("font_size", 52)
+	var fnt_title: FontFile = _load_claude_font(MerlinVisual.FONT_IM_FELL)
+	if fnt_title != null:
+		_title.add_theme_font_override("font", fnt_title)
+	_left.add_child(_title)
 
-	# Filet + triskèle.
-	_rule_box = HBoxContainer.new()
-	_rule_box.add_theme_constant_override("separation", 8)
-	_rule_box.custom_minimum_size = Vector2(0, 22)
-	_rule_box.add_child(_hline())
-	_tris = _icon("triskele", COL_GOLD, Vector2(22, 22), 1.6)
-	_tris.pivot_offset = Vector2(11, 11)  # rotation autour du centre (22x22)
-	_rule_box.add_child(_tris)
-	_rule_box.add_child(_hline())
-	left.add_child(_rule_box)
+	# Sous-titre en EB Garamond Italic, dim
+	_subtitle = Label.new()
+	_subtitle.text = "Le seuil entre les mondes"
+	_subtitle.add_theme_color_override("font_color", COL_DIM_W)
+	_subtitle.add_theme_font_size_override("font_size", 20)
+	var fnt_sub: FontFile = _load_claude_font(MerlinVisual.FONT_EB_GARAMOND_ITALIC)
+	if fnt_sub != null:
+		_subtitle.add_theme_font_override("font", fnt_sub)
+	_left.add_child(_subtitle)
 
-	# P2 (chantier 4a) : préambule méta discret, allusion aux fragments du Graal déjà ramenés.
+	# Filet + triskele
+	var rule_box: HBoxContainer = HBoxContainer.new()
+	rule_box.add_theme_constant_override("separation", 8)
+	rule_box.custom_minimum_size = Vector2(0, 18)
+	rule_box.add_child(_hline())
+	_tris = _icon("triskele", COL_GOLD, Vector2(18, 18), 1.4)
+	_tris.pivot_offset = Vector2(9, 9)
+	rule_box.add_child(_tris)
+	rule_box.add_child(_hline())
+	_left.add_child(rule_box)
+
+	# Fragments du Graal preamble
 	var frag_n: int = int(MerlinChronicle.read().get("graal_fragments", 0))
 	if frag_n > 0:
 		var pre: Label = Label.new()
 		pre.text = _fragments_preamble(frag_n)
 		pre.add_theme_color_override("font_color", COL_DIM)
-		pre.add_theme_font_size_override("font_size", 16)
+		pre.add_theme_font_size_override("font_size", 15)
 		pre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		left.add_child(pre)
+		_left.add_child(pre)
 
-	var gap: Control = Control.new()
-	gap.custom_minimum_size = Vector2(0, 22)
-	left.add_child(gap)
+	var gap1: Control = Control.new()
+	gap1.custom_minimum_size = Vector2(0, 10)
+	_left.add_child(gap1)
 
-	# Liste de menu.
+	# --- Menu rows Claude-style ---
 	var has_save: bool = get_node("/root/MerlinRun").has_save()
 	var menu: VBoxContainer = VBoxContainer.new()
-	menu.add_theme_constant_override("separation", 4)
-	left.add_child(menu)
-	menu.add_child(_menu_row("spark", "CONTINUER", _on_continue, has_save))
-	menu.add_child(_menu_row("burst", "NOUVELLE PARTIE", _on_new, true))
-	# P2 (chantier 4b) : CHRONIQUES devient un vrai écran de lecture (palmarès) ; l'entrée CARTES,
-	# grisée et sans fonction, est RETIRÉE (un bouton grisé sans condition lisible est pire qu'absent).
-	# LES SENTIERS ÉCRITS (2026-09-08). Les quêtes de `data/scenarios/` n'avaient jamais été
-	# jouables : seul le générateur les lisait, comme exemples pour le modèle. Elles sont du
-	# contenu depuis v56, et il fallait une porte pour y entrer. Ici et non sur l'écran de
-	# sélection : celui-ci est occupé 38 s par le voile pendant que Merlin rêve ses trois sentiers,
-	# et la distinction reste nette entre ce qu'il rêve et ce qui est écrit.
-	menu.add_child(_menu_row("cards", "SENTIERS", _on_sentiers, not MerlinSentier.liste().is_empty()))
-	menu.add_child(_menu_row("book", "CHRONIQUES", _on_chronicles, true))
-	menu.add_child(_menu_row("target", "OPTIONS", _on_options, true))
-	menu.add_child(_menu_row("cross", "QUITTER", _on_quit, true))
+	menu.add_theme_constant_override("separation", 2)
+	_left.add_child(menu)
+	menu.add_child(_menu_row("burst", "Nouveau récit", "N", _on_new, true))
+	menu.add_child(_menu_row("spark", "Reprendre", "R", _on_continue, has_save))
+	menu.add_child(_menu_row("cards", "Sentiers", "S", _on_sentiers, not MerlinSentier.liste().is_empty()))
+	menu.add_child(_menu_row("book", "Chroniques", "C", _on_chronicles, true))
+	menu.add_child(_menu_row("target", "Options", ",", _on_options, true))
 
-	_build_bottom_bar()
+	# --- Recents ---
+	_build_recents()
 
-	# Focus initial : CONTINUER si sauvegarde, sinon NOUVELLE PARTIE.
-	var first_idx: int = 0 if has_save else 1
-	(_rows[first_idx]["btn"] as Button).call_deferred("grab_focus")
+	# --- Spacer ---
+	var spacer: Control = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_left.add_child(spacer)
+
+	# --- Status bar (Gemma 4 . local . pret) ---
+	_build_status_bar()
+
+	# Separator before quit
+	_left.add_child(_hline())
+
+	# Quitter
+	var quit_box: VBoxContainer = VBoxContainer.new()
+	quit_box.add_theme_constant_override("separation", 0)
+	quit_box.add_child(_menu_row("cross", "Quitter", "Q", _on_quit, true))
+	_left.add_child(quit_box)
+
+	# --- Carte-reponse Merlin (bas-droit) ---
+	_response_card = MerlinClaudeUI.make_response_card()
+	_response_card.anchor_left = 0.52
+	_response_card.anchor_right = 0.96
+	_response_card.anchor_top = 1.0
+	_response_card.anchor_bottom = 1.0
+	_response_card.offset_top = -180
+	_response_card.offset_bottom = -24
+	_response_card.offset_left = 0
+	_response_card.offset_right = 0
+	_response_card.visible = false
+	_response_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_response_card)
+
+	# Focus initial : Reprendre si sauvegarde, sinon Nouveau recit
+	var first_idx: int = 1 if has_save else 0
+	if first_idx < _rows.size():
+		(_rows[first_idx]["btn"] as Button).call_deferred("grab_focus")
 
 
-func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool) -> Button:
+func _menu_row(glyph_key: String, label_txt: String, kbd_hint: String, cb: Callable, enabled: bool) -> Button:
 	var btn: Button = Button.new()
-	btn.custom_minimum_size = Vector2(520, 66)  # ≥44px (tactile) — agrandi (user 2026-06-06)
+	btn.custom_minimum_size = Vector2(0, 48)
 	btn.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
 	btn.disabled = not enabled
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
@@ -286,68 +354,59 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 
 	var row: HBoxContainer = HBoxContainer.new()
 	row.set_anchors_preset(Control.PRESET_FULL_RECT)
-	row.add_theme_constant_override("separation", 14)
+	row.add_theme_constant_override("separation", 10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	btn.add_child(row)
 
-	# Icône dans un disque (disque or plein si sélectionné).
-	var icon_box: Control = Control.new()
-	icon_box.custom_minimum_size = Vector2(52, 52)
-	icon_box.pivot_offset = Vector2(26, 26)  # pop de focus centré
-	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# v10.18 — Halo de focus (derrière le disque, invisible au repos).
-	var halo: TextureRect = TextureRect.new()
-	halo.texture = _radial_glow_tex()
-	halo.stretch_mode = TextureRect.STRETCH_SCALE
-	halo.set_anchors_preset(Control.PRESET_FULL_RECT)
-	halo.offset_left = -18
-	halo.offset_top = -18
-	halo.offset_right = 18
-	halo.offset_bottom = 18
-	halo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	halo.modulate.a = 0.0
-	icon_box.add_child(halo)
-	var disc: Panel = Panel.new()
-	disc.set_anchors_preset(Control.PRESET_FULL_RECT)
-	disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	disc.add_theme_stylebox_override("panel", _disc_style(false))
-	icon_box.add_child(disc)
+	# MerlinGlyph icon (24x24)
 	var g: MerlinGlyph = MerlinGlyph.new()
-	g.set_anchors_preset(Control.PRESET_FULL_RECT)
-	g.offset_left = 9
-	g.offset_top = 9
-	g.offset_right = -9
-	g.offset_bottom = -9
-	g.setup(glyph_key, COL_DIM, 1.8)
-	icon_box.add_child(g)
-	row.add_child(icon_box)
+	g.custom_minimum_size = Vector2(24, 24)
+	g.setup(glyph_key, COL_DIM_W if enabled else COL_DIM, 1.8)
+	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(g)
 
+	# Label (DM Sans)
 	var lbl: Label = Label.new()
-	lbl.text = _spaced(label_txt)
+	lbl.text = label_txt
 	lbl.add_theme_color_override("font_color", COL_CREAM if enabled else COL_DIM)
-	lbl.add_theme_font_size_override("font_size", 27)
+	lbl.add_theme_font_size_override("font_size", MerlinVisual.FS_BTN)
+	var fnt_ui: FontFile = _load_claude_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui != null:
+		lbl.add_theme_font_override("font", fnt_ui)
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(lbl)
 
-	var line: ColorRect = _hline()
-	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(line)
-	row.add_child(_diamond())
+	# Spacer
+	var sp: Control = Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(sp)
 
-	var data: Dictionary = {"btn": btn, "glyph": g, "lbl": lbl, "disc": disc, "icon_box": icon_box, "key": glyph_key, "halo": halo, "line": line}
+	# Kbd hint (hidden by default, shown on hover/focus)
+	var kbd_lbl: Label = Label.new()
+	kbd_lbl.text = kbd_hint
+	kbd_lbl.add_theme_color_override("font_color", COL_DIM)
+	kbd_lbl.add_theme_font_size_override("font_size", MerlinVisual.FS_HINT)
+	var fnt_kbd: FontFile = _load_claude_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_kbd != null:
+		kbd_lbl.add_theme_font_override("font", fnt_kbd)
+	kbd_lbl.modulate.a = 0.0
+	kbd_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(kbd_lbl)
+
+	var data: Dictionary = {"btn": btn, "glyph": g, "lbl": lbl, "kbd_lbl": kbd_lbl, "key": glyph_key}
 	_rows.append(data)
 	if enabled:
 		if cb.is_valid():
 			btn.pressed.connect(cb)
-		btn.pressed.connect(_play_press_tick)  # clic audible (feedback net, user 2026-06-29)
+		btn.pressed.connect(_play_press_tick)
 		btn.focus_entered.connect(_on_row_focus.bind(data, true))
 		btn.focus_exited.connect(_on_row_focus.bind(data, false))
-		btn.mouse_entered.connect(btn.grab_focus)  # survol = focus (highlight unifié)
+		btn.mouse_entered.connect(btn.grab_focus)
 	return btn
 
 
-# Tick sonore au clic d'une ligne de menu (feedback « net »). Null-safe (MerlinAudio = autoload).
 func _play_press_tick() -> void:
 	var a: Node = get_node_or_null("/root/MerlinAudio")
 	if a != null and a.has_method("play_sfx"):
@@ -356,120 +415,84 @@ func _play_press_tick() -> void:
 
 func _on_row_focus(data: Dictionary, on: bool) -> void:
 	if on:
-		_maybe_hover_voice(data)  # v10.19 : Merlin commente le bouton survolé (si une réplique est prête)
-	(data["disc"] as Panel).add_theme_stylebox_override("panel", _disc_style(on))
-	(data["glyph"] as MerlinGlyph).setup(str(data["key"]), COL_BG if on else COL_DIM, 1.8)
-	(data["lbl"] as Label).add_theme_color_override("font_color", COL_GOLD if on else COL_CREAM)
-	MerlinMenuFx.focus_halo(data.get("halo") as CanvasItem, on)
+		_maybe_hover_voice(data)
+	var g: MerlinGlyph = data["glyph"] as MerlinGlyph
+	var lbl: Label = data["lbl"] as Label
+	var kbd: Label = data["kbd_lbl"] as Label
 	if on:
-		# Pop bref du disque (retour visuel ≤100ms — pilier UX §21.1).
-		# Tuer le pop précédent encore en vol (navigation clavier rapide) : évite le wobble.
-		var prev: Tween = data.get("pop_tw") as Tween
-		if prev != null and prev.is_valid():
-			prev.kill()
-		var box: Control = data["icon_box"]
-		box.scale = Vector2.ONE
-		var tw: Tween = create_tween()
-		data["pop_tw"] = tw
-		tw.tween_property(box, "scale", Vector2(1.16, 1.16), MerlinVisual.DUR_TAP_DOWN * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(box, "scale", Vector2.ONE, MerlinVisual.DUR_TAP_UP * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		# v10.18 — charge du trait + comète de navigation depuis la rangée précédente.
-		MerlinMenuFx.connector_charge(data.get("line") as ColorRect)
-		MerlinMenuFx.comet(_last_focus_box, box, self)
-		_last_focus_box = box
-
-
-func _disc_style(selected: bool) -> StyleBoxFlat:
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.set_corner_radius_all(20)
-	if selected:
-		sb.bg_color = COL_GOLD
+		g.setup(str(data["key"]), COL_GOLD, 1.8)
+		lbl.add_theme_color_override("font_color", COL_GOLD)
+		# Kbd hint fade in
+		var tw_k: Tween = create_tween()
+		tw_k.tween_property(kbd, "modulate:a", 1.0, 0.15 * MerlinVisual.motion())
+		# Subtle scale feedback
+		var btn_ctrl: Button = data["btn"] as Button
+		btn_ctrl.pivot_offset = btn_ctrl.size * 0.5
+		var tw_s: Tween = create_tween()
+		tw_s.tween_property(btn_ctrl, "scale", Vector2(0.985, 0.985), MerlinVisual.DUR_TAP_DOWN * MerlinVisual.motion()).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw_s.tween_property(btn_ctrl, "scale", Vector2.ONE, MerlinVisual.DUR_TAP_UP * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_last_focus_box = btn_ctrl
 	else:
-		sb.bg_color = Color(0, 0, 0, 0)
-		sb.set_border_width_all(1)
-		sb.border_color = COL_DIM
-	return sb
+		var btn_d: Button = data["btn"] as Button
+		var is_enabled: bool = not btn_d.disabled
+		g.setup(str(data["key"]), COL_DIM_W if is_enabled else COL_DIM, 1.8)
+		lbl.add_theme_color_override("font_color", COL_CREAM if is_enabled else COL_DIM)
+		var tw_ko: Tween = create_tween()
+		tw_ko.tween_property(kbd, "modulate:a", 0.0, 0.15 * MerlinVisual.motion())
 
 
-# v10.18 — Texture radiale dorée pour le halo de focus (or au centre → transparent).
-func _radial_glow_tex() -> GradientTexture2D:
-	var g: Gradient = Gradient.new()
-	g.set_color(0, Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.8))
-	g.set_color(1, Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.0))
-	var t: GradientTexture2D = GradientTexture2D.new()
-	t.gradient = g
-	t.width = 96
-	t.height = 96
-	t.fill = GradientTexture2D.FILL_RADIAL
-	t.fill_from = Vector2(0.5, 0.5)
-	t.fill_to = Vector2(1.0, 0.5)
-	return t
+func _load_claude_font(path: String) -> FontFile:
+	if ResourceLoader.exists(path):
+		var res: Resource = load(path)
+		if res is FontFile:
+			return res as FontFile
+	return null
 
 
-func _build_bottom_bar() -> void:
-	_bottom_bar = HBoxContainer.new()
-	_bottom_bar.anchor_left = 0.0
-	_bottom_bar.anchor_right = 1.0
-	_bottom_bar.anchor_top = 1.0
-	_bottom_bar.anchor_bottom = 1.0
-	_bottom_bar.offset_left = 36
-	_bottom_bar.offset_right = -36
-	_bottom_bar.offset_top = -56
-	_bottom_bar.offset_bottom = -22
-	_bottom_bar.add_theme_constant_override("separation", 14)
-	add_child(_bottom_bar)
-
-	# v10.18 (user 2026-06-29) — la couronne devient un VRAI bouton « À PROPOS » (identité/version) ;
-	# les ornements sans rôle (compas, œil, points, traits) sont retirés (pilier MINIMAL §23).
-	_bottom_bar.add_child(_about_button())
-
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_bottom_bar.add_child(spacer)
-
-	# Indicateur d'éveil du modèle (droite) — « ✦ Merlin s'éveille… » (pulse) puis « ✦ Merlin veille » (or).
-	_model_lbl = Label.new()
-	_model_lbl.text = "✦ Merlin s'éveille…"
-	_model_lbl.add_theme_color_override("font_color", COL_DIM)
-	_model_lbl.add_theme_font_size_override("font_size", 18)
-	_model_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_bottom_bar.add_child(_model_lbl)
-	_model_pulse_tw = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_model_pulse_tw.tween_property(_model_lbl, "modulate:a", 0.35, 1.1)
-	_model_pulse_tw.tween_property(_model_lbl, "modulate:a", 1.0, 1.1)
+func _build_recents() -> void:
+	var pages: Array = MerlinJournal.liste()
+	if pages.is_empty():
+		return
+	var section_gap: Control = Control.new()
+	section_gap.custom_minimum_size = Vector2(0, 8)
+	_left.add_child(section_gap)
+	_left.add_child(MerlinClaudeUI.make_section_title("Récents"))
+	var count: int = mini(3, pages.size())
+	for i in count:
+		var pg: Dictionary = pages[i] as Dictionary
+		var titre: String = str(pg.get("titre", ""))
+		if titre == "":
+			titre = "Traversée sans titre"
+		var date_str: String = _chro_date(str(pg.get("iso", "")))
+		var row: PanelContainer = MerlinClaudeUI.make_list_row(
+			titre.substr(0, 30),
+			"%s · %d beats" % [date_str, int(pg.get("beats", 0))],
+			"",
+			"✦"
+		)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_left.add_child(row)
 
 
-# Bouton « À PROPOS » du bandeau bas : couronne + libellé, ouvre une fiche identité/version (vrai bouton).
-func _about_button() -> Button:
-	var btn: Button = Button.new()
-	btn.custom_minimum_size = Vector2(150, 32)
-	btn.focus_mode = Control.FOCUS_ALL
-	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
-	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
-		btn.add_theme_stylebox_override(st, empty)
-	var row: HBoxContainer = HBoxContainer.new()
-	row.set_anchors_preset(Control.PRESET_FULL_RECT)
-	row.add_theme_constant_override("separation", 8)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(row)
-	row.add_child(_icon("crown", COL_GOLD, Vector2(22, 22), 1.6))
-	var lbl: Label = Label.new()
-	lbl.text = "À PROPOS"
-	lbl.add_theme_color_override("font_color", COL_DIM)
-	lbl.add_theme_font_size_override("font_size", 16)
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(lbl)
-	# Feedback survol/focus net : libellé or au survol, retour au repos (≤100ms, pilier ÉVIDENT).
-	btn.mouse_entered.connect(func() -> void: btn.grab_focus())
-	btn.focus_entered.connect(func() -> void: lbl.add_theme_color_override("font_color", COL_GOLD))
-	btn.focus_exited.connect(func() -> void: lbl.add_theme_color_override("font_color", COL_DIM))
-	btn.pressed.connect(_show_about)
-	return btn
+func _build_status_bar() -> void:
+	var mn: Node = get_node_or_null("/root/MerlinNative")
+	var is_ready: bool = mn != null and mn.is_ready()
+	var status_text: String = "prêt" if is_ready else "s'éveille…"
+	var hb: HBoxContainer = MerlinClaudeUI.make_status_bar("Gemma 4", "local · " + status_text, is_ready)
+	_left.add_child(hb)
+	# Find the dot and label children via meta for later update
+	for ch in hb.get_children():
+		if ch is ColorRect and ch.has_meta("_status_dot"):
+			_status_dot = ch as ColorRect
+		if ch is Label and ch.has_meta("_status_label"):
+			_status_lbl = ch as Label
+	# Pulse animation if not ready
+	if not is_ready and _status_lbl != null:
+		_model_pulse_tw = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_model_pulse_tw.tween_property(_status_lbl, "modulate:a", 0.35, 1.1)
+		_model_pulse_tw.tween_property(_status_lbl, "modulate:a", 1.0, 1.1)
 
 
-# Fiche « À propos » : identité du jeu + version + pitch. Overlay sobre, clic n'importe où = fermer.
 func _show_about() -> void:
 	var layer: Control = Control.new()
 	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -519,20 +542,22 @@ func _show_about() -> void:
 			layer.queue_free())
 
 
-# v10.13 (B1) : le modèle est chargé — l'indicateur cesse de pulser et passe à l'or « veille ».
 func _set_model_awake() -> void:
-	if _model_lbl == null:
-		return
 	if _model_pulse_tw != null and _model_pulse_tw.is_valid():
 		_model_pulse_tw.kill()
 	_model_pulse_tw = null
-	_model_lbl.modulate.a = 1.0
-	_model_lbl.text = "✦ Merlin veille"
-	_model_lbl.add_theme_color_override("font_color", COL_GOLD)
-	# Audit ux_flow M1 (pilier MINIMAL) : la confirmation est vue 2,5s puis s'efface — pas de badge à vie.
-	var t: Tween = _model_lbl.create_tween()
-	t.tween_interval(2.5)
-	t.tween_property(_model_lbl, "modulate:a", 0.0, 0.8)
+	if _status_dot != null:
+		_status_dot.color = COL_GREEN
+	if _status_lbl != null:
+		_status_lbl.modulate.a = 1.0
+		_status_lbl.text = "Gemma 4 · local · prêt"
+		_status_lbl.add_theme_color_override("font_color", COL_DIM_W)
+		var t: Tween = _status_lbl.create_tween()
+		t.tween_interval(2.5)
+		t.tween_property(_status_lbl, "modulate:a", 0.6, 0.8)
+
+
+# ============================== SMALL HELPERS ==============================
 
 
 func _icon(glyph_key: String, col: Color, sz: Vector2, w: float) -> MerlinGlyph:
@@ -590,41 +615,48 @@ func _spaced(s: String) -> String:
 # ============================== ANIMATIONS ==============================
 
 
-## Entrée en cascade : tout démarre invisible puis fond en fondu, du titre vers le bas.
-## Fondus uniquement (pas de slides) : robuste aux re-layouts des containers, DA flat.
 func _animate_entrance() -> void:
-	# v10.18 (user 2026-06-29) — entrée DYNAMIQUE : caméra zoom-settle sur la scène, colonne gauche qui
-	# SLIDE depuis la gauche (+ fondus stagger), bandeau bas qui slide-up. Épuré mais vivant.
-	# Pré-masque pour éviter le flash avant le calcul de layout (1 frame).
-	for n in [_title, _rule_box, _scene_art, _bottom_bar]:
-		(n as CanvasItem).modulate.a = 0.0
+	# Pre-mask everything for the cascade
+	var to_mask: Array = [_title, _subtitle, _scene_art]
+	if _panel != null:
+		to_mask.append(_panel)
+	if _response_card != null:
+		to_mask.append(_response_card)
+	if _orb != null:
+		to_mask.append(_orb as CanvasItem)
+	for n in to_mask:
+		if n != null and n is CanvasItem:
+			(n as CanvasItem).modulate.a = 0.0
 	for d in _rows:
 		(d["btn"] as CanvasItem).modulate.a = 0.0
-	await get_tree().process_frame  # tailles/positions des containers calculées
+	await get_tree().process_frame
 
-	# Caméra : léger zoom-settle (pull-in) + fondu de la scène (pivot = centre).
+	# Camera: slight zoom-settle on the scene art
 	_scene_art.pivot_offset = _scene_art.size * 0.5
 	_scene_art.scale = Vector2(1.06, 1.06)
 	var cam: Tween = create_tween().set_parallel(true)
 	cam.tween_property(_scene_art, "scale", Vector2.ONE, 0.95 * MerlinVisual.motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	cam.tween_property(_scene_art, "modulate:a", 1.0, 0.85 * MerlinVisual.motion())
 
-	# Colonne gauche : SLIDE depuis la gauche (bloc) ; les éléments fondent en stagger par-dessus.
-	if _left != null:
-		var left_rest: Vector2 = _left.position
-		_left.position = left_rest - Vector2(44.0, 0.0)
-		create_tween().tween_property(_left, "position", left_rest, 0.55 * MerlinVisual.motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_fade_in(_title, 0.00, 0.45)
-	_fade_in(_rule_box, 0.12, 0.40)
-	for i in _rows.size():
-		_fade_in(_rows[i]["btn"], 0.22 + 0.06 * float(i), 0.36)
+	# Panel slide-in from left + fade
+	if _panel != null:
+		var panel_rest: Vector2 = _panel.position
+		_panel.position = panel_rest - Vector2(50.0, 0.0)
+		var ptw: Tween = create_tween().set_parallel(true)
+		ptw.tween_property(_panel, "position", panel_rest, 0.55 * MerlinVisual.motion()).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		ptw.tween_property(_panel, "modulate:a", 1.0, 0.50 * MerlinVisual.motion())
 
-	# Bandeau bas : slide-up + fondu (après les boutons).
-	var bb_rest: Vector2 = _bottom_bar.position
-	_bottom_bar.position = bb_rest + Vector2(0.0, 18.0)
-	var bs: Tween = create_tween().set_parallel(true)
-	bs.tween_property(_bottom_bar, "position", bb_rest, 0.5 * MerlinVisual.motion()).set_delay(0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	bs.tween_property(_bottom_bar, "modulate:a", 1.0, 0.45 * MerlinVisual.motion()).set_delay(0.5)
+	# Title and subtitle stagger
+	_fade_in(_title, 0.05, 0.45)
+	_fade_in(_subtitle, 0.15, 0.40)
+
+	# Menu rows stagger
+	for i in _rows.size():
+		_fade_in(_rows[i]["btn"], 0.25 + 0.06 * float(i), 0.36)
+
+	# Orb
+	if _orb != null:
+		_fade_in(_orb as CanvasItem, 0.6, 0.5)
 
 
 func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
@@ -634,26 +666,25 @@ func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
 	tw.tween_property(node, "modulate:a", 1.0, dur * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-## Animations d'attente continues : triskèle rotative, runes qui respirent (déphasées),
-## titre qui pulse (v10.15 — or lumineux).
 func _start_idle_anims() -> void:
+	# Triskele rotation
 	var rot: Tween = create_tween().set_loops()
 	rot.tween_property(_tris, "rotation", TAU, 24.0).from(0.0)
-	# v10.15 — Title breathing : le wordmark pulse entre crème et or (luminance warm).
+	# Title breathing: gold luminance pulse
 	if _title != null and not MerlinVisual.reduced_motion:
 		var col_bright: Color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 1.0).lerp(COL_CREAM, 0.5)
 		var tb: Tween = create_tween().set_loops()
 		var half: float = MerlinVisual.DUR_BREATHE * MerlinVisual.motion()
 		tb.tween_property(_title, "modulate", Color(col_bright.r, col_bright.g, col_bright.b, 1.0), half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		tb.tween_property(_title, "modulate", Color.WHITE, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	# v10.18 — Shimmer ténu sur les rangées désactivées + invitation idle sur la 1re active.
+	# Locked shimmer on disabled rows + attention nudge on first active
 	for d in _rows:
 		if (d["btn"] as Button).disabled:
-			MerlinMenuFx.locked_shimmer(d.get("disc") as CanvasItem)
+			MerlinMenuFx.locked_shimmer(d.get("glyph") as CanvasItem)
 	var first_active: Control = null
 	for d in _rows:
 		if not (d["btn"] as Button).disabled:
-			first_active = d.get("icon_box") as Control
+			first_active = d.get("btn") as Control
 			break
 	if first_active != null:
 		var nudge_t: Tween = create_tween()
@@ -662,9 +693,12 @@ func _start_idle_anims() -> void:
 
 
 # ====================== AMBIANCE (Phase 1, v10.18) ======================
-## Pilote le décor vivant : souffle de forêt périodique, pulse rare de l'orbe,
-## parallaxe + aura de curseur (throttlés 30fps, désactivés en reduced_motion).
+
+
 func _process(delta: float) -> void:
+	# Woodcut boil tick
+	MerlinWoodcut.tick_boil(delta)
+
 	if _scene_art == null:
 		return
 	_gust_timer += delta
@@ -682,10 +716,21 @@ func _process(delta: float) -> void:
 		_parallax_acc = 0.0
 		_update_parallax_cursor()
 	_tick_voice(delta)
-	# Dev (MERLIN_EYE_MOOD=neutral|surprise|angry) : force l'humeur des yeux pour capture/QA.
+	# Response card typewriter tick
+	if _card_typing and _response_card != null and _response_card.visible:
+		_card_tw_acc += delta
+		if _card_tw_acc >= 0.03:
+			_card_tw_acc = 0.0
+			if _card_text_idx < _card_text_full.length():
+				_card_text_idx += 1
+				var body_node: RichTextLabel = _find_card_body()
+				if body_node != null:
+					body_node.text = _card_text_full.substr(0, _card_text_idx)
+			else:
+				_card_typing = false
+	# Dev environment overrides
 	if _scene_art != null and OS.has_environment("MERLIN_EYE_MOOD"):
 		_scene_art.set_eye_mood(OS.get_environment("MERLIN_EYE_MOOD"))
-	# Dev (MERLIN_AUTOCLICK) : déclenche Nouvelle Partie après ~2s pour capturer l'entrée en jeu.
 	if not _autoclick_done and OS.has_environment("MERLIN_AUTOCLICK"):
 		_autoclick_acc += delta
 		if _autoclick_acc >= 2.0:
@@ -696,11 +741,26 @@ func _process(delta: float) -> void:
 		_demo_walk(delta)
 
 
-# Cadence de prise de parole : affiche une pensée prête quand la bulle est libre + le délai écoulé.
+func _find_card_body() -> RichTextLabel:
+	if _response_card == null:
+		return null
+	# Traverse the card looking for the _card_body meta
+	return _find_meta_child(_response_card, "_card_body") as RichTextLabel
+
+
+func _find_meta_child(node: Node, meta_key: String) -> Node:
+	if node.has_meta(meta_key):
+		return node
+	for ch in node.get_children():
+		var found: Node = _find_meta_child(ch, meta_key)
+		if found != null:
+			return found
+	return null
+
+
 func _tick_voice(delta: float) -> void:
 	if _bubble == null:
 		return
-	# Dev (env MERLIN_VOICE_TEST) : bulle factice instantanée pour valider le rendu sans attendre le LLM.
 	if _voice_test and not _voice_test_done:
 		_voice_test_acc += delta
 		if _voice_test_acc >= 1.2:
@@ -712,20 +772,31 @@ func _tick_voice(delta: float) -> void:
 	_speak_acc += delta
 	if not _bubble.is_active() and _voice.has_ready() and _speak_acc >= _next_speak:
 		_speak_acc = 0.0
-		_next_speak = randf_range(14.0, 20.0)  # cadence modérée
+		_next_speak = randf_range(14.0, 20.0)
 		_say(_voice.take_thought())
 
 
-# Fait parler Merlin : humeur des yeux (heuristique) + bulle voixée. Centralise le rituel de parole.
 func _say(line: String) -> void:
 	if line.strip_edges().is_empty():
 		return
 	var mood: String = MerlinSceneArt.mood_for_text(line)
 	if _scene_art != null:
 		_scene_art.set_eye_mood(mood)
-		_scene_art.set_posture("pensee", 4.0)  # 08/09 : le corps parle — il penche la tête le temps de la bulle
-	# v10.22 (user) — placement ALÉATOIRE (5 slots hors UI) + en-tête « MERLIN » : la bulle habite l'écran.
+		_scene_art.set_posture("pensee", 4.0)
 	_bubble.show_line(line, Callable(self, "_head_screen"), mood, true)
+	# Populate response card with typewriter effect
+	if _response_card != null:
+		_response_card.visible = true
+		_response_card.modulate.a = 0.0
+		var tw_card: Tween = create_tween()
+		tw_card.tween_property(_response_card, "modulate:a", 1.0, 0.25 * MerlinVisual.motion())
+		_card_text_full = line
+		_card_text_idx = 0
+		_card_tw_acc = 0.0
+		_card_typing = true
+		var body_node: RichTextLabel = _find_card_body()
+		if body_node != null:
+			body_node.text = ""
 
 
 func _update_parallax_cursor() -> void:
@@ -738,12 +809,14 @@ func _update_parallax_cursor() -> void:
 		var norm: Vector2 = (mouse - center) / (art_rect.size * 0.5)
 		norm.x = clampf(norm.x, -1.0, 1.0)
 		norm.y = clampf(norm.y, -1.0, 1.0)
-		_scene_art.set_parallax(norm * 9.0)  # v10.18 : réactivité curseur renforcée (user 2026-06-29)
+		_scene_art.set_parallax(norm * 9.0)
 	var inside: bool = art_rect.has_point(mouse)
 	_scene_art.set_cursor(mouse - art_rect.position, inside)
 
 
-# Capture dev (env-gated MERLIN_CAPTURE_DIR) — jamais active en prod. Motif de l'ancien CaptureRecorder.
+# ============================== DEV CAPTURE ==============================
+
+
 func _setup_dev_capture() -> void:
 	_cap_dir = OS.get_environment("MERLIN_CAPTURE_DIR")
 	if _cap_dir.is_empty():
@@ -784,7 +857,6 @@ func _maybe_capture() -> void:
 	_cap_count += 1
 
 
-# Dev uniquement (pendant la capture) : promène le focus pour exercer halo/comète/charge.
 func _demo_walk(delta: float) -> void:
 	_walk_acc += delta
 	if _walk_acc < 1.4:
@@ -823,18 +895,10 @@ func _setup_music() -> void:
 
 func _on_new() -> void:
 	_confirm_row("burst")
-	# v10.22 (user) — Nouvelle Partie ouvre d'abord le CHOIX DU BIOME (Forêt / Falaises) ; le décor du
-	# monde choisi POP progressivement autour, PUIS la transition vers la sélection s'enclenche.
 	_show_biome_choice()
 
 
-# v10.22 — Overlay du choix de biome : 2 cartes compactes à la charte (titre + 2 lignes + bouton).
 var _biome_layer: Control = null
-
-const BIOME_CARDS: Array = [
-	{"id": "foret", "titre": "Brocéliande", "desc": "La forêt qui rêve. Brumes, korrigans,\npierres qui murmurent, et quatre puissances\nqui se disputent son cœur."},
-	{"id": "falaises", "titre": "Les Falaises du Bout-du-Monde", "desc": "La terre s'achève en à-pic. Un phare mort,\nune mer qui ne rend rien, et le vent\nqui use les serments plus vite que la pierre."},
-]
 
 
 func _show_biome_choice() -> void:
@@ -854,55 +918,62 @@ func _show_biome_choice() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_biome_layer.add_child(center)
 	var col: VBoxContainer = VBoxContainer.new()
-	col.add_theme_constant_override("separation", 24)
+	col.add_theme_constant_override("separation", 20)
 	center.add_child(col)
-	var title: Label = Label.new()
-	title.text = "Où le chemin commence-t-il ?"
-	title.add_theme_color_override("font_color", MerlinVisual.GOLD)
-	title.add_theme_font_size_override("font_size", 32)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
-	col.add_child(MerlinOrnament.triskele_rule(18.0))
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 30)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(row)
-	for bc in BIOME_CARDS:
+	var title_l: Label = Label.new()
+	title_l.text = "Où le chemin commence-t-il ?"
+	title_l.add_theme_color_override("font_color", MerlinVisual.GOLD)
+	title_l.add_theme_font_size_override("font_size", 30)
+	title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title_l)
+	col.add_child(MerlinOrnament.triskele_rule(16.0))
+
+	# 8 biomes in a 4x2 grid of menhir-style cards
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 16)
+	col.add_child(grid)
+
+	var biome_count: int = MerlinVisual.BIOME_IDS.size()
+	for bi in biome_count:
+		var bio_id: String = str(MerlinVisual.BIOME_IDS[bi])
+		var bio_name: String = str(MerlinVisual.BIOME_NAMES[bi])
+		var bio_col: Color = MerlinVisual.BIOME_COLORS[bi] as Color
 		var card: PanelContainer = PanelContainer.new()
-		card.custom_minimum_size = Vector2(420, 0)
+		card.custom_minimum_size = Vector2(200, 120)
 		card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var sb2: StyleBoxFlat = StyleBoxFlat.new()
 		sb2.bg_color = MerlinVisual.SURFACE
-		sb2.set_border_width_all(1)
-		sb2.border_color = MerlinVisual.BORDER_BRUN
-		sb2.set_corner_radius_all(10)
-		sb2.set_content_margin_all(24)
+		sb2.set_border_width_all(2)
+		sb2.border_color = bio_col
+		sb2.set_corner_radius_all(8)
+		sb2.set_content_margin_all(14)
 		card.add_theme_stylebox_override("panel", sb2)
 		var cv2: VBoxContainer = VBoxContainer.new()
-		cv2.add_theme_constant_override("separation", 12)
+		cv2.add_theme_constant_override("separation", 8)
 		card.add_child(cv2)
+		# Menhir accent bar at top
+		var accent: ColorRect = ColorRect.new()
+		accent.custom_minimum_size = Vector2(40, 3)
+		accent.color = bio_col
+		cv2.add_child(accent)
 		var ct: Label = Label.new()
-		ct.text = str(bc["titre"])
-		ct.add_theme_color_override("font_color", MerlinVisual.GOLD)
-		ct.add_theme_font_size_override("font_size", 26)
+		ct.text = bio_name
+		ct.add_theme_color_override("font_color", bio_col)
+		ct.add_theme_font_size_override("font_size", 20)
 		ct.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		ct.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		cv2.add_child(ct)
-		var cd: Label = Label.new()
-		cd.text = str(bc["desc"])
-		cd.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
-		cd.add_theme_font_size_override("font_size", 18)
-		cd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cv2.add_child(cd)
 		var cb: Button = Button.new()
-		cb.text = "Partir là-bas"
-		cb.custom_minimum_size = Vector2(0, 52)
-		cb.add_theme_font_size_override("font_size", 20)
+		cb.text = "Entrer"
+		cb.custom_minimum_size = Vector2(0, 40)
+		cb.add_theme_font_size_override("font_size", 17)
 		MerlinVisual.apply_button_da(cb)
-		cb.pressed.connect(_on_biome_picked.bind(str(bc["id"])))
+		cb.pressed.connect(_on_biome_picked.bind(bio_id))
 		MerlinVisual.connect_button_feedback(cb)
 		cv2.add_child(cb)
-		row.add_child(card)
+		grid.add_child(card)
 	_biome_layer.modulate.a = 0.0
 	_biome_layer.create_tween().tween_property(_biome_layer, "modulate:a", 1.0, 0.30 * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE)
 
@@ -914,22 +985,12 @@ func _on_biome_picked(bio: String) -> void:
 	_biome_layer = null
 	var run: Node = get_node("/root/MerlinRun")
 	run.biome = bio
-	# LE POINT DE DÉPART DE L'ÉCRITURE. C'est ici, et pas avant, que Merlin sait dans quel monde
-	# il doit rêver. `invalidate_selection` remet le compteur d'essais à zéro puis le warmup part
-	# aussitôt : les ~3 s d'animation qui suivent (decor_reveal, gust, flash_moon) et la transition
-	# sont autant de pris sur la génération, gratuitement, avant même que l'écran s'affiche.
-	# La voix de Merlin est coupée AVANT de lancer l'écriture, et non 2,5 s plus tard à la fin de
-	# l'animation comme auparavant : le moteur est SINGLE-FLIGHT. Tant que la voix du menu génère,
-	# la demande de sélection se fait répondre « génération déjà en cours » et repart les mains
-	# vides. L'ordre inverse faisait donc échouer le tout premier essai par simple collision.
 	_stop_voice()
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc != null and sc.has_method("invalidate_selection"):
 		sc.invalidate_selection()
 		if sc.has_method("warmup_and_prefetch_selection"):
-			sc.warmup_and_prefetch_selection()  # fire-and-forget : l'écran récupérera ce qui est en vol
-	# L'overlay s'efface, le MONDE choisi apparaît en pop progressif (rampe decor_reveal du boot),
-	# la forêt/mer accueille le Voyageur (gust + flash), puis la transition s'enclenche.
+			sc.warmup_and_prefetch_selection()
 	var m: float = MerlinVisual.motion()
 	var out_tw: Tween = layer.create_tween()
 	out_tw.tween_property(layer, "modulate:a", 0.0, 0.25 * m).set_trans(Tween.TRANS_SINE)
@@ -958,19 +1019,15 @@ func _on_continue() -> void:
 		MerlinTransition.change_scene(GAME_SCENE, "", "haut")
 
 
-# Coupe la voix du menu avant de quitter la scène (single-flight : la scène suivante a besoin du
-# moteur, et le menu va être quitté). Ne rend plus de réplique : le montage qui la prononçait est
-# retiré — l'entrée en jeu se fait sur la révélation du décor puis la transition à l'encre.
 func _stop_voice() -> void:
 	if _voice != null:
 		_voice.stop()
 
 
-# v10.18 — Retour de confirmation (anneau qui s'évase + flash) sur la rangée d'une clé donnée.
 func _confirm_row(key: String) -> void:
 	for d in _rows:
 		if str(d.get("key")) == key:
-			MerlinMenuFx.confirm(d.get("lbl") as Label, d.get("icon_box") as Control)
+			MerlinMenuFx.confirm(d.get("lbl") as Label, d.get("btn") as Control)
 			return
 
 
@@ -982,22 +1039,9 @@ func _on_quit() -> void:
 	get_tree().quit()
 
 
-# ÉCRAN CHRONIQUES — LE PALMARÈS, PUIS CHAQUE TRAVERSÉE.
-#
-# v1 ne montrait que des compteurs : combien de traversées, combien accomplies, la dernière fin.
-# On ne pouvait donc PAS répondre à la question qui compte — « est-ce que le jeu s'améliore ? » —
-# puisque rien ne gardait ce qu'une traversée avait donné à lire. `MerlinJournal` le garde
-# désormais ; cet écran le donne à lire, sans rien changer au palmarès qui reste en tête.
-#
-# DEUX VUES, UN SEUL VOILE. La liste, puis le détail d'une traversée, se remplacent dans le même
-# panneau : un second voile empilé demanderait deux clics pour revenir, et le pilier FACILE
-# (bible §21.1) tient l'action à deux gestes au plus.
-# === LES SENTIERS ÉCRITS À LA MAIN ===========================================================
-#
-# Une quête écrite se joue SANS le modèle : sa prose est déjà là, donc aucune attente, aucun beat
-# au banc. La mécanique, elle, se joue pour de vrai (tags tirés, dé lancé, intégrité qui descend).
-# On ne passe donc ni par l'écran de sélection, ni par `build_skeleton`, ni par l'écriture de
-# l'ouverture : le sentier EST le scénario.
+# ============================== SENTIERS ==============================
+
+
 func _on_sentiers() -> void:
 	if get_node_or_null("SentiersOverlay") != null:
 		return  # garde de ré-entrance (pas d'empilement de voiles)
@@ -1055,12 +1099,11 @@ func _sentiers_liste(panel: PanelContainer, layer: Control) -> void:
 	v.add_child(_chro_bouton("← Retour", func() -> void: layer.queue_free()))
 
 
-## Titre, lieu et longueur, puis la première ligne du préambule. Assez pour choisir, rien qui déflore.
 func _sentier_ligne(r: Dictionary, layer: Control) -> Control:
 	var b: Button = Button.new()
-	b.custom_minimum_size = Vector2(0, 86)   # ≥ 44 px : pilier TACTILE
+	b.custom_minimum_size = Vector2(0, 86)   # cible tactile >= 44 px
 	b.flat = true
-	b.clip_contents = true                    # rien ne déborde sur la ligne suivante
+	b.clip_contents = true
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.pressed.connect(func() -> void: _lancer_le_sentier(str(r.get("cle", "")), layer))
 	var col: VBoxContainer = VBoxContainer.new()
@@ -1081,18 +1124,19 @@ func _sentier_ligne(r: Dictionary, layer: Control) -> Control:
 	return b
 
 
-## Le sentier devient la traversée. Aucun squelette, aucune ouverture à écrire : on entre en jeu.
 func _lancer_le_sentier(cle: String, layer: Control) -> void:
 	var s: Dictionary = MerlinSentier.charger(cle)
 	if s.is_empty():
-		return  # illisible : on ne lance pas une traversée qui mentirait sur ce qu'elle raconte
+		return  # illisible
 	var run: Node = get_node("/root/MerlinRun")
-	# LE BIOME AVANT LA TRAVERSÉE : `new_run` ouvre la chronique avec lui, et le décor le lit.
 	run.biome = str(s.get("biome", run.biome))
 	run.new_run(s)
 	layer.queue_free()
 	_stop_voice()
 	MerlinTransition.change_scene(GAME_SCENE, "", "haut")
+
+
+# ============================== CHRONIQUES ==============================
 
 
 func _on_chronicles() -> void:
@@ -1108,8 +1152,6 @@ func _on_chronicles() -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	layer.add_child(dim)
-	# SEUL LE FOND FERME. Le panneau contient des lignes cliquables : fermer sur n'importe quel
-	# clic renverrait au menu chaque fois qu'on veut ouvrir une chronique.
 	dim.gui_input.connect(func(e: InputEvent) -> void:
 		if e is InputEventMouseButton and e.pressed:
 			layer.queue_free())
@@ -1131,7 +1173,6 @@ func _on_chronicles() -> void:
 	tw.tween_property(layer, "modulate:a", 1.0, MerlinVisual.DUR_VEIL_IN * MerlinVisual.motion())
 
 
-## Vue 1 : le palmarès, puis une ligne par traversée, la plus récente en haut.
 func _chroniques_liste(panel: PanelContainer) -> void:
 	_vider(panel)
 	var c: Dictionary = MerlinChronicle.read()
@@ -1150,9 +1191,6 @@ func _chroniques_liste(panel: PanelContainer) -> void:
 
 	var pages: Array = MerlinJournal.liste()
 	if pages.is_empty():
-		# UNE LISTE VIDE DIT POURQUOI. Les traversées jouées AVANT que le journal existe n'y sont
-		# pas : sans cette phrase, un palmarès à douze traversées face à une liste vide se lit
-		# comme une panne.
 		v.add_child(_chro_ligne("Aucune traversée enregistrée pour l'instant.", 18, COL_CREAM))
 		v.add_child(_chro_ligne("Le journal note chaque traversée à partir de maintenant ; "
 			+ "celles d'avant n'ont pas été gardées.", 15, COL_DIM))
@@ -1172,11 +1210,9 @@ func _chroniques_liste(panel: PanelContainer) -> void:
 	v.add_child(_chro_ligne("cliquer hors du cadre pour fermer", 13, COL_DIM))
 
 
-## Une ligne de la liste : de quoi choisir sans avoir à ouvrir. Le nombre de signes de prose est
-## là parce que c'est la mesure la plus simple de « le jeu écrit-il plus qu'avant ».
 func _chro_rangee(pg: Dictionary, panel: PanelContainer) -> Control:
 	var b: Button = Button.new()
-	b.custom_minimum_size = Vector2(0, 46)   # cible tactile ≥ 44 px (bible §21.1)
+	b.custom_minimum_size = Vector2(0, 46)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.flat = true
 	b.add_theme_color_override("font_color", COL_CREAM)
@@ -1193,7 +1229,6 @@ func _chro_rangee(pg: Dictionary, panel: PanelContainer) -> Control:
 	return b
 
 
-## Vue 2 : une traversée, beat par beat, telle qu'elle s'est lue.
 func _chroniques_detail(panel: PanelContainer, id: String) -> void:
 	var q: Dictionary = MerlinJournal.lire(id)
 	_vider(panel)
@@ -1243,10 +1278,6 @@ func _chro_ligne(txt: String, taille: int, coul: Color) -> Label:
 	return l
 
 
-## LA PROSE SE LIT COMME EN PARTIE. Le jeu l'écrit en BBCode et l'affiche dans un RichTextLabel
-## (le geste en [i]…[/i]) : un Label ordinaire montrerait les balises en clair, et la chronique se
-## lirait moins bien que la traversée qu'elle raconte. Mesuré sur p93, dont les neuf issues
-## commencent toutes par une balise d'italique.
 func _chro_prose(txt: String, coul: Color) -> RichTextLabel:
 	var r: RichTextLabel = RichTextLabel.new()
 	r.bbcode_enabled = true
@@ -1277,7 +1308,6 @@ func _vider(n: Node) -> void:
 		e.queue_free()
 
 
-## « 2026-09-01T15:04:12 » se lit mal dans une liste ; « 01/09 15:04 » se compare d'un coup d'œil.
 func _chro_date(iso: String) -> String:
 	if iso.length() < 16:
 		return iso
@@ -1298,8 +1328,6 @@ func _chro_fin(t: String) -> String:
 			return t
 
 
-# P2 (chantier 4a) : phrase de préambule (menu) qui fait allusion aux fragments déjà ramenés. Nombre
-# écrit en toutes lettres jusqu'à douze, chiffre au-delà. "" si aucun fragment (pas de ligne).
 func _fragments_preamble(n: int) -> String:
 	if n <= 0:
 		return ""
