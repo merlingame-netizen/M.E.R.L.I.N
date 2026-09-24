@@ -1,7 +1,7 @@
 class_name MerlinVisual
 extends RefCounted
-## v10.13 (A1) — SOURCE DE VÉRITÉ visuelle : palette DA flat rétro-minimaliste (verrouillée
-## 2026-05-26, R70 BIBLE.md) + factories de styles partagées. Classe STATIQUE volontairement
+## v11.0 (DA v8) — SOURCE DE VÉRITÉ visuelle : palette gravure sur bois P1 + sphère 3D + UI
+## façon Claude (validée 2026-09-24, R192+ BIBLE.md). Classe STATIQUE volontairement
 ## (pas un autoload) : zéro ordre d'init, zéro get_node, utilisable depuis les probes hors-arbre.
 ## Convention : les écrans/components gardent leurs noms locaux (COL_GOLD…) mais ALIASÉS ici
 ## (`const COL_GOLD: Color = MerlinVisual.GOLD`) — un rebranding = UNE édition.
@@ -30,22 +30,84 @@ const RARE_BLUE: Color = Color("5A7A8C")  # bleu-acier (rareté Rare / déviatio
 const MERLIN_BLUE: Color = Color("A6CFF0")         # texte de la voix de Merlin (clair, fort contraste sur bleu-nuit)
 const MERLIN_SPEECH_BG: Color = Color(0.08, 0.11, 0.17, 0.94)  # cartouche bleu-nuit (récit reste crème)
 const MERLIN_SPEECH_BORDER: Color = Color("5F8FBE") # liseré bleuté (≠ liseré or du récit)
-const MERLIN_FONT_PATH: String = "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # serif roman élégant + lisible
+const MERLIN_FONT_PATH: String = "res://resources/fonts/eb_garamond/EBGaramond-Regular.ttf"  # DA v8 : EB Garamond (voix + titres)
 
 # ── Yeux de Merlin — humeurs (R124, user 2026-06-29) ──
 const EYE_NEUTRAL: Color = Color("5FB8E8")  # bleu BRILLANT (humeur neutre)
 const EYE_SURPRISE: Color = Color("F2D24A") # jaune lumineux (surprise / suspicion)
 const EYE_ANGRY: Color = Color("E0483A")    # rouge (colère + sourcils froncés)
 
-# ── Rareté (palier Épique) ──
-const RARITY_EPIC: Color = Color("9A4FA8")
+# ── DA v8 : gravure P1 (charte_p1.md §2-§3) ──
+const GRAV_TAILLE: Color = Color("C8B894")         # trait clair sur nuit (sous CREAM)
+const GRAV_PAPIER_FOULE: Color = Color("D6C8A6")   # ombre douce de la page
+const GRAV_OR_REHAUT: Color = Color("E8CC7A")       # facette éclairée de l'or
+const STROKE_ENC: float = 4.2    # contour extérieur (px 1920)
+const STROKE_INT: float = 2.1    # plis, glyphes, filets
+const STROKE_HACH: float = 1.5   # hachures
+const HATCH_PITCH_4: int = 4     # pas de hachure h4
+const HATCH_PITCH_6: int = 6     # pas de hachure h6
+const BOIL_FPS: float = 8.0      # cadence du bouillonnement de gravure
+const BOIL_OFFSET_MAX: float = 1.4  # décalage max des hachures (u)
+const BOIL_ANGLE_MAX: float = 1.0   # rotation max des hachures (degrés)
 
-# ── Archétypes d'effet ──
+# ── DA v8 : couleurs de Merlin sphère (SPEC §3, kit.md §C) ──
+const MERLIN_SLATE: Color = Color("6E7477")       # teint de la coque (gris réservé à Merlin)
+const MERLIN_SLATE_DARK: Color = Color("3C4144")  # ombre de la coque
+const MERLIN_ASH: Color = Color("B9BDB6")         # accent clair de la coque
+const MACHINE_CYAN: Color = Color("9FD3E6")       # coeur, yeux, antenne (= EYE_NEUTRAL)
+const MERLIN_GRAYS: Array = [
+	Color("484C4F"), Color("5A5E61"), Color("6E7477"), Color("545859")
+]
+
+# ── DA v8 : 8 biomes (kit.md §A) ──
+const BIOME_FORET: Color = Color("4F6B3E")        # Brocéliande (= GREEN_DARK)
+const BIOME_FALAISES: Color = Color("4E6A78")     # Falaises du Bout-du-Monde
+const BIOME_ARREE: Color = Color("5E5140")        # Monts d'Arrée
+const BIOME_IROISE: Color = Color("3E5C5A")       # Mer d'Iroise
+const BIOME_ALIGNEMENTS: Color = Color("8C8472")  # Les Alignements
+const BIOME_TINTAGEL: Color = Color("6A5A48")     # Tintagel
+const BIOME_AVALON: Color = Color("CFC6B0")       # Avalon (nacre)
+const BIOME_CORBENIC: Color = Color("C9A24B")     # Corbénic (= GOLD, glitch maximal)
+const BIOME_COLORS: Array = [
+	Color("4F6B3E"), Color("4E6A78"), Color("5E5140"), Color("3E5C5A"),
+	Color("8C8472"), Color("6A5A48"), Color("CFC6B0"), Color("C9A24B")
+]
+const BIOME_IDS: Array = [
+	"foret", "falaises", "arree", "iroise",
+	"alignements", "tintagel", "avalon", "corbenic"
+]
+
+# ── DA v8 : polices (OFL) ──
+const FONT_EB_GARAMOND: String = "res://resources/fonts/eb_garamond/EBGaramond-Regular.ttf"
+const FONT_EB_GARAMOND_SEMI: String = "res://resources/fonts/eb_garamond/EBGaramond-SemiBold.ttf"
+const FONT_EB_GARAMOND_ITALIC: String = "res://resources/fonts/eb_garamond/EBGaramond-Italic.ttf"
+const FONT_IM_FELL: String = "res://resources/fonts/im_fell_english_sc/IMFellEnglishSC-Regular.ttf"
+const FONT_DM_SANS: String = "res://resources/fonts/dm_sans/DMSans-Regular.ttf"
+const FONT_DM_SANS_MEDIUM: String = "res://resources/fonts/dm_sans/DMSans-Medium.ttf"
+
+# ── DA v8 : panneau UI façon Claude (SPEC §4) ──
+const PANEL_ALPHA: float = 0.88          # opacité du panneau latéral
+const PANEL_BORDER_ALPHA: float = 0.16   # opacité du liseré crème
+const PANEL_RADIUS: int = 16             # rayon coins (sur 1920)
+const BTN_PRIMARY_RADIUS: int = 10       # rayon bouton primaire
+const SHEEN_INTERVAL: float = 4.5        # intervalle du reflet sur bouton primaire
+
+# ── DA v8 : Merlin carte de réponse (SPEC §4) ──
+const TYPEWRITER_WPS: float = 24.0       # mots par seconde de la carte de réponse
+const WORD_FADE_DUR: float = 0.18        # fondu par mot
+
+# ── Rareté (palier Épique — DA v8 : argent, le violet est réservé à la Corruption) ──
+const RARITY_EPIC: Color = Color("B9BDB6")
+
+# ── Archétypes d'effet (DA v8 : MYSTÈRE en indigo nuit, VIOLET réservé Corruption) ──
 const ARCHETYPE_OFFENSE: Color = Color("C0533A")
+const ARCHETYPE_OFFENSE_BAND: Color = Color("9E4631")   # bande assombrie -20%
 const ARCHETYPE_DEFENSE: Color = Color("4E7A6A")
+const ARCHETYPE_DEFENSE_BAND: Color = Color("426557")
 const ARCHETYPE_SPEECH: Color = Color("B58A3A")
-const ARCHETYPE_MYSTERY: Color = Color("6B5A9C")
+const ARCHETYPE_MYSTERY: Color = Color("44558C")         # indigo nuit (ex-violet 6B5A9C)
 const ARCHETYPE_CORRUPT: Color = Color("8B4FA3")
+const ARCHETYPE_CORRUPT_BAND: Color = Color("734285")
 
 # ── Effets actifs ──
 const EFFECT_HEAL: Color = Color("5E7A42")
