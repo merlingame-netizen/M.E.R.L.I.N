@@ -76,6 +76,10 @@ const BIOME_IDS: Array = [
 	"foret", "falaises", "arree", "iroise",
 	"alignements", "tintagel", "avalon", "corbenic"
 ]
+const BIOME_NAMES: Array = [
+	"Brocéliande", "Les Falaises", "Monts d'Arrée", "Mer d'Iroise",
+	"Les Alignements", "Tintagel", "Avalon", "Corbénic"
+]
 
 # ── DA v8 : polices (OFL) ──
 const FONT_EB_GARAMOND: String = "res://resources/fonts/eb_garamond/EBGaramond-Regular.ttf"
