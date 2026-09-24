@@ -14,6 +14,7 @@ const COL_GOLD: Color = MerlinVisual.GOLD
 const COL_GREEN: Color = MerlinVisual.GREEN
 const COL_VIOLET: Color = MerlinVisual.VIOLET
 const COL_DIM: Color = MerlinVisual.DIM_WARM
+const ORB_SCENE: PackedScene = preload("res://scenes/MerlinOrb.tscn")
 
 # R164 : la revente de cartes est HORS SCOPE V1. Aucune source de carte vendable n'existe aujourd'hui
 # (le draft greffe des bonus sur les actions, il ne donne jamais de carte-trait autonome ;
@@ -193,6 +194,7 @@ var _tuto_prompt_row: HBoxContainer = null     # rangée de proposition Z4 (duck
 # P3 (chantier 1, CDC-UX-04) — overlay PAUSE système (Échap). Node ALWAYS (survit à get_tree().paused).
 const PAUSE_SCRIPT: GDScript = preload("res://scripts/game/merlin_pause.gd")  # R147bis
 var _pause: CanvasLayer = null
+var _orb: Node = null
 
 
 # v10.13 (Fix 0) — garde canonique post-await : la scène est-elle toujours « fraîche » ?
@@ -202,6 +204,7 @@ func _fresh(ep: int) -> bool:
 
 
 func _process(delta: float) -> void:
+	MerlinWoodcut.tick_boil(delta)
 	_maybe_game_capture()  # dev (MERLIN_CAPTURE_DIR) : capture in-game pour QA
 	# v10.20 — l'ŒIL-LUNE (yeux de Merlin dans la lune) suit le CURSEUR : le joueur manipule ses cartes
 	# en bas → les yeux le regardent. Throttle 30 fps. Suivi off en reduced_motion (l'humeur reste).
@@ -3128,6 +3131,9 @@ func _update_corruption_fx(corruption: int) -> void:
 	if palier > prev and prev >= 0:
 		MerlinAudio.play_sfx("whisper_threshold")
 	MerlinAudio.set_corruption_layer(palier)
+	if _orb != null and _orb.has_method("set_mood"):
+		var moods: Array = ["neutral", "thinking", "angry", "angry"]
+		_orb.set_mood(moods[palier])
 	var lv: Dictionary = GLITCH_LEVELS[palier]
 	var ti: float = float(lv["i"])
 	var td: float = float(lv["d"])
@@ -3976,6 +3982,9 @@ func _build_ui() -> void:
 	_emprise_lbl.text = "l'Emprise guette"
 	_emprise_lbl.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
 	_emprise_lbl.add_theme_font_size_override("font_size", 16)
+	var fnt_ui_e: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui_e != null:
+		_emprise_lbl.add_theme_font_override("font", fnt_ui_e)
 	_emprise_lbl.position = Vector2(-34, 52)
 	_emprise_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_emprise_lbl.visible = false
@@ -3994,6 +4003,10 @@ func _build_ui() -> void:
 	journal_btn.pressed.connect(_ouvrir_le_journal)
 	MerlinVisual.connect_button_feedback(journal_btn)
 	hud.add_child(journal_btn)
+	_orb = ORB_SCENE.instantiate()
+	_orb.custom_minimum_size = Vector2(64, 64)
+	_orb.size = Vector2(64, 64)
+	hud.add_child(_orb)
 	_corr_gauge.add_child(_emprise_lbl)
 
 	# Scène en silhouettes plates — Z2 DÉCOR 200 px FIXE (dessine relatif à `size`).
@@ -4041,6 +4054,9 @@ func _build_ui() -> void:
 	_quest_obj_lbl = Label.new()
 	_quest_obj_lbl.add_theme_color_override("font_color", MerlinVisual.INK_DIM)
 	_quest_obj_lbl.add_theme_font_size_override("font_size", MerlinVisual.FS_HINT)
+	var fnt_ui_q: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui_q != null:
+		_quest_obj_lbl.add_theme_font_override("font", fnt_ui_q)
 	_quest_obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_quest_obj_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_quest_obj_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -4065,6 +4081,9 @@ func _build_ui() -> void:
 	# (Pas de fonte italique dédiée au thème : le fallback rend l'italique en romain, la TAILLE prime.)
 	_situation_text.add_theme_font_size_override("italics_font_size", MerlinVisual.FS_NARRATIVE)
 	_situation_text.add_theme_font_size_override("bold_italics_font_size", MerlinVisual.FS_NARRATIVE)
+	var fnt_narr: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND)
+	if fnt_narr != null:
+		_situation_text.add_theme_font_override("normal_font", fnt_narr)
 	inner.add_child(_situation_text)
 
 	# v11-V2a (Z4) — LIGNE D'ÉTAT 72 px FIXE entre l'encart et l'éventail : slot central (vignette
@@ -4092,6 +4111,9 @@ func _build_ui() -> void:
 	_meca_lbl = Label.new()
 	_meca_lbl.add_theme_color_override("font_color", MerlinVisual.DIM_WARM)
 	_meca_lbl.add_theme_font_size_override("font_size", 16)
+	var fnt_ui_m: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui_m != null:
+		_meca_lbl.add_theme_font_override("font", fnt_ui_m)
 	_meca_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_meca_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_meca_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -4099,6 +4121,9 @@ func _build_ui() -> void:
 
 	# Caret « cliquer pour continuer » : clignote quand l'issue est écrite — alpha-fade, jamais caché.
 	_caret = _mk_label(MerlinVisual.GOLD_DARK, 20)
+	var fnt_ui_c: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui_c != null:
+		_caret.add_theme_font_override("font", fnt_ui_c)
 	_caret.text = "▮ cliquer pour continuer"
 	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -4183,6 +4208,9 @@ func _build_ui() -> void:
 	_overlay_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_overlay_lbl.add_theme_font_size_override("font_size", 22)
+	var fnt_ui_ov: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui_ov != null:
+		_overlay_lbl.add_theme_font_override("font", fnt_ui_ov)
 	_overlay_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_overlay_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_overlay_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -4235,7 +4263,10 @@ func _on_think_tick() -> void:
 	if _scene_art == null:
 		return
 	var mn: Node = get_node_or_null("/root/MerlinNative")
-	_scene_art.set_thinking(mn != null and mn.is_busy())
+	var busy: bool = mn != null and mn.is_busy()
+	_scene_art.set_thinking(busy)
+	if _orb != null and _orb.has_method("set_generating"):
+		_orb.set_generating(busy)
 
 
 func _mk_label(col: Color, fsize: int) -> Label:
@@ -4243,6 +4274,14 @@ func _mk_label(col: Color, fsize: int) -> Label:
 	l.add_theme_color_override("font_color", col)
 	l.add_theme_font_size_override("font_size", fsize)
 	return l
+
+
+static func _load_font(path: String) -> FontFile:
+	if ResourceLoader.exists(path):
+		var res: Resource = load(path)
+		if res is FontFile:
+			return res as FontFile
+	return null
 
 
 func _cream_style() -> StyleBoxFlat:
