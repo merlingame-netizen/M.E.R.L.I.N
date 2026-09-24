@@ -93,8 +93,16 @@ Implémentation Godot conseillée : `SubViewport` (transparent_bg, taille ~512²
 - **Performance** : décor ≤ 15 écritures/s par calque animé (throttle §21 R121), bouillonnement 8 i/s, sphère 30 i/s, tout en pause fenêtre cachée ; pendant une génération LLM, `set_generating(true)` divise les animations par 2 et coupe les figures.
 - **Flux** : ne pas modifier la logique de run, la save (R108), les prompts ni la résolution. Le menu change (choix du biome par les menhirs) : c'est un changement de flow, donc gate R109.
 - **Gates avant chaque commit runtime** : parse check sans erreur, smoke des scènes touchées (`passed=true`, `script_errors=[]`), et en fin de chantier soak 200/200 + autoplay 3/3 (R109). Sur Linux, appeler Godot directement (`tools/cli.py` porte des chemins Windows).
-- **Bible** : ajouter les règles R173 et suivantes (vérifier le plus grand R existant) : Merlin-sphère (amende R16/R126/R129), Seuil entre les mondes (R97/R132), patte P1 + UI façon Claude (amende §20 et R70 : sans-serif autorisé pour le chrome d'interface, serif pour la voix et les titres).
+- **Bible** : ajouter les règles **R192 et suivantes** (au canon de9d1385 le plus grand numéro est R191, §26 « Penn ar Bed » ; revérifier avant d’écrire) : Merlin-sphère (amende R16/R126/R129), Seuil entre les mondes (R97/R132), patte P1 + UI façon Claude (amende §20 et R70 : sans-serif autorisé pour le chrome d'interface, serif pour la voix et les titres).
 - **Textes** : biome-agnostiques hors contexte de biome ; voix de Merlin taquine, brève, par questions, ne nomme jamais la simulation ; pas de tiret cadratin.
+
+## 6bis. Repères techniques relevés dans le canon (2026-09-24)
+
+- `scripts/game/merlin_game.gd` fait environ 4 255 lignes, `merlin_scene_art.gd` 1 686, `merlin_menu.gd` 1 310 : procéder par petits commits vérifiés.
+- L'overlay de choix de biome `BIOME_CARDS` est dans `scripts/game/merlin_menu.gd` (vers les lignes 834 et 870).
+- Polices présentes : MorrisRoman et VT323 seulement ; EB Garamond, IM Fell English SC et DM Sans sont à ajouter avec leur licence OFL.
+- `tools/cli.py godot` et `tools/adapters/godot_adapter.py` portent des chemins Windows : appeler Godot directement avec `--path`.
+- Import headless : sans dossier `.godot/`, poser des `.gdignore` dans Assets, external, native, docs, archive, web-demo et `import/blender/enabled=false` dans `project.godot`, SANS commiter ces réglages locaux.
 
 ## 7. Points ouverts (ne pas trancher sans Maxime)
 
