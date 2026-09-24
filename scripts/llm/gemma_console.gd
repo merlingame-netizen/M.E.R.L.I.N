@@ -13,6 +13,8 @@ const COL_TEXT: Color = MerlinVisual.CREAM
 const COL_GOLD: Color = MerlinVisual.GOLD
 const COL_GREEN: Color = MerlinVisual.GREEN_DARK
 const COL_VIOLET: Color = MerlinVisual.VIOLET
+const COL_INK: Color = MerlinVisual.INK
+const ORB_SCENE: PackedScene = preload("res://scenes/MerlinOrb.tscn")
 
 const SYSTEM_TEST: String = "Tu es Merlin, maitre du jeu enigmatique de la foret de Broceliande. Reponds en francais, ton merveilleux-inquietant, bref et image."
 const USER_TEST: String = "Le voyageur arrive a l'oree de la foret au crepuscule. Decris ce qu'il voit, en 2 phrases."
@@ -30,6 +32,7 @@ var _tw: Tween
 var _title_lbl: Label
 var _controls_row: HBoxContainer
 var _out_panel: PanelContainer
+var _orb: Node = null
 
 
 func _ready() -> void:
@@ -66,18 +69,26 @@ func _build_ui() -> void:
 	margin.add_child(root)
 
 	_title_lbl = Label.new()
-	_title_lbl.text = "GEMMA PARLE — Console debug (Gemma 4 E2B natif)"
+	_title_lbl.text = "GEMMA PARLE — Console debug"
 	_title_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_title_lbl.add_theme_font_size_override("font_size", 26)
+	var fnt_title: FontFile = _load_font(MerlinVisual.FONT_IM_FELL)
+	if fnt_title != null:
+		_title_lbl.add_theme_font_override("font", fnt_title)
 	root.add_child(_title_lbl)
 
 	_status = Label.new()
 	_status.add_theme_font_size_override("font_size", 16)
+	var fnt_ui: FontFile = _load_font(MerlinVisual.FONT_DM_SANS)
+	if fnt_ui != null:
+		_status.add_theme_font_override("font", fnt_ui)
 	root.add_child(_status)
 
 	var prompt_lbl: Label = Label.new()
 	prompt_lbl.text = "Prompt (libre) :"
 	prompt_lbl.add_theme_color_override("font_color", COL_TEXT)
+	if fnt_ui != null:
+		prompt_lbl.add_theme_font_override("font", fnt_ui)
 	root.add_child(prompt_lbl)
 
 	_prompt_edit = TextEdit.new()
@@ -109,34 +120,31 @@ func _build_ui() -> void:
 	_tokens_spin.custom_minimum_size = Vector2(0, 44)
 	_controls_row.add_child(_tokens_spin)
 
-	_gen_btn = Button.new()
-	_gen_btn.text = "Generer"
+	_gen_btn = MerlinClaudeUI.make_primary_button("Générer")
 	_gen_btn.custom_minimum_size = Vector2(120, 44)
 	_gen_btn.pressed.connect(_on_generate_pressed)
 	_gen_btn.disabled = true
 	_controls_row.add_child(_gen_btn)
-	MerlinVisual.connect_button_feedback(_gen_btn)
 
 	_cancel_btn = Button.new()
 	_cancel_btn.text = "Annuler"
 	_cancel_btn.custom_minimum_size = Vector2(100, 44)
 	_cancel_btn.pressed.connect(_on_cancel_pressed)
 	_cancel_btn.disabled = true
-	_controls_row.add_child(_cancel_btn)
+	MerlinVisual.apply_button_da(_cancel_btn)
 	MerlinVisual.connect_button_feedback(_cancel_btn)
+	_controls_row.add_child(_cancel_btn)
 
 	var out_lbl: Label = Label.new()
 	out_lbl.text = "Sortie de Gemma :"
 	out_lbl.add_theme_color_override("font_color", COL_TEXT)
+	if fnt_ui != null:
+		out_lbl.add_theme_font_override("font", fnt_ui)
 	root.add_child(out_lbl)
 
 	_out_panel = PanelContainer.new()
 	_out_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = COL_SURFACE
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(14)
-	_out_panel.add_theme_stylebox_override("panel", sb)
+	_out_panel.add_theme_stylebox_override("panel", MerlinClaudeUI.panel_style())
 	root.add_child(_out_panel)
 
 	_output = RichTextLabel.new()
@@ -144,13 +152,40 @@ func _build_ui() -> void:
 	_output.scroll_active = true
 	_output.add_theme_color_override("default_color", COL_TEXT)
 	_output.add_theme_font_size_override("normal_font_size", 18)
+	var fnt_body: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND)
+	if fnt_body != null:
+		_output.add_theme_font_override("normal_font", fnt_body)
 	_out_panel.add_child(_output)
 
 	_metrics = Label.new()
 	_metrics.add_theme_color_override("font_color", COL_GOLD)
 	_metrics.add_theme_font_size_override("font_size", 15)
+	if fnt_ui != null:
+		_metrics.add_theme_font_override("font", fnt_ui)
 	root.add_child(_metrics)
+	# MerlinOrb 96×96 top-right
+	_orb = ORB_SCENE.instantiate()
+	_orb.custom_minimum_size = Vector2(96, 96)
+	_orb.size = Vector2(96, 96)
+	_orb.position = Vector2(size.x - 96 - 24, 24)
+	add_child(_orb)
+	resized.connect(func() -> void:
+		if _orb != null and is_instance_valid(_orb):
+			_orb.position = Vector2(size.x - 96 - 24, 24))
 	_animate_entrance()
+
+
+func _process(delta: float) -> void:
+	if MerlinWoodcut.tick_boil(delta):
+		queue_redraw()
+
+
+static func _load_font(path: String) -> FontFile:
+	if ResourceLoader.exists(path):
+		var res: Resource = load(path)
+		if res is FontFile:
+			return res as FontFile
+	return null
 
 
 func _set_status(txt: String, col: Color) -> void:
@@ -163,6 +198,8 @@ func _on_model_ready() -> void:
 	_set_status("Modele PRET — Gemma 4 E2B (n_ctx=4096, natif, zero Ollama)", COL_GREEN)
 	if _gen_btn != null:
 		_gen_btn.disabled = false
+	if _orb != null and _orb.has_method("set_mood"):
+		_orb.set_mood("neutral")
 	# Auto-test : prouve que la generation tourne (utile en smoke + a l'ouverture).
 	_run_generation(SYSTEM_TEST, USER_TEST)
 
@@ -192,6 +229,8 @@ func _run_generation(system_text: String, user_text: String) -> void:
 	_cancel_btn.disabled = false
 	_output.text = ""
 	_set_status("Generation en cours...", COL_GOLD)
+	if _orb != null and _orb.has_method("set_generating"):
+		_orb.set_generating(true)
 	_metrics.text = ""
 	var opts: Dictionary = {
 		"creative": _creative_chk.button_pressed,
@@ -204,6 +243,8 @@ func _run_generation(system_text: String, user_text: String) -> void:
 func _on_generation_finished(result: Dictionary) -> void:
 	_gen_btn.disabled = false
 	_cancel_btn.disabled = true
+	if _orb != null and _orb.has_method("set_generating"):
+		_orb.set_generating(false)
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	var metrics: Dictionary = mn.last_metrics() if mn != null else {}
 	if result.has("error"):
