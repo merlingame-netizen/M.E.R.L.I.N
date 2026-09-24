@@ -12,6 +12,11 @@ const COL_BG: Color = MerlinVisual.BG_DEEP
 const COL_SURFACE: Color = MerlinVisual.SURFACE
 const COL_TEXT: Color = MerlinVisual.CREAM
 const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_DIM: Color = MerlinVisual.INK_DIM
+const COL_DIM_W: Color = MerlinVisual.DIM_WARM
+const COL_INK: Color = MerlinVisual.INK
+const COL_CREAM: Color = MerlinVisual.CREAM
+const ORB_SCENE: String = "res://scenes/MerlinOrb.tscn"
 
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
@@ -69,6 +74,14 @@ var _busy: bool = false
 var _overlay_dots_tw: Tween = null
 var _overlay_pulse_tw: Tween = null
 var _overlay_base_txt: String = ""
+
+# DA v8 — MerlinOrb, response card, typewriter
+var _orb: Node = null
+var _response_card: PanelContainer = null
+var _card_text_full: String = ""
+var _card_text_idx: int = 0
+var _card_tw_acc: float = 0.0
+var _card_typing: bool = false
 
 
 func _ready() -> void:
@@ -265,11 +278,19 @@ func _verdict_e2e(ok: bool, motif: String, mur_ms: int, titres: Array) -> void:
 # v10.22 (QA user, screenshot) — carte À LA CHARTE du menu : hauteur AJUSTÉE AU CONTENU (fini le panneau
 # 560px aux 2/3 vide), ornement triskèle sous le titre (langage du menu), pitch centré, bouton collé au
 # texte. La carte se centre verticalement dans la rangée (SHRINK_CENTER).
+# DA v8 : parchment-style cards — page-polarity (ink on cream), serif fonts, Claude-like rounded panels.
 func _add_parchemin(title: String, pitch: String) -> void:
 	var panel: PanelContainer = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(440, 0)  # hauteur = contenu
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	panel.add_theme_stylebox_override("panel", _surface_style())
+	# DA v8 : page-polarity parchment card — cream background, ink border, rounded Claude-like
+	var card_sb: StyleBoxFlat = StyleBoxFlat.new()
+	card_sb.bg_color = Color(COL_CREAM.r, COL_CREAM.g, COL_CREAM.b, 0.94)
+	card_sb.set_corner_radius_all(MerlinVisual.PANEL_RADIUS)
+	card_sb.set_border_width_all(2)
+	card_sb.border_color = Color(COL_INK.r, COL_INK.g, COL_INK.b, 0.30)
+	card_sb.set_content_margin_all(20)
+	panel.add_theme_stylebox_override("panel", card_sb)
 	var marg: MarginContainer = MarginContainer.new()
 	for side in ["margin_left", "margin_right"]:
 		marg.add_theme_constant_override(side, 30)
@@ -280,22 +301,30 @@ func _add_parchemin(title: String, pitch: String) -> void:
 	v.add_theme_constant_override("separation", 16)
 	marg.add_child(v)
 
+	# DA v8 : title in EB Garamond Semi, gold on cream
 	var t: Label = Label.new()
 	t.text = title
 	t.add_theme_color_override("font_color", COL_GOLD)
 	t.add_theme_font_size_override("font_size", 30)
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var fnt_semi: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND_SEMI)
+	if fnt_semi != null:
+		t.add_theme_font_override("font", fnt_semi)
 	v.add_child(t)
 
 	v.add_child(MerlinOrnament.triskele_rule(18.0))  # ornement du menu — même langage partout (R125)
 
+	# DA v8 : pitch in EB Garamond, ink (dark text on cream card)
 	var p: Label = Label.new()
 	p.text = pitch
-	p.add_theme_color_override("font_color", COL_TEXT)
+	p.add_theme_color_override("font_color", COL_INK)
 	p.add_theme_font_size_override("font_size", 22)
 	p.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	p.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var fnt_body: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND)
+	if fnt_body != null:
+		p.add_theme_font_override("font", fnt_body)
 	v.add_child(p)
 
 	var sp: Control = Control.new()
@@ -316,6 +345,36 @@ func _add_parchemin(title: String, pitch: String) -> void:
 	_titres_poses.append(title)
 	if _carte != null:
 		_carte.terminer(_titres_poses.size() - 1)  # 08/09 : le trait de ce sentier se ferme
+
+	# DA v8 : hover lift + orb look + response card comment
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.mouse_entered.connect(_on_card_hover.bind(panel, title, true))
+	panel.mouse_exited.connect(_on_card_hover.bind(panel, title, false))
+
+
+# DA v8 : hover lifts the card, orb looks toward it, response card shows a Merlin quip.
+func _on_card_hover(panel: PanelContainer, title: String, entered: bool) -> void:
+	if not is_instance_valid(panel) or not panel.is_inside_tree():
+		return
+	if panel.has_meta("_fx_tw_hover"):
+		var prev: Tween = panel.get_meta("_fx_tw_hover")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	var m: float = MerlinVisual.motion()
+	var tw: Tween = panel.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if entered:
+		panel.pivot_offset = panel.size * 0.5
+		tw.tween_property(panel, "scale", Vector2(1.03, 1.03), 0.18 * m)
+		# Orb looks toward hovered card
+		if _orb != null and is_instance_valid(_orb) and _orb.has_method("look_at_node"):
+			_orb.look_at_node(panel)
+		# Response card quip (DA v8 : Merlin comments on hovered story)
+		var quip: String = MerlinLexique.tirer("selection.hover", title)
+		if quip != "" and quip != title:
+			_say(quip)
+	else:
+		tw.tween_property(panel, "scale", Vector2.ONE, 0.22 * m)
+	panel.set_meta("_fx_tw_hover", tw)
 
 
 # Entrée de parchemin : pop d'échelle + fondu (juice renforcé, user 2026-06-29). Pas de position
@@ -416,11 +475,15 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 24)
 	margin.add_child(root)
 
+	# DA v8 : title in EB Garamond serif, gold
 	_title_lbl = Label.new()
 	_title_lbl.text = "Choisis ton chemin"
 	_title_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_title_lbl.add_theme_font_size_override("font_size", 46)
 	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var fnt_title: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND_SEMI)
+	if fnt_title != null:
+		_title_lbl.add_theme_font_override("font", fnt_title)
 	root.add_child(_title_lbl)
 	# Filet + triskèle or (signature DA du menu).
 	var rule: HBoxContainer = MerlinOrnament.triskele_rule(24.0)
@@ -442,10 +505,13 @@ func _build_ui() -> void:
 	MerlinVisual.connect_button_feedback(_back_btn)
 
 	# --- Overlay « montage réflexion de Merlin » (ultra-animé) ---
+	# DA v8 : overlay uses MerlinClaudeUI.panel_style() for consistency
 	_overlay = Panel.new()
 	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var ov_sb: StyleBoxFlat = StyleBoxFlat.new()
 	ov_sb.bg_color = Color(MerlinVisual.BG_DEEP.r, MerlinVisual.BG_DEEP.g, MerlinVisual.BG_DEEP.b, 0.96)
+	ov_sb.set_corner_radius_all(0)
+	ov_sb.set_border_width_all(0)
 	_overlay.add_theme_stylebox_override("panel", ov_sb)
 	# MOUSE_FILTER_STOP reste : le voile avale les clics pour qu'aucune carte en dessous ne soit
 	# cliquable pendant l'attente. Plus aucun gui_input à écouter — le « passer » a disparu.
@@ -466,6 +532,7 @@ func _build_ui() -> void:
 		hour = int(OS.get_environment("MERLIN_TOD_HOUR"))
 	_overlay_art.set_time_of_day(hour)
 	_overlay_art.set_animated(true)
+	# DA v8 : overlay label in EB Garamond, gold
 	_overlay_lbl = Label.new()
 	# En bas de l'écran (08/09) : la carte se dessine au milieu, la légende ne la couvre plus.
 	_overlay_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
@@ -476,6 +543,9 @@ func _build_ui() -> void:
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
 	_overlay_lbl.add_theme_font_size_override("font_size", 30)
 	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fnt_overlay: FontFile = _load_font(MerlinVisual.FONT_EB_GARAMOND)
+	if fnt_overlay != null:
+		_overlay_lbl.add_theme_font_override("font", fnt_overlay)
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
 	# LA CARTE À L'ENCRE (08/09) vit AU-DESSUS du voile et des parchemins : le voile tombe au premier
@@ -483,6 +553,84 @@ func _build_ui() -> void:
 	_carte = MerlinCarteEncre.new()
 	_carte.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_carte)
+
+	# --- DA v8 : MerlinOrb (petit 128x128, coin haut-droit) ---
+	if ResourceLoader.exists(ORB_SCENE):
+		var orb_scene: PackedScene = load(ORB_SCENE)
+		if orb_scene != null:
+			_orb = orb_scene.instantiate()
+			_orb.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+			_orb.offset_left = -160
+			_orb.offset_top = 24
+			_orb.offset_right = -32
+			_orb.offset_bottom = 152
+			_orb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			add_child(_orb)
+
+	# --- DA v8 : Response card (Merlin comment, bottom-right) ---
+	_response_card = MerlinClaudeUI.make_response_card()
+	_response_card.anchor_left = 0.52
+	_response_card.anchor_right = 0.96
+	_response_card.anchor_top = 1.0
+	_response_card.anchor_bottom = 1.0
+	_response_card.offset_top = -180
+	_response_card.offset_bottom = -24
+	_response_card.offset_left = 0
+	_response_card.offset_right = 0
+	_response_card.visible = false
+	_response_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_response_card)
+
+
+# DA v8 : woodcut boil + response card typewriter tick
+func _process(delta: float) -> void:
+	MerlinWoodcut.tick_boil(delta)
+	if _card_typing and _response_card != null and _response_card.visible:
+		_card_tw_acc += delta
+		if _card_tw_acc >= 0.03:
+			_card_tw_acc = 0.0
+			if _card_text_idx < _card_text_full.length():
+				_card_text_idx += 1
+				var body_node: RichTextLabel = _find_card_body()
+				if body_node != null:
+					body_node.text = _card_text_full.substr(0, _card_text_idx)
+			else:
+				_card_typing = false
+
+
+# DA v8 : Merlin response card quip (same pattern as merlin_menu.gd)
+func _say(line: String) -> void:
+	if line.strip_edges().is_empty():
+		return
+	if _response_card != null:
+		_response_card.visible = true
+		_response_card.modulate.a = 0.0
+		var tw_card: Tween = create_tween()
+		tw_card.tween_property(_response_card, "modulate:a", 1.0, 0.25 * MerlinVisual.motion())
+		_card_text_full = line
+		_card_text_idx = 0
+		_card_tw_acc = 0.0
+		_card_typing = true
+		var body_node: RichTextLabel = _find_card_body()
+		if body_node != null:
+			body_node.text = ""
+
+
+# DA v8 : find the RichTextLabel body inside the response card
+func _find_card_body() -> RichTextLabel:
+	if _response_card == null:
+		return null
+	return _find_meta_child(_response_card, "_card_body") as RichTextLabel
+
+
+func _find_meta_child(node: Node, meta_key: String) -> Node:
+	if node.has_meta(meta_key):
+		return node
+	for ch in node.get_children():
+		var found: Node = _find_meta_child(ch, meta_key)
+		if found != null:
+			return found
+	return null
 
 
 # Chaque morceau de texte écrit par le modèle passe ici. On n'attend pas la fin : dès qu'un objet
@@ -718,9 +866,19 @@ func _fade_in(node: CanvasItem, delay: float, dur: float) -> void:
 	tw.tween_property(node, "modulate:a", 1.0, dur * MerlinVisual.motion()).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
+# DA v8 : page-polarity parchment style replaced _surface_style — kept for compatibility
 func _surface_style() -> StyleBoxFlat:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_SURFACE
 	sb.set_corner_radius_all(8)
 	sb.set_content_margin_all(20)
 	return sb
+
+
+# DA v8 : font loader (same utility as MerlinClaudeUI._load_font)
+func _load_font(path: String) -> FontFile:
+	if ResourceLoader.exists(path):
+		var res: Resource = load(path)
+		if res is FontFile:
+			return res as FontFile
+	return null
