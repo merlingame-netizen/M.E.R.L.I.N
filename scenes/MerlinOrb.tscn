@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://da_v8_merlin_orb"]
+
+[ext_resource type="Script" path="res://scripts/game/merlin_orb.gd" id="1_orb"]
+
+[node name="MerlinOrb" type="SubViewportContainer"]
+anchors_preset = 0
+script = ExtResource("1_orb")
