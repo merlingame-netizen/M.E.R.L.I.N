@@ -2,6 +2,13 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-09-30 — jev-router (routage LLM local facon Jev)
+
+- `tools/jev_router/` : decideur System One local (Ollama qwen2.5:3b, logprobs -> probabilites, fallback vote), routeur lanes small/medium/high/escalate, garde-fous (seuil 0.70, 3 retries/lane, 1 escalade, kill switch), API HTTP 127.0.0.1:8790, serveur MCP stdio, hook UserPromptSubmit fail-open.
+- Branche : Claude Code (hook + .mcp.json), Copilot (.vscode/mcp.json), CLI `python tools/cli.py jev route|fail|stats|eval|health`.
+- Mesure : 15 tests unitaires OK ; eval reel qwen2.5:3b = 7/8 lanes exactes, ~2 s/decision CPU.
+- Pourquoi local : politique securite poste Orange (Jev TypeSafe = API fermee, poids non publies).
+
 ## Session: 2026-04-25 — Vision Graphique v3 + MCP Native Forest + LLM Cards
 
 ### Context

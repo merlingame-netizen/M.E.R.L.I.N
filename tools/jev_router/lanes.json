@@ -1,0 +1,42 @@
+{
+  "_doc": "Lane -> modele par outil. Editer librement : les noms Copilot/ChatGPT sont ceux du selecteur de modele de chaque app.",
+  "decider": {
+    "backend": "ollama",
+    "ollama_url": "http://127.0.0.1:11434",
+    "model": "qwen2.5:3b",
+    "vote_samples": 5,
+    "timeout_s": 20
+  },
+  "gates": {
+    "escalate_below": 0.70,
+    "complete_above": 0.85,
+    "max_retries_per_lane": 3,
+    "max_escalations_per_task": 1
+  },
+  "lanes": {
+    "small": {
+      "claude_code": "haiku",
+      "copilot": "Claude Haiku 4.5",
+      "chatgpt": "GPT-6 Luna (reasoning low)",
+      "ollama": "qwen2.5:7b"
+    },
+    "medium": {
+      "claude_code": "sonnet",
+      "copilot": "Claude Sonnet 5.5",
+      "chatgpt": "GPT-6 Luna (reasoning medium)",
+      "ollama": null
+    },
+    "high": {
+      "claude_code": "opus",
+      "copilot": "Claude Opus 5.5",
+      "chatgpt": "GPT-6 Luna (reasoning high)",
+      "ollama": null
+    },
+    "escalate": {
+      "claude_code": "opus",
+      "copilot": "Claude Opus 5.5",
+      "chatgpt": "GPT-6 Sol (reasoning high)",
+      "ollama": null
+    }
+  }
+}

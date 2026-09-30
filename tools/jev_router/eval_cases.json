@@ -1,0 +1,10 @@
+[
+ {"expected": "small", "prompt": "Renomme la variable x en count dans utils.py"},
+ {"expected": "small", "prompt": "Quelle est la commande pour lancer les tests ?"},
+ {"expected": "small", "prompt": "Corrige la faute de frappe 'recieve' dans le README"},
+ {"expected": "medium", "prompt": "Ajoute un bouton pause au HUD qui met le jeu en pause et affiche un menu"},
+ {"expected": "medium", "prompt": "Le score du minigame ne s'additionne pas au total, corrige le bug dans merlin_store.gd"},
+ {"expected": "high", "prompt": "Refactor le systeme de cartes pour separer generation LLM et fallback pool sur 6 fichiers, avec tests"},
+ {"expected": "high", "prompt": "Le jeu perd 20 fps apres 10 minutes, trouve la fuite memoire"},
+ {"expected": "escalate", "prompt": "Concois l'architecture complete d'un mode multijoueur en ligne avec serveur autoritaire"}
+]

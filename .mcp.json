@@ -40,7 +40,9 @@
     },
     "mermaid": {
       "command": "npx",
-      "args": ["@peng-shawn/mermaid-mcp-server"],
+      "args": [
+        "@peng-shawn/mermaid-mcp-server"
+      ],
       "description": "Text-to-diagram: flowcharts, sequences, ERD, state machines -> SVG/PNG. Compatible Claude + Codex (MCP stdio)."
     },
     "stitch": {
@@ -96,6 +98,13 @@
     "datagouv": {
       "type": "streamable-http",
       "url": "https://mcp.data.gouv.fr/mcp"
+    },
+    "jev-router": {
+      "command": "python",
+      "args": [
+        "tools/jev_router/jev.py",
+        "mcp"
+      ]
     }
   }
 }

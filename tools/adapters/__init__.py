@@ -49,6 +49,8 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "rag":           ("adapters.rag_adapter",           "RagAdapter",          None),
     # ── Wave 12 — Studio Bridge (autonomous orchestrator) ────────────
     "studio":        ("adapters.studio_adapter",        "StudioAdapter",       None),
+    # ── Wave 13 — Routeur local facon Jev (decideur Ollama) ─────────
+    "jev":           ("adapters.jev_adapter",           "JevAdapter",          None),
 }
 
 

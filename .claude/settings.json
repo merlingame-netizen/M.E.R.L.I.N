@@ -37,6 +37,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python tools/jev_router/jev.py hook",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "PreToolUse": [

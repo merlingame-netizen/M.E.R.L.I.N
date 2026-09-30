@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "jev-router": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/tools/jev_router/jev.py",
+        "mcp"
+      ]
+    }
+  }
+}
