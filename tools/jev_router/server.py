@@ -2,7 +2,7 @@
 
   GET  /health          -> etat + decideur
   POST /v1/systemone    -> {"context", "questions"}  (voir systemone.py)
-  POST /v1/route        -> {"prompt", "task_id"?}
+  POST /v1/route        -> {"prompt", "task_id"?, "cwd"?}   (sans cwd : decideur local)
   POST /v1/failure      -> {"task_id"}
   GET  /v1/stats
 """
@@ -54,7 +54,8 @@ class _Handler(BaseHTTPRequestHandler):
             if self.path == "/v1/systemone":
                 self._send(200, decide(body, make_backend(cfg)))
             elif self.path == "/v1/route":
-                self._send(200, route(str(body.get("prompt", "")), body.get("task_id"), cfg))
+                self._send(200, route(str(body.get("prompt", "")), body.get("task_id"), cfg,
+                                      cwd=body.get("cwd")))
             elif self.path == "/v1/failure":
                 self._send(200, record_failure(str(body.get("task_id", "")), cfg))
             else:

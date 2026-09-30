@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python tools/jev_router/jev.py hook",
+            "command": "python \"$CLAUDE_PROJECT_DIR/tools/jev_router/jev.py\" hook",
             "timeout": 30
           }
         ]

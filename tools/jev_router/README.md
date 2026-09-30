@@ -1,6 +1,6 @@
 # jev-router — routage local façon Jev (poste Orange, zéro clé API)
 
-Avant chaque demande, un décideur local (Ollama) choisit la **lane la moins chère suffisante** et le modèle correspondant dans chaque outil. Le décideur ne fait que classer : ce sont les seuils, les retries et le kill switch, écrits en dur dans le code, qui tranchent. Aucune donnée ne part vers TypeSafe.
+Avant chaque demande, un décideur local (Ollama) choisit la **lane la moins chère suffisante** et le modèle correspondant dans chaque outil. Le décideur ne fait que classer : ce sont les seuils, les retries et le kill switch, écrits en dur dans le code, qui tranchent.
 
 ```
 demande ─► regex risque (0 token) ─► décideur Ollama (choix typés + probabilités) ─► garde-fous ─► lane
@@ -8,6 +8,16 @@ demande ─► regex risque (0 token) ─► décideur Ollama (choix typés + pr
                      small / medium / high / escalate ◄──────────────────────────────┘
                      └─► modèle Claude Code / Copilot / ChatGPT / Ollama  (lanes.json)
 ```
+
+## Décideur : Qwen local ou Jev (TypeSafe)
+
+Par défaut tout reste local (Qwen via Ollama). Jev, via `POST https://api.typesafe.ai/v1/systemone`, n'est appelé que si **toutes** ces conditions sont réunies :
+
+1. un dossier du chemin du projet figure dans `lanes.json` → `decider_policy.remote_allowed_paths` (par défaut `M.E.R.L.I.N` et `Godot-MCP`, comparaison sur le nom de dossier entier) ;
+2. la variable `TYPESAFE_API_KEY` est définie ;
+3. la regex n'a pas classé la demande `security` (`remote_blocked_risks`), car elle peut contenir un secret.
+
+Un projet inconnu (pas de `cwd`), hors liste blanche ou sans clé reste sur Qwen. Si l'API échoue (401, 422, 429, 529, réseau), le routeur retombe sur Qwen, puis sur l'heuristique. Le dossier arrive par le champ `cwd` du hook, l'argument `cwd` du MCP (par défaut, le dossier du serveur), le champ `cwd` de `/v1/route` (sans lui, tout reste local) et `--cwd` en CLI (par défaut, le dossier courant). `jev stats` compte les passages par Jev (`typesafe_routes`), et `jev eval --cwd <dossier MERLIN>` mesure Jev sur les cas d'évaluation.
 
 ## Installation (poste Windows)
 

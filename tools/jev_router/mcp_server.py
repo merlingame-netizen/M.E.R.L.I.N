@@ -7,6 +7,7 @@ Outils : route_task, report_failure, decide, router_stats.
 from __future__ import annotations
 
 import json
+import os
 import sys
 
 from router import describe, load_config, make_backend, record_failure, route, stats
@@ -24,6 +25,7 @@ TOOLS = [
             "properties": {
                 "prompt": {"type": "string", "description": "La demande de l'utilisateur"},
                 "task_id": {"type": "string", "description": "Identifiant pour suivre retries/escalades"},
+                "cwd": {"type": "string", "description": "Dossier du projet (defaut : dossier du serveur MCP)"},
             },
             "required": ["prompt"],
         },
@@ -53,7 +55,7 @@ TOOLS = [
 def _call(name: str, args: dict) -> str:
     cfg = load_config()
     if name == "route_task":
-        res = route(str(args.get("prompt", "")), args.get("task_id"), cfg)
+        res = route(str(args.get("prompt", "")), args.get("task_id"), cfg, cwd=args.get("cwd") or os.getcwd())
         return describe(res) + "\n" + json.dumps(res, ensure_ascii=False)
     if name == "report_failure":
         return json.dumps(record_failure(str(args.get("task_id", "")), cfg), ensure_ascii=False)

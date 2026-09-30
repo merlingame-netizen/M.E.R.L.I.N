@@ -1,7 +1,11 @@
 """Routeur de taches : decide la lane (small/medium/high/escalate) et le modele par outil.
 
-Ordre : checks deterministes (0 token) -> decideur local System One -> garde-fous
+Ordre : checks deterministes (0 token) -> decideur System One -> garde-fous
 codes en dur (seuils, retries, escalades). Le decideur juge, ce code tranche.
+
+Decideur : Qwen local (Ollama) par defaut. Jev (API TypeSafe) seulement si le dossier du
+projet est dans decider_policy.remote_allowed_paths ET que TYPESAFE_API_KEY est presente ET
+que la demande n'est pas classee "security" par la regex. Echec de l'API -> repli sur Qwen.
 Chaque decision est journalisee dans ~/.jev_router/decisions.jsonl.
 """
 
@@ -11,9 +15,11 @@ import json
 import os
 import re
 import time
-from pathlib import Path
+from pathlib import Path, PurePath
+from typing import Callable
 
 from systemone import Backend, DecisionError, OllamaBackend, decide
+from typesafe_backend import API_KEY_ENV, TypeSafeClient
 
 HERE = Path(__file__).resolve().parent
 CONFIG_PATH = Path(os.environ.get("JEV_ROUTER_CONFIG", HERE / "lanes.json"))
@@ -64,6 +70,46 @@ def load_config(path: Path = CONFIG_PATH) -> dict:
 def make_backend(cfg: dict) -> Backend:
     d = cfg["decider"]
     return OllamaBackend(d["ollama_url"], d["model"], d.get("vote_samples", 5), d.get("timeout_s", 20))
+
+
+def remote_allowed(cfg: dict, cwd: str | None, risk: str) -> tuple[bool, str]:
+    """Jev autorise pour ce projet ? Projet inconnu ou hors liste blanche -> non."""
+    policy = cfg.get("decider_policy") or {}
+    allowed = {a.casefold() for a in policy.get("remote_allowed_paths", [])}
+    if not allowed or not cwd:
+        return False, "projet inconnu -> decideur local"
+    if not {part.casefold() for part in PurePath(cwd).parts} & allowed:
+        return False, "projet hors liste blanche -> decideur local"
+    if risk in policy.get("remote_blocked_risks", ["security"]):
+        return False, f"risque {risk} -> jamais envoye a l'API"
+    if not os.environ.get(API_KEY_ENV):
+        return False, f"{API_KEY_ENV} absente -> decideur local"
+    return True, "projet en liste blanche -> Jev"
+
+
+def _deciders(cfg: dict, cwd: str | None, risk: str,
+              reasons: list[str]) -> list[Callable[[dict], dict]]:
+    """Chaine de decideurs a essayer dans l'ordre (le dernier est toujours Qwen local)."""
+    local = make_backend(cfg)
+    chain: list[Callable[[dict], dict]] = []
+    ok, why = remote_allowed(cfg, cwd, risk)
+    if ok:
+        chain.append(TypeSafeClient.from_policy(cfg["decider_policy"]).decide)
+    elif cwd:
+        reasons.append(why)
+    chain.append(lambda req: decide(req, local))
+    return chain
+
+
+def _run_chain(request: dict, chain: list[Callable[[dict], dict]], reasons: list[str]) -> dict:
+    for i, decider in enumerate(chain):
+        try:
+            return decider(request)
+        except DecisionError as exc:
+            if i == len(chain) - 1:
+                raise
+            reasons.append(f"Jev indisponible ({exc}) -> repli Qwen")
+    raise DecisionError("aucun decideur configure")
 
 
 def deterministic_risk(prompt: str) -> str:
@@ -141,7 +187,7 @@ def record_failure(task_id: str, cfg: dict | None = None) -> dict:
 
 
 def route(prompt: str, task_id: str | None = None, cfg: dict | None = None,
-          backend: Backend | None = None) -> dict:
+          backend: Backend | None = None, cwd: str | None = None) -> dict:
     cfg = cfg or load_config()
     gates = cfg["gates"]
     reasons: list[str] = []
@@ -151,9 +197,12 @@ def route(prompt: str, task_id: str | None = None, cfg: dict | None = None,
 
     confidence: float | None = None
     calibrated = False
+    request = {"context": prompt, "questions": [COMPLEXITY_QUESTION, RISK_QUESTION]}
     try:
-        result = decide({"context": prompt, "questions": [COMPLEXITY_QUESTION, RISK_QUESTION]},
-                        backend or make_backend(cfg))
+        if backend is not None:
+            result = decide(request, backend)
+        else:
+            result = _run_chain(request, _deciders(cfg, cwd, risk, reasons), reasons)
         by_id = {a["id"]: a for a in result["answers"]}
         lane = by_id["complexity"]["value"]
         confidence = by_id["complexity"]["confidence"]
@@ -195,7 +244,7 @@ def route(prompt: str, task_id: str | None = None, cfg: dict | None = None,
 def stats() -> dict:
     """Resume du journal : repartition des lanes, escalades, fallbacks."""
     counts: dict[str, int] = {}
-    failures = fallbacks = total = 0
+    failures = fallbacks = remote = total = 0
     path = STATE_DIR / "decisions.jsonl"
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():
@@ -207,9 +256,11 @@ def stats() -> dict:
                 total += 1
                 counts[e["lane"]] = counts.get(e["lane"], 0) + 1
                 fallbacks += e.get("source") == "heuristic"
+                remote += str(e.get("source", "")).startswith("typesafe:")
             elif e.get("event") == "failure":
                 failures += 1
-    return {"routes": total, "lanes": counts, "failures": failures, "heuristic_fallbacks": fallbacks}
+    return {"routes": total, "lanes": counts, "failures": failures, "heuristic_fallbacks": fallbacks,
+            "typesafe_routes": remote}
 
 
 def describe(result: dict) -> str:

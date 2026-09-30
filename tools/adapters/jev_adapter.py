@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -24,7 +25,7 @@ class JevAdapter(BaseAdapter):
 
     def list_actions(self) -> dict[str, str]:
         return {
-            "route":  "Classe une demande -> lane + modele par outil (requires prompt=, optional task=)",
+            "route":  "Classe une demande -> lane + modele par outil (requires prompt=, optional task=, cwd=)",
             "fail":   "Signale un cycle echoue -> retry/escalate/stop (requires task=)",
             "stats":  "Repartition des lanes depuis le journal local",
             "eval":   "Justesse du decideur sur tools/jev_router/eval_cases.json",
@@ -43,7 +44,8 @@ class JevAdapter(BaseAdapter):
                 prompt = kwargs.get("prompt")
                 if not prompt:
                     return self.error("prompt= requis")
-                return self.ok(router.route(str(prompt), kwargs.get("task")))
+                return self.ok(router.route(str(prompt), kwargs.get("task"),
+                                            cwd=kwargs.get("cwd") or os.getcwd()))
             case "fail":
                 if not kwargs.get("task"):
                     return self.error("task= requis")

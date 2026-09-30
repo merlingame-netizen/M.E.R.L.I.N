@@ -3,17 +3,20 @@
   python tools/jev_router/jev.py serve [--port 8790]   # API HTTP locale
   python tools/jev_router/jev.py mcp                   # serveur MCP stdio (Copilot, Claude Desktop)
   python tools/jev_router/jev.py hook                  # hook UserPromptSubmit Claude Code (stdin JSON)
-  python tools/jev_router/jev.py route "<demande>" [--task ID]
+  python tools/jev_router/jev.py route "<demande>" [--task ID] [--cwd DOSSIER]
   python tools/jev_router/jev.py fail --task ID
   python tools/jev_router/jev.py decide <requete.json>
   python tools/jev_router/jev.py stats
-  python tools/jev_router/jev.py eval [cases.json]            # mesure la justesse du decideur
+  python tools/jev_router/jev.py eval [cases.json] [--cwd D]   # mesure la justesse du decideur
+
+Le dossier du projet (cwd) decide du decideur : Jev pour la liste blanche de lanes.json, Qwen sinon.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -33,7 +36,7 @@ def _hook() -> int:
         prompt = str(payload.get("prompt", ""))
         if len(prompt) < HOOK_MIN_CHARS or prompt[:1] in "*/!":
             return 0
-        res = route(prompt, payload.get("session_id"))
+        res = route(prompt, payload.get("session_id"), cwd=payload.get("cwd"))
         if res["source"] == "heuristic":
             return 0
         print(json.dumps({"hookSpecificOutput": {
@@ -46,12 +49,12 @@ def _hook() -> int:
     return 0
 
 
-def _eval(path: Path) -> dict:
+def _eval(path: Path, cwd: str | None = None) -> dict:
     """Compare la lane choisie a la lane attendue (sans journaliser dans le state des taches)."""
     cases = json.loads(path.read_text(encoding="utf-8"))
     rows, exact = [], 0
     for case in cases:
-        res = route(case["prompt"])
+        res = route(case["prompt"], cwd=cwd)
         exact += res["lane"] == case["expected"]
         rows.append({"expected": case["expected"], "got": res["lane"], "confidence": res["confidence"],
                      "source": res["source"], "prompt": case["prompt"][:60]})
@@ -68,6 +71,7 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("route")
     p.add_argument("prompt")
     p.add_argument("--task")
+    p.add_argument("--cwd", default=os.getcwd())
     p = sub.add_parser("fail")
     p.add_argument("--task", required=True)
     p = sub.add_parser("decide")
@@ -75,6 +79,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("stats")
     p = sub.add_parser("eval")
     p.add_argument("cases", nargs="?", default=str(EVAL_CASES))
+    p.add_argument("--cwd", default=None, help="evalue le decideur de ce projet (defaut : Qwen local)")
     args = ap.parse_args(argv)
 
     if args.cmd == "serve":
@@ -89,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
         return _hook()
     try:
         if args.cmd == "route":
-            res = route(args.prompt, args.task)
+            res = route(args.prompt, args.task, cwd=args.cwd)
             print(describe(res))
         elif args.cmd == "fail":
             res = record_failure(args.task)
@@ -97,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
             req = json.loads(Path(args.request_file).read_text(encoding="utf-8"))
             res = decide(req, make_backend(load_config()))
         elif args.cmd == "eval":
-            res = _eval(Path(args.cases))
+            res = _eval(Path(args.cases), args.cwd)
         else:
             res = stats()
     except DecisionError as exc:

@@ -22,6 +22,7 @@ import jev  # noqa: E402
 import mcp_server  # noqa: E402
 import router  # noqa: E402
 import systemone  # noqa: E402
+import typesafe_backend  # noqa: E402
 
 
 class FakeBackend:
@@ -141,7 +142,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("route_task", [t["name"] for t in tools])
         self.assertIsNone(mcp_server._handle({"method": "notifications/initialized"}))
         with mock.patch.object(router, "make_backend", return_value=FakeBackend({"B": 0.9})), \
-                mock.patch.object(mcp_server, "route", side_effect=lambda p, t, c: router.route(
+                mock.patch.object(mcp_server, "route", side_effect=lambda p, t, c, **kw: router.route(
                     p, t, c, backend=FakeBackend({"B": 0.9}))):
             out = mcp_server._handle({"id": 3, "method": "tools/call",
                                       "params": {"name": "route_task", "arguments": {"prompt": "fix bug"}}})
@@ -153,7 +154,7 @@ class IntegrationTests(unittest.TestCase):
         out = io.StringIO()
         with mock.patch.object(sys, "stdin", io.StringIO(json.dumps(payload))), \
                 mock.patch.object(sys, "stdout", out), \
-                mock.patch.object(jev, "route", side_effect=lambda p, t: router.route(p, t, CFG, backend)):
+                mock.patch.object(jev, "route", side_effect=lambda p, t, **kw: router.route(p, t, CFG, backend)):
             self.assertEqual(jev.main(["hook"]), 0)
         return out.getvalue()
 
@@ -168,6 +169,113 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(self._run_hook({"prompt": "* bypass avec un prompt assez long"}, FakeBackend({"A": 1})), "")
         with mock.patch.object(sys, "stdin", io.StringIO("pas du json")):
             self.assertEqual(jev.main(["hook"]), 0)
+
+
+def _fake_urlopen(reply: dict, sent: list):
+    """Remplace urlopen : capture la requete, renvoie la reponse TypeSafe scriptee."""
+    class _Resp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def _open(req, timeout=None):
+        sent.append({"url": req.full_url, "auth": req.get_header("Authorization"),
+                     "body": json.loads(req.data)})
+        return _Resp(json.dumps(reply).encode("utf-8"))
+    return _open
+
+
+JEV_REPLY = {"model": "jev-1.13.0", "answers": {
+    "complexity": {"type": "choice", "choice": "medium", "confidence": 0.91,
+                   "probabilities": {"small": 0.05, "medium": 0.91, "high": 0.04, "escalate": 0.0}},
+    "risk_flag": {"type": "choice", "choice": "none", "confidence": 0.97,
+                  "probabilities": {"none": 0.97, "security": 0.02, "data_loss": 0.01}}}}
+MERLIN = str(Path("C:/Users/x/M.E.R.L.I.N/scripts"))
+QWEN = FakeBackend({"A": 0.95})
+
+
+class TypeSafeTests(unittest.TestCase):
+    def setUp(self):
+        self.sent: list = []
+        patches = [mock.patch.dict(os.environ, {"TYPESAFE_API_KEY": "cle-test"}),
+                   mock.patch.object(router, "make_backend", return_value=QWEN)]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+
+    def _route(self, prompt="Ajoute un bouton pause au HUD", cwd=MERLIN, reply=JEV_REPLY):
+        with mock.patch("urllib.request.urlopen", side_effect=_fake_urlopen(reply, self.sent)):
+            return router.route(prompt, cfg=CFG, cwd=cwd)
+
+    def test_whitelisted_project_uses_jev_with_spec_payload(self):
+        res = self._route()
+        self.assertEqual((res["source"], res["lane"]), ("typesafe:jev-1.13.0", "medium"))
+        self.assertEqual(len(self.sent), 1)
+        req = self.sent[0]
+        self.assertEqual(req["url"], "https://api.typesafe.ai/v1/systemone")
+        self.assertEqual(req["auth"], "Bearer cle-test")
+        self.assertEqual(req["body"]["model"], "jev-latest")
+        self.assertEqual(req["body"]["state"], "Ajoute un bouton pause au HUD")
+        q = req["body"]["questions"]["complexity"]
+        self.assertEqual((q["type"], list(q["criteria"])), ("choice", ["small", "medium", "high", "escalate"]))
+
+    def test_other_project_unknown_or_no_key_stays_local(self):
+        for cwd in (str(Path("C:/Users/x/OneDrive - orange.com/Partage VOC/Data")), None):
+            self.assertEqual(self._route(cwd=cwd)["source"], "fake")
+        with mock.patch.dict(os.environ, {"TYPESAFE_API_KEY": ""}):
+            self.assertEqual(self._route()["source"], "fake")
+        self.assertEqual(self.sent, [])
+
+    def test_whitelist_matches_whole_folder_only(self):
+        self.assertEqual(self._route(cwd=str(Path("C:/Users/x/M.E.R.L.I.N-fork")))["source"], "fake")
+        self.assertEqual(self.sent, [])
+
+    def test_security_prompt_never_sent(self):
+        res = self._route(prompt="Change le mot de passe admin dans la config")
+        self.assertEqual((res["source"], res["lane"]), ("fake", "high"))
+        self.assertEqual(self.sent, [])
+
+    def test_api_failure_falls_back_to_qwen(self):
+        with mock.patch("urllib.request.urlopen",
+                        side_effect=typesafe_backend.urllib.error.HTTPError("u", 529, "Overloaded", {}, None)):
+            res = router.route("Ajoute un bouton pause au HUD", cfg=CFG, cwd=MERLIN)
+        self.assertEqual(res["source"], "fake")
+        self.assertTrue(any("HTTP 529" in r for r in res["reasons"]))
+        res = self._route(reply={"model": "jev", "answers": {}})
+        self.assertEqual(res["source"], "fake")
+
+    def test_noul_and_score_mapping(self):
+        client = typesafe_backend.TypeSafeClient("https://x.test/v1/systemone", "jev-latest", "k")
+        reply = {"model": "jev", "answers": {
+            "u": {"type": "noul", "noul": 0.2},
+            "s": {"type": "score", "score": 1.6, "confidence": 0.7, "legend": {"0": "1", "1": "2", "2": "3"}}}}
+        with mock.patch("urllib.request.urlopen", side_effect=_fake_urlopen(reply, self.sent)):
+            res = client.decide({"context": "x", "questions": [
+                {"id": "u", "type": "noul", "text": "Urgent ?", "criteria": {"true": "vite", "false": "calme"}},
+                {"id": "s", "type": "score", "text": "Note ?", "min": 1, "max": 3}]})
+        a = {x["id"]: x for x in res["answers"]}
+        self.assertIs(a["u"]["value"], False)
+        self.assertAlmostEqual(a["u"]["confidence"], 0.8)
+        self.assertEqual((a["s"]["value"], a["s"]["expected"]), (3, 2.6))
+        body = self.sent[0]["body"]["questions"]
+        self.assertEqual(body["u"]["criteria"], {"true": "vite", "false": "calme"})
+        self.assertEqual(body["s"]["criteria"], ["1", "2", "3"])
+        with self.assertRaises(systemone.DecisionError):
+            client.decide({"questions": [{"id": "s", "type": "score", "min": 0, "max": 10}]})
+
+    def test_missing_key_refused(self):
+        with self.assertRaises(systemone.DecisionError):
+            typesafe_backend.TypeSafeClient("u", "m", "")
+
+    def test_hook_passes_cwd(self):
+        seen = {}
+        payload = {"prompt": "Corrige le calcul de score du minigame", "cwd": MERLIN}
+        with mock.patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),                 mock.patch.object(sys, "stdout", io.StringIO()),                 mock.patch.object(jev, "route", side_effect=lambda p, t, **kw: seen.update(kw) or
+                                  router.route(p, t, CFG, QWEN)):
+            jev.main(["hook"])
+        self.assertEqual(seen["cwd"], MERLIN)
 
 
 if __name__ == "__main__":

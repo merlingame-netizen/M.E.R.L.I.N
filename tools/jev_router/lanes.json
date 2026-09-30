@@ -7,6 +7,15 @@
     "vote_samples": 5,
     "timeout_s": 20
   },
+  "decider_policy": {
+    "_doc": "Jev (API TypeSafe) seulement si un dossier du chemin du projet est dans remote_allowed_paths ET TYPESAFE_API_KEY definie. Sinon, ou si l'API echoue : Qwen local.",
+    "remote_backend": "typesafe",
+    "api_url": "https://api.typesafe.ai/v1/systemone",
+    "model": "jev-latest",
+    "timeout_s": 10,
+    "remote_allowed_paths": ["M.E.R.L.I.N", "Godot-MCP"],
+    "remote_blocked_risks": ["security"]
+  },
   "gates": {
     "escalate_below": 0.70,
     "complete_above": 0.85,
