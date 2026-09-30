@@ -22,12 +22,12 @@ Un projet inconnu (pas de `cwd`), hors liste blanche ou sans clé reste sur Qwen
 ## Installation (poste Windows)
 
 ```powershell
-ollama pull qwen2.5:3b                      # décideur par défaut (~2 Go)
+ollama pull qwen2.5:7b                      # décideur par défaut (~4,7 Go ; 7/8 mesuré, 3b : 6/8)
 python tools/cli.py jev health              # le décideur répond ? calibrated=true attendu
-python tools/cli.py jev eval                # justesse sur eval_cases.json (7/8 mesuré avec 3b)
+python tools/cli.py jev eval                # justesse sur eval_cases.json (7/8 mesuré avec 7b)
 ```
 
-Si `eval` donne moins de 7/8, passez `decider.model` à `qwen2.5:7b` dans `lanes.json`.
+Le 3b (`qwen2.5:3b`, ~2 Go) donne 6/8 : il surclasse (questions simples envoyées en `high`). Au premier appel après inactivité, le chargement du 7b peut dépasser `timeout_s` : le hook reste alors muet (fail-open).
 
 ## Branchements
 
@@ -63,6 +63,6 @@ La réponse contient `value`, `confidence`, `probabilities` et `calibrated` pour
 
 ## Limites
 
-- Ce n'est **pas** Jev : ses poids sont fermés. Qwen 2.5 3b fait office de décideur, avec une justesse mesurée de 7/8 sur 8 cas. Les logprobs sont souvent sur-confiants.
+- Ce n'est **pas** Jev : ses poids sont fermés. Qwen 2.5 7b fait office de décideur, avec une justesse mesurée de 7/8 sur 8 cas. Les logprobs sont souvent sur-confiants.
 - Le choix réel du modèle dans Copilot et ChatGPT reste **manuel**. Seul Claude Code peut l'appliquer, via les sous-agents.
 - Tests : `python -m unittest discover -s tools/jev_router/tests -v`

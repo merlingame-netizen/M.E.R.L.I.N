@@ -22,7 +22,7 @@ Write-Host "== 4/4 Verification reelle" -ForegroundColor Cyan
 python tools/cli.py jev health
 $eval = python tools/jev_router/jev.py eval | ConvertFrom-Json
 Write-Host ("eval : {0}/{1} lanes exactes" -f $eval.exact, $eval.total)
-if ($eval.exact -lt 7) { Write-Host "Moins de 7/8 : passer decider.model a qwen2.5:7b dans lanes.json" -ForegroundColor Yellow }
+if ($eval.exact -lt 7) { Write-Host "Moins de 7/8 : relancer (modele froid) ou verifier decider.model dans lanes.json" -ForegroundColor Yellow }
 '{"prompt":"Ajoute un bouton pause au HUD du jeu"}' | python tools/jev_router/jev.py hook
 
 Write-Host "OK. Redemarrer Claude Code et VS Code pour charger le hook et les serveurs MCP." -ForegroundColor Green
